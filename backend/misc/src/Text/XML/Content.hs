@@ -64,7 +64,7 @@ nodesToEvents ct = goN (unXMLContent ct) []
       (EventBeginElement name (Map.toList (fmap ((: []) . ContentText) as)) :)
         . goN ns
         . (EventEndElement name :)
-    goN []       = id
+    goN []       = identity
     goN [x     ] = goN' x
     goN (x : xs) = goN' x . goN xs
     goN' (NodeElement     e) = goE e
@@ -91,7 +91,7 @@ removeTags = XMLContent . concatMap remove . unXMLContent
 
 -- | Form XMLContent from string literals
 instance IsString XMLContent where
-  fromString s = either (unexpectedError $ "Cannot parse XML content " <> (showt s)) id
+  fromString s = either (unexpectedError $ "Cannot parse XML content " <> (showt s)) identity
     $ parseXMLContent (T.pack s)
 
 -- | Form XMLContent from plain text
@@ -103,7 +103,7 @@ class ToXMLContent a where
   toXMLContent :: a -> XMLContent
 
 instance ToXMLContent XMLContent where
-  toXMLContent = id
+  toXMLContent = identity
 
 instance ToXMLContent Text where
   toXMLContent = cdata

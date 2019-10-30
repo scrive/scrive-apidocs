@@ -164,7 +164,7 @@ stagingTests :: [TestEnvSt -> Test]
 stagingTests = [screenshotTests, gtWorkflowTests]
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
-modifyTestEnv [] = ([], id)
+modifyTestEnv [] = ([], identity)
 modifyTestEnv ("--staging-tests" : r) =
   second (. set teStagingTests True) $ modifyTestEnv r
 modifyTestEnv ("--output-dir" : d : r) =

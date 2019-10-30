@@ -275,7 +275,7 @@ checkCGISignStatus CgiGrpConfig {..} did slid = do
     just_lookup name = fromMaybe (missing name) . lookup name
 
     invalid_b64 txt = unexpectedError $ "invalid base64:" <+> txt
-    mk_binary txt = either (invalid_b64 txt) id . B64.decode . TE.encodeUtf8 $ txt
+    mk_binary txt = either (invalid_b64 txt) identity . B64.decode . TE.encodeUtf8 $ txt
 
 checkCGIAuthStatus
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
@@ -379,7 +379,7 @@ checkCGIAuthStatus did slid = do
     just_lookup name = fromMaybe (missing name) . lookup name
 
     invalid_b64 txt = unexpectedError $ "invalid base64:" <+> txt
-    mk_binary txt = either (invalid_b64 txt) id . B64.decode . TE.encodeUtf8 $ txt
+    mk_binary txt = either (invalid_b64 txt) identity . B64.decode . TE.encodeUtf8 $ txt
 
 ----------------------------------------
 

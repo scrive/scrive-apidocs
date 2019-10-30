@@ -168,4 +168,4 @@ fieldsAreAlmostEqual a b = and
 
 --  fieldsAreAlmostEqual for Lists. It will work only for lists that are ordered
 fieldsListsAreAlmostEqual :: [SignatoryField] -> [SignatoryField] -> Bool
-fieldsListsAreAlmostEqual fs fs' = all id $ zipWith fieldsAreAlmostEqual fs fs'
+fieldsListsAreAlmostEqual fs fs' = all identity $ zipWith fieldsAreAlmostEqual fs fs'

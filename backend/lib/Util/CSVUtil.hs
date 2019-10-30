@@ -104,7 +104,7 @@ instance ToMessage CSV where
   toResponse csv =
     (if not (null (csvFilename csv))
         then setHeader "Content-Disposition" ("attachment;filename=" ++ csvFilename csv)
-        else id
+        else identity
       )
       $ setHeaderBS (BS.fromString "Content-Type") (toContentType csv)
       $ toResponse (toMessage csv)

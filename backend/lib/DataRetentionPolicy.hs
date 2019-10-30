@@ -41,7 +41,7 @@ drpIdleDocTimeout = \case
   Timedout      -> drpIdleDocTimeoutTimedout
   Rejected      -> drpIdleDocTimeoutRejected
   DocumentError -> drpIdleDocTimeoutError
-  Pending       -> lens (const Nothing) (const id)
+  Pending       -> lens (const Nothing) (const identity)
 
 defaultDataRetentionPolicy :: DataRetentionPolicy
 defaultDataRetentionPolicy = DataRetentionPolicy

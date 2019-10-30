@@ -100,7 +100,7 @@ logObject :: (Loggable a) => (Text -> Text) -> a -> Value
 logObject f a = object [logPair f a]
 
 logObject_ :: (Loggable a) => a -> Value
-logObject_ = logObject id
+logObject_ = logObject identity
 
 -- | Convert datatype to Aeson Pair for logging purposes. Allows adjusting or
 --   replacing of the default label
@@ -110,4 +110,4 @@ logPair f a = (f $ logDefaultLabel a, logValue a)
 -- | Convert datatype to Aeson Pair for logging purposes. Default label will
 --   be used.
 logPair_ :: (Loggable a) => a -> Pair
-logPair_ = logPair id
+logPair_ = logPair identity

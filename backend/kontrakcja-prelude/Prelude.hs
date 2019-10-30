@@ -17,7 +17,7 @@ module Prelude (
   , TextShow (..)
   , (!!)
   , (.)
-  , id
+  , identity
   , get
   , set
   , copy
@@ -107,6 +107,10 @@ maybeRead s = case reads (T.unpack s) of
   _         -> Nothing
 
 ----------------------------------------
+
+-- | Replacement for 'id' that doesn't collide with "identifier".
+identity :: Category cat => cat a a
+identity = id
 
 -- | Replacement for 'P.!!' that provides useful information on failure.
 (!!) :: HasCallStack => [a] -> Int -> a

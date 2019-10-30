@@ -70,7 +70,7 @@ userJSONUserDetails user = do
   value "lang" $ codeFromLang $ getLang user
 
 unjsonUser :: UnjsonDef User
-unjsonUser = unjsonUserPartial id
+unjsonUser = unjsonUserPartial identity
 
 unjsonUserWithPassword :: Text -> UnjsonDef User
 unjsonUserWithPassword password =

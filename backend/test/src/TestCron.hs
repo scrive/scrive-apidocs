@@ -93,14 +93,14 @@ runTestCronUntilIdle ctx = do
           (cronConsumerExtendingMaxJobs cronConf)
         )
       , ( "api callbacks"
-        , runConsumerWithIdleSignal . modTimeout $ documentAPICallback {-runCronEnv-}id
+        , runConsumerWithIdleSignal . modTimeout $ documentAPICallback {-runCronEnv-}identity
           (cronConsumerAPICallbackMaxJobs cronConf)
         )
       , ( "cron"
         , runConsumerWithIdleSignal . modTimeout $ cronConsumer
           cronConf
           reqManager {-mmixpanel-}Nothing
-              {-mplanhat-}Nothing {-runCronEnv-}id {-runDB-}id
+              {-mplanhat-}Nothing {-runCronEnv-}identity {-runDB-}identity
           (cronConsumerCronMaxJobs cronConf)
         )
       , ( "file purging"
@@ -132,7 +132,7 @@ allSignalsTrue :: (MonadIO m) => [TMVar Bool] -> TVar [Bool] -> m Bool
 allSignalsTrue idleSignals idleStatuses = liftIO . atomically $ do
   (idx, isIdle) <- takeAnyMVar idleSignals
   modifyTVar idleStatuses (\ss -> take idx ss <> [isIdle] <> drop (idx + 1) ss)
-  all id <$> readTVar idleStatuses
+  all identity <$> readTVar idleStatuses
 
 takeAnyMVar :: [TMVar a] -> STM (Int, a)
 takeAnyMVar =

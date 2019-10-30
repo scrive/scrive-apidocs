@@ -53,7 +53,7 @@ instance ToResp Response where
   toResp = return
 
 instance ToResp (Kontra Response) where
-  toResp = id
+  toResp = identity
 
 instance ToResp KontraLink where
   toResp = sendRedirect

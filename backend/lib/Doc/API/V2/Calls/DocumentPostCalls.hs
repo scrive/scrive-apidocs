@@ -139,7 +139,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM
       (serverError "Can't clone given document")
-      (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=
+      (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor identity) >>=
     )
     $ flip withDocumentID
     $ do
@@ -667,7 +667,7 @@ docApiV2Clone did = logDocument did . api $ do
     guardThatObjectVersionMatchesIfProvided did
     -- API call actions
     doc     <- theDocument
-    mNewDid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor id
+    mNewDid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor identity
     when (isNothing mNewDid) $ apiError $ serverError
       "Could not clone document, did not get back valid ID"
     newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mNewDid

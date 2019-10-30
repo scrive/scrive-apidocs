@@ -2258,7 +2258,7 @@ testCreateFromSharedTemplate = do
   docid'  <-
     fromJust
       <$> ( dbUpdate
-          $ CloneDocumentWithUpdatedAuthor (Just newuser) doc (systemActor mt) id
+          $ CloneDocumentWithUpdatedAuthor (Just newuser) doc (systemActor mt) identity
           )
   void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (documentid doc)
                                                                  (systemActor mt)
@@ -2299,7 +2299,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   user'  <- fromJust <$> (dbQuery $ GetUserByID (userid user))
   docid' <-
     fromJust
-      <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user') doc (systemActor mt) id)
+      <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user') doc (systemActor mt) identity)
   void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (documentid doc)
                                                                  (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
@@ -2496,7 +2496,7 @@ testUpdateConsentResponsesForSigningSuccess = do
         responses' = map (\q -> (scqID q, scqResponse q)) questions'
     assertBool
       "Some responses are missing or wrong"
-      (all id (zipWith (\(i, r) (i', r') -> i == i' && Just r == r') responses responses')
+      (all identity (zipWith (\(i, r) (i', r') -> i == i' && Just r == r') responses responses')
       )
 
     events <- query $ GetEvidenceLog $ documentid doc

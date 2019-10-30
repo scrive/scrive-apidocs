@@ -33,8 +33,8 @@ handlers = choice
   , dir "sms" $ dir "mblox" $ hPost handleMbloxEvents
   ]
   where
-    hGet  = path GET id
-    hPost = path POST id
+    hGet  = path GET identity
+    hPost = path POST identity
 
 showHelloMessage :: Messenger Response
 showHelloMessage = ok $ toResponse "Messenger says hello!"

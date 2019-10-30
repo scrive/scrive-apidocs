@@ -160,7 +160,7 @@ class ToAPIResponse a where
   toAPIResponse :: a -> Response
 
 instance ToAPIResponse Response where
-  toAPIResponse = id
+  toAPIResponse = identity
 
 instance ToAPIResponse JSValue where
   -- It used to have to be text/plain because an ancient version of IE that

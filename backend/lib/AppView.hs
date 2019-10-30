@@ -263,7 +263,7 @@ respondWithZipFile = respondWithDownloadContents "application/zip"
 respondWithDownloadContents :: BS.ByteString -> Bool -> BS.ByteString -> Response
 respondWithDownloadContents mimeType forceDownload contents =
   setHeaderBS "Content-Type" mimeType
-    $ (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else id)
+    $ (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else identity)
     $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 {- |

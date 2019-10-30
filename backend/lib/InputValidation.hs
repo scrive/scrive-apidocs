@@ -775,7 +775,7 @@ stripAllWhitespace = return . T.filter (not . isSpace)
 -}
 unjsonWithValidationOrEmpty :: (Text -> InputValidation.Result Text) -> UJ.UnjsonDef Text
 unjsonWithValidationOrEmpty validation = UJ.unjsonInvmapR (convertResult . validation)
-                                                          id
+                                                          identity
                                                           UJ.unjsonDef
   where
     convertResult (InputValidation.Good s) = return s
@@ -789,7 +789,7 @@ unjsonWithValidationOrEmptyText
   :: (Text -> InputValidation.Result Text) -> UJ.UnjsonDef Text
 unjsonWithValidationOrEmptyText validation = UJ.unjsonInvmapR
   (convertResult . validation')
-  id
+  identity
   UJ.unjsonDef
   where
     convertResult :: Result T.Text -> UJ.Result T.Text

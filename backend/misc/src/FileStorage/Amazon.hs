@@ -123,7 +123,7 @@ awsLogger = do
     adjustLevel AWS.Trace = LogTrace
 
     builderToText =
-      either (T.append "decode error: " . showt) id
+      either (T.append "decode error: " . showt) identity
         . T.decodeUtf8'
         . BSL.toStrict
         . B.toLazyByteString

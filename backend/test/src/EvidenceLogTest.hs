@@ -38,7 +38,7 @@ conversionEq = do
     -- test that fromSQL . toSQL == id (fromSQL is onto and toSQL is
     -- bijection as function EvidenceEventType -> {1..eventsNum})
     runQuery_ $ rawSQL "SELECT $1, $1 >= 1 AND $1 <= $2" (t, eventsNum)
-    (t', True) <- fetchOne id
+    (t', True) <- fetchOne identity
     assertBool ("fromSQL . toSQL /= id on " ++ show t) $ t' == t
 
     -- test that id . toSQL . fromSQL == id (fromSQL|{1..eventsNum} is

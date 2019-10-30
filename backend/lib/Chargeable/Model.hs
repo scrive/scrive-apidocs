@@ -222,4 +222,4 @@ getAuthorAndAuthorsUserGroupIDs did = do
     sqlResult "u.id"
     sqlResult "u.user_group_id"
     sqlWhereEq "d.id" did
-  fetchOne id
+  fetchOne identity

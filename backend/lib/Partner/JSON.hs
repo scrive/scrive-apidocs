@@ -113,7 +113,7 @@ userToUserForUpdate user = UserForUpdate
 
 unjsonUsersForUpdate :: UnjsonDef [UserForUpdate]
 unjsonUsersForUpdate =
-  objectOf $ fieldBy "users" id "List of users" (arrayOf unjsonUserForUpdate)
+  objectOf $ fieldBy "users" identity "List of users" (arrayOf unjsonUserForUpdate)
 
 data UserGroupForUpdate = UserGroupForUpdate
   { uguUserGroupID      :: Text
@@ -176,7 +176,7 @@ unjsonUserGroupForUpdate =
 
 unjsonUserGroupsForUpdate :: UnjsonDef [UserGroupForUpdate]
 unjsonUserGroupsForUpdate =
-  objectOf $ fieldBy "companies" id "List of companies" (arrayOf unjsonUserGroupForUpdate)
+  objectOf $ fieldBy "companies" identity "List of companies" (arrayOf unjsonUserGroupForUpdate)
 
 -- This is intended for PartnerAPI only. It uses inherited data and the caller
 -- does not know about UserGroups or inheritance
@@ -209,7 +209,7 @@ updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
                                      }
       -- don't stop inheriting address, unless it has been changed
       updateAddress = case new_address == old_address of
-        True  -> id
+        True  -> identity
         False -> set ugAddress $ Just new_address
   in  set ugName uguUserGroupName . updateAddress $ ug
 

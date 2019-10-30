@@ -175,7 +175,7 @@ apiCallV1CreateFromFile = api $ do
       -- This is some kind of Salesforce hack that was supposed to be
       -- dropped with Happstack 7.0.4. It seems to be used till now
       -- for example by Avis.
-      let content' = either (const content1') id (B64.decode content1')
+      let content' = either (const content1') identity (B64.decode content1')
 
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
       fileid'    <- saveNewFile (T.pack filename) pdfcontent
@@ -216,7 +216,7 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
     $ serverError "Template is deleted"
   (apiGuardJustM
       (serverError "Can't clone given document")
-      (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=
+      (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor identity) >>=
     )
     $ flip withDocumentID
     $ do
@@ -233,7 +233,7 @@ apiCallV1Clone did = logDocument did . api $ do
   doc              <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc, user)
     then do
-      mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor id
+      mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor identity
       when (isNothing mndid) $ throwM . SomeDBExtraException $ serverError
         "Can't clone given document"
       newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mndid
@@ -1778,7 +1778,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
         -- This is some kind of Salesforce hack that was supposed to be
         -- dropped with Happstack 7.0.4. It seems to be used till now
         -- for example by Avis.
-        let content' = either (const content1') id (B64.decode content1')
+        let content' = either (const content1') identity (B64.decode content1')
 
         pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
         fileid'    <- saveNewFile (T.pack filename) pdfcontent

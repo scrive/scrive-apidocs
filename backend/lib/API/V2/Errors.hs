@@ -259,7 +259,7 @@ tryToConvertConditionalExceptionIntoAPIError
   :: SomeDBExtraException -> SomeDBExtraException
 tryToConvertConditionalExceptionIntoAPIError = foldr
   (.)
-  id
+  identity
   [ convertDocumentDoesNotExist
   , convertShortDocumentIDHasNoMatch
   , convertDocumentTypeShouldBe

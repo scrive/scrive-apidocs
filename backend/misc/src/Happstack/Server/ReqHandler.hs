@@ -74,7 +74,7 @@ newtype ReqHandlerT m a = ReqHandlerT { unReqHandlerT :: InnerReqHandlerT m a }
 runReqHandlerT :: Socket -> Conf -> ReqHandlerT IO Response -> IO ()
 runReqHandlerT sock conf (ReqHandlerT action) = L.listen' sock conf $ \req -> do
   now       <- getCurrentTime
-  (res, st) <- runStateT action $ ReqHandlerSt req id now
+  (res, st) <- runStateT action $ ReqHandlerSt req identity now
   runValidator (fromMaybe return $ validator conf) $ hsFilter st res
 
 mapReqHandlerT

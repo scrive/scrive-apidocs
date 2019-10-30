@@ -480,7 +480,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
         else set ugAddress . Just . ugAddressChange $ ugwpAddress ugwp
       newUG =
         set ugParentGroupID mTryParentUserGroupID
-          . maybe id (set ugName) mCompanyName
+          . maybe identity (set ugName) mCompanyName
           . setSettings
           . setAddress
           $ ugwpUG ugwp
@@ -556,39 +556,39 @@ getUserGroupSettingsChange = do
   mcompanyportalurl <- fmap emptyToNothing <$> getField "companyportalurl"
 
   return
-    $ maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
-    . maybe id (set ugsCGIDisplayName)    mcompanycgidisplayname
-    . maybe id
+    $ maybe identity (set ugsIPAddressMaskList) mcompanyipaddressmasklist
+    . maybe identity (set ugsCGIDisplayName)    mcompanycgidisplayname
+    . maybe identity
             (set (drpIdleDocTimeoutPreparation . ugsDataRetentionPolicy))
             mcompanyidledoctimeoutpreparation
-    . maybe id
+    . maybe identity
             (set (drpIdleDocTimeoutClosed . ugsDataRetentionPolicy))
             mcompanyidledoctimeoutclosed
-    . maybe id
+    . maybe identity
             (set (drpIdleDocTimeoutCanceled . ugsDataRetentionPolicy))
             mcompanyidledoctimeoutcanceled
-    . maybe id
+    . maybe identity
             (set (drpIdleDocTimeoutTimedout . ugsDataRetentionPolicy))
             mcompanyidledoctimeouttimedout
-    . maybe id
+    . maybe identity
             (set (drpIdleDocTimeoutRejected . ugsDataRetentionPolicy))
             mcompanyidledoctimeoutrejected
-    . maybe id
+    . maybe identity
             (set (drpIdleDocTimeoutError . ugsDataRetentionPolicy))
             mcompanyidledoctimeouterror
-    . maybe id
+    . maybe identity
             (set (drpImmediateTrash . ugsDataRetentionPolicy) . (== "true"))
             mcompanyimmediatetrash
-    . maybe id (set ugsCGIServiceID) mcompanycgiserviceid
-    . maybe id (set ugsSMSProvider)  mcompanysmsprovider
-    . maybe id (set ugsPadAppMode)   mcompanypadappmode
-    . maybe id (set ugsPadEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
-    . maybe id
+    . maybe identity (set ugsCGIServiceID) mcompanycgiserviceid
+    . maybe identity (set ugsSMSProvider)  mcompanysmsprovider
+    . maybe identity (set ugsPadAppMode)   mcompanypadappmode
+    . maybe identity (set ugsPadEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
+    . maybe identity
             (set ugsSendTimeoutNotification . (== "true"))
             mcompanysendtimeoutnotification
-    . maybe id (set ugsTotpIsMandatory . (== "true")) mcompanytotpismandatory
-    . maybe id (set ugsSessionTimeoutSecs)            mcompanysessiontimeout
-    . maybe id (set ugsPortalUrl)                     mcompanyportalurl
+    . maybe identity (set ugsTotpIsMandatory . (== "true")) mcompanytotpismandatory
+    . maybe identity (set ugsSessionTimeoutSecs)            mcompanysessiontimeout
+    . maybe identity (set ugsPortalUrl)                     mcompanyportalurl
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))
@@ -638,12 +638,12 @@ getUserGroupAddressChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   return
-    $ maybe id (set ugaCompanyNumber) mcompanynumber
-    . maybe id (set ugaEntityName)    mentityname
-    . maybe id (set ugaAddress)       mcompanyaddress
-    . maybe id (set ugaZip)           mcompanyzip
-    . maybe id (set ugaCity)          mcompanycity
-    . maybe id (set ugaCountry)       mcompanycountry
+    $ maybe identity (set ugaCompanyNumber) mcompanynumber
+    . maybe identity (set ugaEntityName)    mentityname
+    . maybe identity (set ugaAddress)       mcompanyaddress
+    . maybe identity (set ugaZip)           mcompanyzip
+    . maybe identity (set ugaCity)          mcompanycity
+    . maybe identity (set ugaCountry)       mcompanycountry
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
@@ -1061,7 +1061,7 @@ unjsonBrandedDomain =
 
 unjsonBrandedDomainsList :: UnjsonDef [BrandedDomain]
 unjsonBrandedDomainsList =
-  objectOf $ fieldBy "domains" id "List of branded domains" (arrayOf unjsonBrandedDomain)
+  objectOf $ fieldBy "domains" identity "List of branded domains" (arrayOf unjsonBrandedDomain)
 
 
 createBrandedDomain :: Kontrakcja m => m JSValue

@@ -212,7 +212,7 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
       . runDBT pool ts
       $ runStateT (unKontra tk) ctx
       )
-      (ReqHandlerSt rq id now)
+      (ReqHandlerSt rq identity now)
     )
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin

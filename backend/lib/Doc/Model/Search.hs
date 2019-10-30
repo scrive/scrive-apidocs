@@ -22,7 +22,7 @@ updateHistoricalSearchData = do
     dbUpdate $ SetDocumentSearchField docID
   unless (null docIDs) commit
   t1 <- currentTime
-  let numberOfItemsUpdated = length . filter id $ ress
+  let numberOfItemsUpdated = length . filter identity $ ress
   logInfo "Document search data updated" $ object
     [ "items_updated" .= numberOfItemsUpdated
     , "items_failed" .= (length . filter not $ ress)

@@ -127,7 +127,7 @@ cnFromDN dn =
 
 decodeCertificate :: Text -> B.ByteString
 decodeCertificate =
-  either (unexpectedError $ "invalid base64 of nets certificate") id
+  either (unexpectedError $ "invalid base64 of nets certificate") identity
     . B64.decode
     . T.encodeUtf8
 

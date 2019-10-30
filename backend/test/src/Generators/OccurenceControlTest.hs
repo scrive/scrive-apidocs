@@ -28,5 +28,5 @@ testListGenerator = do
   -- Generate a list between 2 and 10 booleans which represent the event
   -- occurence.
   let generator = listOC 2 10 $ decide' pure
-      checkOcc  = any id
+      checkOcc  = any identity
   testGeneratorHelper 0.1 generator checkOcc

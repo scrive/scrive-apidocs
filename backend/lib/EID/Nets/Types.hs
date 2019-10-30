@@ -653,4 +653,4 @@ xpCancelOrderResponse = XMLParser $ \cursor ->
 
 readTs :: [Text] -> XML.Cursor -> Text
 readTs names cursor = T.concat $ cursor $/ laxElements names content
-  where laxElements = foldr (.) id . fmap (&/) . fmap laxElement
+  where laxElements = foldr (.) identity . fmap (&/) . fmap laxElement

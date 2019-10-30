@@ -44,7 +44,7 @@ class ToAPIResponse a where
   toAPIResponse :: a -> Response
 
 instance ToAPIResponse Response where
-  toAPIResponse = id
+  toAPIResponse = identity
 
 instance ToAPIResponse BSL.ByteString where
   toAPIResponse bs =
