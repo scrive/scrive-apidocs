@@ -7,7 +7,6 @@ import Text.JSON.Gen
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Context
 import DB
 import IPAddress
 import Login
@@ -148,7 +147,7 @@ testHandlerForLoginSuccess = do
 testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
   user <- createTestUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   req  <- mkRequest
     POST
     [("oldpassword", inText "test_password"), ("password", inText "test1111test")]
@@ -162,7 +161,7 @@ testHandlerForPasswordSetup = do
 testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
   user <- createTestUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   req  <- mkRequest POST
                     [("oldpassword", inText "test"), ("password", inText "test1111test")]
   void $ runTestKontra req ctx $ apiCallChangeUserPassword
@@ -213,7 +212,7 @@ testHandlerForTOSAccept = do
 testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
   user <- createTestUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   req  <- mkRequest
     POST
     [ ("fstname"        , inText "Karol")
@@ -259,9 +258,9 @@ createTestUser = do
   muser <- createNewUser ("", "")
                          "karol@skrivapa.se"
                          (Just pwd)
-                         (get ugID ug, True)
+                         (ugID ug, True)
                          defaultLang
-                         (get bdid bd)
+                         (bdid bd)
                          AccountRequest
   case muser of
     Nothing     -> unexpectedError "can't create user"

@@ -85,7 +85,7 @@ executePdfToolsLambdaActionCall
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 executePdfToolsLambdaActionCall lc action inputData = do
-  let amazonEnv = get pdfToolsLambdaS3Env lc
+  let amazonEnv = pdfToolsLambdaS3Env lc
   logInfo_ "Uploading data to s3 for lamda"
   uploadedDataFileName <- sendDataFileToAmazon amazonEnv inputData
   case uploadedDataFileName of
@@ -98,12 +98,12 @@ executePdfToolsLambdaActionCall lc action inputData = do
         [ "-X"
         , "POST"
         , "-H"
-        , "x-api-key: " ++ get pdfToolsLambdaApiKey lc
+        , "x-api-key: " ++ pdfToolsLambdaApiKey lc
         , "-H"
         , "Content-Type: text/plain"
         , "--data"
         , "@-"
-        , get pdfToolsLambdaGatewayUrl lc
+        , pdfToolsLambdaGatewayUrl lc
         ]
         (BSL.fromString $ JSON.encode $ JSON.runJSONGen $ do
           JSON.value "action" $ T.unpack $ pdfToolsActionName action
@@ -130,7 +130,7 @@ parseSealingResponse
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 parseSealingResponse lc stdout = do
-  let amazonEnv = get pdfToolsLambdaS3Env lc
+  let amazonEnv = pdfToolsLambdaS3Env lc
   case (parsePdfToolsLambdaSealingResponse stdout) of
     SealSuccess resultS3Name -> do
       mresdata <- getDataFromAmazon amazonEnv resultS3Name
@@ -152,7 +152,7 @@ parseCleaningResponse
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 parseCleaningResponse lc stdout = do
-  let amazonEnv = get pdfToolsLambdaS3Env lc
+  let amazonEnv = pdfToolsLambdaS3Env lc
   case (parsePdfToolsLambdaCleaningResponse stdout) of
     CleanSuccess resultS3Name -> do
       mresdata <- getDataFromAmazon amazonEnv resultS3Name
@@ -174,7 +174,7 @@ parseAddImageResponse
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 parseAddImageResponse lc stdout = do
-  let amazonEnv = get pdfToolsLambdaS3Env lc
+  let amazonEnv = pdfToolsLambdaS3Env lc
   case (parsePdfToolsLambdaAddImageResponse stdout) of
     AddImageSuccess resultS3Name -> do
       mresdata <- getDataFromAmazon amazonEnv resultS3Name

@@ -746,7 +746,7 @@ guardDocumentReadAccess mslid doc = do
   mSessionSignatory <- case mslid of
     Nothing   -> return Nothing
     Just slid -> do
-      sid          <- get ctxsessionid <$> getContext
+      sid          <- ctxSessionID <$> getContext
       validSession <- dbQuery $ CheckDocumentSession sid slid
       if validSession
         then do
@@ -782,7 +782,7 @@ guardThatDocumentIsReadableBySignatories doc = do
 guardAccessToDocumentWithSignatory
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 guardAccessToDocumentWithSignatory did slid = do
-  sid   <- get ctxsessionid <$> getContext
+  sid   <- ctxSessionID <$> getContext
   check <- dbQuery $ CheckDocumentSession sid slid
   unless check $ do
     (user, _) <- getAPIUser APIPersonal

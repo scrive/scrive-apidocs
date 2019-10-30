@@ -155,9 +155,9 @@ unjsonUserPartial passwordDef = objectOf $ passwordDef
 companyJSON :: UserGroupWithParents -> JSValue
 companyJSON ugwp = do
   runJSONGen $ do
-    value "companyid" . show . get ugID $ ugwpUG ugwp
-    value "companyname" . get ugName $ ugwpUG ugwp
-    value "companyhomefolderid" . get ugHomeFolderID $ ugwpUG ugwp
+    value "companyid" . show . ugID $ ugwpUG ugwp
+    value "companyname" . ugName $ ugwpUG ugwp
+    value "companyhomefolderid" . ugHomeFolderID $ ugwpUG ugwp
     companyAddressJson $ ugwpAddress ugwp
     companySettingsJson $ ugwpSettings ugwp
 
@@ -169,12 +169,12 @@ companyJSONAdminOnly ugwp = do
       mInheritedAddress     = ugwpAddress <$> ugwpOnlyParents ugwp
       mInheritedSettings    = ugwpSettings <$> ugwpOnlyParents ugwp
       ugParentPath          = maybe [] ugwpToList . ugwpOnlyParents $ ugwp
-      ugSettingsIsInherited = isNothing . get ugSettings $ ug
-      ugAddressIsInherited  = isNothing . get ugAddress $ ug
+      ugSettingsIsInherited = isNothing $ ugSettings ug
+      ugAddressIsInherited  = isNothing $ ugAddress ug
   runJSONGen $ do
-    value "companyid" $ show $ get ugID ug
+    value "companyid" $ show $ ugID ug
     companyAddressJson activeAddress
-    value "companyname" $ get ugName ug
+    value "companyname" $ ugName ug
     companySettingsJson $ activeSettings
 
     whenJust (mInheritedAddress) $ object "companyinheritedaddress" . companyAddressJson
@@ -185,40 +185,40 @@ companyJSONAdminOnly ugwp = do
       . companySettingsJson
     value "companysettingsisinherited" ugSettingsIsInherited
 
-    value "parentid" . fmap show $ get ugParentGroupID ug
+    value "parentid" . fmap show $ ugParentGroupID ug
     objects "parentgrouppath" . for ugParentPath $ \parent -> do
-      value "group_id" . show . get ugID $ parent
-      value "group_name" . get ugName $ parent
+      value "group_id" . show . ugID $ parent
+      value "group_name" . ugName $ parent
 
 companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
 companyAddressJson uga = do
-  value "address" $ get ugaAddress uga
-  value "city" $ get ugaCity uga
-  value "country" $ get ugaCountry uga
-  value "zip" $ get ugaZip uga
-  value "companynumber" $ get ugaCompanyNumber uga
-  value "entityname" $ get ugaEntityName uga
+  value "address" $ ugaAddress uga
+  value "city" $ ugaCity uga
+  value "country" $ ugaCountry uga
+  value "zip" $ ugaZip uga
+  value "companynumber" $ ugaCompanyNumber uga
+  value "entityname" $ ugaEntityName uga
 
 companySettingsJson :: UserGroupSettings -> JSONGenT Identity ()
 companySettingsJson ugs = do
-  let drp = get ugsDataRetentionPolicy ugs
-  value "ipaddressmasklist" . intercalate "," . fmap show $ get ugsIPAddressMaskList ugs
-  value "cgidisplayname" $ get ugsCGIDisplayName ugs
-  value "cgiserviceid" $ get ugsCGIServiceID ugs
-  value "smsprovider" . show $ get ugsSMSProvider ugs
-  value "padappmode" . padAppModeText $ get ugsPadAppMode ugs
-  value "padearchiveenabled" $ get ugsPadEarchiveEnabled ugs
-  value "idledoctimeoutpreparation" $ get drpIdleDocTimeoutPreparation drp
-  value "idledoctimeoutclosed" $ get drpIdleDocTimeoutClosed drp
-  value "idledoctimeoutcanceled" $ get drpIdleDocTimeoutCanceled drp
-  value "idledoctimeouttimedout" $ get drpIdleDocTimeoutTimedout drp
-  value "idledoctimeoutrejected" $ get drpIdleDocTimeoutRejected drp
-  value "idledoctimeouterror" $ get drpIdleDocTimeoutError drp
-  value "immediatetrash" $ get drpImmediateTrash drp
-  value "sendtimeoutnotification" $ get ugsSendTimeoutNotification ugs
-  value "totpismandatory" $ get ugsTotpIsMandatory ugs
-  value "sessiontimeout" $ get ugsSessionTimeoutSecs ugs
-  value "portalurl" $ get ugsPortalUrl ugs
+  let drp = ugsDataRetentionPolicy ugs
+  value "ipaddressmasklist" . intercalate "," . fmap show $ ugsIPAddressMaskList ugs
+  value "cgidisplayname" $ ugsCGIDisplayName ugs
+  value "cgiserviceid" $ ugsCGIServiceID ugs
+  value "smsprovider" . show $ ugsSMSProvider ugs
+  value "padappmode" . padAppModeText $ ugsPadAppMode ugs
+  value "padearchiveenabled" $ ugsPadEarchiveEnabled ugs
+  value "idledoctimeoutpreparation" $ drpIdleDocTimeoutPreparation drp
+  value "idledoctimeoutclosed" $ drpIdleDocTimeoutClosed drp
+  value "idledoctimeoutcanceled" $ drpIdleDocTimeoutCanceled drp
+  value "idledoctimeouttimedout" $ drpIdleDocTimeoutTimedout drp
+  value "idledoctimeoutrejected" $ drpIdleDocTimeoutRejected drp
+  value "idledoctimeouterror" $ drpIdleDocTimeoutError drp
+  value "immediatetrash" $ drpImmediateTrash drp
+  value "sendtimeoutnotification" $ ugsSendTimeoutNotification ugs
+  value "totpismandatory" $ ugsTotpIsMandatory ugs
+  value "sessiontimeout" $ ugsSessionTimeoutSecs ugs
+  value "portalurl" $ ugsPortalUrl ugs
 
 userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

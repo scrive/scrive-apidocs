@@ -6,8 +6,8 @@ import BrandedDomain.BrandedDomain
 import User.Model
 
 data MailContext = MailContext
-  { _mctxlang                 :: !Lang
-  , _mctxcurrentBrandedDomain :: !BrandedDomain
-  , _mctxtime                 :: !UTCTime
-  , _mctxmailNoreplyAddress   :: !Text
+  { mctxLang                 :: !Lang
+  , mctxCurrentBrandedDomain :: !BrandedDomain
+  , mctxTime                 :: !UTCTime
+  , mctxMailNoreplyAddress   :: !Text
   } deriving Show

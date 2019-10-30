@@ -196,8 +196,8 @@ logValidationBad :: Kontrakcja m => Input -> m ()
 logValidationBad input = do
   ctx <- getContext
   logInfo "Input validation failed" $ object
-    [ "ip" .= show (get ctxipnumber ctx)
-    , "user" .= maybe "unknown" (unEmail . useremail . userinfo) (get ctxmaybeuser ctx)
+    [ "ip" .= show (ctxIpNumber ctx)
+    , "user" .= maybe "unknown" (unEmail . useremail . userinfo) (ctxMaybeUser ctx)
     , "input" .= show input
     ]
 

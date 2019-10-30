@@ -185,7 +185,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           logInfo "Handler started"
             .  object
             $  routeLogData
-            ++ [ "ip" .= show (get ctxipnumber ctx)
+            ++ [ "ip" .= show (ctxIpNumber ctx)
                , "server_hostname" .= hostname appGlobals
                ]
 
@@ -201,9 +201,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
             when (issecure || not usehttps) $ do
               logInfo_ "Updating session"
               void $ updateSession session
-                                   (get ctxsessionid ctx')
-                                   (userid <$> get ctxmaybeuser ctx')
-                                   (userid <$> get ctxmaybepaduser ctx')
+                                   (ctxSessionID ctx')
+                                   (userid <$> ctxMaybeUser ctx')
+                                   (userid <$> ctxMaybePadUser ctx')
 
             logInfo_ "Evaluating response"
             -- Make sure response is well defined before passing it further.
@@ -216,9 +216,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 -- which was used during API call.
             let
               mUser =
-                get ctxmaybeapiuser ctx'
-                  <|> get ctxmaybeuser    ctx'
-                  <|> get ctxmaybepaduser ctx'
+                ctxMaybeApiUser ctx'
+                  <|> ctxMaybeUser    ctx'
+                  <|> ctxMaybePadUser ctx'
               res' = case mUser of
                 Nothing -> res
                 Just user ->
@@ -368,40 +368,40 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       -- work out the language
       userlang      <- getStandardLang muser
 
-      return Context { _ctxmaybeuser           = muser
-                     , _ctxtime                = minutestime
-                     , _ctxclientname          = clientName `mplus` userAgent
-                     , _ctxclienttime          = clientTime
-                     , _ctxipnumber            = peerip
-                     , _ctxproduction          = production appConf
-                     , _ctxcdnbaseurl          = cdnBaseUrl appConf
-                     , _ctxtemplates           = localizedVersion userlang templates2
-                     , _ctxglobaltemplates     = templates2
-                     , _ctxlang                = userlang
-                     , _ctxismailbackdooropen  = isMailBackdoorOpen appConf
-                     , _ctxmailnoreplyaddress  = mailNoreplyAddress appConf
-                     , _ctxgtconf              = guardTimeConf appConf
-                     , _ctxcgigrpconfig        = cgiGrpConfig appConf
-                     , _ctxmrediscache         = mrediscache appGlobals
-                     , _ctxfilecache           = filecache appGlobals
-                     , _ctxxtoken              = sesCSRFToken session
-                     , _ctxadminaccounts       = admins appConf
-                     , _ctxsalesaccounts       = sales appConf
-                     , _ctxmaybepaduser        = mpaduser
-                     , _ctxusehttps            = useHttps appConf
-                     , _ctxsessionid           = sesID session
-                     , _ctxtrackjstoken        = trackjsToken appConf
-                     , _ctxzendeskkey          = zendeskKey appConf
-                     , _ctxgatoken             = gaToken appConf
-                     , _ctxmixpaneltoken       = mixpanelToken appConf
-                     , _ctxhubspotconf         = hubspotConf appConf
-                     , _ctxbrandeddomain       = brandeddomain
-                     , _ctxsalesforceconf      = salesforceConf appConf
-                     , _ctxnetsconfig          = netsConfig appConf
-                     , _ctxisapilogenabled     = isAPILogEnabled appConf
-                     , _ctxnetssignconfig      = netsSignConfig appConf
-                     , _ctxpdftoolslambdaenv   = pdftoolslambdaenv appGlobals
-                     , _ctxpasswordserviceconf = passwordServiceConf appConf
-                     , _ctxeidserviceconf      = eidServiceConf appConf
-                     , _ctxmaybeapiuser        = Nothing
+      return Context { ctxMaybeUser           = muser
+                     , ctxTime                = minutestime
+                     , ctxClientName          = clientName `mplus` userAgent
+                     , ctxClientTime          = clientTime
+                     , ctxIpNumber            = peerip
+                     , ctxProduction          = production appConf
+                     , ctxCdnBaseUrl          = cdnBaseUrl appConf
+                     , ctxTemplates           = localizedVersion userlang templates2
+                     , ctxGlobalTemplates     = templates2
+                     , ctxLang                = userlang
+                     , ctxIsMailBackdoorOpen  = isMailBackdoorOpen appConf
+                     , ctxMailNoreplyAddress  = mailNoreplyAddress appConf
+                     , ctxGtConf              = guardTimeConf appConf
+                     , ctxCgiGrpConfig        = cgiGrpConfig appConf
+                     , ctxRedisCache         = mrediscache appGlobals
+                     , ctxFileCache           = filecache appGlobals
+                     , ctxXToken              = sesCSRFToken session
+                     , ctxAdminAccounts       = admins appConf
+                     , ctxSalesAccounts       = sales appConf
+                     , ctxMaybePadUser        = mpaduser
+                     , ctxUseHttps            = useHttps appConf
+                     , ctxSessionID           = sesID session
+                     , ctxTrackJsToken        = trackjsToken appConf
+                     , ctxZendeskKey          = zendeskKey appConf
+                     , ctxGaToken             = gaToken appConf
+                     , ctxMixpanelToken       = mixpanelToken appConf
+                     , ctxHubspotConf         = hubspotConf appConf
+                     , ctxBrandedDomain       = brandeddomain
+                     , ctxSalesforceConf      = salesforceConf appConf
+                     , ctxNetsConfig          = netsConfig appConf
+                     , ctxIsApiLogEnabled     = isAPILogEnabled appConf
+                     , ctxNetsSignConfig      = netsSignConfig appConf
+                     , ctxPdfToolsLambdaEnv   = pdftoolslambdaenv appGlobals
+                     , ctxPasswordServiceConf = passwordServiceConf appConf
+                     , ctxEidServiceConf      = eidServiceConf appConf
+                     , ctxMaybeApiUser        = Nothing
                      }

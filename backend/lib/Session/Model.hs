@@ -45,7 +45,7 @@ import Utils.HTTP
 getSessionTimeoutSecs :: forall  m . (MonadDB m, MonadThrow m) => UserID -> m Int32
 getSessionTimeoutSecs userId = do
   userGroup :: UserGroupWithParents <- dbQuery $ UserGroupGetWithParentsByUserID userId
-  let mSessionTimeout :: Maybe Int32 = get ugsSessionTimeoutSecs $ ugwpSettings userGroup
+  let mSessionTimeout :: Maybe Int32 = ugsSessionTimeoutSecs $ ugwpSettings userGroup
   return $ fromMaybe defaultSessionTimeoutSecs mSessionTimeout
 
 -- Get the session expiry delay from a user associated with a
@@ -83,11 +83,11 @@ getNonTempSessionID
   :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m)
   => m SessionID
 getNonTempSessionID = do
-  sid <- get ctxsessionid <$> getContext
+  sid <- ctxSessionID <$> getContext
   if sid == SessionID.tempSessionID
     then do
       new_sid <- sesID <$> insertEmptySession
-      modifyContext $ set ctxsessionid new_sid
+      modifyContext $ set #ctxSessionID new_sid
       return new_sid
     else return sid
   where

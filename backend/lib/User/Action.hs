@@ -47,7 +47,7 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
   switchLang (getLang actvuser)
   ctx      <- getContext
   phone    <- fromMaybe (getMobile actvuser) <$> getField "phone"
-  ugname   <- (fromMaybe (get ugName ug)) <$> getField "company"
+  ugname   <- (fromMaybe (ugName ug)) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
   void $ dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser)
@@ -56,36 +56,36 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
     , userphone           = phone
     , usercompanyposition = position
     }
-  void $ dbUpdate . UserGroupUpdate . set ugName ugname $ ug
+  void $ dbUpdate . UserGroupUpdate . set #ugName ugname $ ug
   void $ dbUpdate $ LogHistoryUserInfoChanged
     (userid actvuser)
-    (get ctxipnumber ctx)
-    (get ctxtime ctx)
+    (ctxIpNumber ctx)
+    (ctxTime ctx)
     (userinfo actvuser)
     ((userinfo actvuser) { userfstname = fromMaybe "" mfstname
                          , usersndname = fromMaybe "" msndname
                          }
     )
-    (userid <$> get ctxmaybeuser ctx)
+    (userid <$> ctxMaybeUser ctx)
   void $ dbUpdate $ LogHistoryPasswordSetup (userid actvuser)
-                                            (get ctxipnumber ctx)
-                                            (get ctxtime ctx)
-                                            (userid <$> get ctxmaybeuser ctx)
-  void $ dbUpdate $ AcceptTermsOfService (userid actvuser) (get ctxtime ctx)
+                                            (ctxIpNumber ctx)
+                                            (ctxTime ctx)
+                                            (userid <$> ctxMaybeUser ctx)
+  void $ dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxTime ctx)
   void $ dbUpdate $ LogHistoryTOSAccept (userid actvuser)
-                                        (get ctxipnumber ctx)
-                                        (get ctxtime ctx)
-                                        (userid <$> get ctxmaybeuser ctx)
+                                        (ctxIpNumber ctx)
+                                        (ctxTime ctx)
+                                        (userid <$> ctxMaybeUser ctx)
   void $ dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
   dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser)
                                       (userid actvuser)
-                                      (14 `daysBefore` get ctxtime ctx)
+                                      (14 `daysBefore` ctxTime ctx)
 
   mpassword <- getField "password"
   case (mpassword) of
     Just password -> do
-      unlessM (checkPassword (get ctxpasswordserviceconf ctx) password) $ do
+      unlessM (checkPassword (ctxPasswordServiceConf ctx) password) $ do
         logInfo_ "Can't activate account, 'password' is not good"
         internalError
       passwordhash <- createPassword password
@@ -117,25 +117,25 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
     Nothing -> return Nothing
     Just ug -> do
       -- create User home Folder, if the UserGroup has one
-      mUserFolder <- case get ugHomeFolderID ug of
+      mUserFolder <- case ugHomeFolderID ug of
         Nothing -> return Nothing
         Just ugFid ->
           fmap Just
             . dbUpdate
             . FolderCreate
-            . set folderParentID (Just ugFid)
+            . set #folderParentID (Just ugFid)
             $ defaultFolder
       muser <- dbUpdate $ AddUser names
                                   (unEmail email)
                                   (Just passwd)
-                                  (ugid, get folderID <$> mUserFolder, iscompanyadmin)
+                                  (ugid, folderID <$> mUserFolder, iscompanyadmin)
                                   lang
-                                  (get (bdid . ctxbrandeddomain) ctx)
+                                  ((bdid . ctxBrandedDomain) ctx)
                                   sm
       whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
         (userid user)
-        (get ctxipnumber ctx)
-        (get ctxtime ctx)
+        (ctxIpNumber ctx)
+        (ctxTime ctx)
         email
         (userid <$> getContextUser ctx)
       return muser

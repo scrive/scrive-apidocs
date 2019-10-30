@@ -1,8 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
-module BrandedDomain.BrandedDomain.Labels where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module BrandedDomain.BrandedDomain.Labels () where
 
-import Data.Label (mkLabel)
+import Optics.TH
 
 import BrandedDomain.BrandedDomain.Internal
 
-mkLabel ''BrandedDomain
+makeFieldLabelsWith noPrefixFieldLabels ''BrandedDomain

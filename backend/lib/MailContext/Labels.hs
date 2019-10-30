@@ -1,8 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
-module MailContext.Labels where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module MailContext.Labels () where
 
-import Data.Label
+import Optics.TH
 
 import MailContext.Internal
 
-mkLabel ''MailContext
+makeFieldLabelsWith noPrefixFieldLabels ''MailContext

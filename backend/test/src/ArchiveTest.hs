@@ -10,7 +10,6 @@ import Text.JSON.String
 import qualified Data.ByteString.Lazy.Char8 as BS
 import qualified Data.Text as T
 
-import Context
 import Doc.API.V1.Calls
 import Doc.DocStateData
 import Doc.Model
@@ -28,7 +27,7 @@ testListDocs = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   -- send a doc as author
-  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
@@ -41,7 +40,7 @@ testListDocs = do
 
   -- send a doc to author from someoneelse
   (Just user2) <- addNewUser "Jackie" "Chan" "jackie@chan.com"
-  ctx2         <- (set ctxmaybeuser (Just user2)) <$> mkContext defaultLang
+  ctx2         <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
   req2         <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]

@@ -1,19 +1,17 @@
 module MailContext.Class (
-    MailContext
-  , module MailContext.Labels
+    MailContext(..)
   , mctxDomainUrl
   , MailContextMonad(..)
   ) where
 
 import Control.Monad.Trans
-import Data.Label
 
 import BrandedDomain.BrandedDomain
 import MailContext.Internal
-import MailContext.Labels
+import MailContext.Labels ()
 
-mctxDomainUrl :: MailContext :-> Text
-mctxDomainUrl = bdUrl . mctxcurrentBrandedDomain
+mctxDomainUrl :: MailContext -> Text
+mctxDomainUrl = bdUrl . mctxCurrentBrandedDomain
 
 class Monad m => MailContextMonad m where
   getMailContext :: m MailContext

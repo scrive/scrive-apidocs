@@ -505,7 +505,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           <> userEmail
                           <> ") "
                           <> "(company: "
-                          <> (get ugName ug)
+                          <> (ugName ug)
                           <> ") "
                           <> "(documentid: "
                           <> (showt (documentid doc))
@@ -545,7 +545,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           <> (showt (documentid doc))
                           <> "<br />\r\n"
                           <> "<strong>User Company ID:</strong> "
-                          <> (showt (get ugID ug))
+                          <> (showt (ugID ug))
                           <> "<br />\r\n"
                           <> "<strong>User Name:</strong> "
                           <> escapeHTML userName

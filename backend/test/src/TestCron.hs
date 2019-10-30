@@ -26,10 +26,10 @@ runTestCronUntilIdle ctx = do
   -- processes with their own DB transactions, which do not see
   -- changes of the test transaction ... unless there is a commit.
   commit
-  ConnectionSource pool  <- asks (get teConnSource)
-  pdfSealLambdaEnv       <- asks (get tePdfToolsLambdaEnv)
-  cronDBConfig           <- asks (get teCronDBConfig)
-  cronMonthlyInvoiceConf <- asks (get teCronMonthlyInvoice)
+  ConnectionSource pool  <- asks teConnSource
+  pdfSealLambdaEnv       <- asks tePdfToolsLambdaEnv
+  cronDBConfig           <- asks teCronDBConfig
+  cronMonthlyInvoiceConf <- asks teCronMonthlyInvoice
 
   -- Will not be used, because Planhat is not configured when testing,
   -- but it is a parameter for cronConsumer.
@@ -70,7 +70,7 @@ runTestCronUntilIdle ctx = do
         , runConsumerWithIdleSignal . modTimeout $ documentSealing
           (cronGuardTimeConf cronConf)
           pdfSealLambdaEnv
-          (get ctxglobaltemplates ctx)
+          (ctxGlobalTemplates ctx)
           pool
           (cronMailNoreplyAddress cronConf)
           (cronConsumerSealingMaxJobs cronConf)
@@ -80,7 +80,7 @@ runTestCronUntilIdle ctx = do
           (cronGuardTimeConf cronConf)
           (cronCgiGrpConfig cronConf)
           (cronNetsSignConfig cronConf)
-          (get ctxglobaltemplates ctx)
+          (ctxGlobalTemplates ctx)
           pool
           (cronMailNoreplyAddress cronConf)
           (cronConsumerSigningMaxJobs cronConf)
@@ -88,7 +88,7 @@ runTestCronUntilIdle ctx = do
       , ( "document extending"
         , runConsumerWithIdleSignal . modTimeout $ documentExtendingConsumer
           (cronGuardTimeConf cronConf)
-          (get ctxglobaltemplates ctx)
+          (ctxGlobalTemplates ctx)
           pool
           (cronConsumerExtendingMaxJobs cronConf)
         )
@@ -110,7 +110,7 @@ runTestCronUntilIdle ctx = do
         )
       ]
     cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf)
-                                  (get ctxglobaltemplates ctx)
+                                  (ctxGlobalTemplates ctx)
                                   (cronMailNoreplyAddress cronConf)
 
     finalizeRunner ((label, runner), idleSignal) =

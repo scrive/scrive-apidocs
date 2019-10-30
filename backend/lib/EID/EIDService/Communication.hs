@@ -43,7 +43,7 @@ createVerimiTransactionWithEIDService
 createVerimiTransactionWithEIDService conf did slid redirect = do
   ctx <- getContext
   let redirectUrl =
-        (get ctxDomainUrl ctx)
+        (ctxDomainUrl ctx)
           <> "/eid-service/redirect-endpoint/verimi/"
           <> showt did
           <> "/"
@@ -212,7 +212,7 @@ createIDINTransactionWithEIDService
 createIDINTransactionWithEIDService conf did slid redirect = do
   ctx <- getContext
   let redirectUrl =
-        (get ctxDomainUrl ctx)
+        (ctxDomainUrl ctx)
           <> "/eid-service/redirect-endpoint/idin/"
           <> showt did
           <> "/"

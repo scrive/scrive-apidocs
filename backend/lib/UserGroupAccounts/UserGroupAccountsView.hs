@@ -53,16 +53,16 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx)
-    . get (uguiMailTheme . ugUI)
+    . fromMaybe (bdMailTheme $ ctxBrandedDomain ctx)
+    . uguiMailTheme . ugUI
     $ ug
-  kontramail (get ctxmailnoreplyaddress ctx)
-             (get ctxbrandeddomain ctx)
+  kontramail (ctxMailNoreplyAddress ctx)
+             (ctxBrandedDomain ctx)
              theme
              "mailNewCompanyUserInvite"
     $ do
         basicUserGroupInviteFields invited inviter ug
-        basicLinkFields (get ctxDomainUrl ctx) link
+        basicLinkFields (ctxDomainUrl ctx) link
         brandingMailFields theme
         F.value "creatorname" $ getSmartName inviter
         F.value "expiredate" $ formatTimeYMD expires
@@ -86,18 +86,18 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx)
-    . get (uguiMailTheme . ugUI)
+    . fromMaybe (bdMailTheme $ ctxBrandedDomain ctx)
+    . uguiMailTheme . ugUI
     $ ug
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal (get ctxmailnoreplyaddress ctx)
-                  (get ctxbrandeddomain ctx)
+  kontramaillocal (ctxMailNoreplyAddress ctx)
+                  (ctxBrandedDomain ctx)
                   theme
                   invited
                   "mailTakeoverSingleUserInvite"
     $ do
         basicUserGroupInviteFields invited inviter ug
-        basicLinkFields (get ctxDomainUrl ctx) link
+        basicLinkFields (ctxDomainUrl ctx) link
         brandingMailFields theme
 
 basicUserGroupInviteFields
@@ -110,7 +110,7 @@ basicUserGroupInviteFields invited inviter ug = do
   F.value "invitedname" $ getFullName invited
   F.value "invitedemail" $ getEmail invited
   F.value "invitername" $ getSmartName inviter
-  F.value "companyname" . get ugName $ ug
+  F.value "companyname" $ ugName ug
 
 basicLinkFields :: TemplatesMonad m => Text -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do
@@ -123,7 +123,7 @@ basicLinkFields hostpart link = do
 pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m) => Context -> UserGroup -> m Text
 pageDoYouWantToBeCompanyAccount ctx ug =
   renderTextTemplate "pageDoYouWantToBeCompanyAccount" $ do
-    F.value "companyname" . get ugName $ ug
+    F.value "companyname" $ ugName ug
     entryPointFields ctx
 -------------------------------------------------------------------------------
 
@@ -131,7 +131,7 @@ flashMessageUserHasBecomeCompanyAccount
   :: (TemplatesMonad m) => UserGroup -> m FlashMessage
 flashMessageUserHasBecomeCompanyAccount ug = toFlashMsg OperationDone <$> renderTemplate
   "flashMessageUserHasBecomeCompanyAccount"
-  (F.value "companyname" . T.unpack . get ugName $ ug)
+  (F.value "companyname" . T.unpack $ ugName ug)
 
 -------------------------------------------------------------------------------
 

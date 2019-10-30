@@ -26,24 +26,24 @@ unjsonUserGroupUIWithCompanyID uid =
 unjsonUserGroupUIFields :: AltF.Ap (FieldDef UserGroupUI) UserGroupUI
 unjsonUserGroupUIFields =
   pure defaultUserGroupUI
-    <**> (    fieldOpt "mailTheme" (get uguiMailTheme) "Id of a mail theme"
-         <**> (pure $ set uguiMailTheme)
+    <**> (    fieldOpt "mailTheme" uguiMailTheme "Id of a mail theme"
+         <**> (pure $ set #uguiMailTheme)
          )
-    <**> (    fieldOpt "signviewTheme" (get uguiSignviewTheme) "Id of a signview theme"
-         <**> (pure $ set uguiSignviewTheme)
+    <**> (    fieldOpt "signviewTheme" uguiSignviewTheme "Id of a signview theme"
+         <**> (pure $ set #uguiSignviewTheme)
          )
-    <**> (    fieldOpt "serviceTheme" (get uguiServiceTheme) "Id of a service theme"
-         <**> (pure $ set uguiServiceTheme)
+    <**> (    fieldOpt "serviceTheme" uguiServiceTheme "Id of a service theme"
+         <**> (pure $ set #uguiServiceTheme)
          )
-    <**> (    fieldOpt "browserTitle" (get uguiBrowserTitle) "Browser title"
-         <**> (pure $ set uguiBrowserTitle)
+    <**> (    fieldOpt "browserTitle" uguiBrowserTitle "Browser title"
+         <**> (pure $ set #uguiBrowserTitle)
          )
-    <**> (    fieldOpt "smsOriginator" (get uguiSmsOriginator) "SMS Originator"
-         <**> (pure $ set uguiSmsOriginator)
+    <**> (    fieldOpt "smsOriginator" uguiSmsOriginator "SMS Originator"
+         <**> (pure $ set #uguiSmsOriginator)
          )
     <**> (    fieldOptBy
              "favicon"
-             (get uguiFavicon)
+             uguiFavicon
              "Favicon"
              (invmap
                (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
@@ -53,5 +53,5 @@ unjsonUserGroupUIFields =
                )
                unjsonDef
              )
-         <**> (pure $ set uguiFavicon)
+         <**> (pure $ set #uguiFavicon)
          )

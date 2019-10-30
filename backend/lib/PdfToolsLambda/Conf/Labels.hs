@@ -1,9 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
-module PdfToolsLambda.Conf.Labels where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module PdfToolsLambda.Conf.Labels () where
 
-import Data.Label (mkLabel)
+import Optics.TH
 
 import PdfToolsLambda.Conf.Internal
 
-mkLabel ''PdfToolsLambdaConf
-mkLabel ''PdfToolsLambdaEnv
+makeFieldLabelsWith noPrefixFieldLabels ''PdfToolsLambdaConf
+makeFieldLabelsWith noPrefixFieldLabels ''PdfToolsLambdaEnv

@@ -166,9 +166,9 @@ stagingTests = [screenshotTests, gtWorkflowTests]
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], identity)
 modifyTestEnv ("--staging-tests" : r) =
-  second (. set teStagingTests True) $ modifyTestEnv r
+  second (. set #teStagingTests True) $ modifyTestEnv r
 modifyTestEnv ("--output-dir" : d : r) =
-  second (. set teOutputDirectory (Just d)) $ modifyTestEnv r
+  second (. set #teOutputDirectory (Just d)) $ modifyTestEnv r
 modifyTestEnv (d : r) = first (d :) $ modifyTestEnv r
 
 
@@ -226,26 +226,26 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
   mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
   mAmazonEnv         <- sequence (s3envFromConfig <$> testAmazonConfig tconf)
   lambdaEnv          <- pdfToolsLambdaEnvFromConf $ testPdfToolsLambdaConf tconf
-  let env = envf $ TestEnvSt { _teConnSource         = cs
-                             , _teStaticConnSource   = staticSource
-                             , _teTransSettings      = defaultTransactionSettings
-                             , _teRNGState           = rng
-                             , _teRunLogger          = RunLogger runLogger
-                             , _teGlobalTemplates    = templates
-                             , _teActiveTests        = active_tests
-                             , _teRejectedDocuments  = rejected_documents
-                             , _teOutputDirectory    = Nothing
-                             , _teStagingTests       = False
-                             , _tePdfToolsLambdaEnv  = lambdaEnv
-                             , _teAmazonS3Env        = mAmazonEnv
-                             , _teFileMemCache       = memcache
-                             , _teRedisConn          = mRedisConn
-                             , _teCronDBConfig       = testDBConfig tconf
-                             , _teCronMonthlyInvoice = testMonthlyInvoiceConf tconf
-                             , _teTestDurations      = test_durations
+  let env = envf $ TestEnvSt { teConnSource         = cs
+                             , teStaticConnSource   = staticSource
+                             , teTransSettings      = defaultTransactionSettings
+                             , teRNGState           = rng
+                             , teRunLogger          = RunLogger runLogger
+                             , teGlobalTemplates    = templates
+                             , teActiveTests        = active_tests
+                             , teRejectedDocuments  = rejected_documents
+                             , teOutputDirectory    = Nothing
+                             , teStagingTests       = False
+                             , tePdfToolsLambdaEnv  = lambdaEnv
+                             , teAmazonS3Env        = mAmazonEnv
+                             , teFileMemCache       = memcache
+                             , teRedisConn          = mRedisConn
+                             , teCronDBConfig       = testDBConfig tconf
+                             , teCronMonthlyInvoice = testMonthlyInvoiceConf tconf
+                             , teTestDurations      = test_durations
                              }
-      ts' = if get teStagingTests env then stagingTests ++ ts else ts
-  case (get teOutputDirectory env) of
+      ts' = if teStagingTests env then stagingTests ++ ts else ts
+  case teOutputDirectory env of
     Nothing -> return ()
     Just d  -> createDirectoryIfMissing True d
   E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do

@@ -22,16 +22,13 @@ guardThatDataRetentionPolicyIsValid drp mParentDRP = do
         , (DocumentError, "idle_doc_timeout_error")
         ]
   forM_ limits $ \(status, param) -> do
-    let limit = fromMaybe 365 $ mParentDRP >>= get (drpIdleDocTimeout status)
-    case get (drpIdleDocTimeout status) drp of
+    let limit = fromMaybe 365 $ mParentDRP >>= view (drpIdleDocTimeout status)
+    case drp ^. drpIdleDocTimeout status of
       Just value | value <= 0 || value > limit ->
         apiError $ requestParameterInvalid param $ "must be between 1 and" <+> showt limit
       _ -> return ()
 
-  when
-      (fmap (get drpImmediateTrash) mParentDRP == Just True && not
-        (get drpImmediateTrash drp)
-      )
+  when (fmap drpImmediateTrash mParentDRP == Just True && not (drpImmediateTrash drp))
     $ apiError
     $ requestParameterInvalid "immediate_trash"
     $ "must be selected as company has selected it"

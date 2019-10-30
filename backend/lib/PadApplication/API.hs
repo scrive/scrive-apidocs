@@ -62,8 +62,8 @@ apiCallGetPadClientTheme = api $ do
   ctx          <- getContext
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ug           <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <- dbQuery $ GetTheme $ fromMaybe (get (bdSignviewTheme . ctxbrandeddomain) ctx)
-                                          (get (uguiSignviewTheme . ugUI) ug)
+  theme <- dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme $ ctxBrandedDomain ctx)
+                                          (uguiSignviewTheme $ ugUI ug)
   simpleAesonResponse $ Unjson.unjsonToJSON'
     (Options { pretty = True, indent = 2, nulls = True })
     unjsonTheme
@@ -74,6 +74,6 @@ apiCallGetPadInfo = V2.api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ugwp         <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
   return $ V2.Ok $ object
-    [ "app_mode" .= (padAppModeText . get ugsPadAppMode . ugwpSettings $ ugwp)
-    , "e_archive_enabled" .= (get ugsPadEarchiveEnabled . ugwpSettings $ ugwp)
+    [ "app_mode" .= padAppModeText (ugsPadAppMode $ ugwpSettings ugwp)
+    , "e_archive_enabled" .= ugsPadEarchiveEnabled (ugwpSettings ugwp)
     ]

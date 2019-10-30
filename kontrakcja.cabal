@@ -74,6 +74,8 @@ common common-stanza
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
+                    , OverloadedLabels
+                    , DataKinds
 
 Library kontrakcja-prelude
 
@@ -84,7 +86,7 @@ Library kontrakcja-prelude
 
   Exposed-Modules:    Prelude
   Build-Depends:      base, cond, exceptions, extra
-                    , fclabels, hpqtypes
+                    , optics, hpqtypes
                     , text, text-show
                     , fields-json
   Default-Language:   Haskell2010
@@ -590,7 +592,7 @@ Library
                , exceptions
                , explicit-exception
                , extra
-               , fclabels
+               , optics
                , fields-json
                , filepath
                , free
@@ -859,7 +861,7 @@ Executable kontrakcja-migrate
                , data-default
                , directory
                , exceptions
-               , fclabels
+               , optics
                , fields-json
                , filepath
                , hpqtypes
@@ -993,7 +995,7 @@ Executable mailing-server
                , ekg-statsd
                , exceptions
                , extra
-               , fclabels
+               , optics
                , fields-json
                , filepath
                , happstack-server
@@ -1106,7 +1108,7 @@ Executable messenger-server
                , ekg-statsd
                , exceptions
                , extra
-               , fclabels
+               , optics
                , fields-json
                , filepath
                , happstack-server
@@ -1346,7 +1348,7 @@ Test-suite kontrakcja-test
                , directory
                , exceptions
                , extra
-               , fclabels
+               , optics
                , fields-json
                , filepath
                , free
@@ -1442,7 +1444,7 @@ Executable localization
                , directory
                , exceptions
                , extra
-               , fclabels
+               , optics
                , filepath
                , happstack-server
                , hpqtypes

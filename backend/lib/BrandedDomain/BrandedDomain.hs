@@ -1,9 +1,8 @@
 module BrandedDomain.BrandedDomain
   (   BrandedDomainID
-    , BrandedDomain
-    , module BrandedDomain.BrandedDomain.Labels
+    , BrandedDomain(..)
   ) where
 
 import BrandedDomain.BrandedDomain.Internal
-import BrandedDomain.BrandedDomain.Labels
+import BrandedDomain.BrandedDomain.Labels ()
 import BrandedDomain.BrandedDomainID

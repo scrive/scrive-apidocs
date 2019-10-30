@@ -52,15 +52,15 @@ resetPasswordMail
   -> KontraLink
   -> m Mail
 resetPasswordMail ctx user setpasslink = do
-  theme <- dbQuery $ GetTheme $ get (bdMailTheme . ctxbrandeddomain) ctx
-  kontramail (get ctxmailnoreplyaddress ctx)
-             (get ctxbrandeddomain ctx)
+  theme <- dbQuery . GetTheme . bdMailTheme $ ctxBrandedDomain ctx
+  kontramail (ctxMailNoreplyAddress ctx)
+             (ctxBrandedDomain ctx)
              theme
              "passwordChangeLinkMail"
     $ do
         F.value "personemail" $ getEmail user
         F.value "passwordlink" $ show setpasslink
-        F.value "ctxhostpart" $ get ctxDomainUrl ctx
+        F.value "ctxhostpart" $ ctxDomainUrl ctx
         brandingMailFields theme
 
 newUserMail
@@ -70,15 +70,15 @@ newUserMail
   -> KontraLink
   -> m Mail
 newUserMail ctx emailaddress activatelink = do
-  theme <- dbQuery $ GetTheme $ get (bdMailTheme . ctxbrandeddomain) ctx
-  kontramail (get ctxmailnoreplyaddress ctx)
-             (get ctxbrandeddomain ctx)
+  theme <- dbQuery $ GetTheme $ bdMailTheme $ ctxBrandedDomain ctx
+  kontramail (ctxMailNoreplyAddress ctx)
+             (ctxBrandedDomain ctx)
              theme
              "newUserMail"
     $ do
         F.value "email" $ emailaddress
         F.value "activatelink" $ show activatelink
-        F.value "ctxhostpart" $ get ctxDomainUrl ctx
+        F.value "ctxhostpart" $ ctxDomainUrl ctx
         brandingMailFields theme
 
 
@@ -90,17 +90,17 @@ mailNewAccountCreatedByAdmin
   -> KontraLink
   -> m Mail
 mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
-  theme <- dbQuery $ GetTheme $ get (bdMailTheme . ctxbrandeddomain) ctx
-  kontramaillocal (get ctxmailnoreplyaddress ctx)
-                  (get ctxbrandeddomain ctx)
+  theme <- dbQuery $ GetTheme $ bdMailTheme $ ctxBrandedDomain ctx
+  kontramaillocal (ctxMailNoreplyAddress ctx)
+                  (ctxBrandedDomain ctx)
                   theme
                   lang
                   "mailNewAccountCreatedByAdmin"
     $ do
         F.value "email" $ email
         F.value "passwordlink" $ show setpasslink
-        F.value "creatorname" $ maybe "" getSmartName (get ctxmaybeuser ctx)
-        F.value "ctxhostpart" $ get ctxDomainUrl ctx
+        F.value "creatorname" $ maybe "" getSmartName (ctxMaybeUser ctx)
+        F.value "ctxhostpart" $ ctxDomainUrl ctx
         brandingMailFields theme
 
 
@@ -113,15 +113,15 @@ mailEmailChangeRequest
   -> KontraLink
   -> m Mail
 mailEmailChangeRequest ctx requestingUser changedUser newemail link = do
-  theme <- dbQuery $ GetTheme $ get (bdMailTheme . ctxbrandeddomain) ctx
-  kontramail (get ctxmailnoreplyaddress ctx)
-             (get ctxbrandeddomain ctx)
+  theme <- dbQuery $ GetTheme $ bdMailTheme $ ctxBrandedDomain ctx
+  kontramail (ctxMailNoreplyAddress ctx)
+             (ctxBrandedDomain ctx)
              theme
              "mailRequestChangeEmail"
     $ do
         F.value "fullname" $ getFullName changedUser
         F.value "newemail" $ unEmail newemail
-        F.value "ctxhostpart" $ get ctxDomainUrl ctx
+        F.value "ctxhostpart" $ ctxDomainUrl ctx
         F.value "link" $ show link
         F.value "requestedby" $ getSmartName <$> requestingUser
         brandingMailFields theme

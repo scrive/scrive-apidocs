@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
-module TestEnvSt.Labels where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module TestEnvSt.Labels () where
 
-import Data.Label (mkLabel)
+import Optics.TH
 
 import TestEnvSt.Internal
 
-mkLabel ''TestEnvSt
-
-mkLabel ''TestEnvStRW
+makeFieldLabelsWith noPrefixFieldLabels ''TestEnvSt
+makeFieldLabelsWith noPrefixFieldLabels ''TestEnvStRW

@@ -15,7 +15,6 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
-import Prelude hiding (get)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as HM
 

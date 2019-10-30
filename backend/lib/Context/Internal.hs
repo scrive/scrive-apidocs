@@ -21,58 +21,58 @@ import User.Email
 import User.Model
 
 data Context = Context
-    { _ctxmaybeuser           :: Maybe User
+    { ctxMaybeUser           :: Maybe User
       -- ^ The logged in user. Is Nothing when there is no one logged in.
-    , _ctxtime                :: UTCTime
+    , ctxTime                :: UTCTime
       -- ^ The time of the request.
-    , _ctxclientname          :: Maybe Text
+    , ctxClientName          :: Maybe Text
       -- ^ Client identification from header Client-Name or if that's
       -- missing: User-Agent.
-    , _ctxclienttime          :: Maybe UTCTime
+    , ctxClientTime          :: Maybe UTCTime
       -- ^ Client-local time when an action was performed
       -- (e.g. signing a document).
-    , _ctxipnumber            :: IPAddress
+    , ctxIpNumber            :: IPAddress
       -- ^ The IP number of the client.
-    , _ctxproduction          :: Bool
+    , ctxProduction          :: Bool
       -- ^ Is this server the production server?
-    , _ctxcdnbaseurl          :: Maybe Text
+    , ctxCdnBaseUrl          :: Maybe Text
       -- ^ CDN base URL if one shouild be used.
-    , _ctxtemplates           :: KontrakcjaTemplates
+    , ctxTemplates           :: KontrakcjaTemplates
       -- ^ The set of templates to render text for the context's language.
-    , _ctxglobaltemplates     :: KontrakcjaGlobalTemplates
+    , ctxGlobalTemplates     :: KontrakcjaGlobalTemplates
       -- ^ All of the templates for all valid languages.
-    , _ctxlang                :: Lang
+    , ctxLang                :: Lang
       -- ^ The current context's language.
-    , _ctxismailbackdooropen  :: Bool
-    , _ctxmailnoreplyaddress  :: Text
+    , ctxIsMailBackdoorOpen  :: Bool
+    , ctxMailNoreplyAddress  :: Text
       -- ^ The "noreply" address used when sending email.
-    , _ctxcgigrpconfig        :: Maybe CgiGrpConfig
-    , _ctxgtconf              :: GuardTimeConf
+    , ctxCgiGrpConfig        :: Maybe CgiGrpConfig
+    , ctxGtConf              :: GuardTimeConf
       -- ^ GuardTime configuration.
-    , _ctxmrediscache         :: Maybe R.Connection
-    , _ctxfilecache           :: FileMemCache
-    , _ctxxtoken              :: MagicHash
+    , ctxRedisCache          :: Maybe R.Connection
+    , ctxFileCache           :: FileMemCache
+    , ctxXToken              :: MagicHash
       -- ^ The XToken for combating CSRF.
-    , _ctxadminaccounts       :: [Email]
-    , _ctxsalesaccounts       :: [Email]
-    , _ctxmaybepaduser        :: Maybe User
+    , ctxAdminAccounts       :: [Email]
+    , ctxSalesAccounts       :: [Email]
+    , ctxMaybePadUser        :: Maybe User
       -- ^ If we are logged in to the pad view.
-    , _ctxusehttps            :: Bool
-    , _ctxsessionid           :: SessionID
-    , _ctxtrackjstoken        :: Maybe Text
-    , _ctxzendeskkey          :: Maybe Text
-    , _ctxmixpaneltoken       :: Maybe Text
-    , _ctxgatoken             :: Maybe Text
-    , _ctxhubspotconf         :: Maybe HubSpotConf
-    , _ctxbrandeddomain       :: BrandedDomain
-    , _ctxsalesforceconf      :: Maybe SalesforceConf
-    , _ctxnetsconfig          :: Maybe NetsConfig
-    , _ctxisapilogenabled     :: Bool
-    , _ctxnetssignconfig      :: Maybe NetsSignConfig
-    , _ctxpdftoolslambdaenv   :: PdfToolsLambdaEnv
-    , _ctxpasswordserviceconf :: PasswordServiceConf
-    , _ctxeidserviceconf      :: Maybe EIDServiceConf
-    , _ctxmaybeapiuser        :: Maybe User
+    , ctxUseHttps            :: Bool
+    , ctxSessionID           :: SessionID
+    , ctxTrackJsToken        :: Maybe Text
+    , ctxZendeskKey          :: Maybe Text
+    , ctxMixpanelToken       :: Maybe Text
+    , ctxGaToken             :: Maybe Text
+    , ctxHubspotConf         :: Maybe HubSpotConf
+    , ctxBrandedDomain       :: BrandedDomain
+    , ctxSalesforceConf      :: Maybe SalesforceConf
+    , ctxNetsConfig          :: Maybe NetsConfig
+    , ctxIsApiLogEnabled     :: Bool
+    , ctxNetsSignConfig      :: Maybe NetsSignConfig
+    , ctxPdfToolsLambdaEnv   :: PdfToolsLambdaEnv
+    , ctxPasswordServiceConf :: PasswordServiceConf
+    , ctxEidServiceConf      :: Maybe EIDServiceConf
+    , ctxMaybeApiUser        :: Maybe User
     -- ^ The user which was effectively used for API call (this
     -- includes api/frontend) This might be the user from session, if
     -- the OAuth authorization was missing.
@@ -82,8 +82,8 @@ data Context = Context
 -- hold any user credentials.  Use this if your action requires
 -- different form of authentication.
 anonymiseContext :: Context -> Context
-anonymiseContext ctx = ctx { _ctxmaybeuser    = Nothing
-                           , _ctxmaybepaduser = Nothing
-                           , _ctxmaybeapiuser = Nothing
-                           , _ctxsessionid    = SessionID.tempSessionID
+anonymiseContext ctx = ctx { ctxMaybeUser    = Nothing
+                           , ctxMaybePadUser = Nothing
+                           , ctxMaybeApiUser = Nothing
+                           , ctxSessionID    = SessionID.tempSessionID
                            }

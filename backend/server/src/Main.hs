@@ -162,23 +162,23 @@ initDatabaseEntries appConf = do
         ug       <-
           dbUpdate
           . UserGroupCreate
-          . set ugHomeFolderID (Just $ get folderID ugFolder)
+          . set #ugHomeFolderID (Just $ folderID ugFolder)
           $ defaultUserGroup
         userFolder <-
           dbUpdate
           . FolderCreate
-          . set folderParentID (Just $ get folderID ugFolder)
+          . set #folderParentID (Just $ folderID ugFolder)
           $ defaultFolder
         void $ dbUpdate $ AddUser ("", "")
                                   (unEmail email)
                                   (Just passwd)
-                                  (get ugID ug, Just $ get folderID userFolder, True)
+                                  (ugID ug, Just $ folderID userFolder, True)
                                   LANG_EN
-                                  (get bdid bd)
+                                  (bdid bd)
                                   ByAdmin
-        let features = fromJust $ get ugFeatures ug
+        let features = fromJust $ ugFeatures ug
         -- enable everything for initial admins
-        let adminFeatures = (fromJust $ get ugFeatures ug)
+        let adminFeatures = (fromJust $ ugFeatures ug)
               { fAdminUsers = (fAdminUsers features) { ffCanUseDKAuthenticationToView = True
                                                      , ffCanUseDKAuthenticationToSign = True
                                                      , ffCanUseFIAuthenticationToView = True
@@ -190,7 +190,7 @@ initDatabaseEntries appConf = do
               }
         dbUpdate
           . UserGroupUpdate
-          . set ugInvoicing (Invoice EnterprisePlan)
-          . set ugFeatures  (Just adminFeatures)
+          . set #ugInvoicing (Invoice EnterprisePlan)
+          . set #ugFeatures  (Just adminFeatures)
           $ ug
       Just _ -> return () -- user exist, do not add it

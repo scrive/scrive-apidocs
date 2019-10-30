@@ -55,7 +55,7 @@ folderAPICreate = api $ do
   fdrIn <- case updateFolderWithFolderFromRequest defaultFolder fdru of
     Nothing            -> apiError $ requestFailed "Error parsing folder create object."
     Just folderUpdated -> return folderUpdated
-  fdrOut <- case get folderParentID fdrIn of
+  fdrOut <- case folderParentID fdrIn of
     Nothing -> do
       -- guard against non-admins being able to create root folders
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
@@ -93,8 +93,8 @@ folderAPIUpdate fid = api $ do
       fdrNew  <- case updateFolderWithFolderFromRequest fdrDB fdrfuin of
         Nothing -> apiError $ requestFailed "Error parsing folder update object."
         Just folderUpdated -> return folderUpdated
-      let mtoParentID   = get folderParentID fdrNew
-          mfromParentID = get folderParentID fdrDB
+      let mtoParentID   = folderParentID fdrNew
+          mfromParentID = folderParentID fdrDB
           accParents    = if (mfromParentID == mtoParentID)
                           -- child is remaining in same place. no special privileges needed
             then []
@@ -119,7 +119,7 @@ folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
   apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
     fdr <- folderOrAPIError fid
-    let isRootFolder = isNothing . _folderParentID $ fdr
+    let isRootFolder = isNothing . folderParentID $ fdr
     when isRootFolder
       $
       -- cf. `userGroupApiV2Delete`

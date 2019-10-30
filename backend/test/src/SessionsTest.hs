@@ -110,11 +110,11 @@ testCustomSessionTimeout = do
   (user, userGroup) <- createTestUser
 
   let userId      = userid user
-      userGroupId = get ugID userGroup
-  groupSettings1 <- assertJustAndExtract $ get ugSettings userGroup
+      userGroupId = ugID userGroup
+  groupSettings1 <- assertJustAndExtract $ ugSettings userGroup
 
   assertEqual "initial group session timeout should be nothing"
-              (get ugsSessionTimeoutSecs groupSettings1)
+              (ugsSessionTimeoutSecs groupSettings1)
               Nothing
 
   do
@@ -124,7 +124,7 @@ testCustomSessionTimeout = do
     -- Test a long session timeout of 7 days
     let sessionTimeout = 7 * 24 * 60 * 60
 
-    let groupSettings2 = set ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings1
+    let groupSettings2 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings1
     dbUpdate $ UserGroupUpdateSettings userGroupId (Just groupSettings2)
 
     (session1, _) <- insertNewSession userId
@@ -151,7 +151,7 @@ testCustomSessionTimeout = do
 
     setTestTime time1
 
-    let groupSettings2 = set ugsSessionTimeoutSecs Nothing groupSettings1
+    let groupSettings2 = set #ugsSessionTimeoutSecs Nothing groupSettings1
     dbUpdate $ UserGroupUpdateSettings userGroupId (Just groupSettings2)
 
     (session2, _) <- insertNewSession userId
@@ -203,12 +203,12 @@ testCustomSessionTimeoutDelay = do
   (user, userGroup) <- createTestUser
 
   let userId                = userid user
-      userGroupId           = get ugID userGroup
-      (Just groupSettings1) = get ugSettings userGroup
+      userGroupId           = ugID userGroup
+      (Just groupSettings1) = ugSettings userGroup
       sessionTimeout        = 15 * 60  -- test 15 mins session timout
 
   do
-    let groupSettings2 = set ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings1
+    let groupSettings2 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings1
     dbUpdate $ UserGroupUpdateSettings userGroupId (Just groupSettings2)
 
   (session, _) <- insertNewSession userId
@@ -231,28 +231,27 @@ testCustomSessionTimeoutDelay = do
 testCustomSessionTimeoutInheritance :: TestEnv ()
 testCustomSessionTimeoutInheritance = do
   userGroup11 :: UserGroupRoot <- rand 10 arbitrary
-  let groupSettings11 = _ugrSettings userGroup11
+  let groupSettings11 = ugrSettings userGroup11
 
       sessionTimeout  = 7 * 24 * 60 * 60
-      groupSettings12 = set ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings11
-      userGroup12     = set ugSettings (Just groupSettings12) $ ugFromUGRoot userGroup11
+      groupSettings12 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings11
+      userGroup12     = set #ugSettings (Just groupSettings12) $ ugFromUGRoot userGroup11
 
   userGroup13              <- dbUpdate $ UserGroupCreate userGroup12
 
   userGroup21 :: UserGroup <- rand 10 arbitrary
-  let userGroup22 =
-        set ugParentGroupID (Just $ get ugID userGroup13)
-          $ set ugSettings Nothing
-          $ userGroup21
+  let userGroup22 = userGroup21
+        { ugParentGroupID = Just $ ugID userGroup13
+        , ugSettings = Nothing
+        }
   userGroup23 <- dbUpdate $ UserGroupCreate userGroup22
 
-  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $ get
-    ugID
+  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $ ugID
     userGroup23
 
   let groupSettings2            = ugwpSettings <$> userGroup24
 
-  let timeoutVal :: Maybe Int32 = join $ get ugsSessionTimeoutSecs <$> groupSettings2
+  let timeoutVal :: Maybe Int32 = ugsSessionTimeoutSecs =<< groupSettings2
 
   assertEqual "session timeout value should be inherited from parent user group"
               (Just sessionTimeout)
@@ -263,7 +262,7 @@ testCustomSessionTimeoutInheritance = do
     setTestTime time1
 
     (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com"
-      $ get ugID userGroup23
+      $ ugID userGroup23
 
     let userId = userid user
     (session1, _) <- insertNewSession userId
@@ -289,7 +288,7 @@ testDocumentTicketInsertion = replicateM_ 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
   runSQL_
     $   "SELECT COUNT(*) FROM document_session_tokens WHERE session_id ="
-    <?> get ctxsessionid ctx
+    <?> ctxSessionID ctx
   tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
 
@@ -358,7 +357,7 @@ addDocumentAndInsertToken = do
       sid  <- getNonTempSessionID
       dbUpdate $ AddDocumentSession sid (signatorylinkid asl)
       ctx' <- getContext
-      updateSession sess (get ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
+      updateSession sess (ctxSessionID ctx') (sesUserID sess) (sesPadUserID sess)
   return (author, doc, ctx)
 
 addCgiGrpTransaction :: TestEnv (Maybe CgiGrpTransaction, Context)
@@ -368,9 +367,9 @@ addCgiGrpTransaction = do
   trans_ <- rand 20 arbitrary
   let trans = case trans_ of
         (CgiGrpAuthTransaction _ tid orf _) ->
-          CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ get ctxsessionid ctx
+          CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ ctxSessionID ctx
         (CgiGrpSignTransaction _ tbs tid orf _) ->
-          CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ get ctxsessionid ctx
+          CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ ctxSessionID ctx
   rq <- mkRequest GET []
   runTestKontra rq ctx $ do
     dbUpdate $ MergeCgiGrpTransaction trans
@@ -387,8 +386,8 @@ createTestUser = do
   Just user <- createNewUser ("Andrzej", "Rybczak")
                              "andrzej@scrive.com"
                              (Just pwd)
-                             (get ugID ug, True)
+                             (ugID ug, True)
                              defaultLang
-                             (get bdid bd)
+                             (bdid bd)
                              AccountRequest
   return $ (user, ug)

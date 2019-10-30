@@ -253,14 +253,14 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
       UserSettings
         { lang                = lang
         , dataretentionpolicy = DataRetentionPolicy
-                                  { _drpIdleDocTimeoutPreparation =
+                                  { drpIdleDocTimeoutPreparation =
                                     idle_doc_timeout_preparation
-                                  , _drpIdleDocTimeoutClosed = idle_doc_timeout_closed
-                                  , _drpIdleDocTimeoutCanceled = idle_doc_timeout_canceled
-                                  , _drpIdleDocTimeoutTimedout = idle_doc_timeout_timedout
-                                  , _drpIdleDocTimeoutRejected = idle_doc_timeout_rejected
-                                  , _drpIdleDocTimeoutError = idle_doc_timeout_error
-                                  , _drpImmediateTrash = immediate_trash
+                                  , drpIdleDocTimeoutClosed = idle_doc_timeout_closed
+                                  , drpIdleDocTimeoutCanceled = idle_doc_timeout_canceled
+                                  , drpIdleDocTimeoutTimedout = idle_doc_timeout_timedout
+                                  , drpIdleDocTimeoutRejected = idle_doc_timeout_rejected
+                                  , drpIdleDocTimeoutError = idle_doc_timeout_error
+                                  , drpImmediateTrash = immediate_trash
                                   }
         }
     , userassociateddomainid = associated_domain_id
@@ -326,13 +326,13 @@ fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspe
           { lang                = lang
           , dataretentionpolicy =
             DataRetentionPolicy
-              { _drpIdleDocTimeoutPreparation = idle_doc_timeout_preparation
-              , _drpIdleDocTimeoutClosed      = idle_doc_timeout_closed
-              , _drpIdleDocTimeoutCanceled    = idle_doc_timeout_canceled
-              , _drpIdleDocTimeoutTimedout    = idle_doc_timeout_timedout
-              , _drpIdleDocTimeoutRejected    = idle_doc_timeout_rejected
-              , _drpIdleDocTimeoutError       = idle_doc_timeout_error
-              , _drpImmediateTrash            = immediate_trash
+              { drpIdleDocTimeoutPreparation = idle_doc_timeout_preparation
+              , drpIdleDocTimeoutClosed      = idle_doc_timeout_closed
+              , drpIdleDocTimeoutCanceled    = idle_doc_timeout_canceled
+              , drpIdleDocTimeoutTimedout    = idle_doc_timeout_timedout
+              , drpIdleDocTimeoutRejected    = idle_doc_timeout_rejected
+              , drpIdleDocTimeoutError       = idle_doc_timeout_error
+              , drpImmediateTrash            = immediate_trash
               }
           }
       , userassociateddomainid = associated_domain_id

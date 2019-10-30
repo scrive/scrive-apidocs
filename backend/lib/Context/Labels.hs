@@ -1,8 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Context.Labels where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module Context.Labels () where
 
-import Data.Label
+import Optics.TH
 
 import Context.Internal
 
-mkLabel ''Context
+makeFieldLabelsWith noPrefixFieldLabels ''Context

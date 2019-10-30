@@ -22,26 +22,26 @@ import DB
 import Log.Identifier
 
 data Folder = Folder
-  { _folderID       :: !FolderID
-  , _folderParentID :: !(Maybe FolderID)
-  , _folderName     :: !Text
+  { folderID       :: !FolderID
+  , folderParentID :: !(Maybe FolderID)
+  , folderName     :: !Text
   } deriving (Show, Eq)
 
 -- Folder and all its children down to the bottom
 data FolderWithChildren = FolderWithChildren
-  { _fwcFolder :: Folder
-  , _fwcChildren :: [FolderWithChildren]
+  { fwcFolder :: Folder
+  , fwcChildren :: [FolderWithChildren]
   }
 
 fwcToList :: FolderWithChildren -> [Folder]
-fwcToList fwc = _fwcFolder fwc : concatMap fwcToList (_fwcChildren fwc)
+fwcToList fwc = fwcFolder fwc : concatMap fwcToList (fwcChildren fwc)
 
 fetchFolder :: (FolderID, Maybe FolderID, Text) -> Folder
-fetchFolder (_folderID, _folderParentID, _folderName) = Folder { .. }
+fetchFolder (folderID, folderParentID, folderName) = Folder { .. }
 
 defaultFolder :: Folder
 defaultFolder =
-  Folder { _folderID = emptyFolderID, _folderParentID = Nothing, _folderName = "" }
+  Folder { folderID = emptyFolderID, folderParentID = Nothing, folderName = "" }
 
 newtype FolderID = FolderID Int64
   deriving (Eq, Ord)

@@ -101,7 +101,7 @@ docApiV2New = api $ do
     _               -> do
       ctx   <- getContext
       title <- renderTemplate_ "newDocumentTitle"
-      return $ title <> " " <> formatTimeSimple (get ctxtime ctx)
+      return $ title <> " " <> formatTimeSimple (ctxTime ctx)
   whenJust mFolderId guardDocumentCreateInFolderIsAllowed
   ( dbUpdate
     $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor mFolderId
@@ -212,7 +212,7 @@ docApiV2Start did = logDocument did . api $ do
     guardThatDocumentCanBeStarted =<< theDocument
     -- Parameters
     authorSignsNow <- apiV2ParameterDefault False (ApiV2ParameterBool "author_signs_now")
-    t              <- get ctxtime <$> getContext
+    t              <- ctxTime <$> getContext
     timezone       <- documenttimezonename <$> theDocument
     clearDocFields actor
     dbUpdate $ PreparationToPending actor timezone
@@ -226,7 +226,7 @@ docApiV2Start did = logDocument did . api $ do
 docApiV2StartWithPortal :: Kontrakcja m => m Response
 docApiV2StartWithPortal = api $ do
   -- Permissions
-  time <- get ctxtime <$> getContext
+  time <- ctxTime <$> getContext
   (user, actor) <- getAPIUser APIDocSend
   dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
   when (length dids > 20) . apiError $ requestParameterInvalid
@@ -252,7 +252,7 @@ docApiV2StartWithPortal = api $ do
     return =<< theDocument -- return changed
 
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
-  case get ugsPortalUrl (ugwpSettings ugwp) of
+  case ugsPortalUrl (ugwpSettings ugwp) of
     Just portalUrl -> do
       sendPortalInvites user portalUrl docs
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
@@ -440,7 +440,7 @@ docApiV2RemindWithPortal = api $ do
     return =<< theDocument -- return changed
 
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
-  case get ugsPortalUrl (ugwpSettings ugwp) of
+  case ugsPortalUrl (ugwpSettings ugwp) of
     Just portalUrl -> do
       forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs)
         $ \(email, name) -> sendPortalReminder user portalUrl email name
@@ -645,7 +645,7 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
       Just d  -> do
         ctx <- getContext
         tot <- documenttimeouttime <$> theDocument
-        if d < 1 || (isJust tot && d `daysAfter` (get ctxtime ctx) > fromJust tot)
+        if d < 1 || (isJust tot && d `daysAfter` (ctxTime ctx) > fromJust tot)
           then apiError $ requestParameterInvalid
             "days"
             "Must be a number between 1 and the number of days left to sign"

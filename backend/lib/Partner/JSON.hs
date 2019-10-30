@@ -184,13 +184,13 @@ userGroupToUserGroupForUpdate :: UserGroupWithParents -> UserGroupForUpdate
 userGroupToUserGroupForUpdate ugwp =
   let ug         = ugwpUG ugwp
       ug_address = ugwpAddress ugwp
-  in  UserGroupForUpdate { uguUserGroupID      = showt $ get ugID ug
-                         , uguUserGroupName    = get ugName ug
-                         , uguUserGroupNumber  = get ugaCompanyNumber ug_address
-                         , uguUserGroupAddress = get ugaAddress ug_address
-                         , uguUserGroupZip     = get ugaZip ug_address
-                         , uguUserGroupCity    = get ugaCity ug_address
-                         , uguUserGroupCountry = get ugaCountry ug_address
+  in  UserGroupForUpdate { uguUserGroupID      = showt $ ugID ug
+                         , uguUserGroupName    = ugName ug
+                         , uguUserGroupNumber  = ugaCompanyNumber ug_address
+                         , uguUserGroupAddress = ugaAddress ug_address
+                         , uguUserGroupZip     = ugaZip ug_address
+                         , uguUserGroupCity    = ugaCity ug_address
+                         , uguUserGroupCountry = ugaCountry ug_address
                          }
 
 -- This is intended for PartnerAPI only. We compare the set values with
@@ -200,18 +200,18 @@ updateUserGroupWithUserGroupForUpdate
 updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
   let ug          = ugwpUG ugwp
       old_address = ugwpAddress ugwp
-      new_address = UserGroupAddress { _ugaCompanyNumber = uguUserGroupNumber
-                                     , _ugaEntityName    = uguUserGroupName
-                                     , _ugaAddress       = uguUserGroupAddress
-                                     , _ugaZip           = uguUserGroupZip
-                                     , _ugaCity          = uguUserGroupCity
-                                     , _ugaCountry       = uguUserGroupCountry
+      new_address = UserGroupAddress { ugaCompanyNumber = uguUserGroupNumber
+                                     , ugaEntityName    = uguUserGroupName
+                                     , ugaAddress       = uguUserGroupAddress
+                                     , ugaZip           = uguUserGroupZip
+                                     , ugaCity          = uguUserGroupCity
+                                     , ugaCountry       = uguUserGroupCountry
                                      }
       -- don't stop inheriting address, unless it has been changed
       updateAddress = case new_address == old_address of
         True  -> identity
-        False -> set ugAddress $ Just new_address
-  in  set ugName uguUserGroupName . updateAddress $ ug
+        False -> set #ugAddress $ Just new_address
+  in set #ugName uguUserGroupName . updateAddress $ ug
 
 -------------------------------------------------------------------------------
 -- Utils                                                                    ---

@@ -62,30 +62,30 @@ import UserGroup.Tables
 import UserGroup.Types.PaymentPlan
 
 data UserGroup = UserGroup {
-    _ugID            :: UserGroupID
-  , _ugParentGroupID :: Maybe UserGroupID
-  , _ugName          :: Text
+    ugID            :: UserGroupID
+  , ugParentGroupID :: Maybe UserGroupID
+  , ugName          :: Text
   -- Folder, where home folders are created for new users
   -- it is a Maybe for slow migration purposes after that
   -- the Maybe will be removed
   -- The Maybe can be re-introduced, when we implement home folder inheritance
-  , _ugHomeFolderID  :: Maybe FolderID
-  , _ugAddress       :: Maybe UserGroupAddress
-  , _ugSettings      :: Maybe UserGroupSettings
-  , _ugInvoicing     :: UserGroupInvoicing
-  , _ugUI            :: UserGroupUI
-  , _ugFeatures      :: Maybe Features
+  , ugHomeFolderID  :: Maybe FolderID
+  , ugAddress       :: Maybe UserGroupAddress
+  , ugSettings      :: Maybe UserGroupSettings
+  , ugInvoicing     :: UserGroupInvoicing
+  , ugUI            :: UserGroupUI
+  , ugFeatures      :: Maybe Features
   } deriving (Show, Eq)
 
 data UserGroupRoot = UserGroupRoot
-  { _ugrID            :: UserGroupID
-  , _ugrName          :: Text
-  , _ugrHomeFolderID  :: Maybe FolderID
-  , _ugrAddress       :: UserGroupAddress
-  , _ugrSettings      :: UserGroupSettings
-  , _ugrPaymentPlan   :: PaymentPlan  -- user group root always must have Invoice
-  , _ugrUI            :: UserGroupUI
-  , _ugrFeatures      :: Features
+  { ugrID            :: UserGroupID
+  , ugrName          :: Text
+  , ugrHomeFolderID  :: Maybe FolderID
+  , ugrAddress       :: UserGroupAddress
+  , ugrSettings      :: UserGroupSettings
+  , ugrPaymentPlan   :: PaymentPlan  -- user group root always must have Invoice
+  , ugrUI            :: UserGroupUI
+  , ugrFeatures      :: Features
   } deriving (Show, Eq)
 
 -- UserGroup list is ordered from Leaf to Child of Root)
@@ -93,31 +93,31 @@ type UserGroupWithParents = (UserGroupRoot, [UserGroup])
 
 -- UserGroup and all its children down to the bottom
 data UserGroupWithChildren = UserGroupWithChildren
-  { _ugwcGroup :: UserGroup
-  , _ugwcChildren :: [UserGroupWithChildren]
+  { ugwcGroup :: UserGroup
+  , ugwcChildren :: [UserGroupWithChildren]
   } deriving (Eq, Show)
 
 defaultUserGroup :: UserGroup
-defaultUserGroup = ugFromUGRoot $ UserGroupRoot { _ugrID = emptyUserGroupID
-                                                , _ugrName = ""
-                                                , _ugrHomeFolderID = Nothing
-                                                , _ugrSettings = defaultUserGroupSettings
-                                                , _ugrPaymentPlan = FreePlan
-                                                , _ugrAddress = defaultUserGroupAddress
-                                                , _ugrUI = defaultUserGroupUI
-                                                , _ugrFeatures = defaultFeatures FreePlan
+defaultUserGroup = ugFromUGRoot $ UserGroupRoot { ugrID = emptyUserGroupID
+                                                , ugrName = ""
+                                                , ugrHomeFolderID = Nothing
+                                                , ugrSettings = defaultUserGroupSettings
+                                                , ugrPaymentPlan = FreePlan
+                                                , ugrAddress = defaultUserGroupAddress
+                                                , ugrUI = defaultUserGroupUI
+                                                , ugrFeatures = defaultFeatures FreePlan
                                                 }
 
 defaultChildUserGroup :: UserGroup
-defaultChildUserGroup = UserGroup { _ugID            = emptyUserGroupID
-                                  , _ugParentGroupID = Nothing
-                                  , _ugName          = ""
-                                  , _ugHomeFolderID  = Nothing
-                                  , _ugSettings      = Nothing
-                                  , _ugInvoicing     = None
-                                  , _ugAddress       = Nothing
-                                  , _ugUI            = defaultUserGroupUI
-                                  , _ugFeatures      = Nothing
+defaultChildUserGroup = UserGroup { ugID            = emptyUserGroupID
+                                  , ugParentGroupID = Nothing
+                                  , ugName          = ""
+                                  , ugHomeFolderID  = Nothing
+                                  , ugSettings      = Nothing
+                                  , ugInvoicing     = None
+                                  , ugAddress       = Nothing
+                                  , ugUI            = defaultUserGroupUI
+                                  , ugFeatures      = Nothing
                                   }
 
 data UserGroupInvoicing =
@@ -133,72 +133,72 @@ data InvoicingType =
   deriving (Eq, Ord)
 
 data UserGroupSettings = UserGroupSettings
-  { _ugsIPAddressMaskList         :: [IPAddressWithMask]
-  , _ugsDataRetentionPolicy       :: DataRetentionPolicy
-  , _ugsCGIDisplayName            :: Maybe Text
-  , _ugsCGIServiceID              :: Maybe Text
-  , _ugsSMSProvider               :: SMSProvider
-  , _ugsPadAppMode                :: PadAppMode
-  , _ugsPadEarchiveEnabled        :: Bool
-  , _ugsLegalText                 :: Bool
-  , _ugsRequireBPIDForNewDoc      :: Bool
-  , _ugsSendTimeoutNotification   :: Bool
-  , _ugsTotpIsMandatory           :: Bool
-  , _ugsSessionTimeoutSecs        :: Maybe Int32
-  , _ugsPortalUrl                 :: Maybe Text
+  { ugsIPAddressMaskList         :: [IPAddressWithMask]
+  , ugsDataRetentionPolicy       :: DataRetentionPolicy
+  , ugsCGIDisplayName            :: Maybe Text
+  , ugsCGIServiceID              :: Maybe Text
+  , ugsSMSProvider               :: SMSProvider
+  , ugsPadAppMode                :: PadAppMode
+  , ugsPadEarchiveEnabled        :: Bool
+  , ugsLegalText                 :: Bool
+  , ugsRequireBPIDForNewDoc      :: Bool
+  , ugsSendTimeoutNotification   :: Bool
+  , ugsTotpIsMandatory           :: Bool
+  , ugsSessionTimeoutSecs        :: Maybe Int32
+  , ugsPortalUrl                 :: Maybe Text
   } deriving (Show, Eq)
 
 defaultUserGroupSettings :: UserGroupSettings
 defaultUserGroupSettings = UserGroupSettings
-  { _ugsIPAddressMaskList       = []
-  , _ugsDataRetentionPolicy     = defaultDataRetentionPolicy
-  , _ugsCGIDisplayName          = Nothing
-  , _ugsCGIServiceID            = Nothing
-  , _ugsSMSProvider             = SMSDefault
-  , _ugsPadAppMode              = ListView
-  , _ugsPadEarchiveEnabled      = True
-  , _ugsLegalText               = False
-  , _ugsRequireBPIDForNewDoc    = False
-  , _ugsSendTimeoutNotification = False
-  , _ugsTotpIsMandatory         = False
-  , _ugsSessionTimeoutSecs      = Nothing
-  , _ugsPortalUrl               = Nothing
+  { ugsIPAddressMaskList       = []
+  , ugsDataRetentionPolicy     = defaultDataRetentionPolicy
+  , ugsCGIDisplayName          = Nothing
+  , ugsCGIServiceID            = Nothing
+  , ugsSMSProvider             = SMSDefault
+  , ugsPadAppMode              = ListView
+  , ugsPadEarchiveEnabled      = True
+  , ugsLegalText               = False
+  , ugsRequireBPIDForNewDoc    = False
+  , ugsSendTimeoutNotification = False
+  , ugsTotpIsMandatory         = False
+  , ugsSessionTimeoutSecs      = Nothing
+  , ugsPortalUrl               = Nothing
   }
 
 data UserGroupUI = UserGroupUI
-  { _uguiMailTheme     :: !(Maybe ThemeID)
-  , _uguiSignviewTheme :: !(Maybe ThemeID)
-  , _uguiServiceTheme  :: !(Maybe ThemeID)
-  , _uguiBrowserTitle  :: !(Maybe Text)
-  , _uguiSmsOriginator :: !(Maybe Text)
-  , _uguiFavicon       :: !(Maybe BS.ByteString)
+  { uguiMailTheme     :: !(Maybe ThemeID)
+  , uguiSignviewTheme :: !(Maybe ThemeID)
+  , uguiServiceTheme  :: !(Maybe ThemeID)
+  , uguiBrowserTitle  :: !(Maybe Text)
+  , uguiSmsOriginator :: !(Maybe Text)
+  , uguiFavicon       :: !(Maybe BS.ByteString)
   } deriving (Eq, Ord, Show)
 
 defaultUserGroupUI :: UserGroupUI
-defaultUserGroupUI = UserGroupUI { _uguiMailTheme     = Nothing
-                                 , _uguiSignviewTheme = Nothing
-                                 , _uguiServiceTheme  = Nothing
-                                 , _uguiBrowserTitle  = Nothing
-                                 , _uguiSmsOriginator = Nothing
-                                 , _uguiFavicon       = Nothing
+defaultUserGroupUI = UserGroupUI { uguiMailTheme     = Nothing
+                                 , uguiSignviewTheme = Nothing
+                                 , uguiServiceTheme  = Nothing
+                                 , uguiBrowserTitle  = Nothing
+                                 , uguiSmsOriginator = Nothing
+                                 , uguiFavicon       = Nothing
                                  }
 
 data UserGroupAddress = UserGroupAddress
-  { _ugaCompanyNumber :: Text
-  , _ugaEntityName    :: Text
-  , _ugaAddress       :: Text
-  , _ugaZip           :: Text
-  , _ugaCity          :: Text
-  , _ugaCountry       :: Text
+  { ugaCompanyNumber :: Text
+  , ugaEntityName    :: Text
+  , ugaAddress       :: Text
+  , ugaZip           :: Text
+  , ugaCity          :: Text
+  , ugaCountry       :: Text
   } deriving (Eq, Ord, Show)
 
 defaultUserGroupAddress :: UserGroupAddress
-defaultUserGroupAddress = UserGroupAddress { _ugaCompanyNumber = ""
-                                           , _ugaEntityName    = ""
-                                           , _ugaAddress       = ""
-                                           , _ugaZip           = ""
-                                           , _ugaCity          = ""
-                                           , _ugaCountry       = ""
+defaultUserGroupAddress = UserGroupAddress { ugaCompanyNumber = ""
+                                           , ugaEntityName    = ""
+                                           , ugaAddress       = ""
+                                           , ugaZip           = ""
+                                           , ugaCity          = ""
+                                           , ugaCountry       = ""
                                            }
 
 -- INVOICING
@@ -240,13 +240,13 @@ instance Unjson InvoicingType where
     unjsonDef
 
 ugInvoicingType :: UserGroup -> InvoicingType
-ugInvoicingType ug = case _ugInvoicing ug of
+ugInvoicingType ug = case ugInvoicing ug of
   None         -> InvoicingTypeNone
   (BillItem _) -> InvoicingTypeBillItem
   (Invoice  _) -> InvoicingTypeInvoice
 
 ugPaymentPlan :: UserGroup -> Maybe PaymentPlan
-ugPaymentPlan ug = case _ugInvoicing ug of
+ugPaymentPlan ug = case ugInvoicing ug of
   None           -> Nothing
   (BillItem mpp) -> mpp
   (Invoice  pp ) -> Just pp
@@ -278,13 +278,13 @@ fetchUserGroup
      , Maybe (Composite FeatureFlags)
      )  -- for regular users
   -> UserGroup
-fetchUserGroup (_ugID, _ugParentGroupID, _ugName, _ugHomeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags)
+fetchUserGroup (ugID, ugParentGroupID, ugName, ugHomeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags)
   = UserGroup
-    { _ugSettings  = unComposite <$> cinfos
-    , _ugInvoicing = unComposite cinvoicing
-    , _ugAddress   = unComposite <$> caddresses
-    , _ugUI        = unComposite cuis
-    , _ugFeatures  = Features
+    { ugSettings  = unComposite <$> cinfos
+    , ugInvoicing = unComposite cinvoicing
+    , ugAddress   = unComposite <$> caddresses
+    , ugUI        = unComposite cuis
+    , ugFeatures  = Features
       <$> (unComposite <$> cAdminFeatureFlags)
       <*> (unComposite <$> cRegularFeatureFlags)
     , ..
@@ -296,31 +296,31 @@ ugrFromUG :: UserGroup -> Maybe UserGroupRoot
 ugrFromUG ug = do
   -- the root of usergroup tree must have Invoice, Settings, Address, UI
   -- and Feature Flags
-  _ugrPaymentPlan <- case _ugInvoicing ug of
+  ugrPaymentPlan <- case ugInvoicing ug of
     None        -> Nothing
     BillItem _  -> Nothing         -- the root of usergroup tree must have:
     Invoice  pp -> Just pp         --   Invoice
-  _ugrSettings <- _ugSettings ug  --   Settings
-  _ugrAddress  <- _ugAddress ug    --   Address
-  _ugrFeatures <- _ugFeatures ug  --   Features
+  ugrSettings <- ugSettings ug  --   Settings
+  ugrAddress  <- ugAddress ug    --   Address
+  ugrFeatures <- ugFeatures ug  --   Features
   return $ UserGroupRoot
-    { _ugrID           = _ugID ug
-    , _ugrName         = _ugName ug
-    , _ugrHomeFolderID = _ugHomeFolderID ug
-    , _ugrUI           = _ugUI ug
+    { ugrID           = ugID ug
+    , ugrName         = ugName ug
+    , ugrHomeFolderID = ugHomeFolderID ug
+    , ugrUI           = ugUI ug
     , ..
     }
 
 ugFromUGRoot :: UserGroupRoot -> UserGroup
-ugFromUGRoot ugr = UserGroup { _ugID            = _ugrID ugr
-                             , _ugName          = _ugrName ugr
-                             , _ugHomeFolderID  = _ugrHomeFolderID ugr
-                             , _ugParentGroupID = Nothing
-                             , _ugInvoicing     = Invoice . _ugrPaymentPlan $ ugr
-                             , _ugSettings      = Just $ _ugrSettings ugr
-                             , _ugAddress       = Just $ _ugrAddress ugr
-                             , _ugUI            = _ugrUI ugr
-                             , _ugFeatures      = Just $ _ugrFeatures ugr
+ugFromUGRoot ugr = UserGroup { ugID            = ugrID ugr
+                             , ugName          = ugrName ugr
+                             , ugHomeFolderID  = ugrHomeFolderID ugr
+                             , ugParentGroupID = Nothing
+                             , ugInvoicing     = Invoice . ugrPaymentPlan $ ugr
+                             , ugSettings      = Just $ ugrSettings ugr
+                             , ugAddress       = Just $ ugrAddress ugr
+                             , ugUI            = ugrUI ugr
+                             , ugFeatures      = Just $ ugrFeatures ugr
                              }
 
 -- USER GROUP WITH PARENTS
@@ -334,7 +334,7 @@ ugwpInherit
   -> UserGroupWithParents
   -> (UserGroupID, a)
 ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
-  fromMaybe (_ugrID ug_root, ugrProperty ug_root)
+  fromMaybe (ugrID ug_root, ugrProperty ug_root)
     . listToMaybe
     . catMaybes
     . map (makeIDPropertyTuple)
@@ -342,31 +342,31 @@ ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
   where
     makeIDPropertyTuple ug = case ugProperty ug of
       Nothing   -> Nothing
-      Just prop -> Just (_ugID ug, prop)
+      Just prop -> Just (ugID ug, prop)
 
 ugwpPaymentPlan :: UserGroupWithParents -> PaymentPlan
-ugwpPaymentPlan = snd . ugwpInherit _ugrPaymentPlan ugPaymentPlan
+ugwpPaymentPlan = snd . ugwpInherit ugrPaymentPlan ugPaymentPlan
 
 ugwpPaymentPlanWithID :: UserGroupWithParents -> (UserGroupID, PaymentPlan)
-ugwpPaymentPlanWithID = ugwpInherit _ugrPaymentPlan ugPaymentPlan
+ugwpPaymentPlanWithID = ugwpInherit ugrPaymentPlan ugPaymentPlan
 
 ugwpSettings :: UserGroupWithParents -> UserGroupSettings
-ugwpSettings = snd . ugwpInherit _ugrSettings _ugSettings
+ugwpSettings = snd . ugwpInherit ugrSettings ugSettings
 
 ugwpSettingsWithID :: UserGroupWithParents -> (UserGroupID, UserGroupSettings)
-ugwpSettingsWithID = ugwpInherit _ugrSettings _ugSettings
+ugwpSettingsWithID = ugwpInherit ugrSettings ugSettings
 
 ugwpAddress :: UserGroupWithParents -> UserGroupAddress
-ugwpAddress = snd . ugwpInherit _ugrAddress _ugAddress
+ugwpAddress = snd . ugwpInherit ugrAddress ugAddress
 
 ugwpAddressWithID :: UserGroupWithParents -> (UserGroupID, UserGroupAddress)
-ugwpAddressWithID = ugwpInherit _ugrAddress _ugAddress
+ugwpAddressWithID = ugwpInherit ugrAddress ugAddress
 
 ugwpFeatures :: UserGroupWithParents -> Features
-ugwpFeatures = snd . ugwpInherit _ugrFeatures _ugFeatures
+ugwpFeatures = snd . ugwpInherit ugrFeatures ugFeatures
 
 ugwpFeaturesWithID :: UserGroupWithParents -> (UserGroupID, Features)
-ugwpFeaturesWithID = ugwpInherit _ugrFeatures _ugFeatures
+ugwpFeaturesWithID = ugwpInherit ugrFeatures ugFeatures
 
 ugwpToList :: UserGroupWithParents -> [UserGroup]
 ugwpToList (ug_root, ug_children_path) = ug_children_path ++ [ugFromUGRoot ug_root]
@@ -383,7 +383,7 @@ ugwpAddChild ug (root, children_path) = (root, ug : children_path)
 
 ugwcToList :: [UserGroupWithChildren] -> [UserGroup]
 ugwcToList ugwcs =
-  concat . for ugwcs $ \ugwc -> _ugwcGroup ugwc : ugwcToList (_ugwcChildren ugwc)
+  concat . for ugwcs $ \ugwc -> ugwcGroup ugwc : ugwcToList (ugwcChildren ugwc)
 
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
@@ -467,11 +467,11 @@ instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, _drpIdleDocTimeoutPreparation, _drpIdleDocTimeoutClosed, _drpIdleDocTimeoutCanceled, _drpIdleDocTimeoutTimedout, _drpIdleDocTimeoutRejected, _drpIdleDocTimeoutError, _drpImmediateTrash, _ugsCGIDisplayName, _ugsSMSProvider, _ugsCGIServiceID, _ugsPadAppMode, _ugsPadEarchiveEnabled, _ugsLegalText, _ugsRequireBPIDForNewDoc, _ugsSendTimeoutNotification, _useFolderListCalls -- not yet used
-                                                                                                                                                                                                                                                                                                                                                                                                                       , _ugsTotpIsMandatory, _ugsSessionTimeoutSecs, _ugsPortalUrl)
+  toComposite (ip_address_mask_list, drpIdleDocTimeoutPreparation, drpIdleDocTimeoutClosed, drpIdleDocTimeoutCanceled, drpIdleDocTimeoutTimedout, drpIdleDocTimeoutRejected, drpIdleDocTimeoutError, drpImmediateTrash, ugsCGIDisplayName, ugsSMSProvider, ugsCGIServiceID, ugsPadAppMode, ugsPadEarchiveEnabled, ugsLegalText, ugsRequireBPIDForNewDoc, ugsSendTimeoutNotification, _useFolderListCalls -- not yet used
+                                                                                                                                                                                                                                                                                                                                                                                                                       , ugsTotpIsMandatory, ugsSessionTimeoutSecs, ugsPortalUrl)
     = UserGroupSettings
-      { _ugsIPAddressMaskList   = maybe [] read ip_address_mask_list
-      , _ugsDataRetentionPolicy = DataRetentionPolicy { .. }
+      { ugsIPAddressMaskList   = maybe [] read ip_address_mask_list
+      , ugsDataRetentionPolicy = DataRetentionPolicy { .. }
       , ..
       }
 
@@ -491,12 +491,12 @@ instance PQFormat UserGroupUI where
 
 instance CompositeFromSQL UserGroupUI where
   toComposite (mail_theme, signview_theme, service_theme, browser_title, sms_originator, favicon)
-    = UserGroupUI { _uguiMailTheme     = mail_theme
-                  , _uguiSignviewTheme = signview_theme
-                  , _uguiServiceTheme  = service_theme
-                  , _uguiBrowserTitle  = browser_title
-                  , _uguiSmsOriginator = sms_originator
-                  , _uguiFavicon       = faviconFromBinary favicon
+    = UserGroupUI { uguiMailTheme     = mail_theme
+                  , uguiSignviewTheme = signview_theme
+                  , uguiServiceTheme  = service_theme
+                  , uguiBrowserTitle  = browser_title
+                  , uguiSmsOriginator = sms_originator
+                  , uguiFavicon       = faviconFromBinary favicon
                   }
     where
       faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
@@ -512,10 +512,10 @@ instance PQFormat UserGroupAddress where
 
 instance CompositeFromSQL UserGroupAddress where
   toComposite (company_number, entity_name, address, zip_code, city, country) =
-    UserGroupAddress { _ugaCompanyNumber = company_number
-                     , _ugaEntityName    = entity_name
-                     , _ugaAddress       = address
-                     , _ugaZip           = zip_code
-                     , _ugaCity          = city
-                     , _ugaCountry       = country
+    UserGroupAddress { ugaCompanyNumber = company_number
+                     , ugaEntityName    = entity_name
+                     , ugaAddress       = address
+                     , ugaZip           = zip_code
+                     , ugaCity          = city
+                     , ugaCountry       = country
                      }

@@ -1,7 +1,8 @@
-module TestEnvSt ( RunLogger(..)
-                 , TestEnvSt
-                 , TestEnvStRW
-                 , module TestEnvSt.Labels ) where
+module TestEnvSt
+  ( RunLogger(..)
+  , TestEnvSt(..)
+  , TestEnvStRW(..)
+  ) where
 
 import TestEnvSt.Internal
-import TestEnvSt.Labels
+import TestEnvSt.Labels ()

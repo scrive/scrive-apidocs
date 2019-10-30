@@ -1,8 +1,7 @@
 module PdfToolsLambda.Conf (
-      PdfToolsLambdaConf
-    , PdfToolsLambdaEnv
+      PdfToolsLambdaConf(..)
+    , PdfToolsLambdaEnv(..)
     , pdfToolsLambdaEnvFromConf
-    , module PdfToolsLambda.Conf.Labels
     , PdfToolsLambdaMonad(..)
     , runPdfToolsLambdaT
   ) where
@@ -17,7 +16,7 @@ import Control.Monad.Trans.Control
 
 
 import PdfToolsLambda.Conf.Internal
-import PdfToolsLambda.Conf.Labels
+import PdfToolsLambda.Conf.Labels ()
 
 class Monad m => PdfToolsLambdaMonad m where
   getPdfToolsLambdaEnv :: m PdfToolsLambdaEnv

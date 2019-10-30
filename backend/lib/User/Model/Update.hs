@@ -237,7 +237,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
   update (SetUserUserGroup uid ugid) = dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return False
     Just ug -> runQuery01 $ sqlUpdate "users" $ do
-      sqlSet "user_group_id" . get ugID $ ug
+      sqlSet "user_group_id" $ ugID ug
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
@@ -336,13 +336,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
     runQuery01 . sqlUpdate "users" $ do
       let drp = dataretentionpolicy us
       sqlSet "lang" $ getLang us
-      sqlSet "idle_doc_timeout_preparation" $ get drpIdleDocTimeoutPreparation drp
-      sqlSet "idle_doc_timeout_closed" $ get drpIdleDocTimeoutClosed drp
-      sqlSet "idle_doc_timeout_canceled" $ get drpIdleDocTimeoutCanceled drp
-      sqlSet "idle_doc_timeout_timedout" $ get drpIdleDocTimeoutTimedout drp
-      sqlSet "idle_doc_timeout_rejected" $ get drpIdleDocTimeoutRejected drp
-      sqlSet "idle_doc_timeout_error" $ get drpIdleDocTimeoutError drp
-      sqlSet "immediate_trash" $ get drpImmediateTrash drp
+      sqlSet "idle_doc_timeout_preparation" $ drpIdleDocTimeoutPreparation drp
+      sqlSet "idle_doc_timeout_closed" $ drpIdleDocTimeoutClosed drp
+      sqlSet "idle_doc_timeout_canceled" $ drpIdleDocTimeoutCanceled drp
+      sqlSet "idle_doc_timeout_timedout" $ drpIdleDocTimeoutTimedout drp
+      sqlSet "idle_doc_timeout_rejected" $ drpIdleDocTimeoutRejected drp
+      sqlSet "idle_doc_timeout_error" $ drpIdleDocTimeoutError drp
+      sqlSet "immediate_trash" $ drpImmediateTrash drp
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

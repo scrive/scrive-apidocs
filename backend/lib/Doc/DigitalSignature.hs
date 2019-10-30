@@ -153,7 +153,7 @@ digitallyExtendFile
   -> FilePath
   -> Text
   -> m Bool
-digitallyExtendFile ctxtime pdfpath pdfname = do
+digitallyExtendFile ctxTime pdfpath pdfname = do
   gtconf                 <- getGuardTimeConf
   (code, stdout, stderr) <- GT.digitallyExtend gtconf pdfpath
   mr                     <- case code of
@@ -182,5 +182,5 @@ digitallyExtendFile ctxtime pdfpath pdfname = do
       sealedfileid <- saveNewFile pdfname extendedfilepdf
       logInfo "Finished adding extended file to DB, adding to document"
         $ object [identifier sealedfileid]
-      dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor ctxtime
+      dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor ctxTime
       return True

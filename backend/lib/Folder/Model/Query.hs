@@ -64,9 +64,9 @@ instance (MonadDB m, MonadThrow m)
       sqlWhere $ "parent_path @> " <?> (Array1 [fid])
     allChildren <- fetchMany fetchFolder
     let directChildren parentID =
-          filter ((== Just parentID) . get folderParentID) allChildren
+          filter ((== Just parentID) . folderParentID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
-        mkChild folder = FolderWithChildren folder . mkChildren $ get folderID folder
+        mkChild folder = FolderWithChildren folder . mkChildren $ folderID folder
     return $ mkChildren fid
 
 data FolderGetParents = FolderGetParents FolderID

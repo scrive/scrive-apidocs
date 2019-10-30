@@ -7,7 +7,6 @@ import Log
 import Test.Framework
 import qualified Data.Text as T
 
-import BrandedDomain.BrandedDomain
 import Context
 import DB.Query (dbUpdate)
 import DB.TimeZoneName (mkTimeZoneName)
@@ -63,7 +62,7 @@ apiV2DocumentGetCallsTests env =
 testDocApiV2List :: TestEnv ()
 testDocApiV2List = do
   user <- addNewRandomUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
 
   void $ testDocApiV2New' ctx
   void $ testDocApiV2New' ctx
@@ -78,7 +77,7 @@ testDocApiV2List = do
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do
   user       <- addNewRandomUser
-  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -111,8 +110,8 @@ _testDocApiV2GetFailsAfter30Days = do
   let vars =
         [("signatory_id", inText . showt . fromSignatoryLinkID . signatorylinkid $ sl)]
       ctxWithin30Days =
-        set ctxtime (addUTCTime (29 * 24 * 3600) (documentmtime doc)) ctx'
-      ctxAfter30Days = set ctxtime (addUTCTime (31 * 24 * 3600) (documentmtime doc)) ctx'
+        set #ctxTime (addUTCTime (29 * 24 * 3600) (documentmtime doc)) ctx'
+      ctxAfter30Days = set #ctxTime (addUTCTime (31 * 24 * 3600) (documentmtime doc)) ctx'
   void $ testRequestHelper ctxWithin30Days GET vars (docApiV2Get (documentid doc)) 200
   void $ testRequestHelper ctxAfter30Days GET vars (docApiV2Get (documentid doc)) 410
 
@@ -124,7 +123,7 @@ mockDocToShortID md = read $ T.pack $ reverse $ take 6 $ reverse $ show (getMock
 testDocApiV2GetShortCode :: TestEnv ()
 testDocApiV2GetShortCode = do
   user       <- addNewRandomUser
-  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2StartNew ctx
   let shortDid = mockDocToShortID newMockDoc
 
@@ -166,7 +165,7 @@ testDocApiV2GetShortCode = do
 testMallory :: Request -> KontraTest Response -> TestEnv ()
 testMallory getRequest req = do
   mallory         <- addNewRandomUser
-  ctxMallory      <- (set ctxmaybeuser (Just mallory)) <$> mkContext defaultLang
+  ctxMallory      <- (set #ctxMaybeUser (Just mallory)) <$> mkContext defaultLang
   (resMallory, _) <- runTestKontra getRequest ctxMallory $ req
   assertEqual "We should get a 403 response for someone else's document"
               403
@@ -175,7 +174,7 @@ testMallory getRequest req = do
 testDocApiV2GetQRCode :: TestEnv ()
 testDocApiV2GetQRCode = do
   user       <- addNewRandomUser
-  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId newMockDoc
       slid = getMockDocSigLinkId 1 newMockDoc
@@ -190,7 +189,7 @@ testDocApiV2GetQRCode = do
       , "localhost:8000"
       ]
     $ \domain -> do
-        let ctx' = set (bdUrl . ctxbrandeddomain) domain $ ctx
+        let ctx' = set (#ctxBrandedDomain % #bdUrl) domain $ ctx
         getQRCode <- testRequestHelper ctx' GET [] (docApiV2GetQRCode did slid) 200
         getURL    <- liftIO $ decodeQRBSL getQRCode
         logInfo_ $ "Decoded QR code: " <> (T.pack getURL)
@@ -235,13 +234,13 @@ testDocApiV2GetQRCode = do
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do
   ug <- addNewUserGroup
-  let ugid = (get ugID ug)
+  let ugid = ugID ug
   author     <- addNewRandomCompanyUser ugid False
-  ctxauthor  <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
+  ctxauthor  <- (set #ctxMaybeUser (Just author)) <$> mkContext defaultLang
   did        <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   admin      <- addNewRandomCompanyUser ugid True
-  ctx        <- (set ctxmaybeuser (Just admin)) <$> mkContext defaultLang
+  ctx        <- (set #ctxMaybeUser (Just admin)) <$> mkContext defaultLang
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
               "company_admin"
@@ -250,9 +249,9 @@ testDocApiV2GetByAdmin = do
 testDocApiV2GetShared :: TestEnv ()
 testDocApiV2GetShared = do
   ug <- addNewUserGroup
-  let ugid = (get ugID ug)
+  let ugid = ugID ug
   author    <- addNewRandomCompanyUser ugid False
-  ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
+  ctxauthor <- (set #ctxMaybeUser (Just author)) <$> mkContext defaultLang
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   void $ mockDocTestRequestHelper ctxauthor
@@ -265,7 +264,7 @@ testDocApiV2GetShared = do
   assert setshare
 
   user       <- addNewRandomCompanyUser ugid False
-  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
               "company_shared"
@@ -276,7 +275,7 @@ testDocApiV2GetShared = do
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do
   user <- addNewRandomUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
   let checkHistoryHasNItems :: Int -> TestEnv ()
@@ -297,8 +296,8 @@ testDocApiV2HistoryPermissionCheck :: TestEnv ()
 testDocApiV2HistoryPermissionCheck = do
   userAuthor       <- addNewRandomUser
   userOther        <- addNewRandomUser
-  ctxWithAuthor    <- (set ctxmaybeuser (Just userAuthor)) <$> mkContext defaultLang
-  ctxWithOtherUser <- (set ctxmaybeuser (Just userOther)) <$> mkContext defaultLang
+  ctxWithAuthor    <- (set #ctxMaybeUser (Just userAuthor)) <$> mkContext defaultLang
+  ctxWithOtherUser <- (set #ctxMaybeUser (Just userOther)) <$> mkContext defaultLang
 
   did              <- getMockDocId <$> testDocApiV2New' ctxWithAuthor
 
@@ -310,7 +309,7 @@ testDocApiV2HistoryPermissionCheck = do
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
   user    <- addNewRandomUser
-  ctx     <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx     <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -344,7 +343,7 @@ testDocApiV2EvidenceAttachments = do
 testDocApiV2FilesMain :: TestEnv ()
 testDocApiV2FilesMain = do
   user <- addNewRandomUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -352,7 +351,7 @@ testDocApiV2FilesMain = do
   getReq ctx did [] "(standard)" 200
 
   -- GET request via access token
-  let ctx' = set ctxmaybeuser Nothing ctx
+  let ctx' = set #ctxMaybeUser Nothing ctx
       vars = [("access_token", inText . T.pack . getMockDocAccessToken $ doc)]
   getReq ctx' did []   "(no access token - expected failure)" 401
   getReq ctx' did vars "(access token)" 200
@@ -369,7 +368,7 @@ testDocApiV2FilesMain = do
 testDocApiV2FilesPages :: TestEnv ()
 testDocApiV2FilesPages = do
   user <- addNewRandomUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
       fid = getMockDocFileId doc
@@ -386,7 +385,7 @@ testDocApiV2FilesPages = do
 testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do
   user <- addNewRandomUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -408,7 +407,7 @@ testDocApiV2FilesGet = do
   getReq ctx did fid [] "(standard)" 200
 
   -- GET request via access token
-  let ctx' = set ctxmaybeuser Nothing ctx
+  let ctx' = set #ctxMaybeUser Nothing ctx
       vars = [("access_token", inText . T.pack . getMockDocAccessToken $ doc)]
   getReq ctx' did fid []   "(no access token - expected failure)" 401
   getReq ctx' did fid vars "(access token)" 200
@@ -426,7 +425,7 @@ testDocApiV2FilesFull :: TestEnv ()
 testDocApiV2FilesFull = do
   now     <- currentTime
   user    <- addNewRandomUser
-  ctx     <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  ctx     <- set #ctxMaybeUser (Just user) <$> mkContext defaultLang
   req     <- mkRequest GET []
 
   initDoc <- addRandomDocument (rdaDefault user)

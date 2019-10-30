@@ -55,7 +55,7 @@ eidServiceRoutes = choice
 eidServiceConf :: Kontrakcja m => m EIDServiceConf
 eidServiceConf = do
   ctx <- getContext
-  case get ctxeidserviceconf ctx of
+  case ctxEidServiceConf ctx of
     Nothing   -> noConfigurationError "No eid service provided"
     Just conf -> return conf
 

@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Folder.Labels where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module Folder.Labels () where
 
-import Data.Label
+import Optics.TH
 
 import Folder.Internal
 
-mkLabel ''Folder
-mkLabel ''FolderWithChildren
-
+makeFieldLabelsWith noPrefixFieldLabels ''Folder
+makeFieldLabelsWith noPrefixFieldLabels ''FolderWithChildren

@@ -83,7 +83,7 @@ signupForAccount ctx email = do
 
 assertSignupSuccessful :: Context -> TestEnv UserAccountRequest
 assertSignupSuccessful ctx = do
-  assertEqual "User is not logged in" Nothing (get ctxmaybeuser ctx)
+  assertEqual "User is not logged in" Nothing (ctxMaybeUser ctx)
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
   return $ head actions
@@ -95,7 +95,7 @@ followActivationLink ctx uid token = do
 
 assertActivationPageOK :: Context -> TestEnv ()
 assertActivationPageOK ctx = do
-  assertEqual "User is not logged in" Nothing (get ctxmaybeuser ctx)
+  assertEqual "User is not logged in" Nothing (ctxMaybeUser ctx)
 
 activateAccount
   :: Context
@@ -124,7 +124,7 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
 
 assertAccountActivatedFor :: UserID -> Text -> Text -> JSValue -> Context -> TestEnv ()
 assertAccountActivatedFor uid fstname sndname res ctx = do
-  assertEqual "User is logged in" (Just uid) (fmap userid $ get ctxmaybeuser ctx)
+  assertEqual "User is logged in" (Just uid) (fmap userid $ ctxMaybeUser ctx)
   assertAccountActivated fstname sndname res ctx
 
 assertAccountActivated :: Text -> Text -> JSValue -> Context -> TestEnv ()
@@ -132,9 +132,9 @@ assertAccountActivated fstname sndname res ctx = do
   ((Just resultOk) :: Maybe Bool) <- withJSValue res $ fromJSValueField "ok"
   assertEqual "Account activation succeeded" True resultOk
   assertBool "Accepted TOS"
-    $ isJust ((get ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
-  assertEqual "First name was set"  (Just fstname) (getFirstName <$> get ctxmaybeuser ctx)
-  assertEqual "Second name was set" (Just sndname) (getLastName <$> get ctxmaybeuser ctx)
+    $ isJust (ctxMaybeUser ctx >>= userhasacceptedtermsofservice)
+  assertEqual "First name was set"  (Just fstname) (getFirstName <$> ctxMaybeUser ctx)
+  assertEqual "Second name was set" (Just sndname) (getLastName <$> ctxMaybeUser ctx)
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do

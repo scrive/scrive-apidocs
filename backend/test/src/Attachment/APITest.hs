@@ -9,7 +9,6 @@ import qualified Data.Text as T
 
 import Attachment.API
 import Attachment.Model
-import Context
 import DB
 import File.Storage
 import MinutesTime
@@ -32,7 +31,7 @@ attachmentAPITests env = testGroup
 testAttachmentList :: TestEnv ()
 testAttachmentList = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
+  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ugID ug)
 
   now        <- currentTime
   fid        <- addNewRandomFile
@@ -41,7 +40,7 @@ testAttachmentList = do
   _          <- dbUpdate $ NewAttachment (userid bob) "c" fid $ systemActor now
   _          <- dbUpdate $ SetAttachmentsSharing (userid bob) [attachmentid attB] True
 
-  ctx        <- set ctxmaybeuser (Just anna) <$> mkContext defaultLang
+  ctx        <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
 
   do
     req              <- mkRequest GET []
@@ -62,7 +61,7 @@ testAttachmentList = do
 testAttachmentCreate :: TestEnv ()
 testAttachmentCreate = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set ctxmaybeuser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
 
   req      <- mkRequest
     POST
@@ -81,7 +80,7 @@ testAttachmentCreate = do
 testAttachmentSetSharing :: TestEnv ()
 testAttachmentSetSharing = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set ctxmaybeuser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
   fid      <- addNewRandomFile
@@ -118,7 +117,7 @@ testAttachmentSetSharing = do
 testAttachmentDelete :: TestEnv ()
 testAttachmentDelete = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set ctxmaybeuser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
   fid      <- addNewRandomFile
@@ -140,7 +139,7 @@ testAttachmentDelete = do
 testAttachmentDownload :: TestEnv ()
 testAttachmentDownload = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set ctxmaybeuser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
   fid      <- addNewRandomFile

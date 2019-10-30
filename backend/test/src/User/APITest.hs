@@ -5,24 +5,21 @@ import Control.Monad.IO.Class
 import Crypto.Hash.Algorithms (SHA1(..))
 import Data.Aeson
 import Data.Either (Either(..))
-import Data.Label
 import Data.List.Split (splitOneOf)
 import Data.OTP (totp)
 import Data.Unjson
 import Happstack.Server
+import Optics (_Just)
 import Test.Framework
 import Test.QuickCheck
 import qualified Codec.Binary.Base32 as B32
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.HashMap.Strict as H
-import qualified Data.Label.Base as FCP
-import qualified Data.Label.Partial as FCP
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
 import Attachment.Model
-import Context
 import DataRetentionPolicy
 import DB
 import Doc.DocumentMonad
@@ -154,7 +151,7 @@ testUser2FAWorkflow :: TestEnv ()
 testUser2FAWorkflow = do
   password          <- rand 10 $ arbText 3 30
   randomUser        <- addNewRandomUserWithPassword $ password
-  ctx'              <- set ctxmaybeuser (Just randomUser) <$> mkContext defaultLang
+  ctx'              <- set #ctxMaybeUser (Just randomUser) <$> mkContext defaultLang
 
   -- Start setting up 2FA
   req_setup2fa      <- mkRequest POST []
@@ -175,7 +172,7 @@ testUser2FAWorkflow = do
   -- For some reason we need to get updated User and add to Context
   -- otherwise tests fail because TOTP changes are not "seen"
   Just user <- dbQuery $ GetUserByID $ userid randomUser
-  ctx       <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  ctx       <- set #ctxMaybeUser (Just user) <$> mkContext defaultLang
 
   -- apiCallGetUserPersonalToken should still work: 2FA not yet confirmed
   do
@@ -227,7 +224,7 @@ testUserNoDeletionIfWrongEmail :: TestEnv ()
 testUserNoDeletionIfWrongEmail = do
   (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
 
-  ctx       <- set ctxmaybeuser (Just anna) <$> mkContext defaultLang
+  ctx       <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
 
   do
     req      <- mkRequest POST [("email", inText "wrong@email.com")]
@@ -245,9 +242,9 @@ testUserNoDeletionIfPendingDocuments = do
   now        <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (userid anna) now
 
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
+  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ugID ug)
 
-  ctx      <- set ctxmaybeuser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
 
   doc      <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Signable]
                                                  , rdaStatuses = OneOf [Pending]
@@ -268,7 +265,7 @@ testUserNoDeletionIfPendingDocuments = do
 testUserDeletion :: TestEnv ()
 testUserDeletion = do
   (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  ctx       <- set ctxmaybeuser (Just anna) <$> mkContext defaultLang
+  ctx       <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
 
   req       <- mkRequest POST [("email", inText "anna@android.com")]
   (res, _)  <- runTestKontra req ctx apiCallDeleteUser
@@ -277,7 +274,7 @@ testUserDeletion = do
 testUserDeletionOwnershipTransfer :: TestEnv ()
 testUserDeletionOwnershipTransfer = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
+  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ugID ug)
 
   now        <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (userid anna) now
@@ -291,7 +288,7 @@ testUserDeletionOwnershipTransfer = do
                                                           , rdaSharings = OneOf [Private]
                                                           }
 
-  ctx <- set ctxmaybeuser (Just anna) <$> mkContext defaultLang
+  ctx <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
   let actor = userActor ctx anna
 
   fid                <- addNewRandomFile
@@ -334,7 +331,7 @@ testUserDeletionOwnershipTransfer = do
 testUserSetDataRetentionPolicy :: TestEnv ()
 testUserSetDataRetentionPolicy = do
   (user, _) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
-  ctx       <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  ctx       <- set #ctxMaybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do
     drp <- rand 10 arbitrary
@@ -351,15 +348,13 @@ testUserSetDataRetentionPolicy = do
 testUserSetDataRetentionPolicyOnlyIfAsStrict :: TestEnv ()
 testUserSetDataRetentionPolicyOnlyIfAsStrict = do
   (user, ug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
-  ctx        <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  ctx        <- set #ctxMaybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do
     userDRP    <- rand 10 arbitrary
     companyDRP <- rand 10 arbitrary
 
-    let
-      ug' =
-        fromJust $ FCP.set (ugsDataRetentionPolicy . FCP.just . ugSettings) companyDRP ug
+    let ug' = set (#ugSettings % _Just % #ugsDataRetentionPolicy) companyDRP ug
     void $ dbUpdate $ UserGroupUpdate ug'
 
     let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy userDRP
@@ -378,14 +373,14 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
         && check drpIdleDocTimeoutTimedout drp1 drp2
         && check drpIdleDocTimeoutRejected drp1 drp2
         && check drpIdleDocTimeoutError    drp1 drp2
-        && (not (get drpImmediateTrash drp2) || get drpImmediateTrash drp1)
+        && (not (drpImmediateTrash drp2) || drpImmediateTrash drp1)
 
     check
       :: Ord a
-      => DataRetentionPolicy :-> Maybe a
+      => (DataRetentionPolicy -> Maybe a)
       -> DataRetentionPolicy
       -> DataRetentionPolicy
       -> Bool
-    check l drp1 drp2 = case (get l drp1, get l drp2) of
+    check l drp1 drp2 = case (l drp1, l drp2) of
       (Just x1, Just x2) -> x1 <= x2
       _                  -> True

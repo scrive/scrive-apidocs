@@ -90,17 +90,17 @@ pageFromBody ctx ad bodytext fields = do
 userGroupWithParentsForPage :: Kontrakcja m => m (Maybe UserGroupWithParents)
 userGroupWithParentsForPage = do
   ctx <- getContext
-  case (get ctxmaybeuser ctx) of
+  case ctxMaybeUser ctx of
     Nothing   -> return Nothing
     Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (userid user)
 
 userGroupUIForPage :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
   ctx <- getContext
-  case (get ctxmaybeuser ctx) of
+  case ctxMaybeUser ctx of
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
-      return . Just $ (get ugID ug, get ugUI ug)
+      return . Just $ (ugID ug, ugUI ug)
     _ -> return Nothing
 
 currentSubscriptionJSON :: Kontrakcja m => m (Maybe A.Value)
@@ -198,34 +198,33 @@ standardPageFields
   -> AnalyticsData
   -> Fields m ()
 standardPageFields ctx mugidandui ad = do
-  F.value "langcode" $ codeFromLang $ get ctxlang ctx
-  F.value "logged" $ isJust (get ctxmaybeuser ctx)
-  F.value "padlogged" $ isJust (get ctxmaybepaduser ctx)
-  F.value "hostpart" $ get ctxDomainUrl ctx
-  F.value "production" (get ctxproduction ctx)
-  F.value "brandingdomainid" (show $ get (bdid . ctxbrandeddomain) ctx)
-  F.value "brandinguserid"
-          (fmap (show . userid) (get ctxmaybeuser ctx `mplus` get ctxmaybepaduser ctx))
-  F.value "ctxlang" $ codeFromLang $ get ctxlang ctx
+  F.value "langcode" $ codeFromLang $ ctxLang ctx
+  F.value "logged" $ isJust (ctxMaybeUser ctx)
+  F.value "padlogged" $ isJust (ctxMaybePadUser ctx)
+  F.value "hostpart" $ ctxDomainUrl ctx
+  F.value "production" (ctxProduction ctx)
+  F.value "brandingdomainid" (show $ (bdid . ctxBrandedDomain) ctx)
+  F.value "brandinguserid" (fmap (show . userid) (getContextUser ctx))
+  F.value "ctxlang" $ codeFromLang $ ctxLang ctx
   F.object "analytics" $ analyticsTemplates ad
-  F.value "trackjstoken" (get ctxtrackjstoken ctx)
-  F.value "zendeskkey" (get ctxzendeskkey ctx)
+  F.value "trackjstoken" (ctxTrackJsToken ctx)
+  F.value "zendeskkey" (ctxZendeskKey ctx)
   F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
   F.valueM "b64subscriptiondata"
     $   fmap (B64.encode . A.encode)
     <$> currentSubscriptionJSON
   F.value "subscriptionuseriscompanyadmin"
-    $ case fmap useriscompanyadmin (get ctxmaybeuser ctx) of
+    $ case fmap useriscompanyadmin (ctxMaybeUser ctx) of
         Nothing    -> "undefined"
         Just True  -> "true"
         Just False -> "false"
   F.value "title"
     $ case
-        emptyToNothing . strip . T.unpack =<< get uguiBrowserTitle . snd =<< mugidandui
+        emptyToNothing . strip . T.unpack =<< uguiBrowserTitle . snd =<< mugidandui
       of
         Just ctitle ->
-          ctitle <> " - " <> (T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx))
-        Nothing -> T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx)
+          ctitle <> " - " <> (T.unpack (bdBrowserTitle $ ctxBrandedDomain ctx))
+        Nothing -> T.unpack (bdBrowserTitle $ ctxBrandedDomain ctx)
   entryPointFields ctx
 
 jsonContentType :: BS.ByteString
@@ -272,5 +271,5 @@ respondWithDownloadContents mimeType forceDownload contents =
 -}
 entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx = do
-  F.value "cdnbaseurl" (get ctxcdnbaseurl ctx)
+  F.value "cdnbaseurl" (ctxCdnBaseUrl ctx)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID

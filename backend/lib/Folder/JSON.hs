@@ -15,27 +15,27 @@ encodeFolder :: Folder -> Encoding
 encodeFolder folder =
   pairs
     $  "id"
-    .= get folderID folder
+    .= folderID folder
     <> "parent_id"
-    .= get folderParentID folder
+    .= folderParentID folder
     <> "name"
-    .= get folderName folder
+    .= folderName folder
 
 encodeFolderWithChildren :: FolderWithChildren -> Encoding
 encodeFolderWithChildren fdrwc =
   pairs
     $  "id"
-    .= get folderID folder
+    .= folderID folder
     <> "parent_id"
-    .= get folderParentID folder
+    .= folderParentID folder
     <> "name"
-    .= get folderName folder
+    .= folderName folder
     <> pair "children" (list encodeChild children)
   where
-    folder   = get fwcFolder fdrwc
-    children = get fwcFolder <$> get fwcChildren fdrwc
+    folder   = fwcFolder fdrwc
+    children = fwcFolder <$> fwcChildren fdrwc
     encodeChild childFolder =
-      pairs $ "id" .= get folderID childFolder <> "name" .= get folderName childFolder
+      pairs $ "id" .= folderID childFolder <> "name" .= folderName childFolder
 
 unjsonFolderForUpdate :: UnjsonDef (Maybe FolderID, Text)
 unjsonFolderForUpdate =
@@ -47,8 +47,8 @@ unjsonFolderForUpdate =
 
 updateFolderWithFolderFromRequest :: Folder -> Value -> Maybe Folder
 updateFolderWithFolderFromRequest folder folderChanges = do
-  let folderReq = (get folderParentID folder, get folderName folder)
+  let folderReq = (folderParentID folder, folderName folder)
   case update folderReq unjsonFolderForUpdate folderChanges of
     (Result ugUpdated []) ->
-      Just $ folder { _folderParentID = fst ugUpdated, _folderName = snd ugUpdated }
+      Just $ folder { folderParentID = fst ugUpdated, folderName = snd ugUpdated }
     (Result _ _) -> Nothing

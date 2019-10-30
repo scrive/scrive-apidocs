@@ -137,5 +137,5 @@ replaceSignatoryUser siglink user ugwp = (replaceSignatoryData
   { maybesignatory = Just $ userid user
   }
   where
-    getUGEntityName    = get ugaEntityName . ugwpAddress
-    getUGCompanyNumber = get ugaCompanyNumber . ugwpAddress
+    getUGEntityName    = ugaEntityName . ugwpAddress
+    getUGCompanyNumber = ugaCompanyNumber . ugwpAddress

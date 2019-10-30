@@ -1,12 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
-module UserGroup.Labels where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module UserGroup.Labels () where
 
-import Data.Label
+import Optics.TH
 
 import UserGroup.Internal
 
-mkLabel ''UserGroup
-mkLabel ''UserGroupSettings
-mkLabel ''UserGroupUI
-mkLabel ''UserGroupAddress
-mkLabel ''UserGroupWithChildren
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroup
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupSettings
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupUI
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupAddress
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupWithChildren

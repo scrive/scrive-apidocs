@@ -43,8 +43,8 @@ mailsTests env = testGroup
 testBrandedDocumentMails :: TestEnv ()
 testBrandedDocumentMails = do
   ug     <- addNewUserGroup
-  author <- addNewRandomCompanyUser (get ugID ug) False
-  void $ dbUpdate $ UserGroupUpdate (set ugUI defaultUserGroupUI ug)
+  author <- addNewRandomCompanyUser (ugID ug) False
+  void $ dbUpdate $ UserGroupUpdate (set #ugUI defaultUserGroupUI ug)
   sendDocumentMails author
 
 testDocumentMails :: TestEnv ()
@@ -66,12 +66,12 @@ sendDocumentMails author = do
                       )
       `withDocumentM` do
                         res <- dbUpdate
-                          $ SetDocumentLang l (systemActor $ get ctxtime ctx)
+                          $ SetDocumentLang l (systemActor $ ctxTime ctx)
                         unless res $ unexpectedError "Expected True"
 
                         asl  <- head . documentsignatorylinks <$> theDocument
                         file <- addNewRandomFile
-                        randomUpdate $ AttachFile file (systemActor $ get ctxtime ctx)
+                        randomUpdate $ AttachFile file (systemActor $ ctxTime ctx)
 
                         islf <- rand 10 arbitrary
 
@@ -118,24 +118,24 @@ sendDocumentMails author = do
                           =<< theDocument
                         -- DELIVERY MAILS
                         checkMail "Deferred invitation"
-                          $   mailDeferredInvitation (get ctxmailnoreplyaddress ctx)
-                                                     (get ctxbrandeddomain ctx)
+                          $   mailDeferredInvitation (ctxMailNoreplyAddress ctx)
+                                                     (ctxBrandedDomain ctx)
                                                      sl
                           =<< theDocument
                         checkMail "Undelivered invitation"
-                          $   mailUndeliveredInvitation (get ctxmailnoreplyaddress ctx)
-                                                        (get ctxbrandeddomain ctx)
+                          $   mailUndeliveredInvitation (ctxMailNoreplyAddress ctx)
+                                                        (ctxBrandedDomain ctx)
                                                         sl
                           =<< theDocument
                         checkMail "Delivered invitation"
-                          $   mailDeliveredInvitation (get ctxmailnoreplyaddress ctx)
-                                                      (get ctxbrandeddomain ctx)
+                          $   mailDeliveredInvitation (ctxMailNoreplyAddress ctx)
+                                                      (ctxBrandedDomain ctx)
                                                       sl
                           =<< theDocument
                         checkMail "Undelivered confirmation" $ do
                           doc <- theDocument
-                          mailUndeliveredConfirmation (get ctxmailnoreplyaddress ctx)
-                                                      (get ctxbrandeddomain ctx)
+                          mailUndeliveredConfirmation (ctxMailNoreplyAddress ctx)
+                                                      (ctxBrandedDomain ctx)
                                                       sl
                                                       doc
                         --remind mails
@@ -162,7 +162,7 @@ sendDocumentMails author = do
                                            Nothing
                                            Nothing
                                            SignatoryScreenshots.emptySignatoryScreenshots
-                          =<< (signatoryActor (set ctxtime (10 `minutesAfter` now) ctx) sl
+                          =<< (signatoryActor (set #ctxTime (10 `minutesAfter` now) ctx) sl
                               )
 
                         -- Sending closed email
@@ -200,13 +200,13 @@ testUserMails = do
           m <- fst <$> (runTestKontra req ctx $ mg)
           validMail (T.pack s) m
     checkMail "New account" $ do
-      al <- newUserAccountRequestLink (get ctxlang ctx) (userid user) AccountRequest
+      al <- newUserAccountRequestLink (ctxLang ctx) (userid user) AccountRequest
       newUserMail ctx (getEmail user) al
     checkMail "New account by admin" $ do
-      al <- newUserAccountRequestLink (get ctxlang ctx) (userid user) ByAdmin
-      mailNewAccountCreatedByAdmin ctx (get ctxlang ctx) (getEmail user) al
+      al <- newUserAccountRequestLink (ctxLang ctx) (userid user) ByAdmin
+      mailNewAccountCreatedByAdmin ctx (ctxLang ctx) (getEmail user) al
     checkMail "Reset password mail" $ do
-      al <- newUserAccountRequestLink (get ctxlang ctx) (userid user) AccountRequest
+      al <- newUserAccountRequestLink (ctxLang ctx) (userid user) AccountRequest
       resetPasswordMail ctx user al
   commit
 

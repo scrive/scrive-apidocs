@@ -52,7 +52,6 @@ import InputValidation
 import Kontra
 import Log.Identifier
 import MailContext
-import MailContext.Internal
 import Mails.MailsData
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)
@@ -299,7 +298,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
         eventFields
         (Just signatorylink)
         (Just text <| text /= "" |> Nothing)
-        (systemActor $ get mctxtime mctx)
+        (systemActor $ mctxTime mctx)
 
 sendInvitationEmail1 authorsiglink = do
   when (isSignatory authorsiglink) $ do
@@ -831,11 +830,11 @@ sendPortalInvite authorUser portalUrl email name = do
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
     createUserForPortal = do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug0 = set ugHomeFolderID (Just $ get folderID ugFolder) $ defaultUserGroup
+      let ug0 = set #ugHomeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
                            (""         , "")
-                           (get ugID ug, True)
+                           (ugID ug, True)
                            (getLang authorUser)
                            PortalInvite
       case mnuser of
@@ -875,11 +874,11 @@ sendPortalReminder authorUser portalUrl email name = do
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
     createUserForPortal = do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug0 = set ugHomeFolderID (Just $ get folderID ugFolder) $ defaultUserGroup
+      let ug0 = set #ugHomeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
                            (""         , "")
-                           (get ugID ug, True)
+                           (ugID ug, True)
                            (getLang authorUser)
                            PortalInvite
       case mnuser of
@@ -928,10 +927,10 @@ runMailT templates mailNoreplyAddress doc m = do
   bd <- maybe (dbQuery GetMainBrandedDomain)
               (dbQuery . GetBrandedDomainByUserID)
               (userid <$> mauthor)
-  let mctx = MailContext { _mctxlang                 = documentlang doc
-                         , _mctxcurrentBrandedDomain = bd
-                         , _mctxtime                 = now
-                         , _mctxmailNoreplyAddress   = mailNoreplyAddress
+  let mctx = MailContext { mctxLang                 = documentlang doc
+                         , mctxCurrentBrandedDomain = bd
+                         , mctxTime                 = now
+                         , mctxMailNoreplyAddress   = mailNoreplyAddress
                          }
   runTemplatesT (getLang doc, templates) . runMailContextT mctx $ m
 

@@ -59,10 +59,10 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
         Just user -> do
           ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
           return
-            ( get (uguiSmsOriginator . ugUI) . ugwpUG $ ugwp
-            , get ugsSMSProvider . ugwpSettings $ ugwp
+            ( uguiSmsOriginator . ugUI . ugwpUG $ ugwp
+            , ugsSMSProvider . ugwpSettings $ ugwp
             )
-  let originator = fromMaybe (get (bdSmsOriginator . mctxcurrentBrandedDomain) mctx)
+  let originator = fromMaybe (bdSmsOriginator $ mctxCurrentBrandedDomain mctx)
                              (justEmptyToNothing moriginator)
   return $ SMS (getMobile sl) mkontraInfoForSMS msgBody originator provider
 
@@ -315,7 +315,7 @@ smsFields document = do
   F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
   F.value "documenttitle" $ documenttitle document
   F.value "authorlink"
-    $  get mctxDomainUrl mctx
+    $  mctxDomainUrl mctx
     <> (showt (LinkIssueDoc (documentid document)))
 
 smsInvitationLinkFields
@@ -336,7 +336,7 @@ smsInvitationLinkFields doc sl = do
     SignatoryAccessTokenForSMSBeforeClosing
     Nothing
   let link = LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh
-  F.value "link" $ get mctxDomainUrl mctx <> showt link
+  F.value "link" $ mctxDomainUrl mctx <> showt link
 
 smsConfirmationLinkFields
   :: ( CryptoRNG m
@@ -352,7 +352,7 @@ smsConfirmationLinkFields
 smsConfirmationLinkFields doc sl = do
   mctx             <- lift $ getMailContext
   (mh, expiration) <- lift $ makeConfirmationMagicHash sl
-  F.value "link" $ get mctxDomainUrl mctx <> showt
+  F.value "link" $ mctxDomainUrl mctx <> showt
     (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
   F.value "availabledate" $ formatTimeYMD expiration
 

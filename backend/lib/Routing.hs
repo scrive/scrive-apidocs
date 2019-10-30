@@ -165,7 +165,7 @@ hPostNoXTokenHttp = hPostWrap allowHttp
 https :: Kontra Response -> Kontra Response
 https action = do
   secure   <- isSecure
-  useHttps <- get ctxusehttps <$> getContext
+  useHttps <- ctxUseHttps <$> getContext
   if secure || not useHttps then action else sendSecureLoopBack
 
 allowHttp :: Kontrakcja m => m Response -> m Response
@@ -209,7 +209,7 @@ guardXToken action = do
   mxtokenString <- getField cookieNameXToken
   case mxtokenString of
     Just xtokenString
-      | get ctxxtoken ctx `elem` tokensFromString (T.unpack xtokenString) -> action
+      | ctxXToken ctx `elem` tokensFromString (T.unpack xtokenString) -> action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
       logInfo "Invalid xtoken value, anonymousing context"
         $ object ["xtoken" .= mxtokenString]
