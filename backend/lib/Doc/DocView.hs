@@ -128,9 +128,9 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "documentid" $ show $ documentid document
     F.value "siglinkid" $ show $ signatorylinkid siglink
     F.value "documenttitle" $ documenttitle document
-    F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctxNetsConfig ctx
-    F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctxNetsConfig ctx
-    F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctxNetsConfig ctx
+    F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctx ^. #ctxNetsConfig
+    F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #ctxNetsConfig
+    F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #ctxNetsConfig
     F.value "previewLink" $ show LinkPreviewLockedImage
     standardPageFields ctx (Just (ugID authorug, ugUI authorug)) ad -- Branding for signview depends only on authors company
 

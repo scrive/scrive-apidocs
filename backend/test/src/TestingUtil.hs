@@ -1347,9 +1347,9 @@ sealTestDocument :: Context -> DocumentID -> TestEnv ()
 sealTestDocument ctx did = void $ TestEnv $ liftTestFileStorageT $ \fsEnv -> do
   cryptoSt <- newCryptoRNGState
   withDocumentID did
-    . runGuardTimeConfT (ctxGtConf ctx)
-    . runPdfToolsLambdaT (ctxPdfToolsLambdaEnv ctx)
-    . runTemplatesT (ctxLang ctx, ctxGlobalTemplates ctx)
+    . runGuardTimeConfT (ctx ^. #ctxGtConf)
+    . runPdfToolsLambdaT (ctx ^. #ctxPdfToolsLambdaEnv)
+    . runTemplatesT (ctx ^. #ctxLang, ctx ^. #ctxGlobalTemplates)
     . runMailContextT (contextToMailContext ctx)
     . runCryptoRNGT cryptoSt
     . flip runTestFileStorageT fsEnv

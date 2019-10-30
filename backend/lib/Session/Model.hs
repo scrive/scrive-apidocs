@@ -25,7 +25,6 @@ import Data.Time.Clock (addUTCTime, diffUTCTime)
 import Happstack.Server hiding (Session)
 import Log
 
-import Context
 import DB
 import KontraMonad
 import Log.Identifier
@@ -83,7 +82,7 @@ getNonTempSessionID
   :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m)
   => m SessionID
 getNonTempSessionID = do
-  sid <- ctxSessionID <$> getContext
+  sid <- view #ctxSessionID <$> getContext
   if sid == SessionID.tempSessionID
     then do
       new_sid <- sesID <$> insertEmptySession

@@ -287,7 +287,7 @@ testDocumentTicketInsertion = replicateM_ 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
   runSQL_
     $   "SELECT COUNT(*) FROM document_session_tokens WHERE session_id ="
-    <?> ctxSessionID ctx
+    <?> ctx ^. #ctxSessionID
   tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
 
@@ -356,7 +356,7 @@ addDocumentAndInsertToken = do
       sid  <- getNonTempSessionID
       dbUpdate $ AddDocumentSession sid (signatorylinkid asl)
       ctx' <- getContext
-      updateSession sess (ctxSessionID ctx') (sesUserID sess) (sesPadUserID sess)
+      updateSession sess (ctx' ^. #ctxSessionID) (sesUserID sess) (sesPadUserID sess)
   return (author, doc, ctx)
 
 addCgiGrpTransaction :: TestEnv (Maybe CgiGrpTransaction, Context)
@@ -366,9 +366,9 @@ addCgiGrpTransaction = do
   trans_ <- rand 20 arbitrary
   let trans = case trans_ of
         (CgiGrpAuthTransaction _ tid orf _) ->
-          CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ ctxSessionID ctx
+          CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ ctx ^. #ctxSessionID
         (CgiGrpSignTransaction _ tbs tid orf _) ->
-          CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ ctxSessionID ctx
+          CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ ctx ^. #ctxSessionID
   rq <- mkRequest GET []
   runTestKontra rq ctx $ do
     dbUpdate $ MergeCgiGrpTransaction trans

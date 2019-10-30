@@ -5,7 +5,6 @@ import Test.Framework
 
 import AppControl
 import BrandedDomain.Model
-import Context
 import DB
 import Doc.DocStateData
 import Doc.Model
@@ -45,7 +44,7 @@ testLoggedInLangSwitching = do
     ]
   (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
 
-  assertBool "User was logged into context" $ (userid <$> ctxMaybeUser ctx1) == Just
+  assertBool "User was logged into context" $ (userid <$> ctx1 ^. #ctxMaybeUser) == Just
     (userid user)
   assertUserLang (userid user) LANG_SV
   assertContextLang (userid user) ctx1 LANG_SV

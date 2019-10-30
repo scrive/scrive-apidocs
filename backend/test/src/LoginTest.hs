@@ -111,10 +111,10 @@ testSuccessfulLogin = do
   (res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
   assertBool "User was logged into context"
-    $  (userid <$> ctxMaybeUser ctx')
+    $  (userid <$> ctx' ^. #ctxMaybeUser)
     == Just uid
   assertBool "User was not logged into context as pad user"
-    $  ctxMaybePadUser ctx'
+    $  ctx' ^. #ctxMaybePadUser
     == Nothing
 
 testSuccessfulLoginToPadQueue :: TestEnv ()
@@ -130,9 +130,9 @@ testSuccessfulLoginToPadQueue = do
   (res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
   assertBool "User was logged into context as pad user"
-    $  (userid <$> ctxMaybePadUser ctx')
+    $  (userid <$> ctx' ^. #ctxMaybePadUser)
     == Just uid
-  assertBool "User was not logged into context" $ ctxMaybeUser ctx' == Nothing
+  assertBool "User was not logged into context" $ ctx' ^. #ctxMaybeUser == Nothing
 
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
@@ -172,7 +172,7 @@ testSuccessfulLoginSavesAStatEvent = do
     ]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context"
-    $  (userid <$> ctxMaybeUser ctx')
+    $  (userid <$> ctx' ^. #ctxMaybeUser)
     == Just uid
 
 testCanLoginWithRedirect :: TestEnv ()
@@ -198,7 +198,7 @@ testCanLoginWithRedirect = do
   let redirecturl1 = "/arbitrary/url/path"
   req3 <- mkRequest GET [("session_id", inText sessionid), ("url", inText redirecturl1)]
   (res3, ctx3) <- runTestKontra req3 ctx $ handleLoginWithRedirectGet
-  assertBool "Session was set" $ ctxSessionID ctx /= ctxSessionID ctx3
+  assertBool "Session was set" $ ctx ^. #ctxSessionID /= ctx3 ^. #ctxSessionID
   assertBool "Redirect was set to provided url"
              (isRedirect (LinkExternal redirecturl1) res3)
 
@@ -212,15 +212,15 @@ testCanLoginWithRedirect = do
   let redirecturl2 = "/otherarbitrary/url/path"
   req5 <- mkRequest GET [("session_id", inText sessionid), ("url", inText redirecturl2)]
   (res5, ctx5) <- runTestKontra req5 ctx $ handleLoginWithRedirectGet
-  assertBool "Session was set again" $ ctxSessionID ctx /= ctxSessionID ctx5
+  assertBool "Session was set again" $ ctx ^. #ctxSessionID /= ctx5 ^. #ctxSessionID
   assertBool "Redirect was set to other url" (isRedirect (LinkExternal redirecturl2) res5)
 
   -- Test that usage of invalid session_id will work
   req6 <- mkRequest GET [("session_id", inText "1-100000"), ("url", inText redirecturl2)]
   (res6, ctx6) <- runTestKontra req6 ctx $ handleLoginWithRedirectGet
   assertBool "ctxSessionID will not be changed if session_id is invalid"
-    $  ctxSessionID ctx
-    == ctxSessionID ctx6
+    $  ctx ^. #ctxSessionID
+    == ctx6 ^. #ctxSessionID
   assertBool "Redirect was still set to other url"
              (isRedirect (LinkExternal redirecturl2) res6)
 
@@ -254,14 +254,14 @@ assertResettingPasswordLogsIn = do
   (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context"
               (Just $ userid user)
-              (userid <$> ctxMaybeUser ctx)
+              (userid <$> ctx ^. #ctxMaybeUser)
 
 assertResettingPasswordRecordsALoginEvent :: TestEnv ()
 assertResettingPasswordRecordsALoginEvent = do
   (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context"
               (Just $ userid user)
-              (userid <$> ctxMaybeUser ctx)
+              (userid <$> ctx ^. #ctxMaybeUser)
 
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist = do
@@ -487,7 +487,7 @@ testUser2FAEnforced = do
 loginFailureChecks :: JSValue -> Context -> TestEnv ()
 loginFailureChecks res ctx = do
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" False)
-  assertBool "User wasn't logged into context" $ ctxMaybeUser ctx == Nothing
+  assertBool "User wasn't logged into context" $ ctx ^. #ctxMaybeUser == Nothing
 
 createTestUser :: TestEnv User
 createTestUser = createTestUser' "andrzej@skrivapa.se"

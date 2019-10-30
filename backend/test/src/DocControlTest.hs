@@ -20,7 +20,6 @@ import Archive.Control
 import Branding.Control
 import Branding.CSS
 import Chargeable.Model
-import Context
 import DB
 import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V1.Calls
@@ -427,7 +426,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
                        in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
-  assertBool "Precondition" $ ctxTime ctx /= documentmtime doc
+  assertBool "Precondition" $ ctx ^. #ctxTime /= documentmtime doc
 
   -- who cares which one, just pick the last one
   let sl = head . reverse $ documentsignatorylinks doc
@@ -437,7 +436,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertBool "Modified date is updated"
-    $ compareTime (ctxTime ctx) (documentmtime updateddoc)
+    $ compareTime (ctx ^. #ctxTime) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
@@ -459,7 +458,7 @@ testSendReminderEmailByCompanyAdmin = do
                        in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
-  assertBool "Precondition" $ ctxTime ctx /= documentmtime doc
+  assertBool "Precondition" $ ctx ^. #ctxTime /= documentmtime doc
 
   -- who cares which one, just pick the last one
   let sl = head . reverse $ documentsignatorylinks doc
@@ -488,7 +487,7 @@ testSendReminderEmailByCompanyAdmin = do
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertBool "Modified date is updated"
-    $ compareTime (ctxTime ctxadmin) (documentmtime updateddoc)
+    $ compareTime (ctxadmin ^. #ctxTime) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
@@ -608,7 +607,7 @@ testSendingReminderClearsDeliveryInformation = do
                                       }
     `withDocumentM` do
                       sl <- head . reverse . documentsignatorylinks <$> theDocument
-                      let actor = systemActor $ ctxTime ctx
+                      let actor = systemActor $ ctx ^. #ctxTime
                       void $ dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
                       -- who cares which one, just pick the last one
                       req            <- mkRequest POST []
@@ -723,7 +722,7 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput :: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  bd               <- ctxBrandedDomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
+  bd               <- view #ctxBrandedDomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
   theme            <- dbQuery $ GetTheme $ bd ^. #bdSignviewTheme
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty"

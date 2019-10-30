@@ -28,11 +28,11 @@ import Util.MonadUtils
 withUser :: Kontrakcja m => (User -> m InternalKontraResponse) -> m InternalKontraResponse
 withUser action = do
   ctx <- getContext
-  case ctxMaybeUser ctx of
+  case ctx ^. #ctxMaybeUser of
     Just user -> action user
     Nothing   -> do
       flashmessage <- flashMessageLoginRedirect
-      return $ internalResponseWithFlash flashmessage (LinkLogin (ctxLang ctx))
+      return $ internalResponseWithFlash flashmessage (LinkLogin (ctx ^. #ctxLang))
 
 {- |
   Guard against a GET/POST with no logged in user.
@@ -41,7 +41,7 @@ withUser action = do
 guardLoggedInOrThrowInternalError :: Kontrakcja m => m a -> m a
 guardLoggedInOrThrowInternalError action = do
   ctx <- getContext
-  case ctxMaybeUser ctx of
+  case ctx ^. #ctxMaybeUser of
     Just _user -> action
     Nothing    -> internalError
 
@@ -84,7 +84,7 @@ with2FACheck action user = do
 -}
 withUserAndGroup :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
 withUserAndGroup action = do
-  maybeuser <- ctxMaybeUser <$> getContext
+  maybeuser <- view #ctxMaybeUser <$> getContext
   user      <- guardJust maybeuser
   ug        <- dbQuery . UserGroupGetByUserID . userid $ user
   action (user, ug)
@@ -95,7 +95,7 @@ withUserAndGroup action = do
 -}
 withUserAndRoles :: Kontrakcja m => ((User, [AccessRole]) -> m a) -> m a
 withUserAndRoles action = do
-  muser <- ctxMaybeUser <$> getContext
+  muser <- view #ctxMaybeUser <$> getContext
   user  <- guardJust muser
   roles <- dbQuery $ GetRoles user
   action (user, roles)

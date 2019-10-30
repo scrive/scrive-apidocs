@@ -331,10 +331,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
         void $ dbUpdate $ SetUserCompanyAdmin uid True
         void $ dbUpdate $ LogHistoryDetailsChanged
           uid
-          (ctxIpNumber ctx)
-          (ctxTime ctx)
+          (ctx ^. #ctxIpNumber)
+          (ctx ^. #ctxTime)
           [("is_company_admin", "false", "true")]
-          (userid <$> ctxMaybeUser ctx)
+          (userid <$> ctx ^. #ctxMaybeUser)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", True) -> do
@@ -343,10 +343,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
         void $ dbUpdate $ SetUserCompanyAdmin uid False
         void $ dbUpdate $ LogHistoryDetailsChanged
           uid
-          (ctxIpNumber ctx)
-          (ctxTime ctx)
+          (ctx ^. #ctxIpNumber)
+          (ctx ^. #ctxTime)
           [("is_company_admin", "true", "false")]
-          (userid <$> ctxMaybeUser ctx)
+          (userid <$> ctx ^. #ctxMaybeUser)
         dbQuery $ GetUserByID uid
       return newuser
     _ -> return olduser
@@ -354,11 +354,11 @@ handleUserChange uid = onlySalesOrAdmin $ do
   let applyChanges = do
         void $ dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
         void $ dbUpdate $ LogHistoryUserInfoChanged uid
-                                                    (ctxIpNumber ctx)
-                                                    (ctxTime ctx)
+                                                    (ctx ^. #ctxIpNumber)
+                                                    (ctx ^. #ctxTime)
                                                     (userinfo user)
                                                     (infoChange $ userinfo user)
-                                                    (userid <$> ctxMaybeUser ctx)
+                                                    (userid <$> ctx ^. #ctxMaybeUser)
         settingsChange <- getUserSettingsChange
         void $ dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
         return ()
@@ -383,9 +383,9 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
   password     <- guardJustM $ getField "password"
   passwordhash <- createPassword password
   ctx          <- getContext
-  let time     = ctxTime ctx
-      ipnumber = ctxIpNumber ctx
-      admin    = ctxMaybeUser ctx
+  let time     = ctx ^. #ctxTime
+      ipnumber = ctx ^. #ctxIpNumber
+      admin    = ctx ^. #ctxMaybeUser
   void $ dbUpdate $ SetUserPassword (userid user) passwordhash
   void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
   terminateAllUserSessionsExceptCurrent (userid user)
@@ -413,8 +413,8 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
       if r
         then do
           void $ dbUpdate $ LogHistoryTOTPDisable uid
-                                                  (ctxIpNumber ctx)
-                                                  (ctxTime ctx)
+                                                  (ctx ^. #ctxIpNumber)
+                                                  (ctx ^. #ctxTime)
           return ()
         else internalError
     else return ()
@@ -670,7 +670,7 @@ getUserInfoChange = do
 
 jsonDocuments :: Kontrakcja m => m Response
 jsonDocuments = onlyAdmin $ do
-  adminUser        <- guardJustM $ ctxMaybeUser <$> getContext
+  adminUser        <- guardJustM $ view #ctxMaybeUser <$> getContext
   muid             <- readField "userid"
   mugid            <- readField "companyid"
   offset           <- guardJustM $ readField "offset"

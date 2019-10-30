@@ -163,7 +163,7 @@ apiCallV1CreateFromFile = api $ do
         , T.replace "  " " "
         $  title
         <> " "
-        <> (T.pack $ formatTimeSimple (ctxTime ctx))
+        <> (T.pack $ formatTimeSimple (ctx ^. #ctxTime))
         )
     Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
@@ -398,7 +398,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
 
     hasAccess :: Kontrakcja m => Document -> FileID -> m Bool
     hasAccess doc fid = do
-      user <- fromJust <$> ctxMaybeUser <$> getContext
+      user <- fromJust <$> view #ctxMaybeUser <$> getContext
       if (fid `elem` (authorattachmentfileid <$> documentauthorattachments doc))
         then return True
         else do
@@ -491,7 +491,7 @@ apiCallV1Ready did = logDocument did . api $ do
                  whenM (isNothing . documentfile <$> theDocument) $ do
                    throwM . SomeDBExtraException $ serverError
                      "File must be provided before document can be made ready."
-                 t        <- ctxTime <$> getContext
+                 t        <- view #ctxTime <$> getContext
                  timezone <- documenttimezonename <$> theDocument
                  dbUpdate $ PreparationToPending actor timezone
                  dbUpdate $ SetDocumentInviteTime t actor
@@ -983,7 +983,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
       Nothing -> return Nothing
       Just n  -> do
         tot <- documenttimeouttime <$> theDocument
-        if n < 1 || (isJust tot && n `daysAfter` (ctxTime ctx) > fromJust tot)
+        if n < 1 || (isJust tot && n `daysAfter` (ctx ^. #ctxTime) > fromJust tot)
           then
             throwM
             . SomeDBExtraException
@@ -1402,7 +1402,7 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
 apiCallV1Get :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Get did = logDocument did . api $ do
   (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
-  sid   <- ctxSessionID <$> getContext
+  sid   <- view #ctxSessionID <$> getContext
   check <- maybe (return False) (dbQuery . CheckDocumentSession sid) msignatorylink
   doc   <- dbQuery $ GetDocumentByDocumentID did
   case (msignatorylink, check) of
@@ -1625,7 +1625,7 @@ apiCallV1History did = logDocument did . api $ do
     J.value "paging"
       $ pagingParamsJSON (PagedList events 1000 emptyListParams (length events))
 
-  modifyContext $ set #ctxMaybeUser (ctxMaybeUser ctx)
+  modifyContext $ set #ctxMaybeUser (ctx ^. #ctxMaybeUser)
   return res
 
 
@@ -1637,7 +1637,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
 
   (mslid :: Maybe SignatoryLinkID ) <- readField "signatorylinkid"
   (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
-  sid   <- ctxSessionID <$> getContext
+  sid   <- view #ctxSessionID <$> getContext
   check <- maybe (return False) (dbQuery . CheckDocumentSession sid) mslid
 
   doc   <- do
@@ -1664,7 +1664,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
             ctx <- getContext
             modifyContext $ set #ctxMaybeUser (Just user)
             res <- getDocByDocID did
-            modifyContext $ set #ctxMaybeUser (ctxMaybeUser ctx)
+            modifyContext $ set #ctxMaybeUser (ctx ^. #ctxMaybeUser)
             return res
           else getDocByDocID did
 
@@ -1695,7 +1695,7 @@ apiCallV1DownloadFile did fileid nameForBrowser =
   logDocumentAndFile did fileid . api $ do
     (mslid :: Maybe SignatoryLinkID ) <- readField "signatorylinkid"
     (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
-    sid   <- ctxSessionID <$> getContext
+    sid   <- view #ctxSessionID <$> getContext
     check <- maybe (return False) (dbQuery . CheckDocumentSession sid) mslid
     doc   <- do
       case (mslid, check, maccesstoken) of
@@ -1719,7 +1719,7 @@ apiCallV1DownloadFile did fileid nameForBrowser =
               ctx <- getContext
               modifyContext $ set #ctxMaybeUser (Just user)
               res <- getDocByDocID did
-              modifyContext $ set #ctxMaybeUser (ctxMaybeUser ctx)
+              modifyContext $ set #ctxMaybeUser (ctx ^. #ctxMaybeUser)
               return res
             else getDocByDocID did
     let allfiles =
@@ -1802,7 +1802,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
 
 apiCallV1SendSMSPinCode :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
-  sid <- ctxSessionID <$> getContext
+  sid <- view #ctxSessionID <$> getContext
   void $ apiGuardL (serverError "No document found") $ dbQuery $ CheckDocumentSession
     sid
     slid
@@ -1944,7 +1944,7 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
 guardSignatoryAccessFromSessionOrCredentials
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Maybe User)
 guardSignatoryAccessFromSessionOrCredentials did slid = do
-  sid          <- ctxSessionID <$> getContext
+  sid          <- view #ctxSessionID <$> getContext
   validSession <- dbQuery $ CheckDocumentSession sid slid
   if validSession
     then return Nothing

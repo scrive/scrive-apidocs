@@ -12,7 +12,6 @@ import Test.QuickCheck
 import qualified Data.Set as S
 import qualified Data.Text as T
 
-import Context (ctxPdfToolsLambdaEnv, ctxTime)
 import DataRetentionPolicy
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
@@ -1020,7 +1019,7 @@ performNewDocumentWithRandomUser mug doctype title = do
   let aa = authorActor ctx user
   doc <- randomUpdate
     $ NewDocument user (T.pack title) doctype defaultTimeZoneName 0 aa Nothing
-  return (user, ctxTime ctx, doc)
+  return (user, ctx ^. #ctxTime, doc)
 
 assertGoodNewDocument
   :: Maybe UserGroupWithParents
@@ -1085,7 +1084,7 @@ testCancelDocumentCancelsDocument = replicateM_ 10 $ do
                                   Canceled
                                   (documentstatus canceleddoc)
                       assertBool "Updated modification time"
-                        $ compareTime (ctxTime ctx) (documentmtime canceleddoc)
+                        $ compareTime (ctx ^. #ctxTime) (documentmtime canceleddoc)
                       assertBool
                         "Siglinks are unchanged"
                         (signatoryLinksListsAreAlmostEqualForTests
@@ -1798,7 +1797,7 @@ testSealDocument = replicateM_ 1 $ do
 
                       randomUpdate $ \t -> CloseDocument (systemActor t)
 
-                      runPdfToolsLambdaT (ctxPdfToolsLambdaEnv ctx)
+                      runPdfToolsLambdaT (ctx ^. #ctxPdfToolsLambdaEnv)
                         $ sealDocument "https://scrive.com"
 
 testDocumentAppendSealedPendingRight :: TestEnv ()

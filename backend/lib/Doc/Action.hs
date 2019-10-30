@@ -157,7 +157,7 @@ postDocumentRejectedChange siglinkid customMessage doc@Document {..} =
     -- Log the fact that the current user rejected a document.
     maybe (return ())
           (\user -> logDocEvent "Doc Rejected" user [] doc)
-          (ctxMaybeUser ctx)
+          (ctx ^. #ctxMaybeUser)
     sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
     return ()
 

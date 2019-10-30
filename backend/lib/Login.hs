@@ -40,7 +40,7 @@ import Utils.HTTP
 handleLoginGet :: Kontrakcja m => m (Either KontraLink Response)
 handleLoginGet = do
   ctx <- getContext
-  case ctxMaybeUser ctx of
+  case ctx ^. #ctxMaybeUser of
     Nothing -> do
       dirtyReferer <- getField "referer"
       let checkPrefixes s = s `T.isPrefixOf` fromMaybe "" dirtyReferer
@@ -78,7 +78,7 @@ handleLoginPost = do
           let masklist = ugsIPAddressMaskList $ ugwpSettings ugwp
           return
             $  null masklist
-            || (any (ipAddressIsInNetwork $ ctxIpNumber ctx) masklist)
+            || (any (ipAddressIsInNetwork $ ctx ^. #ctxIpNumber) masklist)
         Nothing -> return True
       case maybeuser of
         Just user@User { userpassword, userid, useraccountsuspended, usertotp, usertotpactive }
@@ -95,8 +95,8 @@ handleLoginPost = do
                           $ logObject_ user
                         void $ dbUpdate $ LogHistoryLoginTOTPFailure
                           userid
-                          (ctxIpNumber ctx)
-                          (ctxTime ctx)
+                          (ctx ^. #ctxIpNumber)
+                          (ctx ^. #ctxTime)
                         J.runJSONGenT $ do
                           J.value "logged" False
                           J.value "totp_correct" False
@@ -123,34 +123,34 @@ handleLoginPost = do
           logInfo "User login failed (invalid password)" $ logObject_ u
           void $ if padlogin
             then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (ctxIpNumber ctx)
-                                                      (ctxTime ctx)
+                                                      (ctx ^. #ctxIpNumber)
+                                                      (ctx ^. #ctxTime)
             else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (ctxIpNumber ctx)
-                                                   (ctxTime ctx)
+                                                   (ctx ^. #ctxIpNumber)
+                                                   (ctx ^. #ctxTime)
           J.runJSONGenT $ J.value "logged" False
 
         Just u | not ipIsOK -> do
           logInfo "User login failed (ip not on allowed list)"
-            $ object [logPair_ u, "ip" .= show (ctxIpNumber ctx)]
+            $ object [logPair_ u, "ip" .= show (ctx ^. #ctxIpNumber)]
           void $ if padlogin
             then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (ctxIpNumber ctx)
-                                                      (ctxTime ctx)
+                                                      (ctx ^. #ctxIpNumber)
+                                                      (ctx ^. #ctxTime)
             else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (ctxIpNumber ctx)
-                                                   (ctxTime ctx)
+                                                   (ctx ^. #ctxIpNumber)
+                                                   (ctx ^. #ctxTime)
           J.runJSONGenT $ J.value "logged" False
         Just u -> do
           {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
           logInfo "User login failed (user account suspended)" $ object [logPair_ u]
           void $ if padlogin
             then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (ctxIpNumber ctx)
-                                                      (ctxTime ctx)
+                                                      (ctx ^. #ctxIpNumber)
+                                                      (ctx ^. #ctxTime)
             else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (ctxIpNumber ctx)
-                                                   (ctxTime ctx)
+                                                   (ctx ^. #ctxIpNumber)
+                                                   (ctx ^. #ctxTime)
           J.runJSONGenT $ J.value "logged" False
         Nothing -> do
           logInfo "User login failed (user not found)" $ object ["email" .= email]
@@ -167,22 +167,22 @@ handleLoginPost = do
           asyncLogEvent SetUserProps (simplePlanhatAction "Login" user now) EventPlanhat
           asyncLogEvent
             "Login"
-            [UserIDProp uid, IPProp $ ctxIpNumber ctx, TimeProp $ ctxTime ctx]
+            [UserIDProp uid, IPProp $ ctx ^. #ctxIpNumber, TimeProp $ ctx ^. #ctxTime]
             EventMixpanel
           asyncLogEvent SetUserProps
-                        [UserIDProp uid, someProp "Last login" $ ctxTime ctx]
+                        [UserIDProp uid, someProp "Last login" $ ctx ^. #ctxTime]
                         EventMixpanel
         _ -> return ()
       if padlogin
         then do
           void $ dbUpdate $ LogHistoryPadLoginSuccess (userid user)
-                                                      (ctxIpNumber ctx)
-                                                      (ctxTime ctx)
+                                                      (ctx ^. #ctxIpNumber)
+                                                      (ctx ^. #ctxTime)
           logPadUserToContext muuser
         else do
           void $ dbUpdate $ LogHistoryLoginSuccess (userid user)
-                                                   (ctxIpNumber ctx)
-                                                   (ctxTime ctx)
+                                                   (ctx ^. #ctxIpNumber)
+                                                   (ctx ^. #ctxTime)
           logUserToContext muuser
       J.runJSONGenT $ J.value "logged" True
 

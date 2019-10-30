@@ -10,7 +10,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Text.XML as XML
 
-import Context
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.DocStateData
@@ -66,12 +65,12 @@ sendDocumentMails author = do
                       )
       `withDocumentM` do
                         res <- dbUpdate
-                          $ SetDocumentLang l (systemActor $ ctxTime ctx)
+                          $ SetDocumentLang l (systemActor $ ctx ^. #ctxTime)
                         unless res $ unexpectedError "Expected True"
 
                         asl  <- head . documentsignatorylinks <$> theDocument
                         file <- addNewRandomFile
-                        randomUpdate $ AttachFile file (systemActor $ ctxTime ctx)
+                        randomUpdate $ AttachFile file (systemActor $ ctx ^. #ctxTime)
 
                         islf <- rand 10 arbitrary
 
@@ -118,24 +117,24 @@ sendDocumentMails author = do
                           =<< theDocument
                         -- DELIVERY MAILS
                         checkMail "Deferred invitation"
-                          $   mailDeferredInvitation (ctxMailNoreplyAddress ctx)
-                                                     (ctxBrandedDomain ctx)
+                          $   mailDeferredInvitation (ctx ^. #ctxMailNoreplyAddress)
+                                                     (ctx ^. #ctxBrandedDomain)
                                                      sl
                           =<< theDocument
                         checkMail "Undelivered invitation"
-                          $   mailUndeliveredInvitation (ctxMailNoreplyAddress ctx)
-                                                        (ctxBrandedDomain ctx)
+                          $   mailUndeliveredInvitation (ctx ^. #ctxMailNoreplyAddress)
+                                                        (ctx ^. #ctxBrandedDomain)
                                                         sl
                           =<< theDocument
                         checkMail "Delivered invitation"
-                          $   mailDeliveredInvitation (ctxMailNoreplyAddress ctx)
-                                                      (ctxBrandedDomain ctx)
+                          $   mailDeliveredInvitation (ctx ^. #ctxMailNoreplyAddress)
+                                                      (ctx ^. #ctxBrandedDomain)
                                                       sl
                           =<< theDocument
                         checkMail "Undelivered confirmation" $ do
                           doc <- theDocument
-                          mailUndeliveredConfirmation (ctxMailNoreplyAddress ctx)
-                                                      (ctxBrandedDomain ctx)
+                          mailUndeliveredConfirmation (ctx ^. #ctxMailNoreplyAddress)
+                                                      (ctx ^. #ctxBrandedDomain)
                                                       sl
                                                       doc
                         --remind mails
@@ -200,13 +199,13 @@ testUserMails = do
           m <- fst <$> (runTestKontra req ctx $ mg)
           validMail (T.pack s) m
     checkMail "New account" $ do
-      al <- newUserAccountRequestLink (ctxLang ctx) (userid user) AccountRequest
+      al <- newUserAccountRequestLink (ctx ^. #ctxLang) (userid user) AccountRequest
       newUserMail ctx (getEmail user) al
     checkMail "New account by admin" $ do
-      al <- newUserAccountRequestLink (ctxLang ctx) (userid user) ByAdmin
-      mailNewAccountCreatedByAdmin ctx (ctxLang ctx) (getEmail user) al
+      al <- newUserAccountRequestLink (ctx ^. #ctxLang) (userid user) ByAdmin
+      mailNewAccountCreatedByAdmin ctx (ctx ^. #ctxLang) (getEmail user) al
     checkMail "Reset password mail" $ do
-      al <- newUserAccountRequestLink (ctxLang ctx) (userid user) AccountRequest
+      al <- newUserAccountRequestLink (ctx ^. #ctxLang) (userid user) AccountRequest
       resetPasswordMail ctx user al
   commit
 

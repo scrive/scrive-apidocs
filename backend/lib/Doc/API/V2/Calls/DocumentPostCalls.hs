@@ -101,7 +101,7 @@ docApiV2New = api $ do
     _               -> do
       ctx   <- getContext
       title <- renderTemplate_ "newDocumentTitle"
-      return $ title <> " " <> formatTimeSimple (ctxTime ctx)
+      return $ title <> " " <> formatTimeSimple (ctx ^. #ctxTime)
   whenJust mFolderId guardDocumentCreateInFolderIsAllowed
   ( dbUpdate
     $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor mFolderId
@@ -212,7 +212,7 @@ docApiV2Start did = logDocument did . api $ do
     guardThatDocumentCanBeStarted =<< theDocument
     -- Parameters
     authorSignsNow <- apiV2ParameterDefault False (ApiV2ParameterBool "author_signs_now")
-    t              <- ctxTime <$> getContext
+    t              <- view #ctxTime <$> getContext
     timezone       <- documenttimezonename <$> theDocument
     clearDocFields actor
     dbUpdate $ PreparationToPending actor timezone
@@ -226,7 +226,7 @@ docApiV2Start did = logDocument did . api $ do
 docApiV2StartWithPortal :: Kontrakcja m => m Response
 docApiV2StartWithPortal = api $ do
   -- Permissions
-  time <- ctxTime <$> getContext
+  time <- view #ctxTime <$> getContext
   (user, actor) <- getAPIUser APIDocSend
   dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
   when (length dids > 20) . apiError $ requestParameterInvalid
@@ -645,7 +645,7 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
       Just d  -> do
         ctx <- getContext
         tot <- documenttimeouttime <$> theDocument
-        if d < 1 || (isJust tot && d `daysAfter` (ctxTime ctx) > fromJust tot)
+        if d < 1 || (isJust tot && d `daysAfter` (ctx ^. #ctxTime) > fromJust tot)
           then apiError $ requestParameterInvalid
             "days"
             "Must be a number between 1 and the number of days left to sign"

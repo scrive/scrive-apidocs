@@ -58,33 +58,33 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
   void $ dbUpdate . UserGroupUpdate . set #ugName ugname $ ug
   void $ dbUpdate $ LogHistoryUserInfoChanged
     (userid actvuser)
-    (ctxIpNumber ctx)
-    (ctxTime ctx)
+    (ctx ^. #ctxIpNumber)
+    (ctx ^. #ctxTime)
     (userinfo actvuser)
     ((userinfo actvuser) { userfstname = fromMaybe "" mfstname
                          , usersndname = fromMaybe "" msndname
                          }
     )
-    (userid <$> ctxMaybeUser ctx)
+    (userid <$> ctx ^. #ctxMaybeUser)
   void $ dbUpdate $ LogHistoryPasswordSetup (userid actvuser)
-                                            (ctxIpNumber ctx)
-                                            (ctxTime ctx)
-                                            (userid <$> ctxMaybeUser ctx)
-  void $ dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxTime ctx)
+                                            (ctx ^. #ctxIpNumber)
+                                            (ctx ^. #ctxTime)
+                                            (userid <$> ctx ^. #ctxMaybeUser)
+  void $ dbUpdate $ AcceptTermsOfService (userid actvuser) (ctx ^. #ctxTime)
   void $ dbUpdate $ LogHistoryTOSAccept (userid actvuser)
-                                        (ctxIpNumber ctx)
-                                        (ctxTime ctx)
-                                        (userid <$> ctxMaybeUser ctx)
+                                        (ctx ^. #ctxIpNumber)
+                                        (ctx ^. #ctxTime)
+                                        (userid <$> ctx ^. #ctxMaybeUser)
   void $ dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
   dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser)
                                       (userid actvuser)
-                                      (14 `daysBefore` ctxTime ctx)
+                                      (14 `daysBefore` (ctx ^. #ctxTime))
 
   mpassword <- getField "password"
   case (mpassword) of
     Just password -> do
-      unlessM (checkPassword (ctxPasswordServiceConf ctx) password) $ do
+      unlessM (checkPassword (ctx ^. #ctxPasswordServiceConf) password) $ do
         logInfo_ "Can't activate account, 'password' is not good"
         internalError
       passwordhash <- createPassword password
@@ -133,8 +133,8 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
                                   sm
       whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
         (userid user)
-        (ctxIpNumber ctx)
-        (ctxTime ctx)
+        (ctx ^. #ctxIpNumber)
+        (ctx ^. #ctxTime)
         email
         (userid <$> getContextUser ctx)
       return muser

@@ -1,5 +1,5 @@
 module Context (
-    Context(..)
+    Context
   , ctxDomainUrl
   , getContextUser
   , anonymiseContext

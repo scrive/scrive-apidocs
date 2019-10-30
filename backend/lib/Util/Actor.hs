@@ -29,7 +29,7 @@ mkAuthorActor ctx = case getContextUser ctx of
   Nothing   -> Nothing
 
 mkAdminActor :: Context -> Maybe Actor
-mkAdminActor ctx = case ctxMaybeUser ctx of
+mkAdminActor ctx = case ctx ^. #ctxMaybeUser of
   Just user -> Just $ adminActor ctx user
   Nothing   -> Nothing
 
@@ -56,10 +56,10 @@ data Actor = Actor
   } deriving (Eq, Ord, Show, Typeable)
 
 contextActor :: Context -> Actor
-contextActor ctx = Actor { actorTime       = ctxTime ctx
-                         , actorClientTime = ctxClientTime ctx
-                         , actorClientName = ctxClientName ctx
-                         , actorIP         = Just (ctxIpNumber ctx)
+contextActor ctx = Actor { actorTime       = ctx ^. #ctxTime
+                         , actorClientTime = ctx ^. #ctxClientTime
+                         , actorClientName = ctx ^. #ctxClientName
+                         , actorIP         = Just (ctx ^. #ctxIpNumber)
                          , actorUserID     = Nothing
                          , actorEmail      = Nothing
                          , actorSigLinkID  = Nothing

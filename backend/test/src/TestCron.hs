@@ -70,7 +70,7 @@ runTestCronUntilIdle ctx = do
         , runConsumerWithIdleSignal . modTimeout $ documentSealing
           (cronGuardTimeConf cronConf)
           pdfSealLambdaEnv
-          (ctxGlobalTemplates ctx)
+          (ctx ^. #ctxGlobalTemplates)
           pool
           (cronMailNoreplyAddress cronConf)
           (cronConsumerSealingMaxJobs cronConf)
@@ -80,7 +80,7 @@ runTestCronUntilIdle ctx = do
           (cronGuardTimeConf cronConf)
           (cronCgiGrpConfig cronConf)
           (cronNetsSignConfig cronConf)
-          (ctxGlobalTemplates ctx)
+          (ctx ^. #ctxGlobalTemplates)
           pool
           (cronMailNoreplyAddress cronConf)
           (cronConsumerSigningMaxJobs cronConf)
@@ -88,7 +88,7 @@ runTestCronUntilIdle ctx = do
       , ( "document extending"
         , runConsumerWithIdleSignal . modTimeout $ documentExtendingConsumer
           (cronGuardTimeConf cronConf)
-          (ctxGlobalTemplates ctx)
+          (ctx ^. #ctxGlobalTemplates)
           pool
           (cronConsumerExtendingMaxJobs cronConf)
         )
@@ -110,7 +110,7 @@ runTestCronUntilIdle ctx = do
         )
       ]
     cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf)
-                                  (ctxGlobalTemplates ctx)
+                                  (ctx ^. #ctxGlobalTemplates)
                                   (cronMailNoreplyAddress cronConf)
 
     finalizeRunner ((label, runner), idleSignal) =

@@ -89,14 +89,14 @@ pageFromBody ctx ad bodytext fields = do
 userGroupWithParentsForPage :: Kontrakcja m => m (Maybe UserGroupWithParents)
 userGroupWithParentsForPage = do
   ctx <- getContext
-  case ctxMaybeUser ctx of
+  case ctx ^. #ctxMaybeUser of
     Nothing   -> return Nothing
     Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (userid user)
 
 userGroupUIForPage :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
   ctx <- getContext
-  case ctxMaybeUser ctx of
+  case ctx ^. #ctxMaybeUser of
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
       return . Just $ (ugID ug, ugUI ug)
@@ -197,23 +197,23 @@ standardPageFields
   -> AnalyticsData
   -> Fields m ()
 standardPageFields ctx mugidandui ad = do
-  F.value "langcode" $ codeFromLang $ ctxLang ctx
-  F.value "logged" $ isJust (ctxMaybeUser ctx)
-  F.value "padlogged" $ isJust (ctxMaybePadUser ctx)
+  F.value "langcode" $ codeFromLang $ ctx ^. #ctxLang
+  F.value "logged" $ isJust (ctx ^. #ctxMaybeUser)
+  F.value "padlogged" $ isJust (ctx ^. #ctxMaybePadUser)
   F.value "hostpart" $ ctx ^. ctxDomainUrl
-  F.value "production" (ctxProduction ctx)
+  F.value "production" (ctx ^. #ctxProduction)
   F.value "brandingdomainid" (show $ ctx ^. #ctxBrandedDomain % #bdid)
   F.value "brandinguserid" (fmap (show . userid) (getContextUser ctx))
-  F.value "ctxlang" $ codeFromLang $ ctxLang ctx
+  F.value "ctxlang" $ codeFromLang $ ctx ^. #ctxLang
   F.object "analytics" $ analyticsTemplates ad
-  F.value "trackjstoken" (ctxTrackJsToken ctx)
-  F.value "zendeskkey" (ctxZendeskKey ctx)
+  F.value "trackjstoken" (ctx ^. #ctxTrackJsToken)
+  F.value "zendeskkey" (ctx ^. #ctxZendeskKey)
   F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
   F.valueM "b64subscriptiondata"
     $   fmap (B64.encode . A.encode)
     <$> currentSubscriptionJSON
   F.value "subscriptionuseriscompanyadmin"
-    $ case fmap useriscompanyadmin (ctxMaybeUser ctx) of
+    $ case fmap useriscompanyadmin (ctx ^. #ctxMaybeUser) of
         Nothing    -> "undefined"
         Just True  -> "true"
         Just False -> "false"
@@ -270,5 +270,5 @@ respondWithDownloadContents mimeType forceDownload contents =
 -}
 entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx = do
-  F.value "cdnbaseurl" (ctxCdnBaseUrl ctx)
+  F.value "cdnbaseurl" (ctx ^. #ctxCdnBaseUrl)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID

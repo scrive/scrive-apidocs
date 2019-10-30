@@ -141,7 +141,7 @@ handleNewDocument' user ugwp = do
     (Just _) -> return ()
   timezone <- fromMaybe defaultTimeZoneName
     <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-  timestamp <- formatTimeSimpleWithTZ timezone (ctxTime ctx)
+  timestamp <- formatTimeSimpleWithTZ timezone (ctx ^. #ctxTime)
   doc       <- dbUpdate $ NewDocument user
                                       (T.replace "  " " " $ title <> " " <> timestamp)
                                       Signable
@@ -322,7 +322,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
             timezone <- documenttimezonename <$> theDocument
             clearDocFields actor
             dbUpdate $ PreparationToPending actor timezone
-            t <- ctxTime <$> getContext
+            t <- view #ctxTime <$> getContext
             dbUpdate $ SetDocumentInviteTime t actor
             postDocumentPreparationChange False timezone
       startDocument
@@ -352,7 +352,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
 {-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow did slid = logDocumentAndSignatory did slid $ do
-  sid          <- ctxSessionID <$> getContext
+  sid          <- view #ctxSessionID <$> getContext
   validSession <- dbQuery $ CheckDocumentSession sid slid
   if validSession
     then do
@@ -463,7 +463,7 @@ handleEvidenceAttachment docid aname =
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
   document      <- getDocByDocID docid
-  muser         <- ctxMaybeUser <$> getContext
+  muser         <- view #ctxMaybeUser <$> getContext
 
   authorsiglink <- guardJust $ getAuthorSigLink document
 
@@ -635,7 +635,7 @@ handleToStart :: Kontrakcja m => m Response
 handleToStart = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  case ctxMaybeUser ctx of
+  case ctx ^. #ctxMaybeUser of
     Just _  -> simpleHtmlResponse =<< pageDocumentToStartList ctx ad
     Nothing -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx ad
 
@@ -679,7 +679,7 @@ checkFileAccessWith fid msid mmh mdid mattid = case (msid, mdid, mattid) of
         doc' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
         return (True, doc')
       Nothing -> do
-        sid  <- ctxSessionID <$> getContext
+        sid  <- view #ctxSessionID <$> getContext
         doc' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
         vs   <- dbQuery $ CheckDocumentSession sid slid
         return (vs, doc')
@@ -700,7 +700,7 @@ checkFileAccessWith fid msid mmh mdid mattid = case (msid, mdid, mattid) of
     _doc <- getDocByDocID did
     checkFileInDocument did
   (_, _, Just attid) -> guardLoggedInOrThrowInternalError $ do
-    user <- guardJustM $ ctxMaybeUser <$> getContext
+    user <- guardJustM $ view #ctxMaybeUser <$> getContext
     atts <- dbQuery $ GetAttachments
       [ AttachmentsSharedInUsersUserGroup (userid user)
       , AttachmentsOfAuthorDeleteValue (userid user) True
@@ -757,7 +757,7 @@ handleVerify = do
       return pth
     _ -> internalError
   ctx <- getContext
-  J.toJSValue <$> GuardTime.verify (ctxGtConf ctx) filepath
+  J.toJSValue <$> GuardTime.verify (ctx ^. #ctxGtConf) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = guardLoggedInOrThrowInternalError $ do
@@ -789,7 +789,7 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
   ctx <- getContext
   doc <- theDocument
   when (isPending doc && isSignatoryAndHasNotSigned sl) $ do
-    updateMTimeAndObjectVersion $ ctxTime ctx
+    updateMTimeAndObjectVersion $ ctx ^. #ctxTime
     void
       $   dbUpdate
       .   InsertEvidenceEventWithAffectedSignatoryAndMsg ev (return ()) (Just sl) Nothing

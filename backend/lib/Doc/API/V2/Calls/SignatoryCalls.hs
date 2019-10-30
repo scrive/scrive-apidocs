@@ -310,10 +310,10 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         dbUpdate $ CleanAllScheduledDocumentSigning slid
         dbUpdate $ ScheduleDocumentSigning slid
                                            (ctx ^. #ctxBrandedDomain % #bdid)
-                                           (ctxTime ctx)
-                                           (ctxIpNumber ctx)
-                                           (ctxClientTime ctx)
-                                           (ctxClientName ctx)
+                                           (ctx ^. #ctxTime)
+                                           (ctx ^. #ctxIpNumber)
+                                           (ctx ^. #ctxClientTime)
+                                           (ctx ^. #ctxClientName)
                                            doclang
                                            fields
                                            acceptedAttachments

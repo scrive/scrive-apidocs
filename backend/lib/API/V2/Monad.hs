@@ -116,7 +116,7 @@ apiLog acc = do
   response <- acc
   request  <- askRq
   ctx      <- getContext
-  when (ctxIsApiLogEnabled ctx && isAPIV2Call request) $ do
+  when (ctx ^. #ctxIsApiLogEnabled && isAPIV2Call request) $ do
     mUser <- catchDBExtraException
       ((Just . fst) <$> getAPIUserWithAnyPrivileges)
       (\(APIError { errorType = InvalidAuthorization }) -> return Nothing)

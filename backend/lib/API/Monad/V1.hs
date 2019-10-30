@@ -328,7 +328,7 @@ getAPIUserWithPad priv = do
 getSessionUser :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUser = do
   ctx <- getContext
-  case ctxMaybeUser ctx of
+  case ctx ^. #ctxMaybeUser of
     Nothing   -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)
 

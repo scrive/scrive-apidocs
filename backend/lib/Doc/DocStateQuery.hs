@@ -156,7 +156,7 @@ signatoryNeedsToIdentifyToView sl doc = if isClosed doc
     check authKind signatoryAuthMethod = case signatoryAuthMethod sl of
       StandardAuthenticationToView -> return False
       authtoview                   -> do
-        sid       <- ctxSessionID <$> getContext
+        sid       <- view #ctxSessionID <$> getContext
         mauthindb <- dbQuery (GetEAuthentication authKind sid $ signatorylinkid sl)
         return $ maybe True (not . authViewMatchesAuth authtoview) mauthindb
 
@@ -166,7 +166,7 @@ signatoryNeedsToIdentifyToView sl doc = if isClosed doc
 getDocumentAndSignatoryForEIDAuth
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Document, SignatoryLink)
 getDocumentAndSignatoryForEIDAuth did slid = do
-  sid   <- ctxSessionID <$> getContext
+  sid   <- view #ctxSessionID <$> getContext
   check <- dbQuery $ CheckDocumentSession sid slid
   if check
     then do
@@ -202,7 +202,7 @@ getDocumentAndSignatoryForEIDAuth did slid = do
 getDocumentAndSignatoryForEIDSign
   :: Kontrakcja m => SignatoryLinkID -> m (Document, SignatoryLink)
 getDocumentAndSignatoryForEIDSign slid = do
-  sid   <- ctxSessionID <$> getContext
+  sid   <- view #ctxSessionID <$> getContext
   check <- dbQuery $ CheckDocumentSession sid slid
   if check
     then do
