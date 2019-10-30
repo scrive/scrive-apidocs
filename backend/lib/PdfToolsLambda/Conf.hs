@@ -1,9 +1,9 @@
-module PdfToolsLambda.Conf (
-      PdfToolsLambdaConf(..)
-    , PdfToolsLambdaEnv(..)
-    , pdfToolsLambdaEnvFromConf
-    , PdfToolsLambdaMonad(..)
-    , runPdfToolsLambdaT
+module PdfToolsLambda.Conf
+  ( PdfToolsLambdaConf
+  , PdfToolsLambdaEnv
+  , pdfToolsLambdaEnvFromConf
+  , PdfToolsLambdaMonad(..)
+  , runPdfToolsLambdaT
   ) where
 
 import Control.Monad.Base (MonadBase)
