@@ -122,10 +122,11 @@ ununTestEnv st =
     . flip
         evalStateT
         I.TestEnvStRW { timeDelay   = 0
-                    , currentTime = Nothing
-                    , requestUri  = "http://testkontra.fake"
-                    }
-    . evalTestFileStorageT ((, st ^. #redisConn, st ^. #fileMemCache) <$> st ^. #amazonS3Env)
+                      , currentTime = Nothing
+                      , requestUri  = "http://testkontra.fake"
+                      }
+    . evalTestFileStorageT
+        ((, st ^. #redisConn, st ^. #fileMemCache) <$> st ^. #amazonS3Env)
     . unTestEnv
 
 instance CryptoRNG TestEnv where
@@ -240,7 +241,7 @@ modifyTestTime modtime = do
   mtesttime <- use #currentTime
   case mtesttime of
     Just testtime -> assign #currentTime (Just $ modtime testtime)
-    Nothing -> assign #timeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
+    Nothing       -> assign #timeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
 
 -- | Sets time and also stops time flow
 setTestTime :: (MonadState TestEnvStRW m) => UTCTime -> m ()
@@ -354,7 +355,7 @@ mkContext lang = do
                      , time                = time
                      , clientName          = Nothing
                      , clientTime          = Nothing
-                     , ipAddr            = noIP
+                     , ipAddr              = noIP
                      , production          = False
                      , cdnBaseUrl          = Nothing
                      , templates           = localizedVersion lang globaltemplates

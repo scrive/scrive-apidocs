@@ -179,10 +179,9 @@ apiCallGetUserPersonalToken = api $ do
               (Nothing, True, Just _) ->
                 unexpectedError "TOTP condition should not happen"
             else do
-              void . dbUpdate $ LogHistoryAPIGetPersonalTokenFailure
-                (userid user)
-                (ctx ^. #ipAddr)
-                (ctx ^. #time)
+              void . dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user)
+                                                                     (ctx ^. #ipAddr)
+                                                                     (ctx ^. #time)
               logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
               -- we do not want rollback here, so we don't raise exception
               return . Left $ forbidden wrongPassMsg
@@ -214,10 +213,9 @@ apiCallGetUserPersonalToken = api $ do
           attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (userid user)
           if attemptCount <= 5
             then do
-              void $ dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess
-                uid
-                (ctx ^. #ipAddr)
-                (ctx ^. #time)
+              void $ dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid
+                                                                     (ctx ^. #ipAddr)
+                                                                     (ctx ^. #time)
               return $ Right $ Ok (unjsonOAuthAuthorization, t)
             else
               -- use an ambiguous message, so that this cannot be used to determine
@@ -329,9 +327,7 @@ apiCallLoginUser = api $ do
   redirectUrl  <- apiGuardJustM (badInput "Redirect URL not provided or invalid.")
     $ getField "redirect"
 
-  void $ dbUpdate $ LogHistoryLoginSuccess (userid user)
-                                           (ctx ^. #ipAddr)
-                                           (ctx ^. #time)
+  void $ dbUpdate $ LogHistoryLoginSuccess (userid user) (ctx ^. #ipAddr) (ctx ^. #time)
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 

@@ -235,8 +235,7 @@ handleAcceptTOSGet =
 handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
   ctx <- getContext
-  let (maybeuser, time, ipnumber) =
-        (ctx ^. #maybeUser, ctx ^. #time, ctx ^. #ipAddr)
+  let (maybeuser, time, ipnumber) = (ctx ^. #maybeUser, ctx ^. #time, ctx ^. #ipAddr)
   userid <- guardJustM $ return $ userid <$> maybeuser
   tos    <- getDefaultedField False asValidCheckBox "tos"
   case tos of
@@ -331,9 +330,7 @@ handlePasswordReminderPost uid token = do
       ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid u
       let masklist = ugsIPAddressMaskList $ ugwpSettings ugwp
       ctx <- getContext
-      return
-        $  null masklist
-        || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
+      return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
     Nothing -> return True
   case muser of
     Just user | not (useraccountsuspended user) && ipIsOK -> do

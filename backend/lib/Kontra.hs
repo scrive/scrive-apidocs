@@ -182,9 +182,7 @@ unsafeSessionTakeover SessionCookieInfo {..} = do
 
 switchLang :: Kontrakcja m => Lang -> m ()
 switchLang lang = modifyContext $ \ctx ->
-  ctx
-    & (#lang .~ lang)
-    & (#templates .~ localizedVersion lang (ctx ^. #globalTemplates))
+  ctx & (#lang .~ lang) & (#templates .~ localizedVersion lang (ctx ^. #globalTemplates))
 
 -- | Extract data from GET or POST request. Fail with 'internalError'
 -- if param variable not present or when it cannot be read.

@@ -34,7 +34,4 @@ instance Unjson PdfToolsLambdaConf where
 
 pdfToolsLambdaEnvFromConf :: MonadBase IO m => PdfToolsLambdaConf -> m PdfToolsLambdaEnv
 pdfToolsLambdaEnvFromConf PdfToolsLambdaConf {..} =
-  PdfToolsLambdaEnv
-    <$> pure gatewayUrl
-    <*> pure apiKey
-    <*> s3envFromConfig config
+  PdfToolsLambdaEnv <$> pure gatewayUrl <*> pure apiKey <*> s3envFromConfig config

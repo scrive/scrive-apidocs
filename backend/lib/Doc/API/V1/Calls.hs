@@ -160,10 +160,7 @@ apiCallV1CreateFromFile = api $ do
       title <- renderTextTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
       return
         ( Nothing
-        , T.replace "  " " "
-        $  title
-        <> " "
-        <> (T.pack $ formatTimeSimple (ctx ^. #time))
+        , T.replace "  " " " $ title <> " " <> (T.pack $ formatTimeSimple (ctx ^. #time))
         )
     Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do

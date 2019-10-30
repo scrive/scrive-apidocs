@@ -131,8 +131,7 @@ assertAccountActivated :: Text -> Text -> JSValue -> Context -> TestEnv ()
 assertAccountActivated fstname sndname res ctx = do
   ((Just resultOk) :: Maybe Bool) <- withJSValue res $ fromJSValueField "ok"
   assertEqual "Account activation succeeded" True resultOk
-  assertBool "Accepted TOS"
-    $ isJust (ctx ^. #maybeUser >>= userhasacceptedtermsofservice)
+  assertBool "Accepted TOS" $ isJust (ctx ^. #maybeUser >>= userhasacceptedtermsofservice)
   assertEqual "First name was set"  (Just fstname) (getFirstName <$> ctx ^. #maybeUser)
   assertEqual "Second name was set" (Just sndname) (getLastName <$> ctx ^. #maybeUser)
 

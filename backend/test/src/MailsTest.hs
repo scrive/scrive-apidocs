@@ -64,8 +64,7 @@ sendDocumentMails author = do
                         (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa Nothing)
                       )
       `withDocumentM` do
-                        res <- dbUpdate
-                          $ SetDocumentLang l (systemActor $ ctx ^. #time)
+                        res <- dbUpdate $ SetDocumentLang l (systemActor $ ctx ^. #time)
                         unless res $ unexpectedError "Expected True"
 
                         asl  <- head . documentsignatorylinks <$> theDocument
@@ -161,9 +160,7 @@ sendDocumentMails author = do
                                            Nothing
                                            Nothing
                                            SignatoryScreenshots.emptySignatoryScreenshots
-                          =<< (signatoryActor (set #time (10 `minutesAfter` now) ctx)
-                                              sl
-                              )
+                          =<< (signatoryActor (set #time (10 `minutesAfter` now) ctx) sl)
 
                         -- Sending closed email
                         checkMail "Closed"

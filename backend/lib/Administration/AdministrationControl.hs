@@ -413,9 +413,7 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
       r <- dbUpdate $ DisableUserTOTP uid
       if r
         then do
-          void $ dbUpdate $ LogHistoryTOTPDisable uid
-                                                  (ctx ^. #ipAddr)
-                                                  (ctx ^. #time)
+          void $ dbUpdate $ LogHistoryTOTPDisable uid (ctx ^. #ipAddr) (ctx ^. #time)
           return ()
         else internalError
     else return ()

@@ -110,9 +110,7 @@ testSuccessfulLogin = do
     ]
   (res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
-  assertBool "User was logged into context"
-    $  (userid <$> ctx' ^. #maybeUser)
-    == Just uid
+  assertBool "User was logged into context" $ (userid <$> ctx' ^. #maybeUser) == Just uid
   assertBool "User was not logged into context as pad user"
     $  (ctx' ^. #maybePadUser)
     == Nothing
@@ -171,9 +169,7 @@ testSuccessfulLoginSavesAStatEvent = do
     , ("loginType", inText "RegularLogin")
     ]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
-  assertBool "User was logged into context"
-    $  (userid <$> ctx' ^. #maybeUser)
-    == Just uid
+  assertBool "User was logged into context" $ (userid <$> ctx' ^. #maybeUser) == Just uid
 
 testCanLoginWithRedirect :: TestEnv ()
 testCanLoginWithRedirect = do
@@ -388,7 +384,8 @@ testResetPasswordRemovesAllOtherUserSessions = do
         <>  ","
         <?> ct
         <>  ",0,0,"
-        <?> bd ^. #id
+        <?> bd
+        ^.  #id
         <>  ")"
   ctx <- mkContext defaultLang
 

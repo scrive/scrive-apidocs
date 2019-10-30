@@ -95,11 +95,9 @@ test_settingUIWithHandleChangeCompanyBranding = do
   -- Try setting new themes
   mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailThemeFromDomain
-  signviewThemeFromDomain <- dbQuery
-    $ GetTheme (ctx ^. #brandedDomain % #signviewTheme)
+  signviewThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #signviewTheme)
   signviewTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) signviewThemeFromDomain
-  serviceThemeFromDomain <- dbQuery
-    $ GetTheme (ctx ^. #brandedDomain % #serviceTheme)
+  serviceThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #serviceTheme)
   serviceTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) serviceThemeFromDomain
   let browserTitle  = "Super"
   let smsOriginator = "Super SMS"

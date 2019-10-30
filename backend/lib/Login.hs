@@ -76,9 +76,7 @@ handleLoginPost = do
         Just u -> do
           ugwp <- dbQuery $ UserGroupGetWithParentsByUserID (userid u)
           let masklist = ugsIPAddressMaskList $ ugwpSettings ugwp
-          return
-            $  null masklist
-            || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
+          return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
         Nothing -> return True
       case maybeuser of
         Just user@User { userpassword, userid, useraccountsuspended, usertotp, usertotpactive }
@@ -93,10 +91,9 @@ handleLoginPost = do
                   let onBadTOTP = do
                         logInfo "User login failed (invalid TOTP code provided)"
                           $ logObject_ user
-                        void $ dbUpdate $ LogHistoryLoginTOTPFailure
-                          userid
-                          (ctx ^. #ipAddr)
-                          (ctx ^. #time)
+                        void $ dbUpdate $ LogHistoryLoginTOTPFailure userid
+                                                                     (ctx ^. #ipAddr)
+                                                                     (ctx ^. #time)
                         J.runJSONGenT $ do
                           J.value "logged" False
                           J.value "totp_correct" False
@@ -122,35 +119,29 @@ handleLoginPost = do
         Just u@User { userpassword } | not (maybeVerifyPassword userpassword passwd) -> do
           logInfo "User login failed (invalid password)" $ logObject_ u
           void $ if padlogin
-            then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (ctx ^. #ipAddr)
-                                                      (ctx ^. #time)
-            else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (ctx ^. #ipAddr)
-                                                   (ctx ^. #time)
+            then dbUpdate
+              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+            else dbUpdate
+              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
 
         Just u | not ipIsOK -> do
           logInfo "User login failed (ip not on allowed list)"
             $ object [logPair_ u, "ip" .= show (ctx ^. #ipAddr)]
           void $ if padlogin
-            then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (ctx ^. #ipAddr)
-                                                      (ctx ^. #time)
-            else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (ctx ^. #ipAddr)
-                                                   (ctx ^. #time)
+            then dbUpdate
+              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+            else dbUpdate
+              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
         Just u -> do
           {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
           logInfo "User login failed (user account suspended)" $ object [logPair_ u]
           void $ if padlogin
-            then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (ctx ^. #ipAddr)
-                                                      (ctx ^. #time)
-            else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (ctx ^. #ipAddr)
-                                                   (ctx ^. #time)
+            then dbUpdate
+              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+            else dbUpdate
+              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
         Nothing -> do
           logInfo "User login failed (user not found)" $ object ["email" .= email]

@@ -49,32 +49,7 @@ fetchBrandedDomain
      , Text
      )
   -> BrandedDomain
-fetchBrandedDomain ( xid
-                   , maindomain
-                   , url
-                   , smsoriginator
-                   , emailoriginator
-                   , mail_theme
-                   , signview_theme
-                   , service_theme
-                   , login_theme
-                   , browser_title
-                   , favicon
-                   , participant_color_1
-                   , participant_color_2
-                   , participant_color_3
-                   , participant_color_4
-                   , participant_color_5
-                   , participant_color_6
-                   , draft_color
-                   , cancelled_color
-                   , initiated_color
-                   , sent_color
-                   , delivered_color
-                   , opened_color
-                   , reviewed_color
-                   , signed_color
-                   )
+fetchBrandedDomain (xid, maindomain, url, smsoriginator, emailoriginator, mail_theme, signview_theme, service_theme, login_theme, browser_title, favicon, participant_color_1, participant_color_2, participant_color_3, participant_color_4, participant_color_5, participant_color_6, draft_color, cancelled_color, initiated_color, sent_color, delivered_color, opened_color, reviewed_color, signed_color)
   = I.BrandedDomain { id                = xid
                     , mainDomain        = maindomain
                     , url               = url

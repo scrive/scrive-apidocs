@@ -70,15 +70,11 @@ newUserMail
   -> m Mail
 newUserMail ctx emailaddress activatelink = do
   theme <- dbQuery $ GetTheme $ ctx ^. #brandedDomain % #mailTheme
-  kontramail (ctx ^. #mailNoreplyAddress)
-             (ctx ^. #brandedDomain)
-             theme
-             "newUserMail"
-    $ do
-        F.value "email" $ emailaddress
-        F.value "activatelink" $ show activatelink
-        F.value "ctxhostpart" $ ctx ^. ctxDomainUrl
-        brandingMailFields theme
+  kontramail (ctx ^. #mailNoreplyAddress) (ctx ^. #brandedDomain) theme "newUserMail" $ do
+    F.value "email" $ emailaddress
+    F.value "activatelink" $ show activatelink
+    F.value "ctxhostpart" $ ctx ^. ctxDomainUrl
+    brandingMailFields theme
 
 
 mailNewAccountCreatedByAdmin

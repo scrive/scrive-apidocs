@@ -54,7 +54,11 @@ getServiceTheme bdID muser = do
     Nothing   -> dbQuery $ GetTheme $ bd ^. #serviceTheme
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
-      dbQuery . GetTheme . fromMaybe (bd ^. #serviceTheme) . (uguiServiceTheme . ugUI) $ ug
+      dbQuery
+        . GetTheme
+        . fromMaybe (bd ^. #serviceTheme)
+        . (uguiServiceTheme . ugUI)
+        $ ug
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> Text -> m Response
 handleLoginBranding bdID _ = do

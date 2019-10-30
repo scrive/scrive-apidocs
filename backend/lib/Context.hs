@@ -22,8 +22,8 @@ contextUser = (#maybeUser % _Just) `afailing` (#maybePadUser % _Just)
 
 contextToMailContext :: I.Context -> I.MailContext
 contextToMailContext ctx = I.MailContext
-  { lang                 = ctx ^. #lang
-  , brandedDomain        = ctx ^. #brandedDomain
-  , time                 = ctx ^. #time
-  , mailNoreplyAddress   = ctx ^. #mailNoreplyAddress
+  { lang               = ctx ^. #lang
+  , brandedDomain      = ctx ^. #brandedDomain
+  , time               = ctx ^. #time
+  , mailNoreplyAddress = ctx ^. #mailNoreplyAddress
   }

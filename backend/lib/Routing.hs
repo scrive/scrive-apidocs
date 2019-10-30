@@ -208,8 +208,8 @@ guardXToken action = do
       tokensFromString = catMaybes . map (maybeRead . T.pack . unQuote) . splitOn ";"
   mxtokenString <- getField cookieNameXToken
   case mxtokenString of
-    Just xtokenString
-      | ctx ^. #xToken `elem` tokensFromString (T.unpack xtokenString) -> action
+    Just xtokenString | ctx ^. #xToken `elem` tokensFromString (T.unpack xtokenString) ->
+      action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
       logInfo "Invalid xtoken value, anonymousing context"
         $ object ["xtoken" .= mxtokenString]

@@ -43,11 +43,7 @@ domainAdler32 bd = do
   themesMD5 <-
     dbQuery
     $ GetThemesMD5
-    $ [ bd ^. #mailTheme
-      , bd ^. #signviewTheme
-      , bd ^. #serviceTheme
-      , bd ^. #loginTheme
-      ]
+    $ [bd ^. #mailTheme, bd ^. #signviewTheme, bd ^. #serviceTheme, bd ^. #loginTheme]
   return
     $  adler32Text
     $  T.concat

@@ -214,7 +214,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 -- just take the first user we find. We prefer the user
                 -- which was used during API call.
             let mUser = ctx ^? ((#maybeApiUser % _Just) `afailing` contextUser)
-                res' = case mUser of
+                res'  = case mUser of
                   Nothing -> res
                   Just user ->
                     setHeader "X-Scrive-UserID" (show . userid $ user)
@@ -367,7 +367,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                        , time                = minutestime
                        , clientName          = clientName `mplus` userAgent
                        , clientTime          = clientTime
-                       , ipAddr            = peerip
+                       , ipAddr              = peerip
                        , production          = production appConf
                        , cdnBaseUrl          = cdnBaseUrl appConf
                        , templates           = localizedVersion userlang templates2

@@ -27,9 +27,7 @@ test_jsonCompanies = do
   void $ dbUpdate . UserGroupUpdate . set #ugInvoicing (Invoice OnePlan) $ ug2
 
   ctx <-
-    ( set #maybeUser     (Just adminuser2)
-      . set #adminAccounts [Email "jet.li@example.com"]
-      )
+    (set #maybeUser (Just adminuser2) . set #adminAccounts [Email "jet.li@example.com"])
       <$> mkContext defaultLang
 
   req2 <- mkRequest

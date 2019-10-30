@@ -293,9 +293,7 @@ testMigrationTriggersWork = do
 
   ctx0 <- mkContext defaultLang
   let ctx =
-        set #adminAccounts [useremail $ userinfo user]
-          . set #maybeUser (Just user)
-          $ ctx0
+        set #adminAccounts [useremail $ userinfo user] . set #maybeUser (Just user) $ ctx0
   req <- mkRequest GET []
   void $ runTestKontra req ctx $ handleTriggerMigrateFolders 1
   assertCountAllFolders "Added Folders for 1 UserGroup with 1 User" 2
