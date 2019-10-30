@@ -11,7 +11,7 @@ import Optics
 import qualified MailContext.Internal as I
 
 mctxDomainUrl :: Lens' I.MailContext Text
-mctxDomainUrl = #mctxCurrentBrandedDomain % #bdUrl
+mctxDomainUrl = #mctxCurrentBrandedDomain % #url
 
 class Monad m => MailContextMonad m where
   getMailContext :: m I.MailContext

@@ -998,7 +998,7 @@ jsonBrandedDomain bdID = onlySalesOrAdmin $ do
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
   obd <- dbQuery $ GetBrandedDomainByID xbdid
-  when (obd ^. #bdMainDomain) $ do
+  when (obd ^. #mainDomain) $ do
     logInfo_ "Main domain can't be changed"
     internalError
   -- keep this 1to1 consistent with fields in the database
@@ -1012,8 +1012,8 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
         void
           $ dbUpdate
           $ UpdateBrandedDomain
-          $ copy #bdid         obd
-          $ copy #bdMainDomain obd
+          $ copy #id         obd
+          $ copy #mainDomain obd
           $ newDomain
         return ()
       _ -> internalError
@@ -1022,19 +1022,19 @@ unjsonBrandedDomain :: UnjsonDef BrandedDomain
 unjsonBrandedDomain =
   objectOf
     $   pure I.BrandedDomain
-    <*> field "id"              (^. #bdid)              "Id of a branded domain (unique)"
-    <*> field "mainDomain"      (^. #bdMainDomain)      "Is this a main domain"
-    <*> field "url"             (^. #bdUrl)             "URL that will match this domain"
-    <*> field "smsOriginator"   (^. #bdSmsOriginator)   "Originator for text messages"
-    <*> field "emailOriginator" (^. #bdEmailOriginator) "Originator for email messages"
-    <*> field "mailTheme"       (^. #bdMailTheme)       "Email theme"
-    <*> field "signviewTheme"   (^. #bdSignviewTheme)   "Signview theme"
-    <*> field "serviceTheme"    (^. #bdServiceTheme)    "Service theme"
-    <*> field "loginTheme"      (^. #bdLoginTheme)      "Login theme"
-    <*> field "browserTitle"    (^. #bdBrowserTitle)    "Browser title"
+    <*> field "id"              (^. #id)              "Id of a branded domain (unique)"
+    <*> field "mainDomain"      (^. #mainDomain)      "Is this a main domain"
+    <*> field "url"             (^. #url)             "URL that will match this domain"
+    <*> field "smsOriginator"   (^. #smsOriginator)   "Originator for text messages"
+    <*> field "emailOriginator" (^. #emailOriginator) "Originator for email messages"
+    <*> field "mailTheme"       (^. #mailTheme)       "Email theme"
+    <*> field "signviewTheme"   (^. #signviewTheme)   "Signview theme"
+    <*> field "serviceTheme"    (^. #serviceTheme)    "Service theme"
+    <*> field "loginTheme"      (^. #loginTheme)      "Login theme"
+    <*> field "browserTitle"    (^. #browserTitle)    "Browser title"
     <*> fieldBy
           "favicon"
-          (^. #bdFavicon)
+          (^. #favicon)
           "Favicon"
           (invmap
             (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') l)
@@ -1043,20 +1043,20 @@ unjsonBrandedDomain =
             )
             unjsonDef
           )
-    <*> field "participantColor1" (^. #bdParticipantColor1) "Participant 1 color"
-    <*> field "participantColor2" (^. #bdParticipantColor2) "Participant 2 color"
-    <*> field "participantColor3" (^. #bdParticipantColor3) "Participant 3 color"
-    <*> field "participantColor4" (^. #bdParticipantColor4) "Participant 4 color"
-    <*> field "participantColor5" (^. #bdParticipantColor5) "Participant 5 color"
-    <*> field "participantColor6" (^. #bdParticipantColor6) "Participant 6 color"
-    <*> field "draftColor"        (^. #bdDraftColor)        "Draft color"
-    <*> field "cancelledColor"    (^. #bdCancelledColor)    "Cancelled color"
-    <*> field "initatedColor"     (^. #bdInitatedColor)     "Initated color"
-    <*> field "sentColor"         (^. #bdSentColor)         "Sent color"
-    <*> field "deliveredColor"    (^. #bdDeliveredColor)    "Delivered color"
-    <*> field "openedColor"       (^. #bdOpenedColor)       "Opened color"
-    <*> field "reviewedColor"     (^. #bdReviewedColor)     "Reviewed color"
-    <*> field "signedColor"       (^. #bdSignedColor)       "Signed color"
+    <*> field "participantColor1" (^. #participantColor1) "Participant 1 color"
+    <*> field "participantColor2" (^. #participantColor2) "Participant 2 color"
+    <*> field "participantColor3" (^. #participantColor3) "Participant 3 color"
+    <*> field "participantColor4" (^. #participantColor4) "Participant 4 color"
+    <*> field "participantColor5" (^. #participantColor5) "Participant 5 color"
+    <*> field "participantColor6" (^. #participantColor6) "Participant 6 color"
+    <*> field "draftColor"        (^. #draftColor)        "Draft color"
+    <*> field "cancelledColor"    (^. #cancelledColor)    "Cancelled color"
+    <*> field "initatedColor"     (^. #initatedColor)     "Initated color"
+    <*> field "sentColor"         (^. #sentColor)         "Sent color"
+    <*> field "deliveredColor"    (^. #deliveredColor)    "Delivered color"
+    <*> field "openedColor"       (^. #openedColor)       "Opened color"
+    <*> field "reviewedColor"     (^. #reviewedColor)     "Reviewed color"
+    <*> field "signedColor"       (^. #signedColor)       "Signed color"
 
 unjsonBrandedDomainsList :: UnjsonDef [BrandedDomain]
 unjsonBrandedDomainsList = objectOf

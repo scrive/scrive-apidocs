@@ -202,7 +202,7 @@ standardPageFields ctx mugidandui ad = do
   F.value "padlogged" $ isJust (ctx ^. #ctxMaybePadUser)
   F.value "hostpart" $ ctx ^. ctxDomainUrl
   F.value "production" (ctx ^. #ctxProduction)
-  F.value "brandingdomainid" (show $ ctx ^. #ctxBrandedDomain % #bdid)
+  F.value "brandingdomainid" (show $ ctx ^. #ctxBrandedDomain % #id)
   F.value "brandinguserid" (fmap (show . userid) (ctx ^? contextUser))
   F.value "ctxlang" $ codeFromLang $ ctx ^. #ctxLang
   F.object "analytics" $ analyticsTemplates ad
@@ -220,8 +220,8 @@ standardPageFields ctx mugidandui ad = do
   F.value "title"
     $ case emptyToNothing . strip . T.unpack =<< uguiBrowserTitle . snd =<< mugidandui of
         Just ctitle ->
-          ctitle <> " - " <> (T.unpack $ ctx ^. #ctxBrandedDomain % #bdBrowserTitle)
-        Nothing -> T.unpack (ctx ^. #ctxBrandedDomain % #bdBrowserTitle)
+          ctitle <> " - " <> (T.unpack $ ctx ^. #ctxBrandedDomain % #browserTitle)
+        Nothing -> T.unpack (ctx ^. #ctxBrandedDomain % #browserTitle)
   entryPointFields ctx
 
 jsonContentType :: BS.ByteString

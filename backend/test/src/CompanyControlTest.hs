@@ -93,13 +93,13 @@ test_settingUIWithHandleChangeCompanyBranding = do
   ctx <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
 
   -- Try setting new themes
-  mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #bdMailTheme)
+  mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #mailTheme)
   mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery
-    $ GetTheme (ctx ^. #ctxBrandedDomain % #bdSignviewTheme)
+    $ GetTheme (ctx ^. #ctxBrandedDomain % #signviewTheme)
   signviewTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) signviewThemeFromDomain
   serviceThemeFromDomain <- dbQuery
-    $ GetTheme (ctx ^. #ctxBrandedDomain % #bdServiceTheme)
+    $ GetTheme (ctx ^. #ctxBrandedDomain % #serviceTheme)
   serviceTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) serviceThemeFromDomain
   let browserTitle  = "Super"
   let smsOriginator = "Super SMS"
@@ -205,7 +205,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
       $  "{\"companyid\":\""
       <> showt (ugID ug)
       <> "\",\"mailTheme\":\""
-      <> showt (ctx ^. #ctxBrandedDomain % #bdMailTheme)
+      <> showt (ctx ^. #ctxBrandedDomain % #mailTheme)
       <> "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
@@ -218,7 +218,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   -- Create theme for other company
   (_, otherUg) <- addNewAdminUserAndUserGroup "Other" "Guy" "other_guy@skrivapa.se"
-  someTheme    <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #bdMailTheme)
+  someTheme    <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #mailTheme)
   otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID otherUg) someTheme
 
   --Test we can't set mailTheme to other company theme

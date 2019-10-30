@@ -52,7 +52,7 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (ctx ^. #ctxBrandedDomain % #bdMailTheme)
+    . fromMaybe (ctx ^. #ctxBrandedDomain % #mailTheme)
     . uguiMailTheme
     . ugUI
     $ ug
@@ -86,7 +86,7 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (ctx ^. #ctxBrandedDomain % #bdMailTheme)
+    . fromMaybe (ctx ^. #ctxBrandedDomain % #mailTheme)
     . uguiMailTheme
     . ugUI
     $ ug

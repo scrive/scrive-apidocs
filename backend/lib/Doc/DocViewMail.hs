@@ -707,7 +707,7 @@ documentMailFields doc mctx = do
   mug <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
@@ -717,7 +717,7 @@ documentMailFields doc mctx = do
     F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
-    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #bdid)
+    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #id)
     F.value "brandinguserid" (show <$> (maybesignatory =<< getAuthorSigLink doc))
     brandingMailFields theme
 
@@ -727,7 +727,7 @@ otherMailFields muser mctx = do
   mug <- case (userid <$> muser) of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
@@ -735,7 +735,7 @@ otherMailFields muser mctx = do
     F.value "ctxlang" (codeFromLang $ mctx ^. #mctxLang)
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
-    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #bdid)
+    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #id)
     F.value "brandinguserid" (show <$> userid <$> muser)
     brandingMailFields theme
 
@@ -751,7 +751,7 @@ documentMail haslang doc mailname otherfields = do
   mug  <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
@@ -775,7 +775,7 @@ otherMail muser mailname otherfields = do
   mug  <- case (userid <$> muser) of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- otherMailFields muser mctx

@@ -379,7 +379,7 @@ handleContactSales = do
   let uid = maybe "user not logged in"
                   ((<>) "user with id " . showt . userid)
                   (ctx ^. #ctxMaybeUser)
-      domainInfo = " (from domain " <> (ctx ^. #ctxBrandedDomain % #bdUrl) <> " )"
+      domainInfo = " (from domain " <> (ctx ^. #ctxBrandedDomain % #url) <> " )"
       content =
         "<p>Hi there!</p>"
           <> "<p>Someone requested information from the payments form"

@@ -14,7 +14,7 @@ import qualified Context.Internal as I
 import qualified MailContext.Internal as I
 
 ctxDomainUrl :: Lens' I.Context Text
-ctxDomainUrl = #ctxBrandedDomain % #bdUrl
+ctxDomainUrl = #ctxBrandedDomain % #url
 
 -- | Get a user from `Context` (user takes precedence over pad user).
 contextUser :: AffineFold I.Context User

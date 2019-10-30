@@ -929,7 +929,7 @@ addNewCompanyUser' makeAdmin firstname secondname email ugid = do
                               Nothing
                               (ugid, makeAdmin == MakeAdmin)
                               defaultLang
-                              (bd ^. #bdid)
+                              (bd ^. #id)
                               CompanyInvitation
 
 -- | Create user and add it to a new user group as admin.
@@ -942,7 +942,7 @@ addNewAdminUserAndUserGroup firstname secondname email = do
                              Nothing
                              (ugID ug, True)
                              defaultLang
-                             (bd ^. #bdid)
+                             (bd ^. #id)
                              CompanyInvitation
   return (user, ug)
 
@@ -956,7 +956,7 @@ addNewUserToUserGroup firstname secondname email ugid = do
                               Nothing
                               (ugid, True)
                               defaultLang
-                              (bd ^. #bdid)
+                              (bd ^. #id)
                               CompanyInvitation
 
 addNewUserFromInfo

@@ -309,7 +309,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         doclang <- getLang <$> theDocument
         dbUpdate $ CleanAllScheduledDocumentSigning slid
         dbUpdate $ ScheduleDocumentSigning slid
-                                           (ctx ^. #ctxBrandedDomain % #bdid)
+                                           (ctx ^. #ctxBrandedDomain % #id)
                                            (ctx ^. #ctxTime)
                                            (ctx ^. #ctxIpNumber)
                                            (ctx ^. #ctxClientTime)

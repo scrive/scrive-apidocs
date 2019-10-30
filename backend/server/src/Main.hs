@@ -173,7 +173,7 @@ initDatabaseEntries appConf = do
                                   (Just passwd)
                                   (ugID ug, Just $ folderID userFolder, True)
                                   LANG_EN
-                                  (bd ^. #bdid)
+                                  (bd ^. #id)
                                   ByAdmin
         let features = fromJust $ ugFeatures ug
         -- enable everything for initial admins

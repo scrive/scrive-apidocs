@@ -51,7 +51,7 @@ handleLoginGet = do
       ad      <- getAnalyticsData
       content <- renderTemplate "loginPageWithBranding" $ do
         F.value "referer" $ fromMaybe "/" referer
-        F.value "nolinks" $ not $ ctx ^. #ctxBrandedDomain % #bdMainDomain
+        F.value "nolinks" $ not $ ctx ^. #ctxBrandedDomain % #mainDomain
         standardPageFields ctx Nothing ad
       response <- simpleHtmlResponse $ T.pack content
       return $ Right response

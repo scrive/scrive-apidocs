@@ -61,7 +61,7 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
             ( uguiSmsOriginator . ugUI . ugwpUG $ ugwp
             , ugsSMSProvider . ugwpSettings $ ugwp
             )
-  let originator = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdSmsOriginator)
+  let originator = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #smsOriginator)
                              (justEmptyToNothing moriginator)
   return $ SMS (getMobile sl) mkontraInfoForSMS msgBody originator provider
 

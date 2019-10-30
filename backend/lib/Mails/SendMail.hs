@@ -154,7 +154,7 @@ kontramailHelper noreplyAddress bd theme renderFunc tname fields = do
           (title' : contentChunks) ->
             (unescapeHTML $ title', T.intercalate "\r\n" contentChunks)
   return $ emptyMail
-    { originator      = bd ^. #bdEmailOriginator
+    { originator      = bd ^. #emailOriginator
     , originatorEmail = noreplyAddress
     , title           = title
     , content         = content

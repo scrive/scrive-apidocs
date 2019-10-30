@@ -8,31 +8,31 @@ import BrandedDomain.BrandedDomainID
 import Theme.ThemeID
 
 data BrandedDomain = BrandedDomain
-  { bdid :: !BrandedDomainID
-  , bdMainDomain :: !Bool
-  , bdUrl :: !Text
-  , bdSmsOriginator :: !Text
-  , bdEmailOriginator :: !Text
-  , bdMailTheme     :: !ThemeID
-  , bdSignviewTheme :: !ThemeID
-  , bdServiceTheme  :: !ThemeID
-  , bdLoginTheme    :: !ThemeID
-  , bdBrowserTitle  :: !Text
-  , bdFavicon       :: !BS.ByteString
-  , bdParticipantColor1 :: !Text
-  , bdParticipantColor2 :: !Text
-  , bdParticipantColor3 :: !Text
-  , bdParticipantColor4 :: !Text
-  , bdParticipantColor5 :: !Text
-  , bdParticipantColor6 :: !Text
-  , bdDraftColor        :: !Text
-  , bdCancelledColor    :: !Text
-  , bdInitatedColor     :: !Text
-  , bdSentColor         :: !Text
-  , bdDeliveredColor    :: !Text
-  , bdOpenedColor       :: !Text
-  , bdReviewedColor     :: !Text
-  , bdSignedColor       :: !Text
+  { id                :: !BrandedDomainID
+  , mainDomain        :: !Bool
+  , url               :: !Text
+  , smsOriginator     :: !Text
+  , emailOriginator   :: !Text
+  , mailTheme         :: !ThemeID
+  , signviewTheme     :: !ThemeID
+  , serviceTheme      :: !ThemeID
+  , loginTheme        :: !ThemeID
+  , browserTitle      :: !Text
+  , favicon           :: !BS.ByteString
+  , participantColor1 :: !Text
+  , participantColor2 :: !Text
+  , participantColor3 :: !Text
+  , participantColor4 :: !Text
+  , participantColor5 :: !Text
+  , participantColor6 :: !Text
+  , draftColor        :: !Text
+  , cancelledColor    :: !Text
+  , initatedColor     :: !Text
+  , sentColor         :: !Text
+  , deliveredColor    :: !Text
+  , openedColor       :: !Text
+  , reviewedColor     :: !Text
+  , signedColor       :: !Text
   } deriving (Eq, Ord, Show)
 
 makeFieldLabelsWith noPrefixFieldLabels ''BrandedDomain

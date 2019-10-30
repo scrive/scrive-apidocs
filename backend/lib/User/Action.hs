@@ -129,7 +129,7 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
                                   (Just passwd)
                                   (ugid, folderID <$> mUserFolder, iscompanyadmin)
                                   lang
-                                  (ctx ^. #ctxBrandedDomain % #bdid)
+                                  (ctx ^. #ctxBrandedDomain % #id)
                                   sm
       whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
         (userid user)

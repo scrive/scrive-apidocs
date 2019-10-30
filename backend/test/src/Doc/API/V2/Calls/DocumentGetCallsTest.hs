@@ -189,7 +189,7 @@ testDocApiV2GetQRCode = do
       , "localhost:8000"
       ]
     $ \domain -> do
-        let ctx' = set (#ctxBrandedDomain % #bdUrl) domain $ ctx
+        let ctx' = set (#ctxBrandedDomain % #url) domain $ ctx
         getQRCode <- testRequestHelper ctx' GET [] (docApiV2GetQRCode did slid) 200
         getURL    <- liftIO $ decodeQRBSL getQRCode
         logInfo_ $ "Decoded QR code: " <> (T.pack getURL)
