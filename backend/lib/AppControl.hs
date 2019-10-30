@@ -25,6 +25,7 @@ import Happstack.Server.Internal.Cookie
 import Happstack.Server.Internal.Multipart (defaultFileSaver, defaultInputIter)
 import Log
 import Network.Socket
+import Optics (_Just, afailing)
 import System.Directory
 import Text.JSON.ToJSValue
 import qualified Control.Exception.Lifted as E
@@ -39,7 +40,6 @@ import qualified System.FilePath.Windows as Windows
 import AppConf
 import AppView as V
 import BrandedDomain.Model
-import Context.Internal
 import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
@@ -58,6 +58,7 @@ import Templates
 import Text.JSON.Convert
 import User.Model
 import Utils.HTTP
+import qualified Context.Internal as I
 
 -- | Global application data
 data AppGlobals = AppGlobals {
@@ -185,7 +186,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           logInfo "Handler started"
             .  object
             $  routeLogData
-            ++ ["ip" .= show (ctxIpNumber ctx), "server_hostname" .= hostname appGlobals]
+            ++ ["ip" .= show (ctx ^. #ctxIpNumber), "server_hostname" .= hostname appGlobals]
 
           (res, handlerTime) <- localData [identifier $ sesID session] $ do
             startTime                 <- liftBase getCurrentTime
@@ -199,9 +200,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
             when (issecure || not usehttps) $ do
               logInfo_ "Updating session"
               void $ updateSession session
-                                   (ctxSessionID ctx')
-                                   (userid <$> ctxMaybeUser ctx')
-                                   (userid <$> ctxMaybePadUser ctx')
+                                   (ctx' ^. #ctxSessionID)
+                                   (userid <$> ctx' ^. #ctxMaybeUser)
+                                   (userid <$> ctx' ^. #ctxMaybePadUser)
 
             logInfo_ "Evaluating response"
             -- Make sure response is well defined before passing it further.
@@ -212,8 +213,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 return response
                 -- just take the first user we find. We prefer the user
                 -- which was used during API call.
-            let mUser =
-                  ctxMaybeApiUser ctx' <|> ctxMaybeUser ctx' <|> ctxMaybePadUser ctx'
+            let mUser = ctx ^? ((#ctxMaybeApiUser % _Just) `afailing` contextUser)
                 res' = case mUser of
                   Nothing -> res
                   Just user ->
@@ -363,40 +363,40 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       -- work out the language
       userlang      <- getStandardLang muser
 
-      return Context { ctxMaybeUser           = muser
-                     , ctxTime                = minutestime
-                     , ctxClientName          = clientName `mplus` userAgent
-                     , ctxClientTime          = clientTime
-                     , ctxIpNumber            = peerip
-                     , ctxProduction          = production appConf
-                     , ctxCdnBaseUrl          = cdnBaseUrl appConf
-                     , ctxTemplates           = localizedVersion userlang templates2
-                     , ctxGlobalTemplates     = templates2
-                     , ctxLang                = userlang
-                     , ctxIsMailBackdoorOpen  = isMailBackdoorOpen appConf
-                     , ctxMailNoreplyAddress  = mailNoreplyAddress appConf
-                     , ctxGtConf              = guardTimeConf appConf
-                     , ctxCgiGrpConfig        = cgiGrpConfig appConf
-                     , ctxRedisCache          = mrediscache appGlobals
-                     , ctxFileCache           = filecache appGlobals
-                     , ctxXToken              = sesCSRFToken session
-                     , ctxAdminAccounts       = admins appConf
-                     , ctxSalesAccounts       = sales appConf
-                     , ctxMaybePadUser        = mpaduser
-                     , ctxUseHttps            = useHttps appConf
-                     , ctxSessionID           = sesID session
-                     , ctxTrackJsToken        = trackjsToken appConf
-                     , ctxZendeskKey          = zendeskKey appConf
-                     , ctxGaToken             = gaToken appConf
-                     , ctxMixpanelToken       = mixpanelToken appConf
-                     , ctxHubspotConf         = hubspotConf appConf
-                     , ctxBrandedDomain       = brandeddomain
-                     , ctxSalesforceConf      = salesforceConf appConf
-                     , ctxNetsConfig          = netsConfig appConf
-                     , ctxIsApiLogEnabled     = isAPILogEnabled appConf
-                     , ctxNetsSignConfig      = netsSignConfig appConf
-                     , ctxPdfToolsLambdaEnv   = pdftoolslambdaenv appGlobals
-                     , ctxPasswordServiceConf = passwordServiceConf appConf
-                     , ctxEidServiceConf      = eidServiceConf appConf
-                     , ctxMaybeApiUser        = Nothing
-                     }
+      return I.Context { ctxMaybeUser           = muser
+                       , ctxTime                = minutestime
+                       , ctxClientName          = clientName `mplus` userAgent
+                       , ctxClientTime          = clientTime
+                       , ctxIpNumber            = peerip
+                       , ctxProduction          = production appConf
+                       , ctxCdnBaseUrl          = cdnBaseUrl appConf
+                       , ctxTemplates           = localizedVersion userlang templates2
+                       , ctxGlobalTemplates     = templates2
+                       , ctxLang                = userlang
+                       , ctxIsMailBackdoorOpen  = isMailBackdoorOpen appConf
+                       , ctxMailNoreplyAddress  = mailNoreplyAddress appConf
+                       , ctxGtConf              = guardTimeConf appConf
+                       , ctxCgiGrpConfig        = cgiGrpConfig appConf
+                       , ctxRedisCache          = mrediscache appGlobals
+                       , ctxFileCache           = filecache appGlobals
+                       , ctxXToken              = sesCSRFToken session
+                       , ctxAdminAccounts       = admins appConf
+                       , ctxSalesAccounts       = sales appConf
+                       , ctxMaybePadUser        = mpaduser
+                       , ctxUseHttps            = useHttps appConf
+                       , ctxSessionID           = sesID session
+                       , ctxTrackJsToken        = trackjsToken appConf
+                       , ctxZendeskKey          = zendeskKey appConf
+                       , ctxGaToken             = gaToken appConf
+                       , ctxMixpanelToken       = mixpanelToken appConf
+                       , ctxHubspotConf         = hubspotConf appConf
+                       , ctxBrandedDomain       = brandeddomain
+                       , ctxSalesforceConf      = salesforceConf appConf
+                       , ctxNetsConfig          = netsConfig appConf
+                       , ctxIsApiLogEnabled     = isAPILogEnabled appConf
+                       , ctxNetsSignConfig      = netsSignConfig appConf
+                       , ctxPdfToolsLambdaEnv   = pdftoolslambdaenv appGlobals
+                       , ctxPasswordServiceConf = passwordServiceConf appConf
+                       , ctxEidServiceConf      = eidServiceConf appConf
+                       , ctxMaybeApiUser        = Nothing
+                       }

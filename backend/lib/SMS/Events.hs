@@ -93,7 +93,7 @@ processEvents = do
               bd        <- (maybesignatory <=< getAuthorSigLink) <$> theDocument >>= \case
                 Nothing  -> dbQuery $ GetMainBrandedDomain
                 Just uid -> dbQuery $ GetBrandedDomainByUserID uid
-              let host = bdUrl bd
+              let host = bd ^. #bdUrl
                   -- since when email is reported deferred author has a possibility to
                   -- change email address, we don't want to send him emails reporting
                   -- success/failure for old signatory address, so we need to compare
@@ -201,7 +201,7 @@ smsUndeliveredInvitation
   -> SignatoryLink
   -> m Mail
 smsUndeliveredInvitation mailNoreplyAddress bd hostpart doc signlink = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ bd ^. #bdMailTheme
   kontramail mailNoreplyAddress bd theme "invitationSMSUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc

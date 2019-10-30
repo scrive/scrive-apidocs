@@ -55,9 +55,9 @@ handleGetThemesForDomain did = do
 -- Generate list of themes used by given domain. Note that order is important here - but we don't need to introduce any middle structure.
 handleGetThemesUsedByDomain :: Kontrakcja m => BrandedDomain -> m Aeson.Value
 handleGetThemesUsedByDomain domain = do
-  mailTheme     <- dbQuery $ GetTheme $ bdMailTheme domain
-  signviewTheme <- dbQuery $ GetTheme $ bdSignviewTheme domain
-  serviceTheme  <- dbQuery $ GetTheme $ bdServiceTheme domain
+  mailTheme     <- dbQuery $ GetTheme $ domain ^. #bdMailTheme
+  signviewTheme <- dbQuery $ GetTheme $ domain ^. #bdSignviewTheme
+  serviceTheme  <- dbQuery $ GetTheme $ domain ^. #bdServiceTheme
   return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
                                 unjsonThemesList
                                 [mailTheme, signviewTheme, serviceTheme]
@@ -125,7 +125,7 @@ handleDeleteThemeForUserGroup ugid tid = do
 guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> Text -> m ()
 guardNotMainDomain did msg = do
   bd <- dbQuery $ GetBrandedDomainByID did
-  if bdMainDomain bd
+  if bd ^. #bdMainDomain
     then do
       logInfo_ msg
       internalError

@@ -24,10 +24,10 @@ import FileStorage
 import GuardTime
 import Log.Identifier
 import MailContext
-import MailContext.Internal
 import PdfToolsLambda.Conf
 import Templates
 import User.Lang
+import qualified MailContext.Internal as I
 
 data DocumentSealing = DocumentSealing {
     dsDocumentID      :: !DocumentID
@@ -76,7 +76,7 @@ documentSealing guardTimeConf pdfToolsLambdaEnv templates pool mailNoreplyAddres
                                       bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
                                       doc <- theDocument
                                       let lang = getLang doc
-                                          mc   = MailContext
+                                          mc   = I.MailContext
                                             { mctxLang                 = lang
                                             , mctxCurrentBrandedDomain = bd
                                             , mctxTime                 = now0

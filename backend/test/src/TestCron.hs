@@ -6,6 +6,7 @@ import Control.Monad.Reader
 import Database.PostgreSQL.Consumers
 import Log
 import Network.HTTP.Client.TLS (newTlsManager)
+import Optics (gview)
 
 import Context
 import Cron.Model
@@ -26,10 +27,10 @@ runTestCronUntilIdle ctx = do
   -- processes with their own DB transactions, which do not see
   -- changes of the test transaction ... unless there is a commit.
   commit
-  ConnectionSource pool  <- asks teConnSource
-  pdfSealLambdaEnv       <- asks tePdfToolsLambdaEnv
-  cronDBConfig           <- asks teCronDBConfig
-  cronMonthlyInvoiceConf <- asks teCronMonthlyInvoice
+  ConnectionSource pool  <- gview #teConnSource
+  pdfSealLambdaEnv       <- gview #tePdfToolsLambdaEnv
+  cronDBConfig           <- gview #teCronDBConfig
+  cronMonthlyInvoiceConf <- gview #teCronMonthlyInvoice
 
   -- Will not be used, because Planhat is not configured when testing,
   -- but it is a parameter for cronConsumer.

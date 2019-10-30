@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module MailContext.Class (
-    MailContext
+    I.MailContext
   , mctxDomainUrl
   , MailContextMonad(..)
   ) where
@@ -8,13 +8,13 @@ module MailContext.Class (
 import Control.Monad.Trans
 import Optics
 
-import MailContext.Internal
+import qualified MailContext.Internal as I
 
-mctxDomainUrl :: Lens' MailContext Text
+mctxDomainUrl :: Lens' I.MailContext Text
 mctxDomainUrl = #mctxCurrentBrandedDomain % #bdUrl
 
 class Monad m => MailContextMonad m where
-  getMailContext :: m MailContext
+  getMailContext :: m I.MailContext
 
 -- | Generic, overlapping instance.
 instance (

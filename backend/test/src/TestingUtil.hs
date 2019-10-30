@@ -5,7 +5,6 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Fail
-import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Crypto.RNG
 import Data.Char
@@ -18,6 +17,7 @@ import Data.Typeable (cast)
 import Data.Word
 import Happstack.Server
 import Log
+import Optics (gview)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
@@ -761,7 +761,7 @@ signatoryLinkExample1 = defaultSignatoryLink
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
 testThat s env test = testCase s $ do
   ((), diff) <- timed $ runTestEnv env test
-  modifyMVar_ (teTestDurations env) $ \td -> return $ (diff, s) : td
+  modifyMVar_ (env ^. #teTestDurations) $ \td -> return $ (diff, s) : td
 
 compareTime :: UTCTime -> UTCTime -> Bool
 compareTime (UTCTime da ta) (UTCTime db tb) =
@@ -929,7 +929,7 @@ addNewCompanyUser' makeAdmin firstname secondname email ugid = do
                               Nothing
                               (ugid, makeAdmin == MakeAdmin)
                               defaultLang
-                              (bdid bd)
+                              (bd ^. #bdid)
                               CompanyInvitation
 
 -- | Create user and add it to a new user group as admin.
@@ -942,7 +942,7 @@ addNewAdminUserAndUserGroup firstname secondname email = do
                              Nothing
                              (ugID ug, True)
                              defaultLang
-                             (bdid bd)
+                             (bd ^. #bdid)
                              CompanyInvitation
   return (user, ug)
 
@@ -956,7 +956,7 @@ addNewUserToUserGroup firstname secondname email ugid = do
                               Nothing
                               (ugid, True)
                               defaultLang
-                              (bdid bd)
+                              (bd ^. #bdid)
                               CompanyInvitation
 
 addNewUserFromInfo
@@ -1332,7 +1332,7 @@ addRandomDocumentWithFile fileid rda = do
       case invariantProblems now adoc of
         Nothing        -> return adoc
         Just _problems -> do
-          rej <- asks teRejectedDocuments
+          rej <- gview #teRejectedDocuments
           modifyMVar_ rej $ \i -> return $! i + 1
           -- Invariant problems might happen e.g. when all signatories are
           -- picked to have signed, but the document was earlier picked to be in

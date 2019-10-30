@@ -27,7 +27,7 @@ brandingAdler32 ctx mugidandui = do
   ad1 <- domainAdler32 $ ctx ^. #ctxBrandedDomain
   ad2 <- maybe (return "") userGroupUIAdler32 mugidandui
   ad3 <- do
-    case getContextUser ctx of
+    case ctx ^? contextUser of
       Nothing   -> return ""
       Just user -> do
         ug <- dbQuery . UserGroupGetByUserID . userid $ user

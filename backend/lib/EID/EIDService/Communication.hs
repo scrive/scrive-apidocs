@@ -19,9 +19,9 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Text as T
 
+import Context
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import Context
 import EID.EIDService.Conf
 import EID.EIDService.Types
 import Kontra hiding (InternalError)

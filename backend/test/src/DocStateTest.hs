@@ -6,7 +6,7 @@ import Control.Monad.Catch (try)
 import Control.Monad.Reader
 import Data.Int
 import Log
-import Optics (_Just)
+import Optics (_Just, gview)
 import Test.Framework
 import Test.QuickCheck
 import qualified Data.Set as S
@@ -505,7 +505,7 @@ getScreenshots = do
 
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
-  pdfSealLambdaEnv <- asks tePdfToolsLambdaEnv
+  pdfSealLambdaEnv <- gview #tePdfToolsLambdaEnv
   author           <- addNewRandomUser
   screenshots      <- getScreenshots
   addRandomDocument (rdaDefault author)

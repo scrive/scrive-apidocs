@@ -388,7 +388,7 @@ testResetPasswordRemovesAllOtherUserSessions = do
         <>  ","
         <?> ct
         <>  ",0,0,"
-        <?> bdid bd
+        <?> bd ^. #bdid
         <>  ")"
   ctx <- mkContext defaultLang
 
@@ -503,7 +503,7 @@ createTestUser' email = do
                              (Just pwd)
                              (ugID ug, True)
                              defaultLang
-                             (bdid bd)
+                             (bd ^. #bdid)
                              AccountRequest
   return user
 
@@ -517,7 +517,7 @@ createUserAndResetPassword = do
                              (Just pwd)
                              (ugID ug, True)
                              defaultLang
-                             (bdid bd)
+                             (bd ^. #bdid)
                              AccountRequest
   PasswordReminder {..} <- newPasswordReminder $ userid user
   ctx                   <- mkContext defaultLang

@@ -259,7 +259,7 @@ createTestUser = do
                          (Just pwd)
                          (ugID ug, True)
                          defaultLang
-                         (bdid bd)
+                         (bd ^. #bdid)
                          AccountRequest
   case muser of
     Nothing     -> unexpectedError "can't create user"

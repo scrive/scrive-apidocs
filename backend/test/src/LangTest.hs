@@ -94,6 +94,6 @@ createTestUser lang = do
                              (Just pwd)
                              (ugID ug, True)
                              lang
-                             (bdid bd)
+                             (bd ^. #bdid)
                              AccountRequest
   return user

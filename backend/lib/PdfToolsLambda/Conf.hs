@@ -1,7 +1,7 @@
 module PdfToolsLambda.Conf
-  ( PdfToolsLambdaConf
-  , PdfToolsLambdaEnv
-  , pdfToolsLambdaEnvFromConf
+  ( I.PdfToolsLambdaConf
+  , I.PdfToolsLambdaEnv
+  , I.pdfToolsLambdaEnvFromConf
   , PdfToolsLambdaMonad(..)
   , runPdfToolsLambdaT
   ) where
@@ -14,10 +14,11 @@ import Control.Monad.Trans.Control
   ( ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith
   , defaultLiftWith, defaultRestoreM, defaultRestoreT )
 
-import PdfToolsLambda.Conf.Internal
+
+import qualified PdfToolsLambda.Conf.Internal as I
 
 class Monad m => PdfToolsLambdaMonad m where
-  getPdfToolsLambdaEnv :: m PdfToolsLambdaEnv
+  getPdfToolsLambdaEnv :: m I.PdfToolsLambdaEnv
 
 -- | Generic, overlapping instance.
 instance {-# OVERLAPPABLE #-} (
@@ -28,7 +29,7 @@ instance {-# OVERLAPPABLE #-} (
   getPdfToolsLambdaEnv = lift getPdfToolsLambdaEnv
 
 newtype PdfToolsLambdaT m a =
-  PdfToolsLambdaT { unPdfToolsLambdaT :: ReaderT PdfToolsLambdaEnv m a }
+  PdfToolsLambdaT { unPdfToolsLambdaT :: ReaderT I.PdfToolsLambdaEnv m a }
   deriving ( Alternative, Applicative, Functor, Monad
            , MonadPlus, MonadIO, MonadTrans, MonadBase b
            , MonadThrow, MonadCatch, MonadMask )
@@ -41,7 +42,7 @@ instance MonadBaseControl b m => MonadBaseControl b (PdfToolsLambdaT m) where
   {-# INLINE restoreM #-}
 
 instance MonadTransControl PdfToolsLambdaT where
-  type StT PdfToolsLambdaT m = StT (ReaderT PdfToolsLambdaEnv) m
+  type StT PdfToolsLambdaT m = StT (ReaderT I.PdfToolsLambdaEnv) m
   liftWith = defaultLiftWith PdfToolsLambdaT unPdfToolsLambdaT
   restoreT = defaultRestoreT PdfToolsLambdaT
   {-# INLINE liftWith #-}
@@ -50,5 +51,5 @@ instance MonadTransControl PdfToolsLambdaT where
 instance Monad m => PdfToolsLambdaMonad (PdfToolsLambdaT m) where
   getPdfToolsLambdaEnv = PdfToolsLambdaT ask
 
-runPdfToolsLambdaT :: PdfToolsLambdaEnv -> PdfToolsLambdaT m a -> m a
+runPdfToolsLambdaT :: I.PdfToolsLambdaEnv -> PdfToolsLambdaT m a -> m a
 runPdfToolsLambdaT ts m = runReaderT (unPdfToolsLambdaT m) ts

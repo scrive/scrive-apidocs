@@ -384,6 +384,6 @@ createTestUser = do
                              (Just pwd)
                              (ugID ug, True)
                              defaultLang
-                             (bdid bd)
+                             (bd ^. #bdid)
                              AccountRequest
   return $ (user, ug)

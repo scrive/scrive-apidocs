@@ -48,7 +48,6 @@ import GuardTime (GuardTimeConfMonad)
 import Kontra
 import Log.Identifier
 import MailContext
-import MailContext.Internal
 import PdfToolsLambda.Conf
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
@@ -61,6 +60,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
+import qualified MailContext.Internal as I
 
 -- | Log a document event, adding some standard properties.
 logDocEvent
@@ -214,7 +214,7 @@ postDocumentPendingChange olddoc signatoryLink = do
   {-then-}(do
             document <- theDocument
             logInfo "All have signed, document will be closed" $ logObject_ document
-            time <- mctxTime <$> getMailContext
+            time <- view #mctxTime <$> getMailContext
             dbUpdate $ CloseDocument (systemActor time)
             dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
             when (documentfromshareablelink olddoc) $ do
@@ -232,8 +232,7 @@ postDocumentPendingChange olddoc signatoryLink = do
                 asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
             dbUpdate
               .   ScheduleDocumentSealing
-              .   bdid
-              .   mctxCurrentBrandedDomain
+              .   view (#mctxCurrentBrandedDomain % #bdid)
               =<< getMailContext
             if signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
               then sendPartyProcessFinalizedNotification document signatoryLink
@@ -423,11 +422,11 @@ findAndTimeoutDocuments = do
       Just author -> do
         ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (usergroupid author)
         bd   <- dbQuery $ GetBrandedDomainByUserID (userid author)
-        let mc = MailContext { mctxLang                 = lang
-                             , mctxCurrentBrandedDomain = bd
-                             , mctxTime                 = now
-                             , mctxMailNoreplyAddress   = noreplyAddress
-                             }
+        let mc = I.MailContext { mctxLang                 = lang
+                               , mctxCurrentBrandedDomain = bd
+                               , mctxTime                 = now
+                               , mctxMailNoreplyAddress   = noreplyAddress
+                               }
         runTemplatesT (lang, gt) . runMailContextT mc $ do
           when (ugsSendTimeoutNotification (ugwpSettings ugwp)) $ do
             sendDocumentTimeoutedEmail =<< theDocument

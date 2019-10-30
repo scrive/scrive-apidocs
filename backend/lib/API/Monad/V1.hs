@@ -335,6 +335,6 @@ getSessionUser = do
 getSessionUserWithPad :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUserWithPad = do
   ctx <- getContext
-  case getContextUser ctx of
+  case ctx ^? contextUser of
     Nothing   -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)

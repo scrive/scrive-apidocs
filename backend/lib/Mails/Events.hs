@@ -330,12 +330,12 @@ mailDeliveredInvitation
   -> Document
   -> m Mail
 mailDeliveredInvitation mailNoreplyAddress bd signlink doc = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ bd ^. #bdMailTheme
   kontramail mailNoreplyAddress bd theme "invitationMailDeliveredAfterDeferred" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "email" $ getEmail signlink
     F.value "documenttitle" $ documenttitle doc
-    F.value "ctxhostpart" $ bdUrl bd
+    F.value "ctxhostpart" $ bd ^. #bdUrl
     brandingMailFields theme
 
 mailDeferredInvitation
@@ -346,13 +346,13 @@ mailDeferredInvitation
   -> Document
   -> m Mail
 mailDeferredInvitation mailNoreplyAddress bd sl doc = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ bd ^. #bdMailTheme
   kontramail mailNoreplyAddress bd theme "invitationMailDeferred" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "counterpartname" $ getFullName sl
     F.value "counterpartemail" $ getEmail sl
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-    F.value "ctxhostpart" $ bdUrl bd
+    F.value "ctxhostpart" $ bd ^. #bdUrl
     brandingMailFields theme
 
 mailUndeliveredInvitation
@@ -363,7 +363,7 @@ mailUndeliveredInvitation
   -> Document
   -> m Mail
 mailUndeliveredInvitation mailNoreplyAddress bd signlink doc = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ bd ^. #bdMailTheme
   kontramail mailNoreplyAddress bd theme "invitationMailUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
@@ -373,7 +373,7 @@ mailUndeliveredInvitation mailNoreplyAddress bd signlink doc = do
     F.value "viewing" $ signatoryrole signlink == SignatoryRoleViewer
     F.value "approving" $ signatoryrole signlink == SignatoryRoleApprover
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-    F.value "ctxhostpart" $ bdUrl bd
+    F.value "ctxhostpart" $ bd ^. #bdUrl
     brandingMailFields theme
 
 mailUndeliveredConfirmation
@@ -384,14 +384,14 @@ mailUndeliveredConfirmation
   -> Document
   -> m Mail
 mailUndeliveredConfirmation mailNoreplyAddress bd sl doc = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ bd ^. #bdMailTheme
   kontramail mailNoreplyAddress bd theme "confirmationMailUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "email" $ getEmail sl
     F.value "name" $ getFullName sl
     F.value "documenttitle" $ documenttitle doc
     F.value "documentlink" $ show $ LinkIssueDoc $ documentid doc
-    F.value "ctxhostpart" $ bdUrl bd
+    F.value "ctxhostpart" $ bd ^. #bdUrl
     brandingMailFields theme
 
 data NormalisedEvent

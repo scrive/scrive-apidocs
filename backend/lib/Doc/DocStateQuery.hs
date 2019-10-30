@@ -106,7 +106,7 @@ getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
         "No access token provided."
   where
     getDocumentOfUser = do
-      user <- guardJust . getContextUser =<< getContext
+      user <- guardJust . preview contextUser =<< getContext
       dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
                             [DocumentFilterByDocumentID did]
 
@@ -114,7 +114,7 @@ getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor did = do
   ctx <- getContext
-  case userid <$> getContextUser ctx of
+  case userid <$> ctx ^? contextUser of
     Nothing -> unexpectedError
       "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
@@ -125,7 +125,7 @@ getDocByDocIDForAuthor did = do
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin did = do
   ctx <- getContext
-  case userid <$> getContextUser ctx of
+  case userid <$> ctx ^? contextUser of
     Nothing -> unexpectedError
       "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
@@ -182,7 +182,7 @@ getDocumentAndSignatoryForEIDAuth did slid = do
       -- Authentication to view archived in author's view case. There is no
       -- magic hash, just find the document in the archive.
       logInfo_ "No document session, checking logged user's documents"
-      (getContextUser <$> getContext) >>= \case
+      (preview contextUser <$> getContext) >>= \case
         Just user -> do
           doc <- dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
                                        [DocumentFilterByDocumentID did]

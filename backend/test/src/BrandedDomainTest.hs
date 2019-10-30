@@ -33,7 +33,7 @@ test_brandedDomainCreateUpdate = do
 
   assertEqual "Branded domain round trips to database" nbd xbd
 
-  wbd <- dbQuery $ GetBrandedDomainByURL (bdUrl nbd)
+  wbd <- dbQuery $ GetBrandedDomainByURL (nbd ^. #bdUrl)
 
   assertEqual "GetBrandedDomainByURL works" nbd wbd
 
@@ -78,8 +78,8 @@ test_brandedDomainAmbiguous = do
   dbUpdate $ UpdateBrandedDomain nbd2
 
 
-  wbd1 <- dbQuery $ GetBrandedDomainByURL (bdUrl nbd1)
-  wbd2 <- dbQuery $ GetBrandedDomainByURL (bdUrl nbd2)
+  wbd1 <- dbQuery $ GetBrandedDomainByURL (nbd1 ^. #bdUrl)
+  wbd2 <- dbQuery $ GetBrandedDomainByURL (nbd2 ^. #bdUrl)
   wbd3 <- dbQuery $ GetBrandedDomainByURL ("")
 
   assertEqual "GetBrandedDomainByURL works" nbd1   wbd1
@@ -90,36 +90,36 @@ test_brandedDomainAmbiguous = do
 test_brandedDomainCanChangeThemeOrSettingsOfMainDomain :: TestEnv ()
 test_brandedDomainCanChangeThemeOrSettingsOfMainDomain = do
   mainbd1 <- dbQuery $ GetMainBrandedDomain
-  void $ dbUpdate $ UpdateBrandedDomain (set #bdMailTheme (bdLoginTheme mainbd1) mainbd1)
+  void $ dbUpdate $ UpdateBrandedDomain (set #bdMailTheme (mainbd1 ^. #bdLoginTheme) mainbd1)
   mainbd2 <- dbQuery $ GetMainBrandedDomain
   assertEqual "Can change main domain " mainbd1 mainbd2
 
-  mailTheme1 <- dbQuery $ GetTheme (bdMailTheme mainbd1)
-  False      <- dbUpdate $ UpdateThemeForDomain (bdid mainbd1) $ mailTheme1
+  mailTheme1 <- dbQuery $ GetTheme (mainbd1 ^. #bdMailTheme)
+  False      <- dbUpdate $ UpdateThemeForDomain (mainbd1 ^. #bdid) $ mailTheme1
     { themeBrandTextColor = "#222345"
     }
-  mailTheme2 <- dbQuery $ GetTheme (bdMailTheme mainbd1)
+  mailTheme2 <- dbQuery $ GetTheme (mainbd1 ^. #bdMailTheme)
   assertEqual "Can change mail theme of main domain " mailTheme1 mailTheme2
 
-  loginTheme1 <- dbQuery $ GetTheme (bdLoginTheme mainbd1)
-  False       <- dbUpdate $ UpdateThemeForDomain (bdid mainbd1) $ loginTheme1
+  loginTheme1 <- dbQuery $ GetTheme (mainbd1 ^. #bdLoginTheme)
+  False       <- dbUpdate $ UpdateThemeForDomain (mainbd1 ^. #bdid) $ loginTheme1
     { themeBrandColor = "#123456"
     }
-  loginTheme2 <- dbQuery $ GetTheme (bdLoginTheme mainbd1)
+  loginTheme2 <- dbQuery $ GetTheme (mainbd1 ^. #bdLoginTheme)
   assertEqual "Can change login theme of main domain " loginTheme1 loginTheme2
 
-  serviceTheme1 <- dbQuery $ GetTheme (bdServiceTheme mainbd1)
-  False         <- dbUpdate $ UpdateThemeForDomain (bdid mainbd1) $ serviceTheme1
+  serviceTheme1 <- dbQuery $ GetTheme (mainbd1 ^. #bdServiceTheme)
+  False         <- dbUpdate $ UpdateThemeForDomain (mainbd1 ^. #bdid) $ serviceTheme1
     { themeName = "New name"
     }
-  serviceTheme2 <- dbQuery $ GetTheme (bdServiceTheme mainbd1)
+  serviceTheme2 <- dbQuery $ GetTheme (mainbd1 ^. #bdServiceTheme)
   assertEqual "Can change service theme of main domain " serviceTheme1 serviceTheme2
 
-  signviewTheme1 <- dbQuery $ GetTheme (bdSignviewTheme mainbd1)
-  False          <- dbUpdate $ UpdateThemeForDomain (bdid mainbd1) signviewTheme1
-  signviewTheme2 <- dbQuery $ GetTheme (bdSignviewTheme mainbd1)
+  signviewTheme1 <- dbQuery $ GetTheme (mainbd1 ^. #bdSignviewTheme)
+  False          <- dbUpdate $ UpdateThemeForDomain (mainbd1 ^. #bdid) signviewTheme1
+  signviewTheme2 <- dbQuery $ GetTheme (mainbd1 ^. #bdSignviewTheme)
   assertEqual "Can change signview theme of main domain " signviewTheme1 signviewTheme2
 
-  void $dbUpdate $ DeleteThemeOwnedByDomain (bdid mainbd1) (bdSignviewTheme mainbd1)
-  signviewTheme3 <- dbQuery $ GetTheme (bdSignviewTheme mainbd1)
+  void $dbUpdate $ DeleteThemeOwnedByDomain (mainbd1 ^. #bdid) (mainbd1 ^. #bdSignviewTheme)
+  signviewTheme3 <- dbQuery $ GetTheme (mainbd1 ^. #bdSignviewTheme)
   assertEqual "Can delete theme of main domain  " signviewTheme1 signviewTheme3

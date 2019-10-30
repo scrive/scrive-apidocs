@@ -2,11 +2,11 @@ module DumpEvidenceTexts (dumpAllEvidenceTexts) where
 
 import Control.Exception (evaluate)
 import Control.Monad.Catch
-import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
 import Data.Decimal (realFracToDecimal)
 import Data.Function (on)
 import Log
+import Optics (gview)
 import System.FilePath ((</>))
 import Test.Framework (Test)
 import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
@@ -30,7 +30,7 @@ import Templates (runTemplatesT)
 import TestingUtil
   ( addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests, testThat )
 
-import TestKontra (TestEnvSt, teGlobalTemplates, teOutputDirectory)
+import TestKontra (TestEnvSt)
 import Text.XML.DirtyContent (renderXMLContent)
 import User.Model (Lang, allLangs, codeFromLang)
 import Util.Actor (Actor(..), actorAPIString, actorEmail, actorIP, actorUserID)
@@ -42,10 +42,10 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
   author <- addNewRandomUser
   did    <- addRandomDocumentWithAuthor author
   withDocumentID did $ forM_ allLangs $ \lang -> do
-    gts <- asks teGlobalTemplates
+    gts <- gview #teGlobalTemplates
     now <- currentTime
     t   <- runTemplatesT (lang, gts) $ theDocument >>= dumpEvidenceTexts now lang
-    case teOutputDirectory env of
+    case env ^. #teOutputDirectory of
       Just d -> liftIO $ writeFile
         (d </> "evidence-texts-" <> (T.unpack $ codeFromLang lang) <> ".html")
         t

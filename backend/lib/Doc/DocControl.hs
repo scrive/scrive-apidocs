@@ -438,7 +438,7 @@ handleIssueGoToSignviewPad
 handleIssueGoToSignviewPad docid slid = do
   ctx  <- getContext
   doc  <- getDocByDocIDForAuthor docid
-  user <- guardJust $ getContextUser ctx
+  user <- guardJust $ ctx ^? contextUser
   case
       (isAuthor <$> getMaybeSignatoryLink (doc, user), getMaybeSignatoryLink (doc, slid))
     of
@@ -627,7 +627,7 @@ handlePadList :: Kontrakcja m => m Response
 handlePadList = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  case getContextUser ctx of
+  case ctx ^? contextUser of
     Just _  -> simpleHtmlResponse =<< pageDocumentPadList ctx ad
     Nothing -> simpleHtmlResponse =<< pageDocumentPadListLogin ctx ad
 

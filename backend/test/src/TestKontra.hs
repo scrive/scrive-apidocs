@@ -43,10 +43,10 @@ import Database.PostgreSQL.PQTypes.Internal.Monad
 import Database.PostgreSQL.PQTypes.Internal.State
 import Happstack.Server hiding (dir, getHeader, method, mkHeaders, path)
 import Log
+import Optics (assign, gview, to, use)
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
-import qualified Control.Monad.State.Strict as State
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
@@ -57,7 +57,6 @@ import qualified Data.Text.Encoding as TE
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
-import Context.Internal
 import DB
 import DB.PostgreSQL
 import FileStorage
@@ -73,6 +72,8 @@ import Templates
 import TestEnvSt
 import TestFileStorage
 import User.Lang
+import qualified Context.Internal as I
+import qualified TestEnvSt.Internal as I
 
 inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
@@ -103,32 +104,32 @@ deriving instance MonadFail m => MonadFail (DBT m)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
-  can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
+  can_be_run <- fst <$> atomically (readTVar $ st ^. #teActiveTests)
   when can_be_run $ do
-    atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
+    atomically . modifyTVar' (st ^. #teActiveTests) $ second (succ $!)
     E.finally
-      (runDBT (unConnectionSource . teStaticConnSource $ st)
-              (teTransSettings st)
+      (runDBT (unConnectionSource $ st ^. #teStaticConnSource)
+              (st ^. #teTransSettings)
               (ununTestEnv st $ withTestDB m)
       )
-      (atomically . modifyTVar' (teActiveTests st) $ second (pred $!))
+      (atomically . modifyTVar' (st ^. #teActiveTests) $ second (pred $!))
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st =
-  (unRunLogger . teRunLogger $ st)
+  (unRunLogger $ st ^. #teRunLogger)
     . flip runReaderT st
   -- for each test start with no time delay
     . flip
         evalStateT
-        TestEnvStRW { terwTimeDelay   = 0
+        I.TestEnvStRW { terwTimeDelay   = 0
                     , terwCurrentTime = Nothing
                     , terwRequestURI  = "http://testkontra.fake"
                     }
-    . evalTestFileStorageT ((, teRedisConn st, teFileMemCache st) <$> teAmazonS3Env st)
+    . evalTestFileStorageT ((, st ^. #teRedisConn, st ^. #teFileMemCache) <$> st ^. #teAmazonS3Env)
     . unTestEnv
 
 instance CryptoRNG TestEnv where
-  randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
+  randomBytes n = gview #teRNGState >>= liftIO . randomBytesIO n
 
 instance MonadDB TestEnv where
   runQuery               = TestEnv . runQuery
@@ -145,8 +146,8 @@ instance MonadDB TestEnv where
   -- different one, thus we can't use current (static) connection
   -- source, so we need one that actually creates new connections.
   withNewConnection (TestEnv m) = do
-    ConnectionSource pool <- asks teConnSource
-    runLogger             <- asks (unRunLogger . teRunLogger)
+    ConnectionSource pool <- gview #teConnSource
+    runLogger             <- gview (#teRunLogger % to unRunLogger)
     TestEnv . liftTestFileStorageT $ \fsVar ->
       StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
         res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT
@@ -157,20 +158,20 @@ instance MonadDB TestEnv where
 
 instance MonadTime TestEnv where
   currentTime = do
-    mtesttime <- gets terwCurrentTime
+    mtesttime <- use #terwCurrentTime
     case mtesttime of
       -- we use static time
       Just testtime -> return testtime
       -- we use IO time, but with a configurable delay
       Nothing       -> do
-        delay <- gets terwTimeDelay
+        delay <- use #terwTimeDelay
         now   <- liftIO getCurrentTime
         return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ T.unpack $ codeFromLang defaultLang
   getTextTemplatesByLanguage langStr = do
-    globaltemplates <- asks teGlobalTemplates
+    globaltemplates <- gview #teGlobalTemplates
     return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
@@ -193,8 +194,8 @@ runTestKontraHelper
   -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   now       <- currentTime
-  rng       <- asks teRNGState
-  runLogger <- asks (unRunLogger . teRunLogger)
+  rng       <- gview #teRNGState
+  runLogger <- gview (#teRunLogger % to unRunLogger)
   ts        <- getTransactionSettings
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
@@ -223,32 +224,31 @@ class RunnableTestKontra a where
 
 instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
-    cs             <- asks teConnSource
+    cs             <- gview #teConnSource
     (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
     return (res, ctx')
 
 instance {-# OVERLAPPING #-} RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
-    cs             <- asks teConnSource
+    cs             <- gview #teConnSource
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
     return (f res, ctx')
 
 -- | Modifies time, but does not change, whether the time is static or from IO.
 modifyTestTime :: (MonadState TestEnvStRW m) => (UTCTime -> UTCTime) -> m ()
 modifyTestTime modtime = do
-  mtesttime <- gets terwCurrentTime
+  mtesttime <- use #terwCurrentTime
   case mtesttime of
-    Just testtime -> State.modify $ set #terwCurrentTime (Just $ modtime testtime)
-    Nothing ->
-      State.modify $ set #terwTimeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
+    Just testtime -> assign #terwCurrentTime (Just $ modtime testtime)
+    Nothing -> assign #terwTimeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
 
 -- | Sets time and also stops time flow
 setTestTime :: (MonadState TestEnvStRW m) => UTCTime -> m ()
-setTestTime currtime = State.modify $ set #terwCurrentTime (Just currtime)
+setTestTime currtime = assign #terwCurrentTime (Just currtime)
 
 -- | Sets current uri of all test requests
 setRequestURI :: (MonadState TestEnvStRW m) => Text -> m ()
-setRequestURI uri = State.modify $ set #terwRequestURI $ T.unpack uri
+setRequestURI uri = assign #terwRequestURI $ T.unpack uri
 
 -- Various helpers for constructing appropriate Context/Request.
 
@@ -321,7 +321,7 @@ mkRequestWithHeaders
   -> m Request
 mkRequestWithHeaders method vars headers = do
   let vars' :: [(String, Input)] = fmap (\(t1, t2) -> (T.unpack t1, t2)) vars
-  uri <- gets terwRequestURI
+  uri <- use #terwRequestURI
   liftIO $ do
     rqbody <- newEmptyMVar
     ib :: MVar [(String, Input)] <- newMVar vars'
@@ -344,51 +344,52 @@ mkRequestWithHeaders method vars headers = do
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
-  pdfSealLambdaEnv <- asks tePdfToolsLambdaEnv
-  globaltemplates  <- asks teGlobalTemplates
+  pdfSealLambdaEnv <- gview #tePdfToolsLambdaEnv
+  globaltemplates  <- gview #teGlobalTemplates
   time             <- currentTime
   bd               <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
     filecache <- newFileMemCache 52428800
-    return Context { ctxMaybeUser           = Nothing
-                   , ctxTime                = time
-                   , ctxClientName          = Nothing
-                   , ctxClientTime          = Nothing
-                   , ctxIpNumber            = noIP
-                   , ctxProduction          = False
-                   , ctxCdnBaseUrl          = Nothing
-                   , ctxTemplates           = localizedVersion lang globaltemplates
-                   , ctxGlobalTemplates     = globaltemplates
-                   , ctxLang                = lang
-                   , ctxIsMailBackdoorOpen  = False
-                   , ctxMailNoreplyAddress  = "noreply@scrive.com"
-                   , ctxCgiGrpConfig        = Nothing
-                   , ctxRedisCache          = Nothing
-                   , ctxFileCache           = filecache
-                   , ctxXToken              = unexpectedError "xtoken is not defined"
-                   , ctxAdminAccounts       = []
-                   , ctxSalesAccounts       = []
-                   , ctxMaybePadUser        = Nothing
-                   , ctxUseHttps            = False
-                   , ctxGtConf              = testGTConf
-                   , ctxSessionID           = SessionID.tempSessionID
-                   , ctxTrackJsToken        = Nothing
-                   , ctxZendeskKey          = Nothing
-                   , ctxMixpanelToken       = Nothing
-                   , ctxGaToken             = Nothing
-                   , ctxHubspotConf         = Nothing
-                   , ctxBrandedDomain       = bd
-                   , ctxSalesforceConf      = Nothing
-                   , ctxNetsConfig          = Nothing
-                   , ctxIsApiLogEnabled     = True
-                   , ctxNetsSignConfig      = Nothing
-        -- We use real Lambda config here because we want our tests to check it.
-        -- This Lambda and S3 bucket are dedicated for tests and development.
-                   , ctxPdfToolsLambdaEnv   = pdfSealLambdaEnv
-                   , ctxPasswordServiceConf = defaultPasswordService
-                   , ctxMaybeApiUser        = Nothing
-                   , ctxEidServiceConf      = Nothing
-                   }
+    return I.Context { ctxMaybeUser           = Nothing
+                     , ctxTime                = time
+                     , ctxClientName          = Nothing
+                     , ctxClientTime          = Nothing
+                     , ctxIpNumber            = noIP
+                     , ctxProduction          = False
+                     , ctxCdnBaseUrl          = Nothing
+                     , ctxTemplates           = localizedVersion lang globaltemplates
+                     , ctxGlobalTemplates     = globaltemplates
+                     , ctxLang                = lang
+                     , ctxIsMailBackdoorOpen  = False
+                     , ctxMailNoreplyAddress  = "noreply@scrive.com"
+                     , ctxCgiGrpConfig        = Nothing
+                     , ctxRedisCache          = Nothing
+                     , ctxFileCache           = filecache
+                     , ctxXToken              = unexpectedError "xtoken is not defined"
+                     , ctxAdminAccounts       = []
+                     , ctxSalesAccounts       = []
+                     , ctxMaybePadUser        = Nothing
+                     , ctxUseHttps            = False
+                     , ctxGtConf              = testGTConf
+                     , ctxSessionID           = SessionID.tempSessionID
+                     , ctxTrackJsToken        = Nothing
+                     , ctxZendeskKey          = Nothing
+                     , ctxMixpanelToken       = Nothing
+                     , ctxGaToken             = Nothing
+                     , ctxHubspotConf         = Nothing
+                     , ctxBrandedDomain       = bd
+                     , ctxSalesforceConf      = Nothing
+                     , ctxNetsConfig          = Nothing
+                     , ctxIsApiLogEnabled     = True
+                     , ctxNetsSignConfig      = Nothing
+                     -- We use real Lambda config here because we want our tests
+                     -- to check it.  This Lambda and S3 bucket are dedicated
+                     -- for tests and development.
+                     , ctxPdfToolsLambdaEnv   = pdfSealLambdaEnv
+                     , ctxPasswordServiceConf = defaultPasswordService
+                     , ctxMaybeApiUser        = Nothing
+                     , ctxEidServiceConf      = Nothing
+                     }
 
 testGTConf :: GuardTimeConf
 testGTConf = GuardTimeConf

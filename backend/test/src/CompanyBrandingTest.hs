@@ -81,7 +81,7 @@ testUpdateCompanyTheme = do
   ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (mainbd ^. #bdMailTheme)
   newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   let newChangedTheme1 = newTheme { themeBrandColor = "#12399a" }
   let newChangedThemeStr1 = unjsonToByteStringLazy'
@@ -158,7 +158,7 @@ testDeleteCompanyTheme = do
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ugID ug)
   ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
   mainbd    <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (mainbd ^. #bdMailTheme)
   newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   req1      <- mkRequest POST []
   ((), _)   <- runTestKontra req1 ctx $ handleDeleteTheme Nothing (themeID newTheme)
@@ -178,7 +178,7 @@ testNormalUserCantChangeOrDeleteTheme = do
   ctx        <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
 
   mainbd     <- dbQuery $ GetMainBrandedDomain
-  mailTheme  <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme  <- dbQuery $ GetTheme (mainbd ^. #bdMailTheme)
   newTheme   <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   let newChangedTheme1 = newTheme { themeBrandColor = "#12399a" }
   let newChangedThemeStr1 = unjsonToByteStringLazy'
@@ -212,7 +212,7 @@ testChangeCompanyUI = do
   ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (mainbd ^. #bdMailTheme)
   newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
@@ -240,7 +240,7 @@ testNormalUseCantChangeCompanyUI = do
   ctx        <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
 
   mainbd     <- dbQuery $ GetMainBrandedDomain
-  mailTheme  <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme  <- dbQuery $ GetTheme (mainbd ^. #bdMailTheme)
   newTheme1  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme2  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme3  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
@@ -269,7 +269,7 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   ctx           <- mkContext defaultLang
 
   mainbd        <- dbQuery $ GetMainBrandedDomain
-  signviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
+  signviewTheme <- dbQuery $ GetTheme (mainbd ^. #bdSignviewTheme)
   newTheme      <- dbUpdate
     $ InsertNewThemeForUserGroup (ugID ug) signviewTheme { themeBrandColor = "#669713" }
   let newUgUI = (ugUI ug) { uguiMailTheme     = Just $ themeID newTheme

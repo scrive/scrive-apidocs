@@ -51,15 +51,15 @@ getServiceTheme :: Kontrakcja m => BrandedDomainID -> Maybe User -> m Theme
 getServiceTheme bdID muser = do
   bd <- dbQuery $ GetBrandedDomainByID bdID
   case muser of
-    Nothing   -> dbQuery $ GetTheme $ bdServiceTheme bd
+    Nothing   -> dbQuery $ GetTheme $ bd ^. #bdServiceTheme
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
-      dbQuery . GetTheme . fromMaybe (bdServiceTheme bd) . (uguiServiceTheme . ugUI) $ ug
+      dbQuery . GetTheme . fromMaybe (bd ^. #bdServiceTheme) . (uguiServiceTheme . ugUI) $ ug
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> Text -> m Response
 handleLoginBranding bdID _ = do
   bd          <- dbQuery $ GetBrandedDomainByID bdID
-  theme       <- dbQuery $ GetTheme (bdLoginTheme bd)
+  theme       <- dbQuery $ GetTheme (bd ^. #bdLoginTheme)
   brandingCSS <- loginBrandingCSS theme
   return (cssResponse brandingCSS)
 
@@ -90,7 +90,7 @@ getSignviewTheme bdID did = do
   doc  <- dbQuery $ GetDocumentByDocumentID did
   ugid <- guardJust (documentauthorugid doc)
   ug   <- guardJustM . dbQuery . UserGroupGet $ ugid
-  dbQuery . GetTheme . fromMaybe (bdSignviewTheme bd) . (uguiSignviewTheme . ugUI) $ ug
+  dbQuery . GetTheme . fromMaybe (bd ^. #bdSignviewTheme) . (uguiSignviewTheme . ugUI) $ ug
 
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
 handleSignviewBrandingWithoutDocument
@@ -106,12 +106,12 @@ getSignviewThemeWithoutDocument bdID uid = do
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
   ug    <- dbQuery . UserGroupGetByUserID . userid $ user
-  dbQuery . GetTheme . fromMaybe (bdSignviewTheme bd) . (uguiSignviewTheme . ugUI) $ ug
+  dbQuery . GetTheme . fromMaybe (bd ^. #bdSignviewTheme) . (uguiSignviewTheme . ugUI) $ ug
 
 loginLogo :: Kontrakcja m => BrandedDomainID -> Text -> m Response
 loginLogo bdID _ = do
   bd    <- dbQuery $ GetBrandedDomainByID bdID
-  theme <- dbQuery $ GetTheme (bdLoginTheme bd)
+  theme <- dbQuery $ GetTheme (bd ^. #bdLoginTheme)
   return (imageResponse $ themeLogo theme)
 
 serviceLogo :: Kontrakcja m => BrandedDomainID -> Text -> Text -> m Response
@@ -130,7 +130,7 @@ emailLogo bdID uid _ = do
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
   ug    <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <- dbQuery . GetTheme . fromMaybe (bdMailTheme bd) . (uguiMailTheme . ugUI) $ ug
+  theme <- dbQuery . GetTheme . fromMaybe (bd ^. #bdMailTheme) . (uguiMailTheme . ugUI) $ ug
   return (imageResponse $ themeLogo theme)
 
 signviewLogo :: Kontrakcja m => BrandedDomainID -> DocumentID -> Text -> m Response
@@ -160,7 +160,7 @@ faviconIcon bdID uidstr _ = do
             return . (uguiFavicon . ugUI) $ ug
 
   bd <- dbQuery $ GetBrandedDomainByID bdID
-  let favicon = fromMaybe (bdFavicon bd) mCompanyFavicon
+  let favicon = fromMaybe (bd ^. #bdFavicon) mCompanyFavicon
   return (imageResponse favicon)
 
 
