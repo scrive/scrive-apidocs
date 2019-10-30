@@ -114,7 +114,7 @@ testSuccessfulLogin = do
     $  (userid <$> ctx' ^. #ctxMaybeUser)
     == Just uid
   assertBool "User was not logged into context as pad user"
-    $  ctx' ^. #ctxMaybePadUser
+    $  (ctx' ^. #ctxMaybePadUser)
     == Nothing
 
 testSuccessfulLoginToPadQueue :: TestEnv ()
@@ -219,8 +219,8 @@ testCanLoginWithRedirect = do
   req6 <- mkRequest GET [("session_id", inText "1-100000"), ("url", inText redirecturl2)]
   (res6, ctx6) <- runTestKontra req6 ctx $ handleLoginWithRedirectGet
   assertBool "ctxSessionID will not be changed if session_id is invalid"
-    $  ctx ^. #ctxSessionID
-    == ctx6 ^. #ctxSessionID
+    $  (ctx ^. #ctxSessionID)
+    == (ctx6 ^. #ctxSessionID)
   assertBool "Redirect was still set to other url"
              (isRedirect (LinkExternal redirecturl2) res6)
 
@@ -434,8 +434,9 @@ testUser2FAEnforced = do
   void . dbUpdate $ SetUserTotpIsMandatory uid False
 
   -- going to archive with 2FA enforced for the usergroup returns a redirect
-  void . dbUpdate . UserGroupUpdate
-    $ set (#ugSettings % _Just % #ugsTotpIsMandatory) True ug
+  void . dbUpdate . UserGroupUpdate $ set (#ugSettings % _Just % #ugsTotpIsMandatory)
+                                          True
+                                          ug
   res2 <- fst <$> runTestKontra req1 ctx' showArchive
   assertBool "We should get a redirect to account with flash message"
     . (isRedirect LinkAccount && hasFlashMessage)

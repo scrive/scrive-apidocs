@@ -232,7 +232,8 @@ postDocumentPendingChange olddoc signatoryLink = do
                 asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
             dbUpdate
               .   ScheduleDocumentSealing
-              .   bdid . mctxCurrentBrandedDomain
+              .   bdid
+              .   mctxCurrentBrandedDomain
               =<< getMailContext
             if signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
               then sendPartyProcessFinalizedNotification document signatoryLink

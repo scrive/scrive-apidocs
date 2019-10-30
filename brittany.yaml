@@ -31,6 +31,7 @@ conf_forward:
     - -XMultiParamTypeClasses
     - -XMultiWayIf
     - -XNamedFieldPuns
+    - -XOverloadedLabels
     - -XOverloadedStrings
     - -XPatternGuards
     - -XRankNTypes

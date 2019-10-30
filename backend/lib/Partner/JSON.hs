@@ -175,8 +175,8 @@ unjsonUserGroupForUpdate =
          )
 
 unjsonUserGroupsForUpdate :: UnjsonDef [UserGroupForUpdate]
-unjsonUserGroupsForUpdate =
-  objectOf $ fieldBy "companies" identity "List of companies" (arrayOf unjsonUserGroupForUpdate)
+unjsonUserGroupsForUpdate = objectOf
+  $ fieldBy "companies" identity "List of companies" (arrayOf unjsonUserGroupForUpdate)
 
 -- This is intended for PartnerAPI only. It uses inherited data and the caller
 -- does not know about UserGroups or inheritance
@@ -211,7 +211,7 @@ updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
       updateAddress = case new_address == old_address of
         True  -> identity
         False -> set #ugAddress $ Just new_address
-  in set #ugName uguUserGroupName . updateAddress $ ug
+  in  set #ugName uguUserGroupName . updateAddress $ ug
 
 -------------------------------------------------------------------------------
 -- Utils                                                                    ---

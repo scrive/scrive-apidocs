@@ -90,8 +90,7 @@ test_brandedDomainAmbiguous = do
 test_brandedDomainCanChangeThemeOrSettingsOfMainDomain :: TestEnv ()
 test_brandedDomainCanChangeThemeOrSettingsOfMainDomain = do
   mainbd1 <- dbQuery $ GetMainBrandedDomain
-  void $ dbUpdate $ UpdateBrandedDomain
-    (set #bdMailTheme (bdLoginTheme mainbd1) mainbd1)
+  void $ dbUpdate $ UpdateBrandedDomain (set #bdMailTheme (bdLoginTheme mainbd1) mainbd1)
   mainbd2 <- dbQuery $ GetMainBrandedDomain
   assertEqual "Can change main domain " mainbd1 mainbd2
 
@@ -121,7 +120,6 @@ test_brandedDomainCanChangeThemeOrSettingsOfMainDomain = do
   signviewTheme2 <- dbQuery $ GetTheme (bdSignviewTheme mainbd1)
   assertEqual "Can change signview theme of main domain " signviewTheme1 signviewTheme2
 
-  void $dbUpdate
-    $ DeleteThemeOwnedByDomain (bdid mainbd1) (bdSignviewTheme mainbd1)
+  void $dbUpdate $ DeleteThemeOwnedByDomain (bdid mainbd1) (bdSignviewTheme mainbd1)
   signviewTheme3 <- dbQuery $ GetTheme (bdSignviewTheme mainbd1)
   assertEqual "Can delete theme of main domain  " signviewTheme1 signviewTheme3

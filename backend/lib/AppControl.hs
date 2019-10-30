@@ -185,9 +185,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           logInfo "Handler started"
             .  object
             $  routeLogData
-            ++ [ "ip" .= show (ctxIpNumber ctx)
-               , "server_hostname" .= hostname appGlobals
-               ]
+            ++ ["ip" .= show (ctxIpNumber ctx), "server_hostname" .= hostname appGlobals]
 
           (res, handlerTime) <- localData [identifier $ sesID session] $ do
             startTime                 <- liftBase getCurrentTime
@@ -214,17 +212,14 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 return response
                 -- just take the first user we find. We prefer the user
                 -- which was used during API call.
-            let
-              mUser =
-                ctxMaybeApiUser ctx'
-                  <|> ctxMaybeUser    ctx'
-                  <|> ctxMaybePadUser ctx'
-              res' = case mUser of
-                Nothing -> res
-                Just user ->
-                  setHeader "X-Scrive-UserID" (show . userid $ user)
-                    . setHeader "X-Scrive-UserGroupID" (show . usergroupid $ user)
-                    $ res
+            let mUser =
+                  ctxMaybeApiUser ctx' <|> ctxMaybeUser ctx' <|> ctxMaybePadUser ctx'
+                res' = case mUser of
+                  Nothing -> res
+                  Just user ->
+                    setHeader "X-Scrive-UserID" (show . userid $ user)
+                      . setHeader "X-Scrive-UserGroupID" (show . usergroupid $ user)
+                      $ res
 
             return (res', timeDiff finishTime startTime)
 
@@ -382,7 +377,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                      , ctxMailNoreplyAddress  = mailNoreplyAddress appConf
                      , ctxGtConf              = guardTimeConf appConf
                      , ctxCgiGrpConfig        = cgiGrpConfig appConf
-                     , ctxRedisCache         = mrediscache appGlobals
+                     , ctxRedisCache          = mrediscache appGlobals
                      , ctxFileCache           = filecache appGlobals
                      , ctxXToken              = sesCSRFToken session
                      , ctxAdminAccounts       = admins appConf

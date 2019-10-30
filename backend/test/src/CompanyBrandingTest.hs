@@ -171,10 +171,7 @@ testDeleteCompanyTheme = do
 testNormalUserCantChangeOrDeleteTheme :: TestEnv ()
 testNormalUserCantChangeOrDeleteTheme = do
   ug         <- addNewUserGroup
-  Just user1 <- addNewUserToUserGroup "Mariusz"
-                                      "Rak"
-                                      "mariusz+ut@scrive.com"
-                                      (ugID ug)
+  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ugID ug)
   True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
 
@@ -219,12 +216,11 @@ testChangeCompanyUI = do
   newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
-  let ugui = (ugUI ug)
-        { uguiMailTheme     = Just $ themeID newTheme1
-        , uguiSignviewTheme = Just $ themeID newTheme2
-        , uguiServiceTheme  = Just $ themeID newTheme3
-        , uguiBrowserTitle  = Just "Wow"
-        }
+  let ugui = (ugUI ug) { uguiMailTheme     = Just $ themeID newTheme1
+                       , uguiSignviewTheme = Just $ themeID newTheme2
+                       , uguiServiceTheme  = Just $ themeID newTheme3
+                       , uguiBrowserTitle  = Just "Wow"
+                       }
 
       newUgUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -238,10 +234,7 @@ testChangeCompanyUI = do
 testNormalUseCantChangeCompanyUI :: TestEnv ()
 testNormalUseCantChangeCompanyUI = do
   ug         <- addNewUserGroup
-  Just user1 <- addNewUserToUserGroup "Mariusz"
-                                      "Rak"
-                                      "mariusz+ut@scrive.com"
-                                      (ugID ug)
+  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ugID ug)
   True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
   ctx        <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
@@ -253,12 +246,11 @@ testNormalUseCantChangeCompanyUI = do
   newTheme3  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
 
   let oldUGUI = ugUI ug
-      newUGUI = oldUGUI
-        { uguiMailTheme     = Just $ themeID newTheme1
-        , uguiSignviewTheme = Just $ themeID newTheme2
-        , uguiServiceTheme  = Just $ themeID newTheme3
-        , uguiBrowserTitle  = Just "Wow"
-        }
+      newUGUI = oldUGUI { uguiMailTheme     = Just $ themeID newTheme1
+                        , uguiSignviewTheme = Just $ themeID newTheme2
+                        , uguiServiceTheme  = Just $ themeID newTheme3
+                        , uguiBrowserTitle  = Just "Wow"
+                        }
 
       newUGUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -278,14 +270,12 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
 
   mainbd        <- dbQuery $ GetMainBrandedDomain
   signviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
-  newTheme      <- dbUpdate $ InsertNewThemeForUserGroup
-    (ugID ug)
-    signviewTheme { themeBrandColor = "#669713" }
-  let newUgUI = (ugUI ug)
-        { uguiMailTheme     = Just $ themeID newTheme
-        , uguiSignviewTheme = Just $ themeID newTheme
-        , uguiServiceTheme  = Just $ themeID newTheme
-        }
+  newTheme      <- dbUpdate
+    $ InsertNewThemeForUserGroup (ugID ug) signviewTheme { themeBrandColor = "#669713" }
+  let newUgUI = (ugUI ug) { uguiMailTheme     = Just $ themeID newTheme
+                          , uguiSignviewTheme = Just $ themeID newTheme
+                          , uguiServiceTheme  = Just $ themeID newTheme
+                          }
 
   void $ dbUpdate $ UserGroupUpdate $ set #ugUI newUgUI ug
   (Just ugui1) <- (ugUI <$>) <$> (dbQuery $ UserGroupGet $ ugID ug)

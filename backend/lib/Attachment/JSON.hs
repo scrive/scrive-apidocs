@@ -12,8 +12,8 @@ import Doc.API.V2.JSON.Misc
 import Doc.API.V2.JSON.Utils
 
 unjsonAttachments :: UnjsonDef [Attachment]
-unjsonAttachments =
-  objectOf $ fieldBy "attachments" identity "List of attachments" (arrayOf unjsonAttachment)
+unjsonAttachments = objectOf
+  $ fieldBy "attachments" identity "List of attachments" (arrayOf unjsonAttachment)
 
 unjsonAttachment :: UnjsonDef Attachment
 unjsonAttachment =

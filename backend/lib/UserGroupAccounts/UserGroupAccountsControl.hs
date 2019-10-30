@@ -289,11 +289,7 @@ sendNewUserGroupUserMail inviter ug user = do
 sendTakeoverSingleUserMail :: Kontrakcja m => User -> UserGroup -> User -> m ()
 sendTakeoverSingleUserMail inviter ug user = do
   ctx  <- getContext
-  mail <- mailTakeoverSingleUserInvite ctx
-                                       user
-                                       inviter
-                                       ug
-                                       (LinkCompanyTakeover $ ugID ug)
+  mail <- mailTakeoverSingleUserInvite ctx user inviter ug (LinkCompanyTakeover $ ugID ug)
   scheduleEmailSendout $ mail { to = [getMailAddress user] }
 
 {- |

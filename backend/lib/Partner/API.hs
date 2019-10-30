@@ -96,11 +96,10 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
         . UserGroupGetWithParents
         $ partnerUsrGrpID
       newUgFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug_new = defaultUserGroup
-            { ugParentGroupID = Just partnerUsrGrpID
-            , ugHomeFolderID  = Just $ folderID newUgFolder
-            , ugInvoicing     = BillItem $ Just FreePlan
-            }
+      let ug_new = defaultUserGroup { ugParentGroupID = Just partnerUsrGrpID
+                                    , ugHomeFolderID  = Just $ folderID newUgFolder
+                                    , ugInvoicing     = BillItem $ Just FreePlan
+                                    }
       ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug =
             updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu

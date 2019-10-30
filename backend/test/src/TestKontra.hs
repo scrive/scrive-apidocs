@@ -124,8 +124,7 @@ ununTestEnv st =
                     , terwCurrentTime = Nothing
                     , terwRequestURI  = "http://testkontra.fake"
                     }
-    . evalTestFileStorageT
-        ((, teRedisConn st, teFileMemCache st) <$> teAmazonS3Env st)
+    . evalTestFileStorageT ((, teRedisConn st, teFileMemCache st) <$> teAmazonS3Env st)
     . unTestEnv
 
 instance CryptoRNG TestEnv where
@@ -364,7 +363,7 @@ mkContext lang = do
                    , ctxIsMailBackdoorOpen  = False
                    , ctxMailNoreplyAddress  = "noreply@scrive.com"
                    , ctxCgiGrpConfig        = Nothing
-                   , ctxRedisCache         = Nothing
+                   , ctxRedisCache          = Nothing
                    , ctxFileCache           = filecache
                    , ctxXToken              = unexpectedError "xtoken is not defined"
                    , ctxAdminAccounts       = []

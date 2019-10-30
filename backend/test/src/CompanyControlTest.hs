@@ -97,12 +97,10 @@ test_settingUIWithHandleChangeCompanyBranding = do
   mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery
     $ GetTheme (ctx ^. #ctxBrandedDomain % #bdSignviewTheme)
-  signviewTheme <- dbUpdate
-    $ InsertNewThemeForUserGroup (ugID ug) signviewThemeFromDomain
+  signviewTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) signviewThemeFromDomain
   serviceThemeFromDomain <- dbQuery
     $ GetTheme (ctx ^. #ctxBrandedDomain % #bdServiceTheme)
-  serviceTheme <- dbUpdate
-    $ InsertNewThemeForUserGroup (ugID ug) serviceThemeFromDomain
+  serviceTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) serviceThemeFromDomain
   let browserTitle  = "Super"
   let smsOriginator = "Super SMS"
   let favicon = "-almoust-binary-data-aaa-000000000-"

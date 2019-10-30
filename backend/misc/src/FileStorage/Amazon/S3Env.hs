@@ -14,8 +14,9 @@ data AmazonS3Env = AmazonS3Env
 
 s3envFromConfig :: MonadBase IO m => AmazonConfig -> m AmazonS3Env
 s3envFromConfig conf = liftBase $ do
-  env <- set (lensVL AWS.envRegion) (amazonConfigRegion conf) . AWS.configure s3
-    <$> AWS.newEnv (AWS.FromKeys accessKey secretKey)
+  env <-
+    set (lensVL AWS.envRegion) (amazonConfigRegion conf) . AWS.configure s3 <$> AWS.newEnv
+      (AWS.FromKeys accessKey secretKey)
   return AmazonS3Env { as3eEnv    = env
                      , as3eBucket = AWS.BucketName $ amazonConfigBucket conf
                      }

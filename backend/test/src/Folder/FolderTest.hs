@@ -379,8 +379,7 @@ testFolderAPIUpdate = do
   fdr <-
     dbUpdate
     $ FolderCreate
-    $ ( set #folderParentID (Just $ folderID fdr1)
-      . set #folderName     "Folder for move test"
+    $ (set #folderParentID (Just $ folderID fdr1) . set #folderName "Folder for move test"
       )
         defaultFolder
   allChildrenFdr1 <-
@@ -515,11 +514,7 @@ testFolderAPIListDocs = do
               numDocsToStart
               (getTotalReturned docsVal)
   -- list child folder
-  docsVal' <- jsonTestRequestHelper ctx
-                                    GET
-                                    []
-                                    (folderAPIListDocs (folderID newFdr))
-                                    200
+  docsVal' <- jsonTestRequestHelper ctx GET [] (folderAPIListDocs (folderID newFdr)) 200
   assertEqual "Listing works for child of user home folder"
               numDocsToStart'
               (getTotalReturned docsVal')

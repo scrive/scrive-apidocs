@@ -34,8 +34,10 @@ saveContentsToAmazon env url contents = go True =<< awsLogger
     go retry logger = do
       logInfo "Attempting to save file to AWS" $ object ["url" .= url]
       (result, diff) <- timed . liftBase $ do
-        withResourceT . runAWS env logger . AWS.send
-          $ AWS.putObject (as3eBucket env) (urlObjectKey url) (AWS.toBody contents)
+        withResourceT . runAWS env logger . AWS.send $ AWS.putObject
+          (as3eBucket env)
+          (urlObjectKey url)
+          (AWS.toBody contents)
       case result of
         Right res -> do
           logInfo "Filed saved to AWS"
@@ -59,8 +61,8 @@ getContentsFromAmazon env url = go True =<< awsLogger
       logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
       (result, diff) <- timed . liftBase $ do
         withResourceT $ do
-          rs <- runAWS env logger . AWS.send
-            $ AWS.getObject (as3eBucket env) (urlObjectKey url)
+          rs <- runAWS env logger . AWS.send $ AWS.getObject (as3eBucket env)
+                                                             (urlObjectKey url)
           C.runConduit $ AWS._streamBody (rs ^. lensVL AWS.gorsBody) C..| C.sinkLazy
       case result of
         Right rsp -> do
@@ -84,8 +86,8 @@ deleteContentsFromAmazon env url = do
   logger <- awsLogger
   logInfo "Attempting to delete file from AWS" $ object ["url" .= url]
   (result, diff) <- timed . liftBase $ do
-    withResourceT . runAWS env logger . AWS.send
-      $ AWS.deleteObject (as3eBucket env) (urlObjectKey url)
+    withResourceT . runAWS env logger . AWS.send $ AWS.deleteObject (as3eBucket env)
+                                                                    (urlObjectKey url)
   case result of
     Right res -> do
       logInfo "AWS file deleted"

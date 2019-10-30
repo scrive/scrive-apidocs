@@ -314,7 +314,7 @@ smsFields document = do
   F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
   F.value "documenttitle" $ documenttitle document
   F.value "authorlink"
-    $  mctx ^. mctxDomainUrl
+    $  (mctx ^. mctxDomainUrl)
     <> (showt (LinkIssueDoc (documentid document)))
 
 smsInvitationLinkFields

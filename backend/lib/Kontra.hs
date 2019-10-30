@@ -173,16 +173,18 @@ unsafeSessionTakeover SessionCookieInfo {..} = do
     Just s  -> do
       mUser    <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesUserID s
       mPadUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesPadUserID s
-      modifyContext $ \ctx -> ctx
-        & #ctxSessionID    .~ sesID s
-        & #ctxMaybeUser    .~ mUser
-        & #ctxMaybePadUser .~ mPadUser
+      modifyContext $ \ctx ->
+        ctx
+          & (#ctxSessionID .~ sesID s)
+          & (#ctxMaybeUser .~ mUser)
+          & (#ctxMaybePadUser .~ mPadUser)
       return $ Just s
 
 switchLang :: Kontrakcja m => Lang -> m ()
-switchLang lang = modifyContext $ \ctx -> ctx
-  & #ctxLang      .~ lang
-  & #ctxTemplates .~ localizedVersion lang (ctx ^. #ctxGlobalTemplates)
+switchLang lang = modifyContext $ \ctx ->
+  ctx
+    & (#ctxLang .~ lang)
+    & (#ctxTemplates .~ localizedVersion lang (ctx ^. #ctxGlobalTemplates))
 
 -- | Extract data from GET or POST request. Fail with 'internalError'
 -- if param variable not present or when it cannot be read.

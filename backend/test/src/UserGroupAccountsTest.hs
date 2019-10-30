@@ -118,9 +118,9 @@ test_addingANewCompanyAccount = do
 
 
   Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  assertEqual "New user is in company"        (ugID ug) (usergroupid newuser)
-  assertEqual "New user is standard user"     False         (useriscompanyadmin newuser)
-  assertEqual "New user has the invited name" "Bob Blue"    (getFullName newuser)
+  assertEqual "New user is in company"        (ugID ug)  (usergroupid newuser)
+  assertEqual "New user is standard user"     False      (useriscompanyadmin newuser)
+  assertEqual "New user has the invited name" "Bob Blue" (getFullName newuser)
 
   assertCompanyInvitesAre ug [] -- We don't add an invite if we created a user
 
@@ -364,8 +364,7 @@ test_removingCompanyAccountWorks = do
   assertEqual "User has NOT been deleted" (Just otheruser) motheruserDB
 
   -- allow adminuser control over otheruser's group
-  void $ dbUpdate $ AccessControlCreateForUserGroup (ugID ug)
-                                                    (UserAdminAR $ ugID otherug)
+  void $ dbUpdate $ AccessControlCreateForUserGroup (ugID ug) (UserAdminAR $ ugID otherug)
 
   -- now removal should work
   (res'', _) <- runTestKontra req' ctx $ handleRemoveUserGroupAccount

@@ -1012,10 +1012,8 @@ testCloseDocumentEvidenceLog = do
 performNewDocumentWithRandomUser
   :: Maybe UserGroup -> DocumentType -> String -> TestEnv (User, UTCTime, Document)
 performNewDocumentWithRandomUser mug doctype title = do
-  user <- maybe addNewRandomUser
-                (\ug -> addNewRandomUserGroupUser (ugID ug) False)
-                mug
-  ctx <- mkContext defaultLang
+  user <- maybe addNewRandomUser (\ug -> addNewRandomUserGroupUser (ugID ug) False) mug
+  ctx  <- mkContext defaultLang
   let aa = authorActor ctx user
   doc <- randomUpdate
     $ NewDocument user (T.pack title) doctype defaultTimeZoneName 0 aa Nothing
@@ -1477,8 +1475,10 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
         $  isNothing (signatorylinkdeleted sl)
         && isJust (signatorylinkreallydeleted sl)
 
-  dbUpdate . UserGroupUpdate $
-    set (#ugSettings % _Just % #ugsDataRetentionPolicy % #drpImmediateTrash) True ug
+  dbUpdate . UserGroupUpdate $ set
+    (#ugSettings % _Just % #ugsDataRetentionPolicy % #drpImmediateTrash)
+    True
+    ug
 
   do
     archived <- dbUpdate $ PurgeDocuments 1
@@ -2253,8 +2253,10 @@ testCreateFromSharedTemplate = do
 
   docid'  <-
     fromJust
-      <$> ( dbUpdate
-          $ CloneDocumentWithUpdatedAuthor (Just newuser) doc (systemActor mt) identity
+      <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just newuser)
+                                                     doc
+                                                     (systemActor mt)
+                                                     identity
           )
   void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (documentid doc)
                                                                  (systemActor mt)
@@ -2295,7 +2297,9 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   user'  <- fromJust <$> (dbQuery $ GetUserByID (userid user))
   docid' <-
     fromJust
-      <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user') doc (systemActor mt) identity)
+      <$> ( dbUpdate
+          $ CloneDocumentWithUpdatedAuthor (Just user') doc (systemActor mt) identity
+          )
   void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (documentid doc)
                                                                  (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
@@ -2492,7 +2496,8 @@ testUpdateConsentResponsesForSigningSuccess = do
         responses' = map (\q -> (scqID q, scqResponse q)) questions'
     assertBool
       "Some responses are missing or wrong"
-      (all identity (zipWith (\(i, r) (i', r') -> i == i' && Just r == r') responses responses')
+      (all identity
+           (zipWith (\(i, r) (i', r') -> i == i' && Just r == r') responses responses')
       )
 
     events <- query $ GetEvidenceLog $ documentid doc

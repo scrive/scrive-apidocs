@@ -161,7 +161,8 @@ sendDocumentMails author = do
                                            Nothing
                                            Nothing
                                            SignatoryScreenshots.emptySignatoryScreenshots
-                          =<< (signatoryActor (set #ctxTime (10 `minutesAfter` now) ctx) sl
+                          =<< (signatoryActor (set #ctxTime (10 `minutesAfter` now) ctx)
+                                              sl
                               )
 
                         -- Sending closed email

@@ -788,12 +788,11 @@ addNewUserGroupWithParent createFolder mparent = do
   ugazip           <- rand 10 (arbText 3 30)
   ugacity          <- rand 10 (arbText 3 30)
   ugacountry       <- rand 10 (arbText 3 30)
-  let ug = defaultUserGroup
-        { ugParentGroupID = mparent
-        , ugName = ugname
-        , ugAddress = uga
-        , ugHomeFolderID = mUgFolderID
-        }
+  let ug = defaultUserGroup { ugParentGroupID = mparent
+                            , ugName          = ugname
+                            , ugAddress       = uga
+                            , ugHomeFolderID  = mUgFolderID
+                            }
       uga = Just $ UserGroupAddress { ugaCompanyNumber = ugacompanynumber
                                     , ugaEntityName    = ugaentityname
                                     , ugaAddress       = ugaaddress
@@ -1076,7 +1075,7 @@ addNewRandomPartnerUser = do
     Just (partnerAdminUser, partnerAdminUserGroup) -> do
       -- insert new partner row with the same ID as the UserGroup
       True <- dbUpdate . InsertPartnerForTests $ Partner
-        { ptID = unsafeUserGroupIDToPartnerID . ugID $ partnerAdminUserGroup
+        { ptID             = unsafeUserGroupIDToPartnerID . ugID $ partnerAdminUserGroup
         , ptName           = T.unpack . ugName $ partnerAdminUserGroup
         , ptDefaultPartner = False
         , ptUserGroupID    = Just $ ugID partnerAdminUserGroup

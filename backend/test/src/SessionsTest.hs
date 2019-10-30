@@ -239,10 +239,8 @@ testCustomSessionTimeoutInheritance = do
   userGroup13              <- dbUpdate $ UserGroupCreate userGroup12
 
   userGroup21 :: UserGroup <- rand 10 arbitrary
-  let userGroup22 = userGroup21
-        { ugParentGroupID = Just $ ugID userGroup13
-        , ugSettings = Nothing
-        }
+  let userGroup22 =
+        userGroup21 { ugParentGroupID = Just $ ugID userGroup13, ugSettings = Nothing }
   userGroup23 <- dbUpdate $ UserGroupCreate userGroup22
 
   userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $ ugID
@@ -260,8 +258,7 @@ testCustomSessionTimeoutInheritance = do
     time1 <- currentTime
     setTestTime time1
 
-    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com"
-      $ ugID userGroup23
+    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com" $ ugID userGroup23
 
     let userId = userid user
     (session1, _) <- insertNewSession userId
@@ -287,7 +284,7 @@ testDocumentTicketInsertion = replicateM_ 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
   runSQL_
     $   "SELECT COUNT(*) FROM document_session_tokens WHERE session_id ="
-    <?> ctx ^. #ctxSessionID
+    <?> (ctx ^. #ctxSessionID)
   tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
 

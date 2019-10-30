@@ -218,10 +218,7 @@ testCannotDeleteUserGroupWithSubgroups = do
   ugB  <- dbUpdate . UserGroupCreate . set #ugParentGroupID (Just . ugID $ ugA) $ ugB0
   commit -- so that raising exception will not take our data with it
   -- deleting group A raises exception
-  assertRaisesDBException
-    .   runSQL_
-    $   "DELETE from user_groups where id = "
-    <?> ugID ugA
+  assertRaisesDBException . runSQL_ $ "DELETE from user_groups where id = " <?> ugID ugA
   commit
   -- deleting group B works
   runSQL_ $ "DELETE from user_groups where id = " <?> ugID ugB

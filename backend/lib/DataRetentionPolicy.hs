@@ -37,15 +37,14 @@ drpIdleDocTimeout = \case
   Pending       -> lens (const Nothing) const
 
 defaultDataRetentionPolicy :: DataRetentionPolicy
-defaultDataRetentionPolicy = DataRetentionPolicy
-  { drpIdleDocTimeoutPreparation = Nothing
-  , drpIdleDocTimeoutClosed      = Nothing
-  , drpIdleDocTimeoutCanceled    = Nothing
-  , drpIdleDocTimeoutTimedout    = Nothing
-  , drpIdleDocTimeoutRejected    = Nothing
-  , drpIdleDocTimeoutError       = Nothing
-  , drpImmediateTrash            = False
-  }
+defaultDataRetentionPolicy = DataRetentionPolicy { drpIdleDocTimeoutPreparation = Nothing
+                                                 , drpIdleDocTimeoutClosed      = Nothing
+                                                 , drpIdleDocTimeoutCanceled    = Nothing
+                                                 , drpIdleDocTimeoutTimedout    = Nothing
+                                                 , drpIdleDocTimeoutRejected    = Nothing
+                                                 , drpIdleDocTimeoutError       = Nothing
+                                                 , drpImmediateTrash            = False
+                                                 }
 
 makeStricterDataRetentionPolicy
   :: DataRetentionPolicy -> DataRetentionPolicy -> DataRetentionPolicy

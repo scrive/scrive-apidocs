@@ -50,7 +50,8 @@ unjsonTheme =
     <*> field "font"              themeFont              "Font"
 
 unjsonThemesList :: UnjsonDef [Theme]
-unjsonThemesList = objectOf $ fieldBy "themes" identity "List of themes" (arrayOf unjsonTheme)
+unjsonThemesList =
+  objectOf $ fieldBy "themes" identity "List of themes" (arrayOf unjsonTheme)
 
 instance Unjson Theme where
   unjsonDef = unjsonTheme

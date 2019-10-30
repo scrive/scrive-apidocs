@@ -54,11 +54,7 @@ getServiceTheme bdID muser = do
     Nothing   -> dbQuery $ GetTheme $ bdServiceTheme bd
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
-      dbQuery
-        . GetTheme
-        . fromMaybe (bdServiceTheme bd)
-        . (uguiServiceTheme . ugUI)
-        $ ug
+      dbQuery . GetTheme . fromMaybe (bdServiceTheme bd) . (uguiServiceTheme . ugUI) $ ug
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> Text -> m Response
 handleLoginBranding bdID _ = do
@@ -94,11 +90,7 @@ getSignviewTheme bdID did = do
   doc  <- dbQuery $ GetDocumentByDocumentID did
   ugid <- guardJust (documentauthorugid doc)
   ug   <- guardJustM . dbQuery . UserGroupGet $ ugid
-  dbQuery
-    . GetTheme
-    . fromMaybe (bdSignviewTheme bd)
-    . (uguiSignviewTheme . ugUI)
-    $ ug
+  dbQuery . GetTheme . fromMaybe (bdSignviewTheme bd) . (uguiSignviewTheme . ugUI) $ ug
 
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
 handleSignviewBrandingWithoutDocument
@@ -114,11 +106,7 @@ getSignviewThemeWithoutDocument bdID uid = do
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
   ug    <- dbQuery . UserGroupGetByUserID . userid $ user
-  dbQuery
-    . GetTheme
-    . fromMaybe (bdSignviewTheme bd)
-    . (uguiSignviewTheme . ugUI)
-    $ ug
+  dbQuery . GetTheme . fromMaybe (bdSignviewTheme bd) . (uguiSignviewTheme . ugUI) $ ug
 
 loginLogo :: Kontrakcja m => BrandedDomainID -> Text -> m Response
 loginLogo bdID _ = do
@@ -142,8 +130,7 @@ emailLogo bdID uid _ = do
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
   ug    <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <-
-    dbQuery . GetTheme . fromMaybe (bdMailTheme bd) . (uguiMailTheme . ugUI) $ ug
+  theme <- dbQuery . GetTheme . fromMaybe (bdMailTheme bd) . (uguiMailTheme . ugUI) $ ug
   return (imageResponse $ themeLogo theme)
 
 signviewLogo :: Kontrakcja m => BrandedDomainID -> DocumentID -> Text -> m Response

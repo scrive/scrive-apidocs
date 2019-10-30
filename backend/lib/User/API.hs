@@ -488,16 +488,11 @@ apiCallSignup = api $ do
       | otherwise -> return $ Just user
     Nothing -> do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug0 = defaultUserGroup
-            { ugName = companyName
-            , ugHomeFolderID = Just $ folderID ugFolder
-            }
+      let ug0 = defaultUserGroup { ugName         = companyName
+                                 , ugHomeFolderID = Just $ folderID ugFolder
+                                 }
       ug <- dbUpdate $ UserGroupCreate ug0
-      createUser (Email email)
-                 (firstname  , lastname)
-                 (ugID ug, True)
-                 lang
-                 AccountRequest
+      createUser (Email email) (firstname, lastname) (ugID ug, True) lang AccountRequest
   case muser' of
     -- return ambiguous response in both cases to prevent a security issue
     Nothing   -> runJSONGenT $ value "sent" True

@@ -112,10 +112,7 @@ pageDocumentSignView ctx document siglink ad = do
       _ -> show LinkPreviewLockedImage
     F.value "b64documentdata" $ B64.encode $ docjson
     F.value "legaltext" $ ugsLegalText . ugwpSettings $ authorugwp
-    standardPageFields
-      ctx
-      (Just (ugID $ ugwpUG authorugwp, ugUI $ ugwpUG authorugwp))
-      ad -- Branding for signview depends only on authors company
+    standardPageFields ctx (Just (ugID $ ugwpUG authorugwp, ugUI $ ugwpUG authorugwp)) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text

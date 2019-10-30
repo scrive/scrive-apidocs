@@ -107,11 +107,11 @@ _testDocApiV2GetFailsAfter30Days = do
   (_, ctx') <- runTestKontra req ctx $ do
     sid <- getNonTempSessionID
     dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
-  let vars =
-        [("signatory_id", inText . showt . fromSignatoryLinkID . signatorylinkid $ sl)]
-      ctxWithin30Days =
-        set #ctxTime (addUTCTime (29 * 24 * 3600) (documentmtime doc)) ctx'
-      ctxAfter30Days = set #ctxTime (addUTCTime (31 * 24 * 3600) (documentmtime doc)) ctx'
+  let
+    vars =
+      [("signatory_id", inText . showt . fromSignatoryLinkID . signatorylinkid $ sl)]
+    ctxWithin30Days = set #ctxTime (addUTCTime (29 * 24 * 3600) (documentmtime doc)) ctx'
+    ctxAfter30Days  = set #ctxTime (addUTCTime (31 * 24 * 3600) (documentmtime doc)) ctx'
   void $ testRequestHelper ctxWithin30Days GET vars (docApiV2Get (documentid doc)) 200
   void $ testRequestHelper ctxAfter30Days GET vars (docApiV2Get (documentid doc)) 410
 

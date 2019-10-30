@@ -313,7 +313,7 @@ testAdminUserCanCreateChildUserGroupWithoutPermissions = do
   muser <- addNewUser "Oolon" "Colluphid" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   ug    <- addNewUserGroup
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
+  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
   where
@@ -325,7 +325,7 @@ testSalesUserCanCreateChildUserGroupWithoutPermissions = do
   muser <- addNewUser "Marvin" "the Paranoid Android" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   ug    <- addNewUserGroup
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
+  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
   where

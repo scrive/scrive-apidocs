@@ -468,7 +468,7 @@ instance PQFormat UserGroupSettings where
 
 instance CompositeFromSQL UserGroupSettings where
   toComposite (ip_address_mask_list, drpIdleDocTimeoutPreparation, drpIdleDocTimeoutClosed, drpIdleDocTimeoutCanceled, drpIdleDocTimeoutTimedout, drpIdleDocTimeoutRejected, drpIdleDocTimeoutError, drpImmediateTrash, ugsCGIDisplayName, ugsSMSProvider, ugsCGIServiceID, ugsPadAppMode, ugsPadEarchiveEnabled, ugsLegalText, ugsRequireBPIDForNewDoc, ugsSendTimeoutNotification, _useFolderListCalls -- not yet used
-                                                                                                                                                                                                                                                                                                                                                                                                                       , ugsTotpIsMandatory, ugsSessionTimeoutSecs, ugsPortalUrl)
+                                                                                                                                                                                                                                                                                                                                                                                                        , ugsTotpIsMandatory, ugsSessionTimeoutSecs, ugsPortalUrl)
     = UserGroupSettings
       { ugsIPAddressMaskList   = maybe [] read ip_address_mask_list
       , ugsDataRetentionPolicy = DataRetentionPolicy { .. }

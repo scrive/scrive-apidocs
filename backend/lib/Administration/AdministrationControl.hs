@@ -469,11 +469,10 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugAddressChange       <- getUserGroupAddressChange
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
-  let oldUG = ugwpUG ugwp
-      setSettings =
-        if fromMaybe (isNothing $ ugSettings oldUG) mUGSettingsIsInherited
-          then set #ugSettings Nothing
-          else set #ugSettings . Just . ugSettingsChange $ ugwpSettings ugwp
+  let oldUG       = ugwpUG ugwp
+      setSettings = if fromMaybe (isNothing $ ugSettings oldUG) mUGSettingsIsInherited
+        then set #ugSettings Nothing
+        else set #ugSettings . Just . ugSettingsChange $ ugwpSettings ugwp
       setAddress = if fromMaybe (isNothing $ ugAddress oldUG) mUGAddressIsInherited
         then set #ugAddress Nothing
         else set #ugAddress . Just . ugAddressChange $ ugwpAddress ugwp
@@ -1059,8 +1058,8 @@ unjsonBrandedDomain =
     <*> field "signedColor"       bdSignedColor       "Signed color"
 
 unjsonBrandedDomainsList :: UnjsonDef [BrandedDomain]
-unjsonBrandedDomainsList =
-  objectOf $ fieldBy "domains" identity "List of branded domains" (arrayOf unjsonBrandedDomain)
+unjsonBrandedDomainsList = objectOf
+  $ fieldBy "domains" identity "List of branded domains" (arrayOf unjsonBrandedDomain)
 
 
 createBrandedDomain :: Kontrakcja m => m JSValue
