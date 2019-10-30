@@ -151,8 +151,8 @@ flashMessageUserHasIdentifiedWithDifferentSSN = toFlashMsg OperationFailed
 handleResolve :: Kontrakcja m => m InternalKontraResponse
 handleResolve = do
   ctx <- getContext
-  let mnetsconfig = ctxNetsConfig ctx
-      domainUrl   = ctxDomainUrl ctx
+  let mnetsconfig = ctx ^. #ctxNetsConfig
+      domainUrl   = ctx ^. ctxDomainUrl
   case mnetsconfig of
     Nothing -> do
       logAttention_ "Request to resolve nets authorization when no nets config available"

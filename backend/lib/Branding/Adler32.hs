@@ -43,34 +43,34 @@ domainAdler32 bd = do
   themesMD5 <-
     dbQuery
     $ GetThemesMD5
-    $ [ bdMailTheme     bd
-      , bdSignviewTheme bd
-      , bdServiceTheme  bd
-      , bdLoginTheme    bd
+    $ [ bd ^. #bdMailTheme
+      , bd ^. #bdSignviewTheme
+      , bd ^. #bdServiceTheme
+      , bd ^. #bdLoginTheme
       ]
   return
     $  adler32Text
     $  T.concat
-    $  [ showt (bdid bd)
-       , imageAdler32 (bdFavicon bd)
-       , bdParticipantColor1 bd
-       , bdParticipantColor2 bd
-       , bdParticipantColor3 bd
-       , bdParticipantColor4 bd
-       , bdParticipantColor5 bd
-       , bdParticipantColor6 bd
-       , bdDraftColor        bd
-       , bdCancelledColor    bd
-       , bdInitatedColor     bd
-       , bdSentColor         bd
-       , bdDeliveredColor    bd
-       , bdOpenedColor       bd
-       , bdReviewedColor     bd
-       , bdSignedColor       bd
-       , showt $ bdMailTheme bd
-       , showt $ bdSignviewTheme bd
-       , showt $ bdServiceTheme bd
-       , showt $ bdLoginTheme bd
+    $  [ showt (bd ^. #bdid)
+       , imageAdler32 (bd ^. #bdFavicon)
+       , bd ^. #bdParticipantColor1
+       , bd ^. #bdParticipantColor2
+       , bd ^. #bdParticipantColor3
+       , bd ^. #bdParticipantColor4
+       , bd ^. #bdParticipantColor5
+       , bd ^. #bdParticipantColor6
+       , bd ^. #bdDraftColor
+       , bd ^. #bdCancelledColor
+       , bd ^. #bdInitatedColor
+       , bd ^. #bdSentColor
+       , bd ^. #bdDeliveredColor
+       , bd ^. #bdOpenedColor
+       , bd ^. #bdReviewedColor
+       , bd ^. #bdSignedColor
+       , showt $ bd ^. #bdMailTheme
+       , showt $ bd ^. #bdSignviewTheme
+       , showt $ bd ^. #bdServiceTheme
+       , showt $ bd ^. #bdLoginTheme
        ]
     <> themesMD5
 

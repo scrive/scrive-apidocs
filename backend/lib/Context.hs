@@ -6,14 +6,15 @@ module Context (
   , contextToMailContext
   ) where
 
-import BrandedDomain.BrandedDomain
+import Optics
+
 import Context.Internal
 import Context.Labels ()
 import MailContext.Internal (MailContext(..))
 import User.Types.User (User)
 
-ctxDomainUrl :: Context -> Text
-ctxDomainUrl = bdUrl . ctxBrandedDomain
+ctxDomainUrl :: Lens' Context Text
+ctxDomainUrl = #ctxBrandedDomain % #bdUrl
 
 -- | Get a user from `Context` (user takes precedence over pad user).
 getContextUser :: Context -> Maybe User

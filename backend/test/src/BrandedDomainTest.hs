@@ -2,7 +2,6 @@ module BrandedDomainTest (brandedDomainTests) where
 
 import Test.Framework
 
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import DB
 import TestingUtil

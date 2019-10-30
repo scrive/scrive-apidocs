@@ -17,7 +17,6 @@ import qualified Data.Text as T
 import qualified Text.JSON
 
 import Archive.Control
-import BrandedDomain.BrandedDomain
 import Branding.Control
 import Branding.CSS
 import Chargeable.Model
@@ -725,7 +724,7 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 testSignviewBrandingBlocksNastyInput :: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
   bd               <- ctxBrandedDomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
-  theme            <- dbQuery $ GetTheme $ bdSignviewTheme $ bd
+  theme            <- dbQuery $ GetTheme $ bd ^. #bdSignviewTheme
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)
@@ -793,7 +792,7 @@ testDownloadSignviewBrandingAccess = do
 
   -- 1) Check access to main signview branding
   emptyContext <- mkContext defaultLang
-  let bid = bdid $ ctxBrandedDomain emptyContext
+  let bid = emptyContext ^. #ctxBrandedDomain % #bdid
   svbr1 <- mkRequest GET []
   resp1 <- E.try $ runTestKontra svbr1 emptyContext $ handleSignviewBranding
     bid

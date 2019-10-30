@@ -11,9 +11,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 
-import BrandedDomain.BrandedDomain
 import Company.CompanyControl
-import Context
 import DB
 import TestingUtil
 import TestKontra as T
@@ -95,14 +93,14 @@ test_settingUIWithHandleChangeCompanyBranding = do
   ctx <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
 
   -- Try setting new themes
-  mailThemeFromDomain <- dbQuery $ GetTheme (bdMailTheme $ ctxBrandedDomain ctx)
+  mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #bdMailTheme)
   mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery
-    $ GetTheme (bdSignviewTheme $ ctxBrandedDomain ctx)
+    $ GetTheme (ctx ^. #ctxBrandedDomain % #bdSignviewTheme)
   signviewTheme <- dbUpdate
     $ InsertNewThemeForUserGroup (ugID ug) signviewThemeFromDomain
   serviceThemeFromDomain <- dbQuery
-    $ GetTheme (bdServiceTheme $ ctxBrandedDomain ctx)
+    $ GetTheme (ctx ^. #ctxBrandedDomain % #bdServiceTheme)
   serviceTheme <- dbUpdate
     $ InsertNewThemeForUserGroup (ugID ug) serviceThemeFromDomain
   let browserTitle  = "Super"
@@ -209,7 +207,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
       $  "{\"companyid\":\""
       <> showt (ugID ug)
       <> "\",\"mailTheme\":\""
-      <> showt (bdMailTheme $ ctxBrandedDomain ctx)
+      <> showt (ctx ^. #ctxBrandedDomain % #bdMailTheme)
       <> "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
@@ -222,7 +220,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   -- Create theme for other company
   (_, otherUg) <- addNewAdminUserAndUserGroup "Other" "Guy" "other_guy@skrivapa.se"
-  someTheme    <- dbQuery $ GetTheme (bdMailTheme $ ctxBrandedDomain$ ctx)
+  someTheme    <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #bdMailTheme)
   otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID otherUg) someTheme
 
   --Test we can't set mailTheme to other company theme

@@ -16,7 +16,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-import BrandedDomain.BrandedDomain
 import DB
 import Happstack.Fields
 import InputValidation hiding (Result)
@@ -52,7 +51,7 @@ handleLoginGet = do
       ad      <- getAnalyticsData
       content <- renderTemplate "loginPageWithBranding" $ do
         F.value "referer" $ fromMaybe "/" referer
-        F.value "nolinks" $ not $ bdMainDomain $ ctxBrandedDomain ctx
+        F.value "nolinks" $ not $ ctx ^. #ctxBrandedDomain % #bdMainDomain
         standardPageFields ctx Nothing ad
       response <- simpleHtmlResponse $ T.pack content
       return $ Right response

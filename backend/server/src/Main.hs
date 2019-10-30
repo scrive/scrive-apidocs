@@ -22,7 +22,6 @@ import AppConf
 import AppControl
 import AppDBTables
 import AppDir (AppPaths(..), setupAppPaths)
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Configuration
 import Database.Redis.Configuration

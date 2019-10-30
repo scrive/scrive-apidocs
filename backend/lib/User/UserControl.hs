@@ -31,7 +31,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-import BrandedDomain.BrandedDomain
 import DB hiding (query, update)
 import Happstack.Fields
 import InputValidation
@@ -380,7 +379,7 @@ handleContactSales = do
   let uid = maybe "user not logged in"
                   ((<>) "user with id " . showt . userid)
                   (ctxMaybeUser ctx)
-      domainInfo = " (from domain " <> (bdUrl $ ctxBrandedDomain ctx) <> " )"
+      domainInfo = " (from domain " <> (ctx ^. #ctxBrandedDomain % #bdUrl) <> " )"
       content =
         "<p>Hi there!</p>"
           <> "<p>Someone requested information from the payments form"

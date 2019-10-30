@@ -18,7 +18,6 @@ import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
-import BrandedDomain.BrandedDomain
 import Context
 import DB
 import Doc.DocViewMail
@@ -53,7 +52,7 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (bdMailTheme $ ctxBrandedDomain ctx)
+    . fromMaybe (ctx ^. #ctxBrandedDomain % #bdMailTheme)
     . uguiMailTheme . ugUI
     $ ug
   kontramail (ctxMailNoreplyAddress ctx)
@@ -62,7 +61,7 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
              "mailNewCompanyUserInvite"
     $ do
         basicUserGroupInviteFields invited inviter ug
-        basicLinkFields (ctxDomainUrl ctx) link
+        basicLinkFields (ctx ^. ctxDomainUrl) link
         brandingMailFields theme
         F.value "creatorname" $ getSmartName inviter
         F.value "expiredate" $ formatTimeYMD expires
@@ -86,7 +85,7 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (bdMailTheme $ ctxBrandedDomain ctx)
+    . fromMaybe (ctx ^. #ctxBrandedDomain % #bdMailTheme)
     . uguiMailTheme . ugUI
     $ ug
   --invite in the language of the existing user rather than in the inviter's language
@@ -97,7 +96,7 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
                   "mailTakeoverSingleUserInvite"
     $ do
         basicUserGroupInviteFields invited inviter ug
-        basicLinkFields (ctxDomainUrl ctx) link
+        basicLinkFields (ctx ^. ctxDomainUrl) link
         brandingMailFields theme
 
 basicUserGroupInviteFields

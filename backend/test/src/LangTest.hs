@@ -4,7 +4,6 @@ import Happstack.Server
 import Test.Framework
 
 import AppControl
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Context
 import DB

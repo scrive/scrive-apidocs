@@ -32,7 +32,6 @@ import AppView
   ( entryPointFields, simpleHtmlResponse, standardPageFields
   , userGroupUIForPage )
 
-import BrandedDomain.BrandedDomain
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
@@ -200,7 +199,7 @@ gtVerificationPage :: Kontrakcja m => m Response
 gtVerificationPage = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  if bdMainDomain $ ctxBrandedDomain ctx
+  if ctx ^. #ctxBrandedDomain % #bdMainDomain
     then do
       content <- renderTextTemplate "gtVerificationPage" $ do
         standardPageFields ctx Nothing ad

@@ -6,7 +6,6 @@ import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Context
 import DB hiding (query, update)

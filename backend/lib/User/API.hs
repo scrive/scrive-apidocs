@@ -236,7 +236,7 @@ setup2FA = V2.api $ do
       if ok
         then do
           let email = useremail . userinfo $ user
-          url    <- ctxDomainUrl <$> getContext
+          url    <- view ctxDomainUrl <$> getContext
           qrCode <- liftIO $ makeQRFromURLEmailAndKey (T.unpack url) email key
           return . V2.Ok <$> runJSONGen $ do
             value "twofactor_active" False

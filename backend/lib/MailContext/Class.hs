@@ -5,13 +5,13 @@ module MailContext.Class (
   ) where
 
 import Control.Monad.Trans
+import Optics
 
-import BrandedDomain.BrandedDomain
 import MailContext.Internal
 import MailContext.Labels ()
 
-mctxDomainUrl :: MailContext -> Text
-mctxDomainUrl = bdUrl . mctxCurrentBrandedDomain
+mctxDomainUrl :: Lens' MailContext Text
+mctxDomainUrl = #mctxCurrentBrandedDomain % #bdUrl
 
 class Monad m => MailContextMonad m where
   getMailContext :: m MailContext

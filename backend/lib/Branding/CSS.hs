@@ -197,20 +197,20 @@ domainBrandingLess bd =
 
 lessVariablesFromDomain :: BrandedDomain -> [Text]
 lessVariablesFromDomain bd =
-  [ bcolor "participantcolor1" $ bdParticipantColor1 bd
-  , bcolor "participantcolor2" $ bdParticipantColor2 bd
-  , bcolor "participantcolor3" $ bdParticipantColor3 bd
-  , bcolor "participantcolor4" $ bdParticipantColor4 bd
-  , bcolor "participantcolor5" $ bdParticipantColor5 bd
-  , bcolor "participantcolor6" $ bdParticipantColor6 bd
-  , bcolor "draftcolor" $ bdDraftColor bd
-  , bcolor "cancelledcolor" $ bdCancelledColor bd
-  , bcolor "initiatedcolor" $ bdInitatedColor bd
-  , bcolor "sentcolor" $ bdSentColor bd
-  , bcolor "deliveredcolor" $ bdDeliveredColor bd
-  , bcolor "openedcolor" $ bdOpenedColor bd
-  , bcolor "reviewedcolor" $ bdReviewedColor bd
-  , bcolor "signedcolor" $ bdSignedColor bd
+  [ bcolor "participantcolor1" $ bd ^. #bdParticipantColor1
+  , bcolor "participantcolor2" $ bd ^. #bdParticipantColor2
+  , bcolor "participantcolor3" $ bd ^. #bdParticipantColor3
+  , bcolor "participantcolor4" $ bd ^. #bdParticipantColor4
+  , bcolor "participantcolor5" $ bd ^. #bdParticipantColor5
+  , bcolor "participantcolor6" $ bd ^. #bdParticipantColor6
+  , bcolor "draftcolor" $ bd ^. #bdDraftColor
+  , bcolor "cancelledcolor" $ bd ^. #bdCancelledColor
+  , bcolor "initiatedcolor" $ bd ^. #bdInitatedColor
+  , bcolor "sentcolor" $ bd ^. #bdSentColor
+  , bcolor "deliveredcolor" $ bd ^. #bdDeliveredColor
+  , bcolor "openedcolor" $ bd ^. #bdOpenedColor
+  , bcolor "reviewedcolor" $ bd ^. #bdReviewedColor
+  , bcolor "signedcolor" $ bd ^. #bdSignedColor
   ]
 
 -- Some sanity checks on data. Note that this are provided by users

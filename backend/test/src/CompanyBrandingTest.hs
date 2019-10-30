@@ -9,7 +9,6 @@ import Text.JSON
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Branding.Adler32
 import Company.CompanyControl

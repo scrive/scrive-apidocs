@@ -5,7 +5,6 @@ import Test.Framework
 import Text.JSON
 import Text.JSON.Gen
 
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import DB
 import IPAddress

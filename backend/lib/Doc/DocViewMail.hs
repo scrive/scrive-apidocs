@@ -32,7 +32,6 @@ import Text.StringTemplates.Templates
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
-import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import DB
 import Doc.DocInfo (getLastSignedOrApprovedTime, isClosed)
@@ -687,7 +686,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
 -- Helpers.
 
 makeFullLink :: MailContext -> Text -> Text
-makeFullLink mctx link = mctxDomainUrl mctx <> link
+makeFullLink mctx link = mctx ^. mctxDomainUrl <> link
 
 protectLink :: Bool -> MailContext -> KontraLink -> Maybe Text
 protectLink forMail mctx link | forMail   = Just $ makeFullLink mctx $ showt link
@@ -708,19 +707,17 @@ documentMailFields doc mctx = do
   mug <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
-  let themeid =
-        fromMaybe (bdMailTheme $ mctxCurrentBrandedDomain mctx)
-          . preview (_Just % #ugUI % #uguiMailTheme % _Just)
-          $ mug
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+        $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
-    F.value "ctxhostpart" $ mctxDomainUrl mctx
-    F.value "ctxlang" (codeFromLang $ mctxLang mctx)
+    F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
+    F.value "ctxlang" (codeFromLang $ mctx ^. #mctxLang)
     F.value "documenttitle" $ documenttitle doc
     F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
-    F.value "brandingdomainid" (show . bdid $ mctxCurrentBrandedDomain mctx)
+    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #bdid)
     F.value "brandinguserid" (show <$> (maybesignatory =<< getAuthorSigLink doc))
     brandingMailFields theme
 
@@ -730,17 +727,15 @@ otherMailFields muser mctx = do
   mug <- case (userid <$> muser) of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
-  let themeid =
-        fromMaybe (bdMailTheme $ mctxCurrentBrandedDomain mctx)
-          . preview (_Just % #ugUI % #uguiMailTheme % _Just)
-          $ mug
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+        $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
-    F.value "ctxhostpart" $ mctxDomainUrl mctx
+    F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
     F.value "ctxlang" (codeFromLang $ mctxLang mctx)
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
-    F.value "brandingdomainid" (show . bdid $ mctxCurrentBrandedDomain mctx)
+    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #bdid)
     F.value "brandinguserid" (show <$> userid <$> muser)
     brandingMailFields theme
 
@@ -756,10 +751,8 @@ documentMail haslang doc mailname otherfields = do
   mug  <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
-  let themeid =
-        fromMaybe (bdMailTheme $ mctxCurrentBrandedDomain mctx)
-          . preview (_Just % #ugUI % #uguiMailTheme % _Just)
-          $ mug
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+        $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
   kontramaillocal (mctxMailNoreplyAddress mctx)
@@ -782,10 +775,8 @@ otherMail muser mailname otherfields = do
   mug  <- case (userid <$> muser) of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
-  let themeid =
-        fromMaybe (bdMailTheme $ mctxCurrentBrandedDomain mctx)
-          . preview (_Just % #ugUI % #uguiMailTheme % _Just)
-          $ mug
+  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #bdMailTheme)
+        $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- otherMailFields muser mctx
   kontramaillocal (mctxMailNoreplyAddress mctx)

@@ -14,7 +14,6 @@ import Text.JSON.Types (JSValue(JSNull))
 
 import API.Monad.V1
 import AppView
-import BrandedDomain.BrandedDomain
 import DB.Query
 import Happstack.Fields
 import Kontra
@@ -62,7 +61,7 @@ apiCallGetPadClientTheme = api $ do
   ctx          <- getContext
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ug           <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme $ ctxBrandedDomain ctx)
+  theme <- dbQuery $ GetTheme $ fromMaybe (ctx ^. #ctxBrandedDomain % #bdSignviewTheme)
                                           (uguiSignviewTheme $ ugUI ug)
   simpleAesonResponse $ Unjson.unjsonToJSON'
     (Options { pretty = True, indent = 2, nulls = True })

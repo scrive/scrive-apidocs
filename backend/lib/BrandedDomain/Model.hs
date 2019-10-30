@@ -16,6 +16,7 @@ import Log
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomain
+import BrandedDomain.BrandedDomain.Internal
 import DB
 import Theme.Model
 import User.UserID

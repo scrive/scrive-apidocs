@@ -9,7 +9,6 @@ import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates
 
-import BrandedDomain.BrandedDomain
 import DB
 import Doc.Model
 import Folder.Model
@@ -130,7 +129,7 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
                                   (Just passwd)
                                   (ugid, folderID <$> mUserFolder, iscompanyadmin)
                                   lang
-                                  ((bdid . ctxBrandedDomain) ctx)
+                                  (ctx ^. #ctxBrandedDomain % #bdid)
                                   sm
       whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
         (userid user)

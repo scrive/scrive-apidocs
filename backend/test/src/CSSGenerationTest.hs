@@ -5,7 +5,6 @@ module CSSGenerationTest(
 import Test.Framework
 import qualified Data.ByteString.Lazy as BSL
 
-import BrandedDomain.BrandedDomain
 import Branding.CSS
 import Context
 import DB
@@ -26,7 +25,7 @@ cssGenerationTests env = testGroup
 testSignviewBrandingGeneration :: TestEnv ()
 testSignviewBrandingGeneration = do
   bd               <- ctxBrandedDomain <$> mkContext defaultLang
-  theme            <- dbQuery $ GetTheme $ bdSignviewTheme $ bd
+  theme            <- dbQuery $ GetTheme $ bd ^. #bdSignviewTheme
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for signview branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)
@@ -34,7 +33,7 @@ testSignviewBrandingGeneration = do
 testServiceBrandingGeneration :: TestEnv ()
 testServiceBrandingGeneration = do
   bd               <- ctxBrandedDomain <$> mkContext defaultLang
-  theme            <- dbQuery $ GetTheme $ bdServiceTheme $ bd
+  theme            <- dbQuery $ GetTheme $ bd ^. #bdServiceTheme
   emptyBrandingCSS <- serviceBrandingCSS theme
   assertBool "CSS generated for service branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)
@@ -42,7 +41,7 @@ testServiceBrandingGeneration = do
 testLoginBrandingGeneration :: TestEnv ()
 testLoginBrandingGeneration = do
   bd               <- ctxBrandedDomain <$> mkContext defaultLang
-  theme            <- dbQuery $ GetTheme $ bdLoginTheme $ bd
+  theme            <- dbQuery $ GetTheme $ bd ^. #bdLoginTheme
   emptyBrandingCSS <- loginBrandingCSS theme
   assertBool "CSS generated for login branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)

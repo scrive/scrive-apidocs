@@ -21,7 +21,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
 import Archive.Control (showArchive)
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Context
 import DB

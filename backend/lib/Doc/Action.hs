@@ -17,7 +17,6 @@ import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Chargeable.Model
 import CronEnv
@@ -293,7 +292,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
           currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
         logInfo_ "Running sealDocument"
-        sealDocument $ mctxDomainUrl mcxt
+        sealDocument $ mcxt ^. mctxDomainUrl
 
         -- Here there is a race condition: when we commit, other callers
         -- of postDocumentClosedActions may see a document that lacks a

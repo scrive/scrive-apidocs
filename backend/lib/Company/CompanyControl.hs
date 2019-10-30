@@ -20,7 +20,6 @@ import Log as Log
 import qualified Data.Aeson as Aeson
 import qualified Data.Unjson as Unjson
 
-import BrandedDomain.BrandedDomain
 import Company.JSON
 import DB
 import Happstack.Fields
@@ -113,7 +112,7 @@ handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
 handleGetSignviewTheme = withUserAndGroup $ \(_, ug) -> do
   bd <- ctxBrandedDomain <$> getContext
   handleGetTheme
-    . fromMaybe (bdSignviewTheme bd)
+    . fromMaybe (bd ^. #bdSignviewTheme)
     . uguiSignviewTheme . ugUI
     $ ug
 
@@ -121,9 +120,9 @@ handleNewTheme :: Kontrakcja m => String -> Maybe UserGroupID -> m Aeson.Value
 handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
   bd  <- ctxBrandedDomain <$> getContext
   tid <- case s of
-    "signview" -> return $ bdSignviewTheme bd
-    "service"  -> return $ bdServiceTheme bd
-    "mail"     -> return $ bdMailTheme bd
+    "signview" -> return $ bd ^. #bdSignviewTheme
+    "service"  -> return $ bd ^. #bdServiceTheme
+    "mail"     -> return $ bd ^. #bdMailTheme
     _          -> internalError
   handleNewThemeForUserGroup (ugID ug) tid
 

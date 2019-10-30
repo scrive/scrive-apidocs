@@ -40,7 +40,6 @@ import qualified Text.JSON as JSON
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import DB
 import Kontra
@@ -201,9 +200,9 @@ standardPageFields ctx mugidandui ad = do
   F.value "langcode" $ codeFromLang $ ctxLang ctx
   F.value "logged" $ isJust (ctxMaybeUser ctx)
   F.value "padlogged" $ isJust (ctxMaybePadUser ctx)
-  F.value "hostpart" $ ctxDomainUrl ctx
+  F.value "hostpart" $ ctx ^. ctxDomainUrl
   F.value "production" (ctxProduction ctx)
-  F.value "brandingdomainid" (show $ (bdid . ctxBrandedDomain) ctx)
+  F.value "brandingdomainid" (show $ ctx ^. #ctxBrandedDomain % #bdid)
   F.value "brandinguserid" (fmap (show . userid) (getContextUser ctx))
   F.value "ctxlang" $ codeFromLang $ ctxLang ctx
   F.object "analytics" $ analyticsTemplates ad
@@ -223,8 +222,8 @@ standardPageFields ctx mugidandui ad = do
         emptyToNothing . strip . T.unpack =<< uguiBrowserTitle . snd =<< mugidandui
       of
         Just ctitle ->
-          ctitle <> " - " <> (T.unpack (bdBrowserTitle $ ctxBrandedDomain ctx))
-        Nothing -> T.unpack (bdBrowserTitle $ ctxBrandedDomain ctx)
+          ctitle <> " - " <> (T.unpack $ ctx ^. #ctxBrandedDomain % #bdBrowserTitle)
+        Nothing -> T.unpack (ctx ^. #ctxBrandedDomain % #bdBrowserTitle)
   entryPointFields ctx
 
 jsonContentType :: BS.ByteString

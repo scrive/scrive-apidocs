@@ -21,6 +21,7 @@ import qualified Data.Text as T
 
 import Doc.DocumentID
 import Doc.SignatoryLinkID
+import Context
 import EID.EIDService.Conf
 import EID.EIDService.Types
 import Kontra hiding (InternalError)
@@ -43,7 +44,7 @@ createVerimiTransactionWithEIDService
 createVerimiTransactionWithEIDService conf did slid redirect = do
   ctx <- getContext
   let redirectUrl =
-        (ctxDomainUrl ctx)
+        (ctx ^. ctxDomainUrl)
           <> "/eid-service/redirect-endpoint/verimi/"
           <> showt did
           <> "/"
@@ -212,7 +213,7 @@ createIDINTransactionWithEIDService
 createIDINTransactionWithEIDService conf did slid redirect = do
   ctx <- getContext
   let redirectUrl =
-        (ctxDomainUrl ctx)
+        (ctx ^. ctxDomainUrl)
           <> "/eid-service/redirect-endpoint/idin/"
           <> showt did
           <> "/"
