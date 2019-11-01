@@ -402,13 +402,7 @@ setMockSigLinkStandardField fieldType value msl = msl
 
 
 setMockDocSigLinkStandardField :: Int -> String -> String -> MockDoc -> MockDoc
-setMockDocSigLinkStandardField i fieldType value = setForSigNumberFromMockDoc i
-  $ \msl -> msl { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl }
-  where
-    newField =
-      defaultMockSigField { mockSigFieldType = fieldType, mockSigFieldValue = Just value }
-    oldFieldsWithoutFieldType msl =
-      filter (\slf -> mockSigFieldType slf /= fieldType) (mockSigLinkFields msl)
+setMockDocSigLinkStandardField i fieldType value = setForSigNumberFromMockDoc i (setMockSigLinkStandardField fieldType value)
 
 addStandardSigLinksToMockDoc :: Int -> MockDoc -> MockDoc
 addStandardSigLinksToMockDoc i md =
