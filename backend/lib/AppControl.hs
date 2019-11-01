@@ -25,7 +25,6 @@ import Happstack.Server.Internal.Cookie
 import Happstack.Server.Internal.Multipart (defaultFileSaver, defaultInputIter)
 import Log
 import Network.Socket
-import Optics (_Just, afailing)
 import System.Directory
 import Text.JSON.ToJSValue
 import qualified Control.Exception.Lifted as E
@@ -213,7 +212,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 return response
                 -- just take the first user we find. We prefer the user
                 -- which was used during API call.
-            let mUser = ctx ^? ((#maybeApiUser % _Just) `afailing` contextUser)
+            let mUser = ctx ^. #maybeApiUser <|> contextUser ctx
                 res'  = case mUser of
                   Nothing -> res
                   Just user ->

@@ -88,8 +88,8 @@ pageDocumentSignView ctx document siglink ad = do
   let loggedAsSignatory =
         (isJust $ maybesignatory siglink)
           && (maybesignatory siglink)
-          == (userid <$> ctx ^? contextUser)
-  let loggedAsAuthor = (Just authorid == (userid <$> ctx ^? contextUser))
+          == (userid <$> contextUser ctx)
+  let loggedAsAuthor = (Just authorid == (userid <$> contextUser ctx))
   let docjson = unjsonToByteStringLazy'
         (Options { pretty = False, indent = 0, nulls = True })
         (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document))

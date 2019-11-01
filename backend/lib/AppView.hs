@@ -203,7 +203,7 @@ standardPageFields ctx mugidandui ad = do
   F.value "hostpart" $ ctx ^. ctxDomainUrl
   F.value "production" (ctx ^. #production)
   F.value "brandingdomainid" (show $ ctx ^. #brandedDomain % #id)
-  F.value "brandinguserid" (fmap (show . userid) (ctx ^? contextUser))
+  F.value "brandinguserid" (fmap (show . userid) (contextUser ctx))
   F.value "ctxlang" $ codeFromLang $ ctx ^. #lang
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (ctx ^. #trackJsToken)

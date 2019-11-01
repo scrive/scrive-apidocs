@@ -816,7 +816,7 @@ daveUserGroup ugid = onlyAdmin $ do
 daveFile :: Kontrakcja m => FileID -> Text -> m Response
 daveFile fileid _title = onlyAdmin $ do
   now  <- currentTime
-  user <- guardJust . preview contextUser =<< getContext
+  user <- guardJust . contextUser =<< getContext
   logInfo "File accessed through dave"
     $ object [identifier fileid, identifier $ userid user, "timestamp" .= now]
   file     <- dbQuery $ GetFileByFileID fileid

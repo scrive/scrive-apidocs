@@ -136,5 +136,5 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
         (ctx ^. #ipAddr)
         (ctx ^. #time)
         email
-        (userid <$> ctx ^? contextUser)
+        (userid <$> contextUser ctx)
       return muser

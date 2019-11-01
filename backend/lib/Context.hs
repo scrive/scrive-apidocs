@@ -7,7 +7,7 @@ module Context
   , contextToMailContext
   ) where
 
-import Optics
+import Optics (Lens')
 
 import User.Types.User (User)
 import qualified Context.Internal as I
@@ -17,8 +17,8 @@ ctxDomainUrl :: Lens' I.Context Text
 ctxDomainUrl = #brandedDomain % #url
 
 -- | Get a user from `Context` (user takes precedence over pad user).
-contextUser :: AffineFold I.Context User
-contextUser = (#maybeUser % _Just) `afailing` (#maybePadUser % _Just)
+contextUser :: I.Context -> Maybe User
+contextUser ctx = ctx ^. #maybeUser <|> ctx ^. #maybePadUser
 
 contextToMailContext :: I.Context -> I.MailContext
 contextToMailContext ctx = I.MailContext

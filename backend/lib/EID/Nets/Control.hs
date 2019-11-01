@@ -169,7 +169,7 @@ handleResolve = do
             (netsTransactionDomain nt)
             link
         (Just nt, Just art) -> do
-          let mUserId = userid <$> ctx ^? contextUser
+          let mUserId = userid <$> contextUser ctx
           logInfo
               "Information about requested nets authorization before assertion request"
             $ object

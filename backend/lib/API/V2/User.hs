@@ -38,7 +38,7 @@ getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor)
 getAPIUserWithPrivileges privs = getAPIUserWith (view #maybeUser) privs
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
-getAPIUserWithPad priv = getAPIUserWith (preview contextUser) [priv]
+getAPIUserWithPad priv = getAPIUserWith contextUser [priv]
 
 
 -- * Internal functions

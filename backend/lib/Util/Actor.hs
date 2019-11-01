@@ -24,7 +24,7 @@ import User.Model
 import Util.HasSomeUserInfo
 
 mkAuthorActor :: Context -> Maybe Actor
-mkAuthorActor ctx = case ctx ^? contextUser of
+mkAuthorActor ctx = case contextUser ctx of
   Just user -> Just $ authorActor ctx user
   Nothing   -> Nothing
 

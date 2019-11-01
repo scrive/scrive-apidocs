@@ -58,8 +58,8 @@ import Text.JSON.FromJSValue
 import Text.JSON.ToJSValue
 import TextShow
 import "base" Prelude hiding
-  ( (!!), (&&), (||), all, and, any, error, head, id, last, maximum
-  , minimum, not, or, read, tail )
+  ( (!!), (&&), (||), all, and, any, error, head, id, last, maximum, minimum
+  , not, or, read, tail )
 
 import qualified Data.Text as T
 import qualified "base" Prelude as P
