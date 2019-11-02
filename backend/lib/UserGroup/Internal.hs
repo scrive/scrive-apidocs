@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module UserGroup.Internal (
     InvoicingType(..)
   , UserGroup(..)
@@ -44,6 +45,7 @@ import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Happstack.Server
+import Optics.TH
 import qualified Control.Exception.Lifted as E
 import qualified Data.Binary as B
 import qualified Data.ByteString.Char8 as BS
@@ -61,8 +63,63 @@ import Theme.ThemeID
 import UserGroup.Tables
 import UserGroup.Types.PaymentPlan
 
-data UserGroup = UserGroup {
-    ugID            :: UserGroupID
+newtype UserGroupID = UserGroupID Int64
+  deriving (Eq, Ord)
+deriving newtype instance Read UserGroupID
+deriving newtype instance Show UserGroupID
+deriving newtype instance TextShow UserGroupID
+
+instance ToJSON UserGroupID where
+  toJSON (UserGroupID n) = toJSON $ show n
+
+instance FromJSON UserGroupID where
+  parseJSON v = do
+    uidStr <- parseJSON v
+    case maybeRead uidStr of
+      Nothing  -> fail "Could not parse User Group ID"
+      Just uid -> return uid
+
+instance PQFormat UserGroupID where
+  pqFormat = pqFormat @Int64
+
+instance FromSQL UserGroupID where
+  type PQBase UserGroupID = PQBase Int64
+  fromSQL mbase = UserGroupID <$> fromSQL mbase
+
+instance ToSQL UserGroupID where
+  type PQDest UserGroupID = PQDest Int64
+  toSQL (UserGroupID n) = toSQL n
+
+instance FromReqURI UserGroupID where
+  fromReqURI = maybeRead . T.pack
+
+unsafeUserGroupID :: Int64 -> UserGroupID
+unsafeUserGroupID = UserGroupID
+
+emptyUserGroupID :: UserGroupID
+emptyUserGroupID = UserGroupID 0
+
+fromUserGroupID :: UserGroupID -> Int64
+fromUserGroupID (UserGroupID ugid) = ugid
+
+instance Identifier UserGroupID where
+  idDefaultLabel = "user_group_id"
+  idValue (UserGroupID k) = int64AsStringIdentifier k
+
+instance B.Binary UserGroupID where
+  put (UserGroupID ugid) = B.put ugid
+  get = fmap UserGroupID B.get
+
+instance Unjson UserGroupID where
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse UserGroupID") return) . maybeRead)
+    showt
+    unjsonDef
+
+----------------------------------------
+
+data UserGroup = UserGroup
+  { ugID            :: UserGroupID
   , ugParentGroupID :: Maybe UserGroupID
   , ugName          :: Text
   -- Folder, where home folders are created for new users
@@ -97,29 +154,6 @@ data UserGroupWithChildren = UserGroupWithChildren
   , ugwcChildren :: [UserGroupWithChildren]
   } deriving (Eq, Show)
 
-defaultUserGroup :: UserGroup
-defaultUserGroup = ugFromUGRoot $ UserGroupRoot { ugrID = emptyUserGroupID
-                                                , ugrName = ""
-                                                , ugrHomeFolderID = Nothing
-                                                , ugrSettings = defaultUserGroupSettings
-                                                , ugrPaymentPlan = FreePlan
-                                                , ugrAddress = defaultUserGroupAddress
-                                                , ugrUI = defaultUserGroupUI
-                                                , ugrFeatures = defaultFeatures FreePlan
-                                                }
-
-defaultChildUserGroup :: UserGroup
-defaultChildUserGroup = UserGroup { ugID            = emptyUserGroupID
-                                  , ugParentGroupID = Nothing
-                                  , ugName          = ""
-                                  , ugHomeFolderID  = Nothing
-                                  , ugSettings      = Nothing
-                                  , ugInvoicing     = None
-                                  , ugAddress       = Nothing
-                                  , ugUI            = defaultUserGroupUI
-                                  , ugFeatures      = Nothing
-                                  }
-
 data UserGroupInvoicing =
     None
   | BillItem (Maybe PaymentPlan)
@@ -148,23 +182,6 @@ data UserGroupSettings = UserGroupSettings
   , ugsPortalUrl                 :: Maybe Text
   } deriving (Show, Eq)
 
-defaultUserGroupSettings :: UserGroupSettings
-defaultUserGroupSettings = UserGroupSettings
-  { ugsIPAddressMaskList       = []
-  , ugsDataRetentionPolicy     = defaultDataRetentionPolicy
-  , ugsCGIDisplayName          = Nothing
-  , ugsCGIServiceID            = Nothing
-  , ugsSMSProvider             = SMSDefault
-  , ugsPadAppMode              = ListView
-  , ugsPadEarchiveEnabled      = True
-  , ugsLegalText               = False
-  , ugsRequireBPIDForNewDoc    = False
-  , ugsSendTimeoutNotification = False
-  , ugsTotpIsMandatory         = False
-  , ugsSessionTimeoutSecs      = Nothing
-  , ugsPortalUrl               = Nothing
-  }
-
 data UserGroupUI = UserGroupUI
   { uguiMailTheme     :: !(Maybe ThemeID)
   , uguiSignviewTheme :: !(Maybe ThemeID)
@@ -173,15 +190,6 @@ data UserGroupUI = UserGroupUI
   , uguiSmsOriginator :: !(Maybe Text)
   , uguiFavicon       :: !(Maybe BS.ByteString)
   } deriving (Eq, Ord, Show)
-
-defaultUserGroupUI :: UserGroupUI
-defaultUserGroupUI = UserGroupUI { uguiMailTheme     = Nothing
-                                 , uguiSignviewTheme = Nothing
-                                 , uguiServiceTheme  = Nothing
-                                 , uguiBrowserTitle  = Nothing
-                                 , uguiSmsOriginator = Nothing
-                                 , uguiFavicon       = Nothing
-                                 }
 
 data UserGroupAddress = UserGroupAddress
   { ugaCompanyNumber :: Text
@@ -192,14 +200,12 @@ data UserGroupAddress = UserGroupAddress
   , ugaCountry       :: Text
   } deriving (Eq, Ord, Show)
 
-defaultUserGroupAddress :: UserGroupAddress
-defaultUserGroupAddress = UserGroupAddress { ugaCompanyNumber = ""
-                                           , ugaEntityName    = ""
-                                           , ugaAddress       = ""
-                                           , ugaZip           = ""
-                                           , ugaCity          = ""
-                                           , ugaCountry       = ""
-                                           }
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroup
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupSettings
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupUI
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupAddress
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupRoot
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupWithChildren
 
 -- INVOICING
 
@@ -264,6 +270,30 @@ instance CompositeFromSQL UserGroupInvoicing where
     _ -> unexpectedError "invalid invoicing row in database"
 
 -- USER GROUP
+
+defaultUserGroup :: UserGroup
+defaultUserGroup = ugFromUGRoot $ UserGroupRoot { ugrID = emptyUserGroupID
+                                                , ugrName = ""
+                                                , ugrHomeFolderID = Nothing
+                                                , ugrSettings = defaultUserGroupSettings
+                                                , ugrPaymentPlan = FreePlan
+                                                , ugrAddress = defaultUserGroupAddress
+                                                , ugrUI = defaultUserGroupUI
+                                                , ugrFeatures = defaultFeatures FreePlan
+                                                }
+
+defaultChildUserGroup :: UserGroup
+defaultChildUserGroup = UserGroup { ugID            = emptyUserGroupID
+                                  , ugParentGroupID = Nothing
+                                  , ugName          = ""
+                                  , ugHomeFolderID  = Nothing
+                                  , ugSettings      = Nothing
+                                  , ugInvoicing     = None
+                                  , ugAddress       = Nothing
+                                  , ugUI            = defaultUserGroupUI
+                                  , ugFeatures      = Nothing
+                                  }
+
 
 fetchUserGroup
   :: ( UserGroupID
@@ -385,60 +415,24 @@ ugwcToList :: [UserGroupWithChildren] -> [UserGroup]
 ugwcToList ugwcs =
   concat . for ugwcs $ \ugwc -> ugwcGroup ugwc : ugwcToList (ugwcChildren ugwc)
 
-newtype UserGroupID = UserGroupID Int64
-  deriving (Eq, Ord)
-deriving newtype instance Read UserGroupID
-deriving newtype instance Show UserGroupID
-deriving newtype instance TextShow UserGroupID
-
-instance ToJSON UserGroupID where
-  toJSON (UserGroupID n) = toJSON $ show n
-
-instance FromJSON UserGroupID where
-  parseJSON v = do
-    uidStr <- parseJSON v
-    case maybeRead uidStr of
-      Nothing  -> fail "Could not parse User Group ID"
-      Just uid -> return uid
-
-instance PQFormat UserGroupID where
-  pqFormat = pqFormat @Int64
-
-instance FromSQL UserGroupID where
-  type PQBase UserGroupID = PQBase Int64
-  fromSQL mbase = UserGroupID <$> fromSQL mbase
-
-instance ToSQL UserGroupID where
-  type PQDest UserGroupID = PQDest Int64
-  toSQL (UserGroupID n) = toSQL n
-
-instance FromReqURI UserGroupID where
-  fromReqURI = maybeRead . T.pack
-
-unsafeUserGroupID :: Int64 -> UserGroupID
-unsafeUserGroupID = UserGroupID
-
-emptyUserGroupID :: UserGroupID
-emptyUserGroupID = UserGroupID 0
-
-fromUserGroupID :: UserGroupID -> Int64
-fromUserGroupID (UserGroupID ugid) = ugid
-
-instance Identifier UserGroupID where
-  idDefaultLabel = "user_group_id"
-  idValue (UserGroupID k) = int64AsStringIdentifier k
-
-instance B.Binary UserGroupID where
-  put (UserGroupID ugid) = B.put ugid
-  get = fmap UserGroupID B.get
-
-instance Unjson UserGroupID where
-  unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse UserGroupID") return) . maybeRead)
-    showt
-    unjsonDef
-
 -- USER GROUP INFO
+
+defaultUserGroupSettings :: UserGroupSettings
+defaultUserGroupSettings = UserGroupSettings
+  { ugsIPAddressMaskList       = []
+  , ugsDataRetentionPolicy     = defaultDataRetentionPolicy
+  , ugsCGIDisplayName          = Nothing
+  , ugsCGIServiceID            = Nothing
+  , ugsSMSProvider             = SMSDefault
+  , ugsPadAppMode              = ListView
+  , ugsPadEarchiveEnabled      = True
+  , ugsLegalText               = False
+  , ugsRequireBPIDForNewDoc    = False
+  , ugsSendTimeoutNotification = False
+  , ugsTotpIsMandatory         = False
+  , ugsSessionTimeoutSecs      = Nothing
+  , ugsPortalUrl               = Nothing
+  }
 
 type instance CompositeRow UserGroupSettings
   = ( Maybe Text
@@ -477,6 +471,15 @@ instance CompositeFromSQL UserGroupSettings where
 
 -- UI
 
+defaultUserGroupUI :: UserGroupUI
+defaultUserGroupUI = UserGroupUI { uguiMailTheme     = Nothing
+                                 , uguiSignviewTheme = Nothing
+                                 , uguiServiceTheme  = Nothing
+                                 , uguiBrowserTitle  = Nothing
+                                 , uguiSmsOriginator = Nothing
+                                 , uguiFavicon       = Nothing
+                                 }
+
 type instance CompositeRow UserGroupUI
   = ( Maybe ThemeID
     , Maybe ThemeID
@@ -504,6 +507,15 @@ instance CompositeFromSQL UserGroupUI where
       faviconFromBinary Nothing  = Nothing
 
 -- ADDRESS
+
+defaultUserGroupAddress :: UserGroupAddress
+defaultUserGroupAddress = UserGroupAddress { ugaCompanyNumber = ""
+                                           , ugaEntityName    = ""
+                                           , ugaAddress       = ""
+                                           , ugaZip           = ""
+                                           , ugaCity          = ""
+                                           , ugaCountry       = ""
+                                           }
 
 type instance CompositeRow UserGroupAddress = (Text, Text, Text, Text, Text, Text)
 

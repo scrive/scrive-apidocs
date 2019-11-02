@@ -511,7 +511,6 @@ Library
                  , UserGroup.Types.PaymentPlan
                  , UserGroup.Types.Subscription
                  , UserGroup.Internal
-                 , UserGroup.Labels
                  , UserGroup.Model
                  , UserGroup.Tables
                  , UserGroupAccounts.Migrations

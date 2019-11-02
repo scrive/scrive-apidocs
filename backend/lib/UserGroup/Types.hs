@@ -39,4 +39,3 @@ module UserGroup.Types (
   ) where
 
 import UserGroup.Internal
-import UserGroup.Labels ()
