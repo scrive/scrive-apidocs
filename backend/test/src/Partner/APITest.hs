@@ -844,7 +844,7 @@ testJSONCtxWithPartnerGroupID :: TestEnv (Context, UserGroupID)
 testJSONCtxWithPartnerGroupID = do
   (partnerAdminUser, partnerAdminUserGroup) <- addNewRandomPartnerUser
   ctx <- (set #maybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
-  return (ctx, ugID partnerAdminUserGroup)
+  return (ctx, partnerAdminUserGroup ^. #ugID)
 
 runApiJSONTest
   :: Context             -- ^ Context to run the test in

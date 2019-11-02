@@ -21,7 +21,6 @@ import SMS.SMS
 import SMS.Types (SMSProvider(..))
 import TestingUtil
 import TestKontra as T
-import UserGroup.Types
 import UserGroupAccounts.Model
 import Util.Actor
 import Util.SignatoryLinkUtils
@@ -46,7 +45,7 @@ chargeableTest env = testGroup
 
 test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
-  ugid      <- ugID <$> addNewUserGroup
+  ugid      <- view #ugID <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc       <- addRandomDocument (rdaDefault user)
@@ -72,7 +71,7 @@ test_smsCounting_default = do
 
 test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
-  ugid      <- ugID <$> addNewUserGroup
+  ugid      <- view #ugID <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc       <- addRandomDocument (rdaDefault user)
@@ -98,7 +97,7 @@ test_smsCounting_telia = do
 
 test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
-  ugid        <- ugID <$> addNewUserGroup
+  ugid        <- view #ugID <$> addNewUserGroup
   Just user   <- addNewUser "Bob" "Blue" "bob@blue.com"
   True        <- dbUpdate $ SetUserUserGroup (userid user) ugid
   ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang

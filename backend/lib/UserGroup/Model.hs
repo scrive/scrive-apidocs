@@ -43,7 +43,7 @@ data UserGroupCreate = UserGroupCreate UserGroup
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
   update (UserGroupCreate ug) = do
     guardIfHasNoParentThenIsValidRoot ug
-    new_parentpath <- case ugParentGroupID ug of
+    new_parentpath <- case ug ^. #ugParentGroupID of
       Nothing       -> return . Array1 $ ([] :: [UserGroupID])
       Just parentid -> do
         runQuery_ . sqlSelect "user_groups" $ do
@@ -53,23 +53,23 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
         return . Array1 . (parentid :) $ parentpath
     -- insert user group
     runQuery_ . sqlInsert "user_groups" $ do
-      sqlSet "parent_group_id" $ ugParentGroupID ug
+      sqlSet "parent_group_id" $ ug ^. #ugParentGroupID
       sqlSet "parent_group_path" $ new_parentpath
-      sqlSet "name" $ ugName ug
-      sqlSet "home_folder_id" $ ugHomeFolderID ug
+      sqlSet "name" $ ug ^. #ugName
+      sqlSet "home_folder_id" $ ug ^. #ugHomeFolderID
       sqlResult "id"
     ugid <- fetchOne runIdentity
     -- insert group info
-    whenJust (ugSettings ug) $ insertUserGroupSettings ugid
+    whenJust (ug ^. #ugSettings) $ insertUserGroupSettings ugid
     -- insert group address
-    whenJust (ugAddress ug) $ insertUserGroupAddress ugid
+    whenJust (ug ^. #ugAddress) $ insertUserGroupAddress ugid
     -- insert invoicing
     runQuery_ . sqlInsert "user_group_invoicings" $ do
       sqlSet "user_group_id" ugid
       sqlSet "invoicing_type" . ugInvoicingType $ ug
       sqlSet "payment_plan" . ugPaymentPlan $ ug
     -- insert UI
-    let ugui = ugUI ug
+    let ugui = ug ^. #ugUI
     runQuery_ . sqlInsert "user_group_uis" $ do
       sqlSet "user_group_id" ugid
       -- We are not setting themes here, because UserGroup, which does not
@@ -79,7 +79,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlSet "favicon" $ ugui ^. #uguiFavicon
 
     -- insert Features
-    whenJust (ugFeatures ug) $ insertFeatures ugid
+    whenJust (ug ^. #ugFeatures) $ insertFeatures ugid
 
     return . set #ugID ugid $ ug
 
@@ -187,7 +187,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe U
 data UserGroupGetWithParentsByUG = UserGroupGetWithParentsByUG UserGroup
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG UserGroupWithParents where
   query (UserGroupGetWithParentsByUG ug) = do
-    let ugid = ugID ug
+    let ugid = ug ^. #ugID
     parents <- do
       -- JOIN does not guarantee to preserve order of rows, so we add ORDINALITY and ORDER BY it.
       -- WITH ORDINALITY can only appear inside FROM clause after a function call.
@@ -226,18 +226,18 @@ data UserGroupUpdate = UserGroupUpdate UserGroup
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () where
   update (UserGroupUpdate new_ug) = do
     guardIfHasNoParentThenIsValidRoot new_ug
-    let ugid = ugID new_ug
+    let ugid = new_ug ^. #ugID
     -- update group settings
-    dbUpdate . UserGroupUpdateSettings ugid $ ugSettings new_ug
+    dbUpdate . UserGroupUpdateSettings ugid $ new_ug ^. #ugSettings
     -- update group address
-    dbUpdate . UserGroupUpdateAddress ugid $ ugAddress new_ug
+    dbUpdate . UserGroupUpdateAddress ugid $ new_ug ^. #ugAddress
     -- update invoicing
     runQuery_ . sqlUpdate "user_group_invoicings" $ do
       sqlWhereEq "user_group_id" ugid
       sqlSet "invoicing_type" . ugInvoicingType $ new_ug
       sqlSet "payment_plan" . ugPaymentPlan $ new_ug
     -- update UI
-    let ugui = ugUI new_ug
+    let ugui = new_ug ^. #ugUI
         chkUgOwnsTheme thmLbl ugui' ugid' = when (isJust $ ugui' ^. thmLbl) $ do
           sqlWhereExists $ sqlSelect "theme_owners" $ do
             sqlWhereEq "user_group_id" ugid'
@@ -259,7 +259,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
     -- update feature flags
     runQuery_ . sqlDelete "feature_flags" $ do
       sqlWhereEq "user_group_id" ugid
-    whenJust (ugFeatures new_ug) $ insertFeatures ugid
+    whenJust (new_ug ^. #ugFeatures) $ insertFeatures ugid
 
     -- updated group may have children already, these need to be adjusted
     Array1 (old_parentpath :: [UserGroupID]) <- do
@@ -267,7 +267,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
         sqlResult "parent_group_path"
         sqlWhereEq "id" ugid
       fetchOne runIdentity
-    (Array1 new_parentpath :: Array1 UserGroupID) <- case ugParentGroupID new_ug of
+    (Array1 new_parentpath :: Array1 UserGroupID) <- case new_ug ^. #ugParentGroupID of
       Nothing       -> return . Array1 $ ([] :: [UserGroupID])
       Just parentid -> do
         runQuery_ . sqlSelect "user_groups" $ do
@@ -283,10 +283,10 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
       $ ugid
     -- update user group
     runQuery_ . sqlUpdate "user_groups" $ do
-      sqlSet "parent_group_id" $ ugParentGroupID new_ug
+      sqlSet "parent_group_id" $ new_ug ^. #ugParentGroupID
       sqlSet "parent_group_path" . Array1 $ new_parentpath
-      sqlSet "name" $ ugName new_ug
-      sqlSet "home_folder_id" $ ugHomeFolderID new_ug
+      sqlSet "name" $ new_ug ^. #ugName
+      sqlSet "home_folder_id" $ new_ug ^. #ugHomeFolderID
       sqlWhereEq "id" ugid
     -- update all child groups parentpaths
     runQuery_ . sqlUpdate "user_groups" $ do
@@ -327,7 +327,7 @@ instance ToJSValue UserGroupsFormCycle where
 instance DBExtraException UserGroupsFormCycle
 
 guardIfHasNoParentThenIsValidRoot :: (MonadDB m, MonadThrow m) => UserGroup -> m ()
-guardIfHasNoParentThenIsValidRoot ug = case ugParentGroupID ug of
+guardIfHasNoParentThenIsValidRoot ug = case ug ^. #ugParentGroupID of
   Just _  -> return ()
   Nothing -> case ugrFromUG ug of
     Just _  -> return ()
@@ -491,7 +491,7 @@ ugGetChildrenInheritingProperty ugid ugProperty = do
   children <- dbQuery . UserGroupGetImmediateChildren $ ugid
   let inheriting_children = filter (isNothing . ugProperty) children
   grandchildren <- fmap concat . forM inheriting_children $ \c ->
-    ugGetChildrenInheritingProperty (ugID c) ugProperty
+    ugGetChildrenInheritingProperty (c ^. #ugID) ugProperty
   return $ inheriting_children ++ grandchildren
 
 -- Get all children recursively
@@ -504,9 +504,9 @@ instance (MonadDB m, MonadThrow m)
       sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
     allChildren <- fetchMany fetchUserGroup
     let directChildren parentID =
-          filter ((== Just parentID) . ugParentGroupID) allChildren
+          filter ((== Just parentID) . view #ugParentGroupID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
-        mkChild ug = I.UserGroupWithChildren ug . mkChildren $ ugID ug
+        mkChild ug = I.UserGroupWithChildren ug . mkChildren $ ug ^. #ugID
     return $ mkChildren ugid
 
 -- Synchronize these definitions with frontend/app/js/account/company.js

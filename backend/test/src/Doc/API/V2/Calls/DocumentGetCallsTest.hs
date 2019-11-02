@@ -36,7 +36,6 @@ import Session.Model
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
-import UserGroup.Types
 import Util.Actor
 import Util.QRCode
 
@@ -233,7 +232,7 @@ testDocApiV2GetQRCode = do
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do
   ug <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   author     <- addNewRandomCompanyUser ugid False
   ctxauthor  <- (set #maybeUser (Just author)) <$> mkContext defaultLang
   did        <- getMockDocId <$> testDocApiV2New' ctxauthor
@@ -248,7 +247,7 @@ testDocApiV2GetByAdmin = do
 testDocApiV2GetShared :: TestEnv ()
 testDocApiV2GetShared = do
   ug <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   author    <- addNewRandomCompanyUser ugid False
   ctxauthor <- (set #maybeUser (Just author)) <$> mkContext defaultLang
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor

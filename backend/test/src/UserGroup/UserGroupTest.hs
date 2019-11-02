@@ -57,7 +57,7 @@ testCreateGroups = do
         1 -> ugFromUGRoot <$> rand 10 arbitrary
         _ -> rand 10 arbitrary
       ug1 <- dbUpdate . UserGroupCreate . set #ugParentGroupID mparent_id $ ug0
-      return . replicate 2 . Just . ugID $ ug1
+      return . replicate 2 . Just $ ug1 ^. #ugID
 
 testCreateGroupsWithUsers :: TestEnv ()
 testCreateGroupsWithUsers = do
@@ -75,8 +75,8 @@ testCreateGroupsWithUsers = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #ugParentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . ugID $ ug1)
-        return . replicate 2 . Just . ugID $ ug1
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #ugID)
+        return . replicate 2 . Just $ ug1 ^. #ugID
 
 testGetAllUsersOfTopGroup :: TestEnv ()
 testGetAllUsersOfTopGroup = do
@@ -96,8 +96,8 @@ testGetAllUsersOfTopGroup = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #ugParentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . ugID $ ug1)
-        return . ugID $ ug1
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #ugID)
+        return $ ug1 ^. #ugID
       --      parents for groups in next level , all group ids created
       return (Just <$> (new_ugids ++ new_ugids), ugids ++ new_ugids)
 
@@ -105,7 +105,7 @@ testGetUserGroup :: TestEnv ()
 testGetUserGroup = do
   ug0       <- ugFromUGRoot <$> rand 10 arbitrary
   ug1       <- dbUpdate . UserGroupCreate $ ug0
-  Just _ug2 <- dbQuery . UserGroupGet . ugID $ ug1
+  Just _ug2 <- dbQuery . UserGroupGet $ ug1 ^. #ugID
   return ()
 
 testGetAllGroupsOfUser :: TestEnv ()
@@ -125,8 +125,8 @@ testGetAllGroupsOfUser = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #ugParentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . ugID $ ug1)
-        return (ugID ug1, userid u)
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #ugID)
+        return (ug1 ^. #ugID, userid u)
       --      parents for groups in next level , all userids created
       return (Just <$> (new_ugids ++ new_ugids), uids ++ new_uids)
 
@@ -172,8 +172,8 @@ testMoveGroup = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #ugParentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . ugID $ ug1)
-        return . ugID $ ug1
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #ugID)
+        return $ ug1 ^. #ugID
       --      parents for groups in next level , all group ids created
       return (Just <$> concatMap (replicate 2) new_ugids, ugids ++ new_ugids)
 
@@ -183,12 +183,12 @@ testMoveGroupCycleError = do
   ugA  <- dbUpdate . UserGroupCreate $ ugA0
   -- make B child of A
   ugB0 <- rand 10 arbitrary
-  ugB  <- dbUpdate . UserGroupCreate . set #ugParentGroupID (Just . ugID $ ugA) $ ugB0
+  ugB  <- dbUpdate . UserGroupCreate . set #ugParentGroupID (Just $ ugA ^. #ugID) $ ugB0
   -- making A child of B fails
   assertRaisesKontra (\(UserGroupsFormCycle _) -> True)
     . dbUpdate
     . UserGroupUpdate
-    . set #ugParentGroupID (Just . ugID $ ugB)
+    . set #ugParentGroupID (Just $ ugB ^. #ugID)
     $ ugA
 
 testFindInheritedPricePlan :: TestEnv ()
@@ -199,10 +199,10 @@ testFindInheritedPricePlan = do
   ugB  <-
     dbUpdate
     . UserGroupCreate
-    . set #ugParentGroupID (Just . ugID $ ugA)
+    . set #ugParentGroupID (Just $ ugA ^. #ugID)
     . set #ugInvoicing     None
     $ ugB0
-  Just ugwithparents <- dbQuery . UserGroupGetWithParents . ugID $ ugB
+  Just ugwithparents <- dbQuery . UserGroupGetWithParents $ ugB ^. #ugID
   assertEqual "A is the charging group" (ugPaymentPlan ugA)
     . Just
     . ugwpPaymentPlan
@@ -215,20 +215,20 @@ testCannotDeleteUserGroupWithSubgroups = do
   ugA  <- dbUpdate . UserGroupCreate $ ugA0
   -- make B child of A
   ugB0 <- rand 10 arbitrary
-  ugB  <- dbUpdate . UserGroupCreate . set #ugParentGroupID (Just . ugID $ ugA) $ ugB0
+  ugB  <- dbUpdate . UserGroupCreate . set #ugParentGroupID (Just $ ugA ^. #ugID) $ ugB0
   commit -- so that raising exception will not take our data with it
   -- deleting group A raises exception
-  assertRaisesDBException . runSQL_ $ "DELETE from user_groups where id = " <?> ugID ugA
+  assertRaisesDBException . runSQL_ $ "DELETE from user_groups where id = " <?> ugA ^. #ugID
   commit
   -- deleting group B works
-  runSQL_ $ "DELETE from user_groups where id = " <?> ugID ugB
+  runSQL_ $ "DELETE from user_groups where id = " <?> ugB ^. #ugID
 
 testChangeUserGroupParent :: TestEnv ()
 testChangeUserGroupParent = do
   usrGrp       <- addNewUserGroup
   parentUsrGrp <- addNewUserGroup
-  let usrGrpID       = ugID usrGrp
-      parentUsrGrpID = ugID parentUsrGrp
+  let usrGrpID       = usrGrp ^. #ugID
+      parentUsrGrpID = parentUsrGrp ^. #ugID
       usrEmail       = "testuseremail@scrive.com"
   Just user <- addNewUserToUserGroup "Froggie" "Freddie" usrEmail usrGrpID
   ctx       <- (set #maybeUser $ Just user) <$> mkContext defaultLang
@@ -244,33 +244,33 @@ testChangeUserGroupParent = do
   -- -- user gets admin rights
   let ctx' = (set #adminAccounts [Email usrEmail]) ctx
   mUsrGrpParentBefore <-
-    join <$> (ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group has no parent" mUsrGrpParentBefore Nothing
   void $ runTestKontra req1 ctx' $ handleCompanyChange usrGrpID
   mUsrGrpParentAfter <-
-    join <$> (ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been set correctly" mUsrGrpParentAfter
     $ Just parentUsrGrpID
 
   grandParentUsrGrp <- addNewUserGroup
-  let grandParentUsrGrpID = ugID grandParentUsrGrp
+  let grandParentUsrGrpID = grandParentUsrGrp ^. #ugID
       params2             = [("companyparentid", inText $ showt grandParentUsrGrpID)]
   req2 <- mkRequest POST params2
   void $ runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID
   mUsrGrpGrandParentAfter <-
-    join <$> (ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ parentUsrGrpID)
+    join <$> (view #ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ parentUsrGrpID)
   assertEqual "User group grandparent has been set correctly" mUsrGrpGrandParentAfter
     $ Just grandParentUsrGrpID
 
   -- Setting a parent that already has a parent should work. We'll reuse
   -- usrGrp since it now has one.
   usrGrp' <- addNewUserGroup
-  let usrGrpID' = ugID usrGrp'
+  let usrGrpID' = usrGrp' ^. #ugID
       params3   = [("companyparentid", inText $ showt usrGrpID)]
   req3 <- mkRequest POST params3
   void $ runTestKontra req3 ctx' $ handleCompanyChange usrGrpID'
   mUsrGrpParentAfter' <-
-    join <$> (ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID')
+    join <$> (view #ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID')
   assertEqual "User group parent that has parent has been set correctly"
               mUsrGrpParentAfter'
     $ Just usrGrpID
@@ -279,11 +279,11 @@ testChangeUserGroupParent = do
   let params4 = [("companyparentid", inText "")]
   req4                 <- mkRequest POST params4
   mUsrGrpParentBefore' <-
-    join <$> (ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent still set" mUsrGrpParentBefore' $ Just parentUsrGrpID
   void $ runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
   mUsrGrpParentAfter'' <-
-    join <$> (ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been removed" mUsrGrpParentAfter'' Nothing
 
 testUserGroupRootMustHaveInvoice :: TestEnv ()

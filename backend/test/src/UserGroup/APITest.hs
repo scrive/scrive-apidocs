@@ -291,7 +291,7 @@ testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions :: TestEnv (
 testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Prostetnic Vogon" "Jeltz" emailAddress
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
+  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #ugID)]
   res        <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 403 $ rsCode res
   where emailAddress = "prostetnic.vogon.jeltz@scrive.com"
@@ -300,10 +300,10 @@ testUserCanCreateChildUserGroupWithPermissions :: TestEnv ()
 testUserCanCreateChildUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
+  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #ugID)]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 200 $ rsCode res
   where emailAddress = "great.green.arkleseizure@scrive.com"
@@ -313,7 +313,7 @@ testAdminUserCanCreateChildUserGroupWithoutPermissions = do
   muser <- addNewUser "Oolon" "Colluphid" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   ug    <- addNewUserGroup
-  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
+  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #ugID)]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
   where
@@ -325,7 +325,7 @@ testSalesUserCanCreateChildUserGroupWithoutPermissions = do
   muser <- addNewUser "Marvin" "the Paranoid Android" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   ug    <- addNewUserGroup
-  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugID ug)]
+  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #ugID)]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
   where
@@ -336,7 +336,7 @@ testUserCanEditRootUserGroupWithPermissions :: TestEnv ()
 testUserCanEditRootUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest POST [("usergroup", inText $ T.pack jsonExistingRootUG)]
@@ -351,9 +351,9 @@ testUserCanEditChildUserGroupWithPermissions :: TestEnv ()
 testUserCanEditChildUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
   let uid        = userid user
-      ugidParent = ugID ug
+      ugidParent = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugidParent
-  ugidChild <- ugID <$> addNewUserGroupWithParent False (Just ugidParent)
+  ugidChild <- view #ugID <$> addNewUserGroupWithParent False (Just ugidParent)
   ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
   let field = ("usergroup", inText $ T.pack $ jsonExistingChildUG ugidParent)
   req <- mkRequest POST [field]
@@ -407,7 +407,7 @@ testNonAdminUserCanViewUserGroupWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -419,7 +419,7 @@ testAdminUserCanViewUserGroupWithPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Grunthos" "the Flatulent" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -433,7 +433,7 @@ testSalesUserCanViewUserGroupWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -447,7 +447,7 @@ testAdminUserCanViewUserGroupWithoutPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupWithoutPermissions = do
   muser <- addNewUser "Grunthos" "the Flatulent" emailAddress
   ug    <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser muser <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
@@ -460,7 +460,7 @@ testSalesUserCanViewUserGroupWithoutPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupWithoutPermissions = do
   muser <- addNewUser "Hotblack" "Desiato" emailAddress
   ug    <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser muser <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
@@ -508,9 +508,9 @@ testUserCanDeleteChildUserGroupWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupWithPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
   let uid   = userid user
-      ugid1 = ugID ug1
+      ugid1 = ug1 ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- set #maybeUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid2)
@@ -520,8 +520,8 @@ testUserCanDeleteChildUserGroupWithPermissions = do
 testAdminUserCanDeleteChildUserGroupWithoutPermissions :: TestEnv ()
 testAdminUserCanDeleteChildUserGroupWithoutPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid1 = ugID ug1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  let ugid1 = ug1 ^. #ugID
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid2)
@@ -533,8 +533,8 @@ testAdminUserCanDeleteChildUserGroupWithoutPermissions = do
 testSalesUserCanDeleteChildUserGroupWithoutPermissions :: TestEnv ()
 testSalesUserCanDeleteChildUserGroupWithoutPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let ugid1 = ugID ug1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  let ugid1 = ug1 ^. #ugID
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid2)
@@ -547,7 +547,7 @@ testUserCannotDeleteRootUserGroupWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
@@ -559,7 +559,7 @@ testUserCannotDeleteRootUserGroupWithPermissions = do
 testAdminUserCannotDeleteRootUserGroup :: TestEnv ()
 testAdminUserCannotDeleteRootUserGroup = do
   (user, ug) <- addNewAdminUserAndUserGroup "Humma" "Kavula" emailAddress
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
@@ -572,7 +572,7 @@ testAdminUserCannotDeleteRootUserGroup = do
 testSalesUserCannotDeleteRootUserGroup :: TestEnv ()
 testSalesUserCannotDeleteRootUserGroup = do
   (user, ug) <- addNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
@@ -620,7 +620,7 @@ testNonAdminUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -633,7 +633,7 @@ testAdminUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Grunthos" "the Flatulent" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -647,7 +647,7 @@ testSalesUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -661,7 +661,7 @@ testAdminUserCanViewUserGroupAddressWithoutPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupAddressWithoutPermissions = do
   muser <- addNewUser "Grunthos" "the Flatulent" emailAddress
   ug    <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser muser <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
@@ -674,7 +674,7 @@ testSalesUserCanViewUserGroupAddressWithoutPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupAddressWithoutPermissions = do
   muser <- addNewUser "Hotblack" "Desiato" "hotblack.desiato@scrive.com"
   ug    <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser muser <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
@@ -689,7 +689,7 @@ testSalesUserCanEditUserGroupAddressWithPermissions :: TestEnv ()
 testSalesUserCanEditUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest POST [("contact_details", inText addressJson)]
@@ -742,9 +742,9 @@ testUserCanDeleteChildUserGroupAddressWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupAddressWithPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
   let uid   = userid user
-      ugid1 = ugID ug1
+      ugid1 = ug1 ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- set #maybeUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
@@ -754,8 +754,8 @@ testUserCanDeleteChildUserGroupAddressWithPermissions = do
 testAdminUserCanDeleteChildUserGroupAddressWithoutPermissions :: TestEnv ()
 testAdminUserCanDeleteChildUserGroupAddressWithoutPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid1 = ugID ug1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  let ugid1 = ug1 ^. #ugID
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
@@ -768,8 +768,8 @@ testAdminUserCanDeleteChildUserGroupAddressWithoutPermissions = do
 testSalesUserCanDeleteChildUserGroupAddressWithoutPermissions :: TestEnv ()
 testSalesUserCanDeleteChildUserGroupAddressWithoutPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let ugid1 = ugID ug1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  let ugid1 = ug1 ^. #ugID
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
@@ -783,7 +783,7 @@ testUserCannotDeleteRootUserGroupAddressWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
@@ -794,7 +794,7 @@ testUserCannotDeleteRootUserGroupAddressWithPermissions = do
 testAdminUserCannotDeleteRootUserGroupAddress :: TestEnv ()
 testAdminUserCannotDeleteRootUserGroupAddress = do
   (user, ug) <- addNewAdminUserAndUserGroup "Humma" "Kavula" emailAddress
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
@@ -806,7 +806,7 @@ testAdminUserCannotDeleteRootUserGroupAddress = do
 testSalesUserCannotDeleteRootUserGroupAddress :: TestEnv ()
 testSalesUserCannotDeleteRootUserGroupAddress = do
   (user, ug) <- addNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
@@ -854,7 +854,7 @@ testNonAdminUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -867,7 +867,7 @@ testAdminUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Grunthos" "the Flatulent" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -881,7 +881,7 @@ testSalesUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -895,7 +895,7 @@ testAdminUserCanViewUserGroupSettingsWithoutPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupSettingsWithoutPermissions = do
   muser <- addNewUser "Grunthos" "the Flatulent" emailAddress
   ug    <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser muser <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
@@ -908,7 +908,7 @@ testSalesUserCanViewUserGroupSettingsWithoutPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupSettingsWithoutPermissions = do
   muser <- addNewUser "Hotblack" "Desiato" "hotblack.desiato@scrive.com"
   ug    <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser muser <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
@@ -923,7 +923,7 @@ testSalesUserCanEditUserGroupSettingsWithPermissions :: TestEnv ()
 testSalesUserCanEditUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest POST [("settings", inText settingsJson)]
@@ -980,9 +980,9 @@ testUserCanDeleteChildUserGroupSettingsWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupSettingsWithPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
   let uid   = userid user
-      ugid1 = ugID ug1
+      ugid1 = ug1 ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- set #maybeUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid2)
@@ -992,8 +992,8 @@ testUserCanDeleteChildUserGroupSettingsWithPermissions = do
 testAdminUserCanDeleteChildUserGroupSettingsWithoutPermissions :: TestEnv ()
 testAdminUserCanDeleteChildUserGroupSettingsWithoutPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid1 = ugID ug1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  let ugid1 = ug1 ^. #ugID
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid2)
@@ -1006,8 +1006,8 @@ testAdminUserCanDeleteChildUserGroupSettingsWithoutPermissions = do
 testSalesUserCanDeleteChildUserGroupSettingsWithoutPermissions :: TestEnv ()
 testSalesUserCanDeleteChildUserGroupSettingsWithoutPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let ugid1 = ugID ug1
-  ugid2 <- ugID <$> addNewUserGroupWithParent False (Just ugid1)
+  let ugid1 = ug1 ^. #ugID
+  ugid2 <- view #ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
   res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid2)
@@ -1021,7 +1021,7 @@ testUserCannotDeleteRootUserGroupSettingsWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
@@ -1032,7 +1032,7 @@ testUserCannotDeleteRootUserGroupSettingsWithPermissions = do
 testAdminUserCannotDeleteRootUserGroupSettings :: TestEnv ()
 testAdminUserCannotDeleteRootUserGroupSettings = do
   (user, ug) <- addNewAdminUserAndUserGroup "Humma" "Kavula" emailAddress
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
@@ -1044,7 +1044,7 @@ testAdminUserCannotDeleteRootUserGroupSettings = do
 testSalesUserCannotDeleteRootUserGroupSettings :: TestEnv ()
 testSalesUserCannotDeleteRootUserGroupSettings = do
   (user, ug) <- addNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   ctx <- setUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
@@ -1059,7 +1059,7 @@ testNonAdminUserCanViewUsersInUserGroupWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUsersInUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
   let uid  = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []

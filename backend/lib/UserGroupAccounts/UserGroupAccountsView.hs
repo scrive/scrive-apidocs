@@ -107,7 +107,7 @@ basicUserGroupInviteFields invited inviter ug = do
   F.value "invitedname" $ getFullName invited
   F.value "invitedemail" $ getEmail invited
   F.value "invitername" $ getSmartName inviter
-  F.value "companyname" $ ugName ug
+  F.value "companyname" $ ug ^. #ugName
 
 basicLinkFields :: TemplatesMonad m => Text -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do
@@ -120,7 +120,7 @@ basicLinkFields hostpart link = do
 pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m) => Context -> UserGroup -> m Text
 pageDoYouWantToBeCompanyAccount ctx ug =
   renderTextTemplate "pageDoYouWantToBeCompanyAccount" $ do
-    F.value "companyname" $ ugName ug
+    F.value "companyname" $ ug ^. #ugName
     entryPointFields ctx
 -------------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ flashMessageUserHasBecomeCompanyAccount
   :: (TemplatesMonad m) => UserGroup -> m FlashMessage
 flashMessageUserHasBecomeCompanyAccount ug = toFlashMsg OperationDone <$> renderTemplate
   "flashMessageUserHasBecomeCompanyAccount"
-  (F.value "companyname" . T.unpack $ ugName ug)
+  (F.value "companyname" . T.unpack $ ug ^. #ugName)
 
 -------------------------------------------------------------------------------
 

@@ -42,7 +42,7 @@ mailsTests env = testGroup
 testBrandedDocumentMails :: TestEnv ()
 testBrandedDocumentMails = do
   ug     <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ugID ug) False
+  author <- addNewRandomCompanyUser (ug ^. #ugID) False
   void $ dbUpdate $ UserGroupUpdate (set #ugUI defaultUserGroupUI ug)
   sendDocumentMails author
 

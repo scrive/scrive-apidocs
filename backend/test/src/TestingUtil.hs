@@ -189,7 +189,7 @@ genMaybeUnicodeString = oneof [pure Nothing, Just <$> genUnicodeString]
 
 instance Arbitrary UserGroup where
   arbitrary =
-    (UserGroup emptyUserGroupID Nothing)
+    (I.UserGroup emptyUserGroupID Nothing)
       <$> arbitraryName
       <*> pure Nothing
       <*> arbitrary
@@ -789,11 +789,11 @@ addNewUserGroupWithParent createFolder mparent = do
   ugazip           <- rand 10 (arbText 3 30)
   ugacity          <- rand 10 (arbText 3 30)
   ugacountry       <- rand 10 (arbText 3 30)
-  let ug = defaultUserGroup { ugParentGroupID = mparent
-                            , ugName          = ugname
-                            , ugAddress       = uga
-                            , ugHomeFolderID  = mUgFolderID
-                            }
+  let ug = defaultUserGroup
+        & (#ugParentGroupID .~ mparent)
+        & (#ugName          .~ ugname)
+        & (#ugAddress       .~ uga)
+        & (#ugHomeFolderID  .~ mUgFolderID)
       uga = Just $ I.UserGroupAddress { ugaCompanyNumber = ugacompanynumber
                                       , ugaEntityName    = ugaentityname
                                       , ugaAddress       = ugaaddress
@@ -806,7 +806,7 @@ addNewUserGroupWithParent createFolder mparent = do
 addNewUserGroupWithParents :: Bool -> TestEnv UserGroupWithParents
 addNewUserGroupWithParents createFolder = do
   ug <- addNewUserGroup' createFolder
-  guardJustM . dbQuery . UserGroupGetWithParents $ ugID ug
+  guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #ugID
 
 addNewRandomFile
   :: ( CryptoRNG m
@@ -847,8 +847,8 @@ addNewUserWithCompany
   -> m (Maybe (User, UserGroupID))
 addNewUserWithCompany firstname secondname email createFolders = do
   ug    <- addNewCompany createFolders
-  mUser <- addNewCompanyAdminUser firstname secondname email (ugID ug)
-  return $ (, ugID ug) <$> mUser
+  mUser <- addNewCompanyAdminUser firstname secondname email (ug ^. #ugID)
+  return $ (, ug ^. #ugID) <$> mUser
 
 addNewCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => Bool -> m UserGroup
 addNewCompany createFolders = do
@@ -941,7 +941,7 @@ addNewAdminUserAndUserGroup firstname secondname email = do
   Just user <- createNewUser (firstname, secondname)
                              email
                              Nothing
-                             (ugID ug, True)
+                             (ug ^. #ugID, True)
                              defaultLang
                              (bd ^. #id)
                              CompanyInvitation
@@ -1066,7 +1066,7 @@ addNewRandomPartnerUser = do
         partnerAdminUser      <- addNewRandomUser
         partnerAdminUserGroup <- dbQuery $ UserGroupGetByUserID (userid partnerAdminUser)
         let partnerIDAlreadyExists =
-              (unsafeUserGroupIDToPartnerID . ugID $ partnerAdminUserGroup)
+              (unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #ugID)
                 `elem` map ptID partners
         case partnerIDAlreadyExists of
           True  -> return Nothing
@@ -1076,13 +1076,13 @@ addNewRandomPartnerUser = do
     Just (partnerAdminUser, partnerAdminUserGroup) -> do
       -- insert new partner row with the same ID as the UserGroup
       True <- dbUpdate . InsertPartnerForTests $ Partner
-        { ptID             = unsafeUserGroupIDToPartnerID . ugID $ partnerAdminUserGroup
-        , ptName           = T.unpack . ugName $ partnerAdminUserGroup
+        { ptID             = unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #ugID
+        , ptName           = T.unpack $ partnerAdminUserGroup ^. #ugName
         , ptDefaultPartner = False
-        , ptUserGroupID    = Just $ ugID partnerAdminUserGroup
+        , ptUserGroupID    = Just $ partnerAdminUserGroup ^. #ugID
         }
       let uid  = userid partnerAdminUser
-          ugid = ugID partnerAdminUserGroup
+          ugid = partnerAdminUserGroup ^. #ugID
       void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
       return (partnerAdminUser, partnerAdminUserGroup)
 

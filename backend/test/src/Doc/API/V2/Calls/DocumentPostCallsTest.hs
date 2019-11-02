@@ -32,7 +32,6 @@ import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
 import User.Model
-import UserGroup.Types
 import Util.Actor (userActor)
 
 apiV2DocumentPostCallsTests :: TestEnvSt -> Test
@@ -129,7 +128,7 @@ testDocApiV2NewFromTemplate = do
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
   ug <- addNewUserGroup
-  let ugid = ugID ug
+  let ugid = ug ^. #ugID
   author    <- addNewRandomCompanyUser ugid False
   ctxauthor <- set #maybeUser (Just author) <$> mkContext defaultLang
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor

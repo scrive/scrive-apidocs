@@ -8,7 +8,6 @@ import TestingUtil
 import TestKontra
 import Theme.Model
 import User.Model
-import UserGroup.Types
 
 brandedDomainTests :: TestEnvSt -> Test
 brandedDomainTests env = testGroup
@@ -39,7 +38,7 @@ test_brandedDomainCreateUpdate = do
 
 test_brandedDomainAssociatedDomain :: TestEnv ()
 test_brandedDomainAssociatedDomain = do
-  ugid <- ugID <$> addNewUserGroup
+  ugid <- view #ugID <$> addNewUserGroup
   bdID <- dbUpdate $ NewBrandedDomain
   bd   <- dbQuery $ GetBrandedDomainByID bdID
   let nbd = set #url "http://localhost:8000" bd

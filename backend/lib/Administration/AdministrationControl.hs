@@ -260,15 +260,15 @@ jsonCompanies = onlySalesOrAdmin $ do
   ugs <- dbQuery $ UserGroupsGetFiltered (textFilter <> usersFilter <> pplanFilter)
                                          (Just (offset, limit))
   -- get address for those companies, which inherit it
-  ugsWithAddress <- forM ugs $ \ug -> case ugAddress ug of
+  ugsWithAddress <- forM ugs $ \ug -> case ug ^. #ugAddress of
     Just uga -> return (ug, uga)
     Nothing ->
       ((ug, ) . ugwpAddress)
-        <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ugID ug)
+        <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #ugID)
   runJSONGenT $ do
     valueM "companies" $ forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
-      value "id" . show . ugID $ ug
-      value "companyname" . T.unpack . ugName $ ug
+      value "id" . show $ ug ^. #ugID
+      value "companyname" . T.unpack $ ug ^. #ugName
       value "companynumber" . T.unpack $ uga ^. #ugaCompanyNumber
       value "companyentityname" . T.unpack $ uga ^. #ugaEntityName
       value "companyaddress" . T.unpack $ uga ^. #ugaAddress
@@ -470,10 +470,10 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
   let oldUG       = ugwpUG ugwp
-      setSettings = if fromMaybe (isNothing $ ugSettings oldUG) mUGSettingsIsInherited
+      setSettings = if fromMaybe (isNothing $ oldUG ^. #ugSettings) mUGSettingsIsInherited
         then set #ugSettings Nothing
         else set #ugSettings . Just . ugSettingsChange $ ugwpSettings ugwp
-      setAddress = if fromMaybe (isNothing $ ugAddress oldUG) mUGAddressIsInherited
+      setAddress = if fromMaybe (isNothing $ oldUG ^. #ugAddress) mUGAddressIsInherited
         then set #ugAddress Nothing
         else set #ugAddress . Just . ugAddressChange $ ugwpAddress ugwp
       newUG =
@@ -487,7 +487,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
     guardJust
     . listToMaybe
     . catMaybes
-    $ [ugSettings newUG, ugwpSettings <$> ugwpOnlyParents ugwp]
+    $ [newUG ^. #ugSettings, ugwpSettings <$> ugwpOnlyParents ugwp]
   guardThatDataRetentionPolicyIsValid (newSettings ^. #ugsDataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
@@ -504,7 +504,7 @@ handleCreateUser = onlySalesOrAdmin $ do
     . UserGroupCreate
     . set #ugHomeFolderID (Just $ folderID ugFolder)
     $ defaultUserGroup
-  muser <- createNewUserByAdmin email (fstname, sndname) (ugID ug, True) lang
+  muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #ugID, True) lang
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False
@@ -923,14 +923,14 @@ handleCompanyGetStructure :: Kontrakcja m => UserGroupID -> m Aeson.Value
 handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
   ugwp <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
   let root = ugwpRoot ugwp
-  children <- dbQuery . UserGroupGetAllChildrenRecursive $ ugID root
+  children <- dbQuery . UserGroupGetAllChildrenRecursive $ root ^. #ugID
   return $ object
     [ "user_group_structure"
         .= (ugWithChildrenToJson $ I.UserGroupWithChildren root children)
     ]
   where
     ugWithChildrenToJson (I.UserGroupWithChildren ug children) = object
-      [ "group" .= object ["name" .= ugName ug, identifier $ ugID ug]
+      [ "group" .= object ["name" .= (ug ^. #ugName), identifier $ ug ^. #ugID]
       , "children" .= map ugWithChildrenToJson children
       ]
 

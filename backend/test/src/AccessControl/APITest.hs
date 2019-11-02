@@ -17,7 +17,6 @@ import TestKontra
 import User.Email
 import User.Model
 import UserGroup.Model
-import UserGroup.Types
 
 accessControlApiTests :: TestEnvSt -> Test
 accessControlApiTests env = testGroup
@@ -124,7 +123,7 @@ testUserGroupAdminCanViewRolesOfOtherUserGroupMember :: TestEnv ()
 testUserGroupAdminCanViewRolesOfOtherUserGroupMember = do
   (user, ug) <- addNewAdminUserAndUserGroup "Captain" "Hollister" emailAddress
   let uid1 = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   user2 <- fromJust <$> addNewUserToUserGroup "Dwayne" "Dibley" emailAddress2 ugid
   let uid2 = userid user2
@@ -140,7 +139,7 @@ testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers :: TestEnv ()
 testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers = do
   (user, ug) <- addNewAdminUserAndUserGroup "Captain" "Hollister" emailAddress
   let uid1 = userid user
-      ugid = ugID ug
+      ugid = ug ^. #ugID
   void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   muser2 <- addNewCompanyUser "Dwayne" "Dibley" emailAddress2 ugid
   ctx    <- set #maybeUser muser2 <$> mkContext defaultLang
@@ -161,7 +160,7 @@ testAllInheritedRolesAreReturned = do
                                                 "Dibley"
                                                 "dwayne.dibley@scrive.com"
   ctx <- set #maybeUser (Just userA) <$> mkContext defaultLang
-  void . dbUpdate . UserGroupUpdate . set #ugParentGroupID (Just . ugID $ ugA) $ ugB0
+  void . dbUpdate . UserGroupUpdate . set #ugParentGroupID (Just $ ugA ^. #ugID) $ ugB0
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles $ userid userA)
   let

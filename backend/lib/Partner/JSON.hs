@@ -185,8 +185,8 @@ userGroupToUserGroupForUpdate :: UserGroupWithParents -> UserGroupForUpdate
 userGroupToUserGroupForUpdate ugwp =
   let ug         = ugwpUG ugwp
       ug_address = ugwpAddress ugwp
-  in  UserGroupForUpdate { uguUserGroupID      = showt $ ugID ug
-                         , uguUserGroupName    = ugName ug
+  in  UserGroupForUpdate { uguUserGroupID      = showt $ ug ^. #ugID
+                         , uguUserGroupName    = ug ^. #ugName
                          , uguUserGroupNumber  = ug_address ^. #ugaCompanyNumber
                          , uguUserGroupAddress = ug_address ^. #ugaAddress
                          , uguUserGroupZip     = ug_address ^. #ugaZip

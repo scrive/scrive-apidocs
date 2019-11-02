@@ -15,7 +15,6 @@ import MinutesTime
 import TestingUtil
 import TestKontra
 import User.Model
-import UserGroup.Types
 import Util.Actor
 
 attachmentAPITests :: TestEnvSt -> Test
@@ -31,7 +30,7 @@ attachmentAPITests env = testGroup
 testAttachmentList :: TestEnv ()
 testAttachmentList = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ugID ug)
+  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #ugID)
 
   now        <- currentTime
   fid        <- addNewRandomFile

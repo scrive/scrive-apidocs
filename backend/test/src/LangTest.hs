@@ -14,7 +14,6 @@ import TestingUtil
 import TestKontra as T
 import User.Lang
 import User.Model
-import UserGroup.Types
 
 langTests :: TestEnvSt -> Test
 langTests env = testGroup
@@ -92,7 +91,7 @@ createTestUser lang = do
   Just user <- createNewUser ("", "")
                              "andrzej@skrivapa.se"
                              (Just pwd)
-                             (ugID ug, True)
+                             (ug ^. #ugID, True)
                              lang
                              (bd ^. #id)
                              AccountRequest

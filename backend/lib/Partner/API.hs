@@ -96,10 +96,10 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
         . UserGroupGetWithParents
         $ partnerUsrGrpID
       newUgFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug_new = defaultUserGroup { ugParentGroupID = Just partnerUsrGrpID
-                                    , ugHomeFolderID  = Just $ folderID newUgFolder
-                                    , ugInvoicing     = BillItem $ Just FreePlan
-                                    }
+      let ug_new = defaultUserGroup
+            & (#ugParentGroupID ?~ partnerUsrGrpID)
+            & (#ugHomeFolderID  ?~ folderID newUgFolder)
+            & (#ugInvoicing     .~ BillItem (Just FreePlan))
       ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug =
             updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu
@@ -113,8 +113,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
             apiGuardJustM (serverError "Was not able to retrieve newly created company")
             . dbQuery
             . UserGroupGetWithParents
-            . ugID
-            $ ug'
+            $ ug' ^. #ugID
           Created
             <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 
@@ -191,7 +190,7 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
     apiAccessControl acc $ do
       user_groups              <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
       user_groups_with_parents <- fmap catMaybes . forM user_groups $ \ug ->
-        dbQuery . UserGroupGetWithParents . ugID $ ug
+        dbQuery . UserGroupGetWithParents $ ug ^. #ugID
       Ok <$> return
         ( unjsonUserGroupsForUpdate
         , userGroupToUserGroupForUpdate <$> user_groups_with_parents
@@ -377,7 +376,7 @@ resolveUserGroupID k = do
         (Just ugid) -> return (Just . ptID $ partner, ugid)
 
     (Left _, Just ug) -> do
-      return (Nothing, ugID ug)
+      return (Nothing, ug ^. #ugID)
 
     (Right partner, Just ug) -> do
       -- This won't ever happen *except* in tests the way they're implemented now.
@@ -389,9 +388,9 @@ resolveUserGroupID k = do
         , "identifier" .= k
         ]
       let mpID = ptUserGroupID partner
-      unless (isJust mpID && (Just $ ugID ug) == mpID) $ do
+      unless (isJust mpID && (Just $ ug ^. #ugID) == mpID) $ do
         srvLogErr $ "The partner ID and the user group ID are not connected"
-      return (Just . ptID $ partner, ugID ug)
+      return (Just . ptID $ partner, ug ^. #ugID)
 
     (_, _) -> do
       srvLogErr "No partner, no user group for the given identifier"

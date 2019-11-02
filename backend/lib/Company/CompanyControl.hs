@@ -85,8 +85,8 @@ handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetCompanyBranding mugid = do
   withCompanyAdminOrAdminOnly mugid $ \ug -> do
     return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
-                                  (unjsonUserGroupUIWithCompanyID $ ugID ug)
-                                  (ugUI ug)
+                                  (unjsonUserGroupUIWithCompanyID $ ug ^. #ugID)
+                                  (ug ^. #ugUI)
 
 handleChangeCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m ()
 handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
@@ -101,7 +101,7 @@ handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> d
 
 handleGetThemes :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleGetThemesForUserGroup $ ugID ug
+  handleGetThemesForUserGroup $ ug ^. #ugID
 
 handleGetDomainThemes :: Kontrakcja m => m Aeson.Value
 handleGetDomainThemes = do
@@ -121,12 +121,12 @@ handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
     "service"  -> return $ bd ^. #serviceTheme
     "mail"     -> return $ bd ^. #mailTheme
     _          -> internalError
-  handleNewThemeForUserGroup (ugID ug) tid
+  handleNewThemeForUserGroup (ug ^. #ugID) tid
 
 handleDeleteTheme :: Kontrakcja m => Maybe UserGroupID -> ThemeID -> m ()
 handleDeleteTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleDeleteThemeForUserGroup (ugID ug) tid
+  handleDeleteThemeForUserGroup (ug ^. #ugID) tid
 
 handleUpdateTheme :: Kontrakcja m => Maybe UserGroupID -> ThemeID -> m ()
 handleUpdateTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleUpdateThemeForUserGroup (ugID ug) tid
+  handleUpdateThemeForUserGroup (ug ^. #ugID) tid

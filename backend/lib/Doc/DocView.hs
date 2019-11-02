@@ -112,7 +112,7 @@ pageDocumentSignView ctx document siglink ad = do
       _ -> show LinkPreviewLockedImage
     F.value "b64documentdata" $ B64.encode $ docjson
     F.value "legaltext" $ ugwpSettings authorugwp ^. #ugsLegalText
-    standardPageFields ctx (Just (ugID $ ugwpUG authorugwp, ugUI $ ugwpUG authorugwp)) ad -- Branding for signview depends only on authors company
+    standardPageFields ctx (Just (ugwpUG authorugwp ^. #ugID, ugwpUG authorugwp ^. #ugUI)) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text
@@ -129,7 +129,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #netsConfig
     F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #netsConfig
     F.value "previewLink" $ show LinkPreviewLockedImage
-    standardPageFields ctx (Just (ugID authorug, ugUI authorug)) ad -- Branding for signview depends only on authors company
+    standardPageFields ctx (Just (authorug ^. #ugID, authorug ^. #ugUI)) ad -- Branding for signview depends only on authors company
 
 pageDocumentPadList :: Kontrakcja m => Context -> AnalyticsData -> m Text
 pageDocumentPadList ctx ad = do

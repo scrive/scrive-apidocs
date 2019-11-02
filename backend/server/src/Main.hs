@@ -171,13 +171,13 @@ initDatabaseEntries appConf = do
         void $ dbUpdate $ AddUser ("", "")
                                   (unEmail email)
                                   (Just passwd)
-                                  (ugID ug, Just $ folderID userFolder, True)
+                                  (ug ^. #ugID, Just $ folderID userFolder, True)
                                   LANG_EN
                                   (bd ^. #id)
                                   ByAdmin
-        let features = fromJust $ ugFeatures ug
+        let features = fromJust $ ug ^. #ugFeatures
         -- enable everything for initial admins
-        let adminFeatures = (fromJust $ ugFeatures ug)
+        let adminFeatures = (fromJust $ ug ^. #ugFeatures)
               { fAdminUsers = (fAdminUsers features) { ffCanUseDKAuthenticationToView = True
                                                      , ffCanUseDKAuthenticationToSign = True
                                                      , ffCanUseFIAuthenticationToView = True

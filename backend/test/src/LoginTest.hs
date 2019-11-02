@@ -36,7 +36,6 @@ import User.Model
 import User.PasswordReminder
 import User.UserControl
 import UserGroup.Model
-import UserGroup.Types
 import Util.MonadUtils
 import Util.QRCode
 
@@ -294,7 +293,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ugID ug
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
   let expCode = 200
@@ -307,8 +306,8 @@ testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   let uid1 = userid user
   uid2 <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid1 $ ugID ug
-  void . dbUpdate . SetUserUserGroup uid2 $ ugID ug
+  void . dbUpdate . SetUserUserGroup uid1 $ ug ^. #ugID
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
   let expCode = 403
@@ -341,7 +340,7 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ugID ug
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
   -- Generate an expired login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]
@@ -355,7 +354,7 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ugID ug
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
   -- Generate a valid login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]
@@ -498,7 +497,7 @@ createTestUser' email = do
   Just user <- createNewUser ("", "")
                              email
                              (Just pwd)
-                             (ugID ug, True)
+                             (ug ^. #ugID, True)
                              defaultLang
                              (bd ^. #id)
                              AccountRequest
@@ -512,7 +511,7 @@ createUserAndResetPassword = do
   Just user <- createNewUser ("", "")
                              "andrzej@skrivapa.se"
                              (Just pwd)
-                             (ugID ug, True)
+                             (ug ^. #ugID, True)
                              defaultLang
                              (bd ^. #id)
                              AccountRequest

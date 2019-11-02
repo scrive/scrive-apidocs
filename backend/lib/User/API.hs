@@ -381,7 +381,7 @@ apiCallUpdateUserProfile = api $ do
     then do
       ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
       let ug = ugwpUG ugwp
-      companyname <- getParameter "companyname" asValidCompanyName $ ugName ug
+      companyname <- getParameter "companyname" asValidCompanyName $ ug ^. #ugName
       let getAddrParameter n v prevValue =
             getParameter n v $ ugwpAddress ugwp ^. prevValue
       number     <- getAddrParameter "companynumber" asValidCompanyNumber #ugaCompanyNumber
@@ -398,7 +398,7 @@ apiCallUpdateUserProfile = api $ do
                                            , ugaCity          = city
                                            , ugaCountry       = country
                                            }
-          ug'' = case ugAddress ug' of
+          ug'' = case ug' ^. #ugAddress of
             Just _ ->
               -- change address directly if it wasn't inherited
               set #ugAddress (Just new_address) ug'
@@ -485,11 +485,11 @@ apiCallSignup = api $ do
       | otherwise -> return $ Just user
     Nothing -> do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug0 = defaultUserGroup { ugName         = companyName
-                                 , ugHomeFolderID = Just $ folderID ugFolder
-                                 }
+      let ug0 = defaultUserGroup
+            & (#ugName         .~ companyName)
+            & (#ugHomeFolderID ?~ folderID ugFolder)
       ug <- dbUpdate $ UserGroupCreate ug0
-      createUser (Email email) (firstname, lastname) (ugID ug, True) lang AccountRequest
+      createUser (Email email) (firstname, lastname) (ug ^. #ugID, True) lang AccountRequest
   case muser' of
     -- return ambiguous response in both cases to prevent a security issue
     Nothing   -> runJSONGenT $ value "sent" True

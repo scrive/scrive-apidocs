@@ -256,12 +256,12 @@ handleAccountSetupGet uid token sm = do
       ug      <- dbQuery . UserGroupGetByUserID . userid $ user
       ad      <- getAnalyticsData
       content <- renderTextTemplate "accountSetupPage" $ do
-        standardPageFields ctx (Just (ugID ug, ugUI ug)) ad
+        standardPageFields ctx (Just (ug ^. #ugID, ug ^. #ugUI)) ad
         F.value "fstname" $ getFirstName user
         F.value "sndname" $ getLastName user
         F.value "email" $ getEmail user
         F.value "userid" $ show uid
-        F.value "company" $ ugName ug
+        F.value "company" $ ug ^. #ugName
         F.value "companyAdmin" $ useriscompanyadmin user
         F.value "companyPosition" $ usercompanyposition $ userinfo user
         F.value "mobile" $ getMobile user

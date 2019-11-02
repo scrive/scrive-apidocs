@@ -835,7 +835,7 @@ sendPortalInvite authorUser portalUrl email name = do
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
                            (""     , "")
-                           (ugID ug, True)
+                           (ug ^. #ugID, True)
                            (getLang authorUser)
                            PortalInvite
       case mnuser of
@@ -879,7 +879,7 @@ sendPortalReminder authorUser portalUrl email name = do
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
                            (""     , "")
-                           (ugID ug, True)
+                           (ug ^. #ugID, True)
                            (getLang authorUser)
                            PortalInvite
       case mnuser of

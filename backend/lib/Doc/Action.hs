@@ -90,7 +90,7 @@ logDocEvent name user extraProps doc = do
        , TimeProp now
        , MailProp email
        , NameProp fullname
-       , stringProp "Company Name" $ ugName ug
+       , stringProp "Company Name" $ ug ^. #ugName
        , stringProp "Delivery Method" deliverymethod
        , stringProp "Type"            (showt $ documenttype doc)
        , stringProp "Language"        (showt $ documentlang doc)

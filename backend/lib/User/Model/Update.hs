@@ -237,7 +237,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
   update (SetUserUserGroup uid ugid) = dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return False
     Just ug -> runQuery01 $ sqlUpdate "users" $ do
-      sqlSet "user_group_id" $ ugID ug
+      sqlSet "user_group_id" $ ug ^. #ugID
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

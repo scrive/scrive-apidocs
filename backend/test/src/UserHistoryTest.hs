@@ -19,7 +19,6 @@ import User.History.Model
 import User.Model
 import User.UserAccountRequest
 import User.UserControl
-import UserGroup.Types
 
 userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup
@@ -257,7 +256,7 @@ createTestUser = do
   muser <- createNewUser ("", "")
                          "karol@skrivapa.se"
                          (Just pwd)
-                         (ugID ug, True)
+                         (ug ^. #ugID, True)
                          defaultLang
                          (bd ^. #id)
                          AccountRequest

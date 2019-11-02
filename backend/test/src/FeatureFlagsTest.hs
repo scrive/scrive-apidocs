@@ -8,7 +8,6 @@ import FeatureFlags.Model
 import TestingUtil
 import TestKontra
 import UserGroup.Model
-import UserGroup.Types
 
 featureFlagsTest :: TestEnvSt -> Test
 featureFlagsTest env = testGroup
@@ -25,13 +24,13 @@ testUpdateFeatureFlagsWorks = do
   replicateM_ 100 $ do
     (fs :: Features) <- rand 10 arbitrary
     dbUpdate . UserGroupUpdate $ set #ugFeatures (Just fs) ug
-    ug' <- fmap fromJust . dbQuery . UserGroupGet $ ugID ug
-    assertEqual "Updating feature flags works" (Just fs) (ugFeatures ug')
+    ug' <- fmap fromJust . dbQuery . UserGroupGet $ ug ^. #ugID
+    assertEqual "Updating feature flags works" (Just fs) (ug' ^. #ugFeatures)
 
 testNewCompanyFeatureFlagDefaults :: TestEnv ()
 testNewCompanyFeatureFlagDefaults = do
   ug <- addNewUserGroup
-  let fs = fromJust $ ugFeatures ug
+  let fs = fromJust $ ug ^. #ugFeatures
   checkNewAccountFlags (fAdminUsers fs)
   checkNewAccountFlags (fRegularUsers fs)
 

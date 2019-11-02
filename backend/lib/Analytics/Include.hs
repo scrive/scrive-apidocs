@@ -101,7 +101,7 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Company Name")
       $   emptyToNothing
       $   escapeString
-      <$> ugName
+      <$> (^. #ugName)
       <$> aUserGroup
 
     mnop (J.value "Signup Method")

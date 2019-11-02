@@ -93,17 +93,17 @@ testPartnerUsersWithFolders = do
   (ctx, cid) <- partnerCompanyCreate partnerAdminUser partnerAdminUserGroup
   assertCountAllFolders "Partner, Partner admin and UserGroup have Folders" 3
 
-  partnerUserCreate ctx cid $ ugID partnerAdminUserGroup
+  partnerUserCreate ctx cid $ partnerAdminUserGroup ^. #ugID
   assertCountAllFolders "Partner, Partner admin, UserGroup and User have Folders" 4
 
   ug <- guardJustM . dbQuery $ UserGroupGet cid
-  assertBool "UserGroup has home Folder" . isJust $ ugHomeFolderID ug
+  assertBool "UserGroup has home Folder" . isJust $ ug ^. #ugHomeFolderID
 
   user <- fmap head . dbQuery $ UserGroupGetUsers cid
   assertBool "User has home Folder" . isJust $ userhomefolderid user
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid user
   assertEqual "User home folder is child of UserGroup home folder"
-              (ugHomeFolderID ug)
+              (ug ^. #ugHomeFolderID)
               (folderParentID userFolder)
 
 testPartnerUsersWithoutFolders :: TestEnv ()
@@ -118,13 +118,13 @@ testPartnerUsersWithoutFolders = do
   ug <- guardJustM . dbQuery $ UserGroupGet cid
   dbUpdate . UserGroupUpdate . set #ugHomeFolderID Nothing $ ug
 
-  partnerUserCreate ctx cid $ ugID partnerAdminUserGroup
+  partnerUserCreate ctx cid $ partnerAdminUserGroup ^. #ugID
   assertCountAllFolders "User havs no Folder" 3
 
 partnerCompanyCreate :: User -> UserGroup -> TestEnv (Context, UserGroupID)
 partnerCompanyCreate partnerAdminUser partnerAdminUserGroup = do
   ctx <- (set #maybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
-  let partnerUgID = ugID partnerAdminUserGroup
+  let partnerUgID = partnerAdminUserGroup ^. #ugID
   newCompanyJSON <- readTestFile "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [("json", inTextBS newCompanyJSON)]
       rq_newCompany_resp_fp =
@@ -158,7 +158,7 @@ partnerUserCreate ctx cid pid = do
 testNewCompanyAccount :: TestEnv ()
 testNewCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  assertBool "UserGroup has home Folder" . isJust $ ugHomeFolderID ug
+  assertBool "UserGroup has home Folder" . isJust $ ug ^. #ugHomeFolderID
 
   ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
@@ -175,7 +175,7 @@ testNewCompanyAccount = do
 
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid userBob
   assertEqual "User home folder is child of UserGroup home folder"
-              (ugHomeFolderID ug)
+              (ug ^. #ugHomeFolderID)
               (folderParentID userFolder)
 
   -- unlink UserGroup from Folder

@@ -22,26 +22,27 @@ encodeUserGroup :: Bool -> UserGroupWithParents -> [UserGroup] -> Encoding
 encodeUserGroup inheritable ugwp children =
   pairs
     $  "id"
-    .= ugID ug
+    .= (ug ^. #ugID)
     <> "parent_id"
-    .= ugParentGroupID ug
+    .= (ug ^. #ugParentGroupID)
     <> "name"
-    .= ugName ug
+    .= (ug ^. #ugName)
     <> pair "children"        childrenEncoding
     <> pair "contact_details" (encodeUserGroupContactDetails inheritable ugwp)
     <> pair "settings" (encodeUserGroupSettings inheritable ugwp)
   where
     ug = ugwpUG ugwp
     childrenEncoding =
-      flip list children $ \child -> pairs $ "id" .= ugID child <> "name" .= ugName child
+      flip list children $ \child -> pairs $ "id" .= (child ^. #ugID) <> "name" .= (child ^. #ugName)
 
 updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
 updateUserGroupFromRequest ug ugChanges = do
   let ugReq =
-        UserGroupRequestJSON { reqParentID = ugParentGroupID ug, reqName = ugName ug }
+        UserGroupRequestJSON { reqParentID = ug ^. #ugParentGroupID, reqName = ug ^. #ugName }
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
-    (Result ugUpdated []) ->
-      Just $ ug { ugParentGroupID = reqParentID ugUpdated, ugName = reqName ugUpdated }
+    (Result ugUpdated []) -> Just $ ug
+      & (#ugParentGroupID .~ reqParentID ugUpdated)
+      & (#ugName          .~ reqName ugUpdated)
     (Result _ _) -> Nothing
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
@@ -81,7 +82,7 @@ encodeUserGroupContactDetails inheritable ugwp =
   where
     makeAddressJson mugid addr =
       "inherited_from" .= mugid <> "address" .= fmap UGAddrJSON addr
-    mugAddr                  = ugAddress $ ugwpUG ugwp
+    mugAddr                  = ugwpUG ugwp ^. #ugAddress
     minherited               = ugwpAddressWithID <$> ugwpOnlyParents ugwp
     (inheritedFrom, address) = if isJust mugAddr
       then (Nothing, mugAddr) -- UG has own Address
@@ -161,7 +162,7 @@ encodeUserGroupSettings inheritable ugwp =
     makeDRPJson mugid msett =
       let drp = UGDRPJSON . view #ugsDataRetentionPolicy <$> msett
       in  "inherited_from" .= mugid <> "data_retention_policy" .= drp
-    mugSettings                = ugSettings $ ugwpUG ugwp
+    mugSettings                = ugwpUG ugwp ^. #ugSettings
     minherited                 = ugwpSettingsWithID <$> ugwpOnlyParents ugwp
     (inheritedFrom, msettings) = if isJust mugSettings
       then (Nothing, mugSettings) -- UG has own Settings

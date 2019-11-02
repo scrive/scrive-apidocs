@@ -109,8 +109,8 @@ testCustomSessionTimeout = do
   (user, userGroup) <- createTestUser
 
   let userId      = userid user
-      userGroupId = ugID userGroup
-  groupSettings1 <- assertJustAndExtract $ ugSettings userGroup
+      userGroupId = userGroup ^. #ugID
+  groupSettings1 <- assertJustAndExtract $ userGroup ^. #ugSettings
 
   assertEqual "initial group session timeout should be nothing"
               (groupSettings1 ^. #ugsSessionTimeoutSecs)
@@ -202,8 +202,8 @@ testCustomSessionTimeoutDelay = do
   (user, userGroup) <- createTestUser
 
   let userId                = userid user
-      userGroupId           = ugID userGroup
-      (Just groupSettings1) = ugSettings userGroup
+      userGroupId           = userGroup ^. #ugID
+      (Just groupSettings1) = userGroup ^. #ugSettings
       sessionTimeout        = 15 * 60  -- test 15 mins session timout
 
   do
@@ -239,12 +239,12 @@ testCustomSessionTimeoutInheritance = do
   userGroup13              <- dbUpdate $ UserGroupCreate userGroup12
 
   userGroup21 :: UserGroup <- rand 10 arbitrary
-  let userGroup22 =
-        userGroup21 { ugParentGroupID = Just $ ugID userGroup13, ugSettings = Nothing }
+  let userGroup22 = userGroup21
+        & (#ugParentGroupID ?~ userGroup13 ^. #ugID)
+        & (#ugSettings .~ Nothing)
   userGroup23 <- dbUpdate $ UserGroupCreate userGroup22
 
-  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $ ugID
-    userGroup23
+  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $     userGroup23 ^. #ugID
 
   let groupSettings2            = ugwpSettings <$> userGroup24
       timeoutVal = view #ugsSessionTimeoutSecs =<< groupSettings2
@@ -257,7 +257,7 @@ testCustomSessionTimeoutInheritance = do
     time1 <- currentTime
     setTestTime time1
 
-    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com" $ ugID userGroup23
+    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com" $ userGroup23 ^. #ugID
 
     let userId = userid user
     (session1, _) <- insertNewSession userId
@@ -381,7 +381,7 @@ createTestUser = do
   Just user <- createNewUser ("Andrzej", "Rybczak")
                              "andrzej@scrive.com"
                              (Just pwd)
-                             (ugID ug, True)
+                             (ug ^. #ugID, True)
                              defaultLang
                              (bd ^. #id)
                              AccountRequest

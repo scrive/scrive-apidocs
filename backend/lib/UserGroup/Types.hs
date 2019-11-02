@@ -1,6 +1,6 @@
 module UserGroup.Types (
     InvoicingType(..)
-  , UserGroup(..)
+  , UserGroup
   , fetchUserGroup
   , defaultUserGroup
   , defaultChildUserGroup

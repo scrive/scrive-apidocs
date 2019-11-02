@@ -36,7 +36,6 @@ import User.API
 import User.Email
 import User.Model
 import UserGroup.Model
-import UserGroup.Types
 import Util.Actor
 import Util.QRCode
 
@@ -242,7 +241,7 @@ testUserNoDeletionIfPendingDocuments = do
   now        <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (userid anna) now
 
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ugID ug)
+  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #ugID)
 
   ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
@@ -274,7 +273,7 @@ testUserDeletion = do
 testUserDeletionOwnershipTransfer :: TestEnv ()
 testUserDeletionOwnershipTransfer = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ugID ug)
+  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #ugID)
 
   now        <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (userid anna) now

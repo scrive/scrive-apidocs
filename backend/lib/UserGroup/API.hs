@@ -66,7 +66,7 @@ userGroupAPIV2 = dir "usergroups" $ choice
 constructUserGroupResponse :: Kontrakcja m => Bool -> UserGroupID -> m Encoding
 constructUserGroupResponse inheritable ugid = do
   ugwp     <- userGroupWithParentsOrAPIError ugid
-  children <- dbQuery . UserGroupGetImmediateChildren . ugID $ ugwpUG ugwp
+  children <- dbQuery . UserGroupGetImmediateChildren $ ugwpUG ugwp ^. #ugID
   return $ encodeUserGroup inheritable ugwp children
 
 userGroupApiV2Get :: Kontrakcja m => UserGroupID -> m Response
@@ -86,18 +86,18 @@ userGroupApiV2Create = api $ do
   ugIn        <- case updateUserGroupFromRequest defaultChildUserGroup ugReq of
     Nothing        -> apiError $ requestFailed "Error parsing user group create object."
     Just ugUpdated -> return ugUpdated
-  ugOut <- case ugParentGroupID ugIn of
+  ugOut <- case ugIn ^. #ugParentGroupID of
     Nothing -> do
       -- Guard against non-Admins being able to create root UserGroups
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
-      dbUpdate $ UserGroupCreate defaultUserGroup { ugName = ugName ugIn }
+      dbUpdate $ UserGroupCreate (defaultUserGroup & #ugName .~ ugIn ^. #ugName)
           -- _externalIDs = ....      -- TODO: Implement external_ids
     Just parent_ugid -> do
       -- Check user has permissions to create child UserGroup
       let acc = mkAccPolicyItem (CreateA, UserGroupR, parent_ugid)
       apiAccessControlOrIsAdmin [acc] . dbUpdate $ UserGroupCreate ugIn
   -- Return response
-  Ok <$> constructUserGroupResponse inheritable (ugID ugOut)
+  Ok <$> constructUserGroupResponse inheritable (ugOut ^. #ugID)
 
 userGroupApiV2Update :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiV2Update ugid = api $ do
@@ -110,8 +110,8 @@ userGroupApiV2Update ugid = api $ do
   ugNew <- case updateUserGroupFromRequest ugOriginal ugReq of
     Nothing        -> apiError $ requestFailed "Error parsing user group update object."
     Just ugUpdated -> return ugUpdated
-  let moldparentugid = ugParentGroupID ugOriginal
-  let mnewparentugid = ugParentGroupID ugNew
+  let moldparentugid = ugOriginal ^. #ugParentGroupID
+  let mnewparentugid = ugNew ^. #ugParentGroupID
   -- Checks to see whether the usergroup is being moved (its parent ugid changed)
   movementAccs <- case (moldparentugid, mnewparentugid) of
     (Just oldparentugid, Just newparentugid) -> if oldparentugid /= newparentugid
@@ -120,7 +120,7 @@ userGroupApiV2Update ugid = api $ do
                                                   -- Permissions are required for "from" and "to" UserGroups
         let oldAcc = mkAccPolicyItem (UpdateA, UserGroupR, oldparentugid)
             newAcc = mkAccPolicyItem (UpdateA, UserGroupR, newparentugid)
-            curAcc = mkAccPolicyItem (DeleteA, UserGroupR, ugID ugOriginal)
+            curAcc = mkAccPolicyItem (DeleteA, UserGroupR, ugOriginal ^. #ugID)
         return [oldAcc, newAcc, curAcc]
       else
                                                   -- The usergroup isn't being moved, no special permissions needed
@@ -128,7 +128,7 @@ userGroupApiV2Update ugid = api $ do
     (Nothing, Just newparentugid) -> do
       -- Root usergroup is being made subordinate to another UserGroup
       let newAcc = mkAccPolicyItem (UpdateA, UserGroupR, newparentugid)
-          curAcc = mkAccPolicyItem (DeleteA, UserGroupR, ugID ugOriginal)
+          curAcc = mkAccPolicyItem (DeleteA, UserGroupR, ugOriginal ^. #ugID)
       return [newAcc, curAcc]
     (Just _, Nothing) -> do
       -- Only admin or sales can promote UserGroup to root
@@ -150,7 +150,7 @@ userGroupApiV2Delete ugid =
       apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, UserGroupR, ugid)]
     $ do
         ug <- userGroupOrAPIError ugid
-        let isRootUserGroup = isNothing . ugParentGroupID
+        let isRootUserGroup = isNothing . view #ugParentGroupID
         when (isRootUserGroup ug)
           $
           -- Maybe Sales/Admin users should be allowed
@@ -191,7 +191,7 @@ userGroupApiContactDetailsV2Update ugid = api $ do
     ug <- userGroupOrAPIError ugid
     -- New address creation DOES NOT inherit, since people will want to start
     -- from a blank address.
-    let ugAddr = fromMaybe defaultUserGroupAddress $ ugAddress ug
+    let ugAddr = fromMaybe defaultUserGroupAddress $ ug ^. #ugAddress
     ugAddrUpdated <-
       case updateUserGroupContactDetailsFromRequest ugAddr contactDetailsChanges of
         Nothing -> apiError $ requestFailed "Error parsing address update object."
@@ -206,7 +206,7 @@ userGroupApiContactDetailsV2Delete ugid = api $ do
   -- Check user has permissions to update UserGroup
   apiAccessControlOrIsAdmin [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
     ug <- userGroupOrAPIError ugid
-    when (isNothing $ ugParentGroupID ug) $ apiError $ requestFailed
+    when (isNothing $ ug ^. #ugParentGroupID) $ apiError $ requestFailed
       "A root usergroup must have an address object."
     dbUpdate $ UserGroupUpdateAddress ugid Nothing
     -- Return response
@@ -230,8 +230,8 @@ userGroupApiSettingsV2Update ugid = api $ do
     ug     <- userGroupOrAPIError ugid
     -- New settings creation DOES inherit, since there are things that are
     -- not settable by the API which need to be preserved for children.
-    ugSett <- case ugSettings ug of
-      Nothing -> case ugParentGroupID ug of
+    ugSett <- case ug ^. #ugSettings of
+      Nothing -> case ug ^. #ugParentGroupID of
         Nothing          -> return defaultUserGroupSettings
         Just parent_ugid -> dbQuery (UserGroupGetWithParents parent_ugid) >>= \case
           Nothing   -> unexpectedError "Impossible happened (parent ID does not exist)"
@@ -253,7 +253,7 @@ userGroupApiSettingsV2Delete ugid = api $ do
   -- Check user has permissions to update UserGroup
   apiAccessControlOrIsAdmin [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
     ug <- userGroupOrAPIError ugid
-    when (isNothing $ ugParentGroupID ug) $ apiError $ requestFailed
+    when (isNothing $ ug ^. #ugParentGroupID) $ apiError $ requestFailed
       "A root usergroup must have a settings object."
     dbUpdate $ UserGroupUpdateSettings ugid Nothing
     -- Return response

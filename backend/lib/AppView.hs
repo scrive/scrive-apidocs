@@ -99,7 +99,7 @@ userGroupUIForPage = do
   case ctx ^. #maybeUser of
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
-      return . Just $ (ugID ug, ugUI ug)
+      return . Just $ (ug ^. #ugID, ug ^. #ugUI)
     _ -> return Nothing
 
 currentSubscriptionJSON :: Kontrakcja m => m (Maybe A.Value)
