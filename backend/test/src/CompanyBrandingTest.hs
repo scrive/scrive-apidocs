@@ -216,11 +216,11 @@ testChangeCompanyUI = do
   newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
-  let ugui = (ugUI ug) { uguiMailTheme     = Just $ themeID newTheme1
-                       , uguiSignviewTheme = Just $ themeID newTheme2
-                       , uguiServiceTheme  = Just $ themeID newTheme3
-                       , uguiBrowserTitle  = Just "Wow"
-                       }
+  let ugui = ugUI ug
+        & (#uguiMailTheme     ?~ themeID newTheme1)
+        & (#uguiSignviewTheme ?~ themeID newTheme2)
+        & (#uguiServiceTheme  ?~ themeID newTheme3)
+        & (#uguiBrowserTitle  ?~ "Wow")
 
       newUgUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -246,11 +246,11 @@ testNormalUseCantChangeCompanyUI = do
   newTheme3  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
 
   let oldUGUI = ugUI ug
-      newUGUI = oldUGUI { uguiMailTheme     = Just $ themeID newTheme1
-                        , uguiSignviewTheme = Just $ themeID newTheme2
-                        , uguiServiceTheme  = Just $ themeID newTheme3
-                        , uguiBrowserTitle  = Just "Wow"
-                        }
+      newUGUI = oldUGUI
+        & (#uguiMailTheme     ?~ themeID newTheme1)
+        & (#uguiSignviewTheme ?~ themeID newTheme2)
+        & (#uguiServiceTheme  ?~ themeID newTheme3)
+        & (#uguiBrowserTitle  ?~ "Wow")
 
       newUGUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -272,10 +272,10 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   signviewTheme <- dbQuery $ GetTheme (mainbd ^. #signviewTheme)
   newTheme      <- dbUpdate
     $ InsertNewThemeForUserGroup (ugID ug) signviewTheme { themeBrandColor = "#669713" }
-  let newUgUI = (ugUI ug) { uguiMailTheme     = Just $ themeID newTheme
-                          , uguiSignviewTheme = Just $ themeID newTheme
-                          , uguiServiceTheme  = Just $ themeID newTheme
-                          }
+  let newUgUI = ugUI ug
+        & (#uguiMailTheme     ?~ themeID newTheme)
+        & (#uguiSignviewTheme ?~ themeID newTheme)
+        & (#uguiServiceTheme  ?~ themeID newTheme)
 
   void $ dbUpdate $ UserGroupUpdate $ set #ugUI newUgUI ug
   (Just ugui1) <- (ugUI <$>) <$> (dbQuery $ UserGroupGet $ ugID ug)

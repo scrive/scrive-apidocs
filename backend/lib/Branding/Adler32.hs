@@ -76,15 +76,15 @@ userGroupUIAdler32 (ugid, ugui) = do
     dbQuery
     . GetThemesMD5
     . catMaybes
-    . fmap ($ ugui)
-    $ [uguiMailTheme, uguiSignviewTheme, uguiServiceTheme]
+    . fmap (ugui ^.)
+    $ [#uguiMailTheme, #uguiSignviewTheme, #uguiServiceTheme]
   return
     $  adler32Text
     $  T.concat
     $  [ showt ugid
-       , maybe "" imageAdler32 (uguiFavicon ugui)
-       , showt (uguiMailTheme ugui)
-       , showt (uguiSignviewTheme ugui)
+       , maybe "" imageAdler32 (ugui ^. #uguiFavicon)
+       , showt (ugui ^. #uguiMailTheme)
+       , showt (ugui ^. #uguiSignviewTheme)
        , showt (ugui)
        ]
     <> themesMD5

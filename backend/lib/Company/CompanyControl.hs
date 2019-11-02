@@ -111,7 +111,7 @@ handleGetDomainThemes = do
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
 handleGetSignviewTheme = withUserAndGroup $ \(_, ug) -> do
   bd <- view #brandedDomain <$> getContext
-  handleGetTheme . fromMaybe (bd ^. #signviewTheme) . uguiSignviewTheme . ugUI $ ug
+  handleGetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ugUI % #uguiSignviewTheme)
 
 handleNewTheme :: Kontrakcja m => String -> Maybe UserGroupID -> m Aeson.Value
 handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do

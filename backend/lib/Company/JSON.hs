@@ -26,24 +26,24 @@ unjsonUserGroupUIWithCompanyID uid =
 unjsonUserGroupUIFields :: AltF.Ap (FieldDef UserGroupUI) UserGroupUI
 unjsonUserGroupUIFields =
   pure defaultUserGroupUI
-    <**> (    fieldOpt "mailTheme" uguiMailTheme "Id of a mail theme"
+    <**> (    fieldOpt "mailTheme" (^. #uguiMailTheme) "Id of a mail theme"
          <**> (pure $ set #uguiMailTheme)
          )
-    <**> (    fieldOpt "signviewTheme" uguiSignviewTheme "Id of a signview theme"
+    <**> (    fieldOpt "signviewTheme" (^. #uguiSignviewTheme) "Id of a signview theme"
          <**> (pure $ set #uguiSignviewTheme)
          )
-    <**> (    fieldOpt "serviceTheme" uguiServiceTheme "Id of a service theme"
+    <**> (    fieldOpt "serviceTheme" (^. #uguiServiceTheme) "Id of a service theme"
          <**> (pure $ set #uguiServiceTheme)
          )
-    <**> (    fieldOpt "browserTitle" uguiBrowserTitle "Browser title"
+    <**> (    fieldOpt "browserTitle" (^. #uguiBrowserTitle) "Browser title"
          <**> (pure $ set #uguiBrowserTitle)
          )
-    <**> (    fieldOpt "smsOriginator" uguiSmsOriginator "SMS Originator"
+    <**> (    fieldOpt "smsOriginator" (^. #uguiSmsOriginator) "SMS Originator"
          <**> (pure $ set #uguiSmsOriginator)
          )
     <**> (    fieldOptBy
              "favicon"
-             uguiFavicon
+             (^. #uguiFavicon)
              "Favicon"
              (invmap
                (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)

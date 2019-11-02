@@ -249,7 +249,7 @@ instance Arbitrary UserGroupAddress where
 
 instance Arbitrary UserGroupUI where
   arbitrary =
-    (UserGroupUI Nothing Nothing Nothing)
+    (I.UserGroupUI Nothing Nothing Nothing)
       <$> arbitraryMaybe arbitraryUnicodeText
       <*> arbitraryMaybe arbitraryUnicodeText
       <*> arbitrary

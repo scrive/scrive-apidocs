@@ -29,7 +29,7 @@ module UserGroup.Types (
   , defaultUserGroupSettings
   , UserGroupAddress(..)
   , defaultUserGroupAddress
-  , UserGroupUI(..)
+  , UserGroupUI
   , defaultUserGroupUI
   , UserGroupInvoicing(..)
   , UserGroupWithParents
