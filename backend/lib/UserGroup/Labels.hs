@@ -10,4 +10,5 @@ makeFieldLabelsWith noPrefixFieldLabels ''UserGroup
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupSettings
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupUI
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupAddress
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupRoot
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupWithChildren

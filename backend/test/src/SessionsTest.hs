@@ -230,7 +230,7 @@ testCustomSessionTimeoutDelay = do
 testCustomSessionTimeoutInheritance :: TestEnv ()
 testCustomSessionTimeoutInheritance = do
   userGroup11 :: UserGroupRoot <- rand 10 arbitrary
-  let groupSettings11 = ugrSettings userGroup11
+  let groupSettings11 = userGroup11 ^. #ugrSettings
 
       sessionTimeout  = 7 * 24 * 60 * 60
       groupSettings12 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings11

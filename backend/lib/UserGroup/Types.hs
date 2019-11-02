@@ -33,7 +33,7 @@ module UserGroup.Types (
   , defaultUserGroupUI
   , UserGroupInvoicing(..)
   , UserGroupWithParents
-  , UserGroupRoot(..)
+  , UserGroupRoot
   , ugFromUGRoot
   , UserGroupWithChildren
   ) where

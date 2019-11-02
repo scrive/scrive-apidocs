@@ -86,6 +86,7 @@ import UserGroup.Types.PaymentPlan
 import Util.Actor
 import Util.MonadUtils
 import qualified KontraError as KE
+import qualified UserGroup.Internal as I
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
 
@@ -199,7 +200,7 @@ instance Arbitrary UserGroup where
 
 instance Arbitrary UserGroupRoot where
   arbitrary =
-    UserGroupRoot emptyUserGroupID
+    I.UserGroupRoot emptyUserGroupID
       <$> arbitraryUnicodeText
       <*> pure Nothing
       <*> arbitrary
