@@ -268,8 +268,8 @@ testLastPersonSigningADocumentClosesIt = do
 
 testSigningWithPin :: TestEnv ()
 testSigningWithPin = do
-  ugid1      <- view #ugID <$> addNewUserGroup
-  ugid2      <- view #ugID <$> addNewUserGroup
+  ugid1      <- view #id <$> addNewUserGroup
+  ugid2      <- view #id <$> addNewUserGroup
   Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
   Just user2 <- addNewUser "Gary" "Green" "gary@green.com"
   True       <- dbUpdate $ SetUserUserGroup (userid user1) ugid1
@@ -441,7 +441,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
 
 testSendReminderEmailByCompanyAdmin :: TestEnv ()
 testSendReminderEmailByCompanyAdmin = do
-  ugid      <- view #ugID <$> addNewUserGroup
+  ugid      <- view #id <$> addNewUserGroup
   user      <- addNewRandomCompanyUser ugid False
   otheruser <- addNewRandomCompanyUser ugid False
   adminuser <- addNewRandomCompanyUser ugid True
@@ -492,7 +492,7 @@ testSendReminderEmailByCompanyAdmin = do
 
 testDownloadFile :: TestEnv ()
 testDownloadFile = do
-  ugid           <- view #ugID <$> addNewUserGroup
+  ugid           <- view #id <$> addNewUserGroup
   user           <- addNewRandomCompanyUser ugid False
   otheruser      <- addNewRandomCompanyUser ugid False
   adminuser      <- addNewRandomCompanyUser ugid True
@@ -639,7 +639,7 @@ testDocumentFromTemplate = do
 
 testDocumentFromTemplateShared :: TestEnv ()
 testDocumentFromTemplateShared = do
-  ugid          <- view #ugID <$> addNewUserGroup
+  ugid          <- view #id <$> addNewUserGroup
   (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
   doc           <- addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Template] }
   void $ randomUpdate $ SetDocumentSharing [documentid doc] True
@@ -653,7 +653,7 @@ testDocumentFromTemplateShared = do
 
 testDocumentDeleteInBulk :: TestEnv ()
 testDocumentDeleteInBulk = do
-  ugid          <- view #ugID <$> addNewUserGroup
+  ugid          <- view #id <$> addNewUserGroup
   (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
   -- isSignable condition below is wrong. Tests somehow generate template documents
   -- that are pending and that breaks everything.
@@ -968,9 +968,9 @@ testSendEmailOnTimeout :: TestEnv ()
 testSendEmailOnTimeout = do
   ug        <- addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True      <- dbUpdate $ SetUserUserGroup (userid user) (ug ^. #ugID)
-  let newUGS = (set #ugsSendTimeoutNotification True (fromJust $ ug ^. #ugSettings))
-  dbUpdate $ UserGroupUpdateSettings (ug ^. #ugID) (Just newUGS)
+  True      <- dbUpdate $ SetUserUserGroup (userid user) (ug ^. #id)
+  let newUGS = (set #ugsSendTimeoutNotification True (fromJust $ ug ^. #settings))
+  dbUpdate $ UserGroupUpdateSettings (ug ^. #id) (Just newUGS)
 
   doc <- addRandomDocument (rdaDefault user) { rdaTypes       = OneOf [Signable]
                                              , rdaStatuses    = OneOf [Pending]

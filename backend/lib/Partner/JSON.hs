@@ -185,8 +185,8 @@ userGroupToUserGroupForUpdate :: UserGroupWithParents -> UserGroupForUpdate
 userGroupToUserGroupForUpdate ugwp =
   let ug         = ugwpUG ugwp
       ug_address = ugwpAddress ugwp
-  in  UserGroupForUpdate { uguUserGroupID      = showt $ ug ^. #ugID
-                         , uguUserGroupName    = ug ^. #ugName
+  in  UserGroupForUpdate { uguUserGroupID      = showt $ ug ^. #id
+                         , uguUserGroupName    = ug ^. #name
                          , uguUserGroupNumber  = ug_address ^. #ugaCompanyNumber
                          , uguUserGroupAddress = ug_address ^. #ugaAddress
                          , uguUserGroupZip     = ug_address ^. #ugaZip
@@ -211,8 +211,8 @@ updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
       -- don't stop inheriting address, unless it has been changed
       updateAddress = case new_address == old_address of
         True  -> identity
-        False -> set #ugAddress $ Just new_address
-  in  set #ugName uguUserGroupName . updateAddress $ ug
+        False -> set #address $ Just new_address
+  in  set #name uguUserGroupName . updateAddress $ ug
 
 -------------------------------------------------------------------------------
 -- Utils                                                                    ---

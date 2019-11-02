@@ -58,7 +58,7 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
         Just user -> do
           ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
           return
-            ( ugwpUG ugwp ^. #ugUI % #uguiSmsOriginator
+            ( ugwpUG ugwp ^. #ui % #uguiSmsOriginator
             , ugwpSettings ugwp ^. #ugsSMSProvider
             )
   let originator = fromMaybe (mctx ^. #brandedDomain % #smsOriginator)

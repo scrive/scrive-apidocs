@@ -256,7 +256,7 @@ createTestUser = do
   muser <- createNewUser ("", "")
                          "karol@skrivapa.se"
                          (Just pwd)
-                         (ug ^. #ugID, True)
+                         (ug ^. #id, True)
                          defaultLang
                          (bd ^. #id)
                          AccountRequest

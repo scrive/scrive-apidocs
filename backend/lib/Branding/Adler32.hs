@@ -31,7 +31,7 @@ brandingAdler32 ctx mugidandui = do
       Nothing   -> return ""
       Just user -> do
         ug <- dbQuery . UserGroupGetByUserID . userid $ user
-        userGroupUIAdler32 (ug ^. #ugID, ug ^. #ugUI)
+        userGroupUIAdler32 (ug ^. #id, ug ^. #ui)
   return $ adler32Text $ T.concat $ [ad1, ad2, ad3, showt versionID]
 
 

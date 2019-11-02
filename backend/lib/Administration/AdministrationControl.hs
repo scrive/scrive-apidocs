@@ -260,15 +260,15 @@ jsonCompanies = onlySalesOrAdmin $ do
   ugs <- dbQuery $ UserGroupsGetFiltered (textFilter <> usersFilter <> pplanFilter)
                                          (Just (offset, limit))
   -- get address for those companies, which inherit it
-  ugsWithAddress <- forM ugs $ \ug -> case ug ^. #ugAddress of
+  ugsWithAddress <- forM ugs $ \ug -> case ug ^. #address of
     Just uga -> return (ug, uga)
     Nothing ->
       ((ug, ) . ugwpAddress)
-        <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #ugID)
+        <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id)
   runJSONGenT $ do
     valueM "companies" $ forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
-      value "id" . show $ ug ^. #ugID
-      value "companyname" . T.unpack $ ug ^. #ugName
+      value "id" . show $ ug ^. #id
+      value "companyname" . T.unpack $ ug ^. #name
       value "companynumber" . T.unpack $ uga ^. #ugaCompanyNumber
       value "companyentityname" . T.unpack $ uga ^. #ugaEntityName
       value "companyaddress" . T.unpack $ uga ^. #ugaAddress
@@ -470,15 +470,15 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
   let oldUG       = ugwpUG ugwp
-      setSettings = if fromMaybe (isNothing $ oldUG ^. #ugSettings) mUGSettingsIsInherited
-        then set #ugSettings Nothing
-        else set #ugSettings . Just . ugSettingsChange $ ugwpSettings ugwp
-      setAddress = if fromMaybe (isNothing $ oldUG ^. #ugAddress) mUGAddressIsInherited
-        then set #ugAddress Nothing
-        else set #ugAddress . Just . ugAddressChange $ ugwpAddress ugwp
+      setSettings = if fromMaybe (isNothing $ oldUG ^. #settings) mUGSettingsIsInherited
+        then set #settings Nothing
+        else set #settings . Just . ugSettingsChange $ ugwpSettings ugwp
+      setAddress = if fromMaybe (isNothing $ oldUG ^. #address) mUGAddressIsInherited
+        then set #address Nothing
+        else set #address . Just . ugAddressChange $ ugwpAddress ugwp
       newUG =
-        set #ugParentGroupID mTryParentUserGroupID
-          . maybe identity (set #ugName) mCompanyName
+        set #parentGroupID mTryParentUserGroupID
+          . maybe identity (set #name) mCompanyName
           . setSettings
           . setAddress
           $ ugwpUG ugwp
@@ -487,7 +487,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
     guardJust
     . listToMaybe
     . catMaybes
-    $ [newUG ^. #ugSettings, ugwpSettings <$> ugwpOnlyParents ugwp]
+    $ [newUG ^. #settings, ugwpSettings <$> ugwpOnlyParents ugwp]
   guardThatDataRetentionPolicyIsValid (newSettings ^. #ugsDataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
@@ -502,9 +502,9 @@ handleCreateUser = onlySalesOrAdmin $ do
   ug       <-
     dbUpdate
     . UserGroupCreate
-    . set #ugHomeFolderID (Just $ folderID ugFolder)
+    . set #homeFolderID (Just $ folderID ugFolder)
     $ defaultUserGroup
-  muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #ugID, True) lang
+  muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False
@@ -912,25 +912,25 @@ handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
       mNewFeatures           = ugSubFeatures subscription
       mInheritedFeatures     = ugwpFeatures <$> ugwpOnlyParents ugwp
       setFeatures = case (newFeaturesIsInherited, mNewFeatures, mInheritedFeatures) of
-        (True, _, Just _) -> set #ugFeatures Nothing
-        (False, Just newFeatures, _) -> set #ugFeatures $ Just newFeatures
+        (True, _, Just _) -> set #features Nothing
+        (False, Just newFeatures, _) -> set #features $ Just newFeatures
         _ -> unexpectedError "invalid combination of features and inheriting"
 
-  dbUpdate . UserGroupUpdate . set #ugInvoicing newInvoicing . setFeatures . ugwpUG $ ugwp
+  dbUpdate . UserGroupUpdate . set #invoicing newInvoicing . setFeatures . ugwpUG $ ugwp
   return $ V2.Accepted ()
 
 handleCompanyGetStructure :: Kontrakcja m => UserGroupID -> m Aeson.Value
 handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
   ugwp <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
   let root = ugwpRoot ugwp
-  children <- dbQuery . UserGroupGetAllChildrenRecursive $ root ^. #ugID
+  children <- dbQuery . UserGroupGetAllChildrenRecursive $ root ^. #id
   return $ object
     [ "user_group_structure"
         .= (ugWithChildrenToJson $ I.UserGroupWithChildren root children)
     ]
   where
     ugWithChildrenToJson (I.UserGroupWithChildren ug children) = object
-      [ "group" .= object ["name" .= (ug ^. #ugName), identifier $ ug ^. #ugID]
+      [ "group" .= object ["name" .= (ug ^. #name), identifier $ ug ^. #id]
       , "children" .= map ugWithChildrenToJson children
       ]
 

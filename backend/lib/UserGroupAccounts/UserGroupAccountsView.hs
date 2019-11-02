@@ -53,7 +53,7 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
     dbQuery
     . GetTheme
     . fromMaybe (ctx ^. #brandedDomain % #mailTheme)
-    $ ug ^. #ugUI % #uguiMailTheme
+    $ ug ^. #ui % #uguiMailTheme
   kontramail (ctx ^. #mailNoreplyAddress)
              (ctx ^. #brandedDomain)
              theme
@@ -85,7 +85,7 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
     dbQuery
     . GetTheme
     . fromMaybe (ctx ^. #brandedDomain % #mailTheme)
-    $ ug ^. #ugUI % #uguiMailTheme
+    $ ug ^. #ui % #uguiMailTheme
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal (ctx ^. #mailNoreplyAddress)
                   (ctx ^. #brandedDomain)
@@ -107,7 +107,7 @@ basicUserGroupInviteFields invited inviter ug = do
   F.value "invitedname" $ getFullName invited
   F.value "invitedemail" $ getEmail invited
   F.value "invitername" $ getSmartName inviter
-  F.value "companyname" $ ug ^. #ugName
+  F.value "companyname" $ ug ^. #name
 
 basicLinkFields :: TemplatesMonad m => Text -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do
@@ -120,7 +120,7 @@ basicLinkFields hostpart link = do
 pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m) => Context -> UserGroup -> m Text
 pageDoYouWantToBeCompanyAccount ctx ug =
   renderTextTemplate "pageDoYouWantToBeCompanyAccount" $ do
-    F.value "companyname" $ ug ^. #ugName
+    F.value "companyname" $ ug ^. #name
     entryPointFields ctx
 -------------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ flashMessageUserHasBecomeCompanyAccount
   :: (TemplatesMonad m) => UserGroup -> m FlashMessage
 flashMessageUserHasBecomeCompanyAccount ug = toFlashMsg OperationDone <$> renderTemplate
   "flashMessageUserHasBecomeCompanyAccount"
-  (F.value "companyname" . T.unpack $ ug ^. #ugName)
+  (F.value "companyname" . T.unpack $ ug ^. #name)
 
 -------------------------------------------------------------------------------
 

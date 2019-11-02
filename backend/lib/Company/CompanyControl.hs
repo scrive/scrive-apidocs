@@ -85,8 +85,8 @@ handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetCompanyBranding mugid = do
   withCompanyAdminOrAdminOnly mugid $ \ug -> do
     return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
-                                  (unjsonUserGroupUIWithCompanyID $ ug ^. #ugID)
-                                  (ug ^. #ugUI)
+                                  (unjsonUserGroupUIWithCompanyID $ ug ^. #id)
+                                  (ug ^. #ui)
 
 handleChangeCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m ()
 handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
@@ -96,12 +96,12 @@ handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> d
       logInfo "Error while parsing company branding" $ object ["error" .= err]
       internalError
     Right js -> case (Unjson.parse unjsonUserGroupUI js) of
-      (Result ugui []) -> dbUpdate . UserGroupUpdate . set #ugUI ugui $ ug
+      (Result ugui []) -> dbUpdate . UserGroupUpdate . set #ui ugui $ ug
       _                -> internalError
 
 handleGetThemes :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleGetThemesForUserGroup $ ug ^. #ugID
+  handleGetThemesForUserGroup $ ug ^. #id
 
 handleGetDomainThemes :: Kontrakcja m => m Aeson.Value
 handleGetDomainThemes = do
@@ -111,7 +111,7 @@ handleGetDomainThemes = do
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
 handleGetSignviewTheme = withUserAndGroup $ \(_, ug) -> do
   bd <- view #brandedDomain <$> getContext
-  handleGetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ugUI % #uguiSignviewTheme)
+  handleGetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #uguiSignviewTheme)
 
 handleNewTheme :: Kontrakcja m => String -> Maybe UserGroupID -> m Aeson.Value
 handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
@@ -121,12 +121,12 @@ handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
     "service"  -> return $ bd ^. #serviceTheme
     "mail"     -> return $ bd ^. #mailTheme
     _          -> internalError
-  handleNewThemeForUserGroup (ug ^. #ugID) tid
+  handleNewThemeForUserGroup (ug ^. #id) tid
 
 handleDeleteTheme :: Kontrakcja m => Maybe UserGroupID -> ThemeID -> m ()
 handleDeleteTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleDeleteThemeForUserGroup (ug ^. #ugID) tid
+  handleDeleteThemeForUserGroup (ug ^. #id) tid
 
 handleUpdateTheme :: Kontrakcja m => Maybe UserGroupID -> ThemeID -> m ()
 handleUpdateTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleUpdateThemeForUserGroup (ug ^. #ugID) tid
+  handleUpdateThemeForUserGroup (ug ^. #id) tid

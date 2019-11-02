@@ -241,7 +241,7 @@ testUserNoDeletionIfPendingDocuments = do
   now        <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (userid anna) now
 
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #ugID)
+  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
 
   ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
@@ -273,7 +273,7 @@ testUserDeletion = do
 testUserDeletionOwnershipTransfer :: TestEnv ()
 testUserDeletionOwnershipTransfer = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #ugID)
+  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
 
   now        <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (userid anna) now
@@ -353,7 +353,7 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
     userDRP    <- rand 10 arbitrary
     companyDRP <- rand 10 arbitrary
 
-    let ug' = set (#ugSettings % _Just % #ugsDataRetentionPolicy) companyDRP ug
+    let ug' = set (#settings % _Just % #ugsDataRetentionPolicy) companyDRP ug
     void $ dbUpdate $ UserGroupUpdate ug'
 
     let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy userDRP

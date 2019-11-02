@@ -831,11 +831,11 @@ sendPortalInvite authorUser portalUrl email name = do
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
     createUserForPortal = do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug0 = set #ugHomeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
+      let ug0 = set #homeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
                            (""     , "")
-                           (ug ^. #ugID, True)
+                           (ug ^. #id, True)
                            (getLang authorUser)
                            PortalInvite
       case mnuser of
@@ -875,11 +875,11 @@ sendPortalReminder authorUser portalUrl email name = do
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
     createUserForPortal = do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug0 = set #ugHomeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
+      let ug0 = set #homeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
                            (""     , "")
-                           (ug ^. #ugID, True)
+                           (ug ^. #id, True)
                            (getLang authorUser)
                            PortalInvite
       case mnuser of

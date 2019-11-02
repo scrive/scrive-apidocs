@@ -51,7 +51,7 @@ getSubscription
   -> m Subscription
 getSubscription ugwp = do
   let ug   = ugwpUG ugwp
-      ugid = ug ^. #ugID
+      ugid = ug ^. #id
   users   <- dbQuery $ UserGroupGetUsers ugid
   docsMTD <- fromIntegral <$> dbQuery (GetNumberOfDocumentsStartedThisMonth ugid)
   let mInheritedFeatures = ugwpFeatures <$> ugwpOnlyParents ugwp
@@ -61,7 +61,7 @@ getSubscription ugwp = do
     , ugSubInheritedPaymentPlan = ugwpPaymentPlan <$> ugwpOnlyParents ugwp
     , ugSubCountUsers           = Just $ length users
     , ugSubCountDocsMTD         = Just docsMTD
-    , ugSubFeatures             = ug ^. #ugFeatures
+    , ugSubFeatures             = ug ^. #features
     , ugSubInheritedFeatures    = mInheritedFeatures
-    , ugSubFeaturesIsInherited  = isNothing $ ug ^. #ugFeatures
+    , ugSubFeaturesIsInherited  = isNothing $ ug ^. #features
     }

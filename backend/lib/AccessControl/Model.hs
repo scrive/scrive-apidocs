@@ -188,7 +188,7 @@ addInheritedRoles roles = concatForM roles $ \role -> case accessRoleTarget role
   UserAdminAR ugid -> do
     ugwcs <- dbQuery $ UserGroupGetAllChildrenRecursive ugid
     return . (role :) . for (ugwcToList ugwcs) $ \ug ->
-      accessRoleSetTarget (UserAdminAR $ ug ^. #ugID) role
+      accessRoleSetTarget (UserAdminAR $ ug ^. #id) role
   _ -> return [role]
 
 fetchAccessRole

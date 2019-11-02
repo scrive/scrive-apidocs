@@ -156,9 +156,9 @@ companyJSON :: UserGroupWithParents -> JSValue
 companyJSON ugwp = do
   runJSONGen $ do
     let ug = ugwpUG ugwp
-    value "companyid" . show $ ug ^. #ugID
-    value "companyname" $ ug ^. #ugName
-    value "companyhomefolderid" $ ug ^. #ugHomeFolderID
+    value "companyid" . show $ ug ^. #id
+    value "companyname" $ ug ^. #name
+    value "companyhomefolderid" $ ug ^. #homeFolderID
     companyAddressJson $ ugwpAddress ugwp
     companySettingsJson $ ugwpSettings ugwp
 
@@ -170,12 +170,12 @@ companyJSONAdminOnly ugwp = do
       mInheritedAddress     = ugwpAddress <$> ugwpOnlyParents ugwp
       mInheritedSettings    = ugwpSettings <$> ugwpOnlyParents ugwp
       ugParentPath          = maybe [] ugwpToList . ugwpOnlyParents $ ugwp
-      ugSettingsIsInherited = isNothing $ ug ^. #ugSettings
-      ugAddressIsInherited  = isNothing $ ug ^. #ugAddress
+      ugSettingsIsInherited = isNothing $ ug ^. #settings
+      ugAddressIsInherited  = isNothing $ ug ^. #address
   runJSONGen $ do
-    value "companyid" $ show $ ug ^. #ugID
+    value "companyid" $ show $ ug ^. #id
     companyAddressJson activeAddress
-    value "companyname" $ ug ^. #ugName
+    value "companyname" $ ug ^. #name
     companySettingsJson $ activeSettings
 
     whenJust (mInheritedAddress) $ object "companyinheritedaddress" . companyAddressJson
@@ -186,10 +186,10 @@ companyJSONAdminOnly ugwp = do
       . companySettingsJson
     value "companysettingsisinherited" ugSettingsIsInherited
 
-    value "parentid" . fmap show $ ug ^. #ugParentGroupID
+    value "parentid" . fmap show $ ug ^. #parentGroupID
     objects "parentgrouppath" . for ugParentPath $ \parent -> do
-      value "group_id" . show $ parent ^. #ugID
-      value "group_name" $ parent ^. #ugName
+      value "group_id" . show $ parent ^. #id
+      value "group_name" $ parent ^. #name
 
 companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
 companyAddressJson uga = do

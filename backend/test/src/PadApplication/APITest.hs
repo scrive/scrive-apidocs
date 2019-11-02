@@ -32,7 +32,7 @@ testPadApplicationPadInfoGet = do
 
   assertEqual ("We should get a 200 response") 200 (rsCode res1)
   assertEqual "We should get the same e_archive_enabled"
-              (fromJust $ preview (#ugSettings % _Just % #ugsPadEarchiveEnabled) ug)
+              (fromJust $ preview (#settings % _Just % #ugsPadEarchiveEnabled) ug)
               res1padearchiveenabled
   assertEqual "We should get the same app_mode" "list_view" (T.unpack res1padappmode)
   return ()

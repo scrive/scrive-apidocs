@@ -423,7 +423,7 @@ testNewDocumentForNonCompanyUser = replicateM_ 10 $ do
 testNewDocumentForACompanyUser :: TestEnv ()
 testNewDocumentForACompanyUser = replicateM_ 10 $ do
   ug     <- addNewUserGroup
-  ugwp   <- guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #ugID
+  ugwp   <- guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id
   result <- performNewDocumentWithRandomUser (Just ug) (Signable) "doc title"
   assertGoodNewDocument (Just ugwp) (Signable) "doc title" result
 
@@ -1012,7 +1012,7 @@ testCloseDocumentEvidenceLog = do
 performNewDocumentWithRandomUser
   :: Maybe UserGroup -> DocumentType -> String -> TestEnv (User, UTCTime, Document)
 performNewDocumentWithRandomUser mug doctype title = do
-  user <- maybe addNewRandomUser (\ug -> addNewRandomUserGroupUser (ug ^. #ugID) False) mug
+  user <- maybe addNewRandomUser (\ug -> addNewRandomUserGroupUser (ug ^. #id) False) mug
   ctx  <- mkContext defaultLang
   let aa = authorActor ctx user
   doc <- randomUpdate
@@ -1141,8 +1141,8 @@ testArchiveDocumentAuthorRight = replicateM_ 10 $ do
 testArchiveDocumentCompanyAdminRight :: TestEnv ()
 testArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   ug        <- addNewUserGroup
-  author    <- addNewRandomCompanyUser (ug ^. #ugID) False
-  adminuser <- addNewRandomCompanyUser (ug ^. #ugID) True
+  author    <- addNewRandomCompanyUser (ug ^. #id) False
+  adminuser <- addNewRandomCompanyUser (ug ^. #id) True
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
@@ -1162,8 +1162,8 @@ testRestoreArchivedDocumentAuthorRight = replicateM_ 10 $ do
 testRestoreArchiveDocumentCompanyAdminRight :: TestEnv ()
 testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   ug        <- addNewUserGroup
-  author    <- addNewRandomCompanyUser (ug ^. #ugID) False
-  adminuser <- addNewRandomCompanyUser (ug ^. #ugID) True
+  author    <- addNewRandomCompanyUser (ug ^. #id) False
+  adminuser <- addNewRandomCompanyUser (ug ^. #id) True
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
@@ -1261,8 +1261,8 @@ testReallyDeleteDocument = replicateM_ 10 $ do
 testReallyDeleteDocumentCompanyAdmin :: TestEnv ()
 testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
   ug        <- addNewUserGroup
-  author    <- addNewRandomCompanyUser (ug ^. #ugID) False
-  adminuser <- addNewRandomCompanyUser (ug ^. #ugID) True
+  author    <- addNewRandomCompanyUser (ug ^. #id) False
+  adminuser <- addNewRandomCompanyUser (ug ^. #id) True
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       res <- randomUpdate
@@ -1288,8 +1288,8 @@ testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
 testReallyDeleteDocumentSomebodyElse :: TestEnv ()
 testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
   ug     <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ug ^. #ugID) False
-  other  <- addNewRandomCompanyUser (ug ^. #ugID) False
+  author <- addNewRandomCompanyUser (ug ^. #id) False
+  other  <- addNewRandomCompanyUser (ug ^. #id) False
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       res1 <- randomUpdate
@@ -1317,7 +1317,7 @@ testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
 testPurgeDocument :: TestEnv ()
 testPurgeDocument = replicateM_ 10 $ do
   ug     <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ug ^. #ugID) False
+  author <- addNewRandomCompanyUser (ug ^. #id) False
   doc    <- addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                   , rdaStatuses = OneOf
                                                     [Closed, Canceled, Rejected]
@@ -1339,7 +1339,7 @@ testPurgeDocument = replicateM_ 10 $ do
 testPurgeDocumentUserSaved :: TestEnv ()
 testPurgeDocumentUserSaved = replicateM_ 10 $ do
   ug     <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ug ^. #ugID) False
+  author <- addNewRandomCompanyUser (ug ^. #id) False
   doc    <- addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                   , rdaStatuses = OneOf
                                                     [Closed, Canceled, Rejected]
@@ -1355,7 +1355,7 @@ testPurgeDocumentUserSaved = replicateM_ 10 $ do
 testPurgeDocumentRemovesSensitiveData :: TestEnv ()
 testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
   ug <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ug ^. #ugID) False
+  author <- addNewRandomCompanyUser (ug ^. #id) False
   doc <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed]
                                                }
   now <- currentTime
@@ -1437,8 +1437,8 @@ testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
 testPurgeDocumentSharedTemplates :: TestEnv ()
 testPurgeDocumentSharedTemplates = do
   ug    <- addNewUserGroup
-  bob   <- addNewRandomCompanyUser (ug ^. #ugID) True
-  alice <- addNewRandomCompanyUser (ug ^. #ugID) False
+  bob   <- addNewRandomCompanyUser (ug ^. #id) True
+  alice <- addNewRandomCompanyUser (ug ^. #id) False
 
   doc   <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Template]
                                               , rdaSharings = OneOf [Shared]
@@ -1457,7 +1457,7 @@ testPurgeDocumentSharedTemplates = do
 testPurgeDocumentImmediateTrash :: TestEnv ()
 testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
   ug <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ug ^. #ugID) False
+  author <- addNewRandomCompanyUser (ug ^. #id) False
   doc <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed]
                                                }
   now <- currentTime
@@ -1476,7 +1476,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
         && isJust (signatorylinkreallydeleted sl)
 
   dbUpdate . UserGroupUpdate $ set
-    (#ugSettings % _Just % #ugsDataRetentionPolicy % #drpImmediateTrash)
+    (#settings % _Just % #ugsDataRetentionPolicy % #drpImmediateTrash)
     True
     ug
 
@@ -1493,7 +1493,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
 testArchiveIdleDocument :: TestEnv ()
 testArchiveIdleDocument = replicateM_ 10 $ do
   ug      <- addNewUserGroup
-  author  <- addNewRandomUserGroupUser (ug ^. #ugID) False
+  author  <- addNewRandomUserGroupUser (ug ^. #id) False
   author2 <- addNewRandomUser
   doc     <- addRandomDocument (rdaDefault author)
     { rdaTypes    = OneOf [Signable]
@@ -1504,11 +1504,11 @@ testArchiveIdleDocument = replicateM_ 10 $ do
                                                 , rdaStatuses = OneOf [documentstatus doc]
                                                 }
 
-  let oldUGS = fromJust $ ug ^. #ugSettings
+  let oldUGS = fromJust $ ug ^. #settings
       newUGS =
         set (#ugsDataRetentionPolicy % drpIdleDocTimeout (documentstatus doc)) (Just 1)
           $ oldUGS
-  void $ dbUpdate . UserGroupUpdate . set #ugSettings (Just newUGS) $ ug
+  void $ dbUpdate . UserGroupUpdate . set #settings (Just newUGS) $ ug
 
   archived1 <- archiveIdleDocuments (documentmtime doc)
   assertEqual "Archived zero idle documents (too early)" 0 archived1
@@ -1518,7 +1518,7 @@ testArchiveIdleDocument = replicateM_ 10 $ do
 testArchiveIdleDocumentWhenOnlyUserHasDrpSet :: TestEnv ()
 testArchiveIdleDocumentWhenOnlyUserHasDrpSet = replicateM_ 10 $ do
   ug      <- addNewUserGroup
-  author  <- addNewRandomUserGroupUser (ug ^. #ugID) False
+  author  <- addNewRandomUserGroupUser (ug ^. #id) False
   author2 <- addNewRandomUser
   doc     <- addRandomDocument (rdaDefault author)
     { rdaTypes    = OneOf [Signable]
@@ -1556,8 +1556,8 @@ testArchiveDocumentUnrelatedUserLeft = replicateM_ 10 $ do
 testArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   ug           <- addNewUserGroup
-  author       <- addNewRandomCompanyUser (ug ^. #ugID) False
-  standarduser <- addNewRandomCompanyUser (ug ^. #ugID) False
+  author       <- addNewRandomCompanyUser (ug ^. #id) False
+  standarduser <- addNewRandomCompanyUser (ug ^. #id) False
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       res <- randomUpdate
@@ -1584,8 +1584,8 @@ testRestoreArchivedDocumentUnrelatedUserLeft = replicateM_ 10 $ do
 testRestoreArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testRestoreArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   ug           <- addNewUserGroup
-  author       <- addNewRandomCompanyUser (ug ^. #ugID) False
-  standarduser <- addNewRandomCompanyUser (ug ^. #ugID) False
+  author       <- addNewRandomCompanyUser (ug ^. #id) False
+  standarduser <- addNewRandomCompanyUser (ug ^. #id) False
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
@@ -1602,7 +1602,7 @@ checkQueryDoesntContainArchivedDocs
   :: DBQuery (DocumentT TestEnv) q [Document] => (User -> q) -> TestEnv ()
 checkQueryDoesntContainArchivedDocs qry = replicateM_ 10 $ do
   ug     <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ug ^. #ugID) True
+  author <- addNewRandomCompanyUser (ug ^. #id) True
   addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                         , rdaStatuses = OneOf [Preparation, Closed]
                                         }
@@ -1948,15 +1948,15 @@ testGetDocumentsSharedInCompany = replicateM_ 10 $ do
   ug2    <- addNewUserGroup
   user1' <- addNewRandomUser
   user2' <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid user1') (ug1 ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid user1') (ug1 ^. #id)
   Just user1 <- dbQuery $ GetUserByID (userid user1')
-  void $ dbUpdate $ SetUserUserGroup (userid user2') (ug1 ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid user2') (ug1 ^. #id)
   Just user2 <- dbQuery $ GetUserByID (userid user2')
   user3'     <- addNewRandomUser
   user4'     <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid user3') (ug2 ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid user3') (ug2 ^. #id)
   Just user3 <- dbQuery $ GetUserByID (userid user3')
-  void $ dbUpdate $ SetUserUserGroup (userid user4') (ug2 ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid user4') (ug2 ^. #id)
   Just user4 <- dbQuery $ GetUserByID (userid user4')
   user5      <- addNewRandomUser
   user6      <- addNewRandomUser
@@ -2284,7 +2284,7 @@ testCreateFromTemplateCompanyField :: TestEnv ()
 testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   user <- addNewRandomUser
   ug   <- addNewUserGroup
-  void $ dbUpdate $ SetUserUserGroup (userid user) (ug ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid user) (ug ^. #id)
   docid <- documentid
     <$> addRandomDocument (rdaDefault user) { rdaStatuses = OneOf [Preparation] }
   tmpdoc <- dbQuery $ GetDocumentByDocumentID docid
@@ -2305,7 +2305,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'
   assertEqual "Author signatory link user group name is not same as his user group"
-              (view #ugaEntityName . fromJust $ ug ^. #ugAddress)
+              (view #ugaEntityName . fromJust $ ug ^. #address)
               (getCompanyName author)
 
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
@@ -3273,7 +3273,7 @@ testGetDocumentsByCompanyWithFilteringCompany = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did          <- addRandomDocumentWithAuthor author'
   withDocumentID did $ do
@@ -3291,7 +3291,7 @@ testGetDocumentsByCompanyWithFilteringFilters = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did          <- addRandomDocumentWithAuthor author'
   docs         <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
@@ -3307,7 +3307,7 @@ testSetDocumentUnsavedDraft :: TestEnv ()
 testSetDocumentUnsavedDraft = replicateM_ 10 $ do
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did          <- addRandomDocumentWithAuthor author'
   withDocumentID did $ do
@@ -3351,7 +3351,7 @@ testGetDocumentsByCompanyWithFilteringFinds = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #ugID)
+  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did          <- addRandomDocumentWithAuthor author'
   time         <- currentTime
@@ -3379,7 +3379,7 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = replicateM_ 10 $ do
       author <- addNewRandomUser
       time   <- currentTime
       let actor = systemActor time
-      void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #ugID)
+      void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
       Just author' <- dbQuery $ GetUserByID (userid author)
       did          <- addRandomDocumentWithAuthor author'
 

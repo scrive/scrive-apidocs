@@ -49,7 +49,7 @@ companyBrandingTests env = testGroup
 
 testFetchCompanyBranding :: TestEnv ()
 testFetchCompanyBranding = do
-  ugid         <- view #ugID <$> addNewUserGroup
+  ugid         <- view #id <$> addNewUserGroup
   Just user    <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" ugid
   ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req1         <- mkRequest GET []
@@ -76,12 +76,12 @@ testFetchDomainThemes = do
 testUpdateCompanyTheme :: TestEnv ()
 testUpdateCompanyTheme = do
   ug        <- addNewUserGroup
-  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #ugID)
+  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
-  newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
+  newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   let newChangedTheme1 = newTheme { themeBrandColor = "#12399a" }
   let newChangedThemeStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -154,11 +154,11 @@ testUpdateCompanyTheme = do
 testDeleteCompanyTheme :: TestEnv ()
 testDeleteCompanyTheme = do
   ug        <- addNewUserGroup
-  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #ugID)
+  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   mainbd    <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
-  newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
+  newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   req1      <- mkRequest POST []
   ((), _)   <- runTestKontra req1 ctx $ handleDeleteTheme Nothing (themeID newTheme)
   assertRaisesDBException $ do
@@ -170,7 +170,7 @@ testDeleteCompanyTheme = do
 testNormalUserCantChangeOrDeleteTheme :: TestEnv ()
 testNormalUserCantChangeOrDeleteTheme = do
   ug         <- addNewUserGroup
-  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #ugID)
+  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
   True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
 
@@ -178,7 +178,7 @@ testNormalUserCantChangeOrDeleteTheme = do
 
   mainbd     <- dbQuery $ GetMainBrandedDomain
   mailTheme  <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
-  newTheme   <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
+  newTheme   <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   let newChangedTheme1 = newTheme { themeBrandColor = "#12399a" }
   let newChangedThemeStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -207,15 +207,15 @@ testNormalUserCantChangeOrDeleteTheme = do
 testChangeCompanyUI :: TestEnv ()
 testChangeCompanyUI = do
   ug        <- addNewUserGroup
-  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #ugID)
+  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
-  newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
-  newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
-  newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
-  let ugui = ug ^. #ugUI
+  newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
+  newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
+  newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
+  let ugui = ug ^. #ui
         & (#uguiMailTheme     ?~ themeID newTheme1)
         & (#uguiSignviewTheme ?~ themeID newTheme2)
         & (#uguiServiceTheme  ?~ themeID newTheme3)
@@ -227,24 +227,24 @@ testChangeCompanyUI = do
         ugui
   req1       <- mkRequest POST [("companyui", inTextBS newUgUIStr1)]
   ((), _)    <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
-  mugUIAfter <- (view #ugUI <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #ugID)
+  mugUIAfter <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
   assertEqual "User group UI has been changed" mugUIAfter (Just ugui)
 
 testNormalUseCantChangeCompanyUI :: TestEnv ()
 testNormalUseCantChangeCompanyUI = do
   ug         <- addNewUserGroup
-  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #ugID)
+  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
   True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
   ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
 
   mainbd     <- dbQuery $ GetMainBrandedDomain
   mailTheme  <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
-  newTheme1  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
-  newTheme2  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
-  newTheme3  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #ugID) mailTheme
+  newTheme1  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
+  newTheme2  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
+  newTheme3  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
 
-  let oldUGUI = ug ^. #ugUI
+  let oldUGUI = ug ^. #ui
       newUGUI = oldUGUI
         & (#uguiMailTheme     ?~ themeID newTheme1)
         & (#uguiSignviewTheme ?~ themeID newTheme2)
@@ -259,7 +259,7 @@ testNormalUseCantChangeCompanyUI = do
   assertRaisesInternalError $ do
     ((), _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
     return ()
-  mugUIAfter <- (view #ugUI <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #ugID)
+  mugUIAfter <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
   assertEqual "User group UI has not been changed" mugUIAfter (Just oldUGUI)
 
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault :: TestEnv ()
@@ -270,19 +270,19 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   mainbd        <- dbQuery $ GetMainBrandedDomain
   signviewTheme <- dbQuery $ GetTheme (mainbd ^. #signviewTheme)
   newTheme      <- dbUpdate
-    $ InsertNewThemeForUserGroup (ug ^. #ugID) signviewTheme { themeBrandColor = "#669713" }
-  let newUgUI = ug ^. #ugUI
+    $ InsertNewThemeForUserGroup (ug ^. #id) signviewTheme { themeBrandColor = "#669713" }
+  let newUgUI = ug ^. #ui
         & (#uguiMailTheme     ?~ themeID newTheme)
         & (#uguiSignviewTheme ?~ themeID newTheme)
         & (#uguiServiceTheme  ?~ themeID newTheme)
 
-  void $ dbUpdate $ UserGroupUpdate $ set #ugUI newUgUI ug
-  (Just ugui1) <- (view #ugUI <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #ugID)
-  adlerSum1    <- brandingAdler32 ctx $ Just (ug ^. #ugID, ugui1)
+  void $ dbUpdate $ UserGroupUpdate $ set #ui newUgUI ug
+  (Just ugui1) <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
+  adlerSum1    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui1)
 
-  void $ dbUpdate $ UserGroupUpdate $ set #ugUI (set #uguiServiceTheme Nothing ugui1) ug
-  (Just ugui2) <- (view #ugUI <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #ugID)
-  adlerSum2    <- brandingAdler32 ctx $ Just (ug ^. #ugID, ugui2)
+  void $ dbUpdate $ UserGroupUpdate $ set #ui (set #uguiServiceTheme Nothing ugui1) ug
+  (Just ugui2) <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
+  adlerSum2    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui2)
 
   assertBool "Branding Adler32 should change after we stoped using theme for service"
              (adlerSum1 /= adlerSum2)

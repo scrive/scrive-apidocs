@@ -23,14 +23,14 @@ testUpdateFeatureFlagsWorks = do
   ug <- addNewUserGroup
   replicateM_ 100 $ do
     (fs :: Features) <- rand 10 arbitrary
-    dbUpdate . UserGroupUpdate $ set #ugFeatures (Just fs) ug
-    ug' <- fmap fromJust . dbQuery . UserGroupGet $ ug ^. #ugID
-    assertEqual "Updating feature flags works" (Just fs) (ug' ^. #ugFeatures)
+    dbUpdate . UserGroupUpdate $ set #features (Just fs) ug
+    ug' <- fmap fromJust . dbQuery . UserGroupGet $ ug ^. #id
+    assertEqual "Updating feature flags works" (Just fs) (ug' ^. #features)
 
 testNewCompanyFeatureFlagDefaults :: TestEnv ()
 testNewCompanyFeatureFlagDefaults = do
   ug <- addNewUserGroup
-  let fs = fromJust $ ug ^. #ugFeatures
+  let fs = fromJust $ ug ^. #features
   checkNewAccountFlags (fAdminUsers fs)
   checkNewAccountFlags (fRegularUsers fs)
 

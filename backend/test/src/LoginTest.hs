@@ -293,7 +293,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
   let expCode = 200
@@ -306,8 +306,8 @@ testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   let uid1 = userid user
   uid2 <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid1 $ ug ^. #ugID
-  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
+  void . dbUpdate . SetUserUserGroup uid1 $ ug ^. #id
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
   let expCode = 403
@@ -340,7 +340,7 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   -- Generate an expired login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]
@@ -354,7 +354,7 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #ugID
+  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   -- Generate a valid login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]
@@ -430,7 +430,7 @@ testUser2FAEnforced = do
   void . dbUpdate $ SetUserTotpIsMandatory uid False
 
   -- going to archive with 2FA enforced for the usergroup returns a redirect
-  void . dbUpdate . UserGroupUpdate $ set (#ugSettings % _Just % #ugsTotpIsMandatory)
+  void . dbUpdate . UserGroupUpdate $ set (#settings % _Just % #ugsTotpIsMandatory)
                                           True
                                           ug
   res2 <- fst <$> runTestKontra req1 ctx' showArchive
@@ -497,7 +497,7 @@ createTestUser' email = do
   Just user <- createNewUser ("", "")
                              email
                              (Just pwd)
-                             (ug ^. #ugID, True)
+                             (ug ^. #id, True)
                              defaultLang
                              (bd ^. #id)
                              AccountRequest
@@ -511,7 +511,7 @@ createUserAndResetPassword = do
   Just user <- createNewUser ("", "")
                              "andrzej@skrivapa.se"
                              (Just pwd)
-                             (ug ^. #ugID, True)
+                             (ug ^. #id, True)
                              defaultLang
                              (bd ^. #id)
                              AccountRequest

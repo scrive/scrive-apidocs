@@ -30,7 +30,7 @@ attachmentAPITests env = testGroup
 testAttachmentList :: TestEnv ()
 testAttachmentList = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #ugID)
+  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
 
   now        <- currentTime
   fid        <- addNewRandomFile

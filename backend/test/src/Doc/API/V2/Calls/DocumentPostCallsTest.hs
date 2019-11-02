@@ -128,7 +128,7 @@ testDocApiV2NewFromTemplate = do
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
   ug <- addNewUserGroup
-  let ugid = ug ^. #ugID
+  let ugid = ug ^. #id
   author    <- addNewRandomCompanyUser ugid False
   ctxauthor <- set #maybeUser (Just author) <$> mkContext defaultLang
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor

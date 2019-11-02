@@ -274,7 +274,7 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
         -- By specification, it should be enough to have permission for the
         -- wanted action on _any_ parent.
         let mkExprBase g =
-              NeededPermissionsExprBase (Permission action resource $ g ^. #ugID)
+              NeededPermissionsExprBase (Permission action resource $ g ^. #id)
         return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
   neededPermissionsPure (action, resource, usrGrpID) =
     NeededPermissionsExprBase $ Permission action resource usrGrpID
@@ -295,7 +295,7 @@ instance NeedsPermissions (AccessAction, AccessResource, UserID) where
   neededPermissions (action, resource, usrID) = dbQuery (GetUserByID usrID) >>= \case
     Nothing -> throwM . SomeDBExtraException . UserNonExistent $ usrID
     Just _  -> do
-      usrGrpID         <- view #ugID <$> (dbQuery . UserGroupGetByUserID $ usrID)
+      usrGrpID         <- view #id <$> (dbQuery . UserGroupGetByUserID $ usrID)
       groupPermissions <- neededPermissions (action, resource, usrGrpID)
       return $ NeededPermissionsExprOr
         [NeededPermissionsExprBase . Permission action resource $ usrID, groupPermissions]

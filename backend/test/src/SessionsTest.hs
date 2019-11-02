@@ -109,8 +109,8 @@ testCustomSessionTimeout = do
   (user, userGroup) <- createTestUser
 
   let userId      = userid user
-      userGroupId = userGroup ^. #ugID
-  groupSettings1 <- assertJustAndExtract $ userGroup ^. #ugSettings
+      userGroupId = userGroup ^. #id
+  groupSettings1 <- assertJustAndExtract $ userGroup ^. #settings
 
   assertEqual "initial group session timeout should be nothing"
               (groupSettings1 ^. #ugsSessionTimeoutSecs)
@@ -202,8 +202,8 @@ testCustomSessionTimeoutDelay = do
   (user, userGroup) <- createTestUser
 
   let userId                = userid user
-      userGroupId           = userGroup ^. #ugID
-      (Just groupSettings1) = userGroup ^. #ugSettings
+      userGroupId           = userGroup ^. #id
+      (Just groupSettings1) = userGroup ^. #settings
       sessionTimeout        = 15 * 60  -- test 15 mins session timout
 
   do
@@ -234,17 +234,17 @@ testCustomSessionTimeoutInheritance = do
 
       sessionTimeout  = 7 * 24 * 60 * 60
       groupSettings12 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings11
-      userGroup12     = set #ugSettings (Just groupSettings12) $ ugFromUGRoot userGroup11
+      userGroup12     = set #settings (Just groupSettings12) $ ugFromUGRoot userGroup11
 
   userGroup13              <- dbUpdate $ UserGroupCreate userGroup12
 
   userGroup21 :: UserGroup <- rand 10 arbitrary
   let userGroup22 = userGroup21
-        & (#ugParentGroupID ?~ userGroup13 ^. #ugID)
-        & (#ugSettings .~ Nothing)
+        & (#parentGroupID ?~ userGroup13 ^. #id)
+        & (#settings .~ Nothing)
   userGroup23 <- dbUpdate $ UserGroupCreate userGroup22
 
-  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $     userGroup23 ^. #ugID
+  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $     userGroup23 ^. #id
 
   let groupSettings2            = ugwpSettings <$> userGroup24
       timeoutVal = view #ugsSessionTimeoutSecs =<< groupSettings2
@@ -257,7 +257,7 @@ testCustomSessionTimeoutInheritance = do
     time1 <- currentTime
     setTestTime time1
 
-    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com" $ userGroup23 ^. #ugID
+    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com" $ userGroup23 ^. #id
 
     let userId = userid user
     (session1, _) <- insertNewSession userId
@@ -381,7 +381,7 @@ createTestUser = do
   Just user <- createNewUser ("Andrzej", "Rybczak")
                              "andrzej@scrive.com"
                              (Just pwd)
-                             (ug ^. #ugID, True)
+                             (ug ^. #id, True)
                              defaultLang
                              (bd ^. #id)
                              AccountRequest

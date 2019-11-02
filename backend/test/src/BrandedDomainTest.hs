@@ -38,7 +38,7 @@ test_brandedDomainCreateUpdate = do
 
 test_brandedDomainAssociatedDomain :: TestEnv ()
 test_brandedDomainAssociatedDomain = do
-  ugid <- view #ugID <$> addNewUserGroup
+  ugid <- view #id <$> addNewUserGroup
   bdID <- dbUpdate $ NewBrandedDomain
   bd   <- dbQuery $ GetBrandedDomainByID bdID
   let nbd = set #url "http://localhost:8000" bd

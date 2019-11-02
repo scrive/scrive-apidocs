@@ -97,9 +97,9 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
         $ partnerUsrGrpID
       newUgFolder <- dbUpdate . FolderCreate $ defaultFolder
       let ug_new = defaultUserGroup
-            & (#ugParentGroupID ?~ partnerUsrGrpID)
-            & (#ugHomeFolderID  ?~ folderID newUgFolder)
-            & (#ugInvoicing     .~ BillItem (Just FreePlan))
+            & (#parentGroupID ?~ partnerUsrGrpID)
+            & (#homeFolderID  ?~ folderID newUgFolder)
+            & (#invoicing     .~ BillItem (Just FreePlan))
       ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug =
             updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu
@@ -113,7 +113,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
             apiGuardJustM (serverError "Was not able to retrieve newly created company")
             . dbQuery
             . UserGroupGetWithParents
-            $ ug' ^. #ugID
+            $ ug' ^. #id
           Created
             <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 
@@ -190,7 +190,7 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
     apiAccessControl acc $ do
       user_groups              <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
       user_groups_with_parents <- fmap catMaybes . forM user_groups $ \ug ->
-        dbQuery . UserGroupGetWithParents $ ug ^. #ugID
+        dbQuery . UserGroupGetWithParents $ ug ^. #id
       Ok <$> return
         ( unjsonUserGroupsForUpdate
         , userGroupToUserGroupForUpdate <$> user_groups_with_parents
@@ -376,7 +376,7 @@ resolveUserGroupID k = do
         (Just ugid) -> return (Just . ptID $ partner, ugid)
 
     (Left _, Just ug) -> do
-      return (Nothing, ug ^. #ugID)
+      return (Nothing, ug ^. #id)
 
     (Right partner, Just ug) -> do
       -- This won't ever happen *except* in tests the way they're implemented now.
@@ -388,9 +388,9 @@ resolveUserGroupID k = do
         , "identifier" .= k
         ]
       let mpID = ptUserGroupID partner
-      unless (isJust mpID && (Just $ ug ^. #ugID) == mpID) $ do
+      unless (isJust mpID && (Just $ ug ^. #id) == mpID) $ do
         srvLogErr $ "The partner ID and the user group ID are not connected"
-      return (Just . ptID $ partner, ug ^. #ugID)
+      return (Just . ptID $ partner, ug ^. #id)
 
     (_, _) -> do
       srvLogErr "No partner, no user group for the given identifier"

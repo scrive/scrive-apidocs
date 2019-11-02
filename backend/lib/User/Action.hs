@@ -46,7 +46,7 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
   switchLang (getLang actvuser)
   ctx      <- getContext
   phone    <- fromMaybe (getMobile actvuser) <$> getField "phone"
-  ugname   <- fromMaybe (ug ^. #ugName) <$> getField "company"
+  ugname   <- fromMaybe (ug ^. #name) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
   void $ dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser)
@@ -55,7 +55,7 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
     , userphone           = phone
     , usercompanyposition = position
     }
-  void $ dbUpdate . UserGroupUpdate . set #ugName ugname $ ug
+  void $ dbUpdate . UserGroupUpdate . set #name ugname $ ug
   void $ dbUpdate $ LogHistoryUserInfoChanged
     (userid actvuser)
     (ctx ^. #ipAddr)
@@ -116,7 +116,7 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
     Nothing -> return Nothing
     Just ug -> do
       -- create User home Folder, if the UserGroup has one
-      mUserFolder <- case ug ^. #ugHomeFolderID of
+      mUserFolder <- case ug ^. #homeFolderID of
         Nothing -> return Nothing
         Just ugFid ->
           fmap Just

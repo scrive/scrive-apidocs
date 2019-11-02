@@ -91,7 +91,7 @@ createTestUser lang = do
   Just user <- createNewUser ("", "")
                              "andrzej@skrivapa.se"
                              (Just pwd)
-                             (ug ^. #ugID, True)
+                             (ug ^. #id, True)
                              lang
                              (bd ^. #id)
                              AccountRequest

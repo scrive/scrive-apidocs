@@ -45,7 +45,7 @@ chargeableTest env = testGroup
 
 test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
-  ugid      <- view #ugID <$> addNewUserGroup
+  ugid      <- view #id <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc       <- addRandomDocument (rdaDefault user)
@@ -71,7 +71,7 @@ test_smsCounting_default = do
 
 test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
-  ugid      <- view #ugID <$> addNewUserGroup
+  ugid      <- view #id <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc       <- addRandomDocument (rdaDefault user)
@@ -97,7 +97,7 @@ test_smsCounting_telia = do
 
 test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
-  ugid        <- view #ugID <$> addNewUserGroup
+  ugid        <- view #id <$> addNewUserGroup
   Just user   <- addNewUser "Bob" "Blue" "bob@blue.com"
   True        <- dbUpdate $ SetUserUserGroup (userid user) ugid
   ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang
