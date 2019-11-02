@@ -187,11 +187,11 @@ userGroupToUserGroupForUpdate ugwp =
       ug_address = ugwpAddress ugwp
   in  UserGroupForUpdate { uguUserGroupID      = showt $ ug ^. #id
                          , uguUserGroupName    = ug ^. #name
-                         , uguUserGroupNumber  = ug_address ^. #ugaCompanyNumber
-                         , uguUserGroupAddress = ug_address ^. #ugaAddress
-                         , uguUserGroupZip     = ug_address ^. #ugaZip
-                         , uguUserGroupCity    = ug_address ^. #ugaCity
-                         , uguUserGroupCountry = ug_address ^. #ugaCountry
+                         , uguUserGroupNumber  = ug_address ^. #companyNumber
+                         , uguUserGroupAddress = ug_address ^. #address
+                         , uguUserGroupZip     = ug_address ^. #zipCode
+                         , uguUserGroupCity    = ug_address ^. #city
+                         , uguUserGroupCountry = ug_address ^. #country
                          }
 
 -- This is intended for PartnerAPI only. We compare the set values with
@@ -201,12 +201,12 @@ updateUserGroupWithUserGroupForUpdate
 updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
   let ug          = ugwpUG ugwp
       old_address = ugwpAddress ugwp
-      new_address = I.UserGroupAddress { ugaCompanyNumber = uguUserGroupNumber
-                                       , ugaEntityName    = uguUserGroupName
-                                       , ugaAddress       = uguUserGroupAddress
-                                       , ugaZip           = uguUserGroupZip
-                                       , ugaCity          = uguUserGroupCity
-                                       , ugaCountry       = uguUserGroupCountry
+      new_address = I.UserGroupAddress { companyNumber = uguUserGroupNumber
+                                       , entityName    = uguUserGroupName
+                                       , address       = uguUserGroupAddress
+                                       , zipCode       = uguUserGroupZip
+                                       , city          = uguUserGroupCity
+                                       , country       = uguUserGroupCountry
                                        }
       -- don't stop inheriting address, unless it has been changed
       updateAddress = case new_address == old_address of

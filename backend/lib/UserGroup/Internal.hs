@@ -193,12 +193,12 @@ data UserGroupUI = UserGroupUI
   } deriving (Eq, Ord, Show)
 
 data UserGroupAddress = UserGroupAddress
-  { ugaCompanyNumber :: Text
-  , ugaEntityName    :: Text
-  , ugaAddress       :: Text
-  , ugaZip           :: Text
-  , ugaCity          :: Text
-  , ugaCountry       :: Text
+  { companyNumber :: Text
+  , entityName    :: Text
+  , address       :: Text
+  , zipCode       :: Text
+  , city          :: Text
+  , country       :: Text
   } deriving (Eq, Ord, Show)
 
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroup
@@ -510,12 +510,12 @@ instance CompositeFromSQL UserGroupUI where
 -- ADDRESS
 
 defaultUserGroupAddress :: UserGroupAddress
-defaultUserGroupAddress = UserGroupAddress { ugaCompanyNumber = ""
-                                           , ugaEntityName    = ""
-                                           , ugaAddress       = ""
-                                           , ugaZip           = ""
-                                           , ugaCity          = ""
-                                           , ugaCountry       = ""
+defaultUserGroupAddress = UserGroupAddress { companyNumber = ""
+                                           , entityName    = ""
+                                           , address       = ""
+                                           , zipCode       = ""
+                                           , city          = ""
+                                           , country       = ""
                                            }
 
 type instance CompositeRow UserGroupAddress = (Text, Text, Text, Text, Text, Text)
@@ -524,11 +524,5 @@ instance PQFormat UserGroupAddress where
   pqFormat = compositeTypePqFormat ctUserGroupAddress
 
 instance CompositeFromSQL UserGroupAddress where
-  toComposite (company_number, entity_name, address, zip_code, city, country) =
-    UserGroupAddress { ugaCompanyNumber = company_number
-                     , ugaEntityName    = entity_name
-                     , ugaAddress       = address
-                     , ugaZip           = zip_code
-                     , ugaCity          = city
-                     , ugaCountry       = country
-                     }
+  toComposite (companyNumber, entityName, address, zipCode, city, country) =
+    UserGroupAddress {..}

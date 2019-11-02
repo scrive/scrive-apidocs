@@ -384,19 +384,19 @@ apiCallUpdateUserProfile = api $ do
       companyname <- getParameter "companyname" asValidCompanyName $ ug ^. #name
       let getAddrParameter n v prevValue =
             getParameter n v $ ugwpAddress ugwp ^. prevValue
-      number     <- getAddrParameter "companynumber" asValidCompanyNumber #ugaCompanyNumber
-      entityname <- getAddrParameter "companyentityname" asValidCompanyName #ugaEntityName
-      address    <- getAddrParameter "companyaddress" asValidAddress #ugaAddress
-      zip'       <- getAddrParameter "companyzip" asValidZip #ugaZip
-      city       <- getAddrParameter "companycity" asValidCity #ugaCity
-      country    <- getAddrParameter "companycountry" asValidCountry #ugaCountry
+      number     <- getAddrParameter "companynumber" asValidCompanyNumber #companyNumber
+      entityname <- getAddrParameter "companyentityname" asValidCompanyName #entityName
+      address    <- getAddrParameter "companyaddress" asValidAddress #address
+      zip'       <- getAddrParameter "companyzip" asValidZip #zipCode
+      city       <- getAddrParameter "companycity" asValidCity #city
+      country    <- getAddrParameter "companycountry" asValidCountry #country
       let ug'         = set #name companyname ug
-          new_address = I.UserGroupAddress { ugaCompanyNumber = number
-                                           , ugaEntityName    = entityname
-                                           , ugaAddress       = address
-                                           , ugaZip           = zip'
-                                           , ugaCity          = city
-                                           , ugaCountry       = country
+          new_address = I.UserGroupAddress { companyNumber = number
+                                           , entityName    = entityname
+                                           , address       = address
+                                           , zipCode       = zip'
+                                           , city          = city
+                                           , country       = country
                                            }
           ug'' = case ug' ^. #address of
             Just _ ->

@@ -1063,8 +1063,8 @@ assertGoodNewDocument mugwp doctype title (user, time, doc) = do
               (Just $ userid user)
               (maybesignatory siglink)
   where
-    companyNameFromUserGroup   = maybe "" (view #ugaEntityName . ugwpAddress) mugwp
-    companyNumberFromUserGroup = maybe "" (view #ugaCompanyNumber . ugwpAddress) mugwp
+    companyNameFromUserGroup   = maybe "" (view #entityName . ugwpAddress) mugwp
+    companyNumberFromUserGroup = maybe "" (view #companyNumber . ugwpAddress) mugwp
 
 testCancelDocumentCancelsDocument :: TestEnv ()
 testCancelDocumentCancelsDocument = replicateM_ 10 $ do
@@ -2305,7 +2305,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'
   assertEqual "Author signatory link user group name is not same as his user group"
-              (view #ugaEntityName . fromJust $ ug ^. #address)
+              (view #entityName . fromJust $ ug ^. #address)
               (getCompanyName author)
 
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()

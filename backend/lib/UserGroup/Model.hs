@@ -122,12 +122,12 @@ insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
 insertUserGroupAddress ugid uga = runQuery_ . sqlInsert "user_group_addresses" $ do
   sqlSet "user_group_id" ugid
-  sqlSet "company_number" $ uga ^. #ugaCompanyNumber
-  sqlSet "entity_name" $ uga ^. #ugaEntityName
-  sqlSet "address" $ uga ^. #ugaAddress
-  sqlSet "zip" $ uga ^. #ugaZip
-  sqlSet "city" $ uga ^. #ugaCity
-  sqlSet "country" $ uga ^. #ugaCountry
+  sqlSet "company_number" $ uga ^. #companyNumber
+  sqlSet "entity_name" $ uga ^. #entityName
+  sqlSet "address" $ uga ^. #address
+  sqlSet "zip" $ uga ^. #zipCode
+  sqlSet "city" $ uga ^. #city
+  sqlSet "country" $ uga ^. #country
 
 insertFeatures :: (MonadDB m, MonadThrow m) => UserGroupID -> Features -> m ()
 insertFeatures ugid features = do

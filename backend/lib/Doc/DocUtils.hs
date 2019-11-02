@@ -176,8 +176,8 @@ signatoryFieldsFromUser user = do
          else []
        )
   where
-    getUGEntityName    = view #ugaEntityName . ugwpAddress
-    getUGCompanyNumber = view #ugaCompanyNumber . ugwpAddress
+    getUGEntityName    = view #entityName . ugwpAddress
+    getUGCompanyNumber = view #companyNumber . ugwpAddress
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.

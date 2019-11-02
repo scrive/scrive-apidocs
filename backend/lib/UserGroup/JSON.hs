@@ -64,17 +64,17 @@ instance ToJSON UGAddrJSON where
   toEncoding (UGAddrJSON addr) =
     pairs
       $  "company_number"
-      .= (addr ^. #ugaCompanyNumber)
+      .= (addr ^. #companyNumber)
       <> "entity_name"
-      .= (addr ^. #ugaEntityName)
+      .= (addr ^. #entityName)
       <> "address"
-      .= (addr ^. #ugaAddress)
+      .= (addr ^. #address)
       <> "zip"
-      .= (addr ^. #ugaZip)
+      .= (addr ^. #zipCode)
       <> "city"
-      .= (addr ^. #ugaCity)
+      .= (addr ^. #city)
       <> "country"
-      .= (addr ^. #ugaCountry)
+      .= (addr ^. #country)
 
 encodeUserGroupContactDetails :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupContactDetails inheritable ugwp =
@@ -110,27 +110,27 @@ unjsonUserGroupAddress =
   objectOf
     $   pure I.UserGroupAddress
     <*> fieldBy "company_number"
-                (^. #ugaCompanyNumber)
+                (^. #companyNumber)
                 "User Group Address Company Number"
                 (unjsonWithValidationOrEmptyText asValidCompanyNumber)
     <*> fieldBy "entity_name"
-                (^. #ugaEntityName)
+                (^. #entityName)
                 "User Group Address Entity Name"
                 (unjsonWithValidationOrEmptyText asValidCompanyName)
     <*> fieldBy "address"
-                (^. #ugaAddress)
+                (^. #address)
                 "User Group Address Address"
                 (unjsonWithValidationOrEmptyText asValidAddress)
     <*> fieldBy "zip"
-                (^. #ugaZip)
+                (^. #zipCode)
                 "User Group Address Zip Code"
                 (unjsonWithValidationOrEmptyText asValidZip)
     <*> fieldBy "city"
-                (^. #ugaCity)
+                (^. #city)
                 "User Group Address City"
                 (unjsonWithValidationOrEmptyText asValidCity)
     <*> fieldBy "country"
-                (^. #ugaCountry)
+                (^. #country)
                 "User Group Address Country"
                 (unjsonWithValidationOrEmptyText asValidCountry)
 

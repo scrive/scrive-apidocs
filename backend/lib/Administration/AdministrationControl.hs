@@ -269,12 +269,12 @@ jsonCompanies = onlySalesOrAdmin $ do
     valueM "companies" $ forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
       value "id" . show $ ug ^. #id
       value "companyname" . T.unpack $ ug ^. #name
-      value "companynumber" . T.unpack $ uga ^. #ugaCompanyNumber
-      value "companyentityname" . T.unpack $ uga ^. #ugaEntityName
-      value "companyaddress" . T.unpack $ uga ^. #ugaAddress
-      value "companyzip" . T.unpack $ uga ^. #ugaZip
-      value "companycity" . T.unpack $ uga ^. #ugaCity
-      value "companycountry" . T.unpack $ uga ^. #ugaCountry
+      value "companynumber" . T.unpack $ uga ^. #companyNumber
+      value "companyentityname" . T.unpack $ uga ^. #entityName
+      value "companyaddress" . T.unpack $ uga ^. #address
+      value "companyzip" . T.unpack $ uga ^. #zipCode
+      value "companycity" . T.unpack $ uga ^. #city
+      value "companycountry" . T.unpack $ uga ^. #country
 
 jsonUsersList :: Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
@@ -636,12 +636,12 @@ getUserGroupAddressChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   return
-    $ maybe identity (set #ugaCompanyNumber) mcompanynumber
-    . maybe identity (set #ugaEntityName)    mentityname
-    . maybe identity (set #ugaAddress)       mcompanyaddress
-    . maybe identity (set #ugaZip)           mcompanyzip
-    . maybe identity (set #ugaCity)          mcompanycity
-    . maybe identity (set #ugaCountry)       mcompanycountry
+    $ maybe identity (set #companyNumber) mcompanynumber
+    . maybe identity (set #entityName)    mentityname
+    . maybe identity (set #address)       mcompanyaddress
+    . maybe identity (set #zipCode)           mcompanyzip
+    . maybe identity (set #city)          mcompanycity
+    . maybe identity (set #country)       mcompanycountry
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)

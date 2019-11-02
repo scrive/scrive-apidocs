@@ -794,12 +794,12 @@ addNewUserGroupWithParent createFolder mparent = do
         & (#name          .~ ugname)
         & (#address       .~ uga)
         & (#homeFolderID  .~ mUgFolderID)
-      uga = Just $ I.UserGroupAddress { ugaCompanyNumber = ugacompanynumber
-                                      , ugaEntityName    = ugaentityname
-                                      , ugaAddress       = ugaaddress
-                                      , ugaZip           = ugazip
-                                      , ugaCity          = ugacity
-                                      , ugaCountry       = ugacountry
+      uga = Just $ I.UserGroupAddress { companyNumber = ugacompanynumber
+                                      , entityName    = ugaentityname
+                                      , address       = ugaaddress
+                                      , zipCode       = ugazip
+                                      , city          = ugacity
+                                      , country       = ugacountry
                                       }
   dbUpdate . UserGroupCreate $ ug
 
