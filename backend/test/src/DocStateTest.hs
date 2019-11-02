@@ -1476,7 +1476,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
         && isJust (signatorylinkreallydeleted sl)
 
   dbUpdate . UserGroupUpdate $ set
-    (#settings % _Just % #dataRetentionPolicy % #drpImmediateTrash)
+    (#settings % _Just % #dataRetentionPolicy % #immediateTrash)
     True
     ug
 

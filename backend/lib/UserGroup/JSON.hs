@@ -140,19 +140,19 @@ instance ToJSON UGDRPJSON where
   toEncoding (UGDRPJSON drp) =
     pairs
       $  "idle_doc_timeout_preparation"
-      .= drpIdleDocTimeoutPreparation drp
+      .= (drp ^. #idleDocTimeoutPreparation)
       <> "idle_doc_timeout_closed"
-      .= drpIdleDocTimeoutClosed drp
+      .= (drp ^. #idleDocTimeoutClosed)
       <> "idle_doc_timeout_canceled"
-      .= drpIdleDocTimeoutCanceled drp
+      .= (drp ^. #idleDocTimeoutCanceled)
       <> "idle_doc_timeout_timedout"
-      .= drpIdleDocTimeoutTimedout drp
+      .= (drp ^. #idleDocTimeoutTimedout)
       <> "idle_doc_timeout_rejected"
-      .= drpIdleDocTimeoutRejected drp
+      .= (drp ^. #idleDocTimeoutRejected)
       <> "idle_doc_timeout_error"
-      .= drpIdleDocTimeoutError drp
+      .= (drp ^. #idleDocTimeoutError)
       <> "immediate_trash"
-      .= drpImmediateTrash drp
+      .= (drp ^. #immediateTrash)
 
 encodeUserGroupSettings :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupSettings inheritable ugwp =

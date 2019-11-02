@@ -28,7 +28,8 @@ guardThatDataRetentionPolicyIsValid drp mParentDRP = do
         apiError $ requestParameterInvalid param $ "must be between 1 and" <+> showt limit
       _ -> return ()
 
-  when (fmap drpImmediateTrash mParentDRP == Just True && not (drpImmediateTrash drp))
+  when
+      ((view #immediateTrash <$> mParentDRP) == Just True && not (drp ^. #immediateTrash))
     $ apiError
     $ requestParameterInvalid "immediate_trash"
     $ "must be selected as company has selected it"

@@ -1,7 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module DataRetentionPolicy
-  ( DataRetentionPolicy(..)
+  ( DataRetentionPolicy
   , defaultDataRetentionPolicy
   , drpIdleDocTimeout
   , makeStricterDataRetentionPolicy
@@ -10,52 +8,41 @@ module DataRetentionPolicy
 
 import Data.Int
 import Data.Unjson
-import Optics
+import Optics (Lens', lens)
 
+import DataRetentionPolicy.Internal
 import Doc.Types.DocumentStatus
-
-data DataRetentionPolicy = DataRetentionPolicy
-  { drpIdleDocTimeoutPreparation :: Maybe Int16
-  , drpIdleDocTimeoutClosed      :: Maybe Int16
-  , drpIdleDocTimeoutCanceled    :: Maybe Int16
-  , drpIdleDocTimeoutTimedout    :: Maybe Int16
-  , drpIdleDocTimeoutRejected    :: Maybe Int16
-  , drpIdleDocTimeoutError       :: Maybe Int16
-  , drpImmediateTrash            :: Bool
-  } deriving (Eq, Ord, Show)
-
-makeFieldLabelsWith noPrefixFieldLabels ''DataRetentionPolicy
 
 drpIdleDocTimeout :: DocumentStatus -> Lens' DataRetentionPolicy (Maybe Int16)
 drpIdleDocTimeout = \case
-  Preparation   -> #drpIdleDocTimeoutPreparation
-  Closed        -> #drpIdleDocTimeoutClosed
-  Canceled      -> #drpIdleDocTimeoutCanceled
-  Timedout      -> #drpIdleDocTimeoutTimedout
-  Rejected      -> #drpIdleDocTimeoutRejected
-  DocumentError -> #drpIdleDocTimeoutError
+  Preparation   -> #idleDocTimeoutPreparation
+  Closed        -> #idleDocTimeoutClosed
+  Canceled      -> #idleDocTimeoutCanceled
+  Timedout      -> #idleDocTimeoutTimedout
+  Rejected      -> #idleDocTimeoutRejected
+  DocumentError -> #idleDocTimeoutError
   Pending       -> lens (const Nothing) const
 
 defaultDataRetentionPolicy :: DataRetentionPolicy
-defaultDataRetentionPolicy = DataRetentionPolicy { drpIdleDocTimeoutPreparation = Nothing
-                                                 , drpIdleDocTimeoutClosed      = Nothing
-                                                 , drpIdleDocTimeoutCanceled    = Nothing
-                                                 , drpIdleDocTimeoutTimedout    = Nothing
-                                                 , drpIdleDocTimeoutRejected    = Nothing
-                                                 , drpIdleDocTimeoutError       = Nothing
-                                                 , drpImmediateTrash            = False
+defaultDataRetentionPolicy = DataRetentionPolicy { idleDocTimeoutPreparation = Nothing
+                                                 , idleDocTimeoutClosed      = Nothing
+                                                 , idleDocTimeoutCanceled    = Nothing
+                                                 , idleDocTimeoutTimedout    = Nothing
+                                                 , idleDocTimeoutRejected    = Nothing
+                                                 , idleDocTimeoutError       = Nothing
+                                                 , immediateTrash            = False
                                                  }
 
 makeStricterDataRetentionPolicy
   :: DataRetentionPolicy -> DataRetentionPolicy -> DataRetentionPolicy
 makeStricterDataRetentionPolicy drp1 drp2 = DataRetentionPolicy
-  { drpIdleDocTimeoutPreparation = choose drpIdleDocTimeoutPreparation
-  , drpIdleDocTimeoutClosed      = choose drpIdleDocTimeoutClosed
-  , drpIdleDocTimeoutCanceled    = choose drpIdleDocTimeoutCanceled
-  , drpIdleDocTimeoutTimedout    = choose drpIdleDocTimeoutTimedout
-  , drpIdleDocTimeoutRejected    = choose drpIdleDocTimeoutRejected
-  , drpIdleDocTimeoutError       = choose drpIdleDocTimeoutError
-  , drpImmediateTrash            = drpImmediateTrash drp1 || drpImmediateTrash drp2
+  { idleDocTimeoutPreparation = choose idleDocTimeoutPreparation
+  , idleDocTimeoutClosed      = choose idleDocTimeoutClosed
+  , idleDocTimeoutCanceled    = choose idleDocTimeoutCanceled
+  , idleDocTimeoutTimedout    = choose idleDocTimeoutTimedout
+  , idleDocTimeoutRejected    = choose idleDocTimeoutRejected
+  , idleDocTimeoutError       = choose idleDocTimeoutError
+  , immediateTrash            = immediateTrash drp1 || immediateTrash drp2
   }
 
   where
@@ -70,24 +57,24 @@ unjsonDataRetentionPolicy =
   objectOf
     $   DataRetentionPolicy
     <$> fieldOpt "idle_doc_timeout_preparation"
-                 drpIdleDocTimeoutPreparation
+                 idleDocTimeoutPreparation
                  "Number of days before moving documents in preparation to trash"
     <*> fieldOpt "idle_doc_timeout_closed"
-                 drpIdleDocTimeoutClosed
+                 idleDocTimeoutClosed
                  "Number of days before moving closed documents to trash"
     <*> fieldOpt "idle_doc_timeout_canceled"
-                 drpIdleDocTimeoutCanceled
+                 idleDocTimeoutCanceled
                  "Number of days before moving cancelled documents to trash"
     <*> fieldOpt "idle_doc_timeout_timedout"
-                 drpIdleDocTimeoutTimedout
+                 idleDocTimeoutTimedout
                  "Number of days before moving timed out documents to trash"
     <*> fieldOpt "idle_doc_timeout_rejected"
-                 drpIdleDocTimeoutRejected
+                 idleDocTimeoutRejected
                  "Number of days before moving rejected documents to trash"
     <*> fieldOpt "idle_doc_timeout_error"
-                 drpIdleDocTimeoutError
+                 idleDocTimeoutError
                  "Number of days before moving documents with errors to trash"
     <*> fieldDef "immediate_trash"
-                 (drpImmediateTrash defaultDataRetentionPolicy)
-                 drpImmediateTrash
+                 (immediateTrash defaultDataRetentionPolicy)
+                 immediateTrash
                  "Option to delete documents in trash immediately"

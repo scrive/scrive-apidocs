@@ -557,25 +557,25 @@ getUserGroupSettingsChange = do
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
     . maybe identity (set #cgiDisplayName)    mcompanycgidisplayname
     . maybe identity
-            (set (#dataRetentionPolicy % #drpIdleDocTimeoutPreparation))
+            (set (#dataRetentionPolicy % #idleDocTimeoutPreparation))
             mcompanyidledoctimeoutpreparation
     . maybe identity
-            (set (#dataRetentionPolicy % #drpIdleDocTimeoutClosed))
+            (set (#dataRetentionPolicy % #idleDocTimeoutClosed))
             mcompanyidledoctimeoutclosed
     . maybe identity
-            (set (#dataRetentionPolicy % #drpIdleDocTimeoutCanceled))
+            (set (#dataRetentionPolicy % #idleDocTimeoutCanceled))
             mcompanyidledoctimeoutcanceled
     . maybe identity
-            (set (#dataRetentionPolicy % #drpIdleDocTimeoutTimedout))
+            (set (#dataRetentionPolicy % #idleDocTimeoutTimedout))
             mcompanyidledoctimeouttimedout
     . maybe identity
-            (set (#dataRetentionPolicy % #drpIdleDocTimeoutRejected))
+            (set (#dataRetentionPolicy % #idleDocTimeoutRejected))
             mcompanyidledoctimeoutrejected
     . maybe identity
-            (set (#dataRetentionPolicy % #drpIdleDocTimeoutError))
+            (set (#dataRetentionPolicy % #idleDocTimeoutError))
             mcompanyidledoctimeouterror
     . maybe identity
-            (set (#dataRetentionPolicy % #drpImmediateTrash) . (== "true"))
+            (set (#dataRetentionPolicy % #immediateTrash) . (== "true"))
             mcompanyimmediatetrash
     . maybe identity (set #cgiServiceID) mcompanycgiserviceid
     . maybe identity (set #smsProvider)  mcompanysmsprovider

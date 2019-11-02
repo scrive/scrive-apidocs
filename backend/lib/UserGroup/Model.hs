@@ -28,7 +28,6 @@ import Log
 import Text.JSON.Gen
 import qualified Data.Text as T
 
-import DataRetentionPolicy
 import DB
 import FeatureFlags.Model
 import FeatureFlags.Tables
@@ -99,13 +98,13 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
     [] -> Nothing
     x  -> Just (show x)
   let drp = ugs ^. #dataRetentionPolicy
-  sqlSet "idle_doc_timeout_preparation" $ drpIdleDocTimeoutPreparation drp
-  sqlSet "idle_doc_timeout_closed" $ drpIdleDocTimeoutClosed drp
-  sqlSet "idle_doc_timeout_canceled" $ drpIdleDocTimeoutCanceled drp
-  sqlSet "idle_doc_timeout_timedout" $ drpIdleDocTimeoutTimedout drp
-  sqlSet "idle_doc_timeout_rejected" $ drpIdleDocTimeoutRejected drp
-  sqlSet "idle_doc_timeout_error" $ drpIdleDocTimeoutError drp
-  sqlSet "immediate_trash" $ drpImmediateTrash drp
+  sqlSet "idle_doc_timeout_preparation" $ drp ^. #idleDocTimeoutPreparation
+  sqlSet "idle_doc_timeout_closed" $ drp ^. #idleDocTimeoutClosed
+  sqlSet "idle_doc_timeout_canceled" $ drp ^. #idleDocTimeoutCanceled
+  sqlSet "idle_doc_timeout_timedout" $ drp ^. #idleDocTimeoutTimedout
+  sqlSet "idle_doc_timeout_rejected" $ drp ^. #idleDocTimeoutRejected
+  sqlSet "idle_doc_timeout_error" $ drp ^. #idleDocTimeoutError
+  sqlSet "immediate_trash" $ drp ^. #immediateTrash
   sqlSet "cgi_display_name" $ ugs ^. #cgiDisplayName
   sqlSet "cgi_service_id" $ ugs ^. #cgiServiceID
   sqlSet "sms_provider" $ ugs ^. #smsProvider

@@ -85,6 +85,7 @@ import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import Util.Actor
 import Util.MonadUtils
+import qualified DataRetentionPolicy.Internal as I
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
@@ -211,7 +212,7 @@ instance Arbitrary UserGroupRoot where
 
 instance Arbitrary DataRetentionPolicy where
   arbitrary =
-    DataRetentionPolicy
+    I.DataRetentionPolicy
       <$> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> oneof [return Nothing, Just <$> choose (1, 365)]

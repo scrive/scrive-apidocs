@@ -9,7 +9,7 @@ import Data.List.Split (splitOneOf)
 import Data.OTP (totp)
 import Data.Unjson
 import Happstack.Server
-import Optics (_Just)
+import Optics (Lens', _Just)
 import Test.Framework
 import Test.QuickCheck
 import qualified Codec.Binary.Base32 as B32
@@ -366,20 +366,20 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
   where
     isAsStrict :: DataRetentionPolicy -> DataRetentionPolicy -> Bool
     isAsStrict drp1 drp2 =
-      check drpIdleDocTimeoutPreparation drp1 drp2
-        && check drpIdleDocTimeoutClosed   drp1 drp2
-        && check drpIdleDocTimeoutCanceled drp1 drp2
-        && check drpIdleDocTimeoutTimedout drp1 drp2
-        && check drpIdleDocTimeoutRejected drp1 drp2
-        && check drpIdleDocTimeoutError    drp1 drp2
-        && (not (drpImmediateTrash drp2) || drpImmediateTrash drp1)
+      check #idleDocTimeoutPreparation drp1 drp2
+        && check #idleDocTimeoutClosed   drp1 drp2
+        && check #idleDocTimeoutCanceled drp1 drp2
+        && check #idleDocTimeoutTimedout drp1 drp2
+        && check #idleDocTimeoutRejected drp1 drp2
+        && check #idleDocTimeoutError    drp1 drp2
+        && (not (drp2 ^. #immediateTrash) || drp1 ^. #immediateTrash)
 
     check
       :: Ord a
-      => (DataRetentionPolicy -> Maybe a)
+      => Lens' DataRetentionPolicy (Maybe a)
       -> DataRetentionPolicy
       -> DataRetentionPolicy
       -> Bool
-    check l drp1 drp2 = case (l drp1, l drp2) of
+    check l drp1 drp2 = case (drp1 ^. l, drp2 ^. l) of
       (Just x1, Just x2) -> x1 <= x2
       _                  -> True

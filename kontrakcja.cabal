@@ -189,6 +189,7 @@ Library
                  , Data.ByteString.Utils
                  , DataRetentionPolicy
                  , DataRetentionPolicy.Guards
+                 , DataRetentionPolicy.Internal
                  , Database.Redis.Cache
                  , Database.Redis.Configuration
                  , Database.Redis.Helpers

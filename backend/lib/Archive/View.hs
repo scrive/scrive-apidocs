@@ -23,6 +23,6 @@ pageArchive ctx user ugwp mt = renderTemplate "pageDocumentsList" $ do
     || (ugwpSettings ugwp ^. #dataRetentionPolicy)
     /= defaultDataRetentionPolicy
   F.value "immediatetrash"
-    $  drpImmediateTrash (dataretentionpolicy (usersettings user))
-    || (ugwpSettings ugwp ^. #dataRetentionPolicy % #drpImmediateTrash)
+    $  (dataretentionpolicy (usersettings user) ^. #immediateTrash)
+    || (ugwpSettings ugwp ^. #dataRetentionPolicy % #immediateTrash)
   entryPointFields ctx

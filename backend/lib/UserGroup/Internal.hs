@@ -39,6 +39,7 @@ import SMS.Types
 import Theme.ThemeID
 import UserGroup.Tables
 import UserGroup.Types.PaymentPlan
+import qualified DataRetentionPolicy.Internal as I
 
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
@@ -238,11 +239,11 @@ instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, drpIdleDocTimeoutPreparation, drpIdleDocTimeoutClosed, drpIdleDocTimeoutCanceled, drpIdleDocTimeoutTimedout, drpIdleDocTimeoutRejected, drpIdleDocTimeoutError, drpImmediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, _useFolderListCalls {- not yet used -}
-                                                                                                                                                                                                                                                                                                                                                                                , totpIsMandatory, sessionTimeoutSecs, portalUrl)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, _useFolderListCalls {- not yet used -}
+                                                                                                                                                                                                                                                                                                                                                           , totpIsMandatory, sessionTimeoutSecs, portalUrl)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
-      , dataRetentionPolicy = DataRetentionPolicy { .. }
+      , dataRetentionPolicy = I.DataRetentionPolicy { .. }
       , ..
       }
 

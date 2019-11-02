@@ -23,7 +23,6 @@ import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
 
-import DataRetentionPolicy
 import MinutesTime
 import PadApplication.Types
 import User.CallbackScheme.Model (UserCallbackScheme(..))
@@ -209,13 +208,13 @@ companySettingsJson ugs = do
   value "smsprovider" . show $ ugs ^. #smsProvider
   value "padappmode" . padAppModeText $ ugs ^. #padAppMode
   value "padearchiveenabled" $ ugs ^. #padEarchiveEnabled
-  value "idledoctimeoutpreparation" $ drpIdleDocTimeoutPreparation drp
-  value "idledoctimeoutclosed" $ drpIdleDocTimeoutClosed drp
-  value "idledoctimeoutcanceled" $ drpIdleDocTimeoutCanceled drp
-  value "idledoctimeouttimedout" $ drpIdleDocTimeoutTimedout drp
-  value "idledoctimeoutrejected" $ drpIdleDocTimeoutRejected drp
-  value "idledoctimeouterror" $ drpIdleDocTimeoutError drp
-  value "immediatetrash" $ drpImmediateTrash drp
+  value "idledoctimeoutpreparation" $ drp ^. #idleDocTimeoutPreparation
+  value "idledoctimeoutclosed" $ drp ^. #idleDocTimeoutClosed
+  value "idledoctimeoutcanceled" $ drp ^. #idleDocTimeoutCanceled
+  value "idledoctimeouttimedout" $ drp ^. #idleDocTimeoutTimedout
+  value "idledoctimeoutrejected" $ drp ^. #idleDocTimeoutRejected
+  value "idledoctimeouterror" $ drp ^. #idleDocTimeoutError
+  value "immediatetrash" $ drp ^. #immediateTrash
   value "sendtimeoutnotification" $ ugs ^. #sendTimeoutNotification
   value "totpismandatory" $ ugs ^. #totpIsMandatory
   value "sessiontimeout" $ ugs ^. #sessionTimeoutSecs
