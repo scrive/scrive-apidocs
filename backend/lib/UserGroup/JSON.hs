@@ -159,7 +159,7 @@ encodeUserGroupSettings inheritable ugwp =
   pairs $ makeDRPJson inheritedFrom msettings <> inheritPreview
   where
     makeDRPJson mugid msett =
-      let drp = UGDRPJSON . ugsDataRetentionPolicy <$> msett
+      let drp = UGDRPJSON . view #ugsDataRetentionPolicy <$> msett
       in  "inherited_from" .= mugid <> "data_retention_policy" .= drp
     mugSettings                = ugSettings $ ugwpUG ugwp
     minherited                 = ugwpSettingsWithID <$> ugwpOnlyParents ugwp

@@ -95,10 +95,10 @@ insertUserGroupSettings
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupSettings -> m ()
 insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $ do
   sqlSet "user_group_id" ugid
-  sqlSet "ip_address_mask_list" $ case ugsIPAddressMaskList ugs of
+  sqlSet "ip_address_mask_list" $ case ugs ^. #ugsIPAddressMaskList of
     [] -> Nothing
     x  -> Just (show x)
-  let drp = ugsDataRetentionPolicy ugs
+  let drp = ugs ^. #ugsDataRetentionPolicy
   sqlSet "idle_doc_timeout_preparation" $ drpIdleDocTimeoutPreparation drp
   sqlSet "idle_doc_timeout_closed" $ drpIdleDocTimeoutClosed drp
   sqlSet "idle_doc_timeout_canceled" $ drpIdleDocTimeoutCanceled drp
@@ -106,17 +106,17 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "idle_doc_timeout_rejected" $ drpIdleDocTimeoutRejected drp
   sqlSet "idle_doc_timeout_error" $ drpIdleDocTimeoutError drp
   sqlSet "immediate_trash" $ drpImmediateTrash drp
-  sqlSet "cgi_display_name" $ ugsCGIDisplayName ugs
-  sqlSet "cgi_service_id" $ ugsCGIServiceID ugs
-  sqlSet "sms_provider" $ ugsSMSProvider ugs
-  sqlSet "pad_app_mode" $ ugsPadAppMode ugs
-  sqlSet "pad_earchive_enabled" $ ugsPadEarchiveEnabled ugs
-  sqlSet "legal_text" $ ugsLegalText ugs
-  sqlSet "require_bpid_for_new_document" $ ugsRequireBPIDForNewDoc ugs
-  sqlSet "send_timeout_notification" $ ugsSendTimeoutNotification ugs
-  sqlSet "totp_is_mandatory" $ ugsTotpIsMandatory ugs
-  sqlSet "session_timeout" $ ugsSessionTimeoutSecs ugs
-  sqlSet "portal_url" $ ugsPortalUrl ugs
+  sqlSet "cgi_display_name" $ ugs ^. #ugsCGIDisplayName
+  sqlSet "cgi_service_id" $ ugs ^. #ugsCGIServiceID
+  sqlSet "sms_provider" $ ugs ^. #ugsSMSProvider
+  sqlSet "pad_app_mode" $ ugs ^. #ugsPadAppMode
+  sqlSet "pad_earchive_enabled" $ ugs ^. #ugsPadEarchiveEnabled
+  sqlSet "legal_text" $ ugs ^. #ugsLegalText
+  sqlSet "require_bpid_for_new_document" $ ugs ^. #ugsRequireBPIDForNewDoc
+  sqlSet "send_timeout_notification" $ ugs ^. #ugsSendTimeoutNotification
+  sqlSet "totp_is_mandatory" $ ugs ^. #ugsTotpIsMandatory
+  sqlSet "session_timeout" $ ugs ^. #ugsSessionTimeoutSecs
+  sqlSet "portal_url" $ ugs ^. #ugsPortalUrl
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()

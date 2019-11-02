@@ -70,7 +70,7 @@ with2FACheck
 with2FACheck action user = do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
   let userMustHaveTotpEnabled =
-        ugsTotpIsMandatory (ugwpSettings ugwp) || usertotpismandatory user
+        (ugwpSettings ugwp ^. #ugsTotpIsMandatory) || usertotpismandatory user
   if userMustHaveTotpEnabled && not (usertotpactive user)
     then do
       flashmessage <- flashMessageTotpMustBeActivated

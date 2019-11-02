@@ -488,7 +488,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
     . listToMaybe
     . catMaybes
     $ [ugSettings newUG, ugwpSettings <$> ugwpOnlyParents ugwp]
-  guardThatDataRetentionPolicyIsValid (ugsDataRetentionPolicy newSettings) Nothing
+  guardThatDataRetentionPolicyIsValid (newSettings ^. #ugsDataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
 

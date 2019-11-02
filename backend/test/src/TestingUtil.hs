@@ -222,7 +222,7 @@ instance Arbitrary DataRetentionPolicy where
 
 instance Arbitrary UserGroupSettings where
   arbitrary =
-    UserGroupSettings
+    I.UserGroupSettings
       <$> arbitrary
       <*> arbitrary
       <*> arbitraryMaybe arbitraryUnicodeText

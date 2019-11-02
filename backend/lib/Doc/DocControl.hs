@@ -114,7 +114,7 @@ import qualified GuardTime as GuardTime
 handleNewDocument :: Kontrakcja m => m InternalKontraResponse
 handleNewDocument = withUser . with2FACheck $ \user -> do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
-  if ugsRequireBPIDForNewDoc (ugwpSettings ugwp)
+  if ugwpSettings ugwp ^. #ugsRequireBPIDForNewDoc
     then do
       -- This is a special feature for RBS (CORE-1081)
       -- RBS needs to "force" their employees to enter their internal document

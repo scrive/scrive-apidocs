@@ -25,7 +25,7 @@ module UserGroup.Types (
   , emptyUserGroupID
   , unsafeUserGroupID
   , fromUserGroupID
-  , UserGroupSettings(..)
+  , UserGroupSettings
   , defaultUserGroupSettings
   , UserGroupAddress
   , defaultUserGroupAddress

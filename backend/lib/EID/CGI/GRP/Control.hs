@@ -384,12 +384,12 @@ checkCGIAuthStatus did slid = do
 ----------------------------------------
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
-getCompanyDisplayName doc = ugsCGIDisplayName . ugwpSettings <$> dbQuery
+getCompanyDisplayName doc = view #ugsCGIDisplayName . ugwpSettings <$> dbQuery
   (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
   where author = fromJust $ getSigLinkFor signatoryisauthor doc
 
 getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
-getCompanyServiceID doc = ugsCGIServiceID . ugwpSettings <$> dbQuery
+getCompanyServiceID doc = view #ugsCGIServiceID . ugwpSettings <$> dbQuery
   (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
   where author = fromJust $ getSigLinkFor signatoryisauthor doc
 

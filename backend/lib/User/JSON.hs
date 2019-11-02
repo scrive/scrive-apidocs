@@ -201,13 +201,13 @@ companyAddressJson uga = do
 
 companySettingsJson :: UserGroupSettings -> JSONGenT Identity ()
 companySettingsJson ugs = do
-  let drp = ugsDataRetentionPolicy ugs
-  value "ipaddressmasklist" . intercalate "," . fmap show $ ugsIPAddressMaskList ugs
-  value "cgidisplayname" $ ugsCGIDisplayName ugs
-  value "cgiserviceid" $ ugsCGIServiceID ugs
-  value "smsprovider" . show $ ugsSMSProvider ugs
-  value "padappmode" . padAppModeText $ ugsPadAppMode ugs
-  value "padearchiveenabled" $ ugsPadEarchiveEnabled ugs
+  let drp = ugs ^. #ugsDataRetentionPolicy
+  value "ipaddressmasklist" . intercalate "," . fmap show $ ugs ^. #ugsIPAddressMaskList
+  value "cgidisplayname" $ ugs ^. #ugsCGIDisplayName
+  value "cgiserviceid" $ ugs ^. #ugsCGIServiceID
+  value "smsprovider" . show $ ugs ^. #ugsSMSProvider
+  value "padappmode" . padAppModeText $ ugs ^. #ugsPadAppMode
+  value "padearchiveenabled" $ ugs ^. #ugsPadEarchiveEnabled
   value "idledoctimeoutpreparation" $ drpIdleDocTimeoutPreparation drp
   value "idledoctimeoutclosed" $ drpIdleDocTimeoutClosed drp
   value "idledoctimeoutcanceled" $ drpIdleDocTimeoutCanceled drp
@@ -215,10 +215,10 @@ companySettingsJson ugs = do
   value "idledoctimeoutrejected" $ drpIdleDocTimeoutRejected drp
   value "idledoctimeouterror" $ drpIdleDocTimeoutError drp
   value "immediatetrash" $ drpImmediateTrash drp
-  value "sendtimeoutnotification" $ ugsSendTimeoutNotification ugs
-  value "totpismandatory" $ ugsTotpIsMandatory ugs
-  value "sessiontimeout" $ ugsSessionTimeoutSecs ugs
-  value "portalurl" $ ugsPortalUrl ugs
+  value "sendtimeoutnotification" $ ugs ^. #ugsSendTimeoutNotification
+  value "totpismandatory" $ ugs ^. #ugsTotpIsMandatory
+  value "sessiontimeout" $ ugs ^. #ugsSessionTimeoutSecs
+  value "portalurl" $ ugs ^. #ugsPortalUrl
 
 userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

@@ -43,8 +43,8 @@ import Utils.HTTP
 -- timeout set in the user's group
 getSessionTimeoutSecs :: forall  m . (MonadDB m, MonadThrow m) => UserID -> m Int32
 getSessionTimeoutSecs userId = do
-  userGroup :: UserGroupWithParents <- dbQuery $ UserGroupGetWithParentsByUserID userId
-  let mSessionTimeout :: Maybe Int32 = ugsSessionTimeoutSecs $ ugwpSettings userGroup
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID userId
+  let mSessionTimeout = ugwpSettings ugwp ^. #ugsSessionTimeoutSecs
   return $ fromMaybe defaultSessionTimeoutSecs mSessionTimeout
 
 -- Get the session expiry delay from a user associated with a

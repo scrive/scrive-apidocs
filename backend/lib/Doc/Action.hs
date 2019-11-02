@@ -428,7 +428,7 @@ findAndTimeoutDocuments = do
                                , mailNoreplyAddress = noreplyAddress
                                }
         runTemplatesT (lang, gt) . runMailContextT mc $ do
-          when (ugsSendTimeoutNotification (ugwpSettings ugwp)) $ do
+          when (ugwpSettings ugwp ^. #ugsSendTimeoutNotification) $ do
             sendDocumentTimeoutedEmail =<< theDocument
     triggerAPICallbackIfThereIsOne =<< theDocument
     logInfo_ "Document timed out"
