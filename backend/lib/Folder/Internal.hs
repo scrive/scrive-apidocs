@@ -1,14 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Folder.Internal (
     Folder(..)
-  , FolderID
   , FolderWithChildren(..)
-  , fetchFolder
-  , defaultFolder
+  , FolderID
   , fromFolderID
   , emptyFolderID
   , unsafeFolderID
-  , fwcToList
   ) where
 
 import Data.Aeson
@@ -24,34 +21,21 @@ import DB
 import Log.Identifier
 
 data Folder = Folder
-  { folderID       :: !FolderID
-  , folderParentID :: !(Maybe FolderID)
-  , folderName     :: !Text
+  { id       :: !FolderID
+  , parentID :: !(Maybe FolderID)
+  , name     :: !Text
   } deriving (Show, Eq)
 
 -- Folder and all its children down to the bottom
 data FolderWithChildren = FolderWithChildren
-  { fwcFolder :: Folder
-  , fwcChildren :: [FolderWithChildren]
+  { folder   :: !Folder
+  , children :: ![FolderWithChildren]
   }
 
 newtype FolderID = FolderID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read FolderID
 deriving newtype instance Show FolderID
-
-makeFieldLabelsWith noPrefixFieldLabels ''Folder
-makeFieldLabelsWith noPrefixFieldLabels ''FolderWithChildren
-
-fwcToList :: FolderWithChildren -> [Folder]
-fwcToList fwc = fwcFolder fwc : concatMap fwcToList (fwcChildren fwc)
-
-fetchFolder :: (FolderID, Maybe FolderID, Text) -> Folder
-fetchFolder (folderID, folderParentID, folderName) = Folder { .. }
-
-defaultFolder :: Folder
-defaultFolder =
-  Folder { folderID = emptyFolderID, folderParentID = Nothing, folderName = "" }
 
 instance PQFormat FolderID where
   pqFormat = pqFormat @Int64
@@ -98,3 +82,6 @@ instance FromJSON FolderID where
     case maybeRead fidStr of
       Nothing  -> fail "Could not parse Folder ID"
       Just fid -> return fid
+
+makeFieldLabelsWith noPrefixFieldLabels ''Folder
+makeFieldLabelsWith noPrefixFieldLabels ''FolderWithChildren

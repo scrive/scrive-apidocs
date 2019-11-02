@@ -99,7 +99,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
       let ug_new =
             defaultUserGroup
               & (#parentGroupID ?~ partnerUsrGrpID)
-              & (#homeFolderID ?~ folderID newUgFolder)
+              & (#homeFolderID ?~ newUgFolder ^. #id)
               & (#invoicing .~ BillItem (Just FreePlan))
       ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug =

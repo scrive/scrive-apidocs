@@ -422,13 +422,13 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
   newugid <- guardJustM $ readField "companyid"
-  (folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome newugid) >>= \case
+  (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome newugid) >>= \case
     Nothing         -> internalError
     Just newugfdrid -> do
       void $ dbUpdate $ SetUserUserGroup uid newugid
       void $ dbUpdate $ SetUserCompanyAdmin uid False
-      let newhomefdr = set #folderParentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- folderID <$> (dbUpdate $ FolderCreate newhomefdr)
+      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
+      newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
       void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
 
 handleMergeToOtherCompany :: Kontrakcja m => UserGroupID -> m ()
@@ -443,14 +443,14 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
         <+> "and retry."
     else do
       ugid_target <- guardJustM $ readField "companyid"
-      (folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid_target) >>= \case
+      (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid_target) >>= \case
         Nothing          -> internalError
         Just targetfdrid -> do
           users <- dbQuery $ UserGroupGetUsers ugid_source
           forM_ users $ \u -> do
             void $ dbUpdate $ SetUserUserGroup (userid u) ugid_target
-            let newhomefdr = set #folderParentID (Just targetfdrid) defaultFolder
-            newhomefdrid <- folderID <$> (dbUpdate $ FolderCreate newhomefdr)
+            let newhomefdr = set #parentID (Just targetfdrid) defaultFolder
+            newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
             void $ dbUpdate . SetUserHomeFolder (userid u) $ newhomefdrid
           invites <- dbQuery $ UserGroupGetInvites ugid_source
           forM_ invites $ \i ->
@@ -502,7 +502,7 @@ handleCreateUser = onlySalesOrAdmin $ do
   ug       <-
     dbUpdate
     . UserGroupCreate
-    . set #homeFolderID (Just $ folderID ugFolder)
+    . set #homeFolderID (Just $ ugFolder ^. #id)
     $ defaultUserGroup
   muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang
   runJSONGenT $ case muser of

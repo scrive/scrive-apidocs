@@ -947,10 +947,10 @@ testDocInFolder = do
   _ <- mockDocTestRequestHelper nonAdminCtx POST createInNonOwnedFolder docApiV2New 403
 
   -- create subfolder
-  adminSubfolder <- dbUpdate . FolderCreate $ set #folderParentID
+  adminSubfolder <- dbUpdate . FolderCreate $ set #parentID
                                                   (userhomefolderid admin)
                                                   defaultFolder
-  let subfolderID = folderID adminSubfolder
+  let subfolderID = adminSubfolder ^. #id
   -- create document in subfolder
   let createInSubfolder =
         [ ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -967,7 +967,7 @@ testDocInFolder = do
   -- verify that document has subfolderID
   docFromDB <- dbQuery $ GetDocumentByDocumentID did_2
   assertEqual "Created document has the provided folder_id"
-              (Just $ folderID adminSubfolder)
+              (Just $ adminSubfolder ^. #id)
               (documentfolderid docFromDB)
 
   -- create document from template in subfolder

@@ -94,9 +94,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
     -- Every is_company_admin shall have DocumentAdminAR to the company home
     -- folder
     mGroupHomeFolderID <- do
-      (folderID <$>) <$> (query . FolderGetUserGroupHome $ ugid)
+      (view #id <$>) <$> (query . FolderGetUserGroupHome $ ugid)
     mUserHomeFolderID <- do
-      (folderID <$>) <$> (query . FolderGetUserHome $ uid)
+      (view #id <$>) <$> (query . FolderGetUserHome $ uid)
     -- get company root folder
     let adminOrUserRoles =
           (if isAdmin then [UserAdminAR ugid] else [UserGroupMemberAR ugid])

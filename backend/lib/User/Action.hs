@@ -119,15 +119,11 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
       mUserFolder <- case ug ^. #homeFolderID of
         Nothing -> return Nothing
         Just ugFid ->
-          fmap Just
-            . dbUpdate
-            . FolderCreate
-            . set #folderParentID (Just ugFid)
-            $ defaultFolder
+          fmap Just . dbUpdate . FolderCreate . set #parentID (Just ugFid) $ defaultFolder
       muser <- dbUpdate $ AddUser names
                                   (unEmail email)
                                   (Just passwd)
-                                  (ugid, folderID <$> mUserFolder, iscompanyadmin)
+                                  (ugid, view #id <$> mUserFolder, iscompanyadmin)
                                   lang
                                   (ctx ^. #brandedDomain % #id)
                                   sm

@@ -286,7 +286,7 @@ instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
       Just folder -> do
         folderParents <- dbQuery . FolderGetParents $ fid
         let mkExprBase g =
-              NeededPermissionsExprBase (Permission action resource $ folderID g)
+              NeededPermissionsExprBase (Permission action resource $ g ^. #id)
         return . NeededPermissionsExprOr . map mkExprBase $ (folder : folderParents)
   neededPermissionsPure (action, resource, fid) =
     NeededPermissionsExprBase $ Permission action resource fid

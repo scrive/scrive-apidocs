@@ -16,6 +16,7 @@ import DB
 import Folder.Types
 import User.UserID
 import UserGroup.Types
+import qualified Folder.Internal as I
 
 data FolderGet = FolderGet FolderID
 instance (MonadDB m, MonadThrow m) => DBQuery m FolderGet (Maybe Folder) where
@@ -64,9 +65,9 @@ instance (MonadDB m, MonadThrow m)
       sqlWhere $ "parent_path @> " <?> (Array1 [fid])
     allChildren <- fetchMany fetchFolder
     let directChildren parentID =
-          filter ((== Just parentID) . folderParentID) allChildren
+          filter ((== Just parentID) . view #parentID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
-        mkChild folder = FolderWithChildren folder . mkChildren $ folderID folder
+        mkChild folder = I.FolderWithChildren folder . mkChildren $ folder ^. #id
     return $ mkChildren fid
 
 data FolderGetParents = FolderGetParents FolderID

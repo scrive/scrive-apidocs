@@ -21,6 +21,7 @@ module Prelude (
   , (&), (%), (?~)
   , view, (^.)
   , preview, (^?)
+  , toListOf, (^..)
   , over, (%~)
   , set, (.~)
   , copy

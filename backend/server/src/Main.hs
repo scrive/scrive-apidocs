@@ -161,17 +161,14 @@ initDatabaseEntries appConf = do
         ug       <-
           dbUpdate
           . UserGroupCreate
-          . set #homeFolderID (Just $ folderID ugFolder)
+          . set #homeFolderID (Just $ ugFolder ^. #id)
           $ defaultUserGroup
         userFolder <-
-          dbUpdate
-          . FolderCreate
-          . set #folderParentID (Just $ folderID ugFolder)
-          $ defaultFolder
+          dbUpdate . FolderCreate . set #parentID (Just $ ugFolder ^. #id) $ defaultFolder
         void $ dbUpdate $ AddUser ("", "")
                                   (unEmail email)
                                   (Just passwd)
-                                  (ug ^. #id, Just $ folderID userFolder, True)
+                                  (ug ^. #id, Just $ userFolder ^. #id, True)
                                   LANG_EN
                                   (bd ^. #id)
                                   ByAdmin

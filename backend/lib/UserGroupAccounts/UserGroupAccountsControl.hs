@@ -377,14 +377,14 @@ handlePostBecomeUserGroupAccount
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
   void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
-  (folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
+  (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
     Nothing         -> internalError
     Just newugfdrid -> do
       let uid = userid user
       void $ dbUpdate $ SetUserCompanyAdmin (userid user) False
       void $ dbUpdate $ SetUserUserGroup (userid user) (newug ^. #id)
-      let newhomefdr = set #folderParentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- folderID <$> (dbUpdate $ FolderCreate newhomefdr)
+      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
+      newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
       void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
       void $ dbUpdate $ RemoveUserGroupInvite [ugid] (userid user)
       -- if we are inviting a user with a plan to join the company, we

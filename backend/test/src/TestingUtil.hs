@@ -86,6 +86,7 @@ import UserGroup.Types.PaymentPlan
 import Util.Actor
 import Util.MonadUtils
 import qualified DataRetentionPolicy.Internal as I
+import qualified Folder.Internal as I
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
@@ -139,7 +140,7 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary Folder where
-  arbitrary = (\name -> Folder emptyFolderID Nothing name) <$> arbitraryName
+  arbitrary = (\name -> I.Folder emptyFolderID Nothing name) <$> arbitraryName
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
@@ -782,7 +783,7 @@ addNewUserGroupWithParent :: Bool -> Maybe UserGroupID -> TestEnv UserGroup
 addNewUserGroupWithParent createFolder mparent = do
   mUgFolderID <- case createFolder of
     False -> return Nothing
-    True  -> fmap (Just . folderID) . dbUpdate $ FolderCreate defaultFolder
+    True  -> Just . view #id <$> dbUpdate (FolderCreate defaultFolder)
   ugname           <- rand 10 (arbText 3 30)
   ugacompanynumber <- rand 10 (arbText 3 30)
   ugaentityname    <- rand 10 (arbText 3 30)
@@ -859,7 +860,7 @@ addNewCompany createFolders = do
     True  -> fmap Just . dbUpdate $ FolderCreate defaultFolder
   dbUpdate
     . UserGroupCreate
-    . set #homeFolderID (folderID <$> mUgFolder)
+    . set #homeFolderID (view #id <$> mUgFolder)
     $ defaultUserGroup
 
 createNewUser
@@ -880,12 +881,12 @@ createNewUser names email mPasswd (ugid, isCompanyAdmin) lang bdID sm = do
       fmap Just
         . dbUpdate
         . FolderCreate
-        . set #folderParentID (Just $ folderID ugFolder)
+        . set #parentID (Just $ ugFolder ^. #id)
         $ defaultFolder
   dbUpdate $ AddUser names
                      email
                      mPasswd
-                     (ugid, folderID <$> mUserFolder, isCompanyAdmin)
+                     (ugid, view #id <$> mUserFolder, isCompanyAdmin)
                      lang
                      bdID
                      sm
