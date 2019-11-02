@@ -151,8 +151,8 @@ type UserGroupWithParents = (UserGroupRoot, [UserGroup])
 
 -- UserGroup and all its children down to the bottom
 data UserGroupWithChildren = UserGroupWithChildren
-  { ugwcGroup :: UserGroup
-  , ugwcChildren :: [UserGroupWithChildren]
+  { group :: UserGroup
+  , children :: [UserGroupWithChildren]
   } deriving (Eq, Show)
 
 data UserGroupInvoicing =
@@ -414,7 +414,7 @@ ugwpAddChild ug (root, children_path) = (root, ug : children_path)
 
 ugwcToList :: [UserGroupWithChildren] -> [UserGroup]
 ugwcToList ugwcs =
-  concat . for ugwcs $ \ugwc -> ugwcGroup ugwc : ugwcToList (ugwcChildren ugwc)
+  concat . for ugwcs $ \ugwc -> ugwc ^. #group : ugwcToList (ugwc ^. #children)
 
 -- USER GROUP INFO
 
