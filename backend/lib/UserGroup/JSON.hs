@@ -16,6 +16,7 @@ import qualified Data.List.NonEmpty as L
 import DataRetentionPolicy
 import InputValidation
 import UserGroup.Types
+import qualified UserGroup.Internal as I
 
 encodeUserGroup :: Bool -> UserGroupWithParents -> [UserGroup] -> Encoding
 encodeUserGroup inheritable ugwp children =
@@ -62,17 +63,17 @@ instance ToJSON UGAddrJSON where
   toEncoding (UGAddrJSON addr) =
     pairs
       $  "company_number"
-      .= ugaCompanyNumber addr
+      .= (addr ^. #ugaCompanyNumber)
       <> "entity_name"
-      .= ugaEntityName addr
+      .= (addr ^. #ugaEntityName)
       <> "address"
-      .= ugaAddress addr
+      .= (addr ^. #ugaAddress)
       <> "zip"
-      .= ugaZip addr
+      .= (addr ^. #ugaZip)
       <> "city"
-      .= ugaCity addr
+      .= (addr ^. #ugaCity)
       <> "country"
-      .= ugaCountry addr
+      .= (addr ^. #ugaCountry)
 
 encodeUserGroupContactDetails :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupContactDetails inheritable ugwp =
@@ -106,29 +107,29 @@ updateUserGroupContactDetailsFromRequest ugAddr contactDetailsChanges =
 unjsonUserGroupAddress :: UnjsonDef UserGroupAddress
 unjsonUserGroupAddress =
   objectOf
-    $   pure UserGroupAddress
+    $   pure I.UserGroupAddress
     <*> fieldBy "company_number"
-                ugaCompanyNumber
+                (^. #ugaCompanyNumber)
                 "User Group Address Company Number"
                 (unjsonWithValidationOrEmptyText asValidCompanyNumber)
     <*> fieldBy "entity_name"
-                ugaEntityName
+                (^. #ugaEntityName)
                 "User Group Address Entity Name"
                 (unjsonWithValidationOrEmptyText asValidCompanyName)
     <*> fieldBy "address"
-                ugaAddress
+                (^. #ugaAddress)
                 "User Group Address Address"
                 (unjsonWithValidationOrEmptyText asValidAddress)
     <*> fieldBy "zip"
-                ugaZip
+                (^. #ugaZip)
                 "User Group Address Zip Code"
                 (unjsonWithValidationOrEmptyText asValidZip)
     <*> fieldBy "city"
-                ugaCity
+                (^. #ugaCity)
                 "User Group Address City"
                 (unjsonWithValidationOrEmptyText asValidCity)
     <*> fieldBy "country"
-                ugaCountry
+                (^. #ugaCountry)
                 "User Group Address Country"
                 (unjsonWithValidationOrEmptyText asValidCountry)
 

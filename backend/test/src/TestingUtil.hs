@@ -239,7 +239,7 @@ instance Arbitrary UserGroupSettings where
 
 instance Arbitrary UserGroupAddress where
   arbitrary =
-    UserGroupAddress
+    I.UserGroupAddress
       <$> arbitraryUnicodeText
       <*> arbitraryUnicodeText
       <*> arbitraryUnicodeText
@@ -794,13 +794,13 @@ addNewUserGroupWithParent createFolder mparent = do
                             , ugAddress       = uga
                             , ugHomeFolderID  = mUgFolderID
                             }
-      uga = Just $ UserGroupAddress { ugaCompanyNumber = ugacompanynumber
-                                    , ugaEntityName    = ugaentityname
-                                    , ugaAddress       = ugaaddress
-                                    , ugaZip           = ugazip
-                                    , ugaCity          = ugacity
-                                    , ugaCountry       = ugacountry
-                                    }
+      uga = Just $ I.UserGroupAddress { ugaCompanyNumber = ugacompanynumber
+                                      , ugaEntityName    = ugaentityname
+                                      , ugaAddress       = ugaaddress
+                                      , ugaZip           = ugazip
+                                      , ugaCity          = ugacity
+                                      , ugaCountry       = ugacountry
+                                      }
   dbUpdate . UserGroupCreate $ ug
 
 addNewUserGroupWithParents :: Bool -> TestEnv UserGroupWithParents

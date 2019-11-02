@@ -269,12 +269,12 @@ jsonCompanies = onlySalesOrAdmin $ do
     valueM "companies" $ forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
       value "id" . show . ugID $ ug
       value "companyname" . T.unpack . ugName $ ug
-      value "companynumber" . T.unpack . ugaCompanyNumber $ uga
-      value "companyentityname" . T.unpack . ugaEntityName $ uga
-      value "companyaddress" . T.unpack . ugaAddress $ uga
-      value "companyzip" . T.unpack . ugaZip $ uga
-      value "companycity" . T.unpack . ugaCity $ uga
-      value "companycountry" . T.unpack . ugaCountry $ uga
+      value "companynumber" . T.unpack $ uga ^. #ugaCompanyNumber
+      value "companyentityname" . T.unpack $ uga ^. #ugaEntityName
+      value "companyaddress" . T.unpack $ uga ^. #ugaAddress
+      value "companyzip" . T.unpack $ uga ^. #ugaZip
+      value "companycity" . T.unpack $ uga ^. #ugaCity
+      value "companycountry" . T.unpack $ uga ^. #ugaCountry
 
 jsonUsersList :: Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do

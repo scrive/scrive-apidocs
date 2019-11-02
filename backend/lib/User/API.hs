@@ -79,6 +79,7 @@ import Utils.Monad
 import qualified API.V2 as V2
 import qualified API.V2.Errors as V2
 import qualified API.V2.Parameters as V2
+import qualified UserGroup.Internal as I
 
 userAPI :: Route (Kontra Response)
 userAPI = dir "api" $ choice
@@ -382,21 +383,21 @@ apiCallUpdateUserProfile = api $ do
       let ug = ugwpUG ugwp
       companyname <- getParameter "companyname" asValidCompanyName $ ugName ug
       let getAddrParameter n v prevValue =
-            getParameter n v $ prevValue . ugwpAddress $ ugwp
-      number     <- getAddrParameter "companynumber" asValidCompanyNumber ugaCompanyNumber
-      entityname <- getAddrParameter "companyentityname" asValidCompanyName ugaEntityName
-      address    <- getAddrParameter "companyaddress" asValidAddress ugaAddress
-      zip'       <- getAddrParameter "companyzip" asValidZip ugaZip
-      city       <- getAddrParameter "companycity" asValidCity ugaCity
-      country    <- getAddrParameter "companycountry" asValidCountry ugaCountry
+            getParameter n v $ ugwpAddress ugwp ^. prevValue
+      number     <- getAddrParameter "companynumber" asValidCompanyNumber #ugaCompanyNumber
+      entityname <- getAddrParameter "companyentityname" asValidCompanyName #ugaEntityName
+      address    <- getAddrParameter "companyaddress" asValidAddress #ugaAddress
+      zip'       <- getAddrParameter "companyzip" asValidZip #ugaZip
+      city       <- getAddrParameter "companycity" asValidCity #ugaCity
+      country    <- getAddrParameter "companycountry" asValidCountry #ugaCountry
       let ug'         = set #ugName companyname ug
-          new_address = UserGroupAddress { ugaCompanyNumber = number
-                                         , ugaEntityName    = entityname
-                                         , ugaAddress       = address
-                                         , ugaZip           = zip'
-                                         , ugaCity          = city
-                                         , ugaCountry       = country
-                                         }
+          new_address = I.UserGroupAddress { ugaCompanyNumber = number
+                                           , ugaEntityName    = entityname
+                                           , ugaAddress       = address
+                                           , ugaZip           = zip'
+                                           , ugaCity          = city
+                                           , ugaCountry       = country
+                                           }
           ug'' = case ugAddress ug' of
             Just _ ->
               -- change address directly if it wasn't inherited

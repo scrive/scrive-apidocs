@@ -192,12 +192,12 @@ companyJSONAdminOnly ugwp = do
 
 companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
 companyAddressJson uga = do
-  value "address" $ ugaAddress uga
-  value "city" $ ugaCity uga
-  value "country" $ ugaCountry uga
-  value "zip" $ ugaZip uga
-  value "companynumber" $ ugaCompanyNumber uga
-  value "entityname" $ ugaEntityName uga
+  value "address" $ uga ^. #ugaAddress
+  value "city" $ uga ^. #ugaCity
+  value "country" $ uga ^. #ugaCountry
+  value "zip" $ uga ^. #ugaZip
+  value "companynumber" $ uga ^. #ugaCompanyNumber
+  value "entityname" $ uga ^. #ugaEntityName
 
 companySettingsJson :: UserGroupSettings -> JSONGenT Identity ()
 companySettingsJson ugs = do

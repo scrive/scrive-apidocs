@@ -18,6 +18,7 @@ import InputValidation
 import User.Email (Email(..))
 import User.Model
 import UserGroup.Types
+import qualified UserGroup.Internal as I
 
 data UserForUpdate = UserForUpdate {
       ufuId :: Text
@@ -186,11 +187,11 @@ userGroupToUserGroupForUpdate ugwp =
       ug_address = ugwpAddress ugwp
   in  UserGroupForUpdate { uguUserGroupID      = showt $ ugID ug
                          , uguUserGroupName    = ugName ug
-                         , uguUserGroupNumber  = ugaCompanyNumber ug_address
-                         , uguUserGroupAddress = ugaAddress ug_address
-                         , uguUserGroupZip     = ugaZip ug_address
-                         , uguUserGroupCity    = ugaCity ug_address
-                         , uguUserGroupCountry = ugaCountry ug_address
+                         , uguUserGroupNumber  = ug_address ^. #ugaCompanyNumber
+                         , uguUserGroupAddress = ug_address ^. #ugaAddress
+                         , uguUserGroupZip     = ug_address ^. #ugaZip
+                         , uguUserGroupCity    = ug_address ^. #ugaCity
+                         , uguUserGroupCountry = ug_address ^. #ugaCountry
                          }
 
 -- This is intended for PartnerAPI only. We compare the set values with
@@ -200,13 +201,13 @@ updateUserGroupWithUserGroupForUpdate
 updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
   let ug          = ugwpUG ugwp
       old_address = ugwpAddress ugwp
-      new_address = UserGroupAddress { ugaCompanyNumber = uguUserGroupNumber
-                                     , ugaEntityName    = uguUserGroupName
-                                     , ugaAddress       = uguUserGroupAddress
-                                     , ugaZip           = uguUserGroupZip
-                                     , ugaCity          = uguUserGroupCity
-                                     , ugaCountry       = uguUserGroupCountry
-                                     }
+      new_address = I.UserGroupAddress { ugaCompanyNumber = uguUserGroupNumber
+                                       , ugaEntityName    = uguUserGroupName
+                                       , ugaAddress       = uguUserGroupAddress
+                                       , ugaZip           = uguUserGroupZip
+                                       , ugaCity          = uguUserGroupCity
+                                       , ugaCountry       = uguUserGroupCountry
+                                       }
       -- don't stop inheriting address, unless it has been changed
       updateAddress = case new_address == old_address of
         True  -> identity

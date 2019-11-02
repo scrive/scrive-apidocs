@@ -27,7 +27,7 @@ module UserGroup.Types (
   , fromUserGroupID
   , UserGroupSettings(..)
   , defaultUserGroupSettings
-  , UserGroupAddress(..)
+  , UserGroupAddress
   , defaultUserGroupAddress
   , UserGroupUI
   , defaultUserGroupUI
