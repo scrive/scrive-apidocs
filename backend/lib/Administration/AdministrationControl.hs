@@ -99,6 +99,7 @@ import qualified BrandedDomain.BrandedDomain.Internal as I
 import qualified Company.CompanyControl as Company
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
+import qualified UserGroup.Internal as I
 
 adminonlyRoutes :: Route (Kontra Response)
 adminonlyRoutes =
@@ -925,10 +926,10 @@ handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
   children <- dbQuery . UserGroupGetAllChildrenRecursive $ ugID root
   return $ object
     [ "user_group_structure"
-        .= (ugWithChildrenToJson $ UserGroupWithChildren root children)
+        .= (ugWithChildrenToJson $ I.UserGroupWithChildren root children)
     ]
   where
-    ugWithChildrenToJson (UserGroupWithChildren ug children) = object
+    ugWithChildrenToJson (I.UserGroupWithChildren ug children) = object
       [ "group" .= object ["name" .= ugName ug, identifier $ ugID ug]
       , "children" .= map ugWithChildrenToJson children
       ]

@@ -37,6 +37,7 @@ import User.UserID
 import UserGroup.Tables
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
+import qualified UserGroup.Internal as I
 
 data UserGroupCreate = UserGroupCreate UserGroup
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
@@ -505,7 +506,7 @@ instance (MonadDB m, MonadThrow m)
     let directChildren parentID =
           filter ((== Just parentID) . ugParentGroupID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
-        mkChild ug = UserGroupWithChildren ug . mkChildren $ ugID ug
+        mkChild ug = I.UserGroupWithChildren ug . mkChildren $ ugID ug
     return $ mkChildren ugid
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
