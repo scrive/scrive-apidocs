@@ -152,7 +152,7 @@ handleResolve :: Kontrakcja m => m InternalKontraResponse
 handleResolve = do
   ctx <- getContext
   let mnetsconfig = ctx ^. #netsConfig
-      domainUrl   = ctx ^. ctxDomainUrl
+      domainUrl   = ctx ^. #brandedDomain % #url
   case mnetsconfig of
     Nothing -> do
       logAttention_ "Request to resolve nets authorization when no nets config available"

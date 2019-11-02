@@ -59,7 +59,7 @@ resetPasswordMail ctx user setpasslink = do
     $ do
         F.value "personemail" $ getEmail user
         F.value "passwordlink" $ show setpasslink
-        F.value "ctxhostpart" $ ctx ^. ctxDomainUrl
+        F.value "ctxhostpart" $ ctx ^. #brandedDomain % #url
         brandingMailFields theme
 
 newUserMail
@@ -73,7 +73,7 @@ newUserMail ctx emailaddress activatelink = do
   kontramail (ctx ^. #mailNoreplyAddress) (ctx ^. #brandedDomain) theme "newUserMail" $ do
     F.value "email" $ emailaddress
     F.value "activatelink" $ show activatelink
-    F.value "ctxhostpart" $ ctx ^. ctxDomainUrl
+    F.value "ctxhostpart" $ ctx ^. #brandedDomain % #url
     brandingMailFields theme
 
 
@@ -95,7 +95,7 @@ mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
         F.value "email" $ email
         F.value "passwordlink" $ show setpasslink
         F.value "creatorname" $ maybe "" getSmartName (ctx ^. #maybeUser)
-        F.value "ctxhostpart" $ ctx ^. ctxDomainUrl
+        F.value "ctxhostpart" $ ctx ^. #brandedDomain % #url
         brandingMailFields theme
 
 
@@ -116,7 +116,7 @@ mailEmailChangeRequest ctx requestingUser changedUser newemail link = do
     $ do
         F.value "fullname" $ getFullName changedUser
         F.value "newemail" $ unEmail newemail
-        F.value "ctxhostpart" $ ctx ^. ctxDomainUrl
+        F.value "ctxhostpart" $ ctx ^. #brandedDomain % #url
         F.value "link" $ show link
         F.value "requestedby" $ getSmartName <$> requestingUser
         brandingMailFields theme

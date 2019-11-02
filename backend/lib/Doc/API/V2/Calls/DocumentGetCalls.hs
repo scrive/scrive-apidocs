@@ -132,7 +132,7 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
   void $ guardDocumentReadAccess Nothing doc
   guardDocumentStatus Pending doc
 
-  domainURL <- view ctxDomainUrl <$> getContext
+  domainURL <- view (#brandedDomain % #url) <$> getContext
   sigLink   <- apiGuardJust (signatoryLinkForDocumentNotFound did slid)
     $ getSigLinkFor slid doc
   magicHash <-

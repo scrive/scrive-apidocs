@@ -311,7 +311,7 @@ smsFields document = do
   F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
   F.value "documenttitle" $ documenttitle document
   F.value "authorlink"
-    $  (mctx ^. mctxDomainUrl)
+    $  (mctx ^. #brandedDomain % #url)
     <> (showt (LinkIssueDoc (documentid document)))
 
 smsInvitationLinkFields
@@ -332,7 +332,7 @@ smsInvitationLinkFields doc sl = do
     SignatoryAccessTokenForSMSBeforeClosing
     Nothing
   let link = LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh
-  F.value "link" $ mctx ^. mctxDomainUrl <> showt link
+  F.value "link" $ mctx ^. #brandedDomain % #url <> showt link
 
 smsConfirmationLinkFields
   :: ( CryptoRNG m
@@ -348,7 +348,7 @@ smsConfirmationLinkFields
 smsConfirmationLinkFields doc sl = do
   mctx             <- lift $ getMailContext
   (mh, expiration) <- lift $ makeConfirmationMagicHash sl
-  F.value "link" $ mctx ^. mctxDomainUrl <> showt
+  F.value "link" $ mctx ^. #brandedDomain % #url <> showt
     (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
   F.value "availabledate" $ formatTimeYMD expiration
 

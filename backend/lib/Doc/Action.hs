@@ -293,7 +293,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
           currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
         logInfo_ "Running sealDocument"
-        sealDocument $ mcxt ^. mctxDomainUrl
+        sealDocument $ mcxt ^. #brandedDomain % #url
 
         -- Here there is a race condition: when we commit, other callers
         -- of postDocumentClosedActions may see a document that lacks a

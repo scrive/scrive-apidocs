@@ -1,17 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module MailContext.Class (
     I.MailContext
-  , mctxDomainUrl
   , MailContextMonad(..)
   ) where
 
 import Control.Monad.Trans
-import Optics
 
 import qualified MailContext.Internal as I
-
-mctxDomainUrl :: Lens' I.MailContext Text
-mctxDomainUrl = #brandedDomain % #url
 
 class Monad m => MailContextMonad m where
   getMailContext :: m I.MailContext

@@ -36,7 +36,6 @@ import AccessControl.Types
 import API.Monad.V1
 import API.V2.Parameters
 import API.V2.Utils
-import Context
 import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
@@ -235,7 +234,7 @@ setup2FA = V2.api $ do
       if ok
         then do
           let email = useremail . userinfo $ user
-          url    <- view ctxDomainUrl <$> getContext
+          url    <- view (#brandedDomain % #url) <$> getContext
           qrCode <- liftIO $ makeQRFromURLEmailAndKey (T.unpack url) email key
           return . V2.Ok <$> runJSONGen $ do
             value "twofactor_active" False

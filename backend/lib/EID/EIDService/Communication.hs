@@ -19,7 +19,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Text as T
 
-import Context
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import EID.EIDService.Conf
@@ -44,7 +43,7 @@ createVerimiTransactionWithEIDService
 createVerimiTransactionWithEIDService conf did slid redirect = do
   ctx <- getContext
   let redirectUrl =
-        (ctx ^. ctxDomainUrl)
+        (ctx ^. #brandedDomain % #url)
           <> "/eid-service/redirect-endpoint/verimi/"
           <> showt did
           <> "/"
@@ -213,7 +212,7 @@ createIDINTransactionWithEIDService
 createIDINTransactionWithEIDService conf did slid redirect = do
   ctx <- getContext
   let redirectUrl =
-        (ctx ^. ctxDomainUrl)
+        (ctx ^. #brandedDomain % #url)
           <> "/eid-service/redirect-endpoint/idin/"
           <> showt did
           <> "/"

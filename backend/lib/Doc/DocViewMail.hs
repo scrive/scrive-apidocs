@@ -686,7 +686,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
 -- Helpers.
 
 makeFullLink :: MailContext -> Text -> Text
-makeFullLink mctx link = mctx ^. mctxDomainUrl <> link
+makeFullLink mctx link = mctx ^. #brandedDomain % #url <> link
 
 protectLink :: Bool -> MailContext -> KontraLink -> Maybe Text
 protectLink forMail mctx link | forMail   = Just $ makeFullLink mctx $ showt link
@@ -711,7 +711,7 @@ documentMailFields doc mctx = do
         $ preview (_Just % #ui % #mailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
-    F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
+    F.value "ctxhostpart" $ mctx ^. #brandedDomain % #url
     F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
     F.value "documenttitle" $ documenttitle doc
     F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
@@ -731,7 +731,7 @@ otherMailFields muser mctx = do
         $ preview (_Just % #ui % #mailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
-    F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
+    F.value "ctxhostpart" $ mctx ^. #brandedDomain % #url
     F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo

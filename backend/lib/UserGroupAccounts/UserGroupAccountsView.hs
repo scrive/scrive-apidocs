@@ -57,7 +57,7 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
              "mailNewCompanyUserInvite"
     $ do
         basicUserGroupInviteFields invited inviter ug
-        basicLinkFields (ctx ^. ctxDomainUrl) link
+        basicLinkFields (ctx ^. #brandedDomain % #url) link
         brandingMailFields theme
         F.value "creatorname" $ getSmartName inviter
         F.value "expiredate" $ formatTimeYMD expires
@@ -88,7 +88,7 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
                   "mailTakeoverSingleUserInvite"
     $ do
         basicUserGroupInviteFields invited inviter ug
-        basicLinkFields (ctx ^. ctxDomainUrl) link
+        basicLinkFields (ctx ^. #brandedDomain % #url) link
         brandingMailFields theme
 
 basicUserGroupInviteFields
