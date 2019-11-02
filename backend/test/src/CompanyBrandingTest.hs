@@ -215,11 +215,12 @@ testChangeCompanyUI = do
   newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
-  let ugui = ug ^. #ui
-        & (#mailTheme     ?~ themeID newTheme1)
-        & (#signviewTheme ?~ themeID newTheme2)
-        & (#serviceTheme  ?~ themeID newTheme3)
-        & (#browserTitle  ?~ "Wow")
+  let ugui =
+        (ug ^. #ui)
+          & (#mailTheme ?~ themeID newTheme1)
+          & (#signviewTheme ?~ themeID newTheme2)
+          & (#serviceTheme ?~ themeID newTheme3)
+          & (#browserTitle ?~ "Wow")
 
       newUgUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -245,11 +246,12 @@ testNormalUseCantChangeCompanyUI = do
   newTheme3  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
 
   let oldUGUI = ug ^. #ui
-      newUGUI = oldUGUI
-        & (#mailTheme     ?~ themeID newTheme1)
-        & (#signviewTheme ?~ themeID newTheme2)
-        & (#serviceTheme  ?~ themeID newTheme3)
-        & (#browserTitle  ?~ "Wow")
+      newUGUI =
+        oldUGUI
+          & (#mailTheme ?~ themeID newTheme1)
+          & (#signviewTheme ?~ themeID newTheme2)
+          & (#serviceTheme ?~ themeID newTheme3)
+          & (#browserTitle ?~ "Wow")
 
       newUGUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -271,10 +273,11 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   signviewTheme <- dbQuery $ GetTheme (mainbd ^. #signviewTheme)
   newTheme      <- dbUpdate
     $ InsertNewThemeForUserGroup (ug ^. #id) signviewTheme { themeBrandColor = "#669713" }
-  let newUgUI = ug ^. #ui
-        & (#mailTheme     ?~ themeID newTheme)
-        & (#signviewTheme ?~ themeID newTheme)
-        & (#serviceTheme  ?~ themeID newTheme)
+  let newUgUI =
+        (ug ^. #ui)
+          & (#mailTheme ?~ themeID newTheme)
+          & (#signviewTheme ?~ themeID newTheme)
+          & (#serviceTheme ?~ themeID newTheme)
 
   void $ dbUpdate $ UserGroupUpdate $ set #ui newUgUI ug
   (Just ugui1) <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)

@@ -98,8 +98,8 @@ import qualified API.V2 as V2
 import qualified BrandedDomain.BrandedDomain.Internal as I
 import qualified Company.CompanyControl as Company
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 import qualified UserGroup.Internal as I
+import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 adminonlyRoutes :: Route (Kontra Response)
 adminonlyRoutes =
@@ -639,7 +639,7 @@ getUserGroupAddressChange = do
     $ maybe identity (set #companyNumber) mcompanynumber
     . maybe identity (set #entityName)    mentityname
     . maybe identity (set #address)       mcompanyaddress
-    . maybe identity (set #zipCode)           mcompanyzip
+    . maybe identity (set #zipCode)       mcompanyzip
     . maybe identity (set #city)          mcompanycity
     . maybe identity (set #country)       mcompanycountry
 

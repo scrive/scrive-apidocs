@@ -49,6 +49,6 @@ testRolesNotInheritedInUserGroupTree = do
     createChildGroups root_ugid' = do
       ugrand0 <- rand 10 arbitrary
       ugrand1 <- rand 10 arbitrary
-      ug0 <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just root_ugid') ugrand0
+      ug0     <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just root_ugid') ugrand0
       ug1 <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just (ug0 ^. #id)) ugrand1
       return $ [ug0, ug1]

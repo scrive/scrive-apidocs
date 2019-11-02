@@ -2550,10 +2550,12 @@ archiveIdleDocuments now = do
         -- Get recursive all children, who inherit this DRP property.
         -- This requires another level of queries, but it just means 2 queries per
         -- UserGroup (1 for getting children + 1 for getting users)
-        children_ugs    <- ugGetChildrenInheritingProperty (ug_with_drp ^. #id) (view #settings)
+        children_ugs <- ugGetChildrenInheritingProperty (ug_with_drp ^. #id)
+                                                        (view #settings)
         archived_counts <- forM (ug_with_drp : children_ugs) $ \ug_with_inherited_drp ->
           do
-            users <- dbQuery $ UserGroupGetUsersIncludeDeleted $               ug_with_inherited_drp ^. #id
+            users <-
+              dbQuery $ UserGroupGetUsersIncludeDeleted $ ug_with_inherited_drp ^. #id
             forM users $ expireUserDocuments (Just ug_drp)
         return (sum $ concat archived_counts, map (^. #id) $ ug_with_drp : children_ugs)
       let (archived_counts, ugidss_with_drp) = unzip counts_and_ugids

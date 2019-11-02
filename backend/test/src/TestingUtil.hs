@@ -86,9 +86,9 @@ import UserGroup.Types.PaymentPlan
 import Util.Actor
 import Util.MonadUtils
 import qualified KontraError as KE
-import qualified UserGroup.Internal as I
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
+import qualified UserGroup.Internal as I
 
 newtype XMLChar = XMLChar { unXMLChar :: Char }
   deriving (Enum, Eq, Ord)
@@ -789,11 +789,12 @@ addNewUserGroupWithParent createFolder mparent = do
   ugazip           <- rand 10 (arbText 3 30)
   ugacity          <- rand 10 (arbText 3 30)
   ugacountry       <- rand 10 (arbText 3 30)
-  let ug = defaultUserGroup
-        & (#parentGroupID .~ mparent)
-        & (#name          .~ ugname)
-        & (#address       .~ uga)
-        & (#homeFolderID  .~ mUgFolderID)
+  let ug =
+        defaultUserGroup
+          & (#parentGroupID .~ mparent)
+          & (#name .~ ugname)
+          & (#address .~ uga)
+          & (#homeFolderID .~ mUgFolderID)
       uga = Just $ I.UserGroupAddress { companyNumber = ugacompanynumber
                                       , entityName    = ugaentityname
                                       , address       = ugaaddress

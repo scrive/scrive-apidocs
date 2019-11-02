@@ -273,14 +273,14 @@ instance CompositeFromSQL UserGroupInvoicing where
 -- USER GROUP
 
 defaultUserGroup :: UserGroup
-defaultUserGroup = ugFromUGRoot $ UserGroupRoot { id = emptyUserGroupID
-                                                , name = ""
+defaultUserGroup = ugFromUGRoot $ UserGroupRoot { id           = emptyUserGroupID
+                                                , name         = ""
                                                 , homeFolderID = Nothing
-                                                , settings = defaultUserGroupSettings
-                                                , paymentPlan = FreePlan
-                                                , address = defaultUserGroupAddress
-                                                , ui = defaultUserGroupUI
-                                                , features = defaultFeatures FreePlan
+                                                , settings     = defaultUserGroupSettings
+                                                , paymentPlan  = FreePlan
+                                                , address      = defaultUserGroupAddress
+                                                , ui           = defaultUserGroupUI
+                                                , features     = defaultFeatures FreePlan
                                                 }
 
 defaultChildUserGroup :: UserGroup
@@ -463,7 +463,7 @@ instance PQFormat UserGroupSettings where
 
 instance CompositeFromSQL UserGroupSettings where
   toComposite (ip_address_mask_list, drpIdleDocTimeoutPreparation, drpIdleDocTimeoutClosed, drpIdleDocTimeoutCanceled, drpIdleDocTimeoutTimedout, drpIdleDocTimeoutRejected, drpIdleDocTimeoutError, drpImmediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, _useFolderListCalls -- not yet used
-                                                                                                                                                                                                                                                                                                                                                                                                        , totpIsMandatory, sessionTimeoutSecs, portalUrl)
+                                                                                                                                                                                                                                                                                                                                                                                , totpIsMandatory, sessionTimeoutSecs, portalUrl)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = DataRetentionPolicy { .. }
@@ -525,4 +525,4 @@ instance PQFormat UserGroupAddress where
 
 instance CompositeFromSQL UserGroupAddress where
   toComposite (companyNumber, entityName, address, zipCode, city, country) =
-    UserGroupAddress {..}
+    UserGroupAddress { .. }

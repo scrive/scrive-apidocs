@@ -242,8 +242,8 @@ userGroupApiSettingsV2Update ugid = api $ do
       case updateUserGroupDataRetentionFromRequest dataRetention settingsChanges of
         Nothing -> apiError $ requestFailed "Error parsing address update object."
         Just ugSettUpdated -> return ugSettUpdated
-    dbUpdate . UserGroupUpdateSettings ugid . Just $ ugSett
-      & (#dataRetentionPolicy .~ dataRetentionUpdated)
+    dbUpdate . UserGroupUpdateSettings ugid $ Just
+      (ugSett & #dataRetentionPolicy .~ dataRetentionUpdated)
     -- Return response
     Ok . encodeUserGroupSettings inheritable <$> userGroupWithParentsOrAPIError ugid
 

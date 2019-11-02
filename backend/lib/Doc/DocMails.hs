@@ -834,7 +834,7 @@ sendPortalInvite authorUser portalUrl email name = do
       let ug0 = set #homeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
-                           (""     , "")
+                           (""       , "")
                            (ug ^. #id, True)
                            (getLang authorUser)
                            PortalInvite
@@ -878,7 +878,7 @@ sendPortalReminder authorUser portalUrl email name = do
       let ug0 = set #homeFolderID (Just $ folderID ugFolder) $ defaultUserGroup
       ug     <- dbUpdate $ UserGroupCreate ug0
       mnuser <- createUser email
-                           (""     , "")
+                           (""       , "")
                            (ug ^. #id, True)
                            (getLang authorUser)
                            PortalInvite

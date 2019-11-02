@@ -239,15 +239,15 @@ testCustomSessionTimeoutInheritance = do
   userGroup13              <- dbUpdate $ UserGroupCreate userGroup12
 
   userGroup21 :: UserGroup <- rand 10 arbitrary
-  let userGroup22 = userGroup21
-        & (#parentGroupID ?~ userGroup13 ^. #id)
-        & (#settings .~ Nothing)
+  let userGroup22 =
+        userGroup21 & (#parentGroupID ?~ userGroup13 ^. #id) & (#settings .~ Nothing)
   userGroup23 <- dbUpdate $ UserGroupCreate userGroup22
 
-  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $     userGroup23 ^. #id
+  userGroup24 :: Maybe UserGroupWithParents <-
+    dbQuery $ UserGroupGetWithParents $ userGroup23 ^. #id
 
-  let groupSettings2            = ugwpSettings <$> userGroup24
-      timeoutVal = view #sessionTimeoutSecs =<< groupSettings2
+  let groupSettings2 = ugwpSettings <$> userGroup24
+      timeoutVal     = view #sessionTimeoutSecs =<< groupSettings2
 
   assertEqual "session timeout value should be inherited from parent user group"
               (Just sessionTimeout)
@@ -257,7 +257,8 @@ testCustomSessionTimeoutInheritance = do
     time1 <- currentTime
     setTestTime time1
 
-    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com" $ userGroup23 ^. #id
+    (Just user) <-
+      addNewCompanyUser "John" "Smith" "smith@example.com" $ userGroup23 ^. #id
 
     let userId = userid user
     (session1, _) <- insertNewSession userId

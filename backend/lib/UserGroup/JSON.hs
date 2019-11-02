@@ -31,18 +31,17 @@ encodeUserGroup inheritable ugwp children =
     <> pair "contact_details" (encodeUserGroupContactDetails inheritable ugwp)
     <> pair "settings" (encodeUserGroupSettings inheritable ugwp)
   where
-    ug = ugwpUG ugwp
-    childrenEncoding =
-      flip list children $ \child -> pairs $ "id" .= (child ^. #id) <> "name" .= (child ^. #name)
+    ug               = ugwpUG ugwp
+    childrenEncoding = flip list children
+      $ \child -> pairs $ "id" .= (child ^. #id) <> "name" .= (child ^. #name)
 
 updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
 updateUserGroupFromRequest ug ugChanges = do
   let ugReq =
         UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID, reqName = ug ^. #name }
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
-    (Result ugUpdated []) -> Just $ ug
-      & (#parentGroupID .~ reqParentID ugUpdated)
-      & (#name          .~ reqName ugUpdated)
+    (Result ugUpdated []) ->
+      Just $ ug & (#parentGroupID .~ reqParentID ugUpdated) & (#name .~ reqName ugUpdated)
     (Result _ _) -> Nothing
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON

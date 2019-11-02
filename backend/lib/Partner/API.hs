@@ -96,10 +96,11 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
         . UserGroupGetWithParents
         $ partnerUsrGrpID
       newUgFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug_new = defaultUserGroup
-            & (#parentGroupID ?~ partnerUsrGrpID)
-            & (#homeFolderID  ?~ folderID newUgFolder)
-            & (#invoicing     .~ BillItem (Just FreePlan))
+      let ug_new =
+            defaultUserGroup
+              & (#parentGroupID ?~ partnerUsrGrpID)
+              & (#homeFolderID ?~ folderID newUgFolder)
+              & (#invoicing .~ BillItem (Just FreePlan))
       ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug =
             updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu
@@ -112,8 +113,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
           ugwp <-
             apiGuardJustM (serverError "Was not able to retrieve newly created company")
             . dbQuery
-            . UserGroupGetWithParents
-            $ ug' ^. #id
+            $ UserGroupGetWithParents (ug' ^. #id)
           Created
             <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 

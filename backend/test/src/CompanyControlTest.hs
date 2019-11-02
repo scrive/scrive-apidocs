@@ -95,7 +95,8 @@ test_settingUIWithHandleChangeCompanyBranding = do
   mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #signviewTheme)
-  signviewTheme <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) signviewThemeFromDomain
+  signviewTheme <- dbUpdate
+    $ InsertNewThemeForUserGroup (ug ^. #id) signviewThemeFromDomain
   serviceThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #serviceTheme)
   serviceTheme <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) serviceThemeFromDomain
   let browserTitle  = "Super"

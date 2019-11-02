@@ -485,9 +485,9 @@ apiCallSignup = api $ do
       | otherwise -> return $ Just user
     Nothing -> do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-      let ug0 = defaultUserGroup
-            & (#name         .~ companyName)
-            & (#homeFolderID ?~ folderID ugFolder)
+      let
+        ug0 =
+          defaultUserGroup & (#name .~ companyName) & (#homeFolderID ?~ folderID ugFolder)
       ug <- dbUpdate $ UserGroupCreate ug0
       createUser (Email email) (firstname, lastname) (ug ^. #id, True) lang AccountRequest
   case muser' of
