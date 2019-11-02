@@ -353,7 +353,7 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
     userDRP    <- rand 10 arbitrary
     companyDRP <- rand 10 arbitrary
 
-    let ug' = set (#settings % _Just % #ugsDataRetentionPolicy) companyDRP ug
+    let ug' = set (#settings % _Just % #dataRetentionPolicy) companyDRP ug
     void $ dbUpdate $ UserGroupUpdate ug'
 
     let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy userDRP

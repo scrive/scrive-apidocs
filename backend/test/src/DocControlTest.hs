@@ -969,7 +969,7 @@ testSendEmailOnTimeout = do
   ug        <- addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (userid user) (ug ^. #id)
-  let newUGS = (set #ugsSendTimeoutNotification True (fromJust $ ug ^. #settings))
+  let newUGS = (set #sendTimeoutNotification True (fromJust $ ug ^. #settings))
   dbUpdate $ UserGroupUpdateSettings (ug ^. #id) (Just newUGS)
 
   doc <- addRandomDocument (rdaDefault user) { rdaTypes       = OneOf [Signable]

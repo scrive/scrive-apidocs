@@ -328,7 +328,7 @@ handlePasswordReminderPost uid token = do
   ipIsOK <- case muser of
     Just u -> do
       ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid u
-      let masklist = ugwpSettings ugwp ^. #ugsIPAddressMaskList
+      let masklist = ugwpSettings ugwp ^. #ipAddressMaskList
       ctx <- getContext
       return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
     Nothing -> return True

@@ -73,6 +73,6 @@ apiCallGetPadInfo = V2.api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ugwp         <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
   return $ V2.Ok $ object
-    [ "app_mode" .= padAppModeText (ugwpSettings ugwp ^. #ugsPadAppMode)
-    , "e_archive_enabled" .= (ugwpSettings ugwp ^. #ugsPadEarchiveEnabled)
+    [ "app_mode" .= padAppModeText (ugwpSettings ugwp ^. #padAppMode)
+    , "e_archive_enabled" .= (ugwpSettings ugwp ^. #padEarchiveEnabled)
     ]

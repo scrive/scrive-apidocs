@@ -252,7 +252,7 @@ docApiV2StartWithPortal = api $ do
     return =<< theDocument -- return changed
 
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
-  case ugwpSettings ugwp ^. #ugsPortalUrl of
+  case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
       sendPortalInvites user portalUrl docs
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
@@ -440,7 +440,7 @@ docApiV2RemindWithPortal = api $ do
     return =<< theDocument -- return changed
 
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
-  case ugwpSettings ugwp ^. #ugsPortalUrl of
+  case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
       forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs)
         $ \(email, name) -> sendPortalReminder user portalUrl email name

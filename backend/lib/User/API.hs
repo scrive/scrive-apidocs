@@ -698,7 +698,7 @@ apiCallGetDataRetentionPolicy = V2.api $ do
 
   let drp = dataretentionpolicy $ usersettings user
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
-  let ugDRP = ugwpSettings ugwp ^. #ugsDataRetentionPolicy
+  let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
 
   return $ V2.Ok $ object
     [ "data_retention_policy" .= unjsonToJSON unjsonDataRetentionPolicy drp
@@ -710,7 +710,7 @@ apiCallSetDataRetentionPolicy = V2.api $ do
   (user, _, _) <- getAPIUser APIPersonal
 
   ugwp         <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
-  let ugDRP = ugwpSettings ugwp ^. #ugsDataRetentionPolicy
+  let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
   drp <- V2.apiV2ParameterObligatory
     $ V2.ApiV2ParameterJSON "data_retention_policy" unjsonDataRetentionPolicy
   guardThatDataRetentionPolicyIsValid drp $ Just ugDRP

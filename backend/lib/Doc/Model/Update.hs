@@ -2546,7 +2546,7 @@ archiveIdleDocuments now = do
       -- all usergroups with any Retention Policy have ugSettings
       let ugs_settings = mapMaybe (\ug -> (ug, ) <$> ug ^. #settings) ugs
       counts_and_ugids <- forM ugs_settings $ \(ug_with_drp, ug_settings) -> do
-        let ug_drp = ug_settings ^. #ugsDataRetentionPolicy
+        let ug_drp = ug_settings ^. #dataRetentionPolicy
         -- Get recursive all children, who inherit this DRP property.
         -- This requires another level of queries, but it just means 2 queries per
         -- UserGroup (1 for getting children + 1 for getting users)

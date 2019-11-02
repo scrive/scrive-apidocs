@@ -488,7 +488,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
     . listToMaybe
     . catMaybes
     $ [newUG ^. #settings, ugwpSettings <$> ugwpOnlyParents ugwp]
-  guardThatDataRetentionPolicyIsValid (newSettings ^. #ugsDataRetentionPolicy) Nothing
+  guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
 
@@ -554,39 +554,39 @@ getUserGroupSettingsChange = do
   mcompanyportalurl <- fmap emptyToNothing <$> getField "companyportalurl"
 
   return
-    $ maybe identity (set #ugsIPAddressMaskList) mcompanyipaddressmasklist
-    . maybe identity (set #ugsCGIDisplayName)    mcompanycgidisplayname
+    $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
+    . maybe identity (set #cgiDisplayName)    mcompanycgidisplayname
     . maybe identity
-            (set (#ugsDataRetentionPolicy % #drpIdleDocTimeoutPreparation))
+            (set (#dataRetentionPolicy % #drpIdleDocTimeoutPreparation))
             mcompanyidledoctimeoutpreparation
     . maybe identity
-            (set (#ugsDataRetentionPolicy % #drpIdleDocTimeoutClosed))
+            (set (#dataRetentionPolicy % #drpIdleDocTimeoutClosed))
             mcompanyidledoctimeoutclosed
     . maybe identity
-            (set (#ugsDataRetentionPolicy % #drpIdleDocTimeoutCanceled))
+            (set (#dataRetentionPolicy % #drpIdleDocTimeoutCanceled))
             mcompanyidledoctimeoutcanceled
     . maybe identity
-            (set (#ugsDataRetentionPolicy % #drpIdleDocTimeoutTimedout))
+            (set (#dataRetentionPolicy % #drpIdleDocTimeoutTimedout))
             mcompanyidledoctimeouttimedout
     . maybe identity
-            (set (#ugsDataRetentionPolicy % #drpIdleDocTimeoutRejected))
+            (set (#dataRetentionPolicy % #drpIdleDocTimeoutRejected))
             mcompanyidledoctimeoutrejected
     . maybe identity
-            (set (#ugsDataRetentionPolicy % #drpIdleDocTimeoutError))
+            (set (#dataRetentionPolicy % #drpIdleDocTimeoutError))
             mcompanyidledoctimeouterror
     . maybe identity
-            (set (#ugsDataRetentionPolicy % #drpImmediateTrash) . (== "true"))
+            (set (#dataRetentionPolicy % #drpImmediateTrash) . (== "true"))
             mcompanyimmediatetrash
-    . maybe identity (set #ugsCGIServiceID) mcompanycgiserviceid
-    . maybe identity (set #ugsSMSProvider)  mcompanysmsprovider
-    . maybe identity (set #ugsPadAppMode)   mcompanypadappmode
-    . maybe identity (set #ugsPadEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
+    . maybe identity (set #cgiServiceID) mcompanycgiserviceid
+    . maybe identity (set #smsProvider)  mcompanysmsprovider
+    . maybe identity (set #padAppMode)   mcompanypadappmode
+    . maybe identity (set #padEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
     . maybe identity
-            (set #ugsSendTimeoutNotification . (== "true"))
+            (set #sendTimeoutNotification . (== "true"))
             mcompanysendtimeoutnotification
-    . maybe identity (set #ugsTotpIsMandatory . (== "true")) mcompanytotpismandatory
-    . maybe identity (set #ugsSessionTimeoutSecs)            mcompanysessiontimeout
-    . maybe identity (set #ugsPortalUrl)                     mcompanyportalurl
+    . maybe identity (set #totpIsMandatory . (== "true")) mcompanytotpismandatory
+    . maybe identity (set #sessionTimeoutSecs)            mcompanysessiontimeout
+    . maybe identity (set #portalUrl)                     mcompanyportalurl
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))

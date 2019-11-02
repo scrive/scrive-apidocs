@@ -168,19 +168,19 @@ data InvoicingType =
   deriving (Eq, Ord)
 
 data UserGroupSettings = UserGroupSettings
-  { ugsIPAddressMaskList         :: [IPAddressWithMask]
-  , ugsDataRetentionPolicy       :: DataRetentionPolicy
-  , ugsCGIDisplayName            :: Maybe Text
-  , ugsCGIServiceID              :: Maybe Text
-  , ugsSMSProvider               :: SMSProvider
-  , ugsPadAppMode                :: PadAppMode
-  , ugsPadEarchiveEnabled        :: Bool
-  , ugsLegalText                 :: Bool
-  , ugsRequireBPIDForNewDoc      :: Bool
-  , ugsSendTimeoutNotification   :: Bool
-  , ugsTotpIsMandatory           :: Bool
-  , ugsSessionTimeoutSecs        :: Maybe Int32
-  , ugsPortalUrl                 :: Maybe Text
+  { ipAddressMaskList         :: [IPAddressWithMask]
+  , dataRetentionPolicy       :: DataRetentionPolicy
+  , cgiDisplayName            :: Maybe Text
+  , cgiServiceID              :: Maybe Text
+  , smsProvider               :: SMSProvider
+  , padAppMode                :: PadAppMode
+  , padEarchiveEnabled        :: Bool
+  , legalText                 :: Bool
+  , requireBPIDForNewDoc      :: Bool
+  , sendTimeoutNotification   :: Bool
+  , totpIsMandatory           :: Bool
+  , sessionTimeoutSecs        :: Maybe Int32
+  , portalUrl                 :: Maybe Text
   } deriving (Show, Eq)
 
 data UserGroupUI = UserGroupUI
@@ -420,19 +420,19 @@ ugwcToList ugwcs =
 
 defaultUserGroupSettings :: UserGroupSettings
 defaultUserGroupSettings = UserGroupSettings
-  { ugsIPAddressMaskList       = []
-  , ugsDataRetentionPolicy     = defaultDataRetentionPolicy
-  , ugsCGIDisplayName          = Nothing
-  , ugsCGIServiceID            = Nothing
-  , ugsSMSProvider             = SMSDefault
-  , ugsPadAppMode              = ListView
-  , ugsPadEarchiveEnabled      = True
-  , ugsLegalText               = False
-  , ugsRequireBPIDForNewDoc    = False
-  , ugsSendTimeoutNotification = False
-  , ugsTotpIsMandatory         = False
-  , ugsSessionTimeoutSecs      = Nothing
-  , ugsPortalUrl               = Nothing
+  { ipAddressMaskList       = []
+  , dataRetentionPolicy     = defaultDataRetentionPolicy
+  , cgiDisplayName          = Nothing
+  , cgiServiceID            = Nothing
+  , smsProvider             = SMSDefault
+  , padAppMode              = ListView
+  , padEarchiveEnabled      = True
+  , legalText               = False
+  , requireBPIDForNewDoc    = False
+  , sendTimeoutNotification = False
+  , totpIsMandatory         = False
+  , sessionTimeoutSecs      = Nothing
+  , portalUrl               = Nothing
   }
 
 type instance CompositeRow UserGroupSettings
@@ -462,11 +462,11 @@ instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, drpIdleDocTimeoutPreparation, drpIdleDocTimeoutClosed, drpIdleDocTimeoutCanceled, drpIdleDocTimeoutTimedout, drpIdleDocTimeoutRejected, drpIdleDocTimeoutError, drpImmediateTrash, ugsCGIDisplayName, ugsSMSProvider, ugsCGIServiceID, ugsPadAppMode, ugsPadEarchiveEnabled, ugsLegalText, ugsRequireBPIDForNewDoc, ugsSendTimeoutNotification, _useFolderListCalls -- not yet used
-                                                                                                                                                                                                                                                                                                                                                                                                        , ugsTotpIsMandatory, ugsSessionTimeoutSecs, ugsPortalUrl)
+  toComposite (ip_address_mask_list, drpIdleDocTimeoutPreparation, drpIdleDocTimeoutClosed, drpIdleDocTimeoutCanceled, drpIdleDocTimeoutTimedout, drpIdleDocTimeoutRejected, drpIdleDocTimeoutError, drpImmediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, _useFolderListCalls -- not yet used
+                                                                                                                                                                                                                                                                                                                                                                                                        , totpIsMandatory, sessionTimeoutSecs, portalUrl)
     = UserGroupSettings
-      { ugsIPAddressMaskList   = maybe [] read ip_address_mask_list
-      , ugsDataRetentionPolicy = DataRetentionPolicy { .. }
+      { ipAddressMaskList   = maybe [] read ip_address_mask_list
+      , dataRetentionPolicy = DataRetentionPolicy { .. }
       , ..
       }
 

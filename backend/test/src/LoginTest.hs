@@ -430,7 +430,7 @@ testUser2FAEnforced = do
   void . dbUpdate $ SetUserTotpIsMandatory uid False
 
   -- going to archive with 2FA enforced for the usergroup returns a redirect
-  void . dbUpdate . UserGroupUpdate $ set (#settings % _Just % #ugsTotpIsMandatory)
+  void . dbUpdate . UserGroupUpdate $ set (#settings % _Just % #totpIsMandatory)
                                           True
                                           ug
   res2 <- fst <$> runTestKontra req1 ctx' showArchive

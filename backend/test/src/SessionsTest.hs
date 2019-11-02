@@ -113,7 +113,7 @@ testCustomSessionTimeout = do
   groupSettings1 <- assertJustAndExtract $ userGroup ^. #settings
 
   assertEqual "initial group session timeout should be nothing"
-              (groupSettings1 ^. #ugsSessionTimeoutSecs)
+              (groupSettings1 ^. #sessionTimeoutSecs)
               Nothing
 
   do
@@ -123,7 +123,7 @@ testCustomSessionTimeout = do
     -- Test a long session timeout of 7 days
     let sessionTimeout = 7 * 24 * 60 * 60
 
-    let groupSettings2 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings1
+    let groupSettings2 = set #sessionTimeoutSecs (Just sessionTimeout) groupSettings1
     dbUpdate $ UserGroupUpdateSettings userGroupId (Just groupSettings2)
 
     (session1, _) <- insertNewSession userId
@@ -150,7 +150,7 @@ testCustomSessionTimeout = do
 
     setTestTime time1
 
-    let groupSettings2 = set #ugsSessionTimeoutSecs Nothing groupSettings1
+    let groupSettings2 = set #sessionTimeoutSecs Nothing groupSettings1
     dbUpdate $ UserGroupUpdateSettings userGroupId (Just groupSettings2)
 
     (session2, _) <- insertNewSession userId
@@ -207,7 +207,7 @@ testCustomSessionTimeoutDelay = do
       sessionTimeout        = 15 * 60  -- test 15 mins session timout
 
   do
-    let groupSettings2 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings1
+    let groupSettings2 = set #sessionTimeoutSecs (Just sessionTimeout) groupSettings1
     dbUpdate $ UserGroupUpdateSettings userGroupId (Just groupSettings2)
 
   (session, _) <- insertNewSession userId
@@ -233,7 +233,7 @@ testCustomSessionTimeoutInheritance = do
   let groupSettings11 = userGroup11 ^. #settings
 
       sessionTimeout  = 7 * 24 * 60 * 60
-      groupSettings12 = set #ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings11
+      groupSettings12 = set #sessionTimeoutSecs (Just sessionTimeout) groupSettings11
       userGroup12     = set #settings (Just groupSettings12) $ ugFromUGRoot userGroup11
 
   userGroup13              <- dbUpdate $ UserGroupCreate userGroup12
@@ -247,7 +247,7 @@ testCustomSessionTimeoutInheritance = do
   userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $     userGroup23 ^. #id
 
   let groupSettings2            = ugwpSettings <$> userGroup24
-      timeoutVal = view #ugsSessionTimeoutSecs =<< groupSettings2
+      timeoutVal = view #sessionTimeoutSecs =<< groupSettings2
 
   assertEqual "session timeout value should be inherited from parent user group"
               (Just sessionTimeout)

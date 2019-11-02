@@ -237,13 +237,13 @@ userGroupApiSettingsV2Update ugid = api $ do
           Nothing   -> unexpectedError "Impossible happened (parent ID does not exist)"
           Just ugwp -> return $ ugwpSettings ugwp
       Just ugSett -> return ugSett
-    let dataRetention = ugSett ^. #ugsDataRetentionPolicy
+    let dataRetention = ugSett ^. #dataRetentionPolicy
     dataRetentionUpdated <-
       case updateUserGroupDataRetentionFromRequest dataRetention settingsChanges of
         Nothing -> apiError $ requestFailed "Error parsing address update object."
         Just ugSettUpdated -> return ugSettUpdated
     dbUpdate . UserGroupUpdateSettings ugid . Just $ ugSett
-      & (#ugsDataRetentionPolicy .~ dataRetentionUpdated)
+      & (#dataRetentionPolicy .~ dataRetentionUpdated)
     -- Return response
     Ok . encodeUserGroupSettings inheritable <$> userGroupWithParentsOrAPIError ugid
 

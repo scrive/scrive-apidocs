@@ -1476,7 +1476,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
         && isJust (signatorylinkreallydeleted sl)
 
   dbUpdate . UserGroupUpdate $ set
-    (#settings % _Just % #ugsDataRetentionPolicy % #drpImmediateTrash)
+    (#settings % _Just % #dataRetentionPolicy % #drpImmediateTrash)
     True
     ug
 
@@ -1506,7 +1506,7 @@ testArchiveIdleDocument = replicateM_ 10 $ do
 
   let oldUGS = fromJust $ ug ^. #settings
       newUGS =
-        set (#ugsDataRetentionPolicy % drpIdleDocTimeout (documentstatus doc)) (Just 1)
+        set (#dataRetentionPolicy % drpIdleDocTimeout (documentstatus doc)) (Just 1)
           $ oldUGS
   void $ dbUpdate . UserGroupUpdate . set #settings (Just newUGS) $ ug
 
