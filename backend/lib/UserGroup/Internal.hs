@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell #-}
 module UserGroup.Internal (
     InvoicingType(..)
@@ -135,14 +136,14 @@ data UserGroup = UserGroup
   } deriving (Show, Eq)
 
 data UserGroupRoot = UserGroupRoot
-  { ugrID            :: UserGroupID
-  , ugrName          :: Text
-  , ugrHomeFolderID  :: Maybe FolderID
-  , ugrAddress       :: UserGroupAddress
-  , ugrSettings      :: UserGroupSettings
-  , ugrPaymentPlan   :: PaymentPlan  -- user group root always must have Invoice
-  , ugrUI            :: UserGroupUI
-  , ugrFeatures      :: Features
+  { id            :: UserGroupID
+  , name          :: Text
+  , homeFolderID  :: Maybe FolderID
+  , address       :: UserGroupAddress
+  , settings      :: UserGroupSettings
+  , paymentPlan   :: PaymentPlan  -- user group root always must have Invoice
+  , ui            :: UserGroupUI
+  , features      :: Features
   } deriving (Show, Eq)
 
 -- UserGroup list is ordered from Leaf to Child of Root)
@@ -272,14 +273,14 @@ instance CompositeFromSQL UserGroupInvoicing where
 -- USER GROUP
 
 defaultUserGroup :: UserGroup
-defaultUserGroup = ugFromUGRoot $ UserGroupRoot { ugrID = emptyUserGroupID
-                                                , ugrName = ""
-                                                , ugrHomeFolderID = Nothing
-                                                , ugrSettings = defaultUserGroupSettings
-                                                , ugrPaymentPlan = FreePlan
-                                                , ugrAddress = defaultUserGroupAddress
-                                                , ugrUI = defaultUserGroupUI
-                                                , ugrFeatures = defaultFeatures FreePlan
+defaultUserGroup = ugFromUGRoot $ UserGroupRoot { id = emptyUserGroupID
+                                                , name = ""
+                                                , homeFolderID = Nothing
+                                                , settings = defaultUserGroupSettings
+                                                , paymentPlan = FreePlan
+                                                , address = defaultUserGroupAddress
+                                                , ui = defaultUserGroupUI
+                                                , features = defaultFeatures FreePlan
                                                 }
 
 defaultChildUserGroup :: UserGroup
@@ -326,31 +327,31 @@ ugrFromUG :: UserGroup -> Maybe UserGroupRoot
 ugrFromUG ug = do
   -- the root of usergroup tree must have Invoice, Settings, Address, UI
   -- and Feature Flags
-  ugrPaymentPlan <- case ug ^. #invoicing of
+  paymentPlan <- case ug ^. #invoicing of
     None        -> Nothing
     BillItem _  -> Nothing         -- the root of usergroup tree must have:
     Invoice  pp -> Just pp         --   Invoice
-  ugrSettings <- ug ^. #settings  --   Settings
-  ugrAddress  <- ug ^. #address    --   Address
-  ugrFeatures <- ug ^. #features  --   Features
+  settings <- ug ^. #settings  --   Settings
+  address  <- ug ^. #address    --   Address
+  features <- ug ^. #features  --   Features
   return $ UserGroupRoot
-    { ugrID           = ug ^. #id
-    , ugrName         = ug ^. #name
-    , ugrHomeFolderID = ug ^. #homeFolderID
-    , ugrUI           = ug ^. #ui
+    { id           = ug ^. #id
+    , name         = ug ^. #name
+    , homeFolderID = ug ^. #homeFolderID
+    , ui           = ug ^. #ui
     , ..
     }
 
 ugFromUGRoot :: UserGroupRoot -> UserGroup
-ugFromUGRoot ugr = UserGroup { id            = ugrID ugr
-                             , name          = ugrName ugr
-                             , homeFolderID  = ugrHomeFolderID ugr
+ugFromUGRoot ugr = UserGroup { id            = ugr ^. #id
+                             , name          = ugr ^. #name
+                             , homeFolderID  = ugr ^. #homeFolderID
                              , parentGroupID = Nothing
-                             , invoicing     = Invoice . ugrPaymentPlan $ ugr
-                             , settings      = Just $ ugrSettings ugr
-                             , address       = Just $ ugrAddress ugr
-                             , ui            = ugrUI ugr
-                             , features      = Just $ ugrFeatures ugr
+                             , invoicing     = Invoice $ ugr ^. #paymentPlan
+                             , settings      = Just $ ugr ^. #settings
+                             , address       = Just $ ugr ^. #address
+                             , ui            = ugr ^. #ui
+                             , features      = Just $ ugr ^. #features
                              }
 
 -- USER GROUP WITH PARENTS
@@ -364,7 +365,7 @@ ugwpInherit
   -> UserGroupWithParents
   -> (UserGroupID, a)
 ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
-  fromMaybe (ugrID ug_root, ugrProperty ug_root)
+  fromMaybe (ug_root ^. #id, ugrProperty ug_root)
     . listToMaybe
     . catMaybes
     . map (makeIDPropertyTuple)
@@ -375,28 +376,28 @@ ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
       Just prop -> Just (ug ^. #id, prop)
 
 ugwpPaymentPlan :: UserGroupWithParents -> PaymentPlan
-ugwpPaymentPlan = snd . ugwpInherit (^. #ugrPaymentPlan) ugPaymentPlan
+ugwpPaymentPlan = snd . ugwpInherit (^. #paymentPlan) ugPaymentPlan
 
 ugwpPaymentPlanWithID :: UserGroupWithParents -> (UserGroupID, PaymentPlan)
-ugwpPaymentPlanWithID = ugwpInherit (^. #ugrPaymentPlan) ugPaymentPlan
+ugwpPaymentPlanWithID = ugwpInherit (^. #paymentPlan) ugPaymentPlan
 
 ugwpSettings :: UserGroupWithParents -> UserGroupSettings
-ugwpSettings = snd . ugwpInherit (^. #ugrSettings) (^. #settings)
+ugwpSettings = snd . ugwpInherit (^. #settings) (^. #settings)
 
 ugwpSettingsWithID :: UserGroupWithParents -> (UserGroupID, UserGroupSettings)
-ugwpSettingsWithID = ugwpInherit (^. #ugrSettings) (^. #settings)
+ugwpSettingsWithID = ugwpInherit (^. #settings) (^. #settings)
 
 ugwpAddress :: UserGroupWithParents -> UserGroupAddress
-ugwpAddress = snd . ugwpInherit (^. #ugrAddress) (^. #address)
+ugwpAddress = snd . ugwpInherit (^. #address) (^. #address)
 
 ugwpAddressWithID :: UserGroupWithParents -> (UserGroupID, UserGroupAddress)
-ugwpAddressWithID = ugwpInherit (^. #ugrAddress) (^. #address)
+ugwpAddressWithID = ugwpInherit (^. #address) (^. #address)
 
 ugwpFeatures :: UserGroupWithParents -> Features
-ugwpFeatures = snd . ugwpInherit (^. #ugrFeatures) (^. #features)
+ugwpFeatures = snd . ugwpInherit (^. #features) (^. #features)
 
 ugwpFeaturesWithID :: UserGroupWithParents -> (UserGroupID, Features)
-ugwpFeaturesWithID = ugwpInherit (^. #ugrFeatures) (^. #features)
+ugwpFeaturesWithID = ugwpInherit (^. #features) (^. #features)
 
 ugwpToList :: UserGroupWithParents -> [UserGroup]
 ugwpToList (ug_root, ug_children_path) = ug_children_path ++ [ugFromUGRoot ug_root]
