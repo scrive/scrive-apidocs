@@ -21,7 +21,7 @@ module UserGroup.Types (
   , ugwpAddChild
   , ugrFromUG
   , ugwcToList
-  , UserGroupID(..)
+  , UserGroupID
   , emptyUserGroupID
   , unsafeUserGroupID
   , fromUserGroupID
