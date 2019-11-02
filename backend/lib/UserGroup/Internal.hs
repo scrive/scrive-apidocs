@@ -184,12 +184,12 @@ data UserGroupSettings = UserGroupSettings
   } deriving (Show, Eq)
 
 data UserGroupUI = UserGroupUI
-  { uguiMailTheme     :: !(Maybe ThemeID)
-  , uguiSignviewTheme :: !(Maybe ThemeID)
-  , uguiServiceTheme  :: !(Maybe ThemeID)
-  , uguiBrowserTitle  :: !(Maybe Text)
-  , uguiSmsOriginator :: !(Maybe Text)
-  , uguiFavicon       :: !(Maybe BS.ByteString)
+  { mailTheme     :: !(Maybe ThemeID)
+  , signviewTheme :: !(Maybe ThemeID)
+  , serviceTheme  :: !(Maybe ThemeID)
+  , browserTitle  :: !(Maybe Text)
+  , smsOriginator :: !(Maybe Text)
+  , favicon       :: !(Maybe BS.ByteString)
   } deriving (Eq, Ord, Show)
 
 data UserGroupAddress = UserGroupAddress
@@ -473,12 +473,12 @@ instance CompositeFromSQL UserGroupSettings where
 -- UI
 
 defaultUserGroupUI :: UserGroupUI
-defaultUserGroupUI = UserGroupUI { uguiMailTheme     = Nothing
-                                 , uguiSignviewTheme = Nothing
-                                 , uguiServiceTheme  = Nothing
-                                 , uguiBrowserTitle  = Nothing
-                                 , uguiSmsOriginator = Nothing
-                                 , uguiFavicon       = Nothing
+defaultUserGroupUI = UserGroupUI { mailTheme     = Nothing
+                                 , signviewTheme = Nothing
+                                 , serviceTheme  = Nothing
+                                 , browserTitle  = Nothing
+                                 , smsOriginator = Nothing
+                                 , favicon       = Nothing
                                  }
 
 type instance CompositeRow UserGroupUI
@@ -495,12 +495,12 @@ instance PQFormat UserGroupUI where
 
 instance CompositeFromSQL UserGroupUI where
   toComposite (mail_theme, signview_theme, service_theme, browser_title, sms_originator, favicon)
-    = UserGroupUI { uguiMailTheme     = mail_theme
-                  , uguiSignviewTheme = signview_theme
-                  , uguiServiceTheme  = service_theme
-                  , uguiBrowserTitle  = browser_title
-                  , uguiSmsOriginator = sms_originator
-                  , uguiFavicon       = faviconFromBinary favicon
+    = UserGroupUI { mailTheme     = mail_theme
+                  , signviewTheme = signview_theme
+                  , serviceTheme  = service_theme
+                  , browserTitle  = browser_title
+                  , smsOriginator = sms_originator
+                  , favicon       = faviconFromBinary favicon
                   }
     where
       faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f

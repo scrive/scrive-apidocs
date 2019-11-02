@@ -216,10 +216,10 @@ testChangeCompanyUI = do
   newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   let ugui = ug ^. #ui
-        & (#uguiMailTheme     ?~ themeID newTheme1)
-        & (#uguiSignviewTheme ?~ themeID newTheme2)
-        & (#uguiServiceTheme  ?~ themeID newTheme3)
-        & (#uguiBrowserTitle  ?~ "Wow")
+        & (#mailTheme     ?~ themeID newTheme1)
+        & (#signviewTheme ?~ themeID newTheme2)
+        & (#serviceTheme  ?~ themeID newTheme3)
+        & (#browserTitle  ?~ "Wow")
 
       newUgUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -246,10 +246,10 @@ testNormalUseCantChangeCompanyUI = do
 
   let oldUGUI = ug ^. #ui
       newUGUI = oldUGUI
-        & (#uguiMailTheme     ?~ themeID newTheme1)
-        & (#uguiSignviewTheme ?~ themeID newTheme2)
-        & (#uguiServiceTheme  ?~ themeID newTheme3)
-        & (#uguiBrowserTitle  ?~ "Wow")
+        & (#mailTheme     ?~ themeID newTheme1)
+        & (#signviewTheme ?~ themeID newTheme2)
+        & (#serviceTheme  ?~ themeID newTheme3)
+        & (#browserTitle  ?~ "Wow")
 
       newUGUIStr1 = unjsonToByteStringLazy'
         (Options { pretty = True, indent = 2, nulls = True })
@@ -272,15 +272,15 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   newTheme      <- dbUpdate
     $ InsertNewThemeForUserGroup (ug ^. #id) signviewTheme { themeBrandColor = "#669713" }
   let newUgUI = ug ^. #ui
-        & (#uguiMailTheme     ?~ themeID newTheme)
-        & (#uguiSignviewTheme ?~ themeID newTheme)
-        & (#uguiServiceTheme  ?~ themeID newTheme)
+        & (#mailTheme     ?~ themeID newTheme)
+        & (#signviewTheme ?~ themeID newTheme)
+        & (#serviceTheme  ?~ themeID newTheme)
 
   void $ dbUpdate $ UserGroupUpdate $ set #ui newUgUI ug
   (Just ugui1) <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
   adlerSum1    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui1)
 
-  void $ dbUpdate $ UserGroupUpdate $ set #ui (set #uguiServiceTheme Nothing ugui1) ug
+  void $ dbUpdate $ UserGroupUpdate $ set #ui (set #serviceTheme Nothing ugui1) ug
   (Just ugui2) <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
   adlerSum2    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui2)
 

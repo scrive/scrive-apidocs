@@ -58,23 +58,23 @@ test_handleGetCompanyJSON = do
 
   assertEqual "JSON companyid matches company id" (show $ ug ^. #id) (jsonCompanyid)
   assertEqual "JSON companyMailTheme matches companyMailTheme"
-              (show <$> ugui ^. #uguiMailTheme)
+              (show <$> ugui ^. #mailTheme)
               (jsonMailTheme)
   assertEqual "JSON companySignviewTheme matches companySignviewTheme"
-              (show <$> ugui ^. #uguiSignviewTheme)
+              (show <$> ugui ^. #signviewTheme)
               (jsonSignviewTheme)
   assertEqual "JSON companyServiceTheme matches companyServiceTheme"
-              (show <$> ugui ^. #uguiServiceTheme)
+              (show <$> ugui ^. #serviceTheme)
               (jsonServiceTheme)
   assertEqual "JSON browserTitle matches browserTitle"
-              (T.unpack <$> ugui ^. #uguiBrowserTitle)
+              (T.unpack <$> ugui ^. #browserTitle)
               (jsonBrowserTitle)
   assertEqual "JSON smsOriginator matches SmsOriginator"
-              (T.unpack <$> ugui ^. #uguiSmsOriginator)
+              (T.unpack <$> ugui ^. #smsOriginator)
               (jsonSmsOriginator)
   assertEqual
     "JSON favicon matches favicon"
-    (ugui ^. #uguiFavicon)
+    (ugui ^. #favicon)
     (   B64.decodeLenient
     <$> BS.fromString
     <$> drop 1
@@ -181,12 +181,12 @@ test_settingUIWithHandleChangeCompanyBranding = do
     ]
   (_, _) <- runTestKontra req3 ctx $ handleChangeCompanyBranding Nothing
   let ugui = ug ^. #ui
-  assertEqual "CompanyMailTheme  is empty"     (ugui ^. #uguiMailTheme)     (Nothing)
-  assertEqual "CompanySignviewTheme  is empty" (ugui ^. #uguiSignviewTheme) (Nothing)
-  assertEqual "CompanyServiceTheme  is empty"  (ugui ^. #uguiServiceTheme)  (Nothing)
-  assertEqual "BrowserTitle is empty"          (ugui ^. #uguiBrowserTitle)  (Nothing)
-  assertEqual "SmsOriginator is empty"         (ugui ^. #uguiSmsOriginator) (Nothing)
-  assertEqual "Favicon is empty"               (ugui ^. #uguiFavicon)       (Nothing)
+  assertEqual "CompanyMailTheme  is empty"     (ugui ^. #mailTheme)     (Nothing)
+  assertEqual "CompanySignviewTheme  is empty" (ugui ^. #signviewTheme) (Nothing)
+  assertEqual "CompanyServiceTheme  is empty"  (ugui ^. #serviceTheme)  (Nothing)
+  assertEqual "BrowserTitle is empty"          (ugui ^. #browserTitle)  (Nothing)
+  assertEqual "SmsOriginator is empty"         (ugui ^. #smsOriginator) (Nothing)
+  assertEqual "Favicon is empty"               (ugui ^. #favicon)       (Nothing)
 
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
@@ -210,8 +210,8 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   ug'    <- (dbQuery $ UserGroupGet (ug ^. #id))
   assertEqual "Can't set domain theme as company theme"
-              (view (#ui % #uguiMailTheme) <$> ug')
-              (Just $ ug ^. #ui % #uguiMailTheme)
+              (view (#ui % #mailTheme) <$> ug')
+              (Just $ ug ^. #ui % #mailTheme)
 
   -- Create theme for other company
   (_, otherUg) <- addNewAdminUserAndUserGroup "Other" "Guy" "other_guy@skrivapa.se"
@@ -234,5 +234,5 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
   (_, _) <- runTestKontra req2 ctx $ handleChangeCompanyBranding Nothing
   ugui2  <- (view #ui <$>) <$> (dbQuery $ UserGroupGet (ug ^. #id))
   assertEqual "Can't set other company theme as company theme"
-              (view #uguiMailTheme <$> ugui2)
+              (view #mailTheme <$> ugui2)
               (Just Nothing)

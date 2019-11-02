@@ -218,7 +218,7 @@ standardPageFields ctx mugidandui ad = do
         Just True  -> "true"
         Just False -> "false"
   F.value "title"
-    $ case emptyToNothing . strip . T.unpack =<< view #uguiBrowserTitle . snd =<< mugidandui of
+    $ case emptyToNothing . strip . T.unpack =<< view #browserTitle . snd =<< mugidandui of
         Just ctitle ->
           ctitle <> " - " <> (T.unpack $ ctx ^. #brandedDomain % #browserTitle)
         Nothing -> T.unpack (ctx ^. #brandedDomain % #browserTitle)

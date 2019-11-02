@@ -74,9 +74,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlSet "user_group_id" ugid
       -- We are not setting themes here, because UserGroup, which does not
       -- exist yet, cannot own any themes.
-      sqlSet "browser_title" $ ugui ^. #uguiBrowserTitle
-      sqlSet "sms_originator" $ ugui ^. #uguiSmsOriginator
-      sqlSet "favicon" $ ugui ^. #uguiFavicon
+      sqlSet "browser_title" $ ugui ^. #browserTitle
+      sqlSet "sms_originator" $ ugui ^. #smsOriginator
+      sqlSet "favicon" $ ugui ^. #favicon
 
     -- insert Features
     whenJust (ug ^. #features) $ insertFeatures ugid
@@ -245,16 +245,16 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
 
     runQuery_ . sqlUpdate "user_group_uis" $ do
       sqlWhereEq "user_group_id" ugid
-      sqlSet "mail_theme" $ ugui ^. #uguiMailTheme
-      sqlSet "signview_theme" $ ugui ^. #uguiSignviewTheme
-      sqlSet "service_theme" $ ugui ^. #uguiServiceTheme
-      sqlSet "browser_title" $ ugui ^. #uguiBrowserTitle
-      sqlSet "sms_originator" $ ugui ^. #uguiSmsOriginator
-      sqlSet "favicon" $ ugui ^. #uguiFavicon
+      sqlSet "mail_theme" $ ugui ^. #mailTheme
+      sqlSet "signview_theme" $ ugui ^. #signviewTheme
+      sqlSet "service_theme" $ ugui ^. #serviceTheme
+      sqlSet "browser_title" $ ugui ^. #browserTitle
+      sqlSet "sms_originator" $ ugui ^. #smsOriginator
+      sqlSet "favicon" $ ugui ^. #favicon
 
-      chkUgOwnsTheme #uguiMailTheme     ugui ugid
-      chkUgOwnsTheme #uguiSignviewTheme ugui ugid
-      chkUgOwnsTheme #uguiServiceTheme  ugui ugid
+      chkUgOwnsTheme #mailTheme     ugui ugid
+      chkUgOwnsTheme #signviewTheme ugui ugid
+      chkUgOwnsTheme #serviceTheme  ugui ugid
 
     -- update feature flags
     runQuery_ . sqlDelete "feature_flags" $ do

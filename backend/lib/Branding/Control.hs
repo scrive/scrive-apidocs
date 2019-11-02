@@ -56,7 +56,7 @@ getServiceTheme bdID muser = do
       dbQuery
         . GetTheme
         . fromMaybe (bd ^. #serviceTheme)
-        $ ug ^. #ui % #uguiServiceTheme
+        $ ug ^. #ui % #serviceTheme
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> Text -> m Response
 handleLoginBranding bdID _ = do
@@ -92,7 +92,7 @@ getSignviewTheme bdID did = do
   doc  <- dbQuery $ GetDocumentByDocumentID did
   ugid <- guardJust (documentauthorugid doc)
   ug   <- guardJustM . dbQuery . UserGroupGet $ ugid
-  dbQuery . GetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #uguiSignviewTheme)
+  dbQuery . GetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #signviewTheme)
 
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
 handleSignviewBrandingWithoutDocument
@@ -108,7 +108,7 @@ getSignviewThemeWithoutDocument bdID uid = do
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
   ug    <- dbQuery . UserGroupGetByUserID . userid $ user
-  dbQuery . GetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #uguiSignviewTheme)
+  dbQuery . GetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #signviewTheme)
 
 loginLogo :: Kontrakcja m => BrandedDomainID -> Text -> m Response
 loginLogo bdID _ = do
@@ -132,7 +132,7 @@ emailLogo bdID uid _ = do
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
   ug    <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <- dbQuery . GetTheme $ fromMaybe (bd ^. #mailTheme) (ug ^. #ui % #uguiMailTheme)
+  theme <- dbQuery . GetTheme $ fromMaybe (bd ^. #mailTheme) (ug ^. #ui % #mailTheme)
   return (imageResponse $ themeLogo theme)
 
 signviewLogo :: Kontrakcja m => BrandedDomainID -> DocumentID -> Text -> m Response
@@ -159,7 +159,7 @@ faviconIcon bdID uidstr _ = do
           Nothing   -> return Nothing
           Just user -> do
             ug <- dbQuery . UserGroupGetByUserID . userid $ user
-            return $ ug ^. #ui % #uguiFavicon
+            return $ ug ^. #ui % #favicon
 
   bd <- dbQuery $ GetBrandedDomainByID bdID
   let favicon = fromMaybe (bd ^. #favicon) mCompanyFavicon

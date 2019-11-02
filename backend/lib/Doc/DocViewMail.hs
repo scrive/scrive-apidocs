@@ -708,7 +708,7 @@ documentMailFields doc mctx = do
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
   let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #uguiMailTheme % _Just) mug
+        $ preview (_Just % #ui % #mailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
     F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
@@ -728,7 +728,7 @@ otherMailFields muser mctx = do
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
   let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #uguiMailTheme % _Just) mug
+        $ preview (_Just % #ui % #mailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
     F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
@@ -752,7 +752,7 @@ documentMail haslang doc mailname otherfields = do
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
   let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #uguiMailTheme % _Just) mug
+        $ preview (_Just % #ui % #mailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
   kontramaillocal (mctx ^. #mailNoreplyAddress)
@@ -776,7 +776,7 @@ otherMail muser mailname otherfields = do
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
   let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #uguiMailTheme % _Just) mug
+        $ preview (_Just % #ui % #mailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- otherMailFields muser mctx
   kontramaillocal (mctx ^. #mailNoreplyAddress)
