@@ -213,8 +213,8 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
           $ ApiV2ParameterJSON "json" unjsonUserForUpdate
         return
           ( userInfoFromUserForUpdate userForUpdate
-          , ufuHasAcceptedTOS userForUpdate
-          , ufuLang userForUpdate
+          , userForUpdate ^. #hasAcceptedTOS
+          , userForUpdate ^. #lang
           )
       guardValidEmailAndNoExistingUser (useremail userInfo) Nothing
       unless hasAcceptedTOS $ tosNotAcceptedErr
@@ -288,10 +288,10 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
       let userInfo = userInfoFromUserForUpdate ufu
 
       guardValidEmailAndNoExistingUser (useremail userInfo) (Just uid)
-      unless (ufuHasAcceptedTOS ufu) $ tosNotAcceptedErr
+      unless (ufu ^. #hasAcceptedTOS) $ tosNotAcceptedErr
       didUpdateInfo     <- dbUpdate $ SetUserInfo uid userInfo
       didUpdateSettings <- dbUpdate
-        $ SetUserSettings uid (UserSettings (ufuLang ufu) defaultDataRetentionPolicy)
+        $ SetUserSettings uid (UserSettings (ufu ^. #lang) defaultDataRetentionPolicy)
       -- @todo fix retention policy ^
       unless (didUpdateInfo && didUpdateSettings) $ srvLogErr "Could not update user"
       -- re-fetch original to get what's really in the DB.

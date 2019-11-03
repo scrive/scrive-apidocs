@@ -408,6 +408,7 @@ Library
                  , PadApplication.Types
                  , Partner.API
                  , Partner.JSON
+                 , Partner.JSON.Internal
                  , Partner.Logging
                  , Partner.Model
                  , Partner.Partner
