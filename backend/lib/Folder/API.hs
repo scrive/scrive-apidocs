@@ -71,10 +71,11 @@ folderAPIGet fid = api $ do
   let acc = mkAccPolicy [(ReadA, FolderR, fid)]
   hasReadAccess  <- apiAccessControlCheck acc
   isAdminOrSales <- checkAdminOrSales
-  isSignatory    <- isSignatoryOfOneOfDocuments
-  if (hasReadAccess || isAdminOrSales || isSignatory)
+  if (hasReadAccess || isAdminOrSales)
     then getFolder
-    else (apiError insufficientPrivileges)
+    else do
+      isSignatory <- isSignatoryOfOneOfDocuments
+      if (isSignatory) then getFolder else (apiError insufficientPrivileges)
   where
     srvLogErr :: Kontrakcja m => T.Text -> m a
     srvLogErr t = do
