@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Tai automatinis priminimas, kad Jūs dar nepatvirtinote $documenttitle:noescape()$ dokumento, kurį atsiuntė $creatorname$. Tolesnius nurodymus rasite šiuo saitu $link$ ",
 "_smsReminderAutomatic":"Tai automatinis priminimas, kad Jūs dar nepasirašėte $documenttitle:noescape()$ dokumento, kurį atsiuntė $creatorname$. Tolesnius nurodymus rasite šiuo saitu $link$",
 "_smsReminderSigned":"$creatorname$ prašymu Jums persiųstas pasirašytas dokumentas $documenttitle:noescape()$. Dokumentą galite rasti šiuo saitu: $link$",
-"_unavailableForSign":"Šio dokumento jau nebegalima pasirašyti"
+"_unavailableForSign":"Šio dokumento jau nebegalima pasirašyti",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

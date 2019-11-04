@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Este é um lembrete automático de que ainda não aprovou o documento $documenttitle:noescape()$ de $creatorname$. Siga a hiperligação para obter mais informações $link$",
 "_smsReminderAutomatic":"Este é um lembrete automático de que ainda não assinou o documento $documenttitle:noescape()$ de $creatorname$. Siga a hiperligação para obter mais informações $link$",
 "_smsReminderSigned":"O documento assinado $documenttitle:noescape()$ foi reenviado para si a pedido de $creatorname$. Aceda ao documento seguindo esta hiperligação: $link$",
-"_unavailableForSign":"O documento já não se encontra disponivel para assinar"
+"_unavailableForSign":"O documento já não se encontra disponivel para assinar",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

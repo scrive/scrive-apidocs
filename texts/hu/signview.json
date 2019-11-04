@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"",
 "_smsReminderAutomatic":"",
 "_smsReminderSigned":"",
-"_unavailableForSign":""
+"_unavailableForSign":"",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

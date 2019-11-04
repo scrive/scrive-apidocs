@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Toto je automatická upomínka. Připomíná, že jste ještě neschválili dokument $documenttitle:noescape()$ od uživatele $creatorname$. Další pokyny naleznete na odkazu $link$",
 "_smsReminderAutomatic":"Toto je automatická upomínka. Připomíná, že jste ještě nepodepsali dokument $documenttitle:noescape()$ od uživatele $creatorname$. Další pokyny naleznete na odkazu $link$",
 "_smsReminderSigned":"Na žádost uživatele $creatorname$ vám byl podepsaný dokument $documenttitle:noescape()$ odeslán ještě jednou. Dokument naleznete po kliknutí na odkaz $link$",
-"_unavailableForSign":"Dokument už není pro podpis k dispozici"
+"_unavailableForSign":"Dokument už není pro podpis k dispozici",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

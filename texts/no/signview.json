@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Dette er en automatisk påminnelse om at du ikke har godkjent dokumentet $documenttitle:noescape()$ fra $creatorname$ enda. Følg lenken for videre instruksjoner $link$",
 "_smsReminderAutomatic":"Dette er en automatisk påminnelse om at du ikke har signert dokumentet $documenttitle:noescape()$ fra $creatorname$ enda. Følg lenken for videre instruksjoner $link$",
 "_smsReminderSigned":"Det signerte dokumentet $documenttitle:noescape()$ har blitt sendt til deg pånytt etter anmodning av $creatorname$. Finn dokumentet ved å følge denne lenken $link$",
-"_unavailableForSign":"Dokumentet er ikke lenger tilgjengelig for signering"
+"_unavailableForSign":"Dokumentet er ikke lenger tilgjengelig for signering",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

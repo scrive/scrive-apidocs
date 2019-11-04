@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Tämä on automaattinen muistutus siitä, ettet ole vielä hyväksynyt henkilöltä $creatorname$ saamaasi dokumenttia $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsReminderAutomatic":"Tämä on automaattinen muistutus siitä, ettet ole vielä allekirjoittanut henkilöltä $creatorname$ saamaasi dokumenttia $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsReminderSigned":"Allekirjoitettu dokumentti $documenttitle:noescape()$ on lähetetty sinulle uudelleen henkilön $creatorname$ pyynnöstä. Löydät dokumentin seuraamalla tätä linkkiä: $link$",
-"_unavailableForSign":"Dokumentti ei ole enää avoinna allekirjoittamista varten"
+"_unavailableForSign":"Dokumentti ei ole enää avoinna allekirjoittamista varten",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

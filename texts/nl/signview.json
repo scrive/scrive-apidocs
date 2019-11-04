@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"DIt is een automatische herinnering dat u het document $documenttitle:noescape()$ van $creatorname$ nog niet heeft goedgekeurd. Volg de link voor verdere instructies $link$",
 "_smsReminderAutomatic":"Dit is een automatische herinnering dat u het document $documenttitle:noescape()$ van $creatorname$ nog niet ondertekend heeft. Volg de link voor verdere instructies: $link$",
 "_smsReminderSigned":"Het ondertekende document $documenttitle:noescape()$ is opnieuw naar u verstuurd op verzoek van $creatorname$. Vind het document door deze link te volgen: $link$",
-"_unavailableForSign":"Het document is niet langer beschikbaar voor ondertekening"
+"_unavailableForSign":"Het document is niet langer beschikbaar voor ondertekening",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }
