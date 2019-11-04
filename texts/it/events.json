@@ -11,6 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive ha creato il PDF definitivo.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Verificare la propria identità con il NemID danese per accedere al documento.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Verificare la propria identità con il TUPAS finlandese per accedere al documento.",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verificare la propria identità con il BankID norvegese per accedere al documento.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verificare la propria identità con il BankID svedese per accedere al documento.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verificare la propria identità con il PIN via SMS per accedere al documento.",

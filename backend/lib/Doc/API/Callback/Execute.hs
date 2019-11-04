@@ -194,6 +194,7 @@ executeOAuth2Callback
   -> m Bool
 executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
   logDocument (documentid doc) $ do
+    now <- currentTime
     (exitcode1, stdout1, stderr1) <- readCurl
       [ "-X"
       , "POST"
@@ -217,11 +218,27 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
               , "stderr" `equalsExternalBSL` stderr1
               , "stdout" `equalsExternalBSL` stdout1
               ]
+        let msg = T.concat [ "Failure "
+                           , (showt now) <> "\n"
+                           , "stdout: "
+                           , T.pack $ BSL.unpack stdout1 <> "\n"
+                           , "stderr: "
+                           , T.pack $ BSL.unpack stderr1
+                           ]
+        dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
         return False
       ExitSuccess -> case parseAccessToken stdout1 of
         Nothing -> do
           logInfo "API callback executeOAuth2Callback failed for token parsing"
             $ object ["stdout" .= show stdout1, "stderr" .= show stderr1]
+          let msg = T.concat [ "Parsing failure "
+                             , (showt now) <> "\n"
+                             , "stdout: "
+                             , T.pack $ BSL.unpack stdout1 <> "\n"
+                             , "stderr: "
+                             , T.pack $ BSL.unpack stderr1
+                             ]
+          dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
           return False
         Just t -> do
           callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
@@ -241,13 +258,21 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
           let httpCodeStr = case reverse . lines . BSL.unpack $ stdout2 of
                 []    -> ""
                 c : _ -> c
-              httpCode = case reads httpCodeStr of
-                [(n :: Int, "")] -> n
-                _ -> unexpectedError "Couldn't parse http status from curl output"
+          httpCode <- case reads httpCodeStr of
+                       [(n::Int, "")] -> return n
+                       _ -> do
+                         let msg = T.concat [ "Parsing http failure "
+                                            , (showt now) <> "\n"
+                                            , "httpCodeStr: "
+                                            , T.pack $ httpCodeStr
+                                            ]
+                         dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+                         unexpectedError "Couldn't parse http status from curl output"
           case (exitcode2, httpCode) of
             (ExitSuccess, n)
               | n < 300 -> do
                 logInfo "API callback executeOAuth2Callback succeeded" $ logObject_ dac
+                dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just $ "Success " <> (showt now)
                 return True
               | otherwise -> do
                 logInfo "API callback executeOAuth2Callback failed" $ object
@@ -257,6 +282,14 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
                   , "stderr" `equalsExternalBSL` stderr2
                   , "stdout" `equalsExternalBSL` stdout2
                   ]
+                let msg = T.concat [ "Failure "
+                                   , (showt now) <> "\n"
+                                   , "stdout: "
+                                   , T.pack $ BSL.unpack stdout2 <> "\n"
+                                   , "stderr: "
+                                   , T.pack $ BSL.unpack stderr2
+                                   ]
+                dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
                 return False
             (ExitFailure ec2, _) -> do
               logInfo "API callback executeOAuth2Callback failed" $ object
@@ -265,6 +298,14 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
                 , "stderr" `equalsExternalBSL` stderr2
                 , "stdout" `equalsExternalBSL` stdout2
                 ]
+              let msg = T.concat [ "Failure "
+                                 , (showt now) <> "\n"
+                                 , "stdout: "
+                                 , T.pack $ BSL.unpack stdout2 <> "\n"
+                                 , "stderr: "
+                                 , T.pack $ BSL.unpack stderr2
+                                 ]
+              dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
               return False
   where
     parseAccessToken :: BSLU.ByteString -> Maybe Text

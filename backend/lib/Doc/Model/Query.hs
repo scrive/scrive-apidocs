@@ -280,7 +280,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
     now <- currentTime
-    doc <- kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+    runQuery_ $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
       sqlWhereExists $ sqlSelect "signatory_links" $ do
@@ -293,10 +293,14 @@ instance (MonadDB m, MonadThrow m, MonadTime m)
         sqlWhereSomeSignatoryAccessTokenHasMagicHash mh
         sqlWhereSignatoryLinkIsNotForwaded
       sqlWhereDocumentWasNotPurged
-    let Just sl = getSigLinkFor slid doc
-    unless (isValidSignatoryMagicHash mh now (documentstatus doc) sl) $ do
-      throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
-    return doc
+    mdoc <- fetchMaybe toComposite
+    case mdoc of
+      Nothing -> throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
+      Just doc -> do
+        let Just sl = getSigLinkFor slid doc
+        unless (isValidSignatoryMagicHash mh now (documentstatus doc) sl) $ do
+          throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
+        return doc
 
 -- CheckIfMagicHashIsValid will NOT throw exception and can be used to handle failures nicely
 data CheckIfMagicHashIsValid = CheckIfMagicHashIsValid DocumentID SignatoryLinkID MagicHash

@@ -2,9 +2,8 @@
 
 module Doc.Signing.Model (
     ScheduleDocumentSigning(..)
-  , IsDocumentSigningInProgress(..)
   , CleanAllScheduledDocumentSigning(..)
-  , GetDocumentSigningLastCheckStatus(..)
+  , GetDocumentSigningStatus(..)
   , UpdateDocumentSigning(..)
   ) where
 
@@ -98,24 +97,14 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
         sqlSet "attempts"          (0 :: Int32)
         sqlSet "consent_responses" crs
 
-data IsDocumentSigningInProgress = IsDocumentSigningInProgress SignatoryLinkID
-instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBQuery m IsDocumentSigningInProgress Bool where
-  query (IsDocumentSigningInProgress slid) = do
+data GetDocumentSigningStatus = GetDocumentSigningStatus SignatoryLinkID
+instance (MonadDB m, MonadLog m, MonadMask m) => DBQuery m GetDocumentSigningStatus (Maybe (Bool, Maybe Text)) where
+  query (GetDocumentSigningStatus slid) = do
     runQuery_ . sqlSelect "document_signing_jobs" $ do
       sqlWhereEq "id" slid
-      sqlWhere "NOT cancelled"
-      sqlResult "TRUE"
-    result <- fetchMaybe runIdentity
-    return $ result == Just True
-
-data GetDocumentSigningLastCheckStatus = GetDocumentSigningLastCheckStatus SignatoryLinkID
-instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBQuery m GetDocumentSigningLastCheckStatus (Maybe Text) where
-  query (GetDocumentSigningLastCheckStatus slid) = do
-    runQuery_ . sqlSelect "document_signing_jobs" $ do
-      sqlWhereEq "id" slid
+      sqlResult "cancelled"
       sqlResult "last_check_status"
-    result <- fetchMaybe runIdentity
-    return $ join $ result
+    fetchMaybe id
 
 data UpdateDocumentSigning = UpdateDocumentSigning SignatoryLinkID Bool Text
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m UpdateDocumentSigning () where

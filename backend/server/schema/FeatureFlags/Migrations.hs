@@ -653,5 +653,3 @@ featureFlagsAddPortalFlag = Migration
           ]
         }
   }
-
-

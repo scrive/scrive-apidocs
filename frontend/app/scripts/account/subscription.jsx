@@ -42,10 +42,10 @@ var Subscription = Backbone.Model.extend({
     if (args && args.inherited_features) {
       var inheritedAdminFF = new FeatureFlag(args.inherited_features.admin_users);
       var inheritedRegularFF = new FeatureFlag(args.inherited_features.regular_users);
-      this.set({"inherited_features": {
+      this.set({"inherited_features": new Features({
         "admin_users": inheritedAdminFF,
         "regular_users": inheritedRegularFF
-      }});
+      })});
     }
     // keep inherited features as undefined, if they are not available
 
