@@ -58,10 +58,12 @@ module Doc.API.V2.Mock.TestUtils (
 , setMockDocSigLinkDeliveryMethod
 , setMockDocSigLinkAttachments
 , setMockDocSigLinkSignatoryRole
+, setMockSigLinkStandardField
 , setMockDocSigLinkStandardField
 , getMockDocUserSigLinkId
 , addStandardSigLinksToMockDoc
 , addSigLinksToMockDoc
+, moveMockDoc
 ) where
 
 import Data.Aeson
@@ -388,14 +390,20 @@ setMockDocSigLinkConfirmationDeliveryMethod deliveryMethod sigLink =
 setMockDocSigLinkSignatoryRole :: SignatoryRole -> MockSigLink -> MockSigLink
 setMockDocSigLinkSignatoryRole role sigLink = sigLink { mockSigLinkSignatoryRole = role }
 
-setMockDocSigLinkStandardField :: Int -> String -> String -> MockDoc -> MockDoc
-setMockDocSigLinkStandardField i fieldType value = setForSigNumberFromMockDoc i
-  $ \msl -> msl { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl }
+setMockSigLinkStandardField :: String -> String -> MockSigLink -> MockSigLink
+setMockSigLinkStandardField fieldType value msl = msl
+  { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl
+  }
   where
     newField =
       defaultMockSigField { mockSigFieldType = fieldType, mockSigFieldValue = Just value }
-    oldFieldsWithoutFieldType msl =
-      filter (\slf -> mockSigFieldType slf /= fieldType) (mockSigLinkFields msl)
+    oldFieldsWithoutFieldType oldMsl =
+      filter (\slf -> mockSigFieldType slf /= fieldType) (mockSigLinkFields oldMsl)
+
+
+setMockDocSigLinkStandardField :: Int -> String -> String -> MockDoc -> MockDoc
+setMockDocSigLinkStandardField i fieldType value =
+  setForSigNumberFromMockDoc i (setMockSigLinkStandardField fieldType value)
 
 addStandardSigLinksToMockDoc :: Int -> MockDoc -> MockDoc
 addStandardSigLinksToMockDoc i md =
@@ -475,3 +483,6 @@ setForSigNumberFromMockDoc i f md = md
     originalSL      = getMockSigLinkNumber i md
     updatedSL       = f originalSL
     updatedSigLinks = insert updatedSL . delete originalSL . sort . mockDocParties $ md
+
+moveMockDoc :: FolderID -> MockDoc -> MockDoc
+moveMockDoc fid doc = doc { mockDocFolderId = Just fid }

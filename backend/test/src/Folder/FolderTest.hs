@@ -12,6 +12,7 @@ import Test.QuickCheck
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Encoding as AE
 import qualified Data.HashMap.Strict as H
+import qualified Data.Text as T
 import qualified Data.Unjson as Unjson
 
 import AccessControl.Model
@@ -22,7 +23,9 @@ import DB
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.JSONTest
+import Doc.API.V2.Mock.TestUtils
 import Doc.SignatoryLinkID ()
+import Doc.Types.SignatoryLink
 import Folder.API
 import Folder.JSON
 import Folder.Model
@@ -449,7 +452,8 @@ testFolderAPIGet = do
   grpAdmin <- addNewRandomUser
   ctxAdmin <- (set ctxmaybeuser (Just grpAdmin)) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set folderName "Folder root" defaultFolder)
-  let folderAdminR = FolderAdminAR (get folderID fdrRoot)
+  let fdrRootID    = get folderID fdrRoot
+      folderAdminR = FolderAdminAR fdrRootID
       admid        = userid grpAdmin
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminR
   subs@[_fdr1          , _fdr2          ] <- createChildrenForParentByAPI ctxAdmin fdrRoot
@@ -463,6 +467,40 @@ testFolderAPIGet = do
         fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren
           fdrwc
   assertEqual "Folder data output corresponds to what was sent in" fdrwcfuFromAPI fdrwcbs
+  -- signatories should have access to folders for documents they participate in siging in
+  mockDoc <- testDocApiV2New' ctxAdmin
+  let signatoryEmail = "jakub.janczak@scrive.com" :: String
+  mSignatoryUser   <- addNewUser "Jakub" "Janczak" $ T.pack signatoryEmail
+  signatoryUserCtx <- (set ctxmaybeuser mSignatoryUser) <$> mkContext defaultLang
+  let signatorySigLink =
+        setMockSigLinkStandardField "mobile" "+48666666666"
+          $ setMockSigLinkStandardField "email" signatoryEmail
+          $ defaultMockSigLink
+  let approverEmail = "barbara.streisand@scrive.com" :: String
+  mApproverUser   <- addNewUser "Jakub" "Janczak" $ T.pack approverEmail
+  approverUserCtx <- (set ctxmaybeuser mApproverUser) <$> mkContext defaultLang
+  let approverSigLink =
+        setMockSigLinkStandardField "mobile" "+48666666666"
+          $ setMockSigLinkStandardField "email" approverEmail
+          $ setMockDocSigLinkSignatoryRole SignatoryRoleApprover
+          $ defaultMockSigLink
+
+  void $ testDocApiV2AddParties ctxAdmin
+                                [signatorySigLink, approverSigLink]
+                                (getMockDocId mockDoc)
+  void $ testDocApiV2Start' ctxAdmin (getMockDocId mockDoc)
+  void $ jsonTestRequestHelper signatoryUserCtx
+                               GET
+                               []
+                               (folderAPIGet (fromJust $ userhomefolderid grpAdmin))
+                               200
+  void $ jsonTestRequestHelper approverUserCtx
+                               GET
+                               []
+                               (folderAPIGet (fromJust $ userhomefolderid grpAdmin))
+                               200
+  return ()
+
   where
     fdrAPIGet :: Context -> Folder -> Int -> TestEnv Aeson.Value
     fdrAPIGet ctx fdr code = do
