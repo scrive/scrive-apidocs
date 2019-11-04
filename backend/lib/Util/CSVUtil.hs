@@ -20,11 +20,11 @@ import qualified Data.Text.Encoding as Text
 -}
 parseCSV :: BSL8.ByteString -> Either String [[String]]
 parseCSV csvcontents =
-  let parseresult = splitCSVContents $ BS.toString $ toStrict csvcontents in
-  case (exception parseresult, result parseresult) of
-    (Just msg, _res) -> Left $ "Parse error : " ++ (show msg)
-    (Nothing, res) ->
-      Right $ fixSize $ map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
+  let parseresult = splitCSVContents $ BS.toString $ toStrict csvcontents
+  in  case (exception parseresult, result parseresult) of
+        (Just msg, _res) -> Left $ "Parse error : " ++ (show msg)
+        (Nothing, res) ->
+          Right $ fixSize $ map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
   where
     dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
     isEmptyRow             = all isEmptyCell

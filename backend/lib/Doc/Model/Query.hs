@@ -295,7 +295,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m)
       sqlWhereDocumentWasNotPurged
     mdoc <- fetchMaybe toComposite
     case mdoc of
-      Nothing -> throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
+      Nothing  -> throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
       Just doc -> do
         let Just sl = getSigLinkFor slid doc
         unless (isValidSignatoryMagicHash mh now (documentstatus doc) sl) $ do

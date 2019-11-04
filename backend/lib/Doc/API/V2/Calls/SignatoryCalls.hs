@@ -131,22 +131,25 @@ docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api 
     sl <- guardGetSignatoryFromIdForDocument slid
     (inProgress, signed, mLastStatus) <- case (isSignatoryAndHasSigned sl, mstatus) of
       (True, _) -> return (False, True, Nothing)
-      (False, Just (cancelled, mLastStatus)) -> return (not cancelled, False, mLastStatus)
+      (False, Just (cancelled, mLastStatus)) ->
+        return (not cancelled, False, mLastStatus)
       (False, Nothing) -> do
-        logAttention_ "docApiV2SigSigningStatusCheck, sig hasnt signed, but no status in db"
+        logAttention_
+          "docApiV2SigSigningStatusCheck, sig hasnt signed, but no status in db"
         internalError
-    logInfo "Status Check" $ object [ "in_progress" .= inProgress
-                                    , "signed" .= signed
-                                    , "status" .= mLastStatus
-                                    ]
-    return $ Ok $ JSObject (J.toJSObject $ [
-        ("in_progress", JSBool inProgress)
-      , ("signed", JSBool signed)
-      , ("last_check_status", case mLastStatus of
-          Nothing -> JSNull
-          Just t -> JSString $ J.toJSString $ T.unpack t
-        )
-      ])
+    logInfo "Status Check" $ object
+      ["in_progress" .= inProgress, "signed" .= signed, "status" .= mLastStatus]
+    return $ Ok $ JSObject
+      ( J.toJSObject
+      $ [ ("in_progress", JSBool inProgress)
+        , ("signed"     , JSBool signed)
+        , ( "last_check_status"
+          , case mLastStatus of
+            Nothing -> JSNull
+            Just t  -> JSString $ J.toJSString $ T.unpack t
+          )
+        ]
+      )
 
 docApiV2SigSigningCancel :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSigningCancel did slid = logDocumentAndSignatory did slid . api $ do

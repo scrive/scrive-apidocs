@@ -218,21 +218,30 @@ instance ToJSValue VerifyResult where
 
 verify :: (MonadIO m, MonadMask m) => GuardTimeConf -> String -> m VerifyResult
 verify conf inputFileName = do
-  (code,stdout,stderr) <- withGuardtimeConf conf GTExtendingCredentials $ \confPath -> do
-    let a = [ "-Djava.util.logging.config.file=/dev/null"
-            , "-cp", "GuardTime/slf4j-jdk14-1.7.28.jar:GuardTime/pdf-verifier.jar"
+  (code, stdout, stderr) <- withGuardtimeConf conf GTExtendingCredentials $ \confPath ->
+    do
+      let a =
+            [ "-Djava.util.logging.config.file=/dev/null"
+            , "-cp"
+            , "GuardTime/slf4j-jdk14-1.7.28.jar:GuardTime/pdf-verifier.jar"
             , "com.guardtime.pdftools.PdfVerifier"
-            , "-c", confPath
+            , "-c"
+            , confPath
             , "-j"
-            , "-f", inputFileName
+            , "-f"
+            , inputFileName
             ]
-    liftIO $ readProcessWithExitCode "java" a BSL.empty
+      liftIO $ readProcessWithExitCode "java" a BSL.empty
   -- if stdout is empty, output json with the error is in stderr
   let output = if BSL.null stdout then stderr else stdout
   case code of
     ExitSuccess -> do
       case (runGetJSON readJSObject $ BSL.toString output) of
-        Left s -> return . Problem stdout stderr $ "GuardTime verification result bad format: " ++ s
+        Left s ->
+          return
+            .  Problem stdout stderr
+            $  "GuardTime verification result bad format: "
+            ++ s
         Right json -> case fromJSValue json of
           Nothing ->
             return $ Problem stdout stderr "GuardTime verification result parsing error"

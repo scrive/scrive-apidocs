@@ -313,9 +313,8 @@ handleChangeRoleOfUserGroupAccount = do
         ]
   accessControlLoggedIn acc $ do
     void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
-    logInfo "Changing user group role" $ object [ "to admin" .= makeadmin
-                                                , "target user" .= changeid
-                                                ]
+    logInfo "Changing user group role"
+      $ object ["to admin" .= makeadmin, "target user" .= changeid]
     runJSONGenT $ value "changed" True
 
 {- |
