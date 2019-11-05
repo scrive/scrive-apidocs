@@ -28,6 +28,7 @@ data ShakeFlag = TransifexUser     String
                | TransifexPassword String
                | TransifexLang     String
                | SrcSubdir         FilePath
+               | QuickFormatBranch String
                | NewBuild
                | OldBuild
                | OptimisationLevel OptimisationLevel
@@ -43,6 +44,8 @@ shakeFlags =
   , Option ""  ["lang"]       (reqArg TransifexLang     "LANG") "Language"
   , Option ""  ["src-subdir"] (reqArg SrcSubdir         "DIR")
     "Source subdirectory (for 'hindent'/'stylish-haskell'/'hlint')"
+  , Option ""  ["quick-format-branch"] (reqArg QuickFormatBranch "GIT_MAIN_BRANCH")
+    "Git branch to compare for quick formatting"
   , Option ""  ["new-build"]  (noArg  NewBuild)
     "Use 'v2-build' (default)."
   , Option ""  ["old-build"]  (noArg  OldBuild)

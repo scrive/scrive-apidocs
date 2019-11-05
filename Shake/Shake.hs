@@ -572,7 +572,7 @@ serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
   "brittany-quick" ~> do
     hsFiles <- listHsFiles
     (Exit code, Stdout res, Stderr err) <-
-      command [Cwd sourceRoot] "git" ["diff", "master", "--name-only"]
+      command [Cwd sourceRoot] "git" ["diff", quickFormatBranch, "--name-only"]
     case code of
       ExitSuccess -> do
         let changedFiles = fmap (\file -> sourceRoot </> file) $ lines res
@@ -614,6 +614,12 @@ serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
           [] -> fmap (sourceRoot </>) $
             "Shake" : allHsSourceDirs cabalFile
           ds -> ds
+
+      quickFormatBranch :: String
+      quickFormatBranch =
+        case [branch | QuickFormatBranch branch <- flags] of
+          [] -> "master"
+          (branch:_) -> branch
 
       commonHLintOpts = ["-XNoPatternSynonyms" , "--no-exit-code", "--cross"]
 
