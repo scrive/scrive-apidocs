@@ -31,13 +31,12 @@ buildDBDocs tgt = do
   schemaCrawlerDir <- getSchemaCrawlerDir
   copyFileChanged (schemaCrawlerDir </> "kontra.png") (tgtDir </> "kontra.png")
 
-  runSchemaCrawler [ "-outputformat=html", "-outputfile=kontra.html"
-                   , "-routinetypes=" ]
-  unit $ cmd (Cwd schemaCrawlerDir) ("sed" :: String)
-    [ "-i" :: String, "256i\\<img src=\"kontra.png\" width=\"1280px\"\\>"
-    , "kontra.html" ]
-  copyFileChanged (schemaCrawlerDir </> "kontra.html")
-    (tgtDir </> "kontra.html")
+  runSchemaCrawler ["-outputformat=html", "-outputfile=kontra.html", "-routinetypes="]
+  unit $ cmd
+    (Cwd schemaCrawlerDir)
+    ("sed" :: String)
+    ["-i" :: String, "256i\\<img src=\"kontra.png\" width=\"1280px\"\\>", "kontra.html"]
+  copyFileChanged (schemaCrawlerDir </> "kontra.html") (tgtDir </> "kontra.html")
   where
     getSchemaCrawlerPath :: Action FilePath
     getSchemaCrawlerPath = do
@@ -46,8 +45,12 @@ buildDBDocs tgt = do
         ExitSuccess -> return stdout
         _           -> do
           userHomeDir <- liftIO $ getHomeDirectory
-          return $ userHomeDir </> "bin" </> "schemacrawler"
-                               </> "_schemacrawler" </> "schemacrawler.sh"
+          return
+            $   userHomeDir
+            </> "bin"
+            </> "schemacrawler"
+            </> "_schemacrawler"
+            </> "schemacrawler.sh"
 
     getSchemaCrawlerDir :: Action FilePath
     getSchemaCrawlerDir = takeDirectory <$> getSchemaCrawlerPath
@@ -55,33 +58,49 @@ buildDBDocs tgt = do
     runSchemaCrawler :: [String] -> Action ()
     runSchemaCrawler extraArgs = do
       schemaCrawlerPath <- getSchemaCrawlerPath
-      DBConfig{..} <- getKontrakcjaDBConfig
-      cmd (Cwd $ takeDirectory schemaCrawlerPath) schemaCrawlerPath
-        ([ "-loglevel=CONFIG", "-infolevel=standard", "-server=postgresql"
-         , "-host", dbcHost, "-port", dbcPort, "-database", dbcDatabase
-         , "-u", dbcUser, "-password", dbcPassword, "-c=brief"] ++ extraArgs)
+      DBConfig {..}     <- getKontrakcjaDBConfig
+      cmd
+        (Cwd $ takeDirectory schemaCrawlerPath)
+        schemaCrawlerPath
+        (  [ "-loglevel=CONFIG"
+           , "-infolevel=standard"
+           , "-server=postgresql"
+           , "-host"
+           , dbcHost
+           , "-port"
+           , dbcPort
+           , "-database"
+           , dbcDatabase
+           , "-u"
+           , dbcUser
+           , "-password"
+           , dbcPassword
+           , "-c=brief"
+           ]
+        ++ extraArgs
+        )
 
     getKontrakcjaDBConfig :: Action DBConfig
     getKontrakcjaDBConfig = do
       appconfstr <- liftIO $ BL.readFile "kontrakcja.conf"
       let dbconf = fromMaybe [] $ do
-            Object o <- decode appconfstr :: Maybe Value
+            Object o         <- decode appconfstr :: Maybe Value
             String dbconfstr <- H.lookup "database" o
-            return . either (const []) id
+            return
+              . either (const []) id
               . parseOnly (parserPostgresConnectionStr <* endOfInput)
               $ dbconfstr
-      return $ DBConfig
-        { dbcHost     = findWithDefault "localhost" "host"     $ dbconf
-        , dbcPort     = findWithDefault "5432"      "port"     $ dbconf
-        , dbcDatabase = findWithDefault "kontra"    "dbname"   $ dbconf
-        , dbcUser     = findWithDefault "kontra"    "user"     $ dbconf
-        , dbcPassword = findWithDefault "kontra"    "password" $ dbconf
-        }
+      return $ DBConfig { dbcHost     = findWithDefault "localhost" "host" $ dbconf
+                        , dbcPort     = findWithDefault "5432" "port" $ dbconf
+                        , dbcDatabase = findWithDefault "kontra" "dbname" $ dbconf
+                        , dbcUser     = findWithDefault "kontra" "user" $ dbconf
+                        , dbcPassword = findWithDefault "kontra" "password" $ dbconf
+                        }
 
-    parserPostgresConnectionStr :: Parser [(String,String)]
+    parserPostgresConnectionStr :: Parser [(String, String)]
     parserPostgresConnectionStr = keyValue `sepBy` skipSpace
       where
-        key             = many1 letter
-        value           = many $ letter <|> digit <|> satisfy (inClass "._-")
-        keyValue        = (,) <$> key <*> (char '=' *> maybeInQuotes value)
+        key      = many1 letter
+        value    = many $ letter <|> digit <|> satisfy (inClass "._-")
+        keyValue = (,) <$> key <*> (char '=' *> maybeInQuotes value)
         maybeInQuotes p = (char '\'' *> p <* char '\'') <|> p
