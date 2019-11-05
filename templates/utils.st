@@ -122,11 +122,3 @@ basicAuthDescription=Basic Auth adds an Authorization header to all callbacks.
 ###
 attachmentNameOrPlaceholder=$if(attachment_name)$$attachment_name$$else$<span class='put-attachment-name-here'></span>$endif$
 ###
-verimiText=Verimi
-###
-identifyWithVerimi=Identify with Verimi
-###
-idinText=Dutch iDIN
-###
-identifyWithIdin=Identify with iDIN
-###
