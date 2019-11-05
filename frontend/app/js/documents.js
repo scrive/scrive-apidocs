@@ -369,13 +369,13 @@ var Document = exports.Document = Backbone.Model.extend({
           url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/signing/check?_=" + Math.random(),
           method: "GET",
           ajax: true,
-          ajaxsuccess : function(data) {
+          ajaxsuccess : function(data, status, xhr) {
             if (data.signed) {
               successCallback();
             } else if (data.in_progress) {
               inProgressCallback(data.last_check_status);
             } else {
-              errorCallback(data.last_check_status);
+              errorCallback(data.last_check_status, xhr);
             }
           },
           ajaxerror : errorCallback

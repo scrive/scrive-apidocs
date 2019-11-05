@@ -57,7 +57,7 @@ describe("account/accepttos", function () {
     var $link = jQuery("a", component.refs.label.getDOMNode());
     assert.isTrue($link.hasClass("clickable"));
     assert.equal($link.attr("target"), "_blank");
-    assert.equal($link.attr("href"), "/terms");
+    assert.equal($link.attr("href"), "/terms-of-service/");
   });
 
   describe("onAcceptButtonClick", function () {

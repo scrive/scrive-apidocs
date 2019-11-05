@@ -70,20 +70,36 @@ folderAPICreate = api $ do
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
   let acc = mkAccPolicy [(ReadA, FolderR, fid)]
-  apiAccessControlOrIsAdmin acc $ do
-    fdr <- dbQuery (FolderGet fid) >>= \case
-      Nothing  -> srvLogErr "The folder could not be retrieved."
-      Just fdr -> return fdr
-    -- we retrieve only the immediate children, as in the user group API.
-    fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
-    let fdrwc =
-          I.FolderWithChildren fdr $ map (\c -> I.FolderWithChildren c []) fdrChildren
-    return . Ok $ encodeFolderWithChildren fdrwc
+  hasReadAccess  <- apiAccessControlCheck acc
+  isAdminOrSales <- checkAdminOrSales
+  if (hasReadAccess || isAdminOrSales)
+    then getFolder
+    else do
+      isSignatory <- isSignatoryOfOneOfDocuments
+      if (isSignatory) then getFolder else (apiError insufficientPrivileges)
   where
     srvLogErr :: Kontrakcja m => T.Text -> m a
     srvLogErr t = do
       logInfo "Folder API" $ object ["error_message" .= t]
       apiError $ serverError t
+    isSignatoryOfOneOfDocuments :: Kontrakcja m => m Bool
+    isSignatoryOfOneOfDocuments = do
+      user      <- fst <$> getAPIUserWithAnyPrivileges
+      documents <- dbQuery $ GetDocumentsIDs
+        (DocumentsUserHasAnyLinkTo (userid user))
+        [DocumentFilterDeleted False, DocumentFilterByFolderID fid]
+        []
+      return . (> 0) $ length documents
+    getFolder :: Kontrakcja m => m (APIResponse Encoding)
+    getFolder = do
+      fdr <- dbQuery (FolderGet fid) >>= \case
+        Nothing  -> srvLogErr "The folder could not be retrieved."
+        Just fdr -> return fdr
+      -- we retrieve only the immediate children, as in the user group API.
+      fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
+      let fdrwc =
+            I.FolderWithChildren fdr $ map (\c -> I.FolderWithChildren c []) fdrChildren
+      return . Ok $ encodeFolderWithChildren fdrwc
 
 folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
 folderAPIUpdate fid = api $ do

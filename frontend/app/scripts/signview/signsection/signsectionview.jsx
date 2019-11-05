@@ -323,14 +323,14 @@ var Task = require("../navigation/task");
             bankIDSigning.setStatus(s);
             setTimeout(checkSigning, 1000);
           },
-          function (xhr) {
+          function (lastStatus, xhr) {
             if (xhr.status === 0) {
               setTimeout(function () {
                 checkSigning();
               }, 1000);
               return;
             }
-            bankIDSigning.setStatus(xhr);
+            bankIDSigning.setStatus(lastStatus);
             bankIDSigning.triggerFail();
             self.handleFinishAfterSwedishBankIDFailed();
           }

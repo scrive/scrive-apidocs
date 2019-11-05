@@ -18,7 +18,7 @@ var AcceptTOSView = React.createClass({
     var link = $(".is-TOS", this.refs.label.getDOMNode());
     link.attr("class", "clickable");
     link.attr("target", "_blank");
-    link.attr("href", "/terms");
+    link.attr("href", "/terms-of-service/");
     link.text(" " + link.text());
   },
   onAcceptButtonClick: function (event) {

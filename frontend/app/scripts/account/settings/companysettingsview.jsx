@@ -32,6 +32,7 @@ module.exports = React.createClass({
       <div className="col">
         <div className="account-header company">{model.company().companyname()}</div>
         <div className="account-body standard-input-table">
+<form autoComplete="off">
           <table>
             <tbody>
               <tr>
@@ -137,6 +138,7 @@ module.exports = React.createClass({
               </tr>
             </tbody>
           </table>
+</form>
         </div>
       </div>
     );

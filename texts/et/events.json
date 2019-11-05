@@ -11,6 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive koostas kinnitatud PDF faili.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku Taani NemID abil.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku Soome TUPAS tunnuse abil.",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku Norra BankID abil.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Tuvastas dokumendile ligipääsemiseks enda isiku Rootsi BankID abil.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku SMSi teel saadetud PIN koodi abil",

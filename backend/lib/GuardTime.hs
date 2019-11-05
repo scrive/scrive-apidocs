@@ -218,13 +218,25 @@ instance ToJSValue VerifyResult where
 
 verify :: (MonadIO m, MonadMask m) => GuardTimeConf -> String -> m VerifyResult
 verify conf inputFileName = do
-  (code, stdout, stderr) <- invokeGuardtimeTool conf
-                                                GTExtendingCredentials
-                                                "pdf-verifier"
-                                                ["-j", "-f", inputFileName]
+  (code, stdout, stderr) <- withGuardtimeConf conf GTExtendingCredentials $ \confPath ->
+    do
+      let a =
+            [ "-Djava.util.logging.config.file=/dev/null"
+            , "-cp"
+            , "GuardTime/slf4j-jdk14-1.7.28.jar:GuardTime/pdf-verifier.jar"
+            , "com.guardtime.pdftools.PdfVerifier"
+            , "-c"
+            , confPath
+            , "-j"
+            , "-f"
+            , inputFileName
+            ]
+      liftIO $ readProcessWithExitCode "java" a BSL.empty
+  -- if stdout is empty, output json with the error is in stderr
+  let output = if BSL.null stdout then stderr else stdout
   case code of
     ExitSuccess -> do
-      case (runGetJSON readJSObject $ BSL.toString stdout) of
+      case (runGetJSON readJSObject $ BSL.toString output) of
         Left s ->
           return
             .  Problem stdout stderr
