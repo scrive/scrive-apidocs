@@ -4,6 +4,7 @@ import Control.Exception (IOException, SomeException, catch, evaluate)
 import Control.Monad
 import Control.Monad.Writer (execWriter, tell)
 import Data.Char
+import Data.List (intersect)
 import Data.List.Extra (intersperse, trim)
 import Data.Maybe
 import Data.Version.Extra (makeVersion, readVersion, showVersion)
@@ -87,6 +88,7 @@ usageMsg = unlines
   , "   test-formatting           : Test whether code base has run through fix-formatting"
   , "   test-hs-import-order      : Run Haskell Import Order checking script"
   , "   fix-formatting            : Format code base using brittany and sort_import"
+  , "   fix-formatting-quck       : Format code base using brittany and sort_import, only on changed files against master"
   , "   fix-hs-import-order       : Sort Haskell imports"
   , "   test-hs-outdated-deps     : Check for outdated Haskell dependencies"
   , ""
@@ -504,13 +506,9 @@ needAllHaskellFiles = needHaskellFilesInDirectories . allHsSourceDirs
 needServerHaskellFiles :: CabalFile -> Action ()
 needServerHaskellFiles = needHaskellFilesInDirectories . allLibExeHsSourceDirs
 
-serverFormatLintRules :: FilePath ->UseNewBuild -> OptimisationLevel -> CabalFile
-                      -> [ShakeFlag] -> Rules ()
+serverFormatLintRules :: FilePath -> UseNewBuild -> OptimisationLevel
+                      -> CabalFile -> [ShakeFlag] -> Rules ()
 serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
-  let srcSubdirs = case [subdir | SrcSubdir subdir <- flags]
-                    of [] -> fmap (sourceRoot </>) $ allHsSourceDirs cabalFile
-                       ds -> ds
-
   "_build/hs-import-order" %>>> do
     needAllHaskellFiles cabalFile
     need [componentTargetPath newBuild opt (mkExeName "sort_imports")]
@@ -518,6 +516,9 @@ serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
 
   "fix-formatting" ~> do
     need ["fix-hs-import-order", "brittany"]
+
+  "fix-formatting-quick" ~> do
+    need ["fix-hs-import-order", "brittany-quick"]
 
   "test-formatting" ~> do
     need ["test-hs-import-order", "brittany-check"]
@@ -557,29 +558,49 @@ serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
                             <> [ "--refactor", "--refactor-options=-i"])
 
   "brittany" ~> do
-    forM_ srcSubdirs $ \subdir -> do
-      files <- getDirectoryFiles subdir ["//*.hs"]
-      forM_ files $ \file -> do
+    hsFiles <- listHsFiles
+    forM_ hsFiles $
+      \srcPath -> do
         unit $ command [] "brittany"
           $ [ "--config-file"
             , sourceRoot </> "brittany.yaml"
             , "--write-mode"
             , "inplace"
-            , subdir </> file
+            , srcPath
             ]
 
+  "brittany-quick" ~> do
+    hsFiles <- listHsFiles
+    (Exit code, Stdout res, Stderr err) <-
+      command [Cwd sourceRoot] "git" ["diff", "master", "--name-only"]
+    case code of
+      ExitSuccess -> do
+        let changedFiles = fmap (\file -> sourceRoot </> file) $ lines res
+        let changedHsFiles = intersect hsFiles changedFiles
+        forM_ changedHsFiles $
+          \srcPath -> do
+            unit $ command [] "brittany"
+              $ [ "--config-file"
+                , sourceRoot </> "brittany.yaml"
+                , "--write-mode"
+                , "inplace"
+                , srcPath
+                ]
+
+        return ()
+      ExitFailure _ ->
+        fail $ "Failed to run git diff: " <> err
+
   "brittany-check" ~> do
+    hsFiles <- listHsFiles
     unformattedFiles <- fmap join $
-      forM srcSubdirs $ \subdir -> do
-        files <- getDirectoryFiles subdir ["//*.hs"]
-        fmap join $ forM files $ \file -> do
-          let srcPath = subdir </> file
-          formatted <- checkFormatted $ subdir </> file
-          if formatted
-          then return []
-          else do
-            putNormal $ "file is not formatted: " <> srcPath
-            return [srcPath]
+      forM hsFiles $ \srcPath -> do
+        formatted <- checkFormatted $ srcPath
+        if formatted
+        then return []
+        else do
+          putNormal $ "file is not formatted: " <> srcPath
+          return [srcPath]
     case unformattedFiles of
       [] -> return ()
       _ -> fail $
@@ -587,7 +608,22 @@ serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
         (concat $ intersperse "\n" unformattedFiles)
 
     where
+      srcSubdirs :: [FilePath]
+      srcSubdirs =
+        case [subdir | SrcSubdir subdir <- flags] of
+          [] -> fmap (sourceRoot </>) $
+            "Shake" : allHsSourceDirs cabalFile
+          ds -> ds
+
       commonHLintOpts = ["-XNoPatternSynonyms" , "--no-exit-code", "--cross"]
+
+      listHsFiles :: Action [String]
+      listHsFiles = fmap join $
+        forM srcSubdirs $ \subdir -> do
+          files <- getDirectoryFiles subdir ["//*.hs"]
+          return $ fmap (\file -> subdir </> file) files
+
+      onEachHsFile :: String -> [String] -> Action ()
       onEachHsFile subdir act = unit $
         cmd "find" $ [subdir, "-type", "f", "-name", "*.hs", "-exec"]
                      <> act <> ["{}", ";"]
