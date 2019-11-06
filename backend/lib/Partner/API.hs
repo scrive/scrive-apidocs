@@ -90,7 +90,8 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartner mPartnerID partnerUsrGrpID . api $ do
     let acc = [mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)]
-    apiAccessControl acc $ do
+    user <- fst <$> getAPIUser APIPersonal
+    apiAccessControl user acc $ do
       ugwp_partner <-
         apiGuardJustM (serverError "Was not able to retrieve partner")
         . dbQuery
@@ -130,7 +131,8 @@ partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
           [ mkAccPolicyItem (UpdateA, UserGroupR, ugid)
           , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID)
           ]
-    apiAccessControl acc $ do
+    user <- fst <$> getAPIUser APIPersonal
+    apiAccessControl user acc $ do
       dbQuery (UserGroupGetWithParents ugid) >>= \case
         Nothing   -> noUsrGrpErr
         Just ugwp -> do
@@ -168,7 +170,8 @@ partnerApiCallV1CompanyGet ptOrUgID ugid = do
           , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
           ]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc $ do
+    user <- fst <$> getAPIUser APIPersonal
+    apiAccessControl user acc $ do
       (dbQuery $ UserGroupGetWithParents ugid) >>= \case
         Nothing   -> noUsrGrpErr
         Just ugwp -> do
@@ -188,7 +191,8 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
     -- relies on the fact that only partner admins have `(CreateA,
     -- UserGroupR, partnerUsrGrpID)`; cf. instance for HasPermissions of
     -- (AccessRole UserGroupID) in AccessControl.Types...around line 95
-    apiAccessControl acc $ do
+    user <- fst <$> getAPIUser APIPersonal
+    apiAccessControl user acc $ do
       user_groups              <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
       user_groups_with_parents <- fmap catMaybes . forM user_groups $ \ug ->
         dbQuery . UserGroupGetWithParents $ ug ^. #id
@@ -208,7 +212,8 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
               {- This last one is blocking for all but partner admins.             -}
               {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
               {- Maybe we don't need to have the _exact_ same behaviour as before? -}
-    apiAccessControl acc $ do
+    user <- fst <$> getAPIUser APIPersonal
+    apiAccessControl user acc $ do
       (userInfo, hasAcceptedTOS, lang) <- do
         userForUpdate <- apiV2ParameterObligatory
           $ ApiV2ParameterJSON "json" unjsonUserForUpdate
@@ -250,7 +255,8 @@ partnerApiCallV1UserGet ptOrUgID uid = do
           , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
           ]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc $ do
+    apiUser <- fst <$> getAPIUser APIPersonal
+    apiAccessControl apiUser acc $ do
       (dbQuery . GetUserByID $ uid) >>= \case
         Nothing -> do
           apiError $ resourceNotFound "A user with that ID was not found"
@@ -266,7 +272,8 @@ partnerApiCallV1CompanyUsersGet ptOrUgID ugid = do
           , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
           ]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc $ do
+    user <- fst <$> getAPIUser APIPersonal
+    apiAccessControl user acc $ do
       users <- dbQuery $ UserGroupGetUsers ugid
       Ok <$> return (unjsonUsersForUpdate, userToUserForUpdate <$> users)
 
@@ -279,7 +286,8 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
           , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID)
           ]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc $ do
+    apiUser <- fst <$> getAPIUser APIPersonal
+    apiAccessControl apiUser acc $ do
       user    <- guardThatUserExists uid
       ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
       ufu     <-
@@ -310,7 +318,8 @@ partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
           , mkAccPolicyItem (ReadA, UserPersonalTokenR, uid)
           , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
           ]
-    apiAccessControl acc $ do
+    apiUser <- fst <$> getAPIUser APIPersonal
+    apiAccessControl apiUser acc $ do
       user <- guardThatUserExists uid -- @todo for now...
       void $ dbUpdate $ CreatePersonalToken (user ^. #id) -- @todo in the future: avoid this DB hit?
       token <- apiGuardJustM (serverError "Could not get user personal token")

@@ -331,7 +331,7 @@ apiCallLoginUser = api $ do
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
-apiCallUpdateUserProfile :: forall  m . Kontrakcja m => m Response
+apiCallUpdateUserProfile :: forall m . Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
   (user, _, _) <- getAPIUser APIPersonal
   ctx          <- getContext
@@ -724,7 +724,8 @@ apiCallGetTokenForPersonalCredentials :: Kontrakcja m => UserID -> m Response
 apiCallGetTokenForPersonalCredentials uid = V2.api $ do
   -- Guards
   void $ guardThatUserExists uid
-  apiAccessControl [mkAccPolicyItem (UpdateA, UserR, uid)] $ do
+  (user, _, _) <- getAPIUser APIPersonal
+  apiAccessControl user [mkAccPolicyItem (UpdateA, UserR, uid)] $ do
     minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
     when (minutes < 1 || minutes > maxMinutes) invalidMinsParamError
     -- Create login token
@@ -762,7 +763,7 @@ guardCanChangeUser adminuser otheruser = do
     $ do
         throwM . SomeDBExtraException $ forbidden "Can't change this user details"
 
-apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response
+apiCallUpdateOtherUserProfile :: forall m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
   ctx                  <- getContext
   (authorizingUser, _) <- V2.getAPIUserWithPrivileges [APIPersonal]
