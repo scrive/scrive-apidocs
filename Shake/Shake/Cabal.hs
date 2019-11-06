@@ -45,14 +45,13 @@ import Shake.Utils
 type CabalComponentName = ComponentName
 
 unComponentName :: CabalComponentName -> String
-unComponentName = fromMaybe "" . fmap unUnqualComponentName
-                  . componentNameString
+unComponentName = fromMaybe "" . fmap unUnqualComponentName . componentNameString
 
 mkExeName, mkSubLibName, mkTestName, mkBenchName :: String -> ComponentName
-mkExeName    = CExeName    . mkUnqualComponentName
+mkExeName = CExeName . mkUnqualComponentName
 mkSubLibName = CSubLibName . mkUnqualComponentName
-mkTestName   = CTestName   . mkUnqualComponentName
-mkBenchName  = CBenchName  . mkUnqualComponentName
+mkTestName = CTestName . mkUnqualComponentName
+mkBenchName = CBenchName . mkUnqualComponentName
 
 class ComponentNameHasType t where
   componentNameHasType :: ComponentName -> Bool
@@ -62,17 +61,17 @@ instance ComponentNameHasType Library where
   componentNameHasType (CSubLibName _) = True
   componentNameHasType _               = False
 instance ComponentNameHasType Executable where
-  componentNameHasType (CExeName _)    = True
-  componentNameHasType _               = False
+  componentNameHasType (CExeName _) = True
+  componentNameHasType _            = False
 instance ComponentNameHasType TestSuite where
-  componentNameHasType (CTestName _)   = True
-  componentNameHasType _               = False
+  componentNameHasType (CTestName _) = True
+  componentNameHasType _             = False
 instance ComponentNameHasType Benchmark where
-  componentNameHasType (CBenchName _)  = True
-  componentNameHasType _               = False
+  componentNameHasType (CBenchName _) = True
+  componentNameHasType _              = False
 instance ComponentNameHasType ForeignLib where
-  componentNameHasType (CFLibName _)   = True
-  componentNameHasType _               = False
+  componentNameHasType (CFLibName _) = True
+  componentNameHasType _             = False
 
 -- | A component name -> list of hs-source-dirs map.
 type HsSourceDirsMap = M.Map ComponentName [FilePath]
@@ -98,30 +97,27 @@ cabalComponentHsSourceDirs = Lens.view (Lens.buildInfo . Lens.hsSourceDirs)
 -- | Parse a .cabal file.
 parseCabalFile :: FilePath -> IO CabalFile
 parseCabalFile cabalFile = do
-  pkgDesc <- flattenPackageDescription <$>
-             readGenericPackageDescription normal cabalFile
+  pkgDesc <- flattenPackageDescription <$> readGenericPackageDescription normal cabalFile
 
-  let pkgid       = display . package $ pkgDesc
-      exts        = ordNub . concatMap PkgDesc.allExtensions . allBuildInfo
-                    $ pkgDesc
-      compReqSpec = ComponentRequestedSpec { testsRequested      = True
-                                           , benchmarksRequested = True }
-      compGraphE  = mkComponentsGraph compReqSpec pkgDesc
-      srcDirs     = ordNub . cabalComponentHsSourceDirs
+  let pkgid = display . package $ pkgDesc
+      exts  = ordNub . concatMap PkgDesc.allExtensions . allBuildInfo $ pkgDesc
+      compReqSpec =
+        ComponentRequestedSpec { testsRequested = True, benchmarksRequested = True }
+      compGraphE = mkComponentsGraph compReqSpec pkgDesc
+      srcDirs    = ordNub . cabalComponentHsSourceDirs
 
   compGraph <- case compGraphE of
-    Left compCycle -> fail . PP.renderStyle PP.style . componentCycleMsg
-                      $ compCycle
-    Right g        -> return g
+    Left  compCycle -> fail . PP.renderStyle PP.style . componentCycleMsg $ compCycle
+    Right g         -> return g
 
   return $ CabalFile
     { packageId        = pkgid
     , allExtensions    = exts
-    , hsSourceDirsMap  = M.map (srcDirs . Graph.nodeValue) . Graph.toMap
+    , hsSourceDirsMap  = M.map (srcDirs . Graph.nodeValue) . Graph.toMap $ compGraph
+    , componentDepsMap = M.fromList
+                         . map (\(comp, cnames) -> (componentName comp, cnames))
+                         . componentsGraphToList
                          $ compGraph
-    , componentDepsMap = M.fromList .
-                         map (\(comp, cnames) -> (componentName comp, cnames)) .
-                         componentsGraphToList $ compGraph
     }
 
 -- | All components that this component depends on.
@@ -134,13 +130,11 @@ allHsSourceDirs :: CabalFile -> [FilePath]
 allHsSourceDirs = ordNub . concat . M.elems . hsSourceDirsMap
 
 -- | List of hs-source-dirs of all components of a given type.
-allHsSourceDirsForComponentType :: forall t . ComponentNameHasType t
-                                => CabalFile -> [FilePath]
-allHsSourceDirsForComponentType cabalFile =
-  allHsSourceDirs $ cabalFile
-  { hsSourceDirsMap = M.filterWithKey
-                      (\k _v -> componentNameHasType @t k)
-                      $ hsSourceDirsMap cabalFile
+allHsSourceDirsForComponentType
+  :: forall  t . ComponentNameHasType t => CabalFile -> [FilePath]
+allHsSourceDirsForComponentType cabalFile = allHsSourceDirs $ cabalFile
+  { hsSourceDirsMap = M.filterWithKey (\k _v -> componentNameHasType @t k)
+                        $ hsSourceDirsMap cabalFile
   }
 
 -- | List of hs-source-dirs of a single component.
@@ -150,8 +144,7 @@ componentHsSourceDirs cabalFile compName =
 
 -- | Return the list of hs-source-dirs for all libraries and executables.
 allLibExeHsSourceDirs :: CabalFile -> [FilePath]
-allLibExeHsSourceDirs cabalFile =
-  allHsSourceDirsForComponentType @Library cabalFile
+allLibExeHsSourceDirs cabalFile = allHsSourceDirsForComponentType @Library cabalFile
   ++ allHsSourceDirsForComponentType @Executable cabalFile
 
 -- | Return the list of hs-source-dirs for all test suites.
@@ -174,15 +167,12 @@ allComponentNames = M.keys . hsSourceDirsMap
 libExeComponentNames :: CabalFile -> [ComponentName]
 libExeComponentNames = filter isLibOrExe . allComponentNames
   where
-    isLibOrExe n = componentNameHasType @Library n ||
-                   componentNameHasType @Executable n
+    isLibOrExe n = componentNameHasType @Library n || componentNameHasType @Executable n
 
 -- | List all names of test suite components.
 testComponentNames :: CabalFile -> [ComponentName]
-testComponentNames = filter (componentNameHasType @TestSuite) .
-                     allComponentNames
+testComponentNames = filter (componentNameHasType @TestSuite) . allComponentNames
 
 -- | List all names of benchmark components.
 benchComponentNames :: CabalFile -> [ComponentName]
-benchComponentNames = filter (componentNameHasType @Benchmark) .
-                      allComponentNames
+benchComponentNames = filter (componentNameHasType @Benchmark) . allComponentNames

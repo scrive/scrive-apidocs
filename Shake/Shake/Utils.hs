@@ -27,9 +27,11 @@ getHsDeps rootPath = do
 -- matching files)
 needPatternsInDirectories :: FilePath -> [FilePattern] -> [FilePath] -> Action ()
 needPatternsInDirectories sourceRoot pats dirs = do
-  forM_ dirs ( \d -> do
-    hs <- getDirectoryFiles (sourceRoot </> d) pats
-    need $ map (\f -> sourceRoot </> d </> f) hs
+  forM_
+    dirs
+    (\d -> do
+      hs <- getDirectoryFiles (sourceRoot </> d) pats
+      need $ map (\f -> sourceRoot </> d </> f) hs
     )
 
 infix 1 %>>>
@@ -52,9 +54,8 @@ langEnv = [AddEnv "LANG" "en_US.UTF-8", AddEnv "LC_ALL" "en_US.UTF-8"]
 ordNub :: (Ord a) => [a] -> [a]
 ordNub l = go Set.empty l
   where
-    go _ [] = []
-    go s (x:xs) = if x `Set.member` s then go s xs
-                                      else x : go (Set.insert x s) xs
+    go _ []       = []
+    go s (x : xs) = if x `Set.member` s then go s xs else x : go (Set.insert x s) xs
 
-findWithDefault :: Eq key => val -> key -> [(key,val)] -> val
+findWithDefault :: Eq key => val -> key -> [(key, val)] -> val
 findWithDefault def k = fromMaybe def . lookup k
