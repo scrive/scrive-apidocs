@@ -595,9 +595,10 @@ testSignDocumentSearchData = do
 
                       randomUpdate $ \t -> CloseDocument (systemActor t)
                       docID                 <- theDocumentID
-                      mSearchDataByFunction <- dbQuery
-                        $ GetDocumentSearchDataByFunction docID
-                      mSearchDataByField <- dbQuery $ GetDocumentSearchDataByField docID
+                      mSearchDataByFunction <- normalizeFields
+                        <$> dbQuery (GetDocumentSearchDataByFunction docID)
+                      mSearchDataByField <- normalizeFields
+                        <$> dbQuery (GetDocumentSearchDataByField docID)
                       assertEqual
                         "Search string is updated by triggers upon document creation"
                         mSearchDataByFunction
@@ -606,9 +607,10 @@ testSignDocumentSearchData = do
                       title' <- rand 1 $ arbString 10 25
                       void . randomUpdate $ \t ->
                         SetDocumentTitle (T.pack title') (systemActor t)
-                      mSearchDataByFunction' <- dbQuery
-                        $ GetDocumentSearchDataByFunction docID
-                      mSearchDataByField' <- dbQuery $ GetDocumentSearchDataByField docID
+                      mSearchDataByFunction' <- normalizeFields
+                        <$> dbQuery (GetDocumentSearchDataByFunction docID)
+                      mSearchDataByField' <- normalizeFields
+                        <$> dbQuery (GetDocumentSearchDataByField docID)
                       if (mSearchDataByField' == mSearchDataByField)
                         then assertFailure "Search field was not updated"
                         else assertEqual
@@ -654,9 +656,10 @@ testSignDocumentSearchData = do
                         valueText <- rand 1 gValueText
                         dbUpdate $ SetSLFValueTextField slid (T.unpack valueText)
 
-                      mSearchDataByFunction'' <- dbQuery
-                        $ GetDocumentSearchDataByFunction docID
-                      mSearchDataByField'' <- dbQuery $ GetDocumentSearchDataByField docID
+                      mSearchDataByFunction'' <- normalizeFields
+                        <$> dbQuery (GetDocumentSearchDataByFunction docID)
+                      mSearchDataByField'' <- normalizeFields
+                        <$> dbQuery (GetDocumentSearchDataByField docID)
 
                       if (mSearchDataByField'' == mSearchDataByField')
                         then assertFailure "Search field was not updated"
@@ -664,6 +667,7 @@ testSignDocumentSearchData = do
                           "Search string is updated by triggers after signatory_link_fields.value_text update"
                           mSearchDataByFunction''
                           mSearchDataByField''
+  where normalizeFields = fmap (sort . words)
 
 testDocumentAuthorUserID :: TestEnv ()
 testDocumentAuthorUserID = do
