@@ -1,13 +1,11 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Folder.Internal (
     Folder(..)
-  , FolderID
   , FolderWithChildren(..)
-  , fetchFolder
-  , defaultFolder
+  , FolderID
   , fromFolderID
   , emptyFolderID
   , unsafeFolderID
-  , fwcToList
   ) where
 
 import Data.Aeson
@@ -15,6 +13,7 @@ import Data.Int
 import Data.Text (Text, pack)
 import Data.Unjson
 import Happstack.Server
+import Optics.TH
 import Text.JSON.ToJSValue
 import qualified Data.Text as T
 
@@ -22,26 +21,16 @@ import DB
 import Log.Identifier
 
 data Folder = Folder
-  { _folderID       :: !FolderID
-  , _folderParentID :: !(Maybe FolderID)
-  , _folderName     :: !Text
+  { id       :: !FolderID
+  , parentID :: !(Maybe FolderID)
+  , name     :: !Text
   } deriving (Show, Eq)
 
 -- Folder and all its children down to the bottom
 data FolderWithChildren = FolderWithChildren
-  { _fwcFolder :: Folder
-  , _fwcChildren :: [FolderWithChildren]
+  { folder   :: !Folder
+  , children :: ![FolderWithChildren]
   }
-
-fwcToList :: FolderWithChildren -> [Folder]
-fwcToList fwc = _fwcFolder fwc : concatMap fwcToList (_fwcChildren fwc)
-
-fetchFolder :: (FolderID, Maybe FolderID, Text) -> Folder
-fetchFolder (_folderID, _folderParentID, _folderName) = Folder { .. }
-
-defaultFolder :: Folder
-defaultFolder =
-  Folder { _folderID = emptyFolderID, _folderParentID = Nothing, _folderName = "" }
 
 newtype FolderID = FolderID Int64
   deriving (Eq, Ord)
@@ -93,3 +82,6 @@ instance FromJSON FolderID where
     case maybeRead fidStr of
       Nothing  -> fail "Could not parse Folder ID"
       Just fid -> return fid
+
+makeFieldLabelsWith noPrefixFieldLabels ''Folder
+makeFieldLabelsWith noPrefixFieldLabels ''FolderWithChildren

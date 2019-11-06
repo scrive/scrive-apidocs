@@ -22,7 +22,6 @@ import AppConf
 import AppControl
 import AppDBTables
 import AppDir (AppPaths(..), setupAppPaths)
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Configuration
 import Database.Redis.Configuration
@@ -162,23 +161,20 @@ initDatabaseEntries appConf = do
         ug       <-
           dbUpdate
           . UserGroupCreate
-          . set ugHomeFolderID (Just $ get folderID ugFolder)
+          . set #homeFolderID (Just $ ugFolder ^. #id)
           $ defaultUserGroup
         userFolder <-
-          dbUpdate
-          . FolderCreate
-          . set folderParentID (Just $ get folderID ugFolder)
-          $ defaultFolder
+          dbUpdate . FolderCreate . set #parentID (Just $ ugFolder ^. #id) $ defaultFolder
         void $ dbUpdate $ AddUser ("", "")
                                   (unEmail email)
                                   (Just passwd)
-                                  (get ugID ug, Just $ get folderID userFolder, True)
+                                  (ug ^. #id, Just $ userFolder ^. #id, True)
                                   LANG_EN
-                                  (get bdid bd)
+                                  (bd ^. #id)
                                   ByAdmin
-        let features = fromJust $ get ugFeatures ug
+        let features = fromJust $ ug ^. #features
         -- enable everything for initial admins
-        let adminFeatures = (fromJust $ get ugFeatures ug)
+        let adminFeatures = (fromJust $ ug ^. #features)
               { fAdminUsers = (fAdminUsers features) { ffCanUseDKAuthenticationToView = True
                                                      , ffCanUseDKAuthenticationToSign = True
                                                      , ffCanUseFIAuthenticationToView = True
@@ -190,7 +186,7 @@ initDatabaseEntries appConf = do
               }
         dbUpdate
           . UserGroupUpdate
-          . set ugInvoicing (Invoice EnterprisePlan)
-          . set ugFeatures  (Just adminFeatures)
+          . set #invoicing (Invoice EnterprisePlan)
+          . set #features  (Just adminFeatures)
           $ ug
       Just _ -> return () -- user exist, do not add it

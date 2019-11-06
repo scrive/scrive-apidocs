@@ -62,7 +62,7 @@ apiAccessControlOrIsAdmin acc successAction = do
 
 accessControlLoggedIn :: Kontrakcja m => AccessPolicy -> m a -> m a
 accessControlLoggedIn acc successAction = do
-  user  <- guardJustM $ ((get ctxmaybeuser) <$> getContext)
+  user  <- guardJustM $ (view #maybeUser <$> getContext)
   roles <- dbQuery . GetRoles $ user
   accessControl roles acc internalError successAction
 
@@ -71,19 +71,19 @@ checkAdminOrSales = (isApiAdmin || isApiSales) <$> getContext
 
 {- Logged in user is admin with 2FA (2FA only enforced for production = true) -}
 isApiAdmin :: Context -> Bool
-isApiAdmin ctx = case get ctxmaybeapiuser ctx of
+isApiAdmin ctx = case ctx ^. #maybeApiUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` get ctxadminaccounts ctx)
-      && (usertotpactive user || not (get ctxproduction ctx))
+    (useremail (userinfo user) `elem` ctx ^. #adminAccounts)
+      && (usertotpactive user || not (ctx ^. #production))
 
 {- Logged in user is sales with 2FA (2FA only enforced for production = true) -}
 isApiSales :: Context -> Bool
-isApiSales ctx = case get ctxmaybeapiuser ctx of
+isApiSales ctx = case ctx ^. #maybeApiUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
-      && (usertotpactive user || not (get ctxproduction ctx))
+    (useremail (userinfo user) `elem` ctx ^. #salesAccounts)
+      && (usertotpactive user || not (ctx ^. #production))
 
 userGroupOrAPIError :: (MonadDB m, MonadThrow m) => UserGroupID -> m UserGroup
 userGroupOrAPIError ugid = dbQuery (UserGroupGet ugid) >>= \case

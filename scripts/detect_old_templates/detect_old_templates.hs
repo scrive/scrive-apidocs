@@ -54,6 +54,7 @@ kontraExtensions = map
   , MultiParamTypeClasses
   , MultiWayIf
   , NamedFieldPuns
+  , OverloadedLabels
   , OverloadedStrings
   , PatternGuards
   , RankNTypes

@@ -44,12 +44,12 @@ import IPAddress
 import KontraError
 import Log.Identifier
 import MailContext
-import MailContext.Internal
 import MinutesTime
 import Templates
 import User.Lang
 import Util.Actor
 import Util.SignatoryLinkUtils
+import qualified MailContext.Internal as I
 
 data DocumentSigning = DocumentSigning {
     signingSignatoryID          :: !SignatoryLinkID
@@ -137,11 +137,11 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool mailNoreply
           $ do
               now <- currentTime
               bd  <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
-              let mc = MailContext { _mctxlang                 = signingLang
-                                   , _mctxcurrentBrandedDomain = bd
-                                   , _mctxtime                 = now
-                                   , _mctxmailNoreplyAddress   = mailNoreplyAddress
-                                   }
+              let mc = I.MailContext { lang               = signingLang
+                                     , brandedDomain      = bd
+                                     , time               = now
+                                     , mailNoreplyAddress = mailNoreplyAddress
+                                     }
               runTemplatesT (signingLang, templates)
                 . runMailContextT mc
                 . runGuardTimeConfT guardTimeConf

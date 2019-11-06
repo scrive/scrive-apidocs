@@ -38,6 +38,7 @@ import User.Model
 import UserGroup
 import UserGroupAccounts.UserGroupAccountsControl
 import Util.MonadUtils
+import qualified Folder.Internal as I
 
 folderTests :: TestEnvSt -> Test
 folderTests env = testGroup
@@ -96,18 +97,18 @@ testPartnerUsersWithFolders = do
   (ctx, cid) <- partnerCompanyCreate partnerAdminUser partnerAdminUserGroup
   assertCountAllFolders "Partner, Partner admin and UserGroup have Folders" 3
 
-  partnerUserCreate ctx cid $ get ugID partnerAdminUserGroup
+  partnerUserCreate ctx cid $ partnerAdminUserGroup ^. #id
   assertCountAllFolders "Partner, Partner admin, UserGroup and User have Folders" 4
 
   ug <- guardJustM . dbQuery $ UserGroupGet cid
-  assertBool "UserGroup has home Folder" . isJust $ get ugHomeFolderID ug
+  assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
   user <- fmap head . dbQuery $ UserGroupGetUsers cid
   assertBool "User has home Folder" . isJust $ userhomefolderid user
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid user
   assertEqual "User home folder is child of UserGroup home folder"
-              (get ugHomeFolderID ug)
-              (get folderParentID userFolder)
+              (ug ^. #homeFolderID)
+              (userFolder ^. #parentID)
 
 testPartnerUsersWithoutFolders :: TestEnv ()
 testPartnerUsersWithoutFolders = do
@@ -119,15 +120,15 @@ testPartnerUsersWithoutFolders = do
 
   -- unlink UserGroup from Folder
   ug <- guardJustM . dbQuery $ UserGroupGet cid
-  dbUpdate . UserGroupUpdate . set ugHomeFolderID Nothing $ ug
+  dbUpdate . UserGroupUpdate . set #homeFolderID Nothing $ ug
 
-  partnerUserCreate ctx cid $ get ugID partnerAdminUserGroup
+  partnerUserCreate ctx cid $ partnerAdminUserGroup ^. #id
   assertCountAllFolders "User havs no Folder" 3
 
 partnerCompanyCreate :: User -> UserGroup -> TestEnv (Context, UserGroupID)
 partnerCompanyCreate partnerAdminUser partnerAdminUserGroup = do
-  ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext defaultLang
-  let partnerUgID = get ugID partnerAdminUserGroup
+  ctx <- (set #maybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
+  let partnerUgID = partnerAdminUserGroup ^. #id
   newCompanyJSON <- readTestFile "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [("json", inTextBS newCompanyJSON)]
       rq_newCompany_resp_fp =
@@ -161,9 +162,9 @@ partnerUserCreate ctx cid pid = do
 testNewCompanyAccount :: TestEnv ()
 testNewCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  assertBool "UserGroup has home Folder" . isJust $ get ugHomeFolderID ug
+  assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
-  ctx    <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   bobReq <- mkRequest
     POST
@@ -178,11 +179,11 @@ testNewCompanyAccount = do
 
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid userBob
   assertEqual "User home folder is child of UserGroup home folder"
-              (get ugHomeFolderID ug)
-              (get folderParentID userFolder)
+              (ug ^. #homeFolderID)
+              (userFolder ^. #parentID)
 
   -- unlink UserGroup from Folder
-  dbUpdate . UserGroupUpdate . set ugHomeFolderID Nothing $ ug
+  dbUpdate . UserGroupUpdate . set #homeFolderID Nothing $ ug
 
   -- create another user
   cliffReq <- mkRequest
@@ -204,17 +205,13 @@ createFolderTree :: Int -> TestEnv (FolderID, [FolderID])
 createFolderTree folderDepth = do
   -- create a tree of depth 5 with each parent having 2 subgroups
   let createFolder parentID =
-        fmap (get folderID)
-          . dbUpdate
-          . FolderCreate
-          . set folderParentID (Just parentID)
-          $ defaultFolder
+        view #id <$> dbUpdate (FolderCreate $ set #parentID (Just parentID) defaultFolder)
       createFolders (parentIDs, fids) _lvl = do
         newFids <- concatForM parentIDs
           $ \parentID -> replicateM 2 $ createFolder parentID
         return (newFids, fids ++ newFids)
 
-  fRootID      <- fmap (get folderID) . dbUpdate $ FolderCreate defaultFolder
+  fRootID      <- view #id <$> dbUpdate (FolderCreate defaultFolder)
   (_, allFids) <- foldlM createFolders ([fRootID], [fRootID]) [1 .. folderDepth]
   return (fRootID, allFids)
 
@@ -242,7 +239,7 @@ testMoveFolder = do
   (_, fids)    <- createFolderTree 3
   -- take Root.Left folder and move it to Root.Right....Right folder
   Just folder1 <- dbQuery . FolderGet $ fids !! 1
-  void $ dbUpdate . FolderUpdate . set folderParentID (Just $ fids !! 14) $ folder1
+  void $ dbUpdate . FolderUpdate . set #parentID (Just $ fids !! 14) $ folder1
   -- parentpath of new leaf in moved group should be 6 items long
   parentFolders <- dbQuery . FolderGetParents $ fids !! 10
   assertEqual ("Fetched all parents of leaf folder") 6 (length parentFolders)
@@ -254,36 +251,31 @@ testMoveFolder = do
 testMoveFolderCycleError :: TestEnv ()
 testMoveFolderCycleError = do
   folderA0 <- rand 10 arbitrary
-  folderA  <- dbUpdate . FolderCreate . set folderParentID Nothing $ folderA0
+  folderA  <- dbUpdate . FolderCreate . set #parentID Nothing $ folderA0
 
   -- make B child of A
   folderB0 <- rand 10 arbitrary
-  folderB  <-
-    dbUpdate . FolderCreate . set folderParentID (Just $ get folderID folderA) $ folderB0
+  folderB  <- dbUpdate . FolderCreate . set #parentID (Just $ folderA ^. #id) $ folderB0
   -- making A child of B fails
   assertRaisesKontra (\(FoldersFormCycle _) -> True) . dbUpdate . FolderUpdate $ set
-    folderParentID
-    (Just $ get folderID folderB)
+    #parentID
+    (Just $ folderB ^. #id)
     folderA
 
 testCannotDeleteFolderWithSubfolders :: TestEnv ()
 testCannotDeleteFolderWithSubfolders = do
   folderA0 <- rand 10 arbitrary
-  folderA  <- dbUpdate . FolderCreate . set folderParentID Nothing $ folderA0
+  folderA  <- dbUpdate . FolderCreate . set #parentID Nothing $ folderA0
 
   -- make B child of A
   folderB0 <- rand 10 arbitrary
-  folderB  <-
-    dbUpdate . FolderCreate . set folderParentID (Just $ get folderID folderA) $ folderB0
+  folderB  <- dbUpdate . FolderCreate . set #parentID (Just $ folderA ^. #id) $ folderB0
   commit -- so that raising exception will not take our data with it
   -- deleting folder A raises exception
-  assertRaisesDBException
-    .   runSQL_
-    $   "DELETE from folders where id = "
-    <?> get folderID folderA
+  assertRaisesDBException . runSQL_ $ "DELETE from folders where id = " <?> folderA ^. #id
   commit
   -- deleting folder B works
-  runSQL_ $ "DELETE from folders where id = " <?> get folderID folderB
+  runSQL_ $ "DELETE from folders where id = " <?> folderB ^. #id
 
 testMigrationTriggersWork :: TestEnv ()
 testMigrationTriggersWork = do
@@ -296,9 +288,7 @@ testMigrationTriggersWork = do
 
   ctx0 <- mkContext defaultLang
   let ctx =
-        set ctxadminaccounts [useremail $ userinfo user]
-          . set ctxmaybeuser (Just user)
-          $ ctx0
+        set #adminAccounts [useremail $ userinfo user] . set #maybeUser (Just user) $ ctx0
   req <- mkRequest GET []
   void $ runTestKontra req ctx $ handleTriggerMigrateFolders 1
   assertCountAllFolders "Added Folders for 1 UserGroup with 1 User" 2
@@ -326,17 +316,14 @@ testMigrationTriggersWork = do
 testFolderAPICreate :: TestEnv ()
 testFolderAPICreate = do
   user      <- addNewRandomUser
-  ctx       <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- make root of folder struct
-  fdrRootID <- get folderID <$> do
+  fdrRootID <- view #id <$> do
     dbUpdate . FolderCreate $ defaultFolder
 
   folderNameTest <- rand 10 arbitraryName
-  let fdrTest =
-        set folderName folderNameTest
-          . set folderParentID (Just fdrRootID)
-          $ defaultFolder
-      newFolderJSONBS  = AE.encodingToLazyByteString $ encodeFolder fdrTest
+  let fdrTest = set #name folderNameTest . set #parentID (Just fdrRootID) $ defaultFolder
+      newFolderJSONBS = AE.encodingToLazyByteString $ encodeFolder fdrTest
       reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
   -- should not be able to create a child since the user is not an admin of the
   -- above folder root
@@ -350,10 +337,10 @@ testFolderAPICreate = do
     <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
 
   -- check that API returns what it's supposed to
-  Just newFdrFromDB <- dbQuery . FolderGet . get folderID $ newFdrFromAPI
+  Just newFdrFromDB <- dbQuery . FolderGet $ newFdrFromAPI ^. #id
   assertEqual ("New folder from API equals the one we sent in")
               newFdrFromAPI
-              (set folderID (get folderID newFdrFromAPI) fdrTest)
+              (set #id (newFdrFromAPI ^. #id) fdrTest)
               -- since id is 0 for default
 
   assertEqual ("New folder from API equals corresponding one in DB")
@@ -364,16 +351,16 @@ testFolderAPIUpdate :: TestEnv ()
 testFolderAPIUpdate = do
   grpAdmin <- addNewRandomUser
   user     <- addNewRandomUser
-  ctxAdmin <- (set ctxmaybeuser (Just grpAdmin)) <$> mkContext defaultLang
-  ctxUser  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  fdrRoot  <- dbUpdate $ FolderCreate (set folderName "Folder root" defaultFolder)
-  let folderAdminRoot = FolderAdminAR (get folderID fdrRoot)
+  ctxAdmin <- (set #maybeUser (Just grpAdmin)) <$> mkContext defaultLang
+  ctxUser  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
+  let folderAdminRoot = FolderAdminAR (fdrRoot ^. #id)
       admid           = userid grpAdmin
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminRoot
   subs@[fdr1        , fdr2         ] <- createChildrenForParentByAPI ctxAdmin fdrRoot
   [     childrenFdr1, _childrenFdr2] <- forM subs $ createChildrenForParentByAPI ctxAdmin
 
-  let folderAdminUserFdr1 = FolderAdminAR (get folderID fdr1)
+  let folderAdminUserFdr1 = FolderAdminAR (fdr1 ^. #id)
   void . dbUpdate $ AccessControlInsertRoleForUser (userid user) folderAdminUserFdr1
 
   -- `user` should be able to update fdr1-rooted tree
@@ -382,29 +369,27 @@ testFolderAPIUpdate = do
   fdr <-
     dbUpdate
     $ FolderCreate
-    $ ( set folderParentID (Just $ get folderID fdr1)
-      . set folderName     "Folder for move test"
-      )
+    $ (set #parentID (Just $ fdr1 ^. #id) . set #name "Folder for move test")
         defaultFolder
   allChildrenFdr1 <-
-    concatMap fwcToList <$> (dbQuery $ FolderGetAllChildrenRecursive $ get folderID fdr1)
+    concatMap fwcToList <$> (dbQuery $ FolderGetAllChildrenRecursive $ fdr1 ^. #id)
   assertEqual "Children of folder are the same"
               (sortByFolderID allChildrenFdr1)
               (sortByFolderID $ [fdr] <> childrenFdr1)
 
-  let fdrTryMoving = set folderParentID (Just $ get folderID fdr2) fdr
+  let fdrTryMoving = set #parentID (Just $ fdr2 ^. #id) fdr
   -- `user` should _not_ be able to change parent of fdrTryMoving to fdr2 before being
   -- an admin of both parents
   void $ fdrAPIUpdate ctxUser fdrTryMoving 403
 
   -- make `user` admin of `fdr2`
   void . dbUpdate $ AccessControlInsertRoleForUser (userid user)
-                                                   (FolderAdminAR (get folderID fdr2))
+                                                   (FolderAdminAR (fdr2 ^. #id))
 
   -- move should now be successful
   movedFdr1'        <- jsonToFolder <$> fdrAPIUpdate ctxUser fdrTryMoving 200
 
-  Just moveddbFdr1' <- dbQuery . FolderGet . get folderID $ fdrTryMoving
+  Just moveddbFdr1' <- dbQuery . FolderGet $ fdrTryMoving ^. #id
   assertEqual "Moved folder from API should equal the corresponding one in DB"
               moveddbFdr1'
               movedFdr1'
@@ -413,16 +398,16 @@ testFolderAPIUpdate = do
               fdrTryMoving
 
   fromDBchildrenFdr1' <- do
-    dbQuery . FolderGetImmediateChildren . get folderID $ fdr1
+    dbQuery . FolderGetImmediateChildren $ fdr1 ^. #id
   assertEqual "Children of folder are the same"
               (sortByFolderID fromDBchildrenFdr1')
               (sortByFolderID childrenFdr1)
 
-  parentsOfFdr <- dbQuery . FolderGetParents $ get folderID fdr
+  parentsOfFdr <- dbQuery . FolderGetParents $ fdr ^. #id
   assertEqual "Parent path of moved folder is correct" parentsOfFdr [fdr2, fdrRoot]
   where
     sortByFolderID :: [Folder] -> [Folder]
-    sortByFolderID = sortBy (\f1 f2 -> compare (get folderID f1) (get folderID f2))
+    sortByFolderID = sortBy (\f1 f2 -> compare (f1 ^. #id) (f2 ^. #id))
 
     fdrUpdateParams :: Folder -> [(Text, Input)]
     fdrUpdateParams fdr =
@@ -431,16 +416,16 @@ testFolderAPIUpdate = do
 
     fdrAPIUpdate :: Context -> Folder -> Int -> TestEnv Aeson.Value
     fdrAPIUpdate ctx fdr code = do
-      let apiCall = folderAPIUpdate $ get folderID fdr
+      let apiCall = folderAPIUpdate $ fdr ^. #id
       jsonTestRequestHelper ctx POST (fdrUpdateParams fdr) apiCall code
 
     updateTestHelper :: Context -> Folder -> TestEnv ()
     updateTestHelper ctx fdr = do
       name <- rand 10 arbitraryName
-      let fdr' = (set folderName name fdr)
+      let fdr' = (set #name name fdr)
       updatedFdr <- jsonToFolder <$> fdrAPIUpdate ctx fdr' 200
       assertEqual ("New folder from API should equal the one specified") fdr' updatedFdr
-      Just dbFdr <- dbQuery . FolderGet . get folderID $ fdr
+      Just dbFdr <- dbQuery . FolderGet $ fdr ^. #id
       assertEqual ("New folder from API should equal the corresponding one in DB")
                   dbFdr
                   updatedFdr
@@ -450,9 +435,9 @@ testFolderAPIUpdate = do
 testFolderAPIGet :: TestEnv ()
 testFolderAPIGet = do
   grpAdmin <- addNewRandomUser
-  ctxAdmin <- (set ctxmaybeuser (Just grpAdmin)) <$> mkContext defaultLang
-  fdrRoot  <- dbUpdate $ FolderCreate (set folderName "Folder root" defaultFolder)
-  let fdrRootID    = get folderID fdrRoot
+  ctxAdmin <- set #maybeUser (Just grpAdmin) <$> mkContext defaultLang
+  fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
+  let fdrRootID    = fdrRoot ^. #id
       folderAdminR = FolderAdminAR fdrRootID
       admid        = userid grpAdmin
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminR
@@ -460,25 +445,26 @@ testFolderAPIGet = do
   [     _childrenOfFDR1, _childrenOfFDR2] <- do
     forM subs $ createChildrenForParentByAPI ctxAdmin
   fdrwcfuFromAPI <- fdrAPIGet ctxAdmin fdrRoot 200
-  fdrChildren    <- dbQuery $ FolderGetImmediateChildren (get folderID fdrRoot)
-  let fdrwc =
-        FolderWithChildren fdrRoot $ map (\c -> FolderWithChildren c []) fdrChildren
-      fdrwcbs =
-        fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren
-          fdrwc
+  fdrChildren    <- dbQuery $ FolderGetImmediateChildren (fdrRoot ^. #id)
+  let
+    fdrwc =
+      I.FolderWithChildren fdrRoot $ map (\c -> I.FolderWithChildren c []) fdrChildren
+    fdrwcbs =
+      fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren
+        fdrwc
   assertEqual "Folder data output corresponds to what was sent in" fdrwcfuFromAPI fdrwcbs
   -- signatories should have access to folders for documents they participate in siging in
   mockDoc <- testDocApiV2New' ctxAdmin
   let signatoryEmail = "jakub.janczak@scrive.com" :: String
   mSignatoryUser   <- addNewUser "Jakub" "Janczak" $ T.pack signatoryEmail
-  signatoryUserCtx <- (set ctxmaybeuser mSignatoryUser) <$> mkContext defaultLang
+  signatoryUserCtx <- set #maybeUser mSignatoryUser <$> mkContext defaultLang
   let signatorySigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
           $ setMockSigLinkStandardField "email" signatoryEmail
           $ defaultMockSigLink
   let approverEmail = "barbara.streisand@scrive.com" :: String
   mApproverUser   <- addNewUser "Jakub" "Janczak" $ T.pack approverEmail
-  approverUserCtx <- (set ctxmaybeuser mApproverUser) <$> mkContext defaultLang
+  approverUserCtx <- set #maybeUser mApproverUser <$> mkContext defaultLang
   let approverSigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
           $ setMockSigLinkStandardField "email" approverEmail
@@ -504,46 +490,45 @@ testFolderAPIGet = do
   where
     fdrAPIGet :: Context -> Folder -> Int -> TestEnv Aeson.Value
     fdrAPIGet ctx fdr code = do
-      let apiCall = folderAPIGet . get folderID $ fdr
+      let apiCall = folderAPIGet $ fdr ^. #id
       jsonTestRequestHelper ctx GET [] apiCall code
 
 testFolderAPIDelete :: TestEnv ()
 testFolderAPIDelete = do
   user       <- addNewRandomUser
-  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
   -- I don't want to test deletion of the user home folder, so let's create a subfolder.
-  let fdrTestDeleteChild =
-        set folderParentID (Just $ get folderID userFolder) $ defaultFolder
-      newFolderJSONBS  = AE.encodingToLazyByteString $ encodeFolder fdrTestDeleteChild
-      reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
+  let fdrTestDeleteChild = set #parentID (Just $ userFolder ^. #id) $ defaultFolder
+      newFolderJSONBS    = AE.encodingToLazyByteString $ encodeFolder fdrTestDeleteChild
+      reqNewFolderPrms   = [("folder", inTextBS newFolderJSONBS)]
   newFdrFromAPI <- jsonToFolder
     <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
   void $ jsonTestRequestHelper ctx
                                POST
                                reqNewFolderPrms
-                               (folderAPIDelete $ get folderID newFdrFromAPI)
+                               (folderAPIDelete $ newFdrFromAPI ^. #id)
                                200
 
 testFolderAPIListDocs :: TestEnv ()
 testFolderAPIListDocs = do
   user       <- addNewRandomUser
-  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
   let numDocsToStart = 5
-      fdrid          = get folderID userFolder
+      fdrid          = userFolder ^. #id
   mapM_ testDocApiV2New' $ take numDocsToStart . repeat $ ctx
   -- add a subfolder to org folder tree and start documents there to ensure that we do not
   -- list documents contained in children of a specified folder
-  let newFolderBase = set folderParentID (Just . get folderID $ userFolder) defaultFolder
+  let newFolderBase       = set #parentID (Just $ userFolder ^. #id) defaultFolder
       newFolderBaseJSONBS = AE.encodingToLazyByteString $ encodeFolder newFolderBase
-      reqNewFolderPrms = [("folder", inTextBS newFolderBaseJSONBS)]
+      reqNewFolderPrms    = [("folder", inTextBS newFolderBaseJSONBS)]
   newFdr <-
     jsonToFolder <$> (jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200)
   -- HACK to enable user to start documents in another folder
-  dbUpdate $ FolderSetUserHomeFolder (userid user) (get folderID newFdr)
+  dbUpdate $ FolderSetUserHomeFolder (userid user) (newFdr ^. #id)
   user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
-  let ctx'            = set ctxmaybeuser (Just user') ctx
+  let ctx'            = set #maybeUser (Just user') ctx
       numDocsToStart' = 3
   mapM_ testDocApiV2New' $ take numDocsToStart' . repeat $ ctx'
   -- switch back to original home folder for user
@@ -553,11 +538,7 @@ testFolderAPIListDocs = do
               numDocsToStart
               (getTotalReturned docsVal)
   -- list child folder
-  docsVal' <- jsonTestRequestHelper ctx
-                                    GET
-                                    []
-                                    (folderAPIListDocs (get folderID newFdr))
-                                    200
+  docsVal' <- jsonTestRequestHelper ctx GET [] (folderAPIListDocs (newFdr ^. #id)) 200
   assertEqual "Listing works for child of user home folder"
               numDocsToStart'
               (getTotalReturned docsVal')
@@ -584,7 +565,7 @@ jsonToFolder val = let Unjson.Result fdr _ = Unjson.parse unjsonFolderReadAll va
 createChildrenForParentByAPI :: Context -> Folder -> TestEnv [Folder]
 createChildrenForParentByAPI ctx fdrParent = do
   forM [fdrParent, fdrParent] $ \fdrp -> do
-    let newFolder        = set folderParentID (Just . get folderID $ fdrp) defaultFolder
+    let newFolder        = set #parentID (Just $ fdrp ^. #id) defaultFolder
         newFolderJSONBS  = AE.encodingToLazyByteString $ encodeFolder newFolder
         reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
     jsonToFolder <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
@@ -593,7 +574,7 @@ createChildrenForParentByAPI ctx fdrParent = do
 unjsonFolderReadAll :: Unjson.UnjsonDef Folder
 unjsonFolderReadAll =
   objectOf
-    $   pure Folder
-    <*> (fieldBy "id" _folderID "The folder ID" Unjson.unjsonDef)
-    <*> (fieldOptBy "parent_id" _folderParentID "Parent folder ID" Unjson.unjsonDef)
-    <*> (field "name" _folderName "The folder name")
+    $   pure I.Folder
+    <*> (fieldBy "id" (^. #id) "The folder ID" Unjson.unjsonDef)
+    <*> (fieldOptBy "parent_id" (^. #parentID) "Parent folder ID" Unjson.unjsonDef)
+    <*> (field "name" (^. #name) "The folder name")

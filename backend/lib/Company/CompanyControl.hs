@@ -20,7 +20,6 @@ import Log as Log
 import qualified Data.Aeson as Aeson
 import qualified Data.Unjson as Unjson
 
-import BrandedDomain.BrandedDomain
 import Company.JSON
 import DB
 import Happstack.Fields
@@ -86,8 +85,8 @@ handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetCompanyBranding mugid = do
   withCompanyAdminOrAdminOnly mugid $ \ug -> do
     return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
-                                  (unjsonUserGroupUIWithCompanyID $ get ugID ug)
-                                  (get ugUI ug)
+                                  (unjsonUserGroupUIWithCompanyID $ ug ^. #id)
+                                  (ug ^. #ui)
 
 handleChangeCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m ()
 handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
@@ -97,40 +96,37 @@ handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> d
       logInfo "Error while parsing company branding" $ object ["error" .= err]
       internalError
     Right js -> case (Unjson.parse unjsonUserGroupUI js) of
-      (Result ugui []) -> dbUpdate . UserGroupUpdate . set ugUI ugui $ ug
+      (Result ugui []) -> dbUpdate . UserGroupUpdate . set #ui ugui $ ug
       _                -> internalError
 
 handleGetThemes :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleGetThemesForUserGroup . get ugID $ ug
+  handleGetThemesForUserGroup $ ug ^. #id
 
 handleGetDomainThemes :: Kontrakcja m => m Aeson.Value
 handleGetDomainThemes = do
-  bd <- get ctxbrandeddomain <$> getContext
+  bd <- view #brandedDomain <$> getContext
   handleGetThemesUsedByDomain bd
 
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
 handleGetSignviewTheme = withUserAndGroup $ \(_, ug) -> do
-  bd <- get ctxbrandeddomain <$> getContext
-  handleGetTheme
-    . fromMaybe (get bdSignviewTheme bd)
-    . get (uguiSignviewTheme . ugUI)
-    $ ug
+  bd <- view #brandedDomain <$> getContext
+  handleGetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #signviewTheme)
 
 handleNewTheme :: Kontrakcja m => String -> Maybe UserGroupID -> m Aeson.Value
 handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  bd  <- get ctxbrandeddomain <$> getContext
+  bd  <- view #brandedDomain <$> getContext
   tid <- case s of
-    "signview" -> return $ get bdSignviewTheme bd
-    "service"  -> return $ get bdServiceTheme bd
-    "mail"     -> return $ get bdMailTheme bd
+    "signview" -> return $ bd ^. #signviewTheme
+    "service"  -> return $ bd ^. #serviceTheme
+    "mail"     -> return $ bd ^. #mailTheme
     _          -> internalError
-  handleNewThemeForUserGroup (get ugID ug) tid
+  handleNewThemeForUserGroup (ug ^. #id) tid
 
 handleDeleteTheme :: Kontrakcja m => Maybe UserGroupID -> ThemeID -> m ()
 handleDeleteTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleDeleteThemeForUserGroup (get ugID ug) tid
+  handleDeleteThemeForUserGroup (ug ^. #id) tid
 
 handleUpdateTheme :: Kontrakcja m => Maybe UserGroupID -> ThemeID -> m ()
 handleUpdateTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleUpdateThemeForUserGroup (get ugID ug) tid
+  handleUpdateThemeForUserGroup (ug ^. #id) tid

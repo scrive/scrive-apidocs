@@ -37,8 +37,8 @@ handlers conf = choice
   , dir "mail" $ dir "mailjet" $ hPost $ handleMailJetEvents
   ]
   where
-    hGet  = path GET id
-    hPost = path POST id
+    hGet  = path GET identity
+    hPost = path POST identity
 
 showHelloMessage :: Mailer Response
 showHelloMessage = ok $ toResponse "Mailer says hello!"

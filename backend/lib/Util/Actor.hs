@@ -24,12 +24,12 @@ import User.Model
 import Util.HasSomeUserInfo
 
 mkAuthorActor :: Context -> Maybe Actor
-mkAuthorActor ctx = case getContextUser ctx of
+mkAuthorActor ctx = case contextUser ctx of
   Just user -> Just $ authorActor ctx user
   Nothing   -> Nothing
 
 mkAdminActor :: Context -> Maybe Actor
-mkAdminActor ctx = case get ctxmaybeuser ctx of
+mkAdminActor ctx = case ctx ^. #maybeUser of
   Just user -> Just $ adminActor ctx user
   Nothing   -> Nothing
 
@@ -56,10 +56,10 @@ data Actor = Actor
   } deriving (Eq, Ord, Show, Typeable)
 
 contextActor :: Context -> Actor
-contextActor ctx = Actor { actorTime       = get ctxtime ctx
-                         , actorClientTime = get ctxclienttime ctx
-                         , actorClientName = get ctxclientname ctx
-                         , actorIP         = Just (get ctxipnumber ctx)
+contextActor ctx = Actor { actorTime       = ctx ^. #time
+                         , actorClientTime = ctx ^. #clientTime
+                         , actorClientName = ctx ^. #clientName
+                         , actorIP         = Just (ctx ^. #ipAddr)
                          , actorUserID     = Nothing
                          , actorEmail      = Nothing
                          , actorSigLinkID  = Nothing

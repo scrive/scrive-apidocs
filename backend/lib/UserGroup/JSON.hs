@@ -16,32 +16,32 @@ import qualified Data.List.NonEmpty as L
 import DataRetentionPolicy
 import InputValidation
 import UserGroup.Types
+import qualified UserGroup.Internal as I
 
 encodeUserGroup :: Bool -> UserGroupWithParents -> [UserGroup] -> Encoding
 encodeUserGroup inheritable ugwp children =
   pairs
     $  "id"
-    .= get ugID ug
+    .= (ug ^. #id)
     <> "parent_id"
-    .= get ugParentGroupID ug
+    .= (ug ^. #parentGroupID)
     <> "name"
-    .= get ugName ug
+    .= (ug ^. #name)
     <> pair "children"        childrenEncoding
     <> pair "contact_details" (encodeUserGroupContactDetails inheritable ugwp)
     <> pair "settings" (encodeUserGroupSettings inheritable ugwp)
   where
     ug               = ugwpUG ugwp
     childrenEncoding = flip list children
-      $ \child -> pairs $ "id" .= get ugID child <> "name" .= get ugName child
+      $ \child -> pairs $ "id" .= (child ^. #id) <> "name" .= (child ^. #name)
 
 updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
 updateUserGroupFromRequest ug ugChanges = do
-  let ugReq = UserGroupRequestJSON { reqParentID = get ugParentGroupID ug
-                                   , reqName     = get ugName ug
-                                   }
+  let ugReq =
+        UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID, reqName = ug ^. #name }
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
     (Result ugUpdated []) ->
-      Just $ ug { _ugParentGroupID = reqParentID ugUpdated, _ugName = reqName ugUpdated }
+      Just $ ug & (#parentGroupID .~ reqParentID ugUpdated) & (#name .~ reqName ugUpdated)
     (Result _ _) -> Nothing
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
@@ -63,17 +63,17 @@ instance ToJSON UGAddrJSON where
   toEncoding (UGAddrJSON addr) =
     pairs
       $  "company_number"
-      .= get ugaCompanyNumber addr
+      .= (addr ^. #companyNumber)
       <> "entity_name"
-      .= get ugaEntityName addr
+      .= (addr ^. #entityName)
       <> "address"
-      .= get ugaAddress addr
+      .= (addr ^. #address)
       <> "zip"
-      .= get ugaZip addr
+      .= (addr ^. #zipCode)
       <> "city"
-      .= get ugaCity addr
+      .= (addr ^. #city)
       <> "country"
-      .= get ugaCountry addr
+      .= (addr ^. #country)
 
 encodeUserGroupContactDetails :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupContactDetails inheritable ugwp =
@@ -81,7 +81,7 @@ encodeUserGroupContactDetails inheritable ugwp =
   where
     makeAddressJson mugid addr =
       "inherited_from" .= mugid <> "address" .= fmap UGAddrJSON addr
-    mugAddr                  = get ugAddress $ ugwpUG ugwp
+    mugAddr                  = ugwpUG ugwp ^. #address
     minherited               = ugwpAddressWithID <$> ugwpOnlyParents ugwp
     (inheritedFrom, address) = if isJust mugAddr
       then (Nothing, mugAddr) -- UG has own Address
@@ -107,29 +107,29 @@ updateUserGroupContactDetailsFromRequest ugAddr contactDetailsChanges =
 unjsonUserGroupAddress :: UnjsonDef UserGroupAddress
 unjsonUserGroupAddress =
   objectOf
-    $   pure UserGroupAddress
+    $   pure I.UserGroupAddress
     <*> fieldBy "company_number"
-                _ugaCompanyNumber
+                (^. #companyNumber)
                 "User Group Address Company Number"
                 (unjsonWithValidationOrEmptyText asValidCompanyNumber)
     <*> fieldBy "entity_name"
-                _ugaEntityName
+                (^. #entityName)
                 "User Group Address Entity Name"
                 (unjsonWithValidationOrEmptyText asValidCompanyName)
     <*> fieldBy "address"
-                _ugaAddress
+                (^. #address)
                 "User Group Address Address"
                 (unjsonWithValidationOrEmptyText asValidAddress)
     <*> fieldBy "zip"
-                _ugaZip
+                (^. #zipCode)
                 "User Group Address Zip Code"
                 (unjsonWithValidationOrEmptyText asValidZip)
     <*> fieldBy "city"
-                _ugaCity
+                (^. #city)
                 "User Group Address City"
                 (unjsonWithValidationOrEmptyText asValidCity)
     <*> fieldBy "country"
-                _ugaCountry
+                (^. #country)
                 "User Group Address Country"
                 (unjsonWithValidationOrEmptyText asValidCountry)
 
@@ -140,28 +140,28 @@ instance ToJSON UGDRPJSON where
   toEncoding (UGDRPJSON drp) =
     pairs
       $  "idle_doc_timeout_preparation"
-      .= get drpIdleDocTimeoutPreparation drp
+      .= (drp ^. #idleDocTimeoutPreparation)
       <> "idle_doc_timeout_closed"
-      .= get drpIdleDocTimeoutClosed drp
+      .= (drp ^. #idleDocTimeoutClosed)
       <> "idle_doc_timeout_canceled"
-      .= get drpIdleDocTimeoutCanceled drp
+      .= (drp ^. #idleDocTimeoutCanceled)
       <> "idle_doc_timeout_timedout"
-      .= get drpIdleDocTimeoutTimedout drp
+      .= (drp ^. #idleDocTimeoutTimedout)
       <> "idle_doc_timeout_rejected"
-      .= get drpIdleDocTimeoutRejected drp
+      .= (drp ^. #idleDocTimeoutRejected)
       <> "idle_doc_timeout_error"
-      .= get drpIdleDocTimeoutError drp
+      .= (drp ^. #idleDocTimeoutError)
       <> "immediate_trash"
-      .= get drpImmediateTrash drp
+      .= (drp ^. #immediateTrash)
 
 encodeUserGroupSettings :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupSettings inheritable ugwp =
   pairs $ makeDRPJson inheritedFrom msettings <> inheritPreview
   where
     makeDRPJson mugid msett =
-      let drp = UGDRPJSON . get ugsDataRetentionPolicy <$> msett
+      let drp = UGDRPJSON . view #dataRetentionPolicy <$> msett
       in  "inherited_from" .= mugid <> "data_retention_policy" .= drp
-    mugSettings                = get ugSettings $ ugwpUG ugwp
+    mugSettings                = ugwpUG ugwp ^. #settings
     minherited                 = ugwpSettingsWithID <$> ugwpOnlyParents ugwp
     (inheritedFrom, msettings) = if isJust mugSettings
       then (Nothing, mugSettings) -- UG has own Settings

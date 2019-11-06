@@ -133,7 +133,7 @@ instance
 
       sqlWhere "sms_events.event_read IS NULL"
       sqlOrderBy "sms_events.id"
-    fetchMany id
+    fetchMany identity
 
 data MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
 instance

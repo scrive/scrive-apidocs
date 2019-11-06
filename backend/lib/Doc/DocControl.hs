@@ -114,7 +114,7 @@ import qualified GuardTime as GuardTime
 handleNewDocument :: Kontrakcja m => m InternalKontraResponse
 handleNewDocument = withUser . with2FACheck $ \user -> do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
-  if get ugsRequireBPIDForNewDoc (ugwpSettings ugwp)
+  if ugwpSettings ugwp ^. #requireBPIDForNewDoc
     then do
       -- This is a special feature for RBS (CORE-1081)
       -- RBS needs to "force" their employees to enter their internal document
@@ -141,7 +141,7 @@ handleNewDocument' user ugwp = do
     (Just _) -> return ()
   timezone <- fromMaybe defaultTimeZoneName
     <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-  timestamp <- formatTimeSimpleWithTZ timezone (get ctxtime ctx)
+  timestamp <- formatTimeSimpleWithTZ timezone (ctx ^. #time)
   doc       <- dbUpdate $ NewDocument user
                                       (T.replace "  " " " $ title <> " " <> timestamp)
                                       Signable
@@ -322,7 +322,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
             timezone <- documenttimezonename <$> theDocument
             clearDocFields actor
             dbUpdate $ PreparationToPending actor timezone
-            t <- get ctxtime <$> getContext
+            t <- view #time <$> getContext
             dbUpdate $ SetDocumentInviteTime t actor
             postDocumentPreparationChange False timezone
       startDocument
@@ -352,7 +352,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
 {-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow did slid = logDocumentAndSignatory did slid $ do
-  sid          <- get ctxsessionid <$> getContext
+  sid          <- view #sessionID <$> getContext
   validSession <- dbQuery $ CheckDocumentSession sid slid
   if validSession
     then do
@@ -438,7 +438,7 @@ handleIssueGoToSignviewPad
 handleIssueGoToSignviewPad docid slid = do
   ctx  <- getContext
   doc  <- getDocByDocIDForAuthor docid
-  user <- guardJust $ getContextUser ctx
+  user <- guardJust $ contextUser ctx
   case
       (isAuthor <$> getMaybeSignatoryLink (doc, user), getMaybeSignatoryLink (doc, slid))
     of
@@ -463,7 +463,7 @@ handleEvidenceAttachment docid aname =
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
   document      <- getDocByDocID docid
-  muser         <- get ctxmaybeuser <$> getContext
+  muser         <- view #maybeUser <$> getContext
 
   authorsiglink <- guardJust $ getAuthorSigLink document
 
@@ -627,7 +627,7 @@ handlePadList :: Kontrakcja m => m Response
 handlePadList = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  case getContextUser ctx of
+  case contextUser ctx of
     Just _  -> simpleHtmlResponse =<< pageDocumentPadList ctx ad
     Nothing -> simpleHtmlResponse =<< pageDocumentPadListLogin ctx ad
 
@@ -635,7 +635,7 @@ handleToStart :: Kontrakcja m => m Response
 handleToStart = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  case (get ctxmaybeuser ctx) of
+  case ctx ^. #maybeUser of
     Just _  -> simpleHtmlResponse =<< pageDocumentToStartList ctx ad
     Nothing -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx ad
 
@@ -679,7 +679,7 @@ checkFileAccessWith fid msid mmh mdid mattid = case (msid, mdid, mattid) of
         doc' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
         return (True, doc')
       Nothing -> do
-        sid  <- get ctxsessionid <$> getContext
+        sid  <- view #sessionID <$> getContext
         doc' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
         vs   <- dbQuery $ CheckDocumentSession sid slid
         return (vs, doc')
@@ -700,7 +700,7 @@ checkFileAccessWith fid msid mmh mdid mattid = case (msid, mdid, mattid) of
     _doc <- getDocByDocID did
     checkFileInDocument did
   (_, _, Just attid) -> guardLoggedInOrThrowInternalError $ do
-    user <- guardJustM $ get ctxmaybeuser <$> getContext
+    user <- guardJustM $ view #maybeUser <$> getContext
     atts <- dbQuery $ GetAttachments
       [ AttachmentsSharedInUsersUserGroup (userid user)
       , AttachmentsOfAuthorDeleteValue (userid user) True
@@ -757,7 +757,7 @@ handleVerify = do
       return pth
     _ -> internalError
   ctx <- getContext
-  J.toJSValue <$> GuardTime.verify (get ctxgtconf ctx) filepath
+  J.toJSValue <$> GuardTime.verify (ctx ^. #gtConf) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = guardLoggedInOrThrowInternalError $ do
@@ -789,7 +789,7 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
   ctx <- getContext
   doc <- theDocument
   when (isPending doc && isSignatoryAndHasNotSigned sl) $ do
-    updateMTimeAndObjectVersion $ get ctxtime ctx
+    updateMTimeAndObjectVersion $ ctx ^. #time
     void
       $   dbUpdate
       .   InsertEvidenceEventWithAffectedSignatoryAndMsg ev (return ()) (Just sl) Nothing

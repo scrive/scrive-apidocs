@@ -40,7 +40,6 @@ import qualified Text.JSON as JSON
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import DB
 import Kontra
@@ -90,17 +89,17 @@ pageFromBody ctx ad bodytext fields = do
 userGroupWithParentsForPage :: Kontrakcja m => m (Maybe UserGroupWithParents)
 userGroupWithParentsForPage = do
   ctx <- getContext
-  case (get ctxmaybeuser ctx) of
+  case ctx ^. #maybeUser of
     Nothing   -> return Nothing
     Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (userid user)
 
 userGroupUIForPage :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
   ctx <- getContext
-  case (get ctxmaybeuser ctx) of
+  case ctx ^. #maybeUser of
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
-      return . Just $ (get ugID ug, get ugUI ug)
+      return . Just $ (ug ^. #id, ug ^. #ui)
     _ -> return Nothing
 
 currentSubscriptionJSON :: Kontrakcja m => m (Maybe A.Value)
@@ -198,34 +197,33 @@ standardPageFields
   -> AnalyticsData
   -> Fields m ()
 standardPageFields ctx mugidandui ad = do
-  F.value "langcode" $ codeFromLang $ get ctxlang ctx
-  F.value "logged" $ isJust (get ctxmaybeuser ctx)
-  F.value "padlogged" $ isJust (get ctxmaybepaduser ctx)
-  F.value "hostpart" $ get ctxDomainUrl ctx
-  F.value "production" (get ctxproduction ctx)
-  F.value "brandingdomainid" (show $ get (bdid . ctxbrandeddomain) ctx)
-  F.value "brandinguserid"
-          (fmap (show . userid) (get ctxmaybeuser ctx `mplus` get ctxmaybepaduser ctx))
-  F.value "ctxlang" $ codeFromLang $ get ctxlang ctx
+  F.value "langcode" $ codeFromLang $ ctx ^. #lang
+  F.value "logged" $ isJust (ctx ^. #maybeUser)
+  F.value "padlogged" $ isJust (ctx ^. #maybePadUser)
+  F.value "hostpart" $ ctx ^. #brandedDomain % #url
+  F.value "production" (ctx ^. #production)
+  F.value "brandingdomainid" (show $ ctx ^. #brandedDomain % #id)
+  F.value "brandinguserid" (fmap (show . userid) (contextUser ctx))
+  F.value "ctxlang" $ codeFromLang $ ctx ^. #lang
   F.object "analytics" $ analyticsTemplates ad
-  F.value "trackjstoken" (get ctxtrackjstoken ctx)
-  F.value "zendeskkey" (get ctxzendeskkey ctx)
+  F.value "trackjstoken" (ctx ^. #trackJsToken)
+  F.value "zendeskkey" (ctx ^. #zendeskKey)
   F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
   F.valueM "b64subscriptiondata"
     $   fmap (B64.encode . A.encode)
     <$> currentSubscriptionJSON
   F.value "subscriptionuseriscompanyadmin"
-    $ case fmap useriscompanyadmin (get ctxmaybeuser ctx) of
+    $ case fmap useriscompanyadmin (ctx ^. #maybeUser) of
         Nothing    -> "undefined"
         Just True  -> "true"
         Just False -> "false"
   F.value "title"
     $ case
-        emptyToNothing . strip . T.unpack =<< get uguiBrowserTitle . snd =<< mugidandui
+        emptyToNothing . strip . T.unpack =<< view #browserTitle . snd =<< mugidandui
       of
         Just ctitle ->
-          ctitle <> " - " <> (T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx))
-        Nothing -> T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx)
+          ctitle <> " - " <> (T.unpack $ ctx ^. #brandedDomain % #browserTitle)
+        Nothing -> T.unpack (ctx ^. #brandedDomain % #browserTitle)
   entryPointFields ctx
 
 jsonContentType :: BS.ByteString
@@ -263,7 +261,7 @@ respondWithZipFile = respondWithDownloadContents "application/zip"
 respondWithDownloadContents :: BS.ByteString -> Bool -> BS.ByteString -> Response
 respondWithDownloadContents mimeType forceDownload contents =
   setHeaderBS "Content-Type" mimeType
-    $ (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else id)
+    $ (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else identity)
     $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 {- |
@@ -272,5 +270,5 @@ respondWithDownloadContents mimeType forceDownload contents =
 -}
 entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx = do
-  F.value "cdnbaseurl" (get ctxcdnbaseurl ctx)
+  F.value "cdnbaseurl" (ctx ^. #cdnBaseUrl)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID

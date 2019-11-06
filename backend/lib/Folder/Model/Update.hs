@@ -12,21 +12,21 @@ import Data.Typeable
 import Text.JSON.Gen hiding (object)
 
 import DB
-import Folder.Internal
-import Folder.Labels
 import Folder.Model.Query
+import Folder.Types
 import User.UserID
 import UserGroup.Model
 import UserGroup.Types
+import qualified Folder.Internal as I
 
-data FolderCreate = FolderCreate Folder
+data FolderCreate = FolderCreate I.Folder
 instance (MonadDB m, MonadThrow m)
-    => DBUpdate m FolderCreate Folder where
+    => DBUpdate m FolderCreate I.Folder where
   update (FolderCreate folder) = do
-    let name      = get folderName folder
-        mParentID = get folderParentID folder
+    let name      = folder ^. #name
+        mParentID = folder ^. #parentID
     newParentPath <- case mParentID of
-      Nothing       -> return . Array1 $ ([] :: [FolderID])
+      Nothing       -> return . Array1 $ ([] :: [I.FolderID])
       Just parentID -> do
         runQuery_ . sqlSelect "folders" $ do
           sqlWhereEq "id" parentID
@@ -43,18 +43,18 @@ instance (MonadDB m, MonadThrow m)
       Nothing      -> unexpectedError "Folder could not be read from DB"
       Just folder' -> return folder'
 
-data FolderUpdate = FolderUpdate Folder
+data FolderUpdate = FolderUpdate I.Folder
 instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
   update (FolderUpdate newFolder) = do
-    let fid = get folderID newFolder
+    let fid = newFolder ^. #id
     -- updated group may have children already, these need to be adjusted
-    Array1 (oldParentPath :: [FolderID]) <- do
+    Array1 (oldParentPath :: [I.FolderID]) <- do
       runQuery_ . sqlSelect "folders" $ do
         sqlResult "parent_path"
         sqlWhereEq "id" fid
       fetchOne runIdentity
-    (Array1 newParentPath :: Array1 FolderID) <- do
-      case get folderParentID newFolder of
+    (Array1 newParentPath :: Array1 I.FolderID) <- do
+      case newFolder ^. #parentID of
         Nothing       -> return . Array1 $ []
         Just parentID -> do
           runQuery_ . sqlSelect "folders" $ do
@@ -70,9 +70,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
       $ fid
     -- update folder
     runQuery_ . sqlUpdate "folders" $ do
-      sqlSet "parent_id" . get folderParentID $ newFolder
+      sqlSet "parent_id" $ newFolder ^. #parentID
       sqlSet "parent_path" . Array1 $ newParentPath
-      sqlSet "name" . get folderName $ newFolder
+      sqlSet "name" $ newFolder ^. #name
       sqlWhereEq "id" fid
     -- update all child groups' parentpaths
     runQuery_ . sqlUpdate "folders" $ do
@@ -95,7 +95,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
 -- Create a folder and link it to a user group.
 data FolderCreateByUserGroup = FolderCreateByUserGroup UserGroupID
 instance (MonadDB m, MonadThrow m) =>
-  DBUpdate m FolderCreateByUserGroup (Maybe Folder) where
+  DBUpdate m FolderCreateByUserGroup (Maybe I.Folder) where
   update (FolderCreateByUserGroup ugid) = do
     mfdr <- query . FolderGetUserGroupHome $ ugid
     mug  <- query . UserGroupGet $ ugid
@@ -111,7 +111,7 @@ instance (MonadDB m, MonadThrow m) =>
 
       linkNewFolder ugid' fdr' = do
         fdr <- update . FolderCreate $ fdr'
-        _   <- setFolderID ugid' $ get folderID fdr
+        _   <- setFolderID ugid' $ fdr ^. #id
         return . Just $ fdr
 
       -- local functionality to avoid import loop
@@ -119,19 +119,19 @@ instance (MonadDB m, MonadThrow m) =>
         sqlSet "home_folder_id" fdrid'
         sqlWhereEq "id" ugid'
 
-data FolderCreateForUser = FolderCreateForUser UserID (Maybe FolderID)
+data FolderCreateForUser = FolderCreateForUser UserID (Maybe I.FolderID)
 instance (MonadDB m, MonadThrow m) =>
-  DBUpdate m FolderCreateForUser (Maybe Folder)where
+  DBUpdate m FolderCreateForUser (Maybe I.Folder)where
     -- make sure there isn't one already set for this user
   update (FolderCreateForUser uid mfdrparentid) = do
-    (get folderID <$>) <$> (query . FolderGetUserHome $ uid) >>= \case
+    (view #id <$>) <$> (query . FolderGetUserHome $ uid) >>= \case
       (Just _) -> return Nothing
       Nothing  -> do
-        let fdr' = set folderParentID mfdrparentid defaultFolder
+        let fdr' = set #parentID mfdrparentid defaultFolder
         fdr <- update . FolderCreate $ fdr'
 
         runQuery_ . sqlUpdate "users" $ do
-          sqlSet "home_folder_id" (get folderID fdr)
+          sqlSet "home_folder_id" (fdr ^. #id)
           sqlWhereEq "id" uid
         return . Just $ fdr
 
@@ -141,7 +141,7 @@ data FolderCreateForUsersInUserGroup =
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m FolderCreateForUsersInUserGroup Int where
   update (FolderCreateForUsersInUserGroup ugid) = do
-    ((get folderID <$>) <$> (query . FolderGetUserGroupHome $ ugid)) >>= \case
+    ((view #id <$>) <$> (query . FolderGetUserGroupHome $ ugid)) >>= \case
       Nothing -> do
         unexpectedError "how did we get this far???"
       homeFdrID -> do
@@ -163,14 +163,14 @@ instance (MonadDB m, MonadThrow m) =>
     _ <- (forM ugids $ update . FolderCreateForUsersInUserGroup)
     return numActuallyCreatedFolders
 
-data FolderSetUserHomeFolder = FolderSetUserHomeFolder UserID FolderID
+data FolderSetUserHomeFolder = FolderSetUserHomeFolder UserID I.FolderID
 instance (MonadDB m, MonadThrow m) => DBUpdate m FolderSetUserHomeFolder () where
   update (FolderSetUserHomeFolder uid fdrid) = do
     runQuery01_ . sqlUpdate "users" $ do
       sqlWhereEq "id" uid
       sqlSet "home_folder_id" (Just fdrid)
 
-data FoldersFormCycle = FoldersFormCycle FolderID
+data FoldersFormCycle = FoldersFormCycle I.FolderID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue FoldersFormCycle where

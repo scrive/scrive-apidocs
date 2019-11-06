@@ -8,7 +8,6 @@ import Network.HTTP
 import Network.URI
 import qualified Data.Text as T
 
-import Context
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
@@ -185,6 +184,6 @@ setParams uri params = uri { uriQuery = "?" <> vars }
 getHomeOrDesignViewLink :: KontraMonad m => m KontraLink
 getHomeOrDesignViewLink = do
   ctx <- getContext
-  case get ctxmaybeuser ctx of
+  case ctx ^. #maybeUser of
     Just _  -> return LinkDesignView
-    Nothing -> return $ LinkHome (get ctxlang ctx)
+    Nothing -> return $ LinkHome (ctx ^. #lang)

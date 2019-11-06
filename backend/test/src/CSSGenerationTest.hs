@@ -5,9 +5,7 @@ module CSSGenerationTest(
 import Test.Framework
 import qualified Data.ByteString.Lazy as BSL
 
-import BrandedDomain.BrandedDomain
 import Branding.CSS
-import Context
 import DB
 import TestingUtil
 import TestKontra as T
@@ -25,31 +23,31 @@ cssGenerationTests env = testGroup
 
 testSignviewBrandingGeneration :: TestEnv ()
 testSignviewBrandingGeneration = do
-  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
-  theme            <- dbQuery $ GetTheme $ (get bdSignviewTheme $ bd)
+  bd               <- view #brandedDomain <$> mkContext defaultLang
+  theme            <- dbQuery $ GetTheme $ bd ^. #signviewTheme
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for signview branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)
 
 testServiceBrandingGeneration :: TestEnv ()
 testServiceBrandingGeneration = do
-  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
-  theme            <- dbQuery $ GetTheme $ (get bdServiceTheme $ bd)
+  bd               <- view #brandedDomain <$> mkContext defaultLang
+  theme            <- dbQuery $ GetTheme $ bd ^. #serviceTheme
   emptyBrandingCSS <- serviceBrandingCSS theme
   assertBool "CSS generated for service branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)
 
 testLoginBrandingGeneration :: TestEnv ()
 testLoginBrandingGeneration = do
-  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
-  theme            <- dbQuery $ GetTheme $ (get bdLoginTheme $ bd)
+  bd               <- view #brandedDomain <$> mkContext defaultLang
+  theme            <- dbQuery $ GetTheme $ bd ^. #loginTheme
   emptyBrandingCSS <- loginBrandingCSS theme
   assertBool "CSS generated for login branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)
 
 testDomainBrandingGeneration :: TestEnv ()
 testDomainBrandingGeneration = do
-  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
+  bd               <- view #brandedDomain <$> mkContext defaultLang
   emptyBrandingCSS <- domainBrandingCSS bd
   assertBool "CSS generated for domain branding is not empty"
              (not $ BSL.null $ emptyBrandingCSS)

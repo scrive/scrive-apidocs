@@ -14,7 +14,6 @@ import Text.JSON.Types (JSValue(JSNull))
 
 import API.Monad.V1
 import AppView
-import BrandedDomain.BrandedDomain
 import DB.Query
 import Happstack.Fields
 import Kontra
@@ -62,8 +61,8 @@ apiCallGetPadClientTheme = api $ do
   ctx          <- getContext
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ug           <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <- dbQuery $ GetTheme $ fromMaybe (get (bdSignviewTheme . ctxbrandeddomain) ctx)
-                                          (get (uguiSignviewTheme . ugUI) ug)
+  theme        <- dbQuery $ GetTheme $ fromMaybe (ctx ^. #brandedDomain % #signviewTheme)
+                                                 (ug ^. #ui % #signviewTheme)
   simpleAesonResponse $ Unjson.unjsonToJSON'
     (Options { pretty = True, indent = 2, nulls = True })
     unjsonTheme
@@ -74,6 +73,6 @@ apiCallGetPadInfo = V2.api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ugwp         <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
   return $ V2.Ok $ object
-    [ "app_mode" .= (padAppModeText . get ugsPadAppMode . ugwpSettings $ ugwp)
-    , "e_archive_enabled" .= (get ugsPadEarchiveEnabled . ugwpSettings $ ugwp)
+    [ "app_mode" .= padAppModeText (ugwpSettings ugwp ^. #padAppMode)
+    , "e_archive_enabled" .= (ugwpSettings ugwp ^. #padEarchiveEnabled)
     ]

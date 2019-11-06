@@ -106,7 +106,7 @@ getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
         "No access token provided."
   where
     getDocumentOfUser = do
-      user <- guardJust . getContextUser =<< getContext
+      user <- guardJust . contextUser =<< getContext
       dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
                             [DocumentFilterByDocumentID did]
 
@@ -114,7 +114,7 @@ getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor did = do
   ctx <- getContext
-  case userid <$> getContextUser ctx of
+  case userid <$> contextUser ctx of
     Nothing -> unexpectedError
       "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
@@ -125,7 +125,7 @@ getDocByDocIDForAuthor did = do
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin did = do
   ctx <- getContext
-  case userid <$> getContextUser ctx of
+  case userid <$> contextUser ctx of
     Nothing -> unexpectedError
       "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
@@ -156,7 +156,7 @@ signatoryNeedsToIdentifyToView sl doc = if isClosed doc
     check authKind signatoryAuthMethod = case signatoryAuthMethod sl of
       StandardAuthenticationToView -> return False
       authtoview                   -> do
-        sid       <- get ctxsessionid <$> getContext
+        sid       <- view #sessionID <$> getContext
         mauthindb <- dbQuery (GetEAuthentication authKind sid $ signatorylinkid sl)
         return $ maybe True (not . authViewMatchesAuth authtoview) mauthindb
 
@@ -166,7 +166,7 @@ signatoryNeedsToIdentifyToView sl doc = if isClosed doc
 getDocumentAndSignatoryForEIDAuth
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Document, SignatoryLink)
 getDocumentAndSignatoryForEIDAuth did slid = do
-  sid   <- get ctxsessionid <$> getContext
+  sid   <- view #sessionID <$> getContext
   check <- dbQuery $ CheckDocumentSession sid slid
   if check
     then do
@@ -182,7 +182,7 @@ getDocumentAndSignatoryForEIDAuth did slid = do
       -- Authentication to view archived in author's view case. There is no
       -- magic hash, just find the document in the archive.
       logInfo_ "No document session, checking logged user's documents"
-      (getContextUser <$> getContext) >>= \case
+      (contextUser <$> getContext) >>= \case
         Just user -> do
           doc <- dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
                                        [DocumentFilterByDocumentID did]
@@ -202,7 +202,7 @@ getDocumentAndSignatoryForEIDAuth did slid = do
 getDocumentAndSignatoryForEIDSign
   :: Kontrakcja m => SignatoryLinkID -> m (Document, SignatoryLink)
 getDocumentAndSignatoryForEIDSign slid = do
-  sid   <- get ctxsessionid <$> getContext
+  sid   <- view #sessionID <$> getContext
   check <- dbQuery $ CheckDocumentSession sid slid
   if check
     then do

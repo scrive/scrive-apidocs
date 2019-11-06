@@ -42,7 +42,6 @@ import Salesforce.Conf
 import User.CallbackScheme.Model
 import User.Model
 import UserGroup.Model
-import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.IO
@@ -555,7 +554,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           <> userEmail
                           <> ") "
                           <> "(company: "
-                          <> (get ugName ug)
+                          <> (ug ^. #name)
                           <> ") "
                           <> "(documentid: "
                           <> (showt (documentid doc))
@@ -595,7 +594,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           <> (showt (documentid doc))
                           <> "<br />\r\n"
                           <> "<strong>User Company ID:</strong> "
-                          <> (showt (get ugID ug))
+                          <> (showt (ug ^. #id))
                           <> "<br />\r\n"
                           <> "<strong>User Name:</strong> "
                           <> escapeHTML userName

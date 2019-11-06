@@ -16,7 +16,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-import BrandedDomain.BrandedDomain
 import DB
 import Happstack.Fields
 import InputValidation hiding (Result)
@@ -41,7 +40,7 @@ import Utils.HTTP
 handleLoginGet :: Kontrakcja m => m (Either KontraLink Response)
 handleLoginGet = do
   ctx <- getContext
-  case (get ctxmaybeuser ctx) of
+  case ctx ^. #maybeUser of
     Nothing -> do
       dirtyReferer <- getField "referer"
       let checkPrefixes s = s `T.isPrefixOf` fromMaybe "" dirtyReferer
@@ -52,7 +51,7 @@ handleLoginGet = do
       ad      <- getAnalyticsData
       content <- renderTemplate "loginPageWithBranding" $ do
         F.value "referer" $ fromMaybe "/" referer
-        F.value "nolinks" $ not $ get (bdMainDomain . ctxbrandeddomain) ctx
+        F.value "nolinks" $ not $ ctx ^. #brandedDomain % #mainDomain
         standardPageFields ctx Nothing ad
       response <- simpleHtmlResponse $ T.pack content
       return $ Right response
@@ -76,10 +75,8 @@ handleLoginPost = do
       ipIsOK    <- case maybeuser of
         Just u -> do
           ugwp <- dbQuery $ UserGroupGetWithParentsByUserID (userid u)
-          let masklist = get ugsIPAddressMaskList $ ugwpSettings ugwp
-          return
-            $  null masklist
-            || (any (ipAddressIsInNetwork (get ctxipnumber ctx)) masklist)
+          let masklist = ugwpSettings ugwp ^. #ipAddressMaskList
+          return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
         Nothing -> return True
       case maybeuser of
         Just user@User { userpassword, userid, useraccountsuspended, usertotp, usertotpactive }
@@ -94,10 +91,9 @@ handleLoginPost = do
                   let onBadTOTP = do
                         logInfo "User login failed (invalid TOTP code provided)"
                           $ logObject_ user
-                        void $ dbUpdate $ LogHistoryLoginTOTPFailure
-                          userid
-                          (get ctxipnumber ctx)
-                          (get ctxtime ctx)
+                        void $ dbUpdate $ LogHistoryLoginTOTPFailure userid
+                                                                     (ctx ^. #ipAddr)
+                                                                     (ctx ^. #time)
                         J.runJSONGenT $ do
                           J.value "logged" False
                           J.value "totp_correct" False
@@ -123,35 +119,29 @@ handleLoginPost = do
         Just u@User { userpassword } | not (maybeVerifyPassword userpassword passwd) -> do
           logInfo "User login failed (invalid password)" $ logObject_ u
           void $ if padlogin
-            then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (get ctxipnumber ctx)
-                                                      (get ctxtime ctx)
-            else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (get ctxipnumber ctx)
-                                                   (get ctxtime ctx)
+            then dbUpdate
+              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+            else dbUpdate
+              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
 
         Just u | not ipIsOK -> do
           logInfo "User login failed (ip not on allowed list)"
-            $ object [logPair_ u, "ip" .= show (get ctxipnumber ctx)]
+            $ object [logPair_ u, "ip" .= show (ctx ^. #ipAddr)]
           void $ if padlogin
-            then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (get ctxipnumber ctx)
-                                                      (get ctxtime ctx)
-            else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (get ctxipnumber ctx)
-                                                   (get ctxtime ctx)
+            then dbUpdate
+              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+            else dbUpdate
+              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
         Just u -> do
           {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
           logInfo "User login failed (user account suspended)" $ object [logPair_ u]
           void $ if padlogin
-            then dbUpdate $ LogHistoryPadLoginFailure (userid u)
-                                                      (get ctxipnumber ctx)
-                                                      (get ctxtime ctx)
-            else dbUpdate $ LogHistoryLoginFailure (userid u)
-                                                   (get ctxipnumber ctx)
-                                                   (get ctxtime ctx)
+            then dbUpdate
+              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+            else dbUpdate
+              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
         Nothing -> do
           logInfo "User login failed (user not found)" $ object ["email" .= email]
@@ -168,22 +158,22 @@ handleLoginPost = do
           asyncLogEvent SetUserProps (simplePlanhatAction "Login" user now) EventPlanhat
           asyncLogEvent
             "Login"
-            [UserIDProp uid, IPProp $ get ctxipnumber ctx, TimeProp $ get ctxtime ctx]
+            [UserIDProp uid, IPProp $ ctx ^. #ipAddr, TimeProp $ ctx ^. #time]
             EventMixpanel
           asyncLogEvent SetUserProps
-                        [UserIDProp uid, someProp "Last login" $ get ctxtime ctx]
+                        [UserIDProp uid, someProp "Last login" $ ctx ^. #time]
                         EventMixpanel
         _ -> return ()
       if padlogin
         then do
           void $ dbUpdate $ LogHistoryPadLoginSuccess (userid user)
-                                                      (get ctxipnumber ctx)
-                                                      (get ctxtime ctx)
+                                                      (ctx ^. #ipAddr)
+                                                      (ctx ^. #time)
           logPadUserToContext muuser
         else do
           void $ dbUpdate $ LogHistoryLoginSuccess (userid user)
-                                                   (get ctxipnumber ctx)
-                                                   (get ctxtime ctx)
+                                                   (ctx ^. #ipAddr)
+                                                   (ctx ^. #time)
           logUserToContext muuser
       J.runJSONGenT $ J.value "logged" True
 

@@ -127,7 +127,7 @@ cnFromDN dn =
 
 decodeCertificate :: Text -> B.ByteString
 decodeCertificate =
-  either (unexpectedError $ "invalid base64 of nets certificate") id
+  either (unexpectedError $ "invalid base64 of nets certificate") identity
     . B64.decode
     . T.encodeUtf8
 
@@ -151,8 +151,8 @@ flashMessageUserHasIdentifiedWithDifferentSSN = toFlashMsg OperationFailed
 handleResolve :: Kontrakcja m => m InternalKontraResponse
 handleResolve = do
   ctx <- getContext
-  let mnetsconfig = get ctxnetsconfig ctx
-      domainUrl   = get ctxDomainUrl ctx
+  let mnetsconfig = ctx ^. #netsConfig
+      domainUrl   = ctx ^. #brandedDomain % #url
   case mnetsconfig of
     Nothing -> do
       logAttention_ "Request to resolve nets authorization when no nets config available"
@@ -169,7 +169,7 @@ handleResolve = do
             (netsTransactionDomain nt)
             link
         (Just nt, Just art) -> do
-          let mUserId = userid <$> getContextUser ctx
+          let mUserId = userid <$> contextUser ctx
           logInfo
               "Information about requested nets authorization before assertion request"
             $ object
@@ -253,7 +253,7 @@ handleResolveNetsNOBankID
   -> Context
   -> m Bool
 handleResolveNetsNOBankID res doc nt sl ctx = do
-  sessionID <- get ctxsessionid <$> getContext
+  sessionID <- view #sessionID <$> getContext
   let decodeInternalProvider s = case s of
         "no_bankid" -> NetsNOBankIDStandard
         "no_bidmob" -> NetsNOBankIDMobile
@@ -348,7 +348,7 @@ handleResolveNetsDKNemID
   -> Context
   -> m Bool
 handleResolveNetsDKNemID res doc nt sl ctx = do
-  sessionID <- get ctxsessionid <$> getContext
+  sessionID <- view #sessionID <$> getContext
   let decodeInternalProvider s = case s of
         "dk_nemid_js"       -> NetsDKNemIDKeyCard
         "dk_nemid-opensign" -> NetsDKNemIDKeyFile
@@ -414,7 +414,7 @@ handleResolveNetsFITupas
   -> Context
   -> m Bool
 handleResolveNetsFITupas res doc nt sl ctx = do
-  sessionID <- get ctxsessionid <$> getContext
+  sessionID <- view #sessionID <$> getContext
   let signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
       dob_nets      = attributeFromAssertion "DOB" $ assertionAttributes res
       dob_sl        = dobFromFIPersonalNumber $ getPersonalNumber sl
@@ -485,7 +485,7 @@ handleSignRequest did slid = do
   logInfo_ "NETS SIGN start"
   conf@NetsSignConfig {..} <- do
     ctx <- getContext
-    case get ctxnetssignconfig ctx of
+    case ctx ^. #netsSignConfig of
       Nothing       -> noConfigurationError "Nets ESigning"
       Just netsconf -> return netsconf
   withDocumentID did $ do

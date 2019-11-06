@@ -1,7 +1,8 @@
 -- | Slightly customized replacement of Prelude.
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE PackageImports       #-}
-{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Prelude (
     module Control.Applicative
@@ -16,11 +17,16 @@ module Prelude (
   , Text
   , TextShow (..)
   , (!!)
-  , (.)
-  , id
-  , get
-  , set
+  -- optics
+  , (&), (%), (?~)
+  , view, (^.)
+  , preview, (^?)
+  , toListOf, (^..)
+  , over, (%~)
+  , set, (.~)
   , copy
+  -- prelude
+  , identity
   , for
   , maybeRead
   , head
@@ -36,12 +42,10 @@ module Prelude (
   ) where
 
 import Control.Applicative
-import Control.Category
 import Control.Monad
 import Control.Monad.Extra
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
-import Data.Label ((:->), get, set)
 import Data.List hiding
   ( (!!), all, and, any, head, last, maximum, minimum, or, tail )
 
@@ -50,12 +54,13 @@ import Data.Monoid
 import Data.Monoid.Utils
 import Data.Text (Text)
 import GHC.Stack (HasCallStack, withFrozenCallStack)
+import Optics
 import Text.JSON.FromJSValue
 import Text.JSON.ToJSValue
 import TextShow
 import "base" Prelude hiding
-  ( (!!), (&&), (.), (||), all, and, any, error, head, id, last, maximum
-  , minimum, not, or, read, tail )
+  ( (!!), (&&), (||), all, and, any, error, head, id, last, maximum, minimum
+  , not, or, read, tail )
 
 import qualified Data.Text as T
 import qualified "base" Prelude as P
@@ -88,11 +93,11 @@ instance ToJSValue Text where
   toJSValue = toJSValue . T.unpack
 
 ----------------------------------------
--- Additional fclabels utilities.
+-- Additional optics utilities.
 
 -- | Copy the field value from an object of the same type.
-copy :: (f :-> o) -> f -> f -> f
-copy x fromThis toThat = set x (get x fromThis) $ toThat
+copy :: (Is k A_Setter, Is k A_Getter) => Optic k is s s a a -> s -> s -> s
+copy x fromThis toThat = set x (view x fromThis) toThat
 
 ----------------------------------------
 
@@ -107,6 +112,10 @@ maybeRead s = case reads (T.unpack s) of
   _         -> Nothing
 
 ----------------------------------------
+
+-- | Replacement for 'id' that doesn't collide with "identifier".
+identity :: a -> a
+identity = P.id
 
 -- | Replacement for 'P.!!' that provides useful information on failure.
 (!!) :: HasCallStack => [a] -> Int -> a

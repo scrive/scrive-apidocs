@@ -46,7 +46,6 @@ import API.V2.Parameters
 import AppView (renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
 import Doc.Action (postDocumentClosedActions, postDocumentPendingChange)
@@ -96,8 +95,10 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
 import qualified API.V2 as V2
+import qualified BrandedDomain.BrandedDomain.Internal as I
 import qualified Company.CompanyControl as Company
 import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified UserGroup.Internal as I
 import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 adminonlyRoutes :: Route (Kontra Response)
@@ -259,21 +260,21 @@ jsonCompanies = onlySalesOrAdmin $ do
   ugs <- dbQuery $ UserGroupsGetFiltered (textFilter <> usersFilter <> pplanFilter)
                                          (Just (offset, limit))
   -- get address for those companies, which inherit it
-  ugsWithAddress <- forM ugs $ \ug -> case get ugAddress ug of
+  ugsWithAddress <- forM ugs $ \ug -> case ug ^. #address of
     Just uga -> return (ug, uga)
     Nothing ->
       ((ug, ) . ugwpAddress)
-        <$> (guardJustM . dbQuery . UserGroupGetWithParents $ get ugID ug)
+        <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id)
   runJSONGenT $ do
     valueM "companies" $ forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
-      value "id" . show . get ugID $ ug
-      value "companyname" . T.unpack . get ugName $ ug
-      value "companynumber" . T.unpack . get ugaCompanyNumber $ uga
-      value "companyentityname" . T.unpack . get ugaEntityName $ uga
-      value "companyaddress" . T.unpack . get ugaAddress $ uga
-      value "companyzip" . T.unpack . get ugaZip $ uga
-      value "companycity" . T.unpack . get ugaCity $ uga
-      value "companycountry" . T.unpack . get ugaCountry $ uga
+      value "id" . show $ ug ^. #id
+      value "companyname" . T.unpack $ ug ^. #name
+      value "companynumber" . T.unpack $ uga ^. #companyNumber
+      value "companyentityname" . T.unpack $ uga ^. #entityName
+      value "companyaddress" . T.unpack $ uga ^. #address
+      value "companyzip" . T.unpack $ uga ^. #zipCode
+      value "companycity" . T.unpack $ uga ^. #city
+      value "companycountry" . T.unpack $ uga ^. #country
 
 jsonUsersList :: Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
@@ -332,10 +333,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
         void $ dbUpdate $ SetUserCompanyAdmin uid True
         void $ dbUpdate $ LogHistoryDetailsChanged
           uid
-          (get ctxipnumber ctx)
-          (get ctxtime ctx)
+          (ctx ^. #ipAddr)
+          (ctx ^. #time)
           [("is_company_admin", "false", "true")]
-          (userid <$> get ctxmaybeuser ctx)
+          (userid <$> ctx ^. #maybeUser)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", True) -> do
@@ -344,10 +345,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
         void $ dbUpdate $ SetUserCompanyAdmin uid False
         void $ dbUpdate $ LogHistoryDetailsChanged
           uid
-          (get ctxipnumber ctx)
-          (get ctxtime ctx)
+          (ctx ^. #ipAddr)
+          (ctx ^. #time)
           [("is_company_admin", "true", "false")]
-          (userid <$> get ctxmaybeuser ctx)
+          (userid <$> ctx ^. #maybeUser)
         dbQuery $ GetUserByID uid
       return newuser
     _ -> return olduser
@@ -355,11 +356,11 @@ handleUserChange uid = onlySalesOrAdmin $ do
   let applyChanges = do
         void $ dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
         void $ dbUpdate $ LogHistoryUserInfoChanged uid
-                                                    (get ctxipnumber ctx)
-                                                    (get ctxtime ctx)
+                                                    (ctx ^. #ipAddr)
+                                                    (ctx ^. #time)
                                                     (userinfo user)
                                                     (infoChange $ userinfo user)
-                                                    (userid <$> get ctxmaybeuser ctx)
+                                                    (userid <$> ctx ^. #maybeUser)
         settingsChange <- getUserSettingsChange
         void $ dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
         return ()
@@ -384,9 +385,9 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
   password     <- guardJustM $ getField "password"
   passwordhash <- createPassword password
   ctx          <- getContext
-  let time     = get ctxtime ctx
-      ipnumber = get ctxipnumber ctx
-      admin    = get ctxmaybeuser ctx
+  let time     = ctx ^. #time
+      ipnumber = ctx ^. #ipAddr
+      admin    = ctx ^. #maybeUser
   void $ dbUpdate $ SetUserPassword (userid user) passwordhash
   void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
   terminateAllUserSessionsExceptCurrent (userid user)
@@ -413,9 +414,7 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
       r <- dbUpdate $ DisableUserTOTP uid
       if r
         then do
-          void $ dbUpdate $ LogHistoryTOTPDisable uid
-                                                  (get ctxipnumber ctx)
-                                                  (get ctxtime ctx)
+          void $ dbUpdate $ LogHistoryTOTPDisable uid (ctx ^. #ipAddr) (ctx ^. #time)
           return ()
         else internalError
     else return ()
@@ -423,13 +422,13 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
   newugid <- guardJustM $ readField "companyid"
-  (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome newugid) >>= \case
+  (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome newugid) >>= \case
     Nothing         -> internalError
     Just newugfdrid -> do
       void $ dbUpdate $ SetUserUserGroup uid newugid
       void $ dbUpdate $ SetUserCompanyAdmin uid False
-      let newhomefdr = set folderParentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
+      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
+      newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
       void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
 
 handleMergeToOtherCompany :: Kontrakcja m => UserGroupID -> m ()
@@ -444,14 +443,14 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
         <+> "and retry."
     else do
       ugid_target <- guardJustM $ readField "companyid"
-      (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid_target) >>= \case
+      (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid_target) >>= \case
         Nothing          -> internalError
         Just targetfdrid -> do
           users <- dbQuery $ UserGroupGetUsers ugid_source
           forM_ users $ \u -> do
             void $ dbUpdate $ SetUserUserGroup (userid u) ugid_target
-            let newhomefdr = set folderParentID (Just targetfdrid) defaultFolder
-            newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
+            let newhomefdr = set #parentID (Just targetfdrid) defaultFolder
+            newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
             void $ dbUpdate . SetUserHomeFolder (userid u) $ newhomefdrid
           invites <- dbQuery $ UserGroupGetInvites ugid_source
           forM_ invites $ \i ->
@@ -470,17 +469,16 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugAddressChange       <- getUserGroupAddressChange
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
-  let oldUG = ugwpUG ugwp
-      setSettings =
-        if fromMaybe (isNothing $ get ugSettings oldUG) mUGSettingsIsInherited
-          then set ugSettings Nothing
-          else set ugSettings . Just . ugSettingsChange $ ugwpSettings ugwp
-      setAddress = if fromMaybe (isNothing $ get ugAddress oldUG) mUGAddressIsInherited
-        then set ugAddress Nothing
-        else set ugAddress . Just . ugAddressChange $ ugwpAddress ugwp
+  let oldUG       = ugwpUG ugwp
+      setSettings = if fromMaybe (isNothing $ oldUG ^. #settings) mUGSettingsIsInherited
+        then set #settings Nothing
+        else set #settings . Just . ugSettingsChange $ ugwpSettings ugwp
+      setAddress = if fromMaybe (isNothing $ oldUG ^. #address) mUGAddressIsInherited
+        then set #address Nothing
+        else set #address . Just . ugAddressChange $ ugwpAddress ugwp
       newUG =
-        set ugParentGroupID mTryParentUserGroupID
-          . maybe id (set ugName) mCompanyName
+        set #parentGroupID mTryParentUserGroupID
+          . maybe identity (set #name) mCompanyName
           . setSettings
           . setAddress
           $ ugwpUG ugwp
@@ -489,8 +487,8 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
     guardJust
     . listToMaybe
     . catMaybes
-    $ [get ugSettings newUG, ugwpSettings <$> ugwpOnlyParents ugwp]
-  guardThatDataRetentionPolicyIsValid (get ugsDataRetentionPolicy newSettings) Nothing
+    $ [newUG ^. #settings, ugwpSettings <$> ugwpOnlyParents ugwp]
+  guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
 
@@ -504,9 +502,9 @@ handleCreateUser = onlySalesOrAdmin $ do
   ug       <-
     dbUpdate
     . UserGroupCreate
-    . set ugHomeFolderID (Just $ get folderID ugFolder)
+    . set #homeFolderID (Just $ ugFolder ^. #id)
     $ defaultUserGroup
-  muser <- createNewUserByAdmin email (fstname, sndname) (get ugID ug, True) lang
+  muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False
@@ -556,39 +554,39 @@ getUserGroupSettingsChange = do
   mcompanyportalurl <- fmap emptyToNothing <$> getField "companyportalurl"
 
   return
-    $ maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
-    . maybe id (set ugsCGIDisplayName)    mcompanycgidisplayname
-    . maybe id
-            (set (drpIdleDocTimeoutPreparation . ugsDataRetentionPolicy))
+    $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
+    . maybe identity (set #cgiDisplayName)    mcompanycgidisplayname
+    . maybe identity
+            (set (#dataRetentionPolicy % #idleDocTimeoutPreparation))
             mcompanyidledoctimeoutpreparation
-    . maybe id
-            (set (drpIdleDocTimeoutClosed . ugsDataRetentionPolicy))
+    . maybe identity
+            (set (#dataRetentionPolicy % #idleDocTimeoutClosed))
             mcompanyidledoctimeoutclosed
-    . maybe id
-            (set (drpIdleDocTimeoutCanceled . ugsDataRetentionPolicy))
+    . maybe identity
+            (set (#dataRetentionPolicy % #idleDocTimeoutCanceled))
             mcompanyidledoctimeoutcanceled
-    . maybe id
-            (set (drpIdleDocTimeoutTimedout . ugsDataRetentionPolicy))
+    . maybe identity
+            (set (#dataRetentionPolicy % #idleDocTimeoutTimedout))
             mcompanyidledoctimeouttimedout
-    . maybe id
-            (set (drpIdleDocTimeoutRejected . ugsDataRetentionPolicy))
+    . maybe identity
+            (set (#dataRetentionPolicy % #idleDocTimeoutRejected))
             mcompanyidledoctimeoutrejected
-    . maybe id
-            (set (drpIdleDocTimeoutError . ugsDataRetentionPolicy))
+    . maybe identity
+            (set (#dataRetentionPolicy % #idleDocTimeoutError))
             mcompanyidledoctimeouterror
-    . maybe id
-            (set (drpImmediateTrash . ugsDataRetentionPolicy) . (== "true"))
+    . maybe identity
+            (set (#dataRetentionPolicy % #immediateTrash) . (== "true"))
             mcompanyimmediatetrash
-    . maybe id (set ugsCGIServiceID) mcompanycgiserviceid
-    . maybe id (set ugsSMSProvider)  mcompanysmsprovider
-    . maybe id (set ugsPadAppMode)   mcompanypadappmode
-    . maybe id (set ugsPadEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
-    . maybe id
-            (set ugsSendTimeoutNotification . (== "true"))
+    . maybe identity (set #cgiServiceID) mcompanycgiserviceid
+    . maybe identity (set #smsProvider)  mcompanysmsprovider
+    . maybe identity (set #padAppMode)   mcompanypadappmode
+    . maybe identity (set #padEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
+    . maybe identity
+            (set #sendTimeoutNotification . (== "true"))
             mcompanysendtimeoutnotification
-    . maybe id (set ugsTotpIsMandatory . (== "true")) mcompanytotpismandatory
-    . maybe id (set ugsSessionTimeoutSecs)            mcompanysessiontimeout
-    . maybe id (set ugsPortalUrl)                     mcompanyportalurl
+    . maybe identity (set #totpIsMandatory . (== "true")) mcompanytotpismandatory
+    . maybe identity (set #sessionTimeoutSecs)            mcompanysessiontimeout
+    . maybe identity (set #portalUrl)                     mcompanyportalurl
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))
@@ -638,12 +636,12 @@ getUserGroupAddressChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   return
-    $ maybe id (set ugaCompanyNumber) mcompanynumber
-    . maybe id (set ugaEntityName)    mentityname
-    . maybe id (set ugaAddress)       mcompanyaddress
-    . maybe id (set ugaZip)           mcompanyzip
-    . maybe id (set ugaCity)          mcompanycity
-    . maybe id (set ugaCountry)       mcompanycountry
+    $ maybe identity (set #companyNumber) mcompanynumber
+    . maybe identity (set #entityName)    mentityname
+    . maybe identity (set #address)       mcompanyaddress
+    . maybe identity (set #zipCode)       mcompanyzip
+    . maybe identity (set #city)          mcompanycity
+    . maybe identity (set #country)       mcompanycountry
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
@@ -671,7 +669,7 @@ getUserInfoChange = do
 
 jsonDocuments :: Kontrakcja m => m Response
 jsonDocuments = onlyAdmin $ do
-  adminUser        <- guardJustM $ get ctxmaybeuser <$> getContext
+  adminUser        <- guardJustM $ view #maybeUser <$> getContext
   muid             <- readField "userid"
   mugid            <- readField "companyid"
   offset           <- guardJustM $ readField "offset"
@@ -819,7 +817,7 @@ daveUserGroup ugid = onlyAdmin $ do
 daveFile :: Kontrakcja m => FileID -> Text -> m Response
 daveFile fileid _title = onlyAdmin $ do
   now  <- currentTime
-  user <- guardJust . getContextUser =<< getContext
+  user <- guardJust . contextUser =<< getContext
   logInfo "File accessed through dave"
     $ object [identifier fileid, identifier $ userid user, "timestamp" .= now]
   file     <- dbQuery $ GetFileByFileID fileid
@@ -914,25 +912,25 @@ handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
       mNewFeatures           = ugSubFeatures subscription
       mInheritedFeatures     = ugwpFeatures <$> ugwpOnlyParents ugwp
       setFeatures = case (newFeaturesIsInherited, mNewFeatures, mInheritedFeatures) of
-        (True, _, Just _) -> set ugFeatures Nothing
-        (False, Just newFeatures, _) -> set ugFeatures $ Just newFeatures
+        (True, _, Just _) -> set #features Nothing
+        (False, Just newFeatures, _) -> set #features $ Just newFeatures
         _ -> unexpectedError "invalid combination of features and inheriting"
 
-  dbUpdate . UserGroupUpdate . set ugInvoicing newInvoicing . setFeatures . ugwpUG $ ugwp
+  dbUpdate . UserGroupUpdate . set #invoicing newInvoicing . setFeatures . ugwpUG $ ugwp
   return $ V2.Accepted ()
 
 handleCompanyGetStructure :: Kontrakcja m => UserGroupID -> m Aeson.Value
 handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
   ugwp <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
   let root = ugwpRoot ugwp
-  children <- dbQuery . UserGroupGetAllChildrenRecursive $ get ugID root
+  children <- dbQuery . UserGroupGetAllChildrenRecursive $ root ^. #id
   return $ object
     [ "user_group_structure"
-        .= (ugWithChildrenToJson $ UserGroupWithChildren root children)
+        .= (ugWithChildrenToJson $ I.UserGroupWithChildren root children)
     ]
   where
-    ugWithChildrenToJson (UserGroupWithChildren ug children) = object
-      [ "group" .= object ["name" .= get ugName ug, identifier $ get ugID ug]
+    ugWithChildrenToJson (I.UserGroupWithChildren ug children) = object
+      [ "group" .= object ["name" .= (ug ^. #name), identifier $ ug ^. #id]
       , "children" .= map ugWithChildrenToJson children
       ]
 
@@ -999,7 +997,7 @@ jsonBrandedDomain bdID = onlySalesOrAdmin $ do
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
   obd <- dbQuery $ GetBrandedDomainByID xbdid
-  when (get bdMainDomain obd) $ do
+  when (obd ^. #mainDomain) $ do
     logInfo_ "Main domain can't be changed"
     internalError
   -- keep this 1to1 consistent with fields in the database
@@ -1013,8 +1011,8 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
         void
           $ dbUpdate
           $ UpdateBrandedDomain
-          $ copy bdid         obd
-          $ copy bdMainDomain obd
+          $ copy #id         obd
+          $ copy #mainDomain obd
           $ newDomain
         return ()
       _ -> internalError
@@ -1022,20 +1020,20 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
 unjsonBrandedDomain :: UnjsonDef BrandedDomain
 unjsonBrandedDomain =
   objectOf
-    $   pure BrandedDomain
-    <*> field "id"              (get bdid)              "Id of a branded domain (unique)"
-    <*> field "mainDomain"      (get bdMainDomain)      "Is this a main domain"
-    <*> field "url"             (get bdUrl)             "URL that will match this domain"
-    <*> field "smsOriginator"   (get bdSmsOriginator)   "Originator for text messages"
-    <*> field "emailOriginator" (get bdEmailOriginator) "Originator for email messages"
-    <*> field "mailTheme"       (get bdMailTheme)       "Email theme"
-    <*> field "signviewTheme"   (get bdSignviewTheme)   "Signview theme"
-    <*> field "serviceTheme"    (get bdServiceTheme)    "Service theme"
-    <*> field "loginTheme"      (get bdLoginTheme)      "Login theme"
-    <*> field "browserTitle"    (get bdBrowserTitle)    "Browser title"
+    $   pure I.BrandedDomain
+    <*> field "id"              (^. #id)              "Id of a branded domain (unique)"
+    <*> field "mainDomain"      (^. #mainDomain)      "Is this a main domain"
+    <*> field "url"             (^. #url)             "URL that will match this domain"
+    <*> field "smsOriginator"   (^. #smsOriginator)   "Originator for text messages"
+    <*> field "emailOriginator" (^. #emailOriginator) "Originator for email messages"
+    <*> field "mailTheme"       (^. #mailTheme)       "Email theme"
+    <*> field "signviewTheme"   (^. #signviewTheme)   "Signview theme"
+    <*> field "serviceTheme"    (^. #serviceTheme)    "Service theme"
+    <*> field "loginTheme"      (^. #loginTheme)      "Login theme"
+    <*> field "browserTitle"    (^. #browserTitle)    "Browser title"
     <*> fieldBy
           "favicon"
-          (get bdFavicon)
+          (^. #favicon)
           "Favicon"
           (invmap
             (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') l)
@@ -1044,24 +1042,24 @@ unjsonBrandedDomain =
             )
             unjsonDef
           )
-    <*> field "participantColor1" (get bdParticipantColor1) "Participant 1 color"
-    <*> field "participantColor2" (get bdParticipantColor2) "Participant 2 color"
-    <*> field "participantColor3" (get bdParticipantColor3) "Participant 3 color"
-    <*> field "participantColor4" (get bdParticipantColor4) "Participant 4 color"
-    <*> field "participantColor5" (get bdParticipantColor5) "Participant 5 color"
-    <*> field "participantColor6" (get bdParticipantColor6) "Participant 6 color"
-    <*> field "draftColor"        (get bdDraftColor)        "Draft color"
-    <*> field "cancelledColor"    (get bdCancelledColor)    "Cancelled color"
-    <*> field "initatedColor"     (get bdInitatedColor)     "Initated color"
-    <*> field "sentColor"         (get bdSentColor)         "Sent color"
-    <*> field "deliveredColor"    (get bdDeliveredColor)    "Delivered color"
-    <*> field "openedColor"       (get bdOpenedColor)       "Opened color"
-    <*> field "reviewedColor"     (get bdReviewedColor)     "Reviewed color"
-    <*> field "signedColor"       (get bdSignedColor)       "Signed color"
+    <*> field "participantColor1" (^. #participantColor1) "Participant 1 color"
+    <*> field "participantColor2" (^. #participantColor2) "Participant 2 color"
+    <*> field "participantColor3" (^. #participantColor3) "Participant 3 color"
+    <*> field "participantColor4" (^. #participantColor4) "Participant 4 color"
+    <*> field "participantColor5" (^. #participantColor5) "Participant 5 color"
+    <*> field "participantColor6" (^. #participantColor6) "Participant 6 color"
+    <*> field "draftColor"        (^. #draftColor)        "Draft color"
+    <*> field "cancelledColor"    (^. #cancelledColor)    "Cancelled color"
+    <*> field "initatedColor"     (^. #initatedColor)     "Initated color"
+    <*> field "sentColor"         (^. #sentColor)         "Sent color"
+    <*> field "deliveredColor"    (^. #deliveredColor)    "Delivered color"
+    <*> field "openedColor"       (^. #openedColor)       "Opened color"
+    <*> field "reviewedColor"     (^. #reviewedColor)     "Reviewed color"
+    <*> field "signedColor"       (^. #signedColor)       "Signed color"
 
 unjsonBrandedDomainsList :: UnjsonDef [BrandedDomain]
-unjsonBrandedDomainsList =
-  objectOf $ fieldBy "domains" id "List of branded domains" (arrayOf unjsonBrandedDomain)
+unjsonBrandedDomainsList = objectOf
+  $ fieldBy "domains" identity "List of branded domains" (arrayOf unjsonBrandedDomain)
 
 
 createBrandedDomain :: Kontrakcja m => m JSValue

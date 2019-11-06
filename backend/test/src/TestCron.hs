@@ -6,6 +6,7 @@ import Control.Monad.Reader
 import Database.PostgreSQL.Consumers
 import Log
 import Network.HTTP.Client.TLS (newTlsManager)
+import Optics (gview)
 
 import Context
 import Cron.Model
@@ -26,10 +27,10 @@ runTestCronUntilIdle ctx = do
   -- processes with their own DB transactions, which do not see
   -- changes of the test transaction ... unless there is a commit.
   commit
-  ConnectionSource pool  <- asks (get teConnSource)
-  pdfSealLambdaEnv       <- asks (get tePdfToolsLambdaEnv)
-  cronDBConfig           <- asks (get teCronDBConfig)
-  cronMonthlyInvoiceConf <- asks (get teCronMonthlyInvoice)
+  ConnectionSource pool  <- gview #connSource
+  pdfSealLambdaEnv       <- gview #pdfToolsLambdaEnv
+  cronDBConfig           <- gview #cronDBConfig
+  cronMonthlyInvoiceConf <- gview #cronMonthlyInvoice
 
   -- Will not be used, because Planhat is not configured when testing,
   -- but it is a parameter for cronConsumer.
@@ -70,7 +71,7 @@ runTestCronUntilIdle ctx = do
         , runConsumerWithIdleSignal . modTimeout $ documentSealing
           (cronGuardTimeConf cronConf)
           pdfSealLambdaEnv
-          (get ctxglobaltemplates ctx)
+          (ctx ^. #globalTemplates)
           pool
           (cronMailNoreplyAddress cronConf)
           (cronConsumerSealingMaxJobs cronConf)
@@ -80,7 +81,7 @@ runTestCronUntilIdle ctx = do
           (cronGuardTimeConf cronConf)
           (cronCgiGrpConfig cronConf)
           (cronNetsSignConfig cronConf)
-          (get ctxglobaltemplates ctx)
+          (ctx ^. #globalTemplates)
           pool
           (cronMailNoreplyAddress cronConf)
           (cronConsumerSigningMaxJobs cronConf)
@@ -88,19 +89,19 @@ runTestCronUntilIdle ctx = do
       , ( "document extending"
         , runConsumerWithIdleSignal . modTimeout $ documentExtendingConsumer
           (cronGuardTimeConf cronConf)
-          (get ctxglobaltemplates ctx)
+          (ctx ^. #globalTemplates)
           pool
           (cronConsumerExtendingMaxJobs cronConf)
         )
       , ( "api callbacks"
-        , runConsumerWithIdleSignal . modTimeout $ documentAPICallback {-runCronEnv-}id
+        , runConsumerWithIdleSignal . modTimeout $ documentAPICallback {-runCronEnv-}identity
           (cronConsumerAPICallbackMaxJobs cronConf)
         )
       , ( "cron"
         , runConsumerWithIdleSignal . modTimeout $ cronConsumer
           cronConf
           reqManager {-mmixpanel-}Nothing
-              {-mplanhat-}Nothing {-runCronEnv-}id {-runDB-}id
+              {-mplanhat-}Nothing {-runCronEnv-}identity {-runDB-}identity
           (cronConsumerCronMaxJobs cronConf)
         )
       , ( "file purging"
@@ -110,7 +111,7 @@ runTestCronUntilIdle ctx = do
         )
       ]
     cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf)
-                                  (get ctxglobaltemplates ctx)
+                                  (ctx ^. #globalTemplates)
                                   (cronMailNoreplyAddress cronConf)
 
     finalizeRunner ((label, runner), idleSignal) =
@@ -132,7 +133,7 @@ allSignalsTrue :: (MonadIO m) => [TMVar Bool] -> TVar [Bool] -> m Bool
 allSignalsTrue idleSignals idleStatuses = liftIO . atomically $ do
   (idx, isIdle) <- takeAnyMVar idleSignals
   modifyTVar idleStatuses (\ss -> take idx ss <> [isIdle] <> drop (idx + 1) ss)
-  all id <$> readTVar idleStatuses
+  all identity <$> readTVar idleStatuses
 
 takeAnyMVar :: [TMVar a] -> STM (Int, a)
 takeAnyMVar =

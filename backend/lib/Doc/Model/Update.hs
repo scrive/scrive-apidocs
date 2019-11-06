@@ -2544,22 +2544,20 @@ archiveIdleDocuments now = do
     expireUserDocumentsInGroupsWithDRP = do
       ugs <- dbQuery $ UserGroupsGetFiltered [UGWithAnyIdleDocTimeoutSet] Nothing
       -- all usergroups with any Retention Policy have ugSettings
-      let ugs_settings = mapMaybe (\ug -> (ug, ) <$> get ugSettings ug) ugs
+      let ugs_settings = mapMaybe (\ug -> (ug, ) <$> ug ^. #settings) ugs
       counts_and_ugids <- forM ugs_settings $ \(ug_with_drp, ug_settings) -> do
-        let ug_drp = get ugsDataRetentionPolicy ug_settings
+        let ug_drp = ug_settings ^. #dataRetentionPolicy
         -- Get recursive all children, who inherit this DRP property.
         -- This requires another level of queries, but it just means 2 queries per
         -- UserGroup (1 for getting children + 1 for getting users)
-        children_ugs <- ugGetChildrenInheritingProperty (get ugID ug_with_drp)
-                                                        (get ugSettings)
+        children_ugs <- ugGetChildrenInheritingProperty (ug_with_drp ^. #id)
+                                                        (view #settings)
         archived_counts <- forM (ug_with_drp : children_ugs) $ \ug_with_inherited_drp ->
           do
-            users <- dbQuery $ UserGroupGetUsersIncludeDeleted $ get
-              ugID
-              ug_with_inherited_drp
+            users <-
+              dbQuery $ UserGroupGetUsersIncludeDeleted $ ug_with_inherited_drp ^. #id
             forM users $ expireUserDocuments (Just ug_drp)
-        return
-          (sum $ concat archived_counts, map (get ugID) $ ug_with_drp : children_ugs)
+        return (sum $ concat archived_counts, map (^. #id) $ ug_with_drp : children_ugs)
       let (archived_counts, ugidss_with_drp) = unzip counts_and_ugids
       return $ (sum archived_counts, S.fromList $ concat ugidss_with_drp)
 
@@ -2586,7 +2584,7 @@ archiveIdleDocuments now = do
         $ object [identifier ugid, identifier uid]
       startTime       <- currentTime
       archived_counts <- forM allDrpStatuses $ \status ->
-        case get (drpIdleDocTimeout status) drp of
+        case drp ^. drpIdleDocTimeout status of
           Just timeoutDays -> dbUpdate
             $ ArchiveIdleDocumentsForUserInUserGroup uid ugid status timeoutDays now
           Nothing -> return 0

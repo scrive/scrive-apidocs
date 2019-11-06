@@ -71,7 +71,7 @@ data JobType
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, Text)]
-jobTypeMapper = map (id &&& jobTypeToText) [minBound .. maxBound]
+jobTypeMapper = map (identity &&& jobTypeToText) [minBound .. maxBound]
   where
     jobTypeToText = \case
       AsyncEventsProcessing         -> "async_events_processing"

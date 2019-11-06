@@ -16,7 +16,6 @@ import Control.Monad.Trans.Maybe
 import Crypto.RNG
 import Data.Typeable
 
-import Context
 import DB
 import KontraLink
 import KontraMonad
@@ -40,7 +39,7 @@ getEmailChangeRequestNewEmail
 getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   Just EmailChangeRequest {..} <- dbQuery $ GetEmailChangeRequest uid
   guard $ ecrToken == token
-  Just loggeduser <- get ctxmaybeuser <$> lift getContext
+  Just loggeduser <- view #maybeUser <$> lift getContext
   guard $ ecrUserID == userid loggeduser
   -- check if a user didn't create an account with this email
   -- between requesting email change and confirming the change

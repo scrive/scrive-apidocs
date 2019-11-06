@@ -7,7 +7,6 @@ import Test.Framework
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
-import Context
 import DB hiding (query, update)
 import Doc.API.V1.Calls
 import Doc.API.V2.AesonTestUtils (testRequestHelperNoAssert_)
@@ -22,7 +21,6 @@ import SMS.SMS
 import SMS.Types (SMSProvider(..))
 import TestingUtil
 import TestKontra as T
-import UserGroup.Types
 import UserGroupAccounts.Model
 import Util.Actor
 import Util.SignatoryLinkUtils
@@ -47,7 +45,7 @@ chargeableTest env = testGroup
 
 test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
-  ugid      <- (get ugID) <$> addNewUserGroup
+  ugid      <- view #id <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc       <- addRandomDocument (rdaDefault user)
@@ -73,7 +71,7 @@ test_smsCounting_default = do
 
 test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
-  ugid      <- (get ugID) <$> addNewUserGroup
+  ugid      <- view #id <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc       <- addRandomDocument (rdaDefault user)
@@ -99,10 +97,10 @@ test_smsCounting_telia = do
 
 test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
-  ugid        <- (get ugID) <$> addNewUserGroup
+  ugid        <- view #id <$> addNewUserGroup
   Just user   <- addNewUser "Bob" "Blue" "bob@blue.com"
   True        <- dbUpdate $ SetUserUserGroup (userid user) ugid
-  ctxWithUser <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   did1        <- newDocumentReadyToStart user
   req1        <- mkRequest POST []
@@ -164,7 +162,7 @@ test_startDocumentCharging = do
 test_closeDocAndSigCharging :: TestEnv ()
 test_closeDocAndSigCharging = do
   user <- addNewRandomUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   let queryChargeableSigClose =
         "SELECT count(*) FROM chargeable_items WHERE type = 9 "
           <>  "AND quantity = 1 AND user_group_id ="

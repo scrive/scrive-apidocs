@@ -23,7 +23,6 @@ import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
 
-import DataRetentionPolicy
 import MinutesTime
 import PadApplication.Types
 import User.CallbackScheme.Model (UserCallbackScheme(..))
@@ -70,7 +69,7 @@ userJSONUserDetails user = do
   value "lang" $ codeFromLang $ getLang user
 
 unjsonUser :: UnjsonDef User
-unjsonUser = unjsonUserPartial id
+unjsonUser = unjsonUserPartial identity
 
 unjsonUserWithPassword :: Text -> UnjsonDef User
 unjsonUserWithPassword password =
@@ -155,9 +154,10 @@ unjsonUserPartial passwordDef = objectOf $ passwordDef
 companyJSON :: UserGroupWithParents -> JSValue
 companyJSON ugwp = do
   runJSONGen $ do
-    value "companyid" . show . get ugID $ ugwpUG ugwp
-    value "companyname" . get ugName $ ugwpUG ugwp
-    value "companyhomefolderid" . get ugHomeFolderID $ ugwpUG ugwp
+    let ug = ugwpUG ugwp
+    value "companyid" . show $ ug ^. #id
+    value "companyname" $ ug ^. #name
+    value "companyhomefolderid" $ ug ^. #homeFolderID
     companyAddressJson $ ugwpAddress ugwp
     companySettingsJson $ ugwpSettings ugwp
 
@@ -169,12 +169,12 @@ companyJSONAdminOnly ugwp = do
       mInheritedAddress     = ugwpAddress <$> ugwpOnlyParents ugwp
       mInheritedSettings    = ugwpSettings <$> ugwpOnlyParents ugwp
       ugParentPath          = maybe [] ugwpToList . ugwpOnlyParents $ ugwp
-      ugSettingsIsInherited = isNothing . get ugSettings $ ug
-      ugAddressIsInherited  = isNothing . get ugAddress $ ug
+      ugSettingsIsInherited = isNothing $ ug ^. #settings
+      ugAddressIsInherited  = isNothing $ ug ^. #address
   runJSONGen $ do
-    value "companyid" $ show $ get ugID ug
+    value "companyid" $ show $ ug ^. #id
     companyAddressJson activeAddress
-    value "companyname" $ get ugName ug
+    value "companyname" $ ug ^. #name
     companySettingsJson $ activeSettings
 
     whenJust (mInheritedAddress) $ object "companyinheritedaddress" . companyAddressJson
@@ -185,40 +185,40 @@ companyJSONAdminOnly ugwp = do
       . companySettingsJson
     value "companysettingsisinherited" ugSettingsIsInherited
 
-    value "parentid" . fmap show $ get ugParentGroupID ug
+    value "parentid" . fmap show $ ug ^. #parentGroupID
     objects "parentgrouppath" . for ugParentPath $ \parent -> do
-      value "group_id" . show . get ugID $ parent
-      value "group_name" . get ugName $ parent
+      value "group_id" . show $ parent ^. #id
+      value "group_name" $ parent ^. #name
 
 companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
 companyAddressJson uga = do
-  value "address" $ get ugaAddress uga
-  value "city" $ get ugaCity uga
-  value "country" $ get ugaCountry uga
-  value "zip" $ get ugaZip uga
-  value "companynumber" $ get ugaCompanyNumber uga
-  value "entityname" $ get ugaEntityName uga
+  value "address" $ uga ^. #address
+  value "city" $ uga ^. #city
+  value "country" $ uga ^. #country
+  value "zip" $ uga ^. #zipCode
+  value "companynumber" $ uga ^. #companyNumber
+  value "entityname" $ uga ^. #entityName
 
 companySettingsJson :: UserGroupSettings -> JSONGenT Identity ()
 companySettingsJson ugs = do
-  let drp = get ugsDataRetentionPolicy ugs
-  value "ipaddressmasklist" . intercalate "," . fmap show $ get ugsIPAddressMaskList ugs
-  value "cgidisplayname" $ get ugsCGIDisplayName ugs
-  value "cgiserviceid" $ get ugsCGIServiceID ugs
-  value "smsprovider" . show $ get ugsSMSProvider ugs
-  value "padappmode" . padAppModeText $ get ugsPadAppMode ugs
-  value "padearchiveenabled" $ get ugsPadEarchiveEnabled ugs
-  value "idledoctimeoutpreparation" $ get drpIdleDocTimeoutPreparation drp
-  value "idledoctimeoutclosed" $ get drpIdleDocTimeoutClosed drp
-  value "idledoctimeoutcanceled" $ get drpIdleDocTimeoutCanceled drp
-  value "idledoctimeouttimedout" $ get drpIdleDocTimeoutTimedout drp
-  value "idledoctimeoutrejected" $ get drpIdleDocTimeoutRejected drp
-  value "idledoctimeouterror" $ get drpIdleDocTimeoutError drp
-  value "immediatetrash" $ get drpImmediateTrash drp
-  value "sendtimeoutnotification" $ get ugsSendTimeoutNotification ugs
-  value "totpismandatory" $ get ugsTotpIsMandatory ugs
-  value "sessiontimeout" $ get ugsSessionTimeoutSecs ugs
-  value "portalurl" $ get ugsPortalUrl ugs
+  let drp = ugs ^. #dataRetentionPolicy
+  value "ipaddressmasklist" . intercalate "," . fmap show $ ugs ^. #ipAddressMaskList
+  value "cgidisplayname" $ ugs ^. #cgiDisplayName
+  value "cgiserviceid" $ ugs ^. #cgiServiceID
+  value "smsprovider" . show $ ugs ^. #smsProvider
+  value "padappmode" . padAppModeText $ ugs ^. #padAppMode
+  value "padearchiveenabled" $ ugs ^. #padEarchiveEnabled
+  value "idledoctimeoutpreparation" $ drp ^. #idleDocTimeoutPreparation
+  value "idledoctimeoutclosed" $ drp ^. #idleDocTimeoutClosed
+  value "idledoctimeoutcanceled" $ drp ^. #idleDocTimeoutCanceled
+  value "idledoctimeouttimedout" $ drp ^. #idleDocTimeoutTimedout
+  value "idledoctimeoutrejected" $ drp ^. #idleDocTimeoutRejected
+  value "idledoctimeouterror" $ drp ^. #idleDocTimeoutError
+  value "immediatetrash" $ drp ^. #immediateTrash
+  value "sendtimeoutnotification" $ ugs ^. #sendTimeoutNotification
+  value "totpismandatory" $ ugs ^. #totpIsMandatory
+  value "sessiontimeout" $ ugs ^. #sessionTimeoutSecs
+  value "portalurl" $ ugs ^. #portalUrl
 
 userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

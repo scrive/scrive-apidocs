@@ -64,7 +64,7 @@ handleArchiveDocumentsAction
   -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
   ctx  <- getContext
-  user <- guardJust $ getContextUser ctx
+  user <- guardJust $ contextUser ctx
   ids  <- getCriticalField asValidDocIDList "documentids"
   docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user)
                                  [DocumentFilterByDocumentIDs ids]
@@ -176,7 +176,7 @@ handleListCSV :: Kontrakcja m => m CSV
 handleListCSV = do
   logInfo_ "Downloading CSV list"
   ctx     <- getContext
-  user    <- guardJust $ getContextUser ctx
+  user    <- guardJust $ contextUser ctx
   filters <- apiV2ParameterDefault [] (ApiV2ParameterJSON "filter" unjsonDef)
   sorting <- apiV2ParameterDefault [] (ApiV2ParameterJSON "sorting" unjsonDef)
   let documentFilters =

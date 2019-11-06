@@ -1,11 +1,11 @@
-module Partner.JSON (
-    UserForUpdate(..)
+module Partner.JSON
+  ( I.UserForUpdate
   , unjsonUserForUpdate
   , userInfoFromUserForUpdate
   , userToUserForUpdate
   , unjsonUsersForUpdate
 
-  , UserGroupForUpdate
+  , I.UserGroupForUpdate
   , unjsonUserGroupForUpdate
   , unjsonUserGroupsForUpdate
   , userGroupToUserGroupForUpdate
@@ -18,200 +18,176 @@ import InputValidation
 import User.Email (Email(..))
 import User.Model
 import UserGroup.Types
+import qualified Partner.JSON.Internal as I
+import qualified UserGroup.Internal as I
 
-data UserForUpdate = UserForUpdate {
-      ufuId :: Text
-    , ufuEmail :: Email
-    , ufuFirstName :: Text
-    , ufuLastName :: Text
-    , ufuPersonalNumber :: Text
-    , ufuPhone :: Text
-    , ufuCompanyPosition :: Text
-    , ufuLang :: Lang
-    , ufuHasAcceptedTOS :: Bool
-    }
+defaultUserForUpdate :: I.UserForUpdate
+defaultUserForUpdate = I.UserForUpdate { id              = ""
+                                       , email           = Email ""
+                                       , firstName       = ""
+                                       , lastName        = ""
+                                       , personalNumber  = ""
+                                       , phone           = ""
+                                       , companyPosition = ""
+                                       , lang            = LANG_EN
+                                       , hasAcceptedTOS  = False
+                                       }
 
-defaultUserForUpdate :: UserForUpdate
-defaultUserForUpdate = UserForUpdate { ufuId              = ""
-                                     , ufuEmail           = Email ""
-                                     , ufuFirstName       = ""
-                                     , ufuLastName        = ""
-                                     , ufuPersonalNumber  = ""
-                                     , ufuPhone           = ""
-                                     , ufuCompanyPosition = ""
-                                     , ufuLang            = LANG_EN
-                                     , ufuHasAcceptedTOS  = False
-                                     }
-
-userInfoFromUserForUpdate :: UserForUpdate -> UserInfo
-userInfoFromUserForUpdate UserForUpdate {..} = UserInfo
-  { userfstname         = ufuFirstName
-  , usersndname         = ufuLastName
-  , userpersonalnumber  = ufuPersonalNumber
-  , usercompanyposition = ufuCompanyPosition
-  , userphone           = ufuPhone
-  , useremail           = ufuEmail
+userInfoFromUserForUpdate :: I.UserForUpdate -> UserInfo
+userInfoFromUserForUpdate I.UserForUpdate {..} = UserInfo
+  { userfstname         = firstName
+  , usersndname         = lastName
+  , userpersonalnumber  = personalNumber
+  , usercompanyposition = companyPosition
+  , userphone           = phone
+  , useremail           = email
   }
 
-unjsonUserForUpdate :: UnjsonDef UserForUpdate
+unjsonUserForUpdate :: UnjsonDef I.UserForUpdate
 unjsonUserForUpdate =
   objectOf
     $    pure defaultUserForUpdate
-    <*   fieldReadonly "id" ufuId "The user's ID"
-    <**> (    fieldBy "email" ufuEmail "A user's email" (unjsonEmail)
-         <**> (pure $ \email ufu -> ufu { ufuEmail = email })
-         )
+    <*   fieldReadonly "id" (^. #id) "The user's ID"
+    <**> (fieldBy "email" (^. #email) "A user's email" unjsonEmail <**> pure (#email .~))
     <**> (    fieldBy "first_name"
-                      ufuFirstName
+                      (^. #firstName)
                       "A user's name"
                       (unjsonWithValidationOrEmpty asValidName)
-         <**> (pure $ \fname ufu -> ufu { ufuFirstName = fname })
+         <**> pure (#firstName .~)
          )
     <**> (    fieldBy "last_name"
-                      ufuLastName
+                      (^. #lastName)
                       "A user's last name"
                       (unjsonWithValidationOrEmpty asValidName)
-         <**> (pure $ \lname ufu -> ufu { ufuLastName = lname })
+         <**> pure (#lastName .~)
          )
     <**> (    fieldBy "personal_number"
-                      ufuPersonalNumber
+                      (^. #personalNumber)
                       "A user's personal number"
                       (unjsonWithValidationOrEmpty $ emptyOK asValidPersonalNumber)
-         <**> (pure $ \pnumber ufu -> ufu { ufuPersonalNumber = pnumber })
+         <**> pure (#personalNumber .~)
          )
     <**> (    fieldBy "phone"
-                      ufuPhone
+                      (^. #phone)
                       "A user's phone"
                       (unjsonWithValidationOrEmpty $ emptyOK asValidPhone)
-         <**> (pure $ \phone ufu -> ufu { ufuPhone = phone })
+         <**> pure (#phone .~)
          )
     <**> (    fieldBy "company_position"
-                      ufuCompanyPosition
+                      (^. #companyPosition)
                       "A user's company position"
                       (unjsonWithValidationOrEmpty asValidPosition)
-         <**> (pure $ \comppos ufu -> ufu { ufuCompanyPosition = comppos })
+         <**> pure (#companyPosition .~)
          )
-    <**> (    fieldBy "lang" ufuLang "A user's language" (unjsonLang)
-         <**> (pure $ \lang ufu -> ufu { ufuLang = lang })
-         )
-    <**> (    field "has_accepted_tos" ufuHasAcceptedTOS "Has the user accepted the TOS?"
-         <**> (pure $ \tos ufu -> ufu { ufuHasAcceptedTOS = tos })
+    <**> (fieldBy "lang" (^. #lang) "A user's language" (unjsonLang) <**> pure (#lang .~))
+    <**> (field "has_accepted_tos" (^. #hasAcceptedTOS) "Has the user accepted the TOS?"
+         <**> pure (#hasAcceptedTOS .~)
          )
 
-userToUserForUpdate :: User -> UserForUpdate
-userToUserForUpdate user = UserForUpdate
-  { ufuId              = showt $ userid user
-  , ufuEmail           = useremail . userinfo $ user
-  , ufuFirstName       = userfstname . userinfo $ user
-  , ufuLastName        = usersndname . userinfo $ user
-  , ufuPersonalNumber  = userpersonalnumber . userinfo $ user
-  , ufuPhone           = userphone . userinfo $ user
-  , ufuCompanyPosition = usercompanyposition . userinfo $ user
-  , ufuLang            = lang $ usersettings $ user
-  , ufuHasAcceptedTOS  = maybe False (const True) (userhasacceptedtermsofservice user)
+userToUserForUpdate :: User -> I.UserForUpdate
+userToUserForUpdate user = I.UserForUpdate
+  { id              = showt $ userid user
+  , email           = useremail . userinfo $ user
+  , firstName       = userfstname . userinfo $ user
+  , lastName        = usersndname . userinfo $ user
+  , personalNumber  = userpersonalnumber . userinfo $ user
+  , phone           = userphone . userinfo $ user
+  , companyPosition = usercompanyposition . userinfo $ user
+  , lang            = lang $ usersettings $ user
+  , hasAcceptedTOS  = maybe False (const True) (userhasacceptedtermsofservice user)
   }
 
-unjsonUsersForUpdate :: UnjsonDef [UserForUpdate]
+unjsonUsersForUpdate :: UnjsonDef [I.UserForUpdate]
 unjsonUsersForUpdate =
-  objectOf $ fieldBy "users" id "List of users" (arrayOf unjsonUserForUpdate)
+  objectOf $ fieldBy "users" identity "List of users" (arrayOf unjsonUserForUpdate)
 
-data UserGroupForUpdate = UserGroupForUpdate
-  { uguUserGroupID      :: Text
-  , uguUserGroupName    :: Text
-  , uguUserGroupNumber  :: Text
-  , uguUserGroupAddress :: Text
-  , uguUserGroupZip     :: Text
-  , uguUserGroupCity    :: Text
-  , uguUserGroupCountry :: Text
-  } deriving (Show)
+----------------------------------------
 
-defaultUserGroupForUpdate :: UserGroupForUpdate
-defaultUserGroupForUpdate = UserGroupForUpdate { uguUserGroupID      = ""
-                                               , uguUserGroupName    = ""
-                                               , uguUserGroupNumber  = ""
-                                               , uguUserGroupAddress = ""
-                                               , uguUserGroupZip     = ""
-                                               , uguUserGroupCity    = ""
-                                               , uguUserGroupCountry = ""
-                                               }
+defaultUserGroupForUpdate :: I.UserGroupForUpdate
+defaultUserGroupForUpdate = I.UserGroupForUpdate { id            = ""
+                                                 , entityName    = ""
+                                                 , companyNumber = ""
+                                                 , address       = ""
+                                                 , zipCode       = ""
+                                                 , city          = ""
+                                                 , country       = ""
+                                                 }
 
-unjsonUserGroupForUpdate :: UnjsonDef UserGroupForUpdate
+unjsonUserGroupForUpdate :: UnjsonDef I.UserGroupForUpdate
 unjsonUserGroupForUpdate =
   objectOf
     $    pure defaultUserGroupForUpdate
-    <*   fieldReadonly "id" uguUserGroupID "The company ID"
+    <*   fieldReadonly "id" (^. #id) "The company ID"
     <**> (    fieldBy "name"
-                      uguUserGroupName
+                      (^. #entityName)
                       "Company name"
                       (unjsonWithValidationOrEmptyText asValidCompanyName)
-         <**> (pure $ \cn cfu -> cfu { uguUserGroupName = cn })
+         <**> pure (#entityName .~)
          )
     <**> (    fieldBy "number"
-                      uguUserGroupNumber
+                      (^. #companyNumber)
                       "Company number"
                       (unjsonWithValidationOrEmptyText asValidCompanyNumber)
-         <**> (pure $ \cnum cfu -> cfu { uguUserGroupNumber = cnum })
+         <**> pure (#companyNumber .~)
          )
     <**> (    fieldBy "address"
-                      uguUserGroupAddress
+                      (^. #address)
                       "Company address"
                       (unjsonWithValidationOrEmptyText asValidAddress)
-         <**> (pure $ \ca cfu -> cfu { uguUserGroupAddress = ca })
+         <**> pure (#address .~)
          )
-    <**> (    field "zip" uguUserGroupZip "Company zip"
-         <**> (pure $ \cz cfu -> cfu { uguUserGroupZip = cz })
-         )
+    <**> (field "zip" (^. #zipCode) "Company zip" <**> pure (#zipCode .~))
     <**> (    fieldBy "city"
-                      uguUserGroupCity
+                      (^. #city)
                       "Company city"
                       (unjsonWithValidationOrEmptyText asValidCity)
-         <**> (pure $ \cci cfu -> cfu { uguUserGroupCity = cci })
+         <**> pure (#city .~)
          )
     <**> (    fieldBy "country"
-                      uguUserGroupCountry
+                      (^. #country)
                       "Company country"
                       (unjsonWithValidationOrEmptyText asValidCountry)
-         <**> (pure $ \cco cfu -> cfu { uguUserGroupCountry = cco })
+         <**> pure (#country .~)
          )
 
-unjsonUserGroupsForUpdate :: UnjsonDef [UserGroupForUpdate]
-unjsonUserGroupsForUpdate =
-  objectOf $ fieldBy "companies" id "List of companies" (arrayOf unjsonUserGroupForUpdate)
+unjsonUserGroupsForUpdate :: UnjsonDef [I.UserGroupForUpdate]
+unjsonUserGroupsForUpdate = objectOf
+  $ fieldBy "companies" identity "List of companies" (arrayOf unjsonUserGroupForUpdate)
 
 -- This is intended for PartnerAPI only. It uses inherited data and the caller
 -- does not know about UserGroups or inheritance
-userGroupToUserGroupForUpdate :: UserGroupWithParents -> UserGroupForUpdate
+userGroupToUserGroupForUpdate :: UserGroupWithParents -> I.UserGroupForUpdate
 userGroupToUserGroupForUpdate ugwp =
   let ug         = ugwpUG ugwp
       ug_address = ugwpAddress ugwp
-  in  UserGroupForUpdate { uguUserGroupID      = showt $ get ugID ug
-                         , uguUserGroupName    = get ugName ug
-                         , uguUserGroupNumber  = get ugaCompanyNumber ug_address
-                         , uguUserGroupAddress = get ugaAddress ug_address
-                         , uguUserGroupZip     = get ugaZip ug_address
-                         , uguUserGroupCity    = get ugaCity ug_address
-                         , uguUserGroupCountry = get ugaCountry ug_address
-                         }
+  in  I.UserGroupForUpdate { id            = showt $ ug ^. #id
+                           , entityName    = ug ^. #name
+                           , companyNumber = ug_address ^. #companyNumber
+                           , address       = ug_address ^. #address
+                           , zipCode       = ug_address ^. #zipCode
+                           , city          = ug_address ^. #city
+                           , country       = ug_address ^. #country
+                           }
 
 -- This is intended for PartnerAPI only. We compare the set values with
 -- inherited data and update only if there is any change.
 updateUserGroupWithUserGroupForUpdate
-  :: UserGroupWithParents -> UserGroupForUpdate -> UserGroup
-updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
+  :: UserGroupWithParents -> I.UserGroupForUpdate -> UserGroup
+updateUserGroupWithUserGroupForUpdate ugwp I.UserGroupForUpdate {..} =
   let ug          = ugwpUG ugwp
       old_address = ugwpAddress ugwp
-      new_address = UserGroupAddress { _ugaCompanyNumber = uguUserGroupNumber
-                                     , _ugaEntityName    = uguUserGroupName
-                                     , _ugaAddress       = uguUserGroupAddress
-                                     , _ugaZip           = uguUserGroupZip
-                                     , _ugaCity          = uguUserGroupCity
-                                     , _ugaCountry       = uguUserGroupCountry
-                                     }
+      new_address = I.UserGroupAddress { companyNumber = companyNumber
+                                       , entityName    = entityName
+                                       , address       = address
+                                       , zipCode       = zipCode
+                                       , city          = city
+                                       , country       = country
+                                       }
       -- don't stop inheriting address, unless it has been changed
       updateAddress = case new_address == old_address of
-        True  -> id
-        False -> set ugAddress $ Just new_address
-  in  set ugName uguUserGroupName . updateAddress $ ug
+        True  -> identity
+        False -> set #address $ Just new_address
+  in  set #name entityName . updateAddress $ ug
 
 -------------------------------------------------------------------------------
 -- Utils                                                                    ---

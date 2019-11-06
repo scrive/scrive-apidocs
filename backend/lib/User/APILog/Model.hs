@@ -168,7 +168,7 @@ unjsonCallLogItem =
 
 unjsonCallLogListForAPI :: UnjsonDef [CallLogItem]
 unjsonCallLogListForAPI =
-  objectOf $ fieldBy "call_logs" id "List of log items" (arrayOf unjsonCallLogItem)
+  objectOf $ fieldBy "call_logs" identity "List of log items" (arrayOf unjsonCallLogItem)
 
 selectCallLogItemSelectorsList :: [SQL]
 selectCallLogItemSelectorsList =

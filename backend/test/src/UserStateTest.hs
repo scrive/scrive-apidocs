@@ -159,7 +159,7 @@ test_addUser_repeatedEmailReturnsNothing = do
 
 test_userGroupGetUsers :: TestEnv ()
 test_userGroupGetUsers = do
-  ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
   users <- forM emails $ \email -> do
     Just user <- addNewUserToUserGroup "Emily" "Green" email ugid
@@ -201,7 +201,7 @@ test_userUsageStatisticsByCompany :: TestEnv ()
 test_userUsageStatisticsByCompany = do
   let email1 = "emily@green.com"
       email2 = "bob@gblue.com"
-  ugid       <- (get ugID) <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid       <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
   Just user1 <- addNewUserToUserGroup "Emily" "Green" email1 ugid
   Just user2 <- addNewUserToUserGroup "Bob" "Blue" email2 ugid
   doc0       <- addRandomDocument (rdaDefault user1) { rdaTypes    = OneOf [Signable]
@@ -267,7 +267,7 @@ test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
 
 test_userShareableLinkStatisticsByGroup :: TestEnv ()
 test_userShareableLinkStatisticsByGroup = do
-  ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
   Just user1 <- addNewUserToUserGroup "Emily" "Green" "emily@green.com" ugid
   Just user2 <- addNewUserToUserGroup "Bob" "Blue" "bob@gblue.com" ugid
   template <- addRandomDocumentWithAuthor' user1
@@ -291,7 +291,7 @@ test_userShareableLinkStatisticsByGroup = do
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
   Just User { userid } <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  ugid                 <- (get ugID) <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid                 <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
   res                  <- dbUpdate $ SetUserUserGroup userid ugid
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID userid

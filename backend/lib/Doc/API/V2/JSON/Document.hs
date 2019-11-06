@@ -176,7 +176,7 @@ unjsonSignatory da =
     $   pure
           (\m_is_signatory msignatoryrole fields mbTitleQs signorder msuccredirecturl mrejredirecturl mcsvupload deliverymethod authtoviewmethod authtoviewarchivedmethod authtosignmethod confirmationdeliverymethod notificationdeliverymethod allowshighlighting hidepn canforward sattachments ->
             let
-              (title, qs) = maybe defTitleQs id mbTitleQs
+              (title, qs) = maybe defTitleQs identity mbTitleQs
               link        = defaultSignatoryLink
               defTitleQs =
                 (signatorylinkconsenttitle link, signatorylinkconsentquestions link)

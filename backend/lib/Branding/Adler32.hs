@@ -24,14 +24,14 @@ import VersionTH
 brandingAdler32
   :: (MonadDB m, MonadThrow m) => Context -> Maybe (UserGroupID, UserGroupUI) -> m Text
 brandingAdler32 ctx mugidandui = do
-  ad1 <- domainAdler32 $ get ctxbrandeddomain ctx
+  ad1 <- domainAdler32 $ ctx ^. #brandedDomain
   ad2 <- maybe (return "") userGroupUIAdler32 mugidandui
   ad3 <- do
-    case getContextUser ctx of
+    case contextUser ctx of
       Nothing   -> return ""
       Just user -> do
         ug <- dbQuery . UserGroupGetByUserID . userid $ user
-        userGroupUIAdler32 (get ugID ug, get ugUI ug)
+        userGroupUIAdler32 (ug ^. #id, ug ^. #ui)
   return $ adler32Text $ T.concat $ [ad1, ad2, ad3, showt versionID]
 
 
@@ -43,34 +43,30 @@ domainAdler32 bd = do
   themesMD5 <-
     dbQuery
     $ GetThemesMD5
-    $ [ get bdMailTheme     bd
-      , get bdSignviewTheme bd
-      , get bdServiceTheme  bd
-      , get bdLoginTheme    bd
-      ]
+    $ [bd ^. #mailTheme, bd ^. #signviewTheme, bd ^. #serviceTheme, bd ^. #loginTheme]
   return
     $  adler32Text
     $  T.concat
-    $  [ showt (get bdid bd)
-       , imageAdler32 (get bdFavicon bd)
-       , get bdParticipantColor1 bd
-       , get bdParticipantColor2 bd
-       , get bdParticipantColor3 bd
-       , get bdParticipantColor4 bd
-       , get bdParticipantColor5 bd
-       , get bdParticipantColor6 bd
-       , get bdDraftColor        bd
-       , get bdCancelledColor    bd
-       , get bdInitatedColor     bd
-       , get bdSentColor         bd
-       , get bdDeliveredColor    bd
-       , get bdOpenedColor       bd
-       , get bdReviewedColor     bd
-       , get bdSignedColor       bd
-       , showt $ get bdMailTheme bd
-       , showt $ get bdSignviewTheme bd
-       , showt $ get bdServiceTheme bd
-       , showt $ get bdLoginTheme bd
+    $  [ showt (bd ^. #id)
+       , imageAdler32 (bd ^. #favicon)
+       , bd ^. #participantColor1
+       , bd ^. #participantColor2
+       , bd ^. #participantColor3
+       , bd ^. #participantColor4
+       , bd ^. #participantColor5
+       , bd ^. #participantColor6
+       , bd ^. #draftColor
+       , bd ^. #cancelledColor
+       , bd ^. #initatedColor
+       , bd ^. #sentColor
+       , bd ^. #deliveredColor
+       , bd ^. #openedColor
+       , bd ^. #reviewedColor
+       , bd ^. #signedColor
+       , showt $ bd ^. #mailTheme
+       , showt $ bd ^. #signviewTheme
+       , showt $ bd ^. #serviceTheme
+       , showt $ bd ^. #loginTheme
        ]
     <> themesMD5
 
@@ -80,16 +76,16 @@ userGroupUIAdler32 (ugid, ugui) = do
     dbQuery
     . GetThemesMD5
     . catMaybes
-    . fmap (\getter -> get getter ugui)
-    $ [uguiMailTheme, uguiSignviewTheme, uguiServiceTheme]
+    . fmap (ugui ^.)
+    $ [#mailTheme, #signviewTheme, #serviceTheme]
   return
     $  adler32Text
     $  T.concat
     $  [ showt ugid
-       , maybe "" imageAdler32 (get uguiFavicon ugui)
-       , showt (get uguiMailTheme ugui)
-       , showt (get uguiSignviewTheme ugui)
-       , showt (get uguiServiceTheme ugui)
+       , maybe "" imageAdler32 (ugui ^. #favicon)
+       , showt (ugui ^. #mailTheme)
+       , showt (ugui ^. #signviewTheme)
+       , showt (ugui)
        ]
     <> themesMD5
 

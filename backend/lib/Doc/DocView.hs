@@ -32,7 +32,6 @@ import AppView
   ( entryPointFields, simpleHtmlResponse, standardPageFields
   , userGroupUIForPage )
 
-import BrandedDomain.BrandedDomain
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
@@ -89,8 +88,8 @@ pageDocumentSignView ctx document siglink ad = do
   let loggedAsSignatory =
         (isJust $ maybesignatory siglink)
           && (maybesignatory siglink)
-          == (userid <$> getContextUser ctx)
-  let loggedAsAuthor = (Just authorid == (userid <$> getContextUser ctx))
+          == (userid <$> contextUser ctx)
+  let loggedAsAuthor = (Just authorid == (userid <$> contextUser ctx))
   let docjson = unjsonToByteStringLazy'
         (Options { pretty = False, indent = 0, nulls = True })
         (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document))
@@ -112,11 +111,8 @@ pageDocumentSignView ctx document siglink ad = do
         600
       _ -> show LinkPreviewLockedImage
     F.value "b64documentdata" $ B64.encode $ docjson
-    F.value "legaltext" $ get ugsLegalText . ugwpSettings $ authorugwp
-    standardPageFields
-      ctx
-      (Just (get ugID $ ugwpUG authorugwp, get ugUI $ ugwpUG authorugwp))
-      ad -- Branding for signview depends only on authors company
+    F.value "legaltext" $ ugwpSettings authorugwp ^. #legalText
+    standardPageFields ctx (Just (ugwpUG authorugwp ^. #id, ugwpUG authorugwp ^. #ui)) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text
@@ -129,11 +125,11 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "documentid" $ show $ documentid document
     F.value "siglinkid" $ show $ signatorylinkid siglink
     F.value "documenttitle" $ documenttitle document
-    F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> get ctxnetsconfig ctx
-    F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> get ctxnetsconfig ctx
-    F.value "netsTrustedDomain" $ netsTrustedDomain <$> get ctxnetsconfig ctx
+    F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctx ^. #netsConfig
+    F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #netsConfig
+    F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #netsConfig
     F.value "previewLink" $ show LinkPreviewLockedImage
-    standardPageFields ctx (Just (get ugID authorug, get ugUI authorug)) ad -- Branding for signview depends only on authors company
+    standardPageFields ctx (Just (authorug ^. #id, authorug ^. #ui)) ad -- Branding for signview depends only on authors company
 
 pageDocumentPadList :: Kontrakcja m => Context -> AnalyticsData -> m Text
 pageDocumentPadList ctx ad = do
@@ -200,7 +196,7 @@ gtVerificationPage :: Kontrakcja m => m Response
 gtVerificationPage = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  if (get (bdMainDomain . ctxbrandeddomain) ctx)
+  if ctx ^. #brandedDomain % #mainDomain
     then do
       content <- renderTextTemplate "gtVerificationPage" $ do
         standardPageFields ctx Nothing ad

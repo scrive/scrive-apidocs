@@ -282,7 +282,7 @@ unjsonCheckboxField =
           []
           (unsafeFromCheckboxField schfPlacements)
           "Placements"
-          (arrayOf (unjsonInvmapR validCheckboxPlacement id unsonFieldPlacement))
+          (arrayOf (unjsonInvmapR validCheckboxPlacement identity unsonFieldPlacement))
   where
     unsafeFromCheckboxField :: (SignatoryCheckboxField -> a) -> SignatoryField -> a
     unsafeFromCheckboxField f (SignatoryCheckboxField a) = f a
@@ -308,7 +308,7 @@ unjsonSignatureField =
                    []
                    (unsafeFromSignatureField ssfPlacements)
                    "Placements"
-                   (arrayOf (unjsonInvmapR return id unsonFieldPlacement))
+                   (arrayOf (unjsonInvmapR return identity unsonFieldPlacement))
   where
     unsafeFromSignatureField :: (SignatorySignatureField -> a) -> SignatoryField -> a
     unsafeFromSignatureField f (SignatorySignatureField a) = f a
@@ -330,7 +330,7 @@ unjsonRadioGroupField =
           []
           (unsafeFromRadioGroupField srgfPlacements)
           "Placements"
-          (arrayOf (unjsonInvmapR validRadiobuttonPlacement id unsonFieldPlacement))
+          (arrayOf (unjsonInvmapR validRadiobuttonPlacement identity unsonFieldPlacement))
     <*> field "values"
               (unsafeFromRadioGroupField srgfValues)
               "Possible values of radio buttons"

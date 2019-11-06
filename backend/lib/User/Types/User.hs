@@ -31,6 +31,7 @@ import User.Types.SignupMethod
 import User.UserID
 import UserGroup.Types
 import Util.HasSomeUserInfo
+import qualified DataRetentionPolicy.Internal as I
 
 data User = User
   { userid                        :: UserID
@@ -252,15 +253,15 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
     , usersettings           =
       UserSettings
         { lang                = lang
-        , dataretentionpolicy = DataRetentionPolicy
-                                  { _drpIdleDocTimeoutPreparation =
+        , dataretentionpolicy = I.DataRetentionPolicy
+                                  { idleDocTimeoutPreparation =
                                     idle_doc_timeout_preparation
-                                  , _drpIdleDocTimeoutClosed = idle_doc_timeout_closed
-                                  , _drpIdleDocTimeoutCanceled = idle_doc_timeout_canceled
-                                  , _drpIdleDocTimeoutTimedout = idle_doc_timeout_timedout
-                                  , _drpIdleDocTimeoutRejected = idle_doc_timeout_rejected
-                                  , _drpIdleDocTimeoutError = idle_doc_timeout_error
-                                  , _drpImmediateTrash = immediate_trash
+                                  , idleDocTimeoutClosed      = idle_doc_timeout_closed
+                                  , idleDocTimeoutCanceled    = idle_doc_timeout_canceled
+                                  , idleDocTimeoutTimedout    = idle_doc_timeout_timedout
+                                  , idleDocTimeoutRejected    = idle_doc_timeout_rejected
+                                  , idleDocTimeoutError       = idle_doc_timeout_error
+                                  , immediateTrash            = immediate_trash
                                   }
         }
     , userassociateddomainid = associated_domain_id
@@ -324,16 +325,16 @@ fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspe
       , usersettings           =
         UserSettings
           { lang                = lang
-          , dataretentionpolicy =
-            DataRetentionPolicy
-              { _drpIdleDocTimeoutPreparation = idle_doc_timeout_preparation
-              , _drpIdleDocTimeoutClosed      = idle_doc_timeout_closed
-              , _drpIdleDocTimeoutCanceled    = idle_doc_timeout_canceled
-              , _drpIdleDocTimeoutTimedout    = idle_doc_timeout_timedout
-              , _drpIdleDocTimeoutRejected    = idle_doc_timeout_rejected
-              , _drpIdleDocTimeoutError       = idle_doc_timeout_error
-              , _drpImmediateTrash            = immediate_trash
-              }
+          , dataretentionpolicy = I.DataRetentionPolicy
+                                    { idleDocTimeoutPreparation =
+                                      idle_doc_timeout_preparation
+                                    , idleDocTimeoutClosed = idle_doc_timeout_closed
+                                    , idleDocTimeoutCanceled = idle_doc_timeout_canceled
+                                    , idleDocTimeoutTimedout = idle_doc_timeout_timedout
+                                    , idleDocTimeoutRejected = idle_doc_timeout_rejected
+                                    , idleDocTimeoutError = idle_doc_timeout_error
+                                    , immediateTrash = immediate_trash
+                                    }
           }
       , userassociateddomainid = associated_domain_id
       , usergroupid            = ugid

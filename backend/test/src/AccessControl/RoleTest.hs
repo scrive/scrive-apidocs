@@ -26,9 +26,9 @@ testRolesNotInheritedInUserGroupTree = do
   (Just user) <- addNewUser "Lloyd" "Garmadon" "lloyd.garmadon@scrive.com"
   let uid = userid user
   (root_ug :: UserGroupRoot) <- rand 10 arbitrary
-  root_ugid <- (get ugID) <$> (dbUpdate . UserGroupCreate $ ugFromUGRoot root_ug)
+  root_ugid <- view #id <$> (dbUpdate . UserGroupCreate $ ugFromUGRoot root_ug)
   [_ug0, ug1] <- createChildGroups root_ugid
-  void $ dbUpdate $ SetUserGroup uid (Just $ get ugID ug1)
+  void $ dbUpdate $ SetUserGroup uid (Just $ ug1 ^. #id)
   -- user's group changed, need to re-retrieve the user
   (Just user') <- dbQuery $ GetUserByID uid
   let role_trg = UserGroupAdminAR root_ugid
@@ -49,7 +49,6 @@ testRolesNotInheritedInUserGroupTree = do
     createChildGroups root_ugid' = do
       ugrand0 <- rand 10 arbitrary
       ugrand1 <- rand 10 arbitrary
-      ug0 <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just root_ugid') $ ugrand0
-      ug1     <-
-        dbUpdate . UserGroupCreate . set ugParentGroupID (Just (get ugID ug0)) $ ugrand1
+      ug0     <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just root_ugid') ugrand0
+      ug1 <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just (ug0 ^. #id)) ugrand1
       return $ [ug0, ug1]

@@ -11,16 +11,13 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 
-import BrandedDomain.BrandedDomain
 import Company.CompanyControl
-import Context
 import DB
 import TestingUtil
 import TestKontra as T
 import Theme.Model
 import User.Lang (defaultLang)
 import UserGroup.Model
-import UserGroup.Types
 import Util.MonadUtils
 
 companyControlTests :: TestEnvSt -> Test
@@ -40,9 +37,9 @@ test_handleGetCompanyJSON :: TestEnv ()
 test_handleGetCompanyJSON = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  let ugui = get ugUI ug
+  let ugui = ug ^. #ui
 
-  ctx              <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx              <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req              <- mkRequest GET []
   (avalue, _ctx')  <- runTestKontra req ctx $ handleGetCompanyBranding Nothing
@@ -59,25 +56,25 @@ test_handleGetCompanyJSON = do
     $ fromJSValueField "smsOriginator"
   (jsonFavicon :: Maybe String) <- withJSValue jsv $ fromJSValueField "favicon"
 
-  assertEqual "JSON companyid matches company id" (show $ get ugID ug) (jsonCompanyid)
+  assertEqual "JSON companyid matches company id" (show $ ug ^. #id) (jsonCompanyid)
   assertEqual "JSON companyMailTheme matches companyMailTheme"
-              (show <$> (get uguiMailTheme ugui))
+              (show <$> ugui ^. #mailTheme)
               (jsonMailTheme)
   assertEqual "JSON companySignviewTheme matches companySignviewTheme"
-              (show <$> (get uguiSignviewTheme ugui))
+              (show <$> ugui ^. #signviewTheme)
               (jsonSignviewTheme)
   assertEqual "JSON companyServiceTheme matches companyServiceTheme"
-              (show <$> (get uguiServiceTheme ugui))
+              (show <$> ugui ^. #serviceTheme)
               (jsonServiceTheme)
   assertEqual "JSON browserTitle matches browserTitle"
-              (T.unpack <$> get uguiBrowserTitle ugui)
+              (T.unpack <$> ugui ^. #browserTitle)
               (jsonBrowserTitle)
   assertEqual "JSON smsOriginator matches SmsOriginator"
-              (T.unpack <$> get uguiSmsOriginator ugui)
+              (T.unpack <$> ugui ^. #smsOriginator)
               (jsonSmsOriginator)
   assertEqual
     "JSON favicon matches favicon"
-    (get uguiFavicon ugui)
+    (ugui ^. #favicon)
     (   B64.decodeLenient
     <$> BS.fromString
     <$> drop 1
@@ -92,19 +89,16 @@ test_settingUIWithHandleChangeCompanyBranding = do
 
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   -- Try setting new themes
-  mailThemeFromDomain <- dbQuery $ GetTheme (get (bdMailTheme . ctxbrandeddomain) ctx)
-  mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (get ugID ug) mailThemeFromDomain
-  signviewThemeFromDomain <- dbQuery
-    $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
+  mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
+  mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailThemeFromDomain
+  signviewThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #signviewTheme)
   signviewTheme <- dbUpdate
-    $ InsertNewThemeForUserGroup (get ugID ug) signviewThemeFromDomain
-  serviceThemeFromDomain <- dbQuery
-    $ GetTheme (get (bdServiceTheme . ctxbrandeddomain) ctx)
-  serviceTheme <- dbUpdate
-    $ InsertNewThemeForUserGroup (get ugID ug) serviceThemeFromDomain
+    $ InsertNewThemeForUserGroup (ug ^. #id) signviewThemeFromDomain
+  serviceThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #serviceTheme)
+  serviceTheme <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) serviceThemeFromDomain
   let browserTitle  = "Super"
   let smsOriginator = "Super SMS"
   let favicon = "-almoust-binary-data-aaa-000000000-"
@@ -120,7 +114,7 @@ test_settingUIWithHandleChangeCompanyBranding = do
     [ ( "companyui"
       , inText
       $  "{\"companyid\":\""
-      <> showt (get ugID ug)
+      <> showt (ug ^. #id)
       <> "\",\"mailTheme\":\""
       <> showt (themeID mailTheme)
       <> "\",\"signviewTheme\":\""
@@ -182,24 +176,24 @@ test_settingUIWithHandleChangeCompanyBranding = do
     [ ( "companyui"
       , inText
       $ "{\"companyid\":\""
-      <> showt (get ugID ug)
+      <> showt (ug ^. #id)
       <> "\",\"mailTheme\":null,\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
   (_, _) <- runTestKontra req3 ctx $ handleChangeCompanyBranding Nothing
-  let ugui = get ugUI ug
-  assertEqual "CompanyMailTheme  is empty"     (get uguiMailTheme ugui)     (Nothing)
-  assertEqual "CompanySignviewTheme  is empty" (get uguiSignviewTheme ugui) (Nothing)
-  assertEqual "CompanyServiceTheme  is empty"  (get uguiServiceTheme ugui)  (Nothing)
-  assertEqual "BrowserTitle is empty"          (get uguiBrowserTitle ugui)  (Nothing)
-  assertEqual "SmsOriginator is empty"         (get uguiSmsOriginator ugui) (Nothing)
-  assertEqual "Favicon is empty"               (get uguiFavicon ugui)       (Nothing)
+  let ugui = ug ^. #ui
+  assertEqual "CompanyMailTheme  is empty"     (ugui ^. #mailTheme)     (Nothing)
+  assertEqual "CompanySignviewTheme  is empty" (ugui ^. #signviewTheme) (Nothing)
+  assertEqual "CompanyServiceTheme  is empty"  (ugui ^. #serviceTheme)  (Nothing)
+  assertEqual "BrowserTitle is empty"          (ugui ^. #browserTitle)  (Nothing)
+  assertEqual "SmsOriginator is empty"         (ugui ^. #smsOriginator) (Nothing)
+  assertEqual "Favicon is empty"               (ugui ^. #favicon)       (Nothing)
 
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   --Test we can't set mailTheme to domain theme
   req1       <- mkRequest
@@ -207,23 +201,23 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
     [ ( "companyui"
       , inText
       $  "{\"companyid\":\""
-      <> showt (get ugID ug)
+      <> showt (ug ^. #id)
       <> "\",\"mailTheme\":\""
-      <> showt (get (bdMailTheme . ctxbrandeddomain) ctx)
+      <> showt (ctx ^. #brandedDomain % #mailTheme)
       <> "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
   (_, _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
 
-  ug'    <- (dbQuery $ UserGroupGet (get ugID ug))
+  ug'    <- (dbQuery $ UserGroupGet (ug ^. #id))
   assertEqual "Can't set domain theme as company theme"
-              (get (uguiMailTheme . ugUI) <$> ug')
-              (Just $ get (uguiMailTheme . ugUI) ug)
+              (view (#ui % #mailTheme) <$> ug')
+              (Just $ ug ^. #ui % #mailTheme)
 
   -- Create theme for other company
   (_, otherUg) <- addNewAdminUserAndUserGroup "Other" "Guy" "other_guy@skrivapa.se"
-  someTheme    <- dbQuery $ GetTheme (get (bdMailTheme . ctxbrandeddomain) ctx)
-  otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (get ugID otherUg) someTheme
+  someTheme    <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
+  otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (otherUg ^. #id) someTheme
 
   --Test we can't set mailTheme to other company theme
   req2         <- mkRequest
@@ -232,14 +226,14 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
       , inText
       $  T.pack
       $  "{\"companyid\":\""
-      <> show (get ugID ug)
+      <> show (ug ^. #id)
       <> "\",\"mailTheme\":\""
       <> show (themeID otherUgTheme)
       <> "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
   (_, _) <- runTestKontra req2 ctx $ handleChangeCompanyBranding Nothing
-  ugui2  <- (get ugUI <$>) <$> (dbQuery $ UserGroupGet (get ugID ug))
+  ugui2  <- (view #ui <$>) <$> (dbQuery $ UserGroupGet (ug ^. #id))
   assertEqual "Can't set other company theme as company theme"
-              (get uguiMailTheme <$> ugui2)
+              (view #mailTheme <$> ugui2)
               (Just Nothing)

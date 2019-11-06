@@ -73,7 +73,7 @@ handleAuthRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleAuthRequest did slid = do
   CgiGrpConfig {..} <- do
     ctx <- getContext
-    case get ctxcgigrpconfig ctx of
+    case ctx ^. #cgiGrpConfig of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
   (doc, _)              <- getDocumentAndSignatoryForEIDAuth did slid
@@ -120,7 +120,7 @@ handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest _did slid = do
   CgiGrpConfig {..} <- do
     ctx <- getContext
-    case get ctxcgigrpconfig ctx of
+    case ctx ^. #cgiGrpConfig of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
   (doc, _)              <- getDocumentAndSignatoryForEIDSign slid
@@ -275,14 +275,14 @@ checkCGISignStatus CgiGrpConfig {..} did slid = do
     just_lookup name = fromMaybe (missing name) . lookup name
 
     invalid_b64 txt = unexpectedError $ "invalid base64:" <+> txt
-    mk_binary txt = either (invalid_b64 txt) id . B64.decode . TE.encodeUtf8 $ txt
+    mk_binary txt = either (invalid_b64 txt) identity . B64.decode . TE.encodeUtf8 $ txt
 
 checkCGIAuthStatus
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
 checkCGIAuthStatus did slid = do
   CgiGrpConfig {..} <- do
     ctx <- getContext
-    case get ctxcgigrpconfig ctx of
+    case ctx ^. #cgiGrpConfig of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
   (doc, sl)             <- getDocumentAndSignatoryForEIDAuth did slid
@@ -291,7 +291,7 @@ checkCGIAuthStatus did slid = do
   mcgiTransaction       <- dbQuery (GetCgiGrpTransaction CgiGrpAuth slid)
   case mcgiTransaction of
     Nothing -> do
-      sesid   <- get ctxsessionid <$> getContext
+      sesid   <- view #sessionID <$> getContext
       success <- isJust <$> (dbQuery $ GetEAuthentication (mkAuthKind doc) sesid slid)
       if (success) then return $ Right Complete else return $ Left ExpiredTransaction
     Just cgiTransaction -> do
@@ -379,18 +379,18 @@ checkCGIAuthStatus did slid = do
     just_lookup name = fromMaybe (missing name) . lookup name
 
     invalid_b64 txt = unexpectedError $ "invalid base64:" <+> txt
-    mk_binary txt = either (invalid_b64 txt) id . B64.decode . TE.encodeUtf8 $ txt
+    mk_binary txt = either (invalid_b64 txt) identity . B64.decode . TE.encodeUtf8 $ txt
 
 ----------------------------------------
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
-getCompanyDisplayName doc = (get ugsCGIDisplayName . ugwpSettings)
-  <$> dbQuery (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
+getCompanyDisplayName doc = view #cgiDisplayName . ugwpSettings <$> dbQuery
+  (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
   where author = fromJust $ getSigLinkFor signatoryisauthor doc
 
 getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
-getCompanyServiceID doc = (get ugsCGIServiceID . ugwpSettings)
-  <$> dbQuery (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
+getCompanyServiceID doc = view #cgiServiceID . ugwpSettings <$> dbQuery
+  (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
   where author = fromJust $ getSigLinkFor signatoryisauthor doc
 
 -- | Generate text to be signed that represents contents of the document.

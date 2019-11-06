@@ -33,7 +33,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , "  FROM information_schema.key_column_usage"
       , " WHERE constraint_name IN (SELECT name FROM file_constraints)"
       ]
-    refs :: [(Text, Text)] <- fetchMany id
+    refs :: [(Text, Text)] <- fetchMany identity
     let expected_refs =
           [ ("attachments"          , "file_id")
           , ("author_attachments"   , "file_id")
@@ -150,7 +150,7 @@ filePurgingConsumer pool maxJobs = ConsumerConfig
   { ccJobsTable           = tblName tableFilePurgeJobs
   , ccConsumersTable      = tblName tableFilePurgeConsumers
   , ccJobSelectors        = ["id", "attempts"]
-  , ccJobFetcher          = id
+  , ccJobFetcher          = identity
   , ccJobIndex            = fst
   , ccNotificationChannel = Nothing
   -- The amount of queued jobs in the table can have large spikes that sit there

@@ -25,7 +25,6 @@ import Data.Time.Clock (addUTCTime, diffUTCTime)
 import Happstack.Server hiding (Session)
 import Log
 
-import Context
 import DB
 import KontraMonad
 import Log.Identifier
@@ -44,8 +43,8 @@ import Utils.HTTP
 -- timeout set in the user's group
 getSessionTimeoutSecs :: forall  m . (MonadDB m, MonadThrow m) => UserID -> m Int32
 getSessionTimeoutSecs userId = do
-  userGroup :: UserGroupWithParents <- dbQuery $ UserGroupGetWithParentsByUserID userId
-  let mSessionTimeout :: Maybe Int32 = get ugsSessionTimeoutSecs $ ugwpSettings userGroup
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID userId
+  let mSessionTimeout = ugwpSettings ugwp ^. #sessionTimeoutSecs
   return $ fromMaybe defaultSessionTimeoutSecs mSessionTimeout
 
 -- Get the session expiry delay from a user associated with a
@@ -83,11 +82,11 @@ getNonTempSessionID
   :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m)
   => m SessionID
 getNonTempSessionID = do
-  sid <- get ctxsessionid <$> getContext
+  sid <- view #sessionID <$> getContext
   if sid == SessionID.tempSessionID
     then do
       new_sid <- sesID <$> insertEmptySession
-      modifyContext $ set ctxsessionid new_sid
+      modifyContext $ set #sessionID new_sid
       return new_sid
     else return sid
   where

@@ -160,7 +160,7 @@ class ToAPIResponse a where
   toAPIResponse :: a -> Response
 
 instance ToAPIResponse Response where
-  toAPIResponse = id
+  toAPIResponse = identity
 
 instance ToAPIResponse JSValue where
   -- It used to have to be text/plain because an ancient version of IE that
@@ -328,13 +328,13 @@ getAPIUserWithPad priv = do
 getSessionUser :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUser = do
   ctx <- getContext
-  case get ctxmaybeuser ctx of
+  case ctx ^. #maybeUser of
     Nothing   -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)
 
 getSessionUserWithPad :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUserWithPad = do
   ctx <- getContext
-  case getContextUser ctx of
+  case contextUser ctx of
     Nothing   -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)

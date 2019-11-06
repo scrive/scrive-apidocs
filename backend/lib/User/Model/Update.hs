@@ -25,7 +25,6 @@ import Log
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
-import DataRetentionPolicy
 import DB
 import Doc.DocStateData (DocumentStatus(..))
 import Doc.Types.Document (DocumentSharing(..), DocumentType(..))
@@ -237,7 +236,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
   update (SetUserUserGroup uid ugid) = dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return False
     Just ug -> runQuery01 $ sqlUpdate "users" $ do
-      sqlSet "user_group_id" . get ugID $ ug
+      sqlSet "user_group_id" $ ug ^. #id
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
@@ -336,13 +335,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
     runQuery01 . sqlUpdate "users" $ do
       let drp = dataretentionpolicy us
       sqlSet "lang" $ getLang us
-      sqlSet "idle_doc_timeout_preparation" $ get drpIdleDocTimeoutPreparation drp
-      sqlSet "idle_doc_timeout_closed" $ get drpIdleDocTimeoutClosed drp
-      sqlSet "idle_doc_timeout_canceled" $ get drpIdleDocTimeoutCanceled drp
-      sqlSet "idle_doc_timeout_timedout" $ get drpIdleDocTimeoutTimedout drp
-      sqlSet "idle_doc_timeout_rejected" $ get drpIdleDocTimeoutRejected drp
-      sqlSet "idle_doc_timeout_error" $ get drpIdleDocTimeoutError drp
-      sqlSet "immediate_trash" $ get drpImmediateTrash drp
+      sqlSet "idle_doc_timeout_preparation" $ drp ^. #idleDocTimeoutPreparation
+      sqlSet "idle_doc_timeout_closed" $ drp ^. #idleDocTimeoutClosed
+      sqlSet "idle_doc_timeout_canceled" $ drp ^. #idleDocTimeoutCanceled
+      sqlSet "idle_doc_timeout_timedout" $ drp ^. #idleDocTimeoutTimedout
+      sqlSet "idle_doc_timeout_rejected" $ drp ^. #idleDocTimeoutRejected
+      sqlSet "idle_doc_timeout_error" $ drp ^. #idleDocTimeoutError
+      sqlSet "immediate_trash" $ drp ^. #immediateTrash
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

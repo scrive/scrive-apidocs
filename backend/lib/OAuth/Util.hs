@@ -215,4 +215,4 @@ getMaybeAPIUserWithAnyPrivileges :: Kontrakcja m => m (Maybe User)
 getMaybeAPIUserWithAnyPrivileges = getOAuthUser allPrivileges >>= \case
   Just (Left  _        ) -> return Nothing
   Just (Right (user, _)) -> return $ Just user
-  Nothing                -> get ctxmaybeuser <$> getContext
+  Nothing                -> view #maybeUser <$> getContext

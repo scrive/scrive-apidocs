@@ -24,7 +24,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import API.V2
 import API.V2.Parameters
-import BrandedDomain.BrandedDomain
 import DB
 import Doc.Action
 import Doc.API.V2.Calls.SignatoryCallsUtils
@@ -314,11 +313,11 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         doclang <- getLang <$> theDocument
         dbUpdate $ CleanAllScheduledDocumentSigning slid
         dbUpdate $ ScheduleDocumentSigning slid
-                                           (get (bdid . ctxbrandeddomain) ctx)
-                                           (get ctxtime ctx)
-                                           (get ctxipnumber ctx)
-                                           (get ctxclienttime ctx)
-                                           (get ctxclientname ctx)
+                                           (ctx ^. #brandedDomain % #id)
+                                           (ctx ^. #time)
+                                           (ctx ^. #ipAddr)
+                                           (ctx ^. #clientTime)
+                                           (ctx ^. #clientName)
                                            doclang
                                            fields
                                            acceptedAttachments

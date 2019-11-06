@@ -71,7 +71,7 @@ testPartnerCompanyCreate = do
 
   -- Random  user shouldn't be able to create company
   randomUser      <- addNewRandomUser
-  randomCtx       <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx       <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
   randomReq       <- mkRequestWithHeaders POST [] []
   (randomRes1, _) <-
     runTestKontra randomReq randomCtx
@@ -91,12 +91,12 @@ testPartnerCompanyCreate = do
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
 
   -- Test role combinations; use the first user and partner structure generated.
-  let (Just uid) = userid <$> get ctxmaybeuser ctx1
+  let (Just uid) = userid <$> ctx1 ^. #maybeUser
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr') ctx1)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr') ctx1)
                                 POST
                                 (partnerApiCallV1CompanyCreate $ fromUserGroupID pid1)
                                 rq_newCompany_params
@@ -106,7 +106,7 @@ testPartnerCompanyCreate = do
   void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid pid1
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr'') ctx1)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr'') ctx1)
                                 POST
                                 (partnerApiCallV1CompanyCreate $ fromUserGroupID pid1)
                                 rq_newCompany_params
@@ -115,7 +115,7 @@ testPartnerCompanyCreate = do
   -- 3) not a partner admin, nor a company admin; should fail
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr''') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr''') ctx1)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr''') ctx1)
                                 POST
                                 (partnerApiCallV1CompanyCreate $ fromUserGroupID pid1)
                                 rq_newCompany_params
@@ -142,7 +142,7 @@ testPartnerCompanyUpdate = do
 
   -- Random user shouldn't be able to update
   randomUser     <- addNewRandomUser
-  randomCtx      <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
   randomReq      <- mkRequestWithHeaders POST [("json", inTextBS companyUpdateJSON)] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
     $ partnerApiCallV1CompanyUpdate (fromUserGroupID pid) cid
@@ -162,13 +162,13 @@ testPartnerCompanyUpdate = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uid) = userid <$> get ctxmaybeuser ctx
+  let (Just uid) = userid <$> ctx ^. #maybeUser
 
   -- 1) user is a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr') ctx)
+    (set #maybeUser (Just usr') ctx)
     POST
     (partnerApiCallV1CompanyUpdate (fromUserGroupID pid) cid)
     rq_companyUpdate_params
@@ -179,7 +179,7 @@ testPartnerCompanyUpdate = do
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr'') ctx)
+    (set #maybeUser (Just usr'') ctx)
     POST
     (partnerApiCallV1CompanyUpdate (fromUserGroupID pid) cid)
     rq_companyUpdate_params
@@ -189,7 +189,7 @@ testPartnerCompanyUpdate = do
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr''') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr''') ctx)
+    (set #maybeUser (Just usr''') ctx)
     POST
     (partnerApiCallV1CompanyUpdate (fromUserGroupID pid) cid)
     []
@@ -251,7 +251,7 @@ testPartnerCompanyGet = do
 
   -- Random user shouldn't be able to update
   randomUser     <- addNewRandomUser
-  randomCtx      <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
   randomReq      <- mkRequestWithHeaders POST [] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
     $ partnerApiCallV1CompanyGet (fromUserGroupID pid) cid
@@ -271,12 +271,12 @@ testPartnerCompanyGet = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uid) = userid <$> get ctxmaybeuser ctx
+  let (Just uid) = userid <$> ctx ^. #maybeUser
 
   -- 1) user is a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr') ctx)
                                 POST
                                 (partnerApiCallV1CompanyGet (fromUserGroupID pid) cid)
                                 []
@@ -286,7 +286,7 @@ testPartnerCompanyGet = do
   void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid pid
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr'') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr'') ctx)
                                 POST
                                 (partnerApiCallV1CompanyGet (fromUserGroupID pid) cid)
                                 []
@@ -295,7 +295,7 @@ testPartnerCompanyGet = do
   -- 3) not a partner admin, nor a company admin; should fail
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr''') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr''') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr''') ctx)
                                 POST
                                 (partnerApiCallV1CompanyGet (fromUserGroupID pid) cid)
                                 []
@@ -333,19 +333,19 @@ testPartnerCompaniesGet = do
   randomUser     <- addNewRandomUser
 
   -- random user is denied listing companies of partnerA
-  randomCtx      <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
   randomReq      <- mkRequestWithHeaders POST [] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
     $ partnerApiCallV1CompaniesGet (fromUserGroupID pidA)
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
 
   -- Test role combinations; use the first user and partner structure generated.
-  let (Just uid) = userid <$> get ctxmaybeuser ctxA
+  let (Just uid) = userid <$> ctxA ^. #maybeUser
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr') ctxA)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr') ctxA)
                                 POST
                                 (partnerApiCallV1CompaniesGet (fromUserGroupID pidA))
                                 []
@@ -355,7 +355,7 @@ testPartnerCompaniesGet = do
   void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid pidA
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr'') ctxA)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr'') ctxA)
                                 POST
                                 (partnerApiCallV1CompaniesGet (fromUserGroupID pidA))
                                 []
@@ -364,7 +364,7 @@ testPartnerCompaniesGet = do
   -- 3) not a partner admin, nor a company admin; should fail
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr''') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr''') ctxA)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr''') ctxA)
                                 POST
                                 (partnerApiCallV1CompaniesGet (fromUserGroupID pidA))
                                 []
@@ -413,7 +413,7 @@ testPartnerCompanyUserNew = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uid) = userid <$> get ctxmaybeuser ctx
+  let (Just uid) = userid <$> ctx ^. #maybeUser
   -- cannot reuse old user email
   newUserGoodJSON' <- readTestFile
     "json/partner_api_v1/param-partnerCompanyUserNew-good3.json"
@@ -422,7 +422,7 @@ testPartnerCompanyUserNew = do
   -- 1) user is a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr') ctx)
                                 POST
                                 (partnerApiCallV1UserCreate (fromUserGroupID pid) cid)
                                 rq_newUserGood_params'
@@ -436,7 +436,7 @@ testPartnerCompanyUserNew = do
   void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid pid
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr'') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr'') ctx)
                                 POST
                                 (partnerApiCallV1UserCreate (fromUserGroupID pid) cid)
                                 rq_newUserGood_params''
@@ -449,7 +449,7 @@ testPartnerCompanyUserNew = do
   -- 3) not a partner admin, nor a company admin; should fail
   void . dbUpdate $ SetUserCompanyAdmin uid False
   (Just usr''') <- dbQuery . GetUserByID $ uid
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr''') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr''') ctx)
                                 POST
                                 (partnerApiCallV1UserCreate (fromUserGroupID pid) cid)
                                 rq_newUserGood_params'''
@@ -484,12 +484,12 @@ testPartnerUserUpdate = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
 
   -- 1) user is a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr') <- dbQuery . GetUserByID $ uidAdmin
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr') ctx)
                                 POST
                                 (partnerApiCallV1UserUpdate (fromUserGroupID pid) uid)
                                 rq_updateUser_params
@@ -499,7 +499,7 @@ testPartnerUserUpdate = do
   void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uidAdmin pid
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr'') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr'') ctx)
                                 POST
                                 (partnerApiCallV1UserUpdate (fromUserGroupID pid) uid)
                                 rq_updateUser_params
@@ -508,7 +508,7 @@ testPartnerUserUpdate = do
   -- 3) not a partner admin, nor a company admin; should fail
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr''') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr''') ctx)
                                 POST
                                 (partnerApiCallV1UserUpdate (fromUserGroupID pid) uid)
                                 rq_updateUser_params
@@ -620,12 +620,12 @@ testPartnerUserGet = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr') <- dbQuery . GetUserByID $ uidAdmin
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr') ctx)
                                 POST
                                 (partnerApiCallV1UserGet (fromUserGroupID pid) uid)
                                 []
@@ -635,7 +635,7 @@ testPartnerUserGet = do
   void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uidAdmin pid
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr'') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr'') ctx)
                                 POST
                                 (partnerApiCallV1UserGet (fromUserGroupID pid) uid)
                                 []
@@ -644,7 +644,7 @@ testPartnerUserGet = do
   -- 3) not a partner admin, nor a company admin; should fail
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
-  void $ runApiJSONTestNoResChk (set ctxmaybeuser (Just usr''') ctx)
+  void $ runApiJSONTestNoResChk (set #maybeUser (Just usr''') ctx)
                                 POST
                                 (partnerApiCallV1UserGet (fromUserGroupID pid) uid)
                                 []
@@ -673,13 +673,13 @@ testPartnerCompanyUsersGet = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr') ctx)
+    (set #maybeUser (Just usr') ctx)
     POST
     (partnerApiCallV1CompanyUsersGet (fromUserGroupID pid) cid)
     []
@@ -690,7 +690,7 @@ testPartnerCompanyUsersGet = do
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr'') ctx)
+    (set #maybeUser (Just usr'') ctx)
     POST
     (partnerApiCallV1CompanyUsersGet (fromUserGroupID pid) cid)
     []
@@ -700,7 +700,7 @@ testPartnerCompanyUsersGet = do
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr''') ctx)
+    (set #maybeUser (Just usr''') ctx)
     POST
     (partnerApiCallV1CompanyUsersGet (fromUserGroupID pid) cid)
     []
@@ -751,13 +751,13 @@ testPartnersUserGetTokens = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr') ctx)
+    (set #maybeUser (Just usr') ctx)
     GET
     (partnerApiCallV1UserGetPersonalToken (fromUserGroupID pid) uid)
     []
@@ -768,7 +768,7 @@ testPartnersUserGetTokens = do
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr'') ctx)
+    (set #maybeUser (Just usr'') ctx)
     POST
     (partnerApiCallV1UserGetPersonalToken (fromUserGroupID pid) uid)
     []
@@ -778,7 +778,7 @@ testPartnersUserGetTokens = do
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
   (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
-    (set ctxmaybeuser (Just usr''') ctx)
+    (set #maybeUser (Just usr''') ctx)
     POST
     (partnerApiCallV1UserGetPersonalToken (fromUserGroupID pid) uid)
     []
@@ -843,8 +843,8 @@ testHelperPartnerCompanyUserCreate ctx pid company_ugid = do
 testJSONCtxWithPartnerGroupID :: TestEnv (Context, UserGroupID)
 testJSONCtxWithPartnerGroupID = do
   (partnerAdminUser, partnerAdminUserGroup) <- addNewRandomPartnerUser
-  ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext defaultLang
-  return (ctx, get ugID partnerAdminUserGroup)
+  ctx <- (set #maybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
+  return (ctx, partnerAdminUserGroup ^. #id)
 
 runApiJSONTest
   :: Context             -- ^ Context to run the test in

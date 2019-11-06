@@ -36,6 +36,7 @@ import Log.Identifier
 import OAuth.Model
 import Routing
 import User.Model
+import qualified Folder.Internal as I
 
 folderAPIRoutes :: Route (Kontra Response)
 folderAPIRoutes = dir "api" $ choice [dir "frontend" $ folderAPI, dir "v2" $ folderAPI]
@@ -55,7 +56,7 @@ folderAPICreate = api $ do
   fdrIn <- case updateFolderWithFolderFromRequest defaultFolder fdru of
     Nothing            -> apiError $ requestFailed "Error parsing folder create object."
     Just folderUpdated -> return folderUpdated
-  fdrOut <- case get folderParentID fdrIn of
+  fdrOut <- case fdrIn ^. #parentID of
     Nothing -> do
       -- guard against non-admins being able to create root folders
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
@@ -97,7 +98,7 @@ folderAPIGet fid = api $ do
       -- we retrieve only the immediate children, as in the user group API.
       fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
       let fdrwc =
-            FolderWithChildren fdr $ map (\c -> FolderWithChildren c []) fdrChildren
+            I.FolderWithChildren fdr $ map (\c -> I.FolderWithChildren c []) fdrChildren
       return . Ok $ encodeFolderWithChildren fdrwc
 
 folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
@@ -110,8 +111,8 @@ folderAPIUpdate fid = api $ do
       fdrNew  <- case updateFolderWithFolderFromRequest fdrDB fdrfuin of
         Nothing -> apiError $ requestFailed "Error parsing folder update object."
         Just folderUpdated -> return folderUpdated
-      let mtoParentID   = get folderParentID fdrNew
-          mfromParentID = get folderParentID fdrDB
+      let mtoParentID   = fdrNew ^. #parentID
+          mfromParentID = fdrDB ^. #parentID
           accParents    = if (mfromParentID == mtoParentID)
                           -- child is remaining in same place. no special privileges needed
             then []
@@ -136,7 +137,7 @@ folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
   apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
     fdr <- folderOrAPIError fid
-    let isRootFolder = isNothing . _folderParentID $ fdr
+    let isRootFolder = isNothing $ fdr ^. #parentID
     when isRootFolder
       $
       -- cf. `userGroupApiV2Delete`

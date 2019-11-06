@@ -160,10 +160,7 @@ apiCallV1CreateFromFile = api $ do
       title <- renderTextTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
       return
         ( Nothing
-        , T.replace "  " " "
-        $  title
-        <> " "
-        <> (T.pack $ formatTimeSimple (get ctxtime ctx))
+        , T.replace "  " " " $ title <> " " <> (T.pack $ formatTimeSimple (ctx ^. #time))
         )
     Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
@@ -175,7 +172,7 @@ apiCallV1CreateFromFile = api $ do
       -- This is some kind of Salesforce hack that was supposed to be
       -- dropped with Happstack 7.0.4. It seems to be used till now
       -- for example by Avis.
-      let content' = either (const content1') id (B64.decode content1')
+      let content' = either (const content1') identity (B64.decode content1')
 
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
       fileid'    <- saveNewFile (T.pack filename) pdfcontent
@@ -216,7 +213,7 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
     $ serverError "Template is deleted"
   (apiGuardJustM
       (serverError "Can't clone given document")
-      (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=
+      (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor identity) >>=
     )
     $ flip withDocumentID
     $ do
@@ -233,7 +230,7 @@ apiCallV1Clone did = logDocument did . api $ do
   doc              <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc, user)
     then do
-      mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor id
+      mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor identity
       when (isNothing mndid) $ throwM . SomeDBExtraException $ serverError
         "Can't clone given document"
       newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mndid
@@ -398,7 +395,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
 
     hasAccess :: Kontrakcja m => Document -> FileID -> m Bool
     hasAccess doc fid = do
-      user <- fromJust <$> get ctxmaybeuser <$> getContext
+      user <- fromJust <$> view #maybeUser <$> getContext
       if (fid `elem` (authorattachmentfileid <$> documentauthorattachments doc))
         then return True
         else do
@@ -491,7 +488,7 @@ apiCallV1Ready did = logDocument did . api $ do
                  whenM (isNothing . documentfile <$> theDocument) $ do
                    throwM . SomeDBExtraException $ serverError
                      "File must be provided before document can be made ready."
-                 t        <- get ctxtime <$> getContext
+                 t        <- view #time <$> getContext
                  timezone <- documenttimezonename <$> theDocument
                  dbUpdate $ PreparationToPending actor timezone
                  dbUpdate $ SetDocumentInviteTime t actor
@@ -983,7 +980,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
       Nothing -> return Nothing
       Just n  -> do
         tot <- documenttimeouttime <$> theDocument
-        if n < 1 || (isJust tot && n `daysAfter` (get ctxtime ctx) > fromJust tot)
+        if n < 1 || (isJust tot && n `daysAfter` (ctx ^. #time) > fromJust tot)
           then
             throwM
             . SomeDBExtraException
@@ -1402,7 +1399,7 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
 apiCallV1Get :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Get did = logDocument did . api $ do
   (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
-  sid   <- get ctxsessionid <$> getContext
+  sid   <- view #sessionID <$> getContext
   check <- maybe (return False) (dbQuery . CheckDocumentSession sid) msignatorylink
   doc   <- dbQuery $ GetDocumentByDocumentID did
   case (msignatorylink, check) of
@@ -1613,7 +1610,7 @@ apiCallV1History :: Kontrakcja m => DocumentID -> m Response
 apiCallV1History did = logDocument did . api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   ctx               <- getContext
-  modifyContext $ set ctxmaybeuser (Just user)
+  modifyContext $ set #maybeUser (Just user)
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
   switchLang $ fromMaybe (lang $ usersettings user) mlang
 
@@ -1625,7 +1622,7 @@ apiCallV1History did = logDocument did . api $ do
     J.value "paging"
       $ pagingParamsJSON (PagedList events 1000 emptyListParams (length events))
 
-  modifyContext $ set ctxmaybeuser (get ctxmaybeuser ctx)
+  modifyContext $ set #maybeUser (ctx ^. #maybeUser)
   return res
 
 
@@ -1637,7 +1634,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
 
   (mslid :: Maybe SignatoryLinkID ) <- readField "signatorylinkid"
   (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
-  sid   <- get ctxsessionid <$> getContext
+  sid   <- view #sessionID <$> getContext
   check <- maybe (return False) (dbQuery . CheckDocumentSession sid) mslid
 
   doc   <- do
@@ -1662,9 +1659,9 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
         if (external)
           then do
             ctx <- getContext
-            modifyContext $ set ctxmaybeuser (Just user)
+            modifyContext $ set #maybeUser (Just user)
             res <- getDocByDocID did
-            modifyContext $ set ctxmaybeuser (get ctxmaybeuser ctx)
+            modifyContext $ set #maybeUser (ctx ^. #maybeUser)
             return res
           else getDocByDocID did
 
@@ -1695,7 +1692,7 @@ apiCallV1DownloadFile did fileid nameForBrowser =
   logDocumentAndFile did fileid . api $ do
     (mslid :: Maybe SignatoryLinkID ) <- readField "signatorylinkid"
     (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
-    sid   <- get ctxsessionid <$> getContext
+    sid   <- view #sessionID <$> getContext
     check <- maybe (return False) (dbQuery . CheckDocumentSession sid) mslid
     doc   <- do
       case (mslid, check, maccesstoken) of
@@ -1717,9 +1714,9 @@ apiCallV1DownloadFile did fileid nameForBrowser =
           if (external)
             then do
               ctx <- getContext
-              modifyContext $ set ctxmaybeuser (Just user)
+              modifyContext $ set #maybeUser (Just user)
               res <- getDocByDocID did
-              modifyContext $ set ctxmaybeuser (get ctxmaybeuser ctx)
+              modifyContext $ set #maybeUser (ctx ^. #maybeUser)
               return res
             else getDocByDocID did
     let allfiles =
@@ -1778,7 +1775,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
         -- This is some kind of Salesforce hack that was supposed to be
         -- dropped with Happstack 7.0.4. It seems to be used till now
         -- for example by Avis.
-        let content' = either (const content1') id (B64.decode content1')
+        let content' = either (const content1') identity (B64.decode content1')
 
         pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
         fileid'    <- saveNewFile (T.pack filename) pdfcontent
@@ -1802,7 +1799,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
 
 apiCallV1SendSMSPinCode :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
-  sid <- get ctxsessionid <$> getContext
+  sid <- view #sessionID <$> getContext
   void $ apiGuardL (serverError "No document found") $ dbQuery $ CheckDocumentSession
     sid
     slid
@@ -1944,7 +1941,7 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
 guardSignatoryAccessFromSessionOrCredentials
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Maybe User)
 guardSignatoryAccessFromSessionOrCredentials did slid = do
-  sid          <- get ctxsessionid <$> getContext
+  sid          <- view #sessionID <$> getContext
   validSession <- dbQuery $ CheckDocumentSession sid slid
   if validSession
     then return Nothing

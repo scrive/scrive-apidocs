@@ -62,7 +62,7 @@ class ToXMLContent a where
   toXMLContent :: a -> XMLContent
 
 instance ToXMLContent XMLContent where
-  toXMLContent = id
+  toXMLContent = identity
 
 instance ToXMLContent Text where
   toXMLContent = cdata

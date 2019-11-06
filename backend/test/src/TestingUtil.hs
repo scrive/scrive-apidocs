@@ -5,7 +5,6 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Fail
-import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Crypto.RNG
 import Data.Char
@@ -18,6 +17,7 @@ import Data.Typeable (cast)
 import Data.Word
 import Happstack.Server
 import Log
+import Optics (gview)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
@@ -85,9 +85,12 @@ import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import Util.Actor
 import Util.MonadUtils
+import qualified DataRetentionPolicy.Internal as I
+import qualified Folder.Internal as I
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
+import qualified UserGroup.Internal as I
 
 newtype XMLChar = XMLChar { unXMLChar :: Char }
   deriving (Enum, Eq, Ord)
@@ -137,7 +140,7 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary Folder where
-  arbitrary = (\name -> Folder emptyFolderID Nothing name) <$> arbitraryName
+  arbitrary = (\name -> I.Folder emptyFolderID Nothing name) <$> arbitraryName
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
@@ -188,7 +191,7 @@ genMaybeUnicodeString = oneof [pure Nothing, Just <$> genUnicodeString]
 
 instance Arbitrary UserGroup where
   arbitrary =
-    (UserGroup emptyUserGroupID Nothing)
+    (I.UserGroup emptyUserGroupID Nothing)
       <$> arbitraryName
       <*> pure Nothing
       <*> arbitrary
@@ -199,7 +202,7 @@ instance Arbitrary UserGroup where
 
 instance Arbitrary UserGroupRoot where
   arbitrary =
-    UserGroupRoot emptyUserGroupID
+    I.UserGroupRoot emptyUserGroupID
       <$> arbitraryUnicodeText
       <*> pure Nothing
       <*> arbitrary
@@ -210,7 +213,7 @@ instance Arbitrary UserGroupRoot where
 
 instance Arbitrary DataRetentionPolicy where
   arbitrary =
-    DataRetentionPolicy
+    I.DataRetentionPolicy
       <$> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
@@ -221,7 +224,7 @@ instance Arbitrary DataRetentionPolicy where
 
 instance Arbitrary UserGroupSettings where
   arbitrary =
-    UserGroupSettings
+    I.UserGroupSettings
       <$> arbitrary
       <*> arbitrary
       <*> arbitraryMaybe arbitraryUnicodeText
@@ -238,7 +241,7 @@ instance Arbitrary UserGroupSettings where
 
 instance Arbitrary UserGroupAddress where
   arbitrary =
-    UserGroupAddress
+    I.UserGroupAddress
       <$> arbitraryUnicodeText
       <*> arbitraryUnicodeText
       <*> arbitraryUnicodeText
@@ -248,7 +251,7 @@ instance Arbitrary UserGroupAddress where
 
 instance Arbitrary UserGroupUI where
   arbitrary =
-    (UserGroupUI Nothing Nothing Nothing)
+    (I.UserGroupUI Nothing Nothing Nothing)
       <$> arbitraryMaybe arbitraryUnicodeText
       <*> arbitraryMaybe arbitraryUnicodeText
       <*> arbitrary
@@ -761,7 +764,7 @@ signatoryLinkExample1 = defaultSignatoryLink
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
 testThat s env test = testCase s $ do
   ((), diff) <- timed $ runTestEnv env test
-  modifyMVar_ (get teTestDurations env) $ \td -> return $ (diff, s) : td
+  modifyMVar_ (env ^. #testDurations) $ \td -> return $ (diff, s) : td
 
 compareTime :: UTCTime -> UTCTime -> Bool
 compareTime (UTCTime da ta) (UTCTime db tb) =
@@ -780,7 +783,7 @@ addNewUserGroupWithParent :: Bool -> Maybe UserGroupID -> TestEnv UserGroup
 addNewUserGroupWithParent createFolder mparent = do
   mUgFolderID <- case createFolder of
     False -> return Nothing
-    True  -> fmap (Just . get folderID) . dbUpdate $ FolderCreate defaultFolder
+    True  -> Just . view #id <$> dbUpdate (FolderCreate defaultFolder)
   ugname           <- rand 10 (arbText 3 30)
   ugacompanynumber <- rand 10 (arbText 3 30)
   ugaentityname    <- rand 10 (arbText 3 30)
@@ -789,23 +792,24 @@ addNewUserGroupWithParent createFolder mparent = do
   ugacity          <- rand 10 (arbText 3 30)
   ugacountry       <- rand 10 (arbText 3 30)
   let ug =
-        set ugName ugname
-          . set ugAddress      uga
-          . set ugHomeFolderID mUgFolderID
-          $ defaultUserGroup { _ugParentGroupID = mparent }
-      uga = Just $ UserGroupAddress { _ugaCompanyNumber = ugacompanynumber
-                                    , _ugaEntityName    = ugaentityname
-                                    , _ugaAddress       = ugaaddress
-                                    , _ugaZip           = ugazip
-                                    , _ugaCity          = ugacity
-                                    , _ugaCountry       = ugacountry
-                                    }
+        defaultUserGroup
+          & (#parentGroupID .~ mparent)
+          & (#name .~ ugname)
+          & (#address .~ uga)
+          & (#homeFolderID .~ mUgFolderID)
+      uga = Just $ I.UserGroupAddress { companyNumber = ugacompanynumber
+                                      , entityName    = ugaentityname
+                                      , address       = ugaaddress
+                                      , zipCode       = ugazip
+                                      , city          = ugacity
+                                      , country       = ugacountry
+                                      }
   dbUpdate . UserGroupCreate $ ug
 
 addNewUserGroupWithParents :: Bool -> TestEnv UserGroupWithParents
 addNewUserGroupWithParents createFolder = do
   ug <- addNewUserGroup' createFolder
-  guardJustM . dbQuery . UserGroupGetWithParents $ get ugID ug
+  guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id
 
 addNewRandomFile
   :: ( CryptoRNG m
@@ -846,8 +850,8 @@ addNewUserWithCompany
   -> m (Maybe (User, UserGroupID))
 addNewUserWithCompany firstname secondname email createFolders = do
   ug    <- addNewCompany createFolders
-  mUser <- addNewCompanyAdminUser firstname secondname email (get ugID ug)
-  return $ (, get ugID ug) <$> mUser
+  mUser <- addNewCompanyAdminUser firstname secondname email (ug ^. #id)
+  return $ (, ug ^. #id) <$> mUser
 
 addNewCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => Bool -> m UserGroup
 addNewCompany createFolders = do
@@ -856,7 +860,7 @@ addNewCompany createFolders = do
     True  -> fmap Just . dbUpdate $ FolderCreate defaultFolder
   dbUpdate
     . UserGroupCreate
-    . set ugHomeFolderID (get folderID <$> mUgFolder)
+    . set #homeFolderID (view #id <$> mUgFolder)
     $ defaultUserGroup
 
 createNewUser
@@ -877,12 +881,12 @@ createNewUser names email mPasswd (ugid, isCompanyAdmin) lang bdID sm = do
       fmap Just
         . dbUpdate
         . FolderCreate
-        . set folderParentID (Just $ get folderID ugFolder)
+        . set #parentID (Just $ ugFolder ^. #id)
         $ defaultFolder
   dbUpdate $ AddUser names
                      email
                      mPasswd
-                     (ugid, get folderID <$> mUserFolder, isCompanyAdmin)
+                     (ugid, view #id <$> mUserFolder, isCompanyAdmin)
                      lang
                      bdID
                      sm
@@ -929,7 +933,7 @@ addNewCompanyUser' makeAdmin firstname secondname email ugid = do
                               Nothing
                               (ugid, makeAdmin == MakeAdmin)
                               defaultLang
-                              (get bdid bd)
+                              (bd ^. #id)
                               CompanyInvitation
 
 -- | Create user and add it to a new user group as admin.
@@ -940,9 +944,9 @@ addNewAdminUserAndUserGroup firstname secondname email = do
   Just user <- createNewUser (firstname, secondname)
                              email
                              Nothing
-                             (get ugID ug, True)
+                             (ug ^. #id, True)
                              defaultLang
-                             (get bdid bd)
+                             (bd ^. #id)
                              CompanyInvitation
   return (user, ug)
 
@@ -956,7 +960,7 @@ addNewUserToUserGroup firstname secondname email ugid = do
                               Nothing
                               (ugid, True)
                               defaultLang
-                              (get bdid bd)
+                              (bd ^. #id)
                               CompanyInvitation
 
 addNewUserFromInfo
@@ -1065,7 +1069,7 @@ addNewRandomPartnerUser = do
         partnerAdminUser      <- addNewRandomUser
         partnerAdminUserGroup <- dbQuery $ UserGroupGetByUserID (userid partnerAdminUser)
         let partnerIDAlreadyExists =
-              (unsafeUserGroupIDToPartnerID . get ugID $ partnerAdminUserGroup)
+              (unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #id)
                 `elem` map ptID partners
         case partnerIDAlreadyExists of
           True  -> return Nothing
@@ -1075,13 +1079,13 @@ addNewRandomPartnerUser = do
     Just (partnerAdminUser, partnerAdminUserGroup) -> do
       -- insert new partner row with the same ID as the UserGroup
       True <- dbUpdate . InsertPartnerForTests $ Partner
-        { ptID = unsafeUserGroupIDToPartnerID . get ugID $ partnerAdminUserGroup
-        , ptName           = T.unpack . get ugName $ partnerAdminUserGroup
+        { ptID             = unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #id
+        , ptName           = T.unpack $ partnerAdminUserGroup ^. #name
         , ptDefaultPartner = False
-        , ptUserGroupID    = Just $ get ugID partnerAdminUserGroup
+        , ptUserGroupID    = Just $ partnerAdminUserGroup ^. #id
         }
       let uid  = userid partnerAdminUser
-          ugid = get ugID partnerAdminUserGroup
+          ugid = partnerAdminUserGroup ^. #id
       void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
       return (partnerAdminUser, partnerAdminUserGroup)
 
@@ -1332,7 +1336,7 @@ addRandomDocumentWithFile fileid rda = do
       case invariantProblems now adoc of
         Nothing        -> return adoc
         Just _problems -> do
-          rej <- asks (get teRejectedDocuments)
+          rej <- gview #rejectedDocuments
           modifyMVar_ rej $ \i -> return $! i + 1
           -- Invariant problems might happen e.g. when all signatories are
           -- picked to have signed, but the document was earlier picked to be in
@@ -1346,9 +1350,9 @@ sealTestDocument :: Context -> DocumentID -> TestEnv ()
 sealTestDocument ctx did = void $ TestEnv $ liftTestFileStorageT $ \fsEnv -> do
   cryptoSt <- newCryptoRNGState
   withDocumentID did
-    . runGuardTimeConfT (get ctxgtconf ctx)
-    . runPdfToolsLambdaT (get ctxpdftoolslambdaenv ctx)
-    . runTemplatesT ((get ctxlang ctx), (get ctxglobaltemplates ctx))
+    . runGuardTimeConfT (ctx ^. #gtConf)
+    . runPdfToolsLambdaT (ctx ^. #pdfToolsLambdaEnv)
+    . runTemplatesT (ctx ^. #lang, ctx ^. #globalTemplates)
     . runMailContextT (contextToMailContext ctx)
     . runCryptoRNGT cryptoSt
     . flip runTestFileStorageT fsEnv

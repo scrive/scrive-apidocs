@@ -31,7 +31,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-import BrandedDomain.BrandedDomain
 import DB hiding (query, update)
 import Happstack.Fields
 import InputValidation
@@ -67,7 +66,7 @@ handleAccountGet = withUser . withTosCheck $ \user -> do
   ctx <- getContext
   pb  <- renderTextTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
-    F.value "apiLogEnabled" $ get ctxisapilogenabled ctx
+    F.value "apiLogEnabled" $ ctx ^. #isApiLogEnabled
     entryPointFields ctx
   internalResponse <$> renderFromBodyWithFields pb (F.value "account" True)
 
@@ -110,7 +109,7 @@ handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m InternalKontra
 handlePostChangeEmail uid hash = withUser $ \user -> do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   ctx       <- getContext
-  let (ipnumber, time) = (get ctxipnumber ctx, get ctxtime ctx)
+  let (ipnumber, time) = (ctx ^. #ipAddr, ctx ^. #time)
   mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return $ internalResponse $ LinkAccount
@@ -153,7 +152,7 @@ handleUsageStatsJSONForUserMonths = V2.api $ do
 
 handleUsageStatsJSONForShareableLinks :: Kontrakcja m => StatsPartition -> m JSValue
 handleUsageStatsJSONForShareableLinks statsPartition = do
-  user <- guardJustM $ get ctxmaybeuser <$> getContext
+  user <- guardJustM $ view #maybeUser <$> getContext
   getShareableLinksStats statsPartition $ if useriscompanyadmin user
     then UsageStatsForUserGroup $ usergroupid user
     else UsageStatsForUser $ userid user
@@ -236,8 +235,7 @@ handleAcceptTOSGet =
 handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
   ctx <- getContext
-  let (maybeuser, time, ipnumber) =
-        (get ctxmaybeuser ctx, get ctxtime ctx, get ctxipnumber ctx)
+  let (maybeuser, time, ipnumber) = (ctx ^. #maybeUser, ctx ^. #time, ctx ^. #ipAddr)
   userid <- guardJustM $ return $ userid <$> maybeuser
   tos    <- getDefaultedField False asValidCheckBox "tos"
   case tos of
@@ -258,12 +256,12 @@ handleAccountSetupGet uid token sm = do
       ug      <- dbQuery . UserGroupGetByUserID . userid $ user
       ad      <- getAnalyticsData
       content <- renderTextTemplate "accountSetupPage" $ do
-        standardPageFields ctx (Just (get ugID ug, get ugUI ug)) ad
+        standardPageFields ctx (Just (ug ^. #id, ug ^. #ui)) ad
         F.value "fstname" $ getFirstName user
         F.value "sndname" $ getLastName user
         F.value "email" $ getEmail user
         F.value "userid" $ show uid
-        F.value "company" . get ugName $ ug
+        F.value "company" $ ug ^. #name
         F.value "companyAdmin" $ useriscompanyadmin user
         F.value "companyPosition" $ usercompanyposition $ userinfo user
         F.value "mobile" $ getMobile user
@@ -274,7 +272,7 @@ handleAccountSetupGet uid token sm = do
       flashmessage <- case sm of
         CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
         _                 -> flashMessageUserAccountRequestExpired
-      return . internalResponseWithFlash flashmessage . LinkLogin $ get ctxlang ctx
+      return . internalResponseWithFlash flashmessage . LinkLogin $ ctx ^. #lang
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
@@ -292,7 +290,7 @@ handleAccountSetupPost uid token sm = do
       void $ dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
       void $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user)
-        { lang = get ctxlang ctx
+        { lang = ctx ^. #lang
         }
       link <- getHomeOrDesignViewLink
       J.runJSONGenT $ do
@@ -321,7 +319,7 @@ handlePasswordReminderGet uid token = do
     Nothing -> do
       ctx          <- getContext
       flashmessage <- flashMessagePasswordChangeLinkNotValid
-      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (get ctxlang ctx)
+      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (ctx ^. #lang)
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
@@ -330,21 +328,19 @@ handlePasswordReminderPost uid token = do
   ipIsOK <- case muser of
     Just u -> do
       ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid u
-      let masklist = get ugsIPAddressMaskList $ ugwpSettings ugwp
+      let masklist = ugwpSettings ugwp ^. #ipAddressMaskList
       ctx <- getContext
-      return
-        $  null masklist
-        || (any (ipAddressIsInNetwork $ get ctxipnumber ctx) masklist)
+      return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
     Nothing -> return True
   case muser of
     Just user | not (useraccountsuspended user) && ipIsOK -> do
       switchLang (getLang user)
       ctx <- getContext
-      let time      = get ctxtime ctx
-          ipnumber  = get ctxipnumber ctx
-          maybeuser = get ctxmaybeuser ctx
+      let time      = ctx ^. #time
+          ipnumber  = ctx ^. #ipAddr
+          maybeuser = ctx ^. #maybeUser
       password     <- guardJustM $ getField "password"
-      goodPassword <- checkPassword (get ctxpasswordserviceconf ctx) password
+      goodPassword <- checkPassword (ctx ^. #passwordServiceConf) password
       if (goodPassword)
         then do
           void $ dbUpdate $ DeletePasswordReminder uid
@@ -379,8 +375,8 @@ handleContactSales = do
 
   let uid = maybe "user not logged in"
                   ((<>) "user with id " . showt . userid)
-                  (get ctxmaybeuser ctx)
-      domainInfo = " (from domain " <> (get (bdUrl . ctxbrandeddomain) ctx) <> " )"
+                  (ctx ^. #maybeUser)
+      domainInfo = " (from domain " <> (ctx ^. #brandedDomain % #url) <> " )"
       content =
         "<p>Hi there!</p>"
           <> "<p>Someone requested information from the payments form"

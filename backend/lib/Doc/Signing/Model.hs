@@ -104,7 +104,7 @@ instance (MonadDB m, MonadLog m, MonadMask m) => DBQuery m GetDocumentSigningSta
       sqlWhereEq "id" slid
       sqlResult "cancelled"
       sqlResult "last_check_status"
-    fetchMaybe id
+    fetchMaybe identity
 
 data UpdateDocumentSigning = UpdateDocumentSigning SignatoryLinkID Bool Text
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m UpdateDocumentSigning () where

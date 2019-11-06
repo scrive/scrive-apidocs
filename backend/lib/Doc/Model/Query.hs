@@ -70,7 +70,7 @@ instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, 
       sqlResult "type"
       sqlResult "time"
       sqlResult "file_id"
-    screenshotsWithoutBinaryData <- fetchMany id
+    screenshotsWithoutBinaryData <- fetchMany identity
     let getBinaries (slid, ty, time, fid) = do
           bin <- getFileIDContents fid
           return (slid, ty, time, bin)
@@ -366,7 +366,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
   query (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) =
     do
       runQuery_ sql
-      (count :: Int64, CompositeArray1 documents) <- fetchOne id
+      (count :: Int64, CompositeArray1 documents) <- fetchOne identity
       return (fromIntegral count, documents)
     where
       sql = sqlSelect "" $ do

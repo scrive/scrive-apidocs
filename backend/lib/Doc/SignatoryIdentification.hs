@@ -61,7 +61,7 @@ signatoryIdentifierMap includenonsigning docs slids = Map.fromList $ zipWith3
   names
   initials
   where
-    esignatorylinkid = either signatorylinkid id
+    esignatorylinkid = either signatorylinkid identity
 
     slmap =
       Map.fromList [ (signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d ]

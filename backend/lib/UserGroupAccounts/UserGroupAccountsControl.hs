@@ -68,17 +68,17 @@ handleUserGroupAccountsForAdminOnly ugid = onlySalesOrAdmin $ do
 -- company admin.
 handleUserGroupAccountsInternal :: Kontrakcja m => [UserGroupID] -> m JSValue
 handleUserGroupAccountsInternal ugids = do
-  muser <- get ctxmaybeuser <$> getContext
+  muser <- view #maybeUser <$> getContext
   user  <- case muser of
     Nothing   -> unexpectedError "handleUserGroupAccountsInternal: No user in Context!"
     Just user -> return user
   ugs          <- forM ugids $ guardJustM . dbQuery . UserGroupGet
   usersWithUgs <- concatForM ugs $ \ug -> do
-    users <- dbQuery . UserGroupGetUsers $ get ugID ug
+    users <- dbQuery . UserGroupGetUsers $ ug ^. #id
     return . zip users $ repeat ug
   deletableuserids <- map userid <$> filterM isUserDeletable (map fst usersWithUgs)
   invitesWithUgs   <- concatForM ugs $ \ug -> do
-    invites <- dbQuery . UserGroupGetInvitesWithUsersData $ get ugID ug
+    invites <- dbQuery . UserGroupGetInvitesWithUsersData $ ug ^. #id
     return . zip invites $ repeat ug
   let isUser ((invite, _, _, _), _) =
         (inviteduserid invite) `elem` map (userid . fst) usersWithUgs
@@ -99,7 +99,7 @@ handleUserGroupAccountsInternal ugids = do
         , catos         = userhasacceptedtermsofservice u
         , catotpactive  = usertotpactive u
         , calang        = Just $ lang $ usersettings u
-        , caugname      = get ugName ug
+        , caugname      = ug ^. #name
         }
       mkAccountFromInvite ((i, fn, ln, em), ug) = CompanyAccount
         { camaybeuserid = inviteduserid i
@@ -116,7 +116,7 @@ handleUserGroupAccountsInternal ugids = do
         , catos         = Nothing
         , catotpactive  = False
         , calang        = Nothing
-        , caugname      = get ugName ug
+        , caugname      = ug ^. #name
         }
 
   textFilter <- getField "text" >>= \case
@@ -217,7 +217,7 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
     Just trgugid -> dbQuery (UserGroupGet trgugid) >>= \case
       Nothing    -> internalError -- non-existing UserGroup is not OK
       Just trgug -> return $ Just trgug
-  let trgugid = get ugID $ fromMaybe ug mtrgug
+  let trgugid = fromMaybe ug mtrgug ^. #id
       acc     = mkAccPolicy [(CreateA, UserR, trgugid)]
   roles <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
@@ -227,15 +227,15 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
       newuser' <- guardJustM $ createUser (Email email)
                                           (fstname, sndname)
                                           (trgugid, False)
-                                          (get ctxlang ctx)
+                                          (ctx ^. #lang)
                                           CompanyInvitation
       void $ dbUpdate $ LogHistoryUserInfoChanged
         (userid newuser')
-        (get ctxipnumber ctx)
-        (get ctxtime ctx)
+        (ctx ^. #ipAddr)
+        (ctx ^. #time)
         (userinfo newuser')
         ((userinfo newuser') { userfstname = fstname, usersndname = sndname })
-        (userid <$> get ctxmaybeuser ctx)
+        (userid <$> ctx ^. #maybeUser)
       newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
       void $ sendNewUserGroupUserMail user ug newuser
       runJSONGenT $ value "added" True
@@ -263,7 +263,7 @@ handleResendToUserGroupAccount :: Kontrakcja m => m JSValue
 handleResendToUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   resendid <- getCriticalField asValidUserID "resendid"
   newuser  <- guardJustM $ dbQuery $ GetUserByID resendid
-  let ugid = get ugID ug
+  let ugid = ug ^. #id
   if (usergroupid newuser /= ugid)
     then do
        -- We need to check if there is a company invitation, and if it is, we send takeover email again
@@ -294,7 +294,7 @@ sendTakeoverSingleUserMail inviter ug user = do
                                        user
                                        inviter
                                        ug
-                                       (LinkCompanyTakeover . get ugID $ ug)
+                                       (LinkCompanyTakeover $ ug ^. #id)
   scheduleEmailSendout $ mail { to = [getMailAddress user] }
 
 {- |
@@ -339,8 +339,8 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
         void $ dbUpdate $ DeleteUser (userid removeuser)
         void $ dbUpdate $ LogHistoryAccountDeleted (userid removeuser)
                                                    (userid user)
-                                                   (get ctxipnumber ctx)
-                                                   (get ctxtime ctx)
+                                                   (ctx ^. #ipAddr)
+                                                   (ctx ^. #time)
         runJSONGenT $ value "removed" True
       _ -> do
         runJSONGenT $ value "removed" False
@@ -380,14 +380,14 @@ handlePostBecomeUserGroupAccount
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
   void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
-  (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
+  (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
     Nothing         -> internalError
     Just newugfdrid -> do
       let uid = userid user
       void $ dbUpdate $ SetUserCompanyAdmin (userid user) False
-      void $ dbUpdate $ SetUserUserGroup (userid user) (get ugID newug)
-      let newhomefdr = set folderParentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
+      void $ dbUpdate $ SetUserUserGroup (userid user) (newug ^. #id)
+      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
+      newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
       void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
       void $ dbUpdate $ RemoveUserGroupInvite [ugid] (userid user)
       -- if we are inviting a user with a plan to join the company, we

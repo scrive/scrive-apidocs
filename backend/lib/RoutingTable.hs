@@ -170,7 +170,7 @@ staticRoutes production = choice
   $   hGet
   $   toK0
   $   LinkLoginDirect
-  <$> get ctxlang
+  <$> view #lang
   <$> getContext -- Drop this after EE is migrated
   , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
   , dir "loginwithredirect" $ hGet $ toK0 $ handleLoginWithRedirectGet
@@ -179,7 +179,7 @@ staticRoutes production = choice
   $   hGetAllowHttp
   $   toK0
   $   LinkSignup
-  <$> get ctxlang
+  <$> view #lang
   <$> getContext -- Drop this after EE is migrated
   , allLangDirs $ dir "amnesia" $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
   , allLangDirs $ dir "amnesia" $ hPostNoXToken $ toK2

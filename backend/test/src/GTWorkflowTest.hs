@@ -8,7 +8,6 @@ import Test.Framework
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
-import Context
 import DB
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
@@ -78,7 +77,7 @@ testExtendingIsNotRescheduledForPurgedDocs :: TestEnv ()
 testExtendingIsNotRescheduledForPurgedDocs = do
   setTestTime unixEpoch
   user    <- addNewRandomUser
-  ctx     <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- Create a document
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc

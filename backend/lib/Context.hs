@@ -1,31 +1,23 @@
-module Context (
-    Context
-  , ctxDomainUrl
-  , getContextUser
-  , anonymiseContext
+{-# LANGUAGE TemplateHaskell #-}
+module Context
+  ( I.Context
+  , contextUser
+  , I.anonymiseContext
   , contextToMailContext
-  , module Context.Labels
   ) where
 
-import Data.Label
-
-import BrandedDomain.BrandedDomain
-import Context.Internal
-import Context.Labels
-import MailContext.Internal (MailContext(..))
 import User.Types.User (User)
-
-ctxDomainUrl :: Context :-> Text
-ctxDomainUrl = bdUrl . ctxbrandeddomain
+import qualified Context.Internal as I
+import qualified MailContext.Internal as I
 
 -- | Get a user from `Context` (user takes precedence over pad user).
-getContextUser :: Context -> Maybe User
-getContextUser ctx = get ctxmaybeuser ctx `mplus` get ctxmaybepaduser ctx
+contextUser :: I.Context -> Maybe User
+contextUser ctx = ctx ^. #maybeUser <|> ctx ^. #maybePadUser
 
-contextToMailContext :: Context -> MailContext
-contextToMailContext ctx = MailContext
-  { _mctxlang                 = get ctxlang ctx
-  , _mctxcurrentBrandedDomain = get ctxbrandeddomain ctx
-  , _mctxtime                 = get ctxtime ctx
-  , _mctxmailNoreplyAddress   = get ctxmailnoreplyaddress ctx
+contextToMailContext :: I.Context -> I.MailContext
+contextToMailContext ctx = I.MailContext
+  { lang               = ctx ^. #lang
+  , brandedDomain      = ctx ^. #brandedDomain
+  , time               = ctx ^. #time
+  , mailNoreplyAddress = ctx ^. #mailNoreplyAddress
   }

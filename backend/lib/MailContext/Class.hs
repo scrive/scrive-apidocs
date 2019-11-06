@@ -1,22 +1,15 @@
+{-# LANGUAGE TemplateHaskell #-}
 module MailContext.Class (
-    MailContext
-  , module MailContext.Labels
-  , mctxDomainUrl
+    I.MailContext
   , MailContextMonad(..)
   ) where
 
 import Control.Monad.Trans
-import Data.Label
 
-import BrandedDomain.BrandedDomain
-import MailContext.Internal
-import MailContext.Labels
-
-mctxDomainUrl :: MailContext :-> Text
-mctxDomainUrl = bdUrl . mctxcurrentBrandedDomain
+import qualified MailContext.Internal as I
 
 class Monad m => MailContextMonad m where
-  getMailContext :: m MailContext
+  getMailContext :: m I.MailContext
 
 -- | Generic, overlapping instance.
 instance (

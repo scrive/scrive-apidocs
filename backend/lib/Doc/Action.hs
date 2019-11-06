@@ -17,7 +17,6 @@ import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
-import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Chargeable.Model
 import CronEnv
@@ -49,7 +48,6 @@ import GuardTime (GuardTimeConfMonad)
 import Kontra
 import Log.Identifier
 import MailContext
-import MailContext.Internal
 import PdfToolsLambda.Conf
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
@@ -62,6 +60,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
+import qualified MailContext.Internal as I
 
 -- | Log a document event, adding some standard properties.
 logDocEvent
@@ -91,7 +90,7 @@ logDocEvent name user extraProps doc = do
        , TimeProp now
        , MailProp email
        , NameProp fullname
-       , stringProp "Company Name" . get ugName $ ug
+       , stringProp "Company Name" $ ug ^. #name
        , stringProp "Delivery Method" deliverymethod
        , stringProp "Type"            (showt $ documenttype doc)
        , stringProp "Language"        (showt $ documentlang doc)
@@ -159,7 +158,7 @@ postDocumentRejectedChange siglinkid customMessage doc@Document {..} =
     -- Log the fact that the current user rejected a document.
     maybe (return ())
           (\user -> logDocEvent "Doc Rejected" user [] doc)
-          (get ctxmaybeuser ctx)
+          (ctx ^. #maybeUser)
     sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
     return ()
 
@@ -215,7 +214,7 @@ postDocumentPendingChange olddoc signatoryLink = do
   {-then-}(do
             document <- theDocument
             logInfo "All have signed, document will be closed" $ logObject_ document
-            time <- get mctxtime <$> getMailContext
+            time <- view #time <$> getMailContext
             dbUpdate $ CloseDocument (systemActor time)
             dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
             when (documentfromshareablelink olddoc) $ do
@@ -233,7 +232,7 @@ postDocumentPendingChange olddoc signatoryLink = do
                 asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
             dbUpdate
               .   ScheduleDocumentSealing
-              .   get (bdid . mctxcurrentBrandedDomain)
+              .   view (#brandedDomain % #id)
               =<< getMailContext
             if signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
               then sendPartyProcessFinalizedNotification document signatoryLink
@@ -294,7 +293,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
           currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
         logInfo_ "Running sealDocument"
-        sealDocument $ get mctxDomainUrl mcxt
+        sealDocument $ mcxt ^. #brandedDomain % #url
 
         -- Here there is a race condition: when we commit, other callers
         -- of postDocumentClosedActions may see a document that lacks a
@@ -423,13 +422,13 @@ findAndTimeoutDocuments = do
       Just author -> do
         ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (usergroupid author)
         bd   <- dbQuery $ GetBrandedDomainByUserID (userid author)
-        let mc = MailContext { _mctxlang                 = lang
-                             , _mctxcurrentBrandedDomain = bd
-                             , _mctxtime                 = now
-                             , _mctxmailNoreplyAddress   = noreplyAddress
-                             }
+        let mc = I.MailContext { lang               = lang
+                               , brandedDomain      = bd
+                               , time               = now
+                               , mailNoreplyAddress = noreplyAddress
+                               }
         runTemplatesT (lang, gt) . runMailContextT mc $ do
-          when (get ugsSendTimeoutNotification (ugwpSettings ugwp)) $ do
+          when (ugwpSettings ugwp ^. #sendTimeoutNotification) $ do
             sendDocumentTimeoutedEmail =<< theDocument
     triggerAPICallbackIfThereIsOne =<< theDocument
     logInfo_ "Document timed out"

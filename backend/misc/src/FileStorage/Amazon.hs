@@ -8,8 +8,8 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Aeson.Types
 import Log
+import Optics (lensVL)
 import qualified Conduit as C
-import qualified Control.Lens as L
 import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
@@ -63,7 +63,7 @@ getContentsFromAmazon env url = go True =<< awsLogger
         withResourceT $ do
           rs <- runAWS env logger . AWS.send $ AWS.getObject (as3eBucket env)
                                                              (urlObjectKey url)
-          C.runConduit $ AWS._streamBody (L.view AWS.gorsBody rs) C..| C.sinkLazy
+          C.runConduit $ AWS._streamBody (rs ^. lensVL AWS.gorsBody) C..| C.sinkLazy
       case result of
         Right rsp -> do
           logInfo "Fetching file from AWS succeeded"
@@ -106,7 +106,7 @@ withResourceT :: C.ResourceT IO r -> IO (Either AWS.Error r)
 withResourceT = try . C.runResourceT
 
 runAWS :: AmazonS3Env -> AWS.Logger -> AWS.AWS a -> C.ResourceT IO a
-runAWS env lgr = AWS.runAWS (L.set AWS.envLogger lgr $ as3eEnv env)
+runAWS env lgr = AWS.runAWS (as3eEnv env & lensVL AWS.envLogger .~ lgr)
 
 awsLogger :: MonadLog m => m AWS.Logger
 awsLogger = do
@@ -123,7 +123,7 @@ awsLogger = do
     adjustLevel AWS.Trace = LogTrace
 
     builderToText =
-      either (T.append "decode error: " . showt) id
+      either (T.append "decode error: " . showt) identity
         . T.decodeUtf8'
         . BSL.toStrict
         . B.toLazyByteString

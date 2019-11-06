@@ -28,11 +28,11 @@ import Util.MonadUtils
 withUser :: Kontrakcja m => (User -> m InternalKontraResponse) -> m InternalKontraResponse
 withUser action = do
   ctx <- getContext
-  case get ctxmaybeuser ctx of
+  case ctx ^. #maybeUser of
     Just user -> action user
     Nothing   -> do
       flashmessage <- flashMessageLoginRedirect
-      return $ internalResponseWithFlash flashmessage (LinkLogin (get ctxlang ctx))
+      return $ internalResponseWithFlash flashmessage (LinkLogin (ctx ^. #lang))
 
 {- |
   Guard against a GET/POST with no logged in user.
@@ -41,7 +41,7 @@ withUser action = do
 guardLoggedInOrThrowInternalError :: Kontrakcja m => m a -> m a
 guardLoggedInOrThrowInternalError action = do
   ctx <- getContext
-  case get ctxmaybeuser ctx of
+  case ctx ^. #maybeUser of
     Just _user -> action
     Nothing    -> internalError
 
@@ -70,7 +70,7 @@ with2FACheck
 with2FACheck action user = do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
   let userMustHaveTotpEnabled =
-        get ugsTotpIsMandatory (ugwpSettings ugwp) || usertotpismandatory user
+        (ugwpSettings ugwp ^. #totpIsMandatory) || usertotpismandatory user
   if userMustHaveTotpEnabled && not (usertotpactive user)
     then do
       flashmessage <- flashMessageTotpMustBeActivated
@@ -84,7 +84,7 @@ with2FACheck action user = do
 -}
 withUserAndGroup :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
 withUserAndGroup action = do
-  maybeuser <- get ctxmaybeuser <$> getContext
+  maybeuser <- view #maybeUser <$> getContext
   user      <- guardJust maybeuser
   ug        <- dbQuery . UserGroupGetByUserID . userid $ user
   action (user, ug)
@@ -95,7 +95,7 @@ withUserAndGroup action = do
 -}
 withUserAndRoles :: Kontrakcja m => ((User, [AccessRole]) -> m a) -> m a
 withUserAndRoles action = do
-  muser <- get ctxmaybeuser <$> getContext
+  muser <- view #maybeUser <$> getContext
   user  <- guardJust muser
   roles <- dbQuery $ GetRoles user
   action (user, roles)

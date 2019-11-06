@@ -55,7 +55,7 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
       sqlWhereEq "signatory_link_id" slid
       sqlWhereEq "phone_number"      phone
       sqlWhereEq "pin_type"          pintype
-    mpin <- fetchMaybe id
+    mpin <- fetchMaybe identity
     now  <- currentTime
     case mpin of
       Just (pin, generated_at) -> if now `diffUTCTime` generated_at <= validityWindow

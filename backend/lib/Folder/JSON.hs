@@ -7,6 +7,7 @@ module Folder.JSON (
 import Data.Aeson
 import Data.Aeson.Encoding
 import Data.Unjson
+import Optics (folded)
 
 import Folder.Types
 import InputValidation
@@ -15,27 +16,27 @@ encodeFolder :: Folder -> Encoding
 encodeFolder folder =
   pairs
     $  "id"
-    .= get folderID folder
+    .= (folder ^. #id)
     <> "parent_id"
-    .= get folderParentID folder
+    .= (folder ^. #parentID)
     <> "name"
-    .= get folderName folder
+    .= (folder ^. #name)
 
 encodeFolderWithChildren :: FolderWithChildren -> Encoding
 encodeFolderWithChildren fdrwc =
   pairs
     $  "id"
-    .= get folderID folder
+    .= (folder ^. #id)
     <> "parent_id"
-    .= get folderParentID folder
+    .= (folder ^. #parentID)
     <> "name"
-    .= get folderName folder
+    .= (folder ^. #name)
     <> pair "children" (list encodeChild children)
   where
-    folder   = get fwcFolder fdrwc
-    children = get fwcFolder <$> get fwcChildren fdrwc
+    folder   = fdrwc ^. #folder
+    children = fdrwc ^.. #children % folded % #folder
     encodeChild childFolder =
-      pairs $ "id" .= get folderID childFolder <> "name" .= get folderName childFolder
+      pairs $ "id" .= (childFolder ^. #id) <> "name" .= (childFolder ^. #name)
 
 unjsonFolderForUpdate :: UnjsonDef (Maybe FolderID, Text)
 unjsonFolderForUpdate =
@@ -47,8 +48,8 @@ unjsonFolderForUpdate =
 
 updateFolderWithFolderFromRequest :: Folder -> Value -> Maybe Folder
 updateFolderWithFolderFromRequest folder folderChanges = do
-  let folderReq = (get folderParentID folder, get folderName folder)
+  let folderReq = (folder ^. #parentID, folder ^. #name)
   case update folderReq unjsonFolderForUpdate folderChanges of
     (Result ugUpdated []) ->
-      Just $ folder { _folderParentID = fst ugUpdated, _folderName = snd ugUpdated }
+      Just $ folder & (#parentID .~ fst ugUpdated) & (#name .~ snd ugUpdated)
     (Result _ _) -> Nothing

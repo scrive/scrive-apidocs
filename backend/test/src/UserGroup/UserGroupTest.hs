@@ -56,8 +56,8 @@ testCreateGroups = do
       ug0 <- case level of
         1 -> ugFromUGRoot <$> rand 10 arbitrary
         _ -> rand 10 arbitrary
-      ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
-      return . replicate 2 . Just . get ugID $ ug1
+      ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
+      return . replicate 2 . Just $ ug1 ^. #id
 
 testCreateGroupsWithUsers :: TestEnv ()
 testCreateGroupsWithUsers = do
@@ -73,10 +73,10 @@ testCreateGroupsWithUsers = do
         ug0 <- case level of
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
-        ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
+        ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . get ugID $ ug1)
-        return . replicate 2 . Just . get ugID $ ug1
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
+        return . replicate 2 . Just $ ug1 ^. #id
 
 testGetAllUsersOfTopGroup :: TestEnv ()
 testGetAllUsersOfTopGroup = do
@@ -94,10 +94,10 @@ testGetAllUsersOfTopGroup = do
         ug0 <- case level of
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
-        ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
+        ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . get ugID $ ug1)
-        return . get ugID $ ug1
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
+        return $ ug1 ^. #id
       --      parents for groups in next level , all group ids created
       return (Just <$> (new_ugids ++ new_ugids), ugids ++ new_ugids)
 
@@ -105,7 +105,7 @@ testGetUserGroup :: TestEnv ()
 testGetUserGroup = do
   ug0       <- ugFromUGRoot <$> rand 10 arbitrary
   ug1       <- dbUpdate . UserGroupCreate $ ug0
-  Just _ug2 <- dbQuery . UserGroupGet . get ugID $ ug1
+  Just _ug2 <- dbQuery . UserGroupGet $ ug1 ^. #id
   return ()
 
 testGetAllGroupsOfUser :: TestEnv ()
@@ -123,10 +123,10 @@ testGetAllGroupsOfUser = do
         ug0 <- case level of
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
-        ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
+        ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . get ugID $ ug1)
-        return (get ugID ug1, userid u)
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
+        return (ug1 ^. #id, userid u)
       --      parents for groups in next level , all userids created
       return (Just <$> (new_ugids ++ new_ugids), uids ++ new_uids)
 
@@ -153,7 +153,7 @@ testMoveGroup = do
   (_, ugids) <- foldlM createGroupsWithUsers ([Nothing], []) [1 .. 4]
   -- take Root.Left group and move it to Root.Right....Right group
   Just ug1   <- dbQuery . UserGroupGet $ ugids !! 1
-  void $ dbUpdate . UserGroupUpdate . set ugParentGroupID (Just $ ugids !! 14) $ ug1
+  void $ dbUpdate . UserGroupUpdate . set #parentGroupID (Just $ ugids !! 14) $ ug1
   -- parentpath of new leaf in moved group should be 6 items long
   Just (_ug10, parentugs) <- dbQuery . UserGroupGetWithParents $ ugids !! 10
   assertEqual ("Fetched all parents of leaf group") 6 (length parentugs)
@@ -170,10 +170,10 @@ testMoveGroup = do
         ug0 <- case level of
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
-        ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
+        ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just . get ugID $ ug1)
-        return . get ugID $ ug1
+        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
+        return $ ug1 ^. #id
       --      parents for groups in next level , all group ids created
       return (Just <$> concatMap (replicate 2) new_ugids, ugids ++ new_ugids)
 
@@ -183,12 +183,12 @@ testMoveGroupCycleError = do
   ugA  <- dbUpdate . UserGroupCreate $ ugA0
   -- make B child of A
   ugB0 <- rand 10 arbitrary
-  ugB  <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just . get ugID $ ugA) $ ugB0
+  ugB  <- dbUpdate . UserGroupCreate . set #parentGroupID (Just $ ugA ^. #id) $ ugB0
   -- making A child of B fails
   assertRaisesKontra (\(UserGroupsFormCycle _) -> True)
     . dbUpdate
     . UserGroupUpdate
-    . set ugParentGroupID (Just . get ugID $ ugB)
+    . set #parentGroupID (Just $ ugB ^. #id)
     $ ugA
 
 testFindInheritedPricePlan :: TestEnv ()
@@ -199,10 +199,10 @@ testFindInheritedPricePlan = do
   ugB  <-
     dbUpdate
     . UserGroupCreate
-    . set ugParentGroupID (Just . get ugID $ ugA)
-    . set ugInvoicing     None
+    . set #parentGroupID (Just $ ugA ^. #id)
+    . set #invoicing     None
     $ ugB0
-  Just ugwithparents <- dbQuery . UserGroupGetWithParents . get ugID $ ugB
+  Just ugwithparents <- dbQuery . UserGroupGetWithParents $ ugB ^. #id
   assertEqual "A is the charging group" (ugPaymentPlan ugA)
     . Just
     . ugwpPaymentPlan
@@ -215,26 +215,23 @@ testCannotDeleteUserGroupWithSubgroups = do
   ugA  <- dbUpdate . UserGroupCreate $ ugA0
   -- make B child of A
   ugB0 <- rand 10 arbitrary
-  ugB  <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just . get ugID $ ugA) $ ugB0
+  ugB  <- dbUpdate . UserGroupCreate . set #parentGroupID (Just $ ugA ^. #id) $ ugB0
   commit -- so that raising exception will not take our data with it
   -- deleting group A raises exception
-  assertRaisesDBException
-    .   runSQL_
-    $   "DELETE from user_groups where id = "
-    <?> get ugID ugA
+  assertRaisesDBException . runSQL_ $ "DELETE from user_groups where id = " <?> ugA ^. #id
   commit
   -- deleting group B works
-  runSQL_ $ "DELETE from user_groups where id = " <?> get ugID ugB
+  runSQL_ $ "DELETE from user_groups where id = " <?> ugB ^. #id
 
 testChangeUserGroupParent :: TestEnv ()
 testChangeUserGroupParent = do
   usrGrp       <- addNewUserGroup
   parentUsrGrp <- addNewUserGroup
-  let usrGrpID       = get ugID usrGrp
-      parentUsrGrpID = get ugID parentUsrGrp
+  let usrGrpID       = usrGrp ^. #id
+      parentUsrGrpID = parentUsrGrp ^. #id
       usrEmail       = "testuseremail@scrive.com"
   Just user <- addNewUserToUserGroup "Froggie" "Freddie" usrEmail usrGrpID
-  ctx       <- (set ctxmaybeuser $ Just user) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser $ Just user) <$> mkContext defaultLang
 
   let params1 = [("companyparentid", inText $ showt parentUsrGrpID)]
   req1 <- mkRequest POST params1
@@ -245,35 +242,35 @@ testChangeUserGroupParent = do
   assertLeft eErrRes
 
   -- -- user gets admin rights
-  let ctx' = (set ctxadminaccounts [Email usrEmail]) ctx
+  let ctx' = (set #adminAccounts [Email usrEmail]) ctx
   mUsrGrpParentBefore <-
-    join <$> ((get ugParentGroupID) <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group has no parent" mUsrGrpParentBefore Nothing
   void $ runTestKontra req1 ctx' $ handleCompanyChange usrGrpID
   mUsrGrpParentAfter <-
-    join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been set correctly" mUsrGrpParentAfter
     $ Just parentUsrGrpID
 
   grandParentUsrGrp <- addNewUserGroup
-  let grandParentUsrGrpID = get ugID grandParentUsrGrp
+  let grandParentUsrGrpID = grandParentUsrGrp ^. #id
       params2             = [("companyparentid", inText $ showt grandParentUsrGrpID)]
   req2 <- mkRequest POST params2
   void $ runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID
   mUsrGrpGrandParentAfter <-
-    join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ parentUsrGrpID)
+    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ parentUsrGrpID)
   assertEqual "User group grandparent has been set correctly" mUsrGrpGrandParentAfter
     $ Just grandParentUsrGrpID
 
   -- Setting a parent that already has a parent should work. We'll reuse
   -- usrGrp since it now has one.
   usrGrp' <- addNewUserGroup
-  let usrGrpID' = get ugID usrGrp'
+  let usrGrpID' = usrGrp' ^. #id
       params3   = [("companyparentid", inText $ showt usrGrpID)]
   req3 <- mkRequest POST params3
   void $ runTestKontra req3 ctx' $ handleCompanyChange usrGrpID'
   mUsrGrpParentAfter' <-
-    join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID')
+    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID')
   assertEqual "User group parent that has parent has been set correctly"
               mUsrGrpParentAfter'
     $ Just usrGrpID
@@ -282,11 +279,11 @@ testChangeUserGroupParent = do
   let params4 = [("companyparentid", inText "")]
   req4                 <- mkRequest POST params4
   mUsrGrpParentBefore' <-
-    join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent still set" mUsrGrpParentBefore' $ Just parentUsrGrpID
   void $ runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
   mUsrGrpParentAfter'' <-
-    join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been removed" mUsrGrpParentAfter'' Nothing
 
 testUserGroupRootMustHaveInvoice :: TestEnv ()
@@ -296,17 +293,17 @@ testUserGroupRootMustHaveInvoice = do
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupCreate
-    . set ugInvoicing None
+    . set #invoicing None
     $ ug0
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupCreate
-    . set ugInvoicing (BillItem Nothing)
+    . set #invoicing (BillItem Nothing)
     $ ug0
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupCreate
-    . set ugInvoicing (BillItem (Just FreePlan))
+    . set #invoicing (BillItem (Just FreePlan))
     $ ug0
 
   ug1 <- dbUpdate . UserGroupCreate $ ug0
@@ -314,17 +311,17 @@ testUserGroupRootMustHaveInvoice = do
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupUpdate
-    . set ugInvoicing None
+    . set #invoicing None
     $ ug1
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupUpdate
-    . set ugInvoicing (BillItem Nothing)
+    . set #invoicing (BillItem Nothing)
     $ ug1
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupUpdate
-    . set ugInvoicing (BillItem (Just FreePlan))
+    . set #invoicing (BillItem (Just FreePlan))
     $ ug1
 
 testUserGroupRootMustHaveAddress :: TestEnv ()
@@ -334,7 +331,7 @@ testUserGroupRootMustHaveAddress = do
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupCreate
-    . set ugAddress Nothing
+    . set #address Nothing
     $ ug0
 
   ug1 <- dbUpdate . UserGroupCreate $ ug0
@@ -342,7 +339,7 @@ testUserGroupRootMustHaveAddress = do
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupUpdate
-    . set ugAddress Nothing
+    . set #address Nothing
     $ ug1
 
 testUserGroupRootMustHaveSettings :: TestEnv ()
@@ -352,7 +349,7 @@ testUserGroupRootMustHaveSettings = do
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupCreate
-    . set ugSettings Nothing
+    . set #settings Nothing
     $ ug0
 
   ug1 <- dbUpdate . UserGroupCreate $ ug0
@@ -360,5 +357,5 @@ testUserGroupRootMustHaveSettings = do
   assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate
     . UserGroupUpdate
-    . set ugSettings Nothing
+    . set #settings Nothing
     $ ug1

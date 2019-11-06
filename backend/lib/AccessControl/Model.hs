@@ -94,9 +94,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
     -- Every is_company_admin shall have DocumentAdminAR to the company home
     -- folder
     mGroupHomeFolderID <- do
-      (get folderID <$>) <$> (query . FolderGetUserGroupHome $ ugid)
+      (view #id <$>) <$> (query . FolderGetUserGroupHome $ ugid)
     mUserHomeFolderID <- do
-      (get folderID <$>) <$> (query . FolderGetUserHome $ uid)
+      (view #id <$>) <$> (query . FolderGetUserHome $ uid)
     -- get company root folder
     let adminOrUserRoles =
           (if isAdmin then [UserAdminAR ugid] else [UserGroupMemberAR ugid])
@@ -188,7 +188,7 @@ addInheritedRoles roles = concatForM roles $ \role -> case accessRoleTarget role
   UserAdminAR ugid -> do
     ugwcs <- dbQuery $ UserGroupGetAllChildrenRecursive ugid
     return . (role :) . for (ugwcToList ugwcs) $ \ug ->
-      accessRoleSetTarget (UserAdminAR $ get ugID ug) role
+      accessRoleSetTarget (UserAdminAR $ ug ^. #id) role
   _ -> return [role]
 
 fetchAccessRole

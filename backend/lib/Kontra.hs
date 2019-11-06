@@ -96,7 +96,7 @@ instance MonadBaseControl IO (InnerKontra fst)
 
 instance (MonadTrans fst, Monad (InnerKontra fst), KontraMonad (KontraG fst))
     => MonadTime (KontraG fst) where
-  currentTime = get ctxtime <$> getContext
+  currentTime = view #time <$> getContext
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => KontraMonad (KontraG fst) where
@@ -105,18 +105,18 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => TemplatesMonad (KontraG fst) where
-  getTemplates = get ctxtemplates <$> getContext
+  getTemplates = view #templates <$> getContext
   getTextTemplatesByLanguage langStr = do
-    globaltemplates <- get ctxglobaltemplates <$> getContext
+    globaltemplates <- view #globalTemplates <$> getContext
     return $ TL.localizedVersion langStr globaltemplates
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => GuardTimeConfMonad (KontraG fst) where
-  getGuardTimeConf = get ctxgtconf <$> getContext
+  getGuardTimeConf = view #gtConf <$> getContext
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => PdfToolsLambdaMonad (KontraG fst) where
-  getPdfToolsLambdaEnv = get ctxpdftoolslambdaenv <$> getContext
+  getPdfToolsLambdaEnv = view #pdfToolsLambdaEnv <$> getContext
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => MailContextMonad (KontraG fst) where
@@ -124,20 +124,20 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
 
 -- | Logged in user is admin with 2FA (2FA only enforced for production = true)
 isAdmin :: Context -> Bool
-isAdmin ctx = case get ctxmaybeuser ctx of
+isAdmin ctx = case ctx ^. #maybeUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` get ctxadminaccounts ctx)
-      && (usertotpactive user || not (get ctxproduction ctx))
+    (useremail (userinfo user) `elem` ctx ^. #adminAccounts)
+      && (usertotpactive user || not (ctx ^. #production))
 
 
 -- | Logged in user is sales with 2FA (2FA only enforced for production = true)
 isSales :: Context -> Bool
-isSales ctx = case get ctxmaybeuser ctx of
+isSales ctx = case ctx ^. #maybeUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
-      && (usertotpactive user || not (get ctxproduction ctx))
+    (useremail (userinfo user) `elem` ctx ^. #salesAccounts)
+      && (usertotpactive user || not (ctx ^. #production))
 
 -- | Will 404 if not logged in as an admin.
 onlyAdmin :: Kontrakcja m => m a -> m a
@@ -154,15 +154,15 @@ onlySalesOrAdmin m = do
 -- | Will 404 if the testing backdoor isn't open.
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
 onlyBackdoorOpen a = do
-  backdoorOpen <- get ctxismailbackdooropen <$> getContext
+  backdoorOpen <- view #isMailBackdoorOpen <$> getContext
   if backdoorOpen then a else respond404
 
 -- | Sticks the logged in user onto the context.
 logUserToContext :: Kontrakcja m => Maybe User -> m ()
-logUserToContext user = modifyContext $ set ctxmaybeuser user
+logUserToContext user = modifyContext $ set #maybeUser user
 
 logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
-logPadUserToContext user = modifyContext $ set ctxmaybepaduser user
+logPadUserToContext user = modifyContext $ set #maybePadUser user
 
 unsafeSessionTakeover :: Kontrakcja m => SessionCookieInfo -> m (Maybe Session)
 unsafeSessionTakeover SessionCookieInfo {..} = do
@@ -173,20 +173,16 @@ unsafeSessionTakeover SessionCookieInfo {..} = do
     Just s  -> do
       mUser    <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesUserID s
       mPadUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesPadUserID s
-      modifyContext
-        $ (\ctx ->
-            set ctxsessionid (sesID s)
-              $ set ctxmaybeuser    mUser
-              $ set ctxmaybepaduser mPadUser
-              $ ctx
-          )
+      modifyContext $ \ctx ->
+        ctx
+          & (#sessionID .~ sesID s)
+          & (#maybeUser .~ mUser)
+          & (#maybePadUser .~ mPadUser)
       return $ Just s
 
 switchLang :: Kontrakcja m => Lang -> m ()
 switchLang lang = modifyContext $ \ctx ->
-  set ctxlang lang
-    $ set ctxtemplates (localizedVersion lang (get ctxglobaltemplates ctx))
-    $ ctx
+  ctx & (#lang .~ lang) & (#templates .~ localizedVersion lang (ctx ^. #globalTemplates))
 
 -- | Extract data from GET or POST request. Fail with 'internalError'
 -- if param variable not present or when it cannot be read.

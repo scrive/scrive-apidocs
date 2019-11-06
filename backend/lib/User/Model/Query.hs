@@ -64,7 +64,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByTempLoginToken (Maybe (
       sqlResult "user_id"
       sqlResult $ "expiration_time <=" <?> now
       sqlWhere $ "hash =" <?> logintoken
-    mrow <- fetchMaybe id
+    mrow <- fetchMaybe identity
     case mrow of
       Nothing             -> return Nothing
       Just (uid, expired) -> do
@@ -111,7 +111,7 @@ instance (MonadDB m, MonadThrow m)
       sqlWhereIsNULL "u.deleted"
       sqlWhere . sqlConcatOR $ [isNotFree, hasParent]
 
-    fetchMany id
+    fetchMany identity
     where
       hasParent = "ug.parent_group_id IS NOT NULL"
       isNotFree = "ugi.payment_plan <>" <?> FreePlan
@@ -121,7 +121,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccount
   query GetUserGroupAccountsCountActive = do
     now <- currentTime
     runQuery_ $ activeUsersQuery now
-    fetchMany id
+    fetchMany identity
     where
       activeUsersQuery :: UTCTime -> SQL
       activeUsersQuery now =

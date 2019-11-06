@@ -1,6 +1,8 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Context.Internal where
 
 import Log.Class
+import Optics.TH
 import qualified Database.Redis as R
 
 import BrandedDomain.BrandedDomain
@@ -21,69 +23,71 @@ import User.Email
 import User.Model
 
 data Context = Context
-    { _ctxmaybeuser           :: Maybe User
+    { maybeUser           :: Maybe User
       -- ^ The logged in user. Is Nothing when there is no one logged in.
-    , _ctxtime                :: UTCTime
+    , time                :: UTCTime
       -- ^ The time of the request.
-    , _ctxclientname          :: Maybe Text
+    , clientName          :: Maybe Text
       -- ^ Client identification from header Client-Name or if that's
       -- missing: User-Agent.
-    , _ctxclienttime          :: Maybe UTCTime
+    , clientTime          :: Maybe UTCTime
       -- ^ Client-local time when an action was performed
       -- (e.g. signing a document).
-    , _ctxipnumber            :: IPAddress
+    , ipAddr            :: IPAddress
       -- ^ The IP number of the client.
-    , _ctxproduction          :: Bool
+    , production          :: Bool
       -- ^ Is this server the production server?
-    , _ctxcdnbaseurl          :: Maybe Text
+    , cdnBaseUrl          :: Maybe Text
       -- ^ CDN base URL if one shouild be used.
-    , _ctxtemplates           :: KontrakcjaTemplates
+    , templates           :: KontrakcjaTemplates
       -- ^ The set of templates to render text for the context's language.
-    , _ctxglobaltemplates     :: KontrakcjaGlobalTemplates
+    , globalTemplates     :: KontrakcjaGlobalTemplates
       -- ^ All of the templates for all valid languages.
-    , _ctxlang                :: Lang
+    , lang                :: Lang
       -- ^ The current context's language.
-    , _ctxismailbackdooropen  :: Bool
-    , _ctxmailnoreplyaddress  :: Text
+    , isMailBackdoorOpen  :: Bool
+    , mailNoreplyAddress  :: Text
       -- ^ The "noreply" address used when sending email.
-    , _ctxcgigrpconfig        :: Maybe CgiGrpConfig
-    , _ctxgtconf              :: GuardTimeConf
+    , cgiGrpConfig        :: Maybe CgiGrpConfig
+    , gtConf              :: GuardTimeConf
       -- ^ GuardTime configuration.
-    , _ctxmrediscache         :: Maybe R.Connection
-    , _ctxfilecache           :: FileMemCache
-    , _ctxxtoken              :: MagicHash
+    , redisCache          :: Maybe R.Connection
+    , fileCache           :: FileMemCache
+    , xToken              :: MagicHash
       -- ^ The XToken for combating CSRF.
-    , _ctxadminaccounts       :: [Email]
-    , _ctxsalesaccounts       :: [Email]
-    , _ctxmaybepaduser        :: Maybe User
+    , adminAccounts       :: [Email]
+    , salesAccounts       :: [Email]
+    , maybePadUser        :: Maybe User
       -- ^ If we are logged in to the pad view.
-    , _ctxusehttps            :: Bool
-    , _ctxsessionid           :: SessionID
-    , _ctxtrackjstoken        :: Maybe Text
-    , _ctxzendeskkey          :: Maybe Text
-    , _ctxmixpaneltoken       :: Maybe Text
-    , _ctxgatoken             :: Maybe Text
-    , _ctxhubspotconf         :: Maybe HubSpotConf
-    , _ctxbrandeddomain       :: BrandedDomain
-    , _ctxsalesforceconf      :: Maybe SalesforceConf
-    , _ctxnetsconfig          :: Maybe NetsConfig
-    , _ctxisapilogenabled     :: Bool
-    , _ctxnetssignconfig      :: Maybe NetsSignConfig
-    , _ctxpdftoolslambdaenv   :: PdfToolsLambdaEnv
-    , _ctxpasswordserviceconf :: PasswordServiceConf
-    , _ctxeidserviceconf      :: Maybe EIDServiceConf
-    , _ctxmaybeapiuser        :: Maybe User
-    -- ^ The user which was effectively used for API call (this
-    -- includes api/frontend) This might be the user from session, if
-    -- the OAuth authorization was missing.
+    , useHttps            :: Bool
+    , sessionID           :: SessionID
+    , trackJsToken        :: Maybe Text
+    , zendeskKey          :: Maybe Text
+    , mixpanelToken       :: Maybe Text
+    , gaToken             :: Maybe Text
+    , hubspotConf         :: Maybe HubSpotConf
+    , brandedDomain       :: BrandedDomain
+    , salesforceConf      :: Maybe SalesforceConf
+    , netsConfig          :: Maybe NetsConfig
+    , isApiLogEnabled     :: Bool
+    , netsSignConfig      :: Maybe NetsSignConfig
+    , pdfToolsLambdaEnv   :: PdfToolsLambdaEnv
+    , passwordServiceConf :: PasswordServiceConf
+    , eidServiceConf      :: Maybe EIDServiceConf
+    , maybeApiUser        :: Maybe User
+    -- ^ The user which was effectively used for API call (this includes
+    -- api/frontend) This might be the user from session, if the OAuth
+    -- authorization was missing.
     }
 
--- | 'anonymiseContext' changes given context into a one that does not
--- hold any user credentials.  Use this if your action requires
--- different form of authentication.
+makeFieldLabelsWith noPrefixFieldLabels ''Context
+
+-- | 'anonymiseContext' changes given context into a one that does not hold any
+-- user credentials.  Use this if your action requires different form of
+-- authentication.
 anonymiseContext :: Context -> Context
-anonymiseContext ctx = ctx { _ctxmaybeuser    = Nothing
-                           , _ctxmaybepaduser = Nothing
-                           , _ctxmaybeapiuser = Nothing
-                           , _ctxsessionid    = SessionID.tempSessionID
+anonymiseContext ctx = ctx { maybeUser    = Nothing
+                           , maybePadUser = Nothing
+                           , maybeApiUser = Nothing
+                           , sessionID    = SessionID.tempSessionID
                            }

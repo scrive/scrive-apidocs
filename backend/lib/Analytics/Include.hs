@@ -35,11 +35,11 @@ getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
   ctx <- getContext
 
-  let muser       = get ctxmaybeuser ctx
-      token       = get ctxmixpaneltoken ctx
-      hubspotConf = get ctxhubspotconf ctx
-      gaToken     = get ctxgatoken ctx
-      lang        = get ctxlang ctx
+  let muser       = ctx ^. #maybeUser
+      token       = ctx ^. #mixpanelToken
+      hubspotConf = ctx ^. #hubspotConf
+      gaToken     = ctx ^. #gaToken
+      lang        = ctx ^. #lang
 
   musergroup <- case muser of
     Just user -> dbQuery . UserGroupGet . usergroupid $ user
@@ -101,7 +101,7 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Company Name")
       $   emptyToNothing
       $   escapeString
-      <$> get ugName
+      <$> (^. #name)
       <$> aUserGroup
 
     mnop (J.value "Signup Method")

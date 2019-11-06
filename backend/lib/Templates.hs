@@ -88,4 +88,4 @@ runTemplatesT (lang, ts) action =
 -- | Use 'templateName' to flag that a string literal is a template
 -- name (for detect_old_templates)
 templateName :: Text -> Text
-templateName = id
+templateName = identity
