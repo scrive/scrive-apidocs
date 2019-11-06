@@ -63,7 +63,8 @@ folderAPICreate = api $ do
     Just parent_id -> do
       -- Check user has permissions to create child folder
       let acc = [mkAccPolicyItem (CreateA, FolderR, parent_id)]
-      apiAccessControlOrIsAdmin acc . dbUpdate $ FolderCreate fdrIn
+      apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+      apiAccessControlOrIsAdmin apiuser acc . dbUpdate $ FolderCreate fdrIn
   return . Ok $ encodeFolder fdrOut
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
@@ -130,7 +131,8 @@ folderAPIUpdate fid = api $ do
           -- root is remaining root. no special privileges needed
           _ -> return []
       let acc = mkAccPolicy $ [(UpdateA, FolderR, fid)] <> accParents
-      apiAccessControlOrIsAdmin acc $ do
+      apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+      apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
         fdrDB' <- apiGuardJustM (serverError "Was not able to retrieve updated folder")
                                 (dbQuery . FolderGet $ fid)
@@ -138,7 +140,8 @@ folderAPIUpdate fid = api $ do
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
-  apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
+  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
     fdr <- folderOrAPIError fid
     let isRootFolder = isNothing $ fdr ^. #parentID
     when isRootFolder
@@ -159,7 +162,8 @@ folderAPIListDocs :: Kontrakcja m => FolderID -> m Response
 folderAPIListDocs fid = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
   let acc = mkAccPolicy $ [(ReadA, FolderR, fid)]
-  apiAccessControlOrIsAdmin acc $ do
+  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+  apiAccessControlOrIsAdmin apiuser acc $ do
     offset   <- apiV2ParameterDefault 0 (ApiV2ParameterInt "offset")
     maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt "max")
     sorting  <- apiV2ParameterDefault defaultDocumentAPISort

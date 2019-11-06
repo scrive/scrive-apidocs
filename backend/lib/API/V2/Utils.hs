@@ -22,7 +22,6 @@ import Context
 import DB
 import Folder.Model
 import Kontra
-import OAuth.Model
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
@@ -48,13 +47,12 @@ apiAccessControlCheck :: Kontrakcja m => User -> AccessPolicy -> m Bool
 apiAccessControlCheck apiUser acc = do
   userAccessControlImpl apiUser acc (return False) (return True)
 
-apiAccessControlOrIsAdmin :: Kontrakcja m => AccessPolicy -> m a -> m a
-apiAccessControlOrIsAdmin acc successAction = do
+apiAccessControlOrIsAdmin :: Kontrakcja m => User -> AccessPolicy -> m a -> m a
+apiAccessControlOrIsAdmin apiuser acc successAction = do
   isAdminOrSales <- checkAdminOrSales
   -- If scrive admin or sales, should perform action anyway (unless non-existance error)
   let failAction =
         if isAdminOrSales then successAction else apiError insufficientPrivileges
-  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
   userAccessControlImpl apiuser acc failAction successAction
 
 accessControlLoggedIn :: Kontrakcja m => AccessPolicy -> m a -> m a
