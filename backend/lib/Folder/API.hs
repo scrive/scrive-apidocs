@@ -69,7 +69,8 @@ folderAPICreate = api $ do
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
   let acc = mkAccPolicy [(ReadA, FolderR, fid)]
-  hasReadAccess  <- apiAccessControlCheck acc
+  user           <- fst <$> getAPIUser APIPersonal
+  hasReadAccess  <- apiAccessControlCheck user acc
   isAdminOrSales <- checkAdminOrSales
   if (hasReadAccess || isAdminOrSales)
     then getFolder

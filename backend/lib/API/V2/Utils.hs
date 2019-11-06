@@ -44,10 +44,9 @@ apiAccessControl :: Kontrakcja m => User -> AccessPolicy -> m a -> m a
 apiAccessControl user acc successAction = do
   userAccessControlImpl user acc (apiError insufficientPrivileges) successAction
 
-apiAccessControlCheck :: Kontrakcja m => AccessPolicy -> m Bool
-apiAccessControlCheck acc = do
-  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
-  userAccessControlImpl apiuser acc (return False) (return True)
+apiAccessControlCheck :: Kontrakcja m => User -> AccessPolicy -> m Bool
+apiAccessControlCheck apiUser acc = do
+  userAccessControlImpl apiUser acc (return False) (return True)
 
 apiAccessControlOrIsAdmin :: Kontrakcja m => AccessPolicy -> m a -> m a
 apiAccessControlOrIsAdmin acc successAction = do
