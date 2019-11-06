@@ -18,10 +18,10 @@ import API.V2.Errors
 import API.V2.Utils
 import DB
 import Kontra
+import OAuth.Model
 import Routing
 import User.Model.Query
 import User.UserID
-import OAuth.Model
 
 accessControlAPI :: Route (Kontra Response)
 accessControlAPI =

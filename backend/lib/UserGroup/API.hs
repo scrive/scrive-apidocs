@@ -27,13 +27,13 @@ import API.V2.Parameters
 import API.V2.Utils
 import DB
 import Kontra
+import OAuth.Model
 import Routing
 import User.JSON
 import User.Model
 import UserGroup.JSON
 import UserGroup.Model
 import UserGroup.Types
-import OAuth.Model
 
 userGroupAPI :: Route (Kontra Response)
 userGroupAPI =
