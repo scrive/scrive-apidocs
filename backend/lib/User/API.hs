@@ -321,20 +321,20 @@ apiCallChangeUserPassword = api $ do
 
 apiCallLoginUser :: Kontrakcja m => m Response
 apiCallLoginUser = api $ do
-  ctx          <- getContext
-  (user, _, _) <- getAPIUser APIPersonal
+  ctx         <- getContext
+  user        <- V2.getAPIUserWithAPIPersonal
 
-  redirectUrl  <- apiGuardJustM (badInput "Redirect URL not provided or invalid.")
+  redirectUrl <- apiGuardJustM (badInput "Redirect URL not provided or invalid.")
     $ getField "redirect"
 
   void $ dbUpdate $ LogHistoryLoginSuccess (user ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
-apiCallUpdateUserProfile :: forall  m . Kontrakcja m => m Response
+apiCallUpdateUserProfile :: forall m . Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
-  (user, _, _) <- getAPIUser APIPersonal
-  ctx          <- getContext
+  user <- V2.getAPIUserWithAPIPersonal
+  ctx  <- getContext
 
   -- allow empty strings through validation
   let getParameter :: Text -> (Text -> InputValidation.Result Text) -> Text -> m Text
@@ -428,9 +428,9 @@ apiCallUpdateUserProfile = api $ do
 
 apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do
-  ctx          <- getContext
-  (user, _, _) <- getAPIUser APIPersonal
-  mnewemail    <- getOptionalField asValidEmail "newemail"
+  ctx       <- getContext
+  user      <- V2.getAPIUserWithAPIPersonal
+  mnewemail <- getOptionalField asValidEmail "newemail"
   case (Email <$> mnewemail) of
     (Just newemail) -> do
       mexistinguser <- dbQuery $ GetUserByEmail newemail
@@ -556,8 +556,8 @@ sendPasswordReminder user = do
 
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do
-  (user, _, _) <- getAPIUser APIPersonal
-  scheme       <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
+  user   <- V2.getAPIUserWithAPIPersonal
+  scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
   fmap Ok $ case scheme of
     Just (ConstantUrlScheme url) -> runJSONGenT $ do
       value "scheme"      ("constant" :: String)
@@ -652,10 +652,8 @@ apiCallLoginUserAndGetSession = V2.api $ do
 
 apiCallIsUserDeletable :: Kontrakcja m => m Response
 apiCallIsUserDeletable = V2.api $ do
-  (user, _, _) <- getAPIUser APIPersonal
-
-  mReason      <- dbQuery $ IsUserDeletable user
-
+  user    <- V2.getAPIUserWithAPIPersonal
+  mReason <- dbQuery $ IsUserDeletable user
   return $ V2.Ok $ runJSONGen $ case mReason of
     Just reason -> do
       value "deletable" False
@@ -665,10 +663,9 @@ apiCallIsUserDeletable = V2.api $ do
 
 apiCallDeleteUser :: Kontrakcja m => m Response
 apiCallDeleteUser = V2.api $ do
-  (user, _, _) <- getAPIUser APIPersonal
-  ctx          <- getContext
-
-  email        <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
+  user  <- V2.getAPIUserWithAPIPersonal
+  ctx   <- getContext
+  email <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
   unless (unEmail (user ^. #info % #email) == email)
     $ V2.apiError
     $ V2.requestParameterParseError
@@ -694,8 +691,7 @@ apiCallDeleteUser = V2.api $ do
 
 apiCallGetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallGetDataRetentionPolicy = V2.api $ do
-  (user, _, _) <- getAPIUser APIPersonal
-
+  user <- V2.getAPIUserWithAPIPersonal
   let drp = user ^. #settings % #dataRetentionPolicy
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
@@ -707,9 +703,8 @@ apiCallGetDataRetentionPolicy = V2.api $ do
 
 apiCallSetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallSetDataRetentionPolicy = V2.api $ do
-  (user, _, _) <- getAPIUser APIPersonal
-
-  ugwp         <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+  user <- V2.getAPIUserWithAPIPersonal
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
   drp <- V2.apiV2ParameterObligatory
     $ V2.ApiV2ParameterJSON "data_retention_policy" unjsonDataRetentionPolicy
@@ -724,7 +719,7 @@ apiCallGetTokenForPersonalCredentials :: Kontrakcja m => UserID -> m Response
 apiCallGetTokenForPersonalCredentials uid = V2.api $ do
   -- Guards
   void $ guardThatUserExists uid
-  (user, _, _) <- getAPIUser APIPersonal
+  user <- V2.getAPIUserWithAPIPersonal
   apiAccessControl user [mkAccPolicyItem (UpdateA, UserR, uid)] $ do
     minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
     when (minutes < 1 || minutes > maxMinutes) invalidMinsParamError
@@ -763,11 +758,11 @@ guardCanChangeUser adminuser otheruser = do
     $ do
         throwM . SomeDBExtraException $ forbidden "Can't change this user details"
 
-apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response
+apiCallUpdateOtherUserProfile :: forall m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
-  ctx                  <- getContext
-  (authorizingUser, _) <- V2.getAPIUserWithPrivileges [APIPersonal]
-  mAffectedUser        <- dbQuery $ GetUserByID affectedUserID
+  ctx             <- getContext
+  authorizingUser <- V2.getAPIUserWithAPIPersonal
+  mAffectedUser   <- dbQuery $ GetUserByID affectedUserID
   case mAffectedUser of
     Nothing           -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
     Just affectedUser -> do
@@ -816,9 +811,9 @@ apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
 
 apiCallChangeOtherUserEmail :: Kontrakcja m => UserID -> m Response
 apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
-  ctx                  <- getContext
-  (authorizingUser, _) <- V2.getAPIUserWithPrivileges [APIPersonal]
-  mAffectedUser        <- dbQuery $ GetUserByID affectedUserID
+  ctx             <- getContext
+  authorizingUser <- V2.getAPIUserWithAPIPersonal
+  mAffectedUser   <- dbQuery $ GetUserByID affectedUserID
   case mAffectedUser of
     Nothing           -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
     Just affectedUser -> do

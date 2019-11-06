@@ -63,14 +63,14 @@ folderAPICreate = api $ do
     Just parent_id -> do
       -- Check user has permissions to create child folder
       let acc = [mkAccPolicyItem (CreateA, FolderR, parent_id)]
-      apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+      apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc . dbUpdate $ FolderCreate fdrIn
   return . Ok $ encodeFolder fdrOut
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
   let acc = mkAccPolicy [(ReadA, FolderR, fid)]
-  user           <- fst <$> getAPIUser APIPersonal
+  user           <- getAPIUserWithAPIPersonal
   hasReadAccess  <- apiAccessControlCheck user acc
   isAdminOrSales <- checkAdminOrSales
   if (hasReadAccess || isAdminOrSales)
@@ -131,7 +131,7 @@ folderAPIUpdate fid = api $ do
           -- root is remaining root. no special privileges needed
           _ -> return []
       let acc = mkAccPolicy $ [(UpdateA, FolderR, fid)] <> accParents
-      apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+      apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
         fdrDB' <- apiGuardJustM (serverError "Was not able to retrieve updated folder")
@@ -140,7 +140,7 @@ folderAPIUpdate fid = api $ do
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
-  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+  apiuser <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
     fdr <- folderOrAPIError fid
     let isRootFolder = isNothing $ fdr ^. #parentID
@@ -162,8 +162,7 @@ folderAPIListDocs :: Kontrakcja m => FolderID -> m Response
 folderAPIListDocs fid = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
   let acc = mkAccPolicy $ [(ReadA, FolderR, fid)]
-  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
-  apiAccessControlOrIsAdmin apiuser acc $ do
+  apiAccessControlOrIsAdmin user acc $ do
     offset   <- apiV2ParameterDefault 0 (ApiV2ParameterInt "offset")
     maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt "max")
     sorting  <- apiV2ParameterDefault defaultDocumentAPISort

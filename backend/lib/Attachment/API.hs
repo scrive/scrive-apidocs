@@ -90,11 +90,12 @@ attachmentsApiV2Create = api $ do
 
 attachmentsApiV2Download :: Kontrakcja m => AttachmentID -> m Response
 attachmentsApiV2Download attid = api $ do
-  (user, _) <- getAPIUser APIPersonal
+  user <- getAPIUserWithAPIPersonal
+  let uid = user ^. #id
   atts      <- dbQuery $ GetAttachments
-    [ AttachmentsSharedInUsersUserGroup (user ^. #id)
-    , AttachmentsOfAuthorDeleteValue (user ^. #id) True
-    , AttachmentsOfAuthorDeleteValue (user ^. #id) False
+    [ AttachmentsSharedInUsersUserGroup uid
+    , AttachmentsOfAuthorDeleteValue uid True
+    , AttachmentsOfAuthorDeleteValue uid False
     ]
     [AttachmentFilterByID attid]
     []
@@ -106,8 +107,8 @@ attachmentsApiV2Download attid = api $ do
 
 attachmentsApiV2SetSharing :: Kontrakcja m => m Response
 attachmentsApiV2SetSharing = api $ do
-  (user, _) <- getAPIUser APIPersonal
-  ids       <- apiV2ParameterObligatory $ ApiV2ParameterJSON "attachment_ids" $ arrayOf
+  user <- getAPIUserWithAPIPersonal
+  ids  <- apiV2ParameterObligatory $ ApiV2ParameterJSON "attachment_ids" $ arrayOf
     unjsonDef
   shared <- apiV2ParameterObligatory $ ApiV2ParameterBool "shared"
   dbUpdate $ SetAttachmentsSharing (user ^. #id) ids shared

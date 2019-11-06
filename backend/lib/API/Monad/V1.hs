@@ -324,7 +324,6 @@ getAPIUserWithPad priv = do
         Just (user, actor) -> return (user, actor, False)
         Nothing            -> (throwM . SomeDBExtraException) notLoggedIn'
 
-
 getSessionUser :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUser = do
   ctx <- getContext

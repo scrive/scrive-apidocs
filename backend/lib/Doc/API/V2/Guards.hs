@@ -805,6 +805,6 @@ guardAccessToDocumentWithSignatory did slid = do
   sid   <- view #sessionID <$> getContext
   check <- dbQuery $ CheckDocumentSession sid slid
   unless check $ do
-    (user, _) <- getAPIUser APIPersonal
-    check'    <- checkIfUserCanAccessDocumentAsSignatory user did slid
+    user   <- getAPIUserWithAPIPersonal
+    check' <- checkIfUserCanAccessDocumentAsSignatory user did slid
     unless check' $ apiError documentActionForbidden
