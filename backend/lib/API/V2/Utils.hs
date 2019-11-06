@@ -2,7 +2,6 @@ module API.V2.Utils
     ( apiAccessControl
     , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
-    , apiAccessControlWithAnyPrivileges
     , apiAccessControlCheck
     , checkAdminOrSales
     , folderOrAPIError
@@ -34,10 +33,6 @@ userAccessControlImpl apiuser acc failAction successAction = do
     `catchDBExtraException` (\(UserNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
-
-apiAccessControlWithAnyPrivileges :: Kontrakcja m => User -> AccessPolicy -> m a -> m a
-apiAccessControlWithAnyPrivileges user acc successAction = do
-  userAccessControlImpl user acc (apiError insufficientPrivileges) successAction
 
 apiAccessControl :: Kontrakcja m => User -> AccessPolicy -> m a -> m a
 apiAccessControl user acc successAction = do

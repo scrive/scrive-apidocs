@@ -213,9 +213,8 @@ guardThatAttachmentDetailsAreConsistent ads = do
 guardFolderActionIsAllowed :: Kontrakcja m => [(AccessAction, FolderID)] -> m ()
 guardFolderActionIsAllowed acts_fids = do
   user <- fst <$> getAPIUserWithAnyPrivileges
-  apiAccessControlWithAnyPrivileges
-      user
-      [ mkAccPolicyItem (act, DocumentR, fid) | (act, fid) <- acts_fids ]
+  apiAccessControl user
+                   [ mkAccPolicyItem (act, DocumentR, fid) | (act, fid) <- acts_fids ]
     $ return ()
 
 guardDocumentCreateInFolderIsAllowed :: Kontrakcja m => FolderID -> m ()
