@@ -36,9 +36,8 @@ userAccessControlImpl apiuser acc failAction successAction = do
     `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
 
-apiAccessControlWithAnyPrivileges :: Kontrakcja m => AccessPolicy -> m a -> m a
-apiAccessControlWithAnyPrivileges acc successAction = do
-  user <- fst <$> getAPIUserWithAnyPrivileges
+apiAccessControlWithAnyPrivileges :: Kontrakcja m => User -> AccessPolicy -> m a -> m a
+apiAccessControlWithAnyPrivileges user acc successAction = do
   userAccessControlImpl user acc (apiError insufficientPrivileges) successAction
 
 apiAccessControl :: Kontrakcja m => AccessPolicy -> m a -> m a

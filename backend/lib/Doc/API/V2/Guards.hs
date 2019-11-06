@@ -211,8 +211,10 @@ guardThatAttachmentDetailsAreConsistent ads = do
     hasDuplicates (x : xs) = x `elem` xs || hasDuplicates xs
 
 guardFolderActionIsAllowed :: Kontrakcja m => [(AccessAction, FolderID)] -> m ()
-guardFolderActionIsAllowed acts_fids =
+guardFolderActionIsAllowed acts_fids = do
+  user <- fst <$> getAPIUserWithAnyPrivileges
   apiAccessControlWithAnyPrivileges
+      user
       [ mkAccPolicyItem (act, DocumentR, fid) | (act, fid) <- acts_fids ]
     $ return ()
 
