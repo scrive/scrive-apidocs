@@ -119,9 +119,6 @@ $htmlopentag()$
     <div class='error-page-description'>
       $_linkInvalidError()$
     </div>
-    <div class='error-page-instruction'>
-        $_afterErrorGoToInstruction()$
-    </div>
 
     <div class='error-page-buttons-box'>
       <a class='button main float-left' href='/'>
