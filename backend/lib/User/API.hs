@@ -331,7 +331,7 @@ apiCallLoginUser = api $ do
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
-apiCallUpdateUserProfile :: forall m . Kontrakcja m => m Response
+apiCallUpdateUserProfile :: forall  m . Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
   user <- V2.getAPIUserWithAPIPersonal
   ctx  <- getContext
@@ -758,7 +758,7 @@ guardCanChangeUser adminuser otheruser = do
     $ do
         throwM . SomeDBExtraException $ forbidden "Can't change this user details"
 
-apiCallUpdateOtherUserProfile :: forall m . Kontrakcja m => UserID -> m Response
+apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
   ctx             <- getContext
   authorizingUser <- V2.getAPIUserWithAPIPersonal
