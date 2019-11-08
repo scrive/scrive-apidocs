@@ -107,7 +107,8 @@ module.exports = React.createClass({
             width="50px"
             className="archive-table-shareablelink-column-header"
             rendering={function (d) {
-              return (<div className={"archive-table-shareablelink-column " + ((d.field("shareable_link")) ? "sharedIcon" : "")}/>);
+              return (<div className={"archive-table-shareablelink-column "
+                                      + ((d.field("shareable_link")) ? "sharedIcon" : "")}/>);
             }}
           />
 
