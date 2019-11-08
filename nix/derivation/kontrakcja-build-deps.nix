@@ -29,7 +29,7 @@ let
 
   logSrc = builtins.fetchGit {
     url = "ssh://git@github.com/scrive/log.git";
-    rev = "c30a152ac80357abeff538e61554465601fc2f13";
+    rev = "27bbb54abed66e65fccfb890e887146cc3a197a0";
   };
 
   haskellLib = pkgs.haskell.lib;
@@ -47,7 +47,7 @@ let
             callGitPackage super
             "hpqtypes"
             "ssh://git@github.com/scrive/hpqtypes.git"
-            "24e7c6067d0b1bfe12e1efab0800990093cd3f0d"
+            "be71b0c49740018748df482c9fc3f1a17b5e1655"
           )
         ;
 
@@ -56,7 +56,7 @@ let
             (callGitPackage super
               "hpqtypes-extras"
               "ssh://git@github.com/scrive/hpqtypes-extras.git"
-              "8323faa8267f0756f29269d63e95fd1a636e97f3"
+              "8adfa1315987544369899e8c4c62823799c92047"
             ))
         ;
 
@@ -64,13 +64,14 @@ let
           (callGitPackage super
             "consumers"
             "ssh://git@github.com/scrive/consumers.git"
-            "98df52670ce51a213ac4d9fe1bef3b08976cbe18"
+            "8b1a2cd4642dd910a8116234a82dd2c3ff1e027d"
           )
         ;
 
-        fields-json = callScrivePackage super
+        fields-json = callGitPackage super
           "fields-json"
-          "0.2.2.4"
+          "git@github.com:scrive/fields-json.git"
+          "c6d850b24e7d58dd24d95e8676d12ce35155dd4d"
         ;
 
         resource-pool = callScrivePackage super
@@ -83,6 +84,12 @@ let
             "unjson"
             "0.15.2.1"
             {})
+        ;
+
+        Cabal = super.callHackage
+            "Cabal"
+            "2.4.1.0"
+            {}
         ;
 
         kontrakcja-templates = callScrivePackage super

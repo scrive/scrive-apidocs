@@ -9,7 +9,9 @@ let
     gemdir = ../../.;
   };
 
-  run-deps = [ rubyEnv ] ++
+  aws-sam-cli = import ./aws-sam-cli { inherit nixpkgs; };
+
+  run-deps = [ rubyEnv aws-sam-cli ] ++
     (with pkgs; [
       jq
       curl
@@ -22,7 +24,6 @@ let
       pngquant
       qrencode
       postgresql
-      aws-sam-cli
       imagemagick
       glibcLocales
       poppler_utils

@@ -2,7 +2,7 @@ nixOptions :
 let
   nixpkgsSource = builtins.fetchGit {
     url = "https://github.com/NixOS/nixpkgs.git";
-    rev = "bb8b193bd5f3615dad2c25f3d6464774eed89224";
+    rev = "85f3d86bea70fe0d76a7e3520966c58604f8e5e9";
   };
 
   override = {
