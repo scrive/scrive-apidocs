@@ -171,8 +171,8 @@ testNormalUserCantChangeOrDeleteTheme :: TestEnv ()
 testNormalUserCantChangeOrDeleteTheme = do
   ug         <- addNewUserGroup
   Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
-  True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
-  Just user2 <- dbQuery $ GetUserByID (userid user1)
+  True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
+  Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
 
   ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
 
@@ -235,8 +235,8 @@ testNormalUseCantChangeCompanyUI :: TestEnv ()
 testNormalUseCantChangeCompanyUI = do
   ug         <- addNewUserGroup
   Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
-  True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
-  Just user2 <- dbQuery $ GetUserByID (userid user1)
+  True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
+  Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
   ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
 
   mainbd     <- dbQuery $ GetMainBrandedDomain

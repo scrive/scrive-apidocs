@@ -1,11 +1,10 @@
-module Analytics.Include (
-    AnalyticsData
+module Analytics.Include
+  ( AnalyticsData
   , getAnalyticsData
   , analyticsTemplates
-)
+  ) where
 
-where
-
+import Optics (to)
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplates.Templates
@@ -42,7 +41,7 @@ getAnalyticsData = do
       lang        = ctx ^. #lang
 
   musergroup <- case muser of
-    Just user -> dbQuery . UserGroupGet . usergroupid $ user
+    Just user -> dbQuery . UserGroupGet $ user ^. #groupID
     Nothing   -> return Nothing
 
   return $ AnalyticsData { aUser        = muser
@@ -58,7 +57,7 @@ mnop f m = maybe (return ()) f m
 
 analyticsTemplates :: Monad m => AnalyticsData -> Fields m ()
 analyticsTemplates ad = do
-  mnop (F.value "userid" . show . userid) $ aUser ad
+  mnop (F.value "userid" . show . view #id) $ aUser ad
   F.value "token" $ aToken ad
   F.value "gacode" $ aGACode ad
   F.value "hubspotConf" $ encode $ toJSValue $ aHubSpotConf ad
@@ -67,55 +66,44 @@ analyticsTemplates ad = do
 instance ToJSValue AnalyticsData where
   toJSValue AnalyticsData {..} = runJSONGen $ do
     mnop (J.value "$email") $ escapeString <$> getEmail <$> aUser
-    mnop (J.value "userid") $ show <$> userid <$> aUser
+    mnop (J.value "userid") $ show <$> (aUser ^? _Just % #id)
 
-    mnop (J.value "TOS Date" . formatTimeISO)
-      $   join
-      $   userhasacceptedtermsofservice
-      <$> aUser
+    mnop (J.value "TOS Date" . formatTimeISO) (aUser ^? _Just % #hasAcceptedTOS % _Just)
     mnop (J.value "Full Name") $ emptyToNothing $ escapeString <$> getFullName <$> aUser
     mnop (J.value "Smart Name") $ emptyToNothing $ escapeString <$> getSmartName <$> aUser
     mnop (J.value "$first_name")
       $   emptyToNothing
       $   escapeString
-      <$> getFirstName
-      <$> aUser
+      <$> (aUser ^? _Just % #info % #firstName)
     mnop (J.value "$last_name") $ emptyToNothing $ escapeString <$> getLastName <$> aUser
     mnop (J.value "$username") $ escapeString <$> getEmail <$> aUser
     mnop (J.value "Phone")
       $   emptyToNothing
       $   escapeString
-      <$> (userphone . userinfo)
-      <$> aUser
+      <$> (aUser ^? _Just % #info % #phone)
     mnop (J.value "Position")
       $   emptyToNothing
       $   escapeString
-      <$> usercompanyposition
-      <$> userinfo
-      <$> aUser
+      <$> (aUser ^? _Just % #info % #companyPosition)
 
     mnop (J.value "Company Status")
       $   escapeString
-      <$> (\u -> if (useriscompanyadmin u) then "admin" else "sub")
-      <$> aUser
+      <$> (aUser ^? _Just % to (\u -> if u ^. #isCompanyAdmin then "admin" else "sub"))
     mnop (J.value "Company Name")
       $   emptyToNothing
       $   escapeString
-      <$> (^. #name)
-      <$> aUserGroup
+      <$> (aUserGroup ^? _Just % #name)
 
     mnop (J.value "Signup Method")
       $   emptyToNothing
       $   escapeString
-      <$> showt
-      <$> usersignupmethod
-      <$> aUser
+      <$> (aUser ^? _Just % #signupMethod % to showt)
 
     J.value "Language" $ codeFromLang aLanguage
 
     -- Set these values so we can A/B/C test within mixpanel,
     -- for example with emails.
-    case unUserID <$> userid <$> aUser of
+    case unUserID <$> aUser ^? _Just % #id of
       Nothing  -> return ()
       Just uid -> do
         J.value "MOD 2" $ uid `mod` 2

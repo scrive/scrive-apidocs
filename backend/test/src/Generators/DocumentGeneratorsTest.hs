@@ -10,7 +10,6 @@ import Generators.DocumentGenerators
 import Generators.OccurenceControl
 import TestingUtil
 import TestKontra
-import User.Types.User
 
 documentGeneratorsTests :: TestEnvSt -> Test
 documentGeneratorsTests env = testGroup
@@ -25,5 +24,5 @@ testStartableDocumentOC = do
   user <- addNewRandomUser
   fid  <- addNewRandomFile
   file <- randomQuery $ GetFileByFileID fid
-  let generator = startableDocumentOC (userid user) file
+  let generator = startableDocumentOC (user ^. #id) file
   testGeneratorHelper 0.2 generator (isJust . documentCanBeStarted)

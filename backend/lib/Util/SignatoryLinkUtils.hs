@@ -89,7 +89,7 @@ instance SignatoryLinkIdentity SignatoryLinkID where
    Identify a User based on UserID or Email (if UserID fails).
  -}
 instance SignatoryLinkIdentity User where
-  isJustSigLinkFor u sl = isSigLinkFor (userid u) sl || isSigLinkFor (getEmail u) sl
+  isJustSigLinkFor u sl = isSigLinkFor (u ^. #id) sl || isSigLinkFor (getEmail u) sl
 
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isJustSigLinkFor (Just a) sl = isSigLinkFor a sl
@@ -196,7 +196,7 @@ isAuthor = isSigLinkFor signatoryisauthor
 isAuthorOrAuthorsAdmin :: User -> Document -> Bool
 isAuthorOrAuthorsAdmin user doc =
   isAuthor (doc, user)
-    || (useriscompanyadmin user && documentauthorugid doc == Just (usergroupid user))
+    || (user ^. #isCompanyAdmin && documentauthorugid doc == Just (user ^. #groupID))
 
 isDocumentVisibleToUser :: User -> Document -> Bool
 isDocumentVisibleToUser user doc =

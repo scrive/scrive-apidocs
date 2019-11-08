@@ -56,7 +56,7 @@ sendDocumentMails author = do
   forM_ allLangs $ \l -> do
       -- make  the context, user and document all use the same lang
     ctx <- mkContext l
-    void $ dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
+    void $ dbUpdate $ SetUserSettings (author ^. #id) (author ^. #settings & #lang .~ l)
     let aa = authorActor ctx author
     req <- mkRequest POST []
     runTestKontra req ctx
@@ -197,13 +197,13 @@ testUserMails = do
           m <- fst <$> (runTestKontra req ctx $ mg)
           validMail (T.pack s) m
     checkMail "New account" $ do
-      al <- newUserAccountRequestLink (ctx ^. #lang) (userid user) AccountRequest
+      al <- newUserAccountRequestLink (ctx ^. #lang) (user ^. #id) AccountRequest
       newUserMail ctx (getEmail user) al
     checkMail "New account by admin" $ do
-      al <- newUserAccountRequestLink (ctx ^. #lang) (userid user) ByAdmin
+      al <- newUserAccountRequestLink (ctx ^. #lang) (user ^. #id) ByAdmin
       mailNewAccountCreatedByAdmin ctx (ctx ^. #lang) (getEmail user) al
     checkMail "Reset password mail" $ do
-      al <- newUserAccountRequestLink (ctx ^. #lang) (userid user) AccountRequest
+      al <- newUserAccountRequestLink (ctx ^. #lang) (user ^. #id) AccountRequest
       resetPasswordMail ctx user al
   commit
 
@@ -236,6 +236,6 @@ validMail name m = do
 addNewRandomUserWithLang :: Lang -> TestEnv User
 addNewRandomUserWithLang l = do
   user <- addNewRandomUser
-  void . dbUpdate $ SetUserSettings (userid user) ((usersettings user) { lang = l })
-  Just uuser <- dbQuery $ GetUserByID (userid user)
+  void . dbUpdate $ SetUserSettings (user ^. #id) (user ^. #settings & #lang .~ l)
+  Just uuser <- dbQuery $ GetUserByID (user ^. #id)
   return uuser

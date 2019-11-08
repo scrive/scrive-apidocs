@@ -57,7 +57,7 @@ simplePlanhatAction :: Text -> User -> UTCTime -> [EventProperty]
 simplePlanhatAction actionTag author time =
   [ MailProp . Email $ getEmail author
   , stringProp "action" actionTag
-  , UserIDProp $ userid author
+  , UserIDProp $ author ^. #id
   , TimeProp time
   ]
 

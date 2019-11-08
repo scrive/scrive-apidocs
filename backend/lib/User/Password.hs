@@ -109,8 +109,11 @@ maybeVerifyPassword (Just hash) pass = verifyPassword hash pass
 -- | Like 'mkPassword', but everything is wrapped in Maybe. If the
 -- password strength parameter is Nothing, it defaults to legacy.
 maybeMkPassword
-  :: (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordAlgorithm) -> Maybe Password
-maybeMkPassword (mHash, mSalt, mStrength) =
+  :: Maybe BS.ByteString
+  -> Maybe BS.ByteString
+  -> Maybe PasswordAlgorithm
+  -> Maybe Password
+maybeMkPassword mHash mSalt mStrength =
   mkPassword <$> mHash <*> mSalt <*> (mStrength <|> Just PasswordAlgorithmScrypt)
 
 randomPassword :: CryptoRNG m => m Password

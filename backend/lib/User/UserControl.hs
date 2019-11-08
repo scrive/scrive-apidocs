@@ -65,7 +65,7 @@ handleAccountGet :: Kontrakcja m => m (InternalKontraResponse)
 handleAccountGet = withUser . withTosCheck $ \user -> do
   ctx <- getContext
   pb  <- renderTextTemplate "showAccount" $ do
-    F.value "companyAdmin" $ useriscompanyadmin user
+    F.value "companyAdmin" $ user ^. #isCompanyAdmin
     F.value "apiLogEnabled" $ ctx ^. #isApiLogEnabled
     entryPointFields ctx
   internalResponse <$> renderFromBodyWithFields pb (F.value "account" True)
@@ -76,7 +76,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         "User "
           <> getEmail user
           <> " ("
-          <> (showt (userid user))
+          <> (showt (user ^. #id))
           <> ")"
           <> " has requested that their email be changed to "
           <> unEmail newemail
@@ -114,16 +114,16 @@ handlePostChangeEmail uid hash = withUser $ \user -> do
   case mpassword of
     Nothing -> return $ internalResponse $ LinkAccount
     -- No need to check TOTP here, withUser gives us logged in user
-    Just password | maybeVerifyPassword (userpassword user) password -> do
-      changed <- maybe (return False) (dbUpdate . SetUserEmail (userid user)) mnewemail
+    Just password | maybeVerifyPassword (user ^. #password) password -> do
+      changed <- maybe (return False) (dbUpdate . SetUserEmail (user ^. #id)) mnewemail
       flashmessage <- if changed
         then do
           void $ dbUpdate $ LogHistoryDetailsChanged
-            (userid user)
+            (user ^. #id)
             ipnumber
             time
-            [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
-            (Just $ userid user)
+            [("email", unEmail $ user ^. #info % #email, unEmail $ fromJust mnewemail)]
+            (Just $ user ^. #id)
           flashMessageYourEmailHasChanged
         else flashMessageProblemWithEmailChange
       void $ dbUpdate $ DeleteEmailChangeRequest uid
@@ -136,26 +136,26 @@ handleUsageStatsJSONForUserDays :: Kontrakcja m => m Response
 handleUsageStatsJSONForUserDays = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
   withCompany <- isFieldSet "withCompany"
-  stats <- getUsageStats PartitionByDay $ if (useriscompanyadmin user && withCompany)
-    then UsageStatsForUserGroup $ usergroupid user
-    else UsageStatsForUser $ userid user
+  stats <- getUsageStats PartitionByDay $ if (user ^. #isCompanyAdmin && withCompany)
+    then UsageStatsForUserGroup $ user ^. #groupID
+    else UsageStatsForUser $ user ^. #id
   return $ V2.Ok stats
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m Response
 handleUsageStatsJSONForUserMonths = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
   withCompany <- isFieldSet "withCompany"
-  stats <- getUsageStats PartitionByMonth $ if (useriscompanyadmin user && withCompany)
-    then UsageStatsForUserGroup $ usergroupid user
-    else UsageStatsForUser $ userid user
+  stats <- getUsageStats PartitionByMonth $ if (user ^. #isCompanyAdmin && withCompany)
+    then UsageStatsForUserGroup $ user ^. #groupID
+    else UsageStatsForUser $ user ^. #id
   return $ V2.Ok stats
 
 handleUsageStatsJSONForShareableLinks :: Kontrakcja m => StatsPartition -> m JSValue
 handleUsageStatsJSONForShareableLinks statsPartition = do
   user <- guardJustM $ view #maybeUser <$> getContext
-  getShareableLinksStats statsPartition $ if useriscompanyadmin user
-    then UsageStatsForUserGroup $ usergroupid user
-    else UsageStatsForUser $ userid user
+  getShareableLinksStats statsPartition $ if user ^. #isCompanyAdmin
+    then UsageStatsForUserGroup $ user ^. #groupID
+    else UsageStatsForUser $ user ^. #id
 
 
 getStatsInterval :: StatsPartition -> Interval
@@ -204,7 +204,7 @@ isUserDeletable = fmap isNothing . dbQuery . IsUserDeletable
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
-  al <- newUserAccountRequestLink (lang $ usersettings user) (userid user) AccountRequest
+  al <- newUserAccountRequestLink (user ^. #settings % #lang) (user ^. #id) AccountRequest
   mail <- newUserMail ctx (getEmail user) al
   scheduleEmailSendout $ mail
     { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]
@@ -219,8 +219,8 @@ createNewUserByAdmin email names usergroupandrole lg = do
   case muser of
     Just user -> do
       let fullname = composeFullName names
-      chpwdlink <- newUserAccountRequestLink (lang $ usersettings user)
-                                             (userid user)
+      chpwdlink <- newUserAccountRequestLink (user ^. #settings % #lang)
+                                             (user ^. #id)
                                              ByAdmin
       mail <- mailNewAccountCreatedByAdmin ctx (getLang user) email chpwdlink
       scheduleEmailSendout
@@ -236,7 +236,7 @@ handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
   ctx <- getContext
   let (maybeuser, time, ipnumber) = (ctx ^. #maybeUser, ctx ^. #time, ctx ^. #ipAddr)
-  userid <- guardJustM $ return $ userid <$> maybeuser
+  userid <- guardJustM $ return $ view #id <$> maybeuser
   tos    <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
@@ -251,9 +251,9 @@ handleAccountSetupGet
 handleAccountSetupGet uid token sm = do
   ctx   <- getContext
   muser <- getUserAccountRequestUser uid token
-  case (muser, userhasacceptedtermsofservice =<< muser) of
+  case (muser, view #hasAcceptedTOS =<< muser) of
     (Just user, Nothing) -> do
-      ug      <- dbQuery . UserGroupGetByUserID . userid $ user
+      ug      <- dbQuery . UserGroupGetByUserID $ user ^. #id
       ad      <- getAnalyticsData
       content <- renderTextTemplate "accountSetupPage" $ do
         standardPageFields ctx (Just (ug ^. #id, ug ^. #ui)) ad
@@ -262,8 +262,8 @@ handleAccountSetupGet uid token sm = do
         F.value "email" $ getEmail user
         F.value "userid" $ show uid
         F.value "company" $ ug ^. #name
-        F.value "companyAdmin" $ useriscompanyadmin user
-        F.value "companyPosition" $ usercompanyposition $ userinfo user
+        F.value "companyAdmin" $ user ^. #isCompanyAdmin
+        F.value "companyPosition" $ user ^. #info % #companyPosition
         F.value "mobile" $ getMobile user
         F.value "signupmethod" $ show sm
       internalResponse <$> (simpleHtmlResponse content)
@@ -277,8 +277,8 @@ handleAccountSetupGet uid token sm = do
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
-  ug   <- dbQuery . UserGroupGetByUserID . userid $ user
-  if isJust $ userhasacceptedtermsofservice user
+  ug   <- dbQuery . UserGroupGetByUserID $ user ^. #id
+  if isJust $ user ^. #hasAcceptedTOS
     then do
       J.runJSONGenT $ do
         J.value "ok" False
@@ -289,9 +289,8 @@ handleAccountSetupPost uid token sm = do
       void $ handleActivate mfstname msndname (user, ug) sm
       void $ dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
-      void $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user)
-        { lang = ctx ^. #lang
-        }
+      void $ dbUpdate $ SetUserSettings (user ^. #id)
+                                        (user ^. #settings & #lang .~ ctx ^. #lang)
       link <- getHomeOrDesignViewLink
       J.runJSONGenT $ do
         J.value "ok" True
@@ -327,13 +326,13 @@ handlePasswordReminderPost uid token = do
   muser  <- getPasswordReminderUser uid token
   ipIsOK <- case muser of
     Just u -> do
-      ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid u
+      ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ u ^. #id
       let masklist = ugwpSettings ugwp ^. #ipAddressMaskList
       ctx <- getContext
       return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
     Nothing -> return True
   case muser of
-    Just user | not (useraccountsuspended user) && ipIsOK -> do
+    Just user | not (user ^. #accountSuspended) && ipIsOK -> do
       switchLang (getLang user)
       ctx <- getContext
       let time      = ctx ^. #time
@@ -345,12 +344,12 @@ handlePasswordReminderPost uid token = do
         then do
           void $ dbUpdate $ DeletePasswordReminder uid
           passwordhash <- createPassword password
-          void $ dbUpdate $ SetUserPassword (userid user) passwordhash
-          void $ dbUpdate $ LogHistoryPasswordSetup (userid user)
+          void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+          void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
                                                     ipnumber
                                                     time
-                                                    (userid <$> maybeuser)
-          terminateAllUserSessionsExceptCurrent (userid user)
+                                                    (view #id <$> maybeuser)
+          terminateAllUserSessionsExceptCurrent (user ^. #id)
           logUserToContext $ Just user
           J.runJSONGenT $ do
             J.value "logged" True
@@ -374,8 +373,8 @@ handleContactSales = do
   plan    <- getField' "plan"
 
   let uid = maybe "user not logged in"
-                  ((<>) "user with id " . showt . userid)
-                  (ctx ^. #maybeUser)
+                  (("user with id " <>) . showt)
+                  (ctx ^? #maybeUser % _Just % #id)
       domainInfo = " (from domain " <> (ctx ^. #brandedDomain % #url) <> " )"
       content =
         "<p>Hi there!</p>"

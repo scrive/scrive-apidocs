@@ -91,7 +91,7 @@ testPartnerCompanyCreate = do
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
 
   -- Test role combinations; use the first user and partner structure generated.
-  let (Just uid) = userid <$> ctx1 ^. #maybeUser
+  let (Just uid) = ctx1 ^? #maybeUser % _Just % #id
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
@@ -162,7 +162,7 @@ testPartnerCompanyUpdate = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uid) = userid <$> ctx ^. #maybeUser
+  let (Just uid) = ctx ^? #maybeUser % _Just % #id
 
   -- 1) user is a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
@@ -271,7 +271,7 @@ testPartnerCompanyGet = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uid) = userid <$> ctx ^. #maybeUser
+  let (Just uid) = ctx ^? #maybeUser % _Just % #id
 
   -- 1) user is a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
@@ -340,7 +340,7 @@ testPartnerCompaniesGet = do
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
 
   -- Test role combinations; use the first user and partner structure generated.
-  let (Just uid) = userid <$> ctxA ^. #maybeUser
+  let (Just uid) = ctxA ^? #maybeUser % _Just % #id
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uid False
@@ -413,7 +413,7 @@ testPartnerCompanyUserNew = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uid) = userid <$> ctx ^. #maybeUser
+  let (Just uid) = ctx ^? #maybeUser % _Just % #id
   -- cannot reuse old user email
   newUserGoodJSON' <- readTestFile
     "json/partner_api_v1/param-partnerCompanyUserNew-good3.json"
@@ -484,7 +484,7 @@ testPartnerUserUpdate = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
+  let (Just uidAdmin) = ctx ^? #maybeUser % _Just % #id
 
   -- 1) user is a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
@@ -620,7 +620,7 @@ testPartnerUserGet = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
+  let (Just uidAdmin) = ctx ^? #maybeUser % _Just % #id
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
@@ -673,7 +673,7 @@ testPartnerCompanyUsersGet = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
+  let (Just uidAdmin) = ctx ^? #maybeUser % _Just % #id
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
@@ -751,7 +751,7 @@ testPartnersUserGetTokens = do
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
-  let (Just uidAdmin) = userid <$> ctx ^. #maybeUser
+  let (Just uidAdmin) = ctx ^? #maybeUser % _Just % #id
 
   -- 1) only a partner admin; should succeed
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin False

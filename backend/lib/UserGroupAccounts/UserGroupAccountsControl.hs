@@ -76,29 +76,29 @@ handleUserGroupAccountsInternal ugids = do
   usersWithUgs <- concatForM ugs $ \ug -> do
     users <- dbQuery . UserGroupGetUsers $ ug ^. #id
     return . zip users $ repeat ug
-  deletableuserids <- map userid <$> filterM isUserDeletable (map fst usersWithUgs)
+  deletableuserids <- map (^. #id) <$> filterM isUserDeletable (map fst usersWithUgs)
   invitesWithUgs   <- concatForM ugs $ \ug -> do
     invites <- dbQuery . UserGroupGetInvitesWithUsersData $ ug ^. #id
     return . zip invites $ repeat ug
   let isUser ((invite, _, _, _), _) =
-        (inviteduserid invite) `elem` map (userid . fst) usersWithUgs
+        (inviteduserid invite) `elem` map (^. _1 % #id) usersWithUgs
   let companyaccounts = map mkAccountFromUser usersWithUgs
         <> map mkAccountFromInvite (filter (not . isUser) invitesWithUgs)
       mkAccountFromUser (u, ug) = CompanyAccount
-        { camaybeuserid = userid u
+        { camaybeuserid = u ^. #id
         , cafullname    = getFullName u
-        , cafstname     = userfstname $ userinfo u
-        , casndname     = usersndname $ userinfo u
+        , cafstname     = u ^. #info % #firstName
+        , casndname     = u ^. #info % #lastName
         , caemail       = getEmail u
-        , caphone       = userphone $ userinfo u
-        , cassn         = userpersonalnumber $ userinfo u
-        , caposition    = usercompanyposition $ userinfo u
-        , carole        = if (useriscompanyadmin u) then RoleAdmin else RoleStandard
-        , cadeletable   = userid u `elem` deletableuserids
-        , caactivated   = isJust $ userhasacceptedtermsofservice u
-        , catos         = userhasacceptedtermsofservice u
-        , catotpactive  = usertotpactive u
-        , calang        = Just $ lang $ usersettings u
+        , caphone       = u ^. #info % #phone
+        , cassn         = u ^. #info % #personalNumber
+        , caposition    = u ^. #info % #companyPosition
+        , carole        = if u ^. #isCompanyAdmin then RoleAdmin else RoleStandard
+        , cadeletable   = u ^. #id `elem` deletableuserids
+        , caactivated   = isJust $ u ^. #hasAcceptedTOS
+        , catos         = u ^. #hasAcceptedTOS
+        , catotpactive  = u ^. #totpActive
+        , calang        = Just $ u ^. #settings % #lang
         , caugname      = ug ^. #name
         }
       mkAccountFromInvite ((i, fn, ln, em), ug) = CompanyAccount
@@ -147,7 +147,7 @@ handleUserGroupAccountsInternal ugids = do
           value "role" $ show $ carole f
           value "deletable" $ cadeletable f
           value "activated" $ caactivated f
-          value "isctxuser" $ userid user == camaybeuserid f
+          value "isctxuser" $ user ^. #id == camaybeuserid f
           value "tos" $ formatTimeISO <$> (catos f)
           value "twofactor_active" $ catotpactive f
           value "lang" $ codeFromLang <$> calang f
@@ -230,26 +230,26 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
                                           (ctx ^. #lang)
                                           CompanyInvitation
       void $ dbUpdate $ LogHistoryUserInfoChanged
-        (userid newuser')
+        (newuser' ^. #id)
         (ctx ^. #ipAddr)
         (ctx ^. #time)
-        (userinfo newuser')
-        ((userinfo newuser') { userfstname = fstname, usersndname = sndname })
-        (userid <$> ctx ^. #maybeUser)
-      newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
+        (newuser' ^. #info)
+        (newuser' ^. #info & (#firstName .~ fstname) & (#lastName .~ sndname))
+        (ctx ^? #maybeUser % _Just % #id)
+      newuser <- guardJustM $ dbQuery $ GetUserByID (newuser' ^. #id)
       void $ sendNewUserGroupUserMail user ug newuser
       runJSONGenT $ value "added" True
-    Just existinguser -> if (usergroupid existinguser == trgugid)
+    Just existinguser -> if (existinguser ^. #groupID == trgugid)
       then runJSONGenT $ do
         value "added"       False
         value "samecompany" True
       else do
                              -- If user exists we allow takeover only if he is the only user in his company
-        users <- dbQuery . UserGroupGetUsers . usergroupid $ existinguser
+        users <- dbQuery . UserGroupGetUsers $ existinguser ^. #groupID
         if (length users == 1)
           then do
             void $ sendTakeoverSingleUserMail user ug existinguser
-            void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (userid existinguser)
+            void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (existinguser ^. #id)
                                                                    trgugid
             runJSONGenT $ value "added" True
           else do
@@ -264,7 +264,7 @@ handleResendToUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   resendid <- getCriticalField asValidUserID "resendid"
   newuser  <- guardJustM $ dbQuery $ GetUserByID resendid
   let ugid = ug ^. #id
-  if (usergroupid newuser /= ugid)
+  if (newuser ^. #groupID /= ugid)
     then do
        -- We need to check if there is a company invitation, and if it is, we send takeover email again
       void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid resendid
@@ -277,8 +277,8 @@ handleResendToUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
 sendNewUserGroupUserMail :: Kontrakcja m => User -> UserGroup -> User -> m ()
 sendNewUserGroupUserMail inviter ug user = do
   ctx <- getContext
-  uar <- newUserAccountRequest $ userid user
-  let al = LinkAccountCreated (lang $ usersettings user)
+  uar <- newUserAccountRequest $ user ^. #id
+  let al = LinkAccountCreated (user ^. #settings % #lang)
                               (uarUserID uar)
                               (uarToken uar)
                               CompanyInvitation
@@ -304,7 +304,7 @@ sendTakeoverSingleUserMail inviter ug user = do
 handleChangeRoleOfUserGroupAccount :: Kontrakcja m => m JSValue
 handleChangeRoleOfUserGroupAccount = do
   changeid  <- getCriticalField asValidUserID "changeid"
-  ugid      <- usergroupid <$> (guardJustM $ dbQuery . GetUserByID $ changeid)
+  ugid      <- view #groupID <$> (guardJustM $ dbQuery . GetUserByID $ changeid)
   makeadmin <- getField "makeadmin"
   -- cf. `roleToAccessPolicyReq`
   let acc =
@@ -325,7 +325,7 @@ handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
 handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
   removeuid  <- getCriticalField asValidUserID "removeid"
   removeuser <- guardJustM $ dbQuery $ GetUserByID $ removeuid
-  let acc = [mkAccPolicyItem (DeleteA, UserR, usergroupid removeuser)]
+  let acc = [mkAccPolicyItem (DeleteA, UserR, removeuser ^. #groupID)]
   -- Even if we don't execute the main action for whatever reason we remove all invites
   -- that we possibly can, restricted by the caller's permissions.
   accessControl roles acc (removeInvitesOnly roles removeuser) $ do
@@ -334,11 +334,11 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
     case isdeletable of
       True -> do
               -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
-        void $ dbUpdate $ RemoveUserUserGroupInvites (userid removeuser)
-        void $ dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
-        void $ dbUpdate $ DeleteUser (userid removeuser)
-        void $ dbUpdate $ LogHistoryAccountDeleted (userid removeuser)
-                                                   (userid user)
+        void $ dbUpdate $ RemoveUserUserGroupInvites (removeuser ^. #id)
+        void $ dbUpdate $ DeleteUserCallbackScheme $ removeuser ^. #id
+        void $ dbUpdate $ DeleteUser (removeuser ^. #id)
+        void $ dbUpdate $ LogHistoryAccountDeleted (removeuser ^. #id)
+                                                   (user ^. #id)
                                                    (ctx ^. #ipAddr)
                                                    (ctx ^. #time)
         runJSONGenT $ value "removed" True
@@ -355,7 +355,7 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
           ugids = catMaybes $ map extractResourceRef deleteUserPerms
         -- We remove only the invites, possibly making user account in other some user
         -- group still be valid.
-      void $ dbUpdate $ RemoveUserGroupInvite ugids (userid removeForUser)
+      void $ dbUpdate $ RemoveUserGroupInvite ugids (removeForUser ^. #id)
       runJSONGenT $ value "removed" True
 
 {- |
@@ -365,7 +365,7 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
 -}
 handleGetBecomeUserGroupAccount :: Kontrakcja m => UserGroupID -> m InternalKontraResponse
 handleGetBecomeUserGroupAccount ugid = withUser $ \user -> do
-  invite <- dbQuery $ GetUserGroupInvite ugid (userid user)
+  invite <- dbQuery $ GetUserGroupInvite ugid (user ^. #id)
   case invite of
     Nothing -> do
       flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
@@ -378,18 +378,17 @@ handleGetBecomeUserGroupAccount ugid = withUser $ \user -> do
 handlePostBecomeUserGroupAccount
   :: Kontrakcja m => UserGroupID -> m InternalKontraResponse
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
-  void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
+  void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (user ^. #id)
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
   (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
     Nothing         -> internalError
     Just newugfdrid -> do
-      let uid = userid user
-      void $ dbUpdate $ SetUserCompanyAdmin (userid user) False
-      void $ dbUpdate $ SetUserUserGroup (userid user) (newug ^. #id)
+      void $ dbUpdate $ SetUserCompanyAdmin (user ^. #id) False
+      void $ dbUpdate $ SetUserUserGroup (user ^. #id) (newug ^. #id)
       let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
       newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
-      void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
-      void $ dbUpdate $ RemoveUserGroupInvite [ugid] (userid user)
+      void $ dbUpdate $ SetUserHomeFolder (user ^. #id) newhomefdrid
+      void $ dbUpdate $ RemoveUserGroupInvite [ugid] (user ^. #id)
       -- if we are inviting a user with a plan to join the company, we
       -- should delete their personal plan
       flashmessage <- flashMessageUserHasBecomeCompanyAccount newug

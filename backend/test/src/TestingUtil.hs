@@ -90,6 +90,7 @@ import qualified Folder.Internal as I
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
+import qualified User.Types.User.Internal as I
 import qualified UserGroup.Internal as I
 
 newtype XMLChar = XMLChar { unXMLChar :: Char }
@@ -620,13 +621,13 @@ instance Arbitrary UserInfo where
     pn <- arbitraryUnicodeText
     em <- arbEmail
 
-    return $ UserInfo { userfstname         = fn
-                      , usersndname         = ln
-                      , userpersonalnumber  = pn
-                      , usercompanyposition = ""
-                      , userphone           = ""
-                      , useremail           = Email em
-                      }
+    return $ I.UserInfo { firstName       = fn
+                        , lastName        = ln
+                        , personalNumber  = pn
+                        , companyPosition = ""
+                        , phone           = ""
+                        , email           = Email em
+                        }
 
 instance Arbitrary Scrypt.EncryptedPass where
   arbitrary = do
@@ -644,11 +645,11 @@ instance Arbitrary SignupMethod where
   arbitrary = elements [AccountRequest, ViralInvitation, ByAdmin, CompanyInvitation]
 
 instance Arbitrary UserSettings where
-  arbitrary = UserSettings <$> arbitrary <*> arbitrary
+  arbitrary = I.UserSettings <$> arbitrary <*> arbitrary
 
 instance Arbitrary User where
   arbitrary =
-    User
+    I.User
       <$> arbitrary
       <*> arbitrary    -- Messes with tests if these are set:
       <*> pure Nothing -- usertotp
@@ -967,10 +968,10 @@ addNewUserFromInfo
   :: UserInfo
   -> (CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m, MonadLog m, MonadMask m)
   => m User
-addNewUserFromInfo userInfo@(UserInfo { userfstname = firstName, usersndname = lastName, useremail = Email { unEmail = email } })
+addNewUserFromInfo userInfo@(I.UserInfo { firstName = firstName, lastName = lastName, email = Email { unEmail = email } })
   = do
     Just user <- addNewUser firstName lastName email
-    void $ dbUpdate $ SetUserInfo (userid user) userInfo
+    void $ dbUpdate $ SetUserInfo (user ^. #id) userInfo
     return user
 
 randomPersonalNumber :: CryptoRNG m => m Text
@@ -985,13 +986,13 @@ randomUserInfo = do
   personal_number  <- randomPersonalNumber
   company_position <- rand 10 $ arbText 3 30
   phone            <- rand 10 $ arbText 3 30
-  return UserInfo { userfstname         = fn
-                  , usersndname         = ln
-                  , userpersonalnumber  = personal_number
-                  , usercompanyposition = company_position
-                  , userphone           = phone
-                  , useremail           = Email em
-                  }
+  return I.UserInfo { firstName       = fn
+                    , lastName        = ln
+                    , personalNumber  = personal_number
+                    , companyPosition = company_position
+                    , phone           = phone
+                    , email           = Email em
+                    }
 
 addNewRandomUser
   :: (CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m, MonadLog m, MonadMask m)
@@ -1017,14 +1018,14 @@ addNewRandomUserWithCompany' createFolders = do
   personal_number   <- rand 10 $ arbText 3 30
   company_position  <- rand 10 $ arbText 3 30
   phone             <- rand 10 $ arbText 3 30
-  let userinfo = UserInfo { userfstname         = fn
-                          , usersndname         = ln
-                          , userpersonalnumber  = personal_number
-                          , usercompanyposition = company_position
-                          , userphone           = phone
-                          , useremail           = Email em
-                          }
-  void $ dbUpdate $ SetUserInfo (userid user) userinfo
+  let userinfo = I.UserInfo { firstName       = fn
+                            , lastName        = ln
+                            , personalNumber  = personal_number
+                            , companyPosition = company_position
+                            , phone           = phone
+                            , email           = Email em
+                            }
+  void $ dbUpdate $ SetUserInfo (user ^. #id) userinfo
   return (user, ugid)
 
 addNewRandomUserWithPassword
@@ -1036,23 +1037,23 @@ addNewRandomUserWithPassword password = do
   randomUser   <- addNewRandomUser
   -- set his password
   passwordhash <- createPassword password
-  void $ dbUpdate $ SetUserPassword (userid randomUser) passwordhash
+  void $ dbUpdate $ SetUserPassword (randomUser ^. #id) passwordhash
   return randomUser
 
 addNewRandomCompanyUser :: UserGroupID -> Bool -> TestEnv User
 addNewRandomCompanyUser ugid isadmin = do
-  User { userid } <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup userid ugid
-  void $ dbUpdate $ SetUserCompanyAdmin userid isadmin
-  Just user <- dbQuery $ GetUserByID userid
+  uid <- view #id <$> addNewRandomUser
+  void $ dbUpdate $ SetUserUserGroup uid ugid
+  void $ dbUpdate $ SetUserCompanyAdmin uid isadmin
+  Just user <- dbQuery $ GetUserByID uid
   return user
 
 addNewRandomUserGroupUser :: UserGroupID -> Bool -> TestEnv User
 addNewRandomUserGroupUser ugid isadmin = do
-  User { userid } <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup userid ugid
-  void $ dbUpdate $ SetUserCompanyAdmin userid isadmin
-  Just user <- dbQuery $ GetUserByID userid
+  uid <- view #id <$> addNewRandomUser
+  void $ dbUpdate $ SetUserUserGroup uid ugid
+  void $ dbUpdate $ SetUserCompanyAdmin uid isadmin
+  Just user <- dbQuery $ GetUserByID uid
   return user
 
 addNewRandomPartnerUser :: TestEnv (User, UserGroup)
@@ -1067,7 +1068,7 @@ addNewRandomPartnerUser = do
       Just res -> return . Just $ res
       Nothing  -> do
         partnerAdminUser      <- addNewRandomUser
-        partnerAdminUserGroup <- dbQuery $ UserGroupGetByUserID (userid partnerAdminUser)
+        partnerAdminUserGroup <- dbQuery $ UserGroupGetByUserID (partnerAdminUser ^. #id)
         let partnerIDAlreadyExists =
               (unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #id)
                 `elem` map ptID partners
@@ -1084,7 +1085,7 @@ addNewRandomPartnerUser = do
         , ptDefaultPartner = False
         , ptUserGroupID    = Just $ partnerAdminUserGroup ^. #id
         }
-      let uid  = userid partnerAdminUser
+      let uid  = partnerAdminUser ^. #id
           ugid = partnerAdminUserGroup ^. #id
       void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
       return (partnerAdminUser, partnerAdminUserGroup)
@@ -1307,14 +1308,14 @@ addRandomDocumentWithFile fileid rda = do
           , documenttitle             = title
           , documentfromshareablelink = rdaSharedLink rda
           , documenttemplateid        = rdaTemplateId rda
-          , documentfolderid          = userhomefolderid user
+          , documentfolderid          = user ^. #homeFolderID
           , documenttimeouttime       = if rdaTimeoutTime rda
                                           then documenttimeouttime doc'
                                           else Nothing
           }
       userDetails <- signatoryFieldsFromUser user
       let asl =
-            asl' { maybesignatory = Just (userid user), signatoryfields = userDetails }
+            asl' { maybesignatory = Just (user ^. #id), signatoryfields = userDetails }
 
       let alllinks = asl : siglinks
 

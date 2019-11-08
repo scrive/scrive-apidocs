@@ -9,7 +9,7 @@ import Data.List.Split (splitOneOf)
 import Data.OTP (totp)
 import Data.Unjson
 import Happstack.Server
-import Optics (Lens', _Just)
+import Optics (Lens')
 import Test.Framework
 import Test.QuickCheck
 import qualified Codec.Binary.Base32 as B32
@@ -77,7 +77,7 @@ testUserLoginAndGetSession = do
   ctx        <- mkContext defaultLang
   req1       <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
   -- get access tokens using an email and password
@@ -121,7 +121,7 @@ testUserTooManyGetTokens = do
   -- getting personap token works with correct password
   req1       <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
   (res1, _) <- runTestKontra req1 ctx $ apiCallGetUserPersonalToken
@@ -130,7 +130,7 @@ testUserTooManyGetTokens = do
   -- now we fail to get access tokens 6 times
   req2 <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
     , ("password", inText wrongpassword)
     ]
   forM_ [1 .. 6] $ \_ -> do
@@ -140,7 +140,7 @@ testUserTooManyGetTokens = do
   -- after 6 failed requests, trying valid password also fails
   req3 <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
   (res3, _) <- runTestKontra req3 ctx $ apiCallGetUserPersonalToken
@@ -170,14 +170,14 @@ testUser2FAWorkflow = do
 
   -- For some reason we need to get updated User and add to Context
   -- otherwise tests fail because TOTP changes are not "seen"
-  Just user <- dbQuery $ GetUserByID $ userid randomUser
+  Just user <- dbQuery $ GetUserByID $ randomUser ^. #id
   ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   -- apiCallGetUserPersonalToken should still work: 2FA not yet confirmed
   do
     req <- mkRequest
       GET
-      [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+      [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
       , ("password", inText password)
       ]
     (res, _) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
@@ -202,7 +202,7 @@ testUser2FAWorkflow = do
   do
     req <- mkRequest
       GET
-      [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+      [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
       , ("password", inText password)
       ]
     (res, _) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
@@ -212,7 +212,7 @@ testUser2FAWorkflow = do
   do
     req <- mkRequest
       GET
-      [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+      [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
       , ("password", inText password)
       , ("totp"    , inText totpcode)
       ]
@@ -239,7 +239,7 @@ testUserNoDeletionIfPendingDocuments :: TestEnv ()
 testUserNoDeletionIfPendingDocuments = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   now        <- currentTime
-  void $ dbUpdate $ AcceptTermsOfService (userid anna) now
+  void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
 
   Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
 
@@ -276,9 +276,9 @@ testUserDeletionOwnershipTransfer = do
   Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
 
   now        <- currentTime
-  void $ dbUpdate $ AcceptTermsOfService (userid anna) now
-  void $ dbUpdate $ AcceptTermsOfService (userid bob) now
-  void $ dbUpdate $ SetUserCompanyAdmin (userid bob) True
+  void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
+  void $ dbUpdate $ AcceptTermsOfService (bob ^. #id) now
+  void $ dbUpdate $ SetUserCompanyAdmin (bob ^. #id) True
 
   sharedTemplate <- addRandomDocument (rdaDefault anna) { rdaTypes    = OneOf [Template]
                                                         , rdaSharings = OneOf [Shared]
@@ -292,9 +292,9 @@ testUserDeletionOwnershipTransfer = do
 
   fid                <- addNewRandomFile
   fid'               <- addNewRandomFile
-  sharedAttachment   <- dbUpdate $ NewAttachment (userid anna) "shared" fid actor
-  unsharedAttachment <- dbUpdate $ NewAttachment (userid anna) "shared" fid' actor
-  dbUpdate $ SetAttachmentsSharing (userid anna) [attachmentid sharedAttachment] True
+  sharedAttachment   <- dbUpdate $ NewAttachment (anna ^. #id) "shared" fid actor
+  unsharedAttachment <- dbUpdate $ NewAttachment (anna ^. #id) "shared" fid' actor
+  dbUpdate $ SetAttachmentsSharing (anna ^. #id) [attachmentid sharedAttachment] True
 
   req      <- mkRequest POST [("email", inText "anna@android.com")]
   (res, _) <- runTestKontra req ctx apiCallDeleteUser
@@ -304,9 +304,9 @@ testUserDeletionOwnershipTransfer = do
   unsharedTemplate' <- dbQuery $ GetDocumentByDocumentID $ documentid unsharedTemplate
 
   let domains =
-        [ AttachmentsOfAuthorDeleteValue (userid bob)  False
-        , AttachmentsOfAuthorDeleteValue (userid anna) False
-        , AttachmentsSharedInUsersUserGroup (userid bob)
+        [ AttachmentsOfAuthorDeleteValue (bob ^. #id)  False
+        , AttachmentsOfAuthorDeleteValue (anna ^. #id) False
+        , AttachmentsSharedInUsersUserGroup (bob ^. #id)
         ]
   [sharedAttachment'] <- dbQuery
     $ GetAttachments domains [AttachmentFilterByID (attachmentid sharedAttachment)] []
@@ -315,17 +315,17 @@ testUserDeletionOwnershipTransfer = do
 
   assertEqual "other admin has been given shared template"
               (maybesignatory $ head $ documentsignatorylinks sharedTemplate')
-              (Just $ userid bob)
+              (Just $ bob ^. #id)
   assertEqual "other admin has not been given unshared template"
               (maybesignatory $ head $ documentsignatorylinks unsharedTemplate')
-              (Just $ userid anna)
+              (Just $ anna ^. #id)
 
   assertEqual "other admin has been given shared attachment"
               (attachmentuser sharedAttachment')
-              (userid bob)
+              (bob ^. #id)
   assertEqual "other admin has not been given unshared attachment"
               (attachmentuser unsharedAttachment')
-              (userid anna)
+              (anna ^. #id)
 
 testUserSetDataRetentionPolicy :: TestEnv ()
 testUserSetDataRetentionPolicy = do
@@ -339,9 +339,9 @@ testUserSetDataRetentionPolicy = do
     (res, _) <- runTestKontra req ctx apiCallSetDataRetentionPolicy
     assertEqual "should return 200" (rsCode res) 200
 
-    Just user' <- dbQuery $ GetUserByID $ userid user
+    Just user' <- dbQuery $ GetUserByID $ user ^. #id
     assertEqual "policy should have been saved"
-                (dataretentionpolicy (usersettings user'))
+                (user' ^. #settings % #dataRetentionPolicy)
                 drp
 
 testUserSetDataRetentionPolicyOnlyIfAsStrict :: TestEnv ()

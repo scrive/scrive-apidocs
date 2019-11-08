@@ -33,7 +33,6 @@ import DB
 import Kontra
 import Text.JSON.Convert
 import User.APILog.Model
-import User.Model
 import Util.CSVUtil
 
 -- | Wrapper around any API response. If forces us to select HTTP response code
@@ -134,7 +133,7 @@ apiLog acc = do
                                               , clrsBody = BSU.toString $ rsBody response
                                               }
               }
-        void . dbUpdate $ CreateCallLogItem (userid user) logData
+        void . dbUpdate $ CreateCallLogItem (user ^. #id) logData
       _ -> return ()
   return response
   where

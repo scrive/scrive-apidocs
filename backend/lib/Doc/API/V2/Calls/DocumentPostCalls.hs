@@ -131,7 +131,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     guardThatUserIsAuthorOrDocumentIsShared user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (isTemplate) "The document is not a template." =<< theDocument
-    guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user)
+    guardThatDocumentIs (not $ flip documentDeletedForUser $ user ^. #id)
                         "The template is in Trash"
       =<< theDocument
   whenJust mFolderId guardDocumentCreateInFolderIsAllowed
@@ -251,7 +251,7 @@ docApiV2StartWithPortal = api $ do
     dbUpdate $ ChargeUserGroupForStartingDocument did
     return =<< theDocument -- return changed
 
-  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
       sendPortalInvites user portalUrl docs
@@ -347,7 +347,7 @@ docApiV2TrashDeleteCommon guardAction dbAction errorMsg did = logDocument did . 
   guardAction user did
   withDocumentID did $ do
     -- API call actions
-    success <- dbUpdate $ dbAction (userid user) actor
+    success <- dbUpdate $ dbAction (user ^. #id) actor
     unless success $ apiError . documentStateError $ errorMsg
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
@@ -391,12 +391,12 @@ docApiV2TrashDeleteMultipleCommon guardAction dbAction errorMsg = api $ do
   forM_ dids $ guardAction user
   -- API call actions
   forM_ dids $ \did -> withDocumentID did $ do
-    success <- dbUpdate $ dbAction (userid user) actor
+    success <- dbUpdate $ dbAction (user ^. #id) actor
     unless success $ apiError . documentStateError $ T.concat
       [errorMsg, "(", showt did, ")"]
 
   -- Result
-  let docDomain = DocumentsVisibleToUser $ userid user
+  let docDomain = DocumentsVisibleToUser $ user ^. #id
       docFilter = [DocumentFilterByDocumentIDs dids]
       limits    = (0, 100, 100)
       docQuery  = GetDocumentsWithSoftLimit docDomain docFilter [] limits
@@ -439,7 +439,7 @@ docApiV2RemindWithPortal = api $ do
     -- Parameters
     return =<< theDocument -- return changed
 
-  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
       forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs)
@@ -622,9 +622,9 @@ docApiV2SetAttachments did = logDocument did . api $ do
 
   where
     attachmentsQueryFor user fid = GetAttachments
-      [ AttachmentsSharedInUsersUserGroup (userid user)
-      , AttachmentsOfAuthorDeleteValue (userid user) True
-      , AttachmentsOfAuthorDeleteValue (userid user) False
+      [ AttachmentsSharedInUsersUserGroup (user ^. #id)
+      , AttachmentsOfAuthorDeleteValue (user ^. #id) True
+      , AttachmentsOfAuthorDeleteValue (user ^. #id) False
       ]
       [AttachmentFilterByFileID fid]
       []

@@ -54,7 +54,7 @@ test_brandedDomainAssociatedDomain = do
                              bdID
                              AccountRequest
 
-  wbd <- dbQuery $ GetBrandedDomainByUserID (userid user)
+  wbd <- dbQuery $ GetBrandedDomainByUserID (user ^. #id)
 
   assertEqual "GetBrandedDomainByUserID works" nbd wbd
 

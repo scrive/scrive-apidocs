@@ -14,15 +14,15 @@ import UserGroup.Types
 pageArchive
   :: TemplatesMonad m => Context -> User -> UserGroupWithParents -> UTCTime -> m String
 pageArchive ctx user ugwp mt = renderTemplate "pageDocumentsList" $ do
-  F.value "isadmin" $ useriscompanyadmin user
+  F.value "isadmin" $ user ^. #isCompanyAdmin
   F.value "month" $ formatTime' "%m" mt
   F.value "year" $ formatTime' "%Y" mt
   F.value "hasdataretentionpolicy"
-    $  dataretentionpolicy (usersettings user)
+    $  (user ^. #settings % #dataRetentionPolicy)
     /= defaultDataRetentionPolicy
     || (ugwpSettings ugwp ^. #dataRetentionPolicy)
     /= defaultDataRetentionPolicy
   F.value "immediatetrash"
-    $  (dataretentionpolicy (usersettings user) ^. #immediateTrash)
+    $  (user ^. #settings % #dataRetentionPolicy % #immediateTrash)
     || (ugwpSettings ugwp ^. #dataRetentionPolicy % #immediateTrash)
   entryPointFields ctx

@@ -107,14 +107,14 @@ getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
   where
     getDocumentOfUser = do
       user <- guardJust . contextUser =<< getContext
-      dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
+      dbQuery $ GetDocument (DocumentsVisibleToUser $ user ^. #id)
                             [DocumentFilterByDocumentID did]
 
 -- | Same as getDocByDocID, but works only for author
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor did = do
   ctx <- getContext
-  case userid <$> contextUser ctx of
+  case view #id <$> contextUser ctx of
     Nothing -> unexpectedError
       "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
@@ -125,7 +125,7 @@ getDocByDocIDForAuthor did = do
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin did = do
   ctx <- getContext
-  case userid <$> contextUser ctx of
+  case view #id <$> contextUser ctx of
     Nothing -> unexpectedError
       "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
@@ -136,7 +136,7 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin did = do
 checkIfUserCanAccessDocumentAsSignatory
   :: Kontrakcja m => User -> DocumentID -> SignatoryLinkID -> m Bool
 checkIfUserCanAccessDocumentAsSignatory user did sigid = do
-  mdoc <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user)
+  mdoc <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ user ^. #id)
                                  [DocumentFilterByDocumentID did]
                                  []
                                  1
@@ -184,10 +184,10 @@ getDocumentAndSignatoryForEIDAuth did slid = do
       logInfo_ "No document session, checking logged user's documents"
       (contextUser <$> getContext) >>= \case
         Just user -> do
-          doc <- dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
+          doc <- dbQuery $ GetDocument (DocumentsVisibleToUser $ user ^. #id)
                                        [DocumentFilterByDocumentID did]
           let slink = fromJust $ getSigLinkFor slid doc
-          if maybesignatory slink == Just (userid user)
+          if maybesignatory slink == Just (user ^. #id)
             then return (doc, slink)
             else do
               logInfo_ "Current user is not author of the document"

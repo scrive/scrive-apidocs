@@ -197,7 +197,7 @@ logValidationBad input = do
   ctx <- getContext
   logInfo "Input validation failed" $ object
     [ "ip" .= show (ctx ^. #ipAddr)
-    , "user" .= maybe "unknown" (unEmail . useremail . userinfo) (ctx ^. #maybeUser)
+    , "user" .= maybe "unknown" unEmail (ctx ^? #maybeUser % _Just % #info % #email)
     , "input" .= show input
     ]
 

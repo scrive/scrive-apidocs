@@ -43,10 +43,10 @@ testLoggedInLangSwitching = do
     ]
   (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
 
-  assertBool "User was logged into context" $ (userid <$> ctx1 ^. #maybeUser) == Just
-    (userid user)
-  assertUserLang (userid user) LANG_SV
-  assertContextLang (userid user) ctx1 LANG_SV
+  assertBool "User was logged into context" $ (ctx1 ^? #maybeUser % _Just % #id) == Just
+    (user ^. #id)
+  assertUserLang (user ^. #id) LANG_SV
+  assertContextLang (user ^. #id) ctx1 LANG_SV
 
   where
     assertUserLang uid lang = do

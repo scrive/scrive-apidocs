@@ -14,6 +14,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Log
+import Optics (to)
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import Text.StringTemplates.Templates
@@ -139,15 +140,14 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "value" v
     J.value "apicallbackurl" $ documentapiv1callbackurl doc
     J.value "saved" $ not (documentunsaveddraft doc)
-    J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> userid <$> muser
+    J.value "deleted"
+      $ fromMaybe False (muser ^? _Just % #id % to (documentDeletedForUser doc))
     J.value "reallydeleted"
       $   fromMaybe False
       $   documentReallyDeletedForUser doc
-      <$> userid
-      <$> muser
-    when (isJust muser) $ J.value "canperformsigning" $ userCanPerformSigningAction
-      (userid $ fromJust muser)
-      doc
+      <$> (muser ^? _Just % #id)
+    forM_ muser $ \user ->
+      J.value "canperformsigning" $ userCanPerformSigningAction (user ^. #id) doc
     J.value "objectversion" $ documentobjectversion doc
     J.value "process" ("Contract" :: Text)
     J.value "isviewedbyauthor" $ isSigLinkFor muser (getAuthorSigLink doc)
@@ -157,12 +157,11 @@ documentJSONV1 muser forapi forauthor msl doc = do
         && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
       J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
       J.value "canbecanceled"
-        $  (isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser))
-        && documentstatus doc
-        == Pending
+        $  (isAuthor msl || fromMaybe False (view #isCompanyAdmin <$> muser))
+        && (documentstatus doc == Pending)
       J.value "canseeallattachments" $ isAuthor msl || fromMaybe
         False
-        (useriscompanyadmin <$> muser)
+        (view #isCompanyAdmin <$> muser)
     J.value "accesstoken"
       $ if (isNothing msl || isAuthor msl) then showt (documentmagichash doc) else ""
     J.value "timezone" $ toString $ documenttimezonename doc
@@ -481,13 +480,13 @@ docForListJSONV1 user doc = do
   let link = LinkIssueDoc $ documentid doc
       sigFilter sl = isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do
-    J.object "fields" $ docFieldsListForJSON (userid user) doc
+    J.object "fields" $ docFieldsListForJSON (user ^. #id) doc
     J.objects "subfields" $ map (signatoryFieldsListForJSON doc)
                                 (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
     J.value "isauthor" $ fromMaybe False (isAuthor <$> getSigLinkFor user doc)
     J.value "docauthorcompanysameasuser"
-      $  Just (usergroupid user)
+      $  Just (user ^. #groupID)
       == documentauthorugid doc
 
 docFieldsListForJSON :: TemplatesMonad m => UserID -> Document -> JSONGenT m ()

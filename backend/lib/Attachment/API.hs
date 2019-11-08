@@ -26,7 +26,6 @@ import File.Storage
 import Kontra
 import OAuth.Model
 import Routing
-import User.Model
 
 attachmentAPI :: Route (Kontra Response)
 attachmentAPI =
@@ -66,10 +65,10 @@ attachmentsApiV2List_ = do
 
   let domain = case domainStr of
         Just "All" ->
-          [ AttachmentsOfAuthorDeleteValue (userid user) False
-          , AttachmentsSharedInUsersUserGroup (userid user)
+          [ AttachmentsOfAuthorDeleteValue (user ^. #id) False
+          , AttachmentsSharedInUsersUserGroup (user ^. #id)
           ]
-        _ -> [AttachmentsOfAuthorDeleteValue (userid user) False]
+        _ -> [AttachmentsOfAuthorDeleteValue (user ^. #id) False]
       filters = fromMaybe [] mFilters
       sorting = fromMaybe [] mSorting
 
@@ -82,7 +81,7 @@ attachmentsApiV2Create = api $ do
   file          <- apiV2ParameterObligatory $ ApiV2ParameterFilePDF "file"
 
   let title = fromMaybe (takeTextBaseName $ filename file) mTitle
-  void $ dbUpdate $ NewAttachment (userid user) title (fileid file) actor
+  void $ dbUpdate $ NewAttachment (user ^. #id) title (fileid file) actor
 
   return $ Created ()
   where
@@ -93,9 +92,9 @@ attachmentsApiV2Download :: Kontrakcja m => AttachmentID -> m Response
 attachmentsApiV2Download attid = api $ do
   (user, _) <- getAPIUser APIPersonal
   atts      <- dbQuery $ GetAttachments
-    [ AttachmentsSharedInUsersUserGroup (userid user)
-    , AttachmentsOfAuthorDeleteValue (userid user) True
-    , AttachmentsOfAuthorDeleteValue (userid user) False
+    [ AttachmentsSharedInUsersUserGroup (user ^. #id)
+    , AttachmentsOfAuthorDeleteValue (user ^. #id) True
+    , AttachmentsOfAuthorDeleteValue (user ^. #id) False
     ]
     [AttachmentFilterByID attid]
     []
@@ -111,7 +110,7 @@ attachmentsApiV2SetSharing = api $ do
   ids       <- apiV2ParameterObligatory $ ApiV2ParameterJSON "attachment_ids" $ arrayOf
     unjsonDef
   shared <- apiV2ParameterObligatory $ ApiV2ParameterBool "shared"
-  dbUpdate $ SetAttachmentsSharing (userid user) ids shared
+  dbUpdate $ SetAttachmentsSharing (user ^. #id) ids shared
   return $ Ok ()
 
 attachmentsApiV2Delete :: Kontrakcja m => m Response
@@ -119,5 +118,5 @@ attachmentsApiV2Delete = api $ do
   (user, actor) <- getAPIUser APIPersonal
   ids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "attachment_ids" $ arrayOf
     unjsonDef
-  dbUpdate $ DeleteAttachments (userid user) ids actor
+  dbUpdate $ DeleteAttachments (user ^. #id) ids actor
   return $ Accepted ()

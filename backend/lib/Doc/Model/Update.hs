@@ -661,7 +661,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpd
           sqlWhereEq "signatory_link_fields.type"              EmailFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSet "mail_invitation_delivery_status" Unknown
-        sqlSet "user_id" $ fmap userid muser
+        sqlSet "user_id" $ view #id <$> muser
         sqlWhereEq "signatory_links.id" slid
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
@@ -1203,7 +1203,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
                                              (SignOrder 1)
                                              []
 
-      let authorlink = authorlink0 { maybesignatory = Just $ userid user }
+      let authorlink = authorlink0 { maybesignatory = Just $ user ^. #id }
 
       othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
         return $ signLinkFromDetails' emptySignatoryFields
@@ -1223,7 +1223,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
             , documentauthorattachments = []
             , documentmagichash         = token
             , documenttimezonename      = timezone
-            , documentfolderid          = desiredFolderId <|> userhomefolderid user
+            , documentfolderid          = desiredFolderId <|> user ^. #homeFolderID
             }
 
       insertDocument doc
@@ -1407,7 +1407,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Restore
           "(users.user_group_id = same_usergroup_users.user_group_id OR users.id = same_usergroup_users.id)"
         sqlWhere "signatory_links.user_id = users.id"
 
-        sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument (userid user)
+        sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument (user ^. #id)
         sqlWhereUserIsSelfOrCompanyAdmin
 
       sqlWhereExists $ sqlSelect "documents" $ do
@@ -1426,9 +1426,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Restore
 -}
 data SaveDocumentForUser = SaveDocumentForUser User SignatoryLinkID
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveDocumentForUser Bool where
-  update (SaveDocumentForUser User { userid } slid) = updateDocumentWithID $ \did -> do
+  update (SaveDocumentForUser user slid) = updateDocumentWithID $ \did -> do
     runQuery01 . sqlUpdate "signatory_links" $ do
-      sqlSet "user_id" userid
+      sqlSet "user_id" $ user ^. #id
       sqlWhereEq "document_id" did
       sqlWhereEq "id"          slid
 
@@ -1880,7 +1880,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
     siglinks <- forM (documentsignatorylinks document) $ \sl -> do
       sl' <- case mUser of
         Just user | isAuthor sl -> do
-          ugwp <- query . UserGroupGetWithParentsByUserID . userid $ user
+          ugwp <- query . UserGroupGetWithParentsByUserID $ user ^. #id
           return $ replaceSignatoryUser sl user ugwp
         _ -> return sl
       return sl' { signatorylinkid = unsafeSignatoryLinkID 0 }
@@ -1899,7 +1899,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime             = actorTime actor
       , documentmtime             = actorTime actor
       , documentshareablelinkhash = Nothing
-      , documentfolderid          = (userhomefolderid =<< mAuthorUser)
+      , documentfolderid          = (view #homeFolderID =<< mAuthorUser)
                                       `mplus` (documentfolderid doc)
       }
 
@@ -2566,7 +2566,7 @@ archiveIdleDocuments now = do
     expireUserDocumentsWithTheirOwnDRP processed_ugids = do
       users <- dbQuery $ GetUsers [UserFilterWithAnyDocumentRetentionPolicy]
       let users_not_yet_processed =
-            filter (\u -> not $ S.member (usergroupid u) processed_ugids) users
+            filter (\u -> not $ S.member (u ^. #groupID) processed_ugids) users
       archived_counts_from_users <- forM users_not_yet_processed
         $ expireUserDocuments Nothing
       return $ sum archived_counts_from_users
@@ -2574,9 +2574,9 @@ archiveIdleDocuments now = do
     expireUserDocuments
       :: (MonadLog m, MonadDB m) => Maybe DataRetentionPolicy -> User -> m Int
     expireUserDocuments m_ug_drp user = do
-      let uid      = userid user
-          ugid     = usergroupid user
-          user_drp = dataretentionpolicy $ usersettings user
+      let uid      = user ^. #id
+          ugid     = user ^. #groupID
+          user_drp = user ^. #settings % #dataRetentionPolicy
           drp      = case m_ug_drp of
             Nothing     -> user_drp
             Just ug_drp -> makeStricterDataRetentionPolicy ug_drp user_drp

@@ -74,24 +74,25 @@ handleLoginPost = do
       maybeuser <- dbQuery $ GetUserByEmail (Email email)
       ipIsOK    <- case maybeuser of
         Just u -> do
-          ugwp <- dbQuery $ UserGroupGetWithParentsByUserID (userid u)
+          ugwp <- dbQuery $ UserGroupGetWithParentsByUserID (u ^. #id)
           let masklist = ugwpSettings ugwp ^. #ipAddressMaskList
           return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
         Nothing -> return True
       case maybeuser of
-        Just user@User { userpassword, userid, useraccountsuspended, usertotp, usertotpactive }
-          | maybeVerifyPassword userpassword passwd && ipIsOK && not useraccountsuspended
+        Just user
+          | maybeVerifyPassword (user ^. #password) passwd && ipIsOK && not
+            (user ^. #accountSuspended)
           -> do
-            failedAttemptCount <- dbQuery $ GetUserRecentAuthFailureCount userid
+            failedAttemptCount <- dbQuery $ GetUserRecentAuthFailureCount $ user ^. #id
             if failedAttemptCount <= 5
-              then case (usertotp, usertotpactive, mtotpcode) of
+              then case (user ^. #totpKey, user ^. #totpActive, mtotpcode) of
                 (_        , False, _             ) -> logTheUserIn ctx user padlogin
                 (Just totp, True , Just totpcode') -> do
                   now <- currentTime
                   let onBadTOTP = do
                         logInfo "User login failed (invalid TOTP code provided)"
                           $ logObject_ user
-                        void $ dbUpdate $ LogHistoryLoginTOTPFailure userid
+                        void $ dbUpdate $ LogHistoryLoginTOTPFailure (user ^. #id)
                                                                      (ctx ^. #ipAddr)
                                                                      (ctx ^. #time)
                         J.runJSONGenT $ do
@@ -116,13 +117,13 @@ handleLoginPost = do
                 logInfo "User login failed (too many attempts)" $ logObject_ user
                 J.runJSONGenT $ J.value "logged" False
 
-        Just u@User { userpassword } | not (maybeVerifyPassword userpassword passwd) -> do
+        Just u | not (maybeVerifyPassword (u ^. #password) passwd) -> do
           logInfo "User login failed (invalid password)" $ logObject_ u
           void $ if padlogin
             then dbUpdate
-              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+              $ LogHistoryPadLoginFailure (u ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
             else dbUpdate
-              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+              $ LogHistoryLoginFailure (u ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
 
         Just u | not ipIsOK -> do
@@ -130,18 +131,18 @@ handleLoginPost = do
             $ object [logPair_ u, "ip" .= show (ctx ^. #ipAddr)]
           void $ if padlogin
             then dbUpdate
-              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+              $ LogHistoryPadLoginFailure (u ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
             else dbUpdate
-              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+              $ LogHistoryLoginFailure (u ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
         Just u -> do
           {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
           logInfo "User login failed (user account suspended)" $ object [logPair_ u]
           void $ if padlogin
             then dbUpdate
-              $ LogHistoryPadLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+              $ LogHistoryPadLoginFailure (u ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
             else dbUpdate
-              $ LogHistoryLoginFailure (userid u) (ctx ^. #ipAddr) (ctx ^. #time)
+              $ LogHistoryLoginFailure (u ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
         Nothing -> do
           logInfo "User login failed (user not found)" $ object ["email" .= email]
@@ -151,9 +152,10 @@ handleLoginPost = do
   where
     logTheUserIn ctx user padlogin = do
       logInfo "User logged in" $ logObject_ user
-      muuser <- dbQuery $ GetUserByID (userid user)
+      muuser <- dbQuery $ GetUserByID (user ^. #id)
       case muuser of
-        Just User { userid = uid } -> do
+        Just uuser -> do
+          let uid = uuser ^. #id
           now <- currentTime
           asyncLogEvent SetUserProps (simplePlanhatAction "Login" user now) EventPlanhat
           asyncLogEvent
@@ -166,12 +168,12 @@ handleLoginPost = do
         _ -> return ()
       if padlogin
         then do
-          void $ dbUpdate $ LogHistoryPadLoginSuccess (userid user)
+          void $ dbUpdate $ LogHistoryPadLoginSuccess (user ^. #id)
                                                       (ctx ^. #ipAddr)
                                                       (ctx ^. #time)
           logPadUserToContext muuser
         else do
-          void $ dbUpdate $ LogHistoryLoginSuccess (userid user)
+          void $ dbUpdate $ LogHistoryLoginSuccess (user ^. #id)
                                                    (ctx ^. #ipAddr)
                                                    (ctx ^. #time)
           logUserToContext muuser

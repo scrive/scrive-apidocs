@@ -52,7 +52,7 @@ testSignupAndActivate = do
                                  (Just "123")
   assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" res ctx3
   Just uuser <- dbQuery $ GetUserByID uarUserID
-  assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
+  assertEqual "Phone number was saved" "123" (uuser ^. #info % #phone)
   emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent to the user" 1 (length emails)
 
@@ -124,14 +124,14 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
 
 assertAccountActivatedFor :: UserID -> Text -> Text -> JSValue -> Context -> TestEnv ()
 assertAccountActivatedFor uid fstname sndname res ctx = do
-  assertEqual "User is logged in" (Just uid) (fmap userid $ ctx ^. #maybeUser)
+  assertEqual "User is logged in" (Just uid) (ctx ^? #maybeUser % _Just % #id)
   assertAccountActivated fstname sndname res ctx
 
 assertAccountActivated :: Text -> Text -> JSValue -> Context -> TestEnv ()
 assertAccountActivated fstname sndname res ctx = do
   ((Just resultOk) :: Maybe Bool) <- withJSValue res $ fromJSValueField "ok"
   assertEqual "Account activation succeeded" True resultOk
-  assertBool "Accepted TOS" $ isJust (ctx ^. #maybeUser >>= userhasacceptedtermsofservice)
+  assertBool "Accepted TOS" $ isJust (ctx ^. #maybeUser >>= view #hasAcceptedTOS)
   assertEqual "First name was set"  (Just fstname) (getFirstName <$> ctx ^. #maybeUser)
   assertEqual "Second name was set" (Just sndname) (getLastName <$> ctx ^. #maybeUser)
 

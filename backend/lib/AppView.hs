@@ -46,7 +46,6 @@ import Kontra
 import Templates (renderTextTemplate)
 import ThirdPartyStats.Core
 import User.Lang
-import User.Model
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
@@ -91,14 +90,14 @@ userGroupWithParentsForPage = do
   ctx <- getContext
   case ctx ^. #maybeUser of
     Nothing   -> return Nothing
-    Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (userid user)
+    Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (user ^. #id)
 
 userGroupUIForPage :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
   ctx <- getContext
   case ctx ^. #maybeUser of
     Just user -> do
-      ug <- dbQuery . UserGroupGetByUserID . userid $ user
+      ug <- dbQuery . UserGroupGetByUserID $ user ^. #id
       return . Just $ (ug ^. #id, ug ^. #ui)
     _ -> return Nothing
 
@@ -203,7 +202,7 @@ standardPageFields ctx mugidandui ad = do
   F.value "hostpart" $ ctx ^. #brandedDomain % #url
   F.value "production" (ctx ^. #production)
   F.value "brandingdomainid" (show $ ctx ^. #brandedDomain % #id)
-  F.value "brandinguserid" (fmap (show . userid) (contextUser ctx))
+  F.value "brandinguserid" (show <$> contextUser ctx ^? _Just % #id)
   F.value "ctxlang" $ codeFromLang $ ctx ^. #lang
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (ctx ^. #trackJsToken)
@@ -213,7 +212,7 @@ standardPageFields ctx mugidandui ad = do
     $   fmap (B64.encode . A.encode)
     <$> currentSubscriptionJSON
   F.value "subscriptionuseriscompanyadmin"
-    $ case fmap useriscompanyadmin (ctx ^. #maybeUser) of
+    $ case ctx ^? #maybeUser % _Just % #isCompanyAdmin of
         Nothing    -> "undefined"
         Just True  -> "true"
         Just False -> "false"

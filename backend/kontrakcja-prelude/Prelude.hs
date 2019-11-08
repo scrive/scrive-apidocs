@@ -13,6 +13,7 @@ module Prelude (
   , module Data.Maybe
   , module Data.Monoid
   , module Data.Monoid.Utils
+  , module O
   , module P
   , Text
   , TextShow (..)
@@ -62,7 +63,10 @@ import "base" Prelude hiding
   ( (!!), (&&), (||), all, and, any, error, head, id, last, maximum, minimum
   , not, or, read, tail )
 
+import qualified Data.Either.Optics as O
+import qualified Data.Maybe.Optics as O
 import qualified Data.Text as T
+import qualified Data.Tuple.Optics as O
 import qualified "base" Prelude as P
 
 -- | Boolean algebra of functions.

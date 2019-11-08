@@ -122,7 +122,7 @@ docControlTests env = testGroup
 testUploadingFile :: TestEnv ()
 testUploadingFile = do
   (user, rsp) <- uploadDocAsNewUser
-  docs        <- randomQuery $ GetDocumentsByAuthor (userid user)
+  docs        <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertBool "Document id in result json"
@@ -131,13 +131,13 @@ testUploadingFile = do
 testNewDocumentUnsavedDraft :: TestEnv ()
 testNewDocumentUnsavedDraft = do
   (user, _rsp) <- uploadDocAsNewUser
-  docs         <- randomQuery $ GetDocuments (DocumentsVisibleToUser $ userid user)
+  docs         <- randomQuery $ GetDocuments (DocumentsVisibleToUser $ user ^. #id)
                                              [DocumentFilterDeleted False]
                                              []
                                              maxBound
   assertEqual "Draft is there" 1 (length docs)
   docs' <- randomQuery $ GetDocuments
-    (DocumentsVisibleToUser $ userid user)
+    (DocumentsVisibleToUser $ user ^. #id)
     [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False]
     []
     maxBound
@@ -196,7 +196,7 @@ testLastPersonSigningADocumentClosesIt = do
                                  (signatoryfields $ fromJust $ getAuthorSigLink d)
                                , signatoryisauthor = True
                                , signatoryrole     = SignatoryRoleViewer
-                               , maybesignatory    = Just $ userid user
+                               , maybesignatory    = Just $ user ^. #id
                                }
                              )
                            , (defaultSignatoryLink
@@ -272,8 +272,8 @@ testSigningWithPin = do
   ugid2      <- view #id <$> addNewUserGroup
   Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
   Just user2 <- addNewUser "Gary" "Green" "gary@green.com"
-  True       <- dbUpdate $ SetUserUserGroup (userid user1) ugid1
-  True       <- dbUpdate $ SetUserUserGroup (userid user2) ugid2
+  True       <- dbUpdate $ SetUserUserGroup (user1 ^. #id) ugid1
+  True       <- dbUpdate $ SetUserUserGroup (user2 ^. #id) ugid2
   ctx        <- (set #maybeUser (Just user1)) <$> mkContext defaultLang
 
   let filename = inTestDir "pdfs/simple.pdf"
@@ -297,7 +297,7 @@ testSigningWithPin = do
                                signatoryfields $ fromJust $ getAuthorSigLink d
                              , signatoryisauthor = True
                              , signatoryrole     = SignatoryRoleViewer
-                             , maybesignatory    = Just $ userid user1
+                             , maybesignatory    = Just $ user1 ^. #id
                              }
                            )
                          , (defaultSignatoryLink
@@ -327,7 +327,7 @@ testSigningWithPin = do
                         assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
                         runSQL
                             ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id ="
-                            <?> userid user1
+                            <?> (user1 ^. #id)
                             <+> "AND user_group_id ="
                             <?> ugid1
                             <+> "AND document_id ="
@@ -400,7 +400,7 @@ testSigningWithPin = do
                       -- make sure that smses are counted only for the designated company
                       runSQL
                           ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id <>"
-                          <?> userid user1
+                          <?> (user1 ^. #id)
                           )
                         >>= assertEqual "Users other than author don't get charged" 0
 
@@ -506,7 +506,7 @@ testDownloadFile = do
 
   reqfile        <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (_rsp, _ctx')  <- runTestKontra reqfile ctxuser $ apiCallV1CreateFromFile
-  [doc]          <- randomQuery $ GetDocumentsByAuthor (userid user)
+  [doc]          <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
 
   assertBool "Document access token should not be zero"
              (documentmagichash doc /= unsafeMagicHash 0)
@@ -630,11 +630,11 @@ testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
   (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
   doc         <- addRandomDocument (rdaDefault user) { rdaTypes = OneOf [Template] }
-  docs1       <- randomQuery $ GetDocumentsByAuthor (userid user)
+  docs1       <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest POST []
   void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
-  docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
+  docs2 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   assertBool "No new document" (length docs2 == 1 + length docs1)
 
 testDocumentFromTemplateShared :: TestEnv ()
@@ -644,11 +644,11 @@ testDocumentFromTemplateShared = do
   doc           <- addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Template] }
   void $ randomUpdate $ SetDocumentSharing [documentid doc] True
   (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
-  docs1       <- randomQuery $ GetDocumentsByAuthor (userid user)
+  docs1       <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest POST []
   void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
-  docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
+  docs2 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   assertEqual "New document should have been created" (1 + length docs1) (length docs2)
 
 testDocumentDeleteInBulk :: TestEnv ()
@@ -665,7 +665,7 @@ testDocumentDeleteInBulk = do
   req <- mkRequest POST [("documentids", inText $ (showt $ documentid <$> docs))]
 
   void $ runTestKontra req ctx $ handleDelete
-  docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
+  docs2 <- dbQuery $ GetDocumentsByAuthor (author ^. #id)
   assertEqual "Documents are deleted" 0 (length docs2)
 
 testGetLoggedIn :: TestEnv ()
@@ -765,7 +765,7 @@ testDownloadSignviewBrandingAccess = do
            { signatoryfields   = (signatoryfields $ fromJust $ getAuthorSigLink d)
            , signatoryisauthor = True
            , signatoryrole     = SignatoryRoleViewer
-           , maybesignatory    = Just $ userid user
+           , maybesignatory    = Just $ user ^. #id
            }
          )
        , (defaultSignatoryLink
@@ -807,7 +807,7 @@ testDownloadSignviewBrandingAccess = do
   resp2 <-
     E.try $ runTestKontra svbr2 emptyContext $ handleSignviewBrandingWithoutDocument
       bid
-      (userid user)
+      (user ^. #id)
       "branding-hash-7cdsgSAq1-some_name.css"
   case resp2 of
     Right (cssResp2, _) -> assertBool "CSS should be returned" (rsCode cssResp2 == 200)
@@ -968,7 +968,7 @@ testSendEmailOnTimeout :: TestEnv ()
 testSendEmailOnTimeout = do
   ug        <- addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True      <- dbUpdate $ SetUserUserGroup (userid user) (ug ^. #id)
+  True      <- dbUpdate $ SetUserUserGroup (user ^. #id) (ug ^. #id)
   let newUGS = (set #sendTimeoutNotification True (fromJust $ ug ^. #settings))
   dbUpdate $ UserGroupUpdateSettings (ug ^. #id) (Just newUGS)
 

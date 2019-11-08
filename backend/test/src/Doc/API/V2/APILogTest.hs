@@ -14,7 +14,6 @@ import TestKontra
 import User.APILog.API
 import User.APILog.Model
 import User.Lang (defaultLang)
-import User.Model
 
 apiV2CallLogTests :: TestEnvSt -> Test
 apiV2CallLogTests env =
@@ -35,7 +34,7 @@ testApiLogIsStored = do
 
   setRequestURI "/api/v2/documents"
   void $ testRequestHelper ctx GET [] (docApiV2Get did) 200
-  logs <- dbQuery $ GetCallLogList (userid user)
+  logs <- dbQuery $ GetCallLogList (user ^. #id)
   assertEqual "There should be a logged API Call" 1 (length logs)
 
 
@@ -48,7 +47,7 @@ testApiLogIsRotated = do
 
   setRequestURI "/api/v2/documents"
   forM_ [1 .. 101] $ \_ -> testRequestHelper ctx GET [] (docApiV2Get did) 200
-  logs <- dbQuery $ GetCallLogList (userid user)
+  logs <- dbQuery $ GetCallLogList (user ^. #id)
   assertEqual "There should be only 100 logged API Calls" 100 (length logs)
 
 testApiLogGetItemWorks :: TestEnv ()
@@ -60,7 +59,7 @@ testApiLogGetItemWorks = do
 
   setRequestURI "/api/v2/documents"
   forM_ [1 .. 5] $ \_ -> testRequestHelper ctx GET [] (docApiV2Get did) 200
-  logs <- dbQuery $ GetCallLogList (userid user)
+  logs <- dbQuery $ GetCallLogList (user ^. #id)
   assertEqual "There should be 5 logged API Calls" 5 (length logs)
   void $ testRequestHelper ctx GET [] (apiLogGetItem . cliID . head $ logs) 200
 
@@ -84,7 +83,7 @@ testApiLog2Users = do
 
   setRequestURI "/api/v2/documents"
   forM_ [1 .. 5] $ \_ -> testRequestHelper ctxA GET [] (docApiV2Get didA) 200
-  logsUserA <- dbQuery $ GetCallLogList (userid userA)
+  logsUserA <- dbQuery $ GetCallLogList (userA ^. #id)
   assertEqual "There should be 5 logged API Calls for user A" 5 (length logsUserA)
 
   userB       <- addNewRandomUser
@@ -93,12 +92,12 @@ testApiLog2Users = do
   let didB = getMockDocId newMockDocB
 
   forM_ [1 .. 101] $ \_ -> testRequestHelper ctxB GET [] (docApiV2Get didB) 200
-  logsUserB <- dbQuery $ GetCallLogList (userid userB)
+  logsUserB <- dbQuery $ GetCallLogList (userB ^. #id)
   assertEqual "There should be only 100 logged API Calls for user B"
               100
               (length logsUserB)
 
-  logsUserA' <- dbQuery $ GetCallLogList (userid userA)
+  logsUserA' <- dbQuery $ GetCallLogList (userA ^. #id)
   assertEqual "Logs of user A are not affected by user B activity"
               (sortBy (compare `on` cliID) logsUserA)
               (sortBy (compare `on` cliID) logsUserA')

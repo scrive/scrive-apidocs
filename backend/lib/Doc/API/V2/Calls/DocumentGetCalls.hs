@@ -77,10 +77,10 @@ docApiV2List = api $ do
   -- API call actions
   let documentFilters =
         (DocumentFilterUnsavedDraft False)
-          : (join $ toDocumentFilter (userid user) <$> filters)
+          : (join $ toDocumentFilter (user ^. #id) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
   logInfo "Fetching list of documents from the database" $ object
-    [ identifier $ userid user
+    [ identifier $ user ^. #id
     , "offset" .= offset
     , "max_count" .= maxcount
     , "filters" .= map show documentFilters
@@ -88,7 +88,7 @@ docApiV2List = api $ do
     ]
   startQueryTime          <- liftBase getCurrentTime
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit
-    (DocumentsVisibleToUser $ userid user)
+    (DocumentsVisibleToUser $ user ^. #id)
     documentFilters
     documentSorting
     (offset, 1000, maxcount)
@@ -174,7 +174,7 @@ docApiV2History did = logDocument did . api $ do
       apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
     Just (Just l) -> return $ Just l
   -- API call actions
-  switchLang $ fromMaybe (lang $ usersettings user) mLang
+  switchLang $ fromMaybe (user ^. #settings % #lang) mLang
   evidenceLog <- dbQuery $ GetEvidenceLog did
   events      <- reverse <$> eventsJSListFromEvidenceLog doc evidenceLog
   -- Result

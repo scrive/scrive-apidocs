@@ -71,10 +71,10 @@ logDocEvent
   -> Document
   -> m ()
 logDocEvent name user extraProps doc = do
-  ug  <- dbQuery . UserGroupGetByUserID . userid $ user
+  ug  <- dbQuery . UserGroupGetByUserID $ user ^. #id
   now <- currentTime
   let
-    uid      = userid user
+    uid      = user ^. #id
     email    = Email $ getEmail user
     fullname = getFullName user
     deliverymethod =
@@ -96,7 +96,7 @@ logDocEvent name user extraProps doc = do
        , stringProp "Language"        (showt $ documentlang doc)
        , numProp "Days to sign" (fromIntegral $ documentdaystosign doc)
        , numProp "Signatories"  (fromIntegral $ length $ documentsignatorylinks doc)
-       , stringProp "Signup Method" (showt $ usersignupmethod user)
+       , stringProp "Signup Method" (showt $ user ^. #signupMethod)
        ]
     )
     EventMixpanel
@@ -134,7 +134,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   return ()
   where
     userMixpanelData author time =
-      [UserIDProp (userid author), someProp "Last Doc Sent" time]
+      [UserIDProp (author ^. #id), someProp "Last Doc Sent" time]
 
 initialiseSignatoryAPIMagicHashes :: (DocumentMonad m, Kontrakcja m) => m ()
 initialiseSignatoryAPIMagicHashes = do
@@ -257,7 +257,7 @@ postDocumentPendingChange olddoc signatoryLink = do
           )
         . documentsignatorylinks
     userMixpanelData author time =
-      [UserIDProp (userid author), someProp "Last Doc Closed" time]
+      [UserIDProp (author ^. #id), someProp "Last Doc Closed" time]
 
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
@@ -420,8 +420,8 @@ findAndTimeoutDocuments = do
     case mauthor of
       Nothing     -> return ()
       Just author -> do
-        ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (usergroupid author)
-        bd   <- dbQuery $ GetBrandedDomainByUserID (userid author)
+        ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (author ^. #groupID)
+        bd   <- dbQuery $ GetBrandedDomainByUserID (author ^. #id)
         let mc = I.MailContext { lang               = lang
                                , brandedDomain      = bd
                                , time               = now

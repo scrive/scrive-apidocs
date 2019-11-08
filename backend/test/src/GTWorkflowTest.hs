@@ -114,7 +114,7 @@ testExtendingIsNotRescheduledForPurgedDocs = do
 
   -- Purge document
   withDocumentID did $ void $ randomUpdate $ \t ->
-    ArchiveDocument (userid user) (systemActor t)
+    ArchiveDocument (user ^. #id) (systemActor t)
   modifyTestTime (31 `daysAfter`)
   purgedcount <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 purgedcount

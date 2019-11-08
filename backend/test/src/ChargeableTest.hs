@@ -47,7 +47,7 @@ test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
   ugid      <- view #id <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
+  True      <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   doc       <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
                 , kontraInfoForSMS = Nothing
@@ -73,7 +73,7 @@ test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
   ugid      <- view #id <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True      <- dbUpdate $ SetUserUserGroup (userid user) ugid
+  True      <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   doc       <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
                 , kontraInfoForSMS = Nothing
@@ -99,7 +99,7 @@ test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
   ugid        <- view #id <$> addNewUserGroup
   Just user   <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True        <- dbUpdate $ SetUserUserGroup (userid user) ugid
+  True        <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   did1        <- newDocumentReadyToStart user
@@ -141,7 +141,7 @@ test_startDocumentCharging = do
                { signatoryfields   = (signatoryfields $ fromJust $ getAuthorSigLink doc)
                , signatoryisauthor = True
                , signatoryrole     = SignatoryRoleViewer
-               , maybesignatory    = Just $ userid user
+               , maybesignatory    = Just $ user ^. #id
                }
              )
            , (defaultSignatoryLink
@@ -166,11 +166,11 @@ test_closeDocAndSigCharging = do
   let queryChargeableSigClose =
         "SELECT count(*) FROM chargeable_items WHERE type = 9 "
           <>  "AND quantity = 1 AND user_group_id ="
-          <?> usergroupid user
+          <?> (user ^. #groupID)
   let queryChargeableDocClose =
         "SELECT count(*) FROM chargeable_items WHERE type = 8 "
           <>  "AND quantity = 1 AND user_group_id ="
-          <?> usergroupid user
+          <?> (user ^. #groupID)
 
   -- Test that closing document in V1 adds a chargeable item
   mockDocV1 <- testDocApiV2StartNew ctx

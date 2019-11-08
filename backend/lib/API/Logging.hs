@@ -10,14 +10,13 @@ import API.APIVersion
 import Kontra
 import Log.Identifier
 import OAuth.Util
-import User.Types.User
 
 logUserCompanyIPAndApiVersion :: Kontrakcja m => APIVersion -> m a -> m a
 logUserCompanyIPAndApiVersion apiversion acc = do
   userandcompanyids <- (view #maybeApiUser <$> getContext) >>= \case
     Nothing   -> return []
     Just user -> do
-      return [identifier $ userid user, identifier $ usergroupid user]
+      return [identifier $ user ^. #id, identifier $ user ^. #groupID]
   ctx <- getContext
   let apiversionandip = [identifier apiversion, "ip" .= show (ctx ^. #ipAddr)]
   localData (userandcompanyids ++ apiversionandip) $ do

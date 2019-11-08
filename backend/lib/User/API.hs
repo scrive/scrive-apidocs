@@ -164,8 +164,8 @@ apiCallGetUserPersonalToken = api $ do
           throwM . SomeDBExtraException $ forbidden wrongPassMsg
         Just user -> do
           ctx <- getContext
-          if maybeVerifyPassword (userpassword user) passwd
-            then case (usertotp user, usertotpactive user, mtotpcode) of
+          if maybeVerifyPassword (user ^. #password) passwd
+            then case (user ^. #totpKey, user ^. #totpActive, mtotpcode) of
               -- No TOTP is active
               (_        , False, _            ) -> returnTokenFor ctx user
               -- TOTP is active and present
@@ -179,7 +179,7 @@ apiCallGetUserPersonalToken = api $ do
               (Nothing, True, Just _) ->
                 unexpectedError "TOTP condition should not happen"
             else do
-              void . dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user)
+              void . dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (user ^. #id)
                                                                      (ctx ^. #ipAddr)
                                                                      (ctx ^. #time)
               logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
@@ -203,14 +203,14 @@ apiCallGetUserPersonalToken = api $ do
     wrongPassMsg    = "Email and password don't match"
     invalidTokenMsg = "The login_token provided is invalid"
     returnTokenFor ctx user = do
-      let uid = userid user
+      let uid = user ^. #id
       _success <- dbUpdate $ CreatePersonalToken uid
       token    <- dbQuery $ GetPersonalToken uid
       case token of
         Nothing -> throwM . SomeDBExtraException $ serverError
           "No token found, this should not happend"
         Just t -> do
-          attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (userid user)
+          attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (user ^. #id)
           if attemptCount <= 5
             then do
               void $ dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid
@@ -226,14 +226,14 @@ apiCallGetUserPersonalToken = api $ do
 setup2FA :: Kontrakcja m => m Response
 setup2FA = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
-  if usertotpactive user
+  if user ^. #totpActive
     then V2.Ok <$> runJSONGenT (value "twofactor_active" True)
     else do
       key <- createTOTPKey
-      ok  <- dbUpdate $ SetUserTOTPKey (userid user) key
+      ok  <- dbUpdate $ SetUserTOTPKey (user ^. #id) key
       if ok
         then do
-          let email = useremail . userinfo $ user
+          let email = user ^. #info % #email
           url    <- view (#brandedDomain % #url) <$> getContext
           qrCode <- liftIO $ makeQRFromURLEmailAndKey (T.unpack url) email key
           return . V2.Ok <$> runJSONGen $ do
@@ -247,13 +247,13 @@ confirm2FA = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
   totpcode  <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterInt "totp"
   now       <- currentTime
-  case (usertotp user, usertotpactive user) of
+  case (user ^. #totpKey, user ^. #totpActive) of
     (Just totpkey, False) -> if verifyTOTPCode totpkey now (fromIntegral totpcode)
       then do
-        r <- dbUpdate $ ConfirmUserTOTPSetup (userid user)
+        r <- dbUpdate $ ConfirmUserTOTPSetup (user ^. #id)
         if r
           then do
-            void $ dbUpdate $ LogHistoryTOTPEnable (userid user)
+            void $ dbUpdate $ LogHistoryTOTPEnable (user ^. #id)
                                                    (ctx ^. #ipAddr)
                                                    (ctx ^. #time)
             return . V2.Ok <$> runJSONGen $ do
@@ -267,12 +267,12 @@ disable2FA :: Kontrakcja m => m Response
 disable2FA = V2.api $ do
   ctx       <- getContext
   (user, _) <- V2.getAPIUserWithAnyPrivileges
-  if usertotpactive user
+  if user ^. #totpActive
     then do
-      r <- dbUpdate $ DisableUserTOTP (userid user)
+      r <- dbUpdate $ DisableUserTOTP (user ^. #id)
       if r
         then do
-          void $ dbUpdate $ LogHistoryTOTPDisable (userid user)
+          void $ dbUpdate $ LogHistoryTOTPDisable (user ^. #id)
                                                   (ctx ^. #ipAddr)
                                                   (ctx ^. #time)
           V2.Ok <$> runJSONGenT (value "twofactor_active" False)
@@ -282,13 +282,13 @@ disable2FA = V2.api $ do
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile = api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   return $ Ok $ userJSONWithCompany user ugwp
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription = api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   sub          <- getSubscription ugwp
   return . Ok $ unjsonToJSON unjsonDef sub
 
@@ -300,21 +300,21 @@ apiCallChangeUserPassword = api $ do
   password     <- getField' "password"
   goodPassword <- checkPassword (ctx ^. #passwordServiceConf) password
   if goodPassword
-    then if (maybeVerifyPassword (userpassword user) oldpassword)
+    then if (maybeVerifyPassword (user ^. #password) oldpassword)
       then do
         passwordhash <- createPassword password
-        void $ dbUpdate $ SetUserPassword (userid user) passwordhash
-        void $ dbUpdate $ LogHistoryPasswordSetup (userid user)
+        void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+        void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
                                                   (ctx ^. #ipAddr)
                                                   (ctx ^. #time)
-                                                  (Just $ userid $ user)
-        terminateAllUserSessionsExceptCurrent (userid user)
+                                                  (Just $ user ^. #id)
+        terminateAllUserSessionsExceptCurrent (user ^. #id)
         Ok <$> (runJSONGenT $ value "changed" True)
       else do
-        void $ dbUpdate $ LogHistoryPasswordSetupReq (userid user)
+        void $ dbUpdate $ LogHistoryPasswordSetupReq (user ^. #id)
                                                      (ctx ^. #ipAddr)
                                                      (ctx ^. #time)
-                                                     (Just $ userid $ user)
+                                                     (Just $ user ^. #id)
         Ok <$> (runJSONGenT $ value "changed" False)
     else throwM . SomeDBExtraException $ serverError
       "New password fields do not match Scrive standard"
@@ -327,7 +327,7 @@ apiCallLoginUser = api $ do
   redirectUrl  <- apiGuardJustM (badInput "Redirect URL not provided or invalid.")
     $ getField "redirect"
 
-  void $ dbUpdate $ LogHistoryLoginSuccess (userid user) (ctx ^. #ipAddr) (ctx ^. #time)
+  void $ dbUpdate $ LogHistoryLoginSuccess (user ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
@@ -345,40 +345,41 @@ apiCallUpdateUserProfile = api $ do
 
       getUserParameter
         :: Text -> (Text -> InputValidation.Result Text) -> (UserInfo -> Text) -> m Text
-      getUserParameter n v getPrevValue = getParameter n v $ getPrevValue $ userinfo user
+      getUserParameter n v getPrevValue = getParameter n v $ getPrevValue $ user ^. #info
 
   companyposition <- getUserParameter "companyposition"
                                       asValidPosition
-                                      usercompanyposition
-  phone          <- getUserParameter "phone" asValidPhone userphone
+                                      (^. #companyPosition)
+  phone          <- getUserParameter "phone" asValidPhone (^. #phone)
   personalnumber <- getUserParameter "personalnumber"
                                      asValidPersonalNumber
-                                     userpersonalnumber
-  fstname <- getUserParameter "fstname" asValidName userfstname
-  sndname <- getUserParameter "sndname" asValidName usersndname
+                                     (^. #personalNumber)
+  fstname <- getUserParameter "fstname" asValidName (^. #firstName)
+  sndname <- getUserParameter "sndname" asValidName (^. #lastName)
 
-  let ui = (userinfo user) { userfstname         = fstname
-                           , usersndname         = sndname
-                           , userpersonalnumber  = personalnumber
-                           , usercompanyposition = companyposition
-                           , userphone           = phone
-                           }
+  let ui =
+        (user ^. #info)
+          & (#firstName .~ fstname)
+          & (#lastName .~ sndname)
+          & (#personalNumber .~ personalnumber)
+          & (#companyPosition .~ companyposition)
+          & (#phone .~ phone)
 
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
-  when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user)
-    { lang = fromJust mlang
-    }
+  when_ (isJust mlang) $ dbUpdate $ SetUserSettings
+    (user ^. #id)
+    (user ^. #settings & #lang .~ fromJust mlang)
 
-  void $ dbUpdate $ SetUserInfo (userid user) ui
-  void $ dbUpdate $ LogHistoryUserInfoChanged (userid user)
+  void $ dbUpdate $ SetUserInfo (user ^. #id) ui
+  void $ dbUpdate $ LogHistoryUserInfoChanged (user ^. #id)
                                               (ctx ^. #ipAddr)
                                               (ctx ^. #time)
-                                              (userinfo user)
+                                              (user ^. #info)
                                               ui
-                                              (userid <$> ctx ^. #maybeUser)
-  if (useriscompanyadmin user)
+                                              (ctx ^? #maybeUser % _Just % #id)
+  if user ^. #isCompanyAdmin
     then do
-      ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
       let ug = ugwpUG ugwp
       companyname <- getParameter "companyname" asValidCompanyName $ ug ^. #name
       let getAddrParameter n v prevValue =
@@ -438,7 +439,7 @@ apiCallChangeEmail = api $ do
           sendChangeToExistingEmailInternalWarningMail user newemail
           Ok <$> (runJSONGenT $ value "send" False)
         Nothing -> do
-          changeemaillink <- newEmailChangeRequestLink (userid user) newemail
+          changeemaillink <- newEmailChangeRequestLink (user ^. #id) newemail
           mail <- mailEmailChangeRequest ctx Nothing user newemail changeemaillink
           scheduleEmailSendout
             (mail
@@ -479,8 +480,7 @@ apiCallSignup = api $ do
                -- creating account that already exists should send password reminder so customers stopp calling us
                -- CORE-631
     Just user
-      | isJust $ userhasacceptedtermsofservice user -> sendPasswordReminder user
-      >> return Nothing
+      | isJust $ user ^. #hasAcceptedTOS -> sendPasswordReminder user >> return Nothing
       | otherwise -> return $ Just user
     Nothing -> do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
@@ -492,15 +492,17 @@ apiCallSignup = api $ do
     -- return ambiguous response in both cases to prevent a security issue
     Nothing   -> runJSONGenT $ value "sent" True
     Just user -> do
-      void $ dbUpdate $ SetUserInfo (userid user) $ (userinfo user)
-        { userphone           = phone
-        , usercompanyposition = companyPosition
-        }
+      void
+        $ dbUpdate
+        $ SetUserInfo (user ^. #id)
+        $ (user ^. #info)
+        & (#phone .~ phone)
+        & (#companyPosition .~ companyPosition)
       sendNewUserMail user
-      l <- newUserAccountRequestLink lang (userid user) AccountRequest
+      l <- newUserAccountRequestLink lang (user ^. #id) AccountRequest
       asyncLogEvent
         "Send account confirmation email"
-        [ UserIDProp $ userid user
+        [ UserIDProp $ user ^. #id
         , IPProp $ ctx ^. #ipAddr
         , TimeProp $ ctx ^. #time
         , someProp "Context" ("Acount request" :: String)
@@ -508,7 +510,7 @@ apiCallSignup = api $ do
         EventMixpanel
       asyncLogEvent
         SetUserProps
-        [ UserIDProp $ userid user
+        [ UserIDProp $ user ^. #id
         , someProp "Account confirmation email" $ ctx ^. #time
         , NameProp (firstname <> " " <> lastname)
         , FirstNameProp firstname
@@ -537,7 +539,7 @@ apiCallSendPasswordReminder = api $ do
 sendPasswordReminder :: Kontrakcja m => User -> m ()
 sendPasswordReminder user = do
   ctx  <- getContext
-  minv <- dbQuery $ GetPasswordReminder $ userid user
+  minv <- dbQuery $ GetPasswordReminder $ user ^. #id
   case minv of
     Just pr@PasswordReminder {..} -> case prRemainedEmails of
       0 -> return ()
@@ -545,7 +547,7 @@ sendPasswordReminder user = do
         void $ dbUpdate $ UpdatePasswordReminder $ pr { prRemainedEmails = n - 1 }
         sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken)
     _ -> do
-      link <- newPasswordReminderLink $ userid user
+      link <- newPasswordReminderLink $ user ^. #id
       sendResetPasswordMail ctx link
   where
     sendResetPasswordMail ctx link = do
@@ -555,7 +557,7 @@ sendPasswordReminder user = do
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do
   (user, _, _) <- getAPIUser APIPersonal
-  scheme       <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
+  scheme       <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
   fmap Ok $ case scheme of
     Just (ConstantUrlScheme url) -> runJSONGenT $ do
       value "scheme"      ("constant" :: String)
@@ -581,7 +583,7 @@ apiCallTestSalesforceIntegration :: Kontrakcja m => m Response
 apiCallTestSalesforceIntegration = do
   api $ do
     (user, _, _) <- getAPIUser APIDocCheck
-    scheme       <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
+    scheme       <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
     murl         <- getField "url"
     when (isNothing murl) $ do
       throwM . SomeDBExtraException $ badInput $ "No 'url' parameter provided"
@@ -624,7 +626,7 @@ apiCallSetSalesforceCallbacks = do
         case mtoken of
           Left  emsg  -> V2.apiError $ V2.requestFailed emsg
           Right token -> do
-            dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
+            dbUpdate $ UpdateUserCallbackScheme (user ^. #id) (SalesforceScheme token)
             return $ V2.Ok $ runJSONGen $ value "status" ("ok" :: String)
 
 apiCallLoginUserAndGetSession :: Kontrakcja m => m Response
@@ -634,17 +636,17 @@ apiCallLoginUserAndGetSession = V2.api $ do
     $ V2.ApiV2ParameterJSON "personal_token" unjsonOAuthAuthorization
   euser <- getUserFromOAuthWithAnyPrivileges oauth
   case euser of
-    Left  err -> V2.apiError $ V2.invalidAuthorizationWithMsg err
-    Right (User { userid }, _actor) -> do
+    Left  err            -> V2.apiError $ V2.invalidAuthorizationWithMsg err
+    Right (user, _actor) -> do
       ctx <- getContext
       asyncLogEvent
         "Login"
-        [UserIDProp userid, IPProp $ ctx ^. #ipAddr, TimeProp $ ctx ^. #time]
+        [UserIDProp $ user ^. #id, IPProp $ ctx ^. #ipAddr, TimeProp $ ctx ^. #time]
         EventMixpanel
       asyncLogEvent SetUserProps
-                    [UserIDProp userid, someProp "Last login" $ ctx ^. #time]
+                    [UserIDProp $ user ^. #id, someProp "Last login" $ ctx ^. #time]
                     EventMixpanel
-      session <- startNewSessionWithUser userid
+      session <- startNewSessionWithUser $ user ^. #id
       return $ V2.Ok $ runJSONGen $ do
         value "session_id" (showt $ sessionCookieInfoFromSession session)
 
@@ -667,7 +669,7 @@ apiCallDeleteUser = V2.api $ do
   ctx          <- getContext
 
   email        <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
-  unless (unEmail (useremail (userinfo user)) == email)
+  unless (unEmail (user ^. #info % #email) == email)
     $ V2.apiError
     $ V2.requestParameterParseError
         "email"
@@ -678,9 +680,9 @@ apiCallDeleteUser = V2.api $ do
     Just reason -> V2.apiError $ V2.conflictError $ userNotDeletableReasonToString reason
     Nothing     -> return ()
 
-  void $ dbUpdate $ DeleteUser (userid user)
-  void $ dbUpdate $ LogHistoryAccountDeleted (userid user)
-                                             (userid user)
+  void $ dbUpdate $ DeleteUser (user ^. #id)
+  void $ dbUpdate $ LogHistoryAccountDeleted (user ^. #id)
+                                             (user ^. #id)
                                              (ctx ^. #ipAddr)
                                              (ctx ^. #time)
 
@@ -694,8 +696,8 @@ apiCallGetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallGetDataRetentionPolicy = V2.api $ do
   (user, _, _) <- getAPIUser APIPersonal
 
-  let drp = dataretentionpolicy $ usersettings user
-  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  let drp = user ^. #settings % #dataRetentionPolicy
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
 
   return $ V2.Ok $ object
@@ -707,14 +709,14 @@ apiCallSetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallSetDataRetentionPolicy = V2.api $ do
   (user, _, _) <- getAPIUser APIPersonal
 
-  ugwp         <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  ugwp         <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
   drp <- V2.apiV2ParameterObligatory
     $ V2.ApiV2ParameterJSON "data_retention_policy" unjsonDataRetentionPolicy
   guardThatDataRetentionPolicyIsValid drp $ Just ugDRP
 
-  let settings' = (usersettings user) { dataretentionpolicy = drp }
-  void $ dbUpdate $ SetUserSettings (userid user) settings'
+  let settings' = user ^. #settings & #dataRetentionPolicy .~ drp
+  void $ dbUpdate $ SetUserSettings (user ^. #id) settings'
 
   return $ V2.Ok ()
 
@@ -756,7 +758,7 @@ apiCallCheckPassword = api $ do
 guardCanChangeUser :: Kontrakcja m => User -> User -> m ()
 guardCanChangeUser adminuser otheruser = do
   unless
-      (useriscompanyadmin adminuser && (usergroupid adminuser == usergroupid otheruser))
+      (adminuser ^. #isCompanyAdmin && (adminuser ^. #groupID == otheruser ^. #groupID))
     $ do
         throwM . SomeDBExtraException $ forbidden "Can't change this user details"
 
@@ -776,36 +778,36 @@ apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
             -> m Text
           getUserParameter n v getPrevValue = do
             mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation n $ emptyOK v
-            return $ fromMaybe (getPrevValue $ userinfo affectedUser) mx
+            return $ fromMaybe (getPrevValue $ affectedUser ^. #info) mx
 
       companyposition <- getUserParameter "companyposition"
                                           asValidPosition
-                                          usercompanyposition
-      phone          <- getUserParameter "phone" asValidPhone userphone
+                                          (^. #companyPosition)
+      phone          <- getUserParameter "phone" asValidPhone (^. #phone)
       personalnumber <- getUserParameter "personalnumber"
                                          asValidPersonalNumber
-                                         userpersonalnumber
-      fstname <- getUserParameter "fstname" asValidName userfstname
-      sndname <- getUserParameter "sndname" asValidName usersndname
-      let affectedUserNewInfo = (userinfo affectedUser) { userfstname = fstname
-                                                        , usersndname = sndname
-                                                        , userpersonalnumber = personalnumber
-                                                        , usercompanyposition = companyposition
-                                                        , userphone = phone
-                                                        }
+                                         (^. #personalNumber)
+      fstname <- getUserParameter "fstname" asValidName (^. #firstName)
+      sndname <- getUserParameter "sndname" asValidName (^. #lastName)
+      let affectedUserNewInfo =
+            (affectedUser ^. #info)
+              & (#firstName .~ fstname)
+              & (#lastName .~ sndname)
+              & (#personalNumber .~ personalnumber)
+              & (#companyPosition .~ companyposition)
+              & (#phone .~ phone)
       void $ dbUpdate $ SetUserInfo affectedUserID affectedUserNewInfo
       void $ dbUpdate $ LogHistoryUserInfoChanged affectedUserID
                                                   (ctx ^. #ipAddr)
                                                   (ctx ^. #time)
-                                                  (userinfo affectedUser)
+                                                  (affectedUser ^. #info)
                                                   affectedUserNewInfo
-                                                  (Just $ userid authorizingUser)
+                                                  (Just $ authorizingUser ^. #id)
 
       mlang <- (join . (fmap langFromCode)) <$> getField "lang"
-      when_ (isJust mlang)
-        $ dbUpdate
-        $ SetUserSettings affectedUserID
-        $ (usersettings affectedUser) { lang = fromJust mlang }
+
+      forM_ mlang $ \lang -> dbUpdate
+        $ SetUserSettings affectedUserID (affectedUser ^. #settings & #lang .~ lang)
 
 
       return $ V2.Ok $ (runJSONGen $ value "changed" True)
@@ -861,17 +863,17 @@ apiCallActivateAccount = V2.api $ do
     $ ApiV2ParameterTextWithValidation "email" asValidEmail
   muser <- dbQuery $ GetUserByEmail $ Email $ email
   let errMsgToPreventAddressHarvesting = "Token is not valid"
-  case (muser, join $ userhasacceptedtermsofservice <$> muser) of
+  case (muser, view #hasAcceptedTOS =<< muser) of
     (Nothing, _) -> V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
     (_, Just _) -> V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
     (Just user, Nothing) -> do
       token        <- apiV2ParameterObligatory (ApiV2ParameterRead "token")
-      validRequest <- isJust <$> getUserAccountRequestUser (userid user) token
+      validRequest <- isJust <$> getUserAccountRequestUser (user ^. #id) token
       unless (validRequest) $ do
         V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
-      void $ dbUpdate $ DeleteUserAccountRequest (userid user)
-      void $ dbUpdate $ AcceptTermsOfService (userid user) (ctx ^. #time)
-      void $ dbUpdate $ LogHistoryTOSAccept (userid user)
+      void $ dbUpdate $ DeleteUserAccountRequest (user ^. #id)
+      void $ dbUpdate $ AcceptTermsOfService (user ^. #id) (ctx ^. #time)
+      void $ dbUpdate $ LogHistoryTOSAccept (user ^. #id)
                                             (ctx ^. #ipAddr)
                                             (ctx ^. #time)
                                             Nothing
@@ -880,8 +882,8 @@ apiCallActivateAccount = V2.api $ do
       unless (validPassword) $ do
         V2.apiError $ V2.requestParameterInvalid "password" "Password is weak"
       passwordhash <- createPassword password
-      void . dbUpdate $ SetUserPassword (userid user) passwordhash
-      void $ dbUpdate $ LogHistoryPasswordSetup (userid user)
+      void . dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+      void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
                                                 (ctx ^. #ipAddr)
                                                 (ctx ^. #time)
                                                 Nothing

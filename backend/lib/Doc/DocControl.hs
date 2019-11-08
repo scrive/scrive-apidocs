@@ -113,7 +113,7 @@ import qualified GuardTime as GuardTime
 
 handleNewDocument :: Kontrakcja m => m InternalKontraResponse
 handleNewDocument = withUser . with2FACheck $ \user -> do
-  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   if ugwpSettings ugwp ^. #requireBPIDForNewDoc
     then do
       -- This is a special feature for RBS (CORE-1081)
@@ -154,7 +154,7 @@ handleNewDocument' user ugwp = do
   (authToView, authToSign, invitationDelivery, confirmationDelivery) <- do
     let features = ugwpFeatures ugwp
         ff =
-          if useriscompanyadmin user then fAdminUsers features else fRegularUsers features
+          if user ^. #isCompanyAdmin then fAdminUsers features else fRegularUsers features
     return
       ( firstAllowedAuthenticationToView ff
       , firstAllowedAuthenticationToSign ff
@@ -248,7 +248,7 @@ handleAfterSigning slid = logSignatory slid $ do
   signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
   maybeuser     <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
   case maybeuser of
-    Just user | isJust $ userhasacceptedtermsofservice user -> do
+    Just user | isJust $ user ^. #hasAcceptedTOS -> do
       void $ dbUpdate $ SaveDocumentForUser user slid
       return ()
     _ -> return ()
@@ -468,7 +468,7 @@ handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
   authorsiglink <- guardJust $ getAuthorSigLink document
 
   let ispreparation = documentstatus document == Preparation
-      isauthor      = (userid <$> muser) == maybesignatory authorsiglink
+      isauthor      = (view #id <$> muser) == maybesignatory authorsiglink
   mauthoruser <- maybe (return Nothing)
                        (dbQuery . GetUserByIDIncludeDeleted)
                        (maybesignatory authorsiglink)
@@ -476,9 +476,9 @@ handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
   let isincompany = case muser of
         Nothing -> False
         Just user ->
-          useriscompanyadmin user
-            && Just (usergroupid user)
-            == (usergroupid <$> mauthoruser)
+          (user ^. #isCompanyAdmin)
+            && Just (user ^. #groupID)
+            == (view #groupID <$> mauthoruser)
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
   ad  <- getAnalyticsData
 
@@ -702,9 +702,9 @@ checkFileAccessWith fid msid mmh mdid mattid = case (msid, mdid, mattid) of
   (_, _, Just attid) -> guardLoggedInOrThrowInternalError $ do
     user <- guardJustM $ view #maybeUser <$> getContext
     atts <- dbQuery $ GetAttachments
-      [ AttachmentsSharedInUsersUserGroup (userid user)
-      , AttachmentsOfAuthorDeleteValue (userid user) True
-      , AttachmentsOfAuthorDeleteValue (userid user) False
+      [ AttachmentsSharedInUsersUserGroup (user ^. #id)
+      , AttachmentsOfAuthorDeleteValue (user ^. #id) True
+      , AttachmentsOfAuthorDeleteValue (user ^. #id) False
       ]
       [AttachmentFilterByID attid, AttachmentFilterByFileID fid]
       []
@@ -770,7 +770,7 @@ handleNewDocumentWithBPID :: Kontrakcja m => m InternalKontraResponse
 handleNewDocumentWithBPID = withUser $ \user -> do
   actor <- guardJustM $ mkAuthorActor <$> getContext
   bpid  <- fromMaybe "" <$> getField "bpid"
-  ugwp  <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
+  ugwp  <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   docid <- handleNewDocument' user ugwp
   withDocumentID docid $ do
     let tag = DocumentTag { tagname = "bpid", tagvalue = bpid }

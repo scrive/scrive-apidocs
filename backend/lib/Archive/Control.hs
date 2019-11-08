@@ -66,7 +66,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
   ctx  <- getContext
   user <- guardJust $ contextUser ctx
   ids  <- getCriticalField asValidDocIDList "documentids"
-  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ user ^. #id)
                                  [DocumentFilterByDocumentIDs ids]
                                  []
                                  100
@@ -75,7 +75,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
   if all (docPermission user) docs
     then do
       logInfo "Archive operation"
-        $ object ["action" .= actionStr, identifier $ userid user, identifier ids]
+        $ object ["action" .= actionStr, identifier $ user ^. #id, identifier ids]
       let actor = userActor ctx user
       forM docs $ flip withDocument $ m (user, actor)
     else do
@@ -84,7 +84,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
     failWithMsg :: forall r . User -> [DocumentID] -> Text -> m r
     failWithMsg user ids msg = do
       logInfo msg
-        $ object ["action" .= actionStr, identifier $ userid user, identifier ids]
+        $ object ["action" .= actionStr, identifier $ user ^. #id, identifier ids]
       internalError
 
 handleArchiveDocumentsAction'
@@ -113,7 +113,7 @@ handleDelete = do
             sl_actor <- signatoryActor ctx sl
             dbUpdate $ RejectDocument signatorylinkid (isApprover sl) Nothing sl_actor
             theDocument >>= postDocumentRejectedChange signatorylinkid Nothing
-        success <- dbUpdate $ ArchiveDocument (userid user) actor
+        success <- dbUpdate $ ArchiveDocument (user ^. #id) actor
         unless (success) internalError
 
 
@@ -132,7 +132,7 @@ handleReallyDelete :: Kontrakcja m => m JSValue
 handleReallyDelete = do
   handleArchiveDocumentsAction' "really delete documents" isDocumentVisibleToUser
     $ \(user, actor) -> do
-        success <- dbUpdate $ ReallyDeleteDocument (userid user) actor
+        success <- dbUpdate $ ReallyDeleteDocument (user ^. #id) actor
         unless (success) internalError
 
 handleSendReminders :: Kontrakcja m => m JSValue
@@ -181,9 +181,9 @@ handleListCSV = do
   sorting <- apiV2ParameterDefault [] (ApiV2ParameterJSON "sorting" unjsonDef)
   let documentFilters =
         (DocumentFilterUnsavedDraft False)
-          : (join $ toDocumentFilter (userid user) <$> filters)
+          : (join $ toDocumentFilter (user ^. #id) <$> filters)
       documentSorting = (toDocumentSorting <$> sorting)
-  allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user)
+  allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ user ^. #id)
                                     documentFilters
                                     documentSorting
                                     10000
@@ -204,16 +204,16 @@ handleListCSV = do
 -- | Main view of the archive
 showArchive :: Kontrakcja m => m InternalKontraResponse
 showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
-  ugwp    <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  ugwp    <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   ctx     <- getContext
-  tostime <- case userhasacceptedtermsofservice user of
+  tostime <- case user ^. #hasAcceptedTOS of
     Just tosaccepttime -> return tosaccepttime
     Nothing            -> do
       logAttention "User has passed TOS check, but TOS was not accepted"
-        $ object [identifier $ userid user]
+        $ object [identifier $ user ^. #id]
       internalError
-  startDate <- if useriscompanyadmin user
-    then dbQuery $ GetUserGroupFirstTOSDate $ usergroupid user
+  startDate <- if user ^. #isCompanyAdmin
+    then dbQuery $ GetUserGroupFirstTOSDate $ user ^. #groupID
     else return tostime
   pb <- pageArchive ctx user ugwp startDate
   internalResponse <$> renderFromBodyWithFields (T.pack pb) (F.value "archive" True)
