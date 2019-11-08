@@ -153,7 +153,7 @@ fieldShareableLink DocumentAccess { daAccessMode } = case daAccessMode of
   CompanyAdminDocumentAccess _ -> hashField
   CompanySharedDocumentAccess  -> hashField
   SignatoryDocumentAccess _    -> pure ()
-  SystemAdminDocumentAccess    -> pure ()
+  SystemAdminDocumentAccess    -> hashField
   where
     hashField :: AltF.Ap (FieldDef Document) ()
     hashField =
