@@ -86,6 +86,12 @@ let
             {})
         ;
 
+        Cabal = super.callHackage
+            "Cabal"
+            "2.4.1.0"
+            {}
+        ;
+
         kontrakcja-templates = callScrivePackage super
           "kontrakcja-templates"
           "0.10"
