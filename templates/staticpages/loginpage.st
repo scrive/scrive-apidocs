@@ -4,7 +4,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
-    <meta name="robots" content="noindex">
+    <meta name="robots" content="noindex" />
     $standardHeaderContents(nobranding='true')$
     <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
 $if(analytics.gacode)$
