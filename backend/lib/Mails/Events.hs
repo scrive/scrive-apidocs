@@ -244,6 +244,9 @@ handleUndeliveredInvitation mailNoreplyAddress bd slid = do
       | mailinvitationdeliverystatus signlink == Delivered -> do
         logInfo "Undelivered email event for email that was already delivered"
           $ object ["signatory_email" .= getEmail signlink]
+      | mailinvitationdeliverystatus signlink == Undelivered -> do
+        logInfo "Undelivered email event for email that was already undelivered"
+          $ object ["signatory_email" .= getEmail signlink]
       | signatoryAlreadyHandled signlink -> return ()
       | otherwise -> do
         time <- currentTime
