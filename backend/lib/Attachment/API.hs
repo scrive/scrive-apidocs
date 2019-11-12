@@ -90,9 +90,8 @@ attachmentsApiV2Create = api $ do
 
 attachmentsApiV2Download :: Kontrakcja m => AttachmentID -> m Response
 attachmentsApiV2Download attid = api $ do
-  user <- getAPIUserWithAPIPersonal
-  let uid = user ^. #id
-  atts      <- dbQuery $ GetAttachments
+  uid  <- (view #id) <$> getAPIUserWithAPIPersonal
+  atts <- dbQuery $ GetAttachments
     [ AttachmentsSharedInUsersUserGroup uid
     , AttachmentsOfAuthorDeleteValue uid True
     , AttachmentsOfAuthorDeleteValue uid False
