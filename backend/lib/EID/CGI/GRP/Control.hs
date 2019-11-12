@@ -71,8 +71,8 @@ grpRoutes = dir "cgi" . dir "grp" $ choice
 
 handleAuthRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleAuthRequest did slid = do
+  ctx               <- getContext
   CgiGrpConfig {..} <- do
-    ctx <- getContext
     case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
@@ -96,6 +96,7 @@ handleAuthRequest did slid = do
                         , arqDisplayName = fromMaybe cgDisplayName mcompany_display_name
                         , arqPersonalNumber = pn
                         , arqProvider       = "bankid"
+                        , arqClientIP       = showt (get ctxipnumber ctx)
                         }
       parser = Right <$> xpAuthResponse <|> Left <$> xpGrpFault
   cgiResp <- soapCall transport "" () req parser >>= \case
@@ -118,8 +119,8 @@ handleAuthRequest did slid = do
 
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest _did slid = do
+  ctx               <- getContext
   CgiGrpConfig {..} <- do
-    ctx <- getContext
     case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
@@ -147,6 +148,7 @@ handleSignRequest _did slid = do
       , srqPersonalNumber  = pn
       , srqUserVisibleData = TE.decodeUtf8 . B64.encode . BSU.fromString . T.unpack $ tbs
       , srqProvider        = "bankid"
+      , srqClientIP        = showt (get ctxipnumber ctx)
       }
     parser = Right <$> xpSignResponse <|> Left <$> xpGrpFault
   cgiResp <- soapCall transport "" () req parser >>= \case
