@@ -102,7 +102,7 @@ docApiV2New = api $ do
       ctx   <- getContext
       title <- renderTemplate_ "newDocumentTitle"
       return $ title <> " " <> formatTimeSimple (ctx ^. #time)
-  whenJust mFolderId guardDocumentCreateInFolderIsAllowed
+  whenJust mFolderId $ guardDocumentCreateInFolderIsAllowed user
   ( dbUpdate
     $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor mFolderId
     )
@@ -134,7 +134,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     guardThatDocumentIs (not $ flip documentDeletedForUser $ user ^. #id)
                         "The template is in Trash"
       =<< theDocument
-  whenJust mFolderId guardDocumentCreateInFolderIsAllowed
+  whenJust mFolderId $ guardDocumentCreateInFolderIsAllowed user
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM
@@ -175,7 +175,7 @@ docApiV2Update did = logDocument did . api $ do
           $   requestParameterParseError "document"
           $   "Errors while parsing document data:"
           <+> showt errs
-    guardDocumentMoveIsAllowed (documentfolderid doc) (documentfolderid draftData)
+    guardDocumentMoveIsAllowed user (documentfolderid doc) (documentfolderid draftData)
     -- API call actions
     applyDraftDataToDocument draftData actor
     guardThatAuthorIsNotApprover =<< theDocument
