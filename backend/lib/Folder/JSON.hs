@@ -15,22 +15,16 @@ import InputValidation
 encodeFolder :: Folder -> Encoding
 encodeFolder folder =
   pairs
-    $  "id"
-    .= (folder ^. #id)
-    <> "parent_id"
-    .= (folder ^. #parentID)
-    <> "name"
-    .= (folder ^. #name)
+    $  ("id" .= (folder ^. #id))
+    <> ("parent_id" .= (folder ^. #parentID))
+    <> ("name" .= (folder ^. #name))
 
 encodeFolderWithChildren :: FolderWithChildren -> Encoding
 encodeFolderWithChildren fdrwc =
   pairs
-    $  "id"
-    .= (folder ^. #id)
-    <> "parent_id"
-    .= (folder ^. #parentID)
-    <> "name"
-    .= (folder ^. #name)
+    $  ("id" .= (folder ^. #id))
+    <> ("parent_id" .= (folder ^. #parentID))
+    <> ("name" .= (folder ^. #name))
     <> pair "children" (list encodeChild children)
   where
     folder   = fdrwc ^. #folder

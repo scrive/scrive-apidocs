@@ -148,12 +148,9 @@ folderAPIDelete fid = api $ do
     return
       .  Ok
       .  pairs
-      $  "id"
-      .= show fid
-      <> "resource"
-      .= ("folder" :: T.Text)
-      <> "action"
-      .= ("deleted" :: T.Text)
+      $  ("id" .= show fid)
+      <> ("resource" .= ("folder" :: T.Text))
+      <> ("action" .= ("deleted" :: T.Text))
 
 folderAPIListDocs :: Kontrakcja m => FolderID -> m Response
 folderAPIListDocs fid = api $ do
