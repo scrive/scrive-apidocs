@@ -21,12 +21,9 @@ import qualified UserGroup.Internal as I
 encodeUserGroup :: Bool -> UserGroupWithParents -> [UserGroup] -> Encoding
 encodeUserGroup inheritable ugwp children =
   pairs
-    $  "id"
-    .= (ug ^. #id)
-    <> "parent_id"
-    .= (ug ^. #parentGroupID)
-    <> "name"
-    .= (ug ^. #name)
+    $  ("id" .= (ug ^. #id))
+    <> ("parent_id" .= (ug ^. #parentGroupID))
+    <> ("name" .= (ug ^. #name))
     <> pair "children"        childrenEncoding
     <> pair "contact_details" (encodeUserGroupContactDetails inheritable ugwp)
     <> pair "settings" (encodeUserGroupSettings inheritable ugwp)
@@ -62,18 +59,12 @@ instance ToJSON UGAddrJSON where
   toJSON _ = Null -- Redundant - Only needed to avoid `deriving Generic`
   toEncoding (UGAddrJSON addr) =
     pairs
-      $  "company_number"
-      .= (addr ^. #companyNumber)
-      <> "entity_name"
-      .= (addr ^. #entityName)
-      <> "address"
-      .= (addr ^. #address)
-      <> "zip"
-      .= (addr ^. #zipCode)
-      <> "city"
-      .= (addr ^. #city)
-      <> "country"
-      .= (addr ^. #country)
+      $  ("company_number" .= (addr ^. #companyNumber))
+      <> ("entity_name" .= (addr ^. #entityName))
+      <> ("address" .= (addr ^. #address))
+      <> ("zip" .= (addr ^. #zipCode))
+      <> ("city" .= (addr ^. #city))
+      <> ("country" .= (addr ^. #country))
 
 encodeUserGroupContactDetails :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupContactDetails inheritable ugwp =
@@ -139,20 +130,13 @@ instance ToJSON UGDRPJSON where
   toJSON _ = Null -- Redundant - Only needed to avoid `deriving Generic`
   toEncoding (UGDRPJSON drp) =
     pairs
-      $  "idle_doc_timeout_preparation"
-      .= (drp ^. #idleDocTimeoutPreparation)
-      <> "idle_doc_timeout_closed"
-      .= (drp ^. #idleDocTimeoutClosed)
-      <> "idle_doc_timeout_canceled"
-      .= (drp ^. #idleDocTimeoutCanceled)
-      <> "idle_doc_timeout_timedout"
-      .= (drp ^. #idleDocTimeoutTimedout)
-      <> "idle_doc_timeout_rejected"
-      .= (drp ^. #idleDocTimeoutRejected)
-      <> "idle_doc_timeout_error"
-      .= (drp ^. #idleDocTimeoutError)
-      <> "immediate_trash"
-      .= (drp ^. #immediateTrash)
+      $  ("idle_doc_timeout_preparation" .= (drp ^. #idleDocTimeoutPreparation))
+      <> ("idle_doc_timeout_closed" .= (drp ^. #idleDocTimeoutClosed))
+      <> ("idle_doc_timeout_canceled" .= (drp ^. #idleDocTimeoutCanceled))
+      <> ("idle_doc_timeout_timedout" .= (drp ^. #idleDocTimeoutTimedout))
+      <> ("idle_doc_timeout_rejected" .= (drp ^. #idleDocTimeoutRejected))
+      <> ("idle_doc_timeout_error" .= (drp ^. #idleDocTimeoutError))
+      <> ("immediate_trash" .= (drp ^. #immediateTrash))
 
 encodeUserGroupSettings :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupSettings inheritable ugwp =

@@ -164,12 +164,9 @@ userGroupApiV2Delete ugid =
         return
           .  Ok
           .  pairs
-          $  "id"
-          .= show ugid
-          <> "resource"
-          .= ("usergroup" :: Text)
-          <> "action"
-          .= ("deleted" :: Text)
+          $  ("id" .= show ugid)
+          <> ("resource" .= ("usergroup" :: Text))
+          <> ("action" .= ("deleted" :: Text))
 
 userGroupApiContactDetailsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Get ugid = api $ do
