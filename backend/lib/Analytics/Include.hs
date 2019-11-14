@@ -4,7 +4,6 @@ module Analytics.Include
   , analyticsTemplates
   ) where
 
-import Optics (to)
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplates.Templates
@@ -52,12 +51,9 @@ getAnalyticsData = do
                          , aLanguage    = lang
                          }
 
-mnop :: Monad m => (a -> m ()) -> Maybe a -> m ()
-mnop f m = maybe (return ()) f m
-
 analyticsTemplates :: Monad m => AnalyticsData -> Fields m ()
 analyticsTemplates ad = do
-  mnop (F.value "userid" . show . view #id) $ aUser ad
+  forM_ (aUser ad) $ F.value "userid" . show . view #id
   F.value "token" $ aToken ad
   F.value "gacode" $ aGACode ad
   F.value "hubspotConf" $ encode $ toJSValue $ aHubSpotConf ad
@@ -65,45 +61,34 @@ analyticsTemplates ad = do
 
 instance ToJSValue AnalyticsData where
   toJSValue AnalyticsData {..} = runJSONGen $ do
-    mnop (J.value "$email") $ escapeString <$> getEmail <$> aUser
-    mnop (J.value "userid") $ show <$> (aUser ^? _Just % #id)
+    forM_ aUser $ \user -> do
+      J.value "$email" . escapeString $ getEmail user
+      J.value "userid" . show $ user ^. #id
 
-    mnop (J.value "TOS Date" . formatTimeISO) (aUser ^? _Just % #hasAcceptedTOS % _Just)
-    mnop (J.value "Full Name") $ emptyToNothing $ escapeString <$> getFullName <$> aUser
-    mnop (J.value "Smart Name") $ emptyToNothing $ escapeString <$> getSmartName <$> aUser
-    mnop (J.value "$first_name")
-      $   emptyToNothing
-      $   escapeString
-      <$> (aUser ^? _Just % #info % #firstName)
-    mnop (J.value "$last_name") $ emptyToNothing $ escapeString <$> getLastName <$> aUser
-    mnop (J.value "$username") $ escapeString <$> getEmail <$> aUser
-    mnop (J.value "Phone")
-      $   emptyToNothing
-      $   escapeString
-      <$> (aUser ^? _Just % #info % #phone)
-    mnop (J.value "Position")
-      $   emptyToNothing
-      $   escapeString
-      <$> (aUser ^? _Just % #info % #companyPosition)
+      forM_ (user ^. #hasAcceptedTOS) $ J.value "TOS Date" . formatTimeISO
+      J.value "Full Name" . emptyToNothing . escapeString $ getFullName user
+      J.value "Smart Name" . emptyToNothing . escapeString $ getSmartName user
+      J.value "$first_name" . emptyToNothing . escapeString $ user ^. #info % #firstName
+      J.value "$last_name" . emptyToNothing . escapeString $ getLastName user
+      J.value "$username" . escapeString $ getEmail user
+      J.value "Phone" . emptyToNothing . escapeString $ user ^. #info % #phone
+      J.value "Position" . emptyToNothing $ escapeString
+        (user ^. #info % #companyPosition)
 
-    mnop (J.value "Company Status")
-      $   escapeString
-      <$> (aUser ^? _Just % to (\u -> if u ^. #isCompanyAdmin then "admin" else "sub"))
-    mnop (J.value "Company Name")
-      $   emptyToNothing
-      $   escapeString
-      <$> (aUserGroup ^? _Just % #name)
+      J.value "Company Status" . escapeString $ if user ^. #isCompanyAdmin
+        then "admin"
+        else "sub"
+      forM_ aUserGroup $ J.value "Company Name" . emptyToNothing . escapeString . view
+        #name
 
-    mnop (J.value "Signup Method")
-      $   emptyToNothing
-      $   escapeString
-      <$> (aUser ^? _Just % #signupMethod % to showt)
+      J.value "Signup Method" . emptyToNothing . escapeString $ showt
+        (user ^. #signupMethod)
 
     J.value "Language" $ codeFromLang aLanguage
 
     -- Set these values so we can A/B/C test within mixpanel,
     -- for example with emails.
-    case unUserID <$> aUser ^? _Just % #id of
+    case unUserID . view #id <$> aUser of
       Nothing  -> return ()
       Just uid -> do
         J.value "MOD 2" $ uid `mod` 2
