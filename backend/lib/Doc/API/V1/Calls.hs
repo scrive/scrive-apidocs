@@ -1429,17 +1429,22 @@ apiCallV1Get did = logDocument did . api $ do
            == usergroupid user
            && (useriscompanyadmin user || isDocumentShared doc)
            )
-      if (haspermission)
-        then do
-          Ok
-            <$> (documentJSONV1 (Just user)
-                                external
-                                ((userid <$> mauser) == (Just $ userid user))
-                                msiglink
-                                doc
-                )
-        else throwM . SomeDBExtraException $ serverError
-          "You do not have right to access document"
+      admin <- isUserAdmin user <$> getContext
+      case () of
+        _
+          | haspermission -> do
+            Ok
+              <$> (documentJSONV1 (Just user)
+                                  external
+                                  ((userid <$> mauser) == (Just $ userid user))
+                                  msiglink
+                                  doc
+                  )
+          | admin -> do
+            logInfo "GOD DOCUMENT ACCESS" $ object ["god" .= show (userid user)]
+            Ok <$> documentJSONV1 (Just user) external False msiglink doc
+          | otherwise -> throwM . SomeDBExtraException $ serverError
+            "You do not have right to access document"
 
 -- Return evidence attachments for document
 apiCallV1GetEvidenceAttachments :: Kontrakcja m => DocumentID -> m Response

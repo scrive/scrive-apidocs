@@ -42,6 +42,7 @@ module Doc.API.V2.Guards (
 
 import Control.Conditional (whenM)
 import Data.Either (rights)
+import Log
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
@@ -121,11 +122,10 @@ guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did =
                         "Pending documents can not be trashed or deleted"
       =<< theDocument
 
-
--- | Internal function used in all guards on User
+-- | Internal function used in guardDocumentAuthorIs
 -- Helps code reuse and keep error messages consistent
-guardDocumentAuthorIs :: Kontrakcja m => (User -> Bool) -> Document -> m ()
-guardDocumentAuthorIs condition doc = do
+getAuthor :: Kontrakcja m => Document -> m User
+getAuthor doc = do
   let msgNoAuthor =
         "Document doesn't have author signatory link connected with user account"
   authorUserId <-
@@ -134,6 +134,13 @@ guardDocumentAuthorIs condition doc = do
         "Document doesn't have author user account for the author signatory link"
   author <- apiGuardJustM (serverError msgNoUser) $ dbQuery $ GetUserByIDIncludeDeleted
     authorUserId
+  return author
+
+-- | Internal function used in all guards on User
+-- Helps code reuse and keep error messages consistent
+guardDocumentAuthorIs :: Kontrakcja m => (User -> Bool) -> Document -> m ()
+guardDocumentAuthorIs condition doc = do
+  author <- getAuthor doc
   unless (condition author) $ do
     apiError documentActionForbidden
 
@@ -167,17 +174,17 @@ guardThatUserIsAuthorOrDocumentIsShared user doc = do
 
 guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
   :: Kontrakcja m => User -> Document -> m ()
-guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc = do
-  guardDocumentAuthorIs
-    (\a ->
-      userid user
-        == userid a
-        || (  usergroupid user
-           == usergroupid a
-           && (useriscompanyadmin user || isDocumentShared doc)
-           )
-    )
-    doc
+guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc =
+  guardDocumentAuthorIs (userIsAuthorOrCompanyAdminOrDocumentIsShared user doc) doc
+
+userIsAuthorOrCompanyAdminOrDocumentIsShared :: User -> Document -> User -> Bool
+userIsAuthorOrCompanyAdminOrDocumentIsShared user doc author =
+  userid user
+    == userid author
+    || (  usergroupid user
+       == usergroupid author
+       && (useriscompanyadmin user || isDocumentShared doc)
+       )
 
 guardThatObjectVersionMatchesIfProvided :: Kontrakcja m => DocumentID -> m ()
 guardThatObjectVersionMatchesIfProvided did = do
@@ -736,6 +743,8 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
 -- If the user account is not linked to the document then also guard extra
 -- permissions using guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 --
+-- SYSTEM ADMINS WILL ALWAYS SUCCEED
+--
 -- This is useful in all situations where a signatory or other users could use
 -- the API call (e.g. document GET call), but not that this function is focused only
 -- on ability to read document
@@ -764,8 +773,20 @@ guardDocumentReadAccess mslid doc = do
       case getSigLinkFor user doc of
         Just sl -> do
           unless (signatoryisauthor sl) $ guardThatDocumentIsReadableBySignatories doc
-        Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
-      return $ documentAccessForUser user doc
+          return $ documentAccessForUser user doc
+        Nothing -> do
+          admin  <- isUserAdmin user <$> getContext
+          author <- getAuthor doc
+          case () of
+            _
+              | userIsAuthorOrCompanyAdminOrDocumentIsShared user doc author
+              -> return $ documentAccessForUser user doc
+              | admin
+              -> do
+                logInfo "GOD DOCUMENT ACCESS" $ object ["god" .= show (userid user)]
+                return $ documentAccessForAdminonly doc
+              | otherwise
+              -> apiError documentActionForbidden
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do
