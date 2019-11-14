@@ -1,0 +1,44 @@
+---
+get:
+  summary: View Folder
+
+  tags:
+    - Folders
+
+  description: |
+    > Example of a Folder
+
+    ```json
+    {
+      "id": "1",
+      "parent_id": null,
+      "name": "Root folder",
+      "children": [
+        {
+          "id": "2",
+          "name": "Subfolder of 1"
+        }
+      ]
+    }
+    ```
+
+    This endpoint is used to get the details of a given folder. Note that the
+    contents of the folder are not displayed, just the metadata about the
+    folder.
+
+    This metadata currently consists of the folder's ID, it's parent ID (if any)
+    and the name/id of its immediate children (if any).
+
+  parameters:
+    - name: folder_id
+      in: url
+      type: integer
+      description: The ID of the Folder you wish to view
+      required: true
+
+  responses:
+    200:
+      $ref: ../../scrive_api.yaml#/definitions/Folder
+    403:
+      description: |
+        Insufficient Permissions error

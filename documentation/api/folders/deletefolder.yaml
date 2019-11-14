@@ -1,0 +1,26 @@
+---
+post:
+  summary: Delete Folder
+
+  tags:
+    - Folders
+
+  description: |
+
+    This endpoint allows you to delete a Folder.
+
+  parameters:
+    - name: folder_id
+      in: url
+      type: integer
+      description: The ID of the Folder you wish to delete
+      required: true
+
+  responses:
+    200:
+      $ref: ../../scrive_api.yaml#/definitions/Folder
+    403:
+      description: |
+        Insufficient Permissions error (this means that you don't have enough
+        permissions to create this Folder. In practise this means that you lack
+        Delete permissions on the Folder.

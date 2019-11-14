@@ -1039,6 +1039,17 @@ paths:
   /accesscontrol/roles/{role_id}/delete:
     $ref: ./api/accesscontrol/deleterole.yaml
 
+  # Folders
+
+  /api/v2/folders/{folder_id}:
+    $ref: ./api/folders/getfolder.yaml
+
+  /api/v2/folders/create:
+    $ref: ./api/folders/createfolder.yaml
+
+  /api/v2/folders/{folder_id}/delete:
+    $ref: ./api/folders/deletefolder.yaml
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
@@ -1098,6 +1109,8 @@ definitions:
     $ref: ./definitions/UserGroupContactDetailsWithInheritable.yaml
   AccessRole:
     $ref: ./definitions/AccessRole.yaml
+  Folder:
+    $ref: ./definitions/Folder.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml
