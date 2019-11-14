@@ -50,6 +50,6 @@ post:
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough
-        permissions to grant this role. In practise this means that you lack
+        permissions to grant this role. In practice this means that you lack
         Create permissions on the Policy relation for either the source or the
         target that the proposed role refers to.
