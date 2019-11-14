@@ -74,16 +74,16 @@ isApiAdmin :: Context -> Bool
 isApiAdmin ctx = case ctx ^. #maybeApiUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` ctx ^. #adminAccounts)
-      && (usertotpactive user || not (ctx ^. #production))
+    (user ^. #info % #email `elem` ctx ^. #adminAccounts)
+      && (user ^. #totpActive || not (ctx ^. #production))
 
 {- Logged in user is sales with 2FA (2FA only enforced for production = true) -}
 isApiSales :: Context -> Bool
 isApiSales ctx = case ctx ^. #maybeApiUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` ctx ^. #salesAccounts)
-      && (usertotpactive user || not (ctx ^. #production))
+    (user ^. #info % #email `elem` ctx ^. #salesAccounts)
+      && (user ^. #totpActive || not (ctx ^. #production))
 
 userGroupOrAPIError :: (MonadDB m, MonadThrow m) => UserGroupID -> m UserGroup
 userGroupOrAPIError ugid = dbQuery (UserGroupGet ugid) >>= \case

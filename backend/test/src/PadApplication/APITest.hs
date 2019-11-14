@@ -3,7 +3,6 @@ module PadApplication.APITest (padAplicationAPITests) where
 
 import Data.Aeson
 import Happstack.Server
-import Optics (_Just)
 import Test.Framework
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T

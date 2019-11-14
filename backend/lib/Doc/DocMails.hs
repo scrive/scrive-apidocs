@@ -814,7 +814,7 @@ sendPortalInvite
   -> m ()
 sendPortalInvite authorUser portalUrl email name = do
   muser <- dbQuery $ GetUserByEmail email
-  case (muser, join $ userhasacceptedtermsofservice <$> muser) of
+  case (muser, view #hasAcceptedTOS =<< muser) of
     (Just _   , Just _ ) -> sendPortalInviteWithActivatedUser
     (Just user, Nothing) -> sendPortalInviteWithNotActivatedUser user
     (Nothing  , _      ) -> sendPortalInviteWithNotActivatedUser =<< createUserForPortal
@@ -825,7 +825,7 @@ sendPortalInvite authorUser portalUrl email name = do
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
 
     sendPortalInviteWithNotActivatedUser user = do
-      uar  <- newUserAccountRequest $ userid user
+      uar  <- newUserAccountRequest $ user ^. #id
       mail <- mailPortalInviteWithoutUser authorUser portalUrl email name uar
       scheduleEmailSendout
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
@@ -858,7 +858,7 @@ sendPortalReminder
   -> m ()
 sendPortalReminder authorUser portalUrl email name = do
   muser <- dbQuery $ GetUserByEmail email
-  case (muser, join $ userhasacceptedtermsofservice <$> muser) of
+  case (muser, view #hasAcceptedTOS =<< muser) of
     (Just _   , Just _ ) -> sendPortalReminderWithActivatedUser
     (Just user, Nothing) -> sendPortalReminderWithNotActivatedUser user
     (Nothing  , _      ) -> sendPortalReminderWithNotActivatedUser =<< createUserForPortal
@@ -869,7 +869,7 @@ sendPortalReminder authorUser portalUrl email name = do
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
 
     sendPortalReminderWithNotActivatedUser user = do
-      uar  <- newUserAccountRequest $ userid user
+      uar  <- newUserAccountRequest $ user ^. #id
       mail <- mailPortalRemindWithoutUser authorUser portalUrl email name uar
       scheduleEmailSendout
         $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
@@ -927,7 +927,7 @@ runMailT templates mailNoreplyAddress doc m = do
     <$> getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain)
               (dbQuery . GetBrandedDomainByUserID)
-              (userid <$> mauthor)
+              (view #id <$> mauthor)
   let mctx = I.MailContext { lang               = documentlang doc
                            , brandedDomain      = bd
                            , time               = now

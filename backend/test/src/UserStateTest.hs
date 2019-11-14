@@ -17,7 +17,7 @@ import UserGroup.Model
 import UserGroup.Types
 
 sortByEmail :: [User] -> [User]
-sortByEmail = sortBy (\a b -> compare (f a) (f b)) where f = useremail . userinfo
+sortByEmail = sortBy (\a b -> compare (f a) (f b)) where f = (^. #info % #email)
 
 userStateTests :: TestEnvSt -> Test
 userStateTests env = testGroup
@@ -116,15 +116,15 @@ test_getUserByID_returnsNothing = do
 test_getUserByID_returnsTheRightUser :: TestEnv ()
 test_getUserByID_returnsTheRightUser = do
   Just user   <- addNewUser "Emily" "Green" "emiy@green.com"
-  queriedUser <- dbQuery $ GetUserByID $ userid user
+  queriedUser <- dbQuery $ GetUserByID $ user ^. #id
   assert (isJust queriedUser)
   assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
 test_setUserEmail_GetByEmail :: TestEnv ()
 test_setUserEmail_GetByEmail = do
   Just user' <- addNewUser "Emily" "Green" "emily@green.com"
-  void $ dbUpdate $ SetUserEmail (userid user') $ Email "Emily@green.coM"
-  Just user   <- dbQuery $ GetUserByID $ userid user'
+  void $ dbUpdate $ SetUserEmail (user' ^. #id) $ Email "Emily@green.coM"
+  Just user   <- dbQuery $ GetUserByID $ user' ^. #id
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
@@ -135,8 +135,8 @@ test_setUserEmail_GetByEmail = do
 test_setUserEmail_works :: TestEnv ()
 test_setUserEmail_works = do
   Just user' <- addNewUser "Emily" "Green" "emily@green.com"
-  void $ dbUpdate $ SetUserEmail (userid user') $ Email "other@email.com"
-  Just user   <- dbQuery $ GetUserByID $ userid user'
+  void $ dbUpdate $ SetUserEmail (user' ^. #id) $ Email "other@email.com"
+  Just user   <- dbQuery $ GetUserByID $ user' ^. #id
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isNothing queriedUser)
   queriedUser2 <- dbQuery $ GetUserByEmail (Email "Other@EmAil.com")
@@ -147,9 +147,9 @@ test_setUserPassword_changesPassword :: TestEnv ()
 test_setUserPassword_changesPassword = do
   Just user    <- addNewUser "Emily" "Green" "emily@green.com"
   passwordhash <- createPassword "Secret Password!"
-  void $ dbUpdate $ SetUserPassword (userid user) passwordhash
+  void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
-  assert $ maybeVerifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
+  assert $ maybeVerifyPassword (fromJust queriedUser ^. #password) "Secret Password!"
 
 test_addUser_repeatedEmailReturnsNothing :: TestEnv ()
 test_addUser_repeatedEmailReturnsNothing = do
@@ -168,7 +168,7 @@ test_userGroupGetUsers = do
   assertBool "Company accounts returned in proper order (sorted by email)"
     $  sortByEmail users
     == ugAccounts1
-  res <- dbUpdate . DeleteUser . userid . head . sortByEmail $ users
+  res <- dbUpdate . DeleteUser . view #id . head . sortByEmail $ users
   assertBool "User was deleted" res
   do
     ugAccounts2 <- dbQuery $ UserGroupGetUsers ugid
@@ -178,8 +178,8 @@ test_userGroupGetUsers = do
   do
     ugAccountsAll <- dbQuery $ UserGroupGetUsersIncludeDeleted ugid
     assertBool "Company accounts returned in proper order (sorted by email)"
-      $  map userid (sortByEmail users)
-      == map userid ugAccountsAll
+      $  map (^. #id) (sortByEmail users)
+      == map (^. #id) ugAccountsAll
 
 test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
@@ -190,7 +190,7 @@ test_userUsageStatisticsByUser = do
                                                    }
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
   res <- dbQuery
-    $ GetUsageStats (UsageStatsForUser $ userid user) PartitionByMonth (iyears 2000)
+    $ GetUsageStats (UsageStatsForUser $ user ^. #id) PartitionByMonth (iyears 2000)
   assertEqual "Document present in stats" 1 (length res)
   let [UserUsageStats {..}] = res
   assertEqual "Email in statistics is correct" email         (T.pack uusUserEmail)
@@ -230,7 +230,7 @@ test_userShareableLinkStatisticsByUser = do
   template  <- addRandomDocumentWithAuthor' user
   doc       <- addRandomDocumentFromShareableLinkWithTemplateId user (documentid template)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
-  res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUser $ userid user)
+  res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUser $ user ^. #id)
                                                  PartitionByMonth
                                                  (iyears 2000)
   assertEqual "Document present in stats" 1 (length res)
@@ -252,7 +252,7 @@ test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
   doc2 <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc2)
-  res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUser $ userid user2)
+  res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUser $ user2 ^. #id)
                                                  PartitionByMonth
                                                  (iyears 2000)
   assertEqual "Document present in stats" 1 (length res)
@@ -290,78 +290,77 @@ test_userShareableLinkStatisticsByGroup = do
 
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
-  Just User { userid } <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  ugid                 <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
-  res                  <- dbUpdate $ SetUserUserGroup userid ugid
+  uid  <- view #id . fromJust <$> addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  res  <- dbUpdate $ SetUserUserGroup uid ugid
   assertBool "Company was correctly set" res
-  Just user <- dbQuery $ GetUserByID userid
-  assertBool "Returned user has proper companyid" $ usergroupid user == ugid
+  Just user <- dbQuery $ GetUserByID uid
+  assertBool "Returned user has proper companyid" $ user ^. #groupID == ugid
 
 test_deleteUser :: TestEnv ()
 test_deleteUser = do
-  Just User { userid, usergroupid } <- addNewUser "Andrzej"
-                                                  "Rybczak"
-                                                  "andrzej@skrivapa.se"
-  res <- dbUpdate $ DeleteUser userid
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  res       <- dbUpdate $ DeleteUser $ user ^. #id
   assertBool "User was correctly removed" res
-  nouser <- dbQuery $ GetUserByID userid
+  nouser <- dbQuery $ GetUserByID $ user ^. #id
   assertBool "No user returned after removal" $ isNothing nouser
-  ugusers <- dbQuery $ UserGroupGetUsers usergroupid
+  ugusers <- dbQuery $ UserGroupGetUsers $ user ^. #groupID
   assertBool "No users in company after removal" $ null ugusers
 
 test_setUserInfo :: TestEnv ()
 test_setUserInfo = do
-  Just User { userid, userinfo } <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let ui = userinfo { userpersonalnumber  = "1234567"
-                    , usercompanyposition = "blabla"
-                    , userphone           = "66346343"
-                    }
-  res <- dbUpdate $ SetUserInfo userid ui
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  let ui =
+        (user ^. #info)
+          & (#personalNumber .~ "1234567")
+          & (#companyPosition .~ "blabla")
+          & (#phone .~ "66346343")
+  res <- dbUpdate $ SetUserInfo (user ^. #id) ui
   assertBool "UserInfo updated correctly" res
-  Just User { userinfo = ui2 } <- dbQuery $ GetUserByID userid
-  assertBool "Updated UserInfo returned" $ ui == ui2
+  Just user2 <- dbQuery $ GetUserByID (user ^. #id)
+  assertBool "Updated UserInfo returned" $ ui == user2 ^. #info
 
 test_setUserInfoCapEmail :: TestEnv ()
 test_setUserInfoCapEmail = do
-  Just User { userid, userinfo } <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let ui = userinfo { userpersonalnumber  = "1234567"
-                    , usercompanyposition = "blabla"
-                    , userphone           = "66346343"
-                    , useremail           = Email "DFSFS@fsdfs.com"
-                    }
-  res <- dbUpdate $ SetUserInfo userid ui
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  let ui =
+        (user ^. #info)
+          & (#personalNumber .~ "1234567")
+          & (#companyPosition .~ "blabla")
+          & (#phone .~ "66346343")
+          & (#email .~ Email "DFSFS@fsdfs.com")
+  res <- dbUpdate $ SetUserInfo (user ^. #id) ui
   assertBool "UserInfo updated correctly" res
-  Just User { userinfo = ui2 } <- dbQuery $ GetUserByID userid
+  Just user2 <- dbQuery $ GetUserByID (user ^. #id)
   assertBool "Updated UserInfo returned"
-    $  ui { useremail = Email "dfsfs@fsdfs.com" }
-    == ui2
+    $  (ui & #email .~ Email "dfsfs@fsdfs.com")
+    == (user2 ^. #info)
 
 test_setUserSettings :: TestEnv ()
 test_setUserSettings = do
-  Just User { userid, usersettings } <- addNewUser "Andrzej"
-                                                   "Rybczak"
-                                                   "andrzej@skrivapa.se"
-  let us = usersettings { lang = defaultLang }
-  res <- dbUpdate $ SetUserSettings userid us
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  let us = user ^. #settings & #lang .~ defaultLang
+  res <- dbUpdate $ SetUserSettings (user ^. #id) us
   assertBool "UserSettings updated correctly" res
-  Just User { usersettings = us2 } <- dbQuery $ GetUserByID userid
-  assertBool "Updated UserSettings returned" $ us == us2
+  Just user2 <- dbQuery $ GetUserByID (user ^. #id)
+  assertBool "Updated UserSettings returned" $ us == user2 ^. #settings
 
 test_acceptTermsOfService :: TestEnv ()
 test_acceptTermsOfService = do
-  Just User { userid } <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  now                  <- currentTime
-  res                  <- dbUpdate $ AcceptTermsOfService userid now
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  now       <- currentTime
+  res       <- dbUpdate $ AcceptTermsOfService (user ^. #id) now
   assertBool "User updated correctly" res
-  Just User { userhasacceptedtermsofservice = Just accepted } <- dbQuery
-    $ GetUserByID userid
+  Just accepted <- preview (_Just % #hasAcceptedTOS % _Just)
+    <$> dbQuery (GetUserByID $ user ^. #id)
   assertBool "Time of acceptance is correct" $ compareTime accepted now
 
 test_setSignupMethod :: TestEnv ()
 test_setSignupMethod = do
-  Just User { userid } <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let method = ViralInvitation
-  res <- dbUpdate $ SetSignupMethod userid method
+  res <- dbUpdate $ SetSignupMethod (user ^. #id) method
   assertBool "User updated correctly" res
-  Just User { usersignupmethod = newmethod } <- dbQuery $ GetUserByID userid
-  assertBool "User's updated signup method is correct" $ newmethod == method
+  Just newUser <- dbQuery $ GetUserByID (user ^. #id)
+  assertBool "User's updated signup method is correct"
+             (newUser ^. #signupMethod == method)

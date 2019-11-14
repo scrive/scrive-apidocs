@@ -9,7 +9,6 @@ import Data.OTP (totp)
 import Data.Time.Clock.POSIX
 import Happstack.Server
 import Log
-import Optics (_Just)
 import Test.Framework
 import Text.JSON hiding (decode)
 import Text.JSON.Gen as J
@@ -99,7 +98,7 @@ loginTests env = testGroup
 
 testSuccessfulLogin :: TestEnv ()
 testSuccessfulLogin = do
-  uid <- userid <$> createTestUser
+  uid <- view #id <$> createTestUser
   ctx <- mkContext defaultLang
   req <- mkRequest
     POST
@@ -109,14 +108,16 @@ testSuccessfulLogin = do
     ]
   (res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
-  assertBool "User was logged into context" $ (userid <$> ctx' ^. #maybeUser) == Just uid
+  assertBool "User was logged into context"
+    $  (ctx' ^? #maybeUser % _Just % #id)
+    == Just uid
   assertBool "User was not logged into context as pad user"
     $  (ctx' ^. #maybePadUser)
     == Nothing
 
 testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue = do
-  uid <- userid <$> createTestUser
+  uid <- view #id <$> createTestUser
   ctx <- mkContext defaultLang
   req <- mkRequest
     POST
@@ -127,7 +128,7 @@ testSuccessfulLoginToPadQueue = do
   (res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
   assertBool "User was logged into context as pad user"
-    $  (userid <$> ctx' ^. #maybePadUser)
+    $  (ctx' ^? #maybePadUser % _Just % #id)
     == Just uid
   assertBool "User was not logged into context" $ ctx' ^. #maybeUser == Nothing
 
@@ -159,7 +160,7 @@ testCantLoginWithInvalidPassword = do
 
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
 testSuccessfulLoginSavesAStatEvent = do
-  uid <- userid <$> createTestUser
+  uid <- view #id <$> createTestUser
   ctx <- mkContext defaultLang
   req <- mkRequest
     POST
@@ -168,7 +169,9 @@ testSuccessfulLoginSavesAStatEvent = do
     , ("loginType", inText "RegularLogin")
     ]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
-  assertBool "User was logged into context" $ (userid <$> ctx' ^. #maybeUser) == Just uid
+  assertBool "User was logged into context"
+    $  (ctx' ^? #maybeUser % _Just % #id)
+    == Just uid
 
 testCanLoginWithRedirect :: TestEnv ()
 testCanLoginWithRedirect = do
@@ -180,7 +183,7 @@ testCanLoginWithRedirect = do
   ctx        <- mkContext defaultLang
   req1       <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
   (res1, _) <- runTestKontra req1 ctx $ apiCallGetUserPersonalToken
@@ -248,15 +251,15 @@ assertResettingPasswordLogsIn :: TestEnv ()
 assertResettingPasswordLogsIn = do
   (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context"
-              (Just $ userid user)
-              (userid <$> ctx ^. #maybeUser)
+              (Just $ user ^. #id)
+              (ctx ^? #maybeUser % _Just % #id)
 
 assertResettingPasswordRecordsALoginEvent :: TestEnv ()
 assertResettingPasswordRecordsALoginEvent = do
   (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context"
-              (Just $ userid user)
-              (userid <$> ctx ^. #maybeUser)
+              (Just $ user ^. #id)
+              (ctx ^? #maybeUser % _Just % #id)
 
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist = do
@@ -272,7 +275,7 @@ testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission
 testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission = do
   user <- createTestUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
-  uid2 <- userid <$> createTestUser' "thomas.busby@scrive.com"
+  uid2 <- view #id <$> createTestUser' "thomas.busby@scrive.com"
   req  <- mkRequest GET []
   res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
   let expCode = 403
@@ -283,7 +286,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser = do
   user <- createTestUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   req  <- mkRequest GET []
-  let uid = userid user
+  let uid = user ^. #id
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
   let expCode = 200
   assertEqual ("should return " <> show expCode) expCode (rsCode res)
@@ -292,7 +295,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup :: TestEn
 testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
-  uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+  uid2       <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
@@ -304,8 +307,8 @@ testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
   ug   <- addNewUserGroup
   user <- createTestUser' "thomas.busby@scrive.com"
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
-  let uid1 = userid user
-  uid2 <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+  let uid1 = user ^. #id
+  uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid1 $ ug ^. #id
   void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   req <- mkRequest GET []
@@ -339,7 +342,7 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
     -- Set up user with permissions to generate token for second user
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
-  uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+  uid2       <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   -- Generate an expired login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
@@ -353,7 +356,7 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
     -- Set up user with permissions to generate token for second user
   (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
-  uid2       <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+  uid2       <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   -- Generate a valid login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
@@ -372,14 +375,14 @@ testResetPasswordRemovesAllOtherUserSessions = do
       runQuery_
         $   "SELECT COUNT(*) FROM sessions\
             \ WHERE user_id ="
-        <?> (userid user)
+        <?> (user ^. #id)
       r <- fetchOne runIdentity
       assertEqual t (c :: Int64) r
     addSession = do
       runQuery_
         $ "INSERT INTO sessions(user_id,expires,token,csrf_token,domain)\
             \ VALUES("
-        <?> (userid user)
+        <?> (user ^. #id)
         <>  ","
         <?> ct
         <>  ",0,0,"
@@ -392,7 +395,7 @@ testResetPasswordRemovesAllOtherUserSessions = do
   addSession
   assertSessions "We expect to have 2 sessions" 2
 
-  PasswordReminder {..} <- newPasswordReminder $ userid user
+  PasswordReminder {..} <- newPasswordReminder $ user ^. #id
   req1 <- mkRequest POST [("password", inText "password_8866")]
   (_, _) <- runTestKontra req1 ctx $ handlePasswordReminderPost prUserID prToken
   assertSessions "We expect not to have any sessions because we reseted password" 0
@@ -412,8 +415,8 @@ testUser2FAEnforced = do
   password   <- rand 10 $ arbText 3 30
   randomUser <- addNewRandomUserWithPassword password
   ctx        <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
-  let uid = userid randomUser
-  ug  <- guardJustM . dbQuery . UserGroupGet $ usergroupid randomUser
+  let uid = randomUser ^. #id
+  ug  <- guardJustM . dbQuery . UserGroupGet $ randomUser ^. #groupID
   now <- currentTime
   void . dbUpdate $ AcceptTermsOfService uid now
   void . dbUpdate $ SetUserTotpIsMandatory uid True
@@ -513,7 +516,7 @@ createUserAndResetPassword = do
                              defaultLang
                              (bd ^. #id)
                              AccountRequest
-  PasswordReminder {..} <- newPasswordReminder $ userid user
+  PasswordReminder {..} <- newPasswordReminder $ user ^. #id
   ctx                   <- mkContext defaultLang
   req                   <- mkRequest POST [("password", inText "password_8866")]
   (_, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken

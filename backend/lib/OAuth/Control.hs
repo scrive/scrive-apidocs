@@ -25,7 +25,6 @@ import OAuth.Model
 import OAuth.Util
 import OAuth.View
 import Routing
-import User.Model
 import Util.MonadUtils
 import Utils.List
 
@@ -117,7 +116,7 @@ authorizationGranted = do
     Nothing   -> return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token
-                                                                   (userid user)
+                                                                   (user ^. #id)
                                                                    time
 
       return $ LinkOAuthCallback url token $ Just verifier
@@ -142,13 +141,13 @@ apiDashboardPersonalTokens :: Kontrakcja m => m Value
 apiDashboardPersonalTokens = do
   ctx  <- getContext
   user <- guardJust $ ctx ^. #maybeUser
-  let mRecentToken = dbQuery $ GetRecentPersonalToken (userid user) 5 -- created in the last 5 min
+  let mRecentToken = dbQuery $ GetRecentPersonalToken (user ^. #id) 5 -- created in the last 5 min
   recentAsList <-
     map (unjsonToJSON unjsonOAuthAuthorization) <$> maybeToList <$> mRecentToken
   if (not . null) recentAsList
     then return $ object ["personal_tokens" .= recentAsList]
     else do
-      let mToken = dbQuery $ GetPersonalToken (userid user)
+      let mToken = dbQuery $ GetPersonalToken (user ^. #id)
       tokenAsList <-
         map
           ( unjsonToJSON unjsonOAuthAuthorizationHideSecrets
@@ -162,7 +161,7 @@ apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do
   ctx  <- getContext
   user <- guardJust $ ctx ^. #maybeUser
-  ls   <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (userid user))
+  ls   <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (user ^. #id))
   return $ J.runJSONGen $ do
     J.value "api_tokens" $ ls
 
@@ -173,7 +172,7 @@ apiDashboardGrantedPrivileges = do
   ds   <- mapKeepM privilegeDescription [APIDocCreate, APIDocSend, APIDocCheck]
   ls   <-
     concatMap (\p -> jsonFromGrantedPrivilege p ds)
-      <$> (dbQuery $ GetGrantedPrivileges (userid user))
+      <$> (dbQuery $ GetGrantedPrivileges (user ^. #id))
   return $ J.runJSONGen $ do
     J.value "granted_privileges" $ ls
 
@@ -186,7 +185,7 @@ createAPIToken :: Kontrakcja m => m JSValue
 createAPIToken = do
   muser    <- view #maybeUser <$> getContext
   user     <- guardJust muser
-  _success <- dbUpdate $ CreateAPIToken (userid user)
+  _success <- dbUpdate $ CreateAPIToken (user ^. #id)
   return success
 
 deleteAPIToken :: Kontrakcja m => m JSValue
@@ -196,21 +195,21 @@ deleteAPIToken = do
   mtk   <- getDataFn' (look "apitoken")
   case maybeRead =<< (T.pack <$> mtk) of
     Nothing    -> return ()
-    Just token -> void $ dbUpdate $ DeleteAPIToken (userid user) token
+    Just token -> void $ dbUpdate $ DeleteAPIToken (user ^. #id) token
   return success
 
 createPersonalToken :: Kontrakcja m => m JSValue
 createPersonalToken = do
   muser    <- view #maybeUser <$> getContext
   user     <- guardJust muser
-  _success <- dbUpdate $ CreatePersonalToken (userid user)
+  _success <- dbUpdate $ CreatePersonalToken (user ^. #id)
   return success
 
 deletePersonalToken :: Kontrakcja m => m JSValue
 deletePersonalToken = do
   muser    <- view #maybeUser <$> getContext
   user     <- guardJust muser
-  _success <- dbUpdate $ DeletePersonalToken (userid user)
+  _success <- dbUpdate $ DeletePersonalToken (user ^. #id)
   return success
 
 deletePrivilege :: Kontrakcja m => m JSValue
@@ -223,6 +222,6 @@ deletePrivilege = do
     Just tokenid -> do
       mpr <- getDataFn' (look "privilege")
       case maybeRead =<< (T.pack <$> mpr) of
-        Nothing -> void $ dbUpdate $ DeletePrivileges (userid user) tokenid
-        Just pr -> void $ dbUpdate $ DeletePrivilege (userid user) tokenid pr
+        Nothing -> void $ dbUpdate $ DeletePrivileges (user ^. #id) tokenid
+        Just pr -> void $ dbUpdate $ DeletePrivilege (user ^. #id) tokenid pr
   return success

@@ -54,7 +54,7 @@ withTosCheck
   => (User -> m InternalKontraResponse)
   -> User
   -> m InternalKontraResponse
-withTosCheck action user = case userhasacceptedtermsofservice user of
+withTosCheck action user = case user ^. #hasAcceptedTOS of
   Just _  -> action user
   Nothing -> return $ internalResponse (LinkAcceptTOS)
 
@@ -68,10 +68,10 @@ with2FACheck
   -> User
   -> m InternalKontraResponse
 with2FACheck action user = do
-  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   let userMustHaveTotpEnabled =
-        (ugwpSettings ugwp ^. #totpIsMandatory) || usertotpismandatory user
-  if userMustHaveTotpEnabled && not (usertotpactive user)
+        (ugwpSettings ugwp ^. #totpIsMandatory) || user ^. #totpIsMandatory
+  if userMustHaveTotpEnabled && not (user ^. #totpActive)
     then do
       flashmessage <- flashMessageTotpMustBeActivated
       return $ internalResponseWithFlash flashmessage LinkAccount
@@ -86,7 +86,7 @@ withUserAndGroup :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
 withUserAndGroup action = do
   maybeuser <- view #maybeUser <$> getContext
   user      <- guardJust maybeuser
-  ug        <- dbQuery . UserGroupGetByUserID . userid $ user
+  ug        <- dbQuery . UserGroupGetByUserID $ user ^. #id
   action (user, ug)
 
 {- |
@@ -105,7 +105,7 @@ withUserAndRoles action = do
 -}
 withCompanyAdmin :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
 withCompanyAdmin action = withUserAndGroup
-  $ \(user, ug) -> if useriscompanyadmin user then action (user, ug) else internalError
+  $ \(user, ug) -> if user ^. #isCompanyAdmin then action (user, ug) else internalError
 
 withCompanyAdminOrAdminOnly
   :: Kontrakcja m => Maybe UserGroupID -> (UserGroup -> m a) -> m a

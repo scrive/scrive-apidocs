@@ -83,9 +83,9 @@ instance (MonadDB m, MonadThrow m)
 data GetRoles = GetRoles User
 instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
   query (GetRoles u) = do
-    let ugid    = usergroupid u
-        uid     = userid u
-        isAdmin = useriscompanyadmin u
+    let ugid    = u ^. #groupID
+        uid     = u ^. #id
+        isAdmin = u ^. #isCompanyAdmin
     dbRolesByUser <- do
       query . AccessControlGetRolesByUser $ uid
     dbRolesByUserGroup <- do

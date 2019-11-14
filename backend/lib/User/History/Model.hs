@@ -325,23 +325,23 @@ diffUserInfos old new =
     ++ phoneDiff
     ++ emailDiff
   where
-    fstNameDiff = if (userfstname old) /= (userfstname new)
-      then [("first_name", userfstname old, userfstname new)]
+    fstNameDiff = if (old ^. #firstName) /= (new ^. #firstName)
+      then [("first_name", old ^. #firstName, new ^. #firstName)]
       else []
-    sndNameDiff = if (usersndname old) /= (usersndname new)
-      then [("last_name", usersndname old, usersndname new)]
+    sndNameDiff = if (old ^. #lastName) /= (new ^. #lastName)
+      then [("last_name", old ^. #lastName, new ^. #lastName)]
       else []
-    personalNumberDiff = if (userpersonalnumber old) /= (userpersonalnumber new)
-      then [("personal_number", userpersonalnumber old, userpersonalnumber new)]
+    personalNumberDiff = if (old ^. #personalNumber) /= (new ^. #personalNumber)
+      then [("personal_number", old ^. #personalNumber, new ^. #personalNumber)]
       else []
-    companyPositionDiff = if (usercompanyposition old) /= (usercompanyposition new)
-      then [("company_position", usercompanyposition old, usercompanyposition new)]
+    companyPositionDiff = if (old ^. #companyPosition) /= (new ^. #companyPosition)
+      then [("company_position", old ^. #companyPosition, new ^. #companyPosition)]
       else []
-    phoneDiff = if (userphone old) /= (userphone new)
-      then [("phone", userphone old, userphone new)]
+    phoneDiff = if (old ^. #phone) /= (new ^. #phone)
+      then [("phone", old ^. #phone, new ^. #phone)]
       else []
-    emailDiff = if (useremail old) /= (useremail new)
-      then [("email", unEmail $ useremail old, unEmail $ useremail new)]
+    emailDiff = if (old ^. #email) /= (new ^. #email)
+      then [("email", unEmail $ old ^. #email, unEmail $ new ^. #email)]
       else []
 
 addUserHistory

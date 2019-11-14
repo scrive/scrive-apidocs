@@ -75,7 +75,7 @@ testCreateGroupsWithUsers = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
+        void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
         return . replicate 2 . Just $ ug1 ^. #id
 
 testGetAllUsersOfTopGroup :: TestEnv ()
@@ -96,7 +96,7 @@ testGetAllUsersOfTopGroup = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
+        void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
         return $ ug1 ^. #id
       --      parents for groups in next level , all group ids created
       return (Just <$> (new_ugids ++ new_ugids), ugids ++ new_ugids)
@@ -125,8 +125,8 @@ testGetAllGroupsOfUser = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
-        return (ug1 ^. #id, userid u)
+        void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
+        return (ug1 ^. #id, u ^. #id)
       --      parents for groups in next level , all userids created
       return (Just <$> (new_ugids ++ new_ugids), uids ++ new_uids)
 
@@ -172,7 +172,7 @@ testMoveGroup = do
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
         u   <- addNewRandomUser
-        void . dbUpdate $ SetUserGroup (userid u) (Just $ ug1 ^. #id)
+        void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
         return $ ug1 ^. #id
       --      parents for groups in next level , all group ids created
       return (Just <$> concatMap (replicate 2) new_ugids, ugids ++ new_ugids)

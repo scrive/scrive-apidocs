@@ -40,7 +40,7 @@ getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   Just EmailChangeRequest {..} <- dbQuery $ GetEmailChangeRequest uid
   guard $ ecrToken == token
   Just loggeduser <- view #maybeUser <$> lift getContext
-  guard $ ecrUserID == userid loggeduser
+  guard $ ecrUserID == loggeduser ^. #id
   -- check if a user didn't create an account with this email
   -- between requesting email change and confirming the change
   Nothing <- dbQuery $ GetUserByEmail ecrNewEmail

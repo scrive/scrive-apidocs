@@ -299,7 +299,7 @@ testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions = do
 testUserCanCreateChildUserGroupWithPermissions :: TestEnv ()
 testUserCanCreateChildUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -335,7 +335,7 @@ testSalesUserCanCreateChildUserGroupWithoutPermissions = do
 testUserCanEditRootUserGroupWithPermissions :: TestEnv ()
 testUserCanEditRootUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -350,7 +350,7 @@ testUserCanEditRootUserGroupWithPermissions = do
 testUserCanEditChildUserGroupWithPermissions :: TestEnv ()
 testUserCanEditChildUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
-  let uid        = userid user
+  let uid        = user ^. #id
       ugidParent = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugidParent
   ugidChild <- view #id <$> addNewUserGroupWithParent False (Just ugidParent)
@@ -406,7 +406,7 @@ testSalesUserCannotViewNonExistentUserGroup = do
 testNonAdminUserCanViewUserGroupWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -418,7 +418,7 @@ testNonAdminUserCanViewUserGroupWithPermissions = do
 testAdminUserCanViewUserGroupWithPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Grunthos" "the Flatulent" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
@@ -432,7 +432,7 @@ testAdminUserCanViewUserGroupWithPermissions = do
 testSalesUserCanViewUserGroupWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
@@ -507,7 +507,7 @@ testSalesUserCannotDeleteNonExistentUserGroup = do
 testUserCanDeleteChildUserGroupWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupWithPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let uid   = userid user
+  let uid   = user ^. #id
       ugid1 = ug1 ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
   ugid2 <- view #id <$> addNewUserGroupWithParent False (Just ugid1)
@@ -546,7 +546,7 @@ testSalesUserCanDeleteChildUserGroupWithoutPermissions = do
 testUserCannotDeleteRootUserGroupWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -619,7 +619,7 @@ testSalesUserCannotViewNonExistentUserGroupAddress = do
 testNonAdminUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -632,7 +632,7 @@ testNonAdminUserCanViewUserGroupAddressWithPermissions = do
 testAdminUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Grunthos" "the Flatulent" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
@@ -646,7 +646,7 @@ testAdminUserCanViewUserGroupAddressWithPermissions = do
 testSalesUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
@@ -688,7 +688,7 @@ testSalesUserCanViewUserGroupAddressWithoutPermissions = do
 testSalesUserCanEditUserGroupAddressWithPermissions :: TestEnv ()
 testSalesUserCanEditUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -741,7 +741,7 @@ testSalesUserCannotDeleteNonExistentUserGroupAddress = do
 testUserCanDeleteChildUserGroupAddressWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupAddressWithPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let uid   = userid user
+  let uid   = user ^. #id
       ugid1 = ug1 ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
   ugid2 <- view #id <$> addNewUserGroupWithParent False (Just ugid1)
@@ -782,7 +782,7 @@ testSalesUserCanDeleteChildUserGroupAddressWithoutPermissions = do
 testUserCannotDeleteRootUserGroupAddressWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupAddressWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -853,7 +853,7 @@ testSalesUserCannotViewNonExistentUserGroupSettings = do
 testNonAdminUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -866,7 +866,7 @@ testNonAdminUserCanViewUserGroupSettingsWithPermissions = do
 testAdminUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
 testAdminUserCanViewUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Grunthos" "the Flatulent" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
@@ -880,7 +880,7 @@ testAdminUserCanViewUserGroupSettingsWithPermissions = do
 testSalesUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- setUser (Just user) <$> mkContext defaultLang
@@ -922,7 +922,7 @@ testSalesUserCanViewUserGroupSettingsWithoutPermissions = do
 testSalesUserCanEditUserGroupSettingsWithPermissions :: TestEnv ()
 testSalesUserCanEditUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -979,7 +979,7 @@ testSalesUserCannotDeleteNonExistentUserGroupSettings = do
 testUserCanDeleteChildUserGroupSettingsWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupSettingsWithPermissions = do
   (user, ug1) <- addNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let uid   = userid user
+  let uid   = user ^. #id
       ugid1 = ug1 ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
   ugid2 <- view #id <$> addNewUserGroupWithParent False (Just ugid1)
@@ -1020,7 +1020,7 @@ testSalesUserCanDeleteChildUserGroupSettingsWithoutPermissions = do
 testUserCannotDeleteRootUserGroupSettingsWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupSettingsWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
@@ -1058,7 +1058,7 @@ testSalesUserCannotDeleteRootUserGroupSettings = do
 testNonAdminUserCanViewUsersInUserGroupWithPermissions :: TestEnv ()
 testNonAdminUserCanViewUsersInUserGroupWithPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
-  let uid  = userid user
+  let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang

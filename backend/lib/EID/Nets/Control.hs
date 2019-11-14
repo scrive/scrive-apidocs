@@ -58,7 +58,6 @@ import Session.Types
 import Templates
 import Text.XML.Parser
 import User.Lang
-import User.Types.User
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -169,7 +168,7 @@ handleResolve = do
             (netsTransactionDomain nt)
             link
         (Just nt, Just art) -> do
-          let mUserId = userid <$> contextUser ctx
+          let mUserId = view #id <$> contextUser ctx
           logInfo
               "Information about requested nets authorization before assertion request"
             $ object

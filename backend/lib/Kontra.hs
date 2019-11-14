@@ -127,8 +127,8 @@ isAdmin :: Context -> Bool
 isAdmin ctx = case ctx ^. #maybeUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` ctx ^. #adminAccounts)
-      && (usertotpactive user || not (ctx ^. #production))
+    (user ^. #info % #email `elem` ctx ^. #adminAccounts)
+      && (user ^. #totpActive || not (ctx ^. #production))
 
 
 -- | Logged in user is sales with 2FA (2FA only enforced for production = true)
@@ -136,8 +136,8 @@ isSales :: Context -> Bool
 isSales ctx = case ctx ^. #maybeUser of
   Nothing -> False
   Just user ->
-    (useremail (userinfo user) `elem` ctx ^. #salesAccounts)
-      && (usertotpactive user || not (ctx ^. #production))
+    (user ^. #info % #email `elem` ctx ^. #salesAccounts)
+      && (user ^. #totpActive || not (ctx ^. #production))
 
 -- | Will 404 if not logged in as an admin.
 onlyAdmin :: Kontrakcja m => m a -> m a

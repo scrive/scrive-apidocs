@@ -21,7 +21,6 @@ import PadApplication.Types
 import Routing
 import Theme.Model
 import Theme.View
-import User.Types.User
 import UserGroup.Model
 import UserGroup.Types
 import qualified API.V2 as V2
@@ -60,7 +59,7 @@ apiCallGetPadClientTheme :: Kontrakcja m => m Response
 apiCallGetPadClientTheme = api $ do
   ctx          <- getContext
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  ug           <- dbQuery . UserGroupGetByUserID . userid $ user
+  ug           <- dbQuery . UserGroupGetByUserID $ user ^. #id
   theme        <- dbQuery $ GetTheme $ fromMaybe (ctx ^. #brandedDomain % #signviewTheme)
                                                  (ug ^. #ui % #signviewTheme)
   simpleAesonResponse $ Unjson.unjsonToJSON'
@@ -71,7 +70,7 @@ apiCallGetPadClientTheme = api $ do
 apiCallGetPadInfo :: Kontrakcja m => m Response
 apiCallGetPadInfo = V2.api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   return $ V2.Ok $ object
     [ "app_mode" .= padAppModeText (ugwpSettings ugwp ^. #padAppMode)
     , "e_archive_enabled" .= (ugwpSettings ugwp ^. #padEarchiveEnabled)

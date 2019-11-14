@@ -31,7 +31,6 @@ import Generators.OccurenceControl
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
-import User.Model
 import Util.Actor (userActor)
 
 apiV2DocumentPostCallsTests :: TestEnvSt -> Test
@@ -101,7 +100,7 @@ testDocApiV2NewFromTemplate = do
   tmpl <- dbQuery $ GetDocumentByDocumentID did
   assertEqual "Document is in user's folder"
               (documentfolderid tmpl)
-              (userhomefolderid user)
+              (user ^. #homeFolderID)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     is_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper
@@ -114,7 +113,7 @@ testDocApiV2NewFromTemplate = do
     tmpl2 <- dbQuery $ GetDocumentByDocumentID did
     assertEqual "Template is still in user's folder"
                 (documentfolderid tmpl2)
-                (userhomefolderid user)
+                (user ^. #homeFolderID)
 
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -123,7 +122,7 @@ testDocApiV2NewFromTemplate = do
     doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
     assertEqual "New document is in user's folder"
                 (documentfolderid doc)
-                (userhomefolderid user)
+                (user ^. #homeFolderID)
 
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
@@ -153,7 +152,7 @@ testDocApiV2NewFromTemplateShared = do
     doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
     assertEqual "New document is in user's folder"
                 (documentfolderid doc)
-                (userhomefolderid user)
+                (user ^. #homeFolderID)
 
 testDocApiV2Update :: TestEnv ()
 testDocApiV2Update = do
@@ -864,7 +863,7 @@ testDocApiV2GenerateShareableLink = replicateM_ 100 $ do
   doc  <- do
     fid  <- addNewRandomFile
     file <- randomQuery $ GetFileByFileID fid
-    doc' <- rand 10 $ runOccurenceControl 0.5 $ startableDocumentOC (userid user) file
+    doc' <- rand 10 $ runOccurenceControl 0.5 $ startableDocumentOC (user ^. #id) file
     did  <- randomUpdate $ StoreDocumentForTesting doc'
     randomQuery $ GetDocumentByDocumentID did
 
@@ -935,20 +934,20 @@ testDocInFolder :: TestEnv ()
 testDocInFolder = do
   admin       <- addNewRandomUser
   adminCtx    <- (set #maybeUser (Just admin)) <$> mkContext defaultLang
-  nonAdmin    <- addNewRandomCompanyUser (usergroupid admin) False
+  nonAdmin    <- addNewRandomCompanyUser (admin ^. #groupID) False
   nonAdminCtx <- return $ set #maybeUser (Just nonAdmin) adminCtx
 
   -- user tries to create document in admins home folder - should fail
   let createInNonOwnedFolder =
         [ ("file", inFile $ inTestDir "pdfs/simple.pdf")
         , ("saved"    , inText "false")
-        , ("folder_id", inText . showt . fromJust $ userhomefolderid admin)
+        , ("folder_id", inText . showt . fromJust $ admin ^. #homeFolderID)
         ]
   _ <- mockDocTestRequestHelper nonAdminCtx POST createInNonOwnedFolder docApiV2New 403
 
   -- create subfolder
   adminSubfolder <- dbUpdate . FolderCreate $ set #parentID
-                                                  (userhomefolderid admin)
+                                                  (admin ^. #homeFolderID)
                                                   defaultFolder
   let subfolderID = adminSubfolder ^. #id
   -- create document in subfolder
@@ -990,7 +989,7 @@ testDocInFolder = do
   let docMove =
         inText
           $  T.pack "{\"folder_id\": \""
-          <> (showt $ fromJust $ userhomefolderid admin)
+          <> (showt $ fromJust $ admin ^. #homeFolderID)
           <> "\"}"
       rq_update_params = [("document", docMove)]
       rq_update_code   = 200
@@ -1019,7 +1018,7 @@ testDocInFolder = do
 
   -- verify that document has home folderID now
   assertEqual "Moved document has user home folderID returned"
-              (userhomefolderid admin)
+              (admin ^. #homeFolderID)
               (getMockDocFolderId doc4)
 
 testDocApiV2AddEvidenceLogEvent :: TestEnv ()

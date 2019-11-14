@@ -19,6 +19,7 @@ import User.Email (Email(..))
 import User.Model
 import UserGroup.Types
 import qualified Partner.JSON.Internal as I
+import qualified User.Types.User.Internal as I
 import qualified UserGroup.Internal as I
 
 defaultUserForUpdate :: I.UserForUpdate
@@ -34,14 +35,7 @@ defaultUserForUpdate = I.UserForUpdate { id              = ""
                                        }
 
 userInfoFromUserForUpdate :: I.UserForUpdate -> UserInfo
-userInfoFromUserForUpdate I.UserForUpdate {..} = UserInfo
-  { userfstname         = firstName
-  , usersndname         = lastName
-  , userpersonalnumber  = personalNumber
-  , usercompanyposition = companyPosition
-  , userphone           = phone
-  , useremail           = email
-  }
+userInfoFromUserForUpdate I.UserForUpdate {..} = I.UserInfo { .. }
 
 unjsonUserForUpdate :: UnjsonDef I.UserForUpdate
 unjsonUserForUpdate =
@@ -86,15 +80,15 @@ unjsonUserForUpdate =
 
 userToUserForUpdate :: User -> I.UserForUpdate
 userToUserForUpdate user = I.UserForUpdate
-  { id              = showt $ userid user
-  , email           = useremail . userinfo $ user
-  , firstName       = userfstname . userinfo $ user
-  , lastName        = usersndname . userinfo $ user
-  , personalNumber  = userpersonalnumber . userinfo $ user
-  , phone           = userphone . userinfo $ user
-  , companyPosition = usercompanyposition . userinfo $ user
-  , lang            = lang $ usersettings $ user
-  , hasAcceptedTOS  = maybe False (const True) (userhasacceptedtermsofservice user)
+  { id              = showt $ user ^. #id
+  , email           = user ^. #info % #email
+  , firstName       = user ^. #info % #firstName
+  , lastName        = user ^. #info % #lastName
+  , personalNumber  = user ^. #info % #personalNumber
+  , phone           = user ^. #info % #phone
+  , companyPosition = user ^. #info % #companyPosition
+  , lang            = user ^. #settings % #lang
+  , hasAcceptedTOS  = maybe False (const True) (user ^. #hasAcceptedTOS)
   }
 
 unjsonUsersForUpdate :: UnjsonDef [I.UserForUpdate]

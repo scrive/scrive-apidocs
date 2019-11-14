@@ -55,17 +55,17 @@ userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
 
 userJSONUserDetails :: User -> JSONGen ()
 userJSONUserDetails user = do
-  value "id" $ showt $ userid user
+  value "id" $ showt $ user ^. #id
   value "fstname" $ getFirstName user
   value "sndname" $ getLastName user
   value "email" $ getEmail user
-  value "home_folder_id" $ userhomefolderid user
-  value "twofactor_active" $ usertotpactive user
-  value "twofactor_is_mandatory" $ usertotpismandatory user
+  value "home_folder_id" $ user ^. #homeFolderID
+  value "twofactor_active" $ user ^. #totpActive
+  value "twofactor_is_mandatory" $ user ^. #totpIsMandatory
   value "personalnumber" $ getPersonalNumber user
-  value "phone" $ userphone $ userinfo user
-  value "companyadmin" $ useriscompanyadmin user
-  value "companyposition" $ usercompanyposition $ userinfo user
+  value "phone" $ user ^. #info % #phone
+  value "companyadmin" $ user ^. #isCompanyAdmin
+  value "companyposition" $ user ^. #info % #companyPosition
   value "lang" $ codeFromLang $ getLang user
 
 unjsonUser :: UnjsonDef User
@@ -81,67 +81,42 @@ unjsonUserPartial
   :: (CAF.Ap (FieldDef User) User -> CAF.Ap (FieldDef User) User) -> UnjsonDef User
 unjsonUserPartial passwordDef = objectOf $ passwordDef
   (    pure defaultUser
-  <*   (fieldReadonly "id" userid "User ID")
+  <*   (fieldReadonly "id" (^. #id) "User ID")
   <**> (    fieldBy "fstname" getFirstName "User First Name" unjsonDef
-       <**> (pure $ \fstname user ->
-              user { userinfo = (userinfo user) { userfstname = fstname } }
-            )
+       <**> pure (#info % #firstName .~)
        )
   <**> (    fieldBy "sndname" getLastName "User Second Name" unjsonDef
-       <**> (pure $ \sndname user ->
-              user { userinfo = (userinfo user) { usersndname = sndname } }
-            )
+       <**> pure (#info % #lastName .~)
        )
-  <**> (    fieldBy "email" (useremail . userinfo) "User Email" unjsonDef
-       <**> (pure $ \email user -> user
-              { userinfo = (userinfo user) { useremail = email }
-              }
-            )
+  <**> (    fieldBy "email" (^. #info % #email) "User Email" unjsonDef
+       <**> pure (#info % #email .~)
        )
-  <**> (    fieldBy "twofactor_active" usertotpactive "User Twofactor Active" unjsonDef
-       <**> (pure $ \totpactive user -> user { usertotpactive = totpactive })
+  <**> (    fieldBy "twofactor_active" (^. #totpActive) "User Twofactor Active" unjsonDef
+       <**> pure (#totpActive .~)
        )
   <**> (    fieldBy "twofactor_is_mandatory"
-                    usertotpismandatory
+                    (^. #totpIsMandatory)
                     "User Twofactor Is Mandatory"
                     unjsonDef
-       <**> (pure $ \totpismandatory user -> user
-              { usertotpismandatory = totpismandatory
-              }
-            )
+       <**> pure (#totpIsMandatory .~)
        )
   <**> (    fieldBy "personalnumber" getPersonalNumber "User Personal Number" unjsonDef
-       <**> (pure $ \personalnumber user -> user
-              { userinfo = (userinfo user) { userpersonalnumber = personalnumber }
-              }
-            )
+       <**> pure (#info % #personalNumber .~)
        )
   <**> (    fieldBy "phone" getMobile "User Phone Number" unjsonDef
-       <**> (pure $ \phone user -> user
-              { userinfo = (userinfo user) { userphone = phone }
-              }
-            )
+       <**> pure (#info % #phone .~)
        )
-  <**> (    fieldBy "companyadmin" useriscompanyadmin "User Company Admin" unjsonDef
-       <**> (pure $ \useriscompanyadmin user -> user
-              { useriscompanyadmin = useriscompanyadmin
-              }
-            )
+  <**> (    fieldBy "companyadmin" (^. #isCompanyAdmin) "User Company Admin" unjsonDef
+       <**> pure (#isCompanyAdmin .~)
        )
   <**> (    fieldBy "companyposition"
-                    (usercompanyposition . userinfo)
+                    (^. #info % #companyPosition)
                     "User Company Position"
                     unjsonDef
-       <**> (pure $ \companyposition user -> user
-              { userinfo = (userinfo user) { usercompanyposition = companyposition }
-              }
-            )
+       <**> pure (#info % #companyPosition .~)
        )
   <**> (    fieldBy "lang" getLang "User Language" unjsonUserLang
-       <**> (pure $ \lang user -> user
-              { usersettings = (usersettings user) { lang = lang }
-              }
-            )
+       <**> pure (#settings % #lang .~)
        )
   )
   where

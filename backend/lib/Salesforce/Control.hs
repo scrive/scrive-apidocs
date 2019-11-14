@@ -15,7 +15,6 @@ import KontraLink
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
-import User.Model
 import User.Utils
 
 {- This handlers sets SalesforceScheme for callbacks for a user -}
@@ -38,7 +37,7 @@ handleSalesforceIntegration = withUser $ \user -> do
           case mtoken of
             Left  _     -> internalError
             Right token -> do
-              dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
+              dbUpdate $ UpdateUserCallbackScheme (user ^. #id) (SalesforceScheme token)
               return $ internalResponse $ fromMaybe LinkDesignView
                                                     (LinkExternal <$> mstate)
 

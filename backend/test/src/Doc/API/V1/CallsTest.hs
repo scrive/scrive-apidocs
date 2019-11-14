@@ -85,7 +85,7 @@ testUpdateDoc updateJsonPath = do
     (_, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
     return ()
 
-  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
+  docs <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   assertEqual "Just one doc" 1 (length docs)
   let doc = head docs
 
@@ -124,7 +124,7 @@ testOAuthCreateDoc = do
   user <- addNewRandomUser
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- Create OAuth API tokens
-  let uid = userid user
+  let uid = user ^. #id
   void $ dbUpdate $ CreateAPIToken uid
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
   time            <- rand 10 arbitrary
@@ -185,7 +185,7 @@ testPersonalAccessCredentialsCreateDoc = do
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   -- Get the personal access token
-  let uid = userid user
+  let uid = user ^. #id
   void $ dbUpdate $ DeletePersonalToken uid
   void $ dbUpdate $ CreatePersonalToken uid
   Just (OAuthAuthorization {..}) <- dbQuery $ GetPersonalToken uid
@@ -224,7 +224,7 @@ testSetAutoReminder :: TestEnv ()
 testSetAutoReminder = do
   ctx <- testUpdateDoc $ head jsonDocs
   let Just user = ctx ^. #maybeUser
-  [doc]    <- randomQuery $ GetDocumentsByAuthor (userid user)
+  [doc]    <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
 
   req      <- mkRequest POST [("days", inText "3")]
   (res, _) <- runTestKontra req ctx $ apiCallV1SetAutoReminder (documentid doc)
@@ -238,9 +238,9 @@ testUpdateDocToSaved useOAuth = do
 
   authStr <- if useOAuth
     then do
-      void $ dbUpdate $ DeletePersonalToken (userid user)
-      void $ dbUpdate $ CreatePersonalToken (userid user)
-      Just (OAuthAuthorization {..}) <- dbQuery $ GetPersonalToken (userid user)
+      void $ dbUpdate $ DeletePersonalToken (user ^. #id)
+      void $ dbUpdate $ CreatePersonalToken (user ^. #id)
+      Just (OAuthAuthorization {..}) <- dbQuery $ GetPersonalToken (user ^. #id)
 
       return
         $  Just
@@ -320,7 +320,7 @@ testChangeAuthenticationToViewMethod :: TestEnv ()
 testChangeAuthenticationToViewMethod = do
   ctx <- testUpdateDoc $ head jsonDocs
   let Just user = ctx ^. #maybeUser
-  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+  [doc] <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   let siglinks       = documentsignatorylinks doc
       validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
 
@@ -476,7 +476,7 @@ testChangeAuthenticationToSignMethod :: TestEnv ()
 testChangeAuthenticationToSignMethod = do
   ctx <- testUpdateDoc $ head jsonDocs
   let Just user = ctx ^. #maybeUser
-  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+  [doc] <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   let siglinks       = documentsignatorylinks doc
       validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
 
@@ -511,7 +511,7 @@ testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue :: TestEnv ()
 testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue = do
   ctx <- testUpdateDoc $ head jsonDocs
   let Just user = ctx ^. #maybeUser
-  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+  [doc] <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   let siglinks       = documentsignatorylinks doc
       validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
 

@@ -24,7 +24,7 @@ accessControlRoleTests env = testGroup
 testRolesNotInheritedInUserGroupTree :: TestEnv ()
 testRolesNotInheritedInUserGroupTree = do
   (Just user) <- addNewUser "Lloyd" "Garmadon" "lloyd.garmadon@scrive.com"
-  let uid = userid user
+  let uid = user ^. #id
   (root_ug :: UserGroupRoot) <- rand 10 arbitrary
   root_ugid <- view #id <$> (dbUpdate . UserGroupCreate $ ugFromUGRoot root_ug)
   [_ug0, ug1] <- createChildGroups root_ugid
@@ -38,7 +38,7 @@ testRolesNotInheritedInUserGroupTree = do
   assertBool "The role set on a parent group is not included in user's roles"
              (not $ grp_role `elem` userRoles1)
 
-  void $ dbUpdate $ SetUserGroup (userid user) (Just $ root_ugid)
+  void $ dbUpdate $ SetUserGroup (user ^. #id) (Just $ root_ugid)
   -- user's group changed, need to re-retrieve the user
   (Just user'') <- dbQuery $ GetUserByID uid
   userRoles2    <- dbQuery $ GetRoles user''

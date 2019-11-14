@@ -32,7 +32,7 @@ testListDocs = do
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   void $ runTestKontra req ctx $ apiCallV1CreateFromFile
-  doc : _ <- randomQuery $ GetDocumentsByAuthor (userid user)
+  doc : _ <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   req'    <- mkRequest POST [("json", inText cont)]
   void $ runTestKontra req' ctx $ apiCallV1Update $ documentid doc
   req'' <- mkRequest POST []
@@ -45,7 +45,7 @@ testListDocs = do
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   void $ runTestKontra req2 ctx2 $ apiCallV1CreateFromFile
-  doc2 : _ <- randomQuery $ GetDocumentsByAuthor (userid user2)
+  doc2 : _ <- randomQuery $ GetDocumentsByAuthor (user2 ^. #id)
   let cont2 = T.replace "example@example.com" "bob@blue.com"
         $ -- send to bob
           T.replace "\"signorder\":2" "\"signorder\":1" cont -- reset sign order to 1

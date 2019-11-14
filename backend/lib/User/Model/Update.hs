@@ -116,7 +116,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
       mapM_ (sqlResult . ("u." <>)) selectUsersSelectorsList
       -- In either the same user group or a subgroup.
       sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
-      sqlWhereEq "ug.id" $ usergroupid user
+      sqlWhereEq "ug.id" $ user ^. #groupID
       sqlWhereIsNULL "u.deleted"
       sqlWhereNotEq "u.id" uid
       sqlOrderBy "u.is_company_admin DESC, u.has_accepted_terms_of_service ASC"
@@ -131,7 +131,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
       Just newOwner -> do
         runQuery_ $ sqlUpdate "signatory_links" $ do
           sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
-            sqlSet "author_user_id" $ userid newOwner
+            sqlSet "author_user_id" $ newOwner ^. #id
             sqlWhereEq "sharing"        Shared
             sqlWhereEq "status"         Preparation
             sqlWhereEq "type"           Template
@@ -171,11 +171,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
             sqlWhereEq "type" PersonalNumberFT
             sqlFieldToChange
 
-          sqlSet "user_id" $ userid newOwner
+          sqlSet "user_id" $ newOwner ^. #id
           sqlWhere "id IN (SELECT id FROM signatory_link_ids_to_change)"
 
         runQuery_ $ sqlUpdate "attachments" $ do
-          sqlSet "user_id" $ userid newOwner
+          sqlSet "user_id" $ newOwner ^. #id
           sqlWhere "shared"
           sqlWhereEq "user_id" uid
 
@@ -276,12 +276,12 @@ data SetUserInfo = SetUserInfo UserID UserInfo
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserInfo Bool where
   update (SetUserInfo uid info) = do
     res <- runQuery01 . sqlUpdate "users" $ do
-      sqlSet "first_name" $ userfstname info
-      sqlSet "last_name" $ usersndname info
-      sqlSet "personal_number" $ userpersonalnumber info
-      sqlSet "company_position" $ usercompanyposition info
-      sqlSet "phone" $ userphone info
-      sqlSet "email" $ T.toLower $ unEmail $ useremail info
+      sqlSet "first_name" $ info ^. #firstName
+      sqlSet "last_name" $ info ^. #lastName
+      sqlSet "personal_number" $ info ^. #personalNumber
+      sqlSet "company_position" $ info ^. #companyPosition
+      sqlSet "phone" $ info ^. #phone
+      sqlSet "email" $ T.toLower $ unEmail $ info ^. #email
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
     void $ update $ UpdateDraftsAndTemplatesWithUserData uid
@@ -333,7 +333,7 @@ data SetUserSettings = SetUserSettings UserID UserSettings
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     runQuery01 . sqlUpdate "users" $ do
-      let drp = dataretentionpolicy us
+      let drp = us ^. #dataRetentionPolicy
       sqlSet "lang" $ getLang us
       sqlSet "idle_doc_timeout_preparation" $ drp ^. #idleDocTimeoutPreparation
       sqlSet "idle_doc_timeout_closed" $ drp ^. #idleDocTimeoutClosed
@@ -354,19 +354,19 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
       Just user -> do
         -- Update first name
         runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-          sqlSet "value_text" (userfstname $ userinfo user)
+          sqlSet "value_text" (user ^. #info % #firstName)
           sqlWhereEq "type"       NameFT
           sqlWhereEq "name_order" (NameOrder 1)
           whereSignatoryLinkCanBeChanged
 
         runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-          sqlSet "value_text" (usersndname $ userinfo user)
+          sqlSet "value_text" (user ^. #info % #lastName)
           sqlWhereEq "type"       NameFT
           sqlWhereEq "name_order" (NameOrder 2)
           whereSignatoryLinkCanBeChanged
 
         runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-          sqlSet "value_text" (useremail $ userinfo user)
+          sqlSet "value_text" (user ^. #info % #email)
           sqlWhereEq "type" EmailFT
           whereSignatoryLinkCanBeChanged
     where

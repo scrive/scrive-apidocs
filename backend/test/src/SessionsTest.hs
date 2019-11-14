@@ -108,7 +108,7 @@ testCustomSessionTimeout = do
 
   (user, userGroup) <- createTestUser
 
-  let userId      = userid user
+  let userId      = user ^. #id
       userGroupId = userGroup ^. #id
   groupSettings1 <- assertJustAndExtract $ userGroup ^. #settings
 
@@ -201,7 +201,7 @@ testCustomSessionTimeoutDelay = do
   setTestTime =<< currentTime  -- freeze time
   (user, userGroup) <- createTestUser
 
-  let userId                = userid user
+  let userId                = user ^. #id
       userGroupId           = userGroup ^. #id
       (Just groupSettings1) = userGroup ^. #settings
       sessionTimeout        = 15 * 60  -- test 15 mins session timout
@@ -260,7 +260,7 @@ testCustomSessionTimeoutInheritance = do
     (Just user) <-
       addNewCompanyUser "John" "Smith" "smith@example.com" $ userGroup23 ^. #id
 
-    let userId = userid user
+    let userId = user ^. #id
     (session1, _) <- insertNewSession userId
 
     let time2    = sesExpires session1
@@ -372,7 +372,7 @@ addCgiGrpTransaction = do
     dbQuery $ GetCgiGrpTransaction (cgiTransactionType trans) (signatorylinkid asl)
 
 createTestUserAndGetId :: TestEnv UserID
-createTestUserAndGetId = (userid . fst) <$> createTestUser
+createTestUserAndGetId = view (_1 % #id) <$> createTestUser
 
 createTestUser :: TestEnv (User, UserGroup)
 createTestUser = do

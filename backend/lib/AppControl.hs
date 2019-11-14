@@ -200,8 +200,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
               logInfo_ "Updating session"
               void $ updateSession session
                                    (ctx' ^. #sessionID)
-                                   (userid <$> ctx' ^. #maybeUser)
-                                   (userid <$> ctx' ^. #maybePadUser)
+                                   (ctx' ^? #maybeUser % _Just % #id)
+                                   (ctx' ^? #maybePadUser % _Just % #id)
 
             logInfo_ "Evaluating response"
             -- Make sure response is well defined before passing it further.
@@ -216,8 +216,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 res'  = case mUser of
                   Nothing -> res
                   Just user ->
-                    setHeader "X-Scrive-UserID" (show . userid $ user)
-                      . setHeader "X-Scrive-UserGroupID" (show . usergroupid $ user)
+                    setHeader "X-Scrive-UserID" (show $ user ^. #id)
+                      . setHeader "X-Scrive-UserGroupID" (show $ user ^. #groupID)
                       $ res
 
             return (res', timeDiff finishTime startTime)

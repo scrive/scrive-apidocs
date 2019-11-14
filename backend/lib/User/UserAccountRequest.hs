@@ -75,7 +75,7 @@ expireUserAccountRequests = do
   forM_ prs $ \UserAccountRequest { uarUserID } -> do
     res <- try . localData [identifier uarUserID] $ do
       void $ dbUpdate $ DeleteUserAccountRequest uarUserID
-      musertos <- (fmap userhasacceptedtermsofservice)
+      musertos <- (fmap $ view #hasAcceptedTOS)
         <$> dbQuery (GetUserByIDIncludeDeleted uarUserID)
       case musertos of
         Just Nothing -> do

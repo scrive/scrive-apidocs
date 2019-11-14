@@ -104,8 +104,8 @@ testPartnerUsersWithFolders = do
   assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
   user <- fmap head . dbQuery $ UserGroupGetUsers cid
-  assertBool "User has home Folder" . isJust $ userhomefolderid user
-  userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid user
+  assertBool "User has home Folder" . isJust $ user ^. #homeFolderID
+  userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ user ^. #homeFolderID
   assertEqual "User home folder is child of UserGroup home folder"
               (ug ^. #homeFolderID)
               (userFolder ^. #parentID)
@@ -175,9 +175,9 @@ testNewCompanyAccount = do
     ]
   void . runTestKontra bobReq ctx $ handleAddUserGroupAccount
   Just userBob <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  assertBool "User has home Folder" . isJust $ userhomefolderid userBob
+  assertBool "User has home Folder" . isJust $ userBob ^. #homeFolderID
 
-  userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid userBob
+  userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userBob ^. #homeFolderID
   assertEqual "User home folder is child of UserGroup home folder"
               (ug ^. #homeFolderID)
               (userFolder ^. #parentID)
@@ -195,7 +195,7 @@ testNewCompanyAccount = do
     ]
   void . runTestKontra cliffReq ctx $ handleAddUserGroupAccount
   Just userCliff <- dbQuery $ GetUserByEmail (Email "cliff@cranberry.com")
-  assertBool "User has no home Folder" . not . isJust $ userhomefolderid userCliff
+  assertBool "User has no home Folder" . not . isJust $ userCliff ^. #homeFolderID
 
 assertCountAllFolders :: String -> Int64 -> TestEnv ()
 assertCountAllFolders msg expectedCount =
@@ -288,7 +288,7 @@ testMigrationTriggersWork = do
 
   ctx0 <- mkContext defaultLang
   let ctx =
-        set #adminAccounts [useremail $ userinfo user] . set #maybeUser (Just user) $ ctx0
+        set #adminAccounts [user ^. #info % #email] . set #maybeUser (Just user) $ ctx0
   req <- mkRequest GET []
   void $ runTestKontra req ctx $ handleTriggerMigrateFolders 1
   assertCountAllFolders "Added Folders for 1 UserGroup with 1 User" 2
@@ -296,7 +296,7 @@ testMigrationTriggersWork = do
   void $ runTestKontra req ctx $ handleTriggerMigrateFolders 2
   assertCountAllFolders "Added the rest of Folders" 6
 
-  Just user' <- dbQuery . GetUserByID $ userid user
+  Just user' <- dbQuery . GetUserByID $ user ^. #id
 
   void $ addRandomDocumentWithAuthor user'
 
@@ -331,7 +331,7 @@ testFolderAPICreate = do
 
   -- make admin of folder
   let folderAdminR = FolderAdminAR fdrRootID
-  void . dbUpdate $ AccessControlInsertRoleForUser (userid user) folderAdminR
+  void . dbUpdate $ AccessControlInsertRoleForUser (user ^. #id) folderAdminR
   -- should now be able to create a child
   newFdrFromAPI <- jsonToFolder
     <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
@@ -355,13 +355,13 @@ testFolderAPIUpdate = do
   ctxUser  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
   let folderAdminRoot = FolderAdminAR (fdrRoot ^. #id)
-      admid           = userid grpAdmin
+      admid           = grpAdmin ^. #id
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminRoot
   subs@[fdr1        , fdr2         ] <- createChildrenForParentByAPI ctxAdmin fdrRoot
   [     childrenFdr1, _childrenFdr2] <- forM subs $ createChildrenForParentByAPI ctxAdmin
 
   let folderAdminUserFdr1 = FolderAdminAR (fdr1 ^. #id)
-  void . dbUpdate $ AccessControlInsertRoleForUser (userid user) folderAdminUserFdr1
+  void . dbUpdate $ AccessControlInsertRoleForUser (user ^. #id) folderAdminUserFdr1
 
   -- `user` should be able to update fdr1-rooted tree
   forM_ childrenFdr1 (updateTestHelper ctxUser)
@@ -383,7 +383,7 @@ testFolderAPIUpdate = do
   void $ fdrAPIUpdate ctxUser fdrTryMoving 403
 
   -- make `user` admin of `fdr2`
-  void . dbUpdate $ AccessControlInsertRoleForUser (userid user)
+  void . dbUpdate $ AccessControlInsertRoleForUser (user ^. #id)
                                                    (FolderAdminAR (fdr2 ^. #id))
 
   -- move should now be successful
@@ -439,7 +439,7 @@ testFolderAPIGet = do
   fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
   let fdrRootID    = fdrRoot ^. #id
       folderAdminR = FolderAdminAR fdrRootID
-      admid        = userid grpAdmin
+      admid        = grpAdmin ^. #id
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminR
   subs@[_fdr1          , _fdr2          ] <- createChildrenForParentByAPI ctxAdmin fdrRoot
   [     _childrenOfFDR1, _childrenOfFDR2] <- do
@@ -478,12 +478,12 @@ testFolderAPIGet = do
   void $ jsonTestRequestHelper signatoryUserCtx
                                GET
                                []
-                               (folderAPIGet (fromJust $ userhomefolderid grpAdmin))
+                               (folderAPIGet (fromJust $ grpAdmin ^. #homeFolderID))
                                200
   void $ jsonTestRequestHelper approverUserCtx
                                GET
                                []
-                               (folderAPIGet (fromJust $ userhomefolderid grpAdmin))
+                               (folderAPIGet (fromJust $ grpAdmin ^. #homeFolderID))
                                200
   return ()
 
@@ -497,7 +497,7 @@ testFolderAPIDelete :: TestEnv ()
 testFolderAPIDelete = do
   user       <- addNewRandomUser
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
-  userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
+  userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust $ user ^. #homeFolderID)
   -- I don't want to test deletion of the user home folder, so let's create a subfolder.
   let fdrTestDeleteChild = set #parentID (Just $ userFolder ^. #id) $ defaultFolder
       newFolderJSONBS    = AE.encodingToLazyByteString $ encodeFolder fdrTestDeleteChild
@@ -514,7 +514,7 @@ testFolderAPIListDocs :: TestEnv ()
 testFolderAPIListDocs = do
   user       <- addNewRandomUser
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
-  userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
+  userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust $ user ^. #homeFolderID)
   let numDocsToStart = 5
       fdrid          = userFolder ^. #id
   mapM_ testDocApiV2New' $ take numDocsToStart . repeat $ ctx
@@ -526,13 +526,13 @@ testFolderAPIListDocs = do
   newFdr <-
     jsonToFolder <$> (jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200)
   -- HACK to enable user to start documents in another folder
-  dbUpdate $ FolderSetUserHomeFolder (userid user) (newFdr ^. #id)
-  user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
+  dbUpdate $ FolderSetUserHomeFolder (user ^. #id) (newFdr ^. #id)
+  user' <- fromJust <$> (dbQuery $ GetUserByID (user ^. #id))
   let ctx'            = set #maybeUser (Just user') ctx
       numDocsToStart' = 3
   mapM_ testDocApiV2New' $ take numDocsToStart' . repeat $ ctx'
   -- switch back to original home folder for user
-  dbUpdate $ FolderSetUserHomeFolder (userid user) fdrid
+  dbUpdate $ FolderSetUserHomeFolder (user ^. #id) fdrid
   docsVal <- jsonTestRequestHelper ctx GET [] (folderAPIListDocs fdrid) 200
   assertEqual "Listing by folder id does not retrieve documents in child folders"
               numDocsToStart

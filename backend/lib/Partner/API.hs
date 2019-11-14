@@ -41,6 +41,7 @@ import User.Model
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
+import qualified User.Types.User.Internal as I
 
 partnerAPI :: Route (Kontra Response)
 partnerAPI = dir "api" $ choice [dir "v1" $ partnerAPIV1]
@@ -216,20 +217,20 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
           , userForUpdate ^. #hasAcceptedTOS
           , userForUpdate ^. #lang
           )
-      guardValidEmailAndNoExistingUser (useremail userInfo) Nothing
+      guardValidEmailAndNoExistingUser (userInfo ^. #email) Nothing
       unless hasAcceptedTOS $ tosNotAcceptedErr
 
       -- API call actions
       newUser <- apiGuardJustM
         (serverError "The user could not be created")
-        (createUser (useremail userInfo)
-                    (userfstname userInfo, usersndname userInfo)
-                    (ugid                , False)
+        (createUser (userInfo ^. #email)
+                    (userInfo ^. #firstName, userInfo ^. #lastName)
+                    (ugid                  , False)
                     lang
                     PartnerInvitation
         )
 
-      let uid = userid newUser
+      let uid = newUser ^. #id
       didUpdate <- dbUpdate $ SetUserInfo uid userInfo
       unless didUpdate $ srvLogErr "Could not update user details"
       when hasAcceptedTOS $ currentTime >>= void . dbUpdate . AcceptTermsOfService uid
@@ -287,11 +288,11 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
           (Result _ errs) -> rqPrmErr ("Errors while parsing user data:" <+> showt errs)
       let userInfo = userInfoFromUserForUpdate ufu
 
-      guardValidEmailAndNoExistingUser (useremail userInfo) (Just uid)
+      guardValidEmailAndNoExistingUser (userInfo ^. #email) (Just uid)
       unless (ufu ^. #hasAcceptedTOS) $ tosNotAcceptedErr
       didUpdateInfo     <- dbUpdate $ SetUserInfo uid userInfo
       didUpdateSettings <- dbUpdate
-        $ SetUserSettings uid (UserSettings (ufu ^. #lang) defaultDataRetentionPolicy)
+        $ SetUserSettings uid (I.UserSettings (ufu ^. #lang) defaultDataRetentionPolicy)
       -- @todo fix retention policy ^
       unless (didUpdateInfo && didUpdateSettings) $ srvLogErr "Could not update user"
       -- re-fetch original to get what's really in the DB.
@@ -311,9 +312,9 @@ partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
           ]
     apiAccessControl acc $ do
       user <- guardThatUserExists uid -- @todo for now...
-      void $ dbUpdate $ CreatePersonalToken (userid user) -- @todo in the future: avoid this DB hit?
+      void $ dbUpdate $ CreatePersonalToken (user ^. #id) -- @todo in the future: avoid this DB hit?
       token <- apiGuardJustM (serverError "Could not get user personal token")
-                             (dbQuery $ GetPersonalToken (userid user))
+                             (dbQuery $ GetPersonalToken (user ^. #id))
       return $ Ok (unjsonOAuthAuthorization, token)
 ----------------------------------------------------------------------------------------------------
 --                                   Unexported local helpers                                     --
@@ -324,7 +325,7 @@ guardValidEmailAndNoExistingUser email muid = do
   case asValidEmail (unEmail email) of
     Good _ -> do
       mExisting <- dbQuery (GetUserByEmail email)
-      case (mExisting, liftA2 (==) muid (fmap userid mExisting)) of
+      case (mExisting, liftA2 (==) muid (view #id <$> mExisting)) of
         (Nothing, _        ) -> return ()
         (Just _ , Just True) -> return ()
         _                    -> apiError $ requestParameterInvalid

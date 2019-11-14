@@ -136,7 +136,7 @@ mailSystemActor time muid email slid = Actor { actorTime       = time
 -- | For actions performed by logged in user
 userActor :: Context -> User -> Actor
 userActor ctx u = (contextActor ctx)
-  { actorUserID = Just (userid u)
+  { actorUserID = Just (u ^. #id)
   , actorEmail  = Just (getEmail u)
   , actorWho    = "the user " <> getFullName u <> " (" <> getEmail u <> ")"
   }

@@ -27,7 +27,6 @@ import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Crypto.RNG
 import Data.Time (UTCTime(..))
-import Optics (_Just)
 import Text.StringTemplates.Templates
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
@@ -724,7 +723,7 @@ documentMailFields doc mctx = do
 otherMailFields
   :: (MonadDB m, MonadThrow m, Monad m') => Maybe User -> MailContext -> m (Fields m' ())
 otherMailFields muser mctx = do
-  mug <- case (userid <$> muser) of
+  mug <- case view #id <$> muser of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
   let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
@@ -736,7 +735,7 @@ otherMailFields muser mctx = do
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
     F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
-    F.value "brandinguserid" (show <$> userid <$> muser)
+    F.value "brandinguserid" (show <$> view #id <$> muser)
     brandingMailFields theme
 
 documentMail
@@ -772,7 +771,7 @@ otherMail
 otherMail muser mailname otherfields = do
   let lang = fromMaybe defaultLang $ getLang <$> muser
   mctx <- getMailContext
-  mug  <- case (userid <$> muser) of
+  mug  <- case view #id <$> muser of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
   let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)

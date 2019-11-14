@@ -213,7 +213,7 @@ instance (MonadDB m, MonadThrow m)
   query (IsUserDeletable user) = do
     n <- runQuery $ sqlSelect "users" $ do
       sqlWhere "users.deleted IS NULL"
-      sqlWhereEq "users.id" $ userid user
+      sqlWhereEq "users.id" $ user ^. #id
       sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
       sqlWhere "signatory_links.deleted IS NULL"
       sqlJoinOn "documents" "signatory_links.id = documents.author_id"

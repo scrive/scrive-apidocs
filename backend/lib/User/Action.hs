@@ -36,7 +36,7 @@ handleActivate
 handleActivate mfstname msndname (actvuser, ug) signupmethod = do
   logInfo "Attempting to activate account for user" $ logObject_ actvuser
   -- Don't remove - else people will be able to hijack accounts
-  when (isJust $ userhasacceptedtermsofservice actvuser) $ do
+  when (isJust $ actvuser ^. #hasAcceptedTOS) $ do
     internalError
 
   whenM (not <$> isFieldSet "tos") $ do
@@ -49,36 +49,38 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
   ugname   <- fromMaybe (ug ^. #name) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
-  void $ dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser)
-    { userfstname         = fromMaybe "" mfstname
-    , usersndname         = fromMaybe "" msndname
-    , userphone           = phone
-    , usercompanyposition = position
-    }
+  void
+    $ dbUpdate
+    $ SetUserInfo (actvuser ^. #id)
+    $ (actvuser ^. #info)
+    & (#firstName .~ fromMaybe "" mfstname)
+    & (#lastName .~ fromMaybe "" msndname)
+    & (#phone .~ phone)
+    & (#companyPosition .~ position)
   void $ dbUpdate . UserGroupUpdate . set #name ugname $ ug
   void $ dbUpdate $ LogHistoryUserInfoChanged
-    (userid actvuser)
+    (actvuser ^. #id)
     (ctx ^. #ipAddr)
     (ctx ^. #time)
-    (userinfo actvuser)
-    ((userinfo actvuser) { userfstname = fromMaybe "" mfstname
-                         , usersndname = fromMaybe "" msndname
-                         }
+    (actvuser ^. #info)
+    ( (actvuser ^. #info)
+    & (#firstName .~ fromMaybe "" mfstname)
+    & (#lastName .~ fromMaybe "" msndname)
     )
-    (userid <$> ctx ^. #maybeUser)
-  void $ dbUpdate $ LogHistoryPasswordSetup (userid actvuser)
+    (ctx ^? #maybeUser % _Just % #id)
+  void $ dbUpdate $ LogHistoryPasswordSetup (actvuser ^. #id)
                                             (ctx ^. #ipAddr)
                                             (ctx ^. #time)
-                                            (userid <$> ctx ^. #maybeUser)
-  void $ dbUpdate $ AcceptTermsOfService (userid actvuser) (ctx ^. #time)
-  void $ dbUpdate $ LogHistoryTOSAccept (userid actvuser)
+                                            (ctx ^? #maybeUser % _Just % #id)
+  void $ dbUpdate $ AcceptTermsOfService (actvuser ^. #id) (ctx ^. #time)
+  void $ dbUpdate $ LogHistoryTOSAccept (actvuser ^. #id)
                                         (ctx ^. #ipAddr)
                                         (ctx ^. #time)
-                                        (userid <$> ctx ^. #maybeUser)
-  void $ dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
+                                        (ctx ^? #maybeUser % _Just % #id)
+  void $ dbUpdate $ SetSignupMethod (actvuser ^. #id) signupmethod
 
   dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser)
-                                      (userid actvuser)
+                                      (actvuser ^. #id)
                                       (14 `daysBefore` (ctx ^. #time))
 
   mpassword <- getField "password"
@@ -88,11 +90,11 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
         logInfo_ "Can't activate account, 'password' is not good"
         internalError
       passwordhash <- createPassword password
-      void . dbUpdate $ SetUserPassword (userid actvuser) passwordhash
-      terminateAllUserSessionsExceptCurrent (userid actvuser)
+      void . dbUpdate $ SetUserPassword (actvuser ^. #id) passwordhash
+      terminateAllUserSessionsExceptCurrent (actvuser ^. #id)
     Nothing -> return ()
 
-  tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
+  tosuser <- guardJustM $ dbQuery $ GetUserByID (actvuser ^. #id)
 
   logInfo "Attempt successful, user logged in" $ logObject_ actvuser
 
@@ -128,9 +130,9 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
                                   (ctx ^. #brandedDomain % #id)
                                   sm
       whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
-        (userid user)
+        (user ^. #id)
         (ctx ^. #ipAddr)
         (ctx ^. #time)
         email
-        (userid <$> contextUser ctx)
+        (view #id <$> contextUser ctx)
       return muser

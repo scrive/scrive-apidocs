@@ -202,12 +202,12 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   auser <-
     apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission =
-        (userid auser == userid user)
-          || (usergroupid auser == usergroupid user && isDocumentShared template)
+        (auser ^. #id == user ^. #id)
+          || (auser ^. #groupID == user ^. #groupID && isDocumentShared template)
   unless (isTemplate template && haspermission) $ do
     throwM $ SomeDBExtraException $ serverError
       "Id did not matched template or you do not have right to access document"
-  when (documentDeletedForUser template $ userid user)
+  when (documentDeletedForUser template $ user ^. #id)
     $ throwM
     $ SomeDBExtraException
     $ serverError "Template is deleted"
@@ -249,7 +249,7 @@ apiCallV1Update did = logDocument did . api $ do
     unlessM (isPreparation <$> theDocument) $ checkObjectVersionIfProvidedAndThrowError
       did
       (serverError "Document is not a draft or template")
-    unless (auid == userid user) $ throwM . SomeDBExtraException $ serverError
+    unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.")
       $ getDataFn' (look "json")
@@ -294,7 +294,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
       checkObjectVersionIfProvidedAndThrowError
         did
         (serverError "Document is not a draft or template")
-    unless (auid == userid user) $ throwM . SomeDBExtraException $ serverError
+    unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     attachmentFilesWithDetails <-
       precheckNewAttachments =<< getAttachments 0 =<< theDocument
@@ -400,9 +400,9 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
         then return True
         else do
           atts <- dbQuery $ GetAttachments
-            [ AttachmentsSharedInUsersUserGroup (userid user)
-            , AttachmentsOfAuthorDeleteValue (userid user) True
-            , AttachmentsOfAuthorDeleteValue (userid user) False
+            [ AttachmentsSharedInUsersUserGroup (user ^. #id)
+            , AttachmentsOfAuthorDeleteValue (user ^. #id) True
+            , AttachmentsOfAuthorDeleteValue (user ^. #id) False
             ]
             [AttachmentFilterByFileID fid]
             []
@@ -426,7 +426,7 @@ apiCallV1Ready did = logDocument did . api $ do
      {-then-}(Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument))
      {-else-}$ do
                  checkObjectVersionIfProvided did
-                 unless (auid == userid user) $ throwM . SomeDBExtraException $ serverError
+                 unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
                    "Permission problem. Not an author."
                  unlessM (isPreparation <$> theDocument) $ do
                    checkObjectVersionIfProvidedAndThrowError did
@@ -921,7 +921,7 @@ apiCallV1Restart did = logDocument did . api $ do
     $   join
     $   maybesignatory
     <$> getAuthorSigLink doc
-  unless (auid == userid user) $ throwM . SomeDBExtraException $ serverError
+  unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
     "Permission problem. Not an author."
   when (documentstatus doc `elem` [Pending, Preparation, Closed]) $ do
     throwM . SomeDBExtraException $ (conflictError "Document can not be restarted")
@@ -969,7 +969,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
       apiGuardJustM (serverError "No author found")
       $   (maybesignatory <=< getAuthorSigLink)
       <$> theDocument
-    unless (auid == userid user) $ throwM . SomeDBExtraException $ serverError
+    unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     unlessM (isPending <$> theDocument)
       $ throwM
@@ -1331,7 +1331,7 @@ apiCallV1Forward did = logDocument did . api $ do
       apiGuardJustM (serverError "No author found") $ getAuthorSigLink <$> theDocument
     auid <- apiGuardJustM (serverError "No author found") $ return $ maybesignatory
       asiglink
-    unless (auid == userid user) $ throwM . SomeDBExtraException $ serverError
+    unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     email <- apiGuardJustM (badInput "Email adress is no valid.")
       $ getOptionalField asValidEmail "email"
@@ -1348,20 +1348,19 @@ apiCallV1Delete :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Delete did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    mauser <- theDocument >>= \d -> case join $ maybesignatory <$> getAuthorSigLink d of
+    mauser <- theDocument >>= \d -> case maybesignatory =<< getAuthorSigLink d of
       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
       _         -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
-    let haspermission =
-          (isJust msl)
-            || (  isJust mauser
-               && usergroupid (fromJust mauser)
-               == usergroupid user
-               && (useriscompanyadmin user)
-               )
+    let haspermission = case msl of
+          Just _  -> True
+          Nothing -> case mauser of
+            Just auser ->
+              (auser ^. #groupID == user ^. #groupID) && (user ^. #isCompanyAdmin)
+            Nothing -> False
     unless haspermission $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not connected to document."
-    deleted <- dbUpdate $ ArchiveDocument (userid user) actor
+    deleted <- dbUpdate $ ArchiveDocument (user ^. #id) actor
     unless deleted $ throwM . SomeDBExtraException $ conflictError
       "Document can't be deleted."
     Accepted <$> (J.runJSONGenT $ return ())
@@ -1371,20 +1370,19 @@ apiCallV1ReallyDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallV1ReallyDelete did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    mauser <- theDocument >>= \d -> case join $ maybesignatory <$> getAuthorSigLink d of
+    mauser <- theDocument >>= \d -> case maybesignatory =<< getAuthorSigLink d of
       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
       _         -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
-    let haspermission =
-          (isJust msl)
-            || (  isJust mauser
-               && usergroupid (fromJust mauser)
-               == usergroupid user
-               && (useriscompanyadmin user)
-               )
+    let haspermission = case msl of
+          Just _  -> True
+          Nothing -> case mauser of
+            Just auser ->
+              (auser ^. #groupID == user ^. #groupID) && (user ^. #isCompanyAdmin)
+            Nothing -> False
     unless haspermission $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not connected to document."
-    reallydeleted <- dbUpdate $ ReallyDeleteDocument (userid user) actor
+    reallydeleted <- dbUpdate $ ReallyDeleteDocument (user ^. #id) actor
     unless reallydeleted $ throwM . SomeDBExtraException $ conflictError
       "Document can't be really deleted."
     Accepted <$> (J.runJSONGenT $ return ())
@@ -1418,20 +1416,19 @@ apiCallV1Get did = logDocument did . api $ do
         Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
         _         -> return Nothing
 
-      haspermission <-
-        return
-        $  isJust msiglink
-        || (  isJust mauser
-           && usergroupid (fromJust mauser)
-           == usergroupid user
-           && (useriscompanyadmin user || isDocumentShared doc)
-           )
+      let haspermission = case msiglink of
+            Just _  -> True
+            Nothing -> case mauser of
+              Just auser ->
+                (auser ^. #groupID == user ^. #groupID)
+                  && (user ^. #isCompanyAdmin || isDocumentShared doc)
+              Nothing -> False
       if (haspermission)
         then do
           Ok
             <$> (documentJSONV1 (Just user)
                                 external
-                                ((userid <$> mauser) == (Just $ userid user))
+                                ((view #id <$> mauser) == (Just $ user ^. #id))
                                 msiglink
                                 doc
                 )
@@ -1449,11 +1446,13 @@ apiCallV1GetEvidenceAttachments did = logDocument did . api $ withDocumentID did
 
 apiCallV1List :: Kontrakcja m => m Response
 apiCallV1List = api $ do
-  (user@User { userid = uid }, _actor, _) <- getAPIUserWithPad APIDocCheck
+  (user, _actor, _) <- getAPIUserWithPad APIDocCheck
 
-  doctype <- getField' "documentType"
-  params  <- getListParams
+  doctype           <- getField' "documentType"
+  params            <- getListParams
   let
+    uid                = user ^. #id
+
     (domain, filters1) = case doctype of
       "Document" ->
         ( DocumentsVisibleToUser uid
@@ -1598,9 +1597,9 @@ apiCallV1CheckAvailable = api $ do
         throwM . SomeDBExtraException $ serverError
           "This request can't check more than 10000 documents"
       logInfo "Checking availability of user's documents"
-        $ object [identifier $ userid user]
+        $ object [identifier $ user ^. #id]
       docids <- dbQuery $ GetDocumentsIDs
-        (DocumentsVisibleToUser $ userid user)
+        (DocumentsVisibleToUser $ user ^. #id)
         [DocumentFilterDeleted False, DocumentFilterByDocumentIDs ids]
         []
       Ok <$> (J.runJSONGenT $ J.value "ids" (show <$> docids))
@@ -1612,7 +1611,7 @@ apiCallV1History did = logDocument did . api $ do
   ctx               <- getContext
   modifyContext $ set #maybeUser (Just user)
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
-  switchLang $ fromMaybe (lang $ usersettings user) mlang
+  switchLang $ fromMaybe (user ^. #settings % #lang) mlang
 
   doc         <- getDocByDocID did
   evidenceLog <- dbQuery $ GetEvidenceLog $ did
@@ -1757,7 +1756,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
       <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ (serverError "Document is not a draft or template")
-    unless (auid == userid user) $ throwM . SomeDBExtraException $ serverError
+    unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
 
     moldfileid <- fmap mainfileid <$> documentfile <$> theDocument
@@ -1932,8 +1931,8 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
     $ dbQuery
     $ GetUserByIDIncludeDeleted docUserID
   let hasPermission =
-        (docUserID == userid user)
-          || ((usergroupid docUser == usergroupid user) && (useriscompanyadmin user))
+        (docUserID == user ^. #id)
+          || ((docUser ^. #groupID == user ^. #groupID) && (user ^. #isCompanyAdmin))
   unless hasPermission $ throwM . SomeDBExtraException $ forbidden $ T.unpack
     forbidenMessage
 

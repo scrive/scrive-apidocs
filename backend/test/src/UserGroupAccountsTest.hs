@@ -90,7 +90,7 @@ test_removingExistingInvite = do
   (user, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
-  void $ dbUpdate $ RemoveUserGroupInvite [ug ^. #id] (userid user)
+  void $ dbUpdate $ RemoveUserGroupInvite [ug ^. #id] (user ^. #id)
   assertCompanyInvitesAre ug []
 
 test_removingNonExistantInvite :: TestEnv ()
@@ -118,8 +118,8 @@ test_addingANewCompanyAccount = do
 
 
   Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  assertEqual "New user is in company"        (ug ^. #id) (usergroupid newuser)
-  assertEqual "New user is standard user"     False       (useriscompanyadmin newuser)
+  assertEqual "New user is in company"        (ug ^. #id) (newuser ^. #groupID)
+  assertEqual "New user is standard user"     False       (newuser ^. #isCompanyAdmin)
   assertEqual "New user has the invited name" "Bob Blue"  (getFullName newuser)
 
   assertCompanyInvitesAre ug [] -- We don't add an invite if we created a user
@@ -146,9 +146,9 @@ test_addingExistingCompanyUserAsCompanyAccount = do
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
 
-  Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
+  Just updatedexistinguser <- dbQuery $ GetUserByID (existinguser ^. #id)
   assertEqual "Invited user's company stays the same"
-              (usergroupid updatedexistinguser)
+              (updatedexistinguser ^. #groupID)
               (existingug ^. #id)
 
   assertCompanyInvitesAre ug [mkInvite ug existinguser]
@@ -178,12 +178,12 @@ test_addingANewCompanyAccountWithDifferentTarget = do
   assertRaisesInternalError (void $ runTestKontra req ctx handleAddUserGroupAccount)
 
   -- user is given permission on target user group, so addition expected
-  void . dbUpdate . AccessControlCreateForUser (userid user) $ UserGroupAdminAR trgugid
+  void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ UserGroupAdminAR trgugid
   (res, _) <- runTestKontra req ctx handleAddUserGroupAccount
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
   Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  assertEqual "New user is in target user group" trgugid    (usergroupid newuser)
-  assertEqual "New user is standard user"        False      (useriscompanyadmin newuser)
+  assertEqual "New user is in target user group" trgugid    (newuser ^. #groupID)
+  assertEqual "New user is standard user"        False      (newuser ^. #isCompanyAdmin)
   assertEqual "New user has the invited name"    "Bob Blue" (getFullName newuser)
   assertCompanyInvitesAre trgug []
 
@@ -213,14 +213,14 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
   assertRaisesInternalError (void $ runTestKontra req ctx handleAddUserGroupAccount)
 
   -- user is given permission on target user group; invite expected
-  void . dbUpdate . AccessControlCreateForUser (userid user) $ UserGroupAdminAR trgugid
+  void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ UserGroupAdminAR trgugid
   (res, _) <- runTestKontra req ctx $ handleAddUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
 
-  Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
+  Just updatedexistinguser <- dbQuery $ GetUserByID (existinguser ^. #id)
   assertEqual "Invited user's company stays the same"
-              (usergroupid updatedexistinguser)
+              (updatedexistinguser ^. #groupID)
               (existingug ^. #id)
 
   assertCompanyInvitesAre trgug [mkInvite trgug existinguser]
@@ -239,7 +239,7 @@ test_resendingInviteToNewCompanyAccount = do
   req <- mkRequest
     POST
     [ ("resend"     , inText "True")
-    , ("resendid"   , inText $ showt (userid newuser))
+    , ("resendid"   , inText $ showt (newuser ^. #id))
     , ("resendemail", inText "bob@blue.com")
     , ("sndname"    , inText "Blue")
     ]
@@ -263,39 +263,39 @@ test_switchingStandardToAdminUser = do
   req               <- mkRequest
     POST
     [ ("changerole", inText "True")
-    , ("changeid", inText $ showt (userid standarduser))
+    , ("changeid", inText $ showt (standarduser ^. #id))
     , ("makeadmin" , inText $ "true")
     ]
   (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "changed" True)
 
-  Just updateduser <- dbQuery $ GetUserByID (userid standarduser)
-  assertBool "User is now an admin" (useriscompanyadmin updateduser)
-  assertEqual "User belongs to the same company" (usergroupid updateduser) (ug ^. #id)
+  Just updateduser <- dbQuery $ GetUserByID (standarduser ^. #id)
+  assertBool "User is now an admin" (updateduser ^. #isCompanyAdmin)
+  assertEqual "User belongs to the same company" (updateduser ^. #groupID) (ug ^. #id)
 
 test_switchingAdminToStandardUser :: TestEnv ()
 test_switchingAdminToStandardUser = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (ug ^. #id)
-  void $ dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
-  Just adminuser <- dbQuery $ GetUserByID (userid user)
+  void $ dbUpdate $ SetUserCompanyAdmin (standarduser ^. #id) True
+  Just adminuser <- dbQuery $ GetUserByID (user ^. #id)
 
   ctx            <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req            <- mkRequest
     POST
     [ ("changerole", inText "True")
-    , ("changeid"  , inText $ showt (userid adminuser))
+    , ("changeid"  , inText $ showt (adminuser ^. #id))
     , ("makeadmin" , inText $ "false")
     ]
   (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "changed" True)
 
-  Just updateduser <- dbQuery $ GetUserByID (userid adminuser)
-  assertBool "User is now standard" (not $ useriscompanyadmin updateduser)
-  assertEqual "User belongs to the same company" (usergroupid updateduser) (ug ^. #id)
+  Just updateduser <- dbQuery $ GetUserByID (adminuser ^. #id)
+  assertBool "User is now standard" (not $ updateduser ^. #isCompanyAdmin)
+  assertEqual "User belongs to the same company" (updateduser ^. #groupID) (ug ^. #id)
 
 test_removingCompanyAccountInvite :: TestEnv ()
 test_removingCompanyAccountInvite = do
@@ -306,7 +306,7 @@ test_removingCompanyAccountInvite = do
 
   ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  req          <- mkRequest POST [("removeid", inText $ showt $ userid standarduser)]
+  req          <- mkRequest POST [("removeid", inText $ showt $ standarduser ^. #id)]
   (res, _ctx') <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
@@ -326,24 +326,24 @@ test_removingCompanyAccountWorks = do
 
   ctx          <- (set #maybeUser (Just adminuser)) <$> mkContext defaultLang
 
-  companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser)
+  companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ adminuser ^. #id)
                                          [DocumentFilterUnsavedDraft False]
                                          []
                                          maxBound
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
   assertEqual "Docid matches before user delete" docid (documentid $ head companydocs1)
 
-  req      <- mkRequest POST [("removeid", inText $ showt (userid standarduser))]
+  req      <- mkRequest POST [("removeid", inText $ showt (standarduser ^. #id))]
   (res, _) <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
 
-  deleteduser <- dbQuery $ GetUserByID (userid standarduser)
+  deleteduser <- dbQuery $ GetUserByID (standarduser ^. #id)
   assertEqual "User has been deleted" Nothing deleteduser
 
   assertCompanyInvitesAre ug []
 
-  companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser)
+  companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ adminuser ^. #id)
                                         [DocumentFilterUnsavedDraft False]
                                         []
                                         maxBound
@@ -354,13 +354,13 @@ test_removingCompanyAccountWorks = do
   (otheruser, otherug) <- addNewAdminUserAndUserGroup "Mad Jack"
                                                       "Churchill"
                                                       "madjack@example.com"
-  req'      <- mkRequest POST [("removeid", inText $ showt (userid otheruser))]
+  req'      <- mkRequest POST [("removeid", inText $ showt (otheruser ^. #id))]
 
   -- shouldn't work
   (res', _) <- runTestKontra req' ctx $ handleRemoveUserGroupAccount
   -- the `True` value here is a bit confusing in this case
   assertBool "Response is proper JSON" $ res' == (runJSONGen $ value "removed" True)
-  motheruserDB <- dbQuery $ GetUserByID (userid otheruser)
+  motheruserDB <- dbQuery $ GetUserByID (otheruser ^. #id)
   assertEqual "User has NOT been deleted" (Just otheruser) motheruserDB
 
   -- allow adminuser control over otheruser's group
@@ -370,7 +370,7 @@ test_removingCompanyAccountWorks = do
   -- now removal should work
   (res'', _) <- runTestKontra req' ctx $ handleRemoveUserGroupAccount
   assertBool "Response is proper JSON" $ res'' == (runJSONGen $ value "removed" True)
-  otheruserDB' <- dbQuery $ GetUserByID (userid otheruser)
+  otheruserDB' <- dbQuery $ GetUserByID (otheruser ^. #id)
   assertEqual "User has been deleted" Nothing otheruserDB'
 
 test_privateUserTakoverWorks :: TestEnv ()
@@ -389,22 +389,22 @@ test_privateUserTakoverWorks = do
   (res, _) <- runTestKontra req ctx $ handlePostBecomeUserGroupAccount (ug ^. #id)
   assertBool "Response is redirect"                (isRedirect LinkAccount res)
   assertBool "Response has flash message redirect" (hasFlashMessage res)
-  Just updateduser <- dbQuery $ GetUserByID (userid user)
-  assertEqual "User belongs to the company" (usergroupid updateduser) (ug ^. #id)
-  assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
+  Just updateduser <- dbQuery $ GetUserByID (user ^. #id)
+  assertEqual "User belongs to the company" (updateduser ^. #groupID) (ug ^. #id)
+  assertBool "User is a standard user" (not $ updateduser ^. #isCompanyAdmin)
 
-  companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser)
+  companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ adminuser ^. #id)
                                         [DocumentFilterUnsavedDraft False]
                                         []
                                         maxBound
   assertEqual "Company owns users docs" 1     (length companydocs)
   assertEqual "Docid matches"           docid (documentid $ head companydocs)
   docs <- dbQuery $ GetDocuments
-    (DocumentsVisibleToUser $ userid user)
+    (DocumentsVisibleToUser $ user ^. #id)
     [DocumentFilterUnsavedDraft False, DocumentFilterSignable]
     []
     maxBound
-  templates <- dbQuery $ GetTemplatesByAuthor $ userid user
+  templates <- dbQuery $ GetTemplatesByAuthor $ user ^. #id
   let userdocids = nub (documentid <$> docs ++ templates)
   assertEqual "User is still linked to their docs" 1     (length userdocids)
   assertEqual "Docid matches" docid (head userdocids)
@@ -422,9 +422,9 @@ test_mustBeInvitedForTakeoverToWork = do
     $         (handlePostBecomeUserGroupAccount (ug ^. #id) >> return False)
     `E.catch` (\(_ :: KontraError) -> return True)
   assertEqual "Exception thrown" True l
-  Just updateduser <- dbQuery $ GetUserByID (userid user)
+  Just updateduser <- dbQuery $ GetUserByID (user ^. #id)
   assertBool "User is still not in the other company"
-             ((usergroupid user) == (usergroupid updateduser))
+             ((user ^. #groupID) == (updateduser ^. #groupID))
 
 assertCompanyInvitesAre :: UserGroup -> [UserGroupInvite] -> TestEnv ()
 assertCompanyInvitesAre ug expectedinvites = do
@@ -442,7 +442,7 @@ assertCompanyInvitesAre ug expectedinvites = do
 
 mkInvite :: UserGroup -> User -> UserGroupInvite
 mkInvite ug user =
-  UserGroupInvite { inviteduserid = userid user, invitingusergroup = ug ^. #id }
+  UserGroupInvite { inviteduserid = user ^. #id, invitingusergroup = ug ^. #id }
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do

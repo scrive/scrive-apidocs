@@ -6,7 +6,7 @@ import Control.Monad.Catch (try)
 import Control.Monad.Reader
 import Data.Int
 import Log
-import Optics (_Just, gview)
+import Optics (gview)
 import Test.Framework
 import Test.QuickCheck
 import qualified Data.Set as S
@@ -688,7 +688,7 @@ testDocumentAuthorUserID = do
                       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID -> assertEqual
                         "Document author_user_id is updated upon document creation"
                         mDocAuthorUserID
-                        (Just $ userid author)
+                        (Just $ author ^. #id)
 
                       asl <-
                         guardJustM
@@ -699,7 +699,7 @@ testDocumentAuthorUserID = do
                       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID -> assertEqual
                         "Document author_user_id is not changed after document seen by author"
                         mDocAuthorUserID
-                        (Just $ userid author)
+                        (Just $ author ^. #id)
                       randomUpdate
                         $ \t -> SignDocument (signatorylinkid asl)
                                              Nothing
@@ -709,7 +709,7 @@ testDocumentAuthorUserID = do
                       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID -> assertEqual
                         "Document author_user_id is not changed after document signed by author"
                         mDocAuthorUserID
-                        (Just $ userid author)
+                        (Just $ author ^. #id)
 
                       sl <-
                         guardJustM
@@ -721,7 +721,7 @@ testDocumentAuthorUserID = do
                       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID -> assertEqual
                         "Document author_user_id is not changed after document seen by signatory"
                         mDocAuthorUserID
-                        (Just $ userid author)
+                        (Just $ author ^. #id)
 
                       randomUpdate
                         $ \t -> SignDocument (signatorylinkid sl)
@@ -732,13 +732,13 @@ testDocumentAuthorUserID = do
                       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID -> assertEqual
                         "Document author_user_id is not changed after document signed by signatory"
                         mDocAuthorUserID
-                        (Just $ userid author)
+                        (Just $ author ^. #id)
 
                       randomUpdate $ \t -> CloseDocument (systemActor t)
                       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID -> assertEqual
                         "Document author_user_id is not changed after document closed"
                         mDocAuthorUserID
-                        (Just $ userid author)
+                        (Just $ author ^. #id)
 
 testTimeoutDocumentEvidenceLog :: TestEnv ()
 testTimeoutDocumentEvidenceLog = do
@@ -1064,7 +1064,7 @@ assertGoodNewDocument mugwp doctype title (user, time, doc) = do
               (getCompanyNumber siglink)
   assertEqual "link company number matches company's" (getMobile user) (getMobile siglink)
   assertEqual "link signatory matches author id"
-              (Just $ userid user)
+              (Just $ user ^. #id)
               (maybesignatory siglink)
   where
     companyNameFromUserGroup   = maybe "" (view #entityName . ugwpAddress) mugwp
@@ -1130,7 +1130,7 @@ testArchiveDocumentPendingLeft = replicateM_ 10 $ do
                                                   , rdaStatuses = OneOf [Pending]
                                                   }
   withDocument doc $ do
-    res <- randomUpdate $ \t -> ArchiveDocument (userid author) (systemActor t)
+    res <- randomUpdate $ \t -> ArchiveDocument (author ^. #id) (systemActor t)
     assertEqual "Document that is pending can't be archived" False res
 
 testArchiveDocumentAuthorRight :: TestEnv ()
@@ -1139,7 +1139,7 @@ testArchiveDocumentAuthorRight = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid author) (systemActor t)
+                        ArchiveDocument (author ^. #id) (systemActor t)
                       assertOneArchivedSigLink =<< theDocument
 
 testArchiveDocumentCompanyAdminRight :: TestEnv ()
@@ -1150,7 +1150,7 @@ testArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid adminuser) (systemActor t)
+                        ArchiveDocument (adminuser ^. #id) (systemActor t)
                       assertOneArchivedSigLink =<< theDocument
 
 testRestoreArchivedDocumentAuthorRight :: TestEnv ()
@@ -1159,7 +1159,7 @@ testRestoreArchivedDocumentAuthorRight = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid author) (systemActor t)
+                        ArchiveDocument (author ^. #id) (systemActor t)
                       randomUpdate $ \t -> RestoreArchivedDocument author (systemActor t)
                       assertNoArchivedSigLink =<< theDocument
 
@@ -1171,7 +1171,7 @@ testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid author) (systemActor t)
+                        ArchiveDocument (author ^. #id) (systemActor t)
                       randomUpdate
                         $ \t -> RestoreArchivedDocument adminuser (systemActor t)
 
@@ -1245,18 +1245,18 @@ testReallyDeleteDocument = replicateM_ 10 $ do
     }
 
   withDocument doc $ do
-    res <- randomUpdate $ \t -> ReallyDeleteDocument (userid author) (systemActor t)
+    res <- randomUpdate $ \t -> ReallyDeleteDocument (author ^. #id) (systemActor t)
     assertEqual "Document that is not deleted can't be really deleted" False res
 
   withDocument doc $ void $ randomUpdate $ \t ->
-    ArchiveDocument (userid author) (systemActor t)
+    ArchiveDocument (author ^. #id) (systemActor t)
   withDocument doc $ void $ randomUpdate $ \t ->
-    ReallyDeleteDocument (userid author) (systemActor t)
+    ReallyDeleteDocument (author ^. #id) (systemActor t)
   withDocument doc $ do
-    res <- randomUpdate $ \t -> ReallyDeleteDocument (userid author) (systemActor t)
+    res <- randomUpdate $ \t -> ReallyDeleteDocument (author ^. #id) (systemActor t)
     assertEqual "Document can't be really deleted twice" False res
 
-  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
                                  [DocumentFilterByDocumentID (documentid doc)]
                                  []
                                  1
@@ -1270,18 +1270,18 @@ testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       res <- randomUpdate
-                        $ \t -> ReallyDeleteDocument (userid adminuser) (systemActor t)
+                        $ \t -> ReallyDeleteDocument (adminuser ^. #id) (systemActor t)
                       assertEqual "Document that is not deleted can't be really deleted"
                                   False
                                   res
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid adminuser) (systemActor t)
+                        ArchiveDocument (adminuser ^. #id) (systemActor t)
                       void $ randomUpdate $ \t ->
-                        ReallyDeleteDocument (userid adminuser) (systemActor t)
+                        ReallyDeleteDocument (adminuser ^. #id) (systemActor t)
                       assertOneArchivedSigLink =<< theDocument
                       doc  <- theDocument
                       docs <- dbQuery $ GetDocuments
-                        (DocumentsVisibleToUser $ userid author)
+                        (DocumentsVisibleToUser $ author ^. #id)
                         [DocumentFilterByDocumentID (documentid doc)]
                         []
                         1
@@ -1297,12 +1297,12 @@ testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       res1 <- randomUpdate
-                        $ \t -> ArchiveDocument (userid other) (systemActor t)
+                        $ \t -> ArchiveDocument (other ^. #id) (systemActor t)
                       assertEqual "ReallyDeleteDocument can be done by other user"
                                   False
                                   res1
                       res2 <- randomUpdate
-                        $ \t -> ReallyDeleteDocument (userid other) (systemActor t)
+                        $ \t -> ReallyDeleteDocument (other ^. #id) (systemActor t)
                       assertEqual "ReallyDeleteDocument can be done by other user"
                                   False
                                   res2
@@ -1330,11 +1330,11 @@ testPurgeDocument = replicateM_ 10 $ do
   archived1 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged zero documents when not deleted" 0 archived1
   withDocument doc $ void $ randomUpdate $ \t ->
-    ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+    ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now })
   archived2 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 archived2
 
-  allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+  allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
                                      [DocumentFilterByDocumentID (documentid doc)]
                                      []
                                      (-1)
@@ -1351,7 +1351,7 @@ testPurgeDocumentUserSaved = replicateM_ 10 $ do
   archived1 <- dbUpdate $ PurgeDocuments 1
   now       <- currentTime
   withDocument doc $ void $ randomUpdate $ \t ->
-    ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+    ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now })
   archived2 <- dbUpdate $ PurgeDocuments 1
   assertEqual "Purged zero documents before delete"                   0 archived1
   assertEqual "Purged zero documents before time passed after delete" 0 archived2
@@ -1364,7 +1364,7 @@ testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
                                                }
   now <- currentTime
   withDocument doc $ void $ randomUpdate $ \t ->
-    ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+    ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now })
   void $ dbUpdate $ PurgeDocuments 0
   let sidsSql = "SELECT id FROM signatory_links WHERE document_id = " <?> documentid doc
 
@@ -1447,7 +1447,7 @@ testPurgeDocumentSharedTemplates = do
   doc   <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Template]
                                               , rdaSharings = OneOf [Shared]
                                               }
-  void $ dbUpdate $ DeleteUser $ userid alice
+  void $ dbUpdate $ DeleteUser $ alice ^. #id
   void $ dbUpdate $ PurgeDocuments 0
 
   eDoc <- try $ dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -1455,7 +1455,7 @@ testPurgeDocumentSharedTemplates = do
     Left (_ :: SomeDBExtraException) ->
       assertFailure "Shared template should not be purged"
     Right Document { documentsignatorylinks = SignatoryLink { maybesignatory = Just uid } : _ }
-      -> assertEqual "Shared template should be given to oldest admin" uid (userid bob)
+      -> assertEqual "Shared template should be given to oldest admin" uid (bob ^. #id)
     _ -> assertFailure "Unexpected error"
 
 testPurgeDocumentImmediateTrash :: TestEnv ()
@@ -1466,7 +1466,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
                                                }
   now <- currentTime
   withDocument doc $ void $ randomUpdate $ \t ->
-    ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+    ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now })
 
   do
     archived <- dbUpdate $ PurgeDocuments 1 -- purge after 1 day
@@ -1488,7 +1488,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
     archived <- dbUpdate $ PurgeDocuments 1
     assertEqual "Purged single document" 1 archived
 
-  allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+  allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
                                      [DocumentFilterByDocumentID (documentid doc)]
                                      []
                                      (-1)
@@ -1533,11 +1533,12 @@ testArchiveIdleDocumentWhenOnlyUserHasDrpSet = replicateM_ 10 $ do
                                                 , rdaStatuses = OneOf [documentstatus doc]
                                                 }
 
-  let oldUS  = usersettings author
-      newDRP = set (drpIdleDocTimeout $ documentstatus doc) (Just 1)
-        $ dataretentionpolicy oldUS
-      newUS = oldUS { dataretentionpolicy = newDRP }
-  void . dbUpdate . SetUserSettings (userid author) $ newUS
+  let oldUS  = author ^. #settings
+      newDRP = set (drpIdleDocTimeout $ documentstatus doc)
+                   (Just 1)
+                   (oldUS ^. #dataRetentionPolicy)
+      newUS = oldUS & #dataRetentionPolicy .~ newDRP
+  void . dbUpdate . SetUserSettings (author ^. #id) $ newUS
 
   archived1 <- archiveIdleDocuments (documentmtime doc)
   assertEqual "Archived zero idle documents (too early)" 0 archived1
@@ -1552,7 +1553,7 @@ testArchiveDocumentUnrelatedUserLeft = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       res <- randomUpdate
-                        $ \t -> ArchiveDocument (userid unrelateduser) (systemActor t)
+                        $ \t -> ArchiveDocument (unrelateduser ^. #id) (systemActor t)
                       assertEqual "ArchiveDocument can be done by unrelated user"
                                   False
                                   res
@@ -1565,7 +1566,7 @@ testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       res <- randomUpdate
-                        $ \t -> ArchiveDocument (userid standarduser) (systemActor t)
+                        $ \t -> ArchiveDocument (standarduser ^. #id) (systemActor t)
                       assertEqual
                         "ArchiveDocument can be done by user that is not company admin"
                         False
@@ -1578,7 +1579,7 @@ testRestoreArchivedDocumentUnrelatedUserLeft = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid author) (systemActor t)
+                        ArchiveDocument (author ^. #id) (systemActor t)
                       assertRaisesKontra
                           (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument{} -> True)
                         $ do
@@ -1593,14 +1594,14 @@ testRestoreArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed] }
     `withDocumentM` do
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid author) (systemActor t)
+                        ArchiveDocument (author ^. #id) (systemActor t)
                       assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin{} -> True) $ do
                         randomUpdate
                           $ \t -> RestoreArchivedDocument standarduser (systemActor t)
 
 testGetDocumentsByAuthorNoArchivedDocs :: TestEnv ()
 testGetDocumentsByAuthorNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs (GetDocumentsByAuthor . userid)
+  checkQueryDoesntContainArchivedDocs (GetDocumentsByAuthor . view #id)
 
 checkQueryDoesntContainArchivedDocs
   :: DBQuery (DocumentT TestEnv) q [Document] => (User -> q) -> TestEnv ()
@@ -1617,7 +1618,7 @@ checkQueryDoesntContainArchivedDocs qry = replicateM_ 10 $ do
                                   [did]
                                   (map documentid docsbeforearchive)
                       void $ randomUpdate $ \t ->
-                        ArchiveDocument (userid author) (systemActor t)
+                        ArchiveDocument (author ^. #id) (systemActor t)
                       docsafterarchive <- dbQuery (qry author)
                       assertEqual "Expecting no docs after archive"
                                   []
@@ -1878,7 +1879,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = replicateM_ 10 $ do
                       --execute
                       success <- dbUpdate $ ResetSignatoryDetails
                         [ defaultSignatoryLink { signatoryisauthor = True
-                                               , maybesignatory    = Just $ userid author
+                                               , maybesignatory    = Just $ author ^. #id
                                                }
                         ]
                         (systemActor mt)
@@ -1896,7 +1897,7 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
                       --execute
                       let newData1 = defaultSignatoryLink
                             { signatoryisauthor = True
-                            , maybesignatory    = Just $ userid author
+                            , maybesignatory    = Just $ author ^. #id
                             }
                       success1 <- dbUpdate
                         $ ResetSignatoryDetails [newData1] (systemActor mt)
@@ -1913,7 +1914,7 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
                       let
                         newData2 = defaultSignatoryLink
                           { signatoryisauthor           = True
-                          , maybesignatory              = Just $ userid author
+                          , maybesignatory              = Just $ author ^. #id
                           , signatorylinkdeliverymethod = PadDelivery
                           , signatorylinkauthenticationtosignmethod =
                             SEBankIDAuthenticationToSign
@@ -1952,26 +1953,26 @@ testGetDocumentsSharedInCompany = replicateM_ 10 $ do
   ug2    <- addNewUserGroup
   user1' <- addNewRandomUser
   user2' <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid user1') (ug1 ^. #id)
-  Just user1 <- dbQuery $ GetUserByID (userid user1')
-  void $ dbUpdate $ SetUserUserGroup (userid user2') (ug1 ^. #id)
-  Just user2 <- dbQuery $ GetUserByID (userid user2')
+  void $ dbUpdate $ SetUserUserGroup (user1' ^. #id) (ug1 ^. #id)
+  Just user1 <- dbQuery $ GetUserByID (user1' ^. #id)
+  void $ dbUpdate $ SetUserUserGroup (user2' ^. #id) (ug1 ^. #id)
+  Just user2 <- dbQuery $ GetUserByID (user2' ^. #id)
   user3'     <- addNewRandomUser
   user4'     <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid user3') (ug2 ^. #id)
-  Just user3 <- dbQuery $ GetUserByID (userid user3')
-  void $ dbUpdate $ SetUserUserGroup (userid user4') (ug2 ^. #id)
-  Just user4 <- dbQuery $ GetUserByID (userid user4')
+  void $ dbUpdate $ SetUserUserGroup (user3' ^. #id) (ug2 ^. #id)
+  Just user3 <- dbQuery $ GetUserByID (user3' ^. #id)
+  void $ dbUpdate $ SetUserUserGroup (user4' ^. #id) (ug2 ^. #id)
+  Just user4 <- dbQuery $ GetUserByID (user4' ^. #id)
   user5      <- addNewRandomUser
   user6      <- addNewRandomUser
 
   -- This test is good only for not admins
-  void $ dbUpdate $ SetUserCompanyAdmin (userid user1) False
-  void $ dbUpdate $ SetUserCompanyAdmin (userid user2) False
-  void $ dbUpdate $ SetUserCompanyAdmin (userid user3) False
-  void $ dbUpdate $ SetUserCompanyAdmin (userid user4) False
-  void $ dbUpdate $ SetUserCompanyAdmin (userid user5) False
-  void $ dbUpdate $ SetUserCompanyAdmin (userid user6) False
+  void $ dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
+  void $ dbUpdate $ SetUserCompanyAdmin (user2 ^. #id) False
+  void $ dbUpdate $ SetUserCompanyAdmin (user3 ^. #id) False
+  void $ dbUpdate $ SetUserCompanyAdmin (user4 ^. #id) False
+  void $ dbUpdate $ SetUserCompanyAdmin (user5 ^. #id) False
+  void $ dbUpdate $ SetUserCompanyAdmin (user6 ^. #id) False
 
   doc1 <- addRandomDocument (rdaDefault user1) { rdaTypes = OneOf [Template] }
   doc2 <- addRandomDocument (rdaDefault user2) { rdaTypes = OneOf [Template] }
@@ -1993,12 +1994,12 @@ testGetDocumentsSharedInCompany = replicateM_ 10 $ do
   void $ dbUpdate $ SetDocumentSharing [docid4] False
   void $ dbUpdate $ SetDocumentSharing [docid1, docid2, docid3, docid5, docid6] True
 
-  dlist1 <- dbQuery $ GetAvailableTemplates (userid user1)
-  dlist2 <- dbQuery $ GetAvailableTemplates (userid user2)
-  dlist3 <- dbQuery $ GetAvailableTemplates (userid user3)
-  dlist4 <- dbQuery $ GetAvailableTemplates (userid user4)
-  dlist5 <- dbQuery $ GetAvailableTemplates (userid user5)
-  dlist6 <- dbQuery $ GetAvailableTemplates (userid user6)
+  dlist1 <- dbQuery $ GetAvailableTemplates (user1 ^. #id)
+  dlist2 <- dbQuery $ GetAvailableTemplates (user2 ^. #id)
+  dlist3 <- dbQuery $ GetAvailableTemplates (user3 ^. #id)
+  dlist4 <- dbQuery $ GetAvailableTemplates (user4 ^. #id)
+  dlist5 <- dbQuery $ GetAvailableTemplates (user5 ^. #id)
+  dlist6 <- dbQuery $ GetAvailableTemplates (user6 ^. #id)
 
   assertEqual "Documents not shared in user without company (X) by user 5"
               1
@@ -2144,7 +2145,7 @@ testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
                                                   , rdaStatuses = OneOf [Preparation]
                                                   }
 
-  let domain    = DocumentsVisibleToUser $ userid author1
+  let domain    = DocumentsVisibleToUser $ author1 ^. #id
       doc1Title = "Magic Unique Title 42"
 
   actor   <- arbitraryAuthorActor
@@ -2227,7 +2228,7 @@ testGetDocumentsSQLSorted = replicateM_ 1 $ do
   author <- addNewRandomUser
   _doc   <- addRandomDocument (rdaDefault author)
 
-  let domain  = DocumentsVisibleToUser $ userid author
+  let domain  = DocumentsVisibleToUser $ author ^. #id
       filters = []
   _docs <- dbQuery $ GetDocuments
     domain
@@ -2288,7 +2289,7 @@ testCreateFromTemplateCompanyField :: TestEnv ()
 testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   user <- addNewRandomUser
   ug   <- addNewUserGroup
-  void $ dbUpdate $ SetUserUserGroup (userid user) (ug ^. #id)
+  void $ dbUpdate $ SetUserUserGroup (user ^. #id) (ug ^. #id)
   docid <- documentid
     <$> addRandomDocument (rdaDefault user) { rdaStatuses = OneOf [Preparation] }
   tmpdoc <- dbQuery $ GetDocumentByDocumentID docid
@@ -2298,7 +2299,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
     else do
       void $ withDocumentID docid $ dbUpdate $ TemplateFromDocument (systemActor mt)
       dbQuery $ GetDocumentByDocumentID docid
-  user'  <- fromJust <$> (dbQuery $ GetUserByID (userid user))
+  user'  <- fromJust <$> (dbQuery $ GetUserByID (user ^. #id))
   docid' <-
     fromJust
       <$> ( dbUpdate
@@ -3277,15 +3278,15 @@ testGetDocumentsByCompanyWithFilteringCompany = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
-  Just author' <- dbQuery $ GetUserByID (userid author)
+  void $ dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
+  Just author' <- dbQuery $ GetUserByID (author ^. #id)
   did          <- addRandomDocumentWithAuthor author'
   withDocumentID did $ do
     time <- currentTime
     let actor = systemActor time
     void $ dbUpdate $ SetDocumentTags (S.singleton $ DocumentTag name value) actor
     docs' <- dbQuery
-      $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] maxBound
+      $ GetDocuments (DocumentsVisibleToUser $ author ^. #id) [] [] maxBound
 
     assertEqual "Should have 1 document returned" 1 (length docs')
 
@@ -3295,14 +3296,14 @@ testGetDocumentsByCompanyWithFilteringFilters = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
-  Just author' <- dbQuery $ GetUserByID (userid author)
+  void $ dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
+  Just author' <- dbQuery $ GetUserByID (author ^. #id)
   did          <- addRandomDocumentWithAuthor author'
-  docs         <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+  docs         <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
                                          [DocumentFilterByTags [DocumentTag name value]]
                                          []
                                          maxBound
-  docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] maxBound
+  docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id) [] [] maxBound
 
   assertBool "Should have no documents returned" (null docs)
   assertEqual "Should have 1 document returned" [did] (map documentid docs')
@@ -3311,31 +3312,31 @@ testSetDocumentUnsavedDraft :: TestEnv ()
 testSetDocumentUnsavedDraft = replicateM_ 10 $ do
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
-  Just author' <- dbQuery $ GetUserByID (userid author)
+  void $ dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
+  Just author' <- dbQuery $ GetUserByID (author ^. #id)
   did          <- addRandomDocumentWithAuthor author'
   withDocumentID did $ do
     isdraft <- (isSignable && isPreparation) <$> theDocument
 
     docs1   <- dbQuery $ GetDocuments
-      (DocumentsVisibleToUser $ userid author)
+      (DocumentsVisibleToUser $ author ^. #id)
       [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did]
       []
       maxBound
     void $ dbUpdate $ SetDocumentUnsavedDraft True
     docs2 <- dbQuery $ GetDocuments
-      (DocumentsVisibleToUser $ userid author)
+      (DocumentsVisibleToUser $ author ^. #id)
       [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did]
       []
       maxBound
     void $ dbUpdate $ SetDocumentUnsavedDraft False
     docs3 <- dbQuery $ GetDocuments
-      (DocumentsVisibleToUser $ userid author)
+      (DocumentsVisibleToUser $ author ^. #id)
       [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did]
       []
       maxBound
     docs4 <- dbQuery $ GetDocuments
-      (DocumentsVisibleToUser $ userid author)
+      (DocumentsVisibleToUser $ author ^. #id)
       [DocumentFilterUnsavedDraft True, DocumentFilterByDocumentID did]
       []
       maxBound
@@ -3355,19 +3356,19 @@ testGetDocumentsByCompanyWithFilteringFinds = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   ug     <- addNewUserGroup
   author <- addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
-  Just author' <- dbQuery $ GetUserByID (userid author)
+  void $ dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
+  Just author' <- dbQuery $ GetUserByID (author ^. #id)
   did          <- addRandomDocumentWithAuthor author'
   time         <- currentTime
   let actor = systemActor time
   void $ withDocumentID did $ dbUpdate $ SetDocumentTags
     (S.singleton $ DocumentTag name value)
     actor
-  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
                                  [DocumentFilterByTags [DocumentTag name value]]
                                  []
                                  maxBound
-  docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] maxBound
+  docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id) [] [] maxBound
 
   assertEqual "Should have one document returned" [did] (map documentid docs)
   assertEqual "Should have one document returned" [did] (map documentid docs')
@@ -3383,30 +3384,30 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = replicateM_ 10 $ do
       author <- addNewRandomUser
       time   <- currentTime
       let actor = systemActor time
-      void $ dbUpdate $ SetUserUserGroup (userid author) (ug ^. #id)
-      Just author' <- dbQuery $ GetUserByID (userid author)
+      void $ dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
+      Just author' <- dbQuery $ GetUserByID (author ^. #id)
       did          <- addRandomDocumentWithAuthor author'
 
       void $ withDocumentID did $ dbUpdate $ SetDocumentTags
         (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2])
         actor
-      docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+      docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
                                      [DocumentFilterByTags [DocumentTag name1 value1]]
                                      []
                                      maxBound
-      docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+      docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
                                       [DocumentFilterByTags [DocumentTag name2 value2]]
                                       []
                                       maxBound
       docs'' <- dbQuery $ GetDocuments
-        (DocumentsVisibleToUser $ userid author)
+        (DocumentsVisibleToUser $ author ^. #id)
         [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]]
         []
         maxBound
       docs''' <- dbQuery
-        $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] maxBound
+        $ GetDocuments (DocumentsVisibleToUser $ author ^. #id) [] [] maxBound
       docs'''' <- dbQuery $ GetDocuments
-        (DocumentsVisibleToUser $ userid author)
+        (DocumentsVisibleToUser $ author ^. #id)
         [ DocumentFilterByTags
             [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]
         ]

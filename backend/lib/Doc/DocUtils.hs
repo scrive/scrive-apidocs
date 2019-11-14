@@ -109,7 +109,7 @@ isLastViewer doc sl = isViewer sl && all
  -}
 signatoryFieldsFromUser :: (MonadDB m, MonadThrow m) => User -> m [SignatoryField]
 signatoryFieldsFromUser user = do
-  ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   return
     $  [ SignatoryNameField $ NameField { snfID = (unsafeSignatoryFieldID 0)
                                         , snfNameOrder              = NameOrder 1

@@ -480,6 +480,7 @@ Library
                  , User.Types.SignupMethod
                  , User.Types.Stats
                  , User.Types.User
+                 , User.Types.User.Internal
                  , User.Email
                  , User.EmailChangeRequest
                  , User.EmailChangeRequest.Tables

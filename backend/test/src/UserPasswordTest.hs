@@ -35,7 +35,7 @@ testPasswordMaybeVerify = do
   s <- randomPasswordString
   assert $ not $ maybeVerifyPassword Nothing s
   p <- createPassword s
-  let triplet = (Just $ pwdHash p, Just $ pwdSalt p, Just $ pwdAlgorithm p)
-      mpass   = maybeMkPassword triplet
+  let mpass =
+        maybeMkPassword (Just $ pwdHash p) (Just $ pwdSalt p) (Just $ pwdAlgorithm p)
   assertJust mpass
   assert $ maybeVerifyPassword mpass s

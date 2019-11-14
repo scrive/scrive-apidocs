@@ -124,18 +124,17 @@ replaceSignatoryData siglink fstname sndname email mobile company personalnumber
     Replaces signatory data with given user's data.
 -}
 replaceSignatoryUser :: SignatoryLink -> User -> UserGroupWithParents -> SignatoryLink
-replaceSignatoryUser siglink user ugwp = (replaceSignatoryData
-                                           siglink
-                                           (getFirstName user)
-                                           (getLastName user)
-                                           (getEmail user)
-                                           (getMobile user)
-                                           (getUGEntityName ugwp)
-                                           (getPersonalNumber user)
-                                           (getUGCompanyNumber ugwp)
-                                         )
-  { maybesignatory = Just $ userid user
-  }
+replaceSignatoryUser siglink user ugwp =
+  (replaceSignatoryData siglink
+                        (getFirstName user)
+                        (getLastName user)
+                        (getEmail user)
+                        (getMobile user)
+                        (getUGEntityName ugwp)
+                        (getPersonalNumber user)
+                        (getUGCompanyNumber ugwp)
+  ) { maybesignatory = Just $ user ^. #id
+    }
   where
     getUGEntityName    = view #entityName . ugwpAddress
     getUGCompanyNumber = view #companyNumber . ugwpAddress

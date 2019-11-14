@@ -291,14 +291,14 @@ jsonUsersList = onlySalesOrAdmin $ do
 
   runJSONGenT $ do
     valueM "users" $ forM (allUsers) $ \(user, ugname) -> runJSONGenT $ do
-      value "id" $ show $ userid user
+      value "id" $ show $ user ^. #id
       value "username" $ T.unpack $ getFullName user
       value "email" $ T.unpack $ getEmail user
-      value "companyposition" $ T.unpack $ usercompanyposition $ userinfo user
+      value "companyposition" $ T.unpack $ user ^. #info % #companyPosition
       value "company" . T.unpack $ ugname
-      value "phone" $ T.unpack $ userphone $ userinfo user
-      value "tos" $ formatTimeISO <$> (userhasacceptedtermsofservice user)
-      value "twofactor_active" $ usertotpactive user
+      value "phone" $ T.unpack $ user ^. #info % #phone
+      value "tos" $ formatTimeISO <$> (user ^. #hasAcceptedTOS)
+      value "twofactor_active" $ user ^. #totpActive
 
 
 {- | Handling user details change. It reads user info change -}
@@ -326,7 +326,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
 
   museraccounttype <- getField "useraccounttype"
   olduser          <- guardJustM $ dbQuery $ GetUserByID uid
-  user             <- case (museraccounttype, useriscompanyadmin olduser) of
+  user             <- case (museraccounttype, olduser ^. #isCompanyAdmin) of
     (Just "companyadminaccount", False) -> do
       --then we just want to make this account an admin
       newuser <- guardJustM $ do
@@ -336,7 +336,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
           (ctx ^. #ipAddr)
           (ctx ^. #time)
           [("is_company_admin", "false", "true")]
-          (userid <$> ctx ^. #maybeUser)
+          (ctx ^? #maybeUser % _Just % #id)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", True) -> do
@@ -348,26 +348,26 @@ handleUserChange uid = onlySalesOrAdmin $ do
           (ctx ^. #ipAddr)
           (ctx ^. #time)
           [("is_company_admin", "true", "false")]
-          (userid <$> ctx ^. #maybeUser)
+          (ctx ^? #maybeUser % _Just % #id)
         dbQuery $ GetUserByID uid
       return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
   let applyChanges = do
-        void $ dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+        void $ dbUpdate $ SetUserInfo uid $ infoChange $ user ^. #info
         void $ dbUpdate $ LogHistoryUserInfoChanged uid
                                                     (ctx ^. #ipAddr)
                                                     (ctx ^. #time)
-                                                    (userinfo user)
-                                                    (infoChange $ userinfo user)
-                                                    (userid <$> ctx ^. #maybeUser)
+                                                    (user ^. #info)
+                                                    (infoChange $ user ^. #info)
+                                                    (ctx ^? #maybeUser % _Just % #id)
         settingsChange <- getUserSettingsChange
-        void $ dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
+        void $ dbUpdate $ SetUserSettings uid $ settingsChange $ user ^. #settings
         return ()
-  if (useremail (infoChange $ userinfo user) /= useremail (userinfo user))
+  if infoChange (user ^. #info) ^. #email /= user ^. #info % #email
     then do
       -- email address changed, check if new one is not used
-      mexistinguser <- dbQuery $ GetUserByEmail $ useremail $ infoChange $ userinfo user
+      mexistinguser <- dbQuery $ GetUserByEmail (infoChange (user ^. #info) ^. #email)
       case mexistinguser of
         Just _  -> runJSONGenT $ value "changed" False
         Nothing -> do
@@ -388,9 +388,12 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
   let time     = ctx ^. #time
       ipnumber = ctx ^. #ipAddr
       admin    = ctx ^. #maybeUser
-  void $ dbUpdate $ SetUserPassword (userid user) passwordhash
-  void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
-  terminateAllUserSessionsExceptCurrent (userid user)
+  void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+  void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
+                                            ipnumber
+                                            time
+                                            (view #id <$> admin)
+  terminateAllUserSessionsExceptCurrent (user ^. #id)
   runJSONGenT $ value "changed" True
 
 handleDeleteInvite :: Kontrakcja m => UserGroupID -> UserID -> m ()
@@ -409,7 +412,7 @@ handleDisable2FAForUser :: Kontrakcja m => UserID -> m ()
 handleDisable2FAForUser uid = onlySalesOrAdmin $ do
   ctx  <- getContext
   user <- guardJustM $ dbQuery $ GetUserByID uid
-  if usertotpactive user
+  if user ^. #totpActive
     then do
       r <- dbUpdate $ DisableUserTOTP uid
       if r
@@ -448,10 +451,10 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
         Just targetfdrid -> do
           users <- dbQuery $ UserGroupGetUsers ugid_source
           forM_ users $ \u -> do
-            void $ dbUpdate $ SetUserUserGroup (userid u) ugid_target
+            void $ dbUpdate $ SetUserUserGroup (u ^. #id) ugid_target
             let newhomefdr = set #parentID (Just targetfdrid) defaultFolder
             newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
-            void $ dbUpdate . SetUserHomeFolder (userid u) $ newhomefdrid
+            void $ dbUpdate . SetUserHomeFolder (u ^. #id) $ newhomefdrid
           invites <- dbQuery $ UserGroupGetInvites ugid_source
           forM_ invites $ \i ->
             void . dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)
@@ -647,7 +650,7 @@ getUserGroupAddressChange = do
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
   mlang <- join <$> fmap langFromCode <$> getField "userlang"
-  return $ \settings -> settings { lang = fromMaybe (lang settings) mlang }
+  return $ maybe identity (#lang .~) mlang
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
 getUserInfoChange :: Kontrakcja m => m (UserInfo -> UserInfo)
@@ -658,14 +661,14 @@ getUserInfoChange = do
   musercompanyposition <- getField "usercompanyposition"
   muserphone           <- getField "userphone"
   museremail           <- fmap Email <$> getField "useremail"
-  return $ \UserInfo {..} -> UserInfo
-    { userfstname         = fromMaybe userfstname muserfstname
-    , usersndname         = fromMaybe usersndname musersndname
-    , userpersonalnumber  = fromMaybe userpersonalnumber muserpersonalnumber
-    , usercompanyposition = fromMaybe usercompanyposition musercompanyposition
-    , userphone           = fromMaybe userphone muserphone
-    , useremail           = fromMaybe useremail museremail
-    }
+  return $ \userInfo ->
+    userInfo
+      & (maybe identity (#firstName .~) muserfstname)
+      & (maybe identity (#lastName .~) musersndname)
+      & (maybe identity (#personalNumber .~) muserpersonalnumber)
+      & (maybe identity (#companyPosition .~) musercompanyposition)
+      & (maybe identity (#phone .~) muserphone)
+      & (maybe identity (#email .~) museremail)
 
 jsonDocuments :: Kontrakcja m => m Response
 jsonDocuments = onlyAdmin $ do
@@ -678,7 +681,7 @@ jsonDocuments = onlyAdmin $ do
   requestedFilters <- getFieldBS "filter" >>= \case
     Just paramValue -> case Aeson.eitherDecode paramValue of
       Right js -> case (Unjson.parse Unjson.unjsonDef js) of
-        (Result res []) -> return $ join $ toDocumentFilter (userid adminUser) <$> res
+        (Result res []) -> return $ join $ toDocumentFilter (adminUser ^. #id) <$> res
         _               -> internalError
       Left _ -> internalError
     Nothing -> return []
@@ -819,7 +822,7 @@ daveFile fileid _title = onlyAdmin $ do
   now  <- currentTime
   user <- guardJust . contextUser =<< getContext
   logInfo "File accessed through dave"
-    $ object [identifier fileid, identifier $ userid user, "timestamp" .= now]
+    $ object [identifier fileid, identifier $ user ^. #id, "timestamp" .= now]
   file     <- dbQuery $ GetFileByFileID fileid
   contents <- getFileContents file
   if BS.null contents
@@ -858,18 +861,18 @@ handleAdminUserUsageStatsDays :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
   user        <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
-  if (useriscompanyadmin user && withCompany)
-    then getUsageStats PartitionByDay (UsageStatsForUserGroup $ usergroupid user)
-    else getUsageStats PartitionByDay (UsageStatsForUser $ userid user)
+  if (user ^. #isCompanyAdmin && withCompany)
+    then getUsageStats PartitionByDay (UsageStatsForUserGroup $ user ^. #groupID)
+    else getUsageStats PartitionByDay (UsageStatsForUser $ user ^. #id)
 
 
 handleAdminUserUsageStatsMonths :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsMonths uid = onlySalesOrAdmin $ do
   user        <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
-  if (useriscompanyadmin user && withCompany)
-    then getUsageStats PartitionByMonth (UsageStatsForUserGroup $ usergroupid user)
-    else getUsageStats PartitionByMonth (UsageStatsForUser $ userid user)
+  if (user ^. #isCompanyAdmin && withCompany)
+    then getUsageStats PartitionByMonth (UsageStatsForUserGroup $ user ^. #groupID)
+    else getUsageStats PartitionByMonth (UsageStatsForUser $ user ^. #id)
 
 handleAdminCompanyUsageStatsDays :: Kontrakcja m => UserGroupID -> m JSValue
 handleAdminCompanyUsageStatsDays ugid =

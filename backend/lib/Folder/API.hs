@@ -35,7 +35,6 @@ import Kontra
 import Log.Identifier
 import OAuth.Model
 import Routing
-import User.Model
 import qualified Folder.Internal as I
 
 folderAPIRoutes :: Route (Kontra Response)
@@ -86,7 +85,7 @@ folderAPIGet fid = api $ do
     isSignatoryOfOneOfDocuments = do
       user      <- fst <$> getAPIUserWithAnyPrivileges
       documents <- dbQuery $ GetDocumentsIDs
-        (DocumentsUserHasAnyLinkTo (userid user))
+        (DocumentsUserHasAnyLinkTo $ user ^. #id)
         [DocumentFilterDeleted False, DocumentFilterByFolderID fid]
         []
       return . (> 0) $ length documents
@@ -163,7 +162,7 @@ folderAPIListDocs fid = api $ do
                                       (ApiV2ParameterJSON "sorting" unjsonDef)
     let documentSorting = (toDocumentSorting <$> sorting)
     logInfo "Fetching list of documents in the folder" $ object
-      [ identifier $ userid user
+      [ identifier $ user ^. #id
       , "offset" .= offset
       , "max_count" .= maxcount
       , "sorting" .= map show documentSorting

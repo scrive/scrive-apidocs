@@ -145,23 +145,21 @@ guardThatUserExists uid = do
     Just user -> return user
 
 guardThatUserIsAuthor :: Kontrakcja m => User -> Document -> m ()
-guardThatUserIsAuthor user = guardDocumentAuthorIs (\a -> userid user == userid a)
+guardThatUserIsAuthor user = guardDocumentAuthorIs (\a -> user ^. #id == a ^. #id)
 
 guardThatUserIsAuthorOrCompanyAdmin :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthorOrCompanyAdmin user = guardDocumentAuthorIs
   (\a ->
-    userid user
-      == userid a
-      || (usergroupid user == usergroupid a && useriscompanyadmin user)
+    (user ^. #id == a ^. #id)
+      || (user ^. #groupID == a ^. #groupID && user ^. #isCompanyAdmin)
   )
 
 guardThatUserIsAuthorOrDocumentIsShared :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthorOrDocumentIsShared user doc = do
   guardDocumentAuthorIs
     (\a ->
-      userid user
-        == userid a
-        || (usergroupid user == usergroupid a && isDocumentShared doc)
+      (user ^. #id == a ^. #id)
+        || (user ^. #groupID == a ^. #groupID && isDocumentShared doc)
     )
     doc
 
@@ -170,11 +168,9 @@ guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc = do
   guardDocumentAuthorIs
     (\a ->
-      userid user
-        == userid a
-        || (  usergroupid user
-           == usergroupid a
-           && (useriscompanyadmin user || isDocumentShared doc)
+      (user ^. #id == a ^. #id)
+        || (  (user ^. #groupID == a ^. #groupID)
+           && (user ^. #isCompanyAdmin || isDocumentShared doc)
            )
     )
     doc

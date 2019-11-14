@@ -1,19 +1,18 @@
 module User.Types.User
-    ( composeFullName
-    , defaultUser
-    , defaultUserInfo
-    , fetchUser
-    , fetchUserWithUserGroupName
-    , selectUsersSQL
-    , selectUsersSelectors
-    , selectUsersSelectorsList
-    , selectUsersWithUserGroupNamesSQL
-    , User(..)
-    , UserInfo(..)
-    , UserSettings(..)
-    ) where
+  ( I.User
+  , I.UserInfo
+  , I.UserSettings
+  , composeFullName
+  , defaultUser
+  , defaultUserInfo
+  , fetchUser
+  , fetchUserWithUserGroupName
+  , selectUsersSQL
+  , selectUsersSelectors
+  , selectUsersSelectorsList
+  , selectUsersWithUserGroupNamesSQL
+  ) where
 
-import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Int (Int16)
 import qualified Data.Text as T
@@ -22,7 +21,6 @@ import BrandedDomain.BrandedDomainID
 import DataRetentionPolicy
 import DB
 import Folder.Types
-import Log.Identifier
 import MinutesTime
 import User.Email
 import User.Lang
@@ -30,96 +28,37 @@ import User.Password
 import User.Types.SignupMethod
 import User.UserID
 import UserGroup.Types
-import Util.HasSomeUserInfo
 import qualified DataRetentionPolicy.Internal as I
+import qualified User.Types.User.Internal as I
 
-data User = User
-  { userid                        :: UserID
-  , userpassword                  :: Maybe Password
-  , usertotp                      :: Maybe ByteString
-  , usertotpactive                :: Bool
-  , usertotpismandatory           :: Bool
-  , useriscompanyadmin            :: Bool
-  , useraccountsuspended          :: Bool
-  , userhasacceptedtermsofservice :: Maybe UTCTime
-  , usersignupmethod              :: SignupMethod
-  , userinfo                      :: UserInfo
-  , usersettings                  :: UserSettings
-  , userassociateddomainid        :: BrandedDomainID
-  , usergroupid                   :: UserGroupID
-  , userhomefolderid              :: Maybe FolderID
-  } deriving (Eq, Ord, Show)
+defaultUser :: I.User
+defaultUser = I.User { id                 = unsafeUserID 0
+                     , password           = Nothing
+                     , totpKey            = Nothing
+                     , totpActive         = False
+                     , totpIsMandatory    = False
+                     , isCompanyAdmin     = False
+                     , accountSuspended   = False
+                     , hasAcceptedTOS     = Nothing
+                     , signupMethod       = ByAdmin
+                     , info               = defaultUserInfo
+                     , settings           = defaultUserSettings
+                     , associatedDomainID = unsafeBrandedDomainID 0
+                     , groupID            = emptyUserGroupID
+                     , homeFolderID       = Nothing
+                     }
 
-instance HasSomeUserInfo User where
-  getEmail          = T.strip . unEmail . useremail . userinfo
-  getFirstName      = userfstname . userinfo
-  getLastName       = usersndname . userinfo
-  getPersonalNumber = userpersonalnumber . userinfo
-  getMobile         = userphone . userinfo
+defaultUserInfo :: I.UserInfo
+defaultUserInfo = I.UserInfo { firstName       = ""
+                             , lastName        = ""
+                             , personalNumber  = ""
+                             , companyPosition = ""
+                             , phone           = ""
+                             , email           = Email ""
+                             }
 
-instance Loggable User where
-  logValue User {..} = object
-    [ identifier userid
-    , "email" .= useremail userinfo
-    , "name" .= (userfstname userinfo <> " " <> usersndname userinfo)
-    ]
-  logDefaultLabel _ = "user"
-
-data UserInfo = UserInfo
-  { userfstname         :: Text
-  , usersndname         :: Text
-  , userpersonalnumber  :: Text
-  , usercompanyposition :: Text
-  , userphone           :: Text
-  , useremail           :: Email
-  } deriving (Eq, Ord, Show)
-
-instance HasSomeUserInfo UserInfo where
-  getEmail          = T.strip . unEmail . useremail
-  getFirstName      = userfstname
-  getLastName       = usersndname
-  getPersonalNumber = userpersonalnumber
-  getMobile         = userphone
-
-defaultUser :: User
-defaultUser = User { userid                 = unsafeUserID 0
-                   , userpassword           = Nothing
-                   , usertotp               = Nothing
-                   , usertotpactive         = False
-                   , usertotpismandatory    = False
-                   , useriscompanyadmin     = False
-                   , useraccountsuspended   = False
-                   , userhasacceptedtermsofservice = Nothing
-                   , usersignupmethod       = ByAdmin
-                   , userinfo               = defaultUserInfo
-                   , usersettings           = defaultUserSettings
-                   , userassociateddomainid = unsafeBrandedDomainID 0
-                   , usergroupid            = emptyUserGroupID
-                   , userhomefolderid       = Nothing
-                   }
-
-defaultUserInfo :: UserInfo
-defaultUserInfo = UserInfo { userfstname         = ""
-                           , usersndname         = ""
-                           , userpersonalnumber  = ""
-                           , usercompanyposition = ""
-                           , userphone           = ""
-                           , useremail           = Email ""
-                           }
-
-data UserSettings  = UserSettings
-  { lang                :: Lang
-  , dataretentionpolicy :: DataRetentionPolicy
-  } deriving (Eq, Ord, Show)
-
-defaultUserSettings :: UserSettings
-defaultUserSettings = UserSettings LANG_EN defaultDataRetentionPolicy
-
-instance HasLang User where
-  getLang = getLang . usersettings
-
-instance HasLang UserSettings where
-  getLang = lang
+defaultUserSettings :: I.UserSettings
+defaultUserSettings = I.UserSettings LANG_EN defaultDataRetentionPolicy
 
 selectUsersSelectorsList :: [SQL]
 selectUsersSelectorsList =
@@ -230,43 +169,15 @@ fetchUser
      , Maybe FolderID
      , Bool
      )
-  -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid, totp_is_mandatory)
-  = User
-    { userid                 = uid
-    , userpassword           = maybeMkPassword
-                                 (password, salt, int16ToPwdAlgorithm <$> password_algorithm)
-    , usertotp               = totp_key
-    , usertotpactive         = totp_active
-    , usertotpismandatory    = totp_is_mandatory
-    , useriscompanyadmin     = is_company_admin
-    , useraccountsuspended   = account_suspended
-    , userhasacceptedtermsofservice = has_accepted_terms_of_service
-    , usersignupmethod       = signup_method
-    , userinfo               = UserInfo { userfstname         = first_name
-                                        , usersndname         = last_name
-                                        , userpersonalnumber  = personal_number
-                                        , usercompanyposition = company_position
-                                        , userphone           = phone
-                                        , useremail           = email
-                                        }
-    , usersettings           =
-      UserSettings
-        { lang                = lang
-        , dataretentionpolicy = I.DataRetentionPolicy
-                                  { idleDocTimeoutPreparation =
-                                    idle_doc_timeout_preparation
-                                  , idleDocTimeoutClosed      = idle_doc_timeout_closed
-                                  , idleDocTimeoutCanceled    = idle_doc_timeout_canceled
-                                  , idleDocTimeoutTimedout    = idle_doc_timeout_timedout
-                                  , idleDocTimeoutRejected    = idle_doc_timeout_rejected
-                                  , idleDocTimeoutError       = idle_doc_timeout_error
-                                  , immediateTrash            = immediate_trash
-                                  }
-        }
-    , userassociateddomainid = associated_domain_id
-    , usergroupid            = ugid
-    , userhomefolderid       = mfid
+  -> I.User
+fetchUser (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory)
+  = I.User
+    { password = maybeMkPassword password salt (int16ToPwdAlgorithm <$> passwordAlgorithm)
+    , info     = I.UserInfo { .. }
+    , settings = I.UserSettings { lang                = lang
+                                , dataRetentionPolicy = I.DataRetentionPolicy { .. }
+                                }
+    , ..
     }
 
 fetchUserWithUserGroupName
@@ -300,43 +211,17 @@ fetchUserWithUserGroupName
      , Bool
      , Text
      )
-  -> (User, Text)
-fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid, totp_is_mandatory, name)
+  -> (I.User, Text)
+fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, name)
   = (user, name)
   where
-    user = User
-      { userid                 = uid
-      , userpassword           = maybeMkPassword
-                                   (password, salt, int16ToPwdAlgorithm <$> password_algorithm)
-      , usertotp               = totp_key
-      , usertotpactive         = totp_active
-      , usertotpismandatory    = totp_is_mandatory
-      , useriscompanyadmin     = is_company_admin
-      , useraccountsuspended   = account_suspended
-      , userhasacceptedtermsofservice = has_accepted_terms_of_service
-      , usersignupmethod       = signup_method
-      , userinfo               = UserInfo { userfstname         = first_name
-                                          , usersndname         = last_name
-                                          , userpersonalnumber  = personal_number
-                                          , usercompanyposition = company_position
-                                          , userphone           = phone
-                                          , useremail           = email
-                                          }
-      , usersettings           =
-        UserSettings
-          { lang                = lang
-          , dataretentionpolicy = I.DataRetentionPolicy
-                                    { idleDocTimeoutPreparation =
-                                      idle_doc_timeout_preparation
-                                    , idleDocTimeoutClosed = idle_doc_timeout_closed
-                                    , idleDocTimeoutCanceled = idle_doc_timeout_canceled
-                                    , idleDocTimeoutTimedout = idle_doc_timeout_timedout
-                                    , idleDocTimeoutRejected = idle_doc_timeout_rejected
-                                    , idleDocTimeoutError = idle_doc_timeout_error
-                                    , immediateTrash = immediate_trash
-                                    }
-          }
-      , userassociateddomainid = associated_domain_id
-      , usergroupid            = ugid
-      , userhomefolderid       = mfid
+    user = I.User
+      { password = maybeMkPassword password
+                                   salt
+                                   (int16ToPwdAlgorithm <$> passwordAlgorithm)
+      , info     = I.UserInfo { .. }
+      , settings = I.UserSettings { lang                = lang
+                                  , dataRetentionPolicy = I.DataRetentionPolicy { .. }
+                                  }
+      , ..
       }

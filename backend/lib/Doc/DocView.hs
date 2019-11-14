@@ -84,12 +84,12 @@ pageDocumentSignView ctx document siglink ad = do
             "Impossible happened: this document was not saved to an account"
           Just authorid' -> authorid'
   authoruser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  authorugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ authoruser
+  authorugwp <- dbQuery . UserGroupGetWithParentsByUserID $ authoruser ^. #id
   let loggedAsSignatory =
         (isJust $ maybesignatory siglink)
           && (maybesignatory siglink)
-          == (userid <$> contextUser ctx)
-  let loggedAsAuthor = (Just authorid == (userid <$> contextUser ctx))
+          == (view #id <$> contextUser ctx)
+  let loggedAsAuthor = (Just authorid == (view #id <$> contextUser ctx))
   let docjson = unjsonToByteStringLazy'
         (Options { pretty = False, indent = 0, nulls = True })
         (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document))
@@ -119,7 +119,7 @@ pageDocumentIdentifyView
 pageDocumentIdentifyView ctx document siglink ad = do
   let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
   auser    <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  authorug <- dbQuery . UserGroupGetByUserID . userid $ auser
+  authorug <- dbQuery . UserGroupGetByUserID $ auser ^. #id
 
   renderTextTemplate "pageDocumentIdentifyView" $ do
     F.value "documentid" $ show $ documentid document

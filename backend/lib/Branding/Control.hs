@@ -52,7 +52,7 @@ getServiceTheme bdID muser = do
   case muser of
     Nothing   -> dbQuery $ GetTheme $ bd ^. #serviceTheme
     Just user -> do
-      ug <- dbQuery . UserGroupGetByUserID . userid $ user
+      ug <- dbQuery . UserGroupGetByUserID $ user ^. #id
       dbQuery . GetTheme $ fromMaybe (bd ^. #serviceTheme) (ug ^. #ui % #serviceTheme)
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> Text -> m Response
@@ -104,7 +104,7 @@ getSignviewThemeWithoutDocument bdID uid = do
   bd    <- dbQuery $ GetBrandedDomainByID bdID
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
-  ug    <- dbQuery . UserGroupGetByUserID . userid $ user
+  ug    <- dbQuery . UserGroupGetByUserID $ user ^. #id
   dbQuery . GetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #signviewTheme)
 
 loginLogo :: Kontrakcja m => BrandedDomainID -> Text -> m Response
@@ -128,7 +128,7 @@ emailLogo bdID uid _ = do
   bd    <- dbQuery $ GetBrandedDomainByID bdID
   muser <- dbQuery $ GetUserByID uid
   user  <- guardJust muser
-  ug    <- dbQuery . UserGroupGetByUserID . userid $ user
+  ug    <- dbQuery . UserGroupGetByUserID $ user ^. #id
   theme <- dbQuery . GetTheme $ fromMaybe (bd ^. #mailTheme) (ug ^. #ui % #mailTheme)
   return (imageResponse $ themeLogo theme)
 
@@ -155,7 +155,7 @@ faviconIcon bdID uidstr _ = do
         case muser of
           Nothing   -> return Nothing
           Just user -> do
-            ug <- dbQuery . UserGroupGetByUserID . userid $ user
+            ug <- dbQuery . UserGroupGetByUserID $ user ^. #id
             return $ ug ^. #ui % #favicon
 
   bd <- dbQuery $ GetBrandedDomainByID bdID
