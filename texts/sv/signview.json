@@ -217,6 +217,6 @@
 "_smsReminderAutomatic":"Det här är en automatisk påminnelse att du inte har signerat dokumentet $documenttitle:noescape()$ från $creatorname$ ännu. Följ länken för vidare instruktioner $link$",
 "_smsReminderSigned":"Det signerade dokumentet $documenttitle:noescape()$ har skickats till dig på nytt på begäran av $creatorname$. Hitta dokumentet genom att följa denna länk $link$",
 "_unavailableForSign":"Dokumentet går inte längre att signera",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Användargrupp",
+"_userGroupExtraInfo":"Internt namn för användargrupp (t ex HR):"
 }
