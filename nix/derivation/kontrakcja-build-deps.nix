@@ -92,6 +92,18 @@ let
             {}
         ;
 
+        test-framework = 
+        haskellLib.appendPatch 
+          (haskellLib.dontCheck 
+            (super.callHackage
+              "test-framework"
+              "0.8.2.0"
+              {}
+              )
+            )
+          ../patches/test-framework.patch          
+        ;
+
         kontrakcja-templates = callScrivePackage super
           "kontrakcja-templates"
           "0.10"

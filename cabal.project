@@ -22,3 +22,9 @@ package kontrakcja
 package text-icu
     extra-include-dirs: /usr/local/opt/icu4c/include
     extra-lib-dirs: /usr/local/opt/icu4c/lib
+
+source-repository-package
+    type: git
+    location: https://github.com/kubek2k/test-framework.git
+    tag: 7e8b4451a91759debfda44963020d2c02f8f5790
+    subdir: core
