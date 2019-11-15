@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2019-11-15  | Update production IP addresses. |
     | 2019-09-30  | Add `verimi` to `authentication_to_view`. |
     | 2019-04-09  | Documented link confirmation delivery. |
     | 2019-04-01  | Reordered the changelog - new changes are now on top. |
@@ -102,6 +103,7 @@ info:
 
     * 46.51.201.244
     * 52.208.49.53
+    * 54.229.202.191
     * 54.246.132.30
     * 54.72.249.47
     * 54.72.251.235
