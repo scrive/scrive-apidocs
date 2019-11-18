@@ -1,0 +1,32 @@
+---
+get:
+  summary: List Documents in Folder
+
+  tags:
+    - Folders
+
+  description: |
+    > Example of a Folder Listing
+
+    ```json
+    {
+      "foo": "bar"
+    }
+    ```
+
+    This endpoint is used to get the details of the documents in a given folder.
+
+  parameters:
+    - name: folder_id
+      in: url
+      type: integer
+      description: The ID of the Folder whose contents you wish to list
+      required: true
+
+  responses:
+    200:
+      description: |
+        @TODO: Needs to be specified
+    403:
+      description: |
+        Insufficient Permissions error

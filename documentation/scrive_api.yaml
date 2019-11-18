@@ -1053,6 +1053,9 @@ paths:
   /api/v2/folders/{folder_id}/delete:
     $ref: ./api/folders/deletefolder.yaml
 
+  /api/v2/folders/{folder_id}/list:
+    $ref: ./api/folders/listdocuments.yaml
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
