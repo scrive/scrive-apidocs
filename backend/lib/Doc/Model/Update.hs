@@ -118,6 +118,7 @@ import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Tables
 import Doc.Types.SignatoryAccessToken
+import EID.EIDService.Types
 import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
@@ -973,6 +974,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
             sqlWhereEq "signatory_link_id" slid
             sqlWhereEq "type"              MobileFT
           )
+        -- IDINAuthenticationToSign has no obligatory fields
+        (False, IDINAuthenticationToSign) -> return ()
       -- If newAuthToSign needs PersonalNumber we need to make sure the field
       -- exists and is obligatory, and maybe set to the value provided
       when (authToSignNeedsPersonalNumber newAuthToSign) $ do
@@ -1779,6 +1782,8 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
         (Just (NetsDKNemIDSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs DKNemIDAuthenticationToSign
+        (Just (EIDServiceIDINSignature_ _), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIs IDINAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
         (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
         (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
@@ -1840,6 +1845,15 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             $ F.value "signatory_personal_number" netsdkSignatorySSN
           F.value "signatory_personal_number_from_signlink" $ getPersonalNumber sl
           unless (T.null netsdkSignatoryIP) $ F.value "signatory_ip" netsdkSignatoryIP
+        (Just (EIDServiceIDINSignature_ (EIDServiceIDINSignature CompleteIDINEIDServiceTransactionData {..})), _)
+          -> do
+            F.value "hide_pn" $ signatorylinkhidepn sl
+            F.value "eleg" True
+            F.value "provider_idin" True
+            F.value "signatory_name" eiditdName
+            F.value "signatory_dob" eiditdBirthDate
+            F.value "signatory_customer_id" eiditdCustomerID
+            F.value "signatory_verified_email" eiditdVerifiedEmail
         (Nothing, Just _) -> do
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl

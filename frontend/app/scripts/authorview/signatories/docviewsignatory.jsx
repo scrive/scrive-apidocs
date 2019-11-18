@@ -533,6 +533,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToSignNOBankID;
       } else if (signatory.dkNemIDAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignDKNemID;
+      } else if (signatory.nlIDINAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignIDIN;
       }
     },
 

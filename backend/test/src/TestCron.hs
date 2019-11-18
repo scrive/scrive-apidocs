@@ -62,6 +62,7 @@ runTestCronUntilIdle ctx = do
       , cronPdfToolsLambdaConf = unexpectedError "cronPdfToolsLambdaConf undefined"
       , cronMonthlyInvoiceConf         = cronMonthlyInvoiceConf
       , cronStatsDConf                 = Nothing
+      , cronEIDServiceConf             = Nothing
       }
 
     -- make timeouts small, so that the test runs faster
@@ -81,6 +82,7 @@ runTestCronUntilIdle ctx = do
           (cronGuardTimeConf cronConf)
           (cronCgiGrpConfig cronConf)
           (cronNetsSignConfig cronConf)
+          (cronEIDServiceConf cronConf)
           (ctx ^. #globalTemplates)
           pool
           (cronMailNoreplyAddress cronConf)

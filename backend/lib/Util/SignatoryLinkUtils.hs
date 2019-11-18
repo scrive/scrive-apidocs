@@ -262,6 +262,7 @@ atsToMix SEBankIDAuthenticationToSign = MAM_SEBankID
 atsToMix SMSPinAuthenticationToSign   = MAM_SMSPin
 atsToMix NOBankIDAuthenticationToSign = MAM_NOBankID
 atsToMix DKNemIDAuthenticationToSign  = MAM_DKNemID
+atsToMix IDINAuthenticationToSign     = MAM_NLIDIN
 
 authenticationMethodsCanMix
   :: AuthenticationToViewMethod
@@ -317,6 +318,7 @@ authToSignNeedsPersonalNumber SMSPinAuthenticationToSign   = False
 authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign = True
 authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign = False
 authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign  = True
+authToSignNeedsPersonalNumber IDINAuthenticationToSign     = False
 
 authToSignNeedsMobileNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsMobileNumber StandardAuthenticationToSign = False
@@ -324,3 +326,4 @@ authToSignNeedsMobileNumber SMSPinAuthenticationToSign   = True
 authToSignNeedsMobileNumber SEBankIDAuthenticationToSign = False
 authToSignNeedsMobileNumber NOBankIDAuthenticationToSign = False
 authToSignNeedsMobileNumber DKNemIDAuthenticationToSign  = False
+authToSignNeedsMobileNumber IDINAuthenticationToSign     = False

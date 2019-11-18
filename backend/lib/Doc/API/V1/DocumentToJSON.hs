@@ -182,6 +182,7 @@ authenticationToSignJSON SEBankIDAuthenticationToSign = toJSValue ("eleg" :: Str
 authenticationToSignJSON SMSPinAuthenticationToSign   = toJSValue ("sms_pin" :: String)
 authenticationToSignJSON NOBankIDAuthenticationToSign = toJSValue ("no_bankid" :: String)
 authenticationToSignJSON DKNemIDAuthenticationToSign  = toJSValue ("dk_nemid" :: String)
+authenticationToSignJSON IDINAuthenticationToSign     = toJSValue ("nl_idin" :: String)
 
 signatoryJSON
   :: ( MonadDB m
@@ -595,6 +596,7 @@ signatoryFieldsListForJSON doc sl = do
     SMSPinAuthenticationToSign   -> "sms_pin"
     NOBankIDAuthenticationToSign -> "no_bankid"
     DKNemIDAuthenticationToSign  -> "dk_nemid"
+    IDINAuthenticationToSign     -> "nl_idin"
 
   J.value "delivery" $ signatorylinkdeliverymethod sl
   where

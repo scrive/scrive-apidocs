@@ -608,6 +608,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     smsPinAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "sms_pin" && this.canHaveAuthenticationToSign();
     },
+    nlIDINAuthenticationToSign: function() {
+          return this.get("authentication_method_to_sign") == "nl_idin" && this.canHaveAuthenticationToSign();
+    },
     emailDelivery: function() {
           return this.get("delivery_method") == "email";
     },
@@ -943,7 +946,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       });
     }
     // maximum of 1 national EID is allowed per signatory
-    var eids = ["se_bankid", "no_bankid", "dk_nemid", "fi_tupas"];
+    var eids = ["se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "nl_idin"];
     return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
     },
     setAuthenticationToView: function(a) {
@@ -1145,9 +1148,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.hasNotificationEmail()
         || this.hasConfirmationEmail()
         || this.verimiAuthenticationToView()
-        || this.verimiAuthenticationToViewArchived()
-        || this.idinAuthenticationToView()
-        || this.idinAuthenticationToViewArchived();
+        || this.verimiAuthenticationToViewArchived();
     },
     ensureEmail: function() {
         var signatory = this;

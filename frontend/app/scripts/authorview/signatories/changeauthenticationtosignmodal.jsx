@@ -79,6 +79,10 @@ var Modal = require("../../common/modal");
       return this.newAuthenticationMethod() == "dk_nemid";
     },
 
+    isNewAuthenticationIDIN: function () {
+      return this.newAuthenticationMethod() == "nl_idin";
+    },
+
     isAuthenticationValueInvalid: function () {
       var authvalue = this.newAuthenticationValue();
 
@@ -134,7 +138,7 @@ var Modal = require("../../common/modal");
       } else if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()) {
         text = localization.docview.changeAuthentication.errorEID;
       }
-      // no NOBankID here, because there is only empty "" authentication value
+      // no NOBankID/IDIN here, because there is only empty "" authentication value
 
       return text;
     }
@@ -162,6 +166,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToSignNOBankID;
       } else if (model.isNewAuthenticationDKNemID()) {
         return localization.docview.signatory.authenticationToSignDKNemID;
+      } else if (model.isNewAuthenticationIDIN()) {
+        return localization.docview.signatory.authenticationToSignIDIN;
       }
     },
 
@@ -261,6 +267,15 @@ var Modal = require("../../common/modal");
         options.push(sms);
       }
 
+      var idin = {
+        name: localization.docview.signatory.authenticationToSignIDIN,
+        selected: model.isNewAuthenticationIDIN(),
+        value: "nl_idin"
+      };
+      if (ff.canUseIDINAuthenticationToSign() && isAvailable(idin.value)) {
+        options.push(idin);
+      }
+
       return options;
     },
 
@@ -282,7 +297,9 @@ var Modal = require("../../common/modal");
         return false;
       // Else always show if we are setting anything other than no authentication
       } else {
-        return (model.newAuthenticationMethod() !== "standard" && model.newAuthenticationMethod() !== "no_bankid");
+        return (model.newAuthenticationMethod() !== "standard"
+          && model.newAuthenticationMethod() !== "no_bankid"
+          && model.newAuthenticationMethod() !== "nl_idin");
       }
     },
 

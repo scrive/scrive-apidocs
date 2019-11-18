@@ -310,6 +310,7 @@ authenticationToViewMethodFromString "no_bankid" = Just NOBankIDAuthenticationTo
 authenticationToViewMethodFromString "dk_nemid"  = Just DKNemIDAuthenticationToView
 authenticationToViewMethodFromString "fi_tupas"  = Just FITupasAuthenticationToView
 authenticationToViewMethodFromString "sms_pin"   = Just SMSPinAuthenticationToView
+authenticationToViewMethodFromString "nl_idin"   = Just SMSPinAuthenticationToView
 authenticationToViewMethodFromString _           = Nothing
 
 getMockDocSigLinkAuthToSignMethod :: Int -> MockDoc -> AuthenticationToSignMethod
@@ -320,6 +321,7 @@ getMockDocSigLinkAuthToSignMethod i md =
     "no_bankid" -> NOBankIDAuthenticationToSign
     "dk_nemid"  -> DKNemIDAuthenticationToSign
     "sms_pin"   -> SMSPinAuthenticationToSign
+    "nl_idin"   -> IDINAuthenticationToSign
     _ ->
       unexpectedError
         $  "Could not parse AuthenticationToSignMethod from MockDoc:\n"
@@ -335,6 +337,7 @@ setMockDocSigLinkAuthToSignMethod i auth = setForSigNumberFromMockDoc
     toStrAuth SEBankIDAuthenticationToSign = "se_bankid"
     toStrAuth NOBankIDAuthenticationToSign = "no_bankid"
     toStrAuth DKNemIDAuthenticationToSign  = "dk_nemid"
+    toStrAuth IDINAuthenticationToSign     = "nl_idin"
     toStrAuth SMSPinAuthenticationToSign   = "sms_pin"
 
 getMockDocSigLinkPersonalNumber :: Int -> MockDoc -> String

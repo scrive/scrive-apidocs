@@ -55,6 +55,7 @@ module.exports = React.createClass({
         canUseStandardAuthenticationToSign: features.canUseStandardAuthenticationToSign(),
         canUseVerimiAuthenticationToView: features.canUseVerimiAuthenticationToView(),
         canUseIDINAuthenticationToView: features.canUseIDINAuthenticationToView(),
+        canUseIDINAuthenticationToSign: features.canUseIDINAuthenticationToSign(),
         canUseEmailInvitations: features.canUseEmailInvitations(),
         canUseEmailConfirmations: features.canUseEmailConfirmations(),
         canUseAPIInvitations: features.canUseAPIInvitations(),
@@ -122,6 +123,7 @@ module.exports = React.createClass({
           regularUserFeatures.canUseSEAuthenticationToSign = false;
           regularUserFeatures.canUseVerimiAuthenticationToView = false;
           regularUserFeatures.canUseIDINAuthenticationToView = false;
+          regularUserFeatures.canUseIDINAuthenticationToSign = false;
           regularUserFeatures.canUsePortal = false;
       } else {
           adminUserFeatures.canUseDKAuthenticationToView = true;
@@ -140,6 +142,7 @@ module.exports = React.createClass({
           regularUserFeatures.canUseSEAuthenticationToSign = true;
           regularUserFeatures.canUseVerimiAuthenticationToView = true;
           regularUserFeatures.canUseIDINAuthenticationToView = true;
+          regularUserFeatures.canUseIDINAuthenticationToSign = true;
       }
       this.setState({
           selectedPlan: v,
@@ -357,6 +360,8 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use Verimi authorization to view","canUseVerimiAuthenticationToView")}
               {this.renderTROptionSeparator("iDIN auth to view")}
               {this.renderTRForOptionWithCheckbox("Can use iDIN authorization to view","canUseIDINAuthenticationToView")}
+              {this.renderTROptionSeparator("iDIN auth at sign time")}
+              {this.renderTRForOptionWithCheckbox("Can use iDIN authorization at sign time","canUseIDINAuthenticationToSign")}
               {this.renderTROptionSeparator("Standard auth to view and sign")}
               {this.renderTROptionSeparator("(disable to force use of eID/SMS)")}
               {this.renderTRForOptionWithCheckbox("Can use Standard authorization to view","canUseStandardAuthenticationToView")}

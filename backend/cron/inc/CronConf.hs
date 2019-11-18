@@ -7,6 +7,7 @@ import Data.Unjson
 
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
+import EID.EIDService.Conf
 import EID.Nets.Config
 import FileStorage.Amazon.Config
 import GuardTime (GuardTimeConf(..))
@@ -55,6 +56,7 @@ data CronConf = CronConf
                                                          -- undefined in tests)
   , cronMonthlyInvoiceConf         :: !(Maybe MonthlyInvoiceConf)
   , cronStatsDConf                 :: !(Maybe StatsDConf)
+  , cronEIDServiceConf             :: Maybe EIDServiceConf
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -106,7 +108,8 @@ unjsonCronConf =
     <*> fieldOpt "monthly_invoice"
                  cronMonthlyInvoiceConf
                  "Monthly-invoice job configuration"
-    <*> fieldOpt "statsd" cronStatsDConf "StatsD configuration"
+    <*> fieldOpt "statsd"      cronStatsDConf     "StatsD configuration"
+    <*> fieldOpt "eid_service" cronEIDServiceConf "Configuration of eid service"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf

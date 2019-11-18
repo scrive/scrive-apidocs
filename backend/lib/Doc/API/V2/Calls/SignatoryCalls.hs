@@ -208,6 +208,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
       SEBankIDAuthenticationToSign -> return ()
       NOBankIDAuthenticationToSign -> return ()
       DKNemIDAuthenticationToSign  -> return ()
+      IDINAuthenticationToSign     -> return ()
     -- Return
     return $ Ok ()
 
@@ -293,6 +294,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
       SEBankIDAuthenticationToSign -> return (Just CgiGrpBankID, Nothing)
       NOBankIDAuthenticationToSign -> return (Just NetsNOBankID, Nothing)
       DKNemIDAuthenticationToSign  -> return (Just NetsDKNemID, Nothing)
+      IDINAuthenticationToSign     -> return (Just EIDServiceIDIN, Nothing)
 
     case mprovider of
       Nothing -> do

@@ -190,7 +190,6 @@ module.exports = React.createClass({
       authTypes = _.without(authTypes, "nl_idin");
     }
 
-
     authTypes = _.filter(authTypes, function (authToView) {
       return sig.authenticationMethodsCanMix(authToView,
                                              sig.authenticationToSign(),
@@ -277,12 +276,16 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToSignDKNemID;
     } else if (t == "sms_pin") {
       return localization.designview.addParties.authenticationToSignSMSPin;
+    } else if (t == "nl_idin") {
+      return localization.designview.addParties.authenticationToSignIDIN;
     }
   },
   authenticationToSignOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var allAuthTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"];
+    var allAuthTypes = !sig.signs() ? ["standard"] : [
+      "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "sms_pin"
+    ];
     var authTypes = allAuthTypes.slice(0);
 
     if (sig.signs()) {
@@ -302,6 +305,9 @@ module.exports = React.createClass({
       }
       if (!ff.canUseSMSPinAuthenticationToSign() && !sig.smsPinAuthenticationToSign()) {
         authTypes = _.without(authTypes, "sms_pin");
+      }
+      if (!ff.canUseIDINAuthenticationToSign() && !sig.nlIDINAuthenticationToSign()) {
+          authTypes = _.without(authTypes, "nl_idin");
       }
     }
 

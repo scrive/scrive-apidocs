@@ -100,7 +100,7 @@ checkFieldsEqualAppConfCronConf
     _admins             _sales              _initialUsers        mixpanelToken
     _gaToken            _trackjsToken       _zendeskKey         _hubspotConf
     salesforceConf      _netsConfig         _monitoringConfig   _isAPILogEnabled
-    netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf _eidServiceConf)
+    netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf eidServiceConf)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -110,7 +110,7 @@ checkFieldsEqualAppConfCronConf
     _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
     _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs _cronConsumerFilePurgingMaxJobs
      cronNetsSignConfig           cronPdfToolsLambdaConf          _cronMonthlyInvoiceConf
-    _cronStatsDConf)
+    _cronStatsDConf               cronEIDServiceConf)
 
   = checkEq "amazon"               amazonConfig       cronAmazonConfig       *>
     checkEq "database"             dbConfig           cronDBConfig           *>
@@ -121,7 +121,8 @@ checkFieldsEqualAppConfCronConf
     checkEq "mixpanel"             mixpanelToken      cronMixpanelToken      *>
     checkEq "salesforce"           salesforceConf     cronSalesforceConf     *>
     checkEq "nets_sign"            netsSignConfig     cronNetsSignConfig     *>
-    checkEq "pdftools_lambda"      pdfToolsLambdaConf cronPdfToolsLambdaConf
+    checkEq "pdftools_lambda"      pdfToolsLambdaConf cronPdfToolsLambdaConf *>
+    checkEq "eid_service"          eidServiceConf cronEIDServiceConf
 
   where
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation

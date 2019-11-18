@@ -122,6 +122,7 @@ main = do
       docSigning = documentSigning (cronGuardTimeConf cronConf)
                                    (cronCgiGrpConfig cronConf)
                                    (cronNetsSignConfig cronConf)
+                                   (cronEIDServiceConf cronConf)
                                    templates
                                    pool
                                    (cronMailNoreplyAddress cronConf)

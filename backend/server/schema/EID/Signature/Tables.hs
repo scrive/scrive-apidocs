@@ -5,18 +5,20 @@ import DB
 tableEIDSignatures :: Table
 tableEIDSignatures = tblTable
   { tblName        = "eid_signatures"
-  , tblVersion     = 3
+  , tblVersion     = 4
   , tblColumns     =
     [ tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
   -- text for now, can be changed to bytea later if necessary
-    , tblColumn { colName = "data", colType = TextT, colNullable = False }
-    , tblColumn { colName = "signature", colType = BinaryT, colNullable = False }
+    , tblColumn { colName = "data", colType = TextT }
+    , tblColumn { colName = "signature", colType = BinaryT }
     , tblColumn { colName = "certificate", colType = BinaryT }
     , tblColumn { colName = "signatory_name", colType = TextT }
     , tblColumn { colName = "signatory_personal_number", colType = TextT }
     , tblColumn { colName = "ocsp_response", colType = BinaryT }
     , tblColumn { colName = "signatory_ip", colType = TextT }
+    , tblColumn { colName = "signatory_date_of_birth", colType = TextT }
+    , tblColumn { colName = "signatory_email", colType = TextT }
     ]
 -- only one signature per signatory. can be relaxed later if necessary.
   , tblPrimaryKey  = pkOnColumn "signatory_link_id"

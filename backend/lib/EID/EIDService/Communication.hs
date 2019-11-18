@@ -9,6 +9,7 @@ module EID.EIDService.Communication (
   , checkIDINTransactionWithEIDService
   ) where
 
+import Control.Monad.Trans.Control
 import Data.Aeson ((.=), object)
 import Log
 import System.Exit
@@ -195,30 +196,10 @@ checkVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
             _ -> return (Nothing, Nothing)
         _ -> return (Nothing, Nothing)
 
-data CompleteIDINEIDServiceTransactionData = CompleteIDINEIDServiceTransactionData {
-    eiditdName :: T.Text
-  , eiditdVerifiedEmail :: T.Text
-  , eiditdBirthDate :: T.Text
-  , eiditCumstomerID :: T.Text
-  }
 
 createIDINTransactionWithEIDService
-  :: Kontrakcja m
-  => EIDServiceConf
-  -> DocumentID
-  -> SignatoryLinkID
-  -> Text
-  -> m (EIDServiceTransactionID)
-createIDINTransactionWithEIDService conf did slid redirect = do
-  ctx <- getContext
-  let redirectUrl =
-        (ctx ^. #brandedDomain % #url)
-          <> "/eid-service/redirect-endpoint/idin/"
-          <> showt did
-          <> "/"
-          <> showt slid
-          <> "?redirect="
-          <> redirect
+  :: Kontrakcja m => EIDServiceConf -> Text -> m EIDServiceTransactionID
+createIDINTransactionWithEIDService conf redirectUrl = do
   (exitcode, stdout, stderr) <- readCurl
     [ "-X"
     , "POST"
@@ -306,7 +287,7 @@ startIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
           internalError
 
 checkIDINTransactionWithEIDService
-  :: Kontrakcja m
+  :: (MonadLog m, MonadBaseControl IO m)
   => EIDServiceConf
   -> EIDServiceTransactionID
   -> m
@@ -351,11 +332,10 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
                 $ fromJSValueFieldCustom "nlIDINAuth"
                 $ fromJSValueFieldCustom "completionData"
                 $ do
-                    msurname  <- fromJSValueField "legalLastName"
-                    minitials <- fromJSValueField "initials"
-                    memail    <- fromJSValueField "email"
-                    -- mdob        <- fromJSValueField "birthDate"
-                    let mdob = Just "N/A" -- TODO: THIS IS A TEMP FIX, REMOVE
+                    msurname    <- fromJSValueField "legalLastName"
+                    minitials   <- fromJSValueField "initials"
+                    memail      <- fromJSValueField "email"
+                    mdob        <- fromJSValueField "birthDate"
                     mcustomerId <- fromJSValueField "customerId"
                     case (msurname, minitials, memail, mdob, mcustomerId) of
                       (Just surname, Just initials, Just email, Just dob, Just customerId)
@@ -363,7 +343,7 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
                           { eiditdName          = T.pack $ initials ++ " " ++ surname
                           , eiditdVerifiedEmail = T.pack email
                           , eiditdBirthDate     = T.pack dob
-                          , eiditCumstomerID    = T.pack customerId
+                          , eiditdCustomerID    = T.pack customerId
                           }
                       _ -> return Nothing
               return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)

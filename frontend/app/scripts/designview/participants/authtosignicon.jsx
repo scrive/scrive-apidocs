@@ -17,6 +17,8 @@ module.exports = React.createClass({
       return false;
     } else if (!ff.canUseSMSPinAuthenticationToSign() && am == "sms_pin") {
       return false;
+    } else if (!ff.canUseIDINAuthenticationToSign() && am == "nl_idin") {
+      return false;
     } else {
       return true;
     }
@@ -33,10 +35,12 @@ module.exports = React.createClass({
         });
     } else {
       var superthis = this;
-      var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"]
-                .filter(function (am) {
-                   return superthis.isAllowedAuthenticationMethod(am);
-                 });
+      var ams = [
+        "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "sms_pin"
+      ]
+      .filter(function (am) {
+          return superthis.isAllowedAuthenticationMethod(am);
+      });
       if (ams.length <= 1) {
         // if no auth methods are enabled, tell customer, that they can purchase them
         this.refs.blockingModal.openContactUsModal();
@@ -65,6 +69,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-sign-icon-dk-nemid";
     } else if (sig.smsPinAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-sms-pin";
+    } else if (sig.nlIDINAuthenticationToSign()) {
+      return "design-view-action-participant-icon-auth-to-sign-icon-idin";
     }
   },
   title: function () {

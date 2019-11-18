@@ -54,7 +54,7 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox", component.getDOMNode());
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 56);
+    assert.equal(checkboxes.size(), 58);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 2);
@@ -71,7 +71,7 @@ describe("admin/paymentspanel", function () {
     component.forceUpdate();
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 56);
+    assert.equal(checkboxes.size(), 58);
   });
 
   it("should call subscriptions updateSubscriptionAsAdmin on button clicked", function () {
@@ -112,6 +112,7 @@ describe("admin/paymentspanel", function () {
           canUseStandardAuthenticationToSign: true,
           canUseVerimiAuthenticationToView: true,
           canUseIDINAuthenticationToView: true,
+          canUseIDINAuthenticationToSign: true,
           canUseEmailInvitations: true,
           canUseEmailConfirmations: true,
           canUseAPIInvitations: true,
@@ -141,6 +142,7 @@ describe("admin/paymentspanel", function () {
           canUseStandardAuthenticationToSign: true,
           canUseVerimiAuthenticationToView: true,
           canUseIDINAuthenticationToView: true,
+          canUseIDINAuthenticationToSign: true,
           canUseEmailInvitations: true,
           canUseEmailConfirmations: true,
           canUseAPIInvitations: true,
@@ -152,11 +154,11 @@ describe("admin/paymentspanel", function () {
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 50); // 4 options were set to false
+    assert.equal(checkedCheckboxes.size(), 52); // 4 options were set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 49);
+    assert.equal(changedCheckedCheckboxes.size(), 51);
   });
 });

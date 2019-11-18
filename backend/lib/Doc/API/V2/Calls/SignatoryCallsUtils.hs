@@ -61,6 +61,7 @@ checkAuthenticationToSignMethodAndValue slid = do
         NOBankIDAuthenticationToSign -> return ()
         DKNemIDAuthenticationToSign  -> checkParamSSNMatchesSigLink siglink
         SMSPinAuthenticationToSign   -> checkParamMobileMatchesSigLink siglink
+        IDINAuthenticationToSign     -> return ()
   where
     checkParamMobileMatchesSigLink siglink = do
       authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")

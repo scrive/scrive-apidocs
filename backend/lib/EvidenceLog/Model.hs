@@ -407,11 +407,13 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignFromSEBankID |
   ChangeAuthenticationToSignFromNOBankID |
   ChangeAuthenticationToSignFromDKNemID  |
+  ChangeAuthenticationToSignFromIDIN     |
   ChangeAuthenticationToSignToStandard   |
   ChangeAuthenticationToSignToSMSPin     |
   ChangeAuthenticationToSignToSEBankID   |
   ChangeAuthenticationToSignToNOBankID   |
   ChangeAuthenticationToSignToDKNemID    |
+  ChangeAuthenticationToSignToIDIN       |
   ChangeAuthenticationToViewFromStandard |
   ChangeAuthenticationToViewFromSMSPin   |
   ChangeAuthenticationToViewFromSEBankID |
@@ -989,6 +991,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewToIDIN              ) = toSQL (261 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedFromIDIN    ) = toSQL (262 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedToIDIN      ) = toSQL (263 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromIDIN            ) = toSQL (264 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToIDIN              ) = toSQL (265 :: Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -1301,8 +1305,9 @@ instance FromSQL EvidenceEventType where
       261 -> return (Current ChangeAuthenticationToViewToIDIN)
       262 -> return (Current ChangeAuthenticationToViewArchivedFromIDIN)
       263 -> return (Current ChangeAuthenticationToViewArchivedToIDIN)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 263)], reValue = n }
-
+      264 -> return (Current ChangeAuthenticationToSignFromIDIN)
+      265 -> return (Current ChangeAuthenticationToSignToIDIN)
+      _   -> E.throwIO $ RangeError { reRange = [(1, 265)], reValue = n }
 
 authToViewChangeEvidence
   :: AuthenticationToViewMethod
@@ -1377,6 +1382,7 @@ authToSignChangeFrom a = case a of
   NOBankIDAuthenticationToSign -> ChangeAuthenticationToSignFromNOBankID
   DKNemIDAuthenticationToSign  -> ChangeAuthenticationToSignFromDKNemID
   SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignFromSMSPin
+  IDINAuthenticationToSign     -> ChangeAuthenticationToSignFromIDIN
 
 authToSignChangeTo :: AuthenticationToSignMethod -> CurrentEvidenceEventType
 authToSignChangeTo a = case a of
@@ -1385,3 +1391,4 @@ authToSignChangeTo a = case a of
   NOBankIDAuthenticationToSign -> ChangeAuthenticationToSignToNOBankID
   DKNemIDAuthenticationToSign  -> ChangeAuthenticationToSignToDKNemID
   SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignToSMSPin
+  IDINAuthenticationToSign     -> ChangeAuthenticationToSignToIDIN
