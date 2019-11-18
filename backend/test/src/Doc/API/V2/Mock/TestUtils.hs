@@ -487,5 +487,5 @@ setForSigNumberFromMockDoc i f md = md
     updatedSL       = f originalSL
     updatedSigLinks = insert updatedSL . delete originalSL . sort . mockDocParties $ md
 
-moveMockDoc :: FolderID -> MockDoc -> MockDoc
-moveMockDoc fid doc = doc { mockDocFolderId = Just fid }
+moveMockDoc :: MockDoc -> FolderID -> MockDoc
+moveMockDoc md fid = md { mockDocFolderId = Just fid }

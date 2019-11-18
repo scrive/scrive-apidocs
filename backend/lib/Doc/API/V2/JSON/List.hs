@@ -12,6 +12,7 @@ import Doc.API.V2.JSON.Misc
 import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.Model.OrderBy
+import Folder.Types
 import MinutesTime
 import User.UserID
 import qualified Doc.Model.Filter as DF
@@ -87,6 +88,7 @@ data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
                     | DocumentAPIFilterIsNotInTrash
                     | DocumentAPIFilterByText Text
                     | DocumentAPIFilterCanBeSignedBy UserID
+                    | DocumentAPIFilterFolderTree FolderID
 
 
 filterType :: DocumentAPIFilter -> Text
@@ -102,6 +104,7 @@ filterType (DocumentAPIFilterIsInTrash      ) = "is_in_trash"
 filterType (DocumentAPIFilterIsNotInTrash   ) = "is_not_in_trash"
 filterType (DocumentAPIFilterByText        _) = "text"
 filterType (DocumentAPIFilterCanBeSignedBy _) = "user_can_sign"
+filterType (DocumentAPIFilterFolderTree    _) = "folder_id"
 
 instance Unjson DocumentAPIFilter where
   unjsonDef =
@@ -122,6 +125,9 @@ instance Unjson DocumentAPIFilter where
           , (DocumentAPIFilterByText ""      , unjsonDocumentAPIFilterByText)
           , ( DocumentAPIFilterCanBeSignedBy (unsafeUserID 0)
             , unjsonDocumentAPIFilterCanBeSignedBy
+            )
+          , ( DocumentAPIFilterFolderTree (unsafeFolderID 0)
+            , unjsonDocumentAPIFilterByFolderTree
             )
           ]
     where
@@ -242,6 +248,17 @@ unjsonDocumentAPIFilterCanBeSignedBy =
     unsafeDocumentAPIFilterUserID (DocumentAPIFilterCanBeSignedBy uid) = uid
     unsafeDocumentAPIFilterUserID _ = unexpectedError "unsafeDocumentAPIFilterStatus"
 
+unjsonDocumentAPIFilterByFolderTree
+  :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterByFolderTree =
+  pure DocumentAPIFilterFolderTree
+    <*  fieldReadonly "filter_by" filterType "Type of filter"
+    <*> field "folder_id" unsafeDocmentAPIFilterFolderTree "Id of folder"
+  where
+    unsafeDocmentAPIFilterFolderTree :: DocumentAPIFilter -> FolderID
+    unsafeDocmentAPIFilterFolderTree (DocumentAPIFilterFolderTree fid) = fid
+    unsafeDocmentAPIFilterFolderTree _ =
+      unexpectedError "unsafeDocumentAPIFilterFolderTree"
 
 toDocumentFilter :: UserID -> DocumentAPIFilter -> [DF.DocumentFilter]
 toDocumentFilter _ (DocumentAPIFilterStatuses ss) = [DF.DocumentFilterStatuses ss]
@@ -265,3 +282,5 @@ toDocumentFilter _ (DocumentAPIFilterIsNotInTrash ) = [DF.DocumentFilterDeleted 
 toDocumentFilter _ (DocumentAPIFilterByText text) = [DF.processSearchStringToFilter text]
 toDocumentFilter _ (DocumentAPIFilterCanBeSignedBy uid) =
   [DF.DocumentFilterByCanSign uid]
+toDocumentFilter _ (DocumentAPIFilterFolderTree fid) =
+  [DF.DocumentFilterByFolderTree fid]

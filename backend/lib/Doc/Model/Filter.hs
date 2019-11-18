@@ -49,7 +49,8 @@ data DocumentFilter
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
-  | DocumentFilterByFolderID FolderID         -- ^ Documents in given folder
+  | DocumentFilterByFolderID FolderID         -- ^ Documents only in given folder
+  | DocumentFilterByFolderTree FolderID       -- ^ Documents that are in any of subfolder of given folder
   deriving Show
 
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
@@ -181,6 +182,11 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
 
 documentFilterToSQL (DocumentFilterByFolderID fid) = do
   sqlWhereEq "documents.folder_id" fid
+
+documentFilterToSQL (DocumentFilterByFolderTree fid) = do
+  sqlWhereExists $ sqlSelect "folders" $ do
+    sqlWhere "folders.id = documents.folder_id"
+    sqlWhere $ "folders.id =" <?> fid <+> "OR folders.parent_path @>" <?> Array1 [fid]
 
 data FilterString = Quoted Text | Unquoted Text
   deriving (Show, Eq)
