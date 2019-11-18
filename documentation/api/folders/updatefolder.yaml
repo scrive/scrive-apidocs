@@ -1,0 +1,51 @@
+---
+post:
+  summary: Update Folder
+
+  tags:
+    - Folders
+
+  description: |
+    > Example of JSON that could be used update a Folder:
+
+    ```json
+    {
+      "name": "new child folder of 1",
+      "parent_id": "1"
+    }
+    ```
+
+    This endpoint allows you to create a new Folder. Neither field is required,
+    providing `{}` as your update JSON is essentially a "no op". The API does
+    distinguish between `null` and "not present" so `"parent_id": null` will
+    likely produce an error (unless you are an internal Scrive admin) since
+    users are not permitted to promote child folders into new root folders.
+
+  parameters:
+    - name: folder_id
+      in: formData
+      type: string
+      format: application/json
+      description: |
+        JSON object containing details of the folder to be updated.
+      example: { "name": "new child folder of 1", "parent_id": "1" }
+      required: true
+    - name: folder
+      in: formData
+      type: string
+      format: application/json
+      description: |
+        JSON object containing details of the folder to be updated.
+      example: {
+        "name": "new child folder of 1",
+        "parent_id": "1"
+      }
+
+  responses:
+    200:
+      $ref: ../../scrive_api.yaml#/definitions/Folder
+    403:
+      description: |
+        Insufficient Permissions error (this means that you don't have enough
+        permissions to update this Folder. In practise this means that you lack
+        Update permissions on the Folder.

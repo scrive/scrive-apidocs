@@ -1047,6 +1047,9 @@ paths:
   /api/v2/folders/create:
     $ref: ./api/folders/createfolder.yaml
 
+  /api/v2/folders/{folder_id}/update:
+    $ref: ./api/folders/updatefolder.yaml
+
   /api/v2/folders/{folder_id}/delete:
     $ref: ./api/folders/deletefolder.yaml
 

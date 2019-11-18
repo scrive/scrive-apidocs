@@ -15,7 +15,10 @@ post:
     }
     ```
 
-    This endpoint allows you to create a new Folder.
+    This endpoint allows you to create a new Folder. `parent_id` is mandatory
+    (unless you are in internal Scrive admin user) since you are not permitted
+    to create new root Folders. `name` will be an empty string if you do not
+    include it.
 
   parameters:
     - name: folder
@@ -24,8 +27,10 @@ post:
       format: application/json
       description: |
         JSON object containing details of the folder to be created.
-      example: { "name": "new child folder of 1", "parent_id": "1" }
-      required: true
+      example: {
+        "name": "new child folder of 1",
+        "parent_id": "1"
+      }
 
   responses:
     200:
