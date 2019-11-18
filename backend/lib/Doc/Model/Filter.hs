@@ -50,7 +50,7 @@ data DocumentFilter
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
   | DocumentFilterByFolderID FolderID         -- ^ Documents only in given folder
-  | DocumentFilterByFolder FolderID           -- ^ Documents that are in any of subfolder of given folder
+  | DocumentFilterByFolderTree FolderID       -- ^ Documents that are in any of subfolder of given folder
   deriving Show
 
 documentFilterToSQL
@@ -184,7 +184,7 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
 documentFilterToSQL (DocumentFilterByFolderID fid) = do
   sqlWhereEq "documents.folder_id" fid
 
-documentFilterToSQL (DocumentFilterByFolder fid) = do
+documentFilterToSQL (DocumentFilterByFolderTree fid) = do
   sqlJoinOn "folders" "documents.folder_id = folders.id"
   sqlWhere $ "folders.parent_path @>" <?> (Array1 [fid]) <+> "OR folders.id =" <?> fid
 

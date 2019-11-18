@@ -282,4 +282,5 @@ toDocumentFilter _ (DocumentAPIFilterIsNotInTrash ) = [DF.DocumentFilterDeleted 
 toDocumentFilter _ (DocumentAPIFilterByText text) = [DF.processSearchStringToFilter text]
 toDocumentFilter _ (DocumentAPIFilterCanBeSignedBy uid) =
   [DF.DocumentFilterByCanSign uid]
-toDocumentFilter _ (DocumentAPIFilterFolderTree fid) = [DF.DocumentFilterByFolder fid]
+toDocumentFilter _ (DocumentAPIFilterFolderTree fid) =
+  [DF.DocumentFilterByFolderTree fid]
