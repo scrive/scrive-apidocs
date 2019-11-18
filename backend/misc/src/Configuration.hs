@@ -142,6 +142,7 @@ showNiceYamlParseException filepath parseException = case parseException of
       ++ context
   Yaml.AesonException      ex -> filepath ++ ": " ++ ex
   Yaml.OtherParseException ex -> filepath ++ ": " ++ show ex
+  Yaml.NonStringKey        _  -> "non-string keys are not supported"
   Yaml.NonStringKeyAlias anchorName value ->
     filepath ++ ": unknown non-string key alias " ++ show anchorName ++ ", " ++ show value
   Yaml.CyclicIncludes             -> filepath ++ ": cyclic includes"

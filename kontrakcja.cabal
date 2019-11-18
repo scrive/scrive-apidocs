@@ -658,7 +658,7 @@ Library
                , xml-conduit
                , xml-conduit-writer
                , xml-types
-               , yaml >= 0.11.1.0
+               , yaml >= 0.11.2.0
                , zip-archive
 
   Other-Extensions: TemplateHaskell
