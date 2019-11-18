@@ -10,6 +10,7 @@ module Chargeable.Model (
   , ChargeUserGroupForFITupasAuthentication(..)
   , ChargeUserGroupForVerimiAuthentication(..)
   , ChargeUserGroupForIDINAuthentication(..)
+  , ChargeUserGroupForIDINSignature(..)
   , ChargeUserGroupForStartingDocument(..)
   , ChargeUserGroupForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
@@ -44,7 +45,8 @@ data ChargeableItem =
   CIFITupasAuthentication  |
   CIShareableLink          |
   CIVerimiAuthentication   |
-  CIIDINAuthentication
+  CIIDINAuthentication     |
+  CIIDINSignature
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -72,7 +74,8 @@ instance FromSQL ChargeableItem where
       13 -> return CIShareableLink
       14 -> return CIVerimiAuthentication
       15 -> return CIIDINAuthentication
-      _  -> throwM RangeError { reRange = [(1, 15)], reValue = n }
+      16 -> return CIIDINSignature
+      _  -> throwM RangeError { reRange = [(1, 16)], reValue = n }
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
@@ -91,6 +94,7 @@ instance ToSQL ChargeableItem where
   toSQL CIShareableLink          = toSQL (13 :: Int16)
   toSQL CIVerimiAuthentication   = toSQL (14 :: Int16)
   toSQL CIIDINAuthentication     = toSQL (15 :: Int16)
+  toSQL CIIDINSignature          = toSQL (16 :: Int16)
 
 -- Note: We charge the user group of the author of the document
 -- at a time of the event, therefore the user_group_id never
@@ -158,6 +162,12 @@ data ChargeUserGroupForIDINAuthentication = ChargeUserGroupForIDINAuthentication
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForIDINAuthentication () where
   update (ChargeUserGroupForIDINAuthentication document_id) =
     update (ChargeUserGroupFor CIIDINAuthentication 1 document_id)
+
+-- | Charge user group of the author of the document for iDIN authentication
+data ChargeUserGroupForIDINSignature = ChargeUserGroupForIDINSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForIDINSignature () where
+  update (ChargeUserGroupForIDINSignature document_id) =
+    update (ChargeUserGroupFor CIIDINSignature 1 document_id)
 
 -- | Charge user group of the author of the document for creation of the document
 data ChargeUserGroupForStartingDocument = ChargeUserGroupForStartingDocument DocumentID

@@ -564,6 +564,7 @@ apiCallV1Ready did = logDocument did . api $ do
         DKNemIDAuthenticationToSign  -> False -- Danish Nets eSigning is not supported in API v1
         StandardAuthenticationToSign -> True
         SMSPinAuthenticationToSign   -> True
+        IDINAuthenticationToSign     -> False -- Dutch iDIN eSigning is not supported in API v1
 
     signatoryHasValidSSNForIdentifyToView sl =
       case (signatorylinkauthenticationtoviewmethod sl) of
@@ -695,6 +696,9 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       DKNemIDAuthenticationToSign -> do
         logAttention_ "Danish NemID signing attempted in V1 API"
         (Left . Failed) <$> (J.runJSONGenT $ J.value "dkNemidNotSupported" True)
+      IDINAuthenticationToSign -> do
+        logAttention_ "Dutch iDIN signing attempted in V1 API"
+        (Left . Failed) <$> (J.runJSONGenT $ J.value "nlIDINNotSupported" True)
 
 apiCallV1Sign
   :: Kontrakcja m
@@ -814,6 +818,10 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
                                   logAttention_ "Danish NemID signing attempted in V1 API"
                                   (Left . Failed)
                                     <$> (J.runJSONGenT $ J.value "dkNemidNotSupported" True)
+                                IDINAuthenticationToSign -> do
+                                  logAttention_ "Dutch iDIN signing attempted in V1 API"
+                                  (Left . Failed)
+                                    <$> (J.runJSONGenT $ J.value "nlIDINNotSupported" True)
                             )
     `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) ->
                               throwM
@@ -866,6 +874,9 @@ checkAuthenticationToSignMethodAndValue slid = do
                 then return ()
                 else throwM . SomeDBExtraException $ conflictError
                   "`authentication_value` for phone number does not match"
+            (True, IDINAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Dutch iDIN signing not supported in API V1"
         Nothing ->
           throwM . SomeDBExtraException $ badInput "`authentication_type` was not a valid"
     (Nothing, Nothing) -> return ()
@@ -1229,6 +1240,11 @@ apiCallV1ChangeAuthenticationToSign did slid =
               . SomeDBExtraException
               $ badInput
                   "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
+          Just IDINAuthenticationToSign ->
+            throwM
+              . SomeDBExtraException
+              $ badInput
+                  "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
 
       let authtoviewmethod = signatorylinkauthenticationtoviewmethod sl
       -- Check conditions for different authentication to sign methods
@@ -1287,6 +1303,8 @@ apiCallV1ChangeAuthenticationToSign did slid =
           "Norwegian BankID signing is not supported in API V1"
         DKNemIDAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "Danish NemID signing is not supported in API V1"
+        IDINAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "Dutch iDIN signing is not supported in API V1"
 
       -- Change authentication to sign method and return Document JSON
       dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor

@@ -1797,6 +1797,13 @@ testSealDocument = replicateM_ 1 $ do
                                 Nothing
                                 screenshots
                                 sa
+                            IDINAuthenticationToSign -> do
+                              randomUpdate $ \esig -> SignDocument
+                                (signatorylinkid slk)
+                                (Just (NetsDKNemIDSignature_ esig))
+                                Nothing
+                                screenshots
+                                sa
                         when (isApprover slk) $ do
                           dbUpdate $ ApproveDocument (signatorylinkid slk) sa
 

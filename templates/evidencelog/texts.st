@@ -76,6 +76,8 @@ ChangeAuthenticationToSignFromNOBankIDLog=$ChangeAuthenticationToSignFrom(auth='
 ###
 ChangeAuthenticationToSignFromDKNemIDLog=$ChangeAuthenticationToSignFrom(auth='“Danish NemID”')$
 ###
+ChangeAuthenticationToSignFromIDINLog=$ChangeAuthenticationToSignFrom(auth='“Dutch iDIN”')$
+###
 ChangeAuthenticationToSignToStandardLog=$ChangeAuthenticationToSignTo(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToSignToSMSPinLog=$ChangeAuthenticationToSignTo(auth='“PIN by SMS”')$
@@ -85,6 +87,8 @@ ChangeAuthenticationToSignToSEBankIDLog=$ChangeAuthenticationToSignTo(auth='“S
 ChangeAuthenticationToSignToNOBankIDLog=$ChangeAuthenticationToSignTo(auth='“Norwegian BankID”')$
 ###
 ChangeAuthenticationToSignToDKNemIDLog=$ChangeAuthenticationToSignTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToSignToIDINLog=$ChangeAuthenticationToSignTo(auth='“Dutch iDIN”')$
 ###
 ChangeAuthenticationToViewFromStandardLog=$ChangeAuthenticationToViewFrom(auth='“no extra authentication”')$
 ###
@@ -589,9 +593,11 @@ $endif$
 ###
 elegVerificationSign=
 <br/>
+$if(signed_text)$
 <br/>
 <p>The text signed in the $providerType$ client was:</p>
 <pre style='white-space:normal'>$signed_text$</pre>
+$endif$
 <br/>
 $if(provider_sebankid)$
 <p>Data returned from $provider()$:
@@ -614,12 +620,23 @@ $if(provider_dknemid)$
   $if(signatory_ip)$<br/>IP: $signatory_ip$$endif$
 </p>
 $endif$
+$if(provider_idin)$
+<p>Authentication at the point of signing with $provider()$.</p>
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  $if(signatory_dob)$<br/>Date of birth: $signatory_dob$$endif$
+  $if(signatory_verified_email)$<br/>Verified email: $signatory_verified_email$$endif$
+  $if(signatory_customer_id)$<br/>Customer ID: $signatory_customer_id$$endif$
+</p>
+$endif$
+$if(signature)$
 <br/>
 <p>Signature: <div>$personalNumber(value=signature)$</div></p>
 $if(provider_sebankid)$
 <p>Online Certificate Status Protocol (OCSP) Response:
   <div>$ocsp_response$</div>
 </p>
+$endif$
 $endif$
 ###
 invitationCustomMessageTextIfThereIsOne=

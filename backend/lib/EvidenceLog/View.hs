@@ -285,14 +285,14 @@ simplifiedEventText mactor sim dee = do
                 LegacyNordeaSignature_{}                        -> return ()
                 LegacyMobileBankIDSignature_{}                  -> return ()
                 CGISEBankIDSignature_ CGISEBankIDSignature {..} -> do
-                  F.value "eid_signatory_name" $ Just cgisebidsSignatoryName
                   F.value "provider_sebankid" True
                 NetsNOBankIDSignature_ NetsNOBankIDSignature {..} -> do
-                  F.value "eid_signatory_name" $ Just netsnoSignatoryName
                   F.value "provider_nobankid" True
                 NetsDKNemIDSignature_ NetsDKNemIDSignature {..} -> do
-                  F.value "eid_signatory_name" $ Just netsdkSignatoryName
                   F.value "provider_dknemid" True
+                EIDServiceIDINSignature_ (EIDServiceIDINSignature CompleteIDINEIDServiceTransactionData {..})
+                  -> do
+                    F.value "provider_idin" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession AuthenticationToView slinkid)
               >>= \case

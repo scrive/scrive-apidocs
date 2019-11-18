@@ -812,7 +812,8 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
       SMSPinAuthenticationToSign   -> return (Nothing, mMobile_)
       NOBankIDAuthenticationToSign -> return (Nothing, Nothing)
       DKNemIDAuthenticationToSign  -> return (mSSN_, Nothing)
-    -- Check conditions on parameters and signatory
+      IDINAuthenticationToSign     -> return (Nothing, Nothing)
+      -- Check conditions on parameters and signatory
     guardCanSetAuthenticationToSignForSignatoryWithValue slid
                                                          authentication_type
                                                          mSSN

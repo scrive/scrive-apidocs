@@ -17,7 +17,6 @@ module EID.Authentication.Model (
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
-import Data.Foldable as F
 import Data.Int
 
 import DB
@@ -209,7 +208,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Mayb
       sqlResult "provider_customer_id"
       sqlWhereEq "signatory_link_id" slid
       sqlWhereEq "auth_kind"         authKind
-      F.forM_ msid $ sqlWhereEq "session_id"
+      whenJust msid $ sqlWhereEq "session_id"
     fetchMaybe fetchEAuthentication
 
 -- | Get signature for a given signatory. Used when generating evidence long after user has signed.

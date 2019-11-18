@@ -223,4 +223,6 @@ kontraMigrations =
   , addProviderCustomerIDToEIDAuthentications
   , featureFlagsAddPortalFlag
   , userGroupAddressAddEntityNameField
+  , featureFlagsAddIDINAuthToSign
+  , addSignatoryDobAndEmailToEIDSignatures
   ]

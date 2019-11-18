@@ -234,9 +234,8 @@ var Modal = require("../../common/modal");
       var isAvailable = function (auth) {
 
         // Changing email is tricky - I prefer just not to allow that
-        // and block switching to Verimi/iDIN if email is not valid.
-        if ((auth == "verimi" || auth == "nl_idin")
-          && !new EmailValidation().validateData(sig.email())) {
+        // and block switching to Verimi if email is not valid.
+        if (auth == "verimi" && !new EmailValidation().validateData(sig.email())) {
           return false;
         }
 

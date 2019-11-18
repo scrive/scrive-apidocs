@@ -19,6 +19,8 @@ var SignEID = require("./signeidview");
 var SignNetsEID = require("./signeidnetsview");
 var SignEIDProcess = require("./signeidprocessview");
 var SignEIDNetsProcess = require("./signeidnetsprocessview");
+var IDINSignModel = require("../../eleg/idinsigning");
+var SignIDINAuth = require("./signidinauth");
 var ErrorModal = require("../errormodal");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var $ = require("jquery");
@@ -89,6 +91,7 @@ var Task = require("../navigation/task");
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
       var hasEIDNets = signatory.noBankIDAuthenticationToSign() || signatory.dkNemIDAuthenticationToSign();
+      var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
 
       if (isApprover) {
         return "approve";
@@ -106,6 +109,10 @@ var Task = require("../navigation/task");
         return "eid-nets";
       }
 
+      if (hasIDINAuth) {
+        return "eid-idin-auth";
+      }
+
       if (signatory.hasPlacedObligatorySignatures()) {
         return "finish";
       }
@@ -117,7 +124,7 @@ var Task = require("../navigation/task");
       var steps = [
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
         "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
-        "approving", "forward"
+        "approving", "forward", "eid-idin-auth"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -182,7 +189,9 @@ var Task = require("../navigation/task");
 
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
-      var noOverlayStep = ["sign", "approve", "finish", "pin", "eid", "eid-nets"];
+      var noOverlayStep = [
+        "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth"
+      ];
       return !(noOverlayStep.indexOf(step) > -1);
     },
 
@@ -578,6 +587,20 @@ var Task = require("../navigation/task");
       });
     },
 
+    handleIDINAuth: function () {
+      if (!this.canSignDocument()) {
+        return this.context.blinkArrow();
+      }
+
+      var document = this.props.model.document();
+      var signatory = document.currentSignatory();
+
+      new IDINSignModel({
+        doc: document,
+        siglinkid: signatory.signatoryid()
+      }).sign();
+    },
+
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -746,6 +769,21 @@ var Task = require("../navigation/task");
               onBack={this.handleSetStep(this.state.initialStep)}
               onReject={this.handleReject}
               allowRejectionReason={doc.allowrejectreason()}
+            />
+          }
+          {/* if */ this.isOnStep("eid-idin-auth") &&
+            <SignIDINAuth
+              model={this.props.model}
+              canSign={this.canSignDocument()}
+              field={phoneField}
+              onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
+              onSign={ function () {
+                  doc.takeSigningScreenshot(function () {
+                    self.handleIDINAuth();
+                  }, {});
+                }
+              }
             />
           }
         </div>

@@ -5,10 +5,14 @@ module EID.EIDService.Types (
 
     , EIDServiceTransactionProvider(..)
     , EIDServiceTransactionStatus(..)
+    , EIDServiceAuthenticationKind(..)
     , EIDServiceTransaction(..)
 
     , EIDServiceVerimiAuthentication(..)
     , EIDServiceIDINAuthentication(..)
+
+    , EIDServiceIDINSignature(..)
+    , CompleteIDINEIDServiceTransactionData(..)
   ) where
 
 import Control.Monad.Catch
@@ -105,11 +109,36 @@ instance ToSQL EIDServiceTransactionStatus where
   toSQL EIDServiceTransactionStatusCompleteAndSuccess = toSQL (4 :: Int16)
   toSQL EIDServiceTransactionStatusCompleteAndFailed  = toSQL (5 :: Int16)
 
+data EIDServiceAuthenticationKind =
+  EIDServiceAuthToView AuthenticationKind
+  | EIDServiceAuthToSign
+  deriving (Eq, Ord, Show)
+
+
+instance PQFormat EIDServiceAuthenticationKind where
+  pqFormat = pqFormat @Int16
+
+instance FromSQL EIDServiceAuthenticationKind where
+  type PQBase EIDServiceAuthenticationKind = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return $ EIDServiceAuthToView AuthenticationToView
+      2 -> return $ EIDServiceAuthToView AuthenticationToViewArchived
+      3 -> return $ EIDServiceAuthToSign
+      _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
+
+instance ToSQL EIDServiceAuthenticationKind where
+  type PQDest EIDServiceAuthenticationKind = PQDest Int16
+  toSQL (EIDServiceAuthToView AuthenticationToView) = toSQL (1 :: Int16)
+  toSQL (EIDServiceAuthToView AuthenticationToViewArchived) = toSQL (2 :: Int16)
+  toSQL EIDServiceAuthToSign = toSQL (3 :: Int16)
+
 data EIDServiceTransaction = EIDServiceTransaction
   { estID :: !EIDServiceTransactionID
   , estStatus :: !EIDServiceTransactionStatus
   , estSignatoryLinkID :: !SignatoryLinkID
-  , estAuthKind :: !AuthenticationKind
+  , estAuthKind :: !EIDServiceAuthenticationKind
   , estProvider :: !EIDServiceTransactionProvider
   , estSessionID :: !SessionID
   , estDeadline :: !UTCTime
@@ -127,4 +156,16 @@ data EIDServiceIDINAuthentication = EIDServiceIDINAuthentication
   , eidServiceIDINVerifiedPhone   :: !(Maybe T.Text)
   , eidServiceIDINBirthDate       :: !(Maybe T.Text)
   , eidServiceIDINCustomerID      :: !(Maybe T.Text)
+} deriving (Eq, Ord, Show)
+
+data EIDServiceIDINSignature = EIDServiceIDINSignature
+  { unEIDServiceIDINSignature :: CompleteIDINEIDServiceTransactionData
+  }
+  deriving (Eq, Ord, Show)
+
+data CompleteIDINEIDServiceTransactionData = CompleteIDINEIDServiceTransactionData
+  {  eiditdName :: T.Text
+  , eiditdVerifiedEmail :: T.Text
+  , eiditdBirthDate :: T.Text
+  , eiditdCustomerID :: T.Text
   } deriving (Eq, Ord, Show)

@@ -413,6 +413,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
               Bad -> apiError $ signatoryStateError
                 "The authentication value provided is not a valid for Danish NemID"
               Good _ -> return ()
+      IDINAuthenticationToSign -> return ()
 
 
 guardAuthenticationMethodsCanMix
@@ -568,6 +569,7 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
         isJust (getFieldByIdentity MobileFI $ signatoryfields sl)
           && (T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
+      IDINAuthenticationToSign     -> True
 
     signatoryHasValidSSNOrEmailForIdentifyToView sl =
       case (signatorylinkauthenticationtoviewmethod sl) of

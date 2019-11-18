@@ -15,6 +15,7 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
+import Chargeable.Model
 import DB
 import DB.PostgreSQL
 import Doc.Action
@@ -33,6 +34,10 @@ import Doc.Types.Document
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
 import EID.CGI.GRP.Types
+import EID.EIDService.Communication
+import EID.EIDService.Conf
+import EID.EIDService.Model
+import EID.EIDService.Types
 import EID.Nets.Config
 import EID.Nets.Control (checkNetsSignStatus)
 import EID.Nets.Types (NetsSignStatus(..), netsFaultText)
@@ -81,12 +86,13 @@ documentSigning
   => GuardTimeConf
   -> Maybe CgiGrpConfig
   -> Maybe NetsSignConfig
+  -> Maybe EIDServiceConf
   -> KontrakcjaGlobalTemplates
   -> ConnectionSourceM m
   -> Text
   -> Int
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
-documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool mailNoreplyAddress maxRunningJobs
+documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates pool mailNoreplyAddress maxRunningJobs
   = ConsumerConfig
     { ccJobsTable           = "document_signing_jobs"
     , ccConsumersTable      = "document_signing_consumers"
@@ -152,12 +158,13 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool mailNoreply
                           minutesTillPurgeOfFailedAction
                         else return $ Ok Remove
                     else case signingSignatureProvider of
-                      CgiGrpBankID -> handleCgiGrpBankID ds now
-                      NetsNOBankID -> handleNets ds now
-                      NetsDKNemID  -> handleNets ds now
-                      LegacyBankID -> legacyProviderFail signingSignatoryID LegacyBankID
-                      LegacyTelia  -> legacyProviderFail signingSignatoryID LegacyTelia
-                      LegacyNordea -> legacyProviderFail signingSignatoryID LegacyNordea
+                      CgiGrpBankID   -> handleCgiGrpBankID ds now
+                      NetsNOBankID   -> handleNets ds now
+                      NetsDKNemID    -> handleNets ds now
+                      EIDServiceIDIN -> handleEidService ds now
+                      LegacyBankID   -> legacyProviderFail signingSignatoryID LegacyBankID
+                      LegacyTelia    -> legacyProviderFail signingSignatoryID LegacyTelia
+                      LegacyNordea   -> legacyProviderFail signingSignatoryID LegacyNordea
                       LegacyMobileBankID ->
                         legacyProviderFail signingSignatoryID LegacyMobileBankID
     , ccOnException         =
@@ -224,6 +231,49 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool mailNoreply
               dbUpdate $ UpdateDocumentSigning signingSignatoryID False "nets_in_progress"
               return $ Ok $ RerunAfter $ iseconds secondsToRetry
             NetsSignStatusAlreadySigned -> return $ Ok Remove
+    handleEidService ds@DocumentSigning {..} now = do
+      case mEidServiceConf of
+        Nothing -> do
+          noConfigurationWarning "EIDService Esigning"
+          return $ Failed Remove
+        Just conf -> do
+          mest <- dbQuery $ GetEIDServiceTransactionNoSessionIDGuard
+            signingSignatoryID
+            EIDServiceAuthToSign
+          res <- case mest of
+            Nothing  -> return Nothing
+            Just est -> checkIDINTransactionWithEIDService conf (estID est) >>= \case
+              (Nothing, _   ) -> return Nothing
+              (Just ts, mctd) -> return $ Just (est, ts, mctd)
+          case res of
+            Just (est, ts, mctd) -> do
+              let mergeWithStatus newStatus =
+                    dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newStatus }
+              case (ts, mctd) of
+                (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
+                  doc <- dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID
+                  dbUpdate
+                    . MergeEIDServiceIDINSignature signingSignatoryID
+                    $ EIDServiceIDINSignature cd
+                  logInfo_ . ("EidHub NL IDIN Sign succeeded: " <>) . showt $ (est, ts)
+                  signFromESignature ds now
+                  dbUpdate $ ChargeUserGroupForIDINSignature (documentid doc)
+                  mergeWithStatus EIDServiceTransactionStatusCompleteAndSuccess
+                  return $ Ok Remove
+                (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
+                  mergeWithStatus EIDServiceTransactionStatusCompleteAndFailed
+                  return $ Failed Remove
+                (EIDServiceTransactionStatusNew, _) -> do
+                  mergeWithStatus ts
+                  return $ Ok $ RerunAfter $ iseconds secondsToRetry
+                (EIDServiceTransactionStatusStarted, _) -> do
+                  mergeWithStatus ts
+                  return $ Ok $ RerunAfter $ iseconds secondsToRetry
+                _ -> do
+                  mergeWithStatus ts
+                  return $ Failed Remove
+            _ -> do
+              return $ Failed Remove
 
 signFromESignature
   :: ( GuardTimeConfMonad m
