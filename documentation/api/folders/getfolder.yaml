@@ -29,6 +29,8 @@ get:
     This metadata currently consists of the folder's ID, it's parent ID (if any)
     and the name/id of its immediate children (if any).
 
+    @DEVOTE: Need to clarify about the stuff Kuba did.
+
   parameters:
     - name: folder_id
       in: url
