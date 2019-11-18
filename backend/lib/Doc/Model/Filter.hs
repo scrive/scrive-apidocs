@@ -53,8 +53,7 @@ data DocumentFilter
   | DocumentFilterByFolderTree FolderID       -- ^ Documents that are in any of subfolder of given folder
   deriving Show
 
-documentFilterToSQL
-  :: (State.MonadState v m, SqlWhere v, SqlFrom v) => DocumentFilter -> m ()
+documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
   sqlWhereIn "documents.status" statuses
 
@@ -185,8 +184,9 @@ documentFilterToSQL (DocumentFilterByFolderID fid) = do
   sqlWhereEq "documents.folder_id" fid
 
 documentFilterToSQL (DocumentFilterByFolderTree fid) = do
-  sqlJoinOn "folders" "documents.folder_id = folders.id"
-  sqlWhere $ "folders.parent_path @>" <?> (Array1 [fid]) <+> "OR folders.id =" <?> fid
+  sqlWhereExists $ sqlSelect "folders" $ do
+    sqlWhere "folders.id = documents.folder_id"
+    sqlWhere $ "folders.id =" <?> fid <+> "OR folders.parent_path @>" <?> Array1 [fid]
 
 data FilterString = Quoted Text | Unquoted Text
   deriving (Show, Eq)
