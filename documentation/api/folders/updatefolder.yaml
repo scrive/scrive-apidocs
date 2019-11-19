@@ -36,10 +36,7 @@ post:
       format: application/json
       description: |
         JSON object containing details of the folder to be updated.
-      example: {
-        "name": "new child folder of 1",
-        "parent_id": "1"
-      }
+      example: { "name": "new child folder of 1", "parent_id": "1" }
 
   responses:
     200:
@@ -47,5 +44,5 @@ post:
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough
-        permissions to update this Folder. In practise this means that you lack
+        permissions to update this Folder. In practice this means that you lack
         Update permissions on the Folder.

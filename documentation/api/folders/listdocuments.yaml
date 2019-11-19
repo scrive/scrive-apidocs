@@ -30,9 +30,18 @@ get:
   responses:
     200:
       description: |
-        @TODO: Needs to be specified
+        JSON object which states the number of documents in the folder and lists
+        the JSON respresentations of those documents. (See Documents in
+        Definitions)
+      properties:
+        total_matching:
+          type: integer
+        documents:
+          type: array
+          items:
+            $ref: ../../scrive_api.yaml#/definitions/Document
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough
-        permissions to create this Folder. In practise this means that you lack
+        permissions to create this Folder. In practice this means that you lack
         Read permissions on the Folder)
