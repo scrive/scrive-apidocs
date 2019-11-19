@@ -10,7 +10,11 @@ get:
 
     ```json
     {
-      "foo": "bar"
+      "total_matching": 2,
+      "documents": [
+        <Document JSON (see doc endpoints)>,
+        <Document JSON (see doc endpoints)>
+      ]
     }
     ```
 
@@ -29,4 +33,6 @@ get:
         @TODO: Needs to be specified
     403:
       description: |
-        Insufficient Permissions error
+        Insufficient Permissions error (this means that you don't have enough
+        permissions to create this Folder. In practise this means that you lack
+        Read permissions on the Folder)

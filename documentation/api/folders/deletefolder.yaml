@@ -18,9 +18,11 @@ post:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/Folder
+      description: |
+        JSON object showing that a Folder with the given ID has been
+        successfully deleted.
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough
         permissions to create this Folder. In practise this means that you lack
-        Delete permissions on the Folder.
+        Delete permissions on the Folder).

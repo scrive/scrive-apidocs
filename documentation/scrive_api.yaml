@@ -1041,19 +1041,19 @@ paths:
 
   # Folders
 
-  /api/v2/folders/{folder_id}:
+  /folders/{folder_id}:
     $ref: ./api/folders/getfolder.yaml
 
-  /api/v2/folders/create:
+  /folders/create:
     $ref: ./api/folders/createfolder.yaml
 
-  /api/v2/folders/{folder_id}/update:
+  /folders/{folder_id}/update:
     $ref: ./api/folders/updatefolder.yaml
 
-  /api/v2/folders/{folder_id}/delete:
+  /folders/{folder_id}/delete:
     $ref: ./api/folders/deletefolder.yaml
 
-  /api/v2/folders/{folder_id}/list:
+  /folders/{folder_id}/list:
     $ref: ./api/folders/listdocuments.yaml
 
 definitions:
