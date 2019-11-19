@@ -48,7 +48,8 @@ new APICallV2({
             argName: "folder_id",
             sendAsParam: true,
             optional: true,
-            description: "ID of the folder to save the document to"
+            description: "ID of the folder to save the document to",
+            defaultValue: ""
         })
         ]
 });
