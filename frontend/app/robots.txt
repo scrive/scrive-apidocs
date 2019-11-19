@@ -12,3 +12,6 @@ Disallow: /s/
 Disallow: /tag/
 Disallow: */accountsetup/
 Disallow: /plugins/
+Disallow: */enter
+Disallow: /to-sign
+Disallow: /api-explorer

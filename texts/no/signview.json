@@ -206,9 +206,9 @@
 "_signviewSigningFailed":"Beklager, noe gikk galt under signering av dokumentet. Vennligst prøv igjen.",
 "_smsDocumentErrorAuthor":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$ og signeringsprosessen har blitt kansellert. Om du har noen spørsmål, vennligst kontakt oss på support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$ og signeringsprosessen har blitt kansellert. Om du har noen spørsmål, vennligst kontakt oss på support@scrive.com",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ har invitert deg til å godkjenne dokument $documenttitle:noescape()$. Følg linken for videre instruksjoner $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ har invitert deg til å e-signere dokumentet $documenttitle:noescape()$. Følg lenken for videre instruksjoner $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ har invitert deg til å se gjennom dokument $documenttitle:noescape()$. Følg linken for videre instruksjoner $link$",
 "_smsPinSendout":"Din PIN for $documenttitle:noescape()$ er $pin$",
 "_smsRejectNotification":"$rejectorName$ har avslått å signere dokumentet $documenttitle:noescape()$. Signeringsprosessen er derfor kansellert.",
 "_smsReminder":"$creatorname$ ønsker å minne deg på å signere dokumentet $documenttitle:noescape()$. Følg lenken for videre instruksjoner $link$",
@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Dette er en automatisk påminnelse om at du ikke har godkjent dokumentet $documenttitle:noescape()$ fra $creatorname$ enda. Følg lenken for videre instruksjoner $link$",
 "_smsReminderAutomatic":"Dette er en automatisk påminnelse om at du ikke har signert dokumentet $documenttitle:noescape()$ fra $creatorname$ enda. Følg lenken for videre instruksjoner $link$",
 "_smsReminderSigned":"Det signerte dokumentet $documenttitle:noescape()$ har blitt sendt til deg pånytt etter anmodning av $creatorname$. Finn dokumentet ved å følge denne lenken $link$",
-"_unavailableForSign":"Dokumentet er ikke lenger tilgjengelig for signering"
+"_unavailableForSign":"Dokumentet er ikke lenger tilgjengelig for signering",
+"_userGroup":"Brukergruppe",
+"_userGroupExtraInfo":"Internbruk brukergruppe (f.eks. HR):"
 }

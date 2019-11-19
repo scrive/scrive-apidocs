@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Þetta er sjálfvirk áminning þess efnis að þú hefur ekki staðfest skjalið $documenttitle:noescape()$ frá $creatorname$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsReminderAutomatic":"Þetta er sjálfvirk áminning þess efnis að þú hefur ekki enn skrifað undir skjalið $documenttitle:noescape()$ from $creatorname$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsReminderSigned":"Undirritaða skjalið $documenttitle:noescape()$ hefur verið endursent til þín að beiðni $creatorname$. Nálgastu skjalið með því að smella á þennan hlekk: $link$",
-"_unavailableForSign":"Skjalið er ekki lengur fáanlegt til undirskriftar"
+"_unavailableForSign":"Skjalið er ekki lengur fáanlegt til undirskriftar",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

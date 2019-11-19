@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Tegu on automaatse meeldetuletusega, et Te pole kasutaja $creatorname$ dokumenti $documenttitle:noescape()$ veel kinnitanud. Klõpsake juhiste jaoks linki $link$",
 "_smsReminderAutomatic":"Tegu on automaatse meeldetuletusega, et Te pole kasutaja $creatorname$ dokumenti $documenttitle:noescape()$ veel allkirjastanud. Klõpsake juhiste jaoks linki $link$",
 "_smsReminderSigned":"Allkirjastatud dokument $documenttitle:noescape()$ on Teile kasutaja $creatorname$ palvel uuesti saadetud. Dokumendi leiate, järgides seda linki $link$",
-"_unavailableForSign":"Dokument pole enam allkirjastamiseks kättesaadav."
+"_unavailableForSign":"Dokument pole enam allkirjastamiseks kättesaadav.",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

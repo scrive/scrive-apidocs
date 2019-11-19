@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Questo è un promemoria automatico per ricordarti che non hai ancora approvato il documento $documenttitle:noescape()$ da $creatorname$. Apri il link per ulteriori istruzioni $link$",
 "_smsReminderAutomatic":"Questo è un promemoria automatico per ricordarti che non hai ancora firmato il documento $documenttitle:noescape()$ da $creatorname$. Apri il link per ulteriori istruzioni $link$",
 "_smsReminderSigned":"Il documento firmato $documenttitle:noescape()$ ti è stato inviato nuovamente su richiesta di $creatorname$. Troverai il documento a questo link $link$",
-"_unavailableForSign":"Il documento non è più disponibile per la firma"
+"_unavailableForSign":"Il documento non è più disponibile per la firma",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

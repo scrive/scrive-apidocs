@@ -129,6 +129,7 @@ data AuthRequest = AuthRequest
   , arqDisplayName     :: !Text
   , arqPersonalNumber  :: !Text
   , arqProvider        :: !Text
+  , arqClientIP        :: !Text
   } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'AuthRequest'.
@@ -144,6 +145,9 @@ instance ToXML AuthRequest where
           element "condition" $ do
             element "key"   ("AllowFingerprint" :: Text)
             element "value" ("yes" :: Text)
+      element "endUserInfo" $ do
+        element "type"  ("IP_ADDR" :: Text)
+        element "value" arqClientIP
 
 ----------------------------------------
 
@@ -154,6 +158,7 @@ data SignRequest = SignRequest
   , srqPersonalNumber  :: !Text
   , srqUserVisibleData :: !Text
   , srqProvider        :: !Text
+  , srqClientIP        :: !Text
   } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'SignRequest'.
@@ -170,6 +175,9 @@ instance ToXML SignRequest where
           element "condition" $ do
             element "key"   ("AllowFingerprint" :: Text)
             element "value" ("yes" :: Text)
+      element "endUserInfo" $ do
+        element "type"  ("IP_ADDR" :: Text)
+        element "value" srqClientIP
 
 ----------------------------------------
 

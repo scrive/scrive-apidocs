@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Ceci est un rappel automatique que vous n'avez pas encore approuvé le document $documenttitle:noescape()$ envoyé par $creatorname$. Suivez le lien pour obtenir plus d'instructions $link$",
 "_smsReminderAutomatic":"Ceci est un rappel automatique que vous n'avez pas encore signé le document $documenttitle:noescape()$ envoyé par $creatorname$. Suivez le lien pour obtenir plus d'instructions $link$",
 "_smsReminderSigned":"Le document signé $documenttitle:noescape()$ vous a été renvoyé à la demande de $creatorname$. Suivez le lien suivant pour consulter ce document $link$",
-"_unavailableForSign":"Le document n'est plus disponible pour signature"
+"_unavailableForSign":"Le document n'est plus disponible pour signature",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

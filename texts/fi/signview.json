@@ -206,9 +206,9 @@
 "_signviewSigningFailed":"Pahoittelut, jotakin meni vikaan dokumentin allekirjoittamisen aikana. Yritä uudelleen.",
 "_smsDocumentErrorAuthor":"Scrive ei pystynyt käsittelemään dokumenttia $documenttitle:noescape()$ ja allekirjoitusprosessi on peruutettu. Jos sinulla on kysymyksiä, ole hyvä ja ota yhteyttä meihin osoitteella support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive ei pystynyt käsittelemään dokumenttia $documenttitle:noescape()$ ja allekirjoitusprosessi on peruutettu. Jos sinulla on kysymyksiä, ole hyvä ja ota yhteyttä meihin osoitteella support@scrive.com",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ on kutsunut sinut hyväksymään dokumentin $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ on kutsunut sinut e-allekirjoittamaan dokumentin $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ on kutsunut sinut esikatselemaan dokumenttia $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja $link$",
 "_smsPinSendout":"Sinun PIN-koodisi dokumentille $documenttitle:noescape()$ on $pin$",
 "_smsRejectNotification":"$rejectorName$ on kieltäytynyt allekirjoittamasta dokumenttia $documenttitle:noescape()$. Allekirjoitusprosessi on tästä syystä peruutettu.",
 "_smsReminder":"$creatorname$ haluaa muistuttaa sinua allekirjoittamaan dokumentin $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Tämä on automaattinen muistutus siitä, ettet ole vielä hyväksynyt henkilöltä $creatorname$ saamaasi dokumenttia $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsReminderAutomatic":"Tämä on automaattinen muistutus siitä, ettet ole vielä allekirjoittanut henkilöltä $creatorname$ saamaasi dokumenttia $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsReminderSigned":"Allekirjoitettu dokumentti $documenttitle:noescape()$ on lähetetty sinulle uudelleen henkilön $creatorname$ pyynnöstä. Löydät dokumentin seuraamalla tätä linkkiä: $link$",
-"_unavailableForSign":"Dokumentti ei ole enää avoinna allekirjoittamista varten"
+"_unavailableForSign":"Dokumentti ei ole enää avoinna allekirjoittamista varten",
+"_userGroup":"Käyttäjäryhmä",
+"_userGroupExtraInfo":"Sisäinen käyttö Käyttäjäryhmän nimi (esim. HR):"
 }

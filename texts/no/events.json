@@ -11,7 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive utarbeidet den ferdigstilte PDF-en.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Verifiserte deres identitet med Dansk NemID for å få tilgang til dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Verifiserte sin identitet med finsk TUPAS for å få tilgang til dokumentet.",
-"_AuthenticatedToViewEvidenceArchiveIDIN":"",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"De verifiserte identiteten sin med iDIN for å få tilgang til dokumentet. ",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verifiserte deres identitet med norsk BankID for å få tilgang til dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verifiserte deres identitet med svensk BankID for å få tilgang til dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verifiserte sin identitet med PIN fra SMS for å få tilgang til dokumentet.",

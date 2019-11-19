@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Dies ist eine automatische Erinnerung, weil Sie das Dokument  $documenttitle:noescape()$ von $creatorname$ noch nicht genehmigt haben. Klicken Sie für weitere Anweisungen auf den Link $link$",
 "_smsReminderAutomatic":"Dies ist eine automatische Erinnerung, weil Sie das Dokument $documenttitle:noescape()$ von $creatorname$ noch nicht signiert haben. Klicken Sie für weitere Anweisungen auf den Link $link$",
 "_smsReminderSigned":"Das signierte Dokument $documenttitle:noescape()$ wurde Ihnen auf Antrag von $creatorname$ erneut gesendet. Klicken Sie auf diesen Link $link$, um das Dokument zu lokalisieren.",
-"_unavailableForSign":"Dieses Dokument kann nicht mehr signiert werden"
+"_unavailableForSign":"Dieses Dokument kann nicht mehr signiert werden",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

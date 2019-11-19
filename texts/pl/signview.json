@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Oto automatyczne przypomnienie o tym, że wciąż nie zatwierdziłeś(-aś) dokumentu $documenttitle:noescape()$ od $creatorname$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_smsReminderAutomatic":"Oto automatyczne przypomnienie o tym, że wciąż nie podpisałeś (-aś) dokumentu $documenttitle:noescape()$ od $creatorname$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_smsReminderSigned":"Podpisany dokument $documenttitle:noescape()$ został do Ciebie ponownie przesłany na prośbę $creatorname$. Dokument jest dostępny pod linkiem $link$",
-"_unavailableForSign":"Nie ma już możliwości podpisania tego dokumentu"
+"_unavailableForSign":"Nie ma już możliwości podpisania tego dokumentu",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

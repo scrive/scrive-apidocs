@@ -83,8 +83,22 @@ applyDraftDataToDocument draft actor = do
       of
         Nothing   -> apiError $ requestParameterInvalid "document" "parties list is empty"
         Just sigs -> do
-          res <- dbUpdate $ ResetSignatoryDetails sigs actor
+          let fixedSigs = map fixSignatorySettings sigs
+          res <- dbUpdate $ ResetSignatoryDetails fixedSigs actor
           unless res $ apiError $ serverError "applyDraftDataToDocument failed"
+
+fixSignatorySettings :: SignatoryLink -> SignatoryLink
+fixSignatorySettings = fixSignatoryDKNemidPersonalField
+
+fixSignatoryDKNemidPersonalField :: SignatoryLink -> SignatoryLink
+fixSignatoryDKNemidPersonalField sl = case sl of
+  SignatoryLink { signatorylinkauthenticationtosignmethod = DKNemIDAuthenticationToSign }
+    -> sl { signatoryfields = map adjustField $ signatoryfields sl }
+  _ -> sl
+  where
+    adjustField (SignatoryPersonalNumberField (pnf@PersonalNumberField { spnfObligatory = False }))
+      = SignatoryPersonalNumberField $ pnf { spnfObligatory = True }
+    adjustField f = f
 
 mergeAuthorDetails :: [SignatoryLink] -> [SignatoryLink] -> Maybe [SignatoryLink]
 mergeAuthorDetails sigs nsigs =

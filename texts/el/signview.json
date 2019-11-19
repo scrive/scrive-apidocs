@@ -216,5 +216,7 @@
 "_smsReminderApproveAutomatic":"Αυτή είναι μια αυτόματη υπενθύμιση ότι δεν έχετε υπογράψει το έγγραφο $documenttitle:noescape()$ from $creatorname$ ακόμα. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsReminderAutomatic":"Αυτή είναι μια αυτόματη υπενθύμιση ότι δεν έχετε υπογράψει το έγγραφο $documenttitle:noescape()$ από τον $creatorname$ ακόμα. Ακολουθείστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsReminderSigned":"Το υπογεγραμμένο έγγραφο $documenttitle:noescape()$ έχει αποσταλεί ξανά σε εσάς μετά από αίτημα του $creatorname$. Βρείτε το έγγραφο ακολουθώντας τον σύνδεσμο $link$",
-"_unavailableForSign":"Το έγγραφο δεν είναι πλέον διαθέσιμο προς υπογραφή "
+"_unavailableForSign":"Το έγγραφο δεν είναι πλέον διαθέσιμο προς υπογραφή ",
+"_userGroup":"",
+"_userGroupExtraInfo":""
 }

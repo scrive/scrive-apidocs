@@ -103,6 +103,16 @@ module.exports = React.createClass({
           />
 
           <List.Column
+            name="Shareable Link"
+            width="50px"
+            className="archive-table-shareablelink-column-header"
+            rendering={function (d) {
+              return (<div className={"archive-table-shareablelink-column "
+                                      + ((d.field("shareable_link")) ? "sharedIcon" : "")}/>);
+            }}
+          />
+
+          <List.Column
             name="Shared"
             width="50px"
             className="archive-table-shared-column-header"

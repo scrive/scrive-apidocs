@@ -1434,24 +1434,32 @@ apiCallV1Get did = logDocument did . api $ do
         Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
         _         -> return Nothing
 
-      let haspermission = case msiglink of
-            Just _  -> True
-            Nothing -> case mauser of
-              Just auser ->
-                (auser ^. #groupID == user ^. #groupID)
-                  && (user ^. #isCompanyAdmin || isDocumentShared doc)
-              Nothing -> False
-      if (haspermission)
-        then do
-          Ok
-            <$> (documentJSONV1 (Just user)
-                                external
-                                ((view #id <$> mauser) == (Just $ user ^. #id))
-                                msiglink
-                                doc
-                )
-        else throwM . SomeDBExtraException $ serverError
-          "You do not have right to access document"
+      haspermission <-
+        return
+        $  isJust msiglink
+        || (  isJust mauser
+           && (fromJust mauser)
+           ^. #groupID
+           == user
+           ^. #groupID
+           && (user ^. #isCompanyAdmin || isDocumentShared doc)
+           )
+      admin <- isUserAdmin user <$> getContext
+      case () of
+        _
+          | haspermission -> do
+            Ok
+              <$> (documentJSONV1 (Just user)
+                                  external
+                                  ((view #id <$> mauser) == (Just $ user ^. #id))
+                                  msiglink
+                                  doc
+                  )
+          | admin -> do
+            logInfo "GOD DOCUMENT ACCESS" $ object ["god" .= show (user ^. #id)]
+            Ok <$> documentJSONV1 (Just user) external False msiglink doc
+          | otherwise -> throwM . SomeDBExtraException $ serverError
+            "You do not have right to access document"
 
 -- Return evidence attachments for document
 apiCallV1GetEvidenceAttachments :: Kontrakcja m => DocumentID -> m Response

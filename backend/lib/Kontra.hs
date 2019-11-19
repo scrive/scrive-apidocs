@@ -9,6 +9,7 @@ module Kontra
     , logPadUserToContext
     , unsafeSessionTakeover
     , isAdmin
+    , isUserAdmin
     , isSales
     , onlyAdmin
     , onlySalesOrAdmin
@@ -125,11 +126,14 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
 -- | Logged in user is admin with 2FA (2FA only enforced for production = true)
 isAdmin :: Context -> Bool
 isAdmin ctx = case ctx ^. #maybeUser of
-  Nothing -> False
-  Just user ->
-    (user ^. #info % #email `elem` ctx ^. #adminAccounts)
-      && (user ^. #totpActive || not (ctx ^. #production))
+  Nothing   -> False
+  Just user -> isUserAdmin user ctx
 
+-- | User is admin with 2FA (2FA only enforced for production = true)
+isUserAdmin :: User -> Context -> Bool
+isUserAdmin user ctx =
+  (user ^. #info % #email `elem` ctx ^. #adminAccounts)
+    && (user ^. #totpActive || not (ctx ^. #production))
 
 -- | Logged in user is sales with 2FA (2FA only enforced for production = true)
 isSales :: Context -> Bool
