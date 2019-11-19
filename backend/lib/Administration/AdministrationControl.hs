@@ -555,6 +555,7 @@ getUserGroupSettingsChange = do
   mcompanytotpismandatory <- getField "companytotpismandatory"
   mcompanysessiontimeout <- getSessionTimeoutField "companysessiontimeout"
   mcompanyportalurl <- fmap emptyToNothing <$> getField "companyportalurl"
+  mcompanyeidservicetoken <- fmap emptyToNothing <$> getField "companyeidservicetoken"
 
   return
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
@@ -590,6 +591,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #totpIsMandatory . (== "true")) mcompanytotpismandatory
     . maybe identity (set #sessionTimeoutSecs)            mcompanysessiontimeout
     . maybe identity (set #portalUrl)                     mcompanyportalurl
+    . maybe identity (set #eidServiceToken)               mcompanyeidservicetoken
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))

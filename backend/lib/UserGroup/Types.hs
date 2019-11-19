@@ -227,6 +227,7 @@ defaultUserGroupSettings = UserGroupSettings
   , totpIsMandatory         = False
   , sessionTimeoutSecs      = Nothing
   , portalUrl               = Nothing
+  , eidServiceToken         = Nothing
   }
 
 -- UI

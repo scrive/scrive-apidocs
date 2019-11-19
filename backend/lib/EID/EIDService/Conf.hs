@@ -1,6 +1,8 @@
+{-# LANGUAGE TemplateHaskell #-}
 module EID.EIDService.Conf ( EIDServiceConf(..), unjsonEIDServiceConf ) where
 
 import Data.Unjson
+import Optics.TH
 import qualified Data.Text as T
 
 -- | A datatype for EIDService configuration data.
@@ -19,3 +21,4 @@ unjsonEIDServiceConf =
 instance Unjson EIDServiceConf where
   unjsonDef = unjsonEIDServiceConf
 
+makeFieldLabelsWith noPrefixFieldLabels ''EIDServiceConf

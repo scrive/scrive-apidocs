@@ -194,6 +194,7 @@ companySettingsJson ugs = do
   value "totpismandatory" $ ugs ^. #totpIsMandatory
   value "sessiontimeout" $ ugs ^. #sessionTimeoutSecs
   value "portalurl" $ ugs ^. #portalUrl
+  value "eidservicetoken" $ ugs ^. #eidServiceToken
 
 userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

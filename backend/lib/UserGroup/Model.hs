@@ -116,6 +116,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "totp_is_mandatory" $ ugs ^. #totpIsMandatory
   sqlSet "session_timeout" $ ugs ^. #sessionTimeoutSecs
   sqlSet "portal_url" $ ugs ^. #portalUrl
+  sqlSet "eid_service_token" $ ugs ^. #eidServiceToken
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -402,6 +403,7 @@ ugSettingsSelectors =
   , "totp_is_mandatory"
   , "session_timeout"
   , "portal_url"
+  , "eid_service_token"
   ]
 
 

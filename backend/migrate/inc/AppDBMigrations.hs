@@ -225,4 +225,5 @@ kontraMigrations =
   , userGroupAddressAddEntityNameField
   , featureFlagsAddIDINAuthToSign
   , addSignatoryDobAndEmailToEIDSignatures
+  , userGroupSettingsAddEidServiceToken
   ]

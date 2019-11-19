@@ -65,6 +65,7 @@ var CompanyDetailsView = React.createClass({
         totpismandatory: this.props.company.totpismandatory(),
         sessiontimeout: this.props.company.sessiontimeout(),
         portalurl: this.props.company.portalurl(),
+        eidservicetoken: this.props.company.eidservicetoken(),
         addressIsInherited: this.props.company.companyaddressisinherited(),
         settingsIsInherited: this.props.company.companysettingsisinherited(),
         inheritedAddress: this.props.company.companyinheritedaddress(),
@@ -153,6 +154,9 @@ var CompanyDetailsView = React.createClass({
               }
               portalurl={
                 this.props.viewModel.get("portalurl")
+              }
+              eidservicetoken={
+                this.props.viewModel.get("eidservicetoken")
               }
               addressIsInherited={this.props.viewModel.get("addressIsInherited")}
               settingsIsInherited={this.props.viewModel.get("settingsIsInherited")}

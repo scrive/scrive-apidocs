@@ -210,6 +210,7 @@ data UserGroupSettings = UserGroupSettings
   , totpIsMandatory           :: !Bool
   , sessionTimeoutSecs        :: !(Maybe Int32)
   , portalUrl                 :: !(Maybe Text)
+  , eidServiceToken           :: !(Maybe Text)
   } deriving (Show, Eq)
 
 type instance CompositeRow UserGroupSettings
@@ -233,6 +234,7 @@ type instance CompositeRow UserGroupSettings
     , Bool
     , Maybe Int32
     , Maybe Text
+    , Maybe Text
     )
 
 instance PQFormat UserGroupSettings where
@@ -240,7 +242,7 @@ instance PQFormat UserGroupSettings where
 
 instance CompositeFromSQL UserGroupSettings where
   toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, _useFolderListCalls {- not yet used -}
-                                                                                                                                                                                                                                                                                                                                                           , totpIsMandatory, sessionTimeoutSecs, portalUrl)
+                                                                                                                                                                                                                                                                                                                                                           , totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = I.DataRetentionPolicy { .. }

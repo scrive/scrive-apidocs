@@ -34,6 +34,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       totpismandatory: false,
       sessiontimeout: null,
       portalurl: null,
+      eidservicetoken: null,
       settingsIsInherited: false,
       inheritedSettings: null
     },
@@ -66,6 +67,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companytotpismandatory: this.get("totpismandatory"),
         companysessiontimeout: this.get("sessiontimeout"),
         companyportalurl: this.get("portalurl"),
+        companyeidservicetoken: this.get("eidservicetoken"),
         companyaddressisinherited: this.get("addressIsInherited"),
         companysettingsisinherited: this.get("settingsIsInherited")
       });

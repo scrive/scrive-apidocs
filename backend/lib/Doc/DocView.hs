@@ -74,7 +74,6 @@ pageDocumentView ctx document msiglink authorcompanyadmin =
 pageDocumentSignView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text
 pageDocumentSignView ctx document siglink ad = do
-
   -- Sign view needs some author details and information if company allows saving a safety copy.
   let authorid = case getAuthorSigLink document of
         Nothing ->

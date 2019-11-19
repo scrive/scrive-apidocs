@@ -35,6 +35,8 @@ import Routing
 import Session.Model
 import Session.SessionID
 import Templates (renderTextTemplate)
+import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -62,12 +64,20 @@ eidServiceRoutes = choice
   $ redirectEndpointFromIDINSignEIDServiceTransaction
   ]
 
-eidServiceConf :: Kontrakcja m => m EIDServiceConf
-eidServiceConf = do
+eidServiceConf :: Kontrakcja m => Document -> m EIDServiceConf
+eidServiceConf doc = do
   ctx <- getContext
   case ctx ^. #eidServiceConf of
-    Nothing   -> noConfigurationError "No eid service provided"
-    Just conf -> return conf
+    Nothing    -> noConfigurationError "No eid service provided"
+    Just conf0 -> do
+      let err =
+            unexpectedError $ "Impossible happened - no author for document: " <> showt
+              (documentid doc)
+      authorid <- maybe err return $ maybesignatory =<< getAuthorSigLink doc
+      ugwp     <- dbQuery . UserGroupGetWithParentsByUserID $ authorid
+      return $ case ugwpSettings ugwp ^. #eidServiceToken of
+        Nothing    -> conf0
+        Just token -> set #eidServiceToken token conf0
 
 startVerimiEIDServiceTransaction
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
@@ -75,7 +85,8 @@ startVerimiEIDServiceTransaction did slid = do
   logInfo_ "EID Service transaction start"
   doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
   rd   <- guardJustM $ getField "redirect"
-  conf <- eidServiceConf
+  conf <- eidServiceConf doc
+
   tid  <- createVerimiTransactionWithEIDService conf did slid rd
   turl <- startVerimiTransactionWithEIDService conf tid
   sid  <- getNonTempSessionID
@@ -162,9 +173,9 @@ checkVerimiEIDServiceTransactionForSignatory
            )
        )
 checkVerimiEIDServiceTransactionForSignatory slid = do
-  conf      <- eidServiceConf
   sessionID <- getNonTempSessionID
   doc       <- dbQuery $ GetDocumentBySignatoryLinkID slid
+  conf      <- eidServiceConf doc
   mest      <- dbQuery $ GetEIDServiceTransactionGuardSessionID
     sessionID
     slid
@@ -199,9 +210,10 @@ startIDINViewEIDServiceTransaction
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
 startIDINViewEIDServiceTransaction did slid = do
   logInfo_ "EID Service transaction start - for view"
-  doc <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
-  rd  <- guardJustM $ getField "redirect"
-  ctx <- getContext
+  doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  conf <- eidServiceConf doc
+  rd   <- guardJustM $ getField "redirect"
+  ctx  <- getContext
   let redirectUrl =
         (ctx ^. #brandedDomain % #url)
           <> "/eid-service/redirect-endpoint/idin-view/"
@@ -210,26 +222,34 @@ startIDINViewEIDServiceTransaction did slid = do
           <> showt slid
           <> "?redirect="
           <> rd
-  startIDINEIDServiceTransaction (EIDServiceAuthToView $ mkAuthKind doc) slid redirectUrl
+  startIDINEIDServiceTransaction conf
+                                 (EIDServiceAuthToView $ mkAuthKind doc)
+                                 slid
+                                 redirectUrl
 
 startIDINSignEIDServiceTransaction
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
 startIDINSignEIDServiceTransaction did slid = do
   logInfo_ "EID Service transaction start - for sign"
-  void $ getDocumentAndSignatoryForEIDAuth did slid -- access guard
-  ctx <- getContext
+  doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- access guard
+  conf <- eidServiceConf doc
+  ctx  <- getContext
   let redirectUrl =
         (ctx ^. #brandedDomain % #url)
           <> "/eid-service/redirect-endpoint/idin-sign/"
           <> showt did
           <> "/"
           <> showt slid
-  startIDINEIDServiceTransaction EIDServiceAuthToSign slid redirectUrl
+  startIDINEIDServiceTransaction conf EIDServiceAuthToSign slid redirectUrl
 
 startIDINEIDServiceTransaction
-  :: Kontrakcja m => EIDServiceAuthenticationKind -> SignatoryLinkID -> Text -> m Value
-startIDINEIDServiceTransaction eidserviceAuthKind slid redirectUrl = do
-  conf <- eidServiceConf
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> EIDServiceAuthenticationKind
+  -> SignatoryLinkID
+  -> Text
+  -> m Value
+startIDINEIDServiceTransaction conf eidserviceAuthKind slid redirectUrl = do
   tid  <- createIDINTransactionWithEIDService conf redirectUrl
   turl <- startIDINTransactionWithEIDService conf tid
   sid  <- getNonTempSessionID
@@ -301,7 +321,8 @@ updateIDINTransactionAfterCheck slid est ts mctd = do
 
 checkIDINEIDServiceTransactionForSignatory
   :: Kontrakcja m
-  => SignatoryLinkID
+  => Document
+  -> SignatoryLinkID
   -> EIDServiceAuthenticationKind
   -> m
        ( Maybe
@@ -310,8 +331,8 @@ checkIDINEIDServiceTransactionForSignatory
            , Maybe CompleteIDINEIDServiceTransactionData
            )
        )
-checkIDINEIDServiceTransactionForSignatory slid eidserviceAuthKind = do
-  conf      <- eidServiceConf
+checkIDINEIDServiceTransactionForSignatory doc slid eidserviceAuthKind = do
+  conf      <- eidServiceConf doc
   sessionID <- getNonTempSessionID
   checkIDINEIDServiceTransactionForSignatoryWithConf conf
                                                      slid
@@ -349,8 +370,9 @@ redirectEndpointFromIDINViewEIDServiceTransaction did slid = do
   rd  <- guardJustM $ getField "redirect"
   doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
   res <-
-    checkIDINEIDServiceTransactionForSignatory slid . EIDServiceAuthToView $ mkAuthKind
-      doc
+    checkIDINEIDServiceTransactionForSignatory doc slid
+    . EIDServiceAuthToView
+    $ mkAuthKind doc
   mts <- case res of
     Just (est, ts, mctd) -> do
       nts <- updateIDINTransactionAfterCheck slid est ts mctd
@@ -366,10 +388,10 @@ redirectEndpointFromIDINSignEIDServiceTransaction
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 redirectEndpointFromIDINSignEIDServiceTransaction did slid = do
   logInfo_ "EID Service signing transaction check"
-  void $ getDocumentAndSignatoryForEIDAuth did slid -- access guard
+  doc                 <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- access guard
   ad                  <- getAnalyticsData
   ctx                 <- getContext
-  conf                <- eidServiceConf
+  conf                <- eidServiceConf doc
   sessionID           <- getNonTempSessionID
   successOrInProgress <- do
     res <- checkIDINEIDServiceTransactionForSignatoryWithConf conf

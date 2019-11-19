@@ -31,6 +31,7 @@ import Doc.SignatoryScreenshots
 import Doc.Signing.Model
 import Doc.Types.AuthorAttachment
 import Doc.Types.Document
+import Doc.Types.SignatoryLink
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
 import EID.CGI.GRP.Types
@@ -52,6 +53,8 @@ import MailContext
 import MinutesTime
 import Templates
 import User.Lang
+import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.SignatoryLinkUtils
 import qualified MailContext.Internal as I
@@ -236,44 +239,59 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
         Nothing -> do
           noConfigurationWarning "EIDService Esigning"
           return $ Failed Remove
-        Just conf -> do
-          mest <- dbQuery $ GetEIDServiceTransactionNoSessionIDGuard
-            signingSignatoryID
-            EIDServiceAuthToSign
-          res <- case mest of
-            Nothing  -> return Nothing
-            Just est -> checkIDINTransactionWithEIDService conf (estID est) >>= \case
-              (Nothing, _   ) -> return Nothing
-              (Just ts, mctd) -> return $ Just (est, ts, mctd)
-          case res of
-            Just (est, ts, mctd) -> do
-              let mergeWithStatus newStatus =
-                    dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newStatus }
-              case (ts, mctd) of
-                (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
-                  doc <- dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID
-                  dbUpdate
-                    . MergeEIDServiceIDINSignature signingSignatoryID
-                    $ EIDServiceIDINSignature cd
-                  logInfo_ . ("EidHub NL IDIN Sign succeeded: " <>) . showt $ (est, ts)
-                  signFromESignature ds now
-                  dbUpdate $ ChargeUserGroupForIDINSignature (documentid doc)
-                  mergeWithStatus EIDServiceTransactionStatusCompleteAndSuccess
-                  return $ Ok Remove
-                (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
-                  mergeWithStatus EIDServiceTransactionStatusCompleteAndFailed
-                  return $ Failed Remove
-                (EIDServiceTransactionStatusNew, _) -> do
-                  mergeWithStatus ts
-                  return $ Ok $ RerunAfter $ iseconds secondsToRetry
-                (EIDServiceTransactionStatusStarted, _) -> do
-                  mergeWithStatus ts
-                  return $ Ok $ RerunAfter $ iseconds secondsToRetry
-                _ -> do
-                  mergeWithStatus ts
-                  return $ Failed Remove
-            _ -> do
+        Just conf0 -> do
+          doc <- dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID
+          case maybesignatory =<< getAuthorSigLink doc of
+            Nothing -> do
+              logAttention "Impossible happened - no author for document"
+                $ object [identifier $ documentid doc]
               return $ Failed Remove
+            Just authorID -> do
+              ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ authorID
+              let conf = case ugwpSettings ugwp ^. #eidServiceToken of
+                    Nothing    -> conf0
+                    Just token -> set #eidServiceToken token conf0
+              mest <- dbQuery $ GetEIDServiceTransactionNoSessionIDGuard
+                signingSignatoryID
+                EIDServiceAuthToSign
+              res <- case mest of
+                Nothing  -> return Nothing
+                Just est -> checkIDINTransactionWithEIDService conf (estID est) >>= \case
+                  (Nothing, _   ) -> return Nothing
+                  (Just ts, mctd) -> return $ Just (est, ts, mctd)
+              case res of
+                Just (est, ts, mctd) -> do
+                  let mergeWithStatus newStatus =
+                        dbUpdate $ MergeEIDServiceTransaction $ est
+                          { estStatus = newStatus
+                          }
+                  case (ts, mctd) of
+                    (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
+                      dbUpdate
+                        . MergeEIDServiceIDINSignature signingSignatoryID
+                        $ EIDServiceIDINSignature cd
+                      logInfo_
+                        . ("EidHub NL IDIN Sign succeeded: " <>)
+                        . showt
+                        $ (est, ts)
+                      signFromESignature ds now
+                      dbUpdate $ ChargeUserGroupForIDINSignature (documentid doc)
+                      mergeWithStatus EIDServiceTransactionStatusCompleteAndSuccess
+                      return $ Ok Remove
+                    (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
+                      mergeWithStatus EIDServiceTransactionStatusCompleteAndFailed
+                      return $ Failed Remove
+                    (EIDServiceTransactionStatusNew, _) -> do
+                      mergeWithStatus ts
+                      return $ Ok $ RerunAfter $ iseconds secondsToRetry
+                    (EIDServiceTransactionStatusStarted, _) -> do
+                      mergeWithStatus ts
+                      return $ Ok $ RerunAfter $ iseconds secondsToRetry
+                    _ -> do
+                      mergeWithStatus ts
+                      return $ Failed Remove
+                _ -> do
+                  return $ Failed Remove
 
 signFromESignature
   :: ( GuardTimeConfMonad m
