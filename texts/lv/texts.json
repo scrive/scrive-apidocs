@@ -744,7 +744,7 @@
 "_june":"jūnijs",
 "_last30Days":"Pēdējās 30 dienas",
 "_last6Months":"Pēdējie 6 mēneši",
-"_linkInvalidError":"<h1>Šī saite vairs nav derīga</h1><h4>Jūs esat nonācis šajā lapā, jo esat klikšķinājis uz tāda dokumenta saites, kas ir atsaukts vai beidzies. Ja, Jūsuprāt, ir notikusi kļūda, lūdzam sazināties ar dokumenta autoru.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Vai tiešām vēlaties dzēst <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Pagarināt <span class='put-one-or-more-things-to-be-prolonged-here'></span> termiņu par <br/>",
 "_listRestoreDialogBody":"Vai vēlaties atjaunot atzīmētos dokumentus?",

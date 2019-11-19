@@ -744,7 +744,7 @@
 "_june":"Kesäkuu",
 "_last30Days":"Viimeiset 30 päivää",
 "_last6Months":"Viimeiset 6 kuukautta",
-"_linkInvalidError":"<h1>Tämä linkki ei ole enää voimassa</h1><h4>Päädyit tälle sivulle, koska klikkasit poistettuun tai vanhentuneeseen dokumenttiin johtanutta linkkiä. Jos tässä on mielestäsi tapahtunut virhe, ole hyvä ja ota siinä tapauksessa yhteys suoraan dokumentin luojaan/kirjoittajaan.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Haluatko varmasti poistaa <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Pitkitä dokumentin <span class='put-one-or-more-things-to-be-prolonged-here'></span> deadlinea <br/> päivällä",
 "_listRestoreDialogBody":"Haluatko palauttaa valitut dokumentit?",

@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Medarbejder nøglekort",
 "_elegSignDKSignMethodEmployeeKeyfile":"Medarbejder nøglefil",
 "_elegSignDKSignMethodPersonalKeycard":"Personligt nøglekort",
+"_elegSignNLConfirmationTitle":"",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, du signerer med det norske BankID. Efterfølgende bliver din underskrift registreret af e-signing servicen Scrive.",
 "_elegSignNOConfirmationTextNoName":"Du signerer med det norske BankID. Efterfølgende bliver din underskrift registreret af e-signing servicen Scrive.",
 "_elegSignNOConfirmationTitle":"Signér med Norwegian BankID",
@@ -88,6 +89,7 @@
 "_email":"E-mail",
 "_enterSMSPin":"Indtast din SMS PIN",
 "_errorMessagePrefix":"Den tilbagevendende fejl var:",
+"_failedToStartNewEIDProcess":"",
 "_filladitionfieldslabel":"Om dig",
 "_firstname":"Fornavn",
 "_followTheArrow":"Følg <span class='arrowtext'>PILEN</span>",
@@ -206,9 +208,9 @@
 "_signviewSigningFailed":"Beklager, noget gik galt under signeringsprocessen af dette dokument. Prøv venligst igen.",
 "_smsDocumentErrorAuthor":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com.",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ har inviteret dig til at godkende dokumentet $documenttitle:noescape()$. Følg linket for yderligere instruktioner $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ har inviteret dig til at e-signere dokumentet $documenttitle:noescape()$. Følg linket for yderligere information $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ har inviteret dig til at gennemse dokumentet $documenttitle:noescape()$. Følg linket for yderligere instruktioner $link$",
 "_smsPinSendout":"Din PIN for $documenttitle:noescape()$ er $pin$",
 "_smsRejectNotification":"$rejectorName$ har afvist at underskrive dokumentet $documenttitle:noescape()$. Underskrivningen er derfor blevet annulleret.",
 "_smsReminder":"$creatorname$ ønsker at påminde dig om at signere dokumentet $documenttitle:noescape()$. Følg linket for yderligere information $link$",
@@ -217,6 +219,6 @@
 "_smsReminderAutomatic":"Dette er en automatisk påmindelse om, at du endnu ikke har signeret dokumentet $documenttitle:noescape()$ from $creatorname$. Følg linket for yderligere information $link$",
 "_smsReminderSigned":"Det signerede dokument $documenttitle:noescape()$ er atter blevet sendt til dig på forespørgsel af $creatorname$. Find dokumentet ved at følge dette link $link$",
 "_unavailableForSign":"Det er ikke længere muligt at signere dette dokument",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Brugergruppe",
+"_userGroupExtraInfo":"Brugergruppenavn til intern brug (f.eks. HR): "
 }

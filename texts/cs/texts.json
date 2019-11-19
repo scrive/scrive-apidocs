@@ -744,7 +744,7 @@
 "_june":"Červen",
 "_last30Days":"Uplynulých 30 dní",
 "_last6Months":"Uplynulých 6 měsíců",
-"_linkInvalidError":"<h1>Tento odkaz už neplatí</h1><h4>Na stránku jste se dostali, protože jste kliknuli na odkaz ke stornovanému dokumentu nebo na odkaz k dokumentu, kterému vypršela platnost. Pokud si myslíte, že se jedná o chybu, obraťte se na autora dokumentu.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Opravdu chcete <span class='put-one-or-more-things-to-be-deleted-here'></span> smazat?",
 "_listLocalDialogsBodyProlong":"Prodloužit termín u <span class='put-one-or-more-things-to-be-prolonged-here'></span> o <br/>",
 "_listRestoreDialogBody":"Přejete si zvolené dokumenty obnovit?",
