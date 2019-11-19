@@ -46,7 +46,7 @@ folderAPI = dir "folders" $ choice
   , dir "create" . hPost . toK0 $ folderAPICreate
   , param . dir "update" . hPost . toK1 $ folderAPIUpdate
   , param . dir "delete" . hPost . toK1 $ folderAPIDelete
-  , param . dir "list" . hPost . toK1 $ folderAPIListDocs
+  , param . dir "list" . hGet . toK1 $ folderAPIListDocs
   ]
 
 folderAPICreate :: Kontrakcja m => m Response
