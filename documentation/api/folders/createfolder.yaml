@@ -15,10 +15,21 @@ post:
     }
     ```
 
-    This endpoint allows you to create a new Folder. `parent_id` is mandatory
-    (unless you are in internal Scrive admin user) since you are not permitted
-    to create new root Folders. `name` will be an empty string if you do not
-    include it.
+    This endpoint allows you to create a new Folder. When creating it, you have
+    the option to set the Folder's name and to specify which other Folder it
+    will be a child of.
+
+    The JSON input must be passed, URL-encoded, via the `folder` form data
+    field.
+
+    You must set a `parent_id` since only internal Scrive admins are permitted
+    to create root Folders. In order to create a new child, you must have the
+    requisite permissions upon the parent. `name` will be an empty string if
+    you do not include it.
+
+    A full Folder JSON response is returned which displays the state after the
+    create operation has been performed. Performing `/update` and then using the
+    GET endpoint should produce the same output both times.
 
   parameters:
     - name: folder
@@ -36,4 +47,4 @@ post:
       description: |
         Insufficient Permissions error (this means that you don't have enough
         permissions to create this Folder. In practice this means that you lack
-        Create permissions on the parent Folder.
+        Create permissions on the parent Folder).

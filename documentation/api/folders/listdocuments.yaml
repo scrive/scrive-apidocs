@@ -20,6 +20,12 @@ get:
 
     This endpoint is used to get the details of the documents in a given folder.
 
+    Other than the JSON fields shown above, which wrap the output data in a list
+    and show a little metadata, the document JSON for each item in `"documents"`
+    is structured the same as it would be for endpoints that display a given
+    document. _(See the [Document Definition](#document-3) documentation for
+    details)._
+
   parameters:
     - name: folder_id
       in: url
