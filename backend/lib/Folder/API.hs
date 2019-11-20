@@ -128,7 +128,7 @@ folderAPIUpdate fid = api $ do
           (Nothing, Just toParentID) -> return [(UpdateA, FolderR, toParentID)]
           -- root is remaining root. no special privileges needed
           _ -> return []
-      let acc = mkAccPolicy $ [(UpdateA, FolderR, fid)] <> accParents-- <> @devnote chkme
+      let acc = mkAccPolicy $ [(UpdateA, FolderR, fid)] <> accParents
       apiAccessControlOrIsAdmin acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
         fdrDB' <- apiGuardJustM (serverError "Was not able to retrieve updated folder")
