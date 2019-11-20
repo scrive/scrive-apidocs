@@ -177,14 +177,8 @@ guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc =
 
 userIsAuthorOrCompanyAdminOrDocumentIsShared :: User -> Document -> User -> Bool
 userIsAuthorOrCompanyAdminOrDocumentIsShared user doc author =
-  user
-    ^. #id
-    == author
-    ^. #id
-    || (  user
-       ^. #groupID
-       == author
-       ^. #groupID
+  (user ^. #id == author ^. #id)
+    || (  (user ^. #groupID == author ^. #groupID)
        && (user ^. #isCompanyAdmin || isDocumentShared doc)
        )
 

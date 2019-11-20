@@ -1434,16 +1434,13 @@ apiCallV1Get did = logDocument did . api $ do
         Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
         _         -> return Nothing
 
-      haspermission <-
-        return
-        $  isJust msiglink
-        || (  isJust mauser
-           && (fromJust mauser)
-           ^. #groupID
-           == user
-           ^. #groupID
-           && (user ^. #isCompanyAdmin || isDocumentShared doc)
-           )
+      let haspermission = case msiglink of
+            Just _  -> True
+            Nothing -> case mauser of
+              Just auser ->
+                (auser ^. #groupID == user ^. #groupID)
+                  && (user ^. #isCompanyAdmin || isDocumentShared doc)
+              Nothing -> False
       admin <- isUserAdmin user <$> getContext
       case () of
         _
