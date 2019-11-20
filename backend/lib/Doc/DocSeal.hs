@@ -467,7 +467,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
         else renderLocalTemplate document "_notAttachedToSealedFile" (return ())
 
       return $ Seal.FileDesc
-        { fileTitle                    = title
+        { fileTitle                    = ICU.normalize ICU.NFC title
         , fileRole                     = attachmentNumText
         , filePagesText                = numberOfPagesText
         , fileAttachedBy               = attachedByText
