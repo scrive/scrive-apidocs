@@ -29,8 +29,6 @@ get:
     This metadata currently consists of the folder's ID, it's parent ID (if any)
     and the name/id of its immediate children (if any).
 
-    @TODO: Need to clarify about the stuff Kuba did.
-
   parameters:
     - name: folder_id
       in: url
@@ -44,5 +42,7 @@ get:
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough
-        permissions to create this Folder. In practice this means that you lack
-        Read permissions on the Folder)
+        permissions to view this Folder). In practice this means that you lack
+        Read permissions on the Folder. Uniquely, for this endpoint, it is also
+        possible to acquire Read permissions by being a signatory or approver
+        of a document in that folder.
