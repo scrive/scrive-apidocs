@@ -74,9 +74,8 @@ userGroupApiV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
   apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)]
-    $
     -- Return response
-        Ok
+    $   Ok
     <$> constructUserGroupResponse inheritable ugid
 
 userGroupApiV2Create :: Kontrakcja m => m Response
@@ -116,14 +115,14 @@ userGroupApiV2Update ugid = api $ do
   movementAccs <- case (moldparentugid, mnewparentugid) of
     (Just oldparentugid, Just newparentugid) -> if oldparentugid /= newparentugid
       then do
-                                                  -- The usergroup is being moved from one or another.
-                                                  -- Permissions are required for "from" and "to" UserGroups
+        -- The usergroup is being moved from one or another.
+        -- Permissions are required for "from" and "to" UserGroups
         let oldAcc = mkAccPolicyItem (UpdateA, UserGroupR, oldparentugid)
             newAcc = mkAccPolicyItem (UpdateA, UserGroupR, newparentugid)
             curAcc = mkAccPolicyItem (DeleteA, UserGroupR, ugOriginal ^. #id)
         return [oldAcc, newAcc, curAcc]
       else
-                                                  -- The usergroup isn't being moved, no special permissions needed
+           -- The usergroup isn't being moved, no special permissions needed
            return []
     (Nothing, Just newparentugid) -> do
       -- Root usergroup is being made subordinate to another UserGroup
@@ -145,18 +144,16 @@ userGroupApiV2Update ugid = api $ do
 userGroupApiV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiV2Delete ugid =
   api
-    $
-  -- Check user has permissions to delete UserGroup
-      apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, UserGroupR, ugid)]
+    -- Check user has permissions to delete UserGroup
+    . apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, UserGroupR, ugid)]
     $ do
         ug <- userGroupOrAPIError ugid
         let isRootUserGroup = isNothing . view #parentGroupID
         when (isRootUserGroup ug)
-          $
           -- Maybe Sales/Admin users should be allowed
           -- Note: Current DB implementation causes DB error when deleting a root.
           -- Will need to be fixed if we want to allow deletion of roots.
-            apiError
+          . apiError
           $ requestFailed "Root usergroups cannot be deleted."
         dbUpdate $ UserGroupDelete ugid
         dbUpdate $ AccessControlDeleteRolesByUserGroup ugid
@@ -173,9 +170,8 @@ userGroupApiContactDetailsV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
   apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)]
-    $
     -- Return response
-        Ok
+    $   Ok
     .   encodeUserGroupContactDetails inheritable
     <$> userGroupWithParentsOrAPIError ugid
 

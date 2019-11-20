@@ -112,19 +112,22 @@ folderAPIUpdate fid = api $ do
         Just folderUpdated -> return folderUpdated
       let mtoParentID   = fdrNew ^. #parentID
           mfromParentID = fdrDB ^. #parentID
-          accParents    = if (mfromParentID == mtoParentID)
-                          -- child is remaining in same place. no special privileges needed
-            then []
-            else case (mfromParentID, mtoParentID) of
-                            -- change parent
-              (Just fromParentID, Just toParentID) ->
-                [(UpdateA, FolderR, toParentID), (UpdateA, FolderR, fromParentID)]
-              -- change from being child to root
-              (Just fromParentID, Nothing) -> [(UpdateA, FolderR, fromParentID)]
-              -- change from being root to child
-              (Nothing, Just toParentID) -> [(UpdateA, FolderR, toParentID)]
-              -- root is remaining root. no special privileges needed
-              _ -> []
+      accParents <- if (mfromParentID == mtoParentID)
+        -- child is remaining in same place. no special privileges needed
+        then return []
+        else case (mfromParentID, mtoParentID) of
+          -- change parent
+          (Just fromParentID, Just toParentID) ->
+            return [(UpdateA, FolderR, toParentID), (UpdateA, FolderR, fromParentID)]
+          -- change from being child to root
+          (Just _, Nothing) -> do
+            -- Only admin or sales can promote Folder to root
+            unlessM checkAdminOrSales $ apiError insufficientPrivileges
+            return []
+          -- change from being root to child
+          (Nothing, Just toParentID) -> return [(UpdateA, FolderR, toParentID)]
+          -- root is remaining root. no special privileges needed
+          _ -> return []
       let acc = mkAccPolicy $ [(UpdateA, FolderR, fid)] <> accParents-- <> @devnote chkme
       apiAccessControlOrIsAdmin acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
