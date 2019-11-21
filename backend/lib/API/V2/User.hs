@@ -3,6 +3,7 @@ module API.V2.User (
   , getAPIUserWithAnyPrivileges
   , getAPIUserWithPrivileges
   , getAPIUserWithPad
+  , getAPIUserWithAPIPersonal
 ) where
 
 import Happstack.Server
@@ -69,3 +70,7 @@ getAPIUserWith ctxUser privs = do
             , "xtoken" .= xtoken
             ]
           apiError $ invalidAuthorization
+
+getAPIUserWithAPIPersonal :: Kontrakcja m => m User
+getAPIUserWithAPIPersonal = do
+  fst <$> getAPIUser APIPersonal

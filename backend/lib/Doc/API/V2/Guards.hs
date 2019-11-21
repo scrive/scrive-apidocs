@@ -210,24 +210,25 @@ guardThatAttachmentDetailsAreConsistent ads = do
     hasDuplicates []       = False
     hasDuplicates (x : xs) = x `elem` xs || hasDuplicates xs
 
-guardFolderActionIsAllowed :: Kontrakcja m => [(AccessAction, FolderID)] -> m ()
-guardFolderActionIsAllowed acts_fids =
-  apiAccessControlWithAnyPrivileges
-      [ mkAccPolicyItem (act, DocumentR, fid) | (act, fid) <- acts_fids ]
+guardFolderActionIsAllowed :: Kontrakcja m => User -> [(AccessAction, FolderID)] -> m ()
+guardFolderActionIsAllowed user acts_fids = do
+  apiAccessControl user
+                   [ mkAccPolicyItem (act, DocumentR, fid) | (act, fid) <- acts_fids ]
     $ return ()
 
-guardDocumentCreateInFolderIsAllowed :: Kontrakcja m => FolderID -> m ()
-guardDocumentCreateInFolderIsAllowed location =
-  guardFolderActionIsAllowed [(CreateA, location)]
+guardDocumentCreateInFolderIsAllowed :: Kontrakcja m => User -> FolderID -> m ()
+guardDocumentCreateInFolderIsAllowed user location =
+  guardFolderActionIsAllowed user [(CreateA, location)]
 
-guardDocumentMoveIsAllowed :: Kontrakcja m => Maybe FolderID -> Maybe FolderID -> m ()
-guardDocumentMoveIsAllowed mOldLocation mNewLocation = do
+guardDocumentMoveIsAllowed
+  :: Kontrakcja m => User -> Maybe FolderID -> Maybe FolderID -> m ()
+guardDocumentMoveIsAllowed user mOldLocation mNewLocation = do
   when (mOldLocation /= mNewLocation) $ do
     case mNewLocation of
       Nothing -> apiError
         $ requestParameterInvalid "document" "folder_id has to be set to some value"
       _ ->
-        guardFolderActionIsAllowed
+        guardFolderActionIsAllowed user
           . catMaybes
           $ [(CreateA, ) <$> mNewLocation, (DeleteA, ) <$> mOldLocation]
 
@@ -804,6 +805,6 @@ guardAccessToDocumentWithSignatory did slid = do
   sid   <- view #sessionID <$> getContext
   check <- dbQuery $ CheckDocumentSession sid slid
   unless check $ do
-    (user, _) <- getAPIUser APIPersonal
-    check'    <- checkIfUserCanAccessDocumentAsSignatory user did slid
+    user   <- getAPIUserWithAPIPersonal
+    check' <- checkIfUserCanAccessDocumentAsSignatory user did slid
     unless check' $ apiError documentActionForbidden

@@ -42,7 +42,8 @@ accessControlRolesAPIV2 = dir "accesscontrol" . dir "roles" $ choice
 accessControlAPIV2GetUserRoles :: Kontrakcja m => UserID -> m Response
 accessControlAPIV2GetUserRoles uid = api $ do
   -- Check user has permissions to view User
-  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserR, uid)] $ do
+  apiuser <- getAPIUserWithAPIPersonal
+  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (ReadA, UserR, uid)] $ do
     -- Get roles for user
     dbQuery (GetUserByID uid) >>= \case
       Nothing ->
@@ -56,7 +57,8 @@ accessControlAPIV2Get roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
     Nothing   -> apiError insufficientPrivileges
     Just role -> do
-      apiAccessControlOrIsAdmin (roleToAccessPolicyReq role ReadA)
+      apiuser <- getAPIUserWithAPIPersonal
+      apiAccessControlOrIsAdmin apiuser (roleToAccessPolicyReq role ReadA)
         $ return
         . Ok
         $ encodeAccessRole role
@@ -66,7 +68,8 @@ accessControlAPIV2Delete roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
     Nothing   -> apiError insufficientPrivileges
     Just role -> do
-      apiAccessControlOrIsAdmin (roleToAccessPolicyReq role DeleteA) $ do
+      apiuser <- getAPIUserWithAPIPersonal
+      apiAccessControlOrIsAdmin apiuser (roleToAccessPolicyReq role DeleteA) $ do
         void . dbUpdate $ AccessControlRemoveRole roleId
         return . Ok . J.runJSONGen $ do
           J.value "role_id" $ show roleId
@@ -74,8 +77,9 @@ accessControlAPIV2Delete roleId = api $ do
 
 accessControlAPIV2Add :: Kontrakcja m => m Response
 accessControlAPIV2Add = api $ do
-  role <- getApiRoleParameter
-  apiAccessControlOrIsAdmin (roleToAccessPolicyReq role CreateA) $ do
+  role    <- getApiRoleParameter
+  apiuser <- getAPIUserWithAPIPersonal
+  apiAccessControlOrIsAdmin apiuser (roleToAccessPolicyReq role CreateA) $ do
     mrole <- case role of
       AccessRoleUser _ uid target -> dbUpdate $ AccessControlCreateForUser uid target
       AccessRoleUserGroup _ ugid target ->
