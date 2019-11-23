@@ -1,6 +1,5 @@
 module Folder.JSON (
-    encodeFolder
-  , encodeFolderWithChildren
+    encodeFolderWithChildren
   , updateFolderWithFolderFromRequest
 ) where
 
@@ -11,13 +10,6 @@ import Optics (folded)
 
 import Folder.Types
 import InputValidation
-
-encodeFolder :: Folder -> Encoding
-encodeFolder folder =
-  pairs
-    $  ("id" .= (folder ^. #id))
-    <> ("parent_id" .= (folder ^. #parentID))
-    <> ("name" .= (folder ^. #name))
 
 encodeFolderWithChildren :: FolderWithChildren -> Encoding
 encodeFolderWithChildren fdrwc =

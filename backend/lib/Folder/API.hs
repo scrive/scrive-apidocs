@@ -35,7 +35,6 @@ import Kontra
 import Log.Identifier
 import OAuth.Model
 import Routing
-import qualified Folder.Internal as I
 
 folderAPIRoutes :: Route (Kontra Response)
 folderAPIRoutes = dir "api" $ choice [dir "frontend" $ folderAPI, dir "v2" $ folderAPI]
@@ -55,7 +54,7 @@ folderAPICreate = api $ do
   fdrIn <- case updateFolderWithFolderFromRequest defaultFolder fdru of
     Nothing            -> apiError $ requestFailed "Error parsing folder create object."
     Just folderUpdated -> return folderUpdated
-  fdrOut <- case fdrIn ^. #parentID of
+  fid <- view #id <$> case fdrIn ^. #parentID of
     Nothing -> do
       -- guard against non-admins being able to create root folders
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
@@ -65,7 +64,7 @@ folderAPICreate = api $ do
       let acc = [mkAccPolicyItem (CreateA, FolderR, parent_id)]
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc . dbUpdate $ FolderCreate fdrIn
-  return . Ok $ encodeFolder fdrOut
+  Ok . encodeFolderWithChildren <$> folderWithChildrenOrAPIError fid
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
@@ -73,16 +72,15 @@ folderAPIGet fid = api $ do
   user           <- getAPIUserWithAPIPersonal
   hasReadAccess  <- apiAccessControlCheck user acc
   isAdminOrSales <- checkAdminOrSales
-  if (hasReadAccess || isAdminOrSales)
-    then getFolder
+  fdrwc          <- if (hasReadAccess || isAdminOrSales)
+    then folderWithChildrenOrAPIError fid
     else do
       isSignatory <- isSignatoryOfOneOfDocuments
-      if (isSignatory) then getFolder else (apiError insufficientPrivileges)
+      if isSignatory
+        then folderWithChildrenOrAPIError fid
+        else apiError insufficientPrivileges
+  return . Ok $ encodeFolderWithChildren fdrwc
   where
-    srvLogErr :: Kontrakcja m => T.Text -> m a
-    srvLogErr t = do
-      logInfo "Folder API" $ object ["error_message" .= t]
-      apiError $ serverError t
     isSignatoryOfOneOfDocuments :: Kontrakcja m => m Bool
     isSignatoryOfOneOfDocuments = do
       user      <- fst <$> getAPIUserWithAnyPrivileges
@@ -91,16 +89,6 @@ folderAPIGet fid = api $ do
         [DocumentFilterDeleted False, DocumentFilterByFolderID fid]
         []
       return . (> 0) $ length documents
-    getFolder :: Kontrakcja m => m (APIResponse Encoding)
-    getFolder = do
-      fdr <- dbQuery (FolderGet fid) >>= \case
-        Nothing  -> srvLogErr "The folder could not be retrieved."
-        Just fdr -> return fdr
-      -- we retrieve only the immediate children, as in the user group API.
-      fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
-      let fdrwc =
-            I.FolderWithChildren fdr $ map (\c -> I.FolderWithChildren c []) fdrChildren
-      return . Ok $ encodeFolderWithChildren fdrwc
 
 folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
 folderAPIUpdate fid = api $ do
@@ -134,9 +122,7 @@ folderAPIUpdate fid = api $ do
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
-        fdrDB' <- apiGuardJustM (serverError "Was not able to retrieve updated folder")
-                                (dbQuery . FolderGet $ fid)
-        return . Ok $ encodeFolder fdrDB'
+        Ok . encodeFolderWithChildren <$> folderWithChildrenOrAPIError fid
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do

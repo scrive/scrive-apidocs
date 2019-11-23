@@ -5,6 +5,7 @@ module API.V2.Utils
     , apiAccessControlCheck
     , checkAdminOrSales
     , folderOrAPIError
+    , folderWithChildrenOrAPIError
     , isApiAdmin
     , isApiSales
     , userGroupOrAPIError
@@ -25,6 +26,7 @@ import User.Model
 import UserGroup.Model
 import UserGroup.Types
 import Util.MonadUtils
+import qualified Folder.Internal as I
 
 userAccessControlImpl :: Kontrakcja m => User -> AccessPolicy -> m a -> m a -> m a
 userAccessControlImpl apiuser acc failAction successAction = do
@@ -92,3 +94,11 @@ folderOrAPIError :: (MonadDB m, MonadThrow m) => FolderID -> m Folder
 folderOrAPIError fdrid = dbQuery (FolderGet fdrid) >>= \case
   Nothing  -> apiError $ serverError "Impossible happened: No folder with ID, or deleted."
   Just fdr -> return fdr
+
+folderWithChildrenOrAPIError
+  :: (MonadDB m, MonadThrow m) => FolderID -> m I.FolderWithChildren
+folderWithChildrenOrAPIError fid = do
+  fdr         <- folderOrAPIError fid
+  -- we retrieve only the immediate children, as in the user group API.
+  fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
+  return $ I.FolderWithChildren fdr $ map (\c -> I.FolderWithChildren c []) fdrChildren
