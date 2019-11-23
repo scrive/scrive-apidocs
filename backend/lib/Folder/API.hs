@@ -89,7 +89,6 @@ folderAPIGet fid = api $ do
         []
       return . (> 0) $ length documents
 
-
 folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
 folderAPIUpdate fid = api $ do
   (dbQuery (FolderGet fid)) >>= \case
@@ -131,9 +130,8 @@ folderAPIDelete fid = api $ do
     fdr <- fGetOrErrNotFound fid
     let isRootFolder = isNothing $ fdr ^. #parentID
     when isRootFolder
-      $
       -- cf. `userGroupApiV2Delete`
-        apiError
+      . apiError
       $ requestFailed "Root folders cannot be deleted."
     dbUpdate $ FolderDelete fid
     dbUpdate $ AccessControlDeleteRolesByFolder fid
