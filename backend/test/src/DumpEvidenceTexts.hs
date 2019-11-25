@@ -21,15 +21,15 @@ import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model
   ( CurrentEvidenceEventType(..), DocumentEvidenceEvent(..)
-  , EvidenceEventType(..), evidenceLogText )
-
+  , EvidenceEventType(..), evidenceLogText
+  )
 import EvidenceLog.View (historyEventType, simplifiedEventText)
 import EvidencePackage.EvidenceLog (finalizeEvidenceText)
 import MinutesTime
 import Templates (runTemplatesT)
 import TestingUtil
-  ( addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests, testThat )
-
+  ( addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests, testThat
+  )
 import TestKontra (TestEnvSt)
 import Text.XML.DirtyContent (renderXMLContent)
 import User.Model (Lang, allLangs, codeFromLang)

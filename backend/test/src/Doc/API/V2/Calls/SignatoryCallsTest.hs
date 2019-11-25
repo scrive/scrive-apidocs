@@ -10,8 +10,8 @@ import Doc.API.V2.Calls.SignatoryCalls
 import Doc.API.V2.Mock.TestUtils
 import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryLink
-  ( AuthenticationToSignMethod(SMSPinAuthenticationToSign) )
-
+  ( AuthenticationToSignMethod(SMSPinAuthenticationToSign)
+  )
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)

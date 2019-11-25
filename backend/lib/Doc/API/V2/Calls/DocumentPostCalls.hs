@@ -62,8 +62,8 @@ import Doc.DocAddImage (addImageToDocumentFile)
 import Doc.DocInfo (isClosed, isPending, isTimedout)
 import Doc.DocMails
 import Doc.DocMails
-  ( sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1 )
-
+  ( sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1
+  )
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad

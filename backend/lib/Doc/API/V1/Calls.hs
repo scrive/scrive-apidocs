@@ -73,8 +73,8 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad
-  ( DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM )
-
+  ( DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM
+  )
 import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
@@ -83,8 +83,8 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
   ( SignatoryScreenshots, emptySignatoryScreenshots
-  , resolveReferenceScreenshotNames )
-
+  , resolveReferenceScreenshotNames
+  )
 import Doc.SMSPin.Model
 import Doc.Tokens.Model
 import EID.Signature.Model

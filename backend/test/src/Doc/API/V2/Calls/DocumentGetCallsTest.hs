@@ -26,11 +26,11 @@ import Doc.Tokens.Model
 import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryAttachment
-  ( SignatoryAttachment(..), defaultSignatoryAttachment )
-
+  ( SignatoryAttachment(..), defaultSignatoryAttachment
+  )
 import Doc.Types.SignatoryLink
-  ( AuthenticationToSignMethod(..), SignatoryLink(..) )
-
+  ( AuthenticationToSignMethod(..), SignatoryLink(..)
+  )
 import File.Storage (saveNewFile)
 import Folder.Model.Update
 import Folder.Types

@@ -10,8 +10,8 @@ import qualified Text.StringTemplates.Fields as F
 
 import Doc.DocStateData
 import Doc.SignatoryIdentification
-  ( SignatoryIdentifierMap, siLink, signatoryIdentifier )
-
+  ( SignatoryIdentifierMap, siLink, signatoryIdentifier
+  )
 import EvidenceLog.Model
 import MinutesTime
 import Text.XML.Content (cdata)

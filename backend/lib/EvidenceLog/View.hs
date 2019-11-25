@@ -23,8 +23,8 @@ import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
 import Doc.SignatoryIdentification
   ( SignatoryIdentifierMap, siFullName, siLink, signatoryIdentifier
-  , signatoryIdentifierMap )
-
+  , signatoryIdentifierMap
+  )
 import EID.Authentication.Model
 import EID.EIDService.Types
 import EID.Nets.Types

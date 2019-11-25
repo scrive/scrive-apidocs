@@ -29,8 +29,8 @@ import Doc.Model.Update
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
   ( SignatoryScreenshots, emptySignatoryScreenshots
-  , resolveReferenceScreenshotNames )
-
+  , resolveReferenceScreenshotNames
+  )
 import Doc.SMSPin.Model
 import EID.Signature.Model
 import File.Model

@@ -18,8 +18,8 @@ import Control.Monad.Reader (ReaderT(..), ask, runReaderT)
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
   ( ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith
-  , defaultLiftWith, defaultRestoreM, defaultRestoreT )
-
+  , defaultLiftWith, defaultRestoreM, defaultRestoreT
+  )
 import Data.Time
 import Log
 import System.Directory (removeFile)

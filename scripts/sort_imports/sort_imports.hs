@@ -162,12 +162,12 @@ showImport Style {..} Import {..} = withImpSpec import_module
           Hiding   es  -> " hiding\n" <> parenthesizeMultiLine es
 
         parenthesizeMultiLine :: [Text] -> Text
-        parenthesizeMultiLine []       = "  ()"
-        parenthesizeMultiLine entities = T.unlines $ unfoldr go entities'
+        parenthesizeMultiLine [] = "  ()"
+        parenthesizeMultiLine entities =
+          T.intercalate "\n" $ unfoldr go entities' ++ ["  )"]
           where
             entities' =
               (\l -> "( " <> head l : tail l)
-                . (\l -> init l ++ [last l <> " )"])
                 . (\l -> head l : map (", " <>) (tail l))
                 $ entities
 

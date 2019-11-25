@@ -48,8 +48,8 @@ import Control.Monad.Extra
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
 import Data.List hiding
-  ( (!!), all, and, any, head, last, maximum, minimum, or, tail )
-
+  ( (!!), all, and, any, head, last, maximum, minimum, or, tail
+  )
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Utils
@@ -61,8 +61,8 @@ import Text.JSON.ToJSValue
 import TextShow
 import "base" Prelude hiding
   ( (!!), (&&), (||), all, and, any, error, head, id, last, maximum, minimum
-  , not, or, read, tail )
-
+  , not, or, read, tail
+  )
 import qualified Data.Either.Optics as O
 import qualified Data.Maybe.Optics as O
 import qualified Data.Text as T

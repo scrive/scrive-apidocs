@@ -29,8 +29,8 @@ import Doc.DocInfo
 import Doc.DocMails
   ( sendClosedEmails, sendDocumentErrorEmail, sendDocumentTimeoutedEmail
   , sendForwardSigningMessages, sendInvitationEmails
-  , sendPartyProcessFinalizedNotification, sendRejectEmails )
-
+  , sendPartyProcessFinalizedNotification, sendRejectEmails
+  )
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad

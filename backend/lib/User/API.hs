@@ -22,8 +22,8 @@ import Control.Monad.Reader
 import Data.Aeson
 import Data.Unjson
 import Happstack.Server hiding
-  ( dir, forbidden, host, lookCookieValue, ok, path, resp, simpleHTTP )
-
+  ( dir, forbidden, host, lookCookieValue, ok, path, resp, simpleHTTP
+  )
 import Happstack.StaticRouting
 import Log
 import Text.JSON.Gen hiding (object)
