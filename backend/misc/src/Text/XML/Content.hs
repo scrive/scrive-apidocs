@@ -27,8 +27,8 @@ import Data.Text.Lazy (fromStrict)
 import Data.XML.Types (Content(..), Event(..))
 import Text.XML
   ( Element(..), Name, Node(..), decodeHtmlEntities, documentRoot, elementNodes
-  , parseText, psDecodeEntities )
-
+  , parseText, psDecodeEntities
+  )
 import Text.XML.Stream.Render (renderBytes)
 import qualified Data.Map as Map
 import qualified Data.Text as T

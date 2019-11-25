@@ -32,8 +32,8 @@ import qualified Text.StringTemplates.Fields as F
 import DB
 import DB.XML ()
 import Doc.DocStateData
-  ( AuthenticationToSignMethod(..), DeliveryMethod(..), SignatoryLink(..) )
-
+  ( AuthenticationToSignMethod(..), DeliveryMethod(..), SignatoryLink(..)
+  )
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.SignatoryLinkID
@@ -46,8 +46,8 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail)
 import Util.SignatoryLinkUtils
-  ( getSigLinkFor, isApprover, isSignatory, isViewer )
-
+  ( getSigLinkFor, isApprover, isSignatory, isViewer
+  )
 import VersionTH
 import qualified HostClock.Model as HC
 

@@ -42,8 +42,8 @@ import Log.Identifier
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl (curlTransport)
 import Network.XMLCurl
-  ( CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction )
-
+  ( CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction
+  )
 import Routing
 import Session.Cookies
 import Session.Model

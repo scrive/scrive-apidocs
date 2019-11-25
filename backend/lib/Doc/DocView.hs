@@ -29,9 +29,8 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-  ( entryPointFields, simpleHtmlResponse, standardPageFields
-  , userGroupUIForPage )
-
+  ( entryPointFields, simpleHtmlResponse, standardPageFields, userGroupUIForPage
+  )
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document

@@ -12,8 +12,8 @@ import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
   ( ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith
-  , defaultLiftWith, defaultRestoreM, defaultRestoreT )
-
+  , defaultLiftWith, defaultRestoreM, defaultRestoreT
+  )
 
 import qualified PdfToolsLambda.Conf.Internal as I
 

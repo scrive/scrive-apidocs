@@ -70,8 +70,8 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad
-  ( DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM )
-
+  ( DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM
+  )
 import Doc.DocUtils (canSignatorySignNow, fileFromMainFile)
 import Doc.DocView
 import Doc.DocViewMail
@@ -82,8 +82,8 @@ import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import EvidenceLog.Model
   ( CurrentEvidenceEventType(..)
-  , InsertEvidenceEventWithAffectedSignatoryAndMsg(..) )
-
+  , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
+  )
 import FeatureFlags.Model
 import File.File (fileid)
 import File.Model

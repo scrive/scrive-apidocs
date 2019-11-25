@@ -4,8 +4,8 @@ import Data.Aeson ((.:), (.=))
 import Data.Int (Int64)
 import Data.Time.Clock (UTCTime)
 import Network.HTTP.Client
-  ( Request, parseRequest_, responseTimeout, responseTimeoutMicro )
-
+  ( Request, parseRequest_, responseTimeout, responseTimeoutMicro
+  )
 import Network.HTTP.Simple (setRequestBodyJSON, setRequestMethod)
 import System.FilePath ((</>))
 import qualified Data.Aeson as JSON

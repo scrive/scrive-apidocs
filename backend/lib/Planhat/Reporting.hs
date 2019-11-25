@@ -14,8 +14,8 @@ import DB
 import Planhat.Communication
 import Planhat.Config
 import User.Model
-  ( GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountTotal(..) )
-
+  ( GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountTotal(..)
+  )
 import UserGroup.Types
 
 doDailyPlanhatStats

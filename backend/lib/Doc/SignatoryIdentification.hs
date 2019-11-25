@@ -15,8 +15,8 @@ import qualified Data.Text as T
 
 import Doc.DocStateData
   ( Document, SignatoryLink, documentsignatorylinks, signatoryisauthor
-  , signatorylinkid )
-
+  , signatorylinkid
+  )
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Util.HasSomeUserInfo (getFullName)
 import Util.SignatoryLinkUtils (isApprover, isSignatory)

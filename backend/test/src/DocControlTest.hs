@@ -28,14 +28,14 @@ import Doc.DocStateData
 import Doc.DocumentID (DocumentID)
 import Doc.DocumentMonad
   ( theDocument, updateDocumentWithID, withDocument, withDocumentID
-  , withDocumentM )
-
+  , withDocumentM
+  )
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.SignatoryScreenshots
-  ( SignatoryScreenshots(signing), emptySignatoryScreenshots )
-
+  ( SignatoryScreenshots(signing), emptySignatoryScreenshots
+  )
 import Doc.SMSPin.Model
 import Doc.Tokens.Model
 import Doc.Types.SignatoryAccessToken

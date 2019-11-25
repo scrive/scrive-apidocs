@@ -23,8 +23,8 @@ import Log.Identifier
 import MinutesTime
 import Network.XMLCurl
 import Network.XMLCurl
-  ( CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction )
-
+  ( CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction
+  )
 import Text.XML.Parser
 import Text.XML.XMLDSig
 import qualified Text.XML.Writer.Extended as X

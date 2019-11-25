@@ -12,16 +12,16 @@ import Control.Monad.Catch
 import Control.Monad.Reader (MonadIO, MonadTrans)
 import Control.Monad.Trans.Control
   ( ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith
-  , defaultLiftWith, defaultRestoreM, defaultRestoreT )
-
+  , defaultLiftWith, defaultRestoreM, defaultRestoreT
+  )
 import Data.Int
 import Log
 
 import DB
 import DB.RowCache
   ( GetRow, RowCacheT, rowCache, rowCacheID, runRowCacheT, runRowCacheTID
-  , updateRow, updateRowWithID )
-
+  , updateRow, updateRowWithID
+  )
 import Doc.Class
 import Doc.DocumentID (DocumentID)
 import Doc.Logging

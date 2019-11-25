@@ -32,8 +32,8 @@ import Doc.Action
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.API.V1.DocumentToJSON
   ( allCustomTextOrCheckboxOrRadioGroupFields, docForListCSVHeaderV1
-  , docForListCSVV1 )
-
+  , docForListCSVV1
+  )
 import Doc.API.V2.JSON.List
 import Doc.DocInfo (isPending)
 import Doc.DocMails

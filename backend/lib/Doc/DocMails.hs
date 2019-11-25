@@ -43,8 +43,8 @@ import Doc.Logging
 import Doc.Model
 import EvidenceLog.Model
   ( CurrentEvidenceEventType(..)
-  , InsertEvidenceEventWithAffectedSignatoryAndMsg(..) )
-
+  , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
+  )
 import File.File
 import File.Model
 import Folder.Model
