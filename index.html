@@ -304,6 +304,9 @@
                   <li>
                     <a href="#access-control" class="toc-h2 toc-link" data-title="access-control">Access Control</a>
                   </li>
+                  <li>
+                    <a href="#folders" class="toc-h2 toc-link" data-title="folders">Folders</a>
+                  </li>
               </ul>
           </li>
           <li>
@@ -533,7 +536,27 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-63" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#folders-2" class="toc-h1 toc-link" data-title="folders">Folders</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#view-folder" class="toc-h2 toc-link" data-title="view-folder">View Folder</a>
+                  </li>
+                  <li>
+                    <a href="#create-folder" class="toc-h2 toc-link" data-title="create-folder">Create Folder</a>
+                  </li>
+                  <li>
+                    <a href="#update-folder" class="toc-h2 toc-link" data-title="update-folder">Update Folder</a>
+                  </li>
+                  <li>
+                    <a href="#delete-folder" class="toc-h2 toc-link" data-title="delete-folder">Delete Folder</a>
+                  </li>
+                  <li>
+                    <a href="#list-documents-in-folder" class="toc-h2 toc-link" data-title="list-documents-in-folder">List Documents in Folder</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#responses-68" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -638,6 +661,9 @@
                   </li>
                   <li>
                     <a href="#accessrole" class="toc-h2 toc-link" data-title="accessrole">AccessRole</a>
+                  </li>
+                  <li>
+                    <a href="#folder" class="toc-h2 toc-link" data-title="folder">Folder</a>
                   </li>
               </ul>
           </li>
@@ -2084,6 +2110,46 @@ Scrive eSign system returning errors.</p>
 <a href="#apiv2accesscontrolroles{role_id}delete">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/accesscontrol/roles/{role_id}/delete</code>
+</strong>
+</a>
+</p>
+<h2 id='folders'>Folders</h2>
+<p>
+<a href="#apiv2folders{folder_id}">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/folders/{folder_id}</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2folderscreate">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/folders/create</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2folders{folder_id}update">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/folders/{folder_id}/update</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2folders{folder_id}delete">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/folders/{folder_id}/delete</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2folders{folder_id}list">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/folders/{folder_id}/list</code>
 </strong>
 </a>
 </p>
@@ -4865,7 +4931,7 @@ have <code>is_generated</code> set to <code>false</code> and a non-<code>null</c
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
 </td> </tr>
 <tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
-permissions to view details of the role. In practise this means that
+permissions to view details of the role. In practice this means that
 you lack Read permissions on either the source or the target that the
 role refers to.</p>
 </td> </tr>
@@ -4907,7 +4973,7 @@ role refers to.</p>
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
 </td> </tr>
 <tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
-permissions to grant this role. In practise this means that you lack
+permissions to grant this role. In practice this means that you lack
 Create permissions on the Policy relation for either the source or the
 target that the proposed role refers to.</p>
 </td> </tr>
@@ -4944,7 +5010,248 @@ permissions upon the Policy relation of either the source or target of
 the role). Either that, or no Access Role exists with this <code>id</code>.</p>
 </td> </tr>
 </table>
-<h1 id='responses-63'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='folders-2'>Folders</h1>
+<div><a id="apiv2folders{folder_id}"></a></div>
+<h2 id='view-folder'>View Folder</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/folders/{folder_id}</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of a Folder</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Root folder"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Subfolder of 1"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<p>This endpoint is used to get the details of a given folder. Note that the
+contents of the folder are not displayed, just the metadata about the
+folder.</p>
+
+<p>This metadata currently consists of the folder&#39;s ID, it&#39;s parent ID (if any)
+and the name/id of its immediate children (if any).</p>
+<h3 id='parameters-58'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to view</p>
+</td><td><p>string</p></td><td>url</td></tr>
+</table>
+<h3 id='responses-63'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
+permissions to view this Folder). In practice this means that you lack
+Read permissions on the Folder. Uniquely, for this endpoint, it is also
+possible to acquire Read permissions by being a signatory or approver
+of a document in that folder.</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2folderscreate"></a></div>
+<h2 id='create-folder'>Create Folder</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/folders/create</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of JSON that could be used create a new Folder:</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new child folder of 1"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<p>This endpoint allows you to create a new Folder. When creating it, you have
+the option to set the Folder&#39;s name and to specify which other Folder it
+will be a child of.</p>
+
+<p>The JSON input must be passed, URL-encoded, via the <code>folder</code> form data
+field.</p>
+
+<p>You must set a <code>parent_id</code> since only internal Scrive admins are permitted
+to create root Folders. In order to create a new child, you must have the
+requisite permissions upon the parent. <code>name</code> will be an empty string if
+you do not include it.</p>
+
+<p>A full Folder JSON response is returned which displays the state after the
+create operation has been performed. Performing <code>/update</code> and then using the
+GET endpoint should produce the same output both times.</p>
+<h3 id='parameters-59'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be created.</p>
+</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-64'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
+permissions to create this Folder. In practice this means that you lack
+Create permissions on the parent Folder).</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2folders{folder_id}update"></a></div>
+<h2 id='update-folder'>Update Folder</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/folders/{folder_id}/update</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of JSON that could be used update a Folder:</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new child folder of 1"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<blockquote>
+<p>For examples of the JSON output, see details of &quot;View Folder&quot;.</p>
+</blockquote>
+
+<p>This endpoint allows you to update the Folder&#39;s meta data, or to change
+its parent ID (i.e. to move this Folder so that it is the child of a
+differnt Folder).</p>
+
+<p>The JSON input must be passed, URL-encoded, via the <code>folder</code> form data
+field.</p>
+
+<p>When updating the <code>parent_id</code>, the following rules are in force:</p>
+
+<ul>
+<li>Only internal Scrive admins can promote a child Folder to a root.</li>
+<li>A root Folder may by subordinated to (i.e. made a child of) another
+Folder if you have permissions to modify the new parent and Folder
+being moved.</li>
+<li>A child Folder may be moved to be a child of another Folder as long
+as you have permissions to update the Folder being moved, the new parent and
+the old parent.</li>
+</ul>
+
+<p>The endpoint supports partial updates. This means that only the fields you
+supply in your requests will have their values altered. Neither field is
+required, providing <code>{}</code> as your update JSON is essentially a &quot;no op&quot;.</p>
+
+<p>A full Folder JSON response is returned which displays the state <em>after</em>
+the update operation has been performed. Performing <code>/update</code> and then
+using the <code>GET</code> endpoint should produce the same output both times.</p>
+
+<p><strong>Important Note</strong>: <em>You cannot move Folders by updating the <code>children</code>
+field, it must be done via <code>parent_id</code></em>.</p>
+<h3 id='parameters-60'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
+</td><td><p>string</p></td><td>url</td></tr>
+<tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be updated.</p>
+</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-65'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
+permissions to update this Folder. In practice this means that you lack
+Update permissions on the Folder.</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2folders{folder_id}delete"></a></div>
+<h2 id='delete-folder'>Delete Folder</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/folders/{folder_id}/delete</code>
+</strong>
+</p>
+
+<p>This endpoint allows you to delete a Folder.</p>
+
+<p>It&#39;s worth noting that you may only delete child Folders. Root Folders
+can only deleted by internal Scrive admins. We also do not support recursive
+deletion. If this is required, it can be implemented client-side by simply
+working up the tree, deleting the leaves.</p>
+<h3 id='parameters-61'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to delete</p>
+</td><td><p>string</p></td><td>url</td></tr>
+</table>
+<h3 id='responses-66'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON object showing that a Folder with the given ID has been
+successfully deleted.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
+permissions to create this Folder. In practice this means that you lack
+Delete permissions on the Folder).</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2folders{folder_id}list"></a></div>
+<h2 id='list-documents-in-folder'>List Documents in Folder</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/folders/{folder_id}/list</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of a Folder Listing</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"total_matching"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"documents"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="err">&lt;Document</span><span class="w"> </span><span class="err">JSON</span><span class="w"> </span><span class="err">(see</span><span class="w"> </span><span class="err">doc</span><span class="w"> </span><span class="err">endpoints)&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="err">&lt;Document</span><span class="w"> </span><span class="err">JSON</span><span class="w"> </span><span class="err">(see</span><span class="w"> </span><span class="err">doc</span><span class="w"> </span><span class="err">endpoints)&gt;</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<p>This endpoint is used to get the details of the documents in a given folder.</p>
+
+<p>Other than the JSON fields shown above, which wrap the output data in a list
+and show a little metadata, the document JSON for each item in <code>&quot;documents&quot;</code>
+is structured the same as it would be for endpoints that display a given
+document. <em>(See the <a href="#document-3">Document Definition</a> documentation for
+details).</em></p>
+<h3 id='parameters-62'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
+</td><td><p>string</p></td><td>url</td></tr>
+</table>
+<h3 id='responses-67'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON object which states the number of documents in the folder and lists
+the JSON respresentations of those documents. (See Documents in
+Definitions)</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
+permissions to create this Folder. In practice this means that you lack
+Read permissions on the Folder)</p>
+</td> </tr>
+</table>
+<h1 id='responses-68'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -19234,6 +19541,80 @@ Preview).</p>
 <li><code>update</code></li>
 
 </ul>
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+<h2 id='folder'>Folder</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-folder-quot'>Example JSON: for &quot;Folder&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Root folder"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Subfolder of 1"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>JSON representation of a Folder.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>id</code> (string)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>parent_id</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>name</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>children</code> (array)</h3>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h5><code>id</code> (string)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>name</code> (string)</h5>
+
+<div class="json-schema">
 
 </div>
 
