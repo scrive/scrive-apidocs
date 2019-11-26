@@ -93,6 +93,6 @@ get:
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough
-        permissions to view details of the role. In practise this means that
+        permissions to view details of the role. In practice this means that
         you lack Read permissions on either the source or the target that the
         role refers to.

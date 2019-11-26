@@ -1,0 +1,29 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: Folder
+type: object
+example:
+  {
+    "id": "1",
+    "parent_id": null,
+    "name": "Root folder",
+    "children": [{ "id": "2", "name": "Subfolder of 1" }],
+  }
+description: |
+  JSON representation of a Folder.
+properties:
+  id:
+    type: string
+  parent_id:
+    type: string
+  name:
+    type: string
+  children:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
