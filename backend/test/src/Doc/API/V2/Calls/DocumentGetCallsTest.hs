@@ -8,7 +8,7 @@ import Test.Framework
 import qualified Data.Text as T
 
 import Context
-import DB.Query (dbUpdate)
+import DB.Query (dbQuery, dbUpdate)
 import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
@@ -32,19 +32,20 @@ import Doc.Types.SignatoryLink
   ( AuthenticationToSignMethod(..), SignatoryLink(..)
   )
 import File.Storage (saveNewFile)
-import Folder.Model.Update
-import Folder.Types
+import Folder.Model
 import Session.Model
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
+import UserGroup.Model
 import Util.Actor
 import Util.QRCode
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env =
   testGroup "APIv2DocumentGetCalls"
-    $ [ testThat "API v2 List"                  env testDocApiV2List
+    $ [ testThat "API v2 List: old style"       env (testDocApiV2List False)
+      , testThat "API v2 List: new style"       env (testDocApiV2List True)
       , testThat "API v2 Get"                   env testDocApiV2Get
       , testThat "API v2 Get by shortcode"      env testDocApiV2GetShortCode
       , testThat "API v2 Get QR code"           env testDocApiV2GetQRCode
@@ -57,13 +58,20 @@ apiV2DocumentGetCallsTests env =
       , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
       , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
       , testThat "API v2 Files - Full"          env testDocApiV2FilesFull
+      , testThat "API v2 Folder listing works with subfolders" env testDocApiV2FolderList
 --  , testThat "API v2 Get - Not after 30 days for signatories" env testDocApiV2GetFailsAfter30Days
       ]
 
-testDocApiV2List :: TestEnv ()
-testDocApiV2List = do
-  user <- addNewRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+testDocApiV2List :: Bool -> TestEnv ()
+testDocApiV2List useFolderListCalls = do
+  user      <- addNewRandomUser
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+
+  -- test with new list feature as well as old
+  (Just ug) <- dbQuery . UserGroupGet $ user ^. #groupID
+  let new_ugsettings =
+        set #useFolderListCalls useFolderListCalls (fromJust $ ug ^. #settings)
+  void $ dbUpdate . UserGroupUpdate $ set #settings (Just new_ugsettings) ug
 
   doc1 <- testDocApiV2New' ctx
   void $ testDocApiV2New' ctx
@@ -552,3 +560,67 @@ testDocApiV2FilesFull = do
     assertBool "Does not have merged.pdf" $ "merged.pdf" `notElem` map fst files
     assertBool "Does not have sig_att.pdf" $ "sig_att.pdf" `notElem` map fst files
     assertBool "Has not_merged.pdf" $ "not_merged.pdf" `elem` map fst files
+
+testDocApiV2FolderList :: TestEnv ()
+testDocApiV2FolderList = do
+  adminA <- addNewRandomUser
+  adminB <- addNewRandomUser
+  let setUseFolderListCall = #settings % _Just % #useFolderListCalls .~ True
+  ugA <- setUseFolderListCall <$> (dbQuery . UserGroupGetByUserID $ adminA ^. #id)
+  void $ dbUpdate $ UserGroupUpdate ugA
+
+  ugB <-
+    (setUseFolderListCall . (#parentGroupID .~ (Just $ ugA ^. #id)))
+      <$> (dbQuery . UserGroupGetByUserID $ adminB ^. #id)
+  void . dbUpdate $ UserGroupUpdate ugB
+  userB          <- addNewRandomCompanyUser (ugB ^. #id) False
+  --  UG-A                |  F-A
+  --   |  \               |     \
+  --   |  adminA          |     F-adminA
+  --   |                  |  
+  --  UG-B ------         |  F-B --------
+  --   |         \        |   |          \
+  --  userB       adminB  |  F-userB     F-adminB
+
+  (Just folderB) <- dbQuery . FolderGet . fromJust $ ugB ^. #homeFolderID
+  void . dbUpdate . FolderUpdate $ set #parentID (ugA ^. #homeFolderID) folderB
+
+  --  UG-A                |  F-A
+  --   |  \               |   | \
+  --   |  adminA          |   | F-adminA
+  --   |                  |   |
+  --  UG-B ------         |  F-B --------
+  --   |         \        |   |          \
+  --  userB       adminB  |  F-userB     F-adminB
+  ctxAdminA <- (set #maybeUser $ Just adminA) <$> mkContext defaultLang
+  ctxAdminB <- (set #maybeUser $ Just adminB) <$> mkContext defaultLang
+  ctxUserB  <- (set #maybeUser $ Just userB) <$> mkContext defaultLang
+
+  void $ testDocApiV2New' ctxUserB     -- creates draft
+  void $ testDocApiV2New' ctxUserB     -- creates draft
+  void $ testDocApiV2StartNew ctxUserB -- creates Pending document
+
+  -- only one is not in preparation stage so only one should be seen by the admins
+  listJSONA      <- jsonTestRequestHelper ctxAdminA GET [] docApiV2List 200
+  listArrayA     <- lookupObjectArray "documents" listJSONA
+
+  listJSONB      <- jsonTestRequestHelper ctxAdminB GET [] docApiV2List 200
+  listArrayB     <- lookupObjectArray "documents" listJSONB
+
+  listJSONUserB  <- jsonTestRequestHelper ctxUserB GET [] docApiV2List 200
+  listArrayUserB <- lookupObjectArray "documents" listJSONUserB
+
+  logInfo_ . showt $ (length listArrayA, length listArrayB, length listArrayUserB)
+
+  assertEqual
+    "`docApiV2List` should return same number of docs using folder list calls (1)"
+    1
+    (length listArrayA)
+  assertEqual
+    "`docApiV2List` should return same number of docs using folder list calls (2)"
+    1
+    (length listArrayB)
+  assertEqual
+    "`docApiV2List` should return same number of docs using folder list calls (3)"
+    3
+    (length listArrayUserB)

@@ -107,10 +107,11 @@ roleToAccessPolicyReq role act =
         AccessRoleImplicitUser      uid  _ -> mkAccPolicyUser uid
         AccessRoleImplicitUserGroup ugid _ -> mkAccPolicyUserGroup ugid
       targetRoleReq = case accessRoleTarget role of
-        UserAR            uid  -> mkAccPolicyUser uid
-        UserGroupMemberAR ugid -> mkAccPolicyUserGroup ugid
-        UserAdminAR       ugid -> mkAccPolicyUserGroup ugid
-        UserGroupAdminAR  ugid -> mkAccPolicyUserGroup ugid
-        FolderAdminAR     fid  -> mkAccPolicyFolder fid
-        FolderUserAR      fid  -> mkAccPolicyFolder fid
+        UserAR               uid  -> mkAccPolicyUser uid
+        UserGroupMemberAR    ugid -> mkAccPolicyUserGroup ugid
+        UserAdminAR          ugid -> mkAccPolicyUserGroup ugid
+        UserGroupAdminAR     ugid -> mkAccPolicyUserGroup ugid
+        FolderAdminAR        fid  -> mkAccPolicyFolder fid
+        FolderUserAR         fid  -> mkAccPolicyFolder fid
+        SharedTemplateUserAR fid  -> mkAccPolicyFolder fid
   in  [sourceRoleReq, targetRoleReq]

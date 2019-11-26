@@ -167,24 +167,31 @@ selectDocuments
   -> Int
   -> State SqlSelect ()
   -> SqlSelect
-selectDocuments domain filters orders limit extend = sqlSelect "documents" $ do
+selectDocuments docDomain docFilters orders limit extend = sqlSelect "documents" $ do
   -- We want to inject filters, offset and limit into domain as soon
   -- as possible to avoid fetching unnecessary rows.
   sqlWith "visible_document_ids" . sqlSelect "domain_ids" $ do
     sqlWith "domain_ids" . sqlSelect "documents" $ do
-      -- When fetching documents of the whole universe don't apply
-      -- DISTINCT as it prevents usage of mtime index (when using
-      -- default sort order), which results in poor performance.
-      when (domain /= DocumentsOfWholeUniverse) $ do
+      let results =
+            mapM_ sqlResult
+              $ "documents.id"
+            -- Include sort expressions as DISTINCT demands it.
+              : map (\dobr -> dobrExpr dobr <+> "AS" <+> dobrName dobr) orderList
+          filters = mapM_ documentFilterToSQL docFilters
+      when (documentDomainNeedsDistinct docDomain) $ do
         sqlDistinct
-      mapM_ sqlResult
-        $ "documents.id"
-        -- Include sort expressions as DISTINCT demands it.
-        : map (\dobr -> dobrExpr dobr <+> "AS" <+> dobrName dobr) orderList
-      documentDomainToSQL domain
-      mapM_ documentFilterToSQL filters
-      mapM_ (sqlOrderBy . (\dobr -> dobrName dobr <+> dobrOrder dobr)) orderList
-      sqlLimit limit
+      case documentDomainToSQL docDomain of
+        []                  -> unexpectedError "selectDocuments: empty domain"
+        (mainDomain : rest) -> do
+          mainDomain
+          results
+          filters
+          sqlUnion $ for rest $ \domain -> toSQLCommand . sqlSelect "documents" $ do
+            domain
+            results
+            filters
+          mapM_ (sqlOrderBy . (\dobr -> dobrName dobr <+> dobrOrder dobr)) orderList
+          sqlLimit limit
     -- Enumerate rows only if order is specified.
     when orderSpecified $ do
       sqlResult "ROW_NUMBER() OVER() AS position"
@@ -360,11 +367,11 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocument Document where
 
 data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, [Document]) where
-  --analysis <- explainAnalyze $ toSQLCommand sql
-  --trace ("ANALYSIS:" <+> analysis) $ return ()
-  --trace (show $ toSQLCommand sql) $ return ()
   query (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) =
     do
+      --analysis <- explainAnalyze $ toSQLCommand sql
+      --trace ("ANALYSIS:" <+> analysis) $ return ()
+      --trace (show $ toSQLCommand sql) $ return ()
       runQuery_ sql
       (count :: Int64, CompositeArray1 documents) <- fetchOne identity
       return (fromIntegral count, documents)

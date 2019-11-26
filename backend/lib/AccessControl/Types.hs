@@ -2,13 +2,22 @@
 module AccessControl.Types
   ( accessControl
   , accessControlPure
+  , extractResourceRef
   , toAccessRoleType
+  , hasAction
+  , hasResource
+  , rolesToPermissions
   , AccessAction(..)
   , AccessPolicy
   , AccessResource(..)
   , AccessRole(..)
   , accessRoleTarget
   , accessRoleSetTarget
+  , accessRoleGetSourceUserID
+  , accessRoleGetSourceUserGroupID
+  , accessRoleGetTargetFolderID
+  , accessRoleGetTargetUserID
+  , accessRoleGetTargetUserGroupID
   , hasPermissions
   , AccessRoleTarget(..)
   , AccessRoleType(..)
@@ -24,9 +33,6 @@ module AccessControl.Types
   , unsafeAccessRoleID
   , emptyAccessRoleID
   , fromAccessRoleID
-  , extractResourceRef
-  , hasAction
-  , hasResource
   )
   where
 
@@ -73,6 +79,51 @@ accessRoleSetTarget new_target (AccessRoleImplicitUser userid _) =
 accessRoleSetTarget new_target (AccessRoleImplicitUserGroup ugid _) =
   AccessRoleImplicitUserGroup ugid new_target
 
+accessRoleGetTargetUserGroupID :: AccessRole -> Maybe UserGroupID
+accessRoleGetTargetUserGroupID role = case accessRoleTarget role of
+  UserAR               _    -> Nothing
+  UserGroupMemberAR    ugid -> Just ugid
+  UserAdminAR          ugid -> Just ugid
+  UserGroupAdminAR     ugid -> Just ugid
+  FolderAdminAR        _    -> Nothing
+  FolderUserAR         _    -> Nothing
+  SharedTemplateUserAR _    -> Nothing
+
+accessRoleGetTargetFolderID :: AccessRole -> Maybe FolderID
+accessRoleGetTargetFolderID role = case accessRoleTarget role of
+  UserAR               _   -> Nothing
+  UserGroupMemberAR    _   -> Nothing
+  UserAdminAR          _   -> Nothing
+  UserGroupAdminAR     _   -> Nothing
+  FolderAdminAR        fid -> Just fid
+  FolderUserAR         fid -> Just fid
+  SharedTemplateUserAR fid -> Just fid
+
+accessRoleGetTargetUserID :: AccessRole -> Maybe UserID
+accessRoleGetTargetUserID role = case accessRoleTarget role of
+  UserAR               uid -> Just uid
+  UserGroupMemberAR    _   -> Nothing
+  UserAdminAR          _   -> Nothing
+  UserGroupAdminAR     _   -> Nothing
+  FolderAdminAR        _   -> Nothing
+  FolderUserAR         _   -> Nothing
+  SharedTemplateUserAR _   -> Nothing
+
+accessRoleGetSourceUserID :: AccessRole -> Maybe UserID
+accessRoleGetSourceUserID role = case role of
+  AccessRoleUser      _ uid _       -> Just uid
+  AccessRoleUserGroup _ _   _       -> Nothing
+  AccessRoleImplicitUser      uid _ -> Just uid
+  AccessRoleImplicitUserGroup _   _ -> Nothing
+
+accessRoleGetSourceUserGroupID :: AccessRole -> Maybe UserGroupID
+accessRoleGetSourceUserGroupID role = case role of
+  AccessRoleUser      _ _    _       -> Nothing
+  AccessRoleUserGroup _ ugid _       -> Just ugid
+  AccessRoleImplicitUser      _    _ -> Nothing
+  AccessRoleImplicitUserGroup ugid _ -> Just ugid
+
+
 -- | The roles we use are mostly rooted in some user group; rather than have
 -- this implicit in implementation we expose it in the constructors. The meaning
 -- is that for the supplied UserGroupID, say, the user has the role thus defined
@@ -88,9 +139,14 @@ data AccessRoleTarget
   | UserGroupAdminAR UserGroupID
   -- ^ A user group admin; may do most things like adding and moving user groups
   | FolderAdminAR FolderID
-  -- ^ A @devnote
+  -- ^ A can CRUD Folders and Documents after Preparation
   | FolderUserAR FolderID
-  -- @devnote - should we introduce `DocumentUserAR FolderID` ??? Look at spec
+  -- ^ Can CRUD Folders and CRUD Documents (including Drafts and Private Templates)
+  --   Yes, he can do more than Folder AdminAR, this is intentional.
+  --   This way users can see drafts and private templates in their User Home Folder, but 
+  --   is_company_admin cannot.
+  | SharedTemplateUserAR FolderID
+  -- ^ Can Read Shared Templates
   deriving (Eq, Show)
 
 -- | We need to discern between permissions and actions that affect users, user
@@ -104,17 +160,21 @@ data AccessResource
   | DocumentR
   | FolderPolicyR
   | FolderR
+  | SharedTemplateR
+  | DocumentAfterPreparationR
   deriving (Eq, Enum, Bounded)
 
 instance Show AccessResource where
-  show UserR              = "user"
-  show UserGroupR         = "user_group"
-  show UserPolicyR        = "user_policy"
-  show UserGroupPolicyR   = "user_group_policy"
-  show UserPersonalTokenR = "user_personal_token"
-  show DocumentR          = "document"
-  show FolderPolicyR      = "folder_policy"
-  show FolderR            = "folder"
+  show UserR                     = "user"
+  show UserGroupR                = "user_group"
+  show UserPolicyR               = "user_policy"
+  show UserGroupPolicyR          = "user_group_policy"
+  show UserPersonalTokenR        = "user_personal_token"
+  show DocumentR                 = "document"
+  show FolderPolicyR             = "folder_policy"
+  show FolderR                   = "folder"
+  show SharedTemplateR           = "shared_template"
+  show DocumentAfterPreparationR = "document_after_preparation"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -216,13 +276,17 @@ hasPermissions (FolderAdminAR fid) =
   map (mkPerm fid FolderR) [minBound .. maxBound]
     <>
   -- can CRUD documents in the folder
-       map (mkPerm fid DocumentR)     [minBound .. maxBound]
+       map (mkPerm fid DocumentAfterPreparationR) [minBound .. maxBound]
     <>
   -- can set/remove any role on the folder
-       map (mkPerm fid FolderPolicyR) [minBound .. maxBound]
+       map (mkPerm fid FolderPolicyR)             [minBound .. maxBound]
 hasPermissions (FolderUserAR fid) =
   -- can read the folder
-  map (mkPerm fid FolderR) [ReadA]
+  map (mkPerm fid FolderR) [minBound .. maxBound]
+    <>
+  -- does not need document after preparation, because DocumentAfterPreparationR is subset of DocumentR
+       map (mkPerm fid DocumentR) [minBound .. maxBound]
+hasPermissions (SharedTemplateUserAR fid) = [mkPerm fid SharedTemplateR ReadA]
 
 -- | Interface to get the proper combinations of 'Permission's needed to gain
 -- access permission.
@@ -331,6 +395,7 @@ data AccessRoleType
   | UserGroupAdminART
   | FolderAdminART
   | FolderUserART
+  | SharedTemplateUserART
   deriving (Eq)
 
 instance PQFormat AccessRoleType where
@@ -350,24 +415,27 @@ instance FromSQL AccessRoleType where
       -- remove this comment.
       5 -> return FolderAdminART
       6 -> return FolderUserART
-      _ -> E.throwIO $ RangeError { reRange = [(0, 6)], reValue = n }
+      7 -> return SharedTemplateUserART
+      _ -> E.throwIO $ RangeError { reRange = [(0, 7)], reValue = n }
 
 instance ToSQL AccessRoleType where
   type PQDest AccessRoleType = PQDest Int16
-  toSQL UserART            = toSQL (0 :: Int16)
-  toSQL UserGroupMemberART = toSQL (1 :: Int16)
-  toSQL UserAdminART       = toSQL (2 :: Int16)
-  toSQL UserGroupAdminART  = toSQL (3 :: Int16)
-  toSQL FolderAdminART     = toSQL (5 :: Int16)
-  toSQL FolderUserART      = toSQL (6 :: Int16)
+  toSQL UserART               = toSQL (0 :: Int16)
+  toSQL UserGroupMemberART    = toSQL (1 :: Int16)
+  toSQL UserAdminART          = toSQL (2 :: Int16)
+  toSQL UserGroupAdminART     = toSQL (3 :: Int16)
+  toSQL FolderAdminART        = toSQL (5 :: Int16)
+  toSQL FolderUserART         = toSQL (6 :: Int16)
+  toSQL SharedTemplateUserART = toSQL (7 :: Int16)
 
 instance Show AccessRoleType where
-  show UserART            = "user"
-  show UserGroupMemberART = "user_group_member"
-  show UserAdminART       = "user_admin"
-  show UserGroupAdminART  = "user_group_admin"
-  show FolderAdminART     = "folder_admin"
-  show FolderUserART      = "folder_user"
+  show UserART               = "user"
+  show UserGroupMemberART    = "user_group_member"
+  show UserAdminART          = "user_admin"
+  show UserGroupAdminART     = "user_group_admin"
+  show FolderAdminART        = "folder_admin"
+  show FolderUserART         = "folder_user"
+  show SharedTemplateUserART = "shared_template_user"
 
 instance Read AccessRoleType where
   readsPrec _ "user"              = [(UserART, "")]
@@ -376,6 +444,7 @@ instance Read AccessRoleType where
   readsPrec _ "user_group_member" = [(UserGroupMemberART, "")]
   readsPrec _ "folder_admin"      = [(FolderAdminART, "")]
   readsPrec _ "folder_user"       = [(FolderUserART, "")]
+  readsPrec _ "shared_template_user" = [(SharedTemplateUserART, "")]
   readsPrec _ _                   = []
 
 instance Unjson AccessRoleType where
@@ -396,12 +465,13 @@ instance FromJSON AccessRoleType where
 
 toAccessRoleType :: AccessRoleTarget -> AccessRoleType
 toAccessRoleType ar = case ar of
-  UserAR            _ -> UserART
-  UserGroupMemberAR _ -> UserGroupMemberART
-  UserAdminAR       _ -> UserAdminART
-  UserGroupAdminAR  _ -> UserGroupAdminART
-  FolderAdminAR     _ -> FolderAdminART
-  FolderUserAR      _ -> FolderUserART
+  UserAR               _ -> UserART
+  UserGroupMemberAR    _ -> UserGroupMemberART
+  UserAdminAR          _ -> UserAdminART
+  UserGroupAdminAR     _ -> UserGroupAdminART
+  FolderAdminAR        _ -> FolderAdminART
+  FolderUserAR         _ -> FolderUserART
+  SharedTemplateUserAR _ -> SharedTemplateUserART
 
 -- AccessRoleID
 
@@ -467,3 +537,6 @@ hasAction (Permission xaa _ _) aa = (xaa == aa)
 
 hasResource :: Permission -> AccessResource -> Bool
 hasResource (Permission _ xar _) ar = (xar == ar)
+
+rolesToPermissions :: [AccessRole] -> [Permission]
+rolesToPermissions rs = join $ map (hasPermissions . accessRoleTarget) rs

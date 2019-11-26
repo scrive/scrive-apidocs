@@ -449,7 +449,8 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
 handleCompanyChange ugid = onlySalesOrAdmin $ do
-  ugwp                   <- guardJustM $ dbQuery $ UserGroupGetWithParents ugid
+  ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents ugid
+  logInfo "ugwp" $ object ["ugwp" .= (showt ugwp)]
   mCompanyName           <- getField "companyname"
   mUGSettingsIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companysettingsisinherited"
@@ -486,6 +487,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
     . listToMaybe
     . catMaybes
     $ [newUG ^. #settings, ugwpSettings <$> ugwpOnlyParents ugwp]
+  logInfo "newsettings" $ object ["newsettings" .= (showt newSettings)]
   guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()

@@ -7,6 +7,7 @@ import Test.QuickCheck
 import AccessControl.Model
 import AccessControl.Types
 import DB
+import Folder.Model
 import TestingUtil
 import TestKontra
 import User.Model
@@ -19,6 +20,8 @@ accessControlRoleTests env = testGroup
   [ testThat "User's roles do not trickle down the user group tree"
              env
              testRolesNotInheritedInUserGroupTree
+  , testThat "Test inheriting implicit roles work" env testImplicitRoles
+  , testThat "Test inheriting explicit roles work" env testExplicitRoles
   ]
 
 testRolesNotInheritedInUserGroupTree :: TestEnv ()
@@ -34,7 +37,8 @@ testRolesNotInheritedInUserGroupTree = do
   let role_trg = UserGroupAdminAR root_ugid
   void $ dbUpdate $ AccessControlCreateForUserGroup root_ugid role_trg
   userRoles1 <- dbQuery $ GetRoles user'
-  [grp_role] <- dbQuery $ AccessControlGetRolesByUserGroup root_ugid
+  [grp_role] <-
+    (filter byUserGroup) <$> (dbQuery $ AccessControlGetExplicitRoles uid root_ugid)
   assertBool "The role set on a parent group is not included in user's roles"
              (not $ grp_role `elem` userRoles1)
 
@@ -45,6 +49,12 @@ testRolesNotInheritedInUserGroupTree = do
   assertBool "The role set on the user's group is indeed included in user's roles"
              (grp_role `elem` userRoles2)
   where
+    byUserGroup :: AccessRole -> Bool
+    byUserGroup r = case r of
+       -- we care only about explicit (persisted) roles
+      AccessRoleUserGroup _ _ _ -> True
+      _ -> False
+
     createChildGroups :: UserGroupID -> TestEnv [UserGroup]
     createChildGroups root_ugid' = do
       ugrand0 <- rand 10 arbitrary
@@ -52,3 +62,151 @@ testRolesNotInheritedInUserGroupTree = do
       ug0     <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just root_ugid') ugrand0
       ug1 <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just (ug0 ^. #id)) ugrand1
       return $ [ug0, ug1]
+
+testImplicitRoles :: TestEnv ()
+testImplicitRoles = do
+  -- admin user
+  admusr <- fromJust <$> addNewUser "Lego" "Flash" "lego.flash@scrive.com"
+  let admusrid = admusr ^. #id
+      admugid  = admusr ^. #groupID
+  admug        <- fromJust <$> (dbQuery $ UserGroupGet admugid)
+  -- ordinary user
+  --              admug              . . . admugfdr
+  --               /                          /
+  --              /    ( \o/ admusr) . . . admfdr
+  --             /
+  --            /
+  --         usrug                   . . . usrughomefolder
+  --                                            /
+  --                   ( \o/ usr)    . . . usrfdr
+
+  usrughomefdr <- dbUpdate $ FolderCreate defaultFolder
+  usrug        <-
+    dbUpdate
+    $ UserGroupCreate
+    $ (set #parentGroupID $ Just admugid)
+    . (set #homeFolderID $ Just (usrughomefdr ^. #id))
+    $ defaultUserGroup
+  usr <- fromJust <$> addNewCompanyUser' DontMakeAdmin
+                                         "Lego"
+                                         "Batman"
+                                         "lego.batman@scrive.com"
+                                         (usrug ^. #id)
+
+  let admugfdrid     = (fromJust $ admug ^. #homeFolderID)
+      admfdrid       = (fromJust $ admusr ^. #homeFolderID)
+      usrid          = usr ^. #id
+      usrughomefdrid = fromJust $ usrug ^. #homeFolderID
+      usrugid        = usrug ^. #id
+      usrfdrid       = fromJust $ usr ^. #homeFolderID
+
+  -- We need some descendants of the user user group and folder when testing role
+  -- inheritance for the user.
+
+  --              admug              . . . admugfdr
+  --               /                          /
+  --              /      \o/ admusr  . . . admfdr
+  --             /
+  --            /
+  --         usrug                   . . . usrughomefolder
+  --            /                                /
+  --           /         \o/ usr     . . . usrfdr
+  --          /                              /
+  --         /                              /
+  --      childug                    . . . childfdr
+
+  --
+  let childfdr = set #parentID (Just usrfdrid) defaultFolder
+      childug  = set #parentGroupID (Just usrugid) defaultUserGroup
+  childfdrid <- view #id <$> (dbUpdate $ FolderCreate childfdr)
+  childugid  <- view #id <$> (dbUpdate $ UserGroupCreate childug)
+
+  -- let's check inheritance for the admin
+  let inheritForUserGroupRoleAdm r = map r [admugid, usrugid, childugid]
+      inheritForFolderRoleAdm r = map r [admugfdrid, admfdrid]
+      shouldBeInherited =
+        (AccessRoleImplicitUser admusrid)
+          <$> concatMap inheritForUserGroupRoleAdm [UserAdminAR]
+          <>  concatMap inheritForFolderRoleAdm [FolderAdminAR, SharedTemplateUserAR]
+          <>  [FolderUserAR admfdrid, UserAR admusrid]
+
+  admroles <- nub <$> (dbQuery $ GetRolesIncludingInherited admusr admug)
+  assertBool
+    "The implicit roles for company admins are inherited as intended"
+    ([] == admroles \\ shouldBeInherited && [] == shouldBeInherited \\ admroles)
+
+  -- now, let's check inheritance for the user
+  usrRoles <- nub <$> (dbQuery $ GetRolesIncludingInherited usr usrug)
+
+  let inheritForUserGroupRoleUsr r = map r [usrugid, childugid]
+      inheritForFolderRoleUsr r = map r [usrfdrid, childfdrid]
+      shouldBeInheritedUsr =
+        (AccessRoleImplicitUser usrid)
+          <$> concatMap inheritForUserGroupRoleUsr [UserGroupMemberAR]
+          <>  concatMap inheritForFolderRoleUsr    [SharedTemplateUserAR, FolderUserAR]
+          <>  [ SharedTemplateUserAR usrughomefdrid
+                               -- ^ special case since code would be ugly otherwise
+              , UserAR usrid
+              ]
+  assertBool
+    "The implicit roles for company users are inherited as intended"
+    ([] == usrRoles \\ shouldBeInheritedUsr && [] == shouldBeInheritedUsr \\ usrRoles)
+
+testExplicitRoles :: TestEnv ()
+testExplicitRoles = do
+  admusr <- fromJust <$> addNewUser "Lego" "Superman" "lego.superman@scrive.com"
+  let admusrid = admusr ^. #id
+      admugid  = admusr ^. #groupID
+  admug    <- fromJust <$> (dbQuery $ UserGroupGet admugid)
+
+  -- the test groups and folders - we test on unrelated structures as per the
+  -- illustration:
+  --
+  --       admug              . . . testfdr
+  --                                   /
+  --              \o/ admusr  . . . testchildfdr
+  --
+  --                          . . . testug
+  --                                  /
+  --                          . . . testchildug
+  --
+
+  testugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  let testchildug = set #parentGroupID (Just testugid) defaultUserGroup
+  testchildugid <- view #id <$> (dbUpdate $ UserGroupCreate testchildug)
+
+  testfdrid     <- view #id <$> (dbUpdate $ FolderCreate defaultFolder)
+  let testchildfdr = set #parentID (Just testfdrid) defaultFolder
+  testchildfdrid <- view #id <$> (dbUpdate $ FolderCreate testchildfdr)
+
+  -- let's set some roles
+  let explicitroles = [FolderAdminAR testfdrid, UserGroupAdminAR testugid]
+  mapM_ (dbUpdate . (AccessControlCreateForUser admusrid)) explicitroles
+
+  -- let's check inheritance for the admin
+  let inheritForUserGroupRole r = map r [testugid, testchildugid]
+      inheritForFolderRole r = map r [testfdrid, testchildfdrid]
+      explicitShouldBeInherited =
+        (AccessRoleUser (unsafeAccessRoleID 0) admusrid)
+          <$> concatMap inheritForUserGroupRole [UserGroupAdminAR]
+          <>  concatMap inheritForFolderRole    [FolderAdminAR]
+
+  admroles <- dbQuery $ GetRolesIncludingInherited admusr admug
+  -- because we get an id in the access roles from the db we set them all to zero so we
+  -- can compare easier later.
+  let explicitOnlyNormalised = catMaybes $ map normalise admroles
+      zeroid                 = unsafeAccessRoleID 0
+      normalise r = case r of
+        AccessRoleUser _ x y -> Just (AccessRoleUser zeroid x y)
+        AccessRoleUserGroup _ x y -> Just (AccessRoleUserGroup zeroid x y)
+        _ -> Nothing
+
+  assertBool
+    "The explicit roles are inherited as intended"
+    (  []
+    == explicitShouldBeInherited
+    \\ explicitOnlyNormalised
+    && []
+    == explicitOnlyNormalised
+    \\ explicitShouldBeInherited
+    )

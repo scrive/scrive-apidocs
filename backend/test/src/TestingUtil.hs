@@ -244,6 +244,7 @@ instance Arbitrary UserGroupSettings where
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
+      <*> pure False -- we must explicitly use folder list calls
       <*> arbitrary
       <*> pure False -- do not enforce 2FA in tests
       <*> pure Nothing -- do not set custom session expiry
@@ -1071,11 +1072,15 @@ addNewRandomUserWithPassword password = do
 
 addNewRandomCompanyUser :: UserGroupID -> Bool -> TestEnv User
 addNewRandomCompanyUser ugid isadmin = do
-  uid <- view #id <$> addNewRandomUser
+  user <- addNewRandomUser
+  let uid = user ^. #id
+  ug <- guardJustM . dbQuery $ UserGroupGet ugid
   void $ dbUpdate $ SetUserUserGroup uid ugid
   void $ dbUpdate $ SetUserCompanyAdmin uid isadmin
-  Just user <- dbQuery $ GetUserByID uid
-  return user
+  (Just userHomeFolder) <- dbQuery . FolderGet =<< (guardJust $ user ^. #homeFolderID)
+  void . dbUpdate . FolderUpdate $ set #parentID (ug ^. #homeFolderID) userHomeFolder
+  Just userFromDB <- dbQuery $ GetUserByID uid
+  return userFromDB
 
 addNewRandomUserGroupUser :: UserGroupID -> Bool -> TestEnv User
 addNewRandomUserGroupUser ugid isadmin = do

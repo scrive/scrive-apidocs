@@ -144,12 +144,13 @@ accessRoleTargetToAllowedActions target =
     sortAll      = sort . map (second sort)
 
 accessRoleTargetToJSON :: AccessRoleTarget -> AccessRoleTargetJSON
-accessRoleTargetToJSON (UserAR            uid ) = UserTargetJSON uid
-accessRoleTargetToJSON (UserGroupMemberAR ugid) = UserGroupTargetJSON ugid
-accessRoleTargetToJSON (UserAdminAR       ugid) = UserGroupTargetJSON ugid
-accessRoleTargetToJSON (UserGroupAdminAR  ugid) = UserGroupTargetJSON ugid
-accessRoleTargetToJSON (FolderAdminAR     fid ) = FolderTargetJSON fid
-accessRoleTargetToJSON (FolderUserAR      fid ) = FolderTargetJSON fid
+accessRoleTargetToJSON (UserAR               uid ) = UserTargetJSON uid
+accessRoleTargetToJSON (UserGroupMemberAR    ugid) = UserGroupTargetJSON ugid
+accessRoleTargetToJSON (UserAdminAR          ugid) = UserGroupTargetJSON ugid
+accessRoleTargetToJSON (UserGroupAdminAR     ugid) = UserGroupTargetJSON ugid
+accessRoleTargetToJSON (FolderAdminAR        fid ) = FolderTargetJSON fid
+accessRoleTargetToJSON (FolderUserAR         fid ) = FolderTargetJSON fid
+accessRoleTargetToJSON (SharedTemplateUserAR fid ) = FolderTargetJSON fid
 
 jsonToAccessRole :: Monad m => AccessRoleJSON -> m AccessRole
 jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson
@@ -163,31 +164,34 @@ jsonToAccessRoleTarget :: Monad m => AccessRoleJSON -> m AccessRoleTarget
 jsonToAccessRoleTarget roleJson = case target roleJson of
   UserTargetJSON uid -> case roleType roleJson of
     -- valid
-    UserART            -> return $ UserAR uid
+    UserART               -> return $ UserAR uid
     -- invalid
-    UserGroupMemberART -> fail invalidTargetErr
-    UserAdminART       -> fail invalidTargetErr
-    UserGroupAdminART  -> fail invalidTargetErr
-    FolderAdminART     -> fail invalidTargetErr
-    FolderUserART      -> fail invalidTargetErr
+    UserGroupMemberART    -> fail invalidTargetErr
+    UserAdminART          -> fail invalidTargetErr
+    UserGroupAdminART     -> fail invalidTargetErr
+    FolderAdminART        -> fail invalidTargetErr
+    FolderUserART         -> fail invalidTargetErr
+    SharedTemplateUserART -> fail invalidTargetErr
   UserGroupTargetJSON ugid -> case roleType roleJson of
     -- valid
-    UserAdminART       -> return $ UserAdminAR ugid
-    UserGroupAdminART  -> return $ UserGroupAdminAR ugid
-    UserGroupMemberART -> return $ UserGroupMemberAR ugid
+    UserAdminART          -> return $ UserAdminAR ugid
+    UserGroupAdminART     -> return $ UserGroupAdminAR ugid
+    UserGroupMemberART    -> return $ UserGroupMemberAR ugid
     -- invalid
-    UserART            -> fail invalidTargetErr
-    FolderAdminART     -> fail invalidTargetErr
-    FolderUserART      -> fail invalidTargetErr
+    UserART               -> fail invalidTargetErr
+    FolderAdminART        -> fail invalidTargetErr
+    FolderUserART         -> fail invalidTargetErr
+    SharedTemplateUserART -> fail invalidTargetErr
   FolderTargetJSON fid -> case roleType roleJson of
     -- valid
-    FolderAdminART     -> return $ FolderAdminAR fid
-    FolderUserART      -> return $ FolderUserAR fid
+    FolderAdminART        -> return $ FolderAdminAR fid
+    FolderUserART         -> return $ FolderUserAR fid
     -- invalid
-    UserART            -> fail invalidTargetErr
-    UserGroupMemberART -> fail invalidTargetErr
-    UserAdminART       -> fail invalidTargetErr
-    UserGroupAdminART  -> fail invalidTargetErr
+    UserART               -> fail invalidTargetErr
+    UserGroupMemberART    -> fail invalidTargetErr
+    UserAdminART          -> fail invalidTargetErr
+    UserGroupAdminART     -> fail invalidTargetErr
+    SharedTemplateUserART -> fail invalidTargetErr
   where invalidTargetErr = "Can't parse AccessRole - Role type doesn't match target type"
 
 encodeAccessRole :: AccessRole -> Encoding
