@@ -2,6 +2,7 @@ module API.V2.Utils
     ( apiAccessControl
     , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
+    , apiAccessControlOrIsAdminWithUser
     , apiAccessControlWithAnyPrivileges
     , apiAccessControlCheck
     , checkAdminOrSales
@@ -50,6 +51,16 @@ apiAccessControlCheck :: Kontrakcja m => AccessPolicy -> m Bool
 apiAccessControlCheck acc = do
   apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
   userAccessControlImpl apiuser acc (return False) (return True)
+
+-- TEMPORARY: Remove after release 90. Implementation of apiAccessControlOrIsAdmin
+-- will be the same after release 90.
+apiAccessControlOrIsAdminWithUser :: Kontrakcja m => User -> AccessPolicy -> m a -> m a
+apiAccessControlOrIsAdminWithUser apiuser acc successAction = do
+  isAdminOrSales <- checkAdminOrSales
+  -- If scrive admin or sales, should perform action anyway (unless non-existance error)
+  let failAction =
+        if isAdminOrSales then successAction else apiError insufficientPrivileges
+  userAccessControlImpl apiuser acc failAction successAction
 
 apiAccessControlOrIsAdmin :: Kontrakcja m => AccessPolicy -> m a -> m a
 apiAccessControlOrIsAdmin acc successAction = do
