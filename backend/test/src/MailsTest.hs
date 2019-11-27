@@ -164,7 +164,7 @@ sendDocumentMails author = do
 
                         -- Sending closed email
                         checkMail "Closed"
-                          $   mailDocumentClosed False sl False False False
+                          $   mailDocumentClosed False sl False False
                           =<< theDocument
                         -- Reminder after send
                         checkMail "Reminder signed" $ do
