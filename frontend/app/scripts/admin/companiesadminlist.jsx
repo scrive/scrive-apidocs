@@ -57,17 +57,17 @@ module.exports = React.createClass({
             ]}
           />
           <List.Column
-            name="Name"
-            width="120px"
-            rendering={function(d) {
-              return (<a href={self.companyLink(d)}>{d.field("companyname")}</a>);
-            }}
-          />
-          <List.Column
-            name="Entity Name"
+            name="Company"
             width="100px"
             rendering={function(d) {
               return (<a href={self.companyLink(d)}>{d.field("companyentityname")}</a>);
+            }}
+          />
+          <List.Column
+            name="User Group"
+            width="120px"
+            rendering={function(d) {
+              return (<a href={self.companyLink(d)}>{d.field("companyname")}</a>);
             }}
           />
           <List.Column
