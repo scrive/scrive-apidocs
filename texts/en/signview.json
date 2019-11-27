@@ -89,7 +89,7 @@
 "_email":"Email",
 "_enterSMSPin":"Enter your SMS PIN",
 "_errorMessagePrefix":"The error returned was:",
-"_failedToStartNewEIDProcess": "Failed to start new EID process",
+"_failedToStartNewEIDProcess": "Failed to start new eID process",
 "_filladitionfieldslabel":"About you",
 "_firstname":"First name",
 "_followTheArrow":"Follow the <span class='arrowtext'>ARROW</span>",
