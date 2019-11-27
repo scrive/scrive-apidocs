@@ -30,29 +30,11 @@ module.exports = React.createClass({
 
     return (
       <div className="col">
-        <div className="account-header company">{model.company().companyname()}</div>
+        <div className="account-header company">{model.companyentityname()}</div>
         <div className="account-body standard-input-table">
 <form autoComplete="off">
           <table>
             <tbody>
-              <tr>
-                <td colSpan="2">
-                <i>{localization.account.accountDetails.userGroupExtraInfo}</i>
-                </td>
-              </tr>
-              <tr>
-                <td><label>{localization.account.accountDetails.userGroup}</label></td>
-                <td>
-                  <InfoTextInput
-                    ref="companyname"
-                    name="companyname"
-                    className={!model.companynameValid() ? "redborder" : ""}
-                    value={model.companyname()}
-                    onChange={this.onCompanynameChange}
-                    readonly={readonly}
-                  />
-                </td>
-              </tr>
               <tr>
                 <td colSpan="2">
                   <i>{localization.account.accountDetails.entitynameExtraInfo}</i>
@@ -132,6 +114,24 @@ module.exports = React.createClass({
                     className={!model.companycountryValid() ? "redborder" : ""}
                     value={model.companycountry()}
                     onChange={this.onCompanycountryChange}
+                    readonly={readonly}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td colSpan="2">
+                <i>{localization.account.accountDetails.userGroupExtraInfo}</i>
+                </td>
+              </tr>
+              <tr>
+                <td><label>{localization.account.accountDetails.userGroup}</label></td>
+                <td>
+                  <InfoTextInput
+                    ref="companyname"
+                    name="companyname"
+                    className={!model.companynameValid() ? "redborder" : ""}
+                    value={model.companyname()}
+                    onChange={this.onCompanynameChange}
                     readonly={readonly}
                   />
                 </td>

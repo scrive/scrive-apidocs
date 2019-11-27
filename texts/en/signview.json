@@ -220,5 +220,5 @@
 "_smsReminderSigned":"The signed document $documenttitle:noescape()$ has been resent to you at the request of $creatorname$. Find the document by following this link $link$",
 "_unavailableForSign":"The document is no longer available for signing",
 "_userGroup": "User Group",
-"_userGroupExtraInfo": "Internal-use User Group name (e.g. HR):"
+"_userGroupExtraInfo": "Internal-use user group name (e.g. HR):"
 }
