@@ -608,7 +608,7 @@
 "_editConfirmationMessagePlaceholder":"Viesti käytettävissä ainoastaan vahvistukseen sähköpostitse, osapuolelle, joka et ole sinä.",
 "_editInvitationMessagePlaceholder":"Viesti käytettävissä ainoastaan kutsuun sähköpostitse, osapuolelle, joka et ole sinä.",
 "_emptyOrNotValidEmail":"Et ole täyttänyt sähköpostiosoitettasi tai sähköpostiosoite on virheellinen. Ole hyvä ja yritä uudelleen. ",
-"_entityname":"Kokonaisuuden nimi",
+"_entityname":"",
 "_entitynameExtraInfo":"Näytetään yrityskenttänä dokumenteissa: ",
 "_evidenceAttachmentBoxHeader":"Todisteliitteet",
 "_february":"Helmikuu",

@@ -608,7 +608,7 @@
 "_editConfirmationMessagePlaceholder":"Message uniquement disponible pour confirmation par mail, à une partie autre que vous.",
 "_editInvitationMessagePlaceholder":"Message uniquement disponible pour invitation par mail, à une partie autre que vous.",
 "_emptyOrNotValidEmail":"Vous n'avez pas entré d'adresse mail ou l'adresse mail entrée est incorrecte. Veuillez réessayer.",
-"_entityname":"Nom de l'entité",
+"_entityname":"",
 "_entitynameExtraInfo":"Indiqué comme Entreprise dans les documents :",
 "_evidenceAttachmentBoxHeader":"Pièces jointes tenant lieu de preuves",
 "_february":"février",

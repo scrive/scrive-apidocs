@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Podpisany dokument $documenttitle:noescape()$ został do Ciebie ponownie przesłany na prośbę $creatorname$. Dokument jest dostępny pod linkiem $link$",
 "_unavailableForSign":"Nie ma już możliwości podpisania tego dokumentu",
 "_userGroup":"Grupa użytkowników",
-"_userGroupExtraInfo":" Nazwa grupy do użytku wewnętrznego (np. HR):"
+"_userGroupExtraInfo":""
 }
