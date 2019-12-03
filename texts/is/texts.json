@@ -744,7 +744,7 @@
 "_june":"Júní",
 "_last30Days":"Síðustu 30 dagar",
 "_last6Months":"Síðustu 6 mánuðir",
-"_linkInvalidError":"<h1>Þessi tengill er ekki lengur í gildi</h1><h4>Þú hefur endað hér því þú hefur smellt á tengil í skjali sem hefur verið afturkallað eða er útrunnið. Ef þú telur að þetta séu mistök skaltu hafa samband við höfund skjalsins.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Ertu viss um að vilja eyða <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Framlengja eindagann <span class='put-one-or-more-things-to-be-prolonged-here'></span> um <br/>",
 "_listRestoreDialogBody":"Viltu endurheimta valin skjöl?",

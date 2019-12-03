@@ -753,10 +753,8 @@ apiCallCheckPassword = api $ do
 
 guardCanChangeUser :: Kontrakcja m => User -> User -> m ()
 guardCanChangeUser adminuser otheruser = do
-  unless
-      (adminuser ^. #isCompanyAdmin && (adminuser ^. #groupID == otheruser ^. #groupID))
-    $ do
-        throwM . SomeDBExtraException $ forbidden "Can't change this user details"
+  let acc = mkAccPolicy [(UpdateA, UserR, otheruser ^. #id)]
+  apiAccessControlOrIsAdminWithUser adminuser acc $ return ()
 
 apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do

@@ -744,7 +744,7 @@
 "_june":"Junio",
 "_last30Days":"Pasados 30 días",
 "_last6Months":"Últimos 6 meses",
-"_linkInvalidError":"<h1>Este link ya no funciona</h1><h4> Usted está aquí porque ha hecho clic en un documento que ha caducado o se ha eliminado. Si piensa que es un error, por favor contacte con el autor del documento.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"¿Está seguro de que quiere borrar <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Extender la fecha de vencimiento de <span class='put-one-or-more-things-to-be-prolonged-here'></span> por <br/>",
 "_listRestoreDialogBody":"¿Le gustaría restaurar los documentos seleccionados?",

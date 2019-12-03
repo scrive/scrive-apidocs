@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Mitarbeiterschlüsselkarte",
 "_elegSignDKSignMethodEmployeeKeyfile":"Mitarbeiterschlüsseldatei",
 "_elegSignDKSignMethodPersonalKeycard":"Persönliche Schlüsselkarte",
+"_elegSignNLConfirmationTitle":"",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, Sie signieren mit norwegischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignNOConfirmationTextNoName":"Sie signieren mit norwegischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignNOConfirmationTitle":"Signieren mit norwegischer BankID",
@@ -88,6 +89,7 @@
 "_email":"E-Mail",
 "_enterSMSPin":"Geben Sie Ihre SMS-PIN ein",
 "_errorMessagePrefix":"Der zurückgegebene Fehler war:",
+"_failedToStartNewEIDProcess":"",
 "_filladitionfieldslabel":"Ihre Daten",
 "_firstname":"Vorname",
 "_followTheArrow":"Folgen Sie dem <span class='arrowtext'>PFEIL</span>",
@@ -206,9 +208,9 @@
 "_signviewSigningFailed":"Der Signierungs-Vorgang hat leider nicht funktioniert. Bitte versuchen Sie es erneut.",
 "_smsDocumentErrorAuthor":"Scrive konnte das Dokument $documenttitle:noescape()$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive konnte das Dokument $documenttitle:noescape()$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ hat Sie eingeladen, das Dokument $documenttitle:noescape()$ zu genehmigen. Klicken Sie für weitere Anweisungen auf den Link $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ hat Sie eingeladen, das Dokument $documenttitle:noescape()$ zu e-signieren. Klicken Sie für weitere Anweisungen auf den Link $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ hat Sie eingeladen, das Dokument $documenttitle:noescape()$ zu überprüfen. Klicken Sie für weitere Anweisungen auf den Link $link$",
 "_smsPinSendout":"Ihre PIN für $documenttitle:noescape()$ lautet $pin$",
 "_smsRejectNotification":"$rejectorName$ hat das Signieren des Dokuments $documenttitle:noescape()$ abgelehnt. Der Signierungsvorgang wurde deshalb abgebrochen.",
 "_smsReminder":"$creatorname$ will Sie daran erinnern, das Dokument $documenttitle:noescape()$ zu signieren. Klicken Sie für weitere Anweisungen auf den Link $link$",
@@ -217,6 +219,6 @@
 "_smsReminderAutomatic":"Dies ist eine automatische Erinnerung, weil Sie das Dokument $documenttitle:noescape()$ von $creatorname$ noch nicht signiert haben. Klicken Sie für weitere Anweisungen auf den Link $link$",
 "_smsReminderSigned":"Das signierte Dokument $documenttitle:noescape()$ wurde Ihnen auf Antrag von $creatorname$ erneut gesendet. Klicken Sie auf diesen Link $link$, um das Dokument zu lokalisieren.",
 "_unavailableForSign":"Dieses Dokument kann nicht mehr signiert werden",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Nutzergruppe",
+"_userGroupExtraInfo":"Name der internen Nutzergruppe (z. B. HR):"
 }

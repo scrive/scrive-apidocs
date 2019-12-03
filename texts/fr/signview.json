@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Carte-clé d'employé",
 "_elegSignDKSignMethodEmployeeKeyfile":"Fichier clé d'employé",
 "_elegSignDKSignMethodPersonalKeycard":"Carte-clé personnelle",
+"_elegSignNLConfirmationTitle":"",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, vous signerez à partir du BankID norvégien. Une fois le document signé, votre signature sera enregistrée par le service d'e-signature Scrive.",
 "_elegSignNOConfirmationTextNoName":"Vous signerez par BankID norvégien. Une fois que vous aurez signé, votre signature sera enregistrée par le service d'e-signature Scrive.",
 "_elegSignNOConfirmationTitle":"Signer par BankID norvégien.",
@@ -88,6 +89,7 @@
 "_email":"Mail",
 "_enterSMSPin":"Entrer votre code PIN reçu par SMS",
 "_errorMessagePrefix":"Le message d'erreur reçu était:",
+"_failedToStartNewEIDProcess":"",
 "_filladitionfieldslabel":"A propos de vous",
 "_firstname":"Prénom",
 "_followTheArrow":"Suivez la <span class='arrowtext'>FLECHE</span>",
@@ -206,9 +208,9 @@
 "_signviewSigningFailed":"Désolé, une erreur est survenue lors de la signature du document. Veuillez réessayer.",
 "_smsDocumentErrorAuthor":"Scrive n'a pas pu traiter le document $documenttitle:noescape()$ et le processus de signature a été annulé. Si vous avez des questions, veuillez nous contacter à l'adresse support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive n'a pas pu traiter le document $documenttitle:noescape()$ et le processus de signature a été annulé. Si vous avez des questions, veuillez nous contacter à l'adresse support@scrive.com",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ vous a invité à approuver le document $documenttitle:noescape()$. Suivez le lien pour obtenir plus d'instructions $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ vous a invité à signer le document $documenttitle:noescape()$. Suivez le lien pour obtenir plus d'instructions $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ vous a invité à réviser le document $documenttitle:noescape()$. Suivez le lien pour obtenir plus d'instructions $link$",
 "_smsPinSendout":"Votre code PIN pour $documenttitle:noescape()$ est $pin$",
 "_smsRejectNotification":"$rejectorName$ a refusé de signer le document $documenttitle:noescape()$. Le processus de signature a donc été annulé.",
 "_smsReminder":"$creatorname$ souhaite vous rappeler de signer le document $documenttitle:noescape()$. Suivez le lien pour obtenir plus d'instructions $link$",
@@ -217,6 +219,6 @@
 "_smsReminderAutomatic":"Ceci est un rappel automatique que vous n'avez pas encore signé le document $documenttitle:noescape()$ envoyé par $creatorname$. Suivez le lien pour obtenir plus d'instructions $link$",
 "_smsReminderSigned":"Le document signé $documenttitle:noescape()$ vous a été renvoyé à la demande de $creatorname$. Suivez le lien suivant pour consulter ce document $link$",
 "_unavailableForSign":"Le document n'est plus disponible pour signature",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Groupe d'utilisateurs",
+"_userGroupExtraInfo":"Nom à usage interne du groupe d'utilisateurs (par exemple, RH) :"
 }

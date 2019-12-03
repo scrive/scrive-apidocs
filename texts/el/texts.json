@@ -744,7 +744,7 @@
 "_june":"Ιούνιος ",
 "_last30Days":"Πέραν 30 ημερών ",
 "_last6Months":"Τους τελευταίους 6 μήνες",
-"_linkInvalidError":"<h1>Αυτός ο σύνδεσμος δεν είναι πλέον έγκυρος.</h1><h4>Καταλήξατε εδώ επειδή κάνατε κλικ σε έναν σύνδεσμο που οδηγεί σε ένα έγγραφο που έχει αποσυρθεί ή λήξει. Εάν πιστεύετε ότι κάτι τέτοιο είναι λάθος, παρακαλείστε να επικοινωνήσετε με τον δημιουργό του εγγράφου.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Είστε σίγουρος ότι θέλετε να διαγράψετε την εντολή<span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Παράταση προθεσμίας λήξης του <span class='put-one-or-more-things-to-be-prolonged-here'></span> κατά <br/>",
 "_listRestoreDialogBody":"Θα θέλατε να αποκαταστήσετε τα επιλεγμένα έγγραφα; ",

@@ -11,7 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive a préparé le document PDF finalisé.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"A vérifié son identité à partir du NemID danois, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"A vérifié son identité à partir du TUPAS finlandais, en vue d'accéder au document.",
-"_AuthenticatedToViewEvidenceArchiveIDIN":"",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"A vérifié son identité à partir de iDIN, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"a vérifié l'identité à partir de l'identifiant bancaire norvégien, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"a vérifié l'identité à partir de l'identifiant bancaire suédois, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"A vérifié l'identité avec PIN par SMS, en vue d'accéder au document.",

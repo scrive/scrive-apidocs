@@ -294,7 +294,7 @@ asValidEmail input =
     >>= mkLowerCase
   where
       -- This must match PATTERN_EMAIL in frontend code
-        emailFormat = "^[a-zA-Z0-9&._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$"
+        emailFormat = "^['a-zA-Z0-9&._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$"
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things

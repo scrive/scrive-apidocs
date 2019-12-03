@@ -744,7 +744,7 @@
 "_june":"Birželis",
 "_last30Days":"Pastarosios 30 dienų",
 "_last6Months":"Pastarieji 6 mėnesiai ",
-"_linkInvalidError":"<h1> Ši nuoroda nebegalioja </h1> <h4>Čia atsidūrėte dėl to, kad paspaudėte nuorodą į dokumentą, kuris buvo atšauktas arba kurio galiojimo laikas pasibaigęs. Jei manote, kad tai klaida, prašome susisiekti su dokumento autoriumi.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Ar tikrai norite ištrinti <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Pratęskite <span class='put-one-or-more-things-to-be-prolonged-here'></span> mokėjimo terminą iki <br/>",
 "_listRestoreDialogBody":"Ar norite atkurti parinktus dokumentus?",

@@ -744,7 +744,7 @@
 "_june":"Giugno",
 "_last30Days":"Ultimi 30 giorni",
 "_last6Months":"Ultimi 6 mesi",
-"_linkInvalidError":"<h1>Questo link non è più valido</h1><h4>Sei arrivato qui perché hai fatto clic su un link a un documento che è stato revocato o che è scaduto. Se pensi che si tratti di un errore, contatta l'autore del documento.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Sei sicuro di voler cancellare <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Proroga la data di scadenza di <span class='put-one-or-more-things-to-be-prolonged-here'></span> a <br/>",
 "_listRestoreDialogBody":"Vuoi ripristinare i documenti selezionati?",

@@ -744,7 +744,7 @@
 "_june":"Juuni",
 "_last30Days":"Viimased 30 päeva",
 "_last6Months":"Viimased 6 kuud",
-"_linkInvalidError":"<h1>See link pole enam kehtiv</h1><h4>Teid suunati siia, kuna klõpsasite tühistatud või aegunud dokumendile viitaval lingil. Kui arvate, et tegu on veaga, võtke ühendust dokumendi autoriga.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Kas olete kindel, et soovite kustutada <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Pikenda <span class='put-one-or-more-things-to-be-prolonged-here'></span> tähtaega <br/> võrra",
 "_listRestoreDialogBody":"Kas soovite valitud dokumendid taastada?",

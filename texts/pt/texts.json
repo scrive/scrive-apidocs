@@ -744,7 +744,7 @@
 "_june":"Junho",
 "_last30Days":"Últimos 30 dias",
 "_last6Months":"Últimos 6 meses",
-"_linkInvalidError":"<h1>Esta hiperligação já não é válida</h1><h4>Foi encaminhado para aqui porque clicou numa hiperligação para um documento que já foi retirado ou que expirou. Se acha que se trata de um erro, contacte o autor do documento.</h4>",
+"_linkInvalidError":"",
 "_listLocalDialogsBody":"Tem a certeza de que deseja eliminar <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listLocalDialogsBodyProlong":"Prolongar o prazo limite de <span class='put-one-or-more-things-to-be-prolonged-here'></span> por <br/>",
 "_listRestoreDialogBody":"Gostaria de restaurar os documentos seleccionados?",
