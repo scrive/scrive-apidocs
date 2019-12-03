@@ -754,7 +754,7 @@ apiCallCheckPassword = api $ do
 guardCanChangeUser :: Kontrakcja m => User -> User -> m ()
 guardCanChangeUser adminuser otheruser = do
   let acc = mkAccPolicy [(UpdateA, UserR, otheruser ^. #id)]
-  apiAccessControlOrIsAdminWithUser adminuser acc $ return ()
+  apiAccessControlOrIsAdmin adminuser acc $ return ()
 
 apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
