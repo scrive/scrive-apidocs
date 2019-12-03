@@ -32,12 +32,9 @@ data MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransacti
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeEIDServiceTransaction () where
   update (MergeEIDServiceTransaction EIDServiceTransaction {..}) = do
-    loopOnUniqueViolation . withSavepoint "merge_eid_service_transaction" $ do
-      success <- runQuery01 . sqlUpdate "eid_service_transactions" $ do
-        setFields
-        sqlWhereEq "signatory_link_id" $ estSignatoryLinkID
-        sqlWhereEq "auth_kind" $ estAuthKind
-      unless success $ runQuery_ . sqlInsert "eid_service_transactions" $ do
+    runQuery_ . sqlInsert "eid_service_transactions" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id", "auth_kind"] . sqlUpdate "" $ do
         setFields
     where
       setFields :: (MonadState v n, SqlSet v) => n ()

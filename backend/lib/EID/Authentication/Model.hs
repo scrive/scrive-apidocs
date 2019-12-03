@@ -95,12 +95,9 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () w
   -- keep being overwritten every time authenticate to view archived routine
   -- is completed.
   update (MergeAuthenticationInternal authKind sid slid setDedicatedAuthFields) = do
-    loopOnUniqueViolation . withSavepoint "merge_authentication_internal" $ do
-      success <- runQuery01 . sqlUpdate "eid_authentications" $ do
-        setFields
-        sqlWhereEq "signatory_link_id" slid
-        sqlWhereEq "auth_kind"         authKind
-      unless success $ runQuery_ . sqlInsertSelect "eid_authentications" "" $ do
+    runQuery_ . sqlInsert "eid_authentications" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id", "auth_kind"] . sqlUpdate "" $ do
         setFields
     where
       setFields :: (MonadState v n, SqlSet v) => n ()
