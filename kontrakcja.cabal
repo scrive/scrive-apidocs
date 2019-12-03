@@ -220,6 +220,7 @@ Library
                  , Doc.API.V2.JSON.List
                  , Doc.API.V2.JSON.Misc
                  , Doc.API.V2.JSON.SignatoryConsentQuestion
+                 , Doc.API.V2.JSON.SigningData
                  , Doc.API.V2.JSON.Utils
                  , Doc.Action
                  , Doc.Anchors
@@ -241,6 +242,7 @@ Library
                  , Doc.SignatoryFieldUtils
                  , Doc.Types.SignatoryLink
                  , Doc.Types.SignatoryAccessToken
+                 , Doc.Types.SigningData
                  , Doc.DigitalSignature
                  , Doc.DocControl
                  , Doc.DocAddImage

@@ -10,6 +10,7 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2FilesPage
 , docApiV2FilesPagesCount
 , docApiV2FilesGet
+, docApiV2SigningData
 -- * Functions for tests
 , docApiV2FilesFullForTests
 ) where
@@ -28,8 +29,10 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Text.JSON as J
 
+import AccessControl.Types
 import API.V2
 import API.V2.Parameters
+import API.V2.Utils
 import AppView (respondWithPDF, respondWithZipFile)
 import DB
 import Doc.API.V2.DocumentAccess
@@ -37,6 +40,7 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.List
 import Doc.API.V2.JSON.Misc (evidenceAttachmentsToJSONBS)
+import Doc.API.V2.JSON.SigningData
 import Doc.DocInfo
 import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData
@@ -48,6 +52,8 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Types.SignatoryAccessToken
+import Doc.Types.SigningData
+import EID.Signature.Model
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.File
@@ -221,6 +227,24 @@ docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
 
     errorPresealDocumentFile :: forall a . Text -> m a
     errorPresealDocumentFile = apiError . serverError
+
+docApiV2SigningData :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
+  user <- getAPIUserWithAPIPersonal
+  doc  <- dbQuery $ GetDocumentByDocumentID did
+  sl   <-
+    apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
+    . getSigLinkFor slid
+    $ doc
+  folderID <- apiGuardJust (serverError "Document is not in a Folder")
+    $ documentfolderid doc
+  let acc = mkAccPolicy [(ReadA, DocumentR, folderID)]
+  apiAccessControl user acc $ do
+    ssdData <- dbQuery (GetESignature slid) >>= \case
+      Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl
+      Just esig -> return $ Right esig
+    let ssdHasSigned = isSignatoryAndHasSigned sl
+    return . Ok . ssdToJson (signatorylinkhidepn sl) $ SignatorySigningData { .. }
 
 getDocBySignatoryLinkIdOrAccessToken
   :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> Maybe MagicHash -> m Document

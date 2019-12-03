@@ -40,6 +40,7 @@ documentAPIV2 = dir "documents" $ choice
   , param $ dir "addimage" $ hPost $ toK1 $ docApiV2AddImage
   , param $ dir "addevidenceevent" $ hPost $ toK1 $ docApiV2AddEvidenceEvent
   , dir "templates" $ dir "setsharing" $ hPost $ toK0 $ docApiV2SetSharing
+  , param $ param $ dir "signingdata" $ hGet $ toK2 $ docApiV2SigningData
   , param $ dir "files" $ dir "main" $ hGet $ toK2 $ \docID (_ :: String) ->
     docApiV2FilesMain docID
   , param $ dir "files" $ dir "main" $ hGet $ toK1 $ docApiV2FilesMain
