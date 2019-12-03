@@ -44,8 +44,11 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2019-11-25  | Add folder API documentation. |
     | 2019-11-15  | Update production IP addresses. |
     | 2019-09-30  | Add `verimi` to `authentication_to_view`. |
+    | 2019-08-15  | Add access control API documentation. |
+    | 2019-07-19  | Add user and user group API documentation. |
     | 2019-04-09  | Documented link confirmation delivery. |
     | 2019-04-01  | Reordered the changelog - new changes are now on top. |
     | 2019-03-27  | Clarified cases where fields can also have a null value. |
