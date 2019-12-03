@@ -428,6 +428,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
         , "aktia"
         , "popbank"
         , "savingsbank"
+        , "omasp"
         ]
       bankStr  = attributeFromAssertion "FI_TUPAS_BANK" $ assertionAttributes res
       bankName = if (bankStr `elem` allowed_banks)
