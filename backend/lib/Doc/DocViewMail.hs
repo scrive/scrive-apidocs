@@ -587,6 +587,7 @@ mailClosedContent ispreview document =
     <$> mailDocumentClosed ispreview
                            (fromJust $ getAuthorSigLink document)
                            False
+                           True
                            False
                            document
 
@@ -601,11 +602,12 @@ mailDocumentClosed
   => Bool
   -> SignatoryLink
   -> Bool
+  -> Bool -- ^ Would the attachments fit inside an email?
   -> Bool -- ^ Force link usage.
   -> Document
   -> m Mail
-mailDocumentClosed ispreview sl sealFixed forceLink document = do
-  mhtime <- if not ispreview
+mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document = do
+  mhtime <- if documentAttachable && not ispreview && not forceLink
     then return Nothing
     else Just <$> makeConfirmationMagicHash sl
   partylist <- renderLocalListTemplate document $ map getSmartName $ filter
