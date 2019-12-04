@@ -35,6 +35,7 @@ import Kontra
 import Log.Identifier
 import OAuth.Model
 import Routing
+import qualified Folder.Internal as I
 
 folderAPIRoutes :: Route (Kontra Response)
 folderAPIRoutes = dir "api" $ choice [dir "frontend" $ folderAPI, dir "v2" $ folderAPI]
@@ -64,7 +65,7 @@ folderAPICreate = api $ do
       let acc = [mkAccPolicyItem (CreateA, FolderR, parent_id)]
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc . dbUpdate $ FolderCreate fdrIn
-  Ok . encodeFolderWithChildren <$> folderWithChildrenOrAPIError fid
+  Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
@@ -73,12 +74,10 @@ folderAPIGet fid = api $ do
   hasReadAccess  <- apiAccessControlCheck user acc
   isAdminOrSales <- checkAdminOrSales
   fdrwc          <- if (hasReadAccess || isAdminOrSales)
-    then folderWithChildrenOrAPIError fid
+    then fwcGetOrErrNotFound fid
     else do
       isSignatory <- isSignatoryOfOneOfDocuments
-      if isSignatory
-        then folderWithChildrenOrAPIError fid
-        else apiError insufficientPrivileges
+      if isSignatory then fwcGetOrErrNotFound fid else apiError insufficientPrivileges
   return . Ok $ encodeFolderWithChildren fdrwc
   where
     isSignatoryOfOneOfDocuments :: Kontrakcja m => m Bool
@@ -89,6 +88,7 @@ folderAPIGet fid = api $ do
         [DocumentFilterDeleted False, DocumentFilterByFolderID fid]
         []
       return . (> 0) $ length documents
+
 
 folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
 folderAPIUpdate fid = api $ do
@@ -122,13 +122,13 @@ folderAPIUpdate fid = api $ do
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
-        Ok . encodeFolderWithChildren <$> folderWithChildrenOrAPIError fid
+        Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
   apiuser <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
-    fdr <- folderOrAPIError fid
+    fdr <- fGetOrErrNotFound fid
     let isRootFolder = isNothing $ fdr ^. #parentID
     when isRootFolder
       $
@@ -175,3 +175,22 @@ folderAPIListDocs fid = api $ do
         jsonbs  = listToJSONBS
           (allDocsCount, (\d -> (documentAccessForUser user d, d)) <$> allDocs)
     return . Ok $ Response 200 headers nullRsFlags jsonbs Nothing
+
+fGetOrErrNotFound :: Kontrakcja m => FolderID -> m Folder
+fGetOrErrNotFound fid = apiGuardJustM folderNotFoundErr . dbQuery $ FolderGet fid
+
+fwcGetOrErrNotFound :: Kontrakcja m => FolderID -> m I.FolderWithChildren
+fwcGetOrErrNotFound fid =
+  dbQuery (FolderGet fid) >>= addChildrenIfJust >>= apiGuardJust folderNotFoundErr
+  where
+    addChildrenIfJust = \case
+      Nothing     -> return Nothing
+      Just folder -> do
+        -- we retrieve only the immediate children, as in the user group API.
+        fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
+        return . Just . I.FolderWithChildren folder $ map
+          (\c -> I.FolderWithChildren c [])
+          fdrChildren
+
+folderNotFoundErr :: APIError
+folderNotFoundErr = serverError "Impossible happened: No folder with ID, or deleted."
