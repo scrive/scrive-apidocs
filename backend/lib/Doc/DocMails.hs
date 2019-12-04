@@ -455,7 +455,12 @@ sendClosedEmails sealFixed document = do
           | otherwise = scheduleEmailSendoutWithAuthorSender (documentid document)
 
         sendMail forceLink = do
-          mail <- mailDocumentClosed False sl sealFixed forceLink document
+          mail <- mailDocumentClosed False
+                                     sl
+                                     sealFixed
+                                     (not (null mailattachments))
+                                     forceLink
+                                     document
           scheduleEmailFunc $ mail
             { to                = [getMailAddress sl]
             , attachments = attachments mail <> if forceLink then [] else mailattachments
