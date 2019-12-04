@@ -24,6 +24,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FolderGet (Maybe Folder) where
     runQuery_ . sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
       sqlWhereEq "id" dgid
+      sqlWhereIsNULL "deleted"
     fetchMaybe fetchFolder
 
 data FolderGetUserGroupHome =
