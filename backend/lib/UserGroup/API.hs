@@ -65,7 +65,7 @@ userGroupAPIV2 = dir "usergroups" $ choice
 
 constructUserGroupResponse :: Kontrakcja m => Bool -> UserGroupID -> m Encoding
 constructUserGroupResponse inheritable ugid = do
-  ugwp     <- userGroupWithParentsOrAPIError ugid
+  ugwp     <- ugwpGetOrErrNotFound ugid
   children <- dbQuery . UserGroupGetImmediateChildren $ ugwpUG ugwp ^. #id
   return $ encodeUserGroup inheritable ugwp children
 
@@ -151,7 +151,7 @@ userGroupApiV2Delete ugid = do
     -- Check user has permissions to delete UserGroup
     . apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (DeleteA, UserGroupR, ugid)]
     $ do
-        ug <- userGroupOrAPIError ugid
+        ug <- ugGetOrErrNotFound ugid
         let isRootUserGroup = isNothing . view #parentGroupID
         when (isRootUserGroup ug)
           -- Maybe Sales/Admin users should be allowed
@@ -177,7 +177,7 @@ userGroupApiContactDetailsV2Get ugid = api $ do
     -- Return response
     $   Ok
     .   encodeUserGroupContactDetails inheritable
-    <$> userGroupWithParentsOrAPIError ugid
+    <$> ugwpGetOrErrNotFound ugid
 
 userGroupApiContactDetailsV2Update :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Update ugid = api $ do
@@ -186,7 +186,7 @@ userGroupApiContactDetailsV2Update ugid = api $ do
     $ ApiV2ParameterAeson "contact_details"
   apiuser <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
-    ug <- userGroupOrAPIError ugid
+    ug <- ugGetOrErrNotFound ugid
     -- New address creation DOES NOT inherit, since people will want to start
     -- from a blank address.
     let ugAddr = fromMaybe defaultUserGroupAddress $ ug ^. #address
@@ -196,7 +196,7 @@ userGroupApiContactDetailsV2Update ugid = api $ do
         Just ugAddrUpdated -> return ugAddrUpdated
     dbUpdate . UserGroupUpdateAddress ugid $ Just ugAddrUpdated
     -- Return response
-    Ok . encodeUserGroupContactDetails inheritable <$> userGroupWithParentsOrAPIError ugid
+    Ok . encodeUserGroupContactDetails inheritable <$> ugwpGetOrErrNotFound ugid
 
 userGroupApiContactDetailsV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Delete ugid = api $ do
@@ -204,13 +204,12 @@ userGroupApiContactDetailsV2Delete ugid = api $ do
   -- Check user has permissions to update UserGroup
   apiuser     <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
-    ug <- userGroupOrAPIError ugid
+    ug <- ugGetOrErrNotFound ugid
     when (isNothing $ ug ^. #parentGroupID) $ apiError $ requestFailed
       "A root usergroup must have an address object."
     dbUpdate $ UserGroupUpdateAddress ugid Nothing
     -- Return response
-    Ok . encodeUserGroupContactDetails inheritable <$> userGroupWithParentsOrAPIError ugid
-
+    Ok . encodeUserGroupContactDetails inheritable <$> ugwpGetOrErrNotFound ugid
 
 userGroupApiSettingsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Get ugid = api $ do
@@ -220,7 +219,7 @@ userGroupApiSettingsV2Get ugid = api $ do
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (ReadA, UserGroupR, ugid)]
     $   Ok
     .   encodeUserGroupSettings inheritable
-    <$> userGroupWithParentsOrAPIError ugid
+    <$> ugwpGetOrErrNotFound ugid
 
 userGroupApiSettingsV2Update :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Update ugid = api $ do
@@ -228,7 +227,7 @@ userGroupApiSettingsV2Update ugid = api $ do
   settingsChanges <- apiV2ParameterObligatory $ ApiV2ParameterAeson "settings"
   apiuser <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
-    ug     <- userGroupOrAPIError ugid
+    ug     <- ugGetOrErrNotFound ugid
     -- New settings creation DOES inherit, since there are things that are
     -- not settable by the API which need to be preserved for children.
     ugSett <- case ug ^. #settings of
@@ -246,7 +245,7 @@ userGroupApiSettingsV2Update ugid = api $ do
     dbUpdate . UserGroupUpdateSettings ugid $ Just
       (ugSett & #dataRetentionPolicy .~ dataRetentionUpdated)
     -- Return response
-    Ok . encodeUserGroupSettings inheritable <$> userGroupWithParentsOrAPIError ugid
+    Ok . encodeUserGroupSettings inheritable <$> ugwpGetOrErrNotFound ugid
 
 userGroupApiSettingsV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Delete ugid = api $ do
@@ -254,12 +253,12 @@ userGroupApiSettingsV2Delete ugid = api $ do
   -- Check user has permissions to update UserGroup
   apiuser     <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
-    ug <- userGroupOrAPIError ugid
+    ug <- ugGetOrErrNotFound ugid
     when (isNothing $ ug ^. #parentGroupID) $ apiError $ requestFailed
       "A root usergroup must have a settings object."
     dbUpdate $ UserGroupUpdateSettings ugid Nothing
     -- Return response
-    Ok . encodeUserGroupSettings inheritable <$> userGroupWithParentsOrAPIError ugid
+    Ok . encodeUserGroupSettings inheritable <$> ugwpGetOrErrNotFound ugid
 
 userGroupApiUsersV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiUsersV2Get ugid = api $ do
@@ -269,3 +268,15 @@ userGroupApiUsersV2Get ugid = api $ do
     users <- dbQuery (UserGroupGetUsers ugid)
     -- Return response
     Ok <$> return (arrayOf unjsonUser, users)
+
+ugGetOrErrNotFound :: Kontrakcja m => UserGroupID -> m UserGroup
+ugGetOrErrNotFound ugid =
+  apiGuardJustM userGroupErrNotFound $ dbQuery (UserGroupGet ugid)
+
+ugwpGetOrErrNotFound :: Kontrakcja m => UserGroupID -> m UserGroupWithParents
+ugwpGetOrErrNotFound ugid =
+  apiGuardJustM userGroupErrNotFound $ dbQuery (UserGroupGetWithParents ugid)
+
+userGroupErrNotFound :: APIError
+userGroupErrNotFound =
+  serverError "Impossible happened: No user group with ID, or deleted."

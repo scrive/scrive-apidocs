@@ -4,14 +4,9 @@ module API.V2.Utils
     , apiAccessControlOrIsAdmin
     , apiAccessControlCheck
     , checkAdminOrSales
-    , folderOrAPIError
     , isApiAdmin
     , isApiSales
-    , userGroupOrAPIError
-    , userGroupWithParentsOrAPIError
     ) where
-
-import Control.Monad.Catch
 
 import AccessControl.Model
 import AccessControl.Types
@@ -19,11 +14,8 @@ import API.V2
 import API.V2.Errors
 import Context
 import DB
-import Folder.Model
 import Kontra
 import User.Model
-import UserGroup.Model
-import UserGroup.Types
 import Util.MonadUtils
 
 userAccessControlImpl :: Kontrakcja m => User -> AccessPolicy -> m a -> m a -> m a
@@ -74,21 +66,3 @@ isApiSales ctx = case ctx ^. #maybeApiUser of
   Just user ->
     (user ^. #info % #email `elem` ctx ^. #salesAccounts)
       && (user ^. #totpActive || not (ctx ^. #production))
-
-userGroupOrAPIError :: (MonadDB m, MonadThrow m) => UserGroupID -> m UserGroup
-userGroupOrAPIError ugid = dbQuery (UserGroupGet ugid) >>= \case
-  Nothing ->
-    apiError $ serverError "Impossible happened: No user group with ID, or deleted."
-  Just ug -> return ug
-
-userGroupWithParentsOrAPIError
-  :: (MonadDB m, MonadThrow m) => UserGroupID -> m UserGroupWithParents
-userGroupWithParentsOrAPIError ugid = dbQuery (UserGroupGetWithParents ugid) >>= \case
-  Nothing ->
-    apiError $ serverError "Impossible happened: No user group with ID, or deleted."
-  Just ugwp -> return ugwp
-
-folderOrAPIError :: (MonadDB m, MonadThrow m) => FolderID -> m Folder
-folderOrAPIError fdrid = dbQuery (FolderGet fdrid) >>= \case
-  Nothing  -> apiError $ serverError "Impossible happened: No folder with ID, or deleted."
-  Just fdr -> return fdr

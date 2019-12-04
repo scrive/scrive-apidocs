@@ -64,6 +64,10 @@ folderTests env = testGroup
   , testThat "Test listing documents in a folder works in API" env testFolderAPIListDocs
   ]
 
+folderToFolderWithChildren :: Folder -> FolderWithChildren
+folderToFolderWithChildren folder =
+  I.FolderWithChildren { folder = folder, children = [] }
+
 testCreateFolders :: TestEnv ()
 testCreateFolders = do
   let folderDepth = 5
@@ -323,7 +327,10 @@ testFolderAPICreate = do
 
   folderNameTest <- rand 10 arbitraryName
   let fdrTest = set #name folderNameTest . set #parentID (Just fdrRootID) $ defaultFolder
-      newFolderJSONBS = AE.encodingToLazyByteString $ encodeFolder fdrTest
+      newFolderJSONBS =
+        AE.encodingToLazyByteString
+          . encodeFolderWithChildren
+          $ folderToFolderWithChildren fdrTest
       reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
   -- should not be able to create a child since the user is not an admin of the
   -- above folder root
@@ -411,7 +418,8 @@ testFolderAPIUpdate = do
 
     fdrUpdateParams :: Folder -> [(Text, Input)]
     fdrUpdateParams fdr =
-      let fdrJSON = AE.encodingToLazyByteString $ encodeFolder fdr
+      let fdrwc   = folderToFolderWithChildren fdr
+          fdrJSON = AE.encodingToLazyByteString $ encodeFolderWithChildren fdrwc
       in  [("folder", inTextBS fdrJSON)]
 
     fdrAPIUpdate :: Context -> Folder -> Int -> TestEnv Aeson.Value
@@ -500,8 +508,11 @@ testFolderAPIDelete = do
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust $ user ^. #homeFolderID)
   -- I don't want to test deletion of the user home folder, so let's create a subfolder.
   let fdrTestDeleteChild = set #parentID (Just $ userFolder ^. #id) $ defaultFolder
-      newFolderJSONBS    = AE.encodingToLazyByteString $ encodeFolder fdrTestDeleteChild
-      reqNewFolderPrms   = [("folder", inTextBS newFolderJSONBS)]
+      newFolderJSONBS =
+        AE.encodingToLazyByteString
+          . encodeFolderWithChildren
+          $ folderToFolderWithChildren fdrTestDeleteChild
+      reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
   newFdrFromAPI <- jsonToFolder
     <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
   void $ jsonTestRequestHelper ctx
@@ -520,9 +531,12 @@ testFolderAPIListDocs = do
   mapM_ testDocApiV2New' $ take numDocsToStart . repeat $ ctx
   -- add a subfolder to org folder tree and start documents there to ensure that we do not
   -- list documents contained in children of a specified folder
-  let newFolderBase       = set #parentID (Just $ userFolder ^. #id) defaultFolder
-      newFolderBaseJSONBS = AE.encodingToLazyByteString $ encodeFolder newFolderBase
-      reqNewFolderPrms    = [("folder", inTextBS newFolderBaseJSONBS)]
+  let newFolderBase = set #parentID (Just $ userFolder ^. #id) defaultFolder
+      newFolderBaseJSONBS =
+        AE.encodingToLazyByteString
+          . encodeFolderWithChildren
+          $ folderToFolderWithChildren newFolderBase
+      reqNewFolderPrms = [("folder", inTextBS newFolderBaseJSONBS)]
   newFdr <-
     jsonToFolder <$> (jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200)
   -- HACK to enable user to start documents in another folder
@@ -565,8 +579,11 @@ jsonToFolder val = let Unjson.Result fdr _ = Unjson.parse unjsonFolderReadAll va
 createChildrenForParentByAPI :: Context -> Folder -> TestEnv [Folder]
 createChildrenForParentByAPI ctx fdrParent = do
   forM [fdrParent, fdrParent] $ \fdrp -> do
-    let newFolder        = set #parentID (Just $ fdrp ^. #id) defaultFolder
-        newFolderJSONBS  = AE.encodingToLazyByteString $ encodeFolder newFolder
+    let newFolder = set #parentID (Just $ fdrp ^. #id) defaultFolder
+        newFolderJSONBS =
+          AE.encodingToLazyByteString
+            . encodeFolderWithChildren
+            $ folderToFolderWithChildren newFolder
         reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
     jsonToFolder <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
 

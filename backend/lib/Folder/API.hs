@@ -55,7 +55,7 @@ folderAPICreate = api $ do
   fdrIn <- case updateFolderWithFolderFromRequest defaultFolder fdru of
     Nothing            -> apiError $ requestFailed "Error parsing folder create object."
     Just folderUpdated -> return folderUpdated
-  fdrOut <- case fdrIn ^. #parentID of
+  fid <- view #id <$> case fdrIn ^. #parentID of
     Nothing -> do
       -- guard against non-admins being able to create root folders
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
@@ -65,7 +65,7 @@ folderAPICreate = api $ do
       let acc = [mkAccPolicyItem (CreateA, FolderR, parent_id)]
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc . dbUpdate $ FolderCreate fdrIn
-  return . Ok $ encodeFolder fdrOut
+  Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
@@ -73,16 +73,13 @@ folderAPIGet fid = api $ do
   user           <- getAPIUserWithAPIPersonal
   hasReadAccess  <- apiAccessControlCheck user acc
   isAdminOrSales <- checkAdminOrSales
-  if (hasReadAccess || isAdminOrSales)
-    then getFolder
+  fdrwc          <- if (hasReadAccess || isAdminOrSales)
+    then fwcGetOrErrNotFound fid
     else do
       isSignatory <- isSignatoryOfOneOfDocuments
-      if (isSignatory) then getFolder else (apiError insufficientPrivileges)
+      if isSignatory then fwcGetOrErrNotFound fid else apiError insufficientPrivileges
+  return . Ok $ encodeFolderWithChildren fdrwc
   where
-    srvLogErr :: Kontrakcja m => T.Text -> m a
-    srvLogErr t = do
-      logInfo "Folder API" $ object ["error_message" .= t]
-      apiError $ serverError t
     isSignatoryOfOneOfDocuments :: Kontrakcja m => m Bool
     isSignatoryOfOneOfDocuments = do
       user      <- fst <$> getAPIUserWithAnyPrivileges
@@ -91,16 +88,7 @@ folderAPIGet fid = api $ do
         [DocumentFilterDeleted False, DocumentFilterByFolderID fid]
         []
       return . (> 0) $ length documents
-    getFolder :: Kontrakcja m => m (APIResponse Encoding)
-    getFolder = do
-      fdr <- dbQuery (FolderGet fid) >>= \case
-        Nothing  -> srvLogErr "The folder could not be retrieved."
-        Just fdr -> return fdr
-      -- we retrieve only the immediate children, as in the user group API.
-      fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
-      let fdrwc =
-            I.FolderWithChildren fdr $ map (\c -> I.FolderWithChildren c []) fdrChildren
-      return . Ok $ encodeFolderWithChildren fdrwc
+
 
 folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
 folderAPIUpdate fid = api $ do
@@ -134,15 +122,13 @@ folderAPIUpdate fid = api $ do
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
-        fdrDB' <- apiGuardJustM (serverError "Was not able to retrieve updated folder")
-                                (dbQuery . FolderGet $ fid)
-        return . Ok $ encodeFolder fdrDB'
+        Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
   apiuser <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
-    fdr <- folderOrAPIError fid
+    fdr <- fGetOrErrNotFound fid
     let isRootFolder = isNothing $ fdr ^. #parentID
     when isRootFolder
       $
@@ -189,3 +175,22 @@ folderAPIListDocs fid = api $ do
         jsonbs  = listToJSONBS
           (allDocsCount, (\d -> (documentAccessForUser user d, d)) <$> allDocs)
     return . Ok $ Response 200 headers nullRsFlags jsonbs Nothing
+
+fGetOrErrNotFound :: Kontrakcja m => FolderID -> m Folder
+fGetOrErrNotFound fid = apiGuardJustM folderNotFoundErr . dbQuery $ FolderGet fid
+
+fwcGetOrErrNotFound :: Kontrakcja m => FolderID -> m I.FolderWithChildren
+fwcGetOrErrNotFound fid =
+  dbQuery (FolderGet fid) >>= addChildrenIfJust >>= apiGuardJust folderNotFoundErr
+  where
+    addChildrenIfJust = \case
+      Nothing     -> return Nothing
+      Just folder -> do
+        -- we retrieve only the immediate children, as in the user group API.
+        fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
+        return . Just . I.FolderWithChildren folder $ map
+          (\c -> I.FolderWithChildren c [])
+          fdrChildren
+
+folderNotFoundErr :: APIError
+folderNotFoundErr = serverError "Impossible happened: No folder with ID, or deleted."
