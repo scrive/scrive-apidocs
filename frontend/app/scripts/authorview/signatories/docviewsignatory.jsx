@@ -100,7 +100,7 @@ var EmailModal = require("../../common/email_modal");
       );
 
       var canGetConfirmation = document.closed() && (
-           signatory.emailConfirmationDelivery()
+           signatory.anyEmailConfirmationDelivery()
         || signatory.mobileConfirmationDelivery()
         || signatory.emailMobileConfirmationDelivery()
       );
