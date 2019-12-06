@@ -60,7 +60,7 @@ instance ToJSON UGAddrJSON where
   toEncoding (UGAddrJSON addr) =
     pairs
       $  ("company_number" .= (addr ^. #companyNumber))
-      <> ("entity_name" .= (addr ^. #entityName))
+      <> ("company_name" .= (addr ^. #entityName))
       <> ("address" .= (addr ^. #address))
       <> ("zip" .= (addr ^. #zipCode))
       <> ("city" .= (addr ^. #city))
