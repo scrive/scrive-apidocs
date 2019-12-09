@@ -88,20 +88,32 @@ module.exports = React.createClass({
         inheritedFeatures: inheritedFeatures,
         featuresIsInherited: featuresIsInherited,
         selectedInvoicingType: this.state.subscription.invoicingtype(),
-        selectedPlan: this.state.subscription.paymentplan()
+        selectedPlan: this.state.subscription.paymentplan(),
+        freeDocumentTokens: this.state.subscription.freeDocumentTokens(),
+        freeDocumentTokensValidTill: this.state.subscription.freeDocumentTokensValidTill()
       });
     },
     saveBilling: function() {
       var self = this;
-      this.state.subscription.updateSubscriptionAsAdmin({
+      var updateData = {
           selectedInvoicingType : self.state.selectedInvoicingType,
           selectedPlan : self.state.selectedPlan,
           features : self.state.features,
           featuresIsInherited : self.state.featuresIsInherited
-        }, function () {
-          new FlashMessage({ type: "success", content: "Saved" });
-          self.reload();
-        });
+      };
+      if (self.state.selectedPlan == "free") {
+        updateData.freeDocumentTokens = self.state.freeDocumentTokens;
+        updateData.freeDocumentTokensValidTill = self.state.freeDocumentTokensValidTill;
+        updateData.freeDocumentTokensValidTill.setHours(23,59,59);
+      };
+
+      this.state.subscription.updateSubscriptionAsAdmin(
+          updateData,
+          function () {
+            new FlashMessage({ type: "success", content: "Saved" });
+            self.reload();
+          }
+      );
     },
     changePlan: function(v) {
       var adminUserFeatures = this.state.features.adminUsers;
@@ -223,6 +235,7 @@ module.exports = React.createClass({
       var selectedInvoicingType = this.state.selectedInvoicingType;
       var selectedPlan = this.state.selectedPlan;
       var inheritedPlan = subscription.inheritedplan()?(" (" + subscription.inheritedplan()) + ")":"";
+      var freeTokensSectionVisible = selectedPlan == "free" && selectedInvoicingType != "none";
       var planOptions = function (it) {
         var obj =
           { "none":
@@ -312,6 +325,49 @@ module.exports = React.createClass({
                   />
                 </td>
               </tr>
+
+              <tr style={{"display": freeTokensSectionVisible ? "" : "none"}} >
+                <td></td>
+                <td>
+                    <span>
+                        with&nbsp;
+                        <input
+                          style={{"width":"40px"}}
+                          type="number"
+                          value={this.state.freeDocumentTokens}
+                          onChange={function(i) {
+                              var n = parseInt(i.target.value)
+                              if (n >= 0) {
+                                self.setState({freeDocumentTokens : n});
+                              }
+                          }}
+                        />
+                        &nbsp;document tokens.
+                    </span>
+                </td>
+              </tr>
+
+              <tr style={{"display": freeTokensSectionVisible ? "" : "none"}} >
+                <td></td>
+                <td>
+                    <span>
+                        Valid: &nbsp;
+                        <input
+                          style={{"width":"126px"}}
+                          type="date"
+                          value={self.state.freeDocumentTokensValidTill.toISOString().slice(0,10)}
+                          onChange={function(i) {
+                                var d = new Date(i.target.value);
+                                if (d instanceof Date && isFinite(d) && d > new Date()) { // Ignore value that are not valid date
+                                  self.setState({freeDocumentTokensValidTill : new Date(i.target.value)});
+                                }
+                            }
+                          }
+                        />
+                    </span>
+                </td>
+              </tr>
+
               <tr><td colSpan={3}><hr/></td></tr>
               <tr>
                 <td><label>Inherit feature flags</label></td>

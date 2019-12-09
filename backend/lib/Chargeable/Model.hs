@@ -13,7 +13,6 @@ module Chargeable.Model (
   , ChargeUserGroupForIDINSignature(..)
   , ChargeUserGroupForStartingDocument(..)
   , ChargeUserGroupForClosingDocument(..)
-  , GetNumberOfDocumentsStartedThisMonth(..)
   , ChargeUserGroupForClosingSignature(..)
   , ChargeUserGroupForShareableLink(..)
   ) where
@@ -217,11 +216,6 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetTotalOfChargeabl
       sqlWhere $ "time >= cast (" <?> firstOfCurrentMonth <+> " as timestamp)"
       sqlResult "COALESCE(sum(quantity),0)"
     fetchOne runIdentity
-
-data GetNumberOfDocumentsStartedThisMonth = GetNumberOfDocumentsStartedThisMonth UserGroupID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetNumberOfDocumentsStartedThisMonth Int64 where
-  query (GetNumberOfDocumentsStartedThisMonth ugid) =
-    query $ GetTotalOfChargeableItemFromThisMonth CIStartingDocument ugid
 
 -- | Fetch id of the author of the document.
 getAuthorAndAuthorsUserGroupIDs

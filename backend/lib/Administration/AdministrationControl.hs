@@ -85,8 +85,10 @@ import User.Email
 import User.History.Model
 import User.JSON
 import User.UserControl
+import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
 import UserGroup.Types
+import UserGroup.Types.PaymentPlan
 import UserGroup.Types.Subscription
 import UserGroupAccounts.Model
 import Util.Actor
@@ -922,6 +924,14 @@ handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
         _ -> unexpectedError "invalid combination of features and inheriting"
 
   dbUpdate . UserGroupUpdate . set #invoicing newInvoicing . setFeatures . ugwpUG $ ugwp
+
+
+  case (ugSubInvoicingType subscription, ugSubPaymentPlan subscription) of
+    (InvoicingTypeInvoice, Just FreePlan) -> do
+      let fdts = freeDocumentTokensFromValues (ugSubValidDocTokensCount subscription)
+                                              (ugSubDocTokensValidTill subscription)
+      dbUpdate $ UserGroupFreeDocumentTokensUpdate ugid fdts
+    _ -> return ()
   return $ V2.Accepted ()
 
 handleCompanyGetStructure :: Kontrakcja m => UserGroupID -> m Aeson.Value

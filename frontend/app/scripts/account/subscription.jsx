@@ -5,15 +5,14 @@ var User = require("../../js/account/user.js").User;
 
 /* Main archive definition. Its a tab based set of different documents lists. */
 
-var FREE_DOCUMENT_LIMIT = 3;
-
 var Subscription = Backbone.Model.extend({
   defaults: {
     "invoicing_type": "none",
     "payment_plan": "free",
     "inherited_plan": "",
     "number_of_users": 0,
-    "started_last_month": 0,
+    "free_document_tokens": 0,
+    "free_document_tokens_valid_till": new Date(),
     "features": undefined,
     "inherited_features": undefined,
     "features_is_inherited": false,
@@ -94,8 +93,11 @@ var Subscription = Backbone.Model.extend({
   numberOfUsers: function () {
      return this.get("number_of_users");
   },
-  startedLastMonth: function () {
-     return this.get("started_last_month");
+  freeDocumentTokens: function () {
+     return this.get("free_document_tokens");
+  },
+  freeDocumentTokensValidTill: function () {
+     return this.get("free_document_tokens_valid_till");
   },
   currentUserIsAdmin: function () {
      return this.get("current_user_is_admin");
@@ -149,7 +151,7 @@ var Subscription = Backbone.Model.extend({
     if (numberOfDocs === undefined) {
       numberOfDocs = 1;
     }
-    return this.hasFreePlan() && (this.startedLastMonth() + numberOfDocs) > FREE_DOCUMENT_LIMIT;
+    return this.hasFreePlan() && this.freeDocumentTokens() < numberOfDocs;
   },
   updateSubscriptionAsAdmin: function (nsd, callback) {
     var self = this;
@@ -194,9 +196,16 @@ var Subscription = Backbone.Model.extend({
         regular_users: fromFeatureFlags(nsd.features.regularUsers)
       }
     };
+
     if (nsd.selectedPlan !== "inherit") {
       newSubscription["payment_plan"] = nsd.selectedPlan;
     }
+
+    if (nsd.selectedPlan == "free") {
+      newSubscription["free_document_tokens"] = nsd.freeDocumentTokens;
+      newSubscription["free_document_tokens_valid_till"] = nsd.freeDocumentTokensValidTill;
+    }
+
     new Submit({
       method: "POST",
       url: "/adminonly/companyadmin/updatesubscription/" + this.companyid(),
@@ -230,10 +239,12 @@ var Subscription = Backbone.Model.extend({
       inherited_plan: args.inherited_plan,
       payment_plan: args.payment_plan || "inherit",
       number_of_users: args.number_of_users,
-      started_last_month: args.started_last_month,
+      valid_free_document_tokens: args.valid_free_document_tokens,
       features: features,
       inherited_features: inheritedFeatures,
       features_is_inherited: featuresIsInherited,
+      free_document_tokens: args.free_document_tokens,
+      free_document_tokens_valid_till: new Date(args.free_document_tokens_valid_till),
       ready: true
     };
   }

@@ -6,12 +6,15 @@ module UserGroup.Types.Subscription (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Time
+import Data.Int
+import Data.Time.Clock
 import Data.Unjson
 
-import Chargeable.Model (GetNumberOfDocumentsStartedThisMonth(..))
 import DB
 import FeatureFlags.Model
+import MinutesTime
 import User.Model.Query (UserGroupGetUsers(..))
+import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 
@@ -20,7 +23,8 @@ data Subscription = Subscription
   , ugSubPaymentPlan          :: Maybe PaymentPlan
   , ugSubInheritedPaymentPlan :: Maybe PaymentPlan
   , ugSubCountUsers           :: Maybe Int
-  , ugSubCountDocsMTD         :: Maybe Int
+  , ugSubValidDocTokensCount  :: Int32
+  , ugSubDocTokensValidTill   :: UTCTime
   , ugSubFeatures             :: Maybe Features
   , ugSubInheritedFeatures    :: Maybe Features
   , ugSubFeaturesIsInherited  :: Bool
@@ -34,9 +38,14 @@ instance Unjson Subscription where
       <*> fieldOpt "payment_plan"    ugSubPaymentPlan          "Payment plan"
       <*> fieldOpt "inherited_plan"  ugSubInheritedPaymentPlan "Inherited payment plan"
       <*> fieldOpt "number_of_users" ugSubCountUsers           "Number of active users"
-      <*> fieldOpt "started_last_month"
-                   ugSubCountDocsMTD
-                   "Number of documents started month to date"
+      <*> fieldDef "free_document_tokens"
+                   0
+                   ugSubValidDocTokensCount
+                   "Number of free document tokens"
+      <*> fieldDef "free_document_tokens_valid_till"
+                   unixEpoch
+                   ugSubDocTokensValidTill
+                   "Free document tokens validity date"
       <*> fieldOpt "features" ugSubFeatures "Features enabled"
       <*> fieldOpt "inherited_features"
                    ugSubInheritedFeatures
@@ -52,15 +61,18 @@ getSubscription
 getSubscription ugwp = do
   let ug   = ugwpUG ugwp
       ugid = ug ^. #id
-  users   <- dbQuery $ UserGroupGetUsers ugid
-  docsMTD <- fromIntegral <$> dbQuery (GetNumberOfDocumentsStartedThisMonth ugid)
+  users              <- dbQuery $ UserGroupGetUsers ugid
+  freeTokens         <- dbQuery (UserGroupFreeDocumentTokensGet ugid)
+  freeTokensCount    <- numberOfValidTokens freeTokens
+  freeTokensValidity <- validityOfTokens freeTokens
   let mInheritedFeatures = ugwpFeatures <$> ugwpOnlyParents ugwp
   return Subscription
     { ugSubInvoicingType        = ugInvoicingType ug
     , ugSubPaymentPlan          = ugPaymentPlan ug
     , ugSubInheritedPaymentPlan = ugwpPaymentPlan <$> ugwpOnlyParents ugwp
     , ugSubCountUsers           = Just $ length users
-    , ugSubCountDocsMTD         = Just docsMTD
+    , ugSubValidDocTokensCount  = freeTokensCount
+    , ugSubDocTokensValidTill   = freeTokensValidity
     , ugSubFeatures             = ug ^. #features
     , ugSubInheritedFeatures    = mInheritedFeatures
     , ugSubFeaturesIsInherited  = isNothing $ ug ^. #features

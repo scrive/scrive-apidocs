@@ -69,6 +69,7 @@ import User.TwoFactor
 import User.UserAccountRequest
 import User.UserControl
 import User.UserView
+import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
@@ -486,7 +487,12 @@ apiCallSignup = api $ do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
       let ug0 =
             defaultUserGroup & (#name .~ companyName) & (#homeFolderID ?~ ugFolder ^. #id)
-      ug <- dbUpdate $ UserGroupCreate ug0
+      ug                    <- dbUpdate $ UserGroupCreate ug0
+      freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
+      let freeDocumentsCount = 3
+          freeDocuments =
+            (freeDocumentTokensFromValues freeDocumentsCount freeDocumentsValidity)
+      dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) freeDocuments
       createUser (Email email) (firstname, lastname) (ug ^. #id, True) lang AccountRequest
   case muser' of
     -- return ambiguous response in both cases to prevent a security issue

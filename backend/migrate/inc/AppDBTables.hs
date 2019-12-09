@@ -168,6 +168,7 @@ kontraTables =
        , tableUserGroupInvoicings
        , tableUserGroupUIs
        , tableUserGroupAddresses
+       , tableUserGroupFreeDocumentTokens
        , tableFilePurgeConsumers
        , tableFilePurgeJobs
        , tableTemporaryLoginTokens

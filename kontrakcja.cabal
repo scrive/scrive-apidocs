@@ -518,6 +518,8 @@ Library
                  , UserGroup.Internal
                  , UserGroup.Model
                  , UserGroup.Tables
+                 , UserGroup.FreeDocumentTokens.Model
+                 , UserGroup.FreeDocumentTokens.Types
                  , UserGroupAccounts.Migrations
                  , UserGroupAccounts.Model
                  , UserGroupAccounts.Tables

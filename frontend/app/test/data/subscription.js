@@ -52,5 +52,6 @@ module.exports = {
     }
   },
   "number_of_users": 1,
-  "started_last_month": 0
+  "free_document_tokens": 1,
+  "free_document_tokens_valid_till": new Date()
 };

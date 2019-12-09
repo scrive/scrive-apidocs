@@ -1122,7 +1122,8 @@ javascriptLocalisation =
               title  : "$_blockingFreeCreateTitle()$"
             },
             has : {
-              headline : "$_blockingFreeHasHeadline()$",
+              headlineWithOne : "$_blockingFreeHasOneHeadline()$",
+              headlineWithMany : "$_blockingFreeHasManyHeadline()$",
               subtext1 : "$_blockingFreeHasSubtext1()$"
             },
             hasNot : {

@@ -1,5 +1,6 @@
 module UserGroup.Migrations where
 
+import Data.Int
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
@@ -622,4 +623,52 @@ userGroupSettingsAddEidServiceToken = Migration
           , CompositeColumn { ccName = "eid_service_token", ccType = TextT }
           ]
         }
+  }
+
+
+createTableUserGroupFreeDocumentTokens :: MonadDB m => Migration m
+createTableUserGroupFreeDocumentTokens = Migration
+  { mgrTableName = "user_group_free_document_tokens"
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration $ do
+      createTable
+        True
+        tblTable
+          { tblName        = "user_group_free_document_tokens"
+          , tblVersion     = 1
+          , tblColumns     = [ tblColumn { colName     = "user_group_id"
+                                         , colType     = BigIntT
+                                         , colNullable = False
+                                         }
+                             , tblColumn { colName     = "tokens_count"
+                                         , colType     = IntegerT
+                                         , colNullable = False
+                                         }
+                             , tblColumn { colName     = "tokens_validity"
+                                         , colType     = TimestampWithZoneT
+                                         , colNullable = False
+                                         }
+                             ]
+          , tblPrimaryKey  = pkOnColumn "user_group_id"
+          , tblChecks      = [ tblCheck { chkName      = "user_group_positive_count"
+                                        , chkCondition = "tokens_count >= 0"
+                                        }
+                             ]
+          , tblForeignKeys =
+            [ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade
+                                                              }
+            ]
+          }
+      -- After migration we want free accounts to keep working for a while.
+      -- Exact values set here don't matter so much as we will adjust this with marketing few days
+      -- after this code is on production
+      runQuery_
+        . sqlInsertSelect "user_group_free_document_tokens" "user_group_invoicings as i"
+        $ do
+            sqlSetCmd "user_group_id" "i.user_group_id"
+            sqlSet "tokens_count" (3 :: Int32)
+            sqlSetCmd "tokens_validity" "now() + interval '30 days'"
+            sqlWhereEq "i.invoicing_type" (3 :: Int16) -- User groups on individual invoicing
+            sqlWhereEq "i.payment_plan"   (0 :: Int16) -- Free plan
   }

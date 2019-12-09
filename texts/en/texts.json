@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -211,9 +211,10 @@
 "_autoreminderTitle":"Automatic reminder",
 "_autoreminderWillBeSentOn":"Will be sent on",
 "_blockingFreeCreateTitle":"Purchase a subscription",
-"_blockingFreeHasHeadline":"You have sent <span class='put-docs-used-here'></span> of your 3 free documents this month.",
-"_blockingFreeHasNotHeadline":"You have sent all your free documents this month.",
-"_blockingFreeHasNotSubtext1":"Purchase a subscription to send more this month",
+"_blockingFreeHasManyHeadline":"You have <span class='put-docs-left-here'></span> free documents available.",
+"_blockingFreeHasNotHeadline":"You have sent all your free documents.",
+"_blockingFreeHasNotSubtext1":"Purchase a subscription to send more",
+"_blockingFreeHasOneHeadline":"You have <span class='put-docs-left-here'></span> free document available.",
 "_blockingFreeHasSubtext1":"Upgrade now to send more and for access to eID.",
 "_blockingUsedAllHeadline":"You have reached the monthly usage limit of 100 sent documents",
 "_blockingUsedAllSubtext1":"Please <a>contact support</a> to increase the limit. Sorry for the inconvenience.",

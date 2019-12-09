@@ -45,8 +45,11 @@ module.exports = React.createClass({
               {/* if */ subscription.hasFreePlan() && !subscription.isOverLimit() &&
                 <span>
                   <HtmlTextWithSubstitution
-                    secureText={localization.blocking.free.has.headline}
-                    subs={{".put-docs-used-here": subscription.startedLastMonth()}}
+                    secureText={ subscription.freeDocumentTokens() == 1 ?
+                        localization.blocking.free.has.headlineWithOne
+                      : localization.blocking.free.has.headlineWithMany
+                    }
+                    subs={{".put-docs-left-here": subscription.freeDocumentTokens()}}
                   />
                   <div className="usage-info-box-subheadline">
                     <a>

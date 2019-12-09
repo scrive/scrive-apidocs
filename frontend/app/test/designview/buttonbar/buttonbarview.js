@@ -253,10 +253,13 @@ describe("designview/buttonbarview", function () {
   });
 
   it("should show sign confirmation modal", function () {
+    sinon.stub(Subscription.currentSubscription(), "freeDocumentTokens", function () {
+      return 10;
+    });
+
     sinon.stub(document_, "hasProblems").returns(false);
     sinon.stub(document_, "authorCanSignFirst").returns(true);
     sinon.stub(document_, "save");
-
     var component = renderComponent();
     sinon.stub(component, "showSignConfirmationModal");
 
@@ -264,9 +267,14 @@ describe("designview/buttonbarview", function () {
 
     assert.isTrue(document_.save.called);
     assert.isTrue(component.showSignConfirmationModal.called);
+
   });
 
   it("should show send confirmation modal", function () {
+    sinon.stub(Subscription.currentSubscription(), "freeDocumentTokens", function () {
+      return 10;
+    });
+
     sinon.stub(document_, "hasProblems").returns(false);
     sinon.stub(document_, "authorCanSignFirst").returns(false);
     sinon.stub(document_, "save");

@@ -226,4 +226,5 @@ kontraMigrations =
   , featureFlagsAddIDINAuthToSign
   , addSignatoryDobAndEmailToEIDSignatures
   , userGroupSettingsAddEidServiceToken
+  , createTableUserGroupFreeDocumentTokens
   ]

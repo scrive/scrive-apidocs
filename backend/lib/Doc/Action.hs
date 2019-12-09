@@ -54,6 +54,7 @@ import ThirdPartyStats.Core
 import ThirdPartyStats.Planhat
 import User.Email
 import User.Model
+import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
@@ -128,6 +129,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
                     EventPlanhat
       asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
       theDocument >>= logDocEvent "Doc Sent" author []
+      dbUpdate $ UserGroupFreeDocumentTokensUseOneIfOnFreePlan (author ^. #groupID)
 
   sendInvitationEmails authorsignsimmediately
   theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn

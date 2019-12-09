@@ -391,3 +391,29 @@ ctUserGroupInvoicing = CompositeType
                 , CompositeColumn { ccName = "payment_plan", ccType = SmallIntT }
                 ]
   }
+
+tableUserGroupFreeDocumentTokens :: Table
+tableUserGroupFreeDocumentTokens = tblTable
+  { tblName        = "user_group_free_document_tokens"
+  , tblVersion     = 1
+  , tblColumns     = [ tblColumn { colName     = "user_group_id"
+                                 , colType     = BigIntT
+                                 , colNullable = False
+                                 }
+                     , tblColumn { colName     = "tokens_count"
+                                 , colType     = IntegerT
+                                 , colNullable = False
+                                 }
+                     , tblColumn { colName     = "tokens_validity"
+                                 , colType     = TimestampWithZoneT
+                                 , colNullable = False
+                                 }
+                     ]
+  , tblPrimaryKey  = pkOnColumn "user_group_id"
+  , tblChecks      = [ tblCheck { chkName      = "user_group_positive_count"
+                                , chkCondition = "tokens_count >= 0"
+                                }
+                     ]
+  , tblForeignKeys =
+    [(fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }]
+  }
