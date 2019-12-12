@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module AccessControl.JSON (
   getApiRoleParameter
 , encodeAccessRole
@@ -167,16 +165,35 @@ jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson
 jsonToAccessRoleTarget :: Monad m => AccessRoleJSON -> m AccessRoleTarget
 jsonToAccessRoleTarget roleJson = case target roleJson of
   UserTargetJSON uid -> case roleType roleJson of
-    UserART -> return $ UserAR uid
-    _       -> fail invalidTargetErr
+    -- valid
+    UserART            -> return $ UserAR uid
+    -- invalid
+    UserGroupMemberART -> fail invalidTargetErr
+    UserAdminART       -> fail invalidTargetErr
+    UserGroupAdminART  -> fail invalidTargetErr
+    DocumentAdminART   -> fail invalidTargetErr
+    FolderAdminART     -> fail invalidTargetErr
+    FolderUserART      -> fail invalidTargetErr
   UserGroupTargetJSON ugid -> case roleType roleJson of
+    -- valid
     UserAdminART       -> return $ UserAdminAR ugid
     UserGroupAdminART  -> return $ UserGroupAdminAR ugid
     UserGroupMemberART -> return $ UserGroupMemberAR ugid
-    _                  -> fail invalidTargetErr
+    -- invalid
+    UserART            -> fail invalidTargetErr
+    DocumentAdminART   -> fail invalidTargetErr
+    FolderAdminART     -> fail invalidTargetErr
+    FolderUserART      -> fail invalidTargetErr
   FolderTargetJSON fid -> case roleType roleJson of
-    DocumentAdminART -> return $ DocumentAdminAR fid
-    _                -> fail invalidTargetErr
+    -- valid
+    DocumentAdminART   -> return $ DocumentAdminAR fid
+    FolderAdminART     -> return $ FolderAdminAR fid
+    FolderUserART      -> return $ FolderUserAR fid
+    -- invalid
+    UserART            -> fail invalidTargetErr
+    UserGroupMemberART -> fail invalidTargetErr
+    UserAdminART       -> fail invalidTargetErr
+    UserGroupAdminART  -> fail invalidTargetErr
   where invalidTargetErr = "Can't parse AccessRole - Role type doesn't match target type"
 
 encodeAccessRole :: AccessRole -> Encoding
