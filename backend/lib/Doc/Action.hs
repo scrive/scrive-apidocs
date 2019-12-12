@@ -6,6 +6,7 @@ module Doc.Action (
   , postDocumentPendingChange
   , postDocumentClosedActions
   , findAndTimeoutDocuments
+  , saveDocumentForPortalSignatories
   ) where
 
 import Control.Conditional (ifM, unlessM, whenM)
@@ -110,11 +111,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
     >>= stateMismatchError "postDocumentPreparationChange" Pending
   logInfo_ "Preparation -> Pending; Sending invitation emails"
   updateDocument $ \_ -> initialiseSignatoryAPIMagicHashes
-  msaved <- saveDocumentForSignatories
-  case msaved of
-    Just msg -> do
-      logAttention "Failed to save document for signatories" $ object ["error" .= msg]
-    Nothing -> return ()
+  saveDocumentForSignatories
   theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject_ d
 
   -- Stat logging
@@ -366,35 +363,31 @@ getDocAuthor doc = do
     Goes through each signatory, and if a user exists this saves it for that user
     by linking the signatory to the user's account.
 -}
-saveDocumentForSignatories :: (Kontrakcja m, DocumentMonad m) => m (Maybe Text)
+saveDocumentForSignatories :: (Kontrakcja m, DocumentMonad m) => m ()
 saveDocumentForSignatories =
-  documentsignatorylinks <$> theDocument >>= foldM foldSaveForSig Nothing . filter
+  documentsignatorylinks <$> theDocument >>= mapM_ saveDocumentForSignatory . filter
     (not . isAuthor)
-  where
-    {- |
-        Wraps up the saveDocumentForSignatory so we can use it in a fold
-    -}
-    foldSaveForSig
-      :: (Kontrakcja m, DocumentMonad m) => Maybe Text -> SignatoryLink -> m (Maybe Text)
-    foldSaveForSig (Just msg) _       = return $ Just msg
-    foldSaveForSig Nothing    siglink = saveDocumentForSignatory siglink
-    {- |
-        Saves the document for the given signatorylink.  It does this by checking to see
-        if there is a user with a matching email, and if there is it hooks up the signatory
-        link to that user.
-    -}
-    saveDocumentForSignatory
-      :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe Text)
-    saveDocumentForSignatory sl = do
-      let sigemail = getEmail sl
-      muser <- case (sigemail) of
-        "" -> return Nothing
-        _  -> dbQuery $ GetUserByEmail (Email sigemail)
-      case muser of
-        Nothing   -> return Nothing
-        Just user -> do
-          res <- dbUpdate $ SaveDocumentForUser user (signatorylinkid sl)
-          if res then return Nothing else return $ Just "saveDocumentForSignatory failed"
+
+saveDocumentForPortalSignatories :: (Kontrakcja m, DocumentMonad m) => m ()
+saveDocumentForPortalSignatories = do
+  sigs <- documentsignatorylinks <$> theDocument
+  let portalSigFilter =
+        (not . isAuthor) && (\sl -> signatorylinkdeliverymethod sl == PortalDelivery)
+  mapM_ saveDocumentForSignatory $ filter portalSigFilter sigs
+
+{- |
+    Saves the document for the given signatorylink.  It does this by checking to see
+    if there is a user with a matching email, and if there is it hooks up the signatory
+    link to that user.
+-}
+saveDocumentForSignatory :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m ()
+saveDocumentForSignatory sl = do
+  let sigemail = getEmail sl
+  muser <- case (sigemail) of
+    "" -> return Nothing
+    _  -> dbQuery $ GetUserByEmail (Email sigemail)
+  whenJust muser $ \user -> do
+    dbUpdate $ SaveDocumentForUser user (signatorylinkid sl)
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
