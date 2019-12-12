@@ -507,6 +507,7 @@ Library
                  , User.UserAccountRequest.Tables
                  , User.UserControl
                  , User.UserID
+                 , User.UserFeatures
                  , User.UserView
                  , User.Utils
                  , UserGroup

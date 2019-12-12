@@ -68,6 +68,7 @@ import User.PasswordReminder
 import User.TwoFactor
 import User.UserAccountRequest
 import User.UserControl
+import User.UserFeatures
 import User.UserView
 import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
@@ -145,6 +146,7 @@ userAPIV2 = choice
   $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByMonth
   , dir "checkpassword" $ hPost $ toK0 $ apiCallCheckPassword
   , dir "activateuser" $ hPost $ toK0 $ apiCallActivateAccount
+  , dir "getusersfeatures" $ hGet $ toK0 $ apiCallGetUsersFeatures
   , userAPIV1
   ]
 
@@ -292,6 +294,12 @@ apiCallGetSubscription = api $ do
   ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   sub          <- getSubscription ugwp
   return . Ok $ unjsonToJSON unjsonDef sub
+
+apiCallGetUsersFeatures :: Kontrakcja m => m Response
+apiCallGetUsersFeatures = V2.api $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  jsonWithData <- getUserFeaturesJSON user
+  return . V2.Ok $ jsonWithData
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
