@@ -234,7 +234,7 @@ docApiV2StartWithPortal = api $ do
     "document_ids parameter can't have more the 20 ids"
 
   logInfo "Running start with portal with ids" $ object ["doc_ids" .= show dids]
-  docs <- forM dids $ \did -> logDocument did . withDocumentID did $ do
+  docs1 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
     logInfo_ "Starting one of documents with portal"
     -- Guards
     guardThatUserIsAuthor user =<< theDocument
@@ -254,13 +254,17 @@ docApiV2StartWithPortal = api $ do
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
-      sendPortalInvites user portalUrl docs
+      sendPortalInvites user portalUrl docs1
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
+
+  docs2 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
+    saveDocumentForPortalSignatories
+    return =<< theDocument -- return changed
 
   -- Result
   let docAccess = \d -> (documentAccessForUser user d, d)
       headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-      jsonBS    = listToJSONBS (length docs, docAccess <$> docs)
+      jsonBS    = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
   where
     sendPortalInvites authorUser portalUrl docs = do
@@ -431,7 +435,7 @@ docApiV2RemindWithPortal = api $ do
     "document_ids parameter can't have more the 20 ids"
 
   logInfo "Running remind with portal with ids" $ object ["doc_ids" .= show dids]
-  docs <- forM dids $ \did -> logDocument did . withDocumentID did $ do
+  docs1 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
       -- Guards
     guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
@@ -442,14 +446,18 @@ docApiV2RemindWithPortal = api $ do
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
-      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs)
+      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs1)
         $ \(email, name) -> sendPortalReminder user portalUrl email name
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
+
+  docs2 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
+    saveDocumentForPortalSignatories
+    return =<< theDocument -- return changed
 
   -- Result
   let docAccess = \d -> (documentAccessForUser user d, d)
       headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-      jsonBS    = listToJSONBS (length docs, docAccess <$> docs)
+      jsonBS    = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
 
 

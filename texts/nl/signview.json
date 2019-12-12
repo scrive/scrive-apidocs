@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Het ondertekende document $documenttitle:noescape()$ is opnieuw naar u verstuurd op verzoek van $creatorname$. Vind het document door deze link te volgen: $link$",
 "_unavailableForSign":"Het document is niet langer beschikbaar voor ondertekening",
 "_userGroup":"Gebruikersgroep",
-"_userGroupExtraInfo":"Naam van Gebruikersgroep voor intern gebruik (bijv. HR)"
+"_userGroupExtraInfo":""
 }

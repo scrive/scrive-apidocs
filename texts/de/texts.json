@@ -608,7 +608,7 @@
 "_editConfirmationMessagePlaceholder":"Eine Nachricht ist nur verfügbar als eine Bestätigung per E-Mail an eine andere Partei als Sie. ",
 "_editInvitationMessagePlaceholder":"Eine Nachricht ist nur verfügbar als Einladung per E-Mail an eine andere Partei als Sie.",
 "_emptyOrNotValidEmail":"Sie haben keine E-Mailadresse eingegeben oder die E-Mailadresse ist falsch. Bitte versuchen Sie es erneut.",
-"_entityname":"Name des Unternehmens",
+"_entityname":"",
 "_entitynameExtraInfo":"Wird in den Dokumenten als Unternehmens-Feld angezeigt:",
 "_evidenceAttachmentBoxHeader":"Beleg-Anhänge",
 "_february":"Februar",

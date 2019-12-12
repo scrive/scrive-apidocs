@@ -587,6 +587,7 @@ mailClosedContent ispreview document =
     <$> mailDocumentClosed ispreview
                            (fromJust $ getAuthorSigLink document)
                            False
+                           True
                            False
                            document
 
@@ -601,13 +602,18 @@ mailDocumentClosed
   => Bool
   -> SignatoryLink
   -> Bool
+  -> Bool -- ^ Would the attachments fit inside an email?
   -> Bool -- ^ Force link usage.
   -> Document
   -> m Mail
-mailDocumentClosed ispreview sl sealFixed forceLink document = do
-  mhtime <- if not ispreview
-    then return Nothing
-    else Just <$> makeConfirmationMagicHash sl
+mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document = do
+  (mhtime, mhtimepreview) <- if not ispreview
+    then do
+      mh <- makeConfirmationMagicHash sl
+      return $ if documentAttachable && not forceLink
+        then (Nothing, Just mh)
+        else (Just mh, Just mh)
+    else return (Nothing, Nothing)
   partylist <- renderLocalListTemplate document $ map getSmartName $ filter
     isSignatory
     (documentsignatorylinks document)
@@ -625,7 +631,7 @@ mailDocumentClosed ispreview sl sealFixed forceLink document = do
     F.value "hasaccount" $ isJust $ maybesignatory sl
     F.value "previewLink" $ showt $ LinkDocumentPreview
       (documentid document)
-      (Nothing <| ispreview |> Just (sl, fst <$> mhtime))
+      (Nothing <| ispreview |> Just (sl, fst <$> mhtimepreview))
       (mainfile)
       150
     F.value "sealFixed" $ sealFixed

@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Das signierte Dokument $documenttitle:noescape()$ wurde Ihnen auf Antrag von $creatorname$ erneut gesendet. Klicken Sie auf diesen Link $link$, um das Dokument zu lokalisieren.",
 "_unavailableForSign":"Dieses Dokument kann nicht mehr signiert werden",
 "_userGroup":"Nutzergruppe",
-"_userGroupExtraInfo":"Name der internen Nutzergruppe (z. B. HR):"
+"_userGroupExtraInfo":""
 }

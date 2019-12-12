@@ -1428,9 +1428,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Restore
       \3. the email of a signatory is corrected to that of an existing user
 -}
 data SaveDocumentForUser = SaveDocumentForUser User SignatoryLinkID
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveDocumentForUser Bool where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveDocumentForUser () where
   update (SaveDocumentForUser user slid) = updateDocumentWithID $ \did -> do
-    runQuery01 . sqlUpdate "signatory_links" $ do
+    runQuery_ . sqlUpdate "signatory_links" $ do
       sqlSet "user_id" $ user ^. #id
       sqlWhereEq "document_id" did
       sqlWhereEq "id"          slid

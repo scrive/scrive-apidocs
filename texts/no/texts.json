@@ -608,7 +608,7 @@
 "_editConfirmationMessagePlaceholder":"Melding er kun tilgjengelig for bekreftelse via e-post til en annen part enn deg selv.",
 "_editInvitationMessagePlaceholder":"Melding er kun tilgjengelig for invitasjon via e-post til en annen part enn deg selv.",
 "_emptyOrNotValidEmail":"Du har ikke skrevet inn en e-postadresse eller så er e-postadressen feil. Vennligst prøv igjen.",
-"_entityname":"Navn på enhet",
+"_entityname":"",
 "_entitynameExtraInfo":"Vis som bedriftsfelt i dokumenter: ",
 "_evidenceAttachmentBoxHeader":"Bevisvedlegg",
 "_february":"Februar",

@@ -608,7 +608,7 @@
 "_editConfirmationMessagePlaceholder":"Besked er kun tilgængelig for bekræftelse via e-mail til en anden part end dig selv.",
 "_editInvitationMessagePlaceholder":"Besked er kun tilgængelig for invitation via e-mail til en anden part end dig selv.",
 "_emptyOrNotValidEmail":"Du har ikke indtastet en e-mailadresse, eller også er e-mail- adressen forkert. Prøv venligst igen.",
-"_entityname":"Enhedsnavn",
+"_entityname":"",
 "_entitynameExtraInfo":"Vises som virksomhedsfelt i dokumenter:",
 "_evidenceAttachmentBoxHeader":"Bevisbilag",
 "_february":"Februar",

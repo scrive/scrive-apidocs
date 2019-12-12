@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Det signerade dokumentet $documenttitle:noescape()$ har skickats till dig på nytt på begäran av $creatorname$. Hitta dokumentet genom att följa denna länk $link$",
 "_unavailableForSign":"Dokumentet går inte längre att signera",
 "_userGroup":"Användargrupp",
-"_userGroupExtraInfo":"Internt namn för användargrupp (t ex HR):"
+"_userGroupExtraInfo":""
 }
