@@ -45,23 +45,14 @@ import Util.SignatoryLinkUtils
 eidServiceRoutes :: Route (Kontra Response)
 eidServiceRoutes = choice
   [ dir "start" . dir "verimi" . hPost . toK2 $ startVerimiEIDServiceTransaction
-  , dir "redirect-endpoint"
-  . dir "verimi"
-  . hGet
-  . toK2
-  $ redirectEndpointFromVerimiEIDServiceTransaction
+  , (dir "redirect-endpoint" . dir "verimi" . hGet . toK2)
+    redirectEndpointFromVerimiEIDServiceTransaction
   , dir "start" . dir "idin-view" . hPost . toK2 $ startIDINViewEIDServiceTransaction
-  , dir "redirect-endpoint"
-  . dir "idin-view"
-  . hGet
-  . toK2
-  $ redirectEndpointFromIDINViewEIDServiceTransaction
+  , (dir "redirect-endpoint" . dir "idin-view" . hGet . toK2)
+    redirectEndpointFromIDINViewEIDServiceTransaction
   , dir "start" . dir "idin-sign" . hPost . toK2 $ startIDINSignEIDServiceTransaction
-  , dir "redirect-endpoint"
-  . dir "idin-sign"
-  . hGet
-  . toK2
-  $ redirectEndpointFromIDINSignEIDServiceTransaction
+  , (dir "redirect-endpoint" . dir "idin-sign" . hGet . toK2)
+    redirectEndpointFromIDINSignEIDServiceTransaction
   ]
 
 eidServiceConf :: Kontrakcja m => Document -> m EIDServiceConf

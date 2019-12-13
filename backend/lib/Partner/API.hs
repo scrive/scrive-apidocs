@@ -50,38 +50,17 @@ partnerAPIV1 :: Route (Kontra Response)
 partnerAPIV1 = dir "partner" $ choice
   [ param $ dir "companies" $ hGet $ toK1 $ partnerApiCallV1CompaniesGet
   , param $ dir "company" $ dir "new" $ hPost $ toK1 $ partnerApiCallV1CompanyCreate
-  , param
-  $ dir "company"
-  $ param
-  $ dir "update"
-  $ hPost
-  $ toK2
-  $ partnerApiCallV1CompanyUpdate
+  , (param . dir "company" . param . dir "update" . hPost . toK2)
+    partnerApiCallV1CompanyUpdate
   , param $ dir "company" $ param $ hGet $ toK2 $ partnerApiCallV1CompanyGet
-  , param
-  $ dir "company"
-  $ param
-  $ dir "user"
-  $ dir "new"
-  $ hPost
-  $ toK2
-  $ partnerApiCallV1UserCreate
-  , param
-  $ dir "company"
-  $ param
-  $ dir "users"
-  $ hGet
-  $ toK2
-  $ partnerApiCallV1CompanyUsersGet
+  , (param . dir "company" . param . dir "user" . dir "new" . hPost . toK2)
+    partnerApiCallV1UserCreate
+  , (param . dir "company" . param . dir "users" . hGet . toK2)
+    partnerApiCallV1CompanyUsersGet
   , param $ dir "user" $ param $ hGet $ toK2 $ partnerApiCallV1UserGet
   , param $ dir "user" $ param $ dir "update" $ hPost $ toK2 $ partnerApiCallV1UserUpdate
-  , param
-  $ dir "user"
-  $ param
-  $ dir "getpersonalcredentials"
-  $ hGet
-  $ toK2
-  $ partnerApiCallV1UserGetPersonalToken
+  , (param . dir "user" . param . dir "getpersonalcredentials" . hGet . toK2)
+    partnerApiCallV1UserGetPersonalToken
   ]
 
 -- | Create a user group as a child of the partner's user group (root of the tree).

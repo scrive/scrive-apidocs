@@ -45,18 +45,10 @@ userGroupAPIV2 = dir "usergroups" $ choice
   , param . dir "update" . hPost . toK1 $ userGroupApiV2Update
   , param . dir "delete" . hPost . toK1 $ userGroupApiV2Delete
   , param . dir "contact_details" . hGet . toK1 $ userGroupApiContactDetailsV2Get
-  , param
-  . dir "contact_details"
-  . dir "update"
-  . hPost
-  . toK1
-  $ userGroupApiContactDetailsV2Update
-  , param
-  . dir "contact_details"
-  . dir "delete"
-  . hPost
-  . toK1
-  $ userGroupApiContactDetailsV2Delete
+  , (param . dir "contact_details" . dir "update" . hPost . toK1)
+    userGroupApiContactDetailsV2Update
+  , (param . dir "contact_details" . dir "delete" . hPost . toK1)
+    userGroupApiContactDetailsV2Delete
   , param . dir "settings" . hGet . toK1 $ userGroupApiSettingsV2Get
   , param . dir "settings" . dir "update" . hPost . toK1 $ userGroupApiSettingsV2Update
   , param . dir "settings" . dir "delete" . hPost . toK1 $ userGroupApiSettingsV2Delete

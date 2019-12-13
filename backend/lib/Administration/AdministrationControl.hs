@@ -122,18 +122,10 @@ adminonlyRoutes =
         handleAdminUserUsageStatsDays
       , dir "useradmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1
         handleAdminUserUsageStatsMonths
-      , dir "useradmin"
-      $ dir "shareablelinkstats"
-      $ dir "days"
-      $ hGet
-      $ toK1
-      $ handleAdminUserShareableLinksStats PartitionByDay
-      , dir "useradmin"
-      $ dir "shareablelinkstats"
-      $ dir "months"
-      $ hGet
-      $ toK1
-      $ handleAdminUserShareableLinksStats PartitionByMonth
+      , (dir "useradmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
+        $ handleAdminUserShareableLinksStats PartitionByDay
+      , (dir "useradmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
+        $ handleAdminUserShareableLinksStats PartitionByMonth
       , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
       , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
       , dir "companyadmin" $ dir "details" $ hGet $ toK1 $ handleCompanyGetProfile
@@ -141,60 +133,34 @@ adminonlyRoutes =
       , dir "companyadmin" $ dir "merge" $ hPost $ toK1 $ handleMergeToOtherCompany
       , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
       , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
-      , dir "companyaccounts"
-      $ hGet
-      $ toK1
-      $ UserGroupAccounts.handleUserGroupAccountsForAdminOnly
+      , (dir "companyaccounts" . hGet . toK1)
+        UserGroupAccounts.handleUserGroupAccountsForAdminOnly
       , dir "companyadmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1
         handleAdminCompanyUsageStatsDays
       , dir "companyadmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1
         handleAdminCompanyUsageStatsMonths
-      , dir "companyadmin"
-      $ dir "shareablelinkstats"
-      $ dir "days"
-      $ hGet
-      $ toK1
-      $ handleAdminCompanyShareableLinksStats PartitionByDay
-      , dir "companyadmin"
-      $ dir "shareablelinkstats"
-      $ dir "months"
-      $ hGet
-      $ toK1
-      $ handleAdminCompanyShareableLinksStats PartitionByMonth
-      , dir "companyadmin"
-      $ dir "getsubscription"
-      $ hGet
-      $ toK1
-      $ handleCompanyGetSubscription
-      , dir "companyadmin"
-      $ dir "updatesubscription"
-      $ hPost
-      $ toK1
-      $ handleCompanyUpdateSubscription
+      , (dir "companyadmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
+        $ handleAdminCompanyShareableLinksStats PartitionByDay
+      , (dir "companyadmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
+        $ handleAdminCompanyShareableLinksStats PartitionByMonth
+      , (dir "companyadmin" . dir "getsubscription" . hGet . toK1)
+        handleCompanyGetSubscription
+      , (dir "companyadmin" . dir "updatesubscription" . hPost . toK1)
+        handleCompanyUpdateSubscription
       , dir "companyadmin" $ dir "getstructure" $ hGet $ toK1 $ handleCompanyGetStructure
       , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
       , dir "companies" $ hGet $ toK0 $ jsonCompanies
       , dir "brandeddomainslist" $ hGet $ toK0 $ jsonBrandedDomainsList
       , dir "brandeddomain" $ dir "create" $ hPost $ toK0 $ createBrandedDomain
       , dir "brandeddomain" $ dir "details" $ hGet $ toK1 $ jsonBrandedDomain
-      , dir "brandeddomain"
-      $ dir "details"
-      $ dir "change"
-      $ hPost
-      $ toK1
-      $ updateBrandedDomain
+      , (dir "brandeddomain" . dir "details" . dir "change" . hPost . toK1)
+        updateBrandedDomain
       , dir "brandeddomain" $ dir "themes" $ hGet $ toK1 $ handleGetThemesForDomain
       , dir "brandeddomain" $ dir "newtheme" $ hPost $ toK2 $ handleNewThemeForDomain
-      , dir "brandeddomain"
-      $ dir "updatetheme"
-      $ hPost
-      $ toK2
-      $ handleUpdateThemeForDomain
-      , dir "brandeddomain"
-      $ dir "deletetheme"
-      $ hPost
-      $ toK2
-      $ handleDeleteThemeForDomain
+      , (dir "brandeddomain" . dir "updatetheme" . hPost . toK2)
+        handleUpdateThemeForDomain
+      , (dir "brandeddomain" . dir "deletetheme" . hPost . toK2)
+        handleDeleteThemeForDomain
 
         -- migration trigging endpoints
       , dir "triggermigratefolders" $ hGet $ toK1 handleTriggerMigrateFolders

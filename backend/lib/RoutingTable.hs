@@ -125,62 +125,30 @@ staticRoutes production = choice
   , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
 
      --UserGroupAccountsControl
-  , dir "account"
-  $ dir "companyaccounts"
-  $ dir "add"
-  $ hPost
-  $ toK0
-  $ UserGroupAccounts.handleAddUserGroupAccount
-  , dir "account"
-  $ dir "companyaccounts"
-  $ dir "resend"
-  $ hPost
-  $ toK0
-  $ UserGroupAccounts.handleResendToUserGroupAccount
-  , dir "account"
-  $ dir "companyaccounts"
-  $ dir "changerole"
-  $ hPost
-  $ toK0
-  $ UserGroupAccounts.handleChangeRoleOfUserGroupAccount
-  , dir "account"
-  $ dir "companyaccounts"
-  $ dir "remove"
-  $ hPost
-  $ toK0
-  $ UserGroupAccounts.handleRemoveUserGroupAccount
+  , (dir "account" . dir "companyaccounts" . dir "add" . hPost . toK0)
+    UserGroupAccounts.handleAddUserGroupAccount
+  , (dir "account" . dir "companyaccounts" . dir "resend" . hPost . toK0)
+    UserGroupAccounts.handleResendToUserGroupAccount
+  , (dir "account" . dir "companyaccounts" . dir "changerole" . hPost . toK0)
+    UserGroupAccounts.handleChangeRoleOfUserGroupAccount
+  , (dir "account" . dir "companyaccounts" . dir "remove" . hPost . toK0)
+    UserGroupAccounts.handleRemoveUserGroupAccount
   , dir "companyaccounts" $ hGet $ toK0 $ UserGroupAccounts.handleUserGroupAccounts
-  , dir "companyaccounts"
-  $ dir "join"
-  $ hGet
-  $ toK1
-  $ UserGroupAccounts.handleGetBecomeUserGroupAccount
-  , dir "companyaccounts"
-  $ dir "join"
-  $ hPost
-  $ toK1
-  $ UserGroupAccounts.handlePostBecomeUserGroupAccount
+  , (dir "companyaccounts" . dir "join" . hGet . toK1)
+    UserGroupAccounts.handleGetBecomeUserGroupAccount
+  , (dir "companyaccounts" . dir "join" . hPost . toK1)
+    UserGroupAccounts.handlePostBecomeUserGroupAccount
 
      -- account stuff
   , allLangDirs $ dir "enter" $ hGet $ toK0 $ handleLoginGet
   , dir "logout" $ hGet $ toK0 $ handleLogout
   , dir "logout_ajax" $ hGet $ toK0 $ handleLogoutAJAX
-  , allLangDirs
-  $   dir "login"
-  $   hGet
-  $   toK0
-  $   LinkLoginDirect
-  <$> view #lang
-  <$> getContext -- Drop this after EE is migrated
+  , (allLangDirs . dir "login" . hGet . toK0)
+    (LinkLoginDirect <$> view #lang <$> getContext) -- Drop this after EE is migrated
   , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
   , dir "loginwithredirect" $ hGet $ toK0 $ handleLoginWithRedirectGet
-  , allLangDirs
-  $   dir "signup"
-  $   hGetAllowHttp
-  $   toK0
-  $   LinkSignup
-  <$> view #lang
-  <$> getContext -- Drop this after EE is migrated
+  , (allLangDirs . dir "signup" . hGetAllowHttp . toK0)
+    (LinkSignup <$> view #lang <$> getContext) -- Drop this after EE is migrated
   , allLangDirs $ dir "amnesia" $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
   , allLangDirs $ dir "amnesia" $ hPostNoXToken $ toK2
     UserControl.handlePasswordReminderPost
@@ -189,21 +157,15 @@ staticRoutes production = choice
   , allLangDirs $ dir "accountsetup" $ hGet $ toK3 $ UserControl.handleAccountSetupGet
   , dir "contactsales" $ hPostAllowHttp $ toK0 $ UserControl.handleContactSales
   , dir "accountsetup" $ hPostNoXToken $ toK3 $ UserControl.handleAccountSetupPost
-  , dir "salesforce"
-  $ dir "integration"
-  $ hGet
-  $ toK0
-  $ Salesforce.handleSalesforceIntegration
+  , (dir "salesforce" . dir "integration" . hGet . toK0)
+    Salesforce.handleSalesforceIntegration
   , dir "salesforce" $ dir "keys" $ hGet $ toK0 $ Salesforce.getSalesforceKeys
   , dir "adminonly" $ Administration.adminonlyRoutes
   , dir "dave" $ Administration.daveRoutes
   , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ unsupportedBrowserPage
-  , allLangDirs
-  $ dir "enable-cookies"
-  $ dir "enable-cookies.html"
-  $ hGetAllowHttp
-  $ toK0
-  $ enableCookiesPage
+  , (allLangDirs . dir "enable-cookies" . dir "enable-cookies.html" . hGetAllowHttp . toK0
+    )
+    enableCookiesPage
   , accessControlAPI
   , documentAPI
   , monitorAPI
@@ -235,10 +197,8 @@ staticRoutes production = choice
   , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
   , dir "colored_image" $ hGet $ toK0 $ ServerUtils.brandedImage
   , dir "document_signview_branding" $ hGet $ toK3 $ Branding.handleSignviewBranding
-  , dir "padlist_signview_branding"
-  $ hGet
-  $ toK3
-  $ Branding.handleSignviewBrandingWithoutDocument
+  , (dir "padlist_signview_branding" . hGet . toK3)
+    Branding.handleSignviewBrandingWithoutDocument
   , dir "service_branding" $ hGet $ toK3 $ Branding.handleServiceBranding
   , dir "scrive_branding" $ hGet $ toK1 $ Branding.handleScriveBranding
   , dir "login_branding" $ hGet $ toK2 $ Branding.handleLoginBranding
@@ -246,10 +206,8 @@ staticRoutes production = choice
   , dir "login_logo" $ hGet $ toK2 $ Branding.loginLogo
   , dir "service_logo" $ hGet $ toK3 $ Branding.serviceLogo
   , dir "signview_logo" $ hGet $ toK3 $ Branding.signviewLogo
-  , dir "signview_logo_without_document"
-  $ hGet
-  $ toK3
-  $ Branding.signviewLogoWithoutDocument
+  , (dir "signview_logo_without_document" . hGet . toK3)
+    Branding.signviewLogoWithoutDocument
   , dir "email_logo" $ hGet $ toK3 $ Branding.emailLogo
   , dir "favicon" $ hGet $ toK3 $ Branding.faviconIcon
   , dir "api" $ dir "v2" $ remainingPath GET $ toK0 noAPIV2CallFoundHandler

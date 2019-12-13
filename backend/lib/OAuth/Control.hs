@@ -40,19 +40,11 @@ oauth = choice
   , dir "oauth" $ dir "createpersonaltoken" $ hPost $ toK0 $ createPersonalToken
   , dir "oauth" $ dir "deletepersonaltoken" $ hPost $ toK0 $ deletePersonalToken
   , dir "oauth" $ dir "deleteprivilege" $ hPost $ toK0 $ deletePrivilege
-  , dir "oauth"
-  $ dir "dashboard"
-  $ dir "personaltoken"
-  $ hGet
-  $ toK0
-  $ apiDashboardPersonalTokens
+  , (dir "oauth" . dir "dashboard" . dir "personaltoken" . hGet . toK0)
+    apiDashboardPersonalTokens
   , dir "oauth" $ dir "dashboard" $ dir "apitokens" $ hGet $ toK0 $ apiDashboardAPITokens
-  , dir "oauth"
-  $ dir "dashboard"
-  $ dir "grantedprivileges"
-  $ hGet
-  $ toK0
-  $ apiDashboardGrantedPrivileges
+  , (dir "oauth" . dir "dashboard" . dir "grantedprivileges" . hGet . toK0)
+    apiDashboardGrantedPrivileges
   ]
 
 -- OAuth Flow

@@ -116,34 +116,18 @@ userAPIV2 = choice
   , dir "deleteuser" $ hPost $ toK0 $ apiCallDeleteUser
   , dir "dataretentionpolicy" $ hGet $ toK0 $ apiCallGetDataRetentionPolicy
   , dir "dataretentionpolicy" $ dir "set" $ hPost $ toK0 $ apiCallSetDataRetentionPolicy
-  , dir "usagestats"
-  $ dir "days"
-  $ hGet
-  $ toK0
-  $ User.UserControl.handleUsageStatsJSONForUserDays
-  , dir "usagestats"
-  $ dir "months"
-  $ hGet
-  $ toK0
-  $ User.UserControl.handleUsageStatsJSONForUserMonths
-  , dir "gettokenforpersonalcredentials"
-  $ hPost
-  $ toK1
-  $ apiCallGetTokenForPersonalCredentials
+  , (dir "usagestats" . dir "days" . hGet . toK0)
+    User.UserControl.handleUsageStatsJSONForUserDays
+  , (dir "usagestats" . dir "months" . hGet . toK0)
+    User.UserControl.handleUsageStatsJSONForUserMonths
+  , (dir "gettokenforpersonalcredentials" . hPost . toK1)
+    apiCallGetTokenForPersonalCredentials
   , dir "updateusersprofile" $ hPost $ toK1 $ apiCallUpdateOtherUserProfile
   , dir "changeusersemail" $ hPost $ toK1 $ apiCallChangeOtherUserEmail
-  , dir "usagestats"
-  $ dir "shareablelink"
-  $ dir "days"
-  $ hGet
-  $ toK0
-  $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByDay
-  , dir "usagestats"
-  $ dir "shareablelink"
-  $ dir "months"
-  $ hGet
-  $ toK0
-  $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByMonth
+  , (dir "usagestats" . dir "shareablelink" . dir "days" . hGet . toK0)
+    $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByDay
+  , (dir "usagestats" . dir "shareablelink" . dir "months" . hGet . toK0)
+    $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByMonth
   , dir "checkpassword" $ hPost $ toK0 $ apiCallCheckPassword
   , dir "activateuser" $ hPost $ toK0 $ apiCallActivateAccount
   , dir "getusersfeatures" $ hGet $ toK0 $ apiCallGetUsersFeatures

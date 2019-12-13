@@ -61,10 +61,8 @@ grpRoutes = dir "cgi" . dir "grp" $ choice
   [ dir "auth" . hPost . toK2 $ handleAuthRequest
   , dir "sign" . hPost . toK2 $ handleSignRequest
   , dir "checkcgiauthstatus" . hGet . toK2 $ handleCheckCGIAuthStatus
-  , dir "checkcgiauthstatuswithredirect"
-  . hGet
-  . toK2
-  $ handleCheckCGIAuthStatusWithRedirect
+  , (dir "checkcgiauthstatuswithredirect" . hGet . toK2)
+    handleCheckCGIAuthStatusWithRedirect
   ]
 
 ----------------------------------------

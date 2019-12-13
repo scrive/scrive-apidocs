@@ -37,13 +37,10 @@ routes = choice
   [ dir "companybranding" $ hGet $ toK0 $ handleGetCompanyBranding Nothing
   , dir "companybranding" $ dir "themes" $ hGet $ toK0 $ handleGetThemes Nothing
   , dir "companybranding" $ dir "domainthemes" $ hGet $ toK0 $ handleGetDomainThemes
-  , dir "companybranding" $ dir "change" $ hPost $ toK0 $ handleChangeCompanyBranding
-    Nothing
-  , dir "companybranding"
-  $ dir "newtheme"
-  $ hPost
-  $ toK1
-  $ (\themeType -> handleNewTheme themeType Nothing)
+  , (dir "companybranding" . dir "change" . hPost . toK0)
+    $ handleChangeCompanyBranding Nothing
+  , (dir "companybranding" . dir "newtheme" . hPost . toK1)
+    $ \themeType -> handleNewTheme themeType Nothing
   , dir "companybranding" $ dir "updatetheme" $ hPost $ toK1 $ handleUpdateTheme Nothing
   , dir "companybranding" $ dir "deletetheme" $ hPost $ toK1 $ handleDeleteTheme Nothing
   , dir "companybranding" $ dir "signviewtheme" $ hGet $ toK0 $ handleGetSignviewTheme
@@ -54,27 +51,14 @@ adminRoutes = choice
   [ dir "companybranding" $ hGet $ toK1 $ handleGetCompanyBranding . Just
   , dir "companybranding" $ dir "themes" $ hGet $ toK1 $ handleGetThemes . Just
   , dir "companybranding" $ dir "domainthemes" $ hGet $ toK0 $ handleGetDomainThemes
-  , dir "companybranding"
-  $ dir "change"
-  $ hPost
-  $ toK1
-  $ handleChangeCompanyBranding
-  . Just
-  , dir "companybranding"
-  $ dir "newtheme"
-  $ hPost
-  $ toK2
-  $ (\cid themeType -> handleNewTheme themeType (Just cid))
-  , dir "companybranding"
-  $ dir "updatetheme"
-  $ hPost
-  $ toK2
-  $ (\cid tid -> handleUpdateTheme (Just cid) tid)
-  , dir "companybranding"
-  $ dir "deletetheme"
-  $ hPost
-  $ toK2
-  $ (\cid tid -> handleDeleteTheme (Just cid) tid)
+  , (dir "companybranding" . dir "change" . hPost . toK1)
+    (handleChangeCompanyBranding . Just)
+  , (dir "companybranding" . dir "newtheme" . hPost . toK2)
+    $ \cid themeType -> handleNewTheme themeType (Just cid)
+  , (dir "companybranding" . dir "updatetheme" . hPost . toK2)
+    $ \cid tid -> handleUpdateTheme (Just cid) tid
+  , (dir "companybranding" . dir "deletetheme" . hPost . toK2)
+    $ \cid tid -> handleDeleteTheme (Just cid) tid
   ]
 
 {-
