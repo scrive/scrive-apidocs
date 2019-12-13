@@ -23,6 +23,7 @@ import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
 
+import Doc.API.V2.JSON.Misc
 import MinutesTime
 import PadApplication.Types
 import User.CallbackScheme.Model (UserCallbackScheme(..))
@@ -67,6 +68,7 @@ userJSONUserDetails user = do
   value "companyadmin" $ user ^. #isCompanyAdmin
   value "companyposition" $ user ^. #info % #companyPosition
   value "lang" $ codeFromLang $ getLang user
+  value "tos_accepted_time" $ utcTimeToAPIFormat <$> user ^. #hasAcceptedTOS
 
 unjsonUser :: UnjsonDef User
 unjsonUser = unjsonUserPartial identity
