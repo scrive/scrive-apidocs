@@ -347,8 +347,9 @@ apiCallUpdateUserProfile = api $ do
   personalnumber <- getUserParameter "personalnumber"
                                      asValidPersonalNumber
                                      (^. #personalNumber)
-  fstname <- getUserParameter "fstname" asValidName (^. #firstName)
-  sndname <- getUserParameter "sndname" asValidName (^. #lastName)
+  fstname         <- getUserParameter "fstname" asValidName (^. #firstName)
+  sndname         <- getUserParameter "sndname" asValidName (^. #lastName)
+  mHasAcceptedTOS <- apiV2ParameterOptional $ ApiV2ParameterBool "has_accepted_tos"
 
   let ui =
         (user ^. #info)
@@ -370,6 +371,13 @@ apiCallUpdateUserProfile = api $ do
                                               (user ^. #info)
                                               ui
                                               (ctx ^? #maybeUser % _Just % #id)
+
+  whenJust mHasAcceptedTOS $ \case
+    True  -> void $ dbUpdate $ AcceptTermsOfService (user ^. #id) (ctx ^. #time)
+    False -> V2.apiError $ V2.requestParameterParseError
+      "has_accepted_tos"
+      "TOS acceptance cannot be revoked"
+
   if user ^. #isCompanyAdmin
     then do
       ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
