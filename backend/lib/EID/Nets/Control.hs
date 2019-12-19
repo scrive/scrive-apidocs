@@ -569,6 +569,14 @@ handleSignRequest did slid = do
                               (show did)
     dbUpdate $ MergeNetsSignOrder nso
     let nets_sign_url = gsprsSignURL getSignProcRs <> encodeNetsUrlParams sign_url_params
+    logInfo_ "Nets signing started - debug message 1 (CORE-1534)"
+    logInfo "Nets signing started - debug message 2 (CORE-1534)" $ object
+      ["nets_sign_url" .= nets_sign_url, logPair_ insOrdRs, logPair_ getSignProcRs]
+    logInfo "Nets signing started - debug message 3 (CORE-1534)" $ object
+      [ "nets_sign_url" .= nets_sign_url
+      , "nets_provider" .= showt provider
+      , "nets_eid_method" .= showt eidmethod
+      ]
     logInfo "Nets signing started" $ object
       [ "nets_sign_url" .= nets_sign_url
       , logPair_ insOrdRs
@@ -576,6 +584,8 @@ handleSignRequest did slid = do
       , "nets_provider" .= showt provider
       , "nets_eid_method" .= showt eidmethod
       ]
+    logInfo_ "Nets signing started - debug message 4 (CORE-1534)"
+
     return $ object ["nets_sign_url" .= nets_sign_url]
   where
     getNOPersonalNumber :: Document -> Maybe Text
