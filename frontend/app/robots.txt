@@ -15,3 +15,7 @@ Disallow: /plugins/
 Disallow: */enter
 Disallow: /to-sign
 Disallow: /api-explorer
+Disallow: /api-explorer/
+Disallow: /d
+Disallow: /enable-cookies/*
+Disallow: */verify
