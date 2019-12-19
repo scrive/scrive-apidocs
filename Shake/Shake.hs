@@ -88,7 +88,7 @@ usageMsg = unlines
   , "   test-formatting           : Test whether code base has run through fix-formatting"
   , "   test-hs-import-order      : Run Haskell Import Order checking script"
   , "   fix-formatting            : Format code base using brittany and sort_import"
-  , "   fix-formatting-quck       : Format code base using brittany and sort_import, only on changed files against master"
+  , "   fix-formatting-quick       : Format code base using brittany and sort_import, only on changed files against master"
   , "   fix-hs-import-order       : Sort Haskell imports"
   , "   test-hs-outdated-deps     : Check for outdated Haskell dependencies"
   , ""
