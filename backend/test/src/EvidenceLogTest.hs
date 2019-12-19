@@ -63,6 +63,7 @@ evidenceLogTemplateVariables = Set.fromList
   , "newblank"        -- Field updates :: Bool
   , "newemail"        -- Undelivery updates
   , "newphone"        -- Undelivery updates
+  , "new_ssn"         -- Updated ssn after auth2view
   , "oldemail"        -- Undelivery updates
   , "oldphone"        -- Undelivery updates
   , "phone"           -- Document signed, SMS identification

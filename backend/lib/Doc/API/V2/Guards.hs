@@ -584,8 +584,10 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
         SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN $ getPersonalNumber sl
         NOBankIDAuthenticationToView ->
           isGood $ asValidNorwegianSSN $ getPersonalNumber sl
-        DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
-        FITupasAuthenticationToView  -> isGood $ asValidFinnishSSN $ getPersonalNumber sl
+        DKNemIDAuthenticationToView -> isGood $ asValidDanishSSN $ getPersonalNumber sl
+        FITupasAuthenticationToView ->
+          T.null (getPersonalNumber sl)
+            || (isGood $ asValidFinnishSSN $ getPersonalNumber sl)
         SMSPinAuthenticationToView   -> True
         StandardAuthenticationToView -> True
         VerimiAuthenticationToView   -> isValidEmail $ getEmail sl

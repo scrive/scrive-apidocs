@@ -1,6 +1,7 @@
 var React = require("react");
 var BackboneMixin = require("../../../common/backbone_mixin");
 var FinnishIdentifyModel = require("./finnishidentifymodel");
+var FinnishInquiry = require("./finnishinquiry");
 var FinnishIdentify = require("./finnishidentify");
 var FinnishProcessing = require("./finnishprocessing");
 
@@ -22,7 +23,13 @@ var FinnishProcessing = require("./finnishprocessing");
       var personalNumber = sig.personalnumber();
       return (
         <div>
-          { /* if */ model.isIdentify() &&
+          { /* if */ model.inquiryRequired() && model.isInquiry() &&
+            <FinnishInquiry
+              ref="inquiry"
+              model={model}
+            />
+          }
+          { /* else if */ model.isIdentify() &&
             <FinnishIdentify
               ref="identify"
               model={model}

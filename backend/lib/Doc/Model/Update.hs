@@ -66,6 +66,7 @@ module Doc.Model.Update
   , UpdateFieldsForSigning(..)
   , UpdateConsentResponsesForSigning(..)
   , UpdatePhoneAfterIdentificationToView(..)
+  , UpdateSsnAfterIdentificationToView(..)
   , UpdateAuthorUserID(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
@@ -2225,6 +2226,29 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
       void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         UpdateMobileAfterIdentificationToViewWithNets
         (F.value "oldphone" oldphone >> F.value "newphone" newphone)
+        (Just sl)
+        Nothing
+        actor
+
+data UpdateSsnAfterIdentificationToView = UpdateSsnAfterIdentificationToView SignatoryLink Text Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateSsnAfterIdentificationToView () where
+  update (UpdateSsnAfterIdentificationToView sl new_ssn actor) =
+    updateDocumentWithID $ const $ do
+      success <- runQuery01 . sqlUpdate "signatory_link_fields" $ do
+        sqlSet "value_text" $ new_ssn
+        sqlWhereEq "signatory_link_id" $ signatorylinkid sl
+        sqlWhereEq "type" $ PersonalNumberFT
+        sqlWhereEq "value_text" ("" :: String) -- we only let update of SSN if it's not set
+        sqlWhereExists $ sqlSelect "documents" $ do
+          sqlWhere "signatory_links.id = signatory_link_id"
+          sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+          sqlWhereEq "documents.status" Pending
+          sqlWhere "signatory_links.sign_time IS NULL"
+      unless success $ do
+        unexpectedError "Failed to update personal number after identification to view"
+      void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        UpdateSsnAfterAuthenticationToViewWithNets
+        (F.value "new_ssn" new_ssn)
         (Just sl)
         Nothing
         actor

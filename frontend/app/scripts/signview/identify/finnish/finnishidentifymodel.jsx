@@ -2,6 +2,7 @@ var _ = require("underscore");
 var Backbone = require("backbone");
 var Base64 = require("base64");
 var LocationUtils = require("../../../common/location");
+var SSNForFITupasValidation = require("../../../../js/validation.js").SSNForFITupasValidation;
 
 var link = link;
 
@@ -11,10 +12,13 @@ var link = link;
     defaults: {
       doc: undefined,
       siglinkid: 0,
-      step: "processing"
+      step: "inquiry"
     },
     initialize: function (args) {
       _.bindAll(this, "identify");
+      if (!this.inquiryRequired()) {
+        this.setProcessing();
+      }
     },
     doc: function () {
       return this.get("doc");
@@ -24,6 +28,12 @@ var link = link;
     },
     personalnumber: function () {
       return this.doc().currentSignatory().personalnumber();
+    },
+    personalnumberValid: function () {
+      return (new SSNForFITupasValidation()).validateData(this.personalnumber());
+    },
+    setPersonalNumber: function (personalnumber) {
+      this.doc().currentSignatory().personalnumberField().setValue(personalnumber);
     },
     personalnumberFormatted: function () {
       // in Finnish SSN the '-' must not be removed, it carries century information.
@@ -50,6 +60,12 @@ var link = link;
     isIDIN: function () {
       return false;
     },
+    inquiryRequired: function () {
+      return this.personalnumber() === "";
+    },
+    isInquiry: function () {
+      return this.get("step") === "inquiry";
+    },
     isIdentify: function () {
       return this.get("step") === "identify";
     },
@@ -75,7 +91,8 @@ var link = link;
       link = link + "&style=" + window.netsTrustedDomain + "/css/assets/nets_fi.css";
       link = link + "&presetid=" + encodeURIComponent(Base64.encode(this.personalnumberFormatted()));
       var target = "(\"" + LocationUtils.origin() + "\"," + this.doc().documentid() +
-                     "," + this.siglinkid() + ",\"" + window.location  + "\")";
+                     "," + this.siglinkid() + ",\"" + window.location +
+                     "\",\"" + this.personalnumberFormatted() + "\")";
       link = link + "&TARGET=" + encodeURIComponent(Base64.encode(target));
 
       var start = netsTrustedDomain + "/nets/start?status=";

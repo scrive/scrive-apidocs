@@ -445,7 +445,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedToDKNemID     |
   ChangeAuthenticationToViewArchivedToFITupas     |
   ChangeAuthenticationToViewArchivedToVerimi      |
-  ChangeAuthenticationToViewArchivedToIDIN
+  ChangeAuthenticationToViewArchivedToIDIN        |
+  UpdateSsnAfterAuthenticationToViewWithNets
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -993,6 +994,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewArchivedToIDIN      ) = toSQL (263 :: Int16)
   toSQL (Current ChangeAuthenticationToSignFromIDIN            ) = toSQL (264 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToIDIN              ) = toSQL (265 :: Int16)
+  toSQL (Current UpdateSsnAfterAuthenticationToViewWithNets    ) = toSQL (266 :: Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -1307,7 +1309,9 @@ instance FromSQL EvidenceEventType where
       263 -> return (Current ChangeAuthenticationToViewArchivedToIDIN)
       264 -> return (Current ChangeAuthenticationToSignFromIDIN)
       265 -> return (Current ChangeAuthenticationToSignToIDIN)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 265)], reValue = n }
+      266 -> return (Current UpdateSsnAfterAuthenticationToViewWithNets)
+      _   -> E.throwIO $ RangeError { reRange = [(1, 266)], reValue = n }
+
 
 authToViewChangeEvidence
   :: AuthenticationToViewMethod
