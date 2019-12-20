@@ -35,10 +35,12 @@ var InfoTextInput = require("../../common/infotextinput");
       var textFiels = sig.fields().filter((f) => f.isText());
       var res = [];
       _.each(textFiels, function (f) {
-        if (self.getNewValue(f) != null && f.value() != self.getNewValue(f)) {
+        var newVal = self.getNewValue(f);
+        // send empty string if not filled out, so backend does not default to old sig values
+        if (f.value() != newVal) {
           res.push({
             field: f,
-            newValue: self.getNewValue(f)
+            newValue: newVal !== undefined ? newVal : ""
           });
         }
       });
