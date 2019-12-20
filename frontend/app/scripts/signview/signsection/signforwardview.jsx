@@ -51,7 +51,10 @@ var InfoTextInput = require("../../common/infotextinput");
         return (f.type() + "_" + (f.order() || "") + "_" +  (f.name() || ""));
     },
     getNewValue (f) {
-        return this.state.newValues[this.fieldKey(f)];
+      if (f.isCustom() && f.value() !== "") {
+        return f.value();
+      }
+      return this.state.newValues[this.fieldKey(f)];
     },
 
     setNewValue: function (f, value) {
@@ -93,6 +96,7 @@ var InfoTextInput = require("../../common/infotextinput");
                           className={(self.obligatoryField(tf) ? "obligatory-forward-input" : "") +
                                      (tf.isValid(self.getNewValue(tf) || "") ? " valid" : "")}
                           value={self.getNewValue(tf)}
+                          disabled={tf.isCustom() && tf.value() !== ""}
                           onChange={function (v) { self.setNewValue(tf, v); }}
                         />
                       </div>

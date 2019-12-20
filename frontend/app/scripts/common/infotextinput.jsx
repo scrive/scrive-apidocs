@@ -17,6 +17,7 @@ var _ = require("underscore");
       value       : string,
       inputtype   : string, default is "text", but "password" is also used
       name        : string, name for input
+      disabled    : bool
       focus       : bool, focus initially. WARNING: DO NOT USE THIS
                     WHEN INPUT IS PART OF ANIMATION, BECAUSE IT WILL FAIL IN IE
                     BEFORE ANIMATION ENDS
@@ -58,6 +59,7 @@ var _ = require("underscore");
       autoGrowth    : React.PropTypes.bool,
       restrictInput : React.PropTypes.func,
       tabIndex      : React.PropTypes.number,
+      disabled      : React.PropTypes.bool,
 
       // Events
       onChange      : React.PropTypes.func,
@@ -89,6 +91,7 @@ var _ = require("underscore");
           "inputStyle" : {},
           "autocomplete" : false,
           "readonly" : false,
+          "disabled" : false,
           "restrictInput": function () { return true; }
         };
       },
@@ -244,6 +247,7 @@ var _ = require("underscore");
             placeholder={this.props.infotext}
             maxLength={this.props.maxLength}
             value={fakePlaceholder ? this.props.infotext : this.state.value}
+            disabled={this.props.disabled}
             onFocus={this.onFocus}
             onBlur={this.onBlur}
             onChange={this.onChange}
