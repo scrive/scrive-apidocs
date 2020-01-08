@@ -588,6 +588,7 @@ Library
                , deepseq
                , digest
                , directory
+               , Diff
                , either
                , ekg-core
                , ekg-statsd

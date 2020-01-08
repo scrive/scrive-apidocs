@@ -164,7 +164,7 @@ data EIDServiceIDINSignature = EIDServiceIDINSignature
   deriving (Eq, Ord, Show)
 
 data CompleteIDINEIDServiceTransactionData = CompleteIDINEIDServiceTransactionData
-  {  eiditdName :: T.Text
+  { eiditdName :: T.Text
   , eiditdVerifiedEmail :: T.Text
   , eiditdBirthDate :: T.Text
   , eiditdCustomerID :: T.Text

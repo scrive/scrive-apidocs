@@ -244,7 +244,7 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl
       Just esig -> return $ Right esig
     let ssdHasSigned = isSignatoryAndHasSigned sl
-    return . Ok . ssdToJson (signatorylinkhidepn sl) $ SignatorySigningData { .. }
+    return . Ok . ssdToJson (signatorylinkhidepn sl) sl $ SignatorySigningData { .. }
 
 getDocBySignatoryLinkIdOrAccessToken
   :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> Maybe MagicHash -> m Document

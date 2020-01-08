@@ -32,6 +32,7 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryFieldID
 import Doc.TestInvariants
+import EID.EIDService.Types (CompleteIDINEIDServiceTransactionData(..))
 import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import File.FileID
@@ -48,6 +49,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
+import qualified Doc.API.V2.JSON.SigningData as SigningData
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
@@ -413,6 +415,7 @@ docStateTests env = testGroup
   , testThat "ChangeAuthenticationToSignMethod works and evidence is as expected"
              env
              testChangeAuthenticationToSignMethod
+  , testThat "Signatory name match algorithm" env testSinatoryNameMatch
   ]
 
 testNewDocumentForNonCompanyUser :: TestEnv ()
@@ -3478,3 +3481,79 @@ signatoryLinksListsAreAlmostEqualForTests (s : ss) (s' : ss') =
     && signatoryLinksListsAreAlmostEqualForTests ss ss'
 signatoryLinksListsAreAlmostEqualForTests [] [] = True
 signatoryLinksListsAreAlmostEqualForTests _  _  = False
+
+testSinatoryNameMatch :: TestEnv ()
+testSinatoryNameMatch = do
+  assertEqual "two equal name strings should match" SigningData.Match
+    $ SigningData.matchName "John Smith" "John Smith"
+
+  assertEqual "name mispelled by one letter should return misspelled"
+              SigningData.Misspelled
+    $ SigningData.matchName "John Smith" "John Snith"
+
+  assertEqual "name missing one letter should return misspelled" SigningData.Misspelled
+    $ SigningData.matchName "John Smith" "John Sith"
+
+  assertEqual "signatory with matched initials and last name should match"
+              SigningData.Match
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "G van Rossum")
+
+  assertEqual "signatory with different cases should match" SigningData.Match
+    $ SigningData.matchSignatoryName (mkSignatoryLink "guido" "van rossum")
+                                     (mkTransactionData "G van Rossum")
+
+  assertEqual "signatory with matched initials and last name should match"
+              SigningData.Match
+    $ SigningData.matchSignatoryName
+        (mkSignatoryLink "Johannes Diderik" "van der Waals")
+        (mkTransactionData "JD van der Waals")
+
+  -- The first name and last name is currently split in the front end
+  -- with the first name being just the first word. This means the
+  -- matching would fail for first name with 2 or more words.
+  assertEqual "part of first name incorrectly placed as last name should mismatch"
+              SigningData.Mismatch
+    $ SigningData.matchSignatoryName
+        (mkSignatoryLink "Johannes" "Diderik van der Waals")
+        (mkTransactionData "JD van der Waals")
+
+  assertEqual "signatory with missing tussenvoegsel should mismatch" SigningData.Mismatch
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "G Rossum")
+
+  assertEqual "signatory with one letter difference should misspell"
+              SigningData.Misspelled
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "G van Rosum")
+
+  assertEqual "signatory with unicode letter difference should misspell"
+              SigningData.Misspelled
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Roßum")
+                                     (mkTransactionData "G van Rosum")
+
+  assertEqual "signatory with two missing letters should misspell" SigningData.Misspelled
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "G van Ross")
+
+  assertEqual "signatory with > 2 letters difference should mismatch" SigningData.Mismatch
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "G van Rosett")
+
+  assertEqual "signatory with different initials should mismatch" SigningData.Mismatch
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "K van Rossum")
+
+  where
+    mkSignatoryLink firstName lastName = defaultSignatoryLink
+      { signatoryfields = [ fieldForTests (NameFI (NameOrder 1)) firstName
+                          , fieldForTests (NameFI (NameOrder 2)) lastName
+                          ]
+      }
+
+    mkTransactionData name = CompleteIDINEIDServiceTransactionData
+      { eiditdName          = name
+      , eiditdVerifiedEmail = ""
+      , eiditdBirthDate     = ""
+      , eiditdCustomerID    = ""
+      }
