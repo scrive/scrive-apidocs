@@ -496,8 +496,9 @@ data ArchiveDocument = ArchiveDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument Bool where
   update (ArchiveDocument uid _actor) = updateDocumentWithID $ \did -> do
     now <- currentTime
-    res <- runQuery $ sqlUpdate "signatory_links" $ do
+    runQuery_ . sqlUpdate "signatory_links" $ do
       sqlSet "deleted" now
+      sqlResult "id"
 
       sqlWhereExists $ sqlSelect "users" $ do
         sqlJoinOn
@@ -516,14 +517,22 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlWhereDocumentStatusIsOneOf
           [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
-    return (res > 0)
+    -- Synchronize with documents
+    slids :: [SignatoryLinkID] <- fetchMany runIdentity
+    runQuery_ . sqlUpdate "documents" $ do
+      sqlSet "author_deleted" now
+      sqlWhereDocumentIDIs did
+      sqlWhereIn "author_id" slids
+
+    return . not null $ slids
 
 data ReallyDeleteDocument = ReallyDeleteDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ReallyDeleteDocument Bool where
   update (ReallyDeleteDocument uid _actor) = updateDocumentWithID $ \did -> do
     now <- currentTime
-    res <- runQuery $ sqlUpdate "signatory_links" $ do
+    runQuery_ . sqlUpdate "signatory_links" $ do
       sqlSet "really_deleted" now
+      sqlResult "id"
 
       sqlWhereExists $ sqlSelect "users" $ do
         sqlJoinOn
@@ -543,7 +552,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlWhereDocumentStatusIsOneOf
           [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
-    return (res > 0)
+    -- Synchronize with documents
+    slids :: [SignatoryLinkID] <- fetchMany runIdentity
+    runQuery_ . sqlUpdate "documents" $ do
+      sqlSet "author_really_deleted" now
+      sqlWhereDocumentIDIs did
+      sqlWhereIn "author_id" slids
+
+    return . not null $ slids
+
 
 -- | Attach a main file to a document associating it with preparation
 -- status.  Any old main file in preparation status will be removed.
@@ -1402,8 +1419,8 @@ data RestoreArchivedDocument = RestoreArchivedDocument User Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RestoreArchivedDocument () where
   update (RestoreArchivedDocument user _actor) = updateDocumentWithID $ \did -> do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-
       sqlSet "deleted" (Nothing :: Maybe UTCTime)
+      sqlResult "id"
 
       sqlWhereExists $ sqlSelect "users" $ do
         sqlJoinOn
@@ -1415,12 +1432,16 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Restore
         sqlWhereUserIsSelfOrCompanyAdmin
 
       sqlWhereExists $ sqlSelect "documents" $ do
-        sqlJoinOn "users AS same_usergroup_users" "TRUE"
-
-        sqlWhere "documents.purged_time IS NULL"
-
+        sqlWhereDocumentWasNotPurged
         sqlWhere $ "signatory_links.document_id =" <?> did
         sqlWhere "documents.id = signatory_links.document_id"
+
+    -- Synchronize with documents
+    slids :: [SignatoryLinkID] <- fetchMany runIdentity
+    runQuery_ . sqlUpdate "documents" $ do
+      sqlSet "author_deleted" (Nothing :: Maybe UTCTime)
+      sqlWhereDocumentIDIs did
+      sqlWhereIn "author_id" slids
 
 {- |
     Links up a signatory link to a user account.  This should happen when
@@ -1979,6 +2000,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongT
           <+> "+ (interval '1 day') *"
           <?> days
           <+> "+ (interval '23 hours 59 minutes 59 seconds')"
+        sqlSet "author_deleted"        (Nothing :: Maybe UTCTime)
+        sqlSet "author_really_deleted" (Nothing :: Maybe UTCTime)
         sqlWhereDocumentIDIs did
         sqlWhereDocumentTypeIs Signable
         sqlWhereDocumentStatusIs Timedout
@@ -1995,6 +2018,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongP
       kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
         sqlSet "mtime" $ actorTime actor
         sqlSetCmd "timeout_time" $ "timeout_time" <+> "+ (interval '1 day') *" <?> days
+        sqlSet "author_deleted"        (Nothing :: Maybe UTCTime)
+        sqlSet "author_really_deleted" (Nothing :: Maybe UTCTime)
         sqlWhereDocumentIDIs did
         sqlWhereDocumentTypeIs Signable
         sqlWhereDocumentStatusIs Pending
@@ -2405,23 +2430,30 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
   update (PurgeDocuments savedDocumentLingerDays) = do
     now <- currentTime
     -- Unlink documents that were in thrash long enough.
-    runQuery_ . sqlUpdate "signatory_links sl" $ do
-      sqlSet "really_deleted" now
-      -- Document belongs to somebody.
-      sqlWhereIsNotNULL "sl.user_id"
-      -- It was deleted sufficient amount of time ago or the user group's data
-      -- retention policy is to delete things in the trash immediately.
-      sqlWhereAny
-        [ sqlWhere $ "sl.deleted +" <?> idays savedDocumentLingerDays <+> "<=" <?> now
-        , do
-          sqlWhereIsNotNULL "sl.deleted"
-          sqlWhereExists . sqlSelect "users u" $ do
-            sqlJoinOn "user_group_settings ugs" "ugs.user_group_id = u.user_group_id"
-            sqlWhere "ugs.immediate_trash OR u.immediate_trash"
-            sqlWhere "u.id = sl.user_id"
-        ]
-      -- It wasn't yet unlinked.
-      sqlWhere "really_deleted IS NULL"
+    runQuery_ . sqlUpdate "documents d" $ do
+      sqlSet "author_really_deleted" now
+      sqlWhereInSql "(d.id, d.author_id)" . sqlSelect "deleted_link_ids dlids" $ do
+        sqlResult "dlids.document_id"
+        sqlResult "dlids.id"
+      sqlWith "deleted_link_ids" . sqlUpdate "signatory_links sl" $ do
+        sqlSet "really_deleted" now
+        sqlResult "sl.document_id"
+        sqlResult "sl.id"
+        -- Document belongs to somebody.
+        sqlWhereIsNotNULL "sl.user_id"
+        -- It was deleted sufficient amount of time ago or the user group's data
+        -- retention policy is to delete things in the trash immediately.
+        sqlWhereAny
+          [ sqlWhere $ "sl.deleted +" <?> idays savedDocumentLingerDays <+> "<=" <?> now
+          , do
+            sqlWhereIsNotNULL "sl.deleted"
+            sqlWhereExists . sqlSelect "users u" $ do
+              sqlJoinOn "user_group_settings ugs" "ugs.user_group_id = u.user_group_id"
+              sqlWhere "ugs.immediate_trash OR u.immediate_trash"
+              sqlWhere "u.id = sl.user_id"
+          ]
+        -- It wasn't yet unlinked.
+        sqlWhere "really_deleted IS NULL"
 
     rows <- runQuery . sqlUpdate "documents" $ do
       sqlWith "documents_to_purge" . sqlSelect "documents d" $ do

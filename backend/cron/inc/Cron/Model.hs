@@ -19,6 +19,7 @@ import CronStats.Control
 import DB
 import Doc.Action
 import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
+import Doc.DocumentID
 import Doc.Model
 import EID.EIDService.Model
 import File.Storage
@@ -68,6 +69,7 @@ data JobType
   | TemporaryLoginTokensPurge
   | CronStats
   | TimeoutedEIDTransactionsPurge
+  | PopulateDocumentAuthorDeleted
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, Text)]
@@ -98,6 +100,7 @@ jobTypeMapper = map (identity &&& jobTypeToText) [minBound .. maxBound]
       TemporaryLoginTokensPurge     -> "temporary_login_tokens_purge"
       CronStats                     -> "cron_stats"
       TimeoutedEIDTransactionsPurge -> "timeouted_eid_transactions_purge"
+      PopulateDocumentAuthorDeleted -> "populate_document_author_deleted"
 
 instance PQFormat JobType where
   pqFormat = pqFormat @Text
@@ -311,6 +314,34 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
               logInfo "Purged timeouted eid transactions"
                 $ object ["purged" .= purgedCount]
             return . RerunAfter $ iminutes 60
+          PopulateDocumentAuthorDeleted -> do
+            let
+              cs = simpleSource defaultConnectionSettings
+                { csConnInfo = cronDBConfig cronConf
+                }
+              ts = defaultTransactionSettings
+                { tsAutoTransaction  = False
+                , tsIsolationLevel   = Serializable
+                , tsRestartPredicate = Just
+                                       $ RestartPredicate
+                                       $ \DetailedQueryError { qeErrorCode } _n ->
+                                           qeErrorCode == SerializationFailure
+                }
+              getIDs = "SELECT id FROM documents WHERE author_deleted_filled IS NULL"
+            runDBT (unConnectionSource cs) ts $ do
+              withCursorSQL "pdad_documents" NoScroll Hold getIDs $ \cursor -> do
+                fix $ \loop -> do
+                  cursorFetch_ cursor (CD_Forward 1000)
+                  dids :: [DocumentID] <- fetchMany runIdentity
+                  if null dids
+                    then return MarkProcessed
+                    else do
+                      withTransaction . runQuery_ . sqlUpdate "documents d" $ do
+                        sqlSetCmd
+                          "(author_deleted, author_really_deleted, author_deleted_filled)"
+                          "(SELECT sl.deleted, sl.really_deleted, TRUE FROM signatory_links sl WHERE d.id = sl.document_id AND d.author_id = sl.id)"
+                        sqlWhereIn "d.id" dids
+                      loop
 
         endTime <- currentTime
         logInfo "Job processed successfully" $ object

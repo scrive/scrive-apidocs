@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable
   { tblName        = "documents"
-  , tblVersion     = 53
+  , tblVersion     = 54
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -91,6 +91,9 @@ tableDocuments = tblTable
                 , colDefault  = Just "true"
                 }
     , tblColumn { colName = "folder_id", colType = BigIntT, colNullable = True }
+    , tblColumn { colName = "author_deleted", colType = TimestampWithZoneT }
+    , tblColumn { colName = "author_really_deleted", colType = TimestampWithZoneT }
+    , tblColumn { colName = "author_deleted_filled", colType = BoolT }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys = [

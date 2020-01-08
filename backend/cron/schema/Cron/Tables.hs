@@ -45,15 +45,12 @@ tableCronWorkers = tblTable
 tableCronJobs :: Table
 tableCronJobs = tblTable
   { tblName         = "cron_jobs"
-  , tblVersion      = 25
+  , tblVersion      = 26
   , tblColumns = [
     -- Type of the task.
                    tblColumn { colName = "id", colType = TextT, colNullable = False }
     -- Time to run a task.
-                 , tblColumn { colName     = "run_at"
-                             , colType     = TimestampWithZoneT
-                             , colNullable = False
-                             }
+                 , tblColumn { colName = "run_at", colType = TimestampWithZoneT }
     -- Time of the last finish (NULL if last run failed).
                  , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
                  , tblColumn { colName = "reserved_by", colType = BigIntT }
@@ -102,4 +99,5 @@ tableCronJobs = tblTable
       , "temporary_login_tokens_purge"
       , "cron_stats"
       , "timeouted_eid_transactions_purge"
+      , "populate_document_author_deleted"
       ]
