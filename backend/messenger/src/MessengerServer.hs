@@ -83,7 +83,7 @@ main = do
           liftBase waitForTermination
   where
     startServer
-      :: (forall m r. Monad m => LogT m r -> m r)
+      :: (forall m r . LogT m r -> m r)
       -> TrackedConnectionSource
       -> CryptoRNGState
       -> MessengerServerConf
