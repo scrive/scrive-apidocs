@@ -101,18 +101,16 @@ instance ToSQL SignatureProvider where
 data MergeCGISEBankIDSignature = MergeCGISEBankIDSignature SignatoryLinkID CGISEBankIDSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () where
   update (MergeCGISEBankIDSignature slid CGISEBankIDSignature {..}) = do
-    loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
-      runQuery01_ selectSignatorySignTime
-      msign_time :: Maybe UTCTime <- fetchOne runIdentity
-      when (isJust msign_time) $ do
-        unexpectedError "signatory already signed, can't merge signature"
-      success <- runQuery01 . sqlUpdate "eid_signatures" $ do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
         setFields
-        sqlWhereEq "signatory_link_id" slid
         -- replace the signature only if signatory hasn't signed yet
         sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-      unless success $ runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
-        setFields
     where
       selectSignatorySignTime = do
         sqlSelect "signatory_links" $ do
@@ -136,19 +134,16 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () whe
 data MergeNetsNOBankIDSignature = MergeNetsNOBankIDSignature SignatoryLinkID NetsNOBankIDSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () where
   update (MergeNetsNOBankIDSignature slid NetsNOBankIDSignature {..}) = do
-    loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
-      runQuery01_ selectSignatorySignTime
-      msign_time :: Maybe UTCTime <- fetchOne runIdentity
-      when (isJust msign_time) $ do
-        unexpectedError "signatory already signed, can't merge signature"
-      success <- runQuery01 . sqlUpdate "eid_signatures" $ do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
         setFields
-        sqlWhereEq "signatory_link_id" slid
         -- replace the signature only if signatory hasn't signed yet
         sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-      unless success $ do
-        runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
-          setFields
     where
       selectSignatorySignTime = do
         sqlSelect "signatory_links" $ do
@@ -168,19 +163,16 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () wh
 data MergeNetsDKNemIDSignature = MergeNetsDKNemIDSignature SignatoryLinkID NetsDKNemIDSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDSignature () where
   update (MergeNetsDKNemIDSignature slid NetsDKNemIDSignature {..}) = do
-    loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
-      runQuery01_ selectSignatorySignTime
-      msign_time :: Maybe UTCTime <- fetchOne runIdentity
-      when (isJust msign_time) $ do
-        unexpectedError "signatory already signed, can't merge signature"
-      success <- runQuery01 . sqlUpdate "eid_signatures" $ do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
         setFields
-        sqlWhereEq "signatory_link_id" slid
         -- replace the signature only if signatory hasn't signed yet
         sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-      unless success $ do
-        runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
-          setFields
     where
       selectSignatorySignTime = do
         sqlSelect "signatory_links" $ do
@@ -203,19 +195,16 @@ data MergeEIDServiceIDINSignature = MergeEIDServiceIDINSignature SignatoryLinkID
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINSignature () where
   update (MergeEIDServiceIDINSignature slid (EIDServiceIDINSignature CompleteIDINEIDServiceTransactionData {..}))
     = do
-      loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
-        runQuery01_ selectSignatorySignTime
-        msign_time :: Maybe UTCTime <- fetchOne runIdentity
-        when (isJust msign_time) $ do
-          unexpectedError "signatory already signed, can't merge signature"
-        success <- runQuery01 . sqlUpdate "eid_signatures" $ do
+      runQuery01_ selectSignatorySignTime
+      msign_time :: Maybe UTCTime <- fetchOne runIdentity
+      when (isJust msign_time) $ do
+        unexpectedError "signatory already signed, can't merge signature"
+      runQuery_ . sqlInsert "eid_signatures" $ do
+        setFields
+        sqlOnConflictOnColumns ["singatory_link_id"] . sqlUpdate "" $ do
           setFields
-          sqlWhereEq "signatory_link_id" slid
           -- replace the signature only if signatory hasn't signed yet
           sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-        unless success $ do
-          runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
-            setFields
     where
       selectSignatorySignTime = do
         sqlSelect "signatory_links" $ do

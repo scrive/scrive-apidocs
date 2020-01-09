@@ -21,15 +21,16 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
     did <- documentid <$> theDocument
     now <- currentTime
     logInfo_ "Attempting to schedule document sealing"
-    -- There can be only one document sealing job for a given
-    -- document. If the job already exists, ignore unique violation
-    -- error and don't do anything.
-    let logErr = logAttention_ "Document already scheduled for sealing"
-    (`onUniqueViolation` logErr) . withSavepoint "schedule_document_sealing" $ do
-      runQuery_ . sqlInsert "document_sealing_jobs" $ do
-        sqlSet "id" did
-        sqlSetCmd "run_at" $ sqlParam now
-        sqlSet "attempts"          (0 :: Int32)
-        sqlSet "branded_domain_id" bdid
-      notify documentSealingNotificationChannel ""
-      logInfo_ "Document sealing scheduled"
+    -- There can be only one document sealing job for a given document. If the
+    -- job already exists, ignore unique violation error and don't do anything.
+    success <- runQuery01 . sqlInsert "document_sealing_jobs" $ do
+      sqlSet "id" did
+      sqlSetCmd "run_at" $ sqlParam now
+      sqlSet "attempts"          (0 :: Int32)
+      sqlSet "branded_domain_id" bdid
+      sqlOnConflictDoNothing
+    if success
+      then do
+        notify documentSealingNotificationChannel ""
+        logInfo_ "Document sealing scheduled"
+      else logAttention_ "Document already scheduled for sealing"

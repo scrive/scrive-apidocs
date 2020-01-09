@@ -31,11 +31,9 @@ data MergeNetsSignOrder = MergeNetsSignOrder NetsSignOrder
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeNetsSignOrder () where
   update (MergeNetsSignOrder NetsSignOrder {..}) = do
-    loopOnUniqueViolation . withSavepoint "merge_nets_transaction" $ do
-      success <- runQuery01 . sqlUpdate "nets_sign_orders" $ do
-        setFields
-        sqlWhereEq "signatory_link_id" $ nsoSignatoryLinkID
-      unless success $ runQuery_ . sqlInsert "nets_sign_orders" $ do
+    runQuery_ . sqlInsert "nets_sign_orders" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
         setFields
     where
       setFields :: (MonadState v n, SqlSet v) => n ()

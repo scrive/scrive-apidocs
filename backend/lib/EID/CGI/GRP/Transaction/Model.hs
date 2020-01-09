@@ -77,12 +77,9 @@ data MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeCgiGrpTransaction () where
   update (MergeCgiGrpTransaction cgiTransaction) = do
-    loopOnUniqueViolation . withSavepoint "merge_cgi_grp_transaction" $ do
-      success <- runQuery01 . sqlUpdate "cgi_grp_transactions" $ do
-        setFields
-        sqlWhereEq "signatory_link_id" $ cgiSignatoryLinkID cgiTransaction
-        sqlWhereEq "type" $ cgiTransactionType cgiTransaction
-      unless success $ runQuery_ . sqlInsert "cgi_grp_transactions" $ do
+    runQuery_ . sqlInsert "cgi_grp_transactions" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id", "type"] . sqlUpdate "" $ do
         setFields
     where
       setFields :: (MonadState v n, SqlSet v) => n ()

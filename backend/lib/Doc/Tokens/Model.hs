@@ -26,8 +26,7 @@ instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m CheckDocumentSess
 data AddDocumentSession = AddDocumentSession SessionID SignatoryLinkID
 instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m AddDocumentSession () where
   update (AddDocumentSession sid slid) = do
-    runQuery_ $ rawSQL
-      "INSERT INTO document_session_tokens\
-      \ (session_id, signatory_link_id) VALUES ($1, $2)\
-      \ ON CONFLICT (session_id, signatory_link_id) DO NOTHING"
-      (sid, slid)
+    runQuery_ . sqlInsert "document_session_tokens" $ do
+      sqlSet "session_id"        sid
+      sqlSet "signatory_link_id" slid
+      sqlOnConflictOnColumnsDoNothing ["session_id", "signatory_link_id"]
