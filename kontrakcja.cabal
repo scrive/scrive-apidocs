@@ -602,6 +602,7 @@ Library
                , happstack-static-routing
                , hashable
                , hedis
+               , hostname
                , hpqtypes
                , hpqtypes-extras
                , http-client
@@ -865,6 +866,7 @@ Executable kontrakcja-migrate
                , optics
                , fields-json
                , filepath
+               , hostname
                , hpqtypes
                , hpqtypes-extras
                , invariant
@@ -1003,6 +1005,7 @@ Executable mailing-server
                , happstack-static-routing
                , hashable
                , hedis
+               , hostname
                , hpqtypes
                , invariant
                , json
@@ -1101,6 +1104,7 @@ Executable messenger-server
                , containers
                , crypto-rng
                , data-default
+               , hostname
                , hpqtypes-extras
                , deepseq
                , directory

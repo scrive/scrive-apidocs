@@ -9,7 +9,9 @@ module Log.Configuration (
   , runWithLogRunner
   ) where
 
+import Control.Monad.Reader (local)
 import Crypto.RNG
+import Data.Aeson.Types (Pair, (.=))
 import Data.Either (lefts, rights)
 import Data.Functor.Invariant (invmap)
 import Data.List.NonEmpty (fromList)
@@ -25,6 +27,7 @@ import Log.Backend.StandardOutput
 import Log.Data
 import Log.Internal.Logger hiding (withLogger)
 import Log.Monad
+import Network.HostName (getHostName)
 import Prelude hiding ((<>))
 
 import DB.PostgreSQL
@@ -148,7 +151,7 @@ newtype LogRunner = LogRunner {
   --
   -- Normally 'withLogger' should only be used in the 'main' function
   -- of the application.
-  withLogger :: forall a . ((forall m r . LogT m r -> m r) -> IO a) -> IO a
+  withLogger :: forall a . ((forall m r. Monad m => LogT m r -> m r) -> IO a) -> IO a
 }
 
 -- | 'withLogger' and 'runLogger' rolled into one. Useful when you
@@ -166,8 +169,15 @@ instance Semigroup WithLoggerFun where
 
 mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO ([Text], LogRunner)
 mkLogRunner component LogConfig {..} rng = do
-  let run :: Logger -> LogT m a -> m a
-      run = runLogT (component <> "-" <> lcSuffix)
+  -- A slight variant of localData from Log.Class
+  let localData :: Monad m => [Pair] -> LogT m a -> LogT m a
+      localData data_ = LogT . local (\e -> e { leData = data_ ++ leData e }) . unLogT
+
+  hostname <- getHostName
+  let run :: Monad m => Logger -> LogT m a -> m a
+      run logger =
+        runLogT (component <> "-" <> lcSuffix) logger
+          . localData ["server_hostname" .= hostname]
 
   let toWithLoggerFun :: LoggerDef -> IO (Either Text WithLoggerFun)
       toWithLoggerFun StandardOutput = return . Right $ WithLoggerFun
@@ -200,7 +210,7 @@ mkLogRunner component LogConfig {..} rng = do
 
   let loggerFun = sconcat . fromList $ withLoggerFuns
 
-  let withLogger :: ((forall m r. LogT m r -> m r) -> IO a) -> IO a
+  let withLogger :: ((forall m r. Monad m => LogT m r -> m r) -> IO a) -> IO a
       withLogger = \act -> withLoggerFun loggerFun $ (\logger -> act (run logger))
   return (errorReports, LogRunner { withLogger = withLogger })
 

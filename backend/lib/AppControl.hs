@@ -66,7 +66,7 @@ data AppGlobals = AppGlobals {
   , filecache          :: !FileMemCache
   , cryptorng          :: !CryptoRNGState
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
-  , runlogger          :: !(forall m r . LogT m r -> m r)
+  , runlogger          :: !(forall m r. Monad m => LogT m r -> m r)
   , hostname           :: !Text
   , amazons3env        :: !AmazonS3Env
   , pdftoolslambdaenv  :: !PdfToolsLambdaEnv
