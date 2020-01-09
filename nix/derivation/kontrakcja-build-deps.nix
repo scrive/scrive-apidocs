@@ -56,7 +56,7 @@ let
             (callGitPackage super
               "hpqtypes-extras"
               "ssh://git@github.com/scrive/hpqtypes-extras.git"
-              "8adfa1315987544369899e8c4c62823799c92047"
+              "9238f1ef264faf9149dd91aefb3136b615c4bb3d"
             ))
         ;
 
@@ -92,16 +92,16 @@ let
             {}
         ;
 
-        test-framework = 
-        haskellLib.appendPatch 
-          (haskellLib.dontCheck 
+        test-framework =
+        haskellLib.appendPatch
+          (haskellLib.dontCheck
             (super.callHackage
               "test-framework"
               "0.8.2.0"
               {}
               )
             )
-          ../patches/test-framework.patch          
+          ../patches/test-framework.patch
         ;
 
         kontrakcja-templates = callScrivePackage super
