@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Työntekijän avainkortti",
 "_elegSignDKSignMethodEmployeeKeyfile":"Työntekijän avaintiedosto",
 "_elegSignDKSignMethodPersonalKeycard":"Henkilökohtainen avainkortti",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Kirjaudu iDIN:n avulla",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, allekirjoitat käyttämällä norjalaista BankID:tä. Kun olet allekirjoittanut, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_elegSignNOConfirmationTextNoName":"Allekirjoitat käyttämällä norjalaista BankID:tä. Kun olet allekirjoittanut, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_elegSignNOConfirmationTitle":"Allekirjoita norjalaisella BankID:llä",
@@ -89,7 +89,7 @@
 "_email":"Sähköposti",
 "_enterSMSPin":"Anna tekstiviestisi PIN",
 "_errorMessagePrefix":"Palautettu virhe oli:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Uuden eID-prosessin aloitus epäonnistui",
 "_filladitionfieldslabel":"Sinusta",
 "_firstname":"Etunimi",
 "_followTheArrow":"Seuraa <span class='arrowtext'>NUOLTA</span>",
@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Allekirjoitettu dokumentti $documenttitle:noescape()$ on lähetetty sinulle uudelleen henkilön $creatorname$ pyynnöstä. Löydät dokumentin seuraamalla tätä linkkiä: $link$",
 "_unavailableForSign":"Dokumentti ei ole enää avoinna allekirjoittamista varten",
 "_userGroup":"Käyttäjäryhmä",
-"_userGroupExtraInfo":""
+"_userGroupExtraInfo":"Sisäinen käyttö käyttäjäryhmän nimi (esim. HR):"
 }

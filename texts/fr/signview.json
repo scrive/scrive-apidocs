@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Carte-clé d'employé",
 "_elegSignDKSignMethodEmployeeKeyfile":"Fichier clé d'employé",
 "_elegSignDKSignMethodPersonalKeycard":"Carte-clé personnelle",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Signer avec iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, vous signerez à partir du BankID norvégien. Une fois le document signé, votre signature sera enregistrée par le service d'e-signature Scrive.",
 "_elegSignNOConfirmationTextNoName":"Vous signerez par BankID norvégien. Une fois que vous aurez signé, votre signature sera enregistrée par le service d'e-signature Scrive.",
 "_elegSignNOConfirmationTitle":"Signer par BankID norvégien.",
@@ -89,7 +89,7 @@
 "_email":"Mail",
 "_enterSMSPin":"Entrer votre code PIN reçu par SMS",
 "_errorMessagePrefix":"Le message d'erreur reçu était:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Impossible de démarrer un nouveau processus eID",
 "_filladitionfieldslabel":"A propos de vous",
 "_firstname":"Prénom",
 "_followTheArrow":"Suivez la <span class='arrowtext'>FLECHE</span>",
@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Le document signé $documenttitle:noescape()$ vous a été renvoyé à la demande de $creatorname$. Suivez le lien suivant pour consulter ce document $link$",
 "_unavailableForSign":"Le document n'est plus disponible pour signature",
 "_userGroup":"Groupe d'utilisateurs",
-"_userGroupExtraInfo":""
+"_userGroupExtraInfo":"Nom à usage interne du groupe d'utilisateurs (par exemple, RH) :"
 }

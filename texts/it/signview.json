@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Keycard dipendente",
 "_elegSignDKSignMethodEmployeeKeyfile":"Keyfile dipendente",
 "_elegSignDKSignMethodPersonalKeycard":"Keycard personale",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Firma con iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, firmerai usando il BankID norvegese. Una volta firmato, la tua firma sarà registrata dal servizio di e-signing di Scrive.",
 "_elegSignNOConfirmationTextNoName":"Userai il BankID norvegese. Una volta firmato, la tua firma sarà registrata dal servizio di e-signing di Scrive.",
 "_elegSignNOConfirmationTitle":"Firma con il BankID norvegese",
@@ -89,7 +89,7 @@
 "_email":"Email",
 "_enterSMSPin":"Inserisci il PIN del tuo SMS",
 "_errorMessagePrefix":"L'errore restituito era:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Inizio del nuovo processo eID non riuscito",
 "_filladitionfieldslabel":"Le tue informazioni",
 "_firstname":"Nome",
 "_followTheArrow":"Segui la <span class='arrowtext'>FRECCIA</span>",
@@ -208,9 +208,9 @@
 "_signviewSigningFailed":"Siamo spiacenti, qualcosa è andato storto durante la firma del documento. Ti preghiamo di riprovare.",
 "_smsDocumentErrorAuthor":"Scrive non ha potuto gestire il documento $documenttitle:noescape()$ e il processo di firma è stato annullato. Se hai domande, non esitare a contattarci all'indirizzo support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive non ha potuto gestire il documento $documenttitle:noescape()$ e il processo di firma è stato annullato. Se hai domande, non esitare a contattarci all'indirizzo support@scrive.com",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ ti ha invitato ad approvare il documento $documenttitle:noescape()$. Apri il link per ulteriori indicazioni $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ ti ha invitato a firmare elettronicamente il documento $documenttitle:noescape()$. Apri il link per ulteriori indicazioni $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ ti ha invitato a rivedere il documento $documenttitle:noescape()$. Apri il link per ulteriori indicazioni $link$",
 "_smsPinSendout":"Il tuo PIN per $documenttitle:noescape()$ è $pin$",
 "_smsRejectNotification":"$rejectorName$ ha rifiutato di firmare il documento $documenttitle:noescape()$. Il processo di firma è stato perciò annullato.",
 "_smsReminder":"$creatorname$ vuole ricordarti di firmare il documento $documenttitle:noescape()$. Apri il link per ulteriori indicazioni $link$",
@@ -219,6 +219,6 @@
 "_smsReminderAutomatic":"Questo è un promemoria automatico per ricordarti che non hai ancora firmato il documento $documenttitle:noescape()$ da $creatorname$. Apri il link per ulteriori istruzioni $link$",
 "_smsReminderSigned":"Il documento firmato $documenttitle:noescape()$ ti è stato inviato nuovamente su richiesta di $creatorname$. Troverai il documento a questo link $link$",
 "_unavailableForSign":"Il documento non è più disponibile per la firma",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Gruppo utenti",
+"_userGroupExtraInfo":"Nome del gruppo utenti per uso interno (es. RU):"
 }

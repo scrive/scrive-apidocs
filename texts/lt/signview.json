@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Darbuotojo raktinė kortelė",
 "_elegSignDKSignMethodEmployeeKeyfile":"Darbuotojo raktinė byla",
 "_elegSignDKSignMethodPersonalKeycard":"Asmeninė raktinė kortelė",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Pasirašykite per iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong> pasirašysite per Norvegijos „BankID“. Pasirašius, jūsų parašas bus užregistruotas e-parašų paslaugoje „Scrive“.",
 "_elegSignNOConfirmationTextNoName":"Pasirašysite per Norvegijos „BankID“. Pasirašius, jūsų parašas bus užregistruotas e-parašų paslaugoje „Scrive“.",
 "_elegSignNOConfirmationTitle":"Pasirašykite per Norvegijos „BankID“. ",
@@ -89,7 +89,7 @@
 "_email":"El. paštas",
 "_enterSMSPin":"Įveskite savo SMS žinutės PIN.",
 "_errorMessagePrefix":"Grąžinta klaida:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Nepavyko pradėti naujo eID proceso",
 "_filladitionfieldslabel":"Duomenys apie save",
 "_firstname":"Vardas",
 "_followTheArrow":"Vadovaukitės <span class='arrowtext'>RODYKLE</span>",
@@ -208,9 +208,9 @@
 "_signviewSigningFailed":"Atsiprašome, kažkas sutriko pasirašant dokumentą. Pabandykite dar kartą.",
 "_smsDocumentErrorAuthor":"„Scrive“ negalėjo apdoroti $documenttitle:noescape()$ dokumento, todėl pasirašymo eiga nutraukta. Jei kilo klausimų, susisiekite su mumis adresu support@scrive.com",
 "_smsDocumentErrorSignatory":"„Scrive“ negalėjo apdoroti $documenttitle:noescape()$ dokumento, todėl pasirašymo eiga nutraukta. Jei kilo klausimų, susisiekite su mumis adresu support@scrive.com",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ pasiūlė Jums pasirašyti $documenttitle:noescape()$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$ ",
 "_smsInvitationToSign":"$creatorname:noescape()$ pasiūlė Jums el. parašu pasirašyti $documenttitle:noescape()$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ pasiūlė Jums peržiūrėti $documenttitle:noescape()$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$ ",
 "_smsPinSendout":"Jūsų PIN $documenttitle:noescape()$ dokumentui yra $pin$",
 "_smsRejectNotification":"$rejectorName$ atmetė pasiūlymą pasirašyti dokumentą $documenttitle:noescape()$. Todėl dokumento pasirašymo eiga nutraukta. ",
 "_smsReminder":"$creatorname$ primena Jums el. parašu pasirašyti $documenttitle:noescape()$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$",
@@ -219,6 +219,6 @@
 "_smsReminderAutomatic":"Tai automatinis priminimas, kad Jūs dar nepasirašėte $documenttitle:noescape()$ dokumento, kurį atsiuntė $creatorname$. Tolesnius nurodymus rasite šiuo saitu $link$",
 "_smsReminderSigned":"$creatorname$ prašymu Jums persiųstas pasirašytas dokumentas $documenttitle:noescape()$. Dokumentą galite rasti šiuo saitu: $link$",
 "_unavailableForSign":"Šio dokumento jau nebegalima pasirašyti",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Naudotojų grupė",
+"_userGroupExtraInfo":"Vidaus naudojimo naudotojų grupės pavadinimas (pvz., ŽI):"
 }

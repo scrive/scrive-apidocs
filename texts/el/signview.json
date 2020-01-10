@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Κάρτα-κλειδί εργαζομένου",
 "_elegSignDKSignMethodEmployeeKeyfile":"Αρχείο-κλειδί εργαζομένου",
 "_elegSignDKSignMethodPersonalKeycard":"Προσωπική κάρτα-κλειδί ",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Υπογράψτε μέσω της εφαρμογής iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, θα υπογράψετε χρησιμοποιώντας την εφαρμογή Norwegian BankID. Όταν θα έχετε υπογράψει, η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",
 "_elegSignNOConfirmationTextNoName":"Θα υπογράψετε χρησιμοποιώντας την εφαρμογή Norwegian BankID. Όταν θα έχετε υπογράψει, η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",
 "_elegSignNOConfirmationTitle":"Υπογράψτε μέσω της εφαρμογής Norwegian BankID",
@@ -89,7 +89,7 @@
 "_email":"Email ",
 "_enterSMSPin":"Εισάγετε το PIN του SMS σας",
 "_errorMessagePrefix":"Το λάθος επιστροφής ήταν:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Δεν ήταν δυνατή η έναρξη της νέας διαδικασίας ηλεκτρονικής ταυτότητας (eID)",
 "_filladitionfieldslabel":"Σχετικά με εσάς ",
 "_firstname":"Όνομα ",
 "_followTheArrow":"Ακολουθήστε το <span class='arrowtext'>ΤΟΞΟ</span> ",
@@ -208,9 +208,9 @@
 "_signviewSigningFailed":"Λυπούμαστε, έγινε κάποιο λάθος ενώ υπογράφατε το έγγραφο. Παρακαλώ προσπαθήστε ξανά.  ",
 "_smsDocumentErrorAuthor":"Η υπηρεσία Scrive δεν μπόρεσε να διαχειριστεί το έγγραφο $documenttitle:noescape()$ και η διαδικασία υπογραφής έχει ακυρωθεί. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε μαζί μας στο support@scrive.com",
 "_smsDocumentErrorSignatory":"Η υπηρεσία Scrive δεν μπόρεσε να διαχειριστεί το έγγραφο $documenttitle:noescape()$ και η διαδικασία υπογραφής έχει ακυρωθεί. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε μαζί μας στο support@scrive.com ",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"Ο/Η $creatorname:noescape()$ σας έχει προσκαλέσει να υπογράψετε ηλεκτρονικά το έγγραφο $documenttitle:noescape()$. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ σας έχει προσκαλέσει να υπογράψετε ηλεκτρονικά το έγγραφο $documenttitle:noescape()$. Ακολουθείστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"Ο/Η $creatorname:noescape()$ σας έχει προσκαλέσει να ελέγξετε το έγγραφο $documenttitle:noescape()$. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsPinSendout":"Το PIN σας για το $documenttitle:noescape()$ είναι $pin$",
 "_smsRejectNotification":"Ο/Η $rejectorName$ έχει απορρίψει την υπογραφή του εγγράφου $documenttitle:noescape()$. Ως εκ τούτου η διαδικασία υπογραφής έχει ακυρωθεί.",
 "_smsReminder":"$creatorname$ θέλει να σας υπενθυμίσει την υπογραφή του εγγράφου $documenttitle:noescape()$. Ακολουθείστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
@@ -219,6 +219,6 @@
 "_smsReminderAutomatic":"Αυτή είναι μια αυτόματη υπενθύμιση ότι δεν έχετε υπογράψει το έγγραφο $documenttitle:noescape()$ από τον $creatorname$ ακόμα. Ακολουθείστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsReminderSigned":"Το υπογεγραμμένο έγγραφο $documenttitle:noescape()$ έχει αποσταλεί ξανά σε εσάς μετά από αίτημα του $creatorname$. Βρείτε το έγγραφο ακολουθώντας τον σύνδεσμο $link$",
 "_unavailableForSign":"Το έγγραφο δεν είναι πλέον διαθέσιμο προς υπογραφή ",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Ομάδα χρήστη",
+"_userGroupExtraInfo":"Ονομασία ομάδας χρήστη για εσωτερική χρήση (π.χ. HR):"
 }

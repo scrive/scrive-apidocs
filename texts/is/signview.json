@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Lyklakort starfsmanns",
 "_elegSignDKSignMethodEmployeeKeyfile":"Lyklaskrá starfsmanns",
 "_elegSignDKSignMethodPersonalKeycard":"Persónulegt lyklakort",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Skrifa undir með iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, þú skrifar undir með því að nota norskt BankID. Þegar þú hefur skrifað undir verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_elegSignNOConfirmationTextNoName":"Þú skrifar undir með því að nota norskt BankID. Þegar þú hefur skrifað undir verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_elegSignNOConfirmationTitle":"Skrifa undir með norsku BankID",
@@ -89,7 +89,7 @@
 "_email":"Netfang",
 "_enterSMSPin":"Sláðu inn PIN-númer textaskilaboða þinna",
 "_errorMessagePrefix":"Uppgefin villa var:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Ekki tókst að hefja nýtt ferli fyrir rafræn skilríki",
 "_filladitionfieldslabel":"Um þig",
 "_firstname":"Fornafn",
 "_followTheArrow":"Fylgdu <span class='arrowtext'>ÖRINNI</span>",
@@ -208,9 +208,9 @@
 "_signviewSigningFailed":"Því miður misfórst eitthvað við undirskrift skjalsins. Vinsamlegast reyndu aftur.",
 "_smsDocumentErrorAuthor":"Scrive gat ekki meðhöndlað skjalið $documenttitle:noescape()$ og hætt hefur verið við undirskriftarferlið. Ef þú hefur einhverjar spurningar skaltu hafa samband á netfangið support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive gat ekki meðhöndlað skjalið $documenttitle:noescape()$ og hætt hefur verið við undirskriftarferlið. Ef þú hefur einhverjar spurningar skaltu hafa samband á netfangið support@scrive.com",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"$creatorname:noescape()$ hefur boðið þér að samþykkja skjalið $documenttitle:noescape()$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsInvitationToSign":"$creatorname:noescape()$ hefur boðið þér að skrifa rafrænt undir skjalið $documenttitle:noescape()$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"$creatorname:noescape()$ hefur boðið þér að endurskoða skjalið $documenttitle:noescape()$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsPinSendout":"PIN þitt fyrir $documenttitle:noescape()$ is $pin$",
 "_smsRejectNotification":"$rejectorName$ hefur hafnað því að skrifa undir skjalið $documenttitle:noescape()$. Því hefur verið hætt við undirskriftarferlið.",
 "_smsReminder":"$creatorname$ vill minna þig á að skrifa undir skjalið $documenttitle:noescape()$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
@@ -219,6 +219,6 @@
 "_smsReminderAutomatic":"Þetta er sjálfvirk áminning þess efnis að þú hefur ekki enn skrifað undir skjalið $documenttitle:noescape()$ from $creatorname$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsReminderSigned":"Undirritaða skjalið $documenttitle:noescape()$ hefur verið endursent til þín að beiðni $creatorname$. Nálgastu skjalið með því að smella á þennan hlekk: $link$",
 "_unavailableForSign":"Skjalið er ekki lengur fáanlegt til undirskriftar",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Notandahópur",
+"_userGroupExtraInfo":"Heiti notandahóps fyrir notkun innanhúss (t.d. mannauðsdeild):"
 }

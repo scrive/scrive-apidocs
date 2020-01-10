@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Medarbejder nøglekort",
 "_elegSignDKSignMethodEmployeeKeyfile":"Medarbejder nøglefil",
 "_elegSignDKSignMethodPersonalKeycard":"Personligt nøglekort",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Signer med iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, du signerer med det norske BankID. Efterfølgende bliver din underskrift registreret af e-signing servicen Scrive.",
 "_elegSignNOConfirmationTextNoName":"Du signerer med det norske BankID. Efterfølgende bliver din underskrift registreret af e-signing servicen Scrive.",
 "_elegSignNOConfirmationTitle":"Signér med Norwegian BankID",
@@ -89,7 +89,7 @@
 "_email":"E-mail",
 "_enterSMSPin":"Indtast din SMS PIN",
 "_errorMessagePrefix":"Den tilbagevendende fejl var:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Kunne ikke starte ny eID-proces",
 "_filladitionfieldslabel":"Om dig",
 "_firstname":"Fornavn",
 "_followTheArrow":"Følg <span class='arrowtext'>PILEN</span>",
@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Det signerede dokument $documenttitle:noescape()$ er atter blevet sendt til dig på forespørgsel af $creatorname$. Find dokumentet ved at følge dette link $link$",
 "_unavailableForSign":"Det er ikke længere muligt at signere dette dokument",
 "_userGroup":"Brugergruppe",
-"_userGroupExtraInfo":""
+"_userGroupExtraInfo":"Brugergruppenavn til intern brug (fx. HR):"
 }
