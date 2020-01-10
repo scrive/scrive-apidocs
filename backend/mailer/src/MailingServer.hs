@@ -70,7 +70,7 @@ main = do
   (errs, lr) <- mkLogRunner "mailer" (mailerLogConfig conf) rng
   mapM_ T.putStrLn errs
 
-  withLogger lr $ \runLogger -> runLogger $ do
+  runWithLogRunner lr $ do
     checkExecutables
 
     let pgSettings    = pgConnSettings $ mailerDBConfig conf
@@ -86,7 +86,7 @@ main = do
       ($ (maxConnectionTracker $ mailerMaxDBConnections conf)) <$> liftBase
         (createPoolSource (pgSettings mailerComposites) (mailerMaxDBConnections conf))
 
-    E.bracket (startServer runLogger conf cs rng) (liftBase . killThread) . const $ do
+    E.bracket (startServer conf cs rng) (liftBase . killThread) . const $ do
       let master = createSender cs $ mailerMasterSender conf
           mslave = createSender cs <$> mailerSlaveSender conf
           cron   = jobsWorker conf cs rng
@@ -97,12 +97,11 @@ main = do
           liftBase waitForTermination
   where
     startServer
-      :: (forall m r . LogT m r -> m r)
-      -> MailingServerConf
+      :: MailingServerConf
       -> TrackedConnectionSource
       -> CryptoRNGState
       -> MainM ThreadId
-    startServer runLogger conf cs rng = do
+    startServer conf cs rng = do
       let (iface, port) = mailerHttpBindAddress conf
           handlerConf   = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile (handlers conf) of
@@ -118,9 +117,7 @@ main = do
                   )
                   return
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
-      fork . liftBase . runReqHandlerT socket handlerConf . runLogger $ router rng
-                                                                               cs
-                                                                               routes
+      fork . mapLogT (runReqHandlerT socket handlerConf) $ router rng cs routes
 
     hasFailoverTests conf = case mailerSlaveSender conf of
       Just _  -> not $ null $ mailerTestReceivers conf

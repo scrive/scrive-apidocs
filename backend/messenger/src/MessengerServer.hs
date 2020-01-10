@@ -62,7 +62,7 @@ main = do
   (errs, lr) <- mkLogRunner "messenger" (messengerLogConfig conf) rng
   mapM_ T.putStrLn errs
 
-  withLogger lr $ \runLogger -> runLogger $ do
+  runWithLogRunner lr $ do
     checkExecutables
 
     let pgSettings    = pgConnSettings (messengerDBConfig conf) []
@@ -75,7 +75,7 @@ main = do
 
     let cron   = jobsWorker cs
         sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf
-    E.bracket (startServer runLogger cs rng conf) (liftBase killThread)
+    E.bracket (startServer cs rng conf) (liftBase killThread)
       . const
       . finalize (localDomain "cron" $ runConsumer cron pool)
       . finalize (localDomain "sender" $ runConsumer sender pool)
@@ -83,12 +83,11 @@ main = do
           liftBase waitForTermination
   where
     startServer
-      :: (forall m r . LogT m r -> m r)
-      -> TrackedConnectionSource
+      :: TrackedConnectionSource
       -> CryptoRNGState
       -> MessengerServerConf
       -> MainM ThreadId
-    startServer runLogger cs rng conf = do
+    startServer cs rng conf = do
       let (iface, port) = messengerHttpBindAddress conf
           handlerConf   = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile handlers of
@@ -98,9 +97,7 @@ main = do
         Right r ->
           return $ r >>= maybe (notFound $ toResponse ("Not found." :: String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
-      fork . liftBase . runReqHandlerT socket handlerConf . runLogger $ router rng
-                                                                               cs
-                                                                               routes
+      fork . mapLogT (runReqHandlerT socket handlerConf) $ router rng cs routes
 
     smsConsumer
       :: CryptoRNGState
