@@ -672,7 +672,7 @@
 "_flashWrongName":"O nome pode conter apenas letras, dígitos, hífenes e espaços (até 100 caracteres)",
 "_flashWrongPersonalNumber":"O número pessoal deve conter 10 ou 12 dígitos (hífenes e espaços serão removidos)",
 "_flashWrongPhone":"O número de telefone deve começar com + e conter apenas dígitos (pelo menos 9). Espaços, parêntesis e hífenes serão removidos",
-"_flashWrongPosition":"O campo de posição deve conter no máximo 100 letras, números, espaços, apóstrofos, hífenes, & (\\\\\"e\\\\\" comercial), parêntesis, dois pontos e vírgulas",
+"_flashWrongPosition":"O campo de posição deve conter no máximo 100 letras, números, espaços, apóstrofos, hífenes, & ('e' comercial), parêntesis, dois pontos e vírgulas",
 "_flashWrongZip":"O código postal deve conter, no máximo, 20 caracteres",
 "_fontSizeBig":"Grande",
 "_fontSizeCustom":"Personalizar",
