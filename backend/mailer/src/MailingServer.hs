@@ -101,10 +101,7 @@ main = do
           liftBase waitForTermination
   where
     startServer
-      :: MailingServerConf
-      -> TrackedConnectionSource
-      -> CryptoRNGState
-      -> MainM ThreadId
+      :: MailingServerConf -> TrackedConnectionSource -> CryptoRNGState -> MainM ThreadId
     startServer conf cs rng = do
       let (iface, port) = mailerHttpBindAddress conf
           handlerConf   = nullConf { port = fromIntegral port, logAccess = Nothing }

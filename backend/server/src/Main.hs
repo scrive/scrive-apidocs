@@ -129,8 +129,9 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       let conf =
             nullConf { port = fromIntegral port, timeout = 120, logAccess = Nothing }
 
-      fork . mapLogT (runReqHandlerT listensocket conf) $
-        appHandler routes appConf appGlobals
+      fork . mapLogT (runReqHandlerT listensocket conf) $ appHandler routes
+                                                                     appConf
+                                                                     appGlobals
     stopServer = killThread
     waitForTerm _ = do
       let trackedConnSource = unConnectionSource

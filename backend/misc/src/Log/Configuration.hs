@@ -171,10 +171,14 @@ mkLogRunner component LogConfig {..} rng = do
 
   let toWithLoggerFun :: LoggerDef -> IO (Either Text WithLoggerFun)
       toWithLoggerFun StandardOutput = return . Right $ WithLoggerFun
-        { withLoggerFun = \act -> withSimpleStdOutLogger act }
+        { withLoggerFun = \act -> withSimpleStdOutLogger act
+        }
       toWithLoggerFun (ElasticSearch ec) = checkElasticSearchConnection ec >>= \case
-        Left _ -> return . Left $ "ElasticSearch: unexpected error; "
-                                  <> "is ElasticSearch server running?\n"
+        Left _ ->
+          return
+            .  Left
+            $  "ElasticSearch: unexpected error; "
+            <> "is ElasticSearch server running?\n"
             -- @review-note:include the below? A bit noisy
             -- (pack . show) ex
         Right () -> return . Right $ WithLoggerFun
@@ -183,8 +187,11 @@ mkLogRunner component LogConfig {..} rng = do
                               withElasticSearchLogger ec randGen act
           }
       toWithLoggerFun (PostgreSQL ci) = do
-        ConnectionSource pool <-
-          poolSource defaultConnectionSettings { csConnInfo = ci } 1 10 1
+        ConnectionSource pool <- poolSource
+          defaultConnectionSettings { csConnInfo = ci }
+          1
+          10
+          1
         withSimpleStdOutLogger $ \logger -> withPostgreSQL pool $ run logger $ do
           let extrasOptions = defaultExtrasOptions
           migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
@@ -200,7 +207,7 @@ mkLogRunner component LogConfig {..} rng = do
 
   let loggerFun = sconcat . fromList $ withLoggerFuns
 
-  let withLogger :: ((forall m r. LogT m r -> m r) -> IO a) -> IO a
+  let withLogger :: ((forall m r . LogT m r -> m r) -> IO a) -> IO a
       withLogger = \act -> withLoggerFun loggerFun $ (\logger -> act (run logger))
   return (errorReports, LogRunner { withLogger = withLogger })
 

@@ -72,7 +72,7 @@ main = do
 
   reqManager <- newTlsManager
 
-  hostname <- getHostName
+  hostname   <- getHostName
   let logContext = ["server_hostname" .= hostname]
 
   runWithLogRunner logRunner . localData logContext $ do
