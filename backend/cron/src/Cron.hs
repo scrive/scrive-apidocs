@@ -5,6 +5,7 @@ import Crypto.RNG
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Log
+import Network.HostName (getHostName)
 import Network.HTTP.Client.TLS (newTlsManager)
 import System.Console.CmdArgs hiding (def)
 import System.Environment
@@ -71,7 +72,10 @@ main = do
 
   reqManager <- newTlsManager
 
-  runWithLogRunner logRunner $ do
+  hostname   <- getHostName
+  let logContext = ["server_hostname" .= hostname]
+
+  runWithLogRunner logRunner . localData logContext $ do
     checkExecutables
 
     let connSettings  = pgConnSettings $ cronDBConfig cronConf

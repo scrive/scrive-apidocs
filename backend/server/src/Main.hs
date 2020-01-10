@@ -82,7 +82,10 @@ main = withCurlDo $ do
   (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf) rng
   mapM_ T.putStrLn errs
 
-  withLogger lr $ \runLogger -> runLogger $ do
+  hostname <- getHostName
+  let globalLogContext = ["server_hostname" .= hostname]
+
+  runWithLogRunner lr . localData globalLogContext $ do
     logInfo "Starting kontrakcja-server" $ object ["version" .= VersionTH.versionID]
     checkExecutables
 
@@ -96,7 +99,6 @@ main = withCurlDo $ do
         liftBase $ newMVar =<< (,) <$> getTemplatesModTime <*> readGlobalTemplates
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
       filecache   <- newFileMemCache $ localFileCacheSize appConf
-      hostname    <- liftBase getHostName
       amazonEnv   <- s3envFromConfig $ amazonConfig appConf
       lambdaEnv   <- pdfToolsLambdaEnvFromConf $ pdfToolsLambdaConf appConf
 
@@ -105,7 +107,6 @@ main = withCurlDo $ do
                         , filecache         = filecache
                         , cryptorng         = rng
                         , connsource        = pool
-                        , runlogger         = runLogger
                         , hostname          = T.pack hostname
                         , amazons3env       = amazonEnv
                         , pdftoolslambdaenv = lambdaEnv
@@ -128,8 +129,9 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       let conf =
             nullConf { port = fromIntegral port, timeout = 120, logAccess = Nothing }
 
-      fork . liftBase . runReqHandlerT listensocket conf $ do
-        (runlogger appGlobals) $ appHandler routes appConf appGlobals
+      fork . mapLogT (runReqHandlerT listensocket conf) $ appHandler routes
+                                                                     appConf
+                                                                     appGlobals
     stopServer = killThread
     waitForTerm _ = do
       let trackedConnSource = unConnectionSource

@@ -721,6 +721,7 @@ Executable cron
                , data-default
                , exceptions
                , filepath
+               , hostname
                , hpqtypes
                , hpqtypes-extras
                , hedis
@@ -989,6 +990,7 @@ Executable mailing-server
                , crypto-rng
                , cryptonite
                , data-default
+               , hostname
                , hpqtypes-extras
                , deepseq
                , directory
@@ -1113,6 +1115,7 @@ Executable messenger-server
                , filepath
                , happstack-server
                , happstack-static-routing
+               , hostname
                , hpqtypes
                , HTTP
                , iconv

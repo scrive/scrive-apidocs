@@ -166,49 +166,50 @@ instance Semigroup WithLoggerFun where
 
 mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO ([Text], LogRunner)
 mkLogRunner component LogConfig {..} rng = do
+  let run :: Logger -> LogT m a -> m a
+      run = runLogT (component <> "-" <> lcSuffix)
+
+  let toWithLoggerFun :: LoggerDef -> IO (Either Text WithLoggerFun)
+      toWithLoggerFun StandardOutput = return . Right $ WithLoggerFun
+        { withLoggerFun = \act -> withSimpleStdOutLogger act
+        }
+      toWithLoggerFun (ElasticSearch ec) = checkElasticSearchConnection ec >>= \case
+        Left _ ->
+          return
+            .  Left
+            $  "ElasticSearch: unexpected error; "
+            <> "is ElasticSearch server running?\n"
+            -- @review-note:include the below? A bit noisy
+            -- (pack . show) ex
+        Right () -> return . Right $ WithLoggerFun
+          { withLoggerFun = \act -> do
+                              let randGen = runCryptoRNGT rng boundedIntegralRandom
+                              withElasticSearchLogger ec randGen act
+          }
+      toWithLoggerFun (PostgreSQL ci) = do
+        ConnectionSource pool <- poolSource
+          defaultConnectionSettings { csConnInfo = ci }
+          1
+          10
+          1
+        withSimpleStdOutLogger $ \logger -> withPostgreSQL pool $ run logger $ do
+          let extrasOptions = defaultExtrasOptions
+          migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
+        return . Right $ WithLoggerFun { withLoggerFun = \act -> withPgLogger pool act }
+
   eWithLoggerFuns <- mapM toWithLoggerFun lcLoggers
+
   let withLoggerFuns = rights eWithLoggerFuns
       errorReports   = lefts eWithLoggerFuns
   if null withLoggerFuns
     then unexpectedError "List of loggers is empty; aborting."
     else return ()
-  let loggerFun = sconcat . fromList $ withLoggerFuns
-  return
-    ( errorReports
-    , LogRunner
-      { withLogger = \act -> withLoggerFun loggerFun $ (\logger -> act (run logger))
-      }
-    )
-  where
-    toWithLoggerFun :: LoggerDef -> IO (Either Text WithLoggerFun)
-    toWithLoggerFun StandardOutput = return . Right $ WithLoggerFun
-      { withLoggerFun = \act -> withSimpleStdOutLogger act
-      }
-    toWithLoggerFun (ElasticSearch ec) = checkElasticSearchConnection ec >>= \case
-      Left _ ->
-        return
-          .  Left
-          $  "ElasticSearch: unexpected error; "
-          <> "is ElasticSearch server running?\n"
-           -- @review-note:include the below? A bit noisy
-           -- (pack . show) ex
-      Right () -> return . Right $ WithLoggerFun
-        { withLoggerFun = \act -> do
-                            let randGen = runCryptoRNGT rng boundedIntegralRandom
-                            withElasticSearchLogger ec randGen act
-        }
-    toWithLoggerFun (PostgreSQL ci) = do
-      ConnectionSource pool <- poolSource defaultConnectionSettings { csConnInfo = ci }
-                                          1
-                                          10
-                                          1
-      withSimpleStdOutLogger $ \logger -> withPostgreSQL pool $ run logger $ do
-        let extrasOptions = defaultExtrasOptions
-        migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
-      return . Right $ WithLoggerFun { withLoggerFun = \act -> withPgLogger pool act }
 
-    run :: Logger -> LogT m a -> m a
-    run = runLogT (component <> "-" <> lcSuffix)
+  let loggerFun = sconcat . fromList $ withLoggerFuns
+
+  let withLogger :: ((forall m r . LogT m r -> m r) -> IO a) -> IO a
+      withLogger = \act -> withLoggerFun loggerFun $ (\logger -> act (run logger))
+  return (errorReports, LogRunner { withLogger = withLogger })
 
 -- @review-note here's what the `show`'n exception looks like
 -- Produces ~
