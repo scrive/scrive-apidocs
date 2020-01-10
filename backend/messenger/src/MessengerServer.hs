@@ -7,6 +7,7 @@ import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (waitForTermination)
 import Log
+import Network.HostName (getHostName)
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import System.FilePath ((</>), FilePath)
@@ -62,7 +63,10 @@ main = do
   (errs, lr) <- mkLogRunner "messenger" (messengerLogConfig conf) rng
   mapM_ T.putStrLn errs
 
-  runWithLogRunner lr $ do
+  hostname <- getHostName
+  let globalLogContext = ["server_hostname" .= hostname]
+
+  runWithLogRunner lr . localData globalLogContext $ do
     checkExecutables
 
     let pgSettings    = pgConnSettings (messengerDBConfig conf) []
