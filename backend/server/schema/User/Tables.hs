@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable
   { tblName        = "users"
-  , tblVersion     = 29
+  , tblVersion     = 30
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "password", colType = BinaryT }
@@ -55,6 +55,11 @@ tableUsers = tblTable
                 , colType     = BoolT
                 , colNullable = False
                 , colDefault  = Just "false"
+                }
+    , tblColumn { colName     = "sysauth"
+                , colType     = SmallIntT
+                , colNullable = False
+                , colDefault  = Just "1"
                 }
     ]
   , tblPrimaryKey  = pkOnColumn "id"

@@ -228,3 +228,17 @@ addUserTotpIsMandatoryColumn = Migration
                                                 }
                      ]
   }
+
+addUserSysAuthColumn :: MonadDB m => Migration m
+addUserSysAuthColumn = Migration
+  { mgrTableName = tblName tableUsers
+  , mgrFrom      = 29
+  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+                     (tblName tableUsers)
+                     [ sqlAddColumn $ tblColumn { colName     = "sysauth"
+                                                , colType     = SmallIntT
+                                                , colNullable = False
+                                                , colDefault  = Just "1"
+                                                }
+                     ]
+  }
