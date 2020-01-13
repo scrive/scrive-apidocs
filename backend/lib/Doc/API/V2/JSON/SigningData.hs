@@ -27,7 +27,7 @@ data NameMatchResult
   deriving (Eq)
 
 instance Show NameMatchResult where
-  show Match      = "matched"
+  show Match      = "match"
   show Mismatch   = "mismatch"
   show Misspelled = "misspelled"
 
@@ -98,7 +98,8 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                   $  [ "signatory_name" .= eiditdName
                      , "signatory_verified_email" .= eiditdVerifiedEmail
                      , "signatory_customer_id" .= eiditdCustomerID
-                     , "name_match" .= (showt $ matchSignatoryName signatory details)
+                     , "signatory_name_match"
+                       .= (showt $ matchSignatoryName signatory details)
                      ]
                   <> if hidePN
                        then []
@@ -158,4 +159,4 @@ stringDistance a b = distance
     patchSize (Diff.Both _ _) = 0
 
     distance :: Int
-    distance = foldl (\acc x -> patchSize x + acc) 0 diffs
+    distance = sum . map patchSize $ diffs
