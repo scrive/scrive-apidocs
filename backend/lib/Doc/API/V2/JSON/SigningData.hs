@@ -1,10 +1,16 @@
 module Doc.API.V2.JSON.SigningData (
     ssdToJson
+  , matchSignatoryName
+  , matchName
+  , NameMatchResult (..)
  ) where
 
 import Data.Aeson
+import Data.Algorithm.Diff (Diff, getGroupedDiff)
 import Data.Unjson
+import qualified Data.Algorithm.Diff as Diff
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 import Doc.API.V2.JSON.Misc
@@ -12,9 +18,21 @@ import Doc.Types.SignatoryLink
 import Doc.Types.SigningData
 import EID.EIDService.Types
 import EID.Signature.Model
+import Util.HasSomeUserInfo
 
-ssdToJson :: Bool -> SignatorySigningData -> Value
-ssdToJson hidePN SignatorySigningData {..} =
+data NameMatchResult
+  = Match
+  | Mismatch
+  | Misspelled
+  deriving (Eq)
+
+instance Show NameMatchResult where
+  show Match      = "match"
+  show Mismatch   = "mismatch"
+  show Misspelled = "misspelled"
+
+ssdToJson :: Bool -> SignatoryLink -> SignatorySigningData -> Value
+ssdToJson hidePN signatory SignatorySigningData {..} =
   object
     $  ["has_signed" .= ssdHasSigned, "provider" .= encAuthMethod]
     <> providerSpecificData
@@ -74,12 +92,14 @@ ssdToJson hidePN SignatorySigningData {..} =
                     else ["signatory_personal_number" .= netsdkSignatorySSN]
                )
         ]
-      Right (EIDServiceIDINSignature_ (EIDServiceIDINSignature (CompleteIDINEIDServiceTransactionData {..})))
+      Right (EIDServiceIDINSignature_ (EIDServiceIDINSignature (details@CompleteIDINEIDServiceTransactionData {..})))
         -> [ "nl_idin_data"
                .= (  object
                   $  [ "signatory_name" .= eiditdName
                      , "signatory_verified_email" .= eiditdVerifiedEmail
                      , "signatory_customer_id" .= eiditdCustomerID
+                     , "signatory_name_match"
+                       .= (showt $ matchSignatoryName signatory details)
                      ]
                   <> if hidePN
                        then []
@@ -90,3 +110,53 @@ ssdToJson hidePN SignatorySigningData {..} =
       Right (LegacyTeliaSignature_        _) -> []
       Right (LegacyNordeaSignature_       _) -> []
       Right (LegacyMobileBankIDSignature_ _) -> []
+
+-- Compare the name registered in the signatory link against
+-- the name returned from IDIN authentication. IDIN returns
+-- the initials of the first name, combined with the legal
+-- last name and prefix (tussenvoegsel).
+--   Match - if name matches exactly
+--   Misspelled - if there is 1~2 letters difference in the last name
+--   Mismatch - if the initials don't match or if more misspellings in the last name.
+matchSignatoryName
+  :: SignatoryLink -> CompleteIDINEIDServiceTransactionData -> NameMatchResult
+matchSignatoryName signatory details
+  | T.isPrefixOf slInitials eidName = matchName eidName slFullName
+  | otherwise = Mismatch
+  where
+    slFirstName = T.toLower $ getFirstName signatory
+    slLastName  = T.toLower $ getLastName signatory
+
+    slInitials :: Text
+    slInitials = T.concat . map (T.take 1) . T.words $ slFirstName
+
+    slFullName :: Text
+    slFullName = slInitials <> " " <> slLastName
+
+    eidName :: Text
+    eidName = T.toLower $ eiditdName details
+
+matchName :: Text -> Text -> NameMatchResult
+matchName s1 s2 | s1 == s2      = Match
+                | distance == 0 = Match
+                | distance <= 2 = Misspelled
+                | otherwise     = Mismatch
+  where distance = stringDistance (T.unpack $ s1) (T.unpack $ s2)
+
+-- Use diff algorithm to compare how many letters
+-- difference in two strings. Missing or additional
+-- one letter have distance of 1, while replacement
+-- of one letter have distance of 2 (substraction + addition).
+stringDistance :: String -> String -> Int
+stringDistance a b = distance
+  where
+    diffs :: [Diff String]
+    diffs = getGroupedDiff a b
+
+    patchSize :: Diff String -> Int
+    patchSize (Diff.First  s) = length s
+    patchSize (Diff.Second s) = length s
+    patchSize (Diff.Both _ _) = 0
+
+    distance :: Int
+    distance = sum . map patchSize $ diffs
