@@ -233,9 +233,10 @@ formatTimeSimpleWithTZ tz t = do
   fetchOne runIdentity
 
 showCreateFromTemplate :: Kontrakcja m => m InternalKontraResponse
-showCreateFromTemplate = withUser . with2FACheck $ \_ -> do
+showCreateFromTemplate = withUser . with2FACheck $ \user -> do
   ctx  <- getContext
-  page <- pageCreateFromTemplate ctx
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+  page <- pageCreateFromTemplate ctx (ugwpSettings ugwp)
   return $ internalResponse page
 
 -- | Call after signing in order to save the document for any user,

@@ -1,8 +1,11 @@
 module Doc.API.V2.Mock.MockDocInternal where
 
+import Data.Functor.Invariant
 import Data.Unjson
+import qualified Data.Set as S
 
-import Doc.API.V2.JSON.Misc (unjsonSignatoryRole)
+import Doc.API.V2.JSON.Misc (unjsonDocumentTag, unjsonSignatoryRole)
+import Doc.Types.DocumentTag (DocumentTag(..))
 import Doc.Types.SignatoryLink (SignatoryRole(..))
 import Folder.Types
 
@@ -28,7 +31,7 @@ data MockDoc = MockDoc
   , mockDocObjectVersion      :: !Int
   , mockDocAccessToken        :: !(Maybe String)
   , mockDocTimezone           :: !String
-  , mockDocTags               :: ![(String, String)]
+  , mockDocTags               :: !(S.Set DocumentTag)
   , mockDocFolderId           :: !(Maybe FolderID)
   , mockDocIsTemplate         :: !Bool
   , mockDocIsSaved            :: !Bool
@@ -63,7 +66,10 @@ mockDocUnjson =
     <*> field "object_version" mockDocObjectVersion "MockDoc ObjectVersion"
     <*> fieldOpt "access_token" mockDocAccessToken "MockDoc AccessToken"
     <*> field "timezone" mockDocTimezone "MockDoc Timezone"
-    <*> field "tags"     mockDocTags     "MockDoc Tags"
+    <*> fieldBy "tags"
+                mockDocTags
+                "MockDoc Tags"
+                (invmap S.fromList S.toList $ arrayOf unjsonDocumentTag)
     <*> fieldOpt "folder_id" mockDocFolderId "MockDoc FolderID"
     <*> field "is_template" mockDocIsTemplate "MockDoc IsTemplate"
     <*> field "is_saved"    mockDocIsSaved    "MockDoc IsSaved"

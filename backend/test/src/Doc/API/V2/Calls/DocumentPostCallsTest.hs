@@ -5,6 +5,7 @@ import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import DB.Query (dbQuery, dbUpdate)
@@ -20,6 +21,7 @@ import Doc.DocumentMonad (withDocumentID)
 import Doc.Model
 import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
+import Doc.Types.DocumentTag (DocumentTag(..))
 import Doc.Types.SignatoryAccessToken
 import Doc.Types.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
 import Doc.Types.SignatoryLink (SignatoryLink(..))
@@ -41,6 +43,9 @@ apiV2DocumentPostCallsTests env = testGroup
   , testThat "API v2 New from template for company shared"
              env
              testDocApiV2NewFromTemplateShared
+  , testThat "API v2 New from template with BPID (RBS hack, see Core-1712)"
+             env
+             testDocApiV2NewFromTemplateWithBPID
   , testThat "API v2 Update"            env testDocApiV2Update
   , testThat "API v2 Start"             env testDocApiV2Start
   , testThat "API v2 Prolong"           env testDocApiV2Prolong
@@ -153,6 +158,45 @@ testDocApiV2NewFromTemplateShared = do
     assertEqual "New document is in user's folder"
                 (documentfolderid doc)
                 (user ^. #homeFolderID)
+
+testDocApiV2NewFromTemplateWithBPID :: TestEnv ()
+testDocApiV2NewFromTemplateWithBPID = do
+  user <- addNewRandomUser
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  did  <- getMockDocId <$> testDocApiV2New' ctx
+  tmpl <- dbQuery $ GetDocumentByDocumentID did
+  assertEqual "Document is in user's folder"
+              (documentfolderid tmpl)
+              (user ^. #homeFolderID)
+
+  do -- Just to ensure limited scope so we don't test against the wrong thing
+    is_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper
+      ctx
+      POST
+      [("document", inText "{\"is_template\":true}")]
+      (docApiV2Update did)
+      200
+    assertEqual "Document should be template" True is_template
+    tmpl2 <- dbQuery $ GetDocumentByDocumentID did
+    assertEqual "Template is still in user's folder"
+                (documentfolderid tmpl2)
+                (user ^. #homeFolderID)
+
+  do -- Just to ensure limited scope so we don't test against the wrong thing
+    let testbpid = "testbpid"
+    mDoc <- mockDocTestRequestHelper ctx
+                                     POST
+                                     [("bpid", inText testbpid)]
+                                     (docApiV2NewFromTemplate did)
+                                     201
+    assertEqual "New document should NOT be template" False (getMockDocIsTemplate mDoc)
+    doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
+    assertEqual "New document is in user's folder"
+                (documentfolderid doc)
+                (user ^. #homeFolderID)
+    assertEqual "New document has BPID tag"
+                (S.singleton (DocumentTag "bpid" testbpid))
+                (documenttags doc)
 
 testDocApiV2Update :: TestEnv ()
 testDocApiV2Update = do

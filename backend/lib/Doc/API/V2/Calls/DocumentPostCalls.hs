@@ -39,6 +39,7 @@ import Happstack.Server.Types
 import Log
 import System.FilePath (dropExtension)
 import Text.StringTemplates.Templates
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import API.V2
@@ -126,6 +127,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   -- Parameters
   mFolderId     <- apiV2ParameterOptional (ApiV2ParameterRead "folder_id")
+  mBPID         <- apiV2ParameterOptional (ApiV2ParameterText "bpid")  -- RBS hack (CORE-1712)
   -- Guards
   withDocumentID did $ do
     guardThatUserIsAuthorOrDocumentIsShared user =<< theDocument
@@ -137,20 +139,27 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   whenJust mFolderId $ guardDocumentCreateInFolderIsAllowed user
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
-  (apiGuardJustM
-      (serverError "Can't clone given document")
-      (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor identity) >>=
-    )
-    $ flip withDocumentID
-    $ do
-        dbUpdate $ DocumentFromTemplate (documentid template) actor
-        dbUpdate $ SetDocumentUnsavedDraft False
-        whenJust mFolderId $ \fid -> void $ dbUpdate $ SetDocumentFolderID fid actor
-      -- Result
-        newDoc <- theDocument
-        logInfo "New document created from template"
-          $ object [logPair ("new_" <>) newDoc, logPair ("template_" <>) template]
-        return $ Created (unjsonDocument $ documentAccessForUser user newDoc, newDoc)
+  newdid   <-
+    apiGuardJustM (serverError "Can't clone given document")
+    $ dbUpdate
+    $ CloneDocumentWithUpdatedAuthor (Just user) template actor identity
+  withDocumentID newdid $ do
+    dbUpdate $ DocumentFromTemplate (documentid template) actor
+    dbUpdate $ SetDocumentUnsavedDraft False
+    whenJust mFolderId $ \fid -> void $ dbUpdate $ SetDocumentFolderID fid actor
+    -- This is a special hack for RBS (CORE-1712).
+    whenJust mBPID $ \bpid -> do
+      let tag = DocumentTag { tagname = "bpid", tagvalue = bpid }
+      draftData <- theDocument >>= \doc -> return $ doc
+        { documenttags      = S.insert tag $ documenttags doc
+        , documentshowarrow = False
+        }
+      applyDraftDataToDocument draftData actor
+    -- Result
+    newDoc <- theDocument
+    logInfo "New document created from template"
+      $ object [logPair ("new_" <>) newDoc, logPair ("template_" <>) template]
+    return $ Created (unjsonDocument $ documentAccessForUser user newDoc, newDoc)
 
 
 docApiV2Update :: Kontrakcja m => DocumentID -> m Response

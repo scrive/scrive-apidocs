@@ -5,8 +5,17 @@ var List = require("../lists/list");
 var moment = require("moment");
 var Submit = require("../../js/submits.js").Submit;
 var LoadingDialog = require("../../js/loading.js").LoadingDialog;
-
+var Modal = require("../common/modal");
+var InfoTextInput = require("../common/infotextinput");
 module.exports = React.createClass({
+    getInitialState: function () {
+      return {
+        selectedTemplate: null,
+        showBIPDModal: false,
+        newDocumentBPID: "",
+        requireBPID: window.promptbpid
+      };
+    },
     onPageShow: function (event) {
       if (event.persisted) {
         // If the page is loaded from the browser's cache (e.g. after the user
@@ -21,11 +30,32 @@ module.exports = React.createClass({
     componentWillUnmount: function () {
       window.removeEventListener("pageshow", this.onPageShow, false);
     },
-    createFromTemplate : function(id) {
+    createFromTemplate: function(id) {
+      var self = this;
+      if (self.state.requireBPID) {
+        self.setState({selectedTemplate: id, showBIPDModal: true});
+      } else {
+        self.createFromTemplateAndRedirect(id);
+      }
+    },
+    closeBIPDModal: function() {
+      this.setState({selectedTemplate: null, showBIPDModal: false});
+    },
+    onNewDocumentBPIDChange: function (value) {
+      this.setState({ newDocumentBPID: value });
+    },
+    acceptBIPDModal: function() {
+      const bpid = this.state.newDocumentBPID;
+      if (bpid.length > 0 && /^[a-z0-9]+$/i.test(bpid)) {
+        this.createFromTemplateAndRedirect(this.state.selectedTemplate,bpid);
+      }
+    },
+    createFromTemplateAndRedirect : function(id,bpid) {
       new Submit({
         method : "POST",
-        url: "/api/frontend/documents/newfromtemplate/" +  id,
+        url: "/api/frontend/documents/newfromtemplate/" + id,
         ajax: true,
+        bpid: bpid,
         onSend: function() {
           LoadingDialog.open();
         },
@@ -109,6 +139,31 @@ module.exports = React.createClass({
           <List.Pagination/>
 
           </List.List>
+
+          <Modal.Container active={self.state.showBIPDModal}>
+            <Modal.Header
+              title={"Create from template"}
+              showClose={true}
+              onClose={self.closeBIPDModal}
+            />
+            <Modal.Content>
+                <div className="position first">
+                  <label style={{"margin-right" : "10px"}}>BusinessPartner ID</label>
+                  <InfoTextInput
+                    ref="newdocumentbpid"
+                    inputtype="text"
+                    name="newdocumentbpid"
+                    value={self.state.newDocumentBPID}
+                    onChange={this.onNewDocumentBPIDChange}
+                  />
+                </div>
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={self.closeBIPDModal} />
+              <Modal.AcceptButton onClick={self.acceptBIPDModal} />
+            </Modal.Footer>
+          </Modal.Container>
+
         </div>
       );
     }

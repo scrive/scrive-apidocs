@@ -50,9 +50,10 @@ import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-pageCreateFromTemplate :: TemplatesMonad m => Context -> m Text
-pageCreateFromTemplate ctx =
-  renderTextTemplate "createFromTemplatePage" $ entryPointFields ctx
+pageCreateFromTemplate :: TemplatesMonad m => Context -> UserGroupSettings -> m Text
+pageCreateFromTemplate ctx ugSettings = renderTextTemplate "createFromTemplatePage" $ do
+  F.value "promptbpid" (ugSettings ^. #requireBPIDForNewDoc)
+  entryPointFields ctx
 
 pageDocumentDesign :: Kontrakcja m => Context -> Document -> AnalyticsData -> m Text
 pageDocumentDesign ctx document ad = do

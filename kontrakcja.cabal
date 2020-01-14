@@ -1361,6 +1361,7 @@ Test-suite kontrakcja-test
                , hpqtypes-extras
                , http-client
                , http-client-tls
+               , invariant
                , json
                , kontrakcja-templates
                , lifted-base
