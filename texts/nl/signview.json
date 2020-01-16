@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Personeelpas",
 "_elegSignDKSignMethodEmployeeKeyfile":"Sleutelbestand voor personeel",
 "_elegSignDKSignMethodPersonalKeycard":"Persoonlijk pasje",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Ondertekenen met iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, u ondertekent met Norwegian BankID. Wanneer u ondertekent wordt uw handtekening geregistreerd door de e-signing service Scrive. ",
 "_elegSignNOConfirmationTextNoName":"U gaat ondertekenen met behulp van Norwegian BankID. Wanneer u ondertekent wordt uw handtekening geregistreerd door de e-signing service Scrive.",
 "_elegSignNOConfirmationTitle":"Onderteken met Norwegian BankID",
@@ -89,7 +89,7 @@
 "_email":"E-mail",
 "_enterSMSPin":"Vul uw SMS PIN in",
 "_errorMessagePrefix":"De volgende fout is opgetreden: ",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Nieuw eID-proces starten is mislukt",
 "_filladitionfieldslabel":"Over u",
 "_firstname":"Voornaam",
 "_followTheArrow":"Volg de <span class='arrowtext'>PIJL</span>",
@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Het ondertekende document $documenttitle:noescape()$ is opnieuw naar u verstuurd op verzoek van $creatorname$. Vind het document door deze link te volgen: $link$",
 "_unavailableForSign":"Het document is niet langer beschikbaar voor ondertekening",
 "_userGroup":"Gebruikersgroep",
-"_userGroupExtraInfo":""
+"_userGroupExtraInfo":"Naam van gebruikersgroep voor intern gebruik (bijv. HR)"
 }

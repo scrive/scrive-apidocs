@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Zaměstnanecká karta s kódem",
 "_elegSignDKSignMethodEmployeeKeyfile":"Soubor s kódem pro zaměstnance",
 "_elegSignDKSignMethodPersonalKeycard":"Osobní karta s kódem",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Podpis pomocí služby iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, dokument podepíšete pomocí norské služby BankID. Po podepsání dokumentu služba Scrive elektronický podpis zaregistruje.",
 "_elegSignNOConfirmationTextNoName":"Dokument podepíšete pomocí norské služby BankID. Po podepsání dokumentu služba Scrive elektronický podpis zaregistruje.",
 "_elegSignNOConfirmationTitle":"Podpis pomocí norské služby BankID",
@@ -89,7 +89,7 @@
 "_email":"E-mail",
 "_enterSMSPin":"Zadejte kód PIN zaslaný zprávou SMS",
 "_errorMessagePrefix":"Vyskytla se tato chyba:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Nepodařilo se spustit nový postup eID",
 "_filladitionfieldslabel":"Osobní údaje",
 "_firstname":"Křestní jméno",
 "_followTheArrow":"Následujte <span class='arrowtext'>ŠIPKU</span>",
@@ -208,9 +208,9 @@
 "_signviewSigningFailed":"Je nám líto, ale během podepisování dokumentu se vyskytla chyba. Zkuste to prosím znovu.",
 "_smsDocumentErrorAuthor":"Službě Scrive se nepodařilo zpracovat dokument $documenttitle:noescape()$ a postup podepisování byl zrušen. V případě jakýchkoliv dotazů nám napište na adresu support@scrive.com.",
 "_smsDocumentErrorSignatory":"Službě Scrive se nepodařilo zpracovat dokument $documenttitle:noescape()$ a postup podepisování byl zrušen. V případě jakýchkoliv dotazů nám napište na adresu support@scrive.com.",
-"_smsInvitationToApprove":"",
+"_smsInvitationToApprove":"Uživatel $creatorname:noescape()$ vás pozval ke schválení dokumentu $documenttitle:noescape()$. Další pokyny naleznete na odkazu $link$",
 "_smsInvitationToSign":"Uživatel $creatorname:noescape()$ vás pozval k elektronickému podpisu dokumentu $documenttitle:noescape()$. Další pokyny naleznete na odkazu $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"Uživatel $creatorname:noescape()$ vás pozval k revizi dokumentu $documenttitle:noescape()$. Další pokyny naleznete na odkazu $link$",
 "_smsPinSendout":"Kód PIN pro dokument $documenttitle:noescape()$ je $pin$",
 "_smsRejectNotification":"Uživatel $rejectorName$ odmítl podepsat dokument $documenttitle:noescape()$. Postup podepisování byl proto zrušen.",
 "_smsReminder":"Uživatel $creatorname$ vás chce upomenout k podpisu dokumentu $documenttitle:noescape()$. Další pokyny naleznete na odkazu $link$",
@@ -219,6 +219,6 @@
 "_smsReminderAutomatic":"Toto je automatická upomínka. Připomíná, že jste ještě nepodepsali dokument $documenttitle:noescape()$ od uživatele $creatorname$. Další pokyny naleznete na odkazu $link$",
 "_smsReminderSigned":"Na žádost uživatele $creatorname$ vám byl podepsaný dokument $documenttitle:noescape()$ odeslán ještě jednou. Dokument naleznete po kliknutí na odkaz $link$",
 "_unavailableForSign":"Dokument už není pro podpis k dispozici",
-"_userGroup":"",
-"_userGroupExtraInfo":""
+"_userGroup":"Skupina uživatelů",
+"_userGroupExtraInfo":"Název skupiny uživatelů pro interní účely (např. HR):"
 }

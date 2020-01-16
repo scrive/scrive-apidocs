@@ -80,6 +80,10 @@ netsRoutes = choice
 
 ----------------------------------------
 
+data NetsResolveResult =
+  Success
+  | ErrorDobDoesNotMatch
+
 formatDOB :: Text -> Text
 formatDOB s = case T.splitOn "." s of
   [day, month, year] -> day <> month <> (T.drop 2 year)
@@ -214,13 +218,12 @@ handleResolve = do
                 _                -> do
                   logAttention_ "Received invalid provider from Nets"
                   internalError
-              resolvesucceeded <- resolve res doc nt sl ctx
-              if resolvesucceeded
-                then do
+              resolve res doc nt sl ctx >>= \case
+                Success -> do
                   logInfo_
                     $ "Successful assertion check with Nets. Signatory redirected back and should see view for signing"
                   return $ internalResponse $ LinkExternal $ netsReturnURL nt
-                else do
+                ErrorDobDoesNotMatch -> do
                   -- we have to switch lang here to get proper template for flash message
                   switchLang $ getLang doc
                   flashmessage <- flashMessageUserHasIdentifiedWithDifferentSSN
@@ -250,7 +253,7 @@ handleResolveNetsNOBankID
   -> NetsTarget
   -> SignatoryLink
   -> Context
-  -> m Bool
+  -> m NetsResolveResult
 handleResolveNetsNOBankID res doc nt sl ctx = do
   sessionID <- view #sessionID <$> getContext
   let decodeInternalProvider s = case s of
@@ -279,7 +282,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
             , "dob_ssn" .= dobSSN
             , "provider" .= ("no_bankid" :: Text)
             ]
-      return False
+      return ErrorDobDoesNotMatch
     else do
       -- Put NO BankID transaction in DB
       dbUpdate
@@ -335,7 +338,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
                                                             actor
 
       dbUpdate $ ChargeUserGroupForNOBankIDAuthentication (documentid doc)
-      return True
+      return Success
 
 
 handleResolveNetsDKNemID
@@ -345,7 +348,7 @@ handleResolveNetsDKNemID
   -> NetsTarget
   -> SignatoryLink
   -> Context
-  -> m Bool
+  -> m NetsResolveResult
 handleResolveNetsDKNemID res doc nt sl ctx = do
   sessionID <- view #sessionID <$> getContext
   let decodeInternalProvider s = case s of
@@ -366,7 +369,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
     then do
       logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object
         ["ssn_sl" .= ssn_sl, "ssn_nets" .= ssn_nets, "provider" .= ("dk_nemid" :: Text)]
-      return False
+      return ErrorDobDoesNotMatch
     else do
       let certificate =
             decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes
@@ -402,7 +405,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
           =<< signatoryActor ctx sl
 
       dbUpdate $ ChargeUserGroupForDKNemIDAuthentication (documentid doc)
-      return True
+      return Success
 
 handleResolveNetsFITupas
   :: Kontrakcja m
@@ -411,12 +414,11 @@ handleResolveNetsFITupas
   -> NetsTarget
   -> SignatoryLink
   -> Context
-  -> m Bool
+  -> m NetsResolveResult
 handleResolveNetsFITupas res doc nt sl ctx = do
   sessionID <- view #sessionID <$> getContext
   let signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
       dob_nets      = attributeFromAssertion "DOB" $ assertionAttributes res
-      dob_sl        = dobFromFIPersonalNumber $ getPersonalNumber sl
       mpid          = attributeFromAssertion "FI_TUPAS_PID" $ assertionAttributes res
       allowed_banks =
         [ "nordea"
@@ -434,12 +436,31 @@ handleResolveNetsFITupas res doc nt sl ctx = do
       bankName = if (bankStr `elem` allowed_banks)
         then bankStr
         else unexpectedError $ "invalid field in FI_TUPAS_BANK:" <+> bankStr
+  let slHadSsnAlready = not . T.null $ getPersonalNumber sl
+      mValidSsnFromFrontend =
+        resultToMaybe . asValidFinnishSSN =<< netsSsnFromFrontend nt
+  ssn_sl <- if slHadSsnAlready
+    then return $ getPersonalNumber sl
+    else case mValidSsnFromFrontend of
+      Just ssn -> return ssn
+      Nothing  -> do
+        logAttention "SSN from frontend missing or invalid." $ object
+          [ "ssn_from_frontend" .= netsSsnFromFrontend nt
+          , "dob_nets" .= dob_nets
+          , "provider" .= ("fi_tupas" :: Text)
+          ]
+        internalError
+  let dob_sl = dobFromFIPersonalNumber ssn_sl
 
-  if (dob_nets /= dob_sl)
+  if dob_sl /= dob_nets
     then do
-      logAttention "DOB from NETS does not match DOB from SSN in SignatoryLink." $ object
-        ["dob_sl" .= dob_sl, "dob_nets" .= dob_nets, "provider" .= ("fi_tupas" :: Text)]
-      return False
+      logInfo "DOB from NETS does not match DOB from SSN in SignatoryLink." $ object
+        [ "dob_sl" .= dob_sl
+        , "dob_nets" .= dob_nets
+        , "ssn_from_frontend" .= netsSsnFromFrontend nt
+        , "provider" .= ("fi_tupas" :: Text)
+        ]
+      return ErrorDobDoesNotMatch
     else do
       -- Put FI TUPAS Nem ID transaction in DB
       dbUpdate
@@ -453,6 +474,15 @@ handleResolveNetsFITupas res doc nt sl ctx = do
       -- Record evidence only for auth-to-view (i.e. if the document is not
       -- closed).
       when (mkAuthKind doc == AuthenticationToView) . withDocument doc $ do
+        -- When SSN is empty in SL but is provided by signatory and matches Nets DOB,
+        -- then set this SSN in DB. This will make future authToView attempts (as well as
+        -- authToSign and authToViewArchived) use this SSN.
+        when (not slHadSsnAlready)
+          . whenJust mValidSsnFromFrontend
+          $ \ssn_from_frontend -> do
+              actor <- signatoryActor ctx sl
+              dbUpdate $ UpdateSsnAfterIdentificationToView sl ssn_from_frontend actor
+
         --Add evidence
         let eventFields = do
               F.value "signatory_name" signatoryName
@@ -469,7 +499,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
           =<< signatoryActor ctx sl
 
       dbUpdate $ ChargeUserGroupForFITupasAuthentication (documentid doc)
-      return True
+      return Success
 
 ------------------------------------------
 

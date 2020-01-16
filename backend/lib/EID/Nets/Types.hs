@@ -165,13 +165,17 @@ data NetsTarget = NetsTarget
   , netsDocumentID           :: !DocumentID
   , netsSignatoryID          :: !SignatoryLinkID
   , netsReturnURL            :: !Text
+  , netsSsnFromFrontend      :: !(Maybe Text)
   } deriving (Eq, Ord, Show)
 
 decodeNetsTarget :: Text -> Maybe NetsTarget
 decodeNetsTarget t = case (B64.decode $ TE.encodeUtf8 t) of
   Right t' -> case (maybeRead $ T.pack $ BS.unpack t') of
-    Just (dmn, did, sid, rurl) -> Just $ NetsTarget dmn did sid rurl
-    _ -> Nothing
+    Just (dmn, did, sid, rurl) -> Just $ NetsTarget dmn did sid rurl Nothing
+    _ -> case (maybeRead $ T.pack $ BS.unpack t') of
+      Just (dmn, did, sid, rurl, ssnfromfrontend) ->
+        Just $ NetsTarget dmn did sid rurl (Just ssnfromfrontend)
+      _ -> Nothing
   _ -> Nothing
 
 -- | GetAssertionRequest request

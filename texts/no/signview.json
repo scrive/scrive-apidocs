@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Adgangskort for ansatte",
 "_elegSignDKSignMethodEmployeeKeyfile":"Adgangsfil for ansatte",
 "_elegSignDKSignMethodPersonalKeycard":"Personlig adgangskort",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Logg inn med iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, du vil signere med norsk BankID. Når du har signert, vil signaturen din bli registrert av e-signeringstjenesten Scrive.",
 "_elegSignNOConfirmationTextNoName":"Du vil signere med norsk BankID. Når du har signert, vil signaturen din bli registrert av e-signeringstjenesten Scrive.",
 "_elegSignNOConfirmationTitle":"Signer med norsk BankID",
@@ -89,7 +89,7 @@
 "_email":"E-post",
 "_enterSMSPin":"Skriv inn din SMS-PIN",
 "_errorMessagePrefix":"Tilbakevendende feilmelding:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Det gikk ikke å starte en ny eID-prosess",
 "_filladitionfieldslabel":"Om deg",
 "_firstname":"Fornavn",
 "_followTheArrow":"Følg <span class='arrowtext'>PILEN</span>",
@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Det signerte dokumentet $documenttitle:noescape()$ har blitt sendt til deg pånytt etter anmodning av $creatorname$. Finn dokumentet ved å følge denne lenken $link$",
 "_unavailableForSign":"Dokumentet er ikke lenger tilgjengelig for signering",
 "_userGroup":"Brukergruppe",
-"_userGroupExtraInfo":""
+"_userGroupExtraInfo":"Internbruk brukergruppe (f.eks. HR):"
 }

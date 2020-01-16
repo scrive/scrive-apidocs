@@ -35,10 +35,12 @@ var InfoTextInput = require("../../common/infotextinput");
       var textFiels = sig.fields().filter((f) => f.isText());
       var res = [];
       _.each(textFiels, function (f) {
-        if (self.getNewValue(f) != null && f.value() != self.getNewValue(f)) {
+        var newVal = self.getNewValue(f);
+        // send empty string if not filled out, so backend does not default to old sig values
+        if (f.value() != newVal) {
           res.push({
             field: f,
-            newValue: self.getNewValue(f)
+            newValue: newVal !== undefined ? newVal : ""
           });
         }
       });
@@ -49,7 +51,10 @@ var InfoTextInput = require("../../common/infotextinput");
         return (f.type() + "_" + (f.order() || "") + "_" +  (f.name() || ""));
     },
     getNewValue (f) {
-        return this.state.newValues[this.fieldKey(f)];
+      if (f.isCustom() && f.value() !== "") {
+        return f.value();
+      }
+      return this.state.newValues[this.fieldKey(f)];
     },
 
     setNewValue: function (f, value) {
@@ -91,6 +96,7 @@ var InfoTextInput = require("../../common/infotextinput");
                           className={(self.obligatoryField(tf) ? "obligatory-forward-input" : "") +
                                      (tf.isValid(self.getNewValue(tf) || "") ? " valid" : "")}
                           value={self.getNewValue(tf)}
+                          disabled={tf.isCustom() && tf.value() !== ""}
                           onChange={function (v) { self.setNewValue(tf, v); }}
                         />
                       </div>

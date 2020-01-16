@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Karta pracownika",
 "_elegSignDKSignMethodEmployeeKeyfile":"Plik klucza pracownika",
 "_elegSignDKSignMethodPersonalKeycard":"Karta osobista",
-"_elegSignNLConfirmationTitle":"",
+"_elegSignNLConfirmationTitle":"Podpisz przy użyciu iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, do złożenia podpisu użyjesz norweskiego BankID. Po podpisaniu dokumentu Twój podpis zostanie zarejestrowany przez serwis podpisów elektronicznych Scrive.",
 "_elegSignNOConfirmationTextNoName":"Do złożenia podpisu użyjesz norweskiego BankID. Po podpisaniu dokumentu Twój podpis zostanie zarejestrowany przez serwis podpisów elektronicznych Scrive.",
 "_elegSignNOConfirmationTitle":"Podpisz przy użyciu norweskiego BankID",
@@ -89,7 +89,7 @@
 "_email":"Adres e-mail",
 "_enterSMSPin":"Podaj kod PIN, który otrzymałeś SMS-em",
 "_errorMessagePrefix":"Wystąpił błąd:",
-"_failedToStartNewEIDProcess":"",
+"_failedToStartNewEIDProcess":"Próba rozpoczęcia nowego procesu eID nie powiodła się",
 "_filladitionfieldslabel":"Twoje dane",
 "_firstname":"Imię",
 "_followTheArrow":"Podążaj za <span class='arrowtext'>STRZAŁKĄ</span>",
@@ -220,5 +220,5 @@
 "_smsReminderSigned":"Podpisany dokument $documenttitle:noescape()$ został do Ciebie ponownie przesłany na prośbę $creatorname$. Dokument jest dostępny pod linkiem $link$",
 "_unavailableForSign":"Nie ma już możliwości podpisania tego dokumentu",
 "_userGroup":"Grupa użytkowników",
-"_userGroupExtraInfo":""
+"_userGroupExtraInfo":" Nazwa grupy do użytku wewnętrznego (np. HR):"
 }

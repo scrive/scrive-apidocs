@@ -744,6 +744,8 @@ $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".
 ###
+UpdateSsnAfterAuthenticationToViewWithNetsLog=The signatory <span class="signatory"/> changed the text in the text field "ID number" from blank to "$new_ssn$". Scrive eSign permanently assigned this ID number for this signatory.
+###
 AuthorAttachmentHashComputedLog=The attachment "$attachment_name$" will not be merged with the main document. To be able to confirm the integrity of "$attachment_name$" it was hashed using the SHA-256 method.
 <br/>
 <br/>

@@ -88,12 +88,21 @@
       font-weight: 600;
     }
 
+    .redborder {
+      background: transparent;
+      border-color: @negativecolor;
+    }
   }
 
   .identify-box-button {
     .button {
       margin-left: auto;
       margin-right: auto;
+
+      &.disabled {
+        background-color: #CCCCCC;
+        cursor: default;
+      }
     }
   }
 

@@ -667,7 +667,7 @@ createTableUserGroupFreeDocumentTokens = Migration
         . sqlInsertSelect "user_group_free_document_tokens" "user_group_invoicings as i"
         $ do
             sqlSetCmd "user_group_id" "i.user_group_id"
-            sqlSet "tokens_count" (3 :: Int32)
+            sqlSet "tokens_count" (5 :: Int32)
             sqlSetCmd "tokens_validity" "now() + interval '30 days'"
             sqlWhereEq "i.invoicing_type" (3 :: Int16) -- User groups on individual invoicing
             sqlWhereEq "i.payment_plan"   (0 :: Int16) -- Free plan
