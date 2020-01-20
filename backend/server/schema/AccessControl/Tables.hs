@@ -5,7 +5,7 @@ import DB
 tableAccessControl :: Table
 tableAccessControl = tblTable
   { tblName        = "access_control"
-  , tblVersion     = 7
+  , tblVersion     = 8
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "role", colType = SmallIntT, colNullable = False }

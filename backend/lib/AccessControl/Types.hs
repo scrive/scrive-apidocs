@@ -87,8 +87,6 @@ data AccessRoleTarget
   --   May e.g. CRUD users but not add user groups
   | UserGroupAdminAR UserGroupID
   -- ^ A user group admin; may do most things like adding and moving user groups
-  | DocumentAdminAR FolderID
-  -- ^ Document admin can do anything with documents in a Folder
   | FolderAdminAR FolderID
   -- ^ A @devnote
   | FolderUserAR FolderID
@@ -213,15 +211,12 @@ hasPermissions (UserGroupAdminAR usrGrpID) =
   | act <- [minBound .. maxBound]
   , res <- [minBound .. maxBound]
   ]
-hasPermissions (DocumentAdminAR fid) =
-  -- can CRUD documents in the folder
-  map (mkPerm fid DocumentR) [minBound .. maxBound]
-    <>
-  -- can set/remove any role on any sub-folder
-       map (mkPerm fid FolderPolicyR) [minBound .. maxBound]
 hasPermissions (FolderAdminAR fid) =
   -- can perform all actions upon folder
   map (mkPerm fid FolderR) [minBound .. maxBound]
+    <>
+  -- can CRUD documents in the folder
+       map (mkPerm fid DocumentR)     [minBound .. maxBound]
     <>
   -- can set/remove any role on the folder
        map (mkPerm fid FolderPolicyR) [minBound .. maxBound]
@@ -334,7 +329,6 @@ data AccessRoleType
   | UserGroupMemberART
   | UserAdminART
   | UserGroupAdminART
-  | DocumentAdminART
   | FolderAdminART
   | FolderUserART
   deriving (Eq)
@@ -351,7 +345,9 @@ instance FromSQL AccessRoleType where
       1 -> return UserGroupMemberART
       2 -> return UserAdminART
       3 -> return UserGroupAdminART
-      4 -> return DocumentAdminART
+      -- The DocumentAdmin role was removed, leaving this gap.
+      -- When creating a new role, please use number 4 and
+      -- remove this comment.
       5 -> return FolderAdminART
       6 -> return FolderUserART
       _ -> E.throwIO $ RangeError { reRange = [(0, 6)], reValue = n }
@@ -362,7 +358,6 @@ instance ToSQL AccessRoleType where
   toSQL UserGroupMemberART = toSQL (1 :: Int16)
   toSQL UserAdminART       = toSQL (2 :: Int16)
   toSQL UserGroupAdminART  = toSQL (3 :: Int16)
-  toSQL DocumentAdminART   = toSQL (4 :: Int16)
   toSQL FolderAdminART     = toSQL (5 :: Int16)
   toSQL FolderUserART      = toSQL (6 :: Int16)
 
@@ -371,7 +366,6 @@ instance Show AccessRoleType where
   show UserGroupMemberART = "user_group_member"
   show UserAdminART       = "user_admin"
   show UserGroupAdminART  = "user_group_admin"
-  show DocumentAdminART   = "document_admin"
   show FolderAdminART     = "folder_admin"
   show FolderUserART      = "folder_user"
 
@@ -380,7 +374,6 @@ instance Read AccessRoleType where
   readsPrec _ "user_admin"        = [(UserAdminART, "")]
   readsPrec _ "user_group_admin"  = [(UserGroupAdminART, "")]
   readsPrec _ "user_group_member" = [(UserGroupMemberART, "")]
-  readsPrec _ "document_admin"    = [(DocumentAdminART, "")]
   readsPrec _ "folder_admin"      = [(FolderAdminART, "")]
   readsPrec _ "folder_user"       = [(FolderUserART, "")]
   readsPrec _ _                   = []
@@ -407,7 +400,6 @@ toAccessRoleType ar = case ar of
   UserGroupMemberAR _ -> UserGroupMemberART
   UserAdminAR       _ -> UserAdminART
   UserGroupAdminAR  _ -> UserGroupAdminART
-  DocumentAdminAR   _ -> DocumentAdminART
   FolderAdminAR     _ -> FolderAdminART
   FolderUserAR      _ -> FolderUserART
 

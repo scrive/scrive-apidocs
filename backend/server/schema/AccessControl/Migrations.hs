@@ -1,5 +1,6 @@
 module AccessControl.Migrations where
 
+import Data.Int
 import Database.PostgreSQL.PQTypes.Checks
 
 import AccessControl.Tables
@@ -162,4 +163,15 @@ addFolderAdminRoleChecks = Migration
                                "role = 5 AND trg_folder_id IS NOT NULL OR role <> 5"
                              }
                          ]
+  }
+
+removeExplicitDocumentAdminRoles :: MonadDB m => Migration m
+removeExplicitDocumentAdminRoles = Migration
+  { mgrTableName = tblName tableAccessControl
+  , mgrFrom      = 7
+  , mgrAction    = StandardMigration
+                   . runQuery_
+                   . sqlDelete "access_control"
+                   . sqlWhereEq "role"
+                   $ Just (4 :: Int16)
   }

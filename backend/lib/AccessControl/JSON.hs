@@ -150,7 +150,6 @@ accessRoleTargetToJSON (UserAR            uid ) = UserTargetJSON uid
 accessRoleTargetToJSON (UserGroupMemberAR ugid) = UserGroupTargetJSON ugid
 accessRoleTargetToJSON (UserAdminAR       ugid) = UserGroupTargetJSON ugid
 accessRoleTargetToJSON (UserGroupAdminAR  ugid) = UserGroupTargetJSON ugid
-accessRoleTargetToJSON (DocumentAdminAR   fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (FolderAdminAR     fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (FolderUserAR      fid ) = FolderTargetJSON fid
 
@@ -171,7 +170,6 @@ jsonToAccessRoleTarget roleJson = case target roleJson of
     UserGroupMemberART -> fail invalidTargetErr
     UserAdminART       -> fail invalidTargetErr
     UserGroupAdminART  -> fail invalidTargetErr
-    DocumentAdminART   -> fail invalidTargetErr
     FolderAdminART     -> fail invalidTargetErr
     FolderUserART      -> fail invalidTargetErr
   UserGroupTargetJSON ugid -> case roleType roleJson of
@@ -181,12 +179,10 @@ jsonToAccessRoleTarget roleJson = case target roleJson of
     UserGroupMemberART -> return $ UserGroupMemberAR ugid
     -- invalid
     UserART            -> fail invalidTargetErr
-    DocumentAdminART   -> fail invalidTargetErr
     FolderAdminART     -> fail invalidTargetErr
     FolderUserART      -> fail invalidTargetErr
   FolderTargetJSON fid -> case roleType roleJson of
     -- valid
-    DocumentAdminART   -> return $ DocumentAdminAR fid
     FolderAdminART     -> return $ FolderAdminAR fid
     FolderUserART      -> return $ FolderUserAR fid
     -- invalid

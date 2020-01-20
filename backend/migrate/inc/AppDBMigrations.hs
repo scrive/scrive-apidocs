@@ -228,4 +228,5 @@ kontraMigrations =
   , userGroupSettingsAddEidServiceToken
   , createTableUserGroupFreeDocumentTokens
   , addUserSysAuthColumn
+  , removeExplicitDocumentAdminRoles
   ]
