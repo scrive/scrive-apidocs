@@ -38,9 +38,10 @@ userGroupTests env = testGroup
              env
              testCannotDeleteUserGroupWithSubgroups
   , testThat "Test setting user group parents"    env testChangeUserGroupParent
-  , testThat "User group root must have invoice"  env testUserGroupRootMustHaveInvoice
-  , testThat "User group root must have address"  env testUserGroupRootMustHaveAddress
+  , testThat "User group root must have invoice" env testUserGroupRootMustHaveInvoice
+  , testThat "User group root must have address" env testUserGroupRootMustHaveAddress
   , testThat "User group root must have settings" env testUserGroupRootMustHaveSettings
+  , testThat "User group tags work"               env testTags
   ]
 
 testCreateGroups :: TestEnv ()
@@ -359,3 +360,27 @@ testUserGroupRootMustHaveSettings = do
     . UserGroupUpdate
     . set #settings Nothing
     $ ug1
+
+testTags :: TestEnv ()
+testTags = do
+  protoUg <- ugFromUGRoot <$> rand 10 arbitrary
+  iTags   <- rand 10 arbitrary
+  eTags   <- rand 10 arbitrary
+  ug      <-
+    dbUpdate
+    . UserGroupCreate
+    . set #internalTags iTags
+    . set #externalTags eTags
+    $ protoUg
+  let ugid = ug ^. #id
+  Just ugRes <- dbQuery $ UserGroupGet ugid
+  assertEqual "Internal tags match after create" iTags (ugRes ^. #internalTags)
+  assertEqual "External tags match after create" eTags (ugRes ^. #externalTags)
+
+  iTags2 <- rand 10 arbitrary
+  eTags2 <- rand 10 arbitrary
+  _      <-
+    dbUpdate . UserGroupUpdate . set #internalTags iTags2 . set #externalTags eTags2 $ ug
+  Just ugRes2 <- dbQuery $ UserGroupGet ugid
+  assertEqual "Internal tags match after update" iTags2 (ugRes2 ^. #internalTags)
+  assertEqual "External tags match after update" eTags2 (ugRes2 ^. #externalTags)

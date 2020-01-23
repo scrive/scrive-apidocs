@@ -12,6 +12,7 @@ import Data.Aeson.Encoding
 import Data.Unjson
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as L
+import qualified Data.Set as S
 
 import DataRetentionPolicy
 import InputValidation
@@ -27,19 +28,35 @@ encodeUserGroup inheritable ugwp children =
     <> pair "children"        childrenEncoding
     <> pair "contact_details" (encodeUserGroupContactDetails inheritable ugwp)
     <> pair "settings" (encodeUserGroupSettings inheritable ugwp)
+    <> pair "tags"            tags
   where
     ug               = ugwpUG ugwp
     childrenEncoding = flip list children
       $ \child -> pairs $ "id" .= (child ^. #id) <> "name" .= (child ^. #name)
+    tags = flip list (S.toList $ ug ^. #externalTags)
+      $ \tag -> pairs $ I.tagname tag .= I.tagvalue tag
 
 updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
-updateUserGroupFromRequest ug ugChanges = do
-  let ugReq =
-        UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID, reqName = ug ^. #name }
+updateUserGroupFromRequest ug ugChanges =
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
-    (Result ugUpdated []) ->
-      Just $ ug & (#parentGroupID .~ reqParentID ugUpdated) & (#name .~ reqName ugUpdated)
+    (Result ugUpdated []) -> do
+      userGroupTags <- mapM parseTag $ reqTags ugUpdated
+      Just
+        $ ug
+        & (#parentGroupID .~ reqParentID ugUpdated)
+        & (#name .~ reqName ugUpdated)
+        & (#externalTags .~ S.fromList userGroupTags)
     (Result _ _) -> Nothing
+  where
+    ugReq = UserGroupRequestJSON
+      { reqParentID = ug ^. #parentGroupID
+      , reqName     = ug ^. #name
+      , reqTags     = map encodeTag . S.toList $ ug ^. #externalTags
+      }
+    parseTag m = case HM.toList m of
+      [(k, v)] -> Just $ I.UserGroupTag k v
+      _        -> Nothing
+    encodeTag ugt = HM.singleton (ugt ^. #tagname) (ugt ^. #tagvalue)
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
 unjsonUserGroupRequestJSON =
@@ -47,10 +64,12 @@ unjsonUserGroupRequestJSON =
     $   pure UserGroupRequestJSON
     <*> fieldOpt "parent_id" reqParentID "User Group ID"
     <*> field "name" reqName "User Group Name"
+    <*> field "tags" reqTags "User Group Tags"
 
 data UserGroupRequestJSON = UserGroupRequestJSON {
     reqParentID    :: Maybe UserGroupID
   , reqName        :: Text
+  , reqTags        :: [HM.HashMap Text Text]
   }
 
 newtype UGAddrJSON = UGAddrJSON UserGroupAddress
@@ -138,6 +157,7 @@ instance ToJSON UGDRPJSON where
       <> ("idle_doc_timeout_error" .= (drp ^. #idleDocTimeoutError))
       <> ("immediate_trash" .= (drp ^. #immediateTrash))
 
+-- This throws away all the fields except DRP
 encodeUserGroupSettings :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupSettings inheritable ugwp =
   pairs $ makeDRPJson inheritedFrom msettings <> inheritPreview

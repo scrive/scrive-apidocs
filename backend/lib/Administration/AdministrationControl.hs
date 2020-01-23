@@ -35,6 +35,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
@@ -437,7 +438,11 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugSettingsChange      <- getUserGroupSettingsChange
   mUGAddressIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companyaddressisinherited"
-  ugAddressChange       <- getUserGroupAddressChange
+  ugAddressChange  <- getUserGroupAddressChange
+  mInternalTagsRaw <- getFieldJSON "companyinternaltags"
+  let mInternalTags = mInternalTagsRaw >>= parseTags
+  mExternalTagsRaw <- getFieldJSON "companyexternaltags"
+  let mExternalTags = mExternalTagsRaw >>= parseTags
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
   let oldUG       = ugwpUG ugwp
@@ -449,7 +454,9 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
         else set #address . Just . ugAddressChange $ ugwpAddress ugwp
       newUG =
         set #parentGroupID mTryParentUserGroupID
-          . maybe identity (set #name) mCompanyName
+          . maybe identity (set #name)         mCompanyName
+          . maybe identity (set #internalTags) mInternalTags
+          . maybe identity (set #externalTags) mExternalTags
           . setSettings
           . setAddress
           $ ugwpUG ugwp
@@ -462,6 +469,16 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
+  where
+    -- Tags look like: [{"name":"value"}, ...]
+    parseTags val = case val of
+      JSArray ar -> S.fromList <$> mapM parseTag ar
+      _          -> Nothing
+    parseTag val = case val of
+      JSObject ob -> case fromJSObject ob of
+        [(k, (JSString v))] -> Just $ I.UserGroupTag (T.pack k) (T.pack $ fromJSString v)
+        _                   -> Nothing
+      _ -> Nothing
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do

@@ -22,6 +22,8 @@ import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
+import qualified Data.Set as S
+import qualified Data.Text as T
 
 import Doc.API.V2.JSON.Misc
 import MinutesTime
@@ -137,6 +139,7 @@ companyJSON ugwp = do
     value "companyhomefolderid" $ ug ^. #homeFolderID
     companyAddressJson $ ugwpAddress ugwp
     companySettingsJson $ ugwpSettings ugwp
+    objects "companyexternaltags" . companyTagsJsons $ ug ^. #externalTags
 
 companyJSONAdminOnly :: UserGroupWithParents -> JSValue
 companyJSONAdminOnly ugwp = do
@@ -153,6 +156,8 @@ companyJSONAdminOnly ugwp = do
     companyAddressJson activeAddress
     value "companyname" $ ug ^. #name
     companySettingsJson $ activeSettings
+    objects "companyinternaltags" . companyTagsJsons $ ug ^. #internalTags
+    objects "companyexternaltags" . companyTagsJsons $ ug ^. #externalTags
 
     whenJust (mInheritedAddress) $ object "companyinheritedaddress" . companyAddressJson
     value "companyaddressisinherited" ugAddressIsInherited
@@ -166,6 +171,12 @@ companyJSONAdminOnly ugwp = do
     objects "parentgrouppath" . for ugParentPath $ \parent -> do
       value "group_id" . show $ parent ^. #id
       value "group_name" $ parent ^. #name
+
+companyTagsJsons :: S.Set UserGroupTag -> [JSONGenT Identity ()]
+companyTagsJsons = map companyTagJson . S.toList
+
+companyTagJson :: UserGroupTag -> JSONGenT Identity ()
+companyTagJson tag = value (T.unpack $ tag ^. #tagname) (T.unpack $ tag ^. #tagvalue)
 
 companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
 companyAddressJson uga = do
