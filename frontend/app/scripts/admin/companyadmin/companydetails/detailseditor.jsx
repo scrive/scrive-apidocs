@@ -1,6 +1,30 @@
 var React = require("react");
 var _ = require("underscore");
 
+var tagUtils = {
+  find: function (tags, name) {
+    var tag = _.find(tags, function (tag) {
+      return _.keys(tag)[0] === name;
+    });
+    return _.values(tag)[0];
+  },
+  delete: function (tags, name) {
+    return _.reject(tags, function (tag) {
+      return _.keys(tag)[0] === name;
+    });
+  },
+  addOne: function (tags, name, value) {
+    var tag = {};
+    tag[name] = value;
+    return [].concat(tags, tag);
+  },
+  updateOne: function (tags, name, value) {
+    var tags2 = this.delete(tags, name);
+    return this.addOne(tags2, name, value);
+  }
+};
+var sfAccountIdTagName = "sf-account-id";
+
 var CompanyDetailsViewModel = require("./companydetailsviewmodel");
 var Select = require("../../../common/select");
 var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
@@ -85,6 +109,8 @@ var DetailsEditorView = React.createClass({
     inheritedAddress: addressPropTypes,
     settingsIsInherited: React.PropTypes.bool.isRequired,
     inheritedSettings: settingsPropTypes,
+    companyinternaltags: React.PropTypes.object,
+    companyexternaltags: React.PropTypes.object,
     onFieldChange: React.PropTypes.func.isRequired
   },
   onNameChange: function (event) {
@@ -189,6 +215,12 @@ var DetailsEditorView = React.createClass({
       this.props.onFieldChange("settingsIsInherited", event.target.checked);
     }
   },
+  onSfAccountIdChange: function (event) {
+    var value = event.target.value;
+    var sfAccountId = value !== "" ? value : null;
+    var tags = tagUtils.updateOne(this.props.companyinternaltags, sfAccountIdTagName, sfAccountId);
+    this.props.onFieldChange("companyinternaltags", tags);
+  },
   render: function () {
     var self = this;
 
@@ -258,6 +290,19 @@ var DetailsEditorView = React.createClass({
             </td>
             <td>
             </td>
+          </tr>
+          <tr><td colSpan={3}><hr/></td></tr>
+          <tr>
+            <td><label>SF Account ID</label></td>
+            <td>
+              <input
+                name="sfAccountId"
+                type="text"
+                value={tagUtils.find(this.props.companyinternaltags, sfAccountIdTagName)}
+                onChange={this.onSfAccountIdChange}
+              />
+            </td>
+            <td>The purpose of this field is to match User Groups with Salesforce Accounts.</td>
           </tr>
           <tr><td colSpan={3}><hr/></td></tr>
           <tr>

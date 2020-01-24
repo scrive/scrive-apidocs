@@ -36,7 +36,9 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       portalurl: null,
       eidservicetoken: null,
       settingsIsInherited: false,
-      inheritedSettings: null
+      inheritedSettings: null,
+      companyinternaltags: [],
+      companyexternaltags: []
     },
     saveDetails: function () {
       return new Submit({
@@ -69,7 +71,9 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companyportalurl: this.get("portalurl"),
         companyeidservicetoken: this.get("eidservicetoken"),
         companyaddressisinherited: this.get("addressIsInherited"),
-        companysettingsisinherited: this.get("settingsIsInherited")
+        companysettingsisinherited: this.get("settingsIsInherited"),
+        companyinternaltags: JSON.stringify(this.get("companyinternaltags")),
+        companyexternaltags: JSON.stringify(this.get("companyexternaltags"))
       });
     },
     mergeToCompany: function (newCompanyId) {
