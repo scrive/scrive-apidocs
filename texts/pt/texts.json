@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Aceitar",
 "_CompanyAccounts":"Utilizadores",
 "_CompanySettings":"Aplicação de marca empresarial",
@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Carregar documentos",
 "_apiConfiramtionDeny":"Página anterior",
 "_apiConfiramtionFooterLogged":"Clique no botão para conceder privilégios.",
-"_apiConfiramtionFooterNotLogged":"Inicie a sessão na sua conta do Scrive para conceder privilégios. Se ainda não dispõe de uma conta do Scrive, siga as instruções fornecidas para criar uma conta.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":" está a solicitar permissão para efectuar as seguintes acções no Scrive em seu nome:",
 "_apiConfiramtionLoginAndAccept":"Iniciar sessão e conceder privilégios",
 "_apiConfiramtionLoginAndAcceptTitle":"Iniciar sessão e conceder privilégios",

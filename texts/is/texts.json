@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Hlaða skjölum upp",
 "_apiConfiramtionDeny":"Fyrri síða",
 "_apiConfiramtionFooterLogged":"Smelltu á hnappinn til að veita réttindi.",
-"_apiConfiramtionFooterNotLogged":"Skráðu þig inn á Scrive reikning þinn til að veita réttindi. Ef þú ert ekki með Scrive reikning skaltu fylgja leiðbeiningunum til að búa til slíkan.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"óskar eftir heimild til að framkvæma eftirfarandi aðgerðir í Scrive fyrir þína hönd:",
 "_apiConfiramtionLoginAndAccept":"Skráðu þig inn og veittu réttindi",
 "_apiConfiramtionLoginAndAcceptTitle":"Skráðu þig inn og veittu réttindi",

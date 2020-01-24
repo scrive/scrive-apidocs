@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Cargar los documentos",
 "_apiConfiramtionDeny":"Página anterior",
 "_apiConfiramtionFooterLogged":"Haga clic en el botón para conceder los privilegios.",
-"_apiConfiramtionFooterNotLogged":"Inicie sesión en su cuenta de Scrive para conceder privilegios. Si no tiene una cuenta en Scrive por favor siga las instrucciones para crear una cuenta. ",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"está solicitando permiso para realizar la siguiente acción en Scrive en su nombre:",
 "_apiConfiramtionLoginAndAccept":"Inicie sesión y conceda los privilegios",
 "_apiConfiramtionLoginAndAcceptTitle":"Inicie sesión y conceda los privilegios",

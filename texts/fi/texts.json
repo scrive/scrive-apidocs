@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Lataa dokumentit",
 "_apiConfiramtionDeny":"Edellinen sivu",
 "_apiConfiramtionFooterLogged":"Paina kuvaketta myöntääksesi etuoikeudet.",
-"_apiConfiramtionFooterNotLogged":"Kirjaudu sisään Scrive-tilillesi myöntääksesi etuoikeudet. Jos sinulla ei ole Scrive-tiliä, ole hyvä ja seuraa ohjeita luodaksesi tilin.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"pyytää lupaa tehdä seuraavat toimet Scrive:ssä puolestasi:",
 "_apiConfiramtionLoginAndAccept":"Kirjaudu sisään ja myönnä etuoikeudet",
 "_apiConfiramtionLoginAndAcceptTitle":"Kirjaudu sisään ja myönnä etuoikeudet",

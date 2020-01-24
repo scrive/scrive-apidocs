@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Carica documenti",
 "_apiConfiramtionDeny":"Pagina precedente",
 "_apiConfiramtionFooterLogged":"Clicca il pulsante per concedere i diritti.",
-"_apiConfiramtionFooterNotLogged":"Accedi al tuo account Scrive per concedere i diritti. Se non possiedi ancora un account Scrive, ti preghiamo di seguire le istruzioni per creare un account.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"chiede l'autorizzazione per eseguire le seguenti azioni in Scrive a tuo nome:",
 "_apiConfiramtionLoginAndAccept":"Accedi e concedi i diritti",
 "_apiConfiramtionLoginAndAcceptTitle":"Accedi e concedi diritti",

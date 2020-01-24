@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Įkelti dokumentus",
 "_apiConfiramtionDeny":"Ankstesnis puslapis",
 "_apiConfiramtionFooterLogged":"Suteikite teises paspausdami mygtuką.",
-"_apiConfiramtionFooterNotLogged":"Norėdami suteikti teises, prisijunkite prie savo „Scrive“ paskyros. Jei neturite „Scrive“ paskyros, susikurkite ją pagal pateiktus nurodymus.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"prašo leidimo Jūsų vardu atlikti tokius veiksmus „Scrive“ programoje:",
 "_apiConfiramtionLoginAndAccept":"Prisijunkite ir suteikite teises",
 "_apiConfiramtionLoginAndAcceptTitle":"Prisijunkite ir suteikite teises",
