@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Last opp dokumenter",
 "_apiConfiramtionDeny":"Forrige side",
 "_apiConfiramtionFooterLogged":"Klikk på knappen for å tildele rettigheter.",
-"_apiConfiramtionFooterNotLogged":"Logg inn på din Scrive-konto for å tildele rettigheter. Om du ikke har en Scrive-konto vennligst følg instruksjonene for å opprette en konto.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"ber om tillatelse til å utføre følgende handlinger i Scrive på dine vegne:",
 "_apiConfiramtionLoginAndAccept":"Logg inn og tildel rettigheter",
 "_apiConfiramtionLoginAndAcceptTitle":"Logg inn og tildel rettigheter",

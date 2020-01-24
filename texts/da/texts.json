@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Upload dokumenter",
 "_apiConfiramtionDeny":"Forrige side",
 "_apiConfiramtionFooterLogged":"Klik på knappen for at tildele privilegier.",
-"_apiConfiramtionFooterNotLogged":"Log ind på din Scrive konto for at tildele privilegier. Hvis du ikke har en Scrive konto, skal du følge instruktionerne for at oprette en konto.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":" anmoder om tilladelse til at udføre følgende handlinger i Scrive på dine vegne:",
 "_apiConfiramtionLoginAndAccept":"Log ind og tildel privilegier",
 "_apiConfiramtionLoginAndAcceptTitle":"Log ind og tildel privilegier",

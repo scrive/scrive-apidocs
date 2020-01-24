@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Lae dokumendid üles",
 "_apiConfiramtionDeny":"Eelnev lehekülg",
 "_apiConfiramtionFooterLogged":"Klõpsake õiguste andmiseks nuppu.",
-"_apiConfiramtionFooterNotLogged":"Logige õiguste andmiseks enda Scrive kontole. Kui Teil pole veel Scrive kontot, järgige juhiseid konto loomiseks.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"palub luba teha järgnevaid toiminguid Scrive keskkonnas Teie nimel:",
 "_apiConfiramtionLoginAndAccept":"Logi sisse ja anna õigused",
 "_apiConfiramtionLoginAndAcceptTitle":"Logi sisse ja anna õigused",

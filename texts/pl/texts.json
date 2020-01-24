@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Załaduj dokumenty",
 "_apiConfiramtionDeny":"Poprzednia strona",
 "_apiConfiramtionFooterLogged":"Kliknij przycisk, aby nadać uprawnienia",
-"_apiConfiramtionFooterNotLogged":"Zaloguj się na swoje konto Scrive, aby nadać uprawnienia. Jeśli nie posiadasz konta Scrive, postępuj zgodnie z instrukcjami odnośnie zakładania nowego konta.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"prosi o pozwolenie na przeprowadzenie następujących działań w Scrive w Twoim imieniu:",
 "_apiConfiramtionLoginAndAccept":"Zaloguj się i nadaj uprawnienia",
 "_apiConfiramtionLoginAndAcceptTitle":"Zaloguj się i nadaj uprawnienia",
