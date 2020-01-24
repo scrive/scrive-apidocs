@@ -115,10 +115,13 @@ var OAuthConfirationView = Backbone.View.extend({
       if (model.sendPermission())
         list.append($("<li>").text(localization.apiConfiration.sendPermission));
       box.append(list);
-      if (model.logged())
+      if (model.logged()) {
         box.append($("<p class=''/>").text(localization.apiConfiration.footerLogged));
-      else
-        box.append($("<p class=''/>").text(localization.apiConfiration.footerNotLogged));
+      } else {
+        var text = $("<p class=''/>").html(localization.apiConfiration.footerNotLogged);
+        text.find("a").attr("href", "/get-started");
+        box.append(text);
+      }
 
       return box;
     },

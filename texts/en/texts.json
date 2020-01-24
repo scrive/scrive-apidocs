@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Upload documents",
 "_apiConfiramtionDeny":"Previous page",
 "_apiConfiramtionFooterLogged":"Click the button to grant privileges.",
-"_apiConfiramtionFooterNotLogged":"Log in to your Scrive account to grant privileges. If you don't have a Scrive account please follow the instructions to create an account.",
+"_apiConfiramtionFooterNotLogged":"Log in to your Scrive account to grant privileges. <a class='put-link-to-signup-here'>Get started with Scrive eSign for free</a>.",
 "_apiConfiramtionHeader":"is requesting permission to perform the following actions in Scrive on your behalf:",
 "_apiConfiramtionLoginAndAccept":"Log in and grant privileges",
 "_apiConfiramtionLoginAndAcceptTitle":"Log in and grant privileges",
