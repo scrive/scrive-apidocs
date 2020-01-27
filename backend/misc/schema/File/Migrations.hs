@@ -2,6 +2,7 @@ module File.Migrations
   ( createFilePurgeConsumers
   , createFilePurgeJobs
   , dropContentAndPurgeAtFromFiles
+  , filePurgingJobsAddStatsIndexes
   ) where
 
 import Database.PostgreSQL.PQTypes.Checks
@@ -73,3 +74,17 @@ dropContentAndPurgeAtFromFiles = Migration
                        "files"
                        [sqlDropColumn "content", sqlDropColumn "purge_at"]
   }
+
+filePurgingJobsAddStatsIndexes :: MonadDB m => Migration m
+filePurgingJobsAddStatsIndexes =
+  let tname = tblName tableFilePurgeJobs
+  in  Migration
+        { mgrTableName = tname
+        , mgrFrom      = 1
+        , mgrAction    =
+          StandardMigration $ do
+            runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "run_at"
+            runQuery_ . sqlCreateIndexSequentially tname $ (indexOnColumn "attempts")
+              { idxWhere = Just "attempts > 1 AND finished_at IS NULL"
+              }
+        }

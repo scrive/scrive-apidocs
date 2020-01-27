@@ -1,11 +1,12 @@
 module StatsD.Config where
 
+import Data.Text (Text)
 import Data.Unjson
 
 data StatsDConf = StatsDConf
   { statsdHost    :: String
   , statsdPort    :: Int
-  , statsdPrefix  :: String
+  , statsdPrefix  :: Text
   } deriving (Eq, Show, Ord)
 
 unjsonStatsDConf :: UnjsonDef StatsDConf

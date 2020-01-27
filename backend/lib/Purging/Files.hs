@@ -153,9 +153,6 @@ filePurgingConsumer pool maxJobs = ConsumerConfig
   , ccJobFetcher          = identity
   , ccJobIndex            = fst
   , ccNotificationChannel = Nothing
-  -- The amount of queued jobs in the table can have large spikes that sit there
-  -- for a week, so don't try to check for available jobs too often as that
-  -- requires full table scan.
   , ccNotificationTimeout = 60 * 60 * 1000000 -- 1 hour
   , ccMaxRunningJobs      = maxJobs
   , ccProcessJob          = withPostgreSQL pool . withTransaction . purgeFile . fst

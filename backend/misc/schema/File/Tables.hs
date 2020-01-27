@@ -36,7 +36,7 @@ tableFilePurgeConsumers = tblTable
 tableFilePurgeJobs :: Table
 tableFilePurgeJobs = tblTable
   { tblName        = "file_purge_jobs"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
@@ -49,5 +49,10 @@ tableFilePurgeJobs = tblTable
     [ (fkOnColumn "id" "files" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "reserved_by" "file_purge_consumers" "id") { fkOnDelete = ForeignKeySetNull
                                                              }
+    ]
+  , tblIndexes     =
+    [ indexOnColumn "run_at"
+    , (indexOnColumn "attempts") { idxWhere = Just "attempts > 1 AND finished_at IS NULL"
+                                 }
     ]
   }

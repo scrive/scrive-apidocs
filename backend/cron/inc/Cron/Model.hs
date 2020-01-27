@@ -190,8 +190,9 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
             runDB $ collectClockError (cronNtpServers cronConf)
             return . RerunAfter $ ihours 1
           CronStats -> do
-            runDB $ reportCronStats (cronStatsDConf cronConf)
-            return . RerunAfter $ iseconds 10
+            ((), time) <- timed . runDB $ reportCronStats (cronStatsDConf cronConf)
+            logInfo "Cron stats generated" $ object ["time" .= time]
+            return . RerunAfter $ iminutes 1
           DocumentAutomaticRemindersEvaluation -> do
             runCronEnv expireDocumentAutomaticReminders
             return . RerunAfter $ iminutes 1

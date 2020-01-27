@@ -19,7 +19,7 @@ tableDocumentExtendingConsumers = tblTable
 tableDocumentExtendingJobs :: Table
 tableDocumentExtendingJobs = tblTable
   { tblName        = "document_extending_jobs"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
@@ -34,4 +34,9 @@ tableDocumentExtendingJobs = tblTable
                        { fkOnDelete = ForeignKeySetNull
                        }
                      ]
+  , tblIndexes     =
+    [ indexOnColumn "run_at"
+    , (indexOnColumn "attempts") { idxWhere = Just "attempts > 1 AND finished_at IS NULL"
+                                 }
+    ]
   }
