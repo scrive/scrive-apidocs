@@ -65,6 +65,7 @@ import GuardTime
 import IPAddress
 import KontraMonad
 import Log.Utils
+import LoginAuth.LoginAuthMethod
 import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
@@ -666,6 +667,7 @@ instance Arbitrary User where
       <*> pure (unsafeBrandedDomainID 0)
       <*> pure (unsafeUserGroupID 0)
       <*> pure Nothing
+      <*> pure LoginAuthNative
 
 instance Arbitrary CgiGrpTransaction where
   arbitrary =

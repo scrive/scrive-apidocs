@@ -14,6 +14,7 @@ import BrandedDomain.BrandedDomainID
 import DataRetentionPolicy
 import Folder.Types
 import Log.Identifier
+import LoginAuth.LoginAuthMethod
 import MinutesTime
 import User.Email
 import User.Lang
@@ -38,6 +39,7 @@ data User = User
   , associatedDomainID :: BrandedDomainID
   , groupID            :: UserGroupID
   , homeFolderID       :: Maybe FolderID
+  , sysAuth            :: LoginAuthMethod
   } deriving (Eq, Ord, Show)
 
 instance HasSomeUserInfo User where

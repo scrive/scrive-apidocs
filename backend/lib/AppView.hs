@@ -12,6 +12,7 @@ module AppView (
               , simpleAesonResponse
               , simpleUnjsonResponse
               , simpleHtmlResponse
+              , simpleXMLResponse
               , respondWithPDF
               , respondWithZipFile
               , unsupportedBrowserPage
@@ -248,6 +249,13 @@ simpleHtmlResponse :: FilterMonad Response m => Text -> m Response
 simpleHtmlResponse s =
   ok
     $ toResponseBS (BS.fromString "text/html;charset=utf-8")
+    $ BSL.fromStrict
+    $ TE.encodeUtf8 s
+
+simpleXMLResponse :: FilterMonad Response m => Text -> m Response
+simpleXMLResponse s =
+  ok
+    $ toResponseBS (BS.fromString "application/xml;charset=utf-8")
     $ BSL.fromStrict
     $ TE.encodeUtf8 s
 

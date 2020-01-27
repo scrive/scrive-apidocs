@@ -2,6 +2,7 @@ module User.Model.Query (
     GetUserGroupAccountsCountActive(..)
   , GetUserGroupAccountsCountTotal(..)
   , GetUserGroupAdmins(..)
+  , GetUserWithStatusByEmail(..)
   , GetUsageStats(..)
   , GetUsageStatsOnShareableLinks(..)
   , UsageStatsFor(..)
@@ -34,6 +35,7 @@ import User.Model.Filter
 import User.Model.OrderBy
 import User.Types.Stats
 import User.Types.User
+import User.Types.User.Internal (User(..))
 import User.UserID
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -56,6 +58,20 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByEmail (Maybe User) wher
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> T.toLower
       (unEmail email)
     fetchMaybe fetchUser
+
+data GetUserWithStatusByEmail = GetUserWithStatusByEmail Email
+instance (MonadDB m, MonadThrow m) =>
+  DBQuery m GetUserWithStatusByEmail (Maybe (User, Bool)) where
+  query (GetUserWithStatusByEmail email) = do
+    runQuery_ $ selectUsersSQL <+> "WHERE email =" <?> T.toLower (unEmail email)
+    (fetchMaybe fetchUser) >>= \case
+      Nothing   -> return Nothing
+      Just user -> do
+        runQuery_
+          $   "select deleted is not null from users where id = "
+          <?> ((user ^. #id) :: UserID)
+        isDeleted <- fetchOne runIdentity
+        return . Just $ (user, isDeleted)
 
 data GetUserByTempLoginToken = GetUserByTempLoginToken UTCTime MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByTempLoginToken (Maybe (User, Bool)) where
