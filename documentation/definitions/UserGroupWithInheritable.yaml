@@ -59,7 +59,12 @@ example: {
         "country": "Sweden"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "home-planet": "Earth"
+    }
+  ]
 }
 description: |
   JSON representation of a User Group (with Inheritable Previews).
@@ -84,3 +89,8 @@ properties:
     $ref: ./UserGroupSettingsWithInheritable.yaml
   contact_details:
     $ref: ./UserGroupContactDetailsWithInheritable.yaml
+  tags:
+    type: array
+    default: []
+    items:
+      type: object

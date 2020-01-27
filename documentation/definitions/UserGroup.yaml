@@ -37,7 +37,12 @@ example: {
       "city": "Stockholm",
       "country": "Sweden"
     }
-  }
+  },
+  "tags": [
+    {
+      "alignment": "chaotic good"
+    }
+  ]
 }
 description: |
   JSON representation of a User Group.
@@ -62,3 +67,8 @@ properties:
     $ref: ./UserGroupSettings.yaml
   contact_details:
     $ref: ./UserGroupContactDetails.yaml
+  tags:
+    type: array
+    default: []
+    items:
+      type: object
