@@ -18,6 +18,7 @@ import PasswordService.Conf
 import PdfToolsLambda.Conf
 import Salesforce.Conf
 import Session.SessionID as SessionID
+import SSO.Conf
 import Templates
 import User.Email
 import User.Model
@@ -74,6 +75,7 @@ data Context = Context
     , pdfToolsLambdaEnv   :: PdfToolsLambdaEnv
     , passwordServiceConf :: PasswordServiceConf
     , eidServiceConf      :: Maybe EIDServiceConf
+    , ssoConf             :: Maybe SSOConf
     , maybeApiUser        :: Maybe User
     -- ^ The user which was effectively used for API call (this includes
     -- api/frontend) This might be the user from session, if the OAuth

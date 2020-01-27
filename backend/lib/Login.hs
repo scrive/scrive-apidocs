@@ -24,6 +24,7 @@ import IPAddress
 import Kontra
 import KontraLink
 import Log.Identifier
+import LoginAuth.LoginAuthMethod
 import Redirect
 import Session.Cookies
 import ThirdPartyStats.Core
@@ -79,6 +80,9 @@ handleLoginPost = do
           return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
         Nothing -> return True
       case maybeuser of
+        -- Is the user even allowed to login here? In order not to enable user discovery, we
+        -- act as if it doesn't exist; cf. the `Nothing` case in `case maybeuser of` below.
+        Just user | user ^. #sysAuth /= LoginAuthNative -> userNotFound email
         Just user
           | maybeVerifyPassword (user ^. #password) passwd && ipIsOK && not
             (user ^. #accountSuspended)
@@ -144,12 +148,14 @@ handleLoginPost = do
             else dbUpdate
               $ LogHistoryLoginFailure (u ^. #id) (ctx ^. #ipAddr) (ctx ^. #time)
           J.runJSONGenT $ J.value "logged" False
-        Nothing -> do
-          logInfo "User login failed (user not found)" $ object ["email" .= email]
-          J.runJSONGenT $ J.value "logged" False
+        Nothing -> userNotFound email
     _ -> J.runJSONGenT $ J.value "logged" False
 
   where
+    userNotFound email = do
+      logInfo "User login failed (user not found)" $ object ["email" .= email]
+      J.runJSONGenT $ J.value "logged" False
+
     logTheUserIn ctx user padlogin = do
       logInfo "User logged in" $ logObject_ user
       muuser <- dbQuery $ GetUserByID (user ^. #id)

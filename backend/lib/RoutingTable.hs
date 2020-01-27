@@ -26,6 +26,7 @@ import Partner.API
 import Redirect
 import Routing
 import Salesforce.Control as Salesforce
+import SSO.API
 import User.API
 import User.APILog.API
 import UserGroup.API
@@ -177,6 +178,7 @@ staticRoutes production = choice
   , oauth
   , apiLogAPI
   , attachmentAPI
+  , sso
 
      -- api explorer
   , dir "api-explorer"

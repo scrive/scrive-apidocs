@@ -15,6 +15,7 @@ module User.Model.Update (
   , ConfirmUserTOTPSetup(..)
   , DisableUserTOTP(..)
   , SetUserSettings(..)
+  , SetLoginAuth(..)
   , SetUserTotpIsMandatory(..)
   ) where
 
@@ -31,6 +32,7 @@ import Doc.Types.Document (DocumentSharing(..), DocumentType(..))
 import Doc.Types.SignatoryField
 import Folder.Types
 import IPAddress
+import LoginAuth.LoginAuthMethod
 import User.Email
 import User.Lang
 import User.Model.Query
@@ -381,5 +383,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserHomeFolder Bool where
   update (SetUserHomeFolder userid fdrid) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "home_folder_id" fdrid
+      sqlWhereEq "id" userid
+      sqlWhereIsNULL "deleted"
+
+data SetLoginAuth = SetLoginAuth UserID LoginAuthMethod
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetLoginAuth Bool where
+  update (SetLoginAuth userid sysauth) = do
+    runQuery01 . sqlUpdate "users" $ do
+      sqlSet "sysauth" sysauth
       sqlWhereEq "id" userid
       sqlWhereIsNULL "deleted"

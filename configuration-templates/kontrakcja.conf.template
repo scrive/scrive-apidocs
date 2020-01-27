@@ -93,5 +93,16 @@
     "_eid_service" : {
       "url": "",
       "token": ""
+    },
+    "_sso": {
+      "idps": [ 
+          { 
+              "idp_id": "http://uri.of.idp/path",
+              "idp_public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmBpZFP2vX0C77Gb/MsrF\nxUcNKMKZKsH24VZLp+Fo/oUgO7PKOkhXpEMP2qPa8FJHCg/wvgWWpnsg6rfKVVZr\nSbSQbiB2+3HJwxGE6Ciy2VJeGk0XdvWFuYFe63bCACNOw4pC7JJEQwgY4V5dfep9\newFQS2UT9JxFhQ+OEpTTphCu04zw0btwNjoNpEyLUiutaNqsvjCXt7p2uEGuHVPd\nP0319QtqksyY43CkDW6EUV6wWLHaaJEoRzWKhNLd4/F9N6PIGQGxFdrVn264SDVC\nwf0Kmf4c0LT8KgJfJeXLYripWpRumlnzbQpo4tWE8vAl4rSYq3x7vdHlY3P45tKP\nBwIDAQAB\n-----END PUBLIC KEY-----\n",
+              "idp_init_ug": "0",
+              "_idp_friendly_name": "Okta"
+          }
+      ],
+      "saml_entity_base_uri": "http://localhost:8000"
     }
 }

@@ -83,6 +83,7 @@ import QRCodeTest
 import ReferenceScreenshotsTest
 import SessionsTest
 import SignupTest
+import SSO.GuardsTest
 import Templates (readGlobalTemplates)
 import TestConf
 import TestKontra
@@ -158,6 +159,7 @@ allTests =
   , userStateTests
   , documentGeneratorsTests
   , occurenceControlTests
+  , samlConditionsGuardsTests
   ]
 
 stagingTests :: [TestEnvSt -> Test]

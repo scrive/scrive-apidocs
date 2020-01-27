@@ -438,6 +438,10 @@ Library
                  , SMS.Model
                  , SMS.SMS
                  , SMS.Tables
+                 , SSO.API
+                 , SSO.Conf
+                 , SSO.SAML
+                 , SSO.Guards
                  , Salesforce.AuthorizationWorkflow
                  , Salesforce.Conf
                  , Salesforce.Control
@@ -450,6 +454,7 @@ Library
                  , Session.Tables
                  , StatsD.Communication
                  , StatsD.Config
+                 , LoginAuth.LoginAuthMethod
                  , System.Random.CryptoRNG
                  , Templates
                  , Text.JSON.Convert
@@ -583,6 +588,7 @@ Library
                , containers >= 0.5 && < 0.7
                , crypto-rng
                , cryptonite
+               , cryptostore
                , curl
                , data-default
                , deepseq
@@ -605,6 +611,9 @@ Library
                , hedis
                , hpqtypes
                , hpqtypes-extras
+               , hsaml2
+               , hxt
+               , hxt-http
                , http-client
                , http-conduit
                , http-client-tls
@@ -629,6 +638,7 @@ Library
                , network
                , network-uri
                , one-time-password
+               , pem
                , process
                , process-extras
                , psqueues
@@ -661,6 +671,7 @@ Library
                , utf8-string
                , uuid
                , vector
+               , x509
                , xml-conduit
                , xml-conduit-writer
                , xml-types
@@ -1296,6 +1307,7 @@ Test-suite kontrakcja-test
                  Session.Tables
                  SessionsTest
                  SignupTest
+                 SSO.GuardsTest
                  TestConf
                  TestCron
                  TestEnvSt
@@ -1359,6 +1371,7 @@ Test-suite kontrakcja-test
                , hedis
                , hpqtypes
                , hpqtypes-extras
+               , hsaml2
                , http-client
                , http-client-tls
                , invariant
