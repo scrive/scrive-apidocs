@@ -390,6 +390,7 @@ mkContext lang = do
                      , passwordServiceConf = defaultPasswordService
                      , maybeApiUser        = Nothing
                      , eidServiceConf      = Nothing
+                     , ssoConf             = Nothing
                      }
 
 testGTConf :: GuardTimeConf

@@ -21,6 +21,7 @@ import BrandedDomain.BrandedDomainID
 import DataRetentionPolicy
 import DB
 import Folder.Types
+import LoginAuth.LoginAuthMethod
 import MinutesTime
 import User.Email
 import User.Lang
@@ -46,6 +47,7 @@ defaultUser = I.User { id                 = unsafeUserID 0
                      , associatedDomainID = unsafeBrandedDomainID 0
                      , groupID            = emptyUserGroupID
                      , homeFolderID       = Nothing
+                     , sysAuth            = LoginAuthNative
                      }
 
 defaultUserInfo :: I.UserInfo
@@ -90,6 +92,7 @@ selectUsersSelectorsList =
   , "user_group_id"
   , "home_folder_id"
   , "totp_is_mandatory"
+  , "sysauth"
   ]
 
 selectUsersSelectors :: SQL
@@ -130,6 +133,7 @@ selectUsersWithUserGroupNamesSQL =
     <> ", users.user_group_id"
     <> ", users.home_folder_id"
     <> ", users.totp_is_mandatory"
+    <> ", users.sysauth"
     <> ", ug.name"
     <> "  FROM users"
     <> "  LEFT JOIN user_groups ug ON users.user_group_id = ug.id"
@@ -168,9 +172,10 @@ fetchUser
      , UserGroupID
      , Maybe FolderID
      , Bool
+     , LoginAuthMethod
      )
   -> I.User
-fetchUser (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory)
+fetchUser (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth)
   = I.User
     { password = maybeMkPassword password salt (int16ToPwdAlgorithm <$> passwordAlgorithm)
     , info     = I.UserInfo { .. }
@@ -209,10 +214,11 @@ fetchUserWithUserGroupName
      , UserGroupID
      , Maybe FolderID
      , Bool
+     , LoginAuthMethod
      , Text
      )
   -> (I.User, Text)
-fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, name)
+fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, name)
   = (user, name)
   where
     user = I.User

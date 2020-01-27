@@ -19,6 +19,7 @@ import Monitoring (MonitoringConf(..))
 import PasswordService.Conf
 import PdfToolsLambda.Conf
 import Salesforce.Conf
+import SSO.Conf
 import User.Email
 
 -- | Main application configuration.  This includes amongst other
@@ -79,6 +80,7 @@ data AppConf = AppConf
     -- ^ Configuration of PdfTools Lambda
   , passwordServiceConf :: PasswordServiceConf
   , eidServiceConf     :: Maybe EIDServiceConf
+  , ssoConf            :: Maybe SSOConf
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -138,6 +140,7 @@ unjsonAppConf =
                  passwordServiceConf
                  "Configuration of password service"
     <*> fieldOpt "eid_service" eidServiceConf "Configuration of eid service"
+    <*> fieldOpt "sso"         ssoConf        "Configuration of SSO"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

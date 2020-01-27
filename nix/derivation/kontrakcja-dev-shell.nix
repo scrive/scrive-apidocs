@@ -43,6 +43,8 @@ haskellPackages.shellFor {
       haskellPackages.cabal-install
       pkgs.nodePackages.less
       pkgs.nodePackages.grunt-cli
+      pkgs.pkg-config
+      pkgs.libxml2
     ];
 
   shellHook = ''

@@ -33,6 +33,7 @@ import Folder.Types
 import InspectXML
 import IPAddress
 import KontraLink
+import LoginAuth.LoginAuthMethod
 import MagicHash (MagicHash)
 import MinutesTime
 import User.Email
@@ -71,6 +72,7 @@ $(deriveInspectXML ''UserHistory)
 $(deriveInspectXML ''UserHistoryEvent)
 $(deriveInspectXML ''SignatoryLink)
 $(deriveInspectXML ''PlacementAnchor)
+$(deriveInspectXML ''LoginAuthMethod)
 $(deriveInspectXML ''SignatoryConsentQuestion)
 $(deriveInspectXML ''SignatoryAccessToken)
 $(deriveInspectXML ''SignatoryAccessTokenReason)

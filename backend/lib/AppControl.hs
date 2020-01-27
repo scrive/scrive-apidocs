@@ -396,5 +396,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                        , pdfToolsLambdaEnv   = pdftoolslambdaenv appGlobals
                        , passwordServiceConf = passwordServiceConf appConf
                        , eidServiceConf      = eidServiceConf appConf
+                       , ssoConf             = ssoConf appConf
                        , maybeApiUser        = Nothing
                        }

@@ -162,7 +162,7 @@ hPostNoXToken = hPostWrap https
 hPostNoXTokenHttp :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPostNoXTokenHttp = hPostWrap allowHttp
 
-https :: Kontra Response -> Kontra Response
+https :: Kontrakcja m => m Response -> m Response
 https action = do
   secure   <- isSecure
   useHttps <- view #useHttps <$> getContext
