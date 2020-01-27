@@ -9,6 +9,7 @@ module UserGroup.JSON (
 
 import Data.Aeson
 import Data.Aeson.Encoding
+import Data.Aeson.Types
 import Data.Unjson
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as L
@@ -40,23 +41,52 @@ updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
 updateUserGroupFromRequest ug ugChanges =
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
     (Result ugUpdated []) -> do
-      userGroupTags <- mapM parseTag $ reqTags ugUpdated
+      let newTags = foldl' updateTag (S.toList $ ug ^. #externalTags) (reqTags ugUpdated)
       Just
         $ ug
         & (#parentGroupID .~ reqParentID ugUpdated)
         & (#name .~ reqName ugUpdated)
-        & (#externalTags .~ S.fromList userGroupTags)
+        & (#externalTags .~ S.fromList newTags)
     (Result _ _) -> Nothing
   where
-    ugReq = UserGroupRequestJSON
-      { reqParentID = ug ^. #parentGroupID
-      , reqName     = ug ^. #name
-      , reqTags     = map encodeTag . S.toList $ ug ^. #externalTags
-      }
-    parseTag m = case HM.toList m of
-      [(k, v)] -> Just $ I.UserGroupTag k v
-      _        -> Nothing
-    encodeTag ugt = HM.singleton (ugt ^. #tagname) (ugt ^. #tagvalue)
+    updateTag ugts (TagUpdate k op) = case op of
+      SetTo v -> (I.UserGroupTag k v) : deleted
+      Delete  -> deleted
+      where deleted = filter (\ugt -> ugt ^. #tagname /= k) ugts
+    ugReq = UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID
+                                 , reqName     = ug ^. #name
+                                 , reqTags     = []
+                                 }
+
+data TagOp = SetTo Text | Delete
+  deriving (Eq, Ord, Show)
+
+instance ToJSON TagOp where
+  toJSON = \case
+    SetTo t -> String t
+    Delete  -> Null
+
+instance FromJSON TagOp where
+  parseJSON = \case
+    Null     -> pure $ Delete
+    String s -> pure $ SetTo s
+    invalid  -> typeMismatch "Expected a string or `null`" invalid
+
+instance Unjson TagOp where
+  unjsonDef = unjsonAeson
+
+data TagUpdate = TagUpdate Text TagOp
+
+instance ToJSON TagUpdate where
+  toJSON (TagUpdate k v) = object [k .= toJSON v]
+
+instance FromJSON TagUpdate where
+  parseJSON = withObject "TagUpdate" $ \hm -> case HM.toList hm of
+    [(k, v)] -> TagUpdate k <$> parseJSON v
+    _ -> typeMismatch "TagUpdate has to contain a single key:value pair" (Object hm)
+
+instance Unjson TagUpdate where
+  unjsonDef = unjsonAeson
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
 unjsonUserGroupRequestJSON =
@@ -69,7 +99,7 @@ unjsonUserGroupRequestJSON =
 data UserGroupRequestJSON = UserGroupRequestJSON {
     reqParentID    :: Maybe UserGroupID
   , reqName        :: Text
-  , reqTags        :: [HM.HashMap Text Text]
+  , reqTags        :: [TagUpdate]
   }
 
 newtype UGAddrJSON = UGAddrJSON UserGroupAddress

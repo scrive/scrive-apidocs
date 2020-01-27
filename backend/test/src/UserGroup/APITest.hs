@@ -2,9 +2,11 @@
 module UserGroup.APITest (userGroupApiTests) where
 
 import Data.Aeson (Value(Object))
+import Data.Aeson.Types
 import Happstack.Server
 import Test.Framework
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import AccessControl.Model
@@ -16,7 +18,9 @@ import TestKontra
 import User.Email
 import User.Model
 import UserGroup.API
+import UserGroup.Model
 import UserGroup.Types
+import qualified UserGroup.Internal as I
 
 userGroupApiTests :: TestEnvSt -> Test
 userGroupApiTests env = testGroup
@@ -1079,17 +1083,35 @@ testUserCanUpdateTags = do
   let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
+  void . dbUpdate . UserGroupUpdate $ ug & #externalTags .~ initialTags
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   val <- jsonTestRequestHelper ctx
                                POST
-                               [("usergroup", inText json)]
+                               [("usergroup", inText tagUpdateJson)]
                                (userGroupApiV2Update ugid)
                                200
   tags <- lookupObjectArray "tags" val
-  assertEqual "user can update tags" (head tags) (Object $ HM.singleton "foo" "bar")
+  let sortedTags = sortBy (\a b -> compare (getName a) (getName b)) tags
+  assertEqual "user can update tags" expectUpdatedTags sortedTags
   where
+    getName = \case
+      Object hm -> case HM.toList hm of
+        [(k, _)] -> k
+        _        -> ""
+      _ -> ""
     emailAddress = "great.green.arkleseizure@scrive.com"
-    json         = "{\"name\": \"a group\", \"tags\": [{\"foo\": \"bar\"}]}"
+    tagUpdateJson =
+      "{\"tags\": [{\"legs\": \"six\"}, {\"size\": null}, {\"eyes\":\"big\"}]}"
+    initialTags = S.fromList
+      [ I.UserGroupTag "legs" "four"
+      , I.UserGroupTag "size" "tiny"
+      , I.UserGroupTag "color" "black"
+      ]
+    expectUpdatedTags =
+      [ object ["color" .= String "black"]
+      , object ["eyes" .= String "big"]
+      , object ["legs" .= String "six"]
+      ]
 
 testUserCanViewTags :: TestEnv ()
 testUserCanViewTags = do
@@ -1100,5 +1122,5 @@ testUserCanViewTags = do
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   val  <- jsonTestRequestHelper ctx GET [] (userGroupApiV2Get ugid) 200
   tags <- lookupObjectArray "tags" val
-  assertEqual "user can view tags" (length tags) (length $ ug ^. #externalTags)
+  assertEqual "user can view tags" (length $ ug ^. #externalTags) (length tags)
   where emailAddress = "great.green.arkleseizure@scrive.com"
