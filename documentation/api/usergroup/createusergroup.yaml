@@ -17,7 +17,7 @@ post:
       "name": "New UG that's the child of user group 1"
       "tags": [
         {
-          "join": "resistance"
+          "side": "dark"
         }
       ]
     }

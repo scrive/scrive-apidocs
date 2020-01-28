@@ -92,7 +92,4 @@ properties:
   contact_details:
     $ref: ./UserGroupContactDetailsWithInheritable.yaml
   tags:
-    type: array
-    default: []
-    items:
-      type: object
+    $ref: ./UserGroupTags.yaml

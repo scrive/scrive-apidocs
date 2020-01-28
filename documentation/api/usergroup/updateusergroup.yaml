@@ -73,9 +73,9 @@ post:
       type: string
       format: application/json
       description: |
-        JSON object containing the new `name` and/or `parent_id` for the User
+        JSON object containing the new `name`, `parent_id` or `tags` for the User
         Group.
-      example: { "name": "new user group", "parent_id": 1, "tags": [] }
+      example: { "name": "new user group", "parent_id": 1, "tags": [ { "foo": "bar" } ] }
       required: true
     - name: include-inheritable
       in: formData

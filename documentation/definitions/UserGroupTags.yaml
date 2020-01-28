@@ -1,0 +1,25 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: UserGroupTags
+type: array
+example: [
+  {
+    "founded": "1846"
+  },
+  {
+    "status": "busy"
+  }
+]
+description: |
+  **User defined set of keys and values.**
+
+  Each tag must have `{key: value}` format.
+  In the responses value is always a string.
+  In the requests you can also provide `null` to delete a tag.
+default: []
+items:
+  type: object
+  minProperties: 1
+  maxProperties: 1
+  additionalProperties:
+    type: string

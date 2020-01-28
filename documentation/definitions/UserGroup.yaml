@@ -69,7 +69,4 @@ properties:
   contact_details:
     $ref: ./UserGroupContactDetails.yaml
   tags:
-    type: array
-    default: []
-    items:
-      type: object
+    $ref: ./UserGroupTags.yaml
