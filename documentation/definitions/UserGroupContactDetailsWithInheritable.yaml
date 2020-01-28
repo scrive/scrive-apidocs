@@ -6,6 +6,7 @@ example: {
   "inherited_from": "1",
   "address": {
     "company_number": "5568166804",
+    "company_name": "Scrive",
     "address": "Barnhusgatan 20",
     "zip": "111 23",
     "city": "Stockholm",
@@ -15,6 +16,7 @@ example: {
     "inherited_from": "1",
     "address": {
       "company_number": "5568166804",
+      "company_name": "Scrive",
       "address": "Barnhusgatan 20",
       "zip": "111 23",
       "city": "Stockholm",
@@ -33,6 +35,8 @@ properties:
     properties:
      company_number:
         type: string
+     company_name:
+        type: string
      address:
         type: string
      zip:
@@ -50,6 +54,8 @@ properties:
         type: object
         properties:
           company_number:
+              type: string
+          company_name:
               type: string
           address:
               type: string

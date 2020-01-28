@@ -32,6 +32,7 @@ example: {
     "inherited_from": null,
     "address": {
       "company_number": "5568166804",
+      "company_name": "Scrive",
       "address": "Barnhusgatan 20",
       "zip": "111 23",
       "city": "Stockholm",

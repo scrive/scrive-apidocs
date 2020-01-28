@@ -13,6 +13,7 @@ get:
       "inherited_from": "1",
       "address": {
         "company_number": "5568166804",
+        "company_name": "Scrive",
         "address": "Barnhusgatan 20",
         "zip": "111 23",
         "city": "Stockholm",
@@ -30,6 +31,7 @@ get:
       "inherited_from": null,
       "address": {
         "company_number": "0987654321",
+        "company_name": "Scrive",
         "address": "Other Street",
         "zip": "00-321",
         "city": "Warsaw",
@@ -47,6 +49,7 @@ get:
       "inherited_from": null,
       "address": {
         "company_number": "0987654321",
+        "company_name": "Scrive",
         "address": "123 Other Street",
         "zip": "00-321",
         "city": "Warsaw",
@@ -56,6 +59,7 @@ get:
         "inherited_from": "1",
         "address": {
           "company_number": "5568166804",
+          "company_name": "Scrive",
           "address": "Barnhusgatan 20",
           "zip": "111 23",
           "city": "Stockholm",
@@ -74,6 +78,7 @@ get:
       "inherited_from": "1",
       "address": {
         "company_number": "5568166804",
+        "company_name": "Scrive",
         "address": "Barnhusgatan 20",
         "zip": "111 23",
         "city": "Stockholm",
@@ -83,6 +88,7 @@ get:
         "inherited_from": "1",
         "address": {
           "company_number": "5568166804",
+          "company_name": "Scrive",
           "address": "Barnhusgatan 20",
           "zip": "111 23",
           "city": "Stockholm",
