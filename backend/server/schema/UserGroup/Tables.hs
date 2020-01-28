@@ -423,7 +423,7 @@ tableUserGroupFreeDocumentTokens = tblTable
 tableUserGroupTags :: Table
 tableUserGroupTags = tblTable
   { tblName        = "user_group_tags"
-  , tblVersion     = 3
+  , tblVersion     = 1
   , tblColumns     =
     [ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }

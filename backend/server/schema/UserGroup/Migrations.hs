@@ -672,3 +672,39 @@ createTableUserGroupFreeDocumentTokens = Migration
             sqlWhereEq "i.invoicing_type" (3 :: Int16) -- User groups on individual invoicing
             sqlWhereEq "i.payment_plan"   (0 :: Int16) -- Free plan
   }
+
+
+createTableUserGroupTags :: MonadDB m => Migration m
+createTableUserGroupTags = Migration
+  { mgrTableName = tblName tableUserGroupTags
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration $ do
+      createTable
+        True
+        tblTable
+          { tblName        = "user_group_tags"
+          , tblVersion     = 1
+          , tblColumns     =
+            [ tblColumn { colName     = "user_group_id"
+                        , colType     = BigIntT
+                        , colNullable = False
+                        }
+            , tblColumn { colName = "name", colType = TextT, colNullable = False }
+            , tblColumn { colName = "value", colType = TextT, colNullable = False }
+            , tblColumn { colName = "internal", colType = BoolT, colNullable = False }
+            ]
+          , tblPrimaryKey  = pkOnColumns ["user_group_id", "name", "internal"]
+          , tblIndexes     = [indexOnColumns ["value", "internal"]]
+          , tblForeignKeys =
+            [ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade
+                                                              }
+            ]
+          }
+      runQuery_ $ sqlCreateComposite $ CompositeType
+        { ctName    = "user_group_tag_c1"
+        , ctColumns = [ CompositeColumn { ccName = "name", ccType = TextT }
+                      , CompositeColumn { ccName = "value", ccType = TextT }
+                      ]
+        }
+  }
