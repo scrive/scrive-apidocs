@@ -93,11 +93,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupDelete ()
       sqlSet "deleted" now
       sqlWhereEq "id" $ Just ugid
 
-data UserGroupDomain = Internal | External
+data UserGroupTagDomain = Internal | External
   deriving (Eq)
 
 insertUserGroupTags
-  :: MonadDB m => UserGroupID -> UserGroupDomain -> S.Set UserGroupTag -> m ()
+  :: MonadDB m => UserGroupID -> UserGroupTagDomain -> S.Set UserGroupTag -> m ()
 insertUserGroupTags ugid domain tags
   | S.null tags = return ()
   | otherwise = do
