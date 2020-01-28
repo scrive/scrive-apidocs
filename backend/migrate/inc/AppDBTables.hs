@@ -75,6 +75,7 @@ kontraComposites =
 
   -- user group composites
     , ctUserGroupInvoicing
+    , ctUserGroupTag
     , ctUserGroupSettings
     , ctUserGroupSettings1
     , ctUserGroupSettings2
@@ -169,6 +170,7 @@ kontraTables =
        , tableUserGroupUIs
        , tableUserGroupAddresses
        , tableUserGroupFreeDocumentTokens
+       , tableUserGroupTags
        , tableFilePurgeConsumers
        , tableFilePurgeJobs
        , tableTemporaryLoginTokens

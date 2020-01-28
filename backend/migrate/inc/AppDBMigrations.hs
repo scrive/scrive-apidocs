@@ -229,4 +229,5 @@ kontraMigrations =
   , createTableUserGroupFreeDocumentTokens
   , addUserSysAuthColumn
   , removeExplicitDocumentAdminRoles
+  , createTableUserGroupTags
   ]

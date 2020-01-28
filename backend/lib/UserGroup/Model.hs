@@ -26,6 +26,7 @@ import Data.Int
 import Data.Typeable
 import Log
 import Text.JSON.Gen
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import DB
@@ -62,6 +63,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
     whenJust (ug ^. #settings) $ insertUserGroupSettings ugid
     -- insert group address
     whenJust (ug ^. #address) $ insertUserGroupAddress ugid
+    insertUserGroupTags ugid Internal (ug ^. #internalTags)
+    insertUserGroupTags ugid External (ug ^. #externalTags)
     -- insert invoicing
     runQuery_ . sqlInsert "user_group_invoicings" $ do
       sqlSet "user_group_id" ugid
@@ -89,6 +92,21 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupDelete ()
     void . runQuery . sqlUpdate "user_groups" $ do
       sqlSet "deleted" now
       sqlWhereEq "id" $ Just ugid
+
+data UserGroupTagDomain = Internal | External
+  deriving (Eq)
+
+insertUserGroupTags
+  :: MonadDB m => UserGroupID -> UserGroupTagDomain -> S.Set UserGroupTag -> m ()
+insertUserGroupTags ugid domain tags
+  | S.null tags = return ()
+  | otherwise = do
+    let tags_list = S.toList tags
+    runQuery_ . sqlInsert "user_group_tags" $ do
+      sqlSet "user_group_id" ugid
+      sqlSetList "name" $ I.tagname <$> tags_list
+      sqlSetList "value" $ I.tagvalue <$> tags_list
+      sqlSet "internal" (domain == Internal)
 
 insertUserGroupSettings
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupSettings -> m ()
@@ -231,6 +249,10 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
     dbUpdate . UserGroupUpdateSettings ugid $ new_ug ^. #settings
     -- update group address
     dbUpdate . UserGroupUpdateAddress ugid $ new_ug ^. #address
+    -- update group tags
+    runQuery_ . sqlDelete "user_group_tags" $ sqlWhereEq "user_group_id" ugid
+    insertUserGroupTags ugid Internal $ new_ug ^. #internalTags
+    insertUserGroupTags ugid External $ new_ug ^. #externalTags
     -- update invoicing
     runQuery_ . sqlUpdate "user_group_invoicings" $ do
       sqlWhereEq "user_group_id" ugid
@@ -379,6 +401,16 @@ userGroupSelectors =
     <>  ")::"
     <>  raw (ctName ctFeatureFlags)
     <+> "FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND NOT feature_flags.flags_for_admin)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " ugTagSelectors
+    <>  ")::"
+    <>  raw (ctName ctUserGroupTag)
+    <+> "FROM user_group_tags ugt WHERE user_groups.id = ugt.user_group_id AND ugt.internal ORDER BY ugt.name)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " ugTagSelectors
+    <>  ")::"
+    <>  raw (ctName ctUserGroupTag)
+    <+> "FROM user_group_tags ugt WHERE user_groups.id = ugt.user_group_id AND NOT ugt.internal ORDER BY ugt.name)"
   ]
 
 ugSettingsSelectors :: [SQL]
@@ -423,6 +455,9 @@ ugUISelectors =
 
 ugInvoicingSelectors :: [SQL]
 ugInvoicingSelectors = ["invoicing_type", "payment_plan"]
+
+ugTagSelectors :: [SQL]
+ugTagSelectors = ["name", "value"]
 
 unsafeUserGroupIDToPartnerID :: UserGroupID -> PartnerID
 unsafeUserGroupIDToPartnerID = unsafePartnerID . fromUserGroupID

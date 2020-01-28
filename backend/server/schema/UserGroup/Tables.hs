@@ -417,3 +417,29 @@ tableUserGroupFreeDocumentTokens = tblTable
   , tblForeignKeys =
     [(fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }]
   }
+
+---------------------------------
+
+tableUserGroupTags :: Table
+tableUserGroupTags = tblTable
+  { tblName        = "user_group_tags"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "value", colType = TextT, colNullable = False }
+    , tblColumn { colName = "internal", colType = BoolT, colNullable = False }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["user_group_id", "name", "internal"]
+  , tblIndexes     = [indexOnColumns ["value", "internal"]]
+  , tblForeignKeys =
+    [(fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }]
+  }
+
+ctUserGroupTag :: CompositeType
+ctUserGroupTag = CompositeType
+  { ctName    = "user_group_tag_c1"
+  , ctColumns = [ CompositeColumn { ccName = "name", ccType = TextT }
+                , CompositeColumn { ccName = "value", ccType = TextT }
+                ]
+  }

@@ -201,12 +201,16 @@ instance Arbitrary UserGroup where
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
+      <*> arbitrary
+      <*> arbitrary
 
 instance Arbitrary UserGroupRoot where
   arbitrary =
     I.UserGroupRoot emptyUserGroupID
       <$> arbitraryUnicodeText
       <*> pure Nothing
+      <*> arbitrary
+      <*> arbitrary
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
@@ -223,6 +227,9 @@ instance Arbitrary DataRetentionPolicy where
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> arbitrary
+
+instance Arbitrary UserGroupTag where
+  arbitrary = I.UserGroupTag <$> arbitraryUnicodeText <*> arbitraryUnicodeText
 
 instance Arbitrary UserGroupSettings where
   arbitrary =
@@ -796,12 +803,16 @@ addNewUserGroupWithParent createFolder mparent = do
   ugazip           <- rand 10 (arbText 3 30)
   ugacity          <- rand 10 (arbText 3 30)
   ugacountry       <- rand 10 (arbText 3 30)
+  ugintags         <- rand 10 arbitrary
+  ugextags         <- rand 10 arbitrary
   let ug =
         defaultUserGroup
           & (#parentGroupID .~ mparent)
           & (#name .~ ugname)
           & (#address .~ uga)
           & (#homeFolderID .~ mUgFolderID)
+          & (#internalTags .~ ugintags)
+          & (#externalTags .~ ugextags)
       uga = Just $ I.UserGroupAddress { companyNumber = ugacompanynumber
                                       , entityName    = ugaentityname
                                       , address       = ugaaddress

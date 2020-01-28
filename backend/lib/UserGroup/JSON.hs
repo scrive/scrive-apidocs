@@ -9,9 +9,11 @@ module UserGroup.JSON (
 
 import Data.Aeson
 import Data.Aeson.Encoding
+import Data.Aeson.Types
 import Data.Unjson
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as L
+import qualified Data.Set as S
 
 import DataRetentionPolicy
 import InputValidation
@@ -27,19 +29,64 @@ encodeUserGroup inheritable ugwp children =
     <> pair "children"        childrenEncoding
     <> pair "contact_details" (encodeUserGroupContactDetails inheritable ugwp)
     <> pair "settings" (encodeUserGroupSettings inheritable ugwp)
+    <> pair "tags"            tags
   where
     ug               = ugwpUG ugwp
     childrenEncoding = flip list children
       $ \child -> pairs $ "id" .= (child ^. #id) <> "name" .= (child ^. #name)
+    tags = flip list (S.toList $ ug ^. #externalTags)
+      $ \tag -> pairs $ I.tagname tag .= I.tagvalue tag
 
 updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
-updateUserGroupFromRequest ug ugChanges = do
-  let ugReq =
-        UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID, reqName = ug ^. #name }
+updateUserGroupFromRequest ug ugChanges =
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
-    (Result ugUpdated []) ->
-      Just $ ug & (#parentGroupID .~ reqParentID ugUpdated) & (#name .~ reqName ugUpdated)
+    (Result ugUpdated []) -> do
+      let newTags = foldl' updateTag (S.toList $ ug ^. #externalTags) (reqTags ugUpdated)
+      Just
+        $ ug
+        & (#parentGroupID .~ reqParentID ugUpdated)
+        & (#name .~ reqName ugUpdated)
+        & (#externalTags .~ S.fromList newTags)
     (Result _ _) -> Nothing
+  where
+    updateTag ugts (TagUpdate k op) = case op of
+      SetTo v -> (I.UserGroupTag k v) : deleted
+      Delete  -> deleted
+      where deleted = filter (\ugt -> ugt ^. #tagname /= k) ugts
+    ugReq = UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID
+                                 , reqName     = ug ^. #name
+                                 , reqTags     = []
+                                 }
+
+data TagOp = SetTo Text | Delete
+  deriving (Eq, Ord, Show)
+
+instance ToJSON TagOp where
+  toJSON = \case
+    SetTo t -> String t
+    Delete  -> Null
+
+instance FromJSON TagOp where
+  parseJSON = \case
+    Null     -> pure $ Delete
+    String s -> pure $ SetTo s
+    invalid  -> typeMismatch "Expected a string or `null`" invalid
+
+instance Unjson TagOp where
+  unjsonDef = unjsonAeson
+
+data TagUpdate = TagUpdate Text TagOp
+
+instance ToJSON TagUpdate where
+  toJSON (TagUpdate k v) = object [k .= toJSON v]
+
+instance FromJSON TagUpdate where
+  parseJSON = withObject "TagUpdate" $ \hm -> case HM.toList hm of
+    [(k, v)] -> TagUpdate k <$> parseJSON v
+    _ -> typeMismatch "TagUpdate has to contain a single key:value pair" (Object hm)
+
+instance Unjson TagUpdate where
+  unjsonDef = unjsonAeson
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
 unjsonUserGroupRequestJSON =
@@ -47,10 +94,12 @@ unjsonUserGroupRequestJSON =
     $   pure UserGroupRequestJSON
     <*> fieldOpt "parent_id" reqParentID "User Group ID"
     <*> field "name" reqName "User Group Name"
+    <*> field "tags" reqTags "User Group Tags"
 
 data UserGroupRequestJSON = UserGroupRequestJSON {
     reqParentID    :: Maybe UserGroupID
   , reqName        :: Text
+  , reqTags        :: [TagUpdate]
   }
 
 newtype UGAddrJSON = UGAddrJSON UserGroupAddress
@@ -138,6 +187,7 @@ instance ToJSON UGDRPJSON where
       <> ("idle_doc_timeout_error" .= (drp ^. #idleDocTimeoutError))
       <> ("immediate_trash" .= (drp ^. #immediateTrash))
 
+-- This throws away all the fields except DRP
 encodeUserGroupSettings :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupSettings inheritable ugwp =
   pairs $ makeDRPJson inheritedFrom msettings <> inheritPreview

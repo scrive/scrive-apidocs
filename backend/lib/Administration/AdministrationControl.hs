@@ -35,6 +35,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
@@ -437,7 +438,11 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugSettingsChange      <- getUserGroupSettingsChange
   mUGAddressIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companyaddressisinherited"
-  ugAddressChange       <- getUserGroupAddressChange
+  ugAddressChange  <- getUserGroupAddressChange
+  mInternalTagsRaw <- getFieldJSON "companyinternaltags"
+  let mInternalTagOps = mInternalTagsRaw >>= parseTags
+  mExternalTagsRaw <- getFieldJSON "companyexternaltags"
+  let mExternalTagOps = mExternalTagsRaw >>= parseTags
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
   let oldUG       = ugwpUG ugwp
@@ -447,9 +452,13 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
       setAddress = if fromMaybe (isNothing $ oldUG ^. #address) mUGAddressIsInherited
         then set #address Nothing
         else set #address . Just . ugAddressChange $ ugwpAddress ugwp
+      updateInternalTags = set #internalTags . updateTags (oldUG ^. #internalTags)
+      updateExternalTags = set #externalTags . updateTags (oldUG ^. #externalTags)
       newUG =
         set #parentGroupID mTryParentUserGroupID
-          . maybe identity (set #name) mCompanyName
+          . maybe identity (set #name)        mCompanyName
+          . maybe identity updateInternalTags mInternalTagOps
+          . maybe identity updateExternalTags mExternalTagOps
           . setSettings
           . setAddress
           $ ugwpUG ugwp
@@ -462,6 +471,22 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
+  where
+    -- Tags look like: [{"name":"value"}, {"name2": null}, ...]
+    parseTags val = case val of
+      JSArray ar -> S.fromList <$> mapM parseTag ar
+      _          -> Nothing
+    parseTag val = case val of
+      JSObject ob -> case fromJSObject ob of
+        [(k, (JSString v))] -> Just $ (T.pack k, Just . T.pack $ fromJSString v)
+        [(k, JSNull      )] -> Just $ (T.pack k, Nothing)
+        _                   -> Nothing
+      _ -> Nothing
+    updateTags oldTags = S.fromList . foldl' updateTag (S.toList oldTags)
+    updateTag ugts (k, op) = case op of
+      Nothing -> deleted
+      Just v  -> (I.UserGroupTag k v) : deleted
+      where deleted = filter (\ugt -> (ugt ^. #tagname) /= k) ugts
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do

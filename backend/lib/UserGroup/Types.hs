@@ -36,9 +36,11 @@ module UserGroup.Types
   , UserGroupRoot
   , ugFromUGRoot
   , UserGroupWithChildren
+  , UserGroupTag
   ) where
 
 import Data.Text (Text)
+import qualified Data.Set as S
 
 import DataRetentionPolicy
 import DB
@@ -74,6 +76,8 @@ defaultUserGroup = ugFromUGRoot $ UserGroupRoot { id           = emptyUserGroupI
                                                 , address      = defaultUserGroupAddress
                                                 , ui           = defaultUserGroupUI
                                                 , features     = defaultFeatures FreePlan
+                                                , internalTags = S.empty
+                                                , externalTags = S.empty
                                                 }
 
 defaultChildUserGroup :: UserGroup
@@ -86,6 +90,8 @@ defaultChildUserGroup = UserGroup { id            = emptyUserGroupID
                                   , address       = Nothing
                                   , ui            = defaultUserGroupUI
                                   , features      = Nothing
+                                  , internalTags  = S.empty
+                                  , externalTags  = S.empty
                                   }
 
 
@@ -100,17 +106,21 @@ fetchUserGroup
      , Composite UserGroupUI
      , Maybe (Composite FeatureFlags)  -- for admins
      , Maybe (Composite FeatureFlags)
+     , CompositeArray1 UserGroupTag
+     , CompositeArray1 UserGroupTag
      )  -- for regular users
   -> UserGroup
-fetchUserGroup (id, parentGroupID, name, homeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags)
+fetchUserGroup (id, parentGroupID, name, homeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags, CompositeArray1 iTags, CompositeArray1 eTags)
   = UserGroup
-    { settings  = unComposite <$> cinfos
-    , invoicing = unComposite cinvoicing
-    , address   = unComposite <$> caddresses
-    , ui        = unComposite cuis
-    , features  = Features
+    { settings     = unComposite <$> cinfos
+    , invoicing    = unComposite cinvoicing
+    , address      = unComposite <$> caddresses
+    , ui           = unComposite cuis
+    , features     = Features
       <$> (unComposite <$> cAdminFeatureFlags)
       <*> (unComposite <$> cRegularFeatureFlags)
+    , internalTags = S.fromList iTags
+    , externalTags = S.fromList eTags
     , ..
     }
 
@@ -132,6 +142,8 @@ ugrFromUG ug = do
     , name         = ug ^. #name
     , homeFolderID = ug ^. #homeFolderID
     , ui           = ug ^. #ui
+    , internalTags = ug ^. #internalTags
+    , externalTags = ug ^. #externalTags
     , ..
     }
 
@@ -145,6 +157,8 @@ ugFromUGRoot ugr = UserGroup { id            = ugr ^. #id
                              , address       = Just $ ugr ^. #address
                              , ui            = ugr ^. #ui
                              , features      = Just $ ugr ^. #features
+                             , internalTags  = ugr ^. #internalTags
+                             , externalTags  = ugr ^. #externalTags
                              }
 
 -- USER GROUP WITH PARENTS

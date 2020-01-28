@@ -8,6 +8,7 @@ module UserGroup.Internal (
   , unsafeUserGroupID
   , fromUserGroupID
   , UserGroupSettings(..)
+  , UserGroupTag(..)
   , UserGroupAddress(..)
   , UserGroupUI(..)
   , UserGroupInvoicing(..)
@@ -17,6 +18,7 @@ module UserGroup.Internal (
   ) where
 
 import Data.Aeson
+import Data.Function
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
@@ -26,6 +28,7 @@ import Optics.TH
 import qualified Control.Exception.Lifted as E
 import qualified Data.Binary as B
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import DataRetentionPolicy
@@ -110,6 +113,8 @@ data UserGroup = UserGroup
   , invoicing     :: !UserGroupInvoicing
   , ui            :: !UserGroupUI
   , features      :: !(Maybe Features)
+  , internalTags  :: !(S.Set UserGroupTag)
+  , externalTags  :: !(S.Set UserGroupTag)
   } deriving (Show, Eq)
 
 data UserGroupRoot = UserGroupRoot
@@ -121,6 +126,8 @@ data UserGroupRoot = UserGroupRoot
   , paymentPlan   :: !PaymentPlan  -- user group root always must have Invoice
   , ui            :: !UserGroupUI
   , features      :: !Features
+  , internalTags  :: !(S.Set UserGroupTag)
+  , externalTags  :: !(S.Set UserGroupTag)
   } deriving (Show, Eq)
 
 -- UserGroup list is ordered from Leaf to Child of Root)
@@ -193,6 +200,24 @@ instance CompositeFromSQL UserGroupInvoicing where
     (InvoicingTypeBillItem, _) -> BillItem mpayplan
     (InvoicingTypeInvoice, Just payplan) -> Invoice payplan
     _ -> unexpectedError "invalid invoicing row in database"
+
+----------------------------------------
+
+data UserGroupTag = UserGroupTag
+  { tagname  :: !Text
+  , tagvalue :: !Text
+  } deriving (Eq, Show)
+
+instance Ord UserGroupTag where
+  compare = compare `on` tagname
+
+type instance CompositeRow UserGroupTag = (Text, Text)
+
+instance PQFormat UserGroupTag where
+  pqFormat = compositeTypePqFormat ctUserGroupTag
+
+instance CompositeFromSQL UserGroupTag where
+  toComposite (name, value) = UserGroupTag { tagname = name, tagvalue = value }
 
 ----------------------------------------
 
@@ -312,3 +337,4 @@ makeFieldLabelsWith noPrefixFieldLabels ''UserGroupUI
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupAddress
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupRoot
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupWithChildren
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupTag
