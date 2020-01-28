@@ -59,14 +59,14 @@ pageDocumentDesign :: Kontrakcja m => Context -> Document -> AnalyticsData -> m 
 pageDocumentDesign ctx document ad = do
   mugui <- userGroupUIForPage
   renderTextTemplate "pageDocumentDesign" $ do
-    F.value "documentid" $ show $ documentid document
+    F.value "documentid" . show $ documentid document
     standardPageFields ctx mugui ad
 
 pageDocumentView
   :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> Bool -> m Text
 pageDocumentView ctx document msiglink authorcompanyadmin =
   renderTextTemplate "pageDocumentView" $ do
-    F.value "documentid" $ show $ documentid document
+    F.value "documentid" . show $ documentid document
     F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
     F.value "authorcompanyadmin" $ authorcompanyadmin
     entryPointFields ctx
@@ -95,8 +95,8 @@ pageDocumentSignView ctx document siglink ad = do
         document
       mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
   renderTextTemplate "pageDocumentSignView" $ do
-    F.value "documentid" $ show $ documentid document
-    F.value "siglinkid" $ show $ signatorylinkid siglink
+    F.value "documentid" . show $ documentid document
+    F.value "siglinkid" . show $ signatorylinkid siglink
     F.value "documenttitle" $ documenttitle document
     F.value "loggedinsignatory" $ loggedAsSignatory
     F.value "loggedinauthor" $ loggedAsAuthor
@@ -117,16 +117,19 @@ pageDocumentIdentifyView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text
 pageDocumentIdentifyView ctx document siglink ad = do
   let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
+      useEIDHubForNemID =
+        fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForDK % _Just
   auser    <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   authorug <- dbQuery . UserGroupGetByUserID $ auser ^. #id
 
   renderTextTemplate "pageDocumentIdentifyView" $ do
-    F.value "documentid" $ show $ documentid document
-    F.value "siglinkid" $ show $ signatorylinkid siglink
+    F.value "documentid" . show $ documentid document
+    F.value "siglinkid" . show $ signatorylinkid siglink
     F.value "documenttitle" $ documenttitle document
     F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctx ^. #netsConfig
     F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #netsConfig
     F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #netsConfig
+    F.value "useEIDHubForNemID" useEIDHubForNemID
     F.value "previewLink" $ show LinkPreviewLockedImage
     standardPageFields ctx (Just (authorug ^. #id, authorug ^. #ui)) ad -- Branding for signview depends only on authors company
 
@@ -158,7 +161,7 @@ pageDocumentToStartView :: Kontrakcja m => Context -> Document -> AnalyticsData 
 pageDocumentToStartView ctx document ad = do
   mugui <- userGroupUIForPage
   renderTextTemplate "pageToStartDocumentView" $ do
-    F.value "documentid" $ show $ documentid document
+    F.value "documentid" . show $ documentid document
     F.value "documenttitle" $ documenttitle document
     standardPageFields ctx mugui ad
 
@@ -169,8 +172,8 @@ documentInfoFields document = do
   F.value "documenttitle" $ documenttitle document
   F.value "title" $ documenttitle document
   F.value "name" $ documenttitle document
-  F.value "id" $ show $ documentid document
-  F.value "documentid" $ show $ documentid document
+  F.value "id" . show $ documentid document
+  F.value "documentid" . show $ documentid document
   F.value "template" $ isTemplate document
   F.value "hasanyattachments" $ not (null $ (documentauthorattachments document)) || not
     (null (concatMap signatoryattachments $ documentsignatorylinks document))
@@ -207,5 +210,5 @@ afterForwardPage did = do
   ctx <- getContext
   ad  <- getAnalyticsData
   renderTextTemplate "afterForwardPage" $ do
-    F.value "documentid" $ show $ did
+    F.value "documentid" . show $ did
     standardPageFields ctx Nothing ad

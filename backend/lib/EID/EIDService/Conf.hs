@@ -9,14 +9,16 @@ import qualified Data.Text as T
 data EIDServiceConf = EIDServiceConf
   { eidServiceUrl :: T.Text
   , eidServiceToken :: T.Text
+  , eidUseForDK :: Maybe Bool
   } deriving (Show, Eq, Ord)
 
 unjsonEIDServiceConf :: UnjsonDef EIDServiceConf
 unjsonEIDServiceConf =
-  objectOf $ pure EIDServiceConf <*> field "url" eidServiceUrl "EIDService url" <*> field
-    "token"
-    eidServiceToken
-    "EIDService token"
+  objectOf
+    $   pure EIDServiceConf
+    <*> field "url"   eidServiceUrl   "EIDService url"
+    <*> field "token" eidServiceToken "EIDService token"
+    <*> fieldOpt "useForDK" eidUseForDK "Use EIDService for Denmark"
 
 instance Unjson EIDServiceConf where
   unjsonDef = unjsonEIDServiceConf

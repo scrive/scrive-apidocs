@@ -1256,6 +1256,7 @@ Test-suite kontrakcja-test
                  EID.Signature.Tables
                  EID.EIDService.Migrations
                  EID.EIDService.Tables
+                 EID.EIDService.CommunicationTest
                  ESignatureTest
                  EvidenceAttachmentsTest
                  EvidenceLog.Tables

@@ -1,5 +1,6 @@
 module EID.EIDService.Communication (
-    CompleteVerimiEIDServiceTransactionData(..)
+    CompleteNemIDEIDServiceTransactionData(..)
+  , CompleteVerimiEIDServiceTransactionData(..)
   , CompleteIDINEIDServiceTransactionData(..)
   , createVerimiTransactionWithEIDService
   , startVerimiTransactionWithEIDService
@@ -7,6 +8,10 @@ module EID.EIDService.Communication (
   , createIDINTransactionWithEIDService
   , startIDINTransactionWithEIDService
   , checkIDINTransactionWithEIDService
+  , createNemIDTransactionWithEIDService
+  , startNemIDTransactionWithEIDService
+  , checkNemIDTransactionWithEIDService
+  , dateOfBirthFromDKPersonalNumber
   ) where
 
 import Control.Monad.Trans.Control
@@ -28,6 +33,127 @@ import Kontra hiding (InternalError)
 import Log.Identifier
 import Log.Utils
 import Utils.IO
+
+createNemIDTransactionWithEIDService
+  :: Kontrakcja m => EIDServiceConf -> Text -> Text -> m (EIDServiceTransactionID)
+createNemIDTransactionWithEIDService conf locale redirect = do
+  let
+    providerParams = Just
+      $ object ["dkNemID" .= object ["limitedClientMode" .= True, "uiLocale" .= locale]]
+  createTransactionWithEIDService conf "dkNemID" providerParams redirect
+
+startNemIDTransactionWithEIDService
+  :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
+startNemIDTransactionWithEIDService conf tid = do
+  response <- startTransactionWithEIDService conf "dkNemID" tid
+  extractUrl response
+  where
+    extractUrl :: Kontrakcja m => JSValue -> m Text
+    extractUrl jsValue = withJSValue jsValue $ do
+      murl <-
+        fromJSValueFieldCustom "providerInfo"
+        $ fromJSValueFieldCustom "dkNemIDAuth"
+        $ fromJSValueField "authUrl"
+      case (murl) of
+        (Just url) -> return (T.pack url)
+        _          -> do
+          logAttention_ "Failed to read 'url' from start transaction response"
+          internalError
+
+checkNemIDTransactionWithEIDService
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> EIDServiceTransactionID
+  -> m
+       ( Maybe EIDServiceTransactionStatus
+       , Maybe CompleteNemIDEIDServiceTransactionData
+       )
+checkNemIDTransactionWithEIDService conf tid = do
+  mtd <- getTransactionFromEIDService conf "dkNemID" tid
+  case mtd of
+    Just td -> getTransactionDataAndStatus td
+    _       -> return (Nothing, Nothing)
+  where
+    getTransactionDataAndStatus
+      :: Kontrakcja m
+      => JSValue
+      -> m
+           ( Maybe EIDServiceTransactionStatus
+           , Maybe CompleteNemIDEIDServiceTransactionData
+           )
+    getTransactionDataAndStatus jsValue = withJSValue jsValue $ do
+      (mstatus :: Maybe String) <- fromJSValueField "status"
+      case (mstatus) of
+        (Just "new"     ) -> return (Just EIDServiceTransactionStatusNew, Nothing)
+        (Just "started" ) -> return (Just EIDServiceTransactionStatusStarted, Nothing)
+        (Just "failed"  ) -> return (Just EIDServiceTransactionStatusFailed, Nothing)
+        (Just "complete") -> do
+          mip <-
+            fromJSValueFieldCustom "providerParameters"
+            $ fromJSValueFieldCustom "auth"
+            $ fromJSValueFieldCustom "dkNemID"
+            $ fromJSValueField "method"
+          td <-
+            fromJSValueFieldCustom "providerInfo"
+            $ fromJSValueFieldCustom "dkNemIDAuth"
+            $ fromJSValueFieldCustom "completionData"
+            $ do
+                mpid <- fromJSValueField "pid"
+                mssn <- fromJSValueField "ssn"
+                mcer <- fromJSValueFieldCustom "certificateData"
+                  $ fromJSValueField "certificate"
+                mdn <- fromJSValueFieldCustom "certificateData"
+                  $ fromJSValueField "distinguishedName"
+                mdob <- return $ dateOfBirthFromDKPersonalNumber <$> mssn
+                case (mpid, mssn, mcer, mdn, mdob, mip) of
+                  (Just pid, Just ssn, Just certificate, Just distinguishedName, Just dateOfBirth, mInternalProvider)
+                    -> return $ Just CompleteNemIDEIDServiceTransactionData
+                      { eidnidInternalProvider = resolveInternalProvider mInternalProvider
+                      , eidnidSSN               = ssn
+                      , eidnidBirthDate         = dateOfBirth
+                      , eidnidCertificate       = certificate
+                      , eidnidDistinguishedName = distinguishedName
+                      , eidnidPid               = pid
+                      }
+                  _ -> return Nothing
+          return (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
+        _ -> return (Nothing, Nothing)
+    resolveInternalProvider :: Maybe Text -> EIDServiceNemIDInternalProvider
+    resolveInternalProvider mt = case mt of
+      -- TODO: decide if we want to distinct between personal keycard and employee keycard - this would break backward
+      -- data compability, but maybe doesn't hurt us that much?
+      Nothing                -> EIDServiceNemIDKeyCard
+      Just "PersonalKeycard" -> EIDServiceNemIDKeyCard
+      Just "EmployeeKeycard" -> EIDServiceNemIDKeyCard
+      Just "EmployeeKeyFile" -> EIDServiceNemIDKeyFile
+      Just t ->
+        unexpectedError $ "unknown internal provider returned from EID service" <> t
+
+dateOfBirthFromDKPersonalNumber :: Text -> Text
+dateOfBirthFromDKPersonalNumber personalnumber =
+  case T.chunksOf 2 (T.take 6 $ personalnumber) of
+    [day, month, year] ->
+      let
+        yearWithoutCentury = read year
+        firstDigitOfSequenceNumber = T.index personalnumber 7
+        century = showt $ resolveCentury yearWithoutCentury firstDigitOfSequenceNumber
+      in
+        day <> "." <> month <> "." <> century <> year
+    _ ->
+      unexpectedError
+        $  "This personal number cannot be formatted to date: "
+        <> personalnumber
+  where
+    resolveCentury :: Int -> Char -> Int
+    resolveCentury yearWithoutCentury firstDigitOfSequenceNumber
+      | firstDigitOfSequenceNumber < '4'
+      = 19
+      | firstDigitOfSequenceNumber == '4'
+      = if yearWithoutCentury < 37 then 20 else 19
+      | firstDigitOfSequenceNumber > '4' && firstDigitOfSequenceNumber < '9'
+      = if yearWithoutCentury < 58 then 20 else 18
+      | otherwise
+      = if yearWithoutCentury < 37 then 20 else 19
 
 data CompleteVerimiEIDServiceTransactionData = CompleteVerimiEIDServiceTransactionData {
     eidvtdName :: T.Text
@@ -355,3 +481,130 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
               return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
             _ -> return (Nothing, Nothing)
         _ -> return (Nothing, Nothing)
+
+-- FIXME those 3 functions below are supposed to be a basis for further refactoring of this file
+createTransactionWithEIDService
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> Text
+  -> Maybe A.Value
+  -> Text
+  -> m (EIDServiceTransactionID)
+createTransactionWithEIDService conf provider providerParams redirectUrl = do
+  let paramsPair = fromMaybe [] $ (\p -> ["providerParameters" .= p]) <$> providerParams
+  (exitcode, stdout, stderr) <- readCurl
+    [ "-X"
+    , "POST"
+    , "-H"
+    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
+    , "-H"
+    , "Content-Type: application/json"
+    , "--data"
+    , "@-"
+    , T.unpack (eidServiceUrl conf) <> "/api/v1/transaction/new"
+    ]
+    (  A.encode
+    .  A.toJSON
+    $  object
+    $  [ "method" .= ("auth" :: String)
+       , "provider" .= provider
+       , "redirectUrl" .= redirectUrl
+       ]
+    ++ paramsPair
+    )
+  case exitcode of
+    ExitFailure msg -> do
+      logAttention ("Failed to create new transaction (eidservice/" <> provider <> ")")
+        $ object
+            [ "stdout" `equalsExternalBSL` stdout
+            , "stderr" `equalsExternalBSL` stderr
+            , "errorMessage" .= msg
+            ]
+      internalError
+    ExitSuccess -> do
+      logInfo ("Created new transaction (eidservice/" <> provider <> ")") $ object
+        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
+      case (decode $ BSL.toString stdout) of
+        Ok jsvalue -> withJSValue jsvalue $ do
+          mtid <- fromJSValueField "id"
+          case (mtid) of
+            (Just tid) -> return (unsafeEIDServiceTransactionID $ T.pack tid)
+            _          -> do
+              logAttention_ "Failed to read 'id' from create transaction response"
+              internalError
+        _ -> do
+          logAttention_ "Failed to parse create transaction response"
+          internalError
+
+getTransactionFromEIDService
+  :: (Kontrakcja m)
+  => EIDServiceConf
+  -> Text
+  -> EIDServiceTransactionID
+  -> m (Maybe JSValue)
+getTransactionFromEIDService conf loggedName tid = localData [identifier tid] $ do
+  (exitcode, stdout, stderr) <- readCurl
+    [ "-X"
+    , "GET"
+    , "-H"
+    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
+    , "-H"
+    , "Content-Type: application/json"
+    , T.unpack
+    $  (eidServiceUrl conf)
+    <> "/api/v1/transaction/"
+    <> (fromEIDServiceTransactionID tid)
+    ]
+    BSL.empty
+  case exitcode of
+    ExitFailure msg -> do
+      logAttention ("Failed to fetch transaction (eidservice/" <> loggedName <> ")")
+        $ object
+            [ "stdout" `equalsExternalBSL` stdout
+            , "stderr" `equalsExternalBSL` stderr
+            , "errorMessage" .= msg
+            ]
+      internalError
+    ExitSuccess -> do
+      logInfo ("Fetched new transaction (eidservice/" <> loggedName <> ")") $ object
+        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
+      case decode $ BSL.toString stdout of
+        Ok jsvalue -> return $ Just jsvalue
+        _          -> return Nothing
+
+startTransactionWithEIDService
+  :: Kontrakcja m => EIDServiceConf -> Text -> EIDServiceTransactionID -> m JSValue
+startTransactionWithEIDService conf providerName tid = localData [identifier tid] $ do
+  (exitcode, stdout, stderr) <- readCurl
+    [ "-X"
+    , "POST"
+    , "-H"
+    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
+    , "-H"
+    , "Content-Type: application/json"
+    , "--data"
+    , "@-"
+    , T.unpack
+    $  (eidServiceUrl conf)
+    <> "/api/v1/transaction/"
+    <> (fromEIDServiceTransactionID tid)
+    <> "/start"
+    ]
+    (A.encode . A.toJSON $ object [])
+  case exitcode of
+    ExitFailure msg -> do
+      logInfo ("Failed to start transaction (eidservice/" <> providerName <> ")") $ object
+        [ "stdout" `equalsExternalBSL` stdout
+        , "stderr" `equalsExternalBSL` stderr
+        , "errorMessage" .= msg
+        ]
+      internalError
+    ExitSuccess -> do
+      logInfo ("Started transaction (eidservice/" <> providerName <> ")") $ object
+        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
+      case (decode $ BSL.toString stdout) of
+        Ok jsvalue -> return jsvalue
+        _          -> do
+          logAttention_ "Failed to parse start transaction response"
+          internalError
+

@@ -10,6 +10,7 @@ module EID.Authentication.Model (
   , MergeSMSPinAuthentication(..)
   , MergeEIDServiceVerimiAuthentication(..)
   , MergeEIDServiceIDINAuthentication(..)
+  , MergeEIDServiceNemIDAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
   ) where
@@ -42,6 +43,7 @@ data EAuthentication
   | SMSPinAuthentication_ Text -- param is a phone number
   | EIDServiceVerimiAuthentication_ !EIDServiceVerimiAuthentication
   | EIDServiceIDINAuthentication_ !EIDServiceIDINAuthentication
+  | EIDServiceNemIDAuthentication_ !EIDServiceNemIDAuthentication
 
 ----------------------------------------
 
@@ -57,6 +59,7 @@ data AuthenticationProvider
   | NetsFITupas
   | VerimiAuth
   | IDINAuth
+  | NemIDAuth
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -74,7 +77,8 @@ instance FromSQL AuthenticationProvider where
       5 -> return NetsFITupas
       6 -> return VerimiAuth
       7 -> return IDINAuth
-      _ -> throwM RangeError { reRange = [(1, 7)], reValue = n }
+      8 -> return NemIDAuth
+      _ -> throwM RangeError { reRange = [(1, 8)], reValue = n }
 
 instance ToSQL AuthenticationProvider where
   type PQDest AuthenticationProvider = PQDest Int16
@@ -85,6 +89,7 @@ instance ToSQL AuthenticationProvider where
   toSQL NetsFITupas  = toSQL (5 :: Int16)
   toSQL VerimiAuth   = toSQL (6 :: Int16)
   toSQL IDINAuth     = toSQL (7 :: Int16)
+  toSQL NemIDAuth    = toSQL (8 :: Int16)
 
 ----------------------------------------
 
@@ -187,6 +192,18 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINAuthenticatio
         sqlSet "signatory_date_of_birth" eidServiceIDINBirthDate
         sqlSet "provider_customer_id"    eidServiceIDINCustomerID
 
+-- | Insert NemID authentication for a given signatory or replace the existing one.
+data MergeEIDServiceNemIDAuthentication = MergeEIDServiceNemIDAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceNemIDAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNemIDAuthentication () where
+  update (MergeEIDServiceNemIDAuthentication authKind sid slid EIDServiceNemIDAuthentication {..})
+    = do
+      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+        sqlSet "provider"                NemIDAuth
+        sqlSet "internal_provider"       eidServiceNemIDInternalProvider
+        sqlSet "signature"               eidServiceNemIDCertificate
+        sqlSet "signatory_name"          eidServiceNemIDSignatoryName
+        sqlSet "signatory_date_of_birth" eidServiceNemIDDateOfBirth
+
 -- Get authentication - internal - just to unify code
 data GetEAuthenticationInternal = GetEAuthenticationInternal AuthenticationKind SignatoryLinkID (Maybe SessionID)
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Maybe EAuthentication) where
@@ -275,3 +292,11 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
       , eidServiceIDINBirthDate     = signatory_dob
       , eidServiceIDINCustomerID    = customer_id
       }
+    NemIDAuth -> EIDServiceNemIDAuthentication_ EIDServiceNemIDAuthentication
+      { eidServiceNemIDInternalProvider = unsafeEIDServiceNemIDInternalProviderFromInt16
+                                            $ fromJust internal_provider
+      , eidServiceNemIDSignatoryName    = fromJust msignatory_name
+      , eidServiceNemIDDateOfBirth      = fromJust signatory_dob
+      , eidServiceNemIDCertificate      = fromJust msignature
+      }
+

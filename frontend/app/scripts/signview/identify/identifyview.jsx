@@ -6,6 +6,8 @@ var NorwegianIdentifyView = require("./norwegian/norwegianidentifyview");
 var NorwegianIdentifyModel = require("./norwegian/norwegianidentifymodel");
 var DanishIdentifyView = require("./danish/danishidentifyview");
 var DanishIdentifyModel = require("./danish/danishidentifymodel");
+var DanishEIDHubIdentifyView = require("./danish-eidhub/danishidentifyview");
+var DanishEIDHubIdentifyModel = require("./danish-eidhub/danishidentifymodel");
 var FinnishIdentifyView = require("./finnish/finnishidentifyview");
 var FinnishIdentifyModel = require("./finnish/finnishidentifymodel");
 var SMSPinIdentifyView = require("./smspin/smspinidentifyview");
@@ -23,7 +25,8 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 
     propTypes: {
       doc: React.PropTypes.instanceOf(Document).isRequired,
-      siglinkid: React.PropTypes.string.isRequired
+      siglinkid: React.PropTypes.string.isRequired,
+      useEIDHubForNemID: React.PropTypes.bool.isRequired
     },
     getInitialState: function () {
       return this.stateFromProps(this.props);
@@ -44,7 +47,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
         } else if (sig.noBankIDAuthenticationToViewArchived()) {
           model = new NorwegianIdentifyModel(args);
         } else if (sig.dkNemIDAuthenticationToViewArchived()) {
-          model = new DanishIdentifyModel(args);
+          if (this.props.useEIDHubForNemID) {
+            model = new DanishEIDHubIdentifyModel(args);
+          } else {
+            model = new DanishIdentifyModel(args);
+          }
         } else if (sig.fiTupasAuthenticationToViewArchived()) {
           model = new FinnishIdentifyModel(args);
         } else if (sig.smsPinAuthenticationToViewArchived()) {
@@ -60,7 +67,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
         } else if (sig.noBankIDAuthenticationToView()) {
           model = new NorwegianIdentifyModel(args);
         } else if (sig.dkNemIDAuthenticationToView()) {
-          model = new DanishIdentifyModel(args);
+          if (this.props.useEIDHubForNemID) {
+            model = new DanishEIDHubIdentifyModel(args);
+          } else {
+            model = new DanishIdentifyModel(args);
+          }
         } else if (sig.fiTupasAuthenticationToView()) {
           model = new FinnishIdentifyModel(args);
         } else if (sig.smsPinAuthenticationToView()) {
@@ -144,7 +155,13 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 model={model}
               />
             }
-            { /* else if */ model.isDanish() &&
+            { /* else if */ model.isDanish() && this.props.useEIDHubForNemID &&
+              <DanishEIDHubIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
+            { /* else if */ model.isDanish() && !this.props.useEIDHubForNemID &&
               <DanishIdentifyView
                 ref="identify"
                 model={model}

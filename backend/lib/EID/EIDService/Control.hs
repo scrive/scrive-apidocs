@@ -9,7 +9,10 @@ import Log
 import Network.HTTP.Base (urlEncode)
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Text.StringTemplates.Fields as F
+import qualified Text.StringTemplates.Templates as TPL
 
 import Analytics.Include
 import AppView
@@ -28,6 +31,7 @@ import EID.EIDService.Conf
 import EID.EIDService.Model
 import EID.EIDService.Types
 import EvidenceLog.Model
+import FlashMessage
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import MinutesTime
@@ -35,6 +39,7 @@ import Routing
 import Session.Model
 import Session.SessionID
 import Templates (renderTextTemplate)
+import User.Lang
 import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
@@ -53,6 +58,9 @@ eidServiceRoutes = choice
   , dir "start" . dir "idin-sign" . hPost . toK2 $ startIDINSignEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "idin-sign" . hGet . toK2)
     redirectEndpointFromIDINSignEIDServiceTransaction
+  , dir "start" $ dir "nemid" . hPost . toK2 $ startNemIDViewEIDServiceTransaction
+  , (dir "redirect-endpoint" . dir "nemid-view" . hGet . toK2)
+    redirectEndpointFromNemIDViewEIDServiceTransaction
   ]
 
 eidServiceConf :: Kontrakcja m => Document -> m EIDServiceConf
@@ -400,5 +408,189 @@ redirectEndpointFromIDINSignEIDServiceTransaction did slid = do
     F.value "incorrect_data" $ not successOrInProgress
     F.value "document_id" $ show did
     F.value "signatory_link_id" $ show slid
+    standardPageFields ctx Nothing ad
+  simpleHtmlResponse redirectPage
+
+startNemIDViewEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
+startNemIDViewEIDServiceTransaction did slid = do
+  logInfo_ "EID Service transaction start"
+  doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  conf <- eidServiceConf doc
+  rd   <- guardJustM $ getField "redirect"
+  ctx  <- getContext
+  let redirectUrl =
+        (ctx ^. #brandedDomain % #url)
+          <> "/eid-service/redirect-endpoint/nemid-view/"
+          <> showt did
+          <> "/"
+          <> showt slid
+          <> "?redirect="
+          <> rd
+  let locale = resolveLocale doc
+  tid  <- createNemIDTransactionWithEIDService conf locale redirectUrl
+  turl <- startNemIDTransactionWithEIDService conf tid
+  sid  <- getNonTempSessionID
+  now  <- currentTime
+  let newTransaction = EIDServiceTransaction
+        { estID              = tid
+        , estStatus          = EIDServiceTransactionStatusStarted
+        , estSignatoryLinkID = slid
+        , estAuthKind        = EIDServiceAuthToView $ mkAuthKind doc
+        , estProvider        = EIDServiceTransactionProviderNemID
+        , estSessionID       = sid
+        , estDeadline        = 60 `minutesAfter` now
+        }
+  dbUpdate $ MergeEIDServiceTransaction newTransaction
+  return $ object ["accessUrl" .= turl]
+  where
+    resolveLocale :: Document -> Text
+    resolveLocale doc = case (documentlang doc) of
+      LANG_SV -> "sv-SE"
+      LANG_NO -> "nb-NO"
+      LANG_DA -> "da-DK"
+      _       -> "en-GB"
+
+updateNemIDTransactionAfterCheck
+  :: Kontrakcja m
+  => SignatoryLinkID
+  -> EIDServiceTransaction
+  -> EIDServiceTransactionStatus
+  -> Maybe CompleteNemIDEIDServiceTransactionData
+  -> m EIDServiceTransactionStatus
+updateNemIDTransactionAfterCheck slid est ts mctd = do
+  if (estStatus est == ts)
+    then return $ estStatus est
+    else do
+      case (ts, mctd) of
+        (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
+          doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
+          let signatoryLink = fromJust $ getSigLinkFor slid doc
+          mergeEIDServiceTransactionWithStatus
+            EIDServiceTransactionStatusCompleteAndSuccess
+          let ssnFromEIDService    = normalizeSSN $ eidnidSSN cd
+              ssnFromSignatoryLink = normalizeSSN $ getPersonalNumber signatoryLink
+          if (ssnFromEIDService /= ssnFromSignatoryLink)
+            then do
+              logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object
+                [ "ssn_sl" .= ssnFromSignatoryLink
+                , "ssn_eidhub" .= ssnFromEIDService
+                , "provider" .= ("dk_nemid" :: Text)
+                ]
+              flashMessageUserHasIdentifiedWithDifferentSSN
+                >>= addFlashCookie
+                .   toCookieValue
+              return $ EIDServiceTransactionStatusCompleteAndFailed
+            else do
+              let signatoryName = cnFromDN $ eidnidDistinguishedName cd
+                  birthDate     = eidnidBirthDate cd
+                  certificate   = decodeCertificate $ eidnidCertificate cd
+                  auth          = EIDServiceNemIDAuthentication
+                    { eidServiceNemIDInternalProvider = eidnidInternalProvider cd
+                    , eidServiceNemIDSignatoryName    = signatoryName
+                    , eidServiceNemIDDateOfBirth      = birthDate
+                    , eidServiceNemIDCertificate      = certificate
+                    }
+              sessionID <- getNonTempSessionID
+              dbUpdate $ MergeEIDServiceNemIDAuthentication (mkAuthKind doc)
+                                                            sessionID
+                                                            slid
+                                                            auth
+              ctx <- getContext
+              let pid         = eidnidPid cd
+                  eventFields = do
+                    F.value "signatory_name" signatoryName
+                    F.value "provider_dknemid" True
+                    F.value "signatory_dob" birthDate
+                    F.value "signatory_pid" pid
+                    F.value "signature" $ B64.encode certificate
+              withDocument doc $ do
+                when (mkAuthKind doc == AuthenticationToView) $ do
+                  void
+                    $   dbUpdate
+                    .   InsertEvidenceEventWithAffectedSignatoryAndMsg
+                          AuthenticatedToViewEvidence
+                          (eventFields)
+                          (Just signatoryLink)
+                          Nothing
+                    =<< signatoryActor ctx signatoryLink
+                dbUpdate $ ChargeUserGroupForDKNemIDAuthentication (documentid doc)
+              return EIDServiceTransactionStatusCompleteAndSuccess
+        (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
+          mergeEIDServiceTransactionWithStatus
+            EIDServiceTransactionStatusCompleteAndFailed
+          return EIDServiceTransactionStatusCompleteAndFailed
+        _ -> do
+          mergeEIDServiceTransactionWithStatus ts
+          return ts
+  where
+    mergeEIDServiceTransactionWithStatus newstatus =
+      dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newstatus }
+    decodeCertificate :: Text -> BSC8.ByteString
+    decodeCertificate =
+      either (unexpectedError $ "invalid base64 of NemID certificate") identity
+        . B64.decode
+        . T.encodeUtf8
+    cnFromDN :: Text -> Text
+    cnFromDN dn =
+      fromMaybe parseError
+        $ lookup "CN"
+        $ fmap parsePair
+        $ concatMap (T.splitOn " + ")
+        $ T.splitOn ", "
+        $ dn
+      where
+        parsePair s = case T.splitOn "=" s of
+          (name : values) -> (name, T.intercalate "=" values)
+          _               -> unexpectedError $ "Cannot parse DN value: " <> dn
+        parseError = unexpectedError $ "Cannot parse DN value: " <> dn
+    normalizeSSN :: Text -> Text
+    normalizeSSN = T.filter (/= '-')
+    flashMessageUserHasIdentifiedWithDifferentSSN
+      :: TPL.TemplatesMonad m => m FlashMessage
+    flashMessageUserHasIdentifiedWithDifferentSSN = toFlashMsg OperationFailed
+      <$> TPL.renderTemplate_ "flashMessageUserHasIdentifiedWithDifferentSSN"
+
+checkNemIDEIDServiceTransactionForSignatory
+  :: Kontrakcja m
+  => SignatoryLinkID
+  -> m
+       ( Maybe
+           ( EIDServiceTransaction
+           , EIDServiceTransactionStatus
+           , Maybe CompleteNemIDEIDServiceTransactionData
+           )
+       )
+checkNemIDEIDServiceTransactionForSignatory slid = do
+  sessionID <- getNonTempSessionID
+  doc       <- dbQuery $ GetDocumentBySignatoryLinkID slid
+  conf      <- eidServiceConf doc
+  mest      <- dbQuery $ GetEIDServiceTransactionGuardSessionID
+    sessionID
+    slid
+    (EIDServiceAuthToView $ mkAuthKind doc)
+  case mest of
+    Nothing  -> return Nothing
+    Just est -> checkNemIDTransactionWithEIDService conf (estID est) >>= \case
+      (Nothing, _   ) -> return Nothing
+      (Just ts, mctd) -> return $ Just (est, ts, mctd)
+
+redirectEndpointFromNemIDViewEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+redirectEndpointFromNemIDViewEIDServiceTransaction did slid = do
+  logInfo_ "EID Service transaction check"
+  void $ getDocumentAndSignatoryForEIDAuth did slid -- access guard
+  ad  <- getAnalyticsData
+  ctx <- getContext
+  rd  <- guardJustM $ getField "redirect"
+  res <- checkNemIDEIDServiceTransactionForSignatory slid
+  mts <- case res of
+    Just (est, ts, mctd) -> do
+      nts <- updateNemIDTransactionAfterCheck slid est ts mctd
+      return $ Just nts
+    _ -> return Nothing
+  redirectPage <- renderTextTemplate "postNemIDRedirect" $ do
+    F.value "redirect" rd
+    F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)
     standardPageFields ctx Nothing ad
   simpleHtmlResponse redirectPage

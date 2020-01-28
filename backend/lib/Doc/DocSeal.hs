@@ -119,28 +119,32 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
   identifiedNameText <- case eauthentication of
     Just (CGISEBankIDAuthentication_ authentication) ->
       renderTextTemplate "_identifiedBySwedishBankIDText"
-        $ F.value "name"
+        . F.value "name"
         $ cgisebidaSignatoryName authentication
     Just (NetsNOBankIDAuthentication_ authentication) ->
       renderTextTemplate "_identifiedByNOBankIDText"
-        $ F.value "name"
+        . F.value "name"
         $ netsNOBankIDSignatoryName authentication
     Just (NetsDKNemIDAuthentication_ authentication) ->
       renderTextTemplate "_identifiedByDKNemIDText"
-        $ F.value "name"
+        . F.value "name"
         $ netsDKNemIDSignatoryName authentication
     Just (NetsFITupasAuthentication_ authentication) ->
       renderTextTemplate "_identifiedByFITupasText"
-        $ F.value "name"
+        . F.value "name"
         $ netsFITupasSignatoryName authentication
     Just (EIDServiceVerimiAuthentication_ authentication) ->
       renderTextTemplate "_identifiedByVerimiText"
-        $ F.value "email"
+        . F.value "email"
         $ eidServiceVerimiVerifiedEmail authentication
     Just (EIDServiceIDINAuthentication_ authentication) ->
       renderTextTemplate "_identifiedByIDINText"
-        $ F.value "email"
+        . F.value "email"
         $ eidServiceIDINVerifiedEmail authentication
+    Just (EIDServiceNemIDAuthentication_ authentication) ->
+      renderTextTemplate "_identifiedByDKNemIDText"
+        . F.value "name"
+        $ eidServiceNemIDSignatoryName authentication
     Just (SMSPinAuthentication_ _) -> return ""
     Nothing -> return ""
 
@@ -148,13 +152,13 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
   nameFromText <- case esignature of
     Just (CGISEBankIDSignature_ sig) ->
       renderTextTemplate "_nameFromSwedishBankIDText"
-        $ F.value "name"
+        . F.value "name"
         $ cgisebidsSignatoryName sig
     Just (NetsNOBankIDSignature_ sig) ->
-      renderTextTemplate "_nameFromNOBankIDText" $ F.value "name" $ netsnoSignatoryName
+      renderTextTemplate "_nameFromNOBankIDText" . F.value "name" $ netsnoSignatoryName
         sig
     Just (NetsDKNemIDSignature_ sig) ->
-      renderTextTemplate "_nameFromDKNemIDText" $ F.value "name" $ netsdkSignatoryName sig
+      renderTextTemplate "_nameFromDKNemIDText" . F.value "name" $ netsdkSignatoryName sig
     _ -> return ""
 
   fields <-

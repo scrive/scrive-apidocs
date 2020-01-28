@@ -287,6 +287,7 @@ authViewMatchesAuth FITupasAuthenticationToView NetsFITupasAuthentication_{} = T
 authViewMatchesAuth SMSPinAuthenticationToView SMSPinAuthentication_{} = True
 authViewMatchesAuth VerimiAuthenticationToView EIDServiceVerimiAuthentication_{} = True
 authViewMatchesAuth IDINAuthenticationToView EIDServiceIDINAuthentication_{} = True
+authViewMatchesAuth DKNemIDAuthenticationToView EIDServiceNemIDAuthentication_{} = True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or

@@ -51,6 +51,7 @@ import Doc.API.V2.JSONTest
 import DocControlTest
 import DocStateTest
 import DumpEvidenceTexts
+import EID.EIDService.CommunicationTest
 import ESignatureTest
 import EvidenceAttachmentsTest
 import EvidenceLogTest
@@ -146,6 +147,7 @@ allTests =
   , mailsTests
   , monitorAPITests
   , netsXmlTests
+  , nemidTests
   , oauthTest
   , padAplicationAPITests
   , partnerAPITests

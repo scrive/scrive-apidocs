@@ -14,7 +14,8 @@ $(function () {
   doc.recall(function () {
     React.render(React.createElement(IdentifyView, {
       doc: doc,
-      siglinkid: fromTemplate.sigLinkId
+      siglinkid: fromTemplate.sigLinkId,
+      useEIDHubForNemID: fromTemplate.useEIDHubForNemID
     }), $(".global-table-cell")[0]);
 
     FlashMessages.FlashMessageTryFromCookie();

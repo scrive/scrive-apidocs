@@ -139,7 +139,8 @@ $htmlopentag()$
     window.netsTrustedDomain = "$netsTrustedDomain$";
     var fromTemplate = {
       documentId: "$documentid$",
-      sigLinkId: "$siglinkid$"
+      sigLinkId: "$siglinkid$",
+      useEIDHubForNemID: $if(useEIDHubForNemID)$ true $else$ false $endif$
     };
     </script>
     <script src="$cdnbaseurl$/compiled/signview/identifyview-$versioncode$.js" crossorigin="anonymous"></script>
