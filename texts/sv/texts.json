@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Ladda upp dokument",
 "_apiConfiramtionDeny":"Föregående sida",
 "_apiConfiramtionFooterLogged":"Klicka på knappen för att bevilja tillstånd.",
-"_apiConfiramtionFooterNotLogged":"",
+"_apiConfiramtionFooterNotLogged":"Logga in på ditt Scrive-konto för att bevilja tillstånd. <a class='put-link-to-signup-here'>Testa gratis med Scrive eSign</a>.",
 "_apiConfiramtionHeader":"begär tillstånd att genomföra följande åtgärder i Scrive för din räkning:",
 "_apiConfiramtionLoginAndAccept":"Logga in och bevilja tillstånd",
 "_apiConfiramtionLoginAndAcceptTitle":"Logga in och bevilja tillstånd",
