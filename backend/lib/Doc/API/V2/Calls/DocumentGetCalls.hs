@@ -154,7 +154,7 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
   return $ Ok qrCode
 
   where
-      -- | Create a URL to be QR-encoded.
+    -- | Create a URL to be QR-encoded.
     mkSignLink :: Text -> MagicHash -> Text
     mkSignLink domainURL mh =
       let relativeLink = LinkSignDocMagicHash did slid mh
