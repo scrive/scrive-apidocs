@@ -596,6 +596,8 @@ apiCallTestSalesforceIntegration = do
     let url = fromJust murl
     fmap Ok $ case scheme of
       Just (SalesforceScheme token) -> do
+        logInfo "Testing salesforce integration with user that has sf callback scheme"
+          $ logObject_ user
         ctx <- getContext
         case ctx ^. #salesforceConf of
           Nothing -> noConfigurationError "Salesforce"
@@ -613,14 +615,26 @@ apiCallTestSalesforceIntegration = do
                 value "curl_exit_code" curl_err
                 value "curl_stdout"    stdout
                 value "curl_stderr"    stderr
-      _ -> throwM . SomeDBExtraException $ conflictError
-        "Salesforce callback scheme is not set for this user"
+      _ -> do
+        logAttention
+            "Testing salesforce integration with user that doesn't have sf callback scheme"
+          $ logObject_ user
+        throwM . SomeDBExtraException $ conflictError
+          "Salesforce callback scheme is not set for this user"
 
 apiCallSetSalesforceCallbacks :: Kontrakcja m => m Response
 apiCallSetSalesforceCallbacks = do
   V2.api $ do
     -- We allow all permission although workflow with Partners API
     -- should use APIPersonal.
+
+    -- START: Following code is placed just for debuging purposes for Telia/SF case (29.01.2020).
+    -- It should be removed within 7 days of that date as it is a security risk.
+    rq <- askRq
+    logInfo "Started setting sf callback scheme (!REMOVE_IT! !IMPORTANT!)"
+      $ object ["rq_headers" .= (show (rqHeaders rq))]
+    -- END
+
     (user, _) <- V2.getAPIUserWithAnyPrivileges
     ctx       <- getContext
     case (ctx ^. #salesforceConf) of
@@ -630,8 +644,12 @@ apiCallSetSalesforceCallbacks = do
         code   <- V2.apiV2ParameterObligatory (V2.ApiV2ParameterText "code")
         mtoken <- flip runReaderT sc (getRefreshTokenFromCode code)
         case mtoken of
-          Left  emsg  -> V2.apiError $ V2.requestFailed emsg
+          Left emsg -> do
+            logAttention "Setting sf callback scheme failed"
+              $ object ["user_id" .= (user ^. #id), "msg" .= emsg]
+            V2.apiError $ V2.requestFailed emsg
           Right token -> do
+            logInfo "Setting sf callback scheme worked" $ logObject_ user
             dbUpdate $ UpdateUserCallbackScheme (user ^. #id) (SalesforceScheme token)
             return $ V2.Ok $ runJSONGen $ value "status" ("ok" :: String)
 

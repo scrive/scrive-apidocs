@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Nahrát dokumenty",
 "_apiConfiramtionDeny":"Předchozí strana",
 "_apiConfiramtionFooterLogged":"Oprávnění udělíte kliknutím na tlačítko.",
-"_apiConfiramtionFooterNotLogged":"Oprávnění budete moci udělit až po přihlášení do účtu Scrive. Pokud účet Scrive nemáte, postupujte dle pokynů a účet si vytvořte.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"žádá o povolení provést vaším jménem ve službě Scrive následující akce:",
 "_apiConfiramtionLoginAndAccept":"Přihlásit se a udělit oprávnění",
 "_apiConfiramtionLoginAndAcceptTitle":"Přihlásit se a udělit oprávnění",

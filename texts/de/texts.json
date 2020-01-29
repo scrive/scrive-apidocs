@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Dokumente hochladen",
 "_apiConfiramtionDeny":"Vorherige Seite",
 "_apiConfiramtionFooterLogged":"Klicken Sie auf die Schaltfläche, um Zugriffsrechte zu gewähren.",
-"_apiConfiramtionFooterNotLogged":"Melden Sie sich auf Ihrem Scrive-Konto an, um Zugriffsrechte zu gewähren. Wenn Sie nicht über ein Scrive-Konto verfügen, folgen Sie bitte den Anweisungen, um ein Konto zu erstellen.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"hat die Berechtigung beantragt, die folgenden Aktionen in Scrive in Ihrem Namen durchzuführen:",
 "_apiConfiramtionLoginAndAccept":"Anmelden und Zugriffsrechte gewähren",
 "_apiConfiramtionLoginAndAcceptTitle":"Anmelden und Zugriffsrechte gewähren",

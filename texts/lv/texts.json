@@ -136,7 +136,7 @@
 "_apiConfiramtionCreatePersmission":"Augšupielādēt dokumentus",
 "_apiConfiramtionDeny":"Iepriekšējā lapa",
 "_apiConfiramtionFooterLogged":"Noklikšķiniet uz pogas, lai piešķirtu privilēģijas.",
-"_apiConfiramtionFooterNotLogged":"Pierakstieties savā Scrive kontā, lai piešķirtu privilēģijas. Ja Jums vēl nav Scrive konta, izveidojiet to, sekojot norādēm.",
+"_apiConfiramtionFooterNotLogged":"",
 "_apiConfiramtionHeader":"lūdz atļauju, lai veiktu šādas darbības Scrive vietnē Jūsu vārdā:",
 "_apiConfiramtionLoginAndAccept":"Pierakstīties un piešķirt privilēģijas",
 "_apiConfiramtionLoginAndAcceptTitle":"Pierakstieties un piešķiriet privilēģijas",

@@ -69,7 +69,7 @@ module.exports = React.createClass({
     this.setState({hasEmailProblem: !validEmail});
     var userGroupID = this.state.userGroupID;
     if (this.props.availableUserGroups.length > 1 && !userGroupID) {
-      userGroupID = this.props.availableUserGroups[0].ugid;
+      userGroupID = this.props.availableUserGroups[0].id;
     }
 
     if (validEmail) {
