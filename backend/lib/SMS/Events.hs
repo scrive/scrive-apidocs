@@ -179,7 +179,8 @@ handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid =
   logSignatory signlinkid $ do
     logInfo_ "handleUndeliveredSMSInvitation: logging info"
     getSigLinkFor signlinkid <$> theDocument >>= \case
-      Just signlink -> do
+      Just signlink | signatoryAlreadyHandled signlink -> return ()
+                    | otherwise -> do
         time <- currentTime
         let
           actor =
@@ -191,6 +192,12 @@ handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid =
           $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink d] }
         triggerAPICallbackIfThereIsOne =<< theDocument
       Nothing -> return ()
+  where signatoryAlreadyHandled sl = case signatoryrole sl of
+          SignatoryRoleSigningParty          -> isJust $ maybesigninfo sl
+          SignatoryRoleViewer                -> isJust $ maybeseeninfo sl
+          SignatoryRoleApprover              -> isJust $ maybesigninfo sl
+          SignatoryRoleForwardedSigningParty -> True
+          SignatoryRoleForwardedApprover     -> True
 
 smsUndeliveredInvitation
   :: (TemplatesMonad m, MonadDB m, MonadThrow m)
