@@ -83,7 +83,7 @@ var sub = require("./data/subscription");
       } else {
         xhr.respond(
           200, {"Content-Type": "text/html"},
-          JSON.stringify({companyid: id, companyname: "Test Company"})
+          JSON.stringify({companyid: id, companyname: "Test Company", parentid: null})
         );
       }
     });
