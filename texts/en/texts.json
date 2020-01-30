@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Are you sure you want to send the document to: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"View CSV",
 "_designViewWhatField":"What field is it?",
-"_designviewCantSignModalInfo1":"You’re not able to send your document yet because something is missing.",
+"_designviewCantSignModalInfo1":"You’re not able to send your document yet because something is missing. <br/><strong>Check that you have defined at least one signing party and that the PDF has been uploaded.</strong>",
 "_designviewCantSignModalInfo2":"Go to \\\\\"Add parties\\\\\" and check if one or more parties are <span class='highlight'>highlighted</span>. Click on this party and look for <span class='highlight'>highlighted</span> fields.",
 "_designviewCantSignModalLi1":"Check if the email address (if any) is entered correctly. It shouldn’t contain any spaces. This is the format: example@email.com",
 "_designviewCantSignModalLi2":"The mobile number (if any) must include a \\\\\"+\\\\\" together with the country code. The leading \\\\\"0\\\\\" should be removed. This is the format: +46701234567",
