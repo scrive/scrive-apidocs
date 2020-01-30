@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Opravdu chcete dokument odeslat těmto stranám: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Zobrazit CSV",
 "_designViewWhatField":"Co je to za pole?",
-"_designviewCantSignModalInfo1":"Dokument ještě nelze odeslat, protože něco chybí.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Přejděte do části \\\\\"Přidat strany\\\\\" a zkontrolujte, není-li některá ze stran <span class='highlight'>zvýrazněna</span>. Na zvýrazněnou stranu klikněte a hledejte <span class='highlight'>zvýrazněná</span> pole.",
 "_designviewCantSignModalLi1":"Zkontrolujte, zda má e-mailová adresa (je-li zadána) správný formát. V adrese nesmí být žádné mezery. Správný formát je: example@email.com",
 "_designviewCantSignModalLi2":"Mobilní číslo (je-li zadáno) musí obsahovat znak \\\\\"+\\\\\" a mezinárodní předvolbu. Počáteční znak \\\\\"0\\\\\" se v čísle nesmí vyskytovat. Správný formát je: +420123456789",

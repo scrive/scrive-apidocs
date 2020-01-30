@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Oletko varma että haluat lähettää dokumentin seuraaville osapuolille: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Katso CSV:tä",
 "_designViewWhatField":"Mikä kenttä on kyseessä?",
-"_designviewCantSignModalInfo1":"Et voi lähettää dokumenttiasi vielä, sillä jotain puuttuu.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Mene \\\\\"Lisää osapuolet\\\\\" -osioon ja tarkista onko yksi tai useampia osapuolia <span class='highlight'>korostettu</span>. Klikkaa osapuolta ja katso läpi <span class='highlight'>korostetut</span> kentät.",
 "_designviewCantSignModalLi1":"Tarkista, että sähköpostiosoite (jos lisätty) on kirjoitettu oikein. Sen ei tulisi sisältää yhtään välilyöntiä. Tämä on ulkoasu: example@email.com",
 "_designviewCantSignModalLi2":"Puhelinnumeron (jos annettu) tulee sisältää plusmerkki \\\\\"+\\\\\" yhdessä suuntanumeron kanssa. Ensimmäinen nolla \\\\\"0\\\\\" tulee poistaa. Oikea muoto on tämä: +358701234567",

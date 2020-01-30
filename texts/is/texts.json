@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Ertu viss um að vilja senda skjalið til: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Skoða CSV-skrá",
 "_designViewWhatField":"Hvaða reitur er það?",
-"_designviewCantSignModalInfo1":"Þú getur ekki sent skjalið þitt því eitthvað vantar.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Farðu í \\\\\"Bæta við aðilum\\\\\" og kannaðu hvort einn eða fleiri aðilar eru <span class='highlight'>auðkenndir</span>. Smelltu á þann aðila og leitaðu að <span class='highlight'>auðkenndum</span> reitum.",
 "_designviewCantSignModalLi1":"Kannaðu hvort netfangið (ef við á) er slegið inn á réttan máta. Það ætti ekki að innihalda nein bil. Svona er sniðið: example@email.com",
 "_designviewCantSignModalLi2":"Farsímanúmerið (ef við á) verður að innihalda \\\\\"+\\\\\" ásamt landskóðanum. \\\\\"0\\\\\" fremst ætti að fjarlægja. Svona er sniðið: +46701234567",

@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Sind Sie sicher, dass Sie das Dokument an <BR/> <span class='put-names-of-parties-here'></span> senden wollen",
 "_designViewViewCSV":"CSV anzeigen",
 "_designViewWhatField":"Welches Feld ist das?",
-"_designviewCantSignModalInfo1":"Sie können das Dokument noch nicht senden, weil es nicht vollständig ist.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Gehen Sie auf \\\\\"Parteien hinzufügen\\\\\" und überprüfen Sie, ob eine oder mehrere Parteien <span class='highlight'>markiert</span> sind. Klicken Sie auf diese Partei und schauen Sie nach den <span class='highlight'>markierten</span> Feldern.",
 "_designviewCantSignModalLi1":"Überprüfen Sie, ob die E-Mail-Adresse (falls vorhanden) korrekt eingegeben wurde. Es dürfen keine Leerzeichen enthalten sein. Das  Format ist: example@email.com",
 "_designviewCantSignModalLi2":"Die Handy-Nummer (falls vorhanden) muss ein \\\\\"+\\\\\" zusammen mit der Landesvorwahl enthalten. Die \\\\\"0\\\\\" am Anfang muss entfernt werden. Das Format ist: +46701234567",

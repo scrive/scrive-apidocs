@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Ar tikrai norite išsiųsti dokumentą: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Peržiūrėti CSV",
 "_designViewWhatField":"Kuris laukelis tai yra?",
-"_designviewCantSignModalInfo1":"Jūs dar negalite išsiųsti savo dokumento, nes kažko trūksta.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Atverskite \\\\„Pridėti šalis\\\\“ ir patikrinkite, ar pažymėta <span class='highlight'>bent viena šalis</span>. Paspauskite tą šalį ir peržiūrėkite <span class='highlight'>pažymėtus</span> laukelius.",
 "_designviewCantSignModalLi1":"Patikrinkite, ar tinkamai įvestas el. pašto adresas (jei iš viso įvestas). Jame neturi būti jokių tarpų. Formatas turi būti toks: example@email.com",
 "_designviewCantSignModalLi2":"Į mobiliojo telefono numerį (jei toks pateikiamas) turi būti įtraukta \\\\\"+\\\\\" ir šalies kodas. Pirmąjį \\\\\"0\\\\\" būtina ištrinti. Formatas: +46701234567",

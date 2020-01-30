@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Er du sikker på at du vil sende dokumentet til: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Vis CSV",
 "_designViewWhatField":"Hvilket felt er det?",
-"_designviewCantSignModalInfo1":"Du kan ikke sende dokumentet enda ettersom noe mangler.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Gå til \\\\\"Legg til parter\\\\\" og sjekk om en eller flere parter er <span class='highlight'>uthevet</span>. Klikk på denne part og se etter <span class='highlight'>uthevede</span> felt.",
 "_designviewCantSignModalLi1":"Sjekk om e-postadressen (om det finnes en) er skrevet rett. Den skal ikke inneholde noen mellomrom. Dette er formatet: example@email.com",
 "_designviewCantSignModalLi2":"Mobilnummeret (om du har ett) må bestå av \\\\\"+\\\\\" etterfulgt av landskode. De første \\\\\"0\\\\\" skal fjernes. Dette er riktig format: +46701234567",

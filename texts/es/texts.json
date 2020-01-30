@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Está usted seguro que quiere enviar el documento a: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Ver CSV",
 "_designViewWhatField":"¿Qué campo es este?",
-"_designviewCantSignModalInfo1":"No puedes enviar tu documento porque falta algo.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Ve a \\\\\"Add parties\\\\\" y revisa si una o más partes están <span class='highlight'>resaltadas</span>. Haz clic en esa parte y busca campos <span class='highlight'>resaltados</span>.",
 "_designviewCantSignModalLi1":"Revisa si la dirección de email (si hubiera) se ha escrito correctamente. No debería contener ningún espacio. El formato sería: example@email.com",
 "_designviewCantSignModalLi2":"El número de móvil (si lo hay) debe incluir un signo \\\\\"+\\\\\" junto con el código del país. El primer \\\\\"0\\\\\" debe ser eliminado. El número de teléfono no debería contener ningún espacio. El formato es este: +46701234567",

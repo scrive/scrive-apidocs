@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Vai tiešām vēlaties nosūtīt dokumentu: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Skatīt CSV",
 "_designViewWhatField":"Kas tas ir par lauku?",
-"_designviewCantSignModalInfo1":"Dokumentu vēl nevar nosūtīt, jo tas nav pilnīgs.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Dodieties uz \\\\\"Add parties\\\\\" un pārbaudiet, vai viena vai vairākas puses nav <span class='highlight'>iekrāsotas</span>. Noklikšķiniet uz šīs puses un meklējiet <span class='highlight'>iekrāsotos</span> laukus.",
 "_designviewCantSignModalLi1":"Pārbaudiet, vai e-pasta adrese (ja tāda ir norādīta) ir ievadīta pareizi. E-pasta adrese nevar būt ar atstarpēm. Pareizais formāts ir: example@email.com",
 "_designviewCantSignModalLi2":"Mobilā tālruņa numurā (ja tāds ir norādīts) jābūt simbolam a \\\\\"+\\\\\" un valsts kodam. Noņemiet tālruņa numura priekšā ievietoto \\\\\"0\\\\\". Pareizais formāts ir: +46701234567",

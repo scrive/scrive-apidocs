@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Είστε σίγουρος/η ότι θέλετε να αποστείλετε το έγγραφο στο: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Έλεγχος CSV",
 "_designViewWhatField":"Τι πεδίο είναι αυτό; ",
-"_designviewCantSignModalInfo1":"Δεν μπορείτε να αποστείλετε το έγγραφό σας ακόμα επειδή λείπει κάτι. ",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Πηγαίνετε στο \\\\\"Πρόσθεση συμβαλλομένων\\\\\" και ελέγξτε εάν ένας ή περισσότεροι συμβαλλόμενοι είναι <span class='highlight'>highlighted</span>. Πιέστε σε αυτόν τον συμβαλλόμενο και ψάξτε για <span class='highlight'>highlighted</span> πεδία.",
 "_designviewCantSignModalLi1":"Ελέγξτε εάν η διεύθυνση email (εάν υπάρχει) έχει καταχωριστεί σωστά. Δεν πρέπει να περιέχει κενά. Αυτή είναι η μορφή: example@email.com",
 "_designviewCantSignModalLi2":"Ο αριθμός κινητού τηλεφώνου (εφόσον υπάρχει) θα πρέπει να περιλαμβάνει ένα \\\\\"+\\\\\" μαζί με τον κωδικό της χώρας. Το αρχικό \\\\\"0\\\\\" θα πρέπει να αφαιρεθεί. Αυτή είναι η μορφή: +46701234567",

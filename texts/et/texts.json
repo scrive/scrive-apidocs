@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Kas oled kindel, et soovid saata dokumendi kasutaja(te)le: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Vaata CSV-d",
 "_designViewWhatField":"Mis väli see on?",
-"_designviewCantSignModalInfo1":"Dokumenti pole võimalik saata, kuna midagi on puudu.",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Minge valiku juurde \\\\\"Lisa osalejaid\\\\\" ja kontrollige, kas üks või mitu poolt on <span class='highlight'>esile tõstetud</span>. Klõpsake sellel poolel ja otsige <span class='highlight'>esile tõstetud</span> välju.",
 "_designviewCantSignModalLi1":"Kontrollige, kas e-maili aadress (kui olemas) on õigesti sisestatud. See ei tohiks sisaldada tühikuid. Õige formaat on: example@email.com",
 "_designviewCantSignModalLi2":"Mobiilinumber (kui olemas) peab sisaldama \\\\\"+\\\\\" koos riigikoodiga. Eelnev \\\\\"0\\\\\" tuleks eemaldada. Õige formaat on: +46701234567",

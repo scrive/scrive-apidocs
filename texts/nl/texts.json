@@ -499,7 +499,7 @@
 "_designViewStartSigningModalTextWithSendout":"Weet u zeker dat u het document wilt versturen naar: <BR/> <span class='put-names-of-parties-here'></span>",
 "_designViewViewCSV":"Bekijk CSV",
 "_designViewWhatField":"Welk veld is dit? ",
-"_designviewCantSignModalInfo1":"U kunt dit document nog niet verzenden omdat er iets ontbreekt. ",
+"_designviewCantSignModalInfo1":"",
 "_designviewCantSignModalInfo2":"Ga naar \\\\\"Partijen toevoegen\\\\\" en controleer of één of meerdere partijen zijn <span class='highlight'>gemarkeerd</span>. Klik op deze partij en zoek naar de <span class='highlight'>gemarkeerde</span> vakken.",
 "_designviewCantSignModalLi1":"Controleer of het email-adres (indien van toepassing) correct is ingevuld. Het mag geen spaties bevatten. Dit is het formaat: example@email.com ",
 "_designviewCantSignModalLi2":"Het mobiele telefoonnummer (indien aanwezig) moet een \\\\\"+\\\\\" bevatten, samen met de landcode. De eerste \\\\\"0\\\\\" moet verwijderd worden. Dit is het formaat: ",
