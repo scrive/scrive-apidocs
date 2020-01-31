@@ -1803,7 +1803,7 @@ testSealDocument = replicateM_ 1 $ do
                             IDINAuthenticationToSign -> do
                               randomUpdate $ \esig -> SignDocument
                                 (signatorylinkid slk)
-                                (Just (NetsDKNemIDSignature_ esig))
+                                (Just (EIDServiceIDINSignature_ esig))
                                 Nothing
                                 screenshots
                                 sa

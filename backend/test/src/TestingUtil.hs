@@ -53,6 +53,7 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.TestInvariants
 import EID.CGI.GRP.Transaction.Model
+import EID.EIDService.Types
 import EID.Signature.Model
 import FeatureFlags.Model
 import File.File
@@ -711,6 +712,19 @@ instance Arbitrary NetsDKNemIDSignature where
       <*> (arbText 10 20)
       <*> (arbText 10 10)
       <*> (arbText 10 10)
+
+instance Arbitrary EIDServiceIDINSignature where
+  arbitrary = do
+    a <- arbText 20 30
+    b <- arbText 200 300
+    c <- arbText 10 20
+    d <- arbText 10 10
+    return $ EIDServiceIDINSignature $ CompleteIDINEIDServiceTransactionData
+      { eiditdName          = a
+      , eiditdVerifiedEmail = b
+      , eiditdBirthDate     = c
+      , eiditdCustomerID    = d
+      }
 
 instance Arbitrary ESignature where
   arbitrary = oneof
