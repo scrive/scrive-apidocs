@@ -7,6 +7,7 @@ module UserGroup.Model (
   , UserGroupGetWithParents(..)
   , UserGroupGetWithParentsByUserID(..)
   , UserGroupsGetFiltered(..)
+  , FindOldUserGroups(..)
   , UserGroupUpdate(..)
   , UserGroupUpdateSettings(..)
   , UserGroupUpdateAddress(..)
@@ -240,6 +241,24 @@ instance (MonadDB m, MonadThrow m)
       sqlWhereIsNULL "user_groups.deleted"
     ug <- fetchOne fetchUserGroup
     dbQuery . UserGroupGetWithParentsByUG $ ug
+
+data FindOldUserGroups = FindOldUserGroups Int
+instance (MonadDB m, MonadTime m) => DBQuery m FindOldUserGroups [UserGroup] where
+  query (FindOldUserGroups batchLimit) = do
+    runQuery_ . sqlSelect "user_groups" $ do
+      mapM_ sqlResult userGroupSelectors
+      sqlWhereIsNULL "user_groups.deleted"
+      sqlWhereIsNULL "user_groups.parent_group_id"
+      sqlWhereNotExists . sqlSelect "users u" $ do
+        sqlResult "1"
+        sqlWhere "u.user_group_id=user_groups.id"
+        sqlWhereIsNULL "u.deleted"
+      sqlWhereNotExists . sqlSelect "user_groups ug1" $ do
+        sqlResult "1"
+        sqlWhere "ug1.parent_group_id=user_groups.id"
+        sqlWhereIsNULL "ug1.deleted"
+      sqlLimit batchLimit
+    fetchMany fetchUserGroup
 
 data UserGroupUpdate = UserGroupUpdate UserGroup
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () where

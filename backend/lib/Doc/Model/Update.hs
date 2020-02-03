@@ -2917,10 +2917,10 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
 
 data PurgeTimeoutedSignatoryAccessTokens= PurgeTimeoutedSignatoryAccessTokens
 instance (MonadDB m, MonadTime m)
-  => DBUpdate m PurgeTimeoutedSignatoryAccessTokens () where
+  => DBUpdate m PurgeTimeoutedSignatoryAccessTokens Int where
   update _ = do
     now <- currentTime
-    runQuery_ . sqlDelete "signatory_access_tokens" $ do
+    runQuery . sqlDelete "signatory_access_tokens" $ do
       sqlWith "ids_to_purge" . sqlSelect "signatory_access_tokens sat" $ do
         sqlResult "sat.id"
         sqlWhere $ "sat.expiration_time IS NOT NULL"
