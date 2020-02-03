@@ -217,7 +217,8 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
     Just trgugid -> dbQuery (UserGroupGet trgugid) >>= \case
       Nothing    -> internalError -- non-existing UserGroup is not OK
       Just trgug -> return $ Just trgug
-  let trgugid = fromMaybe ug mtrgug ^. #id
+  let trgug   = fromMaybe ug mtrgug
+      trgugid = trgug ^. #id
       acc     = mkAccPolicy [(CreateA, UserR, trgugid)]
   roles <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
@@ -244,9 +245,15 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
         value "added"       False
         value "samecompany" True
       else do
-                             -- If user exists we allow takeover only if he is the only user in his company
-        users <- dbQuery . UserGroupGetUsers $ existinguser ^. #groupID
-        if (length users == 1)
+        -- If user exists we allow takeover only if he is the only user in his company
+        users        <- dbQuery . UserGroupGetUsers $ existinguser ^. #groupID
+        targetUGRoot <-
+          ugwpRoot . fromJust <$> (dbQuery . UserGroupGetWithParents $ trgugid)
+        existingUserUGRoot <-
+          ugwpRoot
+          .   fromJust
+          <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
+        if (existingUserUGRoot == targetUGRoot || length users == 1)
           then do
             void $ sendTakeoverSingleUserMail user ug existinguser
             void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (existinguser ^. #id)
