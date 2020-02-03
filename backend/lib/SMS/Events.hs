@@ -179,29 +179,25 @@ handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid =
   logSignatory signlinkid $ do
     logInfo_ "handleUndeliveredSMSInvitation: logging info"
     getSigLinkFor signlinkid <$> theDocument >>= \case
-      Just signlink
-        | signatoryAlreadyHandled signlink -> return ()
-        | otherwise -> do
-          time <- currentTime
-          let
-            actor = mailSystemActor time
-                                    (maybesignatory signlink)
-                                    (getEmail signlink)
-                                    signlinkid
-          void $ dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
-          mail <- theDocument
-            >>= \d -> smsUndeliveredInvitation mailNoreplyAddress bd hostpart d signlink
-          theDocument >>= \d -> scheduleEmailSendout
-            $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink d] }
-          triggerAPICallbackIfThereIsOne =<< theDocument
+      Just signlink | signatoryAlreadyHandled signlink -> return ()
+                    | otherwise -> do
+        time <- currentTime
+        let
+          actor =
+            mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
+        void $ dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
+        mail <- theDocument
+          >>= \d -> smsUndeliveredInvitation mailNoreplyAddress bd hostpart d signlink
+        theDocument >>= \d -> scheduleEmailSendout
+          $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink d] }
+        triggerAPICallbackIfThereIsOne =<< theDocument
       Nothing -> return ()
-  where
-    signatoryAlreadyHandled sl = case signatoryrole sl of
-      SignatoryRoleSigningParty          -> isJust $ maybesigninfo sl
-      SignatoryRoleViewer                -> isJust $ maybeseeninfo sl
-      SignatoryRoleApprover              -> isJust $ maybesigninfo sl
-      SignatoryRoleForwardedSigningParty -> True
-      SignatoryRoleForwardedApprover     -> True
+  where signatoryAlreadyHandled sl = case signatoryrole sl of
+          SignatoryRoleSigningParty          -> isJust $ maybesigninfo sl
+          SignatoryRoleViewer                -> isJust $ maybeseeninfo sl
+          SignatoryRoleApprover              -> isJust $ maybesigninfo sl
+          SignatoryRoleForwardedSigningParty -> True
+          SignatoryRoleForwardedApprover     -> True
 
 smsUndeliveredInvitation
   :: (TemplatesMonad m, MonadDB m, MonadThrow m)
