@@ -36,7 +36,8 @@ instance Unjson SSOConf where
 data IDPConf = IDPConf {
   icID                 :: !T.Text,
   icPublicKey          :: !RSA.PublicKey,
-  icUserInitialGroupID :: !UserGroupID
+  icUserInitialGroupID :: !UserGroupID,
+  icPutNameIDInCompanyPosition :: !Bool
 } deriving (Show, Eq)
 
 unjsonIDPConf :: UnjsonDef IDPConf
@@ -46,6 +47,10 @@ unjsonIDPConf =
     <*> field "idp_id"         icID                 "Entity name of IdP"
     <*> field "idp_public_key" icPublicKey          "IdP public RSA key"
     <*> field "idp_init_ug"    icUserInitialGroupID "Group used for user provisioning"
+    <*> fieldDef "idp_put_name_id_in_company_position"
+                 False
+                 icPutNameIDInCompanyPosition
+                 "Put NameID in company position field of the user"
 
 unjsonRSAPublicKey :: UnjsonDef RSA.PublicKey
 unjsonRSAPublicKey = SimpleUnjsonDef "Crypto.PubKey.RSA.PublicKey"

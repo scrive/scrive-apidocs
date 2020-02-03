@@ -1,4 +1,4 @@
-module SSO.SAML (getVerifiedAssertionsFromSAML, getIDPID, parseSAMLXML, getFirstNonEmptyAttribute) where
+module SSO.SAML (getVerifiedAssertionsFromSAML, getIDPID, parseSAMLXML, getFirstNonEmptyAttribute, getNonEmptyNameID) where
 
 import Control.Exception
 import Control.Monad.Base
@@ -12,8 +12,8 @@ import qualified Data.Text as T
 import qualified SAML2.Core.Assertions as A
 import qualified SAML2.Core.Protocols as SAMLP
 import qualified SAML2.Core.Signature as SIG
+import qualified SAML2.XML as XML
 import qualified SAML2.XML.Signature as SIG
-import qualified SAML2.XML.Types as SIG
 import qualified Text.XML.HXT.Core as HXT
 import qualified Text.XML.HXT.HTTP as HXT (withHTTP)
 
@@ -87,10 +87,22 @@ getFirstNonEmptyAttribute attributeName assertion =
         else Nothing
     findAttributeInPossiblyEncrypted _ = Nothing
 
-    findFirstAttributeInNodes :: SIG.Nodes -> Maybe String
+    findFirstAttributeInNodes :: XML.Nodes -> Maybe String
     findFirstAttributeInNodes =
       listToMaybe . catMaybes . fmap findFirstNonEmptyAttributeValue
 
     findFirstNonEmptyAttributeValue :: HXT.XmlTree -> Maybe String
     findFirstNonEmptyAttributeValue xmlTree =
       listToMaybe $ HXT.runLA (HXT.neg HXT.isWhiteSpace >>> HXT.getText) xmlTree
+
+getNonEmptyNameID :: A.Assertion -> Maybe String
+getNonEmptyNameID assertion =
+  getDecryptedSubjectIdentifier =<< (A.subjectIdentifier $ A.assertionSubject assertion)
+  where
+    getDecryptedSubjectIdentifier :: A.PossiblyEncrypted A.Identifier -> Maybe XML.XString
+    getDecryptedSubjectIdentifier (A.NotEncrypted (A.IdentifierName nameID)) =
+      Just . getSimpleBaseIDName $ nameID
+    getDecryptedSubjectIdentifier _ = Nothing
+
+    getSimpleBaseIDName :: A.NameID -> XML.XString
+    getSimpleBaseIDName nameID = A.baseID . A.nameBaseID $ nameID
