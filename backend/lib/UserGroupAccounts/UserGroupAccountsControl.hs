@@ -206,28 +206,28 @@ companyAccountsSortingBy f ca1 ca2 =
     by inviting them to be taken over.
 -}
 handleAddUserGroupAccount :: Kontrakcja m => m JSValue
-handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
-  ctx     <- getContext
-  email   <- guardJustM $ getOptionalField asValidEmail "email"
-  fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
-  sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
+handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
+  ctx          <- getContext
+  email        <- guardJustM $ getOptionalField asValidEmail "email"
+  fstname      <- fromMaybe "" <$> getOptionalField asValidName "fstname"
+  sndname      <- fromMaybe "" <$> getOptionalField asValidName "sndname"
 
-  mtrgug  <- getOptionalField asValidUserGroupID "user_group_id" >>= \case
+  mTargetGroup <- getOptionalField asValidUserGroupID "user_group_id" >>= \case
     Nothing      -> return Nothing -- non-existing parameter is OK
     Just trgugid -> dbQuery (UserGroupGet trgugid) >>= \case
       Nothing    -> internalError -- non-existing UserGroup is not OK
       Just trgug -> return $ Just trgug
-  let trgug   = fromMaybe ug mtrgug
-      trgugid = trgug ^. #id
-      acc     = mkAccPolicy [(CreateA, UserR, trgugid)]
+  let targetGroup   = fromMaybe currentUserGroup mTargetGroup
+      targetGroupID = targetGroup ^. #id
+      acc           = mkAccPolicy [(CreateA, UserR, targetGroupID)]
   roles <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
   accessControl roles acc internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
     Nothing -> do
       --create a new company user
       newuser' <- guardJustM $ createUser (Email email)
-                                          (fstname, sndname)
-                                          (trgugid, False)
+                                          (fstname      , sndname)
+                                          (targetGroupID, False)
                                           (ctx ^. #lang)
                                           CompanyInvitation
       void $ dbUpdate $ LogHistoryUserInfoChanged
@@ -238,9 +238,9 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
         (newuser' ^. #info & (#firstName .~ fstname) & (#lastName .~ sndname))
         (ctx ^? #maybeUser % _Just % #id)
       newuser <- guardJustM $ dbQuery $ GetUserByID (newuser' ^. #id)
-      void $ sendNewUserGroupUserMail user ug newuser
+      void $ sendNewUserGroupUserMail user targetGroup newuser
       runJSONGenT $ value "added" True
-    Just existinguser -> if (existinguser ^. #groupID == trgugid)
+    Just existinguser -> if (existinguser ^. #groupID == targetGroupID)
       then runJSONGenT $ do
         value "added"       False
         value "samecompany" True
@@ -248,16 +248,16 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
         -- If user exists we allow takeover only if he is the only user in his company
         users        <- dbQuery . UserGroupGetUsers $ existinguser ^. #groupID
         targetUGRoot <-
-          ugwpRoot . fromJust <$> (dbQuery . UserGroupGetWithParents $ trgugid)
+          ugwpRoot . fromJust <$> (dbQuery . UserGroupGetWithParents $ targetGroupID)
         existingUserUGRoot <-
           ugwpRoot
           .   fromJust
           <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
         if (existingUserUGRoot == targetUGRoot || length users == 1)
           then do
-            void $ sendTakeoverSingleUserMail user ug existinguser
+            void $ sendTakeoverSingleUserMail user targetGroup existinguser
             void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (existinguser ^. #id)
-                                                                   trgugid
+                                                                   targetGroupID
             runJSONGenT $ value "added" True
           else do
             runJSONGenT $ value "added" False
