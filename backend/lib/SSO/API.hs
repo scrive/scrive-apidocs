@@ -1,7 +1,7 @@
 -- Due to a possibly bug in Brittany, we'll disable the formatter altogether
 -- brittany --exactprint-only
 
-module SSO.API(sso, getVerifiedAssertionsFromSAML)
+module SSO.API(sso)
   where
 
 import Data.Text as T
@@ -59,9 +59,10 @@ consumeAssertions = guardHttps $ do
           guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
                                           (const currentTime)
                                           verifiedAssertions
-          (memailRaw, mFirstName, mLastName) <- do
+          (mNameID, memailRaw, mFirstName, mLastName) <- do
             (maybe noAssertionsApiErr
-                   (\a -> return (T.pack <$> (getFirstNonEmptyAttribute "email" a),
+                   (\a -> return (T.pack <$> (getNonEmptyNameID a),
+                                  T.pack <$> (getFirstNonEmptyAttribute "email" a),
                                   T.pack <$> (getFirstNonEmptyAttribute "firstname" a),
                                   T.pack <$> (getFirstNonEmptyAttribute "lastname" a)))
                    (listToMaybe verifiedAssertions))
@@ -71,7 +72,8 @@ consumeAssertions = guardHttps $ do
                     loginOrCreateNewAccount (SAMLPrincipal
                                               (fromMaybe "" mFirstName)
                                               (fromMaybe "" mLastName)
-                                              email)
+                                              email
+                                              (fromMaybe "" mNameID))
                                             idpID
                   Nothing ->
                     apiError
@@ -125,7 +127,8 @@ consumeAssertions = guardHttps $ do
       mAccount <- getAccountInAcceptedStateOrFail $ spEmail p
       account <- maybe (createAccount idpconf p) return mAccount
       startSessionForSAMLUser account
-      withTosCheck (\_ -> return . internalResponse $ LinkLogin LANG_EN) account
+      withPositionUpdated <- updateUserWithNameIdInCompanyPosition account (spNameID p)
+      withTosCheck (\_ -> return . internalResponse $ LinkLogin LANG_EN) withPositionUpdated
 
     getAccountInAcceptedStateOrFail :: Kontrakcja m => Email -> m (Maybe User)
     getAccountInAcceptedStateOrFail email = do
@@ -150,6 +153,14 @@ consumeAssertions = guardHttps $ do
                     void $ dbUpdate $ SetLoginAuth (user ^. #id) LoginAuthSSO
                     return $ set #sysAuth LoginAuthSSO user
 
+    updateUserWithNameIdInCompanyPosition :: Kontrakcja m => User -> Text -> m User
+    updateUserWithNameIdInCompanyPosition user nameID = do
+      let positionWithNameID = "NameID:" <> nameID
+          oldUI = view #info user
+          newUI = set #companyPosition positionWithNameID oldUI
+      void . dbUpdate $ SetUserInfo (user ^. #id) newUI
+      return $ set #info newUI user
+
     startSessionForSAMLUser :: Kontrakcja m => User -> m ()
     startSessionForSAMLUser user = do
       let userID = user ^. #id
@@ -170,6 +181,7 @@ data SAMLPrincipal =
     spFirstname    :: Text
   , spLastname     :: Text
   , spEmail        :: Email
+  , spNameID       :: Text
   }
 
 renderMetadata :: Kontrakcja m => m Response
