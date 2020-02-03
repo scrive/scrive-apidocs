@@ -217,8 +217,7 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
     Just trgugid -> dbQuery (UserGroupGet trgugid) >>= \case
       Nothing    -> internalError -- non-existing UserGroup is not OK
       Just trgug -> return $ Just trgug
-  let trgug = fromMaybe ug mtrgug
-      trgugid = trgug ^. #id
+  let trgugid = fromMaybe ug mtrgug ^. #id
       acc     = mkAccPolicy [(CreateA, UserR, trgugid)]
   roles <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
@@ -249,7 +248,7 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
         users <- dbQuery . UserGroupGetUsers $ existinguser ^. #groupID
         if (length users == 1)
           then do
-            void $ sendTakeoverSingleUserMail user trgug existinguser
+            void $ sendTakeoverSingleUserMail user ug existinguser
             void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (existinguser ^. #id)
                                                                    trgugid
             runJSONGenT $ value "added" True
