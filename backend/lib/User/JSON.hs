@@ -210,10 +210,20 @@ companySettingsJson ugs = do
   value "portalurl" $ ugs ^. #portalUrl
   value "eidservicetoken" $ ugs ^. #eidServiceToken
 
-userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
-userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do
-  value "date" . formatTime $ uusTimeWindowStart uus
-  documentStatsToJSON $ uusDocumentStats uus
+userStatsToJSON
+  :: (UTCTime -> Text)
+  -> [UTCTime]  -- Timestamps; we output one record per timestamp.
+  -> [UserUsageStats]  -- User stats, sorted by date.
+  -> JSValue
+userStatsToJSON formatTime timestamps uuss =
+  runJSONGen . objects "stats" . for timestamps $ \timestamp ->
+    case find ((== timestamp) . uusTimeWindowStart) uuss of
+      Just uus -> uusEntry (uusTimeWindowStart uus) (uusDocumentStats uus)
+      Nothing  -> uusEntry timestamp mempty
+  where
+    uusEntry timestamp docstats = do
+      value "date" $ formatTime timestamp
+      documentStatsToJSON docstats
 
 documentStatsToJSON :: Monad m => DocumentStats -> JSONGenT m ()
 documentStatsToJSON DocumentStats {..} = do
@@ -231,37 +241,65 @@ documentStatsToJSON DocumentStats {..} = do
   value "tupas_authentications" dsTupasAuthentications
   value "shareable_links"       dsShareableLinks
 
-companyStatsToJSON :: (UTCTime -> Text) -> Text -> [UserUsageStats] -> JSValue
-companyStatsToJSON formatTime textName uuss =
-  runJSONGen . objects "stats" . for uussGrouped $ \uusGroup -> do
-    let summary = foldMap uusDocumentStats uusGroup
-    value "date" . formatTime . uusTimeWindowStart $ head uusGroup
-    value "name" textName
-    documentStatsToJSON summary
+companyStatsToJSON
+  :: (UTCTime -> Text)
+  -> Text
+  -> [UTCTime]  -- Timestamps; we output one record per timestamp.
+  -> [UserUsageStats]  -- Stats of all users in the company, sorted by date.
+  -> JSValue
+companyStatsToJSON formatTime textName timestamps uuss =
+  runJSONGen . objects "stats" . for timestamps $ \timestamp ->
+    case find ((== timestamp) . uusTimeWindowStart . head) uussGrouped of
+      Just uusGroup -> do
+        let summary = foldMap uusDocumentStats uusGroup
+        value "date" $ formatTime timestamp
+        value "name" textName
+        documentStatsToJSON summary
 
-    objects "user_stats" . for uusGroup $ \uus -> do
-      value "date" . formatTime $ uusTimeWindowStart uus
-      value "email" $ uusUserEmail uus
-      value "name" $ uusUserName uus
-      documentStatsToJSON $ uusDocumentStats uus
+        objects "user_stats" . for uusGroup $ \uus -> do
+          value "date" $ formatTime $ uusTimeWindowStart uus
+          value "email" $ uusUserEmail uus
+          value "name" $ uusUserName uus
+          documentStatsToJSON $ uusDocumentStats uus
+
+      Nothing -> do
+        value "date" $ formatTime timestamp
+        value "name" textName
+        documentStatsToJSON mempty
+
+        objects "user_stats" []
   where
     uussGrouped :: [[UserUsageStats]]
     uussGrouped = groupBy sameTimeWindow uuss
       where sameTimeWindow u1 u2 = uusTimeWindowStart u1 == uusTimeWindowStart u2
 
 shareableLinkStatsToJSON
-  :: (UTCTime -> Text) -> Text -> [ShareableLinkUsageStats] -> JSValue
-shareableLinkStatsToJSON formatTime textName sluss =
-  runJSONGen . objects "stats" . for slussGrouped $ \slusGroup -> do
-    let summary = foldMap slusDocumentStats slusGroup
-    value "date" . formatTime . slusTimeWindowStart $ head slusGroup
-    value "name" textName
-    documentStatsToJSON summary
-    objects "template_stats" . for slusGroup $ \slus -> do
-      value "date" . formatTime $ slusTimeWindowStart slus
-      value "id" . showt $ slusTemplateId slus
-      value "title" $ slusTemplateTitle slus
-      documentStatsToJSON $ slusDocumentStats slus
+  :: (UTCTime -> Text)
+  -> Text
+  -> [UTCTime]  -- Timestamps; we output one record per timestamp.
+  -> [ShareableLinkUsageStats]  -- Link stats, sorted by date.
+  -> JSValue
+shareableLinkStatsToJSON formatTime textName timestamps sluss =
+  runJSONGen . objects "stats" . for timestamps $ \timestamp ->
+    case find ((== timestamp) . slusTimeWindowStart . head) slussGrouped of
+      Just slusGroup -> do
+        let summary = foldMap slusDocumentStats slusGroup
+        value "date" . formatTime $ timestamp
+        value "name" textName
+        documentStatsToJSON summary
+
+        objects "template_stats" . for slusGroup $ \slus -> do
+          value "date" . formatTime $ slusTimeWindowStart slus
+          value "id" . showt $ slusTemplateId slus
+          value "title" $ slusTemplateTitle slus
+          documentStatsToJSON $ slusDocumentStats slus
+
+      Nothing -> do
+        value "date" . formatTime $ timestamp
+        value "name" textName
+        documentStatsToJSON mempty
+
+        objects "template_stats" []
   where
     slussGrouped :: [[ShareableLinkUsageStats]]
     slussGrouped = groupBy sameTimeWindow sluss

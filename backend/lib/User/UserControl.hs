@@ -21,6 +21,7 @@ module User.UserControl (
   , getShareableLinksStats -- Exported for admin section
 ) where
 
+import Data.Time.Calendar
 import Data.Time.Clock
 import Happstack.Server
 import Log
@@ -134,26 +135,33 @@ handlePostChangeEmail uid hash = withUser $ \user -> do
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m Response
 handleUsageStatsJSONForUserDays = V2.api $ do
-  (user, _) <- V2.getAPIUserWithAnyPrivileges
-  withCompany <- isFieldSet "withCompany"
-  stats <- getUsageStats PartitionByDay $ if (user ^. #isCompanyAdmin && withCompany)
-    then UsageStatsForUserGroup $ user ^. #groupID
-    else UsageStatsForUser $ user ^. #id
+  (user, _)          <- V2.getAPIUserWithAnyPrivileges
+  withCompany        <- isFieldSet "withCompany"
+  includeZeroRecords <- isFieldSet "includeZeroRecords"
+  stats              <-
+    getUsageStats PartitionByDay includeZeroRecords
+      $ if (user ^. #isCompanyAdmin && withCompany)
+          then UsageStatsForUserGroup $ user ^. #groupID
+          else UsageStatsForUser $ user ^. #id
   return $ V2.Ok stats
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m Response
 handleUsageStatsJSONForUserMonths = V2.api $ do
-  (user, _) <- V2.getAPIUserWithAnyPrivileges
-  withCompany <- isFieldSet "withCompany"
-  stats <- getUsageStats PartitionByMonth $ if (user ^. #isCompanyAdmin && withCompany)
-    then UsageStatsForUserGroup $ user ^. #groupID
-    else UsageStatsForUser $ user ^. #id
+  (user, _)          <- V2.getAPIUserWithAnyPrivileges
+  withCompany        <- isFieldSet "withCompany"
+  includeZeroRecords <- isFieldSet "includeZeroRecords"
+  stats              <-
+    getUsageStats PartitionByMonth includeZeroRecords
+      $ if (user ^. #isCompanyAdmin && withCompany)
+          then UsageStatsForUserGroup $ user ^. #groupID
+          else UsageStatsForUser $ user ^. #id
   return $ V2.Ok stats
 
 handleUsageStatsJSONForShareableLinks :: Kontrakcja m => StatsPartition -> m JSValue
 handleUsageStatsJSONForShareableLinks statsPartition = do
-  user <- guardJustM $ view #maybeUser <$> getContext
-  getShareableLinksStats statsPartition $ if user ^. #isCompanyAdmin
+  user               <- guardJustM $ view #maybeUser <$> getContext
+  includeZeroRecords <- isFieldSet "includeZeroRecords"
+  getShareableLinksStats statsPartition includeZeroRecords $ if user ^. #isCompanyAdmin
     then UsageStatsForUserGroup $ user ^. #groupID
     else UsageStatsForUser $ user ^. #id
 
@@ -163,30 +171,70 @@ getStatsInterval statsPartition = case statsPartition of
   PartitionByDay   -> idays 30
   PartitionByMonth -> imonths 6
 
-getUsageStats :: Kontrakcja m => StatsPartition -> UsageStatsFor -> m JSValue
-getUsageStats statsPartition forWhom =
+getUsageStats
+  :: Kontrakcja m
+  => StatsPartition
+  -> Bool  -- ^ If set produce reports for days/months with no activity, otherwise omit those.
+  -> UsageStatsFor
+  -> m JSValue
+getUsageStats statsPartition includeZeroRecords forWhom = do
   let interval = getStatsInterval statsPartition
-  in  do
-        stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
-        case forWhom of
-          UsageStatsForUser _uid ->
-            return $ userStatsToJSON (timeFormat statsPartition) stats
-          UsageStatsForUserGroup _ugid -> do
-            totalS <- renderTextTemplate_ "statsOrgTotal"
-            return $ companyStatsToJSON (timeFormat statsPartition) totalS stats
+  stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
+  now   <- currentTime
+  -- We are generating one record for each timestamp. If includeZeroRecords
+  -- isn't set, we only use the timestamps we've got data for.
+  let timestamps | includeZeroRecords = allTimestampsForPartition statsPartition now
+                 | otherwise          = map head . group $ map uusTimeWindowStart stats
+  case forWhom of
+    UsageStatsForUser _uid ->
+      return $ userStatsToJSON (timeFormat statsPartition) timestamps stats
+    UsageStatsForUserGroup _ugid -> do
+      totalS <- renderTextTemplate_ "statsOrgTotal"
+      return $ companyStatsToJSON (timeFormat statsPartition) totalS timestamps stats
 
-getShareableLinksStats :: Kontrakcja m => StatsPartition -> UsageStatsFor -> m JSValue
-getShareableLinksStats statsPartition forWhom =
+getShareableLinksStats
+  :: Kontrakcja m
+  => StatsPartition
+  -> Bool  -- ^ If set produce reports for days/months with no activity, otherwise omit those.
+  -> UsageStatsFor
+  -> m JSValue
+getShareableLinksStats statsPartition includeZeroRecords forWhom = do
   let interval = getStatsInterval statsPartition
-  in  do
-        stats <- dbQuery $ GetUsageStatsOnShareableLinks forWhom statsPartition interval
-        case forWhom of
-          UsageStatsForUser _uid -> do
-            allLinksS <- renderTextTemplate_ "statsShareableLinksTotal"
-            return $ shareableLinkStatsToJSON (timeFormat statsPartition) allLinksS stats
-          UsageStatsForUserGroup _ugid -> do
-            totalS <- renderTextTemplate_ "statsOrgTotal"
-            return $ shareableLinkStatsToJSON (timeFormat statsPartition) totalS stats
+  stats <- dbQuery $ GetUsageStatsOnShareableLinks forWhom statsPartition interval
+  now   <- currentTime
+  -- We are generating one record for each timestamp. If includeZeroRecords
+  -- isn't set, we only use the timestamps we've got data for.
+  let timestamps | includeZeroRecords = allTimestampsForPartition statsPartition now
+                 | otherwise          = map head . group $ map slusTimeWindowStart stats
+  case forWhom of
+    UsageStatsForUser _uid -> do
+      allLinksS <- renderTextTemplate_ "statsShareableLinksTotal"
+      return $ shareableLinkStatsToJSON (timeFormat statsPartition)
+                                        allLinksS
+                                        timestamps
+                                        stats
+    UsageStatsForUserGroup _ugid -> do
+      totalS <- renderTextTemplate_ "statsOrgTotal"
+      return
+        $ shareableLinkStatsToJSON (timeFormat statsPartition) totalS timestamps stats
+
+-- Internal helper. Given a partition scheme and the current time, calculate all
+-- the timestamps that postgresql (cf. `GetUsageStats`) will potentially spit
+-- out, assuming there was activity in that timeframe. In the sql query we
+-- truncate timestamps to start-of-day (resp. start-of-month) and include all
+-- items with timestamp >= truncate(now) - i, where i = 30 days (resp. 6
+-- months).
+allTimestampsForPartition :: StatsPartition -> UTCTime -> [UTCTime]
+allTimestampsForPartition PartitionByDay (UTCTime today _sec) = do
+  i <- [0, -1 .. -30]
+  -- the last 30 days (plus the started day) by descending date
+  return $ UTCTime (addDays i today) 0
+allTimestampsForPartition PartitionByMonth (UTCTime today _sec) = do
+  let (year, month, _) = toGregorian today
+  let startOfThisMonth = fromGregorian year month 1
+  i <- [0, -1 .. -6]
+  -- the last 6 months (plus the started month) by descending date
+  return $ UTCTime (addGregorianMonthsClip i startOfThisMonth) 0
 
 timeFormat :: StatsPartition -> UTCTime -> Text
 timeFormat statsPartition = case statsPartition of

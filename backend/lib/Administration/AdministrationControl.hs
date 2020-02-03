@@ -857,8 +857,8 @@ handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
   user        <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (user ^. #isCompanyAdmin && withCompany)
-    then getUsageStats PartitionByDay (UsageStatsForUserGroup $ user ^. #groupID)
-    else getUsageStats PartitionByDay (UsageStatsForUser $ user ^. #id)
+    then getUsageStats PartitionByDay False (UsageStatsForUserGroup $ user ^. #groupID)
+    else getUsageStats PartitionByDay False (UsageStatsForUser $ user ^. #id)
 
 
 handleAdminUserUsageStatsMonths :: Kontrakcja m => UserID -> m JSValue
@@ -866,27 +866,28 @@ handleAdminUserUsageStatsMonths uid = onlySalesOrAdmin $ do
   user        <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (user ^. #isCompanyAdmin && withCompany)
-    then getUsageStats PartitionByMonth (UsageStatsForUserGroup $ user ^. #groupID)
-    else getUsageStats PartitionByMonth (UsageStatsForUser $ user ^. #id)
+    then getUsageStats PartitionByMonth False (UsageStatsForUserGroup $ user ^. #groupID)
+    else getUsageStats PartitionByMonth False (UsageStatsForUser $ user ^. #id)
 
 handleAdminCompanyUsageStatsDays :: Kontrakcja m => UserGroupID -> m JSValue
 handleAdminCompanyUsageStatsDays ugid =
-  onlySalesOrAdmin $ getUsageStats PartitionByDay (UsageStatsForUserGroup ugid)
+  onlySalesOrAdmin $ getUsageStats PartitionByDay False (UsageStatsForUserGroup ugid)
 
 handleAdminCompanyUsageStatsMonths :: Kontrakcja m => UserGroupID -> m JSValue
 handleAdminCompanyUsageStatsMonths ugid =
-  onlySalesOrAdmin $ getUsageStats PartitionByMonth (UsageStatsForUserGroup ugid)
+  onlySalesOrAdmin $ getUsageStats PartitionByMonth False (UsageStatsForUserGroup ugid)
 
 
 handleAdminUserShareableLinksStats
   :: Kontrakcja m => StatsPartition -> UserID -> m JSValue
-handleAdminUserShareableLinksStats statsPartition uid = onlySalesOrAdmin $ do
-  getShareableLinksStats statsPartition (UsageStatsForUser uid)
+handleAdminUserShareableLinksStats statsPartition uid =
+  onlySalesOrAdmin $ getShareableLinksStats statsPartition False (UsageStatsForUser uid)
 
 handleAdminCompanyShareableLinksStats
   :: Kontrakcja m => StatsPartition -> UserGroupID -> m JSValue
-handleAdminCompanyShareableLinksStats statsPartition ugid = onlySalesOrAdmin $ do
-  getShareableLinksStats statsPartition (UsageStatsForUserGroup ugid)
+handleAdminCompanyShareableLinksStats statsPartition ugid =
+  onlySalesOrAdmin
+    $ getShareableLinksStats statsPartition False (UsageStatsForUserGroup ugid)
 
 
 handleCompanyGetSubscription :: Kontrakcja m => UserGroupID -> m Aeson.Value
