@@ -561,7 +561,18 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
         MobileNotificationDelivery         -> isMobileValidOrEmpty sl
         EmailAndMobileNotificationDelivery -> isEmailAndMobileValidOrEmpty sl
 
-    signatoryHasValidAuthSettings sl = authToSignIsValid sl
+    signatoryHasValidAuthSettings sl = authToSignIsValid sl && authToViewIsValid sl
+
+    authToViewIsValid sl = case signatorylinkauthenticationtoviewmethod sl of
+      SEBankIDAuthenticationToView -> True
+      NOBankIDAuthenticationToView ->
+        isJust (getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
+      DKNemIDAuthenticationToView  -> True
+      SMSPinAuthenticationToView   -> True
+      StandardAuthenticationToView -> True
+      IDINAuthenticationToView     -> True
+      FITupasAuthenticationToView  -> True
+      VerimiAuthenticationToView   -> True
 
     authToSignIsValid sl = case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign ->
