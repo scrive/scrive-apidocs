@@ -11,6 +11,7 @@ module.exports = React.createClass({
        size:  React.PropTypes.string,
        className : React.PropTypes.string,
        locked : React.PropTypes.bool,
+       hidden : React.PropTypes.bool,
        width : React.PropTypes.number
     },
     getDefaultProps: function() {
@@ -18,6 +19,7 @@ module.exports = React.createClass({
         onSelect: function() {},
         name : "",
         size: "normal",
+        disabled: false,
         className: ""
       };
     },
@@ -30,6 +32,7 @@ module.exports = React.createClass({
       var name = self.props.makeName === undefined
                    ? self.props.name
                    : self.props.makeName(selected);
+      var style = self.props.disabled ? {display: "none"} : {};
 
       if (this.props.component != undefined) {
         return (this.props.component(model));
@@ -43,6 +46,7 @@ module.exports = React.createClass({
             size={this.props.size}
             text={name}
             width={this.props.width}
+            style={style}
             className={"float-left actionButton " + this.props.className}
             locked={this.props.locked}
           />

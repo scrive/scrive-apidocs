@@ -13,6 +13,7 @@ var $ = require("jquery");
 var Modal = require("../../common/modal");
 var InfoTextInput = require("../../common/infotextinput");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var Subscription = require("../subscription");
 
 var CreateAccountModal = require("./createaccountmodal");
 var EditAccountModal = require("./editaccountmodal");
@@ -308,6 +309,9 @@ module.exports = React.createClass({
         }).sendAjax();
       }
     },
+    addingUsersEnabled: function () {
+      return !Subscription.currentSubscription().hasFreePlan();
+    },
     render: function() {
       var self = this;
       return (
@@ -334,6 +338,7 @@ module.exports = React.createClass({
             <List.ListAction
               name={localization.account.companyAccounts.createNewButtonText}
               type="action"
+              disabled={!self.addingUsersEnabled()}
               onSelect={this.showCreateAccountModal}
             />
             <List.Column
