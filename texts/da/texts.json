@@ -717,7 +717,7 @@
 "_idinText":"Hollandsk iDIN",
 "_imageFileFormatNotSpported":"Dette filformat understøttes ikke. Vælg i stedet et billede (PNG/JPG).",
 "_imageFileFormatNotSpportedIco":"Filformatet understøttes ikke. Vælg i stedet formatet PNG eller ICO. ",
-"_internalServerError":"<h1>Noget gik galt</h1><h4>Hvis problemet fortsætter, så kontakt vores support på support@scrive.com eller +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Beklager, dette filformat understøttes ikke. Vælg en PDF-fil i stedet.",
 "_invitationMailDeferredContentBodyFirst":"Desværre oplever vi problemer med leveringen af invitationen til at e-signere til <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Enten er vedkommendes e-mailadresse forkert, eller så er der problemer med den pågældende mailserver.",
 "_invitationMailDeferredContentBodySecond":"Bemærk venligst, at vi vil fortsætte med at forsøge at levere mailen, og vi vil underrette dig om forløbet. Klik på knappen nedenfor, hvis du ønsker at afbryde processen eller ændre adressen.",

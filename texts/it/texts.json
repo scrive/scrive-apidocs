@@ -717,7 +717,7 @@
 "_idinText":"iDIN olandese",
 "_imageFileFormatNotSpported":"Questo formato di file non è supportato. Seleziona un'immagine (PNG/JPG) al suo posto.",
 "_imageFileFormatNotSpportedIco":"Questo formato di file non è supportato. Seleziona un file PNG o ICO al suo posto.",
-"_internalServerError":"<h1>Qualcosa è andato storto</h1><h4>Se il problema persiste, contatta la nostra assistenza all'indirizzo support@scrive.com o al numero +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Questo formato di file non è supportato. Ti preghiamo di selezionare un file PDF.",
 "_invitationMailDeferredContentBodyFirst":"Purtroppo stiamo riscontrando difficoltà a consegnare l'invito a firmare a <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Può darsi che l'indirizzo email sia errato o che il server di posta del destinatario abbia un problema.",
 "_invitationMailDeferredContentBodySecond":"Tieni presente che continueremo ad inviare la posta e ti comunicheremo lo stato di avanzamento. Clicca il pulsante qui sotto se desideri cancellare l'operazione o modificare l'indirizzo.",

@@ -717,7 +717,7 @@
 "_idinText":"Niederländisches iDIN",
 "_imageFileFormatNotSpported":"Das Dateiformat wird nicht unterstützt. Wählen Sie ein anderes Format (PNG/JPG).",
 "_imageFileFormatNotSpportedIco":"Das Dateiformat wird nicht unterstützt. Wählen Sie eine PNG oder ICO-Datei. ",
-"_internalServerError":"<h1>Etwas ging schief</h1> <h4>Wenn das Problem nicht verschwindet, wenden Sie sich bitte an unseren Support support@scrive.com oder +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Leider wird dieses Dateiformat nicht unterstützt. Bitte wählen Sie stattdessen eine PDF-Datei.",
 "_invitationMailDeferredContentBodyFirst":"Leider gab es Probleme bei der Zustellung Ihrer Einladung zum E-Signieren an <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Entweder ist die E-Mailadresse des Empfängers falsch oder dessen Mail-Server hat Probleme.",
 "_invitationMailDeferredContentBodySecond":"Bitte beachten Sie, dass wir weiterhin versuchen, die E-Mail zuzustellen und Sie über Fortschritte informieren werden. Klicken Sie auf die Schaltfläche unten, wenn Sie den Vorgang abbrechen oder die Adresse ändern möchten.",

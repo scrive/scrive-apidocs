@@ -717,7 +717,7 @@
 "_idinText":"Hollandi iDIN",
 "_imageFileFormatNotSpported":"Failiformaati ei toetata. Valige selle asemel kujutis (PNG/JPG).",
 "_imageFileFormatNotSpportedIco":"Failiformaati ei toetata. Valige selle asemel PNG või ICO fail.",
-"_internalServerError":"<h1>Miski läks viltu</h1><h4>Probleemi püsides võtke ühendust meie klienditoega aadressil support@scrive.com või helistage +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Vabandame, seda failiformaati ei toetata. Valige PDF fail selle asemel.",
 "_invitationMailDeferredContentBodyFirst":"Kahjuks kogeme hetkel raskusi e-allkirjastamise kutse saatmisega <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Nende e-maili aadress on vale või e-maili server tõrgub.",
 "_invitationMailDeferredContentBodySecond":"Pidage meeles, et jätkame e-maili saatmist ja teavitame Teid protsessi kulgemisest. Klõpsake allpool oleval nupul, kui soovite toimingut tühistada või aadressi muuta.",

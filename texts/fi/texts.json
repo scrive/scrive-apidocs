@@ -717,7 +717,7 @@
 "_idinText":"Hollantilainen iDIN",
 "_imageFileFormatNotSpported":"Tiedostomuotoa ei tueta. Valitse sen sijaan kuva (PNG/JPG).",
 "_imageFileFormatNotSpportedIco":"Tiedostomuotoa ei tueta. Valitse sen sijaan PNG- tai ICO-tiedosto.",
-"_internalServerError":"<h1>Jokin meni vikaan</h1><h4>Jos ongelma ei mene pois, ota yhteyttä tukeemme osoitteessa support@scrive.com tai numerossa +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Olemme pahoillamme, tiedostomuotoa ei tueta. Ole hyvä, ja valitse PDF-tiedosto tämän sijaan.",
 "_invitationMailDeferredContentBodyFirst":"Meillä on valitettavasti ongelmia e-allekirjoittamisen kutsun lähettämisen kanssa osapuolelle, <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Joko heidän sähköpostiosoitteensa on virheellinen tai heidän sähköpostiserverissä on jotain ongelmia.",
 "_invitationMailDeferredContentBodySecond":"Huomaathan, me jatkamme sähköpostiviestin toimittamisen yrittämistä ja ilmoitamme edistymisestä. Klikkaa alla olevaa kuvaketta, jos haluat peruuttaa prosessin ja muuttaa osoitteen.",

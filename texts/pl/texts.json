@@ -717,7 +717,7 @@
 "_idinText":"Holenderski iDIN",
 "_imageFileFormatNotSpported":"Format pliku nie jest obsługiwany. Wybierz plik graficzny (PNG/JPG).",
 "_imageFileFormatNotSpportedIco":"Format pliku nie jest obsługiwany. Wybierz PNG lub ICO.",
-"_internalServerError":"<h1>Coś poszło nie tak</h1><h4>Jeśli problem nadal będzie się pojawiał, prosimy o kontakt z naszym działem wsparcia technicznego pod adresem mailowym support@scrive.com lub pod numerem telefonu: +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Niestety ten format pliku nie jest obsługiwany. Wybierz plik PDF.",
 "_invitationMailDeferredContentBodyFirst":"Niestety mamy pewne trudności z dostarczeniem zaproszenia do złożenia podpisu elektronicznego do  <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Powodem może być nieprawidłowy adres e-mail lub problemy z serwerem poczty elektronicznej.",
 "_invitationMailDeferredContentBodySecond":"Będziemy w dalszym ciągu podejmować próby dostarczenia tego maila. Będziemy informowali Cię o postępie prac. Kliknij na poniższy przycisk, jeśli chcesz anulować proces lub zmienić adres.",

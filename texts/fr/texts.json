@@ -717,7 +717,7 @@
 "_idinText":"iDIN néerlandais",
 "_imageFileFormatNotSpported":"Le format de fichier n'est pas pris en charge. Sélectionnez plutôt une image (PNG/JPG).",
 "_imageFileFormatNotSpportedIco":"Le format de fichier n'est pas pris en charge . Sélectionnez plutôt un fichier PNG ou ICO.",
-"_internalServerError":"<h1>Un problème est survenu</h1><h4>Si le problème persiste, veuillez contacter notre équipe d'assistance via l'adresse support@scrive.com ou le numéro de téléphone +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Désolé, ce format de fichier n'est pas pris en charge. Choisissez plutôt le format PDF.",
 "_invitationMailDeferredContentBodyFirst":"Nous rencontrons malheureusement des difficultés lors de l'envoi de l'invitation à la signature numérique <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. L'adresse mail est incorrecte ou le serveur de messagerie rencontre des problèmes.",
 "_invitationMailDeferredContentBodySecond":"Notez que nous continuerons d'essayer d'envoyer le mail et vous tiendrons informé de l'évolution. Cliquez sur le bouton ci-dessous si vous souhaitez annuler cette opération ou changer d'adresse.",

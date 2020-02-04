@@ -717,7 +717,7 @@
 "_idinText":"Nizozemská služba iDIN",
 "_imageFileFormatNotSpported":"Formát souboru není podporován. Zvolte raději obrázek (PNG/JPG).",
 "_imageFileFormatNotSpportedIco":"Formát souboru není podporován. Zvolte raději formát PNG nebo ICO.",
-"_internalServerError":"<h1>Někde se stala chyba</h1><h4>Pokud problém přetrvává, kontaktujte na adrese support@scrive.com nebo na čísle +46 8 519 779 00 naše oddělení technické podpory.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Je nám líto, ale tento formát souboru není podporován. Zvolte formát PDF.",
 "_invitationMailDeferredContentBodyFirst":"Bohužel se nám nedaří doručit pozvánku k elektronickému podpisu tomuto uživateli: <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Buď je jeho e-mailová adresa chybná, nebo má uživatel potíže se serverem pro poštu.",
 "_invitationMailDeferredContentBodySecond":"O doručení e-mailu se budeme pokoušet i nadále a o výsledku vás budeme informovat. Pokud si přejete postup stornovat, případně změnit adresu, klikněte na tlačítko níže.",

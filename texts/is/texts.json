@@ -717,7 +717,7 @@
 "_idinText":"Hollenskt iDIN",
 "_imageFileFormatNotSpported":"Skráarsnið er ekki stutt. Veldu mynd (PNG/JPG) í staðinn.",
 "_imageFileFormatNotSpportedIco":"Skráarsnið er ekki stutt. Veldu PNG eða ICO skrá í staðinn.",
-"_internalServerError":"<h1>Eitthvað gekk ekki sem skyldi</h1><h4>Ef vandamálið er viðvarandi skaltu hafa samband á netfangið support@scrive.com eða +46 8 519 779 00.</h4>",
+"_internalServerError":"",
 "_invalidAttachments":"Því miður er þetta skráarsnið ekki stutt. Vinsamlegast veldu PDF-skrá í staðinn.",
 "_invitationMailDeferredContentBodyFirst":"Því miður eigum við í erfiðleikum með að afhenda boð um rafræna undirskrift til <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Annað hvort er netfangið ekki rétt eða tölvupóstþjónn viðkomandi á við erfiðleika að stríða.",
 "_invitationMailDeferredContentBodySecond":"Vinsamlegast hafðu í huga að við munum halda áfram að reyna að afhenda tölvupóstinn og að við munum tilkynna þér um framvindu þess. Smelltu á hnappinn að neðan ef þú vilt hætta við ferlið eða breyta netfanginu.",
