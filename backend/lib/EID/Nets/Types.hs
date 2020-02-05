@@ -359,15 +359,13 @@ instance ToXML InsertOrderRequest where
               NetsSignDKEmployeeKeycard -> do
                 element "NemID" $ do
                   element "CertificatePolicy" ("Employee" :: Text)
-                  element "SignerID" $ do
-                    element "IDType"  ("SSN" :: Text)
-                    element "IDValue" nsoSSN
+                  -- we do not include SignerID, because only 1% of Employee CPRs
+                  -- are linked to SSN
               NetsSignDKEmployeeKeyfile -> do
                 element "NemID-OpenSign" $ do
                   element "CertificatePolicy" ("Employee" :: Text)
-                  element "SignerID" $ do
-                    element "IDType"  ("SSN" :: Text)
-                    element "IDValue" nsoSSN
+                  -- we do not include SignerID, because only 1% of Employee CPRs
+                  -- are linked to SSN
               NetsSignDKPersonalKeycard -> do
                 element "NemID" $ do
                   element "CertificatePolicy" ("Personal" :: Text)
