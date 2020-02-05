@@ -216,7 +216,9 @@ var Checkbox = require("../../common/checkbox");
               <span className="paperclip" />
               {model.name()}
             </h1>
-            <p className="desc">{model.description()}</p>
+            <p className="desc">{model.description().split("\n").map((item) => {
+                return <span>{item}<br /></span>;
+            })}</p>
           </div>
           <div className="col-sm-6 right" ref="upload-or-load-area">
             {/* if */ isLoading && !hasFile &&
