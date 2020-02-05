@@ -14,8 +14,8 @@ get:
       "address": {
         "company_number": "5568166804",
         "company_name": "Scrive",
-        "address": "Barnhusgatan 20",
-        "zip": "111 23",
+        "address": "Grev Turegatan 11A",
+        "zip": "114 46",
         "city": "Stockholm",
         "country": "Sweden"
       }
@@ -60,8 +60,8 @@ get:
         "address": {
           "company_number": "5568166804",
           "company_name": "Scrive",
-          "address": "Barnhusgatan 20",
-          "zip": "111 23",
+          "address": "Grev Turegatan 11A",
+          "zip": "114 46",
           "city": "Stockholm",
           "country": "Sweden"
         }
@@ -79,8 +79,8 @@ get:
       "address": {
         "company_number": "5568166804",
         "company_name": "Scrive",
-        "address": "Barnhusgatan 20",
-        "zip": "111 23",
+        "address": "Grev Turegatan 11A",
+        "zip": "114 46",
         "city": "Stockholm",
         "country": "Sweden"
       },
@@ -89,8 +89,8 @@ get:
         "address": {
           "company_number": "5568166804",
           "company_name": "Scrive",
-          "address": "Barnhusgatan 20",
-          "zip": "111 23",
+          "address": "Grev Turegatan 11A",
+          "zip": "114 46",
           "city": "Stockholm",
           "country": "Sweden"
         }
