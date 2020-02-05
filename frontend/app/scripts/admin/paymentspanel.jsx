@@ -412,11 +412,8 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to sign","canUseNOAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to view","canUseSEAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to sign","canUseSEAuthenticationToSign")}
-              {this.renderTROptionSeparator("Verimi auth to view")}
               {this.renderTRForOptionWithCheckbox("Can use Verimi authorization to view","canUseVerimiAuthenticationToView")}
-              {this.renderTROptionSeparator("iDIN auth to view")}
               {this.renderTRForOptionWithCheckbox("Can use iDIN authorization to view","canUseIDINAuthenticationToView")}
-              {this.renderTROptionSeparator("iDIN auth at sign time")}
               {this.renderTRForOptionWithCheckbox("Can use iDIN authorization at sign time","canUseIDINAuthenticationToSign")}
               {this.renderTROptionSeparator("Standard auth to view and sign")}
               {this.renderTROptionSeparator("(disable to force use of eID/SMS)")}
