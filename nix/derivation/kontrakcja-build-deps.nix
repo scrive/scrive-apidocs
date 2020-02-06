@@ -74,10 +74,11 @@ let
           "c6d850b24e7d58dd24d95e8676d12ce35155dd4d"
         ;
 
-        hsaml2 = callGitPackage super
-          "hsaml2"
-          "https://github.com/kubek2k/hsaml2.git"
-          "a09ab6fc87fe2311e7bfa56e0dd5141edc758fe7"
+        hsaml2 = haskellLib.dontCheck
+          (callGitPackage super
+            "hsaml2"
+            "https://github.com/kubek2k/hsaml2.git"
+            "a09ab6fc87fe2311e7bfa56e0dd5141edc758fe7")
         ;
 
         cryptonite = callGitPackage super

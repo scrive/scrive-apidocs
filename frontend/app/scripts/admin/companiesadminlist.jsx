@@ -8,7 +8,7 @@ var companyLimit = 100;
 module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     companyLink : function(d) {
-      return "/adminonly/companyadmin/" + d.field("id");
+      return "/adminonly-old/companyadmin/" + d.field("id");
     },
     render: function() {
       var self = this;

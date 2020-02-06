@@ -10,6 +10,7 @@
 -----------------------------------------------------------------------------
 module Administration.AdministrationView(
               adminMainPage
+            , adminElmMainPage
             , adminUserPage
             , adminCompanyPage
           ) where
@@ -24,6 +25,11 @@ import UserGroup.Types
 
 adminMainPage :: TemplatesMonad m => Context -> m String
 adminMainPage ctx = renderTemplate "adminsmain" $ do
+  F.value "admin" $ isAdmin ctx
+  entryPointFields ctx
+
+adminElmMainPage :: TemplatesMonad m => Context -> m String
+adminElmMainPage ctx = renderTemplate "adminElmMain" $ do
   F.value "admin" $ isAdmin ctx
   entryPointFields ctx
 

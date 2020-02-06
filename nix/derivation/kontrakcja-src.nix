@@ -22,6 +22,7 @@ let
     "_nix_local"
     "s3files"
     "test_s3files"
+    "result"
   ];
 
   src = builtins.filterSource

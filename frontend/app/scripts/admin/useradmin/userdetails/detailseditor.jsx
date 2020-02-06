@@ -229,7 +229,7 @@ var DetailsEditorView = React.createClass({
             <td>
               <a
                 className="user-details-company-link"
-                href={"/adminonly/companyadmin/" + this.props.companyid}
+                href={"/adminonly-old/companyadmin/" + this.props.companyid}
               >
                 Link to company {this.props.companyname}
               </a>
