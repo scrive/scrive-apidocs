@@ -127,7 +127,7 @@ consumeAssertions = guardHttps $ do
       mAccount <- getAccountInAcceptedStateOrFail $ spEmail p
       account <- maybe (createAccount idpconf p) return mAccount
       startSessionForSAMLUser account
-      withPositionUpdated <- updateUserWithNameIdInCompanyPosition account (spNameID p)
+      withPositionUpdated <- updateUserWithNameIdInCompanyPosition idpconf account (spNameID p)
       withTosCheck (\_ -> return . internalResponse $ LinkLogin LANG_EN) withPositionUpdated
 
     getAccountInAcceptedStateOrFail :: Kontrakcja m => Email -> m (Maybe User)
@@ -153,13 +153,16 @@ consumeAssertions = guardHttps $ do
                     void $ dbUpdate $ SetLoginAuth (user ^. #id) LoginAuthSSO
                     return $ set #sysAuth LoginAuthSSO user
 
-    updateUserWithNameIdInCompanyPosition :: Kontrakcja m => User -> Text -> m User
-    updateUserWithNameIdInCompanyPosition user nameID = do
-      let positionWithNameID = "NameID:" <> nameID
-          oldUI = view #info user
-          newUI = set #companyPosition positionWithNameID oldUI
-      void . dbUpdate $ SetUserInfo (user ^. #id) newUI
-      return $ set #info newUI user
+    updateUserWithNameIdInCompanyPosition :: Kontrakcja m => IDPConf -> User -> Text -> m User
+    updateUserWithNameIdInCompanyPosition idpconf user nameID = do
+      if (icPutNameIDInCompanyPosition idpconf) then do
+        let positionWithNameID = "NameID:" <> nameID
+            oldUI = view #info user
+            newUI = set #companyPosition positionWithNameID oldUI
+        void . dbUpdate $ SetUserInfo (user ^. #id) newUI
+        return $ set #info newUI user
+      else
+        return user
 
     startSessionForSAMLUser :: Kontrakcja m => User -> m ()
     startSessionForSAMLUser user = do
