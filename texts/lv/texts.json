@@ -717,7 +717,7 @@
 "_idinText":"",
 "_imageFileFormatNotSpported":"Neatbilstošs faila formāts. Izvēlieties attēla (PNG/JPG) formātu.",
 "_imageFileFormatNotSpportedIco":"Neatbilstošs datnes formāts. Izvēlieties PNG vai ICO datni.",
-"_internalServerError":"",
+"_internalServerError":"<h1>Ir radusies kļūda</h1><h4>Ja problēma nepazūd, lūdzu, sazinieties ar mūsu atbalsta dienestu, rakstot uz e-pastu: support@scrive.com vai zvanot pa tālruni +46 8 557 661 67.</h4>",
 "_invalidAttachments":"Neatbilstošs faila formāts. Lūdzu, izvēlieties PDF formāta failu.",
 "_invitationMailDeferredContentBodyFirst":"Diemžēl nevaram piegādāt uzaicinājumu elektroniski parakstīties šādām pusēm: <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Šo pušu e-pasta adreses ir nepareizas, vai arī to e-pasta serveriem ir darbības traucējumi.",
 "_invitationMailDeferredContentBodySecond":"Mēs mēģināsim piegādāt e-pastu un informēsim Jūs par progresu. Noklikšķiniet uz tālāk esošās pogas, ja vēlaties atcelt sūtīšanu vai mainīt e-pasta adresi.",

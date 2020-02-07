@@ -717,7 +717,7 @@
 "_idinText":"Danijos iDIN",
 "_imageFileFormatNotSpported":"Failo formatas nepalaikomas. Vietoj jo rinkitės paveikslėlį (PNG / JPG).",
 "_imageFileFormatNotSpportedIco":"Netinkamas failo formatas. Vietoj jo parinkite PNG arba ICO failą.",
-"_internalServerError":"",
+"_internalServerError":"<h1>Kažkas nepavyko</h1><h4>Jei sutrikimas kartojasi, prašom susisiekti su pagalbos tarnyba el. paštu support@scrive.com arba +46 8 557 661 67.</h4>",
 "_invalidAttachments":"Atsiprašome, šis failo formatas nepalaikomas. Prašom rinktis PDF formato failą.",
 "_invitationMailDeferredContentBodyFirst":"Deja, mums nepavyksta nusiųsti pasiūlymo pasirašyti el. parašu <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Gali būti, kad neteisingas el. pašto adresas arba neveikia gavėjo pašto tarnybinė stotis.",
 "_invitationMailDeferredContentBodySecond":"Atkreipkite dėmesį, kad mes ir toliau bandysime nusiųsti el. laišką ir pranešime Jums apie eigą. Jei norite nutraukti šią eigą arba pakeisti el. pašto adresą, paspauskite toliau esantį mygtuką.",
