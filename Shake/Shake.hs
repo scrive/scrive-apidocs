@@ -699,7 +699,9 @@ frontendBuildRules newBuild = do
 
   "adminonly-elm" ~> do
     sourceRoot <- askOracle (SourceRoot ())
-    Exit _     <- cmd [Cwd $ sourceRoot </> "frontend-elm"] "npm" ["install"]
+    Exit _     <- cmd [Cwd $ sourceRoot </> "frontend-elm"]
+                      "npm"
+                      ["install", "--progress=false"]
     cmd [Cwd $ sourceRoot </> "frontend-elm"] "npm" ["run", "build"]
 
 -- | Frontend test rules
