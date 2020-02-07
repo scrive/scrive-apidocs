@@ -232,6 +232,7 @@ data UserGroupSettings = UserGroupSettings
   , legalText                 :: !Bool
   , requireBPIDForNewDoc      :: !Bool
   , sendTimeoutNotification   :: !Bool
+  , useFolderListCalls        :: !Bool
   , totpIsMandatory           :: !Bool
   , sessionTimeoutSecs        :: !(Maybe Int32)
   , portalUrl                 :: !(Maybe Text)
@@ -266,8 +267,7 @@ instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, _useFolderListCalls {- not yet used -}
-                                                                                                                                                                                                                                                                                                                                                           , totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = I.DataRetentionPolicy { .. }

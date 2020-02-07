@@ -131,6 +131,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "legal_text" $ ugs ^. #legalText
   sqlSet "require_bpid_for_new_document" $ ugs ^. #requireBPIDForNewDoc
   sqlSet "send_timeout_notification" $ ugs ^. #sendTimeoutNotification
+  sqlSet "use_folder_list_calls" $ ugs ^. #useFolderListCalls
   sqlSet "totp_is_mandatory" $ ugs ^. #totpIsMandatory
   sqlSet "session_timeout" $ ugs ^. #sessionTimeoutSecs
   sqlSet "portal_url" $ ugs ^. #portalUrl

@@ -238,6 +238,7 @@ defaultUserGroupSettings = UserGroupSettings
   , legalText               = False
   , requireBPIDForNewDoc    = False
   , sendTimeoutNotification = False
+  , useFolderListCalls      = False
   , totpIsMandatory         = False
   , sessionTimeoutSecs      = Nothing
   , portalUrl               = Nothing

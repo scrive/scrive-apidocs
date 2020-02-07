@@ -16,7 +16,6 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 ) where
 
 import Codec.Archive.Zip
-import Control.Monad.Base
 import Control.Monad.IO.Class (liftIO)
 import Data.Time
 import Data.Unjson
@@ -29,6 +28,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Text.JSON as J
 
+import AccessControl.Model
 import AccessControl.Types
 import API.V2
 import API.V2.Parameters
@@ -62,9 +62,12 @@ import File.Storage
 import Kontra
 import KontraLink
 import Log.Identifier
+import Log.Utils
 import MagicHash
 import OAuth.Model
 import User.Model
+import UserGroup.Model
+import UserGroup.Types
 import Util.PDFUtil
 import Util.QRCode (encodeQR)
 import Util.SignatoryLinkUtils
@@ -81,34 +84,81 @@ docApiV2List = api $ do
   sorting   <- apiV2ParameterDefault defaultDocumentAPISort
                                      (ApiV2ParameterJSON "sorting" unjsonDef)
   -- API call actions
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   let documentFilters =
         (DocumentFilterUnsavedDraft False)
           : (join $ toDocumentFilter (user ^. #id) <$> filters)
-  let documentSorting = (toDocumentSorting <$> sorting)
+      documentSorting    = (toDocumentSorting <$> sorting)
+      useFolderListCalls = ugwpSettings ugwp ^. #useFolderListCalls
   logInfo "Fetching list of documents from the database" $ object
     [ identifier $ user ^. #id
     , "offset" .= offset
     , "max_count" .= maxcount
-    , "filters" .= map show documentFilters
-    , "sorting" .= map show documentSorting
+    , "filters" .= map showt documentFilters
+    , "sorting" .= map showt documentSorting
+    , "use_folder_list_calls" .= useFolderListCalls
     ]
-  startQueryTime          <- liftBase getCurrentTime
-  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit
-    (DocumentsVisibleToUser $ user ^. #id)
-    documentFilters
-    documentSorting
-    (offset, 1000, maxcount)
-  finishQueryTime <- liftBase getCurrentTime
-  logInfo "Fetching for docApiV2List done" $ object
-    ["query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)]
-  -- Result
-  let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-  return $ Ok $ Response
-    200
-    headers
-    nullRsFlags
-    (listToJSONBS (allDocsCount, (\d -> (documentAccessForUser user d, d)) <$> allDocs))
-    Nothing
+  if useFolderListCalls
+    then do {- new style -}
+      -- we don't care if the role is explicit (set) or implicit (derived from
+      -- some user or user group property), hence `nubBy`
+      userRoles <- nubBy (\x y -> accessRoleTarget x == accessRoleTarget y)
+        <$> dbQuery (GetRolesIncludingInherited user $ ugwpUG ugwp)
+      let
+        allPerms = rolesToPermissions userRoles
+        extractValidRefs ls = catMaybes $ map extractResourceRef ls
+        hasReadOnResource r p = (p `hasAction` ReadA) && (p `hasResource` r)
+        readDocPerms            = filter (hasReadOnResource DocumentR) allPerms
+        readSharedTemplatePerms = filter
+          (hasReadOnResource SharedTemplateR || hasReadOnResource DocumentR)
+          allPerms
+        readStartedDocPerms = filter
+          (hasReadOnResource DocumentAfterPreparationR || hasReadOnResource DocumentR)
+          allPerms
+        full_read_fids = extractValidRefs readDocPerms
+        shared_fids    = extractValidRefs readSharedTemplatePerms
+        started_fids   = extractValidRefs readStartedDocPerms
+      ((allDocsCount, allDocs), time) <- timed . dbQuery $ GetDocumentsWithSoftLimit
+        (DocumentsVisibleToSigningPartyOrByFolders (user ^. #id)
+                                                   shared_fids
+                                                   started_fids
+                                                   full_read_fids
+        )
+        documentFilters
+        documentSorting
+        (offset, 1000, maxcount)
+      logInfo "Fetching for docApiV2List done using folders" $ object
+        [ "query_time" .= time
+        , "folder_ids_shared" .= map show shared_fids
+        , "folder_ids_started" .= map show started_fids
+        , "folder_ids_full_read" .= map show full_read_fids
+        ]
+      let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+      return $ Ok $ Response
+        200
+        headers
+        nullRsFlags
+        (listToJSONBS
+          (allDocsCount, (\d -> (documentAccessByFolder user d userRoles, d)) <$> allDocs)
+        )
+        Nothing
+    else do {- old style -}
+      ((allDocsCount, allDocs), time) <- timed . dbQuery $ GetDocumentsWithSoftLimit
+        (DocumentsVisibleToUser $ user ^. #id)
+        documentFilters
+        documentSorting
+        (offset, 1000, maxcount)
+      logInfo "Fetching for docApiV2List done" $ object ["query_time" .= time]
+      -- Result
+      let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+      return $ Ok $ Response
+        200
+        headers
+        nullRsFlags
+        (listToJSONBS
+          (allDocsCount, (\d -> (documentAccessForUser user d, d)) <$> allDocs)
+        )
+        Nothing
 
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get did = logDocument did . api $ do
