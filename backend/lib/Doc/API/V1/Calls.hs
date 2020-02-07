@@ -416,6 +416,8 @@ apiCallV1Ready did = logDocument did . api $ do
       apiGuardJustM (serverError "No author found")
       $   (maybesignatory <=< getAuthorSigLink)
       <$> theDocument
+    unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
+      "Permission problem. Not an author."
     ifM
         (   (  isPending
             && all (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved)
@@ -426,8 +428,6 @@ apiCallV1Ready did = logDocument did . api $ do
      {-then-}(Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument))
      {-else-}$ do
                  checkObjectVersionIfProvided did
-                 unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
-                   "Permission problem. Not an author."
                  unlessM (isPreparation <$> theDocument) $ do
                    checkObjectVersionIfProvidedAndThrowError did
                      $ (conflictError "Document is not a draft")
