@@ -1029,6 +1029,9 @@ paths:
   /usergroups/{user_group_id}/settings/delete:
     $ref: ./api/usergroup/deleteusergroupsettings.yaml
 
+  /usergroups/{user_group_id}/users:
+    $ref: ./api/usergroup/listusersinusergroup.yaml
+
   # Access Control
 
   /getuserroles/{user_id}:
@@ -1105,6 +1108,8 @@ definitions:
     $ref: ./definitions/LoginToken.yaml
   LanguageCode:
     $ref: ./definitions/LanguageCode.yaml
+  User:
+    $ref: ./definitions/User.yaml
   UserGroup:
     $ref: ./definitions/UserGroup.yaml
   UserGroupWithInheritable:
