@@ -1,0 +1,52 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: User
+type: object
+example:
+  {
+    "id": "123",
+    "fstname": "",
+    "sndname": "",
+    "email": "",
+    "sysauth": "",
+    "home_folder_id": "",
+    "twofactor_active": true,
+    "twofactor_is_mandatory": false,
+    "personalnumber": "",
+    "phone": "",
+    "companyadmin": true,
+    "companyposition": "",
+    "lang": "",
+    "tos_accepted_time": "",
+  }
+description: |
+  JSON representation of a User.
+properties:
+  id:
+    type: string
+  fstname:
+    type: string
+  sndname:
+    type: string
+  email:
+    type: string
+  sysauth:
+    type: string
+  home_folder_id:
+    type: string
+  twofactor_active:
+    type: boolean
+  twofactor_is_mandatory:
+    type: boolean
+  personalnumber:
+    type: string
+  phone:
+    type: string
+  companyadmin:
+    type: boolean
+  companyposition:
+    type: string
+  lang:
+    type: string
+  tos_accepted_time:
+    type: string
