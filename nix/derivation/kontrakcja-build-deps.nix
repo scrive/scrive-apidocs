@@ -56,7 +56,7 @@ let
             (callGitPackage super
               "hpqtypes-extras"
               "ssh://git@github.com/scrive/hpqtypes-extras.git"
-              "9238f1ef264faf9149dd91aefb3136b615c4bb3d"
+              "25116ca501f9949852271f8905d1fd1dc26a3649"
             ))
         ;
 
