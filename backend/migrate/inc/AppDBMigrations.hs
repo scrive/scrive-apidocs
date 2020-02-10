@@ -230,4 +230,8 @@ kontraMigrations =
   , addUserSysAuthColumn
   , removeExplicitDocumentAdminRoles
   , createTableUserGroupTags
+  , documentExtendingJobsAddStatsIndexes
+  , filePurgingJobsAddStatsIndexes
+  , mailsAddStatsIndexes
+  , smsesAddStatsIndexes
   ]

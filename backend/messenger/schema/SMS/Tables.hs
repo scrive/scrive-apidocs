@@ -68,7 +68,7 @@ tableMessengerJobs = tblTable
 tableSMSes :: Table
 tableSMSes = tblTable
   { tblName        = "smses"
-  , tblVersion     = 6
+  , tblVersion     = 7
   , tblColumns = [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
                  , tblColumn { colName     = "originator"
                              , colType     = TextT
@@ -97,10 +97,11 @@ tableSMSes = tblTable
     [ (fkOnColumn "reserved_by" "messenger_workers" "id") { fkOnDelete = ForeignKeySetNull
                                                           }
     ]
-  , tblIndexes     = [ (indexOnColumns ["reserved_by", "run_at"])
-                         { idxWhere = Just "reserved_by IS NULL AND run_at IS NOT NULL"
-                         }
-                     ]
+  , tblIndexes     =
+    [ (indexOnColumn "run_at") { idxWhere = Just "run_at IS NOT NULL" }
+    , (indexOnColumn "attempts") { idxWhere = Just "attempts > 1 AND finished_at IS NULL"
+                                 }
+    ]
   }
 
 tableSMSEvents :: Table

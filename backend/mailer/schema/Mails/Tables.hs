@@ -74,7 +74,7 @@ tableMailerJobs = tblTable
 tableMails :: Table
 tableMails = tblTable
   { tblName        = "mails"
-  , tblVersion     = 7
+  , tblVersion     = 8
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
@@ -96,12 +96,12 @@ tableMails = tblTable
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys =
     [(fkOnColumn "reserved_by" "mailer_workers" "id") { fkOnDelete = ForeignKeySetNull }]
-  , tblIndexes = [ (indexOnColumns ["reserved_by", "run_at"])
-                   { idxWhere = Just "reserved_by IS NULL AND run_at IS NOT NULL"
-                   }
-                 , (indexOnColumn "service_test") { idxWhere = Just "service_test = true"
-                                                  }
-                 ]
+  , tblIndexes     =
+    [ (indexOnColumn "run_at") { idxWhere = Just "run_at IS NOT NULL" }
+    , (indexOnColumn "attempts") { idxWhere = Just "attempts > 1 AND finished_at IS NULL"
+                                 }
+    , (indexOnColumn "service_test") { idxWhere = Just "service_test = true" }
+    ]
   }
 
 tableMailAttachments :: Table

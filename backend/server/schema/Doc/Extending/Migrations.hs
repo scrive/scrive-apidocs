@@ -1,4 +1,8 @@
-module Doc.Extending.Migrations where
+module Doc.Extending.Migrations
+  ( createDocumentExtendingJobs
+  , createDocumentExtendingConsumers
+  , documentExtendingJobsAddStatsIndexes
+  ) where
 
 import Database.PostgreSQL.PQTypes.Checks
 
@@ -55,3 +59,17 @@ createDocumentExtendingConsumers = Migration
         , tblPrimaryKey = pkOnColumn "id"
         }
   }
+
+documentExtendingJobsAddStatsIndexes :: MonadDB m => Migration m
+documentExtendingJobsAddStatsIndexes =
+  let tname = tblName tableDocumentExtendingJobs
+  in  Migration
+        { mgrTableName = tname
+        , mgrFrom      = 1
+        , mgrAction    =
+          StandardMigration $ do
+            runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "run_at"
+            runQuery_ . sqlCreateIndexSequentially tname $ (indexOnColumn "attempts")
+              { idxWhere = Just "attempts > 1 AND finished_at IS NULL"
+              }
+        }
