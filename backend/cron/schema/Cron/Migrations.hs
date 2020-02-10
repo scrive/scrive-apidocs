@@ -20,7 +20,8 @@ module Cron.Migrations (
   , addTimeoutedEIDTransactionsPurge
   , changeTemporaryMagicHashPurgeJobToTokensPurgeJob
   , removeInvoicingUploadJob
-) where
+  , addPopulateDocumentAuthorDeletedJob
+  ) where
 
 import Control.Monad.Catch
 
@@ -228,3 +229,13 @@ removeInvoicingUploadJob = Migration
                      $ runSQL_ "DELETE FROM cron_jobs WHERE id = 'invoice_upload'"
   }
 
+addPopulateDocumentAuthorDeletedJob :: (MonadDB m, MonadThrow m) => Migration m
+addPopulateDocumentAuthorDeletedJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom      = 25
+  , mgrAction    = StandardMigration $ do
+                     runSQL_ "ALTER TABLE cron_jobs ALTER COLUMN run_at DROP NOT NULL"
+                     runSQL_
+                       $   "INSERT INTO cron_jobs (id, run_at) VALUES"
+                       <+> "('populate_document_author_deleted', to_timestamp(0))"
+  }

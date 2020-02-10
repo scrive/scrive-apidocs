@@ -234,4 +234,6 @@ kontraMigrations =
   , filePurgingJobsAddStatsIndexes
   , mailsAddStatsIndexes
   , smsesAddStatsIndexes
+  , addAuthorDeletedFlags
+  , addPopulateDocumentAuthorDeletedJob
   ]

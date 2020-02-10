@@ -34,6 +34,7 @@ module Doc.Migrations
   , updateCompositeTypesForSignatoryAccessTokens
   , dropSignatoryLinkMagicHashesTable
   , dropMagicHashFromSignatories
+  , addAuthorDeletedFlags
 ) where
 
 import Data.Int
@@ -42,6 +43,22 @@ import Database.PostgreSQL.PQTypes.Checks
 import DB
 import Doc.Tables
 import Doc.Tokens.Tables
+
+addAuthorDeletedFlags :: MonadDB m => Migration m
+addAuthorDeletedFlags = Migration
+  { mgrTableName = "documents"
+  , mgrFrom      = 53
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        "documents"
+        [ sqlAddColumn
+          $ tblColumn { colName = "author_deleted", colType = TimestampWithZoneT }
+        , sqlAddColumn
+          $ tblColumn { colName = "author_really_deleted", colType = TimestampWithZoneT }
+        , sqlAddColumn $ tblColumn { colName = "author_deleted_filled", colType = BoolT }
+        ]
+  }
 
 renameDocumentComposites :: MonadDB m => Migration m
 renameDocumentComposites = Migration
