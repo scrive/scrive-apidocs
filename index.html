@@ -516,6 +516,9 @@
                   <li>
                     <a href="#delete-user-group-settings" class="toc-h2 toc-link" data-title="delete-user-group-settings">Delete User Group Settings</a>
                   </li>
+                  <li>
+                    <a href="#list-users-in-user-group" class="toc-h2 toc-link" data-title="list-users-in-user-group">List Users in User Group</a>
+                  </li>
               </ul>
           </li>
           <li>
@@ -556,7 +559,7 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-68" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#responses-69" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -640,6 +643,9 @@
                   </li>
                   <li>
                     <a href="#language-code" class="toc-h2 toc-link" data-title="language-code">Language Code</a>
+                  </li>
+                  <li>
+                    <a href="#user-3" class="toc-h2 toc-link" data-title="user">User</a>
                   </li>
                   <li>
                     <a href="#usergroup-3" class="toc-h2 toc-link" data-title="usergroup">UserGroup</a>
@@ -2094,6 +2100,14 @@ Scrive eSign system returning errors.</p>
 <a href="#apiv2usergroups{user_group_id}settingsdelete">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/usergroups/{user_group_id}/settings/delete</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2usergroups{user_group_id}users">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/usergroups/{user_group_id}/users</code>
 </strong>
 </a>
 </p>
@@ -4722,6 +4736,53 @@ values can be inherited from an ancestor User Group.</p>
 exists with this ID or that you do not have permission to view it)</p>
 </td> </tr>
 </table>
+
+<div><a id="apiv2usergroups{user_group_id}users"></a></div>
+<h2 id='list-users-in-user-group'>List Users in User Group</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/usergroups/{user_group_id}/users</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of a list of the users in a User Group:</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"fstname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Arthur"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"sndname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dent"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"arthur.dent@scrive.com"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"twofactor_active"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"twofactor_is_mandatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"personalnumber"</span><span class="p">:</span><span class="w"> </span><span class="s2">"197910124242"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"phone"</span><span class="p">:</span><span class="w"> </span><span class="s2">"+444242424242"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"companyadmin"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"companyposition"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hitchhiker"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"lang"</span><span class="p">:</span><span class="w"> </span><span class="s2">"en"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre>
+<p>This endpoint is used to list Users who are members of that User Group.</p>
+
+<p>Note that this will only display Users that are in that User Group and will
+not show the Users who are members of any descendent User Groups.</p>
+<h3 id='parameters-54'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose users you wish to view</p>
+</td><td><p>integer</p></td><td>path</td></tr>
+</table>
+<h3 id='responses-59'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>List of Users in the User Group</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that either no User Group
+exists with this ID or that you do not have permission to view it)</p>
+</td> </tr>
+</table>
 <h1 id='access-control-2'>Access Control</h1>
 <div><a id="apiv2getuserroles{user_id}"></a></div>
 <h2 id='view-access-roles-for-user'>View Access Roles for User</h2>
@@ -4838,13 +4899,13 @@ exists with this ID or that you do not have permission to view it)</p>
 </span></code></pre>
 <p>This endpoint is used to view the roles which have been granted to a given
 user.</p>
-<h3 id='parameters-54'>Parameters</h3>
+<h3 id='parameters-55'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_id</code><br/><em>required</em></p></td><td><p>The ID of the User whose roles you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-59'>Responses</h3>
+<h3 id='responses-60'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON array of Access Role objects.</p>
@@ -4934,13 +4995,13 @@ set to <code>true</code> and <code>id</code> set to <code>null</code>.</p>
 <p>Explicit roles are those which have been, as the name suggests, explicitly
 granted. This was also almost done certainly via this API. Explicit roles
 have <code>is_generated</code> set to <code>false</code> and a non-<code>null</code> <code>id</code>.</p>
-<h3 id='parameters-55'>Parameters</h3>
+<h3 id='parameters-56'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-60'>Responses</h3>
+<h3 id='responses-61'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
@@ -4976,13 +5037,13 @@ role refers to.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <p>This endpoint allows you to grant a new Access Role.</p>
-<h3 id='parameters-56'>Parameters</h3>
+<h3 id='parameters-57'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role</code><br/><em>required</em></p></td><td><p>JSON object containing details of the role to be granted.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-61'>Responses</h3>
+<h3 id='responses-62'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
@@ -5008,13 +5069,13 @@ target that the proposed role refers to.</p>
 via the Access Control API&quot; as opposed to an implicit role acquired via, for
 example, User Group membership. If it has a non-<code>null</code> <code>id</code> field then it is
 an explicit role and can be deleted.</p>
-<h3 id='parameters-57'>Parameters</h3>
+<h3 id='parameters-58'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-62'>Responses</h3>
+<h3 id='responses-63'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object showing that an Access Role with the given ID has been
@@ -5055,13 +5116,13 @@ folder.</p>
 
 <p>This metadata currently consists of the folder&#39;s ID, it&#39;s parent ID (if any)
 and the name/id of its immediate children (if any).</p>
-<h3 id='parameters-58'>Parameters</h3>
+<h3 id='parameters-59'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to view</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-63'>Responses</h3>
+<h3 id='responses-64'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5105,13 +5166,13 @@ you do not include it.</p>
 <p>A full Folder JSON response is returned which displays the state after the
 create operation has been performed. Performing <code>/update</code> and then using the
 GET endpoint should produce the same output both times.</p>
-<h3 id='parameters-59'>Parameters</h3>
+<h3 id='parameters-60'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be created.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-64'>Responses</h3>
+<h3 id='responses-65'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5171,7 +5232,7 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 
 <p><strong>Important Note</strong>: <em>You cannot move Folders by updating the <code>children</code>
 field, it must be done via <code>parent_id</code></em>.</p>
-<h3 id='parameters-60'>Parameters</h3>
+<h3 id='parameters-61'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
@@ -5179,7 +5240,7 @@ field, it must be done via <code>parent_id</code></em>.</p>
 <tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be updated.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-65'>Responses</h3>
+<h3 id='responses-66'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5204,13 +5265,13 @@ Update permissions on the Folder.</p>
 can only deleted by internal Scrive admins. We also do not support recursive
 deletion. If this is required, it can be implemented client-side by simply
 working up the tree, deleting the leaves.</p>
-<h3 id='parameters-61'>Parameters</h3>
+<h3 id='parameters-62'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to delete</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-66'>Responses</h3>
+<h3 id='responses-67'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object showing that a Folder with the given ID has been
@@ -5248,13 +5309,13 @@ and show a little metadata, the document JSON for each item in <code>&quot;docum
 is structured the same as it would be for endpoints that display a given
 document. <em>(See the <a href="#document-3">Document Definition</a> documentation for
 details).</em></p>
-<h3 id='parameters-62'>Parameters</h3>
+<h3 id='parameters-63'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-67'>Responses</h3>
+<h3 id='responses-68'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object which states the number of documents in the folder and lists
@@ -5266,7 +5327,7 @@ permissions to create this Folder. In practice this means that you lack
 Read permissions on the Folder)</p>
 </td> </tr>
 </table>
-<h1 id='responses-68'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='responses-69'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -18090,6 +18151,112 @@ count of documents on different stages of the process</p>
 </ul>
 
 </div>
+<h2 id='user-3'>User</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-user-quot'>Example JSON: for &quot;User&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"fstname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Arthur"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"sndname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dent"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"arthur.dent@scrive.com"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"twofactor_active"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"twofactor_is_mandatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"personalnumber"</span><span class="p">:</span><span class="w"> </span><span class="s2">"197910124242"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"phone"</span><span class="p">:</span><span class="w"> </span><span class="s2">"+444242424242"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"companyadmin"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"companyposition"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hitchhiker"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"lang"</span><span class="p">:</span><span class="w"> </span><span class="s2">"en"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>JSON representation of a User.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>id</code> (string)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>fstname</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>sndname</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>email</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>sysauth</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>home_folder_id</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>twofactor_active</code> (boolean)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>twofactor_is_mandatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>personalnumber</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>phone</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>companyadmin</code> (boolean)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>companyposition</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>lang</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
 <h2 id='usergroup-3'>UserGroup</h2>
 <p><code>(object)</code></p>
 
