@@ -4,20 +4,17 @@ title: User
 type: object
 example:
   {
-    "id": "123",
-    "fstname": "",
-    "sndname": "",
-    "email": "",
-    "sysauth": "",
-    "home_folder_id": "",
-    "twofactor_active": true,
+    "id": "1",
+    "fstname": "Arthur",
+    "sndname": "Dent",
+    "email": "arthur.dent@scrive.com",
+    "twofactor_active": false,
     "twofactor_is_mandatory": false,
-    "personalnumber": "",
-    "phone": "",
+    "personalnumber": "197910124242",
+    "phone": "+444242424242",
     "companyadmin": true,
-    "companyposition": "",
-    "lang": "",
-    "tos_accepted_time": "",
+    "companyposition": "Hitchhiker",
+    "lang": "en",
   }
 description: |
   JSON representation of a User.
@@ -47,6 +44,4 @@ properties:
   companyposition:
     type: string
   lang:
-    type: string
-  tos_accepted_time:
     type: string
