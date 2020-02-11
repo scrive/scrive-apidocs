@@ -1122,6 +1122,8 @@ definitions:
     $ref: ./definitions/UserGroupContactDetails.yaml
   UserGroupContactDetailsWithInheritable:
     $ref: ./definitions/UserGroupContactDetailsWithInheritable.yaml
+  UserGroupTags:
+    $ref: ./definitions/UserGroupTags.yaml
   AccessRole:
     $ref: ./definitions/AccessRole.yaml
   Folder:

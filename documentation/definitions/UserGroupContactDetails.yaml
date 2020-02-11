@@ -6,8 +6,9 @@ example: {
   "inherited_from": null,
   "address": {
     "company_number": "5568166804",
-    "address": "Barnhusgatan 20",
-    "zip": "111 23",
+    "company_name": "Scrive",
+    "address": "Grev Turegatan 11A",
+    "zip": "114 46",
     "city": "Stockholm",
     "country": "Sweden"
   }
@@ -21,6 +22,8 @@ properties:
     type: object
     properties:
      company_number:
+        type: string
+     company_name:
         type: string
      address:
         type: string
