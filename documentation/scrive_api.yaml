@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2020-02-05  | Change `getbyshortid` limit from 24 hours from created/modified time, to 72 hours from created time. |
     | 2019-11-25  | Add folder API documentation. |
     | 2019-11-15  | Update production IP addresses. |
     | 2019-09-30  | Add `verimi` to `authentication_to_view`. |
@@ -1028,6 +1029,9 @@ paths:
   /usergroups/{user_group_id}/settings/delete:
     $ref: ./api/usergroup/deleteusergroupsettings.yaml
 
+  /usergroups/{user_group_id}/users:
+    $ref: ./api/usergroup/listusersinusergroup.yaml
+
   # Access Control
 
   /getuserroles/{user_id}:
@@ -1104,6 +1108,8 @@ definitions:
     $ref: ./definitions/LoginToken.yaml
   LanguageCode:
     $ref: ./definitions/LanguageCode.yaml
+  User:
+    $ref: ./definitions/User.yaml
   UserGroup:
     $ref: ./definitions/UserGroup.yaml
   UserGroupWithInheritable:

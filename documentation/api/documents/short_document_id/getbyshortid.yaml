@@ -8,8 +8,7 @@ get:
   description: |
     **Get the Document JSON metadata using a short Document ID.**
 
-    This can only be used for documents created or modified within the last 24
-    hours.
+    This can only be used for documents created within the last 72 hours.
     It can only be used for documents that are pending.
     You can only get documents that you have access to.
 
@@ -21,7 +20,7 @@ get:
       required: true
       description: |
         Last 6 digits of a regular Document ID.
-        Must be a pending document created or modified within the last 24 hours.
+        Must be a pending document created within the last 72 hours.
       type: integer
       format: int64
 
