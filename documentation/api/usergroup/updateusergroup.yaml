@@ -51,6 +51,7 @@ post:
     + If the value of a tag is a string, the key/value pair is stored,
       overwriting the previous value associated with that key.
     + If the value of a tag is `null`, the key/value pair is removed.
+    + Other value types lead to 400 Bad Request response.
 
     The endpoint supports partial updates. This means that only the fields you
     supply in your requests will have their values altered.
