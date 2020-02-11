@@ -37,8 +37,15 @@ var MoveModal = React.createClass({
       var submit = new Submit({
         url: "/adminonly/companyadmin/details/" + this.state.companyId,
         ajaxsuccess: function (resp) {
+          var entityName;
+          if (resp.parentid !== null) {
+            var entity = resp.parentgrouppath[resp.parentgrouppath.length - 1];
+            entityName = entity.group_name;
+          } else {
+            entityName = resp.companyname;
+          }
           self.setState({
-            companyNameOrError: "Company with name: " + resp.companyname
+            companyNameOrError: "Company with name: " + entityName
           });
         },
         ajaxerror: function () {

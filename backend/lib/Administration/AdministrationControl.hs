@@ -521,6 +521,11 @@ handleCreateUser = onlySalesOrAdmin $ do
     . set #homeFolderID (Just $ ugFolder ^. #id)
     $ defaultUserGroup
   muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang
+  freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
+  let freeDocumentsCount = 3
+      freeDocuments =
+        (freeDocumentTokensFromValues freeDocumentsCount freeDocumentsValidity)
+  dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) freeDocuments
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False

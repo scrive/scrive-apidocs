@@ -6,7 +6,11 @@ module.exports = React.createClass({
   render: function () {
     return (
       <div className="designview-cant-sign-modal">
-        <p className="paragraph">{localization.designview.cantSignModal.info1}</p>
+        <p className="paragraph">
+          <HtmlTextWithSubstitution
+            secureText={localization.designview.cantSignModal.info1}
+          />
+        </p>
         <p className="paragraph">
           <HtmlTextWithSubstitution
             secureText={localization.designview.cantSignModal.info2}
