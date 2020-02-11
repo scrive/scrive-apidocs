@@ -666,6 +666,9 @@
                     <a href="#usergroupcontactdetailswithinheritable" class="toc-h2 toc-link" data-title="usergroupcontactdetailswithinheritable">UserGroupContactDetailsWithInheritable</a>
                   </li>
                   <li>
+                    <a href="#usergrouptags" class="toc-h2 toc-link" data-title="usergrouptags">UserGroupTags</a>
+                  </li>
+                  <li>
                     <a href="#accessrole" class="toc-h2 toc-link" data-title="accessrole">AccessRole</a>
                   </li>
                   <li>
@@ -3942,6 +3945,11 @@ It is not necessary to minify the JSON, but also not prohibited.</p>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
   </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New UG that's the child of user group 1"</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"side"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dark"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <blockquote>
@@ -3959,14 +3967,16 @@ field.</p>
 to create root User Groups. In order to create a new child, you must have
 the requisite permissions upon the parent.</p>
 
+<p>You can also set <code>tags</code>, which are arbitrary key/value pairs.</p>
+
 <p>A full User Group JSON response is returned which displays the state <em>after</em>
 the create operation has been performed. Performing <code>/update</code> and then
 using the <code>GET</code> endpoint should produce the same output both times.</p>
 <h3 id='parameters-44'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code> and <code>parent_id</code> of the User Group to
-be created.</p>
+<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code>, <code>parent_id</code>, and <code>tags</code> of the User
+Group to be created.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 <tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
@@ -4023,12 +4033,21 @@ exists with this ID or that you do not have permission to update it)</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"founded"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <blockquote>
@@ -4076,8 +4095,9 @@ exists with this ID or that you do not have permission to update it)</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -4085,13 +4105,22 @@ exists with this ID or that you do not have permission to update it)</p>
       </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"founded"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <p>This endpoint is used to get an overview of a given User Group, including
@@ -4154,6 +4183,14 @@ It is not necessary to minify the JSON, but also not prohibited.</p>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
   </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UG that's now the child of user group 1"</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"station"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ISS"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"lifeform"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <blockquote>
@@ -4179,6 +4216,16 @@ as you have permissions to update the group being moved, the new parent and
 the old parent.</li>
 </ul>
 
+<p>Tags are updated as follows:</p>
+
+<ul>
+<li>Only the provided tags are affected on the server.</li>
+<li>If the value of a tag is a string, the key/value pair is stored,
+overwriting the previous value associated with that key.</li>
+<li>If the value of a tag is <code>null</code>, the key/value pair is removed.</li>
+<li>Other value types lead to 400 Bad Request response.</li>
+</ul>
+
 <p>The endpoint supports partial updates. This means that only the fields you
 supply in your requests will have their values altered.</p>
 
@@ -4193,7 +4240,7 @@ field, it must be done via <code>parent_id</code></em>.</p>
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
 </td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the new <code>name</code> and/or <code>parent_id</code> for the User
+<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the new <code>name</code>, <code>parent_id</code> or <code>tags</code> for the User
 Group.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 <tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Set to <code>true</code> to see a preview of which
@@ -4264,8 +4311,9 @@ exists with this ID or that you do not have permission to update it)</p>
   </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -4280,6 +4328,7 @@ Details object):</p>
   </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0987654321"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Other Street"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00-321"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Warsaw"</span><span class="p">,</span><span class="w">
@@ -4296,6 +4345,7 @@ Details object):</p>
   </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0987654321"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"123 Other Street"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00-321"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Warsaw"</span><span class="p">,</span><span class="w">
@@ -4305,8 +4355,9 @@ Details object):</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">}</span><span class="w">
@@ -4322,8 +4373,9 @@ Details object):</p>
   </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -4331,8 +4383,9 @@ Details object):</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">}</span><span class="w">
@@ -4397,19 +4450,18 @@ Details:</p>
 field. It is not necessary to minify the JSON, but also not prohibited.</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"idle_doc_timeout_canceled"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"idle_doc_timeout_timedout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"idle_doc_timeout_rejected"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"idle_doc_timeout_error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+  </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0987654321"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"123 Other Street"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00-321"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Warsaw"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Poland"</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <blockquote>
-<p>For examples of the JSON output, see 
+<p>For examples of the JSON output, see
 <a href="#view-user-group-contact-details">View User Group Contact Details</a>.</p>
 </blockquote>
 
@@ -8509,12 +8561,18 @@ The list API call can filter based on document tags.</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"alignment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chaotic good"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -8694,6 +8752,12 @@ The list API call can filter based on document tags.</p>
 
 </div>
 
+<h6><code>company_name</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
 <h6><code>address</code> (string)</h6>
 
 <div class="json-schema">
@@ -8719,6 +8783,38 @@ The list API call can filter based on document tags.</p>
 </div>
 
 <p></div></p>
+
+<p></div></p>
+
+<h4><code>tags</code> <code>(array)</code></h4>
+
+<div class="json-schema">
+
+<p><strong>User defined set of keys and values.</strong></p>
+<p>Each tag must have <code>{key: value}</code> format.
+In the responses value is always a string.
+In the requests you can also provide <code>null</code> to delete a tag.
+Other value types lead to 400 Bad Request response.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h5>(object)</h5>
+
+
+<div class="json-schema">
+
+<p>Additional restrictions:</p>
+
+<ul>
+</ul>
+
+</div>
 
 <p></div></p>
 
@@ -8772,8 +8868,9 @@ The list API call can filter based on document tags.</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -8781,13 +8878,19 @@ The list API call can filter based on document tags.</p>
       </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"home-planet"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Earth"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -9052,6 +9155,12 @@ Preview).</p>
 
 </div>
 
+<h6><code>company_name</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
 <h6><code>address</code> (string)</h6>
 
 <div class="json-schema">
@@ -9104,6 +9213,12 @@ Preview).</p>
 
 </div>
 
+<h6><code>company_name</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
 <h6><code>address</code> (string)</h6>
 
 <div class="json-schema">
@@ -9131,6 +9246,38 @@ Preview).</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+
+<h4><code>tags</code> <code>(array)</code></h4>
+
+<div class="json-schema">
+
+<p><strong>User defined set of keys and values.</strong></p>
+<p>Each tag must have <code>{key: value}</code> format.
+In the responses value is always a string.
+In the requests you can also provide <code>null</code> to delete a tag.
+Other value types lead to 400 Bad Request response.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h5>(object)</h5>
+
+
+<div class="json-schema">
+
+<p>Additional restrictions:</p>
+
+<ul>
+</ul>
+
+</div>
 
 <p></div></p>
 
@@ -18292,12 +18439,18 @@ count of documents on different stages of the process</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"alignment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chaotic good"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -18477,6 +18630,12 @@ count of documents on different stages of the process</p>
 
 </div>
 
+<h5><code>company_name</code> (string)</h5>
+
+<div class="json-schema">
+
+</div>
+
 <h5><code>address</code> (string)</h5>
 
 <div class="json-schema">
@@ -18502,6 +18661,38 @@ count of documents on different stages of the process</p>
 </div>
 
 <p></div></p>
+
+<p></div></p>
+
+<h3><code>tags</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p><strong>User defined set of keys and values.</strong></p>
+<p>Each tag must have <code>{key: value}</code> format.
+In the responses value is always a string.
+In the requests you can also provide <code>null</code> to delete a tag.
+Other value types lead to 400 Bad Request response.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>Additional restrictions:</p>
+
+<ul>
+</ul>
+
+</div>
 
 <p></div></p>
 
@@ -18553,8 +18744,9 @@ count of documents on different stages of the process</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -18562,13 +18754,19 @@ count of documents on different stages of the process</p>
       </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"home-planet"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Earth"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -18833,6 +19031,12 @@ Preview).</p>
 
 </div>
 
+<h5><code>company_name</code> (string)</h5>
+
+<div class="json-schema">
+
+</div>
+
 <h5><code>address</code> (string)</h5>
 
 <div class="json-schema">
@@ -18885,6 +19089,12 @@ Preview).</p>
 
 </div>
 
+<h6><code>company_name</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
 <h6><code>address</code> (string)</h6>
 
 <div class="json-schema">
@@ -18912,6 +19122,38 @@ Preview).</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+
+<h3><code>tags</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p><strong>User defined set of keys and values.</strong></p>
+<p>Each tag must have <code>{key: value}</code> format.
+In the responses value is always a string.
+In the requests you can also provide <code>null</code> to delete a tag.
+Other value types lead to 400 Bad Request response.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>Additional restrictions:</p>
+
+<ul>
+</ul>
+
+</div>
 
 <p></div></p>
 
@@ -19225,8 +19467,9 @@ Preview).</p>
   </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -19254,6 +19497,12 @@ Preview).</p>
 
 <h4><code>company_number</code> (string)</h4>
 
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>company_name</code> (string)</h4>
 
 <div class="json-schema">
 
@@ -19295,8 +19544,9 @@ Preview).</p>
   </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -19304,8 +19554,9 @@ Preview).</p>
     </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"111 23"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"company_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grev Turegatan 11A"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"zip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"114 46"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stockholm"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">}</span><span class="w">
@@ -19335,6 +19586,12 @@ Preview).</p>
 
 <h4><code>company_number</code> (string)</h4>
 
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>company_name</code> (string)</h4>
 
 <div class="json-schema">
 
@@ -19392,6 +19649,12 @@ Preview).</p>
 
 </div>
 
+<h5><code>company_name</code> (string)</h5>
+
+<div class="json-schema">
+
+</div>
+
 <h5><code>address</code> (string)</h5>
 
 <div class="json-schema">
@@ -19419,6 +19682,49 @@ Preview).</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+<h2 id='usergrouptags'>UserGroupTags</h2>
+<p><code>(array)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-usergrouptags-quot'>Example JSON: for &quot;UserGroupTags&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"founded"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p><strong>User defined set of keys and values.</strong></p>
+<p>Each tag must have <code>{key: value}</code> format.
+In the responses value is always a string.
+In the requests you can also provide <code>null</code> to delete a tag.
+Other value types lead to 400 Bad Request response.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h3>(object)</h3>
+
+
+<div class="json-schema">
+
+<p>Additional restrictions:</p>
+
+<ul>
+</ul>
+
+</div>
 
 <p></div></p>
 <h2 id='accessrole'>AccessRole</h2>
