@@ -10,7 +10,7 @@ let
   nodejs = pkgs."nodejs-${nodeVersion}";
 
   elmPkgs = import ../../frontend-elm/elm.nix {
-    inherit nixpkgs;
+    nixpkgs = import ./nixpkgs-src.nix;
   };
 
   elmNodePackages = import ../../frontend-elm/default.nix {
@@ -30,7 +30,7 @@ stdenv.mkDerivation {
   src = kontrakcja-src;
 
   configurePhase = ''
-    export LANG=C.UTF-8
+    export LANG=en_US.UTF-8
 
     ln -s ${elmNodeDependencies}/lib/node_modules frontend-elm/node_modules
 

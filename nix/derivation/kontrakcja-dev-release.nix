@@ -15,15 +15,12 @@ let
     inherit nixpkgs haskellPackages;
   };
 
-  kontrakcja = pkgs.haskell.lib.overrideCabal
-    kontrakcja-1 (super: {
-      # test requires other components to be running, so we won't
-      # test while building from source code only
-      doCheck = false;
-      doHaddock = false;
-      doHoogle = false;
-      enableLibraryProfiling = false;
-    });
+  kontrakcja =
+    pkgs.haskell.lib.disableOptimization (
+      pkgs.haskell.lib.dontCheck
+        ( pkgs.haskell.lib.dontHaddock
+            kontrakcja-1
+        ) );
 
   kontrakcja-frontend = import ./kontrakcja-frontend.nix {
     inherit nixpkgs kontrakcja kontrakcja-src;

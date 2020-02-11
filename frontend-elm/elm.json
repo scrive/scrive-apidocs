@@ -19,7 +19,7 @@
             "elm/svg": "1.0.1",
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
-            "elm-community/list-extra": "8.1.0",
+            "elm-community/list-extra": "8.2.3",
             "genthaler/elm-enum": "1.0.2",
             "isaacseymour/deprecated-time": "1.0.0",
             "rtfeldman/elm-hex": "1.0.0",

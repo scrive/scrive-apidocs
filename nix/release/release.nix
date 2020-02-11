@@ -3,11 +3,16 @@
 , ghcVersion
 , inHaskellPackages ? nixpkgs.pkgs.haskell.packages.${ghcVersion}
 , workspaceRoot ? builtins.toPath(../..)
-, localeLang ? "C.UTF-8"
+, localeLang ? "en_US.UTF-8"
 }:
 let
   haskellPackages = import ../derivation/kontrakcja-build-deps.nix {
     inherit nixpkgs inHaskellPackages;
+  };
+
+  prodHaskellPackages = import ../derivation/kontrakcja-build-deps.nix {
+    inherit nixpkgs inHaskellPackages;
+    quickBuild = false;
   };
 
   kontrakcja-src = import ../derivation/kontrakcja-src.nix;
@@ -17,8 +22,7 @@ let
   };
 
   manual-shell = import ../derivation/kontrakcja-manual-shell.nix {
-    inherit nixpkgs workspaceRoot localeLang;
-    haskellPackages = inHaskellPackages;
+    inherit nixpkgs workspaceRoot localeLang haskellPackages;
   };
 
   cabal-shell = import ../derivation/kontrakcja-cabal-shell.nix {
@@ -34,11 +38,14 @@ let
   };
 
   production-shell = import ../derivation/kontrakcja-production-shell.nix {
-    inherit nixpkgs haskellPackages workspaceRoot localeLang;
+    inherit nixpkgs workspaceRoot localeLang;
+
+    haskellPackages = prodHaskellPackages;
   };
 
   production-release = import ../derivation/kontrakcja-production-release.nix {
-    inherit nixpkgs haskellPackages;
+    inherit nixpkgs;
+    haskellPackages = prodHaskellPackages;
   };
 
   dev-deps = nixpkgs.stdenv.mkDerivation {
@@ -49,6 +56,10 @@ let
 
     buildPhase = ''
       mkdir -p $out
+
+      echo copying source: ${kontrakcja-src}
+
+      cp -r "${kontrakcja-src}"/* $out/
     '';
     testPhase = "";
     installPhase = "echo install phase";

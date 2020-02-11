@@ -74,6 +74,7 @@
   },
   "scripts": {
     "test": "grunt test",
-    "build:nix": "grunt build:nix"
+    "build:nix": "grunt build:nix",
+    "sync-nix": "./sync-nix.sh"
   }
 }

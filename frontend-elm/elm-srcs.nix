@@ -76,8 +76,8 @@
       };
 
       "elm-community/list-extra" = {
-        sha256 = "0ngynq305b45zkz0398z66ldb1xl3jjnzdrj8fddim1zxjv2jdiw";
-        version = "8.1.0";
+        sha256 = "1ayv3148drynqnxdfwpjxal8vwzgsjqanjg7yxp6lhdcbkxgd3vd";
+        version = "8.2.3";
       };
 
       "elm/http" = {

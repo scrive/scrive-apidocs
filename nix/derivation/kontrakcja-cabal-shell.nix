@@ -1,7 +1,7 @@
 {
   nixpkgs
 , haskellPackages
-, localeLang ? "C.UTF-8"
+, localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let

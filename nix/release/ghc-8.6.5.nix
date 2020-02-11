@@ -1,7 +1,7 @@
 {
   nixpkgs ? import ./nixpkgs.nix {}
 , workspaceRoot ? builtins.toPath(../..)
-, localeLang ? "C.UTF-8"
+, localeLang ? "en_US.UTF-8"
 }:
 let
   ghcVersion = "ghc865";

@@ -5,6 +5,9 @@ let
     "dist"
     "dist-newstyle"
     "node_modules"
+    "elm-stuff"
+    "registry.dat"
+    "nix-support"
 
     "nix"
     "shell.nix"
@@ -28,6 +31,9 @@ let
   src = builtins.filterSource
     (path: type:
       ! builtins.elem (baseNameOf path) excluded
+
+        && isNull (builtins.match ".+\.nix$"
+                    (baseNameOf path))
 
         # Don't copy .ghc.environemnt.* files
         && isNull (builtins.match "^\\.ghc\\.environment.+"

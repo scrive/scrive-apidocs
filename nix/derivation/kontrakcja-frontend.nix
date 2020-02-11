@@ -11,7 +11,7 @@ let
   nodejs = pkgs."nodejs-${nodeVersion}";
 
   elmPkgs = import ../../frontend-elm/elm.nix {
-    inherit nixpkgs;
+    nixpkgs = import ./nixpkgs-src.nix;
   };
 
   nodePackages = import ../../frontend/default.nix {
@@ -43,7 +43,7 @@ stdenv.mkDerivation {
 
   configurePhase = ''
     export LOCALIZATION_BIN="${kontrakcja}/bin/localization"
-    export LANG=C.UTF-8
+    export LANG=en_US.UTF-8
 
     ln -s ${nodeDependencies}/lib/node_modules frontend/node_modules
     ln -s ${elmNodeDependencies}/lib/node_modules frontend-elm/node_modules
