@@ -445,6 +445,7 @@ insertDocument document@(Document {..}) = do
     sqlSet "from_shareable_link" documentfromshareablelink
     sqlSet "show_arrow"          documentshowarrow
     sqlSet "folder_id"           documentfolderid
+    sqlSet "user_group_to_impersonate_for_eid" documentusergroupforeid
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -2046,7 +2047,12 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
       sqlSet "time_zone_name" timezone
       sqlWhereEq "id" did
 
-
+data SetDocumentUserGroupForEID = SetDocumentUserGroupForEID (Maybe UserGroupID)
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentUserGroupForEID Bool where
+  update (SetDocumentUserGroupForEID mgid) = updateDocumentWithID $ \did -> do
+    runQuery01 . sqlUpdate "documents" $ do
+      sqlSet "user_group_to_impersonate_for_eid" mgid
+      sqlWhereEq "id" did
 
 data PostReminderSend = PostReminderSend SignatoryLink (Maybe Text) Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostReminderSend () where
@@ -2387,6 +2393,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateD
     , update $ SetDocumentAPICallbackURL V1 (documentapiv1callbackurl document)
     , update $ SetDocumentAPICallbackURL V2 (documentapiv2callbackurl document)
     , update $ SetDocumentTimeZoneName (documenttimezonename document)
+    , update $ SetDocumentUserGroupForEID (documentusergroupforeid document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
     ]
 

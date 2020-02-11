@@ -23,6 +23,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Types.SignatoryAccessToken
 import KontraLink
+import UserGroup.Types
 import Util.SignatoryLinkUtils
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document
@@ -135,6 +136,19 @@ unjsonDocument da =
     <*   fieldReadonly "from_shareable_link"
                        documentfromshareablelink
                        "Whether the document was created by a shareable link"
+    <**> (    fieldBy "experimental_features"
+                      documentusergroupforeid
+                      "Experimental features."
+                      unjsonExperimentalFeatures
+         <**> (pure $ \mugid d -> d { documentusergroupforeid = mugid })
+         )
+
+-- For the time being only user_group_to_impersonate_for_eid.
+unjsonExperimentalFeatures :: UnjsonDef (Maybe UserGroupID)
+unjsonExperimentalFeatures = objectOf $ fieldOpt
+  "user_group_to_impersonate_for_eid"
+  (\ugid -> ugid)
+  "Use the settings of the specified user group for Swedish BankID transactions related to this document."
 
 fieldAccessToken :: DocumentAccess -> AltF.Ap (FieldDef Document) ()
 fieldAccessToken (DocumentAccess { daAccessMode }) = case daAccessMode of

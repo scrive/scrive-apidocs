@@ -19,6 +19,7 @@ import qualified Data.Text.IO as T
 import qualified Data.Traversable as T
 
 import AccessControl.APITest
+import AccessControl.EIDTest
 import AccessControl.RoleTest
 import AccountInfoTest
 import AdministrationTest
@@ -102,6 +103,7 @@ import qualified TestEnvSt.Internal as I
 allTests :: [TestEnvSt -> Test]
 allTests =
   [ accessControlApiTests
+  , accessControlEIDTests
   , accessControlRoleTests
   , accountInfoTests
   , administrationTests

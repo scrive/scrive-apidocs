@@ -236,4 +236,5 @@ kontraMigrations =
   , smsesAddStatsIndexes
   , addAuthorDeletedFlags
   , addPopulateDocumentAuthorDeletedJob
+  , addUGIDForEIDToDocuments
   ]

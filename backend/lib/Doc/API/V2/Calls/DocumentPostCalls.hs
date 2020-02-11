@@ -136,6 +136,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     guardThatDocumentIs (not $ flip documentDeletedForUser $ user ^. #id)
                         "The template is in Trash"
       =<< theDocument
+    guardUserMayImpersonateUserGroupForEid user =<< theDocument
   whenJust mFolderId $ guardDocumentCreateInFolderIsAllowed user
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
@@ -185,6 +186,7 @@ docApiV2Update did = logDocument did . api $ do
           $   "Errors while parsing document data:"
           <+> showt errs
     guardDocumentMoveIsAllowed user (documentfolderid doc) (documentfolderid draftData)
+    guardUserMayImpersonateUserGroupForEid user draftData
     -- API call actions
     applyDraftDataToDocument draftData actor
     guardThatAuthorIsNotApprover =<< theDocument
@@ -219,6 +221,7 @@ docApiV2Start did = logDocument did . api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation =<< theDocument
     guardThatDocumentCanBeStarted =<< theDocument
+    guardUserMayImpersonateUserGroupForEid user =<< theDocument
     -- Parameters
     authorSignsNow <- apiV2ParameterDefault False (ApiV2ParameterBool "author_signs_now")
     t              <- view #time <$> getContext

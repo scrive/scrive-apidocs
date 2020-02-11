@@ -298,5 +298,8 @@
   },
   "shareable_link": null,
   "template_id": null,
-  "from_shareable_link": false
+  "from_shareable_link": false,
+  "experimental_features": {
+    "user_group_to_impersonate_for_eid": null
+  }
 }

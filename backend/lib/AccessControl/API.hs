@@ -114,4 +114,5 @@ roleToAccessPolicyReq role act =
         FolderAdminAR        fid  -> mkAccPolicyFolder fid
         FolderUserAR         fid  -> mkAccPolicyFolder fid
         SharedTemplateUserAR fid  -> mkAccPolicyFolder fid
+        EidImpersonatorAR    ugid -> mkAccPolicyUserGroup ugid
   in  [sourceRoleReq, targetRoleReq]

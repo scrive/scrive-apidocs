@@ -1181,6 +1181,7 @@ Test-suite kontrakcja-test
   Main-is:       TestMain.hs
   GHC-options: -main-is TestMain
   Other-Modules: AccessControl.APITest
+                 AccessControl.EIDTest
                  AccessControl.RoleTest
                  AccessControl.Migrations
                  AccessControl.Tables

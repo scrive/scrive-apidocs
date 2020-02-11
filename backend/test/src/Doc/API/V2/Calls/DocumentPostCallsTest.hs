@@ -8,6 +8,10 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Set as S
 import qualified Data.Text as T
 
+import AccessControl.Model
+  ( AccessControlCreateForUser(..), AccessControlRemoveRole(..)
+  )
+import AccessControl.Types (AccessRole(..), AccessRoleTarget(..))
 import DB.Query (dbQuery, dbUpdate)
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
@@ -88,6 +92,15 @@ apiV2DocumentPostCallsTests env = testGroup
              testDocApiV2DiscardShareableLink
   , testThat "API v2 Add image"              env testDocApiV2AddImage
   , testThat "API V2 Add evidence log event" env testDocApiV2AddEvidenceLogEvent
+  , testThat "API v2 Set user_group_to_impersonate_for_eid"
+             env
+             testDocUpdateImpersonateEID
+  , testThat "API v2 Start document impersonating other user group for eid"
+             env
+             testDocApiV2StartImpersonateEID
+  , testThat "API v2 New from template impersonating other user group for eid"
+             env
+             testDocApiV2NewFromTemplateImpersonateEID
   ]
 
 testDocApiV2New :: TestEnv ()
@@ -1083,3 +1096,133 @@ testDocApiV2AddEvidenceLogEvent = do
   assertJust $ find rejectEvent lg
 
   return ()
+
+testDocUpdateImpersonateEID :: TestEnv ()
+testDocUpdateImpersonateEID = do
+  user <- addNewRandomUser
+  let uid = user ^. #id
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  did <- getMockDocId <$> testDocApiV2New' ctx
+
+  -- User group to impersonate
+  ug  <- addNewUserGroup
+  let ugid = ug ^. #id
+
+  let update =
+        "{\"experimental_features\": {\"user_group_to_impersonate_for_eid\":\""
+          <> showt ugid
+          <> "\"}}"
+  let params = [("document", inText update)]
+  request  <- mkRequestWithHeaders POST params []
+
+  (res, _) <- runTestKontra request ctx $ docApiV2Update did
+  assertEqual
+    "Setting 'user_group_to_impersonate_for_eid' without sufficient\
+    \ permissions should fail"
+    403
+    (rsCode res)
+
+  -- grant impersonate role
+  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+
+  mdoc <- mockDocTestRequestHelper ctx POST params (docApiV2Update did) 200
+  assertEqual "'user_group_to_impersonate_for_eid' should match"
+              (Just (show ugid))
+              (getMockDocUserGroupForEid mdoc)
+
+testDocApiV2StartImpersonateEID :: TestEnv ()
+testDocApiV2StartImpersonateEID = do
+  user <- addNewRandomUser
+  let uid = user ^. #id
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  did <- getMockDocId <$> testDocApiV2New' ctx
+
+  -- User group to impersonate
+  ug  <- addNewUserGroup
+  let ugid = ug ^. #id
+
+  -- grant impersonate role
+  Just (AccessRoleUser roleid _ _) <-
+    dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+
+  do  -- set 'user_group_to_impersonate_for_eid' field
+    let update =
+          "{\"experimental_features\": {\"user_group_to_impersonate_for_eid\":\""
+            <> showt ugid
+            <> "\"}}"
+    let params = [("document", inText update)]
+
+    mdoc <- mockDocTestRequestHelper ctx POST params (docApiV2Update did) 200
+    assertEqual "user_group_to_impersonate_for_eid should match"
+                (Just (show ugid))
+                (getMockDocUserGroupForEid mdoc)
+
+  -- remove impersonate role again
+  void . dbUpdate $ AccessControlRemoveRole roleid
+
+  emptyPOSTRequest <- mkRequestWithHeaders POST [] []
+  (resFail, _)     <- runTestKontra emptyPOSTRequest ctx $ docApiV2Start did
+  assertEqual
+    "Starting a document impersonating another user group without sufficient\
+    \ permissions should fail"
+    403
+    (rsCode resFail)
+
+  -- grant impersonate role again
+  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+
+  (resSucc, _) <- runTestKontra emptyPOSTRequest ctx $ docApiV2Start did
+  assertEqual
+    "Starting a document impersonating another user group with sufficient\
+    \ permissions should succeed"
+    200
+    (rsCode resSucc)
+
+testDocApiV2NewFromTemplateImpersonateEID :: TestEnv ()
+testDocApiV2NewFromTemplateImpersonateEID = do
+  user <- addNewRandomUser
+  let uid = user ^. #id
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  did <- getMockDocId <$> testDocApiV2New' ctx
+
+  -- User group to impersonate
+  ug  <- addNewUserGroup
+  let ugid = ug ^. #id
+
+  -- grant impersonate role
+  Just (AccessRoleUser roleid _ _) <-
+    dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+
+  do  -- set 'user_group_to_impersonate_for_eid' field and make template
+    let update =
+          "{\"experimental_features\": {\"user_group_to_impersonate_for_eid\":\""
+            <> showt ugid
+            <> "\"}"
+            <> ", \"is_template\" : true}"
+    let params = [("document", inText update)]
+
+    mdoc <- mockDocTestRequestHelper ctx POST params (docApiV2Update did) 200
+    assertEqual "user_group_to_impersonate_for_eid should match"
+                (Just (show ugid))
+                (getMockDocUserGroupForEid mdoc)
+
+  -- remove impersonate role again
+  void . dbUpdate $ AccessControlRemoveRole roleid
+
+  emptyPOSTRequest <- mkRequestWithHeaders POST [] []
+  (resFail, _)     <- runTestKontra emptyPOSTRequest ctx $ docApiV2NewFromTemplate did
+  assertEqual
+    "Starting a document from template impersonating another user group without\
+    \ sufficient permissions should fail"
+    403
+    (rsCode resFail)
+
+  -- grant impersonate role again
+  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+
+  (resSucc, _) <- runTestKontra emptyPOSTRequest ctx $ docApiV2NewFromTemplate did
+  assertEqual
+    "Starting a document from template impersonating another user group with\
+    \ sufficient permissions should succeed"
+    201
+    (rsCode resSucc)

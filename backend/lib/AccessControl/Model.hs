@@ -15,7 +15,6 @@ module AccessControl.Model
 
 import Control.Monad.Catch
 import Control.Monad.Extra (concatForM)
-import Control.Monad.State (State)
 import Control.Monad.State.Class (MonadState)
 
 import AccessControl.Types
@@ -70,6 +69,7 @@ setTarget target = case target of
   FolderAdminAR        fid  -> sqlSet "trg_folder_id" fid
   FolderUserAR         fid  -> sqlSet "trg_folder_id" fid
   SharedTemplateUserAR fid  -> sqlSet "trg_folder_id" fid
+  EidImpersonatorAR    ugid -> sqlSet "trg_user_group_id" ugid
 
 data AccessRoleGet = AccessRoleGet AccessRoleID
 instance (MonadDB m, MonadThrow m)
@@ -204,19 +204,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AccessControlInsertRoleForUser 
     runQuery01 . sqlInsert "access_control" $ do
       sqlSet "role"        (toAccessRoleType trg)
       sqlSet "src_user_id" uid
-      setAccessRoleTarget trg
-    where
-      (uTrg, ugTrg, fdrTrg) = ("trg_user_id", "trg_user_group_id", "trg_folder_id")
-
-      setAccessRoleTarget :: AccessRoleTarget -> State SqlInsert ()
-      setAccessRoleTarget trg' = case trg' of
-        UserAR               k -> sqlSet uTrg (unUserID k)
-        UserGroupMemberAR    k -> sqlSet ugTrg (fromUserGroupID k)
-        UserAdminAR          k -> sqlSet ugTrg (fromUserGroupID k)
-        UserGroupAdminAR     k -> sqlSet ugTrg (fromUserGroupID k)
-        FolderAdminAR        k -> sqlSet fdrTrg (fromFolderID k)
-        FolderUserAR         k -> sqlSet fdrTrg (fromFolderID k)
-        SharedTemplateUserAR k -> sqlSet fdrTrg (fromFolderID k)
+      setTarget trg
 
 data AccessControlRemoveUserGroupAdminRole =
     AccessControlRemoveUserGroupAdminRole UserID UserGroupID
@@ -286,5 +274,7 @@ fetchAccessRoleTarget (FolderAdminART, Nothing, Nothing, Just fid) = FolderAdmin
 fetchAccessRoleTarget (FolderUserART , Nothing, Nothing, Just fid) = FolderUserAR fid
 fetchAccessRoleTarget (SharedTemplateUserART, Nothing, Nothing, Just fid) =
   SharedTemplateUserAR fid
+fetchAccessRoleTarget (EidImpersonatorART, Nothing, Just ugid, Nothing) =
+  EidImpersonatorAR ugid
 fetchAccessRoleTarget row =
   unexpectedError $ "invalid access_control row in database" <> showt row

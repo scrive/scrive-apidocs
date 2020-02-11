@@ -3,6 +3,8 @@ module EID.CGI.GRP.Control (
   , checkCGISignStatus
   , CGISignStatus(..)
   , guardThatPersonalNumberMatches
+  , handleAuthRequest  -- for testing purposes
+  , handleSignRequest  -- for testing purposes
   ) where
 
 import Control.Monad.Catch
@@ -19,6 +21,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Text.StringTemplates.Fields as F
 
+import AccessControl.Model
+import AccessControl.Types
 import Chargeable.Model
 import DB hiding (InternalError)
 import Doc.DocInfo
@@ -49,6 +53,8 @@ import Session.Cookies
 import Session.Model
 import Session.Types
 import Templates
+import User.Model
+import User.Model.Query (GetUserByID(..))
 import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
@@ -69,15 +75,15 @@ grpRoutes = dir "cgi" . dir "grp" $ choice
 
 handleAuthRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleAuthRequest did slid = do
-  ctx               <- getContext
-  CgiGrpConfig {..} <- do
-    case ctx ^. #cgiGrpConfig of
-      Nothing -> noConfigurationError "CGI Group"
-      Just cc -> return cc
-  (doc, _)              <- getDocumentAndSignatoryForEIDAuth did slid
-  mcompany_display_name <- getCompanyDisplayName doc
-  mcompany_service_id   <- getCompanyServiceID doc
-  pn                    <- getField "personal_number" >>= \case
+  ctx                    <- getContext
+  cgiGrpConfig@CgiGrpConfig {..} <- getCgiGrpConfig
+  (doc     , _         ) <- getDocumentAndSignatoryForEIDAuth did slid
+  (authorid, ugidforeid) <- getAuthorAndUserGroupForEID doc
+  author <- fromMaybe (unexpectedError "Impossible happened: author doesn't exist.")
+    <$> dbQuery (GetUserByID authorid)
+  guardUserMayImpersonateUserGroupForEid author doc
+  (display_name, service_id) <- getCompanyDisplayNameAndServiceID cgiGrpConfig ugidforeid
+  pn <- getField "personal_number" >>= \case
     (Just pn) -> return pn
     _         -> do
       logInfo_ "No personal number"
@@ -90,8 +96,8 @@ handleAuthRequest did slid = do
                                 cgGateway
                                 certErrorHandler
                                 debugFunction
-      req = AuthRequest { arqPolicy         = fromMaybe cgServiceID mcompany_service_id
-                        , arqDisplayName = fromMaybe cgDisplayName mcompany_display_name
+      req = AuthRequest { arqPolicy         = service_id
+                        , arqDisplayName    = display_name
                         , arqPersonalNumber = pn
                         , arqProvider       = "bankid"
                         , arqClientIP       = showt (ctx ^. #ipAddr)
@@ -117,16 +123,16 @@ handleAuthRequest did slid = do
 
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest _did slid = do
-  ctx               <- getContext
-  CgiGrpConfig {..} <- do
-    case ctx ^. #cgiGrpConfig of
-      Nothing -> noConfigurationError "CGI Group"
-      Just cc -> return cc
-  (doc, _)              <- getDocumentAndSignatoryForEIDSign slid
-  mcompany_display_name <- getCompanyDisplayName doc
-  mcompany_service_id   <- getCompanyServiceID doc
-  tbs                   <- textToBeSigned doc
-  pn                    <- getField "personal_number" >>= \case
+  ctx                    <- getContext
+  cgiGrpConfig@CgiGrpConfig {..} <- getCgiGrpConfig
+  (doc     , _         ) <- getDocumentAndSignatoryForEIDSign slid
+  (authorid, ugidforeid) <- getAuthorAndUserGroupForEID doc
+  author <- fromMaybe (unexpectedError "Impossible happened: author doesn't exist.")
+    <$> dbQuery (GetUserByID authorid)
+  guardUserMayImpersonateUserGroupForEid author doc
+  (display_name, service_id) <- getCompanyDisplayNameAndServiceID cgiGrpConfig ugidforeid
+  tbs <- textToBeSigned doc
+  pn  <- getField "personal_number" >>= \case
     (Just pn) -> return pn
     _         -> do
       logInfo_ "No personal number"
@@ -134,21 +140,24 @@ handleSignRequest _did slid = do
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction    <- mkDebugFunction
-  let
-    transport = curlTransport SecureSSL
-                              (CurlAuthCert cgCertFile)
-                              cgGateway
-                              certErrorHandler
-                              debugFunction
-    req = SignRequest
-      { srqPolicy          = fromMaybe cgServiceID mcompany_service_id
-      , srqDisplayName     = fromMaybe cgDisplayName mcompany_display_name
-      , srqPersonalNumber  = pn
-      , srqUserVisibleData = TE.decodeUtf8 . B64.encode . BSU.fromString . T.unpack $ tbs
-      , srqProvider        = "bankid"
-      , srqClientIP        = showt (ctx ^. #ipAddr)
-      }
-    parser = Right <$> xpSignResponse <|> Left <$> xpGrpFault
+  let transport = curlTransport SecureSSL
+                                (CurlAuthCert cgCertFile)
+                                cgGateway
+                                certErrorHandler
+                                debugFunction
+      req = SignRequest
+        { srqPolicy          = service_id
+        , srqDisplayName     = display_name
+        , srqPersonalNumber  = pn
+        , srqUserVisibleData = TE.decodeUtf8
+                               . B64.encode
+                               . BSU.fromString
+                               . T.unpack
+                               $ tbs
+        , srqProvider        = "bankid"
+        , srqClientIP        = showt (ctx ^. #ipAddr)
+        }
+      parser = Right <$> xpSignResponse <|> Left <$> xpGrpFault
   cgiResp <- soapCall transport "" () req parser >>= \case
     Left AlreadyInProgress -> do
       -- Action that is already in progress will get cancelled. In that case we do call again to get new transaction
@@ -199,7 +208,7 @@ checkCGISignStatus
   -> DocumentID
   -> SignatoryLinkID
   -> m CGISignStatus
-checkCGISignStatus CgiGrpConfig {..} did slid = do
+checkCGISignStatus cgiGrpConfig@(CgiGrpConfig {..}) did slid = do
   doc <- dbQuery $ GetDocumentByDocumentID did
   if (not (isPending doc) || isSignatoryAndHasSigned (getSigLinkFor slid doc))
     then return CGISignStatusAlreadySigned
@@ -209,9 +218,10 @@ checkCGISignStatus CgiGrpConfig {..} did slid = do
       if (isJust esignature)
         then return CGISignStatusSuccess
         else do
-          mcompany_display_name <- getCompanyDisplayName doc
-          mcompany_service_id   <- getCompanyServiceID doc
-          mcgiTransaction       <- dbQuery (GetCgiGrpTransaction CgiGrpSign slid)
+          (_           , ugidforeid) <- getAuthorAndUserGroupForEID doc
+          (display_name, service_id) <- getCompanyDisplayNameAndServiceID cgiGrpConfig
+                                                                          ugidforeid
+          mcgiTransaction <- dbQuery (GetCgiGrpTransaction CgiGrpSign slid)
           logInfo_ "Getting transaction"
 
           case mcgiTransaction of
@@ -226,10 +236,10 @@ checkCGISignStatus CgiGrpConfig {..} did slid = do
                                             certErrorHandler
                                             debugFunction
                   req = CollectRequest
-                    { crqPolicy        = fromMaybe cgServiceID mcompany_service_id
+                    { crqPolicy        = service_id
                     , crqTransactionID = cgiTransactionID cgiTransaction
                     , crqOrderRef      = cgiOrderRef cgiTransaction
-                    , crqDisplayName   = fromMaybe cgDisplayName mcompany_display_name
+                    , crqDisplayName   = display_name
                     }
                   parser = Right <$> xpCollectResponse <|> Left <$> xpGrpFault
 
@@ -264,7 +274,7 @@ checkCGISignStatus CgiGrpConfig {..} did slid = do
                                                           "Validation.ocsp.response"
                                                           crsAttributes
                               }
-                          dbUpdate $ ChargeUserGroupForSEBankIDSignature did
+                          dbUpdate $ ChargeUserGroupForSEBankIDSignature ugidforeid did
                           return CGISignStatusSuccess
                         (CgiGrpAuthTransaction _ _ _ _) ->
                           unexpectedError
@@ -280,15 +290,11 @@ checkCGISignStatus CgiGrpConfig {..} did slid = do
 checkCGIAuthStatus
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
 checkCGIAuthStatus did slid = do
-  CgiGrpConfig {..} <- do
-    ctx <- getContext
-    case ctx ^. #cgiGrpConfig of
-      Nothing -> noConfigurationError "CGI Group"
-      Just cc -> return cc
-  (doc, sl)             <- getDocumentAndSignatoryForEIDAuth did slid
-  mcompany_display_name <- getCompanyDisplayName doc
-  mcompany_service_id   <- getCompanyServiceID doc
-  mcgiTransaction       <- dbQuery (GetCgiGrpTransaction CgiGrpAuth slid)
+  cgiGrpConfig@CgiGrpConfig {..} <- getCgiGrpConfig
+  (doc         , sl        )     <- getDocumentAndSignatoryForEIDAuth did slid
+  (_           , ugidforeid)     <- getAuthorAndUserGroupForEID doc
+  (display_name, service_id) <- getCompanyDisplayNameAndServiceID cgiGrpConfig ugidforeid
+  mcgiTransaction                <- dbQuery (GetCgiGrpTransaction CgiGrpAuth slid)
   case mcgiTransaction of
     Nothing -> do
       sesid   <- view #sessionID <$> getContext
@@ -302,12 +308,11 @@ checkCGIAuthStatus did slid = do
                                     cgGateway
                                     certErrorHandler
                                     debugFunction
-          req = CollectRequest
-            { crqPolicy        = fromMaybe cgServiceID mcompany_service_id
-            , crqTransactionID = cgiTransactionID cgiTransaction
-            , crqOrderRef      = cgiOrderRef cgiTransaction
-            , crqDisplayName   = fromMaybe cgDisplayName mcompany_display_name
-            }
+          req = CollectRequest { crqPolicy        = service_id
+                               , crqTransactionID = cgiTransactionID cgiTransaction
+                               , crqOrderRef      = cgiOrderRef cgiTransaction
+                               , crqDisplayName   = display_name
+                               }
           parser = Right <$> xpCollectResponse <|> Left <$> xpGrpFault
 
       soapCall transport "" () req parser >>= \case
@@ -367,7 +372,7 @@ checkCGIAuthStatus did slid = do
                             (Just sl)
                             Nothing
                       =<< signatoryActor ctx sl
-                  dbUpdate $ ChargeUserGroupForSEBankIDAuthentication did
+                  dbUpdate $ ChargeUserGroupForSEBankIDAuthentication ugidforeid did
                   return $ Right Complete
                 (CgiGrpSignTransaction _ _ _ _ _) ->
                   unexpectedError
@@ -383,15 +388,46 @@ checkCGIAuthStatus did slid = do
 
 ----------------------------------------
 
-getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
-getCompanyDisplayName doc = view #cgiDisplayName . ugwpSettings <$> dbQuery
-  (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
-  where author = fromJust $ getSigLinkFor signatoryisauthor doc
+-- | For a given document compute the author as well as the user group whose
+-- identity is to be used for the transaction. The latter affects display name
+-- (see getCompanyDisplayNameAndServiceID) as well as billing.
+getAuthorAndUserGroupForEID
+  :: (MonadDB m, MonadThrow m) => Document -> m (UserID, UserGroupID)
+getAuthorAndUserGroupForEID doc = do
+  let mauthorid = join . fmap maybesignatory $ getAuthorSigLink doc
+      authorid  = fromMaybe
+        (unexpectedError "Impossible happened: document doesn't have an author.")
+        mauthorid
+  author <- fromMaybe (unexpectedError "Impossible happened: author does not exist.")
+    <$> dbQuery (GetUserByID authorid)
+  -- If the 'user_group_to_impersonate_for_eid' field is set, use that user
+  -- group, otherwise use the author's user group.
+  let ugidforeid | Just ugid <- documentusergroupforeid doc = ugid
+                 | otherwise = author ^. #groupID
+  return (authorid, ugidforeid)
 
-getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
-getCompanyServiceID doc = view #cgiServiceID . ugwpSettings <$> dbQuery
-  (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
-  where author = fromJust $ getSigLinkFor signatoryisauthor doc
+-- | Helper to ensure consistent error messages.
+getCgiGrpConfig :: Kontrakcja m => m CgiGrpConfig
+getCgiGrpConfig = do
+  ctx <- getContext
+  case ctx ^. #cgiGrpConfig of
+    Just cfg -> return cfg
+    Nothing  -> noConfigurationError "CGI Group"
+
+-- | For a given user group compute the display name (i.e. the name displayed to
+-- the user on BankID) and service id.
+getCompanyDisplayNameAndServiceID
+  :: (MonadDB m, MonadThrow m) => CgiGrpConfig -> UserGroupID -> m (Text, Text)
+getCompanyDisplayNameAndServiceID CgiGrpConfig {..} ugid = do
+  ugwp <- fromMaybe (unexpectedError "Impossible happened: user group does not exist.")
+    <$> dbQuery (UserGroupGetWithParents ugid)
+  let ugsettings   = ugwpSettings ugwp
+  let mdisplayname = view #cgiDisplayName ugsettings
+  let mserviceid   = view #cgiServiceID ugsettings
+  -- If no display name and/or service ID is set, use Scrive's.
+  let displayname  = fromMaybe cgDisplayName mdisplayname
+  let serviceid    = fromMaybe cgServiceID mserviceid
+  return (displayname, serviceid)
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m Text
@@ -435,3 +471,20 @@ guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
         respond404
     else
       return ()
+
+guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
+guardUserMayImpersonateUserGroupForEid user doc
+  | Just ugid <- documentusergroupforeid doc = do
+    roles <- dbQuery . GetRoles $ user
+    let policy = mkAccPolicy [(ReadA, EidIdentityR, ugid)]
+    let
+      action = do
+        logInfo
+            "Someone tried to use Swedish BankID on a document without\
+            \ sufficient permissions to use the specified display name\
+            \ (via user_group_to_impersonate_for_eid)."
+          $ object
+              [identifier $ documentid doc, identifier $ user ^. #id, identifier ugid]
+        respond404
+    accessControl roles policy action $ return ()
+guardUserMayImpersonateUserGroupForEid _ _ = return ()

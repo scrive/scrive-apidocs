@@ -226,6 +226,11 @@ data Document = Document
   -- document.  Initially Maybe because of initial migration After initial
   -- migration, Maybe will be removed
   , documentfolderid               :: !(Maybe FolderID)
+  -- | When set, use the EID settings of the specified user group (rather than
+  -- that of the author) for EID transactions related to the document. This
+  -- mainly affects the 'display name', i.e. the name presented to the user as
+  -- the party they are entering into a transaction with. Implements CORE-1633.
+  , documentusergroupforeid        :: !(Maybe UserGroupID)
   } deriving (Show)
 
 type instance ID Document = DocumentID
@@ -274,6 +279,7 @@ defaultDocument = Document { documentid                = unsafeDocumentID 0
                            , documentfromshareablelink = False
                            , documentshowarrow         = True
                            , documentfolderid          = Nothing
+                           , documentusergroupforeid   = Nothing
                            }
 
 instance HasGuardtimeSignature Document where
@@ -346,6 +352,7 @@ documentsSelectors =
   , "documents.from_shareable_link"
   , "documents.show_arrow"
   , "documents.folder_id"
+  , "documents.user_group_to_impersonate_for_eid"
   ]
 
 documentStatusClassExpression :: SQL
@@ -445,13 +452,14 @@ type instance CompositeRow Document
     , Bool
     , Bool
     , Maybe FolderID
+    , Maybe UserGroupID
     )
 
 instance PQFormat Document where
   pqFormat = compositeTypePqFormat ctDocument
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid)
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid)
     = Document
       { documentid                = did
       , documenttitle             = title
@@ -495,6 +503,7 @@ instance CompositeFromSQL Document where
       , documentfromshareablelink = from_shareable_link
       , documentshowarrow         = show_arrow
       , documentfolderid          = fid
+      , documentusergroupforeid   = user_group_to_impersonate_for_eid
       }
 
 ---------------------------------

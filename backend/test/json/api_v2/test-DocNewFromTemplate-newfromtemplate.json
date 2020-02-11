@@ -111,5 +111,8 @@
   },
   "shareable_link": null,
   "template_id": "some_id",
-  "from_shareable_link": false
+  "from_shareable_link": false,
+  "experimental_features": {
+    "user_group_to_impersonate_for_eid": null
+  }
 }

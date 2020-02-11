@@ -50,6 +50,8 @@ import qualified Text.JSON as J
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
+import AccessControl.Model
+import AccessControl.Types
 import API.Monad.V1
 import AppView (respondWithPDF)
 import Attachment.Model
@@ -207,6 +209,7 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   unless (isTemplate template && haspermission) $ do
     throwM $ SomeDBExtraException $ serverError
       "Id did not matched template or you do not have right to access document"
+  guardUserMayImpersonateUserGroupForEid auser template
   when (documentDeletedForUser template $ user ^. #id)
     $ throwM
     $ SomeDBExtraException
@@ -418,6 +421,7 @@ apiCallV1Ready did = logDocument did . api $ do
       <$> theDocument
     unless (auid == user ^. #id) $ throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
+    guardUserMayImpersonateUserGroupForEid user =<< theDocument
     ifM
         (   (  isPending
             && all (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved)
@@ -1975,6 +1979,15 @@ guardSignatoryAccessFromSessionOrCredentials did slid = do
         then return $ Just user
         else throwM . SomeDBExtraException $ serverError
           "Can't perform this action. Not authorized."
+
+guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
+guardUserMayImpersonateUserGroupForEid user doc
+  | Just ugid <- documentusergroupforeid doc = do
+    roles <- dbQuery . GetRoles $ user
+    let policy    = mkAccPolicy [(ReadA, EidIdentityR, ugid)]
+    let exception = throwM . SomeDBExtraException $ forbidden'
+    accessControl roles policy exception $ return ()
+guardUserMayImpersonateUserGroupForEid _ _ = return ()
 
 -- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.
 data FieldTmpValue

@@ -88,6 +88,7 @@ accessRoleGetTargetUserGroupID role = case accessRoleTarget role of
   FolderAdminAR        _    -> Nothing
   FolderUserAR         _    -> Nothing
   SharedTemplateUserAR _    -> Nothing
+  EidImpersonatorAR    ugid -> Just ugid
 
 accessRoleGetTargetFolderID :: AccessRole -> Maybe FolderID
 accessRoleGetTargetFolderID role = case accessRoleTarget role of
@@ -98,6 +99,7 @@ accessRoleGetTargetFolderID role = case accessRoleTarget role of
   FolderAdminAR        fid -> Just fid
   FolderUserAR         fid -> Just fid
   SharedTemplateUserAR fid -> Just fid
+  EidImpersonatorAR    _   -> Nothing
 
 accessRoleGetTargetUserID :: AccessRole -> Maybe UserID
 accessRoleGetTargetUserID role = case accessRoleTarget role of
@@ -108,6 +110,7 @@ accessRoleGetTargetUserID role = case accessRoleTarget role of
   FolderAdminAR        _   -> Nothing
   FolderUserAR         _   -> Nothing
   SharedTemplateUserAR _   -> Nothing
+  EidImpersonatorAR    _   -> Nothing
 
 accessRoleGetSourceUserID :: AccessRole -> Maybe UserID
 accessRoleGetSourceUserID role = case role of
@@ -143,10 +146,17 @@ data AccessRoleTarget
   | FolderUserAR FolderID
   -- ^ Can CRUD Folders and CRUD Documents (including Drafts and Private Templates)
   --   Yes, he can do more than Folder AdminAR, this is intentional.
-  --   This way users can see drafts and private templates in their User Home Folder, but 
+  --   This way users can see drafts and private templates in their User Home Folder, but
   --   is_company_admin cannot.
   | SharedTemplateUserAR FolderID
   -- ^ Can Read Shared Templates
+  | EidImpersonatorAR UserGroupID
+  -- ^ A singleton role expressing the permission `EidIdentityR ReadA <group
+  -- id>`. A user with this role is allowed to 'impersonate' the given user
+  -- group through the 'user_group_to_impersonate_for_eid' document field, using
+  -- their EID display name rather than that of their own user group; in that
+  -- case the impersonated group is charged for the EID transaction.
+  -- Impersonation only applies to Swedish BankID at the moment!
   deriving (Eq, Show)
 
 -- | We need to discern between permissions and actions that affect users, user
@@ -162,6 +172,7 @@ data AccessResource
   | FolderR
   | SharedTemplateR
   | DocumentAfterPreparationR
+  | EidIdentityR
   deriving (Eq, Enum, Bounded)
 
 instance Show AccessResource where
@@ -175,6 +186,8 @@ instance Show AccessResource where
   show FolderR                   = "folder"
   show SharedTemplateR           = "shared_template"
   show DocumentAfterPreparationR = "document_after_preparation"
+  show EidIdentityR              = "eid_identity"
+
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -286,7 +299,8 @@ hasPermissions (FolderUserAR fid) =
     <>
   -- does not need document after preparation, because DocumentAfterPreparationR is subset of DocumentR
        map (mkPerm fid DocumentR) [minBound .. maxBound]
-hasPermissions (SharedTemplateUserAR fid) = [mkPerm fid SharedTemplateR ReadA]
+hasPermissions (SharedTemplateUserAR fid     ) = [mkPerm fid SharedTemplateR ReadA]
+hasPermissions (EidImpersonatorAR    usrGrpID) = [mkPerm usrGrpID EidIdentityR ReadA]
 
 -- | Interface to get the proper combinations of 'Permission's needed to gain
 -- access permission.
@@ -396,6 +410,7 @@ data AccessRoleType
   | FolderAdminART
   | FolderUserART
   | SharedTemplateUserART
+  | EidImpersonatorART
   deriving (Eq)
 
 instance PQFormat AccessRoleType where
@@ -416,7 +431,8 @@ instance FromSQL AccessRoleType where
       5 -> return FolderAdminART
       6 -> return FolderUserART
       7 -> return SharedTemplateUserART
-      _ -> E.throwIO $ RangeError { reRange = [(0, 7)], reValue = n }
+      8 -> return EidImpersonatorART
+      _ -> E.throwIO $ RangeError { reRange = [(0, 8)], reValue = n }
 
 instance ToSQL AccessRoleType where
   type PQDest AccessRoleType = PQDest Int16
@@ -427,6 +443,7 @@ instance ToSQL AccessRoleType where
   toSQL FolderAdminART        = toSQL (5 :: Int16)
   toSQL FolderUserART         = toSQL (6 :: Int16)
   toSQL SharedTemplateUserART = toSQL (7 :: Int16)
+  toSQL EidImpersonatorART    = toSQL (8 :: Int16)
 
 instance Show AccessRoleType where
   show UserART               = "user"
@@ -436,6 +453,7 @@ instance Show AccessRoleType where
   show FolderAdminART        = "folder_admin"
   show FolderUserART         = "folder_user"
   show SharedTemplateUserART = "shared_template_user"
+  show EidImpersonatorART    = "eid_impersonator"
 
 instance Read AccessRoleType where
   readsPrec _ "user"              = [(UserART, "")]
@@ -445,6 +463,7 @@ instance Read AccessRoleType where
   readsPrec _ "folder_admin"      = [(FolderAdminART, "")]
   readsPrec _ "folder_user"       = [(FolderUserART, "")]
   readsPrec _ "shared_template_user" = [(SharedTemplateUserART, "")]
+  readsPrec _ "eid_impersonator"  = [(EidImpersonatorART, "")]
   readsPrec _ _                   = []
 
 instance Unjson AccessRoleType where
@@ -472,6 +491,7 @@ toAccessRoleType ar = case ar of
   FolderAdminAR        _ -> FolderAdminART
   FolderUserAR         _ -> FolderUserART
   SharedTemplateUserAR _ -> SharedTemplateUserART
+  EidImpersonatorAR    _ -> EidImpersonatorART
 
 -- AccessRoleID
 

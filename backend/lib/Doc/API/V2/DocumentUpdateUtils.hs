@@ -63,6 +63,7 @@ applyDraftDataToDocument draft actor = do
       , documenttimezonename      = documenttimezonename draft
       , documentshowarrow         = documentshowarrow draft
       , documentfolderid          = documentfolderid draft
+      , documentusergroupforeid   = documentusergroupforeid draft
       }
     actor
   -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'

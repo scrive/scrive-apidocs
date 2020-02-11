@@ -108,17 +108,17 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor
   update (ChargeUserGroupForSMS document_id SMSTeliaCallGuide sms_count) =
     update (ChargeUserGroupFor CISMSTelia sms_count document_id)
 
--- | Charge user group of the author of the document for swedish bankid signature while signing.
-data ChargeUserGroupForSEBankIDSignature = ChargeUserGroupForSEBankIDSignature DocumentID
+-- | Charge acting user group (normally that of the document author) for swedish bankid signature while signing.
+data ChargeUserGroupForSEBankIDSignature = ChargeUserGroupForSEBankIDSignature UserGroupID DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSEBankIDSignature () where
-  update (ChargeUserGroupForSEBankIDSignature document_id) =
-    update (ChargeUserGroupFor CISEBankIDSignature 1 document_id)
+  update (ChargeUserGroupForSEBankIDSignature ugid document_id) =
+    update (ChargeUserGroupExplicitlyFor CISEBankIDSignature 1 ugid document_id)
 
--- | Charge user group of the author of the document for swedish authorization
-data ChargeUserGroupForSEBankIDAuthentication = ChargeUserGroupForSEBankIDAuthentication DocumentID
+-- | Charge acting user group (normally that of the document author) for swedish authorization.
+data ChargeUserGroupForSEBankIDAuthentication = ChargeUserGroupForSEBankIDAuthentication UserGroupID DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSEBankIDAuthentication () where
-  update (ChargeUserGroupForSEBankIDAuthentication document_id) =
-    update (ChargeUserGroupFor CISEBankIDAuthentication 1 document_id)
+  update (ChargeUserGroupForSEBankIDAuthentication ugid document_id) =
+    update (ChargeUserGroupExplicitlyFor CISEBankIDAuthentication 1 ugid document_id)
 
 -- | Charge user group of the author of the document for norwegian authorization
 data ChargeUserGroupForNOBankIDAuthentication = ChargeUserGroupForNOBankIDAuthentication DocumentID
@@ -204,6 +204,20 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor
       sqlSet "document_id"   document_id
       sqlSet "quantity"      quantity
       sqlSet "user_group_id" ugid
+
+-- Takes the charged user group as an explicit parameter rather than inferring it from the document.
+data ChargeUserGroupExplicitlyFor = ChargeUserGroupExplicitlyFor ChargeableItem Int32 UserGroupID DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupExplicitlyFor () where
+  update (ChargeUserGroupExplicitlyFor item quantity user_group_id document_id) = do
+    now          <- currentTime
+    (user_id, _) <- getAuthorAndAuthorsUserGroupIDs document_id
+    runQuery_ . sqlInsert "chargeable_items" $ do
+      sqlSet "time"          now
+      sqlSet "type"          item
+      sqlSet "user_id"       user_id
+      sqlSet "document_id"   document_id
+      sqlSet "quantity"      quantity
+      sqlSet "user_group_id" user_group_id
 
 data GetTotalOfChargeableItemFromThisMonth = GetTotalOfChargeableItemFromThisMonth ChargeableItem UserGroupID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetTotalOfChargeableItemFromThisMonth Int64 where

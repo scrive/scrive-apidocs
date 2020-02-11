@@ -17,6 +17,7 @@ module Doc.API.V2.Guards (
 , guardThatUserIsAuthorOrCompanyAdmin
 , guardThatUserIsAuthorOrDocumentIsShared
 , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+, guardUserMayImpersonateUserGroupForEid
 -- * Signatory guards
 , guardGetSignatoryFromIdForDocument
 , guardSignatoryNeedsToIdentifyToView
@@ -231,6 +232,15 @@ guardDocumentMoveIsAllowed user mOldLocation mNewLocation = do
         guardFolderActionIsAllowed user
           . catMaybes
           $ [(CreateA, ) <$> mNewLocation, (DeleteA, ) <$> mOldLocation]
+
+-- | Make sure the given user (the document author) is allowed to use the
+-- display name and service id of the given user group.
+guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
+guardUserMayImpersonateUserGroupForEid user doc
+  | Just ugid <- documentusergroupforeid doc = do
+    let policy = mkAccPolicy [(ReadA, EidIdentityR, ugid)]
+    apiAccessControl user policy $ return ()
+guardUserMayImpersonateUserGroupForEid _ _ = return ()
 
 guardGetSignatoryFromIdForDocument
   :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m SignatoryLink

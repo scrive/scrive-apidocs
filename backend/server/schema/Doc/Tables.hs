@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable
   { tblName        = "documents"
-  , tblVersion     = 54
+  , tblVersion     = 55
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -94,6 +94,10 @@ tableDocuments = tblTable
     , tblColumn { colName = "author_deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "author_really_deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "author_deleted_filled", colType = BoolT }
+    , tblColumn { colName     = "user_group_to_impersonate_for_eid"
+                , colType     = BigIntT
+                , colNullable = True
+                }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys = [
@@ -106,6 +110,7 @@ tableDocuments = tblTable
                          }
                      , (fkOnColumn "author_user_id" "users" "id")
                      , (fkOnColumn "folder_id" "folders" "id")
+                     , fkOnColumn "user_group_to_impersonate_for_eid" "user_groups" "id"
                      ]
   , tblIndexes     = [
       -- for list of documents in adminonly
@@ -119,6 +124,7 @@ tableDocuments = tblTable
                      , indexOnColumn "template_id"
                      , indexOnColumn "folder_id"
                      , indexOnColumn "shareable_link_hash"
+                     , indexOnColumn "user_group_to_impersonate_for_eid"
                      ]
   , tblChecks      = [ tblCheck { chkName      = "check_documents_pending_are_not_purged"
                                 , chkCondition = "status <> 2 OR purged_time IS NULL"
@@ -178,6 +184,7 @@ ctDocument = CompositeType
     , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
     , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
     , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+    , CompositeColumn { ccName = "user_group_to_impersonate_for_eid", ccType = BigIntT }
     ]
   }
 

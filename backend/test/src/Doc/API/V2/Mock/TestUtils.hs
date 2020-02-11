@@ -60,6 +60,7 @@ module Doc.API.V2.Mock.TestUtils (
 , setMockDocSigLinkSignatoryRole
 , setMockSigLinkStandardField
 , setMockDocSigLinkStandardField
+, getMockDocUserGroupForEid
 , getMockDocUserSigLinkId
 , addStandardSigLinksToMockDoc
 , addSigLinksToMockDoc
@@ -415,6 +416,9 @@ addStandardSigLinksToMockDoc i md =
 addSigLinksToMockDoc :: [MockSigLink] -> MockDoc -> MockDoc
 addSigLinksToMockDoc newParties md =
   md { mockDocParties = mockDocParties md <> newParties }
+
+getMockDocUserGroupForEid :: MockDoc -> Maybe String
+getMockDocUserGroupForEid = mockDocUserGroupForEid
 
 -- * Internal use only!
 -----------------------

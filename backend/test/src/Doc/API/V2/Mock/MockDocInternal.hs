@@ -39,6 +39,7 @@ data MockDoc = MockDoc
   , mockDocIsTrashed          :: !Bool
   , mockDocIsDeleted          :: !Bool
   , mockDocViewer             :: !MockViewer
+  , mockDocUserGroupForEid    :: !(Maybe String)
   } deriving (Show, Eq)
 
 mockDocUnjson :: UnjsonDef MockDoc
@@ -77,6 +78,17 @@ mockDocUnjson =
     <*> field "is_trashed"  mockDocIsTrashed  "MockDoc IsTrashed"
     <*> field "is_deleted"  mockDocIsDeleted  "MockDoc IsDeleted"
     <*> field "viewer"      mockDocViewer     "MockDoc Viewer"
+    <*> fieldBy "experimental_features"
+                mockDocUserGroupForEid
+                "MockDoc Experimental Features"
+                unjsonMockDocExperimentalFeatures
+
+-- For the time being only user_group_to_impersonate_for_eid.
+unjsonMockDocExperimentalFeatures :: UnjsonDef (Maybe String)
+unjsonMockDocExperimentalFeatures = objectOf $ fieldOpt
+  "user_group_to_impersonate_for_eid"
+  (\ugid -> ugid)
+  "MockDoc UserGroupForEid"
 
 data MockMainFile = MockMainFile
   { mockMainFileId   :: !String

@@ -151,6 +151,7 @@ accessRoleTargetToJSON (UserGroupAdminAR     ugid) = UserGroupTargetJSON ugid
 accessRoleTargetToJSON (FolderAdminAR        fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (FolderUserAR         fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (SharedTemplateUserAR fid ) = FolderTargetJSON fid
+accessRoleTargetToJSON (EidImpersonatorAR    ugid) = UserGroupTargetJSON ugid
 
 jsonToAccessRole :: Monad m => AccessRoleJSON -> m AccessRole
 jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson
@@ -172,11 +173,13 @@ jsonToAccessRoleTarget roleJson = case target roleJson of
     FolderAdminART        -> fail invalidTargetErr
     FolderUserART         -> fail invalidTargetErr
     SharedTemplateUserART -> fail invalidTargetErr
+    EidImpersonatorART    -> fail invalidTargetErr
   UserGroupTargetJSON ugid -> case roleType roleJson of
     -- valid
     UserAdminART          -> return $ UserAdminAR ugid
     UserGroupAdminART     -> return $ UserGroupAdminAR ugid
     UserGroupMemberART    -> return $ UserGroupMemberAR ugid
+    EidImpersonatorART    -> return $ EidImpersonatorAR ugid
     -- invalid
     UserART               -> fail invalidTargetErr
     FolderAdminART        -> fail invalidTargetErr
@@ -192,6 +195,7 @@ jsonToAccessRoleTarget roleJson = case target roleJson of
     UserAdminART          -> fail invalidTargetErr
     UserGroupAdminART     -> fail invalidTargetErr
     SharedTemplateUserART -> fail invalidTargetErr
+    EidImpersonatorART    -> fail invalidTargetErr
   where invalidTargetErr = "Can't parse AccessRole - Role type doesn't match target type"
 
 encodeAccessRole :: AccessRole -> Encoding

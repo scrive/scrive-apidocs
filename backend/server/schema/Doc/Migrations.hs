@@ -35,6 +35,7 @@ module Doc.Migrations
   , dropSignatoryLinkMagicHashesTable
   , dropMagicHashFromSignatories
   , addAuthorDeletedFlags
+  , addUGIDForEIDToDocuments
 ) where
 
 import Data.Int
@@ -1009,6 +1010,80 @@ dropMagicHashFromSignatories = Migration
           , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
           , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
           , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+          ]
+        }
+  }
+
+addUGIDForEIDToDocuments :: MonadDB m => Migration m
+addUGIDForEIDToDocuments = Migration
+  { mgrTableName = tblName tableDocuments
+  , mgrFrom      = 54
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        "documents"
+        [ sqlAddColumn tblColumn { colName = "user_group_to_impersonate_for_eid"
+                                 , colType = BigIntT
+                                 }
+        , sqlAddValidFK (tblName tableDocuments)
+          $ (fkOnColumn "user_group_to_impersonate_for_eid" "user_groups" "id")
+        ]
+      runQuery_ . sqlCreateIndexSequentially "documents" $ indexOnColumn
+        "user_group_to_impersonate_for_eid"
+      runQuery_ $ sqlDropComposite $ "document_c1"
+      runQuery_ $ sqlCreateComposite $ CompositeType
+        { ctName    = "document_c1"
+        , ctColumns =
+          [ CompositeColumn { ccName = "id", ccType = BigIntT }
+          , CompositeColumn { ccName = "title", ccType = TextT }
+          , CompositeColumn { ccName = "signatory_links"
+                            , ccType = ArrayT $ CustomT "signatory_link_c1"
+                            }
+          , CompositeColumn { ccName = "main_files"
+                            , ccType = ArrayT $ CustomT "main_file_c1"
+                            }
+          , CompositeColumn { ccName = "status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "type", ccType = SmallIntT }
+          , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "days_to_sign", ccType = IntegerT }
+          , CompositeColumn { ccName = "days_to_remind", ccType = IntegerT }
+          , CompositeColumn { ccName = "timeout_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "expiration_date", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
+          , CompositeColumn { ccName = "invite_text", ccType = TextT }
+          , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+          , CompositeColumn { ccName = "show_header", ccType = BoolT }
+          , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
+          , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+          , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
+          , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+          , CompositeColumn { ccName = "is_receipt", ccType = BoolT }
+          , CompositeColumn { ccName = "lang", ccType = SmallIntT }
+          , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
+          , CompositeColumn { ccName = "tags"
+                            , ccType = ArrayT $ CustomT "document_tag_c1"
+                            }
+          , CompositeColumn { ccName = "author_attachments"
+                            , ccType = ArrayT $ CustomT "author_attachment_c1"
+                            }
+          , CompositeColumn { ccName = "api_v1_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "api_v2_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
+          , CompositeColumn { ccName = "object_version", ccType = BigIntT }
+          , CompositeColumn { ccName = "token", ccType = BigIntT }
+          , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
+          , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+          , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
+          , CompositeColumn { ccName = "template_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
+          , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
+          , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "user_group_to_impersonate_for_eid"
+                            , ccType = BigIntT
+                            }
           ]
         }
   }
