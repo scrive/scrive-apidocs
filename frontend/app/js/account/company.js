@@ -1,6 +1,5 @@
 var Backbone = require("backbone");
 
-
 var Company = exports.Company = Backbone.Model.extend({
   defaults : {
       companyid        : "",
@@ -35,7 +34,9 @@ var Company = exports.Company = Backbone.Model.extend({
       companysettingsisinherited: false,
       companyinheritedaddress: null,
       companyinheritedsettings: null,
-      companysessiontimeout: null
+      companysessiontimeout: null,
+      companyinternaltags: [],
+      companyexternaltags: []
   },
   initialize : function(args) {
     if (args.forAdmin && args.companyid != undefined)
@@ -151,6 +152,12 @@ var Company = exports.Company = Backbone.Model.extend({
   companyinheritedsettings: function(){
      return this.get("companyinheritedsettings");
   },
+  companyinternaltags: function(){
+     return this.get("companyinternaltags");
+  },
+  companyexternaltags: function(){
+     return this.get("companyexternaltags");
+  },
   ready : function() {
      return this.get("ready");
   },
@@ -189,6 +196,8 @@ var Company = exports.Company = Backbone.Model.extend({
       companysettingsisinherited: args.companyinheritedsettings && args.companysettingsisinherited,
       companyinheritedaddress: args.companyinheritedaddress,
       companyinheritedsettings: args.companyinheritedsettings,
+      companyinternaltags: args.companyinternaltags,
+      companyexternaltags: args.companyexternaltags,
       ready : true
     };
   }
