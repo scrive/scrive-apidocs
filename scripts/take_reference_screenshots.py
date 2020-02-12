@@ -2,6 +2,7 @@ import StringIO
 from datetime import datetime
 import contextlib
 import json
+import os
 import os.path as path
 import time
 import base64
@@ -16,16 +17,19 @@ from selenium.webdriver.support import ui as support_ui, expected_conditions
 
 
 URL = 'http://127.0.0.1:8000'
-CLIENT_CREDENTIALS_IDENTIFIER = '0c0a90660cb51341_1'
-CLIENT_CREDENTIALS_SECRET = 'b624b6bbe954994c'
-TOKEN_CREDENTIALS_IDENTIFIER = '832f8dcc79a3f189_1'
-TOKEN_CREDENTIALS_SECRET = 'beb38945a9d15413'
-
 
 class ScriveAPI(object):
 
-    def __init__(self):
+    def __init__(self,
+                 client_credentials_identifier,
+                 client_credentials_secret,
+                 token_credentials_identifier,
+                 token_credentials_secret):
         self.api_url = URL + '/api/v1/'
+        self.client_credentials_identifier = client_credentials_identifier
+        self.client_credentials_secret = client_credentials_secret
+        self.token_credentials_identifier = token_credentials_identifier
+        self.token_credentials_secret = token_credentials_secret
 
     def _make_request(self, api_call, method='POST',
                       url_elems=None, data=None, files=None):
@@ -37,10 +41,10 @@ class ScriveAPI(object):
 
         oauth_elems = \
             {'oauth_signature_method': '"PLAINTEXT"',
-             'oauth_consumer_key': '"%s"' % CLIENT_CREDENTIALS_IDENTIFIER,
-             'oauth_token': '"%s"' % TOKEN_CREDENTIALS_IDENTIFIER,
-             'oauth_signature': '"%s&%s"' % (CLIENT_CREDENTIALS_SECRET,
-                                             TOKEN_CREDENTIALS_SECRET)}
+             'oauth_consumer_key': '"%s"' % self.client_credentials_identifier,
+             'oauth_token': '"%s"' % self.token_credentials_identifier,
+             'oauth_signature': '"%s&%s"' % (self.client_credentials_secret,
+                                             self.token_credentials_secret)}
         oauth_string = ','.join([key + '=' + val
                                  for key, val in oauth_elems.items()])
 
@@ -180,7 +184,10 @@ def make_driver():
                             chrome_options=chrome_options)
 
 if __name__ == '__main__':
-    api = ScriveAPI()
+    api = ScriveAPI(client_credentials_identifier=os.environ['CLIENT_CREDENTIALS_IDENTIFIER'],
+                    client_credentials_secret=os.environ['CLIENT_CREDENTIALS_SECRET'],
+                    token_credentials_identifier=os.environ['TOKEN_CREDENTIALS_IDENTIFIER'],
+                    token_credentials_secret=os.environ['TOKEN_CREDENTIALS_SECRET'])
 
     # Creating author screenshots and screenshots for standard authorization
     doc_data = api.createfromfile('backend/test/pdfs/simple.pdf')
