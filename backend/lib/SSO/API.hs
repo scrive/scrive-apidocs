@@ -141,11 +141,14 @@ consumeAssertions = guardHttps $ do
             return user)
 
     createAccount :: Kontrakcja m => IDPConf -> SAMLPrincipal -> m User
-    createAccount idpconf p = (createUser (spEmail p)
+    createAccount idpconf p = do
+      cuctx <- getCreateUserContextFromContext
+      (createUser (spEmail p)
                       (spFirstname p               , spLastname p)
                       (icUserInitialGroupID idpconf, False)
                       LANG_EN
                       BySSO
+                      cuctx
             )
             >>= \case
                   Nothing   -> unexpectedError "User creation failed."

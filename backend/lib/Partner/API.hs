@@ -35,7 +35,7 @@ import Partner.JSON
 import Partner.Logging
 import Partner.Model
 import Routing
-import User.Action (createUser)
+import User.Action
 import User.Email (Email(..))
 import User.Model
 import UserGroup.Model
@@ -205,6 +205,7 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
       unless hasAcceptedTOS $ tosNotAcceptedErr
 
       -- API call actions
+      cuctx   <- getCreateUserContextFromContext
       newUser <- apiGuardJustM
         (serverError "The user could not be created")
         (createUser (userInfo ^. #email)
@@ -212,6 +213,7 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
                     (ugid                  , False)
                     lang
                     PartnerInvitation
+                    cuctx
         )
 
       let uid = newUser ^. #id

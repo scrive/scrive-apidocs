@@ -30,7 +30,7 @@ import Doc.DocInfo
 import Doc.DocMails
   ( sendClosedEmails, sendDocumentErrorEmail, sendDocumentTimeoutedEmail
   , sendForwardSigningMessages, sendInvitationEmails
-  , sendPartyProcessFinalizedNotification, sendRejectEmails
+  , sendPartyProcessFinalizedNotification, sendPortalInvite, sendRejectEmails
   )
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
@@ -53,6 +53,7 @@ import PdfToolsLambda.Conf
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
 import ThirdPartyStats.Planhat
+import User.Action
 import User.Email
 import User.Model
 import UserGroup.FreeDocumentTokens.Model
@@ -247,6 +248,7 @@ postDocumentPendingChange olddoc signatoryLink = do
                 $ do
                     theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject_ d
                     sendInvitationEmails False
+                    sendInbetweenPortalInvitations
               sendPartyProcessFinalizedNotification document signatoryLink
   where
     allPartiesSignedOrApproved =
@@ -377,12 +379,56 @@ saveDocumentForPortalSignatories = do
         (not . isAuthor) && (\sl -> signatorylinkdeliverymethod sl == PortalDelivery)
   mapM_ saveDocumentForSignatory $ filter portalSigFilter sigs
 
+sendInbetweenPortalInvitations
+  :: ( CryptoRNG m
+     , MonadThrow m
+     , MonadLog m
+     , TemplatesMonad m
+     , DocumentMonad m
+     , MailContextMonad m
+     , MonadBase IO m
+     )
+  => m ()
+sendInbetweenPortalInvitations = do
+  auser <- getDocAuthor =<< theDocument
+  case (auser) of
+    Nothing   -> return ()
+    Just user -> do
+      ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+      case ugwpSettings ugwp ^. #portalUrl of
+        Nothing        -> return ()
+        Just portalUrl -> do
+          sigs <- inbetweenPortalSignatories <$> theDocument
+          forM_ sigs $ \sig -> do
+            sendPortalInvite user portalUrl (Email $ getEmail sig) (getFullName sig)
+              =<< getCreateUserContextWithoutContext
+            saveDocumentForSignatory sig
+  where
+    inbetweenPortalSignatories d = filter
+      (\sl ->
+        (signatorylinkdeliverymethod sl == PortalDelivery) && (matchingSignOrder d sl)
+      )
+      (documentsignatorylinks d)
+    matchingSignOrder d sl =
+      let so = signatorysignorder sl
+      in  so > documentprevioussignorder d && so <= documentcurrentsignorder d
+
 {- |
     Saves the document for the given signatorylink.  It does this by checking to see
     if there is a user with a matching email, and if there is it hooks up the signatory
     link to that user.
 -}
-saveDocumentForSignatory :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m ()
+saveDocumentForSignatory
+  :: ( CryptoRNG m
+     , MonadThrow m
+     , MonadLog m
+     , TemplatesMonad m
+     , DocumentMonad m
+     , MailContextMonad m
+     , MonadBase IO m
+     )
+  => SignatoryLink
+  -> m ()
 saveDocumentForSignatory sl = do
   let sigemail = getEmail sl
   muser <- case (sigemail) of

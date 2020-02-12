@@ -224,11 +224,14 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
   accessControl roles acc internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
     Nothing -> do
       --create a new company user
-      newuser' <- guardJustM $ createUser (Email email)
-                                          (fstname      , sndname)
-                                          (targetGroupID, False)
-                                          (ctx ^. #lang)
-                                          CompanyInvitation
+      newuser' <-
+        guardJustM
+        $   createUser (Email email)
+                       (fstname      , sndname)
+                       (targetGroupID, False)
+                       (ctx ^. #lang)
+                       CompanyInvitation
+        =<< getCreateUserContextFromContext
       void $ dbUpdate $ LogHistoryUserInfoChanged
         (newuser' ^. #id)
         (ctx ^. #ipAddr)

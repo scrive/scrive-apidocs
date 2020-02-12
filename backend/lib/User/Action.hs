@@ -1,18 +1,22 @@
 module User.Action (
     handleActivate
   , createUser
+  , getCreateUserContextFromContext
+  , getCreateUserContextWithoutContext
+  , CreateUserContext
   ) where
 
 import Control.Conditional (unlessM, whenM)
 import Control.Monad.Catch
 import Crypto.RNG
 import Log
-import Text.StringTemplates.Templates
 
+import BrandedDomain.Model
 import DB
 import Doc.Model
 import Folder.Model
 import Happstack.Fields
+import IPAddress
 import Kontra
 import Log.Identifier
 import MinutesTime
@@ -103,16 +107,43 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
 
   return tosuser
 
+data CreateUserContext = CreateUserContext {
+      ipAddr :: IPAddress
+    , creationTime :: UTCTime
+    , creatingUser :: Maybe User
+    , brandedDomain :: BrandedDomain
+  }
+
+getCreateUserContextFromContext :: KontraMonad m => m CreateUserContext
+getCreateUserContextFromContext = do
+  ctx <- getContext
+  return $ CreateUserContext { ipAddr        = ctx ^. #ipAddr
+                             , creationTime  = ctx ^. #time
+                             , creatingUser  = contextUser ctx
+                             , brandedDomain = ctx ^. #brandedDomain
+                             }
+
+getCreateUserContextWithoutContext
+  :: (MonadDB m, MonadThrow m, MonadTime m, MonadLog m) => m CreateUserContext
+getCreateUserContextWithoutContext = do
+  now <- currentTime
+  bd  <- dbQuery $ GetMainBrandedDomain
+  return $ CreateUserContext { ipAddr        = noIP
+                             , creationTime  = now
+                             , creatingUser  = Nothing
+                             , brandedDomain = bd
+                             }
+
 createUser
-  :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m)
+  :: (CryptoRNG m, CryptoRNG m, MonadDB m, MonadThrow m)
   => Email
   -> (Text, Text)
   -> (UserGroupID, Bool)
   -> Lang
   -> SignupMethod
+  -> CreateUserContext
   -> m (Maybe User)
-createUser email names (ugid, iscompanyadmin) lang sm = do
-  ctx    <- getContext
+createUser email names (ugid, iscompanyadmin) lang sm ctx = do
   passwd <- randomPassword
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
@@ -127,12 +158,12 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
                                   (Just passwd)
                                   (ugid, view #id <$> mUserFolder, iscompanyadmin)
                                   lang
-                                  (ctx ^. #brandedDomain % #id)
+                                  ((brandedDomain ctx) ^. #id)
                                   sm
       whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
         (user ^. #id)
-        (ctx ^. #ipAddr)
-        (ctx ^. #time)
+        (ipAddr ctx)
+        (creationTime ctx)
         email
-        (view #id <$> contextUser ctx)
+        (view #id <$> (creatingUser ctx))
       return muser

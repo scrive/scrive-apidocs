@@ -79,6 +79,7 @@ import Kontra
 import Log.Identifier
 import MinutesTime
 import OAuth.Model
+import User.Action
 import User.Email (Email(..))
 import User.Model
 import UserGroup.Model
@@ -280,8 +281,9 @@ docApiV2StartWithPortal = api $ do
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
   where
     sendPortalInvites authorUser portalUrl docs = do
-      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs)
-        $ \(email, name) -> sendPortalInvite authorUser portalUrl email name
+      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs) $ \(email, name) ->
+        sendPortalInvite authorUser portalUrl email name
+          =<< getCreateUserContextFromContext
 
 docApiV2Prolong :: Kontrakcja m => DocumentID -> m Response
 docApiV2Prolong did = logDocument did . api $ do

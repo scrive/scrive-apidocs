@@ -494,6 +494,7 @@ apiCallSignup = api $ do
             (freeDocumentTokensFromValues freeDocumentsCount freeDocumentsValidity)
       dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) freeDocuments
       createUser (Email email) (firstname, lastname) (ug ^. #id, True) lang AccountRequest
+        =<< getCreateUserContextFromContext
   case muser' of
     -- return ambiguous response in both cases to prevent a security issue
     Nothing   -> runJSONGenT $ value "sent" True

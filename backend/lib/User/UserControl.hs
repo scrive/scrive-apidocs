@@ -263,7 +263,9 @@ createNewUserByAdmin
   :: Kontrakcja m => Text -> (Text, Text) -> (UserGroupID, Bool) -> Lang -> m (Maybe User)
 createNewUserByAdmin email names usergroupandrole lg = do
   ctx   <- getContext
-  muser <- createUser (Email email) names usergroupandrole lg ByAdmin
+  muser <-
+    createUser (Email email) names usergroupandrole lg ByAdmin
+      =<< getCreateUserContextFromContext
   case muser of
     Just user -> do
       let fullname = composeFullName names
