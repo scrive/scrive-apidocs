@@ -44,6 +44,13 @@ var fromTemplate = {
 </div>
 ####
 daveDocument=
+<script>
+  var fromTemplate = {
+    documentid: "$id$",
+    istemplate: $if(istemplate)$true$else$false$endif$
+  };
+</script>
+<script src="$cdnbaseurl$/compiled/all/dave-$versioncode$.js" crossorigin="anonymous"></script>
 <div class="mainContainer" >
   <div class="body-container">
 $daveBody:noescape()$
@@ -65,6 +72,7 @@ $elseif(couldBeResealed)$
 $endif$
 <BR/>
 </div>
+<div class="dave-transfer"></div>
 </div>
 </div>
 ####

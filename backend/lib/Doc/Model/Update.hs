@@ -83,6 +83,7 @@ module Doc.Model.Update
   , AddCustomEvidenceEvent(..)
   , PurgeTimeoutedSignatoryAccessTokens(..)
   , ExtendSignatoryAccessTokensForAccessBeforeClosing(..)
+  , TransferDocument(..)
   ) where
 
 import Control.Arrow (second)
@@ -2930,3 +2931,22 @@ instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where
       sqlWhereNotExists . sqlSelect "api_callback_result acr" $ do
         sqlResult "1"
         sqlWhereEq "acr.document_id" did
+
+data TransferDocument = TransferDocument DocumentID UserID
+instance MonadDB m
+  => DBUpdate m TransferDocument () where
+  update (TransferDocument did uid) = do
+    runQuery_ . sqlUpdate "signatory_links" $ do
+      sqlFrom "documents"
+      sqlWhereEq "documents.id" did
+      sqlWhereEq "type"         Template
+      sqlWhere "signatory_links.document_id = documents.id"
+      sqlWhere "signatory_links.id = documents.author_id" -- only authors
+      sqlSet "user_id" uid
+    runQuery_ . sqlUpdate "documents" $ do
+      sqlFrom "users"
+      sqlWhereEq "documents.id" did
+      sqlWhereEq "type"         Template
+      sqlWhereEq "users.id"     uid -- to restrict to proper home folder
+      sqlSetCmd "folder_id" "users.home_folder_id"
+      sqlSet "author_user_id" uid
