@@ -137,7 +137,7 @@ fieldDecoder : Decoder SignatoryField
 fieldDecoder =
     D.succeed SignatoryField
         |> DP.required "type" fieldTypeDecoder
-        |> DP.required "value" D.string
+        |> DP.optional "value" D.string ""
 
 
 fieldTypeDecoder : Decoder FieldType
