@@ -360,7 +360,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
                              END :: TEXT)) AS "Is billitem"
            , escape_for_csv(get_invoicing_aggregation_group(user_groups.id, 3):: TEXT) AS "Invoice group"
            , array_reverse( (SELECT * FROM get_billitem_path_array(user_groups.id)) ) AS "Bill path"
-           , user_groups.parent_group_path AS "Parent group path"
+           , array_reverse( user_groups.parent_group_path ) AS "Parent group path"
            , escape_for_csv(CASE user_group_invoicings.invoicing_type
                 WHEN 1 THEN 'none'
                 WHEN 2 THEN 'billitem'
