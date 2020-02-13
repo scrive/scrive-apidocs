@@ -337,7 +337,6 @@ addUserGroupHomeFolderID =
             runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "home_folder_id"
         }
 
-
 userGroupSettingsAddRequireBPIDForNewDocument :: MonadDB m => Migration m
 userGroupSettingsAddRequireBPIDForNewDocument = Migration
   { mgrTableName = tblName tableUserGroupSettings

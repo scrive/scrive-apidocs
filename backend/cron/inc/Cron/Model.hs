@@ -41,6 +41,7 @@ import ThirdPartyStats.Core
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
+import UserGroup.Model
 import Utils.List
 import qualified CronEnv
 
@@ -70,6 +71,7 @@ data JobType
   | CronStats
   | TimeoutedEIDTransactionsPurge
   | PopulateDocumentAuthorDeleted
+  | UserGroupGarbageCollection
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, Text)]
@@ -101,6 +103,7 @@ jobTypeMapper = map (identity &&& jobTypeToText) [minBound .. maxBound]
       CronStats                     -> "cron_stats"
       TimeoutedEIDTransactionsPurge -> "timeouted_eid_transactions_purge"
       PopulateDocumentAuthorDeleted -> "populate_document_author_deleted"
+      UserGroupGarbageCollection    -> "user_group_garbage_collection"
 
 instance PQFormat JobType where
   pqFormat = pqFormat @Text
@@ -342,6 +345,17 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
                           "(SELECT sl.deleted, sl.really_deleted, TRUE FROM signatory_links sl WHERE d.id = sl.document_id AND d.author_id = sl.id)"
                         sqlWhereIn "d.id" dids
                       loop
+          UserGroupGarbageCollection -> do
+            runDB $ do
+              let batchLimit = 1000
+              ugsForDeletion <- dbQuery $ FindOldUserGroups batchLimit
+              let numMatches = length ugsForDeletion
+              forM_ ugsForDeletion $ \ug -> dbUpdate . UserGroupDelete $ ug ^. #id
+              logInfo "Marked old User Groups as deleted"
+                $ object ["deleted" .= numMatches]
+              if numMatches < batchLimit
+                then RerunAt . nextDayAtHour 5 <$> currentTime
+                else return . RerunAfter $ iminutes 5
 
         endTime <- currentTime
         logInfo "Job processed successfully" $ object

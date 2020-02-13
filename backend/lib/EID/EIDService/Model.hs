@@ -78,10 +78,10 @@ getEIDServiceTransactionInternal mSessionId slid eidAuthKind = do
 
 data PurgeTimeoutedEIDTransactions = PurgeTimeoutedEIDTransactions
 instance (MonadDB m, MonadThrow m, MonadTime m)
-  => DBUpdate m PurgeTimeoutedEIDTransactions () where
+  => DBUpdate m PurgeTimeoutedEIDTransactions Int where
   update (PurgeTimeoutedEIDTransactions) = do
     ct <- currentTime
-    runSQL_ $ "DELETE FROM eid_service_transactions WHERE deadline <" <?> ct
+    runSQL $ "DELETE FROM eid_service_transactions WHERE deadline <" <?> ct
 
 fetchEIDServiceTransaction
   :: ( EIDServiceTransactionID
