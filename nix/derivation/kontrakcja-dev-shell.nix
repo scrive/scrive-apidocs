@@ -41,6 +41,7 @@ haskellPackages.shellFor {
       elm2nix
       scrivepdftools
       haskellPackages.alex
+      haskellPackages.ghcid
       haskellPackages.happy
       haskellPackages.brittany
       haskellPackages.cabal-install
