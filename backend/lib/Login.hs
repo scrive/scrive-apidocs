@@ -193,12 +193,18 @@ handleLogout :: Kontrakcja m => m Response
 handleLogout = do
   logUserToContext Nothing
   logPadUserToContext Nothing
+  -- Excessive stopSessionCookie here will clean all session related cookies,
+  -- even if they hold broken values
+  stopSessionCookie
   (sendRedirect . LinkExternal) =<< getHttpHostpart
 
 handleLogoutAJAX :: Kontrakcja m => m JSValue
 handleLogoutAJAX = do
   logUserToContext Nothing
   logPadUserToContext Nothing
+  -- Excessive stopSessionCookie here will clean all session related cookies,
+  -- even if they hold broken values
+  stopSessionCookie
   J.runJSONGenT $ J.value "success" True
 
 handleLoginWithRedirectGet :: Kontrakcja m => m InternalKontraResponse
