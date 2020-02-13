@@ -23,7 +23,9 @@ Resources:
                     bucket: lambda
                     access_key: k
                     secret_key: s
-                    fakes3_host: 127.0.0.1
+                    # modify this to your docker host IP if AWS SAM
+                    # fails to access fake S3.
+                    fakes3_host: 172.17.0.1
                     fakes3_port: 4568
             Events:
                 Seal:
