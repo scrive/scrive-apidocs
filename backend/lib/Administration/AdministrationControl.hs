@@ -25,7 +25,7 @@ import Data.Int (Int16, Int32)
 import Data.Time (diffUTCTime)
 import Data.Unjson
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
-import Happstack.StaticRouting (Route, choice, dir, remainingPath)
+import Happstack.StaticRouting (Route, choice, dir, remainingPath, param)
 import Log
 import Text.JSON
 import Text.JSON.Gen hiding (object)
@@ -46,7 +46,7 @@ import qualified Text.StringTemplates.Fields as F
 import Administration.AdministrationView
 import API.V2.Errors
 import API.V2.Parameters
-import AppView (renderFromBody, simpleHtmlResponse)
+import AppView (entryPointFields, renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import DataRetentionPolicy.Guards
@@ -184,6 +184,7 @@ daveRoutes =
     $ choice
     $ [ dir "document" $ hGet $ toK1 $ daveDocument
       , dir "document" $ hGet $ toK2 $ daveSignatoryLink
+      , dir "document" $ param $ dir "transfer" $ hPost $ toK1 $ handleTransferDocument
       , dir "user" $ hGet $ toK1 $ daveUser
       , dir "userhistory" $ hGet $ toK1 $ daveUserHistory
       , dir "usergroup" $ hGet $ toK1 $ daveUserGroup
@@ -779,6 +780,7 @@ daveDocument documentid = onlyAdmin $ do
     -- but I could not come up with a better one than this
     --  -Eric
   location <- rqUri <$> askRq
+  ctx      <- getContext
   logInfo "Logging location" $ object ["location" .= location]
   if "/" `isSuffixOf` location
     then do
@@ -800,6 +802,8 @@ daveDocument documentid = onlyAdmin $ do
         F.value "id" $ show documentid
         F.value "couldBeResealed" $ everybodySignedAndStatusIn [Closed, DocumentError]
         F.value "couldBeClosed" $ everybodySignedAndStatusIn [DocumentError, Pending]
+        F.value "istemplate" $ documenttype document == Template
+        entryPointFields ctx
       return $ Right r
     else return $ Left $ LinkDaveDocument documentid
 
@@ -1099,3 +1103,11 @@ createBrandedDomain = do
   bdID <- dbUpdate $ NewBrandedDomain
   runJSONGenT $ do
     value "id" (show bdID)
+
+handleTransferDocument :: Kontrakcja m => DocumentID -> m ()
+handleTransferDocument did = onlySalesOrAdmin $ do
+  newuid <- guardJustM $ readField "userid"
+  doc    <- dbQuery $ GetDocumentByDocumentID did
+  if (documenttype doc == Template)
+    then dbUpdate $ TransferDocument did newuid
+    else internalError
