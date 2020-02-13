@@ -180,7 +180,7 @@ def make_driver():
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1268,899')
-    return webdriver.Chrome(executable_path='/usr/bin/chromedriver',
+    return webdriver.Chrome(executable_path='/usr/local/bin/chromedriver',
                             chrome_options=chrome_options)
 
 if __name__ == '__main__':
