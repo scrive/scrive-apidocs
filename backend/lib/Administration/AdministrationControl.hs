@@ -25,7 +25,7 @@ import Data.Int (Int16, Int32)
 import Data.Time (diffUTCTime)
 import Data.Unjson
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
-import Happstack.StaticRouting (Route, choice, dir, remainingPath, param)
+import Happstack.StaticRouting (Route, choice, dir, param, remainingPath)
 import Log
 import Text.JSON
 import Text.JSON.Gen hiding (object)
