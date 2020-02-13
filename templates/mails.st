@@ -818,6 +818,20 @@ mailRequestChangeEmailP=
   <br/>
   $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailRequestChangeEmailButton())$
 ####
+mailEmailChangeRequestedNotification=
+  $_mailEmailChangeRequestedNotificationTitle()$
+  $nicemail(
+    mailheader=_mailEmailChangeRequestedNotificationTitle();
+    mailp1=mailEmailChangeRequestedNotificationP()
+  )$
+####
+mailEmailChangeRequestedNotificationP=
+  $if(requestedbyadmin)$
+    $_mailEmailChangeRequestedByAdminNotificationExplanation()$
+  $else$
+    $_mailEmailChangeRequestedNotificationExplanation()$
+  $endif$
+####
 ####   UTILS
 ####
 legalparagraph=

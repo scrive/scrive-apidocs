@@ -9,6 +9,7 @@ module User.UserView (
     mailNewAccountCreatedByAdmin,
     resetPasswordMail,
     mailEmailChangeRequest,
+    mailEmailChangeRequestedNotification,
 
     -- flash messages
     flashMessageLoginRedirect,
@@ -119,6 +120,25 @@ mailEmailChangeRequest ctx requestingUser changedUser newemail link = do
         F.value "ctxhostpart" $ ctx ^. #brandedDomain % #url
         F.value "link" $ show link
         F.value "requestedby" $ getSmartName <$> requestingUser
+        brandingMailFields theme
+
+mailEmailChangeRequestedNotification
+  :: (TemplatesMonad m, MonadDB m, MonadThrow m)
+  => Context
+  -> Bool
+  -> User
+  -> Email
+  -> m Mail
+mailEmailChangeRequestedNotification ctx requestedByAdmin changedUser newemail = do
+  theme <- dbQuery $ GetTheme $ ctx ^. #brandedDomain % #mailTheme
+  kontramail (ctx ^. #mailNoreplyAddress)
+             (ctx ^. #brandedDomain)
+             theme
+             "mailEmailChangeRequestedNotification"
+    $ do
+        F.value "fullname" $ getFullName changedUser
+        F.value "newemail" $ unEmail newemail
+        F.value "requestedbyadmin" $ requestedByAdmin
         brandingMailFields theme
 
 -------------------------------------------------------------------------------

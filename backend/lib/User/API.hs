@@ -441,11 +441,21 @@ apiCallChangeEmail = api $ do
           Ok <$> (runJSONGenT $ value "send" False)
         Nothing -> do
           changeemaillink <- newEmailChangeRequestLink (user ^. #id) newemail
-          mail <- mailEmailChangeRequest ctx Nothing user newemail changeemaillink
+          mailRequest <- mailEmailChangeRequest ctx Nothing user newemail changeemaillink
           scheduleEmailSendout
-            (mail
+            (mailRequest
               { to = [ MailAddress { fullname = getFullName user
                                    , email    = unEmail newemail
+                                   }
+                     ]
+              }
+            )
+          let oldemail = user ^. #info ^. #email
+          mailNotification <- mailEmailChangeRequestedNotification ctx False user newemail
+          scheduleEmailSendout
+            (mailNotification
+              { to = [ MailAddress { fullname = getFullName user
+                                   , email    = unEmail oldemail
                                    }
                      ]
               }
@@ -863,6 +873,19 @@ apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
             (mail
               { to = [ MailAddress { fullname = getFullName affectedUser
                                    , email    = unEmail newemail
+                                   }
+                     ]
+              }
+            )
+          let oldemail = affectedUser ^. #info ^. #email
+          mailNotification <- mailEmailChangeRequestedNotification ctx
+                                                                   True
+                                                                   affectedUser
+                                                                   newemail
+          scheduleEmailSendout
+            (mailNotification
+              { to = [ MailAddress { fullname = getFullName affectedUser
+                                   , email    = unEmail oldemail
                                    }
                      ]
               }

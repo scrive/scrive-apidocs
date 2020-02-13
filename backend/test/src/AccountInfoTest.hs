@@ -78,7 +78,7 @@ testChangeEmailAddress = do
   assertEqual "Action email is correct" (Email "jim@bob.com") ecrNewEmail
 
   emails <- dbQuery GetEmailsForTest
-  assertEqual "An email was sent" 1 (length emails)
+  assertEqual "Emails were sent" 2 (length emails)
 
   req2          <- mkRequest POST [("password", inText "abc123")]
   (res2, _ctx2) <- runTestKontra req2 ctx1 $ handlePostChangeEmail ecrUserID ecrToken
