@@ -1,7 +1,8 @@
-{ nixpkgs ? import <nixpkgs> {}
+{ nixpkgs ? <nixpkgs>
+, config ? {}
 }:
 
-with nixpkgs;
+with (import nixpkgs config);
 
 let
   mkDerivation =
@@ -49,3 +50,4 @@ in mkDerivation {
   srcdir = "./src";
   outputJavaScript = false;
 }
+

@@ -1,6 +1,7 @@
 {
   nixpkgs
 , inHaskellPackages
+, quickBuild ? true
 }:
 let
   inherit (nixpkgs) pkgs;
@@ -34,7 +35,33 @@ let
 
   haskellLib = pkgs.haskell.lib;
 
-  haskellPackages = inHaskellPackages.override (old: {
+  # disable optimizations and tests for quick build
+  inHaskellPackages2 = if quickBuild
+    then inHaskellPackages.override (old: {
+      overrides = pkgs.lib.composeExtensions
+        (old.overrides or (_: _: {}))
+        (self: super:
+          let
+              toPackage = name: val:
+                if builtins.typeOf val == "set" &&
+                    builtins.hasAttr "doCheck" val &&
+                    name != "ghc"
+                then
+                  haskellLib.dontHaddock (
+                    haskellLib.dontCheck (
+                      haskellLib.disableOptimization (
+                        val
+                  ) ) )
+                else
+                  val
+              ;
+          in
+            pkgs.lib.mapAttrs toPackage super
+        );
+      })
+    else inHaskellPackages;
+
+  haskellPackages = inHaskellPackages2.override (old: {
     # Use composeExtensions to prevent Nix from obscurely
     # drop any previous overrides
     overrides = pkgs.lib.composeExtensions
@@ -47,7 +74,7 @@ let
             callGitPackage super
             "hpqtypes"
             "ssh://git@github.com/scrive/hpqtypes.git"
-            "be71b0c49740018748df482c9fc3f1a17b5e1655"
+            "c32fbe1052706815fc1b598c408c525226f4a963"
           )
         ;
 
@@ -70,7 +97,7 @@ let
 
         fields-json = callGitPackage super
           "fields-json"
-          "git@github.com:scrive/fields-json.git"
+          "ssh://git@github.com/scrive/fields-json.git"
           "c6d850b24e7d58dd24d95e8676d12ce35155dd4d"
         ;
 
@@ -102,6 +129,12 @@ let
         Cabal = super.callHackage
             "Cabal"
             "2.4.1.0"
+            {}
+        ;
+
+        happstack-server = super.callHackage
+            "happstack-server"
+            "7.5.4"
             {}
         ;
 

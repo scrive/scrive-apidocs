@@ -1,7 +1,7 @@
 {
   nixpkgs ? import ./nixpkgs.nix {}
 , workspaceRoot ? builtins.toPath(../..)
-, localeLang ? "C.UTF-8"
+, localeLang ? "en_US.UTF-8"
 }:
 let
   ghcVersion = "ghc844";
@@ -17,10 +17,8 @@ let
         # with 8.4.4's base version, so we have to override with older version
         base-noprelude = super.callHackage "base-noprelude" "4.11.1.0" {};
 
-        # Diff tests compilation failed when building on GHC 8.4.
-        # Remove this when it is fixed.
-        Diff = pkgs.haskell.lib.dontCheck
-          (super.callHackage "Diff" "0.3.4" {});
+        neat-interpolation =
+          super.callHackage "neat-interpolation" "0.3.2.5" {};
       });
     });
 in

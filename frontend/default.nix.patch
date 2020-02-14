@@ -1,0 +1,16 @@
+Patch the generated default.nix file by node2nix to add
+phantomjs into the Nix environment. Otherwise the phantomjs
+npm package will try to download the phantomjs binary from
+the Internet, which will fail in a Nix sandbox.
+--- default.nix	2020-02-12 13:15:30.413216483 +0000
++++ default.nix.original	2020-02-12 13:17:26.797629816 +0000
+@@ -14,4 +14,7 @@
+ import ./node-packages.nix {
+   inherit (pkgs) fetchurl fetchgit;
+   inherit nodeEnv;
+-}
+\ No newline at end of file
++  globalBuildInputs = [
++    pkgs.phantomjs2
++  ];
++}

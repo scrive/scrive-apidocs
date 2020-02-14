@@ -1,7 +1,7 @@
 {
   nixpkgs
 , haskellPackages
-, localeLang ? "C.UTF-8"
+, localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
@@ -11,6 +11,8 @@ let
 
   ghc = haskellPackages.ghcWithPackages
     (pkg: []);
+
+  elm2nix = import ./elm2nix.nix { inherit nixpkgs; };
 in
 pkgs.mkShell {
   name = "kontrakcja-manual-shell";
@@ -22,13 +24,18 @@ pkgs.mkShell {
 
   buildInputs = [
     ghc
+    elm2nix
     haskellPackages.alex
     haskellPackages.happy
     haskellPackages.brittany
     haskellPackages.cabal-install
     pkgs.nodejs
     pkgs.nodePackages.less
+    pkgs.nodePackages.yarn
     pkgs.nodePackages.grunt-cli
+    pkgs.nodePackages.node2nix
+    pkgs.elmPackages.elm
+    pkgs.elmPackages.elm-format
     pkgs.jq
     pkgs.icu
     pkgs.curl
