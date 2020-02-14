@@ -237,4 +237,5 @@ kontraMigrations =
   , addAuthorDeletedFlags
   , addPopulateDocumentAuthorDeletedJob
   , addUGIDForEIDToDocuments
+  , brandedDomainChangeLightLogo
   ]
