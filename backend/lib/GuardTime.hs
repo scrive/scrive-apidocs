@@ -58,7 +58,7 @@ instance MonadTransControl GuardTimeConfT where
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
-instance {-# OVERLAPPING #-} Monad m => GuardTimeConfMonad (GuardTimeConfT m) where
+instance Monad m => GuardTimeConfMonad (GuardTimeConfT m) where
   getGuardTimeConf = GuardTimeConfT ask
 
 runGuardTimeConfT :: GuardTimeConf -> GuardTimeConfT m a -> m a

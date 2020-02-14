@@ -31,8 +31,8 @@ class MonadDB m => DocumentMonad m where
   -- database, given the document's ID.
   updateDocumentWithID :: (DocumentID -> m a) -> m a
 
--- | Generic, overlapping instance.
-instance (
+-- | Generic, overlappable instance.
+instance {-# OVERLAPPABLE #-} (
     DocumentMonad m
   , MonadDB (t m)
   , MonadTrans t
