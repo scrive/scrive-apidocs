@@ -1,0 +1,13 @@
+diff --git a/list-tries.cabal b/list-tries.cabal
+index 064892a..18b0eb7 100644
+--- a/list-tries.cabal
++++ b/list-tries.cabal
+@@ -46,7 +46,7 @@ source-repository head
+   location: https://github.com/Deewiant/list-tries
+ 
+ Library
+-   Build-Depends: base       >= 4.3  && < 4.13
++   Build-Depends: base       >= 4.11  && < 4.14
+                 , containers >= 0.4  && < 0.7
+                 , dlist      >= 0.4  && < 0.9
+                 , binary     >= 0.5  && < 0.11

@@ -1,4 +1,4 @@
 builtins.fetchGit {
   url = "https://github.com/NixOS/nixpkgs.git";
-  rev = "7c72f165c303944c092665d6338910503e8e9994";
+  rev = "1de505db113712342af1de2a9bc16a914c37ea2d";
 }

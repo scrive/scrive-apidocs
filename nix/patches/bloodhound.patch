@@ -1,0 +1,79 @@
+diff --git a/bloodhound.cabal b/bloodhound.cabal
+index 6889f23..c6fee14 100644
+--- a/bloodhound.cabal
++++ b/bloodhound.cabal
+@@ -67,18 +67,18 @@ library
+                        aeson            >= 0.11.1,
+                        blaze-builder,
+                        bytestring       >= 0.10.0  && <0.11,
+-                       containers       >= 0.5.0.0 && <0.6,
++                       containers       >= 0.5.0.0 && <0.7,
+                        exceptions,
+                        hashable,
+-                       http-client      >= 0.4.30  && <0.6,
++                       http-client      >= 0.4.30  && <0.7,
+                        http-types       >= 0.8     && <0.13,
+                        mtl              >= 1.0     && <2.3,
+                        network-uri      >= 2.6     && <2.7,
+                        scientific       >= 0.3.0.0 && <0.4.0.0,
+-                       semigroups       >= 0.15    && <0.19,
++                       semigroups       >= 0.15    && <0.20,
+                        semver,
+                        text             >= 0.11    && <1.3,
+-                       time             >= 1.4     && <1.9,
++                       time             >= 1.4     && <2.0,
+                        transformers     >= 0.2     && <0.6,
+                        unordered-containers,
+                        vector           >= 0.10.9  && <0.13
+diff --git a/src/Database/V1/Bloodhound/Internal/Client.hs b/src/Database/V1/Bloodhound/Internal/Client.hs
+index 4121de0..0540718 100644
+--- a/src/Database/V1/Bloodhound/Internal/Client.hs
++++ b/src/Database/V1/Bloodhound/Internal/Client.hs
+@@ -1552,7 +1552,7 @@ instance ToJSON Interval where
+   toJSON Second = "second"
+   toJSON (FractionalInterval fraction interval) = toJSON $ show fraction ++ show interval
+ 
+-parseStringInterval :: (Monad m) => String -> m NominalDiffTime
++parseStringInterval :: (Monad m, MonadFail m) => String -> m NominalDiffTime
+ parseStringInterval s = case span isNumber s of
+   ("", _) -> fail "Invalid interval"
+   (nS, unitS) -> case (readMay nS, readMay unitS) of
+diff --git a/src/Database/V1/Bloodhound/Internal/Query.hs b/src/Database/V1/Bloodhound/Internal/Query.hs
+index 2e22695..debb674 100644
+--- a/src/Database/V1/Bloodhound/Internal/Query.hs
++++ b/src/Database/V1/Bloodhound/Internal/Query.hs
+@@ -1468,7 +1468,7 @@ instance FromJSON ZeroTermsQuery where
+           parse "all"  = pure ZeroTermsAll
+           parse q      = fail ("Unexpected ZeroTermsQuery: " <> show q)
+ 
+-fieldTagged :: Monad m => (FieldName -> Object -> m a) -> Object -> m a
++fieldTagged :: (Monad m, MonadFail m) => (FieldName -> Object -> m a) -> Object -> m a
+ fieldTagged f o = case HM.toList o of
+                     [(k, Object o')] -> f (FieldName k) o'
+                     _ -> fail "Expected object with 1 field-named key"
+diff --git a/src/Database/V5/Bloodhound/Internal/Client.hs b/src/Database/V5/Bloodhound/Internal/Client.hs
+index 883e1ae..73ba9f4 100644
+--- a/src/Database/V5/Bloodhound/Internal/Client.hs
++++ b/src/Database/V5/Bloodhound/Internal/Client.hs
+@@ -2331,7 +2331,7 @@ instance ToJSON Interval where
+   toJSON Minute  = "minute"
+   toJSON Second  = "second"
+ 
+-parseStringInterval :: (Monad m) => String -> m NominalDiffTime
++parseStringInterval :: (Monad m, MonadFail m) => String -> m NominalDiffTime
+ parseStringInterval s = case span isNumber s of
+   ("", _) -> fail "Invalid interval"
+   (nS, unitS) -> case (readMay nS, readMay unitS) of
+diff --git a/src/Database/V5/Bloodhound/Internal/Query.hs b/src/Database/V5/Bloodhound/Internal/Query.hs
+index 8ebaf2d..8429a72 100644
+--- a/src/Database/V5/Bloodhound/Internal/Query.hs
++++ b/src/Database/V5/Bloodhound/Internal/Query.hs
+@@ -1617,7 +1617,7 @@ functionScoreFunctionsPair (FunctionScoreSingle fn)
+ functionScoreFunctionsPair (FunctionScoreMultiple componentFns) =
+   ("functions", toJSON componentFns)
+ 
+-fieldTagged :: Monad m => (FieldName -> Object -> m a) -> Object -> m a
++fieldTagged :: (Monad m, MonadFail m) => (FieldName -> Object -> m a) -> Object -> m a
+ fieldTagged f o = case HM.toList o of
+                     [(k, Object o')] -> f (FieldName k) o'
+                     _ -> fail "Expected object with 1 field-named key"

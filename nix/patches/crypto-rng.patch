@@ -1,0 +1,18 @@
+diff --git a/src/Crypto/RNG.hs b/src/Crypto/RNG.hs
+index 705a85b..825dabc 100644
+--- a/src/Crypto/RNG.hs
++++ b/src/Crypto/RNG.hs
+@@ -81,8 +81,11 @@ randomBytesIO :: ByteLength -- ^ number of bytes to generate
+               -> IO ByteString
+ randomBytesIO n (CryptoRNGState gv) = do
+   liftIO $ modifyMVar gv $ \g -> do
+-    (bs, g') <- either (fail "Crypto.GlobalRandom.genBytes") return $
+-                genBytes n g
++    (bs, g') <- case genBytes n g of
++      Left _ ->
++        fail "Crypto.GlobalRandom.genBytes"
++      Right res ->
++        return res
+     return (g', bs)
+ 
+ -- | Generate a cryptographically secure random number in given,

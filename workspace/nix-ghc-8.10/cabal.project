@@ -1,0 +1,9 @@
+packages: ../../ ../../Shake
+write-ghc-environment-files: never
+
+package kontrakcja
+    ghc-options: -fprint-potential-instances -j4 +RTS -A32m -RTS
+
+repository hackage.scrive.com
+    url: http://hackage.scrive.com
+    secure: False
