@@ -17,6 +17,7 @@ import TestKontra
 import User.Email
 import User.Model
 import UserGroup.Model
+import UserGroup.Types
 
 accessControlApiTests :: TestEnvSt -> Test
 accessControlApiTests env = testGroup
@@ -355,14 +356,34 @@ testNonAdminUserCannotAddRoleWithoutPermissions = do
 
 testNonAdminUserCanAddRoleWithPermissions :: TestEnv ()
 testNonAdminUserCanAddRoleWithPermissions = do
-  muser <- addNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  uid2  <- view #id . fromJust <$> addNewUser "Arnold" "Rimmer" "arnold.rimmer@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  void . dbUpdate . AccessControlCreateForUser (fromJust muser ^. #id) $ UserAR uid2
-  let jsonString = roleJSON (fromJust muser ^. #id) uid2
-  req <- mkRequest POST [("role", inText $ T.pack jsonString)]
+  user1 <- fromJust <$> addNewUser "Dave" "Lister" "dave.lister@scrive.com"
+  user2 <- fromJust <$> addNewUser "Arnold" "Rimmer" "arnold.rimmer@scrive.com"
+  ctx   <- set #maybeUser (Just user1) <$> mkContext defaultLang
+  void . dbUpdate . AccessControlCreateForUser (user1 ^. #id) $ UserAdminAR
+    (user2 ^. #groupID)
+  let jsonText = roleUserAdminJSON (user2 ^. #id) (user2 ^. #groupID)
+  req <- mkRequest POST [("role", inText jsonText)]
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can add role with permissions (trg)" 200 $ rsCode res
+
+roleUserAdminJSON :: UserID -> UserGroupID -> Text
+roleUserAdminJSON src_uid trg_ugid =
+  "\
+  \{\
+  \    \"role_type\": \"user_admin\",\
+  \    \"source\": {\
+  \        \"type\": \"user\",\
+  \        \"id\": \""
+    <> showt src_uid
+    <> "\"\
+  \    },\
+  \    \"target\": {\
+  \        \"type\": \"user_group\",\
+  \        \"id\": \""
+    <> showt trg_ugid
+    <> "\"\
+  \    }\
+  \}"
 
 testAdminUserCanAddRoleWithoutPermissions :: TestEnv ()
 testAdminUserCanAddRoleWithoutPermissions = do

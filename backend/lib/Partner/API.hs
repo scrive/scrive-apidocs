@@ -68,7 +68,7 @@ partnerApiCallV1CompanyCreate :: Kontrakcja m => Int64 -> m Response
 partnerApiCallV1CompanyCreate ptOrUgID = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartner mPartnerID partnerUsrGrpID . api $ do
-    let acc = [mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)]
+    let acc = [canDo CreateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
       ugwp_partner <-
@@ -107,9 +107,7 @@ partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
     -- to update the specified partner _and_ the user group. In the future
     -- this should be unnecessary.
     let acc =
-          [ mkAccPolicyItem (UpdateA, UserGroupR, ugid)
-          , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID)
-          ]
+          [canDo UpdateA $ UserGroupR ugid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
       dbQuery (UserGroupGetWithParents ugid) >>= \case
@@ -144,10 +142,7 @@ partnerApiCallV1CompanyGet ptOrUgID ugid = do
     -- for backwards compatibility we check _both_ that the user is allowed
     -- to update the specified partner _and_ the user group. In the future
     -- this should be unnecessary.
-    let acc =
-          [ mkAccPolicyItem (ReadA, UserGroupR, ugid)
-          , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
-          ]
+    let acc = [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
         -- see @note for `partnerApiCallV1CompaniesGet`
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
@@ -161,8 +156,8 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartner mPartnerID partnerUsrGrpID . api $ do
     let acc =
-          [ mkAccPolicyItem (ReadA, UserGroupR, partnerUsrGrpID)
-          , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
+          [ canDo ReadA $ UserGroupR partnerUsrGrpID
+          , canDo CreateA $ UserGroupR partnerUsrGrpID
           ]
     -- @note The last entry is just a trick to keep company admins from
     -- reading the companies - as of now we only want partner admins to be
@@ -185,9 +180,7 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
     let acc =
-          [ mkAccPolicyItem (CreateA, UserR, ugid)
-          , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
-          ]
+          [canDo CreateA $ UserInGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
               {- This last one is blocking for all but partner admins.             -}
               {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
               {- Maybe we don't need to have the _exact_ same behaviour as before? -}
@@ -231,10 +224,7 @@ partnerApiCallV1UserGet :: Kontrakcja m => Int64 -> UserID -> m Response
 partnerApiCallV1UserGet ptOrUgID uid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
-    let acc =
-          [ mkAccPolicyItem (ReadA, UserR, uid)
-          , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
-          ]
+    let acc = [canDo ReadA $ UserR uid, canDo CreateA $ UserGroupR partnerUsrGrpID]
         -- see @note for `partnerApiCallV1CompaniesGet`
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser acc $ do
@@ -248,10 +238,7 @@ partnerApiCallV1CompanyUsersGet :: Kontrakcja m => Int64 -> UserGroupID -> m Res
 partnerApiCallV1CompanyUsersGet ptOrUgID ugid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
-    let acc =
-          [ mkAccPolicyItem (ReadA, UserGroupR, ugid)
-          , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
-          ]
+    let acc = [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
         -- see @note for `partnerApiCallV1CompaniesGet`
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
@@ -262,10 +249,7 @@ partnerApiCallV1UserUpdate :: Kontrakcja m => Int64 -> UserID -> m Response
 partnerApiCallV1UserUpdate ptOrUgID uid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
-    let acc =
-          [ mkAccPolicyItem (UpdateA, UserR, uid)
-          , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID)
-          ]
+    let acc = [canDo UpdateA $ UserR uid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
         -- see @note for `partnerApiCallV1CompaniesGet`
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser acc $ do
@@ -295,9 +279,9 @@ partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
     let acc =
-          [ mkAccPolicyItem (CreateA, UserPersonalTokenR, uid)
-          , mkAccPolicyItem (ReadA, UserPersonalTokenR, uid)
-          , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID)
+          [ canDo CreateA $ UserPersonalTokenR uid
+          , canDo ReadA $ UserPersonalTokenR uid
+          , canDo CreateA $ UserGroupR partnerUsrGrpID
           ]
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser acc $ do

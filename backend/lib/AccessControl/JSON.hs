@@ -139,7 +139,7 @@ accessRoleTargetToAllowedActions :: AccessRoleTarget -> AccessRoleAllowedActions
 accessRoleTargetToAllowedActions target =
   AccessRoleAllowedActions . groupActions $ hasPermissions target
   where
-    mkPair (Permission act res _) = (showt res, [showt act])
+    mkPair (Permission _ act res) = (showt res, [showt act])
     groupActions = sortAll . HM.toList . HM.fromListWith (++) . map mkPair
     sortAll      = sort . map (second sort)
 

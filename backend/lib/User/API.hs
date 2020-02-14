@@ -755,7 +755,7 @@ apiCallGetTokenForPersonalCredentials uid = V2.api $ do
   -- Guards
   void $ guardThatUserExists uid
   user <- V2.getAPIUserWithAPIPersonal
-  apiAccessControl user [mkAccPolicyItem (UpdateA, UserR, uid)] $ do
+  apiAccessControl user [canDo UpdateA $ UserR uid] $ do
     minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
     when (minutes < 1 || minutes > maxMinutes) invalidMinsParamError
     -- Create login token
@@ -788,7 +788,7 @@ apiCallCheckPassword = api $ do
 
 guardCanChangeUser :: Kontrakcja m => User -> User -> m ()
 guardCanChangeUser adminuser otheruser = do
-  let acc = mkAccPolicy [(UpdateA, UserR, otheruser ^. #id)]
+  let acc = [canDo UpdateA . UserR $ otheruser ^. #id]
   apiAccessControlOrIsAdmin adminuser acc $ return ()
 
 apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response

@@ -66,7 +66,7 @@ userGroupApiV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
   apiuser     <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (ReadA, UserGroupR, ugid)]
+  apiAccessControlOrIsAdmin apiuser [canDo ReadA $ UserGroupR ugid]
     -- Return response
     $   Ok
     <$> constructUserGroupResponse inheritable ugid
@@ -86,7 +86,7 @@ userGroupApiV2Create = api $ do
           -- _externalIDs = ....      -- TODO: Implement external_ids
     Just parent_ugid -> do
       -- Check user has permissions to create child UserGroup
-      let acc = mkAccPolicyItem (CreateA, UserGroupR, parent_ugid)
+      let acc = canDo CreateA $ UserGroupR parent_ugid
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser [acc] . dbUpdate $ UserGroupCreate ugIn
   -- Return response
@@ -111,18 +111,22 @@ userGroupApiV2Update ugid = api $ do
       then do
         -- The usergroup is being moved from one or another.
         -- Permissions are required for "from" and "to" UserGroups
-        let oldAcc = mkAccPolicyItem (UpdateA, UserGroupR, oldparentugid)
-            newAcc = mkAccPolicyItem (UpdateA, UserGroupR, newparentugid)
-            curAcc = mkAccPolicyItem (DeleteA, UserGroupR, ugOriginal ^. #id)
-        return [oldAcc, newAcc, curAcc]
+        return
+          [ canDo DeleteA . UserGroupR $ ugOriginal ^. #id
+          , canDo UpdateA $ UserGroupR oldparentugid
+          , canDo CreateA $ UserGroupR newparentugid
+          , canDo UpdateA $ UserGroupR newparentugid
+          ]
       else
            -- The usergroup isn't being moved, no special permissions needed
            return []
     (Nothing, Just newparentugid) -> do
       -- Root usergroup is being made subordinate to another UserGroup
-      let newAcc = mkAccPolicyItem (UpdateA, UserGroupR, newparentugid)
-          curAcc = mkAccPolicyItem (DeleteA, UserGroupR, ugOriginal ^. #id)
-      return [newAcc, curAcc]
+      return
+        [ canDo DeleteA . UserGroupR $ ugOriginal ^. #id
+        , canDo CreateA $ UserGroupR newparentugid
+        , canDo UpdateA $ UserGroupR newparentugid
+        ]
     (Just _, Nothing) -> do
       -- Only admin or sales can promote UserGroup to root
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
@@ -130,7 +134,7 @@ userGroupApiV2Update ugid = api $ do
     (Nothing, Nothing) ->
       -- Root usergroup is remaining root, no special privileges needed
       return []
-  let acc = mkAccPolicyItem (UpdateA, UserGroupR, ugid)
+  let acc = canDo UpdateA $ UserGroupR ugid
   apiuser <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser (acc : movementAccs) $ do
     dbUpdate $ UserGroupUpdate ugNew
@@ -141,7 +145,7 @@ userGroupApiV2Delete ugid = do
   apiuser <- getAPIUserWithAPIPersonal
   api
     -- Check user has permissions to delete UserGroup
-    . apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (DeleteA, UserGroupR, ugid)]
+    . apiAccessControlOrIsAdmin apiuser [canDo DeleteA $ UserGroupR ugid]
     $ do
         ug <- ugGetOrErrNotFound ugid
         let isRootUserGroup = isNothing . view #parentGroupID
@@ -165,7 +169,7 @@ userGroupApiContactDetailsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   apiuser     <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (ReadA, UserGroupR, ugid)]
+  apiAccessControlOrIsAdmin apiuser [canDo ReadA $ UserGroupR ugid]
     -- Return response
     $   Ok
     .   encodeUserGroupContactDetails inheritable
@@ -177,7 +181,7 @@ userGroupApiContactDetailsV2Update ugid = api $ do
   contactDetailsChanges <- apiV2ParameterObligatory
     $ ApiV2ParameterAeson "contact_details"
   apiuser <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
+  apiAccessControlOrIsAdmin apiuser [canDo UpdateA $ UserGroupR ugid] $ do
     ug <- ugGetOrErrNotFound ugid
     -- New address creation DOES NOT inherit, since people will want to start
     -- from a blank address.
@@ -195,7 +199,7 @@ userGroupApiContactDetailsV2Delete ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to update UserGroup
   apiuser     <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
+  apiAccessControlOrIsAdmin apiuser [canDo UpdateA $ UserGroupR ugid] $ do
     ug <- ugGetOrErrNotFound ugid
     when (isNothing $ ug ^. #parentGroupID) $ apiError $ requestFailed
       "A root usergroup must have an address object."
@@ -208,7 +212,7 @@ userGroupApiSettingsV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
   apiuser     <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (ReadA, UserGroupR, ugid)]
+  apiAccessControlOrIsAdmin apiuser [canDo ReadA $ UserGroupR ugid]
     $   Ok
     .   encodeUserGroupSettings inheritable
     <$> ugwpGetOrErrNotFound ugid
@@ -218,7 +222,7 @@ userGroupApiSettingsV2Update ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   settingsChanges <- apiV2ParameterObligatory $ ApiV2ParameterAeson "settings"
   apiuser <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
+  apiAccessControlOrIsAdmin apiuser [canDo UpdateA $ UserGroupR ugid] $ do
     ug     <- ugGetOrErrNotFound ugid
     -- New settings creation DOES inherit, since there are things that are
     -- not settable by the API which need to be preserved for children.
@@ -244,7 +248,7 @@ userGroupApiSettingsV2Delete ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to update UserGroup
   apiuser     <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (UpdateA, UserGroupR, ugid)] $ do
+  apiAccessControlOrIsAdmin apiuser [canDo UpdateA $ UserGroupR ugid] $ do
     ug <- ugGetOrErrNotFound ugid
     when (isNothing $ ug ^. #parentGroupID) $ apiError $ requestFailed
       "A root usergroup must have a settings object."
@@ -256,7 +260,7 @@ userGroupApiUsersV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiUsersV2Get ugid = api $ do
   -- Check user has permissions to view UserGroup
   apiuser <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $ do
+  apiAccessControlOrIsAdmin apiuser [canDo ReadA $ UserGroupR ugid] $ do
     users <- dbQuery (UserGroupGetUsers ugid)
     -- Return response
     Ok <$> return (arrayOf unjsonUser, users)

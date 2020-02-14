@@ -155,10 +155,8 @@ documentAccessModeByFolder user document roles =
     hasReadAccessForDocByFolder =
       maybe False hasReadAccessForFolder (documentfolderid document)
     hasReadAccessForFolder fid =
-      (accessControlPure roles [mkAccPolicyItem (ReadA, DocumentR, fid)])
-        || (accessControlPure roles
-                              [mkAccPolicyItem (ReadA, DocumentAfterPreparationR, fid)]
-           )
+      (accessControlPure roles [canDo ReadA $ DocumentInFolderR fid])
+        || (accessControlPure roles [canDo ReadA $ DocumentAfterPreparationR fid])
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
 documentAccessForSlid slid document = DocumentAccess

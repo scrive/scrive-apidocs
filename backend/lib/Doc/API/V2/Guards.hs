@@ -213,8 +213,7 @@ guardThatAttachmentDetailsAreConsistent ads = do
 
 guardFolderActionIsAllowed :: Kontrakcja m => User -> [(AccessAction, FolderID)] -> m ()
 guardFolderActionIsAllowed user acts_fids = do
-  apiAccessControl user
-                   [ mkAccPolicyItem (act, DocumentR, fid) | (act, fid) <- acts_fids ]
+  apiAccessControl user [ canDo act $ DocumentInFolderR fid | (act, fid) <- acts_fids ]
     $ return ()
 
 guardDocumentCreateInFolderIsAllowed :: Kontrakcja m => User -> FolderID -> m ()
@@ -238,7 +237,7 @@ guardDocumentMoveIsAllowed user mOldLocation mNewLocation = do
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-    let policy = mkAccPolicy [(ReadA, EidIdentityR, ugid)]
+    let policy = [canDo ReadA $ EidIdentityR ugid]
     apiAccessControl user policy $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()
 

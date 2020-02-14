@@ -43,7 +43,7 @@ accessControlAPIV2GetUserRoles :: Kontrakcja m => UserID -> m Response
 accessControlAPIV2GetUserRoles uid = api $ do
   -- Check user has permissions to view User
   apiuser <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (ReadA, UserR, uid)] $ do
+  apiAccessControlOrIsAdmin apiuser [canDo ReadA $ UserR uid] $ do
     -- Get roles for user
     dbQuery (GetUserByID uid) >>= \case
       Nothing ->
@@ -58,10 +58,9 @@ accessControlAPIV2Get roleId = api $ do
     Nothing   -> apiError insufficientPrivileges
     Just role -> do
       apiuser <- getAPIUserWithAPIPersonal
-      apiAccessControlOrIsAdmin apiuser (roleToAccessPolicyReq role ReadA)
-        $ return
-        . Ok
-        $ encodeAccessRole role
+      -- to read a role it is enough to ReadA its source
+      let acc = [canDoActionOnSource ReadA role]
+      apiAccessControlOrIsAdmin apiuser acc $ return . Ok $ encodeAccessRole role
 
 accessControlAPIV2Delete :: Kontrakcja m => AccessRoleID -> m Response
 accessControlAPIV2Delete roleId = api $ do
@@ -69,7 +68,9 @@ accessControlAPIV2Delete roleId = api $ do
     Nothing   -> apiError insufficientPrivileges
     Just role -> do
       apiuser <- getAPIUserWithAPIPersonal
-      apiAccessControlOrIsAdmin apiuser (roleToAccessPolicyReq role DeleteA) $ do
+      -- to delete a role one must UpdateA source and be able to grant the role
+      let acc = [canDoActionOnSource UpdateA role] ++ canGrant (accessRoleTarget role)
+      apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate $ AccessControlRemoveRole roleId
         return . Ok . J.runJSONGen $ do
           J.value "role_id" $ show roleId
@@ -79,7 +80,9 @@ accessControlAPIV2Add :: Kontrakcja m => m Response
 accessControlAPIV2Add = api $ do
   role    <- getApiRoleParameter
   apiuser <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser (roleToAccessPolicyReq role CreateA) $ do
+  -- to add a role one must UpdateA source and be able to grant the role
+  let acc = [canDoActionOnSource UpdateA role] ++ canGrant (accessRoleTarget role)
+  apiAccessControlOrIsAdmin apiuser acc $ do
     mrole <- case role of
       AccessRoleUser _ uid target -> dbUpdate $ AccessControlCreateForUser uid target
       AccessRoleUserGroup _ ugid target ->
@@ -92,27 +95,9 @@ accessControlAPIV2Add = api $ do
       Nothing    -> apiError $ serverError "Impossible happened (new role does not exist)"
       Just role' -> return . Ok $ encodeAccessRole role'
 
--- This helper function constructs a set of roles that you need in order to
--- view/alter some *other* role
-roleToAccessPolicyReq :: AccessRole -> AccessAction -> [AccessPolicyItem]
-roleToAccessPolicyReq role act =
-  -- if the source has user policy on a user group, this requirement will be
-  -- also be satisfied automatically
-  let mkAccPolicyUser uid = mkAccPolicyItem (act, UserPolicyR, uid)
-      mkAccPolicyUserGroup ugid = mkAccPolicyItem (act, UserGroupPolicyR, ugid)
-      mkAccPolicyFolder fid = mkAccPolicyItem (act, FolderPolicyR, fid)
-      sourceRoleReq = case role of
-        AccessRoleUser      _ uid  _       -> mkAccPolicyUser uid
-        AccessRoleUserGroup _ ugid _       -> mkAccPolicyUserGroup ugid
-        AccessRoleImplicitUser      uid  _ -> mkAccPolicyUser uid
-        AccessRoleImplicitUserGroup ugid _ -> mkAccPolicyUserGroup ugid
-      targetRoleReq = case accessRoleTarget role of
-        UserAR               uid  -> mkAccPolicyUser uid
-        UserGroupMemberAR    ugid -> mkAccPolicyUserGroup ugid
-        UserAdminAR          ugid -> mkAccPolicyUserGroup ugid
-        UserGroupAdminAR     ugid -> mkAccPolicyUserGroup ugid
-        FolderAdminAR        fid  -> mkAccPolicyFolder fid
-        FolderUserAR         fid  -> mkAccPolicyFolder fid
-        SharedTemplateUserAR fid  -> mkAccPolicyFolder fid
-        EidImpersonatorAR    ugid -> mkAccPolicyUserGroup ugid
-  in  [sourceRoleReq, targetRoleReq]
+canDoActionOnSource :: AccessAction -> AccessRole -> Permission
+canDoActionOnSource action role = case role of
+  AccessRoleUser      _ uid  _       -> canDo action $ UserR uid
+  AccessRoleUserGroup _ ugid _       -> canDo action $ UserGroupR ugid
+  AccessRoleImplicitUser      uid  _ -> canDo action $ UserR uid
+  AccessRoleImplicitUserGroup ugid _ -> canDo action $ UserGroupR ugid

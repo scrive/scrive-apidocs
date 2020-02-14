@@ -62,14 +62,14 @@ folderAPICreate = api $ do
       dbUpdate $ FolderCreate fdrIn
     Just parent_id -> do
       -- Check user has permissions to create child folder
-      let acc = [mkAccPolicyItem (CreateA, FolderR, parent_id)]
+      let acc = [canDo CreateA $ FolderR parent_id]
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc . dbUpdate $ FolderCreate fdrIn
   Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
-  let acc = mkAccPolicy [(ReadA, FolderR, fid)]
+  let acc = [canDo ReadA $ FolderR fid]
   user           <- getAPIUserWithAPIPersonal
   hasReadAccess  <- apiAccessControlCheck user acc
   isAdminOrSales <- checkAdminOrSales
@@ -106,18 +106,18 @@ folderAPIUpdate fid = api $ do
         then return []
         else case (mfromParentID, mtoParentID) of
           -- change parent
-          (Just fromParentID, Just toParentID) ->
-            return [(UpdateA, FolderR, toParentID), (UpdateA, FolderR, fromParentID)]
+          (Just fromParentID, Just toParentID) -> return
+            [canDo UpdateA $ FolderR toParentID, canDo UpdateA $ FolderR fromParentID]
           -- change from being child to root
           (Just _, Nothing) -> do
             -- Only admin or sales can promote Folder to root
             unlessM checkAdminOrSales $ apiError insufficientPrivileges
             return []
           -- change from being root to child
-          (Nothing, Just toParentID) -> return [(UpdateA, FolderR, toParentID)]
+          (Nothing, Just toParentID) -> return [canDo UpdateA $ FolderR toParentID]
           -- root is remaining root. no special privileges needed
           _ -> return []
-      let acc = mkAccPolicy $ [(UpdateA, FolderR, fid)] <> accParents
+      let acc = [canDo UpdateA $ FolderR fid] <> accParents
       apiuser <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
@@ -126,7 +126,7 @@ folderAPIUpdate fid = api $ do
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
   apiuser <- getAPIUserWithAPIPersonal
-  apiAccessControlOrIsAdmin apiuser [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
+  apiAccessControlOrIsAdmin apiuser [canDo DeleteA $ FolderR fid] $ do
     fdr <- fGetOrErrNotFound fid
     let isRootFolder = isNothing $ fdr ^. #parentID
     when isRootFolder
@@ -145,7 +145,7 @@ folderAPIDelete fid = api $ do
 folderAPIListDocs :: Kontrakcja m => FolderID -> m Response
 folderAPIListDocs fid = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
-  let acc = mkAccPolicy $ [(ReadA, FolderR, fid)]
+  let acc = [canDo ReadA $ FolderR fid]
   apiAccessControlOrIsAdmin user acc $ do
     offset   <- apiV2ParameterDefault 0 (ApiV2ParameterInt "offset")
     maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt "max")

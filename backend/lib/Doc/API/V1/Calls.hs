@@ -1984,7 +1984,7 @@ guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m 
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
     roles <- dbQuery . GetRoles $ user
-    let policy    = mkAccPolicy [(ReadA, EidIdentityR, ugid)]
+    let policy    = [canDo ReadA $ EidIdentityR ugid]
     let exception = throwM . SomeDBExtraException $ forbidden'
     accessControl roles policy exception $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()

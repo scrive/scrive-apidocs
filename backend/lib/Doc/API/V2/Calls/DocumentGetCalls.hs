@@ -104,34 +104,32 @@ docApiV2List = api $ do
       -- some user or user group property), hence `nubBy`
       userRoles <- nubBy (\x y -> accessRoleTarget x == accessRoleTarget y)
         <$> dbQuery (GetRolesIncludingInherited user $ ugwpUG ugwp)
-      let
-        allPerms = rolesToPermissions userRoles
-        extractValidRefs ls = catMaybes $ map extractResourceRef ls
-        hasReadOnResource r p = (p `hasAction` ReadA) && (p `hasResource` r)
-        readDocPerms            = filter (hasReadOnResource DocumentR) allPerms
-        readSharedTemplatePerms = filter
-          (hasReadOnResource SharedTemplateR || hasReadOnResource DocumentR)
-          allPerms
-        readStartedDocPerms = filter
-          (hasReadOnResource DocumentAfterPreparationR || hasReadOnResource DocumentR)
-          allPerms
-        full_read_fids = extractValidRefs readDocPerms
-        shared_fids    = extractValidRefs readSharedTemplatePerms
-        started_fids   = extractValidRefs readStartedDocPerms
+      let allPerms     = nub . concatMap hasPermissions $ map accessRoleTarget userRoles
+          fullReadFids = (\f -> mapMaybe f allPerms) $ \case
+            Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
+            _ -> Nothing
+          sharedFids = (\f -> mapMaybe f allPerms) $ \case
+            Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
+            Permission PermCanDo ReadA (SharedTemplateR fid) -> Just fid
+            _ -> Nothing
+          startedFids = (\f -> mapMaybe f allPerms) $ \case
+            Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
+            Permission PermCanDo ReadA (DocumentAfterPreparationR fid) -> Just fid
+            _ -> Nothing
       ((allDocsCount, allDocs), time) <- timed . dbQuery $ GetDocumentsWithSoftLimit
         (DocumentsVisibleToSigningPartyOrByFolders (user ^. #id)
-                                                   shared_fids
-                                                   started_fids
-                                                   full_read_fids
+                                                   sharedFids
+                                                   startedFids
+                                                   fullReadFids
         )
         documentFilters
         documentSorting
         (offset, 1000, maxcount)
       logInfo "Fetching for docApiV2List done using folders" $ object
         [ "query_time" .= time
-        , "folder_ids_shared" .= map show shared_fids
-        , "folder_ids_started" .= map show started_fids
-        , "folder_ids_full_read" .= map show full_read_fids
+        , "folder_ids_shared" .= map show sharedFids
+        , "folder_ids_started" .= map show startedFids
+        , "folder_ids_full_read" .= map show fullReadFids
         ]
       let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
       return $ Ok $ Response
@@ -288,7 +286,7 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     $ doc
   folderID <- apiGuardJust (serverError "Document is not in a Folder")
     $ documentfolderid doc
-  let acc = mkAccPolicy [(ReadA, DocumentR, folderID)]
+  let acc = [canDo ReadA $ DocumentInFolderR folderID]
   apiAccessControl user acc $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl

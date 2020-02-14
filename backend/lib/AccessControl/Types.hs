@@ -2,13 +2,8 @@
 module AccessControl.Types
   ( accessControl
   , accessControlPure
-  , extractResourceRef
   , toAccessRoleType
-  , hasAction
-  , hasResource
-  , rolesToPermissions
   , AccessAction(..)
-  , AccessPolicy
   , AccessResource(..)
   , AccessRole(..)
   , accessRoleTarget
@@ -25,21 +20,21 @@ module AccessControl.Types
   , UserNonExistent(..)
   , FolderNonExistent(..)
   , Permission(..)
-  , NeedsPermissions(..)
-  , AccessPolicyItem
-  , mkAccPolicy
-  , mkAccPolicyItem
+  , PermissionKind(..)
   , AccessRoleID
   , unsafeAccessRoleID
   , emptyAccessRoleID
   , fromAccessRoleID
+  , extractDeleteUserUGID
+  , canDo
+  , canGrant
   )
   where
 
 import Control.Monad.Catch
 import Data.Aeson
 import Data.Int
-import Data.Typeable (Typeable, cast)
+import Data.Typeable (Typeable)
 import Data.Unjson
 import Happstack.Server
 import Log
@@ -162,32 +157,41 @@ data AccessRoleTarget
 -- | We need to discern between permissions and actions that affect users, user
 -- groups, policies and more.
 data AccessResource
-  = UserR
-  | UserGroupR
-  | UserPolicyR
-  | UserGroupPolicyR
-  | UserPersonalTokenR
-  | DocumentR
-  | FolderPolicyR
-  | FolderR
-  | SharedTemplateR
-  | DocumentAfterPreparationR
-  | EidIdentityR
-  deriving (Eq, Enum, Bounded)
+  -- This user only
+  = UserR UserID
+  -- User in Group or any subgroup
+  | UserInGroupR UserGroupID
+  -- UserGroup or any subgroup
+  | UserGroupR UserGroupID
+  -- This Users token only
+  | UserPersonalTokenR UserID
+  -- Token of user in a group or subgroups
+  | PersonalTokenOfAnyUserInGroupR UserGroupID
+  -- Document in Folder or any subfolder
+  | DocumentInFolderR FolderID
+  -- Folder or any subfolder
+  | FolderR FolderID
+  -- Template in Folder or any subfolder
+  | SharedTemplateR FolderID
+  -- Document after starting (not Draft, not Template) in Folderor any subfolder
+  | DocumentAfterPreparationR FolderID
+  -- Assignee of this role can use UserGroup (but not subgroups) for EID purposes (Display name and charging)
+  | EidIdentityR UserGroupID
+  deriving (Eq)
+
+data PermissionKind = PermCanDo | PermCanGrant deriving (Eq, Show)
 
 instance Show AccessResource where
-  show UserR                     = "user"
-  show UserGroupR                = "user_group"
-  show UserPolicyR               = "user_policy"
-  show UserGroupPolicyR          = "user_group_policy"
-  show UserPersonalTokenR        = "user_personal_token"
-  show DocumentR                 = "document"
-  show FolderPolicyR             = "folder_policy"
-  show FolderR                   = "folder"
-  show SharedTemplateR           = "shared_template"
-  show DocumentAfterPreparationR = "document_after_preparation"
-  show EidIdentityR              = "eid_identity"
-
+  show (UserR                     _) = "user"
+  show (UserInGroupR              _) = "user"
+  show (UserGroupR                _) = "user_group"
+  show (UserPersonalTokenR        _) = "user_personal_token"
+  show (PersonalTokenOfAnyUserInGroupR _) = "user_personal_token"
+  show (DocumentInFolderR         _) = "document"
+  show (FolderR                   _) = "folder"
+  show (SharedTemplateR           _) = "shared_template"
+  show (DocumentAfterPreparationR _) = "document_after_preparation"
+  show (EidIdentityR              _) = "eid_identity"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -195,7 +199,7 @@ data AccessAction
   | ReadA
   | UpdateA
   | DeleteA
-  deriving (Eq, Typeable, Bounded, Enum)
+  deriving (Eq, Enum)
 
 instance Show AccessAction where
   show CreateA = "create"
@@ -203,27 +207,14 @@ instance Show AccessAction where
   show UpdateA = "update"
   show DeleteA = "delete"
 
--- | We use this to bundle different types. We only need to have an instance for
--- 'Eq' when comparing them at the end which is why we derive Typeable.
+-- | Permission describes what action can be performed on what resource.
 data Permission =
-  forall t. (Eq t, Typeable t, Show t) =>
-  Permission AccessAction AccessResource t
-  deriving (Typeable)
-
-instance Eq Permission where
-  Permission xaa xat x == Permission yaa yat y = case cast y of
-    Just y' -> x == y' && xaa == yaa && xat == yat
-    _       -> False
-
--- Bundling by predicate and marshalling helpers
-data AccessPolicyItem = forall t. (NeedsPermissions t) => AccessPolicyItem t
-type AccessPolicy = [AccessPolicyItem]
-
-mkAccPolicyItem :: (NeedsPermissions t) => t -> AccessPolicyItem
-mkAccPolicyItem = AccessPolicyItem
-
-mkAccPolicy :: (NeedsPermissions t) => [t] -> AccessPolicy
-mkAccPolicy = map mkAccPolicyItem
+  Permission
+    { permKind ::PermissionKind
+    , permAction :: AccessAction
+    , permResource :: AccessResource
+    }
+  deriving (Eq, Show)
 
 -- | An 'NeededPermissionsExpr' is evaluated by means of 'evalNeededPermExpr' and is a
 -- wrapper to do boolean logic on several levels.
@@ -240,74 +231,69 @@ evalNeededPermExpr f (NeededPermissionsExprOr aces) =
 evalNeededPermExpr f (NeededPermissionsExprAnd aces) =
   and $ fmap (evalNeededPermExpr f) aces
 
--- local helper for mapping in `hasPermissions`
-mkPerm
-  :: forall t
-   . (Eq t, Typeable t, Show t)
-  => t
-  -> AccessResource
-  -> AccessAction
-  -> Permission
-mkPerm t res act = Permission act res t
-
 hasPermissions :: AccessRoleTarget -> [Permission]
-hasPermissions (UserAR usrID) =
-  -- user can read and update himself
-                                map (mkPerm usrID UserR) [ReadA, UpdateA]
-  <>
-  -- user can grant/revoke permissions related themselves; but only if they have
-  -- permissions on both source and target, since that's how the Access Control
-  -- API works
-     map (mkPerm usrID UserPolicyR) [minBound .. maxBound]
-hasPermissions (UserGroupMemberAR _usrGrpID) =
+hasPermissions (UserAR uid) =
+  -- user can read and update himself and cannot grant it to anyone
+  [ Permission PermCanDo action $ UserR uid | action <- [ReadA, UpdateA] ]
+hasPermissions (UserGroupMemberAR _) =
   -- no special permissions for members
   []
-hasPermissions (UserAdminAR usrGrpID) =
-  -- can CRUD users
-  map (mkPerm usrGrpID UserR) allActions
+-- UserAdminAR can grant the whole role to others
+hasPermissions (UserAdminAR ugid) =
+       -- can CRUD users
+       -- can allow someone else to manipulate users of this group and subgroups (and revoke)
+  [ Permission kind action $ UserInGroupR ugid
+    | kind   <- [PermCanDo, PermCanGrant]
+    , action <- crudActions
+    ]
     <>
-  -- can read sub-groups
-       map (mkPerm usrGrpID UserGroupR)         [ReadA]
+       -- can read group and sub-groups
+       -- can allow someone else to Read groups and subgroups 
+       [ Permission kind ReadA $ UserGroupR ugid | kind <- [PermCanDo, PermCanGrant] ]
     <>
-  -- can set/remove any role on any user
-       map (mkPerm usrGrpID UserPolicyR)        allActions
-    <>
-  -- can set/remove any role on any sub-group
-       map (mkPerm usrGrpID UserGroupPolicyR)   allActions
-    <>
-  -- can CRUD tokens for all users
-       map (mkPerm usrGrpID UserPersonalTokenR) allActions
-  where allActions = [minBound .. maxBound]
-hasPermissions (UserGroupAdminAR usrGrpID) =
+       -- can CRUD tokens for all users of this group and subgroups
+       -- and can grant this right to someone else
+       [ Permission kind action $ PersonalTokenOfAnyUserInGroupR ugid
+       | kind <- [PermCanDo, PermCanGrant]
+       , action <- crudActions
+       ]
+-- UserGroupAdminAR can grant the whole role to others
+hasPermissions (UserGroupAdminAR ugid) =
   -- can perform all actions upon a user group
-  [ mkPerm usrGrpID res act
-  | act <- [minBound .. maxBound]
-  , res <- [minBound .. maxBound]
+  [ Permission kind action $ resource ugid
+  | kind     <- [PermCanDo, PermCanGrant]
+  , action   <- crudActions
+  , resource <- [UserInGroupR, UserGroupR, PersonalTokenOfAnyUserInGroupR]
   ]
+-- FolderAdminAR can grant the whole role to others
 hasPermissions (FolderAdminAR fid) =
-  -- can perform all actions upon folder
-  map (mkPerm fid FolderR) [minBound .. maxBound]
-    <>
-  -- can CRUD documents in the folder
-       map (mkPerm fid DocumentAfterPreparationR) [minBound .. maxBound]
-    <>
-  -- can set/remove any role on the folder
-       map (mkPerm fid FolderPolicyR)             [minBound .. maxBound]
-hasPermissions (FolderUserAR fid) =
-  -- can read the folder
-  map (mkPerm fid FolderR) [minBound .. maxBound]
-    <>
-  -- does not need document after preparation, because DocumentAfterPreparationR is subset of DocumentR
-       map (mkPerm fid DocumentR) [minBound .. maxBound]
-hasPermissions (SharedTemplateUserAR fid     ) = [mkPerm fid SharedTemplateR ReadA]
-hasPermissions (EidImpersonatorAR    usrGrpID) = [mkPerm usrGrpID EidIdentityR ReadA]
+  -- can perform and grant all actions upon folder and sub-folders
+  [ Permission kind action $ FolderR fid
+    | kind   <- [PermCanDo, PermCanGrant]
+    , action <- crudActions
+    ]
 
--- | Interface to get the proper combinations of 'Permission's needed to gain
--- access permission.
-class NeedsPermissions s where
-  neededPermissions :: (MonadCatch m, MonadDB m, MonadThrow m)
-                    => s -> m NeededPermissionsExpr
-  neededPermissionsPure :: s -> NeededPermissionsExpr
+    <>
+  -- can perform and grant CRUD on documents in the folder
+       [ Permission kind action $ DocumentAfterPreparationR fid
+       | kind <- [PermCanDo, PermCanGrant]
+       , action <- crudActions
+       ]
+
+hasPermissions (FolderUserAR fid) =
+  -- can read the folder and cannot grant the permission to anyone else
+  [Permission PermCanDo ReadA $ FolderR fid]
+    <>
+  -- can CRUD documents in the folder, but not grant it to anyone else
+       [ Permission PermCanDo action $ DocumentInFolderR fid | action <- crudActions ]
+
+hasPermissions (SharedTemplateUserAR fid) =
+  [Permission PermCanDo ReadA $ SharedTemplateR fid]
+hasPermissions (EidImpersonatorAR ugid) =
+  [Permission PermCanDo ReadA $ EidIdentityR ugid]
+
+crudActions :: [AccessAction]
+crudActions = [CreateA, ReadA, UpdateA, DeleteA]
 
 data UserGroupNonExistent = UserGroupNonExistent UserGroupID
   deriving (Eq, Ord, Show, Typeable)
@@ -339,55 +325,70 @@ instance ToJSValue FolderNonExistent where
 
 instance DBExtraException FolderNonExistent
 
-instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
-  neededPermissions (action, resource, usrGrpID) = do
-    dbQuery (UserGroupGetWithParents usrGrpID) >>= \case
-      Nothing   -> throwM . SomeDBExtraException . UserGroupNonExistent $ usrGrpID
-      Just ugwp -> do
-        -- By specification, it should be enough to have permission for the
-        -- wanted action on _any_ parent.
-        let mkExprBase g =
-              NeededPermissionsExprBase (Permission action resource $ g ^. #id)
-        return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
-  neededPermissionsPure (action, resource, usrGrpID) =
-    NeededPermissionsExprBase $ Permission action resource usrGrpID
+-- When granting a role we check that we can grant all permissions.
+-- When granting a permission, following is a rule:
+--   Permission PermCanDo      - cannot grant any Permissions
+--   Permission PermCanGrant   - can grant both PermCanDo and PermCanGrant permissions
+canDo :: AccessAction -> AccessResource -> Permission
+canDo = Permission PermCanDo
 
-instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
-  neededPermissions (action, resource, fid) = do
-    dbQuery (FolderGet fid) >>= \case
-      Nothing     -> throwM . SomeDBExtraException . FolderNonExistent $ fid
+--   calling addAlternativePermissions for every Permission will retrieve the same parents from DB
+--   many times (once for each permission). This is acceptable for now because roles are not being
+--   granted very often.
+canGrant :: AccessRoleTarget -> [Permission]
+canGrant = nub . map (\p -> p { permKind = PermCanGrant }) . hasPermissions
+
+-- By specification, it should be enough to have permission for the
+-- wanted action on _any_ parent.
+addAlternativePermissions
+  :: (MonadThrow m, MonadDB m) => Permission -> m NeededPermissionsExpr
+addAlternativePermissions perm = case permResource perm of
+  UserR              uid  -> addForAllParentsUid UserInGroupR uid
+  UserInGroupR       ugid -> addForAllParentsUgid UserInGroupR ugid
+  UserGroupR         ugid -> addForAllParentsUgid UserGroupR ugid
+  UserPersonalTokenR uid  -> addForAllParentsUid PersonalTokenOfAnyUserInGroupR uid
+  PersonalTokenOfAnyUserInGroupR ugid ->
+    addForAllParentsUgid PersonalTokenOfAnyUserInGroupR ugid
+  DocumentInFolderR         fid  -> addForAllParentsFid DocumentInFolderR fid
+  FolderR                   fid  -> addForAllParentsFid FolderR fid
+  SharedTemplateR           fid  -> addForAllParentsFid SharedTemplateR fid
+  DocumentAfterPreparationR fid  -> addForAllParentsFid DocumentAfterPreparationR fid
+  EidIdentityR              ugid -> addForAllParentsUgid EidIdentityR ugid
+  where
+    addForAllParentsFid mkRes fid = dbQuery (FolderGet fid) >>= \case
+      Nothing     -> throwM . SomeDBExtraException $ FolderNonExistent fid
       Just folder -> do
         folderParents <- dbQuery . FolderGetParents $ fid
-        let mkExprBase g =
-              NeededPermissionsExprBase (Permission action resource $ g ^. #id)
+        let mkExprBase f =
+              NeededPermissionsExprBase $ perm { permResource = mkRes $ f ^. #id }
         return . NeededPermissionsExprOr . map mkExprBase $ (folder : folderParents)
-  neededPermissionsPure (action, resource, fid) =
-    NeededPermissionsExprBase $ Permission action resource fid
-
-instance NeedsPermissions (AccessAction, AccessResource, UserID) where
-  neededPermissions (action, resource, usrID) = dbQuery (GetUserByID usrID) >>= \case
-    Nothing -> throwM . SomeDBExtraException . UserNonExistent $ usrID
-    Just _  -> do
-      usrGrpID         <- view #id <$> (dbQuery . UserGroupGetByUserID $ usrID)
-      groupPermissions <- neededPermissions (action, resource, usrGrpID)
-      return $ NeededPermissionsExprOr
-        [NeededPermissionsExprBase . Permission action resource $ usrID, groupPermissions]
-  neededPermissionsPure (action, resource, usrID) =
-    NeededPermissionsExprBase $ Permission action resource usrID
-
-instance NeedsPermissions AccessPolicyItem where
-  neededPermissions (AccessPolicyItem t) = neededPermissions t
-  neededPermissionsPure (AccessPolicyItem t) = neededPermissionsPure t
+    addForAllParentsUgid mkRes ugid = dbQuery (UserGroupGetWithParents ugid) >>= \case
+      Nothing   -> throwM . SomeDBExtraException . UserGroupNonExistent $ ugid
+      Just ugwp -> do
+        let mkExprBase g =
+              NeededPermissionsExprBase $ perm { permResource = mkRes $ g ^. #id }
+        return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
+    addForAllParentsUid mkRes uid = dbQuery (GetUserByID uid) >>= maybe
+      (throwM . SomeDBExtraException $ UserNonExistent uid)
+      (\_ -> dbQuery (UserGroupGetWithParentsByUserID uid) >>= \ugwp -> do
+        let mkExprBase g =
+              NeededPermissionsExprBase $ perm { permResource = mkRes $ g ^. #id }
+        return
+          . NeededPermissionsExprOr
+          . (NeededPermissionsExprBase perm :)
+          . map mkExprBase
+          $ ugwpToList ugwp
+      )
 
 accessControl
   :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
   => [AccessRole]
-  -> AccessPolicy
+  -> [Permission]
   -> m a
   -> m a
   -> m a
-accessControl roles accessPolicy err ma = do
-  accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
+accessControl roles permissions err ma = do
+  accNeeded <- NeededPermissionsExprAnd <$> mapM addAlternativePermissions permissions
   if accessControlCheck roles accNeeded then ma else err
 
 accessControlCheck :: [AccessRole] -> NeededPermissionsExpr -> Bool
@@ -395,10 +396,12 @@ accessControlCheck roles accNeeded =
   let accHad = nub . join $ map (hasPermissions . accessRoleTarget) roles
   in  evalNeededPermExpr (`elem` accHad) accNeeded
 
-accessControlPure :: [AccessRole] -> AccessPolicy -> Bool
-accessControlPure roles accessPolicy =
-  accessControlCheck roles . NeededPermissionsExprAnd $ map neededPermissionsPure
-                                                            accessPolicy
+accessControlPure :: [AccessRole] -> [Permission] -> Bool
+accessControlPure roles permissions =
+  accessControlCheck roles
+    . NeededPermissionsExprAnd
+    . map NeededPermissionsExprBase
+    $ permissions
 
 -- IO (DB, frontend) boilerplate
 
@@ -549,14 +552,6 @@ instance Unjson AccessRoleID where
 
 -- helpers
 
-extractResourceRef :: (Typeable t) => Permission -> Maybe t
-extractResourceRef (Permission _ _ x) = cast x
-
-hasAction :: Permission -> AccessAction -> Bool
-hasAction (Permission xaa _ _) aa = (xaa == aa)
-
-hasResource :: Permission -> AccessResource -> Bool
-hasResource (Permission _ xar _) ar = (xar == ar)
-
-rolesToPermissions :: [AccessRole] -> [Permission]
-rolesToPermissions rs = join $ map (hasPermissions . accessRoleTarget) rs
+extractDeleteUserUGID :: Permission -> Maybe UserGroupID
+extractDeleteUserUGID (Permission PermCanDo DeleteA (UserInGroupR ugid)) = Just ugid
+extractDeleteUserUGID _ = Nothing
