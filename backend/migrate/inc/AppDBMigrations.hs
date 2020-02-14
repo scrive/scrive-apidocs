@@ -238,4 +238,5 @@ kontraMigrations =
   , addPopulateDocumentAuthorDeletedJob
   , addUGIDForEIDToDocuments
   , addUserGroupGarbageCollectionJob
+  , brandedDomainChangeLightLogo
   ]
