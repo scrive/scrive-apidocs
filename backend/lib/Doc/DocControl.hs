@@ -62,7 +62,10 @@ import DB.TimeZoneName
 import Doc.Action
 import Doc.API.Callback.Model
 import Doc.API.V2.DocumentUpdateUtils
-import Doc.API.V2.Guards (guardDocumentStatus, guardThatDocumentCanBeStarted)
+import Doc.API.V2.Guards
+  ( guardDocumentStatus, guardGetSignatoryFromIdForDocument
+  , guardThatDocumentCanBeStarted
+  )
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocMails
@@ -284,10 +287,17 @@ handleSignShowSaveMagicHash did slid mh =
         dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
           `withDocumentM` do
                             guardThatDocumentIsReadableBySignatories =<< theDocument
-                            sid <- getNonTempSessionID
-                            dbUpdate $ AddDocumentSession sid slid
-                            -- Redirect to propper page
-                            sendRedirect $ LinkSignDocNoMagicHash did slid
+                            sl <- guardGetSignatoryFromIdForDocument slid
+                            if isJust (signatorylinkdeleted sl)
+                               || isJust (signatorylinkreallydeleted sl)
+                            then
+                              respondLinkInvalid
+                            else
+                              do
+                                sid <- getNonTempSessionID
+                                dbUpdate $ AddDocumentSession sid slid
+                                -- Redirect to propper page
+                                sendRedirect $ LinkSignDocNoMagicHash did slid
       )
     `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
     `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
