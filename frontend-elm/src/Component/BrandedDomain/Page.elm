@@ -472,37 +472,23 @@ mergeMaybe mx my =
 
 defaultThemeSetFromThemes : List Theme -> Maybe ThemeSet
 defaultThemeSetFromThemes availableThemes =
-    let
-        findTheme : String -> Maybe Theme
-        findTheme themeName =
-            List.find
-                (\theme -> theme.name == themeName)
-                availableThemes
-
-        mThemeSet1 =
-            mergeMaybe
-                (findTheme "Scrive email theme")
-            <|
-                mergeMaybe
-                    (findTheme "Scrive signing theme")
-                <|
-                    mergeMaybe
-                        (findTheme "Scrive service theme")
-                        (findTheme "Scrive login theme")
-
-        mThemeSet2 : Maybe ThemeSet
-        mThemeSet2 =
-            Maybe.map
-                (\( emailTheme, ( signViewTheme, ( serviceTheme, loginTheme ) ) ) ->
-                    { emailTheme = emailTheme
-                    , signViewTheme = signViewTheme
-                    , serviceTheme = serviceTheme
-                    , loginTheme = loginTheme
-                    }
-                )
-                mThemeSet1
-    in
-    mThemeSet2
+    Maybe.map
+        (\firstTheme ->
+            let
+                findTheme : String -> Theme
+                findTheme themeName =
+                    Maybe.withDefault firstTheme <|
+                        List.find
+                            (\theme -> theme.name == themeName)
+                            availableThemes
+            in
+            { emailTheme = findTheme "Scrive email theme"
+            , signViewTheme = findTheme "Scrive signing theme"
+            , serviceTheme = findTheme "Scrive service theme"
+            , loginTheme = findTheme "Scrive login theme"
+            }
+        )
+        (List.head availableThemes)
 
 
 themeSetFromBranding : List Theme -> Branding -> Maybe ThemeSet
