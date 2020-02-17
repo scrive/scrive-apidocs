@@ -458,26 +458,23 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
                 $ fromJSValueFieldCustom "nlIDINAuth"
                 $ fromJSValueFieldCustom "completionData"
                 $ do
-                    msurname       <- fromJSValueField "legalLastName"
+                    let valOrEmptyString = maybe "" T.pack
+                    surname <- valOrEmptyString <$> fromJSValueField "legalLastName"
+                    initials       <- valOrEmptyString <$> fromJSValueField "initials"
+                    email          <- valOrEmptyString <$> fromJSValueField "email"
+                    dob            <- valOrEmptyString <$> fromJSValueField "birthDate"
+                    customerId     <- valOrEmptyString <$> fromJSValueField "customerId"
                     mTussenvoegsel <- fromJSValueField "legalLastNamePrefix"
-                    minitials      <- fromJSValueField "initials"
-                    memail         <- fromJSValueField "email"
-                    mdob           <- fromJSValueField "birthDate"
-                    mcustomerId    <- fromJSValueField "customerId"
-                    case (msurname, minitials, memail, mdob, mcustomerId) of
-                      (Just surname, Just initials, Just email, Just dob, Just customerId)
-                        -> do
-                          let eiditdName = case mTussenvoegsel of
-                                Just tussenvoegsel ->
-                                  initials ++ " " ++ tussenvoegsel ++ " " ++ surname
-                                Nothing -> initials ++ " " ++ surname
-                          return $ Just $ CompleteIDINEIDServiceTransactionData
-                            { eiditdName          = T.pack eiditdName
-                            , eiditdVerifiedEmail = T.pack email
-                            , eiditdBirthDate     = T.pack dob
-                            , eiditdCustomerID    = T.pack customerId
-                            }
-                      _ -> return Nothing
+                    let eiditdName = case mTussenvoegsel of
+                          Just tussenvoegsel ->
+                            initials <> " " <> tussenvoegsel <> " " <> surname
+                          Nothing -> initials <> " " <> surname
+                    return $ Just $ CompleteIDINEIDServiceTransactionData
+                      { eiditdName          = eiditdName
+                      , eiditdVerifiedEmail = email
+                      , eiditdBirthDate     = dob
+                      , eiditdCustomerID    = customerId
+                      }
               return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
             _ -> return (Nothing, Nothing)
         _ -> return (Nothing, Nothing)

@@ -201,7 +201,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINSignature () 
         unexpectedError "signatory already signed, can't merge signature"
       runQuery_ . sqlInsert "eid_signatures" $ do
         setFields
-        sqlOnConflictOnColumns ["singatory_link_id"] . sqlUpdate "" $ do
+        sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
           setFields
           -- replace the signature only if signatory hasn't signed yet
           sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
