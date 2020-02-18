@@ -12,6 +12,7 @@ import DB
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.Model.Filter
 import Folder.Types
 import MagicHash
 import User.UserID
@@ -40,7 +41,8 @@ data DocumentDomain
   | DocumentsVisibleToUser UserID
   -- ^ Documents that a user has possible access to
   | DocumentsByFolderOnly FolderID
-  -- ^ List documents in folder for which user has read access
+  -- ^ List documents in folder for which user has read access and have not been
+  -- deleted by their author.
   | DocumentsUserHasAnyLinkTo UserID
   -- ^ Documents that the given user is linked to
   | DocumentsVisibleToSigningPartyOrByFolders UserID [FolderID] [FolderID] [FolderID]
@@ -94,22 +96,26 @@ documentDomainNeedsDistinct = \case
 -- To do anything with document a user has at least see it. Usually
 -- more strict rules apply.
 
-documentDomainToSQL :: (MonadState v m, SqlFrom v, SqlWhere v) => DocumentDomain -> [m ()]
-documentDomainToSQL DocumentsOfWholeUniverse = pure $ do
+documentDomainToSQL
+  :: (MonadState v m, SqlFrom v, SqlWhere v)
+  => DocumentDomain
+  -> [(DocumentFilterMap, m ())]
+documentDomainToSQL DocumentsOfWholeUniverse = pure . (legacyFilterMap, ) $ do
   sqlWhereDocumentWasNotPurged
 
-documentDomainToSQL (DocumentsVisibleViaAccessToken token) = pure $ do
-  sqlWhereDocumentWasNotPurged
-  sqlWhereEq "documents.token" token
+documentDomainToSQL (DocumentsVisibleViaAccessToken token) =
+  pure . (legacyFilterMap, ) $ do
+    sqlWhereDocumentWasNotPurged
+    sqlWhereEq "documents.token" token
 
-documentDomainToSQL (DocumentsOfUserGroup ugid) = pure $ do
+documentDomainToSQL (DocumentsOfUserGroup ugid) = pure . (legacyFilterMap, ) $ do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlJoinOn "users"           "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
   sqlWhere "documents.author_id = signatory_links.id"
   sqlWhereEq "users.user_group_id" ugid
 
-documentDomainToSQL (DocumentsVisibleToUser uid) = pure $ do
+documentDomainToSQL (DocumentsVisibleToUser uid) = pure . (legacyFilterMap, ) $ do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlJoinOn "users"           "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
@@ -140,17 +146,12 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = pure $ do
       sqlWhereEq "documents.type"    Template
       sqlWhereEq "documents.sharing" Shared
 
-documentDomainToSQL (DocumentsByFolderOnly fdrid) = pure $ do
+documentDomainToSQL (DocumentsByFolderOnly fdrid) = pure . (folderFilterMap, ) $ do
   sqlWhereEq "folder_id" fdrid
   sqlWhereDocumentWasNotPurged
-  sqlWhereAnySignatoryLinkNotReallyDeleted
-  where
-    sqlWhereAnySignatoryLinkNotReallyDeleted = do
-      sqlWhere . toSQLCommand $ sqlSelect "signatory_links" $ do
-        sqlResult "bool_or(signatory_links.really_deleted IS NULL)"
-        sqlWhere "signatory_links.document_id = documents.id"
+  sqlWhereDocumentIsNotReallyDeletedByAuthor
 
-documentDomainToSQL (DocumentsUserHasAnyLinkTo uid) = pure $ do
+documentDomainToSQL (DocumentsUserHasAnyLinkTo uid) = pure . (legacyFilterMap, ) $ do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlWhereEq "user_id" uid
   sqlWhereDocumentWasNotPurged
@@ -175,7 +176,9 @@ documentDomainToSQL (DocumentsUserHasAnyLinkTo uid) = pure $ do
   access.
 -}
 documentDomainToSQL (DocumentsVisibleToSigningPartyOrByFolders uid shared_fids started_fids author_fids)
-  = [documentsVisibleToSigningParty, documentsVisibleByFolders]
+  = [ (legacyFilterMap, documentsVisibleToSigningParty)
+    , (folderFilterMap, documentsVisibleByFolders)
+    ]
   where
     documentsVisibleToSigningParty = do
       sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
@@ -187,12 +190,11 @@ documentDomainToSQL (DocumentsVisibleToSigningPartyOrByFolders uid shared_fids s
         [userIsSignatoryOrApproverAndHasAppropriateSignOrder uid, userIsViewer uid]
 
     documentsVisibleByFolders = do
-      sqlJoinOn "signatory_links" "documents.author_id = signatory_links.id"
-      sqlJoinOn "folders"         "folders.id = documents.folder_id"
+      sqlJoinOn "folders" "folders.id = documents.folder_id"
       sqlWhereIn "folders.id"
                  (S.toList . S.fromList $ author_fids ++ shared_fids ++ started_fids)
       sqlWhereDocumentWasNotPurged
-      sqlWhereDocumentIsNotReallyDeleted
+      sqlWhereDocumentIsNotReallyDeletedByAuthor
       sqlWhereAny
         [ documentIsInFolder author_fids
         , documentIsSharedTemplateAndIsInFolder shared_fids
