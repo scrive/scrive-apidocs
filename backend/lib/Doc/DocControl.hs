@@ -799,12 +799,17 @@ addEventForVisitingSigningPageIfNeeded
 addEventForVisitingSigningPageIfNeeded ev sl = do
   ctx <- getContext
   doc <- theDocument
-  when (isPending doc && isSignatoryAndHasNotSigned sl) $ do
-    updateMTimeAndObjectVersion $ ctx ^. #time
-    void
-      $   dbUpdate
-      .   InsertEvidenceEventWithAffectedSignatoryAndMsg ev (return ()) (Just sl) Nothing
-      =<< signatoryActor ctx sl
+  when
+      (isPending doc && (isSignatoryAndHasNotSigned sl || isApproverAndHasNotApproved sl))
+    $ do
+        updateMTimeAndObjectVersion $ ctx ^. #time
+        void
+          $   dbUpdate
+          .   InsertEvidenceEventWithAffectedSignatoryAndMsg ev
+                                                             (return ())
+                                                             (Just sl)
+                                                             Nothing
+          =<< signatoryActor ctx sl
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc =
