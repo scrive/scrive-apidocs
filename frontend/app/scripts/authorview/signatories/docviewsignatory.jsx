@@ -367,7 +367,7 @@ var EmailModal = require("../../common/email_modal");
         useEmailAndMobile = signatory.emailMobileDelivery();
       } else {
         useEmail = signatory.noneConfirmationDelivery() ?
-          signatory.emailDelivery() : signatory.emailConfirmationDelivery();
+          signatory.emailDelivery() : signatory.anyEmailConfirmationDelivery();
         useMobile = signatory.noneConfirmationDelivery() ?
           signatory.mobileDelivery() : signatory.mobileConfirmationDelivery();
         useEmailAndMobile = signatory.noneConfirmationDelivery() ?

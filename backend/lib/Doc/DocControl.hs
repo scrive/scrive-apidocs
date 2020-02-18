@@ -79,6 +79,7 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
+import Doc.SignatoryUtils
 import Doc.Tokens.Model
 import EvidenceLog.Model
   ( CurrentEvidenceEventType(..)
@@ -724,9 +725,11 @@ prepareEmailPreview docid slid = do
   content  <- flip E.catch (\(E.SomeException _) -> return "") $ case mailtype of
     "remind" -> do
       doc <- getDocByDocID docid
-      let Just sl = getSigLinkFor slid doc
+      sl  <- guardJust $ getSigLinkFor slid doc
+      let forceLink = shouldForceEmailLink sl
       mailattachments <- makeMailAttachments doc True
-      mailDocumentRemindContent Nothing doc sl (not (null mailattachments))
+      let documentAttach = if forceLink then False else not (null mailattachments)
+      mailDocumentRemindContent Nothing doc sl documentAttach forceLink
     "invite" -> do
       doc <- getDocByDocID docid
       mailInvitationContent False Sign Nothing doc

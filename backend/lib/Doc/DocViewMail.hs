@@ -70,8 +70,9 @@ mailDocumentRemind
   -> Document
   -> SignatoryLink
   -> Bool
+  -> Bool
   -> m Mail
-mailDocumentRemind automatic customMessage doc sigLink documentAttached =
+mailDocumentRemind automatic customMessage doc sigLink documentAttached forceLink =
   case
       ( documentstatus doc
       , maybesigninfo sigLink
@@ -80,7 +81,7 @@ mailDocumentRemind automatic customMessage doc sigLink documentAttached =
     of
       (_, Nothing, True) -> remindMailNotSigned automatic True customMessage doc sigLink
       (Pending, _, False) -> remindMailNotSigned automatic True customMessage doc sigLink
-      _ -> remindMailSigned True customMessage doc sigLink documentAttached
+      _ -> remindMailSigned True customMessage doc sigLink documentAttached forceLink
 
 mailDocumentRemindContent
   :: ( CryptoRNG m
@@ -94,8 +95,9 @@ mailDocumentRemindContent
   -> Document
   -> SignatoryLink
   -> Bool
+  -> Bool
   -> m Text
-mailDocumentRemindContent customMessage doc sigLink documentAttached = do
+mailDocumentRemindContent customMessage doc sigLink documentAttached forceLink = do
   content
     <$> case
           ( documentstatus doc
@@ -106,7 +108,8 @@ mailDocumentRemindContent customMessage doc sigLink documentAttached = do
           (_, Nothing, True) -> remindMailNotSigned False False customMessage doc sigLink
           (Pending, _, False) ->
             remindMailNotSigned False False customMessage doc sigLink
-          _ -> remindMailSigned False customMessage doc sigLink documentAttached
+          _ ->
+            remindMailSigned False customMessage doc sigLink documentAttached forceLink
 
 remindMailNotSigned
   :: ( CryptoRNG m
@@ -214,8 +217,9 @@ remindMailSigned
   -> Document
   -> SignatoryLink
   -> Bool
+  -> Bool
   -> m Mail
-remindMailSigned forMail mcustomMessage document signlink documentAttached = do
+remindMailSigned forMail mcustomMessage document signlink documentAttached forceLink = do
   mhtime <- if documentAttached
     then return Nothing
     else Just <$> makeConfirmationMagicHash signlink
@@ -225,8 +229,9 @@ remindMailSigned forMail mcustomMessage document signlink documentAttached = do
       Nothing -> False
       Just "" -> False
       Just _  -> True
-    F.value "shouldhavefilelink" $ isJust mhtime -- for previews
-    documentAttachableFields forMail signlink False mhtime document
+    F.value "forcelink" forceLink
+    F.value "toolarge" $ not documentAttached
+    documentAttachableFields forMail signlink forceLink mhtime document
 
 mailForwardSigned
   :: ( CryptoRNG m

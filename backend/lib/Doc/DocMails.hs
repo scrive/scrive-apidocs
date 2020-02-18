@@ -41,6 +41,7 @@ import Doc.DocViewMail
 import Doc.DocViewSMS
 import Doc.Logging
 import Doc.Model
+import Doc.SignatoryUtils
 import EvidenceLog.Model
   ( CurrentEvidenceEventType(..)
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
@@ -348,11 +349,14 @@ sendReminderEmail custommessage actor automatic siglink =
     let
       domail = do
         mailattachments <- makeMailAttachments doc True
-        mail            <- mailDocumentRemind automatic
-                                              custommessage
-                                              doc
-                                              siglink
-                                              (not (null mailattachments))
+        let forceLink      = shouldForceEmailLink siglink
+            documentAttach = if forceLink then False else not (null mailattachments)
+        mail <- mailDocumentRemind automatic
+                                   custommessage
+                                   doc
+                                   siglink
+                                   documentAttach
+                                   forceLink
         docid <- theDocumentID
         scheduleEmailSendoutWithAuthorSenderThroughService docid $ mail
           { to                = [getMailAddress siglink]
@@ -364,9 +368,11 @@ sendReminderEmail custommessage actor automatic siglink =
                                     (signatorylinkid siglink)
                                   else Just $ OtherDocumentMail $ documentid doc
           -- We only add attachment after document is signed
-          , attachments       =
-            attachments mail
-              <> (if documentstatus doc == DS.Closed then mailattachments else [])
+          , attachments       = attachments mail
+                                  <> (if documentstatus doc == DS.Closed && not forceLink
+                                       then mailattachments
+                                       else []
+                                     )
           }
       dosms = scheduleSMS doc =<< smsReminder automatic doc siglink
       useInvitationMethod =
@@ -410,7 +416,11 @@ sendReminderEmail custommessage actor automatic siglink =
           )
         else
           ( confMethod
-            `elem` [EmailConfirmationDelivery, EmailAndMobileConfirmationDelivery]
+            `elem` [ EmailConfirmationDelivery
+                   , EmailAndMobileConfirmationDelivery
+                   , EmailLinkConfirmationDelivery
+                   , EmailLinkAndMobileConfirmationDelivery
+                   ]
           , confMethod
             `elem` [MobileConfirmationDelivery, EmailAndMobileConfirmationDelivery]
           )

@@ -447,14 +447,21 @@ remindMailSigned=
 ###
 remindMailSignedStandardHeader=
 <br/>
-  $remindMailSignedContractStandardHeaderSendRequest()$
-  <br/>
-  <br/>
-  $if(mainfilelink)$
+  $if(forcelink)$
+    $remindMailSignedContractStandardHeaderSendRequestLink()$
+    <br/>
+    <br/>
+  $elseif(toolarge)$
+    $remindMailSignedContractStandardHeaderSendRequest()$
+    <br/>
+    <br/>
     $_mailDocumentLinked()$
-  $elseif(shouldhavefilelink)$
-    $_mailDocumentLinked()$
+    <br/>
+    <br/>
   $else$
+    $remindMailSignedContractStandardHeaderSendRequest()$
+    <br/>
+    <br/>
     $_remindMailSignedContractStandardHeaderSendRequest2()$
   $endif$
 
@@ -471,7 +478,12 @@ $if(mainfilelink)$
     <br/>
   $endif$
   $nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
-$elseif(shouldhavefilelink)$
+$elseif(forcelink)$
+  $if(hascustommessage)$
+    <br/>
+  $endif$
+  $nicebutton(text=_mailDocumentLinkedButton())$
+$elseif(toolarge)$
   $if(hascustommessage)$
     <br/>
   $endif$
@@ -485,6 +497,15 @@ $elseif(approve)$
   $_remindMailSignedContractStandardHeaderSendRequestApprove()$
 $else$
   $_remindMailSignedContractStandardHeaderSendRequestReview()$
+$endif$
+###
+remindMailSignedContractStandardHeaderSendRequestLink=
+$if(sign)$
+  $_remindMailSignedContractStandardHeaderSendRequestLink()$
+$elseif(approve)$
+  $_remindMailSignedContractStandardHeaderSendRequestLinkApprove()$
+$else$
+  $_remindMailSignedContractStandardHeaderSendRequestLinkReview()$
 $endif$
 ###
 ### Reminding mails - NOT SIGNED

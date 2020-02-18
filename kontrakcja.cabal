@@ -242,6 +242,7 @@ Library
                  , Doc.SignatoryFieldUtils
                  , Doc.Types.SignatoryLink
                  , Doc.Types.SignatoryAccessToken
+                 , Doc.SignatoryUtils
                  , Doc.Types.SigningData
                  , Doc.DigitalSignature
                  , Doc.DocControl

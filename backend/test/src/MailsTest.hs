@@ -139,10 +139,10 @@ sendDocumentMails author = do
                         --remind mails
                         checkMail "Reminder notsigned" $ do
                           doc <- theDocument
-                          mailDocumentRemind False Nothing doc sl True
+                          mailDocumentRemind False Nothing doc sl True False
                         checkMail "Reminder notsigned" $ do
                           doc <- theDocument
-                          mailDocumentRemind True Nothing doc sl True
+                          mailDocumentRemind True Nothing doc sl True False
                         --reject mail
                         checkMail "Reject"
                           $   mailDocumentRejected True Nothing True sl
@@ -174,6 +174,7 @@ sendDocumentMails author = do
                                              doc
                                              (head $ documentsignatorylinks doc)
                                              True
+                                             False
 
                         checkMail "Party process finalized" $ do
                           doc <- theDocument

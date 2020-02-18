@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Show",
@@ -85,11 +85,11 @@
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, you will sign using Swedish BankID. When you have signed your signature will be registered by the e-signing service Scrive.",
 "_elegSignSEConfirmationTextNoName":"You will sign using Swedish BankID. When you have signed your signature will be registered by the e-signing service Scrive.",
 "_elegSignSEConfirmationTitle":"Sign with Swedish BankID",
-"_elegSignTransactionNumber": "Transaction number",
+"_elegSignTransactionNumber":"Transaction number",
 "_email":"Email",
 "_enterSMSPin":"Enter your SMS PIN",
 "_errorMessagePrefix":"The error returned was:",
-"_failedToStartNewEIDProcess": "Failed to start new eID process",
+"_failedToStartNewEIDProcess":"Failed to start new eID process",
 "_filladitionfieldslabel":"About you",
 "_firstname":"First name",
 "_followTheArrow":"Follow the <span class='arrowtext'>ARROW</span>",
@@ -169,6 +169,9 @@
 "_remindMailSignedContractStandardHeaderSendRequest":"You have previously e-signed the document <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the finalised document to you.",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Find the document attached.",
 "_remindMailSignedContractStandardHeaderSendRequestApprove":"You have previously approved the document <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the finalised document to you.",
+"_remindMailSignedContractStandardHeaderSendRequestLink":"You have previously e-signed the document <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the link to the finalised document to you. It will be available to download until $availabledate$.",
+"_remindMailSignedContractStandardHeaderSendRequestLinkApprove":"You have previously approved the document <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the link to the finalised document to you. It will be available to download until $availabledate$.",
+"_remindMailSignedContractStandardHeaderSendRequestLinkReview":"You have previously reviewed the document <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the link to the finalised document to you. It will be available to download until $availabledate$.",
 "_remindMailSignedContractStandardHeaderSendRequestReview":"You have previously reviewed the document <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the finalised document to you.",
 "_remindMailSignedTitle":"Resent document: $documenttitle$",
 "_reviewDocument":"Document for review",
@@ -219,6 +222,6 @@
 "_smsReminderAutomatic":"This is an automatic reminder that you haven't signed the document $documenttitle:noescape()$ from $creatorname$ yet. Follow the link for further instructions $link$",
 "_smsReminderSigned":"The signed document $documenttitle:noescape()$ has been resent to you at the request of $creatorname$. Find the document by following this link $link$",
 "_unavailableForSign":"The document is no longer available for signing",
-"_userGroup": "User Group",
-"_userGroupExtraInfo": "Internal-use user group name (e.g. HR):"
+"_userGroup":"User Group",
+"_userGroupExtraInfo":"Internal-use user group name (e.g. HR):"
 }
