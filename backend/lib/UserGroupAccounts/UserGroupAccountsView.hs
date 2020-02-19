@@ -23,7 +23,7 @@ import DB
 import Doc.DocViewMail
 import FlashMessage
 import KontraLink
-import Mails.SendMail (Mail, kontramail, kontramaillocal)
+import Mails.SendMail (Mail, kontramaillocal)
 import MinutesTime
 import Templates (renderTextTemplate)
 import Theme.Model
@@ -51,10 +51,11 @@ mailNewUserGroupUserInvite
 mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
   theme <- dbQuery . GetTheme $ fromMaybe (ctx ^. #brandedDomain % #mailTheme)
                                           (ug ^. #ui % #mailTheme)
-  kontramail (ctx ^. #mailNoreplyAddress)
-             (ctx ^. #brandedDomain)
-             theme
-             "mailNewCompanyUserInvite"
+  kontramaillocal (ctx ^. #mailNoreplyAddress)
+                  (ctx ^. #brandedDomain)
+                  theme
+                  invited
+                  "mailNewCompanyUserInvite"
     $ do
         basicUserGroupInviteFields invited inviter ug
         basicLinkFields (ctx ^. #brandedDomain % #url) link
