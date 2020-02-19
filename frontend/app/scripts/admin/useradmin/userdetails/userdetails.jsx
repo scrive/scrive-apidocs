@@ -51,7 +51,7 @@ var UserDetailsView = React.createClass({
         phone: this.props.user.phone(),
         lang: this.props.user.lang(),
         companyposition: this.props.user.companyposition(),
-        companyname: this.props.user.company().companyname(),
+        companyname: this.props.user.company().entityname(),
         companyid: this.props.user.company().companyid(),
         accountType: accountType,
         callback_is_editable: this.props.user.callback_is_editable(),
