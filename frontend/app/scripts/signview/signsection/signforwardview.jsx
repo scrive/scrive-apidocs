@@ -19,7 +19,7 @@ var InfoTextInput = require("../../common/infotextinput");
     allFieldsValid: function () {
       var self = this;
       var sig = this.props.model.document().currentSignatory();
-      var textFields = sig.fields().filter((f) => f.isText());
+      var textFields = sig.fields().filter((f) => f.isStandard());
       return _.every(textFields, (tf) => tf.isValid(self.getNewValue(tf) || ""));
     },
 
@@ -32,9 +32,9 @@ var InfoTextInput = require("../../common/infotextinput");
     newFieldsWithValuesForUpdate: function () {
       var self = this;
       var sig = this.props.model.document().currentSignatory();
-      var textFiels = sig.fields().filter((f) => f.isText());
+      var textFields = sig.fields().filter((f) => f.isStandard());
       var res = [];
-      _.each(textFiels, function (f) {
+      _.each(textFields, function (f) {
         var newVal = self.getNewValue(f);
         // send empty string if not filled out, so backend does not default to old sig values
         if (f.value() != newVal) {
@@ -70,7 +70,7 @@ var InfoTextInput = require("../../common/infotextinput");
     render: function () {
       var self = this;
       var sig = this.props.model.document().currentSignatory();
-      var textFiels = sig.fields().filter((f) => f.isText());
+      var textFields = sig.fields().filter((f) => f.isStandard());
 
       return (
         <div>
@@ -86,7 +86,7 @@ var InfoTextInput = require("../../common/infotextinput");
             <div className="col-sm-12">
               <div className="forward-textarea">
                   <p className="label"><label htmlFor="text">{localization.forward.otherpersondetails}</label></p>
-                  {_.map(textFiels, function (tf) {
+                  {_.map(textFields, function (tf) {
                     return (
                       <div>
                         <label style={{"width": "100px"}}>{tf.nicename()}</label>
