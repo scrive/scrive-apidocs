@@ -6,5 +6,5 @@ $(function () {
   if (fromTemplate.incorrect_data) {
      new FlashMessageAfterReload({type : "error", content: localization.identify.authorizationDataMismatch});
   }
-  window.location = decodeURIComponent(window.atob(fromTemplate.redirect));
+  window.parent.location = decodeURIComponent(window.atob(fromTemplate.redirect));
 });
