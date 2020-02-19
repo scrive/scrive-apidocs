@@ -630,8 +630,12 @@ handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     signlink      <- guardJust . getSigLinkFor signlinkid =<< theDocument
     customMessage <- fmap T.strip <$> getField "customtext"
-    actor         <- guardJustM $ fmap mkAuthorActor getContext
-    void $ sendReminderEmail customMessage actor False signlink
+    let mCustomMessage = case customMessage of
+          Just s | T.null s  -> Nothing
+                 | otherwise -> customMessage
+          Nothing -> Nothing
+    actor <- guardJustM $ fmap mkAuthorActor getContext
+    void $ sendReminderEmail mCustomMessage actor False signlink
     return ()
 
 handlePadList :: Kontrakcja m => m Response
