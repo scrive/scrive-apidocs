@@ -26,7 +26,7 @@ accessControlRoleTests env = testGroup
 
 testRolesNotInheritedInUserGroupTree :: TestEnv ()
 testRolesNotInheritedInUserGroupTree = do
-  (Just user) <- addNewUser "Lloyd" "Garmadon" "lloyd.garmadon@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Lloyd" "Garmadon" "lloyd.garmadon@scrive.com"
   let uid = user ^. #id
   (root_ug :: UserGroupRoot) <- rand 10 arbitrary
   root_ugid <- view #id <$> (dbUpdate . UserGroupCreate $ ugFromUGRoot root_ug)
@@ -66,7 +66,7 @@ testRolesNotInheritedInUserGroupTree = do
 testImplicitRoles :: TestEnv ()
 testImplicitRoles = do
   -- admin user
-  admusr <- fromJust <$> addNewUser "Lego" "Flash" "lego.flash@scrive.com"
+  admusr <- fromJust <$> deprecatedAddNewUser "Lego" "Flash" "lego.flash@scrive.com"
   let admusrid = admusr ^. #id
       admugid  = admusr ^. #groupID
   admug        <- fromJust <$> (dbQuery $ UserGroupGet admugid)
@@ -87,11 +87,7 @@ testImplicitRoles = do
     $ (set #parentGroupID $ Just admugid)
     . (set #homeFolderID $ Just (usrughomefdr ^. #id))
     $ defaultUserGroup
-  usr <- fromJust <$> addNewCompanyUser' DontMakeAdmin
-                                         "Lego"
-                                         "Batman"
-                                         "lego.batman@scrive.com"
-                                         (usrug ^. #id)
+  usr <- instantiateUser $ randomUserTemplate { groupID = return $ usrug ^. #id }
 
   let admugfdrid     = (fromJust $ admug ^. #homeFolderID)
       admfdrid       = (fromJust $ admusr ^. #homeFolderID)
@@ -154,7 +150,7 @@ testImplicitRoles = do
 
 testExplicitRoles :: TestEnv ()
 testExplicitRoles = do
-  admusr <- fromJust <$> addNewUser "Lego" "Superman" "lego.superman@scrive.com"
+  admusr <- fromJust <$> deprecatedAddNewUser "Lego" "Superman" "lego.superman@scrive.com"
   let admusrid = admusr ^. #id
       admugid  = admusr ^. #groupID
   admug    <- fromJust <$> (dbQuery $ UserGroupGet admugid)

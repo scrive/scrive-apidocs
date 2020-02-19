@@ -56,7 +56,7 @@ accountInfoTests env = testGroup
 
 testChangeEmailAddress :: TestEnv ()
 testChangeEmailAddress = do
-  Just user'   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user'   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user <- dbQuery $ GetUserByID (user' ^. #id)
@@ -90,8 +90,8 @@ testChangeEmailAddress = do
 
 testNeedEmailToBeUniqueToRequestChange :: TestEnv ()
 testNeedEmailToBeUniqueToRequestChange = do
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  void $ addNewUser "Jim" "Bob" "jim@bob.com"
+  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
+  void $ deprecatedAddNewUser "Jim" "Bob" "jim@bob.com"
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req1 <- mkRequest
@@ -109,7 +109,7 @@ testNeedEmailToBeUniqueToRequestChange = do
 
 testEmailChangeFailsIfActionIDIsWrong :: TestEnv ()
 testEmailChangeFailsIfActionIDIsWrong = do
-  Just user'   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user'   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
@@ -124,7 +124,7 @@ testEmailChangeFailsIfActionIDIsWrong = do
 
 testEmailChangeFailsIfMagicHashIsWrong :: TestEnv ()
 testEmailChangeFailsIfMagicHashIsWrong = do
-  Just user'   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user'   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
@@ -141,11 +141,11 @@ testEmailChangeFailsIfMagicHashIsWrong = do
 
 testEmailChangeIfForAnotherUser :: TestEnv ()
 testEmailChangeIfForAnotherUser = do
-  Just user'   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user'   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
-  Just anotheruser        <- addNewUser "Fred" "Frog" "fred@frog.com"
+  Just anotheruser        <- deprecatedAddNewUser "Fred" "Frog" "fred@frog.com"
   ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req                     <- mkRequest POST [("password", inText "abc123")]
@@ -157,7 +157,7 @@ testEmailChangeIfForAnotherUser = do
 
 testEmailChangeFailsIfEmailInUse :: TestEnv ()
 testEmailChangeFailsIfEmailInUse = do
-  Just user'   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user'   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
@@ -166,14 +166,14 @@ testEmailChangeFailsIfEmailInUse = do
   req                     <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
 
-  Just _                  <- addNewUser "Jim" "Bob" "jim@bob.com"
+  Just _                  <- deprecatedAddNewUser "Jim" "Bob" "jim@bob.com"
   (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken
   assertBool "Response code is a redirect"  (isRedirect LinkAccount res)
   assertBool "Response has a flash message" (hasFlashMessage res)
 
 testEmailChangeFailsIfPasswordWrong :: TestEnv ()
 testEmailChangeFailsIfPasswordWrong = do
-  Just user'   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user'   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
@@ -182,14 +182,14 @@ testEmailChangeFailsIfPasswordWrong = do
   req                     <- mkRequest POST [("password", inText "wrongpassword")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
 
-  Just _                  <- addNewUser "Jim" "Bob" "jim@bob.com"
+  Just _                  <- deprecatedAddNewUser "Jim" "Bob" "jim@bob.com"
   (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken
   assertBool "Response code is a redirect"  (isRedirect LinkAccount res)
   assertBool "Response has a flash message" (hasFlashMessage res)
 
 testEmailChangeFailsIfNoPassword :: TestEnv ()
 testEmailChangeFailsIfNoPassword = do
-  Just user'   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user'   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
@@ -198,13 +198,13 @@ testEmailChangeFailsIfNoPassword = do
   req                     <- mkRequest POST [("password", inText "")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
 
-  Just _                  <- addNewUser "Jim" "Bob" "jim@bob.com"
+  Just _                  <- deprecatedAddNewUser "Jim" "Bob" "jim@bob.com"
   (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken
   assertBool "Response code is a redirect" (isRedirect LinkAccount res)
 
 testGetUserInfoWithOAuthTokens :: TestEnv ()
 testGetUserInfoWithOAuthTokens = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- Create OAuth API tokens
   let uid = user ^. #id
@@ -249,7 +249,7 @@ testGetUserInfoWithOAuthTokens = do
 
 testLoginUsingAPI :: TestEnv ()
 testLoginUsingAPI = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   let uid = user ^. #id

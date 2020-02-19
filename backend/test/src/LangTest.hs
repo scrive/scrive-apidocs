@@ -4,7 +4,6 @@ import Happstack.Server
 import Test.Framework
 
 import AppControl
-import BrandedDomain.Model
 import DB
 import Doc.DocStateData
 import Doc.Model
@@ -84,15 +83,8 @@ createTestDoc user = do
   dbQuery $ GetDocumentByDocumentID $ documentid doc
 
 createTestUser :: Lang -> TestEnv User
-createTestUser lang = do
-  bd        <- dbQuery $ GetMainBrandedDomain
-  pwd       <- createPassword "password_8866"
-  ug        <- addNewUserGroup
-  Just user <- createNewUser ("", "")
-                             "andrzej@skrivapa.se"
-                             (Just pwd)
-                             (ug ^. #id, True)
-                             lang
-                             (bd ^. #id)
-                             AccountRequest
-  return user
+createTestUser lang = instantiateUser $ randomUserTemplate
+  { email    = return "andrzej@skrivapa.se"
+  , password = Just "password_8866"
+  , lang     = lang
+  }

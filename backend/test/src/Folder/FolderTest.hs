@@ -165,7 +165,9 @@ partnerUserCreate ctx cid pid = do
 
 testNewCompanyAccount :: TestEnv ()
 testNewCompanyAccount = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
   assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
   ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -283,9 +285,16 @@ testCannotDeleteFolderWithSubfolders = do
 
 testMigrationTriggersWork :: TestEnv ()
 testMigrationTriggersWork = do
-  (user, _) <- addNewRandomUserWithCompany' False
-  void $ addNewRandomUserWithCompany' False
-  void $ addNewRandomUserWithCompany' False
+  let templateWithoutFolders = randomUserTemplate
+        { groupID      = fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
+                           { groupHomeFolderID = return Nothing
+                           }
+        , homeFolderID = \_ -> return Nothing
+        }
+
+  user <- instantiateUser templateWithoutFolders
+  void $ instantiateUser templateWithoutFolders
+  void $ instantiateUser templateWithoutFolders
   assertCountAllFolders "Created no folders" 0
 
   void $ addRandomDocumentWithAuthor user
@@ -319,7 +328,7 @@ testMigrationTriggersWork = do
 -- API tests
 testFolderAPICreate :: TestEnv ()
 testFolderAPICreate = do
-  user      <- addNewRandomUser
+  user      <- instantiateRandomUser
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- make root of folder struct
   fdrRootID <- view #id <$> do
@@ -356,8 +365,8 @@ testFolderAPICreate = do
 
 testFolderAPIUpdate :: TestEnv ()
 testFolderAPIUpdate = do
-  grpAdmin <- addNewRandomUser
-  user     <- addNewRandomUser
+  grpAdmin <- instantiateRandomUser
+  user     <- instantiateRandomUser
   ctxAdmin <- (set #maybeUser (Just grpAdmin)) <$> mkContext defaultLang
   ctxUser  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
@@ -442,7 +451,7 @@ testFolderAPIUpdate = do
 
 testFolderAPIGet :: TestEnv ()
 testFolderAPIGet = do
-  grpAdmin <- addNewRandomUser
+  grpAdmin <- instantiateRandomUser
   ctxAdmin <- set #maybeUser (Just grpAdmin) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
   let fdrRootID    = fdrRoot ^. #id
@@ -464,14 +473,14 @@ testFolderAPIGet = do
   -- signatories should have access to folders for documents they participate in siging in
   mockDoc <- testDocApiV2New' ctxAdmin
   let signatoryEmail = "jakub.janczak@scrive.com" :: String
-  mSignatoryUser   <- addNewUser "Jakub" "Janczak" $ T.pack signatoryEmail
+  mSignatoryUser   <- deprecatedAddNewUser "Jakub" "Janczak" $ T.pack signatoryEmail
   signatoryUserCtx <- set #maybeUser mSignatoryUser <$> mkContext defaultLang
   let signatorySigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
           $ setMockSigLinkStandardField "email" signatoryEmail
           $ defaultMockSigLink
   let approverEmail = "barbara.streisand@scrive.com" :: String
-  mApproverUser   <- addNewUser "Jakub" "Janczak" $ T.pack approverEmail
+  mApproverUser   <- deprecatedAddNewUser "Jakub" "Janczak" $ T.pack approverEmail
   approverUserCtx <- set #maybeUser mApproverUser <$> mkContext defaultLang
   let approverSigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
@@ -503,7 +512,7 @@ testFolderAPIGet = do
 
 testFolderAPIDelete :: TestEnv ()
 testFolderAPIDelete = do
-  user       <- addNewRandomUser
+  user       <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }  -- TODO: Fix properly!
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust $ user ^. #homeFolderID)
   -- I don't want to test deletion of the user home folder, so let's create a subfolder.
@@ -523,7 +532,7 @@ testFolderAPIDelete = do
 
 testFolderAPIListDocs :: TestEnv ()
 testFolderAPIListDocs = do
-  user       <- addNewRandomUser
+  user       <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }  -- TODO: Fix properly!
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust $ user ^. #homeFolderID)
   let numDocsToStart = 5

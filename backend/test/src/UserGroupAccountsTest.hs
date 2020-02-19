@@ -1,6 +1,5 @@
 module UserGroupAccountsTest ( companyAccountsTests
-                           , addNewAdminUserAndUserGroup
-                           , addNewUserToUserGroup
+                           , deprecatedAddNewAdminUserAndUserGroup
                            ) where
 
 import Data.Ord
@@ -79,15 +78,15 @@ companyAccountsTests env = testGroup
 
 test_addInviteForNewEmail :: TestEnv ()
 test_addInviteForNewEmail = do
-  ug         <- addNewUserGroup
-  (user1, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
+  ug         <- instantiateRandomUserGroup
+  (user1, _) <- deprecatedAddNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user1
   assertCompanyInvitesAre ug [mkInvite ug user1]
 
 test_removingExistingInvite :: TestEnv ()
 test_removingExistingInvite = do
-  ug        <- addNewUserGroup
-  (user, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
+  ug        <- instantiateRandomUserGroup
+  (user, _) <- deprecatedAddNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
   void $ dbUpdate $ RemoveUserGroupInvite [ug ^. #id] (user ^. #id)
@@ -95,17 +94,19 @@ test_removingExistingInvite = do
 
 test_removingNonExistantInvite :: TestEnv ()
 test_removingNonExistantInvite = do
-  ug <- addNewUserGroup
+  ug <- instantiateRandomUserGroup
   void $ dbUpdate $ RemoveUserGroupInvite [ug ^. #id] (unsafeUserID 0)
   assertCompanyInvitesAre ug []
 
 test_addingANewCompanyAccount :: TestEnv ()
 test_addingANewCompanyAccount = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
 
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  req        <- mkRequest
+  req <- mkRequest
     POST
     [ ("add"    , inText "True")
     , ("email"  , inText "bob@blue.com")
@@ -132,8 +133,12 @@ test_addingANewCompanyAccount = do
 
 test_addingExistingCompanyUserAsCompanyAccount :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccount = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  (existinguser, existingug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@blue.com"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
+  (existinguser, existingug) <- deprecatedAddNewAdminUserAndUserGroup "Bob"
+                                                                      "Blue"
+                                                                      "bob@blue.com"
   ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req <- mkRequest
     POST
@@ -159,8 +164,8 @@ test_addingExistingCompanyUserAsCompanyAccount = do
 test_addingANewCompanyAccountWithDifferentTarget :: TestEnv ()
 test_addingANewCompanyAccountWithDifferentTarget = do
   let email = "andrzej@skrivapa.se"
-  (user, _ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" email
-  trgug       <- addNewCompany False
+  (user, _ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej" "Rybczak" email
+  trgug       <- instantiateRandomUserGroup
   let trgugid = trgug ^. #id
 
   ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -195,9 +200,13 @@ test_addingANewCompanyAccountWithDifferentTarget = do
 
 test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
-  (user, _ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  (existinguser, existingug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@blue.com"
-  trgug <- addNewCompany False
+  (user, _ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                       "Rybczak"
+                                                       "andrzej@skrivapa.se"
+  (existinguser, existingug) <- deprecatedAddNewAdminUserAndUserGroup "Bob"
+                                                                      "Blue"
+                                                                      "bob@blue.com"
+  trgug <- instantiateRandomUserGroup
   let trgugid = trgug ^. #id
 
   ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -230,8 +239,10 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
 
 test_resendingInviteToNewCompanyAccount :: TestEnv ()
 test_resendingInviteToNewCompanyAccount = do
-  (user, ug)   <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just newuser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (ug ^. #id)
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
+  newuser <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug newuser
 
   ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -255,12 +266,14 @@ test_resendingInviteToNewCompanyAccount = do
 
 test_switchingStandardToAdminUser :: TestEnv ()
 test_switchingStandardToAdminUser = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (ug ^. #id)
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
+  standarduser <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
 
-  ctx               <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  req               <- mkRequest
+  req          <- mkRequest
     POST
     [ ("changerole", inText "True")
     , ("changeid", inText $ showt (standarduser ^. #id))
@@ -276,8 +289,10 @@ test_switchingStandardToAdminUser = do
 
 test_switchingAdminToStandardUser :: TestEnv ()
 test_switchingAdminToStandardUser = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (ug ^. #id)
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
+  standarduser <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   void $ dbUpdate $ SetUserCompanyAdmin (standarduser ^. #id) True
   Just adminuser <- dbQuery $ GetUserByID (user ^. #id)
 
@@ -299,8 +314,10 @@ test_switchingAdminToStandardUser = do
 
 test_removingCompanyAccountInvite :: TestEnv ()
 test_removingCompanyAccountInvite = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  (standarduser, _) <- addNewAdminUserAndUserGroup "Bob" "Blue" "jony@blue.com"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
+  (standarduser, _) <- deprecatedAddNewAdminUserAndUserGroup "Bob" "Blue" "jony@blue.com"
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
@@ -315,8 +332,10 @@ test_removingCompanyAccountInvite = do
 
 test_removingCompanyAccountWorks :: TestEnv ()
 test_removingCompanyAccountWorks = do
-  (adminuser, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "jony@blue.com" (ug ^. #id)
+  (adminuser, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna"
+                                                           "Android"
+                                                           "anna@android.com"
+  standarduser <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   doc <- addRandomDocument (rdaDefault standarduser) { rdaTypes    = OneOf [Signable]
                                                      , rdaStatuses = OneOf [Closed]
                                                      }
@@ -351,9 +370,9 @@ test_removingCompanyAccountWorks = do
   assertEqual "Docid matches after user delete" docid (documentid $ head companydocs)
 
   -- test removal with access control only
-  (otheruser, otherug) <- addNewAdminUserAndUserGroup "Mad Jack"
-                                                      "Churchill"
-                                                      "madjack@example.com"
+  (otheruser, otherug) <- deprecatedAddNewAdminUserAndUserGroup "Mad Jack"
+                                                                "Churchill"
+                                                                "madjack@example.com"
   req'      <- mkRequest POST [("removeid", inText $ showt (otheruser ^. #id))]
 
   -- shouldn't work
@@ -375,9 +394,11 @@ test_removingCompanyAccountWorks = do
 
 test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
-  (adminuser, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just user       <- addNewUser "Bob" "Blue" "bob@blue.com"
-  docid           <- documentid <$> addRandomDocument (rdaDefault user)
+  (adminuser, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna"
+                                                           "Android"
+                                                           "anna@android.com"
+  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
+  docid     <- documentid <$> addRandomDocument (rdaDefault user)
     { rdaTypes    = OneOf [Signable]
     , rdaStatuses = OneOf $ documentAllStatuses \\ [Preparation]
     }
@@ -411,8 +432,8 @@ test_privateUserTakoverWorks = do
 
 test_mustBeInvitedForTakeoverToWork :: TestEnv ()
 test_mustBeInvitedForTakeoverToWork = do
-  ug         <- addNewUserGroup
-  Just user  <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ug         <- instantiateRandomUserGroup
+  Just user  <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
 
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 

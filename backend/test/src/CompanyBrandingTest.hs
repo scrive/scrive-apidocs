@@ -25,7 +25,7 @@ import UserGroup.Model
 companyBrandingTests :: TestEnvSt -> Test
 companyBrandingTests env = testGroup
   "CompanyBranding"
-  [ testThat "Test that user can fetch company branding" env testFetchCompanyBranding
+  [ testThat "Test that admin can fetch company branding" env testFetchCompanyBranding
   , testThat "Test that user can fetch domain themes (used by previews)"
              env
              testFetchDomainThemes
@@ -49,8 +49,9 @@ companyBrandingTests env = testGroup
 
 testFetchCompanyBranding :: TestEnv ()
 testFetchCompanyBranding = do
-  ugid         <- view #id <$> addNewUserGroup
-  Just user    <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" ugid
+  ugid <- view #id <$> instantiateRandomUserGroup
+  user <- instantiateUser
+    $ randomUserTemplate { groupID = return ugid, isCompanyAdmin = True }
   ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req1         <- mkRequest GET []
   (avalue1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
@@ -75,8 +76,9 @@ testFetchDomainThemes = do
 
 testUpdateCompanyTheme :: TestEnv ()
 testUpdateCompanyTheme = do
-  ug        <- addNewUserGroup
-  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser
+    $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
@@ -153,8 +155,9 @@ testUpdateCompanyTheme = do
 
 testDeleteCompanyTheme :: TestEnv ()
 testDeleteCompanyTheme = do
-  ug        <- addNewUserGroup
-  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser
+    $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   mainbd    <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
@@ -169,8 +172,8 @@ testDeleteCompanyTheme = do
 
 testNormalUserCantChangeOrDeleteTheme :: TestEnv ()
 testNormalUserCantChangeOrDeleteTheme = do
-  ug         <- addNewUserGroup
-  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
+  ug         <- instantiateRandomUserGroup
+  user1      <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
   Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
 
@@ -206,8 +209,9 @@ testNormalUserCantChangeOrDeleteTheme = do
 
 testChangeCompanyUI :: TestEnv ()
 testChangeCompanyUI = do
-  ug        <- addNewUserGroup
-  Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser
+    $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
@@ -233,8 +237,8 @@ testChangeCompanyUI = do
 
 testNormalUseCantChangeCompanyUI :: TestEnv ()
 testNormalUseCantChangeCompanyUI = do
-  ug         <- addNewUserGroup
-  Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ug ^. #id)
+  ug         <- instantiateRandomUserGroup
+  user1      <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
   Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
   ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
@@ -266,7 +270,7 @@ testNormalUseCantChangeCompanyUI = do
 
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault :: TestEnv ()
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
-  ug            <- addNewUserGroup
+  ug            <- instantiateRandomUserGroup
   ctx           <- mkContext defaultLang
 
   mainbd        <- dbQuery $ GetMainBrandedDomain

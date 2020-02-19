@@ -35,7 +35,9 @@ companyControlTests env = testGroup
 
 test_handleGetCompanyJSON :: TestEnv ()
 test_handleGetCompanyJSON = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
 
   let ugui = ug ^. #ui
 
@@ -87,15 +89,17 @@ test_handleGetCompanyJSON = do
 test_settingUIWithHandleChangeCompanyBranding :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBranding = do
 
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
 
-  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   -- Try setting new themes
-  mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
+  mailThemeFromDomain     <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #signviewTheme)
-  signviewTheme <- dbUpdate
+  signviewTheme           <- dbUpdate
     $ InsertNewThemeForUserGroup (ug ^. #id) signviewThemeFromDomain
   serviceThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #serviceTheme)
   serviceTheme <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) serviceThemeFromDomain
@@ -192,11 +196,13 @@ test_settingUIWithHandleChangeCompanyBranding = do
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
-  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   --Test we can't set mailTheme to domain theme
-  req1       <- mkRequest
+  req1 <- mkRequest
     POST
     [ ( "companyui"
       , inText
@@ -215,7 +221,9 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
               (Just $ ug ^. #ui % #mailTheme)
 
   -- Create theme for other company
-  (_, otherUg) <- addNewAdminUserAndUserGroup "Other" "Guy" "other_guy@skrivapa.se"
+  (_, otherUg) <- deprecatedAddNewAdminUserAndUserGroup "Other"
+                                                        "Guy"
+                                                        "other_guy@skrivapa.se"
   someTheme    <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (otherUg ^. #id) someTheme
 

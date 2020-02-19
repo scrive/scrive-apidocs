@@ -28,7 +28,7 @@ import EvidencePackage.EvidenceLog (finalizeEvidenceText)
 import MinutesTime
 import Templates (runTemplatesT)
 import TestingUtil
-  ( addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests, testThat
+  ( addRandomDocumentWithAuthor, fieldForTests, instantiateRandomUser, testThat
   )
 import TestKontra (TestEnvSt)
 import Text.XML.DirtyContent (renderXMLContent)
@@ -39,7 +39,7 @@ import VersionTH (versionID)
 
 dumpAllEvidenceTexts :: TestEnvSt -> Test
 dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
-  author <- addNewRandomUser
+  author <- instantiateRandomUser
   did    <- addRandomDocumentWithAuthor author
   withDocumentID did $ forM_ allLangs $ \lang -> do
     gts <- gview #globalTemplates

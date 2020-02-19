@@ -29,8 +29,8 @@ attachmentAPITests env = testGroup
 
 testAttachmentList :: TestEnv ()
 testAttachmentList = do
-  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
+  (anna, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  bob        <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
 
   now        <- currentTime
   fid        <- addNewRandomFile
@@ -59,7 +59,7 @@ testAttachmentList = do
 
 testAttachmentCreate :: TestEnv ()
 testAttachmentCreate = do
-  Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
   req      <- mkRequest
@@ -78,7 +78,7 @@ testAttachmentCreate = do
 
 testAttachmentSetSharing :: TestEnv ()
 testAttachmentSetSharing = do
-  Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
@@ -115,7 +115,7 @@ testAttachmentSetSharing = do
 
 testAttachmentDelete :: TestEnv ()
 testAttachmentDelete = do
-  Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
@@ -137,7 +137,7 @@ testAttachmentDelete = do
 
 testAttachmentDownload :: TestEnv ()
 testAttachmentDownload = do
-  Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 

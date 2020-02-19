@@ -41,14 +41,14 @@ mailsTests env = testGroup
 
 testBrandedDocumentMails :: TestEnv ()
 testBrandedDocumentMails = do
-  ug     <- addNewUserGroup
-  author <- addNewRandomCompanyUser (ug ^. #id) False
+  ug     <- instantiateRandomUserGroup
+  author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   void $ dbUpdate $ UserGroupUpdate (set #ui defaultUserGroupUI ug)
   sendDocumentMails author
 
 testDocumentMails :: TestEnv ()
 testDocumentMails = do
-  author <- addNewRandomUser
+  author <- instantiateRandomUser
   sendDocumentMails author
 
 sendDocumentMails :: User -> TestEnv ()
@@ -236,7 +236,7 @@ validMail name m = do
 
 addNewRandomUserWithLang :: Lang -> TestEnv User
 addNewRandomUserWithLang l = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   void . dbUpdate $ SetUserSettings (user ^. #id) (user ^. #settings & #lang .~ l)
   Just uuser <- dbQuery $ GetUserByID (user ^. #id)
   return uuser

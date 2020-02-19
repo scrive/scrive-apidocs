@@ -7,7 +7,6 @@ import DB
 import TestingUtil
 import TestKontra
 import Theme.Model
-import User.Model
 
 brandedDomainTests :: TestEnvSt -> Test
 brandedDomainTests env = testGroup
@@ -38,23 +37,14 @@ test_brandedDomainCreateUpdate = do
 
 test_brandedDomainAssociatedDomain :: TestEnv ()
 test_brandedDomainAssociatedDomain = do
-  ugid <- view #id <$> addNewUserGroup
   bdID <- dbUpdate $ NewBrandedDomain
   bd   <- dbQuery $ GetBrandedDomainByID bdID
   let nbd = set #url "http://localhost:8000" bd
   dbUpdate $ UpdateBrandedDomain nbd
 
-  pwd       <- createPassword "password_8866"
+  user <- instantiateUser $ randomUserTemplate { associatedDomainID = return bdID }
 
-  Just user <- createNewUser ("Andrzej", "Rybczak")
-                             "andrzej@scrive.com"
-                             (Just pwd)
-                             (ugid, True)
-                             defaultLang
-                             bdID
-                             AccountRequest
-
-  wbd <- dbQuery $ GetBrandedDomainByUserID (user ^. #id)
+  wbd  <- dbQuery $ GetBrandedDomainByUserID (user ^. #id)
 
   assertEqual "GetBrandedDomainByUserID works" nbd wbd
 

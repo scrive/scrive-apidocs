@@ -5,7 +5,6 @@ import Test.Framework
 import Text.JSON
 import Text.JSON.Gen
 
-import BrandedDomain.Model
 import DB
 import IPAddress
 import Login
@@ -250,16 +249,8 @@ compareEventDataFromList d l =
 
 createTestUser :: TestEnv User
 createTestUser = do
-  bd    <- dbQuery $ GetMainBrandedDomain
-  pwd   <- createPassword "test_password"
-  ug    <- addNewUserGroup
-  muser <- createNewUser ("", "")
-                         "karol@skrivapa.se"
-                         (Just pwd)
-                         (ug ^. #id, True)
-                         defaultLang
-                         (bd ^. #id)
-                         AccountRequest
-  case muser of
-    Nothing     -> unexpectedError "can't create user"
-    (Just user) -> return user
+  instantiateUser $ randomUserTemplate { email     = return "karol@skrivapa.se"
+                                       , firstName = return ""
+                                       , lastName  = return ""
+                                       , password  = Just "test_password"
+                                       }

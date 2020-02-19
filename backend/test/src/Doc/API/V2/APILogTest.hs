@@ -27,7 +27,7 @@ apiV2CallLogTests env =
 
 testApiLogIsStored :: TestEnv ()
 testApiLogIsStored = do
-  user       <- addNewRandomUser
+  user       <- instantiateRandomUser
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
@@ -40,7 +40,7 @@ testApiLogIsStored = do
 
 testApiLogIsRotated :: TestEnv ()
 testApiLogIsRotated = do
-  user       <- addNewRandomUser
+  user       <- instantiateRandomUser
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
@@ -52,7 +52,7 @@ testApiLogIsRotated = do
 
 testApiLogGetItemWorks :: TestEnv ()
 testApiLogGetItemWorks = do
-  user       <- addNewRandomUser
+  user       <- instantiateRandomUser
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
@@ -65,7 +65,7 @@ testApiLogGetItemWorks = do
 
 testApiLogGetListWorks :: TestEnv ()
 testApiLogGetListWorks = do
-  user       <- addNewRandomUser
+  user       <- instantiateRandomUser
   ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
@@ -76,7 +76,7 @@ testApiLogGetListWorks = do
 
 testApiLog2Users :: TestEnv ()
 testApiLog2Users = do
-  userA       <- addNewRandomUser
+  userA       <- instantiateRandomUser
   ctxA        <- (set #maybeUser (Just userA)) <$> mkContext defaultLang
   newMockDocA <- testDocApiV2New' ctxA
   let didA = getMockDocId newMockDocA
@@ -86,7 +86,7 @@ testApiLog2Users = do
   logsUserA <- dbQuery $ GetCallLogList (userA ^. #id)
   assertEqual "There should be 5 logged API Calls for user A" 5 (length logsUserA)
 
-  userB       <- addNewRandomUser
+  userB       <- instantiateRandomUser
   ctxB        <- (set #maybeUser (Just userB)) <$> mkContext defaultLang
   newMockDocB <- testDocApiV2New' ctxB
   let didB = getMockDocId newMockDocB

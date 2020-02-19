@@ -32,14 +32,14 @@ oauthTest env = testGroup
 
 testCreateAPIToken :: TestEnv ()
 testCreateAPIToken = do
-  singleuser <- addNewRandomUser
+  singleuser <- instantiateRandomUser
   r          <- dbUpdate $ CreateAPIToken (singleuser ^. #id)
   assertBool "CreateAPIToken did not return True." r
   ls <- dbQuery $ GetAPITokensForUser (singleuser ^. #id)
   assertBool "GetAPITokensForUser did not return the token just created (first user)."
     $  length ls
     == 1
-  seconduser <- addNewRandomUser
+  seconduser <- instantiateRandomUser
   r2         <- dbUpdate $ CreateAPIToken (seconduser ^. #id)
   assertBool "CreateAPIToken did not return True." r2
   ls2 <- dbQuery $ GetAPITokensForUser (seconduser ^. #id)
@@ -63,7 +63,7 @@ testCreateAPIToken = do
 
 testDeleteAPIToken :: TestEnv ()
 testDeleteAPIToken = do
-  singleuser <- addNewRandomUser
+  singleuser <- instantiateRandomUser
   void $ dbUpdate $ CreateAPIToken (singleuser ^. #id)
   ls <- dbQuery $ GetAPITokensForUser (singleuser ^. #id)
   assertBool "GetAPITokensForUser did not return the token just created." $ length ls == 1
@@ -91,7 +91,7 @@ testRTCSecurity = do
     $ isNothing mcr
 
   -- api secret must match api token
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   void $ dbUpdate $ CreateAPIToken (user ^. #id)
   ls <- dbQuery $ GetAPITokensForUser (user ^. #id)
   assertBool "GetAPITokensForUser did not return the token just created." $ length ls == 1
@@ -136,8 +136,8 @@ testRTCSecurity = do
 testVerifyCredentials :: TestEnv ()
 testVerifyCredentials = do
   -- temp token must exist
-  user    <- addNewRandomUser
-  apiuser <- addNewRandomUser
+  user    <- instantiateRandomUser
+  apiuser <- instantiateRandomUser
   let loop = do
         uid <- rand 10 arbitrary
         if uid /= (user ^. #id) && uid /= (apiuser ^. #id) then return uid else loop
@@ -179,9 +179,9 @@ testVerifyCredentials = do
   case mcr' of
     Nothing        -> assertFailure "RequestTempCredentials should work!"
     Just (tok', _) -> do
-      user1 <- addNewRandomUser
+      user1 <- instantiateRandomUser
       void $ dbUpdate $ VerifyCredentials tok' (user1 ^. #id) time
-      user2 <- addNewRandomUser
+      user2 <- instantiateRandomUser
       mvc'' <- dbUpdate $ VerifyCredentials tok' (user2 ^. #id) time
       assertBool "VerifyCredentials: second user verifying should not work."
         $ isNothing mvc''
@@ -189,8 +189,8 @@ testVerifyCredentials = do
 testRequestAccessToken :: TestEnv ()
 testRequestAccessToken = do
   -- setup
-  apiclient <- addNewRandomUser
-  user      <- addNewRandomUser
+  apiclient <- instantiateRandomUser
+  user      <- instantiateRandomUser
   time      <- rand 10 arbitrary
   void $ dbUpdate $ CreateAPIToken (apiclient ^. #id)
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser (apiclient ^. #id)
@@ -277,8 +277,8 @@ testRequestAccessToken = do
 
 testOAuthFlow :: TestEnv ()
 testOAuthFlow = do
-  apiclient <- addNewRandomUser
-  user      <- addNewRandomUser
+  apiclient <- instantiateRandomUser
+  user      <- instantiateRandomUser
   time      <- rand 10 arbitrary
   void $ dbUpdate $ CreateAPIToken (apiclient ^. #id)
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser (apiclient ^. #id)
@@ -307,7 +307,7 @@ testOAuthFlow = do
 
 testOAuthFlowWithDeny :: TestEnv ()
 testOAuthFlowWithDeny = do
-  apiclient <- addNewRandomUser
+  apiclient <- instantiateRandomUser
   time      <- rand 10 arbitrary
   void $ dbUpdate $ CreateAPIToken (apiclient ^. #id)
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser (apiclient ^. #id)
@@ -334,8 +334,8 @@ testOAuthFlowWithDeny = do
 
 testGetGrantedPrivileges :: TestEnv ()
 testGetGrantedPrivileges = do
-  apiclient <- addNewRandomUser
-  user      <- addNewRandomUser
+  apiclient <- instantiateRandomUser
+  user      <- instantiateRandomUser
   time      <- rand 10 arbitrary
   void $ dbUpdate $ CreateAPIToken (apiclient ^. #id)
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser (apiclient ^. #id)
@@ -364,8 +364,8 @@ testGetGrantedPrivileges = do
 
 testDeletePrivileges :: TestEnv ()
 testDeletePrivileges = do
-  apiclient <- addNewRandomUser
-  user      <- addNewRandomUser
+  apiclient <- instantiateRandomUser
+  user      <- instantiateRandomUser
   time      <- rand 10 arbitrary
   void $ dbUpdate $ CreateAPIToken (apiclient ^. #id)
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser (apiclient ^. #id)
@@ -395,8 +395,8 @@ testDeletePrivileges = do
 
 testDeletePrivilege :: TestEnv ()
 testDeletePrivilege = do
-  apiclient <- addNewRandomUser
-  user      <- addNewRandomUser
+  apiclient <- instantiateRandomUser
+  user      <- instantiateRandomUser
   time      <- rand 10 arbitrary
   void $ dbUpdate $ CreateAPIToken (apiclient ^. #id)
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser (apiclient ^. #id)
@@ -426,7 +426,7 @@ testDeletePrivilege = do
 
 testPersonalToken :: TestEnv ()
 testPersonalToken = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   mt   <- dbQuery $ GetPersonalToken (user ^. #id)
   assertBool "GetPersonalToken: should return Nothing with new User." $ mt == Nothing
 
@@ -447,7 +447,7 @@ testPersonalToken = do
 
 testRecentPersonalToken :: TestEnv ()
 testRecentPersonalToken = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   mt   <- dbQuery $ GetRecentPersonalToken (user ^. #id) 5
   assertBool "GetPersonalToken: should return Nothing with new User." $ mt == Nothing
 

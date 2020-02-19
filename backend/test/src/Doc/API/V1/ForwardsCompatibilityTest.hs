@@ -62,13 +62,13 @@ testApiV1DoesNotBreakApiV2 = do
 
 testDocApiV1FromTemplateImpersonateEID :: TestEnv ()
 testDocApiV1FromTemplateImpersonateEID = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   let uid = user ^. #id
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- addNewUserGroup
+  ug  <- instantiateRandomUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role
@@ -111,13 +111,13 @@ testDocApiV1FromTemplateImpersonateEID = do
 
 testDocApiV1ReadyImpersonateEID :: TestEnv ()
 testDocApiV1ReadyImpersonateEID = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   let uid = user ^. #id
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- addNewUserGroup
+  ug  <- instantiateRandomUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role

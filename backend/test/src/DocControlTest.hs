@@ -147,7 +147,7 @@ testNewDocumentUnsavedDraft = do
 
 uploadDocAsNewUser :: TestEnv (User, Response)
 uploadDocAsNewUser = do
-  (Just user)  <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user)  <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req          <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
@@ -170,7 +170,7 @@ signScreenshots =
 
 testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   let filename = inTestDir "pdfs/simple.pdf"
@@ -268,10 +268,10 @@ testLastPersonSigningADocumentClosesIt = do
 
 testSigningWithPin :: TestEnv ()
 testSigningWithPin = do
-  ugid1      <- view #id <$> addNewUserGroup
-  ugid2      <- view #id <$> addNewUserGroup
-  Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
-  Just user2 <- addNewUser "Gary" "Green" "gary@green.com"
+  ugid1      <- view #id <$> instantiateRandomUserGroup
+  ugid2      <- view #id <$> instantiateRandomUserGroup
+  Just user1 <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
+  Just user2 <- deprecatedAddNewUser "Gary" "Green" "gary@green.com"
   True       <- dbUpdate $ SetUserUserGroup (user1 ^. #id) ugid1
   True       <- dbUpdate $ SetUserUserGroup (user2 ^. #id) ugid2
   ctx        <- (set #maybeUser (Just user1)) <$> mkContext defaultLang
@@ -415,7 +415,7 @@ testSigningWithPin = do
 
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   doc         <- addRandomDocument (rdaDefault user)
@@ -441,16 +441,17 @@ testSendReminderEmailUpdatesLastModifiedDate = do
 
 testSendReminderEmailByCompanyAdmin :: TestEnv ()
 testSendReminderEmailByCompanyAdmin = do
-  ugid      <- view #id <$> addNewUserGroup
-  user      <- addNewRandomCompanyUser ugid False
-  otheruser <- addNewRandomCompanyUser ugid False
-  adminuser <- addNewRandomCompanyUser ugid True
+  ugid      <- view #id <$> instantiateRandomUserGroup
+  user      <- instantiateUser $ randomUserTemplate { groupID = return ugid }
+  otheruser <- instantiateUser $ randomUserTemplate { groupID = return ugid }
+  adminuser <- instantiateUser
+    $ randomUserTemplate { groupID = return ugid, isCompanyAdmin = True }
 
-  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
-  ctxadmin  <- (set #maybeUser (Just adminuser)) <$> mkContext defaultLang
-  ctxother  <- (set #maybeUser (Just otheruser)) <$> mkContext defaultLang
+  ctx      <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctxadmin <- (set #maybeUser (Just adminuser)) <$> mkContext defaultLang
+  ctxother <- (set #maybeUser (Just otheruser)) <$> mkContext defaultLang
 
-  doc       <- addRandomDocument (rdaDefault user)
+  doc      <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
     , rdaTypes       = OneOf [Signable]
     , rdaSignatories = let signatory = OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
@@ -492,10 +493,11 @@ testSendReminderEmailByCompanyAdmin = do
 
 testDownloadFile :: TestEnv ()
 testDownloadFile = do
-  ugid           <- view #id <$> addNewUserGroup
-  user           <- addNewRandomCompanyUser ugid False
-  otheruser      <- addNewRandomCompanyUser ugid False
-  adminuser      <- addNewRandomCompanyUser ugid True
+  ugid      <- view #id <$> instantiateRandomUserGroup
+  user      <- instantiateUser $ randomUserTemplate { groupID = return ugid }
+  otheruser <- instantiateUser $ randomUserTemplate { groupID = return ugid }
+  adminuser <- instantiateUser
+    $ randomUserTemplate { groupID = return ugid, isCompanyAdmin = True }
 
   ctxnotloggedin <- mkContext defaultLang
 
@@ -572,7 +574,7 @@ testDownloadFile = do
 
 testDownloadFileWithAuthToView :: TestEnv ()
 testDownloadFileWithAuthToView = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx         <- mkContext defaultLang
   doc         <- addRandomDocument (rdaDefault user)
     { rdaTypes       = OneOf [Signable]
@@ -599,7 +601,7 @@ testDownloadFileWithAuthToView = do
 
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
                                       , rdaStatuses = OneOf [Pending]
@@ -628,7 +630,7 @@ testSendingReminderClearsDeliveryInformation = do
 
 testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
-  (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
+  (Just user) <- deprecatedAddNewUser "aaa" "bbb" "xxx@xxx.pl"
   doc         <- addRandomDocument (rdaDefault user) { rdaTypes = OneOf [Template] }
   docs1       <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -639,25 +641,23 @@ testDocumentFromTemplate = do
 
 testDocumentFromTemplateShared :: TestEnv ()
 testDocumentFromTemplateShared = do
-  ugid          <- view #id <$> addNewUserGroup
-  (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
-  doc           <- addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Template] }
+  author <- instantiateRandomUser
+  doc    <- addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Template] }
   void $ randomUpdate $ SetDocumentSharing [documentid doc] True
-  (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
-  docs1       <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
-  req         <- mkRequest POST []
+  user  <- instantiateUser $ randomUserTemplate { groupID = return $ author ^. #groupID }
+  docs1 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
+  ctx   <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  req   <- mkRequest POST []
   void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
   docs2 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   assertEqual "New document should have been created" (1 + length docs1) (length docs2)
 
 testDocumentDeleteInBulk :: TestEnv ()
 testDocumentDeleteInBulk = do
-  ugid          <- view #id <$> addNewUserGroup
-  (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
+  author <- instantiateRandomUser
   -- isSignable condition below is wrong. Tests somehow generate template documents
   -- that are pending and that breaks everything.
-  docs          <- replicateM
+  docs   <- replicateM
     100
     (addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Signable] })
 
@@ -670,7 +670,7 @@ testDocumentDeleteInBulk = do
 
 testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest GET []
@@ -680,7 +680,7 @@ testGetLoggedIn = do
 
 testGetNotLoggedIn :: TestEnv ()
 testGetNotLoggedIn = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
   ctx         <- mkContext defaultLang
   req         <- mkRequest GET []
@@ -690,7 +690,7 @@ testGetNotLoggedIn = do
 
 testGetBadHeader :: TestEnv ()
 testGetBadHeader = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
@@ -701,7 +701,7 @@ testGetBadHeader = do
 -- Testing access to evidence documentation
 testGetEvidenceAttachmentsLoggedIn :: TestEnv ()
 testGetEvidenceAttachmentsLoggedIn = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest GET []
@@ -710,7 +710,7 @@ testGetEvidenceAttachmentsLoggedIn = do
 
 testGetEvidenceAttachmentsNotLoggedIn :: TestEnv ()
 testGetEvidenceAttachmentsNotLoggedIn = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
   ctx         <- mkContext defaultLang
   req         <- mkRequest GET []
@@ -743,7 +743,7 @@ testSignviewBrandingBlocksNastyInput = do
 testDownloadSignviewBrandingAccess :: TestEnv ()
 testDownloadSignviewBrandingAccess = do
   -- Create file and make it ready for signing
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
   file        <- saveNewFile (T.pack filename) filecontent
@@ -815,7 +815,7 @@ testDownloadSignviewBrandingAccess = do
 
 testGetCancelledDocument :: TestEnv ()
 testGetCancelledDocument = do
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   ctx       <- mkContext defaultLang
   doc       <- addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Pending]
@@ -848,7 +848,7 @@ testGetCancelledDocument = do
 
 testDocumentFromShareableTemplate :: TestEnv ()
 testDocumentFromShareableTemplate = replicateM_ 10 $ do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   tpl  <- addRandomDocument (rdaDefault user)
     { rdaTypes       = OneOf [Template]
     , rdaSignatories = let author = OneOf
@@ -918,7 +918,7 @@ testDocumentFromShareableTemplate = replicateM_ 10 $ do
 
 testGetDocumentWithSignatoryAccessTokens :: TestEnv ()
 testGetDocumentWithSignatoryAccessTokens = do
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
 
   doc       <- addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Pending]
@@ -966,8 +966,8 @@ testGetDocumentWithSignatoryAccessTokens = do
 
 testSendEmailOnTimeout :: TestEnv ()
 testSendEmailOnTimeout = do
-  ug        <- addNewUserGroup
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ug        <- instantiateRandomUserGroup
+  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (user ^. #id) (ug ^. #id)
   let newUGS = (set #sendTimeoutNotification True (fromJust $ ug ^. #settings))
   dbUpdate $ UserGroupUpdateSettings (ug ^. #id) (Just newUGS)

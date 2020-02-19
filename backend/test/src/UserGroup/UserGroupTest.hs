@@ -75,7 +75,7 @@ testCreateGroupsWithUsers = do
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
-        u   <- addNewRandomUser
+        u   <- instantiateRandomUser
         void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
         return . replicate 2 . Just $ ug1 ^. #id
 
@@ -96,7 +96,7 @@ testGetAllUsersOfTopGroup = do
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
-        u   <- addNewRandomUser
+        u   <- instantiateRandomUser
         void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
         return $ ug1 ^. #id
       --      parents for groups in next level , all group ids created
@@ -125,7 +125,7 @@ testGetAllGroupsOfUser = do
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
-        u   <- addNewRandomUser
+        u   <- instantiateRandomUser
         void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
         return (ug1 ^. #id, u ^. #id)
       --      parents for groups in next level , all userids created
@@ -172,7 +172,7 @@ testMoveGroup = do
           1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set #parentGroupID mparent_id $ ug0
-        u   <- addNewRandomUser
+        u   <- instantiateRandomUser
         void . dbUpdate $ SetUserGroup (u ^. #id) (Just $ ug1 ^. #id)
         return $ ug1 ^. #id
       --      parents for groups in next level , all group ids created
@@ -226,13 +226,14 @@ testCannotDeleteUserGroupWithSubgroups = do
 
 testChangeUserGroupParent :: TestEnv ()
 testChangeUserGroupParent = do
-  usrGrp       <- addNewUserGroup
-  parentUsrGrp <- addNewUserGroup
+  usrGrp       <- instantiateRandomUserGroup
+  parentUsrGrp <- instantiateRandomUserGroup
   let usrGrpID       = usrGrp ^. #id
       parentUsrGrpID = parentUsrGrp ^. #id
       usrEmail       = "testuseremail@scrive.com"
-  Just user <- addNewUserToUserGroup "Froggie" "Freddie" usrEmail usrGrpID
-  ctx       <- (set #maybeUser $ Just user) <$> mkContext defaultLang
+  user <- instantiateUser
+    $ randomUserTemplate { email = return usrEmail, groupID = return usrGrpID }
+  ctx <- (set #maybeUser $ Just user) <$> mkContext defaultLang
 
   let params1 = [("companyparentid", inText $ showt parentUsrGrpID)]
   req1 <- mkRequest POST params1
@@ -253,7 +254,7 @@ testChangeUserGroupParent = do
   assertEqual "User group parent has been set correctly" mUsrGrpParentAfter
     $ Just parentUsrGrpID
 
-  grandParentUsrGrp <- addNewUserGroup
+  grandParentUsrGrp <- instantiateRandomUserGroup
   let grandParentUsrGrpID = grandParentUsrGrp ^. #id
       params2             = [("companyparentid", inText $ showt grandParentUsrGrpID)]
   req2 <- mkRequest POST params2
@@ -265,7 +266,7 @@ testChangeUserGroupParent = do
 
   -- Setting a parent that already has a parent should work. We'll reuse
   -- usrGrp since it now has one.
-  usrGrp' <- addNewUserGroup
+  usrGrp' <- instantiateRandomUserGroup
   let usrGrpID' = usrGrp' ^. #id
       params3   = [("companyparentid", inText $ showt usrGrpID)]
   req3 <- mkRequest POST params3

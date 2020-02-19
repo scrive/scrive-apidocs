@@ -24,7 +24,7 @@ archiveTests env =
 testListDocs :: TestEnv ()
 testListDocs = do
   cont        <- readTestFileAsStr "json/document1.json"
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
 
   -- send a doc as author
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -39,7 +39,7 @@ testListDocs = do
   void $ runTestKontra req'' ctx $ apiCallV1Ready $ documentid doc
 
   -- send a doc to author from someoneelse
-  (Just user2) <- addNewUser "Jackie" "Chan" "jackie@chan.com"
+  (Just user2) <- deprecatedAddNewUser "Jackie" "Chan" "jackie@chan.com"
   ctx2         <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
   req2         <- mkRequest
     POST

@@ -68,7 +68,7 @@ apiV1JSONTests env = testGroup
 {- Test 1 -}
 testFromFileAndReadySimple :: TestEnv ()
 testFromFileAndReadySimple = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
@@ -88,7 +88,7 @@ testFromFileAndReadySimple = do
 {- Test 2 -}
 testFromFileAndUpdate :: TestEnv ()
 testFromFileAndUpdate = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
@@ -109,7 +109,7 @@ testFromFileAndUpdate = do
 {- Test 3 -}
 testFromTemplateAndReadySimple :: TestEnv ()
 testFromTemplateAndReadySimple = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
@@ -146,7 +146,7 @@ testFromTemplateAndReadySimple = do
 {- Test 4 -}
 testUpdateFields :: TestEnv ()
 testUpdateFields = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
@@ -185,7 +185,7 @@ testUpdateFields = do
 {- Test 5 -}
 testUpdateWithReplacementFields :: TestEnv ()
 testUpdateWithReplacementFields = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
@@ -223,7 +223,7 @@ testUpdateWithReplacementFields = do
 {- Test 6 -}
 testUpdateWithSubset :: TestEnv ()
 testUpdateWithSubset = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders POST [] []
@@ -242,7 +242,7 @@ testUpdateWithSubset = do
 {- Test 7 -}
 testUpdateWithAllFeatures :: TestEnv ()
 testUpdateWithAllFeatures = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
@@ -281,7 +281,7 @@ testUpdateWithAllFeatures = do
 {- Test 8 -}
 testList :: TestEnv ()
 testList = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
@@ -365,7 +365,7 @@ testList = do
 {- Test 9 -}
 testSignWithSignature :: TestEnv ()
 testSignWithSignature = do
-  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders

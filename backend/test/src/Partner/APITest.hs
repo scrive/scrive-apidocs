@@ -70,7 +70,7 @@ testPartnerCompanyCreate = do
                         rq_newCompany_resp_fp
 
   -- Random  user shouldn't be able to create company
-  randomUser      <- addNewRandomUser
+  randomUser      <- instantiateRandomUser
   randomCtx       <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
   randomReq       <- mkRequestWithHeaders POST [] []
   (randomRes1, _) <-
@@ -141,7 +141,7 @@ testPartnerCompanyUpdate = do
                         rq_companyUpdate_resp_fp
 
   -- Random user shouldn't be able to update
-  randomUser     <- addNewRandomUser
+  randomUser     <- instantiateRandomUser
   randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
   randomReq      <- mkRequestWithHeaders POST [("json", inTextBS companyUpdateJSON)] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
@@ -250,7 +250,7 @@ testPartnerCompanyGet = do
                         rq_companyUpdate_resp_fp
 
   -- Random user shouldn't be able to update
-  randomUser     <- addNewRandomUser
+  randomUser     <- instantiateRandomUser
   randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
   randomReq      <- mkRequestWithHeaders POST [] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
@@ -330,7 +330,7 @@ testPartnerCompaniesGet = do
                         rq_companiesList_resp_fp
 
   -- create randomUser
-  randomUser     <- addNewRandomUser
+  randomUser     <- instantiateRandomUser
 
   -- random user is denied listing companies of partnerA
   randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang

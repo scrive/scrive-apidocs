@@ -11,7 +11,7 @@ import PadApplication.API
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
-import UserGroupAccountsTest (addNewAdminUserAndUserGroup)
+import UserGroupAccountsTest (deprecatedAddNewAdminUserAndUserGroup)
 
 padAplicationAPITests :: TestEnvSt -> Test
 padAplicationAPITests env = testGroup
@@ -20,7 +20,9 @@ padAplicationAPITests env = testGroup
 
 testPadApplicationPadInfoGet :: TestEnv ()
 testPadApplicationPadInfoGet = do
-  (user, ug)    <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
 
   ctx1          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req1          <- mkRequest GET []

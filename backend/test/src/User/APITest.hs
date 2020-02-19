@@ -73,7 +73,7 @@ testUserLoginAndGetSession :: TestEnv ()
 testUserLoginAndGetSession = do
   -- create a user
   let password = "Secret Password!"
-  randomUser <- addNewRandomUserWithPassword password
+  randomUser <- instantiateUser $ randomUserTemplate { password = Just password }
   ctx        <- mkContext defaultLang
   req1       <- mkRequest
     GET
@@ -116,7 +116,7 @@ testUserTooManyGetTokens = do
   -- create a user
   let password      = "Secret Password!"
   let wrongpassword = "Hello World!"
-  randomUser <- addNewRandomUserWithPassword password
+  randomUser <- instantiateUser $ randomUserTemplate { password = Just password }
   ctx        <- mkContext defaultLang
   -- getting personap token works with correct password
   req1       <- mkRequest
@@ -149,7 +149,8 @@ testUserTooManyGetTokens = do
 testUser2FAWorkflow :: TestEnv ()
 testUser2FAWorkflow = do
   password          <- rand 10 $ arbText 3 30
-  randomUser        <- addNewRandomUserWithPassword $ password
+  randomUser        <- instantiateUser $ randomUserTemplate { password = Just password }
+
   ctx'              <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
 
   -- Start setting up 2FA
@@ -221,7 +222,7 @@ testUser2FAWorkflow = do
 
 testUserNoDeletionIfWrongEmail :: TestEnv ()
 testUserNoDeletionIfWrongEmail = do
-  (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  (anna, _) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
 
   ctx       <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
@@ -237,17 +238,18 @@ testUserNoDeletionIfWrongEmail = do
 
 testUserNoDeletionIfPendingDocuments :: TestEnv ()
 testUserNoDeletionIfPendingDocuments = do
-  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  (anna, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   now        <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
 
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
+  bob <- instantiateUser
+    $ randomUserTemplate { email = return "bob@blue.com", groupID = return $ ug ^. #id }
 
-  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  ctx <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
-  doc      <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Signable]
-                                                 , rdaStatuses = OneOf [Pending]
-                                                 }
+  doc <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Signable]
+                                            , rdaStatuses = OneOf [Pending]
+                                            }
 
   do
     req      <- mkRequest POST [("email", inText "bob@blue.com")]
@@ -263,7 +265,7 @@ testUserNoDeletionIfPendingDocuments = do
 
 testUserDeletion :: TestEnv ()
 testUserDeletion = do
-  (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  (anna, _) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   ctx       <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
   req       <- mkRequest POST [("email", inText "anna@android.com")]
@@ -272,10 +274,11 @@ testUserDeletion = do
 
 testUserDeletionOwnershipTransfer :: TestEnv ()
 testUserDeletionOwnershipTransfer = do
-  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ug ^. #id)
+  (anna, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  bob        <- instantiateUser
+    $ randomUserTemplate { email = return "bob@blue.com", groupID = return $ ug ^. #id }
 
-  now        <- currentTime
+  now <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
   void $ dbUpdate $ AcceptTermsOfService (bob ^. #id) now
   void $ dbUpdate $ SetUserCompanyAdmin (bob ^. #id) True
@@ -329,7 +332,7 @@ testUserDeletionOwnershipTransfer = do
 
 testUserSetDataRetentionPolicy :: TestEnv ()
 testUserSetDataRetentionPolicy = do
-  (user, _) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
+  (user, _) <- deprecatedAddNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
   ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do
@@ -346,7 +349,7 @@ testUserSetDataRetentionPolicy = do
 
 testUserSetDataRetentionPolicyOnlyIfAsStrict :: TestEnv ()
 testUserSetDataRetentionPolicyOnlyIfAsStrict = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do

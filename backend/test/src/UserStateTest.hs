@@ -93,14 +93,14 @@ test_getUserByEmail_returnsNothing = do
 
 test_getUserByEmail_returnsTheRightUser :: TestEnv ()
 test_getUserByEmail_returnsTheRightUser = do
-  Just user   <- addNewUser "Emily" "Green" "emily@green.com"
+  Just user   <- deprecatedAddNewUser "Emily" "Green" "emily@green.com"
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
   queriedUser2 <- dbQuery $ GetUserByEmail (Email "EMILY@green.com")
   assert (isJust queriedUser2)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
-  Just user3   <- addNewUser "Eric" "Normand" "ERIc@Normand.Com"
+  Just user3   <- deprecatedAddNewUser "Eric" "Normand" "ERIc@Normand.Com"
   queriedUser3 <- dbQuery $ GetUserByEmail (Email "eric@normand.com")
   assert (isJust queriedUser3)
   assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser3)
@@ -115,14 +115,14 @@ test_getUserByID_returnsNothing = do
 
 test_getUserByID_returnsTheRightUser :: TestEnv ()
 test_getUserByID_returnsTheRightUser = do
-  Just user   <- addNewUser "Emily" "Green" "emiy@green.com"
+  Just user   <- deprecatedAddNewUser "Emily" "Green" "emiy@green.com"
   queriedUser <- dbQuery $ GetUserByID $ user ^. #id
   assert (isJust queriedUser)
   assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
 test_setUserEmail_GetByEmail :: TestEnv ()
 test_setUserEmail_GetByEmail = do
-  Just user' <- addNewUser "Emily" "Green" "emily@green.com"
+  Just user' <- deprecatedAddNewUser "Emily" "Green" "emily@green.com"
   void $ dbUpdate $ SetUserEmail (user' ^. #id) $ Email "Emily@green.coM"
   Just user   <- dbQuery $ GetUserByID $ user' ^. #id
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
@@ -134,7 +134,7 @@ test_setUserEmail_GetByEmail = do
 
 test_setUserEmail_works :: TestEnv ()
 test_setUserEmail_works = do
-  Just user' <- addNewUser "Emily" "Green" "emily@green.com"
+  Just user' <- deprecatedAddNewUser "Emily" "Green" "emily@green.com"
   void $ dbUpdate $ SetUserEmail (user' ^. #id) $ Email "other@email.com"
   Just user   <- dbQuery $ GetUserByID $ user' ^. #id
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
@@ -145,7 +145,7 @@ test_setUserEmail_works = do
 
 test_setUserPassword_changesPassword :: TestEnv ()
 test_setUserPassword_changesPassword = do
-  Just user    <- addNewUser "Emily" "Green" "emily@green.com"
+  Just user    <- deprecatedAddNewUser "Emily" "Green" "emily@green.com"
   passwordhash <- createPassword "Secret Password!"
   void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
@@ -153,17 +153,22 @@ test_setUserPassword_changesPassword = do
 
 test_addUser_repeatedEmailReturnsNothing :: TestEnv ()
 test_addUser_repeatedEmailReturnsNothing = do
-  Just _ <- addNewUser "Emily" "Green" "emily@green.com"
-  result <- addNewUser "Emily" "Green Again" "emily@green.com"
+  Just _ <- tryInstantiateUser $ randomUserTemplate { firstName = return "Emily"
+                                                    , lastName  = return "Green"
+                                                    , email     = return "emily@green.com"
+                                                    }
+  result <- tryInstantiateUser $ randomUserTemplate { firstName = return "Emily"
+                                                    , lastName  = return "Green Again"
+                                                    , email     = return "emily@green.com"
+                                                    }
   assert $ isNothing result
 
 test_userGroupGetUsers :: TestEnv ()
 test_userGroupGetUsers = do
   ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
-  users <- forM emails $ \email -> do
-    Just user <- addNewUserToUserGroup "Emily" "Green" email ugid
-    return user
+  users <- forM emails $ \email ->
+    instantiateUser $ randomUserTemplate { email = return email, groupID = return ugid }
   ugAccounts1 <- dbQuery $ UserGroupGetUsers ugid
   assertBool "Company accounts returned in proper order (sorted by email)"
     $  sortByEmail users
@@ -184,7 +189,7 @@ test_userGroupGetUsers = do
 test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
   let email = "emily@green.com"
-  Just user <- addNewUser "Emily" "Green" email
+  Just user <- deprecatedAddNewUser "Emily" "Green" email
   doc       <- addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Closed]
                                                    }
@@ -201,12 +206,15 @@ test_userUsageStatisticsByCompany :: TestEnv ()
 test_userUsageStatisticsByCompany = do
   let email1 = "emily@green.com"
       email2 = "bob@gblue.com"
-  ugid       <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
-  Just user1 <- addNewUserToUserGroup "Emily" "Green" email1 ugid
-  Just user2 <- addNewUserToUserGroup "Bob" "Blue" email2 ugid
-  doc0       <- addRandomDocument (rdaDefault user1) { rdaTypes    = OneOf [Signable]
-                                                     , rdaStatuses = OneOf [Closed]
-                                                     }
+  ugid  <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  user1 <- instantiateUser
+    $ randomUserTemplate { email = return email1, groupID = return ugid }
+
+  user2 <- instantiateUser
+    $ randomUserTemplate { email = return email2, groupID = return ugid }
+  doc0 <- addRandomDocument (rdaDefault user1) { rdaTypes    = OneOf [Signable]
+                                               , rdaStatuses = OneOf [Closed]
+                                               }
   doc1 <- addRandomDocument (rdaDefault user2) { rdaTypes    = OneOf [Signable]
                                                , rdaStatuses = OneOf [Closed]
                                                }
@@ -226,7 +234,7 @@ test_userUsageStatisticsByCompany = do
 
 test_userShareableLinkStatisticsByUser :: TestEnv ()
 test_userShareableLinkStatisticsByUser = do
-  Just user <- addNewUser "Emily" "Green" "email"
+  Just user <- deprecatedAddNewUser "Emily" "Green" "email"
   template  <- addRandomDocumentWithAuthor' user
   doc       <- addRandomDocumentFromShareableLinkWithTemplateId user (documentid template)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
@@ -245,8 +253,8 @@ test_userShareableLinkStatisticsByUser = do
 
 test_userShareableLinkStatisticsByUserOnlyCorrectUser :: TestEnv ()
 test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
-  Just user1 <- addNewUser "Emily" "Green" "email"
-  Just user2 <- addNewUser "Emily2" "Green" "email2"
+  Just user1 <- deprecatedAddNewUser "Emily" "Green" "email"
+  Just user2 <- deprecatedAddNewUser "Emily2" "Green" "email2"
   template <- addRandomDocumentWithAuthor' user1
   doc1 <- addRandomDocumentFromShareableLinkWithTemplateId user1 (documentid template)
   doc2 <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
@@ -267,12 +275,12 @@ test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
 
 test_userShareableLinkStatisticsByGroup :: TestEnv ()
 test_userShareableLinkStatisticsByGroup = do
-  ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
-  Just user1 <- addNewUserToUserGroup "Emily" "Green" "emily@green.com" ugid
-  Just user2 <- addNewUserToUserGroup "Bob" "Blue" "bob@gblue.com" ugid
+  ugid     <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  user1    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
+  user2    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   template <- addRandomDocumentWithAuthor' user1
-  doc1 <- addRandomDocumentFromShareableLinkWithTemplateId user1 (documentid template)
-  doc2 <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
+  doc1     <- addRandomDocumentFromShareableLinkWithTemplateId user1 (documentid template)
+  doc2     <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc2)
   res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUserGroup ugid)
@@ -290,7 +298,9 @@ test_userShareableLinkStatisticsByGroup = do
 
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
-  uid  <- view #id . fromJust <$> addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  uid <- view #id . fromJust <$> deprecatedAddNewUser "Andrzej"
+                                                      "Rybczak"
+                                                      "andrzej@skrivapa.se"
   ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
   res  <- dbUpdate $ SetUserUserGroup uid ugid
   assertBool "Company was correctly set" res
@@ -299,7 +309,7 @@ test_setUserCompany = do
 
 test_deleteUser :: TestEnv ()
 test_deleteUser = do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just user <- deprecatedAddNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   res       <- dbUpdate $ DeleteUser $ user ^. #id
   assertBool "User was correctly removed" res
   nouser <- dbQuery $ GetUserByID $ user ^. #id
@@ -309,7 +319,7 @@ test_deleteUser = do
 
 test_setUserInfo :: TestEnv ()
 test_setUserInfo = do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just user <- deprecatedAddNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let ui =
         (user ^. #info)
           & (#personalNumber .~ "1234567")
@@ -322,7 +332,7 @@ test_setUserInfo = do
 
 test_setUserInfoCapEmail :: TestEnv ()
 test_setUserInfoCapEmail = do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just user <- deprecatedAddNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let ui =
         (user ^. #info)
           & (#personalNumber .~ "1234567")
@@ -338,7 +348,7 @@ test_setUserInfoCapEmail = do
 
 test_setUserSettings :: TestEnv ()
 test_setUserSettings = do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just user <- deprecatedAddNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let us = user ^. #settings & #lang .~ defaultLang
   res <- dbUpdate $ SetUserSettings (user ^. #id) us
   assertBool "UserSettings updated correctly" res
@@ -347,7 +357,7 @@ test_setUserSettings = do
 
 test_acceptTermsOfService :: TestEnv ()
 test_acceptTermsOfService = do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just user <- deprecatedAddNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   now       <- currentTime
   res       <- dbUpdate $ AcceptTermsOfService (user ^. #id) now
   assertBool "User updated correctly" res
@@ -357,7 +367,7 @@ test_acceptTermsOfService = do
 
 test_setSignupMethod :: TestEnv ()
 test_setSignupMethod = do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just user <- deprecatedAddNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let method = ViralInvitation
   res <- dbUpdate $ SetSignupMethod (user ^. #id) method
   assertBool "User updated correctly" res

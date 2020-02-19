@@ -45,8 +45,8 @@ chargeableTest env = testGroup
 
 test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
-  ugid      <- view #id <$> addNewUserGroup
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ugid      <- view #id <$> instantiateRandomUserGroup
+  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   doc       <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
@@ -71,8 +71,8 @@ test_smsCounting_default = do
 
 test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
-  ugid      <- view #id <$> addNewUserGroup
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ugid      <- view #id <$> instantiateRandomUserGroup
+  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   True      <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   doc       <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
@@ -97,8 +97,8 @@ test_smsCounting_telia = do
 
 test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
-  ugid        <- view #id <$> addNewUserGroup
-  Just user   <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ugid        <- view #id <$> instantiateRandomUserGroup
+  Just user   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
   True        <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
@@ -161,7 +161,7 @@ test_startDocumentCharging = do
 
 test_closeDocAndSigCharging :: TestEnv ()
 test_closeDocAndSigCharging = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   let queryChargeableSigClose =
         "SELECT count(*) FROM chargeable_items WHERE type = 9 "

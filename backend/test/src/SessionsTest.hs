@@ -6,7 +6,6 @@ import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 
-import BrandedDomain.Model
 import Context
 import DB hiding (query, update)
 import Doc.DocStateData
@@ -257,8 +256,7 @@ testCustomSessionTimeoutInheritance = do
     time1 <- currentTime
     setTestTime time1
 
-    (Just user) <-
-      addNewCompanyUser "John" "Smith" "smith@example.com" $ userGroup23 ^. #id
+    user <- instantiateUser $ randomUserTemplate { groupID = return $ userGroup23 ^. #id }
 
     let userId = user ^. #id
     (session1, _) <- insertNewSession userId
@@ -340,7 +338,7 @@ insertNewSession uid = do
 
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
-  author <- addNewRandomUser
+  author <- instantiateRandomUser
   doc    <- addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                   , rdaStatuses = OneOf [Pending]
                                                   }
@@ -376,14 +374,9 @@ createTestUserAndGetId = view (_1 % #id) <$> createTestUser
 
 createTestUser :: TestEnv (User, UserGroup)
 createTestUser = do
-  bd        <- dbQuery $ GetMainBrandedDomain
-  pwd       <- createPassword "password_8866"
-  ug        <- addNewUserGroup
-  Just user <- createNewUser ("Andrzej", "Rybczak")
-                             "andrzej@scrive.com"
-                             (Just pwd)
-                             (ug ^. #id, True)
-                             defaultLang
-                             (bd ^. #id)
-                             AccountRequest
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { email    = return "andrzej@scrive.com"
+                                               , groupID  = return $ ug ^. #id
+                                               , password = Just "password_8866"
+                                               }
   return $ (user, ug)

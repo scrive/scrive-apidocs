@@ -41,7 +41,7 @@ gtWorkflowTests env = testGroup
 
 testExtendDigitalSignatures :: TestEnv ()
 testExtendDigitalSignatures = do
-  author <- addNewRandomUser
+  author <- instantiateRandomUser
   let filename = inTestDir "pdfs/extensible.pdf"
   filecontent <- liftIO $ BS.readFile filename
   file        <- saveNewFile (T.pack filename) filecontent
@@ -76,7 +76,7 @@ testExtendDigitalSignatures = do
 testExtendingIsNotRescheduledForPurgedDocs :: TestEnv ()
 testExtendingIsNotRescheduledForPurgedDocs = do
   setTestTime unixEpoch
-  user    <- addNewRandomUser
+  user    <- instantiateRandomUser
   ctx     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- Create a document
   mockDoc <- testDocApiV2StartNew ctx

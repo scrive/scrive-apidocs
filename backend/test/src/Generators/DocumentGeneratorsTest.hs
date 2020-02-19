@@ -21,7 +21,7 @@ documentGeneratorsTests env = testGroup
 
 testStartableDocumentOC :: TestEnv ()
 testStartableDocumentOC = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   fid  <- addNewRandomFile
   file <- randomQuery $ GetFileByFileID fid
   let generator = startableDocumentOC (user ^. #id) file

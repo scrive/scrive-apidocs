@@ -20,7 +20,7 @@ eSignatureTests env = testGroup
 
 testCGISEBankIDSignatures :: TestEnv ()
 testCGISEBankIDSignatures = do
-  author <- addNewRandomUser
+  author <- instantiateRandomUser
   doc    <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Pending]
                                                   , rdaTypes    = OneOf [Signable]
                                                   }

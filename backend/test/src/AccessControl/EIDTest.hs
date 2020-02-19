@@ -31,7 +31,7 @@ accessControlEIDTests env = testGroup
 
 testImpersonateAuthAndSignFailWithoutPermissions :: TestEnv ()
 testImpersonateAuthAndSignFailWithoutPermissions = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
 
   ctx  <- do
     defctx <- mkContext defaultLang
@@ -44,7 +44,7 @@ testImpersonateAuthAndSignFailWithoutPermissions = do
     return (getMockDocId mdoc, getMockDocSigLinkId 1 mdoc)
 
   do  -- set `user_group_to_impersonate_for_eid` field
-    ug <- addNewUserGroup
+    ug <- instantiateRandomUserGroup
     let ugid = ug ^. #id  -- user group to be impersonated (not the author's user group!)
     let params =
           [ ( "document"

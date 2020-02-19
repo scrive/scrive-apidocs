@@ -105,14 +105,14 @@ apiV2DocumentPostCallsTests env = testGroup
 
 testDocApiV2New :: TestEnv ()
 testDocApiV2New = do
-  user   <- addNewRandomUser
+  user   <- instantiateRandomUser
   ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
   status <- getMockDocStatus <$> testDocApiV2New' ctx
   assertEqual "Document should be in preparation" Preparation status
 
 testDocApiV2NewFromTemplate :: TestEnv ()
 testDocApiV2NewFromTemplate = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
   tmpl <- dbQuery $ GetDocumentByDocumentID did
@@ -144,9 +144,9 @@ testDocApiV2NewFromTemplate = do
 
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
-  ug <- addNewUserGroup
+  ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
-  author    <- addNewRandomCompanyUser ugid False
+  author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctxauthor <- set #maybeUser (Just author) <$> mkContext defaultLang
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
 
@@ -160,7 +160,7 @@ testDocApiV2NewFromTemplateShared = do
     assertEqual "Document should be template" True is_template
 
   void $ randomUpdate $ SetDocumentSharing [did] True
-  user <- addNewRandomCompanyUser ugid False
+  user <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -174,7 +174,7 @@ testDocApiV2NewFromTemplateShared = do
 
 testDocApiV2NewFromTemplateWithBPID :: TestEnv ()
 testDocApiV2NewFromTemplateWithBPID = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
   tmpl <- dbQuery $ GetDocumentByDocumentID did
@@ -213,7 +213,7 @@ testDocApiV2NewFromTemplateWithBPID = do
 
 testDocApiV2Update :: TestEnv ()
 testDocApiV2Update = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -228,7 +228,7 @@ testDocApiV2Update = do
 
 testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty :: TestEnv ()
 testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty = do
-  user     <- addNewRandomUser
+  user     <- instantiateRandomUser
   ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
   did      <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -245,7 +245,7 @@ testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty = do
 
 testDocApiV2SigUpdateNoConsentResponses :: TestEnv ()
 testDocApiV2SigUpdateNoConsentResponses = do
-  user     <- addNewRandomUser
+  user     <- instantiateRandomUser
   ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
   did      <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -265,13 +265,13 @@ testDocApiV2SigUpdateNoConsentResponses = do
 
 testDocApiV2Start :: TestEnv ()
 testDocApiV2Start = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   void $ testDocApiV2StartNew ctx
 
 testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do
-  user    <- addNewRandomUser
+  user    <- instantiateRandomUser
   ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
   mockDoc <- testDocApiV2StartNew ctx
   assertEqual "Default number of days should match" 90 $ getMockDocDaysToSign mockDoc
@@ -290,7 +290,7 @@ testDocApiV2Prolong = do
 
 testDocApiV2ProlongBeforeTimeout :: TestEnv ()
 testDocApiV2ProlongBeforeTimeout = do
-  user    <- addNewRandomUser
+  user    <- instantiateRandomUser
   ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
   mockDoc <- testDocApiV2StartNew ctx
   assertEqual "Default number of days should match" 90 $ getMockDocDaysToSign mockDoc
@@ -309,7 +309,7 @@ testDocApiV2ProlongBeforeTimeout = do
 
 testDocApiV2Cancel :: TestEnv ()
 testDocApiV2Cancel = do
-  user          <- addNewRandomUser
+  user          <- instantiateRandomUser
   ctx           <- set #maybeUser (Just user) <$> mkContext defaultLang
   did           <- getMockDocId <$> testDocApiV2StartNew ctx
 
@@ -319,7 +319,7 @@ testDocApiV2Cancel = do
 
 testDocApiV2Trash :: TestEnv ()
 testDocApiV2Trash = do
-  user       <- addNewRandomUser
+  user       <- instantiateRandomUser
   ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
   did        <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -329,7 +329,7 @@ testDocApiV2Trash = do
 
 testDocApiV2Delete :: TestEnv ()
 testDocApiV2Delete = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -341,7 +341,7 @@ testDocApiV2Delete = do
 
 testDocApiV2TrashMultiple :: TestEnv ()
 testDocApiV2TrashMultiple = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did1 <- getMockDocId <$> testDocApiV2New' ctx
   did2 <- getMockDocId <$> testDocApiV2New' ctx
@@ -355,7 +355,7 @@ testDocApiV2TrashMultiple = do
 --                 This is important to mitigate a potential DoS attack vector.
 testDocApiV2TrashMultipleLimit :: TestEnv ()
 testDocApiV2TrashMultipleLimit = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   let input = [("document_ids", inText . showt $ map show [1 .. 101])]
   response <- testRequestHelper ctx POST input docApiV2TrashMultiple 400
@@ -367,7 +367,7 @@ testDocApiV2TrashMultipleLimit = do
 
 testDocApiV2DeleteMultiple :: TestEnv ()
 testDocApiV2DeleteMultiple = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did1 <- getMockDocId <$> testDocApiV2New' ctx
   did2 <- getMockDocId <$> testDocApiV2New' ctx
@@ -383,7 +383,7 @@ testDocApiV2DeleteMultiple = do
 --                 This is important to mitigate a potential DoS attack vector.
 testDocApiV2DeleteMultipleLimit :: TestEnv ()
 testDocApiV2DeleteMultipleLimit = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   let input = [("document_ids", inText . showt $ map show [1 .. 101])]
   response <- testRequestHelper ctx POST input docApiV2DeleteMultiple 400
@@ -395,14 +395,14 @@ testDocApiV2DeleteMultipleLimit = do
 
 testDocApiV2Remind :: TestEnv ()
 testDocApiV2Remind = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2StartNew ctx
   void $ testRequestHelper ctx POST [] (docApiV2Remind did) 202
 
 testDocApiV2Forward :: TestEnv ()
 testDocApiV2Forward = do
-  user    <- addNewRandomUser
+  user    <- instantiateRandomUser
   ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
@@ -426,7 +426,7 @@ testDocApiV2Forward = do
 
 testDocApiV2SetFile :: TestEnv ()
 testDocApiV2SetFile = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -446,7 +446,7 @@ testDocApiV2SetFile = do
 
 testDocApiV2SetAttachments :: TestEnv ()
 testDocApiV2SetAttachments = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -507,7 +507,7 @@ testDocApiV2SetAttachments = do
 
 testDocApiV2SetAttachmentsIncrementally :: TestEnv ()
 testDocApiV2SetAttachmentsIncrementally = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -614,7 +614,7 @@ testDocApiV2SetAttachmentsIncrementally = do
 
 testDocApiV2SetAutoReminder :: TestEnv ()
 testDocApiV2SetAutoReminder = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2StartNew ctx
 
@@ -629,7 +629,7 @@ testDocApiV2SetAutoReminder = do
 
 testDocApiV2Clone :: TestEnv ()
 testDocApiV2Clone = do
-  user    <- addNewRandomUser
+  user    <- instantiateRandomUser
   ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
@@ -641,7 +641,7 @@ testDocApiV2Clone = do
 
 testDocApiV2RemovePages :: TestEnv ()
 testDocApiV2RemovePages = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -668,7 +668,7 @@ testDocApiV2RemovePages = do
 
 testDocApiV2Restart :: TestEnv ()
 testDocApiV2Restart = do
-  user    <- addNewRandomUser
+  user    <- instantiateRandomUser
   ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
   mockDoc <- testDocApiV2StartNew ctx
   let did = getMockDocId mockDoc
@@ -682,7 +682,7 @@ testDocApiV2Restart = do
 
 testDocApiV2Callback :: TestEnv ()
 testDocApiV2Callback = do
-  user    <- addNewRandomUser
+  user    <- instantiateRandomUser
   ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
@@ -712,7 +712,7 @@ testDocApiV2Callback = do
 
 testDocApiV2SetSharing :: TestEnv ()
 testDocApiV2SetSharing = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -742,7 +742,7 @@ testDocApiV2SetSharing = do
 --                 This is important to mitigate a potential DoS attack vector.
 testDocApiV2SetSharingLimit :: TestEnv ()
 testDocApiV2SetSharingLimit = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   let idList = show $ map show [1 .. 101]
       input  = [("document_ids", inText $ T.pack idList), ("shared", inText "true")]
@@ -755,7 +755,7 @@ testDocApiV2SetSharingLimit = do
 
 testDocApiV2SigChangeEmailAndMobile :: TestEnv ()
 testDocApiV2SigChangeEmailAndMobile = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   -- Params that we will re-use
@@ -914,7 +914,7 @@ testDocApiV2SigChangeEmailAndMobile = do
 
 testDocApiV2GenerateShareableLink :: TestEnv ()
 testDocApiV2GenerateShareableLink = replicateM_ 100 $ do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   doc  <- do
@@ -946,7 +946,7 @@ testDocApiV2GenerateShareableLink = replicateM_ 100 $ do
 
 testDocApiV2DiscardShareableLink :: TestEnv ()
 testDocApiV2DiscardShareableLink = replicateM_ 10 $ do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   doc  <- addRandomDocument (rdaDefault user) { rdaTypes = OneOf [Template] }
 
@@ -957,7 +957,7 @@ testDocApiV2DiscardShareableLink = replicateM_ 10 $ do
 
 testDocApiV2AddImage :: TestEnv ()
 testDocApiV2AddImage = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
@@ -989,9 +989,10 @@ testDocApiV2AddImage = do
 
 testDocInFolder :: TestEnv ()
 testDocInFolder = do
-  admin       <- addNewRandomUser
-  adminCtx    <- (set #maybeUser (Just admin)) <$> mkContext defaultLang
-  nonAdmin    <- addNewRandomCompanyUser (admin ^. #groupID) False
+  admin    <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }
+  adminCtx <- (set #maybeUser (Just admin)) <$> mkContext defaultLang
+  nonAdmin <- instantiateUser
+    $ randomUserTemplate { groupID = return $ admin ^. #groupID }
   nonAdminCtx <- return $ set #maybeUser (Just nonAdmin) adminCtx
 
   -- user tries to create document in admins home folder - should fail
@@ -1080,7 +1081,7 @@ testDocInFolder = do
 
 testDocApiV2AddEvidenceLogEvent :: TestEnv ()
 testDocApiV2AddEvidenceLogEvent = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   -- siglink <- rand 1 $ randomSigLinkByStatus Closed
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
@@ -1099,13 +1100,13 @@ testDocApiV2AddEvidenceLogEvent = do
 
 testDocUpdateImpersonateEID :: TestEnv ()
 testDocUpdateImpersonateEID = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   let uid = user ^. #id
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- addNewUserGroup
+  ug  <- instantiateRandomUserGroup
   let ugid = ug ^. #id
 
   let update =
@@ -1132,13 +1133,13 @@ testDocUpdateImpersonateEID = do
 
 testDocApiV2StartImpersonateEID :: TestEnv ()
 testDocApiV2StartImpersonateEID = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   let uid = user ^. #id
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- addNewUserGroup
+  ug  <- instantiateRandomUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role
@@ -1180,13 +1181,13 @@ testDocApiV2StartImpersonateEID = do
 
 testDocApiV2NewFromTemplateImpersonateEID :: TestEnv ()
 testDocApiV2NewFromTemplateImpersonateEID = do
-  user <- addNewRandomUser
+  user <- instantiateRandomUser
   let uid = user ^. #id
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- addNewUserGroup
+  ug  <- instantiateRandomUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role

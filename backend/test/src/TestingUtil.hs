@@ -10,6 +10,7 @@ import Crypto.RNG
 import Data.Char
 import Data.Foldable (foldrM)
 import Data.Int
+import Data.Set (Set)
 import Data.Text (pack)
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
@@ -86,7 +87,6 @@ import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import Util.Actor
-import Util.MonadUtils
 import qualified DataRetentionPolicy.Internal as I
 import qualified Folder.Internal as I
 import qualified KontraError as KE
@@ -800,48 +800,6 @@ compareTime (UTCTime da ta) (UTCTime db tb) =
        || ((tb + picosecondsToDiffTime (10 ^ 9)) >= ta && (ta >= tb))
        )
 
-addNewUserGroup' :: Bool -> TestEnv UserGroup
-addNewUserGroup' createFolder = addNewUserGroupWithParent createFolder Nothing
-
-addNewUserGroup :: TestEnv UserGroup
-addNewUserGroup = addNewUserGroupWithParent False Nothing
-
-addNewUserGroupWithParent :: Bool -> Maybe UserGroupID -> TestEnv UserGroup
-addNewUserGroupWithParent createFolder mparent = do
-  mUgFolderID <- case createFolder of
-    False -> return Nothing
-    True  -> Just . view #id <$> dbUpdate (FolderCreate defaultFolder)
-  ugname           <- rand 10 (arbText 3 30)
-  ugacompanynumber <- rand 10 (arbText 3 30)
-  ugaentityname    <- rand 10 (arbText 3 30)
-  ugaaddress       <- rand 10 (arbText 3 30)
-  ugazip           <- rand 10 (arbText 3 30)
-  ugacity          <- rand 10 (arbText 3 30)
-  ugacountry       <- rand 10 (arbText 3 30)
-  ugintags         <- rand 10 arbitrary
-  ugextags         <- rand 10 arbitrary
-  let ug =
-        defaultUserGroup
-          & (#parentGroupID .~ mparent)
-          & (#name .~ ugname)
-          & (#address .~ uga)
-          & (#homeFolderID .~ mUgFolderID)
-          & (#internalTags .~ ugintags)
-          & (#externalTags .~ ugextags)
-      uga = Just $ I.UserGroupAddress { companyNumber = ugacompanynumber
-                                      , entityName    = ugaentityname
-                                      , address       = ugaaddress
-                                      , zipCode       = ugazip
-                                      , city          = ugacity
-                                      , country       = ugacountry
-                                      }
-  dbUpdate . UserGroupCreate $ ug
-
-addNewUserGroupWithParents :: Bool -> TestEnv UserGroupWithParents
-addNewUserGroupWithParents createFolder = do
-  ug <- addNewUserGroup' createFolder
-  guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id
-
 addNewRandomFile
   :: ( CryptoRNG m
      , MonadBase IO m
@@ -863,232 +821,199 @@ addNewRandomFile = do
   cnt <- liftBase $ BS.readFile fn
   saveNewFile (T.pack fn) cnt
 
-addNewUser
-  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+-- | Deprecated -- use `instantiateUser $ randomUserTemplate {..}` instead!
+deprecatedAddNewUser
+  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => Text
   -> Text
   -> Text
   -> m (Maybe User)
-addNewUser firstname secondname email = do
-  fmap fst <$> addNewUserWithCompany firstname secondname email True
+deprecatedAddNewUser firstname secondname email =
+  fmap Just . instantiateUser $ randomUserTemplate { isCompanyAdmin = True
+                                                   , firstName      = return firstname
+                                                   , lastName       = return secondname
+                                                   , email          = return email
+                                                   }
 
-addNewUserWithCompany
-  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => Text
-  -> Text
-  -> Text
-  -> Bool
-  -> m (Maybe (User, UserGroupID))
-addNewUserWithCompany firstname secondname email createFolders = do
-  ug    <- addNewCompany createFolders
-  mUser <- addNewCompanyAdminUser firstname secondname email (ug ^. #id)
-  return $ (, ug ^. #id) <$> mUser
+data UserGroupTemplate m = UserGroupTemplate
+  { parentGroupID :: Maybe UserGroupID
+  , groupHomeFolderID :: m (Maybe FolderID)
+  , name :: m Text
+  , address :: Maybe UserGroupAddress
+  , settings  :: Maybe UserGroupSettings
+  , invoicing :: UserGroupInvoicing
+  , ui :: UserGroupUI
+  , features :: Maybe Features
+  , internalTags :: m (Set UserGroupTag)
+  , externalTags :: m (Set UserGroupTag)
+  }
 
-addNewCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => Bool -> m UserGroup
-addNewCompany createFolders = do
-  mUgFolder <- case createFolders of
-    False -> return Nothing
-    True  -> fmap Just . dbUpdate $ FolderCreate defaultFolder
-  dbUpdate
-    . UserGroupCreate
-    . set #homeFolderID (view #id <$> mUgFolder)
-    $ defaultUserGroup
+-- | `randomUserGroupTemplate` represents 'sane defaults' for use with
+-- `instantiateUserGroup`. An instance of this template has random name and
+-- tags, a home folder and no parent group.
+--
+-- To create a user group with specific features, update the corresponding
+-- fields in the template; e.g. `instantiateUserGroup $ randomUserGroupTemplate
+-- {parentGroupID = Just ugid}` makes the created user group a child of an
+-- existing user group with id `ugid`.
+randomUserGroupTemplate
+  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => UserGroupTemplate m
+randomUserGroupTemplate = UserGroupTemplate
+  { parentGroupID     = Nothing
+  , groupHomeFolderID = fmap (Just . view #id) . dbUpdate $ FolderCreate defaultFolder
+  , name              = rand 10 (arbText 3 30)
+  , address           = defaultUserGroup ^. #address
+  , settings          = defaultUserGroup ^. #settings
+  , invoicing         = defaultUserGroup ^. #invoicing
+  , ui                = defaultUserGroup ^. #ui
+  , features          = defaultUserGroup ^. #features
+  , internalTags      = rand 10 arbitrary
+  , externalTags      = rand 10 arbitrary
+  }
 
-createNewUser
-  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => (Text, Text)
-  -> Text
-  -> Maybe Password
-  -> (UserGroupID, Bool)
-  -> Lang
-  -> BrandedDomainID
-  -> SignupMethod
-  -> m (Maybe User)
-createNewUser names email mPasswd (ugid, isCompanyAdmin) lang bdID sm = do
-  -- create User home Folder, if the UserGroup has one
-  mUserFolder <- dbQuery (FolderGetUserGroupHome ugid) >>= \case
-    Nothing -> return Nothing
-    Just ugFolder ->
-      fmap Just
-        . dbUpdate
-        . FolderCreate
-        . set #parentID (Just $ ugFolder ^. #id)
-        $ defaultFolder
-  dbUpdate $ AddUser names
-                     email
-                     mPasswd
-                     (ugid, view #id <$> mUserFolder, isCompanyAdmin)
-                     lang
-                     bdID
-                     sm
+instantiateRandomUserGroup
+  :: (MonadFail m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => m UserGroup
+instantiateRandomUserGroup = instantiateUserGroup randomUserGroupTemplate
 
--- | Create a new user and add it to a company as a non-admin.
-addNewCompanyUser
-  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => Text
-  -> Text
-  -> Text
-  -> UserGroupID
-  -> m (Maybe User)
-addNewCompanyUser = addNewCompanyUser' DontMakeAdmin
-
--- | Create a new user and add it to a company as an admin.
-addNewCompanyAdminUser
-  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => Text
-  -> Text
-  -> Text
-  -> UserGroupID
-  -> m (Maybe User)
-addNewCompanyAdminUser = addNewCompanyUser' MakeAdmin
-
-data MakeAdmin = DontMakeAdmin | MakeAdmin
-  deriving Eq
-
--- | Create a new user and add it to a company as either an admin or a
--- non-admin.
-addNewCompanyUser'
-  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => MakeAdmin
-  -> Text
-  -> Text
-  -> Text
-  -> UserGroupID
-  -> m (Maybe User)
-addNewCompanyUser' makeAdmin firstname secondname email ugid = do
-  bd <- dbQuery $ GetMainBrandedDomain
-  dbQuery (UserGroupGet ugid) >>= \case
-    Nothing  -> return Nothing
-    Just _ug -> createNewUser (firstname, secondname)
-                              email
-                              Nothing
-                              (ugid, makeAdmin == MakeAdmin)
-                              defaultLang
-                              (bd ^. #id)
-                              CompanyInvitation
-
--- | Create user and add it to a new user group as admin.
-addNewAdminUserAndUserGroup :: Text -> Text -> Text -> TestEnv (User, UserGroup)
-addNewAdminUserAndUserGroup firstname secondname email = do
-  ug        <- addNewUserGroup' True
-  bd        <- dbQuery $ GetMainBrandedDomain
-  Just user <- createNewUser (firstname, secondname)
-                             email
-                             Nothing
-                             (ug ^. #id, True)
-                             defaultLang
-                             (bd ^. #id)
-                             CompanyInvitation
-  return (user, ug)
-
-addNewUserToUserGroup :: Text -> Text -> Text -> UserGroupID -> TestEnv (Maybe User)
-addNewUserToUserGroup firstname secondname email ugid = do
-  bd <- dbQuery $ GetMainBrandedDomain
-  dbQuery (UserGroupGet ugid) >>= \case
-    Nothing  -> return Nothing
-    Just _ug -> createNewUser (firstname, secondname)
-                              email
-                              Nothing
-                              (ugid, True)
-                              defaultLang
-                              (bd ^. #id)
-                              CompanyInvitation
-
-addNewUserFromInfo
-  :: UserInfo
-  -> (CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m, MonadLog m, MonadMask m)
-  => m User
-addNewUserFromInfo userInfo@(I.UserInfo { firstName = firstName, lastName = lastName, email = Email { unEmail = email } })
+-- | To be used together with `randomUserGroupTemplate`, as in
+-- `instantiateUserGroup $ randomUserGroupTemplate {..}`. Generates an instance
+-- of the given template; see the documentation of `randomUserGroupTemplate`.
+instantiateUserGroup
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => UserGroupTemplate m
+  -> m UserGroup
+instantiateUserGroup UserGroupTemplate { groupHomeFolderID = generateHomeFolderID, name = generateName, internalTags = generateInternalTags, externalTags = generateExternalTags, ..}
   = do
-    Just user <- addNewUser firstName lastName email
-    void $ dbUpdate $ SetUserInfo (user ^. #id) userInfo
-    return user
+    let id = emptyUserGroupID
+    name         <- generateName
+    homeFolderID <- generateHomeFolderID
+    internalTags <- generateInternalTags
+    externalTags <- generateExternalTags
+    dbUpdate . UserGroupCreate $ I.UserGroup { .. }
+
+data UserTemplate m = UserTemplate
+  { password :: Maybe Text
+  , isCompanyAdmin :: Bool
+  , signupMethod :: SignupMethod
+  , firstName :: m Text
+  , lastName :: m Text
+  , email :: m Text
+  , personalNumber :: Text
+  , companyPosition :: Text
+  , phone :: Text
+  , lang :: Lang
+  , associatedDomainID :: m BrandedDomainID
+  , groupID :: m UserGroupID
+  , homeFolderID :: Maybe FolderID -> m (Maybe FolderID)
+  -- ^ takes the group's home folder as parameter
+  }
+
+-- | `randomUserTemplate` represents 'sane defaults' for use with
+-- `instantiateUser`. An instance of this template has random name and email; no
+-- password, phone or personal number set; is a non-admin member of a freshly
+-- created (with `instantiateRandomUserGroup`) user group and has a home folder
+-- that is a sub-folder of the user group home folder. tags, a home folder and
+-- no parent group.
+--
+-- To create a user with specific features, update the corresponding fields in
+-- the template; e.g. `instantiateUser $ randomUserTemplate {email = return
+-- "test@user.com", password = Just "secret"}` allows us to use
+-- `handleLoginPost` with email and password to log in as that user.
+--
+-- As a rule you should only explicitly specify fields that are relevant to your
+-- test case; in particular, there are very few instances in which the name of
+-- the test user matters!
+randomUserTemplate
+  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => UserTemplate m
+randomUserTemplate = UserTemplate
+  { password           = Nothing
+  , isCompanyAdmin     = False
+  , signupMethod       = ByAdmin
+  , firstName          = rand 10 (arbText 3 30)
+  , lastName           = rand 10 (arbText 3 30)
+  , email              = let go = do
+                               email <- rand 10 arbEmail
+                               mUser <- query . GetUserByEmail $ Email email
+                               case mUser of  -- ensure uniqueness
+                                 Nothing -> return email
+                                 Just _  -> go
+                         in  go
+  , personalNumber     = ""
+  , companyPosition    = ""
+  , phone              = ""
+  , lang               = defaultLang
+  , associatedDomainID = fmap (view #id) $ dbQuery GetMainBrandedDomain
+  , groupID            = fmap (view #id) instantiateRandomUserGroup
+  , homeFolderID       = \groupHomeFolderID ->
+                           fmap (Just . view #id) . dbUpdate . FolderCreate $ set
+                             #parentID
+                             groupHomeFolderID
+                             defaultFolder
+  }
+
+instantiateRandomUser
+  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => m User
+instantiateRandomUser = instantiateUser randomUserTemplate
+
+-- | To be used together with `randomUserTemplate`, as in `instantiateUser $
+-- randomUserTemplate {..}`. Generates an instance of the given template; see
+-- the documentation of `randomUserTemplate`.
+instantiateUser
+  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => UserTemplate m
+  -> m User
+instantiateUser = fmap fromJust . tryInstantiateUser
+
+tryInstantiateUser
+  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => UserTemplate m
+  -> m (Maybe User)
+tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = generateLastName, email = generateEmail, groupID = generateGroupID, associatedDomainID = generateAssociatedDomainID, homeFolderID = generateHomeFolderID, password = generatePassword, ..}
+  = do
+    firstName          <- generateFirstName
+    lastName           <- generateLastName
+    email              <- generateEmail
+    groupID            <- generateGroupID
+    groupHomeFolderID <- fmap (fmap (view #id)) . dbQuery $ FolderGetUserGroupHome groupID
+    homeFolderID       <- generateHomeFolderID groupHomeFolderID
+    associatedDomainID <- generateAssociatedDomainID
+    password           <- case generatePassword of
+      Nothing           -> return Nothing
+      Just passwordText -> fmap Just $ createPassword passwordText
+    mUser <- dbUpdate $ AddUser (firstName, lastName)
+                                email
+                                password
+                                (groupID, homeFolderID, isCompanyAdmin)
+                                lang
+                                associatedDomainID
+                                signupMethod
+    case mUser of
+      Nothing   -> return Nothing
+      Just user -> do
+        -- AddUser doesn't allow us to provide all of UserInfo so we need to use
+        -- SetUserInfo as well
+        let userID = user ^. #id
+        void . dbUpdate $ SetUserInfo userID I.UserInfo { email = Email email, .. }
+        dbQuery $ GetUserByID userID
+
+-- | Deprecated -- use `instantiateUser $ randomUserTemplate {..}` instead!
+deprecatedAddNewAdminUserAndUserGroup :: Text -> Text -> Text -> TestEnv (User, UserGroup)
+deprecatedAddNewAdminUserAndUserGroup firstname secondname email = do
+  user <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True
+                                               , firstName      = return firstname
+                                               , lastName       = return secondname
+                                               , email          = return email
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  Just userGroup <- dbQuery . UserGroupGet $ user ^. #groupID
+  return (user, userGroup)
 
 randomPersonalNumber :: CryptoRNG m => m Text
 randomPersonalNumber = rand 10 $ arbText 3 30
-
-randomUserInfo :: CryptoRNG m => m UserInfo
-randomUserInfo = do
-  fn               <- rand 10 $ arbText 3 30
-  ln               <- rand 10 $ arbText 3 30
-  em               <- rand 10 arbEmail
-  -- change the user to have some distinct personal information
-  personal_number  <- randomPersonalNumber
-  company_position <- rand 10 $ arbText 3 30
-  phone            <- rand 10 $ arbText 3 30
-  return I.UserInfo { firstName       = fn
-                    , lastName        = ln
-                    , personalNumber  = personal_number
-                    , companyPosition = company_position
-                    , phone           = phone
-                    , email           = Email em
-                    }
-
-addNewRandomUser
-  :: (CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m, MonadLog m, MonadMask m)
-  => m User
-addNewRandomUser = do
-  randomUserInfo >>= addNewUserFromInfo
-
-addNewRandomUserWithCompany
-  :: (CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m, MonadLog m, MonadMask m)
-  => m (User, UserGroupID)
-addNewRandomUserWithCompany = addNewRandomUserWithCompany' True
-
-addNewRandomUserWithCompany'
-  :: (CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m, MonadLog m, MonadMask m)
-  => Bool
-  -> m (User, UserGroupID)
-addNewRandomUserWithCompany' createFolders = do
-  fn                <- rand 10 $ arbText 3 30
-  ln                <- rand 10 $ arbText 3 30
-  em                <- rand 10 arbEmail
-  Just (user, ugid) <- addNewUserWithCompany fn ln em createFolders
-  -- change the user to have some distinct personal information
-  personal_number   <- rand 10 $ arbText 3 30
-  company_position  <- rand 10 $ arbText 3 30
-  phone             <- rand 10 $ arbText 3 30
-  let userinfo = I.UserInfo { firstName       = fn
-                            , lastName        = ln
-                            , personalNumber  = personal_number
-                            , companyPosition = company_position
-                            , phone           = phone
-                            , email           = Email em
-                            }
-  void $ dbUpdate $ SetUserInfo (user ^. #id) userinfo
-  return (user, ugid)
-
-addNewRandomUserWithPassword
-  :: (CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m, MonadLog m, MonadMask m)
-  => Text
-  -> m User
-addNewRandomUserWithPassword password = do
-  -- create random user
-  randomUser   <- addNewRandomUser
-  -- set his password
-  passwordhash <- createPassword password
-  void $ dbUpdate $ SetUserPassword (randomUser ^. #id) passwordhash
-  return randomUser
-
-addNewRandomCompanyUser :: UserGroupID -> Bool -> TestEnv User
-addNewRandomCompanyUser ugid isadmin = do
-  user <- addNewRandomUser
-  let uid = user ^. #id
-  ug <- guardJustM . dbQuery $ UserGroupGet ugid
-  void $ dbUpdate $ SetUserUserGroup uid ugid
-  void $ dbUpdate $ SetUserCompanyAdmin uid isadmin
-  (Just userHomeFolder) <- dbQuery . FolderGet =<< (guardJust $ user ^. #homeFolderID)
-  void . dbUpdate . FolderUpdate $ set #parentID (ug ^. #homeFolderID) userHomeFolder
-  Just userFromDB <- dbQuery $ GetUserByID uid
-  return userFromDB
-
-addNewRandomUserGroupUser :: UserGroupID -> Bool -> TestEnv User
-addNewRandomUserGroupUser ugid isadmin = do
-  uid <- view #id <$> addNewRandomUser
-  void $ dbUpdate $ SetUserUserGroup uid ugid
-  void $ dbUpdate $ SetUserCompanyAdmin uid isadmin
-  Just user <- dbQuery $ GetUserByID uid
-  return user
 
 addNewRandomPartnerUser :: TestEnv (User, UserGroup)
 addNewRandomPartnerUser = do
@@ -1101,7 +1026,7 @@ addNewRandomPartnerUser = do
     case mres of
       Just res -> return . Just $ res
       Nothing  -> do
-        partnerAdminUser      <- addNewRandomUser
+        partnerAdminUser      <- instantiateRandomUser
         partnerAdminUserGroup <- dbQuery $ UserGroupGetByUserID (partnerAdminUser ^. #id)
         let partnerIDAlreadyExists =
               (unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #id)

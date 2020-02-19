@@ -178,7 +178,7 @@ testCanLoginWithRedirect = do
   -- create a user
   password <- rand 10 $ arbText 1 64
   logInfo_ $ "Generated password: " <> password
-  randomUser <- addNewRandomUserWithPassword password
+  randomUser <- instantiateUser $ randomUserTemplate { password = Just password }
   -- get access tokens using an email and password
   ctx        <- mkContext defaultLang
   req1       <- mkRequest
@@ -293,9 +293,11 @@ testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser = do
 
 testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
-  uid2       <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Thomas"
+                                                      "Busby"
+                                                      "thomas.busby@scrive.com"
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
@@ -304,7 +306,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
 
 testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
-  ug   <- addNewUserGroup
+  ug   <- instantiateRandomUserGroup
   user <- createTestUser' "thomas.busby@scrive.com"
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   let uid1 = user ^. #id
@@ -340,9 +342,11 @@ testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword = do
 testLoginGetUserPersonalTokenFailsWithExpiredToken :: TestEnv ()
 testLoginGetUserPersonalTokenFailsWithExpiredToken = do
     -- Set up user with permissions to generate token for second user
-  (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
-  uid2       <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Thomas"
+                                                      "Busby"
+                                                      "thomas.busby@scrive.com"
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   -- Generate an expired login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
@@ -354,9 +358,11 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
 testLoginGetUserPersonalTokenSucceedsWithValidToken :: TestEnv ()
 testLoginGetUserPersonalTokenSucceedsWithValidToken = do
     -- Set up user with permissions to generate token for second user
-  (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
-  uid2       <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Thomas"
+                                                      "Busby"
+                                                      "thomas.busby@scrive.com"
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
   -- Generate a valid login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
@@ -413,7 +419,7 @@ testResetPasswordRemovesAllOtherUserSessions = do
 testUser2FAEnforced :: TestEnv ()
 testUser2FAEnforced = do
   password   <- rand 10 $ arbText 3 30
-  randomUser <- addNewRandomUserWithPassword password
+  randomUser <- instantiateUser $ randomUserTemplate { password = Just password }
   ctx        <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
   let uid = randomUser ^. #id
   ug  <- guardJustM . dbQuery . UserGroupGet $ randomUser ^. #groupID
@@ -491,31 +497,14 @@ createTestUser :: TestEnv User
 createTestUser = createTestUser' "andrzej@skrivapa.se"
 
 createTestUser' :: Text -> TestEnv User
-createTestUser' email = do
-  bd        <- dbQuery $ GetMainBrandedDomain
-  pwd       <- createPassword "password_8866"
-  ug        <- addNewUserGroup
-  Just user <- createNewUser ("", "")
-                             email
-                             (Just pwd)
-                             (ug ^. #id, True)
-                             defaultLang
-                             (bd ^. #id)
-                             AccountRequest
-  return user
+createTestUser' email = instantiateUser
+  $ randomUserTemplate { email = return email, password = Just "password_8866" }
 
 createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
-  bd        <- dbQuery $ GetMainBrandedDomain
-  pwd       <- createPassword "password_8866"
-  ug        <- addNewUserGroup
-  Just user <- createNewUser ("", "")
-                             "andrzej@skrivapa.se"
-                             (Just pwd)
-                             (ug ^. #id, True)
-                             defaultLang
-                             (bd ^. #id)
-                             AccountRequest
+  user <- instantiateUser $ randomUserTemplate { email    = return "andrzej@skrivapa.se"
+                                               , password = Just "password_8866"
+                                               }
   PasswordReminder {..} <- newPasswordReminder $ user ^. #id
   ctx                   <- mkContext defaultLang
   req                   <- mkRequest POST [("password", inText "password_8866")]
