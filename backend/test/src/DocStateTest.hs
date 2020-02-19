@@ -2149,8 +2149,14 @@ testProcessSearchStringToFilter = do
 testGetDocumentsSQLTextFiltered :: TestEnv ()
 testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
   -- setup
-  Just author1 <- deprecatedAddNewUser "Bob" "Blue" "bill@zonk.com"
-  Just author2 <- deprecatedAddNewUser "Anna" "Max" "herm@qqq.com"
+  author1 <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                                  , lastName  = return "Blue"
+                                                  , email     = return "bill@zonk.com"
+                                                  }
+  author2 <- instantiateUser $ randomUserTemplate { firstName = return "Anna"
+                                                  , lastName  = return "Max"
+                                                  , email     = return "herm@qqq.com"
+                                                  }
   doc1 <- addRandomDocument (rdaDefault author1) { rdaTypes    = OneOf [Signable]
                                                  , rdaStatuses = OneOf [Preparation]
                                                  }

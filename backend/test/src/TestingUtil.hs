@@ -1,5 +1,80 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module TestingUtil where
+module TestingUtil (
+  arbitraryText
+  , genUnicodeString
+  , genMaybeUnicodeString
+  , extendRandomness
+  , arbitraryAuthorActor
+  , arbitrarySystemActor
+  , arbitrarySignatoryActor
+  , documentSignableTypes
+  , documentTemplateTypes
+  , nonemptybs
+  , signatoryLinkExample1
+  , testThat
+  , compareTime
+  , addNewRandomFile
+  , UserGroupTemplate(..)
+  , randomUserGroupTemplate
+  , instantiateUserGroup
+  , instantiateRandomUserGroup
+  , UserTemplate(..)
+  , randomUserTemplate
+  , instantiateRandomUser
+  , instantiateUser
+  , tryInstantiateUser
+  , randomPersonalNumber
+  , addNewRandomPartnerUser
+  , anyRandomSignatoryCondition
+  , RandomDocumentAllows(..)
+  , rdaDefault
+  , randomSigLinkByStatus
+  , randomAuthorLinkByStatus
+  , documentAllTypes
+  , addRandomDocument
+  , addRandomDocumentWithAuthor
+  , addRandomDocumentWithAuthor'
+  , addRandomDocumentWithFile
+  , addRandomDocumentFromShareableLinkWithTemplateId
+  , sealTestDocument
+  , untilCondition
+  , assert
+  , assertBool
+  , assertEqual
+  , assertApproxEqual
+  , assertFailure
+  , assertString
+  , assertionPredicate
+  , assertSuccess
+  , assertJust
+  , assertJustAndExtract
+  , assertRight
+  , assertLeft
+  , assertNothing
+  , assertNotEqual
+  , assertEqualJson
+  , assertRaisesInternalError
+  , assertRaisesDBException
+  , assertRaisesKontra
+  , assertSQLCount
+  , guardMethodM
+  , isFlashOfType
+  , getFlashType
+  , OneOf(..)
+  , AllOf(..)
+  , documentAllStatuses
+  , rand
+  , arbText
+  , arbString
+  , arbitraryName
+  , arbitraryUnicodeText
+  , randomUpdate
+  , fieldForTests
+  , StringNoNUL(..)
+  , RandomSignatoryCondition(..)
+  , randomQuery
+  , ArbitraryUnicode(..)
+) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
@@ -821,20 +896,6 @@ addNewRandomFile = do
   cnt <- liftBase $ BS.readFile fn
   saveNewFile (T.pack fn) cnt
 
--- | Deprecated -- use `instantiateUser $ randomUserTemplate {..}` instead!
-deprecatedAddNewUser
-  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => Text
-  -> Text
-  -> Text
-  -> m (Maybe User)
-deprecatedAddNewUser firstname secondname email =
-  fmap Just . instantiateUser $ randomUserTemplate { isCompanyAdmin = True
-                                                   , firstName      = return firstname
-                                                   , lastName       = return secondname
-                                                   , email          = return email
-                                                   }
-
 data UserGroupTemplate m = UserGroupTemplate
   { parentGroupID :: Maybe UserGroupID
   , groupHomeFolderID :: m (Maybe FolderID)
@@ -999,18 +1060,6 @@ tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = gene
         let userID = user ^. #id
         void . dbUpdate $ SetUserInfo userID I.UserInfo { email = Email email, .. }
         dbQuery $ GetUserByID userID
-
--- | Deprecated -- use `instantiateUser $ randomUserTemplate {..}` instead!
-deprecatedAddNewAdminUserAndUserGroup :: Text -> Text -> Text -> TestEnv (User, UserGroup)
-deprecatedAddNewAdminUserAndUserGroup firstname secondname email = do
-  user <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True
-                                               , firstName      = return firstname
-                                               , lastName       = return secondname
-                                               , email          = return email
-                                               , signupMethod   = CompanyInvitation
-                                               }
-  Just userGroup <- dbQuery . UserGroupGet $ user ^. #groupID
-  return (user, userGroup)
 
 randomPersonalNumber :: CryptoRNG m => m Text
 randomPersonalNumber = rand 10 $ arbText 3 30

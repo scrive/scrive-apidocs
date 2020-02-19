@@ -68,10 +68,13 @@ apiV1JSONTests env = testGroup
 {- Test 1 -}
 testFromFileAndReadySimple :: TestEnv ()
 testFromFileAndReadySimple = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
@@ -88,10 +91,13 @@ testFromFileAndReadySimple = do
 {- Test 2 -}
 testFromFileAndUpdate :: TestEnv ()
 testFromFileAndUpdate = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
@@ -109,10 +115,13 @@ testFromFileAndUpdate = do
 {- Test 3 -}
 testFromTemplateAndReadySimple :: TestEnv ()
 testFromTemplateAndReadySimple = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
@@ -146,10 +155,13 @@ testFromTemplateAndReadySimple = do
 {- Test 4 -}
 testUpdateFields :: TestEnv ()
 testUpdateFields = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
@@ -185,10 +197,13 @@ testUpdateFields = do
 {- Test 5 -}
 testUpdateWithReplacementFields :: TestEnv ()
 testUpdateWithReplacementFields = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
@@ -223,7 +238,10 @@ testUpdateWithReplacementFields = do
 {- Test 6 -}
 testUpdateWithSubset :: TestEnv ()
 testUpdateWithSubset = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
   ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders POST [] []
@@ -242,10 +260,13 @@ testUpdateWithSubset = do
 {- Test 7 -}
 testUpdateWithAllFeatures :: TestEnv ()
 testUpdateWithAllFeatures = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
@@ -281,10 +302,13 @@ testUpdateWithAllFeatures = do
 {- Test 8 -}
 testList :: TestEnv ()
 testList = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
@@ -365,10 +389,13 @@ testList = do
 {- Test 9 -}
 testSignWithSignature :: TestEnv ()
 testSignWithSignature = do
-  (Just user) <- deprecatedAddNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Jonathan"
+                                               , lastName  = return "Jounty"
+                                               , email     = return "jonathan@scrive.com"
+                                               }
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  reqDoc      <- mkRequestWithHeaders
+  reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []

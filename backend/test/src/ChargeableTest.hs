@@ -45,10 +45,13 @@ chargeableTest env = testGroup
 
 test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
-  ugid      <- view #id <$> instantiateRandomUserGroup
-  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  True      <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
-  doc       <- addRandomDocument (rdaDefault user)
+  ugid <- view #id <$> instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
+  True <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
+  doc  <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
                 , kontraInfoForSMS = Nothing
                 , smsBody          = ""
@@ -71,10 +74,13 @@ test_smsCounting_default = do
 
 test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
-  ugid      <- view #id <$> instantiateRandomUserGroup
-  Just user <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  True      <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
-  doc       <- addRandomDocument (rdaDefault user)
+  ugid <- view #id <$> instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
+  True <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
+  doc  <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
                 , kontraInfoForSMS = Nothing
                 , smsBody          = ""
@@ -97,8 +103,11 @@ test_smsCounting_telia = do
 
 test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
-  ugid        <- view #id <$> instantiateRandomUserGroup
-  Just user   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
+  ugid <- view #id <$> instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
   True        <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 

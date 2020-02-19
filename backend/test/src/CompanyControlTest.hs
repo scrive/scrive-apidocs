@@ -17,6 +17,7 @@ import TestingUtil
 import TestKontra as T
 import Theme.Model
 import User.Lang (defaultLang)
+import User.Types.SignupMethod
 import UserGroup.Model
 import Util.MonadUtils
 
@@ -35,9 +36,14 @@ companyControlTests env = testGroup
 
 test_handleGetCompanyJSON :: TestEnv ()
 test_handleGetCompanyJSON = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
-                                                      "Rybczak"
-                                                      "andrzej@skrivapa.se"
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
+                                               , lastName       = return "Rybczak"
+                                               , email = return "andrzej@skrivapa.se"
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
 
   let ugui = ug ^. #ui
 
@@ -89,9 +95,14 @@ test_handleGetCompanyJSON = do
 test_settingUIWithHandleChangeCompanyBranding :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBranding = do
 
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
-                                                      "Rybczak"
-                                                      "andrzej@skrivapa.se"
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
+                                               , lastName       = return "Rybczak"
+                                               , email = return "andrzej@skrivapa.se"
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
 
   ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
@@ -196,9 +207,14 @@ test_settingUIWithHandleChangeCompanyBranding = do
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
-                                                      "Rybczak"
-                                                      "andrzej@skrivapa.se"
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
+                                               , lastName       = return "Rybczak"
+                                               , email = return "andrzej@skrivapa.se"
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   --Test we can't set mailTheme to domain theme
@@ -221,9 +237,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
               (Just $ ug ^. #ui % #mailTheme)
 
   -- Create theme for other company
-  (_, otherUg) <- deprecatedAddNewAdminUserAndUserGroup "Other"
-                                                        "Guy"
-                                                        "other_guy@skrivapa.se"
+  otherUg      <- instantiateRandomUserGroup
   someTheme    <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (otherUg ^. #id) someTheme
 

@@ -293,12 +293,15 @@ testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser = do
 
 testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Thomas"
-                                                      "Busby"
-                                                      "thomas.busby@scrive.com"
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Thomas"
+                                               , lastName       = return "Busby"
+                                               , email = return "thomas.busby@scrive.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
+  void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
   let expCode = 200
@@ -342,12 +345,15 @@ testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword = do
 testLoginGetUserPersonalTokenFailsWithExpiredToken :: TestEnv ()
 testLoginGetUserPersonalTokenFailsWithExpiredToken = do
     -- Set up user with permissions to generate token for second user
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Thomas"
-                                                      "Busby"
-                                                      "thomas.busby@scrive.com"
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Thomas"
+                                               , lastName       = return "Busby"
+                                               , email = return "thomas.busby@scrive.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
+  void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   -- Generate an expired login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]
@@ -358,12 +364,15 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
 testLoginGetUserPersonalTokenSucceedsWithValidToken :: TestEnv ()
 testLoginGetUserPersonalTokenSucceedsWithValidToken = do
     -- Set up user with permissions to generate token for second user
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Thomas"
-                                                      "Busby"
-                                                      "thomas.busby@scrive.com"
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Thomas"
+                                               , lastName       = return "Busby"
+                                               , email = return "thomas.busby@scrive.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
-  void . dbUpdate . SetUserUserGroup uid2 $ ug ^. #id
+  void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   -- Generate a valid login_token for uid2
   hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]

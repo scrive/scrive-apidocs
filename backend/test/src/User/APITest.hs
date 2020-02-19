@@ -222,9 +222,14 @@ testUser2FAWorkflow = do
 
 testUserNoDeletionIfWrongEmail :: TestEnv ()
 testUserNoDeletionIfWrongEmail = do
-  (anna, _) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  anna <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
+                                               , lastName       = return "Android"
+                                               , email = return "anna@android.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
 
-  ctx       <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
   do
     req      <- mkRequest POST [("email", inText "wrong@email.com")]
@@ -238,12 +243,18 @@ testUserNoDeletionIfWrongEmail = do
 
 testUserNoDeletionIfPendingDocuments :: TestEnv ()
 testUserNoDeletionIfPendingDocuments = do
-  (anna, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  now        <- currentTime
+  anna <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
+                                               , lastName       = return "Android"
+                                               , email = return "anna@android.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  now <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
 
-  bob <- instantiateUser
-    $ randomUserTemplate { email = return "bob@blue.com", groupID = return $ ug ^. #id }
+  bob <- instantiateUser $ randomUserTemplate { email   = return "bob@blue.com"
+                                              , groupID = return $ anna ^. #groupID
+                                              }
 
   ctx <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
@@ -265,18 +276,29 @@ testUserNoDeletionIfPendingDocuments = do
 
 testUserDeletion :: TestEnv ()
 testUserDeletion = do
-  (anna, _) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  ctx       <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  anna <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
+                                               , lastName       = return "Android"
+                                               , email = return "anna@android.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  ctx      <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
-  req       <- mkRequest POST [("email", inText "anna@android.com")]
-  (res, _)  <- runTestKontra req ctx apiCallDeleteUser
+  req      <- mkRequest POST [("email", inText "anna@android.com")]
+  (res, _) <- runTestKontra req ctx apiCallDeleteUser
   assertEqual "user got deleted" 200 (rsCode res)
 
 testUserDeletionOwnershipTransfer :: TestEnv ()
 testUserDeletionOwnershipTransfer = do
-  (anna, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  bob        <- instantiateUser
-    $ randomUserTemplate { email = return "bob@blue.com", groupID = return $ ug ^. #id }
+  anna <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
+                                               , lastName       = return "Android"
+                                               , email = return "anna@android.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  bob <- instantiateUser $ randomUserTemplate { email   = return "bob@blue.com"
+                                              , groupID = return $ anna ^. #groupID
+                                              }
 
   now <- currentTime
   void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
@@ -332,8 +354,13 @@ testUserDeletionOwnershipTransfer = do
 
 testUserSetDataRetentionPolicy :: TestEnv ()
 testUserSetDataRetentionPolicy = do
-  (user, _) <- deprecatedAddNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
-  ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Bob"
+                                               , lastName       = return "Blue"
+                                               , email          = return "bob@email.tld"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do
     drp <- rand 10 arbitrary
@@ -349,8 +376,15 @@ testUserSetDataRetentionPolicy = do
 
 testUserSetDataRetentionPolicyOnlyIfAsStrict :: TestEnv ()
 testUserSetDataRetentionPolicyOnlyIfAsStrict = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Bob"
+                                               , lastName       = return "Blue"
+                                               , email          = return "bob@email.tld"
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do
     userDRP    <- rand 10 arbitrary

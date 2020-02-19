@@ -26,7 +26,11 @@ accessControlRoleTests env = testGroup
 
 testRolesNotInheritedInUserGroupTree :: TestEnv ()
 testRolesNotInheritedInUserGroupTree = do
-  (Just user) <- deprecatedAddNewUser "Lloyd" "Garmadon" "lloyd.garmadon@scrive.com"
+  user <- instantiateUser $ randomUserTemplate
+    { firstName = return "Lloyd"
+    , lastName  = return "Garmadon"
+    , email     = return "lloyd.garmadon@scrive.com"
+    }
   let uid = user ^. #id
   (root_ug :: UserGroupRoot) <- rand 10 arbitrary
   root_ugid <- view #id <$> (dbUpdate . UserGroupCreate $ ugFromUGRoot root_ug)
@@ -66,7 +70,11 @@ testRolesNotInheritedInUserGroupTree = do
 testImplicitRoles :: TestEnv ()
 testImplicitRoles = do
   -- admin user
-  admusr <- fromJust <$> deprecatedAddNewUser "Lego" "Flash" "lego.flash@scrive.com"
+  admusr <- instantiateUser $ randomUserTemplate { firstName      = return "Lego"
+                                                 , lastName       = return "Flash"
+                                                 , email = return "lego.flash@scrive.com"
+                                                 , isCompanyAdmin = True
+                                                 }
   let admusrid = admusr ^. #id
       admugid  = admusr ^. #groupID
   admug        <- fromJust <$> (dbQuery $ UserGroupGet admugid)
@@ -150,7 +158,11 @@ testImplicitRoles = do
 
 testExplicitRoles :: TestEnv ()
 testExplicitRoles = do
-  admusr <- fromJust <$> deprecatedAddNewUser "Lego" "Superman" "lego.superman@scrive.com"
+  admusr <- instantiateUser $ randomUserTemplate
+    { firstName = return "Lego"
+    , lastName  = return "Superman"
+    , email     = return "lego.superman@scrive.com"
+    }
   let admusrid = admusr ^. #id
       admugid  = admusr ^. #groupID
   admug    <- fromJust <$> (dbQuery $ UserGroupGet admugid)

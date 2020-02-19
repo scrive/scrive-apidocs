@@ -26,28 +26,28 @@ userGroupApiTests :: TestEnvSt -> Test
 userGroupApiTests env = testGroup
   "UserGroupAPI"
   [ -- UserGroup POST and PUT endpoint tests
-    testThat "non-admin and non-sales user can't create root UserGroup"
+    testThat "non-god-mode and non-sales user can't create root UserGroup"
              env
-             testNonAdminUserCannotCreateRootUserGroup
-  , testThat "admin users can create root UserGroup"
+             testNonGodModeUserCannotCreateRootUserGroup
+  , testThat "god-mode users can create root UserGroup"
              env
-             testAdminUserCanCreateRootUserGroup
+             testGodModeUserCanCreateRootUserGroup
   , testThat "sales users can create root UserGroup"
              env
              testSalesUserCanCreateRootUserGroup
   , testThat "users can't create child UserGroup for a non-existent UserGroup"
              env
-             testNonAdminUserCannotCreateChildUserGroupForNonExistentUserGroup
+             testNonGodModeUserCannotCreateChildUserGroupForNonExistentUserGroup
   , testThat
     "non-admin users can't create child UserGroup without permissions on parent UserGroup"
     env
-    testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions
+    testNonGodModeUserCannotCreateChildUserGroupWithoutUGAdminPermissions
   , testThat "users can create child UserGroup as UG Admin"
              env
              testUserCanCreateChildUserGroupWithPermissions
-  , testThat "admin users can create child UserGroup without permissions"
+  , testThat "god-mode users can create child UserGroup without permissions"
              env
-             testAdminUserCanCreateChildUserGroupWithoutPermissions
+             testGodModeUserCanCreateChildUserGroupWithoutPermissions
   , testThat "sales users can create child UserGroup without permissions"
              env
              testSalesUserCanCreateChildUserGroupWithoutPermissions
@@ -58,27 +58,27 @@ userGroupApiTests env = testGroup
              env
              testUserCanEditChildUserGroupWithPermissions
   -- UserGroup GET endpoint tests
-  , testThat "non-admin and non-sales user can't view non-existent UserGroup"
+  , testThat "non-god-mode and non-sales user can't view non-existent UserGroup"
              env
-             testNonAdminUserCannotViewNonExistentUserGroup
-  , testThat "admin user can't view non-existent UserGroup"
+             testNonGodModeUserCannotViewNonExistentUserGroup
+  , testThat "god-mode user can't view non-existent UserGroup"
              env
-             testAdminUserCannotViewNonExistentUserGroup
+             testGodModeUserCannotViewNonExistentUserGroup
   , testThat "sales user can't view non-existent UserGroup"
              env
              testSalesUserCannotViewNonExistentUserGroup
-  , testThat "non-admin and non-sales user can view UserGroup with permissions"
+  , testThat "non-god-mode and non-sales user can view UserGroup with permissions"
              env
-             testNonAdminUserCanViewUserGroupWithPermissions
-  , testThat "admin user can UserGroup with permissions"
+             testNonGodModeUserCanViewUserGroupWithPermissions
+  , testThat "god-mode user can UserGroup with permissions"
              env
-             testAdminUserCanViewUserGroupWithPermissions
+             testGodModeUserCanViewUserGroupWithPermissions
   , testThat "sales user can UserGroup with permissions"
              env
              testSalesUserCanViewUserGroupWithPermissions
-  , testThat "admin user can UserGroup without permissions"
+  , testThat "god-mode user can UserGroup without permissions"
              env
-             testAdminUserCanViewUserGroupWithoutPermissions
+             testGodModeUserCanViewUserGroupWithoutPermissions
   , testThat "sales user can UserGroup without permissions"
              env
              testSalesUserCanViewUserGroupWithoutPermissions
@@ -86,148 +86,150 @@ userGroupApiTests env = testGroup
   , testThat "non-user cannot delete non-existent UserGroup"
              env
              testUserCannotDeleteNonExistentUserGroup
-  , testThat "admin user cannot delete non-existent UserGroup"
+  , testThat "god-mode user cannot delete non-existent UserGroup"
              env
-             testAdminUserCannotDeleteNonExistentUserGroup
+             testGodModeUserCannotDeleteNonExistentUserGroup
   , testThat "sales user cannot delete non-existent UserGroup"
              env
              testSalesUserCannotDeleteNonExistentUserGroup
   , testThat "user can delete child UserGroup as UG Admin"
              env
              testUserCanDeleteChildUserGroupWithPermissions
-  , testThat "admin user can delete child UserGroup without permissions"
+  , testThat "god-mode user can delete child UserGroup without permissions"
              env
-             testAdminUserCanDeleteChildUserGroupWithoutPermissions
+             testGodModeUserCanDeleteChildUserGroupWithoutPermissions
   , testThat "sales user can delete child UserGroup without permissions"
              env
              testSalesUserCanDeleteChildUserGroupWithoutPermissions
   , testThat "user cannot delete root UserGroup as UG Admin"
              env
              testUserCannotDeleteRootUserGroupWithPermissions
-  , testThat "admin user cannot delete root UserGroup"
+  , testThat "god-mode user cannot delete root UserGroup"
              env
-             testAdminUserCannotDeleteRootUserGroup
+             testGodModeUserCannotDeleteRootUserGroup
   , testThat "sales user cannot delete root UserGroup"
              env
              testSalesUserCannotDeleteRootUserGroup
   -- UserGroup Address GET endpoint tests
-  , testThat "non-admin and non-sales user can't view non-existent UserGroupAddress"
+  , testThat "non-god-mode and non-sales user can't view non-existent UserGroupAddress"
              env
-             testNonAdminUserCannotViewNonExistentUserGroupAddress
-  , testThat "admin user can't view non-existent UserGroupAddress"
+             testNonGodModeUserCannotViewNonExistentUserGroupAddress
+  , testThat "god-mode user can't view non-existent UserGroupAddress"
              env
-             testAdminUserCannotViewNonExistentUserGroupAddress
+             testGodModeUserCannotViewNonExistentUserGroupAddress
   , testThat "sales user can't view non-existent UserGroupAddress"
              env
              testSalesUserCannotViewNonExistentUserGroupAddress
-  , testThat "non-admin and non-sales user can view UserGroupAddress with permissions"
+  , testThat
+    "non-god-mode and non-sales user can view UserGroupAddress with permissions"
+    env
+    testNonGodModeUserCanViewUserGroupAddressWithPermissions
+  , testThat "god-mode user can UserGroupAddress with permissions"
              env
-             testNonAdminUserCanViewUserGroupAddressWithPermissions
-  , testThat "admin user can UserGroupAddress with permissions"
-             env
-             testAdminUserCanViewUserGroupAddressWithPermissions
+             testGodModeUserCanViewUserGroupAddressWithPermissions
   , testThat "sales user can UserGroupAddress with permissions"
              env
              testSalesUserCanViewUserGroupAddressWithPermissions
-  , testThat "admin user can UserGroupAddress without permissions"
+  , testThat "god-mode user can UserGroupAddress without permissions"
              env
-             testAdminUserCanViewUserGroupAddressWithoutPermissions
+             testGodModeUserCanViewUserGroupAddressWithoutPermissions
   , testThat "sales user can UserGroupAddress without permissions"
              env
              testSalesUserCanViewUserGroupAddressWithoutPermissions
   -- UserGroup Address PUT endpoint tests
-  , testThat "non-admin and non-sales edit UserGroupAddress with permissions"
+  , testThat "non-god-mode and non-sales edit UserGroupAddress with permissions"
              env
              testSalesUserCanEditUserGroupAddressWithPermissions
   -- UserGroup Address DELETE endpoint tests
   , testThat "non-user cannot delete non-existent UserGroupAddress"
              env
              testUserCannotDeleteNonExistentUserGroupAddress
-  , testThat "admin user cannot delete non-existent UserGroupAddress"
+  , testThat "god-mode user cannot delete non-existent UserGroupAddress"
              env
-             testAdminUserCannotDeleteNonExistentUserGroupAddress
+             testGodModeUserCannotDeleteNonExistentUserGroupAddress
   , testThat "sales user cannot delete non-existent UserGroupAddress"
              env
              testSalesUserCannotDeleteNonExistentUserGroupAddress
   , testThat "user can delete child UserGroupAddress as UG Admin"
              env
              testUserCanDeleteChildUserGroupAddressWithPermissions
-  , testThat "admin user can delete child UserGroupAddress without permissions"
+  , testThat "god-mode user can delete child UserGroupAddress without permissions"
              env
-             testAdminUserCanDeleteChildUserGroupAddressWithoutPermissions
+             testGodModeUserCanDeleteChildUserGroupAddressWithoutPermissions
   , testThat "sales user can delete child UserGroupAddress without permissions"
              env
              testSalesUserCanDeleteChildUserGroupAddressWithoutPermissions
   , testThat "user cannot delete root UserGroupAddress as UG Admin"
              env
              testUserCannotDeleteRootUserGroupAddressWithPermissions
-  , testThat "admin user cannot delete root UserGroupAddress"
+  , testThat "god-mode user cannot delete root UserGroupAddress"
              env
-             testAdminUserCannotDeleteRootUserGroupAddress
+             testGodModeUserCannotDeleteRootUserGroupAddress
   , testThat "sales user cannot delete root UserGroupAddress"
              env
              testSalesUserCannotDeleteRootUserGroupAddress
   -- UserGroup Settings GET endpoint tests
-  , testThat "non-admin and non-sales user can't view non-existent UserGroupSettings"
+  , testThat "non-god-mode and non-sales user can't view non-existent UserGroupSettings"
              env
-             testNonAdminUserCannotViewNonExistentUserGroupSettings
-  , testThat "admin user can't view non-existent UserGroupSettings"
+             testNonGodModeUserCannotViewNonExistentUserGroupSettings
+  , testThat "god-mode user can't view non-existent UserGroupSettings"
              env
-             testAdminUserCannotViewNonExistentUserGroupSettings
+             testGodModeUserCannotViewNonExistentUserGroupSettings
   , testThat "sales user can't view non-existent UserGroupSettings"
              env
              testSalesUserCannotViewNonExistentUserGroupSettings
-  , testThat "non-admin and non-sales user can view UserGroupSettings with permissions"
+  , testThat
+    "non-god-mode and non-sales user can view UserGroupSettings with permissions"
+    env
+    testNonGodModeUserCanViewUserGroupSettingsWithPermissions
+  , testThat "god-mode user can UserGroupSettings with permissions"
              env
-             testNonAdminUserCanViewUserGroupSettingsWithPermissions
-  , testThat "admin user can UserGroupSettings with permissions"
-             env
-             testAdminUserCanViewUserGroupSettingsWithPermissions
+             testGodModeUserCanViewUserGroupSettingsWithPermissions
   , testThat "sales user can UserGroupSettings with permissions"
              env
              testSalesUserCanViewUserGroupSettingsWithPermissions
-  , testThat "admin user can UserGroupSettings without permissions"
+  , testThat "god-mode user can UserGroupSettings without permissions"
              env
-             testAdminUserCanViewUserGroupSettingsWithoutPermissions
+             testGodModeUserCanViewUserGroupSettingsWithoutPermissions
   , testThat "sales user can UserGroupSettings without permissions"
              env
              testSalesUserCanViewUserGroupSettingsWithoutPermissions
   -- UserGroup Settings PUT endpoint tests
-  , testThat "non-admin and non-sales edit UserGroupSettings with permissions"
+  , testThat "non-god-mode and non-sales edit UserGroupSettings with permissions"
              env
              testSalesUserCanEditUserGroupSettingsWithPermissions
   -- UserGroup Settings DELETE endpoint tests
   , testThat "non-user cannot delete non-existent UserGroupSettings"
              env
              testUserCannotDeleteNonExistentUserGroupSettings
-  , testThat "admin user cannot delete non-existent UserGroupSettings"
+  , testThat "god-mode user cannot delete non-existent UserGroupSettings"
              env
-             testAdminUserCannotDeleteNonExistentUserGroupSettings
+             testGodModeUserCannotDeleteNonExistentUserGroupSettings
   , testThat "sales user cannot delete non-existent UserGroupSettings"
              env
              testSalesUserCannotDeleteNonExistentUserGroupSettings
   , testThat "user can delete child UserGroupSettings as UG Admin"
              env
              testUserCanDeleteChildUserGroupSettingsWithPermissions
-  , testThat "admin user can delete child UserGroupSettings without permissions"
+  , testThat "god-mode user can delete child UserGroupSettings without permissions"
              env
-             testAdminUserCanDeleteChildUserGroupSettingsWithoutPermissions
+             testGodModeUserCanDeleteChildUserGroupSettingsWithoutPermissions
   , testThat "sales user can delete child UserGroupSettings without permissions"
              env
              testSalesUserCanDeleteChildUserGroupSettingsWithoutPermissions
   , testThat "user can't delete root UserGroupSettings as UG Admin"
              env
              testUserCannotDeleteRootUserGroupSettingsWithPermissions
-  , testThat "admin user can't delete root UserGroupSettings"
+  , testThat "god-mode user can't delete root UserGroupSettings"
              env
-             testAdminUserCannotDeleteRootUserGroupSettings
+             testGodModeUserCannotDeleteRootUserGroupSettings
   , testThat "sales user can't delete root UserGroupSettings"
              env
              testSalesUserCannotDeleteRootUserGroupSettings
   -- UserGroup Users GET endpoint tests
-  , testThat "non-admin and non-sales can view Users in UserGroup with permissions"
+  , testThat "non-god-mode and non-sales can view Users in UserGroup with permissions"
              env
-             testNonAdminUserCanViewUsersInUserGroupWithPermissions
+             testNonGodModeUserCanViewUsersInUserGroupWithPermissions
   , testThat "user can update tags" env testUserCanUpdateTags
   , testThat "user can view tags"   env testUserCanViewTags
   ]
@@ -241,42 +243,54 @@ jsonWithParentUG :: UserGroupID -> String
 jsonWithParentUG ugid =
   "{\"name\":\"Test UserGroup blah blah\",\"parent_id\":" <> "\"" <> (show ugid) <> "\"}"
 
-testNonAdminUserCannotCreateRootUserGroup :: TestEnv ()
-testNonAdminUserCannotCreateRootUserGroup = do
-  muser <- deprecatedAddNewUser "Arthur" "Dent" "arthur.dent@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [("usergroup", inText $ T.pack jsonRootUG)]
-  res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
+testNonGodModeUserCannotCreateRootUserGroup :: TestEnv ()
+testNonGodModeUserCannotCreateRootUserGroup = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Arthur"
+                                               , lastName = return "Dent"
+                                               , email = return "arthur.dent@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest POST [("usergroup", inText $ T.pack jsonRootUG)]
+  res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "non-admin/sales user can't create root UserGroup" 403 $ rsCode res
 
-testAdminUserCanCreateRootUserGroup :: TestEnv ()
-testAdminUserCanCreateRootUserGroup = do
-  muser <- deprecatedAddNewUser "Tricia" "McMillan" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [("usergroup", inText $ T.pack jsonRootUG)]
-  res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
+testGodModeUserCanCreateRootUserGroup :: TestEnv ()
+testGodModeUserCanCreateRootUserGroup = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Tricia"
+                                               , lastName  = return "McMillan"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest POST [("usergroup", inText $ T.pack jsonRootUG)]
+  res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
   where
     emailAddress = "trillian@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanCreateRootUserGroup :: TestEnv ()
 testSalesUserCanCreateRootUserGroup = do
-  muser <- deprecatedAddNewUser "Deep" "Thought" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [("usergroup", inText $ T.pack jsonRootUG)]
-  res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Deep"
+                                               , lastName  = return "Thought"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest POST [("usergroup", inText $ T.pack jsonRootUG)]
+  res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
   where
     emailAddress = "deep.thought@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
-testNonAdminUserCannotCreateChildUserGroupForNonExistentUserGroup :: TestEnv ()
-testNonAdminUserCannotCreateChildUserGroupForNonExistentUserGroup = do
-  muser <- deprecatedAddNewUser "Gag" "Halfrunt" "gag.halfrunt@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [("usergroup", inText $ T.pack jsonNonExistentParentUG)]
-  res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
+testNonGodModeUserCannotCreateChildUserGroupForNonExistentUserGroup :: TestEnv ()
+testNonGodModeUserCannotCreateChildUserGroupForNonExistentUserGroup = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Gag"
+                                               , lastName = return "Halfrunt"
+                                               , email = return "gag.halfrunt@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest POST [("usergroup", inText $ T.pack jsonNonExistentParentUG)]
+  res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "user can't create child UserGroup for non-existent UserGroup" 403
     $ rsCode res
   where
@@ -296,62 +310,79 @@ testNonAdminUserCannotCreateChildUserGroupForNonExistentUserGroup = do
         <> "\"service_theme\":null,\"browser_title\":null,\"sms_originator\":null,"
         <> "\"favicon\":null}}"
 
-testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions :: TestEnv ()
-testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Prostetnic Vogon"
-                                                      "Jeltz"
-                                                      emailAddress
+testNonGodModeUserCannotCreateChildUserGroupWithoutUGAdminPermissions :: TestEnv ()
+testNonGodModeUserCannotCreateChildUserGroupWithoutUGAdminPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Prostetnic Vogon"
+                                               , lastName       = return "Jeltz"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  req <- mkRequest
+    POST
+    [("usergroup", inText $ T.pack $ jsonWithParentUG $ user ^. #groupID)]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 403 $ rsCode res
   where emailAddress = "prostetnic.vogon.jeltz@scrive.com"
 
 testUserCanCreateChildUserGroupWithPermissions :: TestEnv ()
 testUserCanCreateChildUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Great Green"
-                                                      "Arkleseizure"
-                                                      emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
+                                               , lastName       = return "Arkleseizure"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugid)]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 200 $ rsCode res
   where emailAddress = "great.green.arkleseizure@scrive.com"
 
-testAdminUserCanCreateChildUserGroupWithoutPermissions :: TestEnv ()
-testAdminUserCanCreateChildUserGroupWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Oolon" "Colluphid" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  ug    <- instantiateRandomUserGroup
-  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
-  res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
+testGodModeUserCanCreateChildUserGroupWithoutPermissions :: TestEnv ()
+testGodModeUserCanCreateChildUserGroupWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Oolon"
+                                               , lastName  = return "Colluphid"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  ug  <- instantiateRandomUserGroup
+  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
   where
     emailAddress = "oolon.colluphid@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanCreateChildUserGroupWithoutPermissions :: TestEnv ()
 testSalesUserCanCreateChildUserGroupWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Marvin" "the Paranoid Android" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  ug    <- instantiateRandomUserGroup
-  req   <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
-  res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Marvin"
+                                               , lastName  = return "the Paranoid Android"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  ug  <- instantiateRandomUserGroup
+  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
   where
     emailAddress = "marvin@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 testUserCanEditRootUserGroupWithPermissions :: TestEnv ()
 testUserCanEditRootUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Great Green"
-                                                      "Arkleseizure"
-                                                      emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
+                                               , lastName       = return "Arkleseizure"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest POST [("usergroup", inText $ T.pack jsonExistingRootUG)]
@@ -364,9 +395,14 @@ testUserCanEditRootUserGroupWithPermissions = do
 
 testUserCanEditChildUserGroupWithPermissions :: TestEnv ()
 testUserCanEditChildUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hotblack"
+                                               , lastName       = return "Desiato"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid        = user ^. #id
-      ugidParent = ug ^. #id
+      ugidParent = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugidParent
   ugidChild <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugidParent
@@ -387,48 +423,59 @@ testUserCanEditChildUserGroupWithPermissions = do
 
 -- UserGroup GET endpoint tests
 
-testNonAdminUserCannotViewNonExistentUserGroup :: TestEnv ()
-testNonAdminUserCannotViewNonExistentUserGroup = do
-  muser <- deprecatedAddNewUser "Googleplex"
-                                "Starthinker"
-                                "googleplex.starthinker@scrive.com"
-  ctx <- set #maybeUser muser <$> mkContext defaultLang
+testNonGodModeUserCannotViewNonExistentUserGroup :: TestEnv ()
+testNonGodModeUserCannotViewNonExistentUserGroup = do
+  user <- instantiateUser $ randomUserTemplate
+    { firstName = return "Googleplex"
+    , lastName  = return "Starthinker"
+    , email     = return "googleplex.starthinker@scrive.com"
+    }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "non-admin user can't view non-existent UserGroup" 403 $ rsCode res
   where ugid = unsafeUserGroupID 123
 
-testAdminUserCannotViewNonExistentUserGroup :: TestEnv ()
-testAdminUserCannotViewNonExistentUserGroup = do
-  muser <- deprecatedAddNewUser "Grunthos" "the Flatulent" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
+testGodModeUserCannotViewNonExistentUserGroup :: TestEnv ()
+testGodModeUserCannotViewNonExistentUserGroup = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Grunthos"
+                                               , lastName  = return "the Flatulent"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "admin user can't view non-existent UserGroup" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotViewNonExistentUserGroup :: TestEnv ()
 testSalesUserCannotViewNonExistentUserGroup = do
-  muser <- deprecatedAddNewUser "Hotblack" "Desiato" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Hotblack"
+                                               , lastName  = return "Desiato"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "sales user can't view non-existent UserGroup" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
-testNonAdminUserCanViewUserGroupWithPermissions :: TestEnv ()
-testNonAdminUserCanViewUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Googleplex"
-                                                      "Starthinker"
-                                                      emailAddress
+testNonGodModeUserCanViewUserGroupWithPermissions :: TestEnv ()
+testNonGodModeUserCanViewUserGroupWithPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Googleplex"
+                                               , lastName       = return "Starthinker"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -436,102 +483,130 @@ testNonAdminUserCanViewUserGroupWithPermissions = do
   assertEqual "non-admin user can view UserGroup with permissions" 200 $ rsCode res
   where emailAddress = "googleplex.starthinker@scrive.com"
 
-testAdminUserCanViewUserGroupWithPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Grunthos"
-                                                      "the Flatulent"
-                                                      emailAddress
+testGodModeUserCanViewUserGroupWithPermissions :: TestEnv ()
+testGodModeUserCanViewUserGroupWithPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Grunthos"
+                                               , lastName       = return "the Flatulent"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "admin user can view UserGroup with permissions" 200 $ rsCode res
   where
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanViewUserGroupWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hotblack"
+                                               , lastName       = return "Desiato"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "sales user can view UserGroup with permissions" 200 $ rsCode res
   where
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
-testAdminUserCanViewUserGroupWithoutPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Grunthos" "the Flatulent" emailAddress
-  ug    <- instantiateRandomUserGroup
+testGodModeUserCanViewUserGroupWithoutPermissions :: TestEnv ()
+testGodModeUserCanViewUserGroupWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Grunthos"
+                                               , lastName  = return "the Flatulent"
+                                               , email     = return emailAddress
+                                               }
+  ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
-  ctx <- setUser muser <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "admin user can view UserGroup with permissions" 200 $ rsCode res
   where
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanViewUserGroupWithoutPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Hotblack" "Desiato" emailAddress
-  ug    <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Hotblack"
+                                               , lastName  = return "Desiato"
+                                               , email     = return emailAddress
+                                               }
+  ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
-  ctx <- setUser muser <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "sales user can view UserGroup with permissions" 200 $ rsCode res
   where
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 -- UserGroup DELETE endpoint tests
 
 testUserCannotDeleteNonExistentUserGroup :: TestEnv ()
 testUserCannotDeleteNonExistentUserGroup = do
-  muser <- deprecatedAddNewUser "Almighty" "Bob" "almighty.bob@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Almighty"
+                                               , lastName = return "Bob"
+                                               , email = return "almighty.bob@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup" 403 $ rsCode res
   where ugid = unsafeUserGroupID 123
 
-testAdminUserCannotDeleteNonExistentUserGroup :: TestEnv ()
-testAdminUserCannotDeleteNonExistentUserGroup = do
-  muser <- deprecatedAddNewUser "Blart" "Versenwald III" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
+testGodModeUserCannotDeleteNonExistentUserGroup :: TestEnv ()
+testGodModeUserCannotDeleteNonExistentUserGroup = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Blart"
+                                               , lastName  = return "Versenwald III"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "blart.versenwald@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotDeleteNonExistentUserGroup :: TestEnv ()
 testSalesUserCannotDeleteNonExistentUserGroup = do
-  muser <- deprecatedAddNewUser "Gogrilla" "Mincefriend" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Gogrilla"
+                                               , lastName  = return "Mincefriend"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "gogrilla.mincefriend@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 testUserCanDeleteChildUserGroupWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupWithPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hig"
+                                               , lastName       = return "Hurtenflurst"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid   = user ^. #id
-      ugid1 = ug1 ^. #id
+      ugid1 = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
@@ -542,41 +617,56 @@ testUserCanDeleteChildUserGroupWithPermissions = do
   assertEqual "UserGroup admin can delete child UserGroup" 200 $ rsCode res
   where emailAddress = "hig.hurtenflurst@scrive.com"
 
-testAdminUserCanDeleteChildUserGroupWithoutPermissions :: TestEnv ()
-testAdminUserCanDeleteChildUserGroupWithoutPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid1 = ug1 ^. #id
+testGodModeUserCanDeleteChildUserGroupWithoutPermissions :: TestEnv ()
+testGodModeUserCanDeleteChildUserGroupWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Max"
+                                               , lastName       = return "Quordlepleen"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid1 = user ^. #groupID
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid2)
   assertEqual "admin user can delete child UserGroup without permissions" 200 $ rsCode res
   where
     emailAddress = "max.quordlepleen@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanDeleteChildUserGroupWithoutPermissions :: TestEnv ()
 testSalesUserCanDeleteChildUserGroupWithoutPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let ugid1 = ug1 ^. #id
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hig"
+                                               , lastName       = return "Hurtenflurst"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid1 = user ^. #groupID
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid2)
   assertEqual "sales user can delete child UserGroup without permissions" 200 $ rsCode res
   where
     emailAddress = "hig.hurtenflurst@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 testUserCannotDeleteRootUserGroupWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hurling"
+                                               , lastName       = return "Frootmig"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
@@ -585,75 +675,96 @@ testUserCannotDeleteRootUserGroupWithPermissions = do
   where emailAddress = "hurling.frootmig@scrive.com"
 
 -- Perhaps this should be allowed, currently this checks a prohibition of deleting roots
-testAdminUserCannotDeleteRootUserGroup :: TestEnv ()
-testAdminUserCannotDeleteRootUserGroup = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Humma" "Kavula" emailAddress
-  let ugid = ug ^. #id
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+testGodModeUserCannotDeleteRootUserGroup :: TestEnv ()
+testGodModeUserCannotDeleteRootUserGroup = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Humma"
+                                               , lastName       = return "Kavula"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid = user ^. #groupID
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
   assertEqual "admin user cannot delete root UserGroup" 400 $ rsCode res
   where
     emailAddress = "humma.kavula@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 -- Perhaps this should be allowed, currently this checks a prohibition of deleting roots
 testSalesUserCannotDeleteRootUserGroup :: TestEnv ()
 testSalesUserCannotDeleteRootUserGroup = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid = ug ^. #id
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Max"
+                                               , lastName       = return "Quordlepleen"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid = user ^. #groupID
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
   assertEqual "sales user cannot delete root UserGroup" 400 $ rsCode res
   where
     emailAddress = "max.quordlepleen@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 -- UserGroup Address GET endpoint tests
 
-testNonAdminUserCannotViewNonExistentUserGroupAddress :: TestEnv ()
-testNonAdminUserCannotViewNonExistentUserGroupAddress = do
-  muser <- deprecatedAddNewUser "Googleplex"
-                                "Starthinker"
-                                "googleplex.starthinker@scrive.com"
-  ctx <- set #maybeUser muser <$> mkContext defaultLang
+testNonGodModeUserCannotViewNonExistentUserGroupAddress :: TestEnv ()
+testNonGodModeUserCannotViewNonExistentUserGroupAddress = do
+  user <- instantiateUser $ randomUserTemplate
+    { firstName = return "Googleplex"
+    , lastName  = return "Starthinker"
+    , email     = return "googleplex.starthinker@scrive.com"
+    }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "non-admin user can't view non-existent UserGroup Address" 403 $ rsCode res
   where ugid = unsafeUserGroupID 123
 
-testAdminUserCannotViewNonExistentUserGroupAddress :: TestEnv ()
-testAdminUserCannotViewNonExistentUserGroupAddress = do
-  muser <- deprecatedAddNewUser "Grunthos" "the Flatulent" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
+testGodModeUserCannotViewNonExistentUserGroupAddress :: TestEnv ()
+testGodModeUserCannotViewNonExistentUserGroupAddress = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Grunthos"
+                                               , lastName  = return "the Flatulent"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "admin user can't view non-existent UserGroup Address" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotViewNonExistentUserGroupAddress :: TestEnv ()
 testSalesUserCannotViewNonExistentUserGroupAddress = do
-  muser <- deprecatedAddNewUser "Hotblack" "Desiato" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Hotblack"
+                                               , lastName  = return "Desiato"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "sales user can't view non-existent UserGroup Address" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
-testNonAdminUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
-testNonAdminUserCanViewUserGroupAddressWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Googleplex"
-                                                      "Starthinker"
-                                                      emailAddress
+testNonGodModeUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
+testNonGodModeUserCanViewUserGroupAddressWithPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Googleplex"
+                                               , lastName       = return "Starthinker"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -662,71 +773,89 @@ testNonAdminUserCanViewUserGroupAddressWithPermissions = do
     $ rsCode res
   where emailAddress = "googleplex.starthinker@scrive.com"
 
-testAdminUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupAddressWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Grunthos"
-                                                      "the Flatulent"
-                                                      emailAddress
+testGodModeUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
+testGodModeUserCanViewUserGroupAddressWithPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Grunthos"
+                                               , lastName       = return "the Flatulent"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "admin user can view UserGroup Address with permissions" 200 $ rsCode res
   where
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanViewUserGroupAddressWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupAddressWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hotblack"
+                                               , lastName       = return "Desiato"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "sales user can view UserGroup Address with permissions" 200 $ rsCode res
   where
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
-testAdminUserCanViewUserGroupAddressWithoutPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupAddressWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Grunthos" "the Flatulent" emailAddress
-  ug    <- instantiateRandomUserGroup
+testGodModeUserCanViewUserGroupAddressWithoutPermissions :: TestEnv ()
+testGodModeUserCanViewUserGroupAddressWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Grunthos"
+                                               , lastName  = return "the Flatulent"
+                                               , email     = return emailAddress
+                                               }
+  ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
-  ctx <- setUser muser <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "admin user can view UserGroup Address with permissions" 200 $ rsCode res
   where
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanViewUserGroupAddressWithoutPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupAddressWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Hotblack" "Desiato" "hotblack.desiato@scrive.com"
-  ug    <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate
+    { firstName = return "Hotblack"
+    , lastName  = return "Desiato"
+    , email     = return "hotblack.desiato@scrive.com"
+    }
+  ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
-  ctx <- setUser muser <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "sales user can view UserGroup Address with permissions" 200 $ rsCode res
   where
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 -- UserGroup Address Update endpoint tests
 
 testSalesUserCanEditUserGroupAddressWithPermissions :: TestEnv ()
 testSalesUserCanEditUserGroupAddressWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Great Green"
-                                                      "Arkleseizure"
-                                                      emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
+                                               , lastName       = return "Arkleseizure"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest POST [("contact_details", inText addressJson)]
@@ -744,42 +873,56 @@ testSalesUserCanEditUserGroupAddressWithPermissions = do
 
 testUserCannotDeleteNonExistentUserGroupAddress :: TestEnv ()
 testUserCannotDeleteNonExistentUserGroupAddress = do
-  muser <- deprecatedAddNewUser "Almighty" "Bob" "almighty.bob@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Almighty"
+                                               , lastName = return "Bob"
+                                               , email = return "almighty.bob@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Contact Details" 403 $ rsCode res
   where ugid = unsafeUserGroupID 123
 
-testAdminUserCannotDeleteNonExistentUserGroupAddress :: TestEnv ()
-testAdminUserCannotDeleteNonExistentUserGroupAddress = do
-  muser <- deprecatedAddNewUser "Blart" "Versenwald III" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
+testGodModeUserCannotDeleteNonExistentUserGroupAddress :: TestEnv ()
+testGodModeUserCannotDeleteNonExistentUserGroupAddress = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Blart"
+                                               , lastName  = return "Versenwald III"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Address" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "blart.versenwald@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotDeleteNonExistentUserGroupAddress :: TestEnv ()
 testSalesUserCannotDeleteNonExistentUserGroupAddress = do
-  muser <- deprecatedAddNewUser "Gogrilla" "Mincefriend" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Gogrilla"
+                                               , lastName  = return "Mincefriend"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Address" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "gogrilla.mincefriend@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 testUserCanDeleteChildUserGroupAddressWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupAddressWithPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hig"
+                                               , lastName       = return "Hurtenflurst"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid   = user ^. #id
-      ugid1 = ug1 ^. #id
+      ugid1 = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
@@ -790,43 +933,58 @@ testUserCanDeleteChildUserGroupAddressWithPermissions = do
   assertEqual "UserGroup admin can delete child UserGroup Address" 200 $ rsCode res
   where emailAddress = "hig.hurtenflurst@scrive.com"
 
-testAdminUserCanDeleteChildUserGroupAddressWithoutPermissions :: TestEnv ()
-testAdminUserCanDeleteChildUserGroupAddressWithoutPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid1 = ug1 ^. #id
+testGodModeUserCanDeleteChildUserGroupAddressWithoutPermissions :: TestEnv ()
+testGodModeUserCanDeleteChildUserGroupAddressWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Max"
+                                               , lastName       = return "Quordlepleen"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid1 = user ^. #groupID
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
   assertEqual "admin user can delete child UserGroup Address without permissions" 200
     $ rsCode res
   where
     emailAddress = "max.quordlepleen@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanDeleteChildUserGroupAddressWithoutPermissions :: TestEnv ()
 testSalesUserCanDeleteChildUserGroupAddressWithoutPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let ugid1 = ug1 ^. #id
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hig"
+                                               , lastName       = return "Hurtenflurst"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid1 = user ^. #groupID
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
   assertEqual "sales user can delete child UserGroup Address without permissions" 200
     $ rsCode res
   where
     emailAddress = "hig.hurtenflurst@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 testUserCannotDeleteRootUserGroupAddressWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupAddressWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hurling"
+                                               , lastName       = return "Frootmig"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
@@ -834,74 +992,95 @@ testUserCannotDeleteRootUserGroupAddressWithPermissions = do
   assertEqual "UserGroup admin can delete root UserGroup Address" 400 $ rsCode res
   where emailAddress = "hurling.frootmig@scrive.com"
 
-testAdminUserCannotDeleteRootUserGroupAddress :: TestEnv ()
-testAdminUserCannotDeleteRootUserGroupAddress = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Humma" "Kavula" emailAddress
-  let ugid = ug ^. #id
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+testGodModeUserCannotDeleteRootUserGroupAddress :: TestEnv ()
+testGodModeUserCannotDeleteRootUserGroupAddress = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Humma"
+                                               , lastName       = return "Kavula"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid = user ^. #groupID
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "admin user cannot delete root UserGroup Address" 400 $ rsCode res
   where
     emailAddress = "humma.kavula@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotDeleteRootUserGroupAddress :: TestEnv ()
 testSalesUserCannotDeleteRootUserGroupAddress = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid = ug ^. #id
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Max"
+                                               , lastName       = return "Quordlepleen"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid = user ^. #groupID
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "sales user cannot delete root UserGroup Address" 400 $ rsCode res
   where
     emailAddress = "max.quordlepleen@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 -- UserGroup Settings GET endpoint tests
 
-testNonAdminUserCannotViewNonExistentUserGroupSettings :: TestEnv ()
-testNonAdminUserCannotViewNonExistentUserGroupSettings = do
-  muser <- deprecatedAddNewUser "Googleplex"
-                                "Starthinker"
-                                "googleplex.starthinker@scrive.com"
-  ctx <- set #maybeUser muser <$> mkContext defaultLang
+testNonGodModeUserCannotViewNonExistentUserGroupSettings :: TestEnv ()
+testNonGodModeUserCannotViewNonExistentUserGroupSettings = do
+  user <- instantiateUser $ randomUserTemplate
+    { firstName = return "Googleplex"
+    , lastName  = return "Starthinker"
+    , email     = return "googleplex.starthinker@scrive.com"
+    }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "non-admin user can't view non-existent UserGroup Settings" 403 $ rsCode res
   where ugid = unsafeUserGroupID 123
 
-testAdminUserCannotViewNonExistentUserGroupSettings :: TestEnv ()
-testAdminUserCannotViewNonExistentUserGroupSettings = do
-  muser <- deprecatedAddNewUser "Grunthos" "the Flatulent" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
+testGodModeUserCannotViewNonExistentUserGroupSettings :: TestEnv ()
+testGodModeUserCannotViewNonExistentUserGroupSettings = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Grunthos"
+                                               , lastName  = return "the Flatulent"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "admin user can't view non-existent UserGroup Settings" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotViewNonExistentUserGroupSettings :: TestEnv ()
 testSalesUserCannotViewNonExistentUserGroupSettings = do
-  muser <- deprecatedAddNewUser "Hotblack" "Desiato" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Hotblack"
+                                               , lastName  = return "Desiato"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "sales user can't view non-existent UserGroup Settings" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
-testNonAdminUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
-testNonAdminUserCanViewUserGroupSettingsWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Googleplex"
-                                                      "Starthinker"
-                                                      emailAddress
+testNonGodModeUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
+testNonGodModeUserCanViewUserGroupSettingsWithPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Googleplex"
+                                               , lastName       = return "Starthinker"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -910,71 +1089,89 @@ testNonAdminUserCanViewUserGroupSettingsWithPermissions = do
     $ rsCode res
   where emailAddress = "googleplex.starthinker@scrive.com"
 
-testAdminUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupSettingsWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Grunthos"
-                                                      "the Flatulent"
-                                                      emailAddress
+testGodModeUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
+testGodModeUserCanViewUserGroupSettingsWithPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Grunthos"
+                                               , lastName       = return "the Flatulent"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "admin user can view UserGroup Settings with permissions" 200 $ rsCode res
   where
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanViewUserGroupSettingsWithPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupSettingsWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hotblack"
+                                               , lastName       = return "Desiato"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "sales user can view UserGroup Settings with permissions" 200 $ rsCode res
   where
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
-testAdminUserCanViewUserGroupSettingsWithoutPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupSettingsWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Grunthos" "the Flatulent" emailAddress
-  ug    <- instantiateRandomUserGroup
+testGodModeUserCanViewUserGroupSettingsWithoutPermissions :: TestEnv ()
+testGodModeUserCanViewUserGroupSettingsWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Grunthos"
+                                               , lastName  = return "the Flatulent"
+                                               , email     = return emailAddress
+                                               }
+  ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
-  ctx <- setUser muser <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "admin user can view UserGroup Settings with permissions" 200 $ rsCode res
   where
     emailAddress = "grunthos.the.flatulent@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanViewUserGroupSettingsWithoutPermissions :: TestEnv ()
 testSalesUserCanViewUserGroupSettingsWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Hotblack" "Desiato" "hotblack.desiato@scrive.com"
-  ug    <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate
+    { firstName = return "Hotblack"
+    , lastName  = return "Desiato"
+    , email     = return "hotblack.desiato@scrive.com"
+    }
+  ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
-  ctx <- setUser muser <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "sales user can view UserGroup Settings with permissions" 200 $ rsCode res
   where
     emailAddress = "hotblack.desiato@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 -- UserGroup Settings Update endpoint tests
 
 testSalesUserCanEditUserGroupSettingsWithPermissions :: TestEnv ()
 testSalesUserCanEditUserGroupSettingsWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Great Green"
-                                                      "Arkleseizure"
-                                                      emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
+                                               , lastName       = return "Arkleseizure"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest POST [("settings", inText settingsJson)]
@@ -996,42 +1193,56 @@ testSalesUserCanEditUserGroupSettingsWithPermissions = do
 
 testUserCannotDeleteNonExistentUserGroupSettings :: TestEnv ()
 testUserCannotDeleteNonExistentUserGroupSettings = do
-  muser <- deprecatedAddNewUser "Almighty" "Bob" "almighty.bob@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Almighty"
+                                               , lastName = return "Bob"
+                                               , email = return "almighty.bob@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Settings" 403 $ rsCode res
   where ugid = unsafeUserGroupID 123
 
-testAdminUserCannotDeleteNonExistentUserGroupSettings :: TestEnv ()
-testAdminUserCannotDeleteNonExistentUserGroupSettings = do
-  muser <- deprecatedAddNewUser "Blart" "Versenwald III" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
+testGodModeUserCannotDeleteNonExistentUserGroupSettings :: TestEnv ()
+testGodModeUserCannotDeleteNonExistentUserGroupSettings = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Blart"
+                                               , lastName  = return "Versenwald III"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Settings" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "blart.versenwald@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotDeleteNonExistentUserGroupSettings :: TestEnv ()
 testSalesUserCannotDeleteNonExistentUserGroupSettings = do
-  muser <- deprecatedAddNewUser "Gogrilla" "Mincefriend" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Gogrilla"
+                                               , lastName  = return "Mincefriend"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  req <- mkRequest DELETE []
+  res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Settings" 403 $ rsCode res
   where
     ugid         = unsafeUserGroupID 123
     emailAddress = "gogrilla.mincefriend@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 testUserCanDeleteChildUserGroupSettingsWithPermissions :: TestEnv ()
 testUserCanDeleteChildUserGroupSettingsWithPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hig"
+                                               , lastName       = return "Hurtenflurst"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid   = user ^. #id
-      ugid1 = ug1 ^. #id
+      ugid1 = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid1
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
@@ -1042,43 +1253,58 @@ testUserCanDeleteChildUserGroupSettingsWithPermissions = do
   assertEqual "UserGroup admin can delete child UserGroup Settings" 200 $ rsCode res
   where emailAddress = "hig.hurtenflurst@scrive.com"
 
-testAdminUserCanDeleteChildUserGroupSettingsWithoutPermissions :: TestEnv ()
-testAdminUserCanDeleteChildUserGroupSettingsWithoutPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid1 = ug1 ^. #id
+testGodModeUserCanDeleteChildUserGroupSettingsWithoutPermissions :: TestEnv ()
+testGodModeUserCanDeleteChildUserGroupSettingsWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Max"
+                                               , lastName       = return "Quordlepleen"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid1 = user ^. #groupID
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid2)
   assertEqual "admin user can delete child UserGroup Settings without permissions" 200
     $ rsCode res
   where
     emailAddress = "max.quordlepleen@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCanDeleteChildUserGroupSettingsWithoutPermissions :: TestEnv ()
 testSalesUserCanDeleteChildUserGroupSettingsWithoutPermissions = do
-  (user, ug1) <- deprecatedAddNewAdminUserAndUserGroup "Hig" "Hurtenflurst" emailAddress
-  let ugid1 = ug1 ^. #id
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hig"
+                                               , lastName       = return "Hurtenflurst"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid1 = user ^. #groupID
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid2)
   assertEqual "sales user can delete child UserGroup Settings without permissions" 200
     $ rsCode res
   where
     emailAddress = "hig.hurtenflurst@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 testUserCannotDeleteRootUserGroupSettingsWithPermissions :: TestEnv ()
 testUserCannotDeleteRootUserGroupSettingsWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Hurling" "Frootmig" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Hurling"
+                                               , lastName       = return "Frootmig"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest DELETE []
@@ -1086,39 +1312,52 @@ testUserCannotDeleteRootUserGroupSettingsWithPermissions = do
   assertEqual "UserGroup admin can delete root UserGroup Settings" 400 $ rsCode res
   where emailAddress = "hurling.frootmig@scrive.com"
 
-testAdminUserCannotDeleteRootUserGroupSettings :: TestEnv ()
-testAdminUserCannotDeleteRootUserGroupSettings = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Humma" "Kavula" emailAddress
-  let ugid = ug ^. #id
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+testGodModeUserCannotDeleteRootUserGroupSettings :: TestEnv ()
+testGodModeUserCannotDeleteRootUserGroupSettings = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Humma"
+                                               , lastName       = return "Kavula"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid = user ^. #groupID
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
   assertEqual "admin user cannot delete root UserGroup Settings" 400 $ rsCode res
   where
     emailAddress = "humma.kavula@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
 testSalesUserCannotDeleteRootUserGroupSettings :: TestEnv ()
 testSalesUserCannotDeleteRootUserGroupSettings = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Max" "Quordlepleen" emailAddress
-  let ugid = ug ^. #id
-  ctx <- setUser (Just user) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Max"
+                                               , lastName       = return "Quordlepleen"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  let ugid = user ^. #groupID
+  ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
   assertEqual "sales user cannot delete root UserGroup Settings" 400 $ rsCode res
   where
     emailAddress = "max.quordlepleen@scrive.com"
-    setUser muser = set #maybeUser muser . set #salesAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #salesAccounts [Email emailAddress]
 
 -- UserGroup Users GET endpoint tests
 
-testNonAdminUserCanViewUsersInUserGroupWithPermissions :: TestEnv ()
-testNonAdminUserCanViewUsersInUserGroupWithPermissions = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Googleplex"
-                                                      "Starthinker"
-                                                      emailAddress
+testNonGodModeUserCanViewUsersInUserGroupWithPermissions :: TestEnv ()
+testNonGodModeUserCanViewUsersInUserGroupWithPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Googleplex"
+                                               , lastName       = return "Starthinker"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -1129,9 +1368,14 @@ testNonAdminUserCanViewUsersInUserGroupWithPermissions = do
 
 testUserCanUpdateTags :: TestEnv ()
 testUserCanUpdateTags = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Great Green"
-                                                      "Arkleseizure"
-                                                      emailAddress
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
+                                               , lastName       = return "Arkleseizure"
+                                               , email          = return emailAddress
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
@@ -1167,9 +1411,14 @@ testUserCanUpdateTags = do
 
 testUserCanViewTags :: TestEnv ()
 testUserCanViewTags = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Great Green"
-                                                      "Arkleseizure"
-                                                      emailAddress
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
+                                               , lastName       = return "Arkleseizure"
+                                               , email          = return emailAddress
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid  = user ^. #id
       ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid

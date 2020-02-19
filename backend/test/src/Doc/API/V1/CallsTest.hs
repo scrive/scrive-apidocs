@@ -73,10 +73,13 @@ jsonDocs = [inTestDir "json/document1.json", inTestDir "json/document2.json"]
 
 testUpdateDoc :: String -> TestEnv Context
 testUpdateDoc updateJsonPath = do
-  cont        <- liftIO $ readFile updateJsonPath
+  cont <- liftIO $ readFile updateJsonPath
 
-  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   do
     req <- mkRequest
@@ -550,10 +553,13 @@ testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue = do
 
 testChangeMainFile :: TestEnv ()
 testChangeMainFile = do
-  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  req         <- mkRequest
+  req <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -598,8 +604,11 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
   let anchorpdf1 = inTestDir "pdfs/anchor-avis-contract-1.pdf"
   let anchorpdf2 = inTestDir "pdfs/anchor-avis-contract-2.pdf"
 
-  (Just user)   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  ctx           <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [("expectedType", inText "text"), ("file", inFile anchorpdf1)]
   (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -691,8 +700,11 @@ testChangeMainFileMovePlacements = do
   let anchorpdf3  = inTestDir "pdfs/anchor-Unterschrift-2.pdf"
   let noanchorpdf = inTestDir "pdfs/simple.pdf"
 
-  (Just user)   <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  ctx           <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [("expectedType", inText "text"), ("file", inFile anchorpdf1)]
   (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile

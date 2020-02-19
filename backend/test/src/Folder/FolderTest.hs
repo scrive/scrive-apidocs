@@ -165,9 +165,14 @@ partnerUserCreate ctx cid pid = do
 
 testNewCompanyAccount :: TestEnv ()
 testNewCompanyAccount = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
-                                                      "Rybczak"
-                                                      "andrzej@skrivapa.se"
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
+                                               , lastName       = return "Rybczak"
+                                               , email = return "andrzej@skrivapa.se"
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
   ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -473,15 +478,23 @@ testFolderAPIGet = do
   -- signatories should have access to folders for documents they participate in siging in
   mockDoc <- testDocApiV2New' ctxAdmin
   let signatoryEmail = "jakub.janczak@scrive.com" :: String
-  mSignatoryUser   <- deprecatedAddNewUser "Jakub" "Janczak" $ T.pack signatoryEmail
-  signatoryUserCtx <- set #maybeUser mSignatoryUser <$> mkContext defaultLang
+  signatoryUser <- instantiateUser $ randomUserTemplate
+    { firstName = return "Jakub"
+    , lastName  = return "Janczak"
+    , email     = return $ T.pack signatoryEmail
+    }
+  signatoryUserCtx <- set #maybeUser (Just signatoryUser) <$> mkContext defaultLang
   let signatorySigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
           $ setMockSigLinkStandardField "email" signatoryEmail
           $ defaultMockSigLink
   let approverEmail = "barbara.streisand@scrive.com" :: String
-  mApproverUser   <- deprecatedAddNewUser "Jakub" "Janczak" $ T.pack approverEmail
-  approverUserCtx <- set #maybeUser mApproverUser <$> mkContext defaultLang
+  approverUser <- instantiateUser $ randomUserTemplate
+    { firstName = return "Jakub"
+    , lastName  = return "Janczak"
+    , email     = return $ T.pack approverEmail
+    }
+  approverUserCtx <- set #maybeUser (Just approverUser) <$> mkContext defaultLang
   let approverSigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
           $ setMockSigLinkStandardField "email" approverEmail

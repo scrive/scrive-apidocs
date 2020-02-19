@@ -29,17 +29,22 @@ attachmentAPITests env = testGroup
 
 testAttachmentList :: TestEnv ()
 testAttachmentList = do
-  (anna, ug) <- deprecatedAddNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  bob        <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
+  anna <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
+                                               , lastName       = return "Android"
+                                               , email = return "anna@android.com"
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
+  bob  <- instantiateUser $ randomUserTemplate { groupID = return $ anna ^. #groupID }
 
-  now        <- currentTime
-  fid        <- addNewRandomFile
-  attA       <- dbUpdate $ NewAttachment (anna ^. #id) "a" fid $ systemActor now
-  attB       <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
-  _          <- dbUpdate $ NewAttachment (bob ^. #id) "c" fid $ systemActor now
-  _          <- dbUpdate $ SetAttachmentsSharing (bob ^. #id) [attachmentid attB] True
+  now  <- currentTime
+  fid  <- addNewRandomFile
+  attA <- dbUpdate $ NewAttachment (anna ^. #id) "a" fid $ systemActor now
+  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  _    <- dbUpdate $ NewAttachment (bob ^. #id) "c" fid $ systemActor now
+  _    <- dbUpdate $ SetAttachmentsSharing (bob ^. #id) [attachmentid attB] True
 
-  ctx        <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
   do
     req              <- mkRequest GET []
@@ -59,10 +64,13 @@ testAttachmentList = do
 
 testAttachmentCreate :: TestEnv ()
 testAttachmentCreate = do
-  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  bob <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                              , lastName  = return "Blue"
+                                              , email     = return "bob@blue.com"
+                                              }
+  ctx <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
-  req      <- mkRequest
+  req <- mkRequest
     POST
     [ ("file" , inFile $ inTestDir "pdfs/50page.pdf")
     , ("title", inText "Terms and conditions")
@@ -78,13 +86,16 @@ testAttachmentCreate = do
 
 testAttachmentSetSharing :: TestEnv ()
 testAttachmentSetSharing = do
-  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
-  now      <- currentTime
+  bob <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                              , lastName  = return "Blue"
+                                              , email     = return "bob@blue.com"
+                                              }
+  ctx  <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  now  <- currentTime
 
-  fid      <- addNewRandomFile
-  attA     <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid $ systemActor now
-  attB     <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  fid  <- addNewRandomFile
+  attA <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid $ systemActor now
+  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
 
   -- IDs are supposed to be sent as strings, e.g. ["3", "4"]
   let idsStr = show $ map (show . attachmentid) [attA, attB]
@@ -115,13 +126,16 @@ testAttachmentSetSharing = do
 
 testAttachmentDelete :: TestEnv ()
 testAttachmentDelete = do
-  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
-  now      <- currentTime
+  bob <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                              , lastName  = return "Blue"
+                                              , email     = return "bob@blue.com"
+                                              }
+  ctx  <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  now  <- currentTime
 
-  fid      <- addNewRandomFile
-  attA     <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid $ systemActor now
-  attB     <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  fid  <- addNewRandomFile
+  attA <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid $ systemActor now
+  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
 
   -- IDs are supposed to be sent as strings, e.g. ["3", "4"]
   let idsStr = show $ map (show . attachmentid) [attA, attB]
@@ -137,7 +151,10 @@ testAttachmentDelete = do
 
 testAttachmentDownload :: TestEnv ()
 testAttachmentDownload = do
-  Just bob <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
+  bob <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                              , lastName  = return "Blue"
+                                              , email     = return "bob@blue.com"
+                                              }
   ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 

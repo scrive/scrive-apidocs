@@ -23,15 +23,16 @@ accessControlApiTests :: TestEnvSt -> Test
 accessControlApiTests env = testGroup
   "AccessControlAPI"
   [ -- AccessControl getuserroles tests
-    testThat "non-admin and non-sales user can't view non-existent User's roles"
+    testThat "non-god-mode and non-sales user can't view non-existent User's roles"
              env
-             testNonAdminUserCannotViewRolesForNonExistentUser
-  , testThat "non-admin and non-sales user can't view User's roles without permissions"
+             testNonGodModeUserCannotViewRolesForNonExistentUser
+  , testThat
+    "non-god-mode and non-sales user can't view User's roles without permissions"
+    env
+    testNonGodModeUserCannotViewUserRolesWithoutPermissions
+  , testThat "non-god-mode and non-sales user can view own roles"
              env
-             testNonAdminUserCannotViewUserRolesWithoutPermissions
-  , testThat "non-admin and non-sales user can view own roles"
-             env
-             testNonAdminUserCanViewOwnRoles
+             testNonGodModeUserCanViewOwnRoles
   , testThat "usergroup admin can view roles of other usergroup member"
              env
              testUserGroupAdminCanViewRolesOfOtherUserGroupMember
@@ -42,91 +43,110 @@ accessControlApiTests env = testGroup
              env
              testAllInheritedRolesAreReturned
   -- AccessControl get role by ID tests
-  , testThat "non-admin and non-sales user can't view non-existent role"
+  , testThat "non-god-mode and non-sales user can't view non-existent role"
              env
-             testNonAdminUserCannotViewNonExistentRoles
-  , testThat "non-admin and non-sales user can't view a role without permission"
+             testNonGodModeUserCannotViewNonExistentRoles
+  , testThat "non-god-mode and non-sales user can't view a role without permission"
              env
-             testNonAdminUserCannotViewRoleWithoutPermissions
-  , testThat "non-admin and non-sales user can view own role"
+             testNonGodModeUserCannotViewRoleWithoutPermissions
+  , testThat "non-god-mode and non-sales user can view own role"
              env
-             testNonAdminUserCanViewOwnRole
-  , testThat "admin user can view role without permissions"
+             testNonGodModeUserCanViewOwnRole
+  , testThat "god-mode user can view role without permissions"
              env
-             testAdminUserCanViewRoleWithoutPermissions
+             testGodModeUserCanViewRoleWithoutPermissions
   -- AccessControl delete role by ID tests
-  , testThat "non-admin and non-sales user can't delete non-existent role"
+  , testThat "non-god-mode and non-sales user can't delete non-existent role"
              env
-             testNonAdminUserCannotDeleteNonExistentRoles
-  , testThat "non-admin and non-sales user can't delete a role without permission"
+             testNonGodModeUserCannotDeleteNonExistentRoles
+  , testThat "non-god-mode and non-sales user can't delete a role without permission"
              env
-             testNonAdminUserCannotDeleteRoleWithoutPermissions
-  , testThat "non-admin and non-sales user can delete own role"
+             testNonGodModeUserCannotDeleteRoleWithoutPermissions
+  , testThat "non-god-mode and non-sales user can delete own role"
              env
-             testNonAdminUserCanDeleteOwnRole
-  , testThat "admin user can delete role without permissions"
+             testNonGodModeUserCanDeleteOwnRole
+  , testThat "god-mode user can delete role without permissions"
              env
-             testAdminUserCanDeleteRoleWithoutPermissions
+             testGodModeUserCanDeleteRoleWithoutPermissions
   -- AccessControl add role tests
-  , testThat "non-admin and non-sales user can't add role for non-existent User (trg)"
+  , testThat
+    "non-god-mode and non-sales user can't add role for non-existent User (trg)"
+    env
+    testNonGodModeUserCannotAddRoleFromNonExistentUser
+  , testThat
+    "non-god-mode and non-sales user can't add role for non-existent User (src)"
+    env
+    testNonGodModeUserCannotAddRoleForNonExistentUser
+  , testThat "god-mode user can't add role for non-existent User (trg)"
              env
-             testNonAdminUserCannotAddRoleFromNonExistentUser
-  , testThat "non-admin and non-sales user can't add role for non-existent User (src)"
+             testGodModeUserCannotAddRoleFromNonExistentUser
+  , testThat "god-mode user can't add role for non-existent User (src)"
              env
-             testNonAdminUserCannotAddRoleForNonExistentUser
-  , testThat "admin user can't add role for non-existent User (trg)"
+             testGodModeUserCannotAddRoleForNonExistentUser
+  , testThat
+    "non-god-mode and non-sales user can't add role without permissions on target"
+    env
+    testNonGodModeUserCannotAddRoleWithoutPermissions
+  , testThat "non-god-mode and non-sales user can add role with permissions on target"
              env
-             testAdminUserCannotAddRoleFromNonExistentUser
-  , testThat "admin user can't add role for non-existent User (src)"
+             testNonGodModeUserCanAddRoleWithPermissions
+  , testThat "god-mode user can add role without permissions on target"
              env
-             testAdminUserCannotAddRoleForNonExistentUser
-  , testThat "non-admin and non-sales user can't add role without permissions on target"
-             env
-             testNonAdminUserCannotAddRoleWithoutPermissions
-  , testThat "non-admin and non-sales user can add role with permissions on target"
-             env
-             testNonAdminUserCanAddRoleWithPermissions
-  , testThat "admin user can add role without permissions on target"
-             env
-             testAdminUserCanAddRoleWithoutPermissions
+             testGodModeUserCanAddRoleWithoutPermissions
   ]
 
 -- AccessControl getuserroles tests
 
-testNonAdminUserCannotViewRolesForNonExistentUser :: TestEnv ()
-testNonAdminUserCannotViewRolesForNonExistentUser = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid)
+testNonGodModeUserCannotViewRolesForNonExistentUser :: TestEnv ()
+testNonGodModeUserCannotViewRolesForNonExistentUser = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid)
   assertEqual "non-admin user can't view non-existent user's roles" 403 $ rsCode res
   where uid = unsafeUserID 123
 
-testNonAdminUserCannotViewUserRolesWithoutPermissions :: TestEnv ()
-testNonAdminUserCannotViewUserRolesWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  uid2  <- view #id . fromJust <$> deprecatedAddNewUser "Arnold"
-                                                        "Rimmer"
-                                                        "arnold.rimmer@scrive.com"
-  ctx <- set #maybeUser muser <$> mkContext defaultLang
+testNonGodModeUserCannotViewUserRolesWithoutPermissions :: TestEnv ()
+testNonGodModeUserCannotViewUserRolesWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  uid2 <- fmap (view #id) . instantiateUser $ randomUserTemplate
+    { firstName = return "Arnold"
+    , lastName  = return "Rimmer"
+    , email     = return "arnold.rimmer@scrive.com"
+    }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid2)
   assertEqual "non-admin user can't view user's roles without permission" 403 $ rsCode res
 
-testNonAdminUserCanViewOwnRoles :: TestEnv ()
-testNonAdminUserCanViewOwnRoles = do
-  muser <- deprecatedAddNewUser "The" "Cat" "the.cat@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  let uid = fromJust muser ^. #id
+testNonGodModeUserCanViewOwnRoles :: TestEnv ()
+testNonGodModeUserCanViewOwnRoles = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "The"
+                                               , lastName  = return "Cat"
+                                               , email     = return "the.cat@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest GET []
+  let uid = user ^. #id
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid)
   assertEqual "non-admin user can view own roles" 200 $ rsCode res
 
 testUserGroupAdminCanViewRolesOfOtherUserGroupMember :: TestEnv ()
 testUserGroupAdminCanViewRolesOfOtherUserGroupMember = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Captain" "Hollister" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Captain"
+                                               , lastName       = return "Hollister"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid1 = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   user2 <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   let uid2 = user2 ^. #id
@@ -138,9 +158,14 @@ testUserGroupAdminCanViewRolesOfOtherUserGroupMember = do
 
 testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers :: TestEnv ()
 testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Captain" "Hollister" emailAddress
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Captain"
+                                               , lastName       = return "Hollister"
+                                               , email          = return emailAddress
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
   let uid1 = user ^. #id
-      ugid = ug ^. #id
+      ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   user2 <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctx   <- set #maybeUser (Just user2) <$> mkContext defaultLang
@@ -152,14 +177,16 @@ testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers = do
 
 testAllInheritedRolesAreReturned :: TestEnv ()
 testAllInheritedRolesAreReturned = do
-  (userA, ugA) <- deprecatedAddNewAdminUserAndUserGroup "Captain"
-                                                        "Hollister"
-                                                        "captain.hollister@scrive.com"
-  (_userB, ugB0) <- deprecatedAddNewAdminUserAndUserGroup "Dwayne"
-                                                          "Dibley"
-                                                          "dwayne.dibley@scrive.com"
-  ctx <- set #maybeUser (Just userA) <$> mkContext defaultLang
-  void . dbUpdate . UserGroupUpdate . set #parentGroupID (Just $ ugA ^. #id) $ ugB0
+  userA <- instantiateUser $ randomUserTemplate
+    { firstName      = return "Captain"
+    , lastName       = return "Hollister"
+    , email          = return "captain.hollister@scrive.com"
+    , isCompanyAdmin = True
+    , signupMethod   = CompanyInvitation
+    }
+  ugB0 <- instantiateRandomUserGroup
+  ctx  <- set #maybeUser (Just userA) <$> mkContext defaultLang
+  void . dbUpdate . UserGroupUpdate . set #parentGroupID (Just $ userA ^. #groupID) $ ugB0
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles $ userA ^. #id)
   let
@@ -174,22 +201,30 @@ testAllInheritedRolesAreReturned = do
 
 -- AccessControl get role by ID tests
 
-testNonAdminUserCannotViewNonExistentRoles :: TestEnv ()
-testNonAdminUserCannotViewNonExistentRoles = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Get roleId)
+testNonGodModeUserCannotViewNonExistentRoles :: TestEnv ()
+testNonGodModeUserCannotViewNonExistentRoles = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest GET []
+  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Get roleId)
   assertEqual "non-admin user can't view non-existent role" 403 $ rsCode res
   where roleId = unsafeAccessRoleID 123
 
-testNonAdminUserCannotViewRoleWithoutPermissions :: TestEnv ()
-testNonAdminUserCannotViewRoleWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  uid2  <- view #id . fromJust <$> deprecatedAddNewUser "Arnold"
-                                                        "Rimmer"
-                                                        "arnold.rimmer@scrive.com"
-  ctx  <- set #maybeUser muser <$> mkContext defaultLang
+testNonGodModeUserCannotViewRoleWithoutPermissions :: TestEnv ()
+testNonGodModeUserCannotViewRoleWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  uid2 <- fmap (view #id) . instantiateUser $ randomUserTemplate
+    { firstName = return "Arnold"
+    , lastName  = return "Rimmer"
+    , email     = return "arnold.rimmer@scrive.com"
+    }
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid2 $ UserAR uid2
   req  <- mkRequest GET []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Get $ getRoleId role)
@@ -198,11 +233,14 @@ testNonAdminUserCannotViewRoleWithoutPermissions = do
     getRoleId (AccessRoleUser roleId _ _) = roleId
     getRoleId _ = unexpectedError "This shouldn't happen"
 
-testNonAdminUserCanViewOwnRole :: TestEnv ()
-testNonAdminUserCanViewOwnRole = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  let uid = fromJust muser ^. #id
+testNonGodModeUserCanViewOwnRole :: TestEnv ()
+testNonGodModeUserCanViewOwnRole = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  let uid = user ^. #id
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid $ UserAR uid
   req  <- mkRequest GET []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Get $ getRoleId role)
@@ -211,41 +249,54 @@ testNonAdminUserCanViewOwnRole = do
     getRoleId (AccessRoleUser roleId _ _) = roleId
     getRoleId _ = unexpectedError "This shouldn't happen"
 
-testAdminUserCanViewRoleWithoutPermissions :: TestEnv ()
-testAdminUserCanViewRoleWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" emailAddress
-  uid2  <- view #id . fromJust <$> deprecatedAddNewUser "Arnold"
-                                                        "Rimmer"
-                                                        "arnold.rimmer@scrive.com"
-  ctx  <- setUser muser <$> mkContext defaultLang
+testGodModeUserCanViewRoleWithoutPermissions :: TestEnv ()
+testGodModeUserCanViewRoleWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName  = return "Lister"
+                                               , email     = return emailAddress
+                                               }
+  uid2 <- fmap (view #id) . instantiateUser $ randomUserTemplate
+    { firstName = return "Arnold"
+    , lastName  = return "Rimmer"
+    , email     = return "arnold.rimmer@scrive.com"
+    }
+  ctx  <- setUser user <$> mkContext defaultLang
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid2 $ UserAR uid2
   req  <- mkRequest GET []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Get $ getRoleId role)
   assertEqual "admin user can view a role without permission" 200 $ rsCode res
   where
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
     emailAddress = "dave.lister@scrive.com"
     getRoleId (AccessRoleUser roleId _ _) = roleId
     getRoleId _ = unexpectedError "This shouldn't happen"
 
 -- AccessControl delete role by ID tests
 
-testNonAdminUserCannotDeleteNonExistentRoles :: TestEnv ()
-testNonAdminUserCannotDeleteNonExistentRoles = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  req   <- mkRequest POST []
-  res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Delete roleId)
+testNonGodModeUserCannotDeleteNonExistentRoles :: TestEnv ()
+testNonGodModeUserCannotDeleteNonExistentRoles = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req <- mkRequest POST []
+  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Delete roleId)
   assertEqual "non-admin user can't view non-existent role" 403 $ rsCode res
   where roleId = unsafeAccessRoleID 123
 
-testNonAdminUserCannotDeleteRoleWithoutPermissions :: TestEnv ()
-testNonAdminUserCannotDeleteRoleWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  uid2  <- view #id . fromJust <$> deprecatedAddNewUser "Arnold"
-                                                        "Rimmer"
-                                                        "arnold.rimmer@scrive.com"
-  ctx  <- set #maybeUser muser <$> mkContext defaultLang
+testNonGodModeUserCannotDeleteRoleWithoutPermissions :: TestEnv ()
+testNonGodModeUserCannotDeleteRoleWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  uid2 <- fmap (view #id) . instantiateUser $ randomUserTemplate
+    { firstName = return "Arnold"
+    , lastName  = return "Rimmer"
+    , email     = return "arnold.rimmer@scrive.com"
+    }
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid2 $ UserAR uid2
   req  <- mkRequest POST []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Delete $ getRoleId role)
@@ -254,11 +305,15 @@ testNonAdminUserCannotDeleteRoleWithoutPermissions = do
     getRoleId (AccessRoleUser roleId _ _) = roleId
     getRoleId _ = unexpectedError "This shouldn't happen"
 
-testNonAdminUserCanDeleteOwnRole :: TestEnv ()
-testNonAdminUserCanDeleteOwnRole = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  let uid = fromJust muser ^. #id
+testNonGodModeUserCanDeleteOwnRole :: TestEnv ()
+testNonGodModeUserCanDeleteOwnRole = do
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Dave"
+                                               , lastName       = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               , isCompanyAdmin = True
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  let uid = user ^. #id
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid $ UserAR uid
   req  <- mkRequest POST []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Delete $ getRoleId role)
@@ -267,19 +322,24 @@ testNonAdminUserCanDeleteOwnRole = do
     getRoleId (AccessRoleUser roleId _ _) = roleId
     getRoleId _ = unexpectedError "This shouldn't happen"
 
-testAdminUserCanDeleteRoleWithoutPermissions :: TestEnv ()
-testAdminUserCanDeleteRoleWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" emailAddress
-  uid2  <- view #id . fromJust <$> deprecatedAddNewUser "Arnold"
-                                                        "Rimmer"
-                                                        "arnold.rimmer@scrive.com"
-  ctx  <- setUser muser <$> mkContext defaultLang
+testGodModeUserCanDeleteRoleWithoutPermissions :: TestEnv ()
+testGodModeUserCanDeleteRoleWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName  = return "Lister"
+                                               , email     = return emailAddress
+                                               }
+  uid2 <- fmap (view #id) . instantiateUser $ randomUserTemplate
+    { firstName = return "Arnold"
+    , lastName  = return "Rimmer"
+    , email     = return "arnold.rimmer@scrive.com"
+    }
+  ctx  <- setUser user <$> mkContext defaultLang
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid2 $ UserAR uid2
   req  <- mkRequest POST []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Delete $ getRoleId role)
   assertEqual "admin user can view a role without permission" 200 $ rsCode res
   where
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
     emailAddress = "dave.lister@scrive.com"
     getRoleId (AccessRoleUser roleId _ _) = roleId
     getRoleId _ = unexpectedError "This shouldn't happen"
@@ -308,62 +368,79 @@ roleJSON uid1 uid2 =
     src_uid = show uid1
     trg_uid = show uid2
 
-testNonAdminUserCannotAddRoleFromNonExistentUser :: TestEnv ()
-testNonAdminUserCannotAddRoleFromNonExistentUser = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  let jsonString = roleJSON (fromJust muser ^. #id) (unsafeUserID 321)
+testNonGodModeUserCannotAddRoleFromNonExistentUser :: TestEnv ()
+testNonGodModeUserCannotAddRoleFromNonExistentUser = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  let jsonString = roleJSON (user ^. #id) (unsafeUserID 321)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can't add role for non-existent user (src)" 403 $ rsCode res
 
-testNonAdminUserCannotAddRoleForNonExistentUser :: TestEnv ()
-testNonAdminUserCannotAddRoleForNonExistentUser = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  ctx   <- set #maybeUser muser <$> mkContext defaultLang
-  let jsonString = roleJSON (unsafeUserID 321) (fromJust muser ^. #id)
+testNonGodModeUserCannotAddRoleForNonExistentUser :: TestEnv ()
+testNonGodModeUserCannotAddRoleForNonExistentUser = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  let jsonString = roleJSON (unsafeUserID 321) (user ^. #id)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can't add role for non-existent user (trg)" 403 $ rsCode res
 
-testAdminUserCannotAddRoleFromNonExistentUser :: TestEnv ()
-testAdminUserCannotAddRoleFromNonExistentUser = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  let jsonString = roleJSON (fromJust muser ^. #id) (unsafeUserID 321)
+testGodModeUserCannotAddRoleFromNonExistentUser :: TestEnv ()
+testGodModeUserCannotAddRoleFromNonExistentUser = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName  = return "Lister"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  let jsonString = roleJSON (user ^. #id) (unsafeUserID 321)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "admin user can't add role for non-existent user (src)" 403 $ rsCode res
   where
     emailAddress = "dave.lister@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
-testAdminUserCannotAddRoleForNonExistentUser :: TestEnv ()
-testAdminUserCannotAddRoleForNonExistentUser = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  let jsonString = roleJSON (unsafeUserID 321) (fromJust muser ^. #id)
+testGodModeUserCannotAddRoleForNonExistentUser :: TestEnv ()
+testGodModeUserCannotAddRoleForNonExistentUser = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName  = return "Lister"
+                                               , email     = return emailAddress
+                                               }
+  ctx <- setUser user <$> mkContext defaultLang
+  let jsonString = roleJSON (unsafeUserID 321) (user ^. #id)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "admin user can't add role for non-existent user (trg)" 403 $ rsCode res
   where
     emailAddress = "dave.lister@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
 
-testNonAdminUserCannotAddRoleWithoutPermissions :: TestEnv ()
-testNonAdminUserCannotAddRoleWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" "dave.lister@scrive.com"
-  uid2  <- view #id . fromJust <$> deprecatedAddNewUser "Arnold"
-                                                        "Rimmer"
-                                                        "arnold.rimmer@scrive.com"
-  ctx <- set #maybeUser muser <$> mkContext defaultLang
-  let jsonString = roleJSON (fromJust muser ^. #id) uid2
+testNonGodModeUserCannotAddRoleWithoutPermissions :: TestEnv ()
+testNonGodModeUserCannotAddRoleWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName = return "Lister"
+                                               , email = return "dave.lister@scrive.com"
+                                               }
+  uid2 <- fmap (view #id) . instantiateUser $ randomUserTemplate
+    { firstName = return "Arnold"
+    , lastName  = return "Rimmer"
+    , email     = return "arnold.rimmer@scrive.com"
+    }
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  let jsonString = roleJSON (user ^. #id) uid2
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can't add role without permissions (trg)" 403 $ rsCode res
 
-testNonAdminUserCanAddRoleWithPermissions :: TestEnv ()
-testNonAdminUserCanAddRoleWithPermissions = do
+testNonGodModeUserCanAddRoleWithPermissions :: TestEnv ()
+testNonGodModeUserCanAddRoleWithPermissions = do
   user1 <- instantiateRandomUser
   user2 <- instantiateRandomUser
   ctx   <- set #maybeUser (Just user1) <$> mkContext defaultLang
@@ -393,17 +470,22 @@ roleUserAdminJSON src_uid trg_ugid =
   \    }\
   \}"
 
-testAdminUserCanAddRoleWithoutPermissions :: TestEnv ()
-testAdminUserCanAddRoleWithoutPermissions = do
-  muser <- deprecatedAddNewUser "Dave" "Lister" emailAddress
-  uid2  <- view #id . fromJust <$> deprecatedAddNewUser "Arnold"
-                                                        "Rimmer"
-                                                        "arnold.rimmer@scrive.com"
-  ctx <- setUser muser <$> mkContext defaultLang
-  let jsonString = roleJSON (fromJust muser ^. #id) uid2
+testGodModeUserCanAddRoleWithoutPermissions :: TestEnv ()
+testGodModeUserCanAddRoleWithoutPermissions = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Dave"
+                                               , lastName  = return "Lister"
+                                               , email     = return emailAddress
+                                               }
+  uid2 <- fmap (view #id) . instantiateUser $ randomUserTemplate
+    { firstName = return "Arnold"
+    , lastName  = return "Rimmer"
+    , email     = return "arnold.rimmer@scrive.com"
+    }
+  ctx <- setUser user <$> mkContext defaultLang
+  let jsonString = roleJSON (user ^. #id) uid2
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "admin user can add role without permissions (trg)" 200 $ rsCode res
   where
     emailAddress = "dave.lister@scrive.com"
-    setUser muser = set #maybeUser muser . set #adminAccounts [Email emailAddress]
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]

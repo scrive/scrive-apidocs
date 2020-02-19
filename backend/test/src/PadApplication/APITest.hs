@@ -11,7 +11,7 @@ import PadApplication.API
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
-import UserGroupAccountsTest (deprecatedAddNewAdminUserAndUserGroup)
+import User.Types.SignupMethod
 
 padAplicationAPITests :: TestEnvSt -> Test
 padAplicationAPITests env = testGroup
@@ -20,9 +20,14 @@ padAplicationAPITests env = testGroup
 
 testPadApplicationPadInfoGet :: TestEnv ()
 testPadApplicationPadInfoGet = do
-  (user, ug) <- deprecatedAddNewAdminUserAndUserGroup "Andrzej"
-                                                      "Rybczak"
-                                                      "andrzej@skrivapa.se"
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
+                                               , lastName       = return "Rybczak"
+                                               , email = return "andrzej@skrivapa.se"
+                                               , groupID        = return $ ug ^. #id
+                                               , isCompanyAdmin = True
+                                               , signupMethod   = CompanyInvitation
+                                               }
 
   ctx1          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req1          <- mkRequest GET []

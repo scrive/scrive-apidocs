@@ -10,6 +10,7 @@ import TestingUtil
 import TestKontra as T
 import User.Email
 import User.Lang (defaultLang)
+import User.Types.SignupMethod
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -21,12 +22,20 @@ administrationTests env = testGroup
 
 test_jsonCompanies :: TestEnv ()
 test_jsonCompanies = do
-  (_adminuser1, _ug1) <- deprecatedAddNewAdminUserAndUserGroup "Anna"
-                                                               "Android"
-                                                               "anna@android.com"
-  (adminuser2, ug2) <- deprecatedAddNewAdminUserAndUserGroup "Jet"
-                                                             "Li"
-                                                             "jet.li@example.com"
+  _adminuser1 <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
+                                                      , lastName       = return "Android"
+                                                      , email = return "anna@android.com"
+                                                      , isCompanyAdmin = True
+                                                      , signupMethod   = CompanyInvitation
+                                                      }
+  ug2        <- instantiateRandomUserGroup
+  adminuser2 <- instantiateUser $ randomUserTemplate { firstName = return "Jet"
+                                                     , lastName = return "Li"
+                                                     , email = return "jet.li@example.com"
+                                                     , groupID = return $ ug2 ^. #id
+                                                     , isCompanyAdmin = True
+                                                     , signupMethod = CompanyInvitation
+                                                     }
   _standarduser2 <- instantiateUser $ randomUserTemplate { groupID = return $ ug2 ^. #id }
   void $ dbUpdate . UserGroupUpdate . set #invoicing (Invoice OnePlan) $ ug2
 

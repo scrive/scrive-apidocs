@@ -23,12 +23,15 @@ archiveTests env =
 
 testListDocs :: TestEnv ()
 testListDocs = do
-  cont        <- readTestFileAsStr "json/document1.json"
-  (Just user) <- deprecatedAddNewUser "Bob" "Blue" "bob@blue.com"
+  cont <- readTestFileAsStr "json/document1.json"
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
 
   -- send a doc as author
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
-  req         <- mkRequest
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  req <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   void $ runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -39,9 +42,12 @@ testListDocs = do
   void $ runTestKontra req'' ctx $ apiCallV1Ready $ documentid doc
 
   -- send a doc to author from someoneelse
-  (Just user2) <- deprecatedAddNewUser "Jackie" "Chan" "jackie@chan.com"
-  ctx2         <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
-  req2         <- mkRequest
+  user2 <- instantiateUser $ randomUserTemplate { firstName = return "Jackie"
+                                                , lastName  = return "Chan"
+                                                , email     = return "jackie@chan.com"
+                                                }
+  ctx2 <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
+  req2 <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   void $ runTestKontra req2 ctx2 $ apiCallV1CreateFromFile

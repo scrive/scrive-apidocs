@@ -76,7 +76,10 @@ apiV2JSONTests env = testGroup
 
 testJSONCtx :: TestEnv Context
 testJSONCtx = do
-  (Just user) <- deprecatedAddNewUser "BobTest" "JonesTest" "test@scrive.com"
+  user <- instantiateUser $ randomUserTemplate { firstName = return "BobTest"
+                                               , lastName  = return "JonesTest"
+                                               , email     = return "test@scrive.com"
+                                               }
   (set #maybeUser (Just user)) <$> mkContext defaultLang
 
 runApiJSONTest
