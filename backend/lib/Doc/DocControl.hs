@@ -389,7 +389,7 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
   validSession <- dbQuery $ CheckDocumentSession sid slid
   if validSession
     then do
-      doc         <- dbQuery $ GetDocumentByDocumentID did
+      doc         <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
       invitedlink <- guardJust $ getSigLinkFor slid doc
       -- We always switch to document language in case of pad signing
       switchLang $ getLang doc

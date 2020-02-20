@@ -209,7 +209,7 @@ checkCGISignStatus
   -> SignatoryLinkID
   -> m CGISignStatus
 checkCGISignStatus cgiGrpConfig@(CgiGrpConfig {..}) did slid = do
-  doc <- dbQuery $ GetDocumentByDocumentID did
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
   if (not (isPending doc) || isSignatoryAndHasSigned (getSigLinkFor slid doc))
     then return CGISignStatusAlreadySigned
     else do

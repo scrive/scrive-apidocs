@@ -662,7 +662,7 @@ checkNetsSignStatus
   -> SignatoryLinkID
   -> m NetsSignStatus
 checkNetsSignStatus nets_conf did slid = do
-  doc <- dbQuery $ GetDocumentByDocumentID did
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
   if (not (isPending doc) || isSignatoryAndHasSigned (fromJust $ getSigLinkFor slid doc))
     then return NetsSignStatusAlreadySigned
     else do

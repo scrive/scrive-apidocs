@@ -808,6 +808,8 @@ daveDocument documentid = onlyAdmin $ do
 -}
 daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Text
 daveSignatoryLink documentid siglinkid = onlyAdmin $ do
+  -- No GetDocumentByDocumentIDSignatoryLinkID here, allow getting deleted
+  -- signatory links.
   document <- dbQuery $ GetDocumentByDocumentID documentid
   siglink  <- guardJust $ getSigLinkFor siglinkid document
   renderTextTemplate "daveSignatoryLink" $ do
