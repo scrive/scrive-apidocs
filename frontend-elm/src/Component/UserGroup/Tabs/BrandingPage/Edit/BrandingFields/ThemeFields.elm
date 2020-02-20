@@ -20,7 +20,7 @@ type alias ThemeSet =
 
 
 type alias Config =
-    { defaultThemes : ThemeSet
+    { mDefaultThemes : Maybe ThemeSet
     , currentThemes : ThemeSet
     , availableThemes : List Theme
     }
@@ -63,8 +63,8 @@ initialize =
     in
     \config1 ->
         let
-            defaultThemes =
-                config1.defaultThemes
+            mDefaultThemes =
+                config1.mDefaultThemes
 
             currentThemes =
                 config1.currentThemes
@@ -80,8 +80,8 @@ initialize =
 
             emailConfig =
                 { fieldLabel = "Email"
-                , defaultTheme =
-                    defaultThemes.emailTheme
+                , mDefaultTheme =
+                    Maybe.map .emailTheme mDefaultThemes
                 , selectedThemeIndex =
                     findThemeIndex currentThemes.emailTheme.id
                 , previewHandler = PreviewEmail.view
@@ -89,8 +89,8 @@ initialize =
 
             signViewConfig =
                 { fieldLabel = "Sign View"
-                , defaultTheme =
-                    defaultThemes.signViewTheme
+                , mDefaultTheme =
+                    Maybe.map .signViewTheme mDefaultThemes
                 , selectedThemeIndex =
                     findThemeIndex currentThemes.signViewTheme.id
                 , previewHandler = PreviewSignView.view
@@ -98,8 +98,8 @@ initialize =
 
             serviceConfig =
                 { fieldLabel = "Service"
-                , defaultTheme =
-                    defaultThemes.serviceTheme
+                , mDefaultTheme =
+                    Maybe.map .serviceTheme mDefaultThemes
                 , selectedThemeIndex =
                     findThemeIndex currentThemes.serviceTheme.id
                 , previewHandler = PreviewService.view
@@ -164,7 +164,7 @@ viewPreview availableThemes state =
     tabItems
 
 
-stateToThemeSet : List Theme -> State -> ThemeSet
+stateToThemeSet : List Theme -> State -> Maybe ThemeSet
 stateToThemeSet availableThemes state =
     let
         ( emailState, ( signViewState, serviceState ) ) =
@@ -172,8 +172,23 @@ stateToThemeSet availableThemes state =
 
         stateToTheme =
             ThemeField.stateToTheme availableThemes
+
+        mThemes =
+            ( stateToTheme emailState
+            , stateToTheme signViewState
+            , stateToTheme serviceState
+            )
+
+        mThemeSet =
+            case mThemes of
+                ( Just emailTheme, Just signViewTheme, Just serviceTheme ) ->
+                    Just <|
+                        { emailTheme = emailTheme
+                        , signViewTheme = signViewTheme
+                        , serviceTheme = serviceTheme
+                        }
+
+                _ ->
+                    Nothing
     in
-    { emailTheme = stateToTheme emailState
-    , signViewTheme = stateToTheme signViewState
-    , serviceTheme = stateToTheme serviceState
-    }
+    mThemeSet

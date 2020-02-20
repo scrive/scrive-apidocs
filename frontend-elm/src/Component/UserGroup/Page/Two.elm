@@ -132,34 +132,37 @@ update msg1 state1 =
 
                         commonFields =
                             brandingFields.commonFields
-
-                        themeSet =
-                            brandingFields.themeSet
-
-                        branding2 =
-                            { branding1
-                                | browserTitle =
-                                    Just commonFields.browserTitle
-                                , smsOriginator =
-                                    Just commonFields.smsOriginator
-                                , themeIds =
-                                    { emailTheme = Just themeSet.emailTheme.id
-                                    , signViewTheme = Just themeSet.signViewTheme.id
-                                    , serviceTheme = Just themeSet.serviceTheme.id
-                                    }
-                            }
-
-                        state2 =
-                            { state1
-                                | brandingInfo = branding2
-                            }
-
-                        cmd1 =
-                            Util.msgToCmd <|
-                                Left <|
-                                    SaveBrandingMsg branding2
                     in
-                    ( state2, cmd1 )
+                    case brandingFields.mThemeSet of
+                        Just themeSet ->
+                            let
+                                branding2 =
+                                    { branding1
+                                        | browserTitle =
+                                            Just commonFields.browserTitle
+                                        , smsOriginator =
+                                            Just commonFields.smsOriginator
+                                        , themeIds =
+                                            { emailTheme = Just themeSet.emailTheme.id
+                                            , signViewTheme = Just themeSet.signViewTheme.id
+                                            , serviceTheme = Just themeSet.serviceTheme.id
+                                            }
+                                    }
+
+                                state2 =
+                                    { state1
+                                        | brandingInfo = branding2
+                                    }
+
+                                cmd1 =
+                                    Util.msgToCmd <|
+                                        Left <|
+                                            SaveBrandingMsg branding2
+                            in
+                            ( state2, cmd1 )
+
+                        Nothing ->
+                            ( state1, Cmd.none )
 
                 Sections.CreateThemeMsg newTheme ->
                     let

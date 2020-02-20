@@ -25,6 +25,6 @@ type alias Branding =
 
 
 type alias BrandingFields =
-    { themeSet : ThemeSet
+    { mThemeSet : Maybe ThemeSet
     , commonFields : CommonFields
     }

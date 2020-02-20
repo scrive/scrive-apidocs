@@ -12,7 +12,7 @@ import Html exposing (Html)
 type alias Config =
     { brandingInfo : Branding
     , availableThemes : List Theme
-    , defaultThemeSet : ThemeSet
+    , mDefaultThemeSet : Maybe ThemeSet
     , currentThemeSet : ThemeSet
     }
 
@@ -61,7 +61,7 @@ initialize config1 =
             config1.brandingInfo
 
         config2 =
-            { defaultThemeSet = config1.defaultThemeSet
+            { mDefaultThemeSet = config1.mDefaultThemeSet
             , currentThemeSet = config1.currentThemeSet
             , availableThemes = config1.availableThemes
             , brandingInfo = branding
@@ -128,41 +128,44 @@ update msg1 state1 =
 
                         brandingFields =
                             fields.brandingFields
-
-                        themeSet =
-                            fields.themeSet
-
-                        branding2 =
-                            { branding1
-                                | url = brandingFields.url
-                                , favicon = brandingFields.favicon
-                                , browserTitle =
-                                    brandingFields.browserTitle
-                                , smsOriginator =
-                                    brandingFields.smsOriginator
-                                , emailOriginator =
-                                    brandingFields.emailOriginator
-                                , themeIds =
-                                    { emailTheme = themeSet.emailTheme.id
-                                    , signViewTheme = themeSet.signViewTheme.id
-                                    , serviceTheme = themeSet.serviceTheme.id
-                                    , loginTheme = themeSet.loginTheme.id
-                                    }
-                                , participantColors = brandingFields.participantColors
-                                , brandingColors = brandingFields.actionColors
-                            }
-
-                        state2 =
-                            { state1
-                                | brandingInfo = branding2
-                            }
-
-                        cmd1 =
-                            Util.msgToCmd <|
-                                Left <|
-                                    SaveBrandingMsg branding2
                     in
-                    ( state2, cmd1 )
+                    case fields.mThemeSet of
+                        Just themeSet ->
+                            let
+                                branding2 =
+                                    { branding1
+                                        | url = brandingFields.url
+                                        , favicon = brandingFields.favicon
+                                        , browserTitle =
+                                            brandingFields.browserTitle
+                                        , smsOriginator =
+                                            brandingFields.smsOriginator
+                                        , emailOriginator =
+                                            brandingFields.emailOriginator
+                                        , themeIds =
+                                            { emailTheme = themeSet.emailTheme.id
+                                            , signViewTheme = themeSet.signViewTheme.id
+                                            , serviceTheme = themeSet.serviceTheme.id
+                                            , loginTheme = themeSet.loginTheme.id
+                                            }
+                                        , participantColors = brandingFields.participantColors
+                                        , brandingColors = brandingFields.actionColors
+                                    }
+
+                                state2 =
+                                    { state1
+                                        | brandingInfo = branding2
+                                    }
+
+                                cmd1 =
+                                    Util.msgToCmd <|
+                                        Left <|
+                                            SaveBrandingMsg branding2
+                            in
+                            ( state2, cmd1 )
+
+                        Nothing ->
+                            ( state1, Cmd.none )
 
                 Base.TabsOutMsg (Tabs.CreateThemeMsg newTheme) ->
                     let

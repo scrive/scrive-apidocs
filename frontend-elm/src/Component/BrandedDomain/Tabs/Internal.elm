@@ -17,7 +17,7 @@ import Html exposing (Html)
 type alias Config =
     { availableThemes : List Theme
     , brandingSettings : BrandingSettings
-    , defaultThemeSet : ThemeSet
+    , mDefaultThemeSet : Maybe ThemeSet
     , currentThemeSet : ThemeSet
     , brandingInfo : Branding
     }
@@ -71,29 +71,32 @@ initialize =
             Pair.liftInit
                 BrandingPage.initialize
                 ThemePage.initialize
-    in
-    \config1 ->
-        let
-            availableThemes =
-                config1.availableThemes
 
-            config2 : BrandingPage.Config
-            config2 =
-                { themesConfig =
-                    { defaultThemes = config1.defaultThemeSet
-                    , currentThemes = config1.currentThemeSet
-                    , availableThemes = availableThemes
+        init : Init
+        init config1 =
+            let
+                availableThemes =
+                    config1.availableThemes
+
+                config2 : BrandingPage.Config
+                config2 =
+                    { themesConfig =
+                        { mDefaultThemes = config1.mDefaultThemeSet
+                        , currentThemes = config1.currentThemeSet
+                        , availableThemes = availableThemes
+                        }
+                    , brandingInfo = config1.brandingInfo
                     }
-                , brandingInfo = config1.brandingInfo
-                }
 
-            config3 : ThemePage.Config
-            config3 =
-                { availableThemes = availableThemes
-                , initialThemeIndex = Just 0
-                }
-        in
-        inInit ( config2, config3 )
+                config3 : ThemePage.Config
+                config3 =
+                    { availableThemes = availableThemes
+                    , initialThemeIndex = Just 0
+                    }
+            in
+            inInit ( config2, config3 )
+    in
+    init
 
 
 update : UpdateHandler
