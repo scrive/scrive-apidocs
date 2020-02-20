@@ -1,4 +1,4 @@
-module Component.Input.Select exposing (..)
+module Component.Input.Select exposing (Config, Init, Msg(..), State, UpdateHandler, ViewHandler, getSelected, initialize, update, view)
 
 import Bootstrap.Form as Form
 import Bootstrap.Form.Select as Select
