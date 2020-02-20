@@ -214,17 +214,31 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
       sqlWhereDocumentWasNotPurged
+      sqlWhereAnySignatoryLinkNotReallyDeleted
 
 data GetDocumentByShortDocumentID = GetDocumentByShortDocumentID DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetDocumentByShortDocumentID Document where
+  -- FIXME: Use domains/filters.
   query (GetDocumentByShortDocumentID shortDid) = do
     now <- currentTime
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereShortDocumentIDIs now shortDid
+      sqlWhereDocumentWasNotPurged
+      sqlWhereAnySignatoryLinkNotReallyDeleted
 
--- Like GetDocumentByDocumentID, but also retrieves purged docs,
--- only to be used for Dave
+-- Like GetDocumentByDocumentID, but also gets deleted docs. Only for cache.
+data GetDocumentForCache = GetDocumentForCache DocumentID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForCache Document where
+  -- FIXME: Use domains/filters.
+  query (GetDocumentForCache did) = do
+    kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentWasNotPurged
+      -- No sqlWhereAnySignatoryLinkNotReallyDeleted
+
+-- Like GetDocumentForCache, but also gets purged docs. Only for Dave.
 data GetDocumentForDave = GetDocumentForDave DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForDave Document where
   -- FIXME: Use domains/filters.
@@ -232,6 +246,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForDave Document wher
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
+      -- No sqlWhereDocumentWasNotPurged
+      -- No sqlWhereAnySignatoryLinkNotReallyDeleted
 
 data GetDocumentAPICallbackResult = GetDocumentAPICallbackResult DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAPICallbackResult (Maybe String) where
@@ -255,60 +271,56 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Doc
   -- FIXME: Use domains/filters.
   query (GetDocumentBySignatoryLinkID slid) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+      sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
-      sqlWhereEqSql "documents.id"
-        . parenthesize
-        . toSQLCommand
-        . sqlSelect "signatory_links"
-        $ do
-            sqlResult "signatory_links.document_id"
-            sqlWhereEq "signatory_links.id" slid
+      sqlWhereSignatoryLinkIDIs slid
       sqlWhereDocumentWasNotPurged
+      sqlWhereDocumentIsNotReallyDeleted
 
 data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
   -- FIXME: Use domains/filters.
   query (GetDocumentsBySignatoryLinkIDs slids) = do
     runQuery_ . sqlSelect "documents" $ do
+      sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
-      sqlWhereExists $ sqlSelect "signatory_links" $ do
-        sqlWhereIn "signatory_links.id" slids
-        sqlWhere "signatory_links.document_id = documents.id"
+      sqlWhereIn "signatory_links.id" slids
       sqlWhereDocumentWasNotPurged
+      sqlWhereDocumentIsNotReallyDeleted
     fetchMany toComposite
 
 data GetDocumentByDocumentIDSignatoryLinkID = GetDocumentByDocumentIDSignatoryLinkID DocumentID SignatoryLinkID
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m GetDocumentByDocumentIDSignatoryLinkID Document where
+  -- FIXME: Use domains/filters.
   query (GetDocumentByDocumentIDSignatoryLinkID did slid) = do
-    doc <- kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+    kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+      sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
-      sqlWhereExists $ sqlSelect "signatory_links" $ do
-        sqlWhere "signatory_links.document_id = documents.id"
-        sqlWhereSignatoryLinkIDIs slid
-        sqlWhereSignatoryLinkIsNotForwaded
+      sqlWhereSignatoryLinkIDIs slid
+      sqlWhereSignatoryLinkIsNotForwaded
       sqlWhereDocumentWasNotPurged
-    return doc
+      sqlWhereDocumentIsNotReallyDeleted
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
+  -- FIXME: Use domains/filters.
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
     now <- currentTime
     runQuery_ $ sqlSelect "documents" $ do
+      sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
-      sqlWhereExists $ sqlSelect "signatory_links" $ do
-        sqlWhere "signatory_links.document_id = documents.id"
-        -- Thought for later: Here we might actually check if
-        -- visibility rules allow a person to see this document, for
-        -- example if sign order allows to see the document. For now
-        -- we are sloppy and let a person see the document.
-        sqlWhereSignatoryLinkIDIs slid
-        sqlWhereSomeSignatoryAccessTokenHasMagicHash mh
-        sqlWhereSignatoryLinkIsNotForwaded
+      sqlWhereSignatoryLinkIDIs slid
+      -- TODO: Here we might actually check if visibility rules allow a person
+      -- to see this document, for example if sign order allows to see the
+      -- document. For now we are sloppy and let a person see the document.
+      sqlWhereSomeSignatoryAccessTokenHasMagicHash mh
+      sqlWhereSignatoryLinkIsNotForwaded
       sqlWhereDocumentWasNotPurged
+      sqlWhereDocumentIsNotReallyDeleted
     mdoc <- fetchMaybe toComposite
     case mdoc of
       Nothing  -> throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
@@ -322,18 +334,19 @@ instance (MonadDB m, MonadThrow m, MonadTime m)
 data CheckIfMagicHashIsValid = CheckIfMagicHashIsValid DocumentID SignatoryLinkID MagicHash
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m CheckIfMagicHashIsValid Bool where
+  -- FIXME: Use domains/filters.
   query (CheckIfMagicHashIsValid did slid mh) = do
     runQuery_ $ sqlSelect "documents" $ do
+      sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
-      sqlWhereExists $ sqlSelect "signatory_links" $ do
-        sqlWhere "signatory_links.document_id = documents.id"
-        sqlWhereSignatoryLinkIDIs slid
-        sqlWhereSomeSignatoryAccessTokenHasMagicHash mh
-        sqlWhereSignatoryLinkIsNotForwaded
+      sqlWhereSignatoryLinkIDIs slid
+      sqlWhereSomeSignatoryAccessTokenHasMagicHash mh
+      sqlWhereSignatoryLinkIsNotForwaded
       sqlWhereDocumentWasNotPurged
+      sqlWhereDocumentIsNotReallyDeleted
     mdoc <- fetchMaybe toComposite
-    case (mdoc, join $ getSigLinkFor slid <$> mdoc) of
+    case (mdoc, getSigLinkFor slid =<< mdoc) of
       (Just doc, Just sl) -> do
         now <- currentTime
         return $ isValidSignatoryMagicHash mh now (documentstatus doc) sl
@@ -341,12 +354,14 @@ instance (MonadDB m, MonadThrow m, MonadTime m)
 
 data GetDocumentByDocumentIDAndShareableLinkHash = GetDocumentByDocumentIDAndShareableLinkHash DocumentID MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDAndShareableLinkHash Document where
+  -- FIXME: Use domains/filters.
   query (GetDocumentByDocumentIDAndShareableLinkHash did mh) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
-      sqlWhereDocumentWasNotPurged
       sqlWhereEq "shareable_link_hash" mh
+      sqlWhereDocumentWasNotPurged
+      sqlWhereAnySignatoryLinkNotReallyDeleted
 
 -- | GetDocuments is central switch for documents list queries.
 --
@@ -442,18 +457,22 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetAvailableTemplates [Document]
 
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk UTCTime Int
 instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
+  -- FIXME: Use domains/filters.
   query (GetTimeoutedButPendingDocumentsChunk mtime size) = do
     runQuery_ . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereEq "documents.status" Pending
-      sqlWhere "purged_time IS NULL"
-      sqlWhere $ "timeout_time IS NOT NULL AND timeout_time <" <?> mtime
+      sqlWhere $ "timeout_time <" <?> mtime
+      sqlWhereDocumentWasNotPurged
+      -- No sqlWhereAnySignatoryLinkNotReallyDeleted here as it doesn't matter,
+      -- we can timeout deleted documents if we want to.
       sqlLimit size
     fetchMany toComposite
 
 data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int64
 instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () where
   query (CheckDocumentObjectVersionIs did ov) = do
+    -- FIXME: Use domains/filters.
     _ :: Bool <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlSelect "documents" $ do
       sqlResult "TRUE"
       sqlWhereDocumentIDIs did
@@ -462,23 +481,25 @@ instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () 
 
 data DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor = DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor Bool where
+  -- FIXME: Use domains/filters.
   query (DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor did) = do
     runQuery_ . sqlSelect "documents" $ do
+      sqlJoinOn
+        "signatory_links"
+        "documents.id = signatory_links.document_id AND documents.author_id = signatory_links.id"
       sqlResult "TRUE"
       sqlWhereDocumentIDIs did
       sqlWhereDocumentWasNotPurged
-      sqlWhereNotExists $ sqlSelect "signatory_links" $ do
-        sqlWhere "documents.author_id = signatory_links.id"
-        sqlWhere "signatory_links.really_deleted IS NOT NULL"
-        sqlWhere "signatory_links.document_id = documents.id"
+      sqlWhereDocumentIsNotReallyDeleted
     result <- fetchMaybe runIdentity
     return $ result == Just True
 
 instance (MonadDB m, MonadThrow m) => GetRow Document m where
-  getRow did = dbQuery $ GetDocumentByDocumentID did
+  getRow did = dbQuery $ GetDocumentForCache did
 
 data GetRandomSignatoryLinkIDThatSignedRecently = GetRandomSignatoryLinkIDThatSignedRecently UTCTime
 instance (MonadDB m, MonadThrow m) => DBQuery m GetRandomSignatoryLinkIDThatSignedRecently (Maybe SignatoryLinkID) where
+  -- FIXME: Use domains/filters.
   query (GetRandomSignatoryLinkIDThatSignedRecently time) = do
     runQuery_ . sqlSelect "signatory_links" $ do
       sqlJoinOn "documents" "signatory_links.document_id = documents.id"
