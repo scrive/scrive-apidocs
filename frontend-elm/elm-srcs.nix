@@ -10,6 +10,11 @@
         version = "1.0.3";
       };
 
+      "elm-community/maybe-extra" = {
+        sha256 = "0vd8n8pxk16kzff3j92986cig0j0h5jdnb1yyf92i79sy30gn5vl";
+        version = "5.1.0";
+      };
+
       "toastal/either" = {
         sha256 = "0vjnyjz1gs7lcjx712pwgw2cihry896wplvhhkm28ifaim85ldap";
         version = "3.5.1";
