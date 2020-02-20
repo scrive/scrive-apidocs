@@ -10,7 +10,8 @@ module AdminOnly.UserGroupAdmin.PaymentsTab exposing
 
 import AdminOnly.UserGroupAdmin.Subscription as Subscription
     exposing
-        ( Invoicing(..)
+        ( Features
+        , Invoicing(..)
         , InvoicingType(..)
         , PaymentPlan(..)
         , Subscription
@@ -99,6 +100,85 @@ modifySubscription modify model =
     { model | sSubscription = statusMap modify model.sSubscription }
 
 
+setFreeFeatures : Features -> Features
+setFreeFeatures features =
+    let
+        adminFeatures1 =
+            features.adminUsers
+
+        adminFeatures2 =
+            { adminFeatures1
+                | canUseDKAuthenticationToSign = False
+                , canUseDKAuthenticationToView = False
+                , canUseFIAuthenticationToView = False
+                , canUseNOAuthenticationToView = False
+                , canUseNOAuthenticationToSign = False
+                , canUseSEAuthenticationToView = False
+                , canUseSEAuthenticationToSign = False
+            }
+
+        userFeatures1 =
+            features.regularUsers
+
+        userFeatures2 =
+            { userFeatures1
+                | canUseDKAuthenticationToView = False
+                , canUseDKAuthenticationToSign = False
+                , canUseFIAuthenticationToView = False
+                , canUseNOAuthenticationToView = False
+                , canUseNOAuthenticationToSign = False
+                , canUseSEAuthenticationToView = False
+                , canUseSEAuthenticationToSign = False
+                , canUseVerimiAuthenticationToView = False
+                , canUseIdinAuthenticationToView = False
+                , canUseIdinAuthenticationToSign = False
+                , canUsePortal = False
+            }
+    in
+    { adminUsers = adminFeatures2
+    , regularUsers = userFeatures2
+    }
+
+
+setPaidFeatures : Features -> Features
+setPaidFeatures features =
+    let
+        adminFeatures1 =
+            features.adminUsers
+
+        adminFeatures2 =
+            { adminFeatures1
+                | canUseDKAuthenticationToSign = True
+                , canUseDKAuthenticationToView = True
+                , canUseFIAuthenticationToView = True
+                , canUseNOAuthenticationToView = True
+                , canUseNOAuthenticationToSign = True
+                , canUseSEAuthenticationToView = True
+                , canUseSEAuthenticationToSign = True
+            }
+
+        userFeatures1 =
+            features.regularUsers
+
+        userFeatures2 =
+            { userFeatures1
+                | canUseDKAuthenticationToView = True
+                , canUseDKAuthenticationToSign = True
+                , canUseFIAuthenticationToView = True
+                , canUseNOAuthenticationToView = True
+                , canUseNOAuthenticationToSign = True
+                , canUseSEAuthenticationToView = True
+                , canUseSEAuthenticationToSign = True
+                , canUseVerimiAuthenticationToView = True
+                , canUseIdinAuthenticationToView = True
+                , canUseIdinAuthenticationToSign = True
+            }
+    in
+    { adminUsers = adminFeatures2
+    , regularUsers = userFeatures2
+    }
+
+
 update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
 update globals msg model =
     case msg of
@@ -140,23 +220,40 @@ update globals msg model =
                     ( model, Cmd.none )
 
         SetPaymentPlan value ->
-            let
-                mmPP =
+            case model.sSubscription of
+                Success subscription ->
                     case ( findEnumValue enumPaymentPlan value, value ) of
-                        ( Ok pp, _ ) ->
-                            Just (Just pp)
+                        ( Ok paymentPlan, _ ) ->
+                            let
+                                subscription2 =
+                                    setPaymentPlan (Just paymentPlan) subscription
+
+                                subscription3 =
+                                    if paymentPlan == Free then
+                                        { subscription2
+                                            | features = setFreeFeatures subscription2.features
+                                        }
+
+                                    else
+                                        { subscription2
+                                            | features = setPaidFeatures subscription2.features
+                                        }
+                            in
+                            ( { model | sSubscription = Success subscription3 }
+                            , Cmd.none
+                            )
 
                         ( _, "inherit" ) ->
-                            Just Nothing
+                            ( { model
+                                | sSubscription =
+                                    Success <|
+                                        setPaymentPlan Nothing subscription
+                              }
+                            , Cmd.none
+                            )
 
                         _ ->
-                            Nothing
-            in
-            case ( mmPP, model.sSubscription ) of
-                ( Just mPP, Success sub ) ->
-                    ( { model | sSubscription = Success <| setPaymentPlan mPP sub }
-                    , Cmd.none
-                    )
+                            ( model, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
