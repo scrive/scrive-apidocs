@@ -363,17 +363,6 @@ module.exports = React.createClass({
               name={localization.account.companyAccounts.columnCompany}
               sorting="company_name"
               width="260px"
-              ishidden={function(model) {
-                if (model.list() != undefined) {
-                  return (1 >= model.list().map(function (i) {
-                      return i.field("company_name");
-                    }).filter(function (value, index, self) { 
-                      // display only if there is more than 1 company
-                      return self.indexOf(value) === index;
-                    }).length);
-                }
-                return true;
-              }}
               rendering={function(d) {
                 return (<div>{d.field("company_name")}</div>);
               }}
