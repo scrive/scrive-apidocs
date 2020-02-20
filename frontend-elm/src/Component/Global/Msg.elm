@@ -1,4 +1,4 @@
-module Component.Global.Msg exposing (..)
+module Component.Global.Msg exposing (GlobalMsg(..), flashError, flashSuccess, initialGlobals, initialToFinalGlobal)
 
 import Compose.Util exposing (msgToCmd)
 import FlashMessage exposing (FlashMessage)

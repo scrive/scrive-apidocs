@@ -1,4 +1,4 @@
-module Component.Branding.CreateTheme exposing (..)
+module Component.Branding.CreateTheme exposing (Config, Init, Msg, NewTheme, OutMsg, State, Theme, UpdateHandler, ViewHandler, initialize, update, view)
 
 import Component.Input.SaveButton as SaveButton
 import Component.Input.Select as Select

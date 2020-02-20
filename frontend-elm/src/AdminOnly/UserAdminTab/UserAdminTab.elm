@@ -328,14 +328,16 @@ viewUsers model users =
     Table.table
         { options = [ Table.striped, Table.hover, Table.small ]
         , thead =
-            Table.simpleThead
-                [ th "col-3" SCName [ text "Username", sortIndicator SCName sorting ]
-                , Table.th [ Table.cellAttr <| class "col-2" ] [ text "Email" ]
-                , Table.th [ Table.cellAttr <| class "col-2" ] [ text "Company" ]
-                , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Position" ]
-                , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Phone" ]
-                , th "col-2" SCTosDate [ text "TOS date", sortIndicator SCTosDate sorting ]
-                , Table.th [ Table.cellAttr <| class "col-1" ] [ text "2FA" ]
+            Table.thead []
+                [ Table.tr [ Table.rowAttr <| class "row" ]
+                    [ th "col-2" SCName [ text "Username", sortIndicator SCName sorting ]
+                    , Table.th [ Table.cellAttr <| class "col-3" ] [ text "Email" ]
+                    , Table.th [ Table.cellAttr <| class "col-2" ] [ text "Company" ]
+                    , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Position" ]
+                    , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Phone" ]
+                    , th "col-2" SCTosDate [ text "TOS date", sortIndicator SCTosDate sorting ]
+                    , Table.th [ Table.cellAttr <| class "col-1" ] [ text "2FA" ]
+                    ]
                 ]
         , tbody =
             Table.tbody [] <|
@@ -345,15 +347,20 @@ viewUsers model users =
 
 viewUser : User -> Table.Row Msg
 viewUser user =
+    let
+        colAttr colStr =
+            Table.cellAttr <| class colStr
+    in
     Table.tr
         [ Table.rowAttr <| onClick <| TableRowClicked user.id
         , Table.rowAttr <| class "clickable-row"
+        , Table.rowAttr <| class "row"
         ]
-        [ Table.td [] [ text user.username ]
-        , Table.td [] [ text user.email ]
-        , Table.td [] [ text user.company ]
-        , Table.td [] [ text user.companyPosition ]
-        , Table.td [] [ text user.phone ]
-        , Table.td [] [ text <| M.withDefault "" <| M.map viewDate user.tos ]
-        , Table.td [] [ text <| ite user.twoFAActive "x" "" ]
+        [ Table.td [ colAttr "col-2" ] [ text user.username ]
+        , Table.td [ colAttr "col-3" ] [ text user.email ]
+        , Table.td [ colAttr "col-2" ] [ text user.company ]
+        , Table.td [ colAttr "col-1" ] [ text user.companyPosition ]
+        , Table.td [ colAttr "col-1" ] [ text user.phone ]
+        , Table.td [ colAttr "col-2" ] [ text <| M.withDefault "" <| M.map viewDate user.tos ]
+        , Table.td [ colAttr "col-1" ] [ text <| ite user.twoFAActive "x" "" ]
         ]
