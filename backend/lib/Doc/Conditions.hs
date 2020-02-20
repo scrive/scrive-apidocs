@@ -570,3 +570,11 @@ sqlWhereSignatoryConsentQuestionIDIs
 sqlWhereSignatoryConsentQuestionIDIs scqid = sqlWhereE
   (SignatoryConsentQuestionDoesNotExist scqid)
   ("signatory_link_consent_questions.id =" <?> scqid)
+
+------------------------------------------------------------
+
+sqlWhereAnySignatoryLinkNotReallyDeleted :: (MonadState v m, SqlWhere v) => m ()
+sqlWhereAnySignatoryLinkNotReallyDeleted = do
+  sqlWhere . toSQLCommand $ sqlSelect "signatory_links" $ do
+    sqlResult "bool_or(signatory_links.really_deleted IS NULL)"
+    sqlWhere "signatory_links.document_id = documents.id"

@@ -102,16 +102,19 @@ documentDomainToSQL
   -> [(DocumentFilterMap, m ())]
 documentDomainToSQL DocumentsOfWholeUniverse = pure . (legacyFilterMap, ) $ do
   sqlWhereDocumentWasNotPurged
+  sqlWhereAnySignatoryLinkNotReallyDeleted
 
 documentDomainToSQL (DocumentsVisibleViaAccessToken token) =
   pure . (legacyFilterMap, ) $ do
     sqlWhereDocumentWasNotPurged
+    sqlWhereAnySignatoryLinkNotReallyDeleted
     sqlWhereEq "documents.token" token
 
 documentDomainToSQL (DocumentsOfUserGroup ugid) = pure . (legacyFilterMap, ) $ do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlJoinOn "users"           "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
+  sqlWhereDocumentIsNotReallyDeleted
   sqlWhere "documents.author_id = signatory_links.id"
   sqlWhereEq "users.user_group_id" ugid
 
