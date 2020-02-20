@@ -17,7 +17,8 @@ post:
       "name": "New UG that's the child of user group 1"
       "tags": [
         {
-          "side": "dark"
+          "name": "side",
+          "value": "dark"
         }
       ]
     }
@@ -36,7 +37,7 @@ post:
     to create root User Groups. In order to create a new child, you must have
     the requisite permissions upon the parent.
 
-    You can also set `tags`, which are arbitrary key/value pairs.
+    You can also set `tags`, which are arbitrary name/value pairs.
 
     A full User Group JSON response is returned which displays the state _after_
     the create operation has been performed. Performing `/update` and then

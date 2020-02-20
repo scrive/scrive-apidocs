@@ -64,7 +64,8 @@ example: {
   },
   "tags": [
     {
-      "home-planet": "Earth"
+      "name": "home-planet",
+      "value": "Earth"
     }
   ]
 }
@@ -92,4 +93,4 @@ properties:
   contact_details:
     $ref: ./UserGroupContactDetailsWithInheritable.yaml
   tags:
-    $ref: ./UserGroupTags.yaml
+    $ref: ./Tags.yaml

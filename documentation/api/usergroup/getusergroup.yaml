@@ -48,10 +48,12 @@ get:
       },
       "tags": [
         {
-          "founded": "1846"
+          "name": "founded",
+          "value": "1846"
         },
         {
-          "status": "busy"
+          "name": "status",
+          "value": "busy"
         }
       ]
     }
@@ -122,10 +124,12 @@ get:
       },
       "tags": [
         {
-          "founded": "1846"
+          "name": "founded",
+          "value": "1846"
         },
         {
-          "status": "busy"
+          "name": "status",
+          "value": "busy"
         }
       ]
     }
