@@ -1,8 +1,8 @@
-module Component.UserGroup.Page.Two exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapPageMsg, themeSavedMsg, update, view)
+module Component.UserGroup.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapPageMsg, themeSavedMsg, update, view)
 
 import Component.Theme.Data exposing (Theme)
 import Component.UserGroup.Data exposing (Branding, ThemeSet)
-import Component.UserGroup.Page.One as Page
+import Component.UserGroup.Page.Level1 as Page
 import Component.UserGroup.Tabs.Internal as Sections
 import Compose.Util as Util
 import Either exposing (Either(..))
@@ -38,6 +38,7 @@ type Msg
 type OutMsg
     = SaveBrandingMsg Branding
     | SaveThemeMsg String Theme
+    | DeleteThemeMsg String Theme
     | CreateThemeMsg NewTheme
 
 
@@ -122,6 +123,18 @@ update msg1 state1 =
                             Util.msgToCmd <|
                                 Left <|
                                     SaveThemeMsg brandingId theme
+                    in
+                    ( state1, cmd1 )
+
+                Sections.DeleteThemeMsg theme ->
+                    let
+                        brandingId =
+                            state1.brandingInfo.userGroupId
+
+                        cmd1 =
+                            Util.msgToCmd <|
+                                Left <|
+                                    DeleteThemeMsg brandingId theme
                     in
                     ( state1, cmd1 )
 

@@ -1,7 +1,7 @@
-module Component.BrandedDomain.Page.Two exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapPageMsg, themeSavedMsg, update, view)
+module Component.BrandedDomain.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapPageMsg, themeSavedMsg, update, view)
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
-import Component.BrandedDomain.Page.One as Base
+import Component.BrandedDomain.Page.Level1 as Base
 import Component.BrandedDomain.Tabs.Data as Tabs
 import Component.Theme.Data exposing (Theme)
 import Compose.Util as Util
@@ -32,12 +32,13 @@ type alias NewTheme =
 
 type Msg
     = PageMsg Base.Msg
-    | PageOutMsg Base.OutMsg
+    | HandleBaseOutMsg Tabs.OutMsg
 
 
 type OutMsg
     = SaveBrandingMsg Branding
     | SaveThemeMsg String Theme
+    | DeleteThemeMsg String Theme
     | CreateThemeMsg NewTheme
     | GoBack
 
@@ -84,12 +85,14 @@ initialize config1 =
 mapPageMsg : Either Base.OutMsg Base.Msg -> Either OutMsg Msg
 mapPageMsg msg1 =
     case msg1 of
-        Left msg2 ->
-            Right <| PageOutMsg msg2
+        Left (Base.BaseOutMsg msg2) ->
+            Right <| HandleBaseOutMsg msg2
+
+        Left (Base.GoBack) ->
+            Left <| GoBack
 
         Right msg2 ->
             Right <| PageMsg msg2
-
 
 update : UpdateHandler
 update msg1 state1 =
@@ -107,9 +110,9 @@ update msg1 state1 =
             in
             ( state3, cmd2 )
 
-        PageOutMsg msg2 ->
+        HandleBaseOutMsg msg2 ->
             case msg2 of
-                Base.TabsOutMsg (Tabs.SaveThemeMsg theme) ->
+                Tabs.SaveThemeMsg theme ->
                     let
                         brandingId =
                             state1.brandingInfo.brandedDomainId
@@ -121,7 +124,21 @@ update msg1 state1 =
                     in
                     ( state1, cmd1 )
 
-                Base.TabsOutMsg (Tabs.SaveBrandingMsg fields) ->
+
+                Tabs.DeleteThemeMsg theme ->
+                    let
+                        brandingId =
+                            state1.brandingInfo.brandedDomainId
+
+                        cmd1 =
+                            Util.msgToCmd <|
+                                Left <|
+                                    DeleteThemeMsg brandingId theme
+                    in
+                    ( state1, cmd1 )
+
+
+                Tabs.SaveBrandingMsg fields ->
                     let
                         branding1 =
                             state1.brandingInfo
@@ -167,7 +184,8 @@ update msg1 state1 =
                         Nothing ->
                             ( state1, Cmd.none )
 
-                Base.TabsOutMsg (Tabs.CreateThemeMsg newTheme) ->
+
+                Tabs.CreateThemeMsg newTheme ->
                     let
                         newTheme2 =
                             { brandedDomainId = state1.brandingInfo.brandedDomainId
@@ -181,9 +199,6 @@ update msg1 state1 =
                                     CreateThemeMsg newTheme2
                     in
                     ( state1, cmd1 )
-
-                Base.GoBack ->
-                    ( state1, Util.msgToCmd <| Left GoBack )
 
 
 view : ViewHandler

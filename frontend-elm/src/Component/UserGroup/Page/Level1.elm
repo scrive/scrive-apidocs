@@ -1,4 +1,4 @@
-module Component.UserGroup.Page.One exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, themeSavedMsg, update, view)
+module Component.UserGroup.Page.Level1 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, themeSavedMsg, update, view)
 
 import Component.Branding.BrandingPage as BrandingPage
 import Component.UserGroup.Data exposing (ThemeSet)

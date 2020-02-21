@@ -1,4 +1,4 @@
-module Component.UserGroup.Tabs.BrandingPage.One exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, settingsMsg, update, view)
+module Component.UserGroup.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, settingsMsg, update, view)
 
 import Component.Branding.CreateTheme as CreateTheme
 import Component.Branding.Settings as Settings

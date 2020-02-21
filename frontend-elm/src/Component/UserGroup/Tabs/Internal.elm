@@ -33,6 +33,7 @@ type alias Msg =
 
 type OutMsg
     = SaveThemeMsg Theme
+    | DeleteThemeMsg Theme
     | SaveBrandingMsg BrandingFields
     | CreateThemeMsg CreateTheme.NewTheme
 
@@ -50,8 +51,12 @@ type alias Init =
 
 
 themeOutMsg : ThemeData.OutMsg -> OutMsg
-themeOutMsg (SaveMsg theme) =
-    SaveThemeMsg theme
+themeOutMsg msg1 =
+    case msg1 of
+        ThemeData.SaveThemeMsg theme ->
+            SaveThemeMsg theme
+        ThemeData.DeleteThemeMsg theme ->
+            DeleteThemeMsg theme
 
 
 brandingOutMsg : BrandingData.OutMsg -> OutMsg

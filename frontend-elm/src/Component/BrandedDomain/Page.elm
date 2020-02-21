@@ -2,8 +2,8 @@ module Component.BrandedDomain.Page exposing (Config, Init, Msg(..), OutMsg, Sta
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
 import Component.BrandedDomain.Json as BrandingJson
-import Component.BrandedDomain.Page.Four as Page
-import Component.BrandedDomain.Page.Two as SuccessPage exposing (NewTheme)
+import Component.BrandedDomain.Page.Level4 as Page
+import Component.BrandedDomain.Page.Level2 as SuccessPage exposing (NewTheme)
 import Component.Global.Msg as Global exposing (GlobalMsg(..))
 import Component.Theme.Data exposing (Theme)
 import Component.Theme.Json as ThemeJson
@@ -38,6 +38,7 @@ type Msg
     | OnAvailableThemesMsg (Result Http.Error (List Theme))
     | OnBrandingInfoMsg (Result Http.Error Branding)
     | ThemeSavedMsg (Result Http.Error ())
+    | ThemeDeletedMsg (Result Http.Error ())
     | ThemeCreatedMsg (Result Http.Error ())
     | BrandingSavedMsg (Result Http.Error ())
 
@@ -210,6 +211,33 @@ update msg1 state1 =
                         Err err ->
                             Global.flashError <|
                                 "Error saving theme: "
+                                    ++ Util.httpErrorToString err
+
+                cmd2 =
+                    Util.msgToCmd <| Left outMsg
+
+                cmd3 =
+                    Cmd.batch
+                        [ cmd1, cmd2 ]
+            in
+            ( state2, cmd3 )
+
+        ThemeDeletedMsg res ->
+            let
+                ( state2, cmd1 ) =
+                    update
+                        (PageMsg Page.themeSavedMsg)
+                        state1
+
+                outMsg =
+                    case res of
+                        Ok () ->
+                            Global.flashSuccess
+                                "Theme deleted"
+
+                        Err err ->
+                            Global.flashError <|
+                                "Error deleting theme: "
                                     ++ Util.httpErrorToString err
 
                 cmd2 =
@@ -400,6 +428,36 @@ saveThemeCmd xtoken brandedDomainId theme =
     in
     cmd1
 
+deleteThemeCmd : String -> String -> Theme -> Cmd Msg
+deleteThemeCmd xtoken brandedDomainId theme =
+    let
+        themeJson =
+            JE.encode 0 <|
+                ThemeJson.encodeTheme theme
+
+        url =
+            "/adminonly/brandeddomain/deletetheme/"
+                ++ brandedDomainId
+                ++ "/"
+                ++ theme.id
+
+        formBody1 =
+            Util.formBody
+                [ ( "theme", themeJson )
+                , ( "xtoken", xtoken )
+                ]
+
+        cmd1 =
+            Http.post
+                { url = url
+                , body = formBody1
+                , expect =
+                    Http.expectWhatever
+                        ThemeDeletedMsg
+                }
+    in
+    cmd1
+
 
 createThemeCmd : String -> NewTheme -> Cmd Msg
 createThemeCmd xtoken newTheme =
@@ -438,6 +496,10 @@ handleOutMsg outMsg state =
         SuccessPage.SaveThemeMsg brandedDomainId theme ->
             Cmd.map Right <|
                 saveThemeCmd state.xtoken brandedDomainId theme
+
+        SuccessPage.DeleteThemeMsg brandedDomainId theme ->
+            Cmd.map Right <|
+                deleteThemeCmd state.xtoken brandedDomainId theme
 
         SuccessPage.CreateThemeMsg newTheme ->
             Cmd.map Right <|

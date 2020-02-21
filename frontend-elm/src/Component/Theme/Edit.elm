@@ -1,8 +1,10 @@
 module Component.Theme.Edit exposing (Config, InConfig, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, currentTheme, initialize, stateToThemes, themeSavedMsg, update, view)
 
+import Component.Input.SaveButton as Button
 import Component.Theme.Data as Data exposing (Theme)
 import Component.Theme.Edit.CurrentTheme as CurrentTheme
 import Component.Theme.Edit.SaveButton as SaveButton
+import Component.Theme.Edit.DeleteButton as DeleteButton
 import Component.Theme.Edit.SelectMenu as SelectMenu
 import Component.Theme.Single as Theme
 import Compose.Handler as Handler
@@ -16,15 +18,24 @@ type alias Config =
 
 
 type alias InConfig =
-    Pair.Config CurrentTheme.Config SaveButton.Config
+    Pair.Config CurrentTheme.Config
+        (Pair.Config
+            SaveButton.Config
+            DeleteButton.Config)
 
 
 type alias State =
-    Pair.State CurrentTheme.State SaveButton.State
+    Pair.State CurrentTheme.State
+        (Pair.State
+            SaveButton.State
+            DeleteButton.State)
 
 
 type alias Msg =
-    Pair.Msg CurrentTheme.Msg SaveButton.Msg
+    Pair.Msg CurrentTheme.Msg
+        (Pair.Msg
+            SaveButton.Msg
+            DeleteButton.Msg)
 
 
 type alias OutMsg =
@@ -48,13 +59,15 @@ initialize =
     let
         inInit =
             Pair.liftInit
-                CurrentTheme.initialize
-                SaveButton.initialize
+                CurrentTheme.initialize <|
+                Pair.liftInit
+                    SaveButton.initialize
+                    DeleteButton.initialize
     in
     \config1 ->
         let
             config2 =
-                ( config1, () )
+                ( config1, ((), ()) )
         in
         inInit config2
 
@@ -62,12 +75,18 @@ initialize =
 update : UpdateHandler
 update =
     Pair.liftUpdate
-        (Handler.outerMapUpdate never CurrentTheme.update)
-        SaveButton.update
+        (Handler.outerMapUpdate never CurrentTheme.update) <|
+        Pair.liftUpdate
+            (Handler.outerMapUpdate
+                (\(Button.SaveMsg theme) -> Data.SaveThemeMsg theme)
+                SaveButton.update)
+            (Handler.outerMapUpdate
+                (\(Button.SaveMsg theme) -> Data.DeleteThemeMsg theme)
+                DeleteButton.update)
 
 
 view : ViewHandler
-view ( state1, state2 ) =
+view ( state1, (state2, state3) ) =
     let
         mState3 =
             CurrentTheme.currentThemeState state1
@@ -78,8 +97,10 @@ view ( state1, state2 ) =
         mButtonBody =
             Maybe.map
                 (\theme ->
-                    [ Html.map Pair.SecondMsg <|
+                    [ Html.map (Pair.SecondMsg << Pair.FirstMsg) <|
                         SaveButton.view theme state2
+                    , Html.map (Pair.SecondMsg << Pair.SecondMsg) <|
+                        DeleteButton.view theme state3
                     ]
                 )
                 mTheme
@@ -119,4 +140,4 @@ stateToThemes ( state, _ ) =
 
 themeSavedMsg : Msg
 themeSavedMsg =
-    Pair.SecondMsg SaveButton.themeSavedMsg
+    Pair.SecondMsg <| Pair.FirstMsg SaveButton.themeSavedMsg

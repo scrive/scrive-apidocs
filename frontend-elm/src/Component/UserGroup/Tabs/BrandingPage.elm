@@ -5,7 +5,7 @@ import Component.Input.SaveButton as SaveButton
 import Component.Theme.Data exposing (Theme)
 import Component.UserGroup.Tabs.BrandingPage.Data as Data
 import Component.UserGroup.Tabs.BrandingPage.Edit.BrandingFields as BrandingFields
-import Component.UserGroup.Tabs.BrandingPage.One as Base
+import Component.UserGroup.Tabs.BrandingPage.Level1 as Base
 import Compose.Pair as Pair
 import Either exposing (Either(..))
 import Html exposing (Html)

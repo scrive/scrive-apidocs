@@ -1,7 +1,7 @@
-module Component.UserGroup.Page.Three exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, clearMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, themeSavedMsg, update, view)
+module Component.UserGroup.Page.Level3 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, clearMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, themeSavedMsg, update, view)
 
 import Component.Error.Fail as Fail
-import Component.UserGroup.Page.Two as Page
+import Component.UserGroup.Page.Level2 as Page
 import Compose.Handler as Handler
 import Compose.Loader as Loader
 import Either exposing (Either(..))

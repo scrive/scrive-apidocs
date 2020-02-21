@@ -1,6 +1,6 @@
-module Component.BrandedDomain.Page.Three exposing (Config, FailConfig, Init, Msg, OutMsg, State, SuccessConfig, UpdateHandler, ViewHandler, brandingSavedMsg, clearMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, themeSavedMsg, update, view)
+module Component.BrandedDomain.Page.Level3 exposing (Config, FailConfig, Init, Msg, OutMsg, State, SuccessConfig, UpdateHandler, ViewHandler, brandingSavedMsg, clearMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, themeSavedMsg, update, view)
 
-import Component.BrandedDomain.Page.Two as Page
+import Component.BrandedDomain.Page.Level2 as Page
 import Component.Error.Fail as Fail
 import Compose.Handler as Handler
 import Compose.Loader as Loader

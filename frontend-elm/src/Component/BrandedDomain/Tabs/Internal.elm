@@ -6,7 +6,6 @@ import Component.BrandedDomain.Tabs.BrandingPage.Data as BrandingData
 import Component.BrandedDomain.Tabs.Data as Data
 import Component.BrandedDomain.Tabs.ThemePage as ThemePage
 import Component.Branding.Data exposing (BrandingSettings)
-import Component.Input.SaveButton as SaveButton
 import Component.Theme.Data as ThemeData exposing (Theme)
 import Compose.Handler as Handler
 import Compose.Pair as Pair
@@ -50,8 +49,10 @@ type alias Init =
 themeOutMsg : ThemeData.OutMsg -> OutMsg
 themeOutMsg msg =
     case msg of
-        SaveButton.SaveMsg theme ->
+        ThemeData.SaveThemeMsg theme ->
             Data.SaveThemeMsg theme
+        ThemeData.DeleteThemeMsg theme ->
+            Data.DeleteThemeMsg theme
 
 
 brandingOutMsg : BrandingData.OutMsg -> OutMsg

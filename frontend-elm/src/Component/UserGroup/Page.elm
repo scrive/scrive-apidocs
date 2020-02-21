@@ -5,8 +5,8 @@ import Component.Theme.Data exposing (Theme)
 import Component.Theme.Json as ThemeJson
 import Component.UserGroup.Data exposing (Branding, ThemeSet)
 import Component.UserGroup.Json as BrandingJson
-import Component.UserGroup.Page.Three as Page
-import Component.UserGroup.Page.Two as SuccessPage exposing (NewTheme)
+import Component.UserGroup.Page.Level3 as Page
+import Component.UserGroup.Page.Level2 as SuccessPage exposing (NewTheme)
 import Compose.Util as Util
 import Either exposing (Either(..))
 import Html exposing (Html, div, text)
@@ -40,6 +40,7 @@ type Msg
     | OnDefaultThemesMsg (Result Http.Error (List Theme))
     | OnBrandingInfoMsg (Result Http.Error Branding)
     | ThemeSavedMsg (Result Http.Error ())
+    | ThemeDeletedMsg (Result Http.Error ())
     | BrandingSavedMsg (Result Http.Error ())
     | ThemeCreatedMsg (Result Http.Error ())
 
@@ -284,6 +285,34 @@ update msg1 state1 =
             in
             ( state2, cmd3 )
 
+        ThemeDeletedMsg res ->
+            let
+                ( state2, cmd1 ) =
+                    initialize
+                        { xtoken = state1.xtoken
+                        , userGroupId = state1.userGroupId
+                        }
+
+                outMsg =
+                    case res of
+                        Ok () ->
+                            FlashMessage.SuccessMsg
+                                "Theme deleted"
+
+                        Err err ->
+                            FlashMessage.ErrorMsg <|
+                                "Error deleting theme: "
+                                    ++ Util.httpErrorToString err
+
+                cmd2 =
+                    Util.msgToCmd <| Left <| FlashMsg outMsg
+
+                cmd3 =
+                    Cmd.batch
+                        [ Cmd.map Right cmd1, cmd2 ]
+            in
+            ( state2, cmd3 )
+
         BrandingSavedMsg res ->
             let
                 ( state2, cmd1 ) =
@@ -415,6 +444,36 @@ saveThemeCmd xtoken userGroupId theme =
     in
     cmd1
 
+deleteThemeCmd : String -> String -> Theme -> Cmd Msg
+deleteThemeCmd xtoken userGroupId theme =
+    let
+        themeJson =
+            JE.encode 0 <|
+                ThemeJson.encodeTheme theme
+
+        url =
+            "/adminonly/companyadmin/branding/companybranding/deletetheme/"
+                ++ userGroupId
+                ++ "/"
+                ++ theme.id
+
+        formBody1 =
+            Util.formBody
+                [ ( "theme", themeJson )
+                , ( "xtoken", xtoken )
+                ]
+
+        cmd1 =
+            Http.post
+                { url = url
+                , body = formBody1
+                , expect =
+                    Http.expectWhatever
+                        ThemeDeletedMsg
+                }
+    in
+    cmd1
+
 
 saveBrandingCmd : String -> ThemeSet -> Branding -> Cmd Msg
 saveBrandingCmd xtoken defaultThemeSet branding =
@@ -476,11 +535,6 @@ createThemeCmd xtoken newTheme =
     in
     cmd1
 
-
-
--- Stub for handling saving request later on
-
-
 handleOutMsg : Page.OutMsg -> State -> Cmd (Either OutMsg Msg)
 handleOutMsg outMsg state =
     case outMsg of
@@ -505,6 +559,10 @@ handleOutMsg outMsg state =
         SuccessPage.SaveThemeMsg brandedDomainId theme ->
             Cmd.map Right <|
                 saveThemeCmd state.xtoken brandedDomainId theme
+
+        SuccessPage.DeleteThemeMsg brandedDomainId theme ->
+            Cmd.map Right <|
+                deleteThemeCmd state.xtoken brandedDomainId theme
 
         SuccessPage.CreateThemeMsg newTheme ->
             Cmd.map Right <|
