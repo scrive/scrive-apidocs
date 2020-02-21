@@ -4,22 +4,28 @@ module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     , Settings
     , SmsProvider(..)
     , UserGroup
+    , afterSaved
     , decoder
     , enumPadAppMode
     , enumSmsProvider
     , formValues
+    , getInternalTag
     , padAppModeDecoder
     , setBoolField
     , setIntField
+    , setInternalTag
     , setStringField
     , smsProviderDecoder
     )
 
+import Dict as D
 import EnumExtra exposing (Enum, findEnumValue, makeEnum)
-import Json.Decode as D exposing (Decoder)
+import Json.Decode as JD exposing (Decoder)
 import Json.Decode.Pipeline as DP
+import Json.Encode as JE
 import List as L
 import Maybe as M
+import Set as S
 import Utils exposing (boolToJson, ite, stringNonEmpty)
 
 
@@ -38,22 +44,27 @@ type alias UserGroup =
     , settings : Settings
     , settingsIsInherited : Bool
     , inheritedSettings : Maybe Settings
+    , internalTags : D.Dict String String
+    , initialInternalTags : D.Dict String String
     }
 
 
 decoder : Decoder UserGroup
 decoder =
-    D.succeed UserGroup
-        |> DP.required "companyid" D.string
-        |> DP.required "companyname" D.string
-        |> DP.required "parentid" (D.string |> D.nullable)
-        |> DP.required "parentgrouppath" (D.list parentUserGroupDecoder)
+    JD.succeed UserGroup
+        |> DP.required "companyid" JD.string
+        |> DP.required "companyname" JD.string
+        |> DP.required "parentid" (JD.string |> JD.nullable)
+        |> DP.required "parentgrouppath" (JD.list parentUserGroupDecoder)
         |> DP.custom addressDecoder
-        |> DP.required "companyaddressisinherited" D.bool
-        |> DP.optional "companyinheritedaddress" (addressDecoder |> D.nullable) Nothing
+        |> DP.required "companyaddressisinherited" JD.bool
+        |> DP.optional "companyinheritedaddress" (addressDecoder |> JD.nullable) Nothing
         |> DP.custom settingsDecoder
-        |> DP.required "companysettingsisinherited" D.bool
-        |> DP.optional "companyinheritedsettings" (settingsDecoder |> D.nullable) Nothing
+        |> DP.required "companysettingsisinherited" JD.bool
+        |> DP.optional "companyinheritedsettings" (settingsDecoder |> JD.nullable) Nothing
+        |> DP.optional "companyinternaltags" (JD.list tagDecoder |> JD.map D.fromList) D.empty
+        -- initialInternalTags are exactly the same as internalTags
+        |> DP.optional "companyinternaltags" (JD.list tagDecoder |> JD.map D.fromList) D.empty
 
 
 modifySettings : (Settings -> Settings) -> UserGroup -> UserGroup
@@ -103,6 +114,21 @@ setStringField name value ug =
             ug
 
 
+setInternalTag : String -> Maybe String -> UserGroup -> UserGroup
+setInternalTag key mValue ug =
+    case mValue of
+        Nothing ->
+            { ug | internalTags = D.remove key ug.internalTags }
+
+        Just value ->
+            { ug | internalTags = D.insert key value ug.internalTags }
+
+
+getInternalTag : String -> UserGroup -> Maybe String
+getInternalTag key ug =
+    D.get key ug.internalTags
+
+
 setBoolField : String -> Bool -> UserGroup -> UserGroup
 setBoolField name value ug =
     case name of
@@ -150,6 +176,15 @@ setIntField name value ug =
 
 
 
+-- move tags to initial tags
+
+
+afterSaved : UserGroup -> UserGroup
+afterSaved ug =
+    { ug | initialInternalTags = ug.internalTags }
+
+
+
 -- ADDRESS
 
 
@@ -164,12 +199,12 @@ type alias Address =
 
 addressDecoder : Decoder Address
 addressDecoder =
-    D.succeed Address
-        |> DP.required "address" D.string
-        |> DP.required "city" D.string
-        |> DP.required "country" D.string
-        |> DP.required "zip" D.string
-        |> DP.required "companynumber" D.string
+    JD.succeed Address
+        |> DP.required "address" JD.string
+        |> DP.required "city" JD.string
+        |> DP.required "country" JD.string
+        |> DP.required "zip" JD.string
+        |> DP.required "companynumber" JD.string
 
 
 
@@ -195,20 +230,20 @@ type alias Settings =
 
 settingsDecoder : Decoder Settings
 settingsDecoder =
-    D.succeed Settings
-        |> DP.required "ipaddressmasklist" D.string
-        |> DP.required "cgidisplayname" (D.string |> D.nullable)
-        |> DP.required "cgiserviceid" (D.string |> D.nullable)
-        |> DP.required "smsprovider" (D.string |> D.andThen smsProviderDecoder)
-        |> DP.required "padappmode" (D.string |> D.andThen padAppModeDecoder)
-        |> DP.required "padearchiveenabled" D.bool
-        |> DP.required "idledoctimeoutpreparation" (D.int |> D.nullable)
-        |> DP.required "idledoctimeoutclosed" (D.int |> D.nullable)
-        |> DP.required "idledoctimeoutcanceled" (D.int |> D.nullable)
-        |> DP.required "idledoctimeouttimedout" (D.int |> D.nullable)
-        |> DP.required "idledoctimeoutrejected" (D.int |> D.nullable)
-        |> DP.required "idledoctimeouterror" (D.int |> D.nullable)
-        |> DP.required "immediatetrash" D.bool
+    JD.succeed Settings
+        |> DP.required "ipaddressmasklist" JD.string
+        |> DP.required "cgidisplayname" (JD.string |> JD.nullable)
+        |> DP.required "cgiserviceid" (JD.string |> JD.nullable)
+        |> DP.required "smsprovider" (JD.string |> JD.andThen smsProviderDecoder)
+        |> DP.required "padappmode" (JD.string |> JD.andThen padAppModeDecoder)
+        |> DP.required "padearchiveenabled" JD.bool
+        |> DP.required "idledoctimeoutpreparation" (JD.int |> JD.nullable)
+        |> DP.required "idledoctimeoutclosed" (JD.int |> JD.nullable)
+        |> DP.required "idledoctimeoutcanceled" (JD.int |> JD.nullable)
+        |> DP.required "idledoctimeouttimedout" (JD.int |> JD.nullable)
+        |> DP.required "idledoctimeoutrejected" (JD.int |> JD.nullable)
+        |> DP.required "idledoctimeouterror" (JD.int |> JD.nullable)
+        |> DP.required "immediatetrash" JD.bool
 
 
 type alias ParentUserGroup =
@@ -219,9 +254,16 @@ type alias ParentUserGroup =
 
 parentUserGroupDecoder : Decoder ParentUserGroup
 parentUserGroupDecoder =
-    D.map2 ParentUserGroup
-        (D.field "group_id" D.string)
-        (D.field "group_name" D.string)
+    JD.map2 ParentUserGroup
+        (JD.field "group_id" JD.string)
+        (JD.field "group_name" JD.string)
+
+
+tagDecoder : Decoder ( String, String )
+tagDecoder =
+    JD.map2 (\name value -> ( name, value ))
+        (JD.field "name" JD.string)
+        (JD.field "value" JD.string)
 
 
 
@@ -269,10 +311,10 @@ padAppModeDecoder : String -> Decoder PadAppMode
 padAppModeDecoder padAppModeString =
     case findEnumValue enumPadAppMode padAppModeString of
         Err _ ->
-            D.fail <| "Cannot parse pad app mode: " ++ padAppModeString
+            JD.fail <| "Cannot parse pad app mode: " ++ padAppModeString
 
         Ok padAppMode ->
-            D.succeed padAppMode
+            JD.succeed padAppMode
 
 
 enumPadAppMode : Enum PadAppMode
@@ -288,10 +330,10 @@ smsProviderDecoder : String -> Decoder SmsProvider
 smsProviderDecoder smsProviderString =
     case findEnumValue enumSmsProvider smsProviderString of
         Err _ ->
-            D.fail <| "Cannot parse sms provider: " ++ smsProviderString
+            JD.fail <| "Cannot parse sms provider: " ++ smsProviderString
 
         Ok smsProvider ->
-            D.succeed smsProvider
+            JD.succeed smsProvider
 
 
 allSmsProviders : List SmsProvider
@@ -335,6 +377,37 @@ formValues ug =
                 ]
            )
         ++ (M.withDefault [] <| M.map (\parentID -> [ ( "companyparentid", parentID ) ]) ug.parentID)
+        ++ [ ( "companyinternaltags", JE.encode 0 <| tagsToUpdatesJson ug.internalTags ug.initialInternalTags ) ]
+
+
+tagsToUpdatesJson : D.Dict String String -> D.Dict String String -> JE.Value
+tagsToUpdatesJson newTags oldTags =
+    D.keys newTags
+        ++ D.keys oldTags
+        |> S.fromList
+        |> S.toList
+        |> L.filterMap
+            (\key ->
+                case ( D.get key newTags, D.get key oldTags ) of
+                    -- this cannot happen
+                    ( Nothing, Nothing ) ->
+                        Nothing
+
+                    ( Nothing, Just _ ) ->
+                        Just <|
+                            JE.object
+                                [ ( "name", JE.string key )
+                                , ( "value", JE.null )
+                                ]
+
+                    ( Just newValue, _ ) ->
+                        Just <|
+                            JE.object
+                                [ ( "name", JE.string key )
+                                , ( "value", JE.string newValue )
+                                ]
+            )
+        |> JE.list identity
 
 
 formValuesSettings : Settings -> List ( String, String )
