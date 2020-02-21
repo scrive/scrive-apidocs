@@ -80,7 +80,7 @@ initialize =
             config2 : BrandingPage.Config
             config2 =
                 { themesConfig =
-                    { defaultThemes = config1.defaultThemeSet
+                    { mDefaultThemes = Just config1.defaultThemeSet
                     , currentThemes = config1.currentThemeSet
                     , availableThemes = availableThemes
                     }

@@ -93,6 +93,6 @@ stateToBrandingFields availableThemes ( state1, state2 ) =
             CommonFields.stateToCommonFields
                 state2
     in
-    { themeSet = themeSet
+    { mThemeSet = themeSet
     , commonFields = commonFields
     }

@@ -6,9 +6,10 @@ import Bootstrap.Grid.Col as Col
 import Component.Theme.Data exposing (Theme)
 import Compose.Util as Util
 import Either exposing (Either(..))
-import Html exposing (Html, text)
+import Html exposing (Html, div, text)
 import Html.Attributes exposing (selected, value)
 import List.Extra as List
+import Maybe.Extra as Maybe
 
 
 type alias Config =
@@ -17,7 +18,7 @@ type alias Config =
 
 type alias State =
     { fieldLabel : String
-    , defaultTheme : Theme
+    , mDefaultTheme : Maybe Theme
     , selectedThemeIndex : Maybe Int
     , previewHandler : Theme -> Html Never
     }
@@ -93,8 +94,12 @@ view availableThemes state =
             List.indexedMap viewSelect availableThemes
 
         body2 =
-            selectDefault
-                :: body1
+            case state.mDefaultTheme of
+                Just _ ->
+                    selectDefault :: body1
+
+                Nothing ->
+                    body1
 
         body3 =
             Form.row
@@ -120,18 +125,28 @@ viewPreview availableThemes state =
                 (\i -> List.getAt i availableThemes)
                 state.selectedThemeIndex
 
-        theme2 =
-            Maybe.withDefault
-                state.defaultTheme
+        mTheme2 =
+            Maybe.or
                 mTheme1
+                state.mDefaultTheme
+
+        mBody1 =
+            Maybe.map state.previewHandler mTheme2
+
+        body2 =
+            Maybe.withDefault
+                (div []
+                    [ text "Select a theme to preview" ]
+                )
+                mBody1
     in
-    state.previewHandler theme2
+    body2
 
 
 stateToTheme :
     List Theme
     -> State
-    -> Theme
+    -> Maybe Theme
 stateToTheme availableThemes state =
     let
         mTheme1 =
@@ -143,9 +158,9 @@ stateToTheme availableThemes state =
                 )
                 state.selectedThemeIndex
 
-        theme2 =
-            Maybe.withDefault
-                state.defaultTheme
+        mTheme2 =
+            Maybe.or
                 mTheme1
+                state.mDefaultTheme
     in
-    theme2
+    mTheme2

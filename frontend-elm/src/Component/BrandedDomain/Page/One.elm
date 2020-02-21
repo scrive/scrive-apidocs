@@ -11,7 +11,7 @@ import Html exposing (Html)
 
 type alias Config =
     { brandingInfo : Branding
-    , defaultThemeSet : ThemeSet
+    , mDefaultThemeSet : Maybe ThemeSet
     , currentThemeSet : ThemeSet
     , availableThemes : List Theme
     }
@@ -55,9 +55,10 @@ initialize =
             branding =
                 config1.brandingInfo
 
+            config2 : Tabs.Config
             config2 =
                 { availableThemes = config1.availableThemes
-                , defaultThemeSet = config1.defaultThemeSet
+                , mDefaultThemeSet = config1.mDefaultThemeSet
                 , currentThemeSet = config1.currentThemeSet
                 , brandingInfo = branding
                 , brandingSettings =

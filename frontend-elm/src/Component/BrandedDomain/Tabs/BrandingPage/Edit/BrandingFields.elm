@@ -11,7 +11,7 @@ import Html exposing (Html)
 
 
 type alias BrandingFields =
-    { themeSet : ThemeSet
+    { mThemeSet : Maybe ThemeSet
     , brandingFields : SettingsFields
     }
 
@@ -98,7 +98,7 @@ viewPreview availableThemes ( state1, _ ) =
 stateToBrandingFields : List Theme -> State -> BrandingFields
 stateToBrandingFields availableThemes ( state1, state2 ) =
     let
-        themeSet =
+        mThemeSet =
             ThemeFields.stateToThemeSet
                 availableThemes
                 state1
@@ -107,6 +107,6 @@ stateToBrandingFields availableThemes ( state1, state2 ) =
             SettingsFields.stateToSettingsFields
                 state2
     in
-    { themeSet = themeSet
+    { mThemeSet = mThemeSet
     , brandingFields = settingsFields
     }

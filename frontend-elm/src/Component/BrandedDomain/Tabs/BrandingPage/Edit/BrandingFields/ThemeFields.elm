@@ -12,7 +12,7 @@ import List.Extra as List
 
 
 type alias Config =
-    { defaultThemes : ThemeSet
+    { mDefaultThemes : Maybe ThemeSet
     , currentThemes : ThemeSet
     , availableThemes : List Theme
     }
@@ -52,8 +52,8 @@ initialize =
     in
     \config1 ->
         let
-            defaultThemes =
-                config1.defaultThemes
+            mDefaultThemes =
+                config1.mDefaultThemes
 
             currentThemes =
                 config1.currentThemes
@@ -67,21 +67,27 @@ initialize =
                     (\theme -> theme.id == themeId)
                     availableThemes
 
+            loginConfig : ThemeField.Config
             loginConfig =
                 { fieldLabel = "Login"
-                , defaultTheme =
-                    defaultThemes.loginTheme
+                , mDefaultTheme =
+                    Maybe.map .loginTheme mDefaultThemes
                 , selectedThemeIndex =
                     findThemeIndex currentThemes.loginTheme.id
                 , previewHandler = PreviewLogin.view
                 }
 
+            config2 : UserGroup.Config
             config2 =
-                { defaultThemes =
-                    { emailTheme = defaultThemes.emailTheme
-                    , signViewTheme = defaultThemes.signViewTheme
-                    , serviceTheme = defaultThemes.serviceTheme
-                    }
+                { mDefaultThemes =
+                    Maybe.map
+                        (\defaultThemes ->
+                            { emailTheme = defaultThemes.emailTheme
+                            , signViewTheme = defaultThemes.signViewTheme
+                            , serviceTheme = defaultThemes.serviceTheme
+                            }
+                        )
+                        mDefaultThemes
                 , currentThemes =
                     { emailTheme = currentThemes.emailTheme
                     , signViewTheme = currentThemes.signViewTheme
@@ -90,6 +96,7 @@ initialize =
                 , availableThemes = availableThemes
                 }
 
+            config3 : Pair.Config UserGroup.Config ThemeField.Config
             config3 =
                 ( config2, loginConfig )
         in
@@ -137,17 +144,26 @@ viewPreview availableThemes ( state1, state2 ) =
     items1 ++ [ item2 ]
 
 
-stateToThemeSet : List Theme -> State -> ThemeSet
+stateToThemeSet : List Theme -> State -> Maybe ThemeSet
 stateToThemeSet availableThemes ( state1, state2 ) =
     let
-        themes1 =
+        mThemes1 =
             UserGroup.stateToThemeSet availableThemes state1
 
-        loginTheme =
+        mLoginTheme =
             ThemeField.stateToTheme availableThemes state2
+
+        mThemset =
+            case ( mThemes1, mLoginTheme ) of
+                ( Just themes1, Just loginTheme ) ->
+                    Just <|
+                        { emailTheme = themes1.emailTheme
+                        , signViewTheme = themes1.signViewTheme
+                        , serviceTheme = themes1.serviceTheme
+                        , loginTheme = loginTheme
+                        }
+
+                _ ->
+                    Nothing
     in
-    { emailTheme = themes1.emailTheme
-    , signViewTheme = themes1.signViewTheme
-    , serviceTheme = themes1.serviceTheme
-    , loginTheme = loginTheme
-    }
+    mThemset

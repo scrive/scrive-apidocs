@@ -472,23 +472,37 @@ mergeMaybe mx my =
 
 defaultThemeSetFromThemes : List Theme -> Maybe ThemeSet
 defaultThemeSetFromThemes availableThemes =
-    Maybe.map
-        (\firstTheme ->
-            let
-                findTheme : String -> Theme
-                findTheme themeName =
-                    Maybe.withDefault firstTheme <|
-                        List.find
-                            (\theme -> theme.name == themeName)
-                            availableThemes
-            in
-            { emailTheme = findTheme "Scrive email theme"
-            , signViewTheme = findTheme "Scrive signing theme"
-            , serviceTheme = findTheme "Scrive service theme"
-            , loginTheme = findTheme "Scrive login theme"
-            }
-        )
-        (List.head availableThemes)
+    let
+        findTheme : String -> Maybe Theme
+        findTheme themeName =
+            List.find
+                (\theme -> theme.name == themeName)
+                availableThemes
+
+        mThemeSet1 =
+            mergeMaybe
+                (findTheme "Scrive email theme")
+            <|
+                mergeMaybe
+                    (findTheme "Scrive signing theme")
+                <|
+                    mergeMaybe
+                        (findTheme "Scrive service theme")
+                        (findTheme "Scrive login theme")
+
+        mThemeSet2 : Maybe ThemeSet
+        mThemeSet2 =
+            Maybe.map
+                (\( emailTheme, ( signViewTheme, ( serviceTheme, loginTheme ) ) ) ->
+                    { emailTheme = emailTheme
+                    , signViewTheme = signViewTheme
+                    , serviceTheme = serviceTheme
+                    , loginTheme = loginTheme
+                    }
+                )
+                mThemeSet1
+    in
+    mThemeSet2
 
 
 themeSetFromBranding : List Theme -> Branding -> Maybe ThemeSet
@@ -545,27 +559,27 @@ stateToPageConfig state =
                         ( brandingInfo, availableThemes ) =
                             loaded
 
-                        mThemeSet1 =
+                        mCurrentThemeSet =
                             themeSetFromBranding
                                 availableThemes
                                 brandingInfo
 
-                        mThemeSet2 =
+                        mDefaultThemeSet =
                             defaultThemeSetFromThemes
                                 availableThemes
 
                         mConfig2 : Maybe SuccessPage.Config
                         mConfig2 =
                             Maybe.map
-                                (\( currentThemeSet, defaultThemeSet ) ->
+                                (\currentThemeSet ->
                                     { brandingInfo = brandingInfo
                                     , availableThemes = availableThemes
-                                    , defaultThemeSet = defaultThemeSet
+                                    , mDefaultThemeSet = mDefaultThemeSet
                                     , currentThemeSet = currentThemeSet
                                     }
                                 )
                             <|
-                                mergeMaybe mThemeSet1 mThemeSet2
+                                mCurrentThemeSet
 
                         config3 : Either String SuccessPage.Config
                         config3 =
