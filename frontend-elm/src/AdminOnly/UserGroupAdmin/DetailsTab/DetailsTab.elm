@@ -18,6 +18,7 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Dict as D
 import EnumExtra as Enum exposing (Enum)
 import FlashMessage
 import Html exposing (Html, a, div, h4, hr, text)
@@ -49,6 +50,7 @@ type Msg
     | SetAddressIsInherited Bool
     | SetSettingsIsInherited Bool
     | SetParentID String
+    | SetSfAccountID String
     | GotParentUserGroup (Result Http.Error UserGroup)
     | SubmitForm
     | GotSaveResponse (Result Http.Error String)
@@ -185,6 +187,15 @@ update globals =
                 else
                     ( model1, Cmd.none )
 
+            SetSfAccountID newSfAccountID ->
+                let
+                    model1 =
+                        { model
+                            | sUserGroup = statusMap (UserGroup.setInternalTag "sf-account-id" <| stringNonEmpty newSfAccountID) model.sUserGroup
+                        }
+                in
+                ( model1, Cmd.none )
+
             GotParentUserGroup response ->
                 case response of
                     Err _ ->
@@ -214,7 +225,7 @@ update globals =
                         ( model, outerCmd <| globals.flashMessage <| FlashMessage.error "Request failed." )
 
                     Ok _ ->
-                        ( model
+                        ( { model | sUserGroup = statusMap UserGroup.afterSaved model.sUserGroup }
                         , outerCmd <|
                             Cmd.batch
                                 [ globals.flashMessage <| FlashMessage.success "Saved"
@@ -412,6 +423,20 @@ viewUserGroup model ug address settings =
                             (\parent -> a [ href parent.id ] [ text <| parent.name ++ " (" ++ parent.id ++ ")" ])
                         |> L.intersperse (text " > ")
                     )
+                ]
+            , hr [] []
+            , Form.row
+                []
+                [ Form.colLabel labelColAttrs [ text "SF Account ID" ]
+                , Form.col inputColAttrs <|
+                    [ Input.text <|
+                        [ Input.attrs <|
+                            [ value <| M.withDefault "" <| UserGroup.getInternalTag "sf-account-id" ug
+                            , onInput SetSfAccountID
+                            ]
+                        ]
+                    ]
+                , Form.col [] [ Form.helpInline [] [ text "The purpose of this field is to match User Groups with Salesforce Accounts." ] ]
                 ]
             , hr [] []
             , formCheckboxRowM "Inherit address"
