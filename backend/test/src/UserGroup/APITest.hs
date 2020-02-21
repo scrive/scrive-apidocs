@@ -1,13 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 module UserGroup.APITest (userGroupApiTests) where
 
-import Data.Aeson (Value(Object))
+import Data.Aeson (encode)
 import Data.Aeson.Types
 import Happstack.Server
 import Test.Framework
-import qualified Data.HashMap.Strict as HM
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Set as S
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 
 import AccessControl.Model
 import AccessControl.Types
@@ -18,6 +19,7 @@ import TestKontra
 import User.Email
 import User.Model
 import UserGroup.API
+import UserGroup.JSON
 import UserGroup.Model
 import UserGroup.Types
 import qualified UserGroup.Internal as I
@@ -1091,26 +1093,26 @@ testUserCanUpdateTags = do
                                (userGroupApiV2Update ugid)
                                200
   tags <- lookupObjectArray "tags" val
-  let sortedTags = sortBy (\a b -> compare (getName a) (getName b)) tags
-  assertEqual "user can update tags" expectUpdatedTags sortedTags
+  assertEqual "user can update tags" expectUpdatedTags tags
   where
-    getName = \case
-      Object hm -> case HM.toList hm of
-        [(k, _)] -> k
-        _        -> ""
-      _ -> ""
     emailAddress = "great.green.arkleseizure@scrive.com"
+    tagUpdates =
+      [ TagUpdate "legs" (SetTo "six")
+      , TagUpdate "size" Delete
+      , TagUpdate "eyes" (SetTo "big")
+      ]
     tagUpdateJson =
-      "{\"tags\": [{\"legs\": \"six\"}, {\"size\": null}, {\"eyes\":\"big\"}]}"
+      TE.decodeUtf8 . BSL.toStrict . encode $ object ["tags" .= toJSON tagUpdates]
     initialTags = S.fromList
       [ I.UserGroupTag "legs" "four"
       , I.UserGroupTag "size" "tiny"
       , I.UserGroupTag "color" "black"
       ]
-    expectUpdatedTags =
-      [ object ["color" .= String "black"]
-      , object ["eyes" .= String "big"]
-      , object ["legs" .= String "six"]
+    expectUpdatedTags = map
+      toJSON
+      [ I.UserGroupTag "color" "black"
+      , I.UserGroupTag "eyes" "big"
+      , I.UserGroupTag "legs" "six"
       ]
 
 testUserCanViewTags :: TestEnv ()

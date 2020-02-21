@@ -23,7 +23,6 @@ import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
 import qualified Data.Set as S
-import qualified Data.Text as T
 
 import Doc.API.V2.JSON.Misc
 import MinutesTime
@@ -177,7 +176,9 @@ companyTagsJsons :: S.Set UserGroupTag -> [JSONGenT Identity ()]
 companyTagsJsons = map companyTagJson . S.toList
 
 companyTagJson :: UserGroupTag -> JSONGenT Identity ()
-companyTagJson tag = value (T.unpack $ tag ^. #tagname) (T.unpack $ tag ^. #tagvalue)
+companyTagJson tag = do
+  value "name" $ tag ^. #name
+  value "value" $ tag ^. #value
 
 companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
 companyAddressJson uga = do

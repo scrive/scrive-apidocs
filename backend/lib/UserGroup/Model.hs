@@ -104,8 +104,8 @@ insertUserGroupTags ugid domain tags
     let tags_list = S.toList tags
     runQuery_ . sqlInsert "user_group_tags" $ do
       sqlSet "user_group_id" ugid
-      sqlSetList "name" $ I.tagname <$> tags_list
-      sqlSetList "value" $ I.tagvalue <$> tags_list
+      sqlSetList "name" $ (view #name) <$> tags_list
+      sqlSetList "value" $ (view #value) <$> tags_list
       sqlSet "internal" (domain == Internal)
 
 insertUserGroupSettings

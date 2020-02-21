@@ -4,18 +4,17 @@ var _ = require("underscore");
 var tagUtils = {
   find: function (tags, name) {
     var tag = _.find(tags, function (tag) {
-      return _.keys(tag)[0] === name;
+      return tag.name === name;
     });
-    return _.values(tag)[0];
+    return tag ? tag.value : null;
   },
   delete: function (tags, name) {
     return _.reject(tags, function (tag) {
-      return _.keys(tag)[0] === name;
+      return tag.name === name;
     });
   },
   addOne: function (tags, name, value) {
-    var tag = {};
-    tag[name] = value;
+    var tag = {name: name, value: value};
     return [].concat(tags, tag);
   },
   updateOne: function (tags, name, value) {

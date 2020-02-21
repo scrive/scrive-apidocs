@@ -76,8 +76,9 @@ userGroupApiV2Create = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   ugReq       <- apiV2ParameterObligatory $ ApiV2ParameterAeson "usergroup"
   ugIn        <- case updateUserGroupFromRequest defaultChildUserGroup ugReq of
-    Nothing        -> apiError $ requestFailed "Error parsing user group create object."
-    Just ugUpdated -> return ugUpdated
+    Left err ->
+      apiError . requestFailed $ "Error parsing user group create object. " <> err
+    Right ugUpdated -> return ugUpdated
   ugOut <- case ugIn ^. #parentGroupID of
     Nothing -> do
       -- Guard against non-Admins being able to create root UserGroups
@@ -101,8 +102,9 @@ userGroupApiV2Update ugid = api $ do
     Nothing -> apiError insufficientPrivileges
     Just ug -> return ug
   ugNew <- case updateUserGroupFromRequest ugOriginal ugReq of
-    Nothing        -> apiError $ requestFailed "Error parsing user group update object."
-    Just ugUpdated -> return ugUpdated
+    Left err ->
+      apiError . requestFailed $ "Error parsing user group update object. " <> err
+    Right ugUpdated -> return ugUpdated
   let moldparentugid = ugOriginal ^. #parentGroupID
   let mnewparentugid = ugNew ^. #parentGroupID
   -- Checks to see whether the usergroup is being moved (its parent ugid changed)
