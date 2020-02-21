@@ -5,6 +5,9 @@ module UserGroup.JSON (
   , updateUserGroupContactDetailsFromRequest
   , encodeUserGroupSettings
   , updateUserGroupDataRetentionFromRequest
+  , updateTag
+  , TagOp(..)
+  , TagUpdate(..)
 ) where
 
 import Data.Aeson
@@ -14,6 +17,7 @@ import Data.Unjson
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as L
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 import DataRetentionPolicy
 import InputValidation
@@ -35,28 +39,30 @@ encodeUserGroup inheritable ugwp children =
     childrenEncoding = flip list children
       $ \child -> pairs $ "id" .= (child ^. #id) <> "name" .= (child ^. #name)
     tags = flip list (S.toList $ ug ^. #externalTags)
-      $ \tag -> pairs $ I.tagname tag .= I.tagvalue tag
+      $ \tag -> pairs $ "name" .= (tag ^. #name) <> "value" .= (tag ^. #value)
 
-updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
+updateUserGroupFromRequest :: UserGroup -> Value -> Either Text UserGroup
 updateUserGroupFromRequest ug ugChanges =
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
     (Result ugUpdated []) -> do
       let newTags = foldl' updateTag (S.toList $ ug ^. #externalTags) (reqTags ugUpdated)
-      Just
+      Right
         $ ug
         & (#parentGroupID .~ reqParentID ugUpdated)
         & (#name .~ reqName ugUpdated)
         & (#externalTags .~ S.fromList newTags)
-    (Result _ _) -> Nothing
+    (Result _ problems) -> Left $ T.pack $ show problems
   where
-    updateTag ugts (TagUpdate k op) = case op of
-      SetTo v -> (I.UserGroupTag k v) : deleted
-      Delete  -> deleted
-      where deleted = filter (\ugt -> ugt ^. #tagname /= k) ugts
     ugReq = UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID
                                  , reqName     = ug ^. #name
                                  , reqTags     = []
                                  }
+
+updateTag :: [UserGroupTag] -> TagUpdate -> [UserGroupTag]
+updateTag tags (TagUpdate k op) = case op of
+  SetTo v -> (I.UserGroupTag k v) : deleted
+  Delete  -> deleted
+  where deleted = filter (\ugt -> ugt ^. #name /= k) tags
 
 data TagOp = SetTo Text | Delete
   deriving (Eq, Ord, Show)
@@ -68,22 +74,20 @@ instance ToJSON TagOp where
 
 instance FromJSON TagOp where
   parseJSON = \case
-    Null     -> pure $ Delete
     String s -> pure $ SetTo s
+    Null     -> pure $ Delete
     invalid  -> typeMismatch "Expected a string or `null`" invalid
 
-instance Unjson TagOp where
-  unjsonDef = unjsonAeson
-
-data TagUpdate = TagUpdate Text TagOp
-
-instance ToJSON TagUpdate where
-  toJSON (TagUpdate k v) = object [k .= toJSON v]
+data TagUpdate = TagUpdate {
+    tagName :: Text
+  , tagValue :: TagOp
+}
 
 instance FromJSON TagUpdate where
-  parseJSON = withObject "TagUpdate" $ \hm -> case HM.toList hm of
-    [(k, v)] -> TagUpdate k <$> parseJSON v
-    _ -> typeMismatch "TagUpdate has to contain a single key:value pair" (Object hm)
+  parseJSON = withObject "TagUpdate" $ \v -> TagUpdate <$> v .: "name" <*> v .: "value"
+
+instance ToJSON TagUpdate where
+  toJSON (TagUpdate name val) = object ["name" .= name, "value" .= val]
 
 instance Unjson TagUpdate where
   unjsonDef = unjsonAeson

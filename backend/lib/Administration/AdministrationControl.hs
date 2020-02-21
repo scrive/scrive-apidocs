@@ -20,6 +20,7 @@ module Administration.AdministrationControl (
           ) where
 
 import Control.Monad.IO.Class (liftIO)
+import Data.Aeson.Types
 import Data.Functor.Invariant
 import Data.Int (Int16, Int32)
 import Data.Time (diffUTCTime)
@@ -89,6 +90,7 @@ import User.History.Model
 import User.JSON
 import User.UserControl
 import UserGroup.FreeDocumentTokens.Model
+import UserGroup.JSON
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -458,11 +460,9 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugSettingsChange      <- getUserGroupSettingsChange
   mUGAddressIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companyaddressisinherited"
-  ugAddressChange  <- getUserGroupAddressChange
-  mInternalTagsRaw <- getFieldJSON "companyinternaltags"
-  let mInternalTagOps = mInternalTagsRaw >>= parseTags
-  mExternalTagsRaw <- getFieldJSON "companyexternaltags"
-  let mExternalTagOps = mExternalTagsRaw >>= parseTags
+  ugAddressChange       <- getUserGroupAddressChange
+  mInternalTagOps       <- parseTags "companyinternaltags"
+  mExternalTagOps       <- parseTags "companyexternaltags"
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
   let oldUG       = ugwpUG ugwp
@@ -492,22 +492,18 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
-  where
-    -- Tags look like: [{"name":"value"}, {"name2": null}, ...]
-    parseTags val = case val of
-      JSArray ar -> S.fromList <$> mapM parseTag ar
-      _          -> Nothing
-    parseTag val = case val of
-      JSObject ob -> case fromJSObject ob of
-        [(k, (JSString v))] -> Just $ (T.pack k, Just . T.pack $ fromJSString v)
-        [(k, JSNull      )] -> Just $ (T.pack k, Nothing)
-        _                   -> Nothing
-      _ -> Nothing
-    updateTags oldTags = S.fromList . foldl' updateTag (S.toList oldTags)
-    updateTag ugts (k, op) = case op of
-      Nothing -> deleted
-      Just v  -> (I.UserGroupTag k v) : deleted
-      where deleted = filter (\ugt -> (ugt ^. #tagname) /= k) ugts
+  where updateTags oldTags = S.fromList . foldl' updateTag (S.toList oldTags)
+
+parseTags :: Kontrakcja m => Text -> m (Maybe [TagUpdate])
+parseTags fieldName = do
+  mValue <- getFieldBS fieldName
+  case mValue of
+    Nothing  -> return Nothing
+    Just val -> case Aeson.eitherDecode val of
+      Right res -> return $ Just res
+      Left  err -> do
+        logInfo "Error while parsing tags" $ object ["field" .= fieldName, "error" .= err]
+        internalError
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do
