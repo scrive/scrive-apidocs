@@ -286,17 +286,23 @@ userGroupsDecoder =
 
 viewUserGroups : Model -> List UserGroup -> Html Msg
 viewUserGroups model userGroups =
+    let
+        colAttr colStr =
+            Table.cellAttr <| class colStr
+    in
     Table.table
         { options = [ Table.striped, Table.hover, Table.small ]
         , thead =
-            Table.simpleThead
-                [ Table.th [] [ text "Name" ]
-                , Table.th [] [ text "Number" ]
-                , Table.th [] [ text "Address" ]
-                , Table.th [] [ text "Zip" ]
-                , Table.th [] [ text "City" ]
-                , Table.th [] [ text "Country" ]
-                , Table.th [] [ text "ID" ]
+            Table.thead []
+                [ Table.tr [ Table.rowAttr <| class "row" ]
+                    [ Table.th [ colAttr "col-3" ] [ text "Name" ]
+                    , Table.th [ colAttr "col-2" ] [ text "Number" ]
+                    , Table.th [ colAttr "col-2" ] [ text "Address" ]
+                    , Table.th [ colAttr "col-1" ] [ text "Zip" ]
+                    , Table.th [ colAttr "col-1" ] [ text "City" ]
+                    , Table.th [ colAttr "col-1" ] [ text "Country" ]
+                    , Table.th [ colAttr "col-2" ] [ text "ID" ]
+                    ]
                 ]
         , tbody =
             Table.tbody [] <|
@@ -306,17 +312,22 @@ viewUserGroups model userGroups =
 
 viewUserGroup : Model -> UserGroup -> Table.Row Msg
 viewUserGroup _ userGroup =
+    let
+        colAttr colStr =
+            Table.cellAttr <| class colStr
+    in
     Table.tr
         [ Table.rowAttr <| onClick <| TableRowClicked userGroup.id
         , Table.rowAttr <| class "clickable-row"
+        , Table.rowAttr <| class "row"
         ]
-        [ Table.td [] [ text userGroup.name ]
-        , Table.td [] [ text userGroup.number ]
-        , Table.td [] [ text userGroup.address ]
-        , Table.td [] [ text userGroup.zip ]
-        , Table.td [] [ text userGroup.city ]
-        , Table.td [] [ text userGroup.country ]
-        , Table.td [] [ text userGroup.id ]
+        [ Table.td [ colAttr "col-3" ] [ text userGroup.name ]
+        , Table.td [ colAttr "col-2" ] [ text userGroup.number ]
+        , Table.td [ colAttr "col-2" ] [ text userGroup.address ]
+        , Table.td [ colAttr "col-1" ] [ text userGroup.zip ]
+        , Table.td [ colAttr "col-1" ] [ text userGroup.city ]
+        , Table.td [ colAttr "col-1" ] [ text userGroup.country ]
+        , Table.td [ colAttr "col-2" ] [ text userGroup.id ]
         ]
 
 
