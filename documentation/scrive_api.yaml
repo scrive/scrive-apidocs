@@ -988,6 +988,12 @@ paths:
   /dataretentionpolicy/set:
     $ref: ./api/user/post-dataretentionpolicy.yaml
 
+  /tags:
+    $ref: ./api/user/get-tags.yaml
+
+  /tags/update:
+    $ref: ./api/user/post-tags.yaml
+
   /usagestats/days:
     $ref: ./api/user/getusagestatsdays.yaml
 
