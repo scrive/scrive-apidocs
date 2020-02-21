@@ -1,6 +1,6 @@
 module Component.Theme.Edit exposing (Config, InConfig, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, currentTheme, initialize, stateToThemes, themeSavedMsg, update, view)
 
-import Component.Input.SaveButton as Button
+import Component.Input.Button exposing (OutMsg (..))
 import Component.Theme.Data as Data exposing (Theme)
 import Component.Theme.Edit.CurrentTheme as CurrentTheme
 import Component.Theme.Edit.SaveButton as SaveButton
@@ -78,10 +78,10 @@ update =
         (Handler.outerMapUpdate never CurrentTheme.update) <|
         Pair.liftUpdate
             (Handler.outerMapUpdate
-                (\(Button.SaveMsg theme) -> Data.SaveThemeMsg theme)
+                (\(ClickMsg theme) -> Data.SaveThemeMsg theme)
                 SaveButton.update)
             (Handler.outerMapUpdate
-                (\(Button.SaveMsg theme) -> Data.DeleteThemeMsg theme)
+                (\(ClickMsg theme) -> Data.DeleteThemeMsg theme)
                 DeleteButton.update)
 
 

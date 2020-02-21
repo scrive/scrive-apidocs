@@ -2,7 +2,7 @@ module Component.UserGroup.Tabs.Internal exposing (Config, Init, Msg, OutMsg(..)
 
 import Component.Branding.CreateTheme as CreateTheme
 import Component.Branding.Data exposing (BrandingSettings)
-import Component.Input.SaveButton exposing (OutMsg(..))
+import Component.Input.Button exposing (OutMsg(..))
 import Component.Theme.Data as ThemeData exposing (Theme)
 import Component.UserGroup.Data exposing (ThemeSet)
 import Component.UserGroup.Tabs.BrandingPage as BrandingPage

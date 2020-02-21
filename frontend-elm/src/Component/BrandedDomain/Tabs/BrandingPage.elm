@@ -4,7 +4,7 @@ import Component.BrandedDomain.Tabs.BrandingPage.Data as Data
 import Component.BrandedDomain.Tabs.BrandingPage.Edit.BrandingFields as BrandingFields
 import Component.BrandedDomain.Tabs.BrandingPage.One as Base
 import Component.Branding.Settings as Settings
-import Component.Input.SaveButton as SaveButton
+import Component.Input.Button as Button
 import Component.Theme.Data exposing (Theme)
 import Component.UserGroup.Tabs.BrandingPage as UserGroup
 import Compose.Pair as Pair
@@ -60,10 +60,10 @@ mapMessage msg1 =
                         Pair.FirstMsg msg4 ->
                             Right <| ThemeFieldsMsg msg4
 
-                        Pair.SecondMsg (SaveButton.SaveMsg msg4) ->
+                        Pair.SecondMsg (Button.ClickMsg msg4) ->
                             Left <| Data.SaveBrandingMsg msg4
 
-                Base.CreateThemeMsg (SaveButton.SaveMsg msg3) ->
+                Base.CreateThemeMsg (Button.ClickMsg msg3) ->
                     Left <| Data.CreateThemeMsg msg3
 
         Right msg2 ->

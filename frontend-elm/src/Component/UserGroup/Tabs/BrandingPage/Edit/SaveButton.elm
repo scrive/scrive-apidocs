@@ -1,6 +1,6 @@
 module Component.UserGroup.Tabs.BrandingPage.Edit.SaveButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, update, view)
 
-import Component.Input.SaveButton as SaveButton
+import Component.Input.Button as Button
 import Component.UserGroup.Data exposing (BrandingFields)
 import Either exposing (Either(..))
 import Html exposing (Html)
@@ -11,15 +11,15 @@ type alias Config =
 
 
 type alias OutMsg =
-    SaveButton.OutMsg BrandingFields
+    Button.OutMsg BrandingFields
 
 
 type alias Msg =
-    SaveButton.Msg BrandingFields
+    Button.Msg BrandingFields
 
 
 type alias State =
-    SaveButton.State
+    Button.State
 
 
 type alias UpdateHandler =
@@ -36,19 +36,22 @@ type alias Init =
 
 initialize : Init
 initialize _ =
-    SaveButton.initialize "Save"
+    Button.initialize
+        { caption = "Save"
+        , buttonType = Button.Ok
+        }
 
 
 update : UpdateHandler
 update =
-    SaveButton.update
+    Button.update
 
 
 view : BrandingFields -> ViewHandler
 view =
-    SaveButton.view
+    Button.view
 
 
 brandingSavedMsg : Msg
 brandingSavedMsg =
-    SaveButton.dataSavedMsg
+    Button.dataSavedMsg

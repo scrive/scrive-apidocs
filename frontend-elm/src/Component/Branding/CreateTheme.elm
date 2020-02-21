@@ -1,6 +1,6 @@
 module Component.Branding.CreateTheme exposing (Config, Init, Msg, NewTheme, OutMsg, State, Theme, UpdateHandler, ViewHandler, initialize, update, view)
 
-import Component.Input.SaveButton as SaveButton
+import Component.Input.Button as Button
 import Component.Input.Select as Select
 import Component.Input.TextField as TextField
 import Compose.Handler as Handler
@@ -26,15 +26,15 @@ type alias NewTheme =
 
 
 type alias Msg =
-    Pair.Msg Select.Msg (Pair.Msg TextField.Msg (SaveButton.Msg NewTheme))
+    Pair.Msg Select.Msg (Pair.Msg TextField.Msg (Button.Msg NewTheme))
 
 
 type alias OutMsg =
-    SaveButton.OutMsg NewTheme
+    Button.OutMsg NewTheme
 
 
 type alias State =
-    Pair.State Select.State (Pair.State TextField.State SaveButton.State)
+    Pair.State Select.State (Pair.State TextField.State Button.State)
 
 
 type alias UpdateHandler =
@@ -58,7 +58,7 @@ initialize =
             <|
                 Pair.liftInit
                     TextField.initialize
-                    SaveButton.initialize
+                    Button.initialize
     in
     \_ ->
         let
@@ -72,8 +72,13 @@ initialize =
                 { fieldLabel = "Create New Theme From"
                 , selectedIndex = Just 0
                 }
+
+            buttonConfig =
+                { caption = "Create"
+                , buttonType = Button.Ok
+                }
         in
-        inInit ( selectConfig, ( fieldConfig, "Create" ) )
+        inInit ( selectConfig, ( fieldConfig, buttonConfig ) )
 
 
 update : UpdateHandler
@@ -83,7 +88,7 @@ update =
     <|
         Pair.liftUpdate
             (Handler.outerMapUpdate never TextField.update)
-            SaveButton.update
+            Button.update
 
 
 view : List Theme -> ViewHandler
@@ -118,7 +123,7 @@ view themes ( selectState, ( textState, buttonState ) ) =
 
         buttonBody =
             Html.map (Pair.SecondMsg << Pair.SecondMsg) <|
-                SaveButton.view themeData buttonState
+                Button.view themeData buttonState
     in
     div []
         [ selectBody

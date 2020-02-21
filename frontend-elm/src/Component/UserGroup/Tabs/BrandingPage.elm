@@ -1,7 +1,7 @@
 module Component.UserGroup.Tabs.BrandingPage exposing (Config, Init, Msg(..), OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapMessage, messagePos, themeFieldPos, update, view)
 
 import Component.Branding.Settings as Settings
-import Component.Input.SaveButton as SaveButton
+import Component.Input.Button as Button
 import Component.Theme.Data exposing (Theme)
 import Component.UserGroup.Tabs.BrandingPage.Data as Data
 import Component.UserGroup.Tabs.BrandingPage.Edit.BrandingFields as BrandingFields
@@ -59,10 +59,10 @@ mapMessage msg1 =
                         Pair.FirstMsg msg4 ->
                             Right <| ThemeFieldsMsg msg4
 
-                        Pair.SecondMsg (SaveButton.SaveMsg msg4) ->
+                        Pair.SecondMsg (Button.ClickMsg msg4) ->
                             Left <| Data.SaveBrandingMsg msg4
 
-                Base.CreateThemeMsg (SaveButton.SaveMsg msg3) ->
+                Base.CreateThemeMsg (Button.ClickMsg msg3) ->
                     Left <| Data.CreateThemeMsg msg3
 
         Right msg2 ->

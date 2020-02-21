@@ -1,9 +1,6 @@
-module Component.Input.SaveButton exposing (Config, Init, Msg(..), OutMsg(..), State, UpdateHandler, ViewHandler, dataSavedMsg, initialize, update, view)
+module Component.Input.Button exposing (Config, Init, ButtonType (..), Msg(..), OutMsg(..), State, UpdateHandler, ViewHandler, dataSavedMsg, initialize, update, view)
 
 import Bootstrap.Button as Button
-import Bootstrap.Grid as Grid
-import Bootstrap.Grid.Col as Col
-import Bootstrap.Grid.Row as Row
 import Compose.Util as Util
 import Either exposing (Either(..))
 import Html exposing (Html, text)
@@ -11,13 +8,16 @@ import Html.Attributes exposing (class, disabled)
 import Html.Events exposing (onClick)
 
 
+type ButtonType = Ok | Danger
+
 type OutMsg data
-    = SaveMsg data
+    = ClickMsg data
 
 
 type alias Config =
-    String
-
+    { caption : String
+    , buttonType : ButtonType
+    }
 
 type Msg data
     = DataSavedMsg
@@ -27,6 +27,7 @@ type Msg data
 type alias State =
     { isDisabled : Bool
     , caption : String
+    , buttonType : ButtonType
     }
 
 
@@ -45,8 +46,12 @@ type alias Init data =
 
 
 initialize : Init data
-initialize caption =
-    ( { isDisabled = False, caption = caption }, Cmd.none )
+initialize config =
+    ( { isDisabled = False
+      , caption = config.caption
+      , buttonType = config.buttonType
+      }
+    , Cmd.none )
 
 
 update : UpdateHandler data
@@ -62,7 +67,7 @@ update msg1 state1 =
                 cmd =
                     Util.msgToCmd <|
                         Left <|
-                            SaveMsg fields
+                            ClickMsg fields
             in
             ( { state1 | isDisabled = True }
             , cmd
@@ -71,20 +76,22 @@ update msg1 state1 =
 
 view : data -> ViewHandler data
 view data state =
-    Grid.row [ Row.leftSm, Row.attrs <| [ class "mb-sm-2", class "mt-sm-2" ] ]
-        [ Grid.col [ Col.sm12 ]
-            [ Button.button
-                [ Button.success
-                , Button.attrs
-                    [ class "ml-sm-2"
-                    , onClick <|
-                        SaveButtonClickedMsg data
-                    , disabled state.isDisabled
-                    ]
-                ]
-                [ text state.caption ]
+    let
+        buttonClass = case state.buttonType of
+            Ok -> Button.success
+            Danger -> Button.danger
+    in
+
+    Button.button
+        [ buttonClass
+        , Button.attrs
+            [ class "ml-sm-2"
+            , onClick <|
+                SaveButtonClickedMsg data
+            , disabled state.isDisabled
             ]
         ]
+        [ text state.caption ]
 
 
 dataSavedMsg : Msg data

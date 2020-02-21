@@ -1,6 +1,6 @@
 module Component.Theme.Edit.SaveButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, initialize, themeSavedMsg, update, view)
 
-import Component.Input.SaveButton as SaveButton
+import Component.Input.Button as Button
 import Component.Theme.Data exposing (Theme)
 import Either exposing (Either(..))
 import Html exposing (Html)
@@ -11,15 +11,15 @@ type alias Config =
 
 
 type alias OutMsg =
-    SaveButton.OutMsg Theme
+    Button.OutMsg Theme
 
 
 type alias Msg =
-    SaveButton.Msg Theme
+    Button.Msg Theme
 
 
 type alias State =
-    SaveButton.State
+    Button.State
 
 
 type alias UpdateHandler =
@@ -36,19 +36,22 @@ type alias Init =
 
 initialize : Init
 initialize _ =
-    SaveButton.initialize "Save"
+    Button.initialize
+        { caption = "Save"
+        , buttonType = Button.Ok
+        }
 
 
 update : UpdateHandler
 update =
-    SaveButton.update
+    Button.update
 
 
 view : Theme -> ViewHandler
 view =
-    SaveButton.view
+    Button.view
 
 
 themeSavedMsg : Msg
 themeSavedMsg =
-    SaveButton.dataSavedMsg
+    Button.dataSavedMsg
