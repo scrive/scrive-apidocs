@@ -1,4 +1,4 @@
-module Component.UserGroup.Tabs.Internal exposing (Config, Init, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, brandingOutMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, themeOutMsg, update, view)
+module Component.UserGroup.Tabs.Internal exposing (Config, Init, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, brandingOutMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, doneCreateThemeMsg, initialize, themeOutMsg, update, view)
 
 import Component.Branding.CreateTheme as CreateTheme
 import Component.Branding.Data exposing (BrandingSettings)
@@ -139,6 +139,10 @@ view ( state1, state2 ) =
 doneSaveBrandingMsg : Msg
 doneSaveBrandingMsg =
     Pair.FirstMsg BrandingPage.doneSaveBrandingMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.FirstMsg BrandingPage.doneCreateThemeMsg
 
 
 doneSaveThemeMsg : Msg

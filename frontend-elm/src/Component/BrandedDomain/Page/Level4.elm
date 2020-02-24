@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Page.Level4 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, clearMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, unMsg, unState, update, view)
+module Component.BrandedDomain.Page.Level4 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, clearMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, doneCreateThemeMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, unMsg, unState, update, view)
 
 import Component.BrandedDomain.Page.Level3 as Page
 import Compose.Util as Util
@@ -101,6 +101,10 @@ doneSaveThemeMsg =
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =
     Msg Page.doneDeleteThemeMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Msg Page.doneCreateThemeMsg
 
 
 initEmpty : ( State, Cmd Msg )

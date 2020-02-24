@@ -1,6 +1,5 @@
-module Component.BrandedDomain.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, settingsMsg, update, view)
+module Component.BrandedDomain.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, doneCreateThemeMsg, initialize, settingsMsg, update, view)
 
-import Component.BrandedDomain.Data exposing (ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage.Edit as EditBranding
 import Component.Branding.CreateTheme as CreateTheme
 import Component.Branding.Settings as Settings
@@ -111,6 +110,11 @@ doneSaveBrandingMsg =
         Pair.SecondMsg
             EditBranding.doneSaveBrandingMsg
 
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.FirstMsg <|
+        Pair.FirstMsg
+            CreateTheme.doneCreateThemeMsg
 
 settingsMsg : Settings.Msg -> Msg
 settingsMsg =

@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs exposing (Config, Msg(..), OutMsg, State(..), UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, unMsg, unState, update, view)
+module Component.BrandedDomain.Tabs exposing (Config, Msg(..), OutMsg, State(..), UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, doneCreateThemeMsg, initialize, unMsg, unState, update, view)
 
 import Component.BrandedDomain.Tabs.Internal as Internal
 import Compose.Util as Util
@@ -94,3 +94,7 @@ doneSaveThemeMsg =
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =
     Msg Internal.doneDeleteThemeMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Msg Internal.doneCreateThemeMsg

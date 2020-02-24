@@ -1,4 +1,4 @@
-module Component.UserGroup.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, settingsMsg, update, view)
+module Component.UserGroup.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneCreateThemeMsg, doneSaveBrandingMsg, initialize, settingsMsg, update, view)
 
 import Component.Branding.CreateTheme as CreateTheme
 import Component.Branding.Settings as Settings
@@ -113,6 +113,12 @@ doneSaveBrandingMsg =
         Pair.SecondMsg
             EditBranding.doneSaveBrandingMsg
 
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.FirstMsg <|
+        Pair.FirstMsg
+            CreateTheme.doneCreateThemeMsg
 
 settingsMsg : Settings.Msg -> Msg
 settingsMsg =

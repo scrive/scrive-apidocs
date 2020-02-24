@@ -1,6 +1,5 @@
 module Component.BrandedDomain.Tabs.BrandingPage.Edit exposing (Config, InConfig, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, update, view, viewPreview)
 
-import Component.BrandedDomain.Data exposing (ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage.Edit.BrandingFields as BrandingFields
 import Component.BrandedDomain.Tabs.BrandingPage.Edit.SaveButton as SaveButton
 import Component.Theme.Data exposing (Theme)

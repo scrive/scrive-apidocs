@@ -296,60 +296,62 @@ update msg1 state1 =
             ( state2, cmd3 )
 
         ThemeCreatedMsg res ->
-            let
-                ( state2, cmd1 ) =
-                    initialize
-                        { xtoken = state1.xtoken
-                        , userGroupId = state1.userGroupId
-                        }
+            case res of
+                Ok () ->
+                    let
+                        ( state2, cmd1 ) =
+                            initialize
+                                { xtoken = state1.xtoken
+                                , userGroupId = state1.userGroupId
+                                }
 
-                outMsg =
-                    case res of
-                        Ok () ->
-                            FlashMessage.SuccessMsg
-                                "Theme saved"
+                        cmd2 = Util.msgToCmd <| Left <| FlashMsg <|
+                            FlashMessage.SuccessMsg "Theme created"
+                    in
+                    ( state2, Cmd.batch [ Cmd.map Right cmd1, cmd2 ] )
 
-                        Err err ->
+                Err err ->
+                    let
+                        (state2, cmd1) = update
+                            (PageMsg Page.doneCreateThemeMsg)
+                            state1
+
+                        cmd2 = Util.msgToCmd <| Left <| FlashMsg <|
                             FlashMessage.ErrorMsg <|
-                                "Error saving theme: "
+                                "Error creating theme: "
                                     ++ Util.httpErrorToString err
-
-                cmd2 =
-                    Util.msgToCmd <| Left <| FlashMsg outMsg
-
-                cmd3 =
-                    Cmd.batch
-                        [ Cmd.map Right cmd1, cmd2 ]
-            in
-            ( state2, cmd3 )
+                    in
+                    (state2, Cmd.batch [ cmd1, cmd2 ])
 
         ThemeDeletedMsg res ->
-            let
-                ( state2, cmd1 ) =
-                    initialize
-                        { xtoken = state1.xtoken
-                        , userGroupId = state1.userGroupId
-                        }
+            case res of
+                Ok () ->
+                    let
+                        ( state2, cmd1 ) =
+                            initialize
+                                { xtoken = state1.xtoken
+                                , userGroupId = state1.userGroupId
+                                }
 
-                outMsg =
-                    case res of
-                        Ok () ->
-                            FlashMessage.SuccessMsg
-                                "Theme deleted"
+                        outMsg = FlashMsg <| FlashMessage.SuccessMsg "Theme deleted"
 
-                        Err err ->
+                        cmd2 =
+                            Util.msgToCmd <| Left outMsg
+                    in
+                    ( state2, Cmd.batch [ Cmd.map Right cmd1, cmd2 ] )
+
+                Err err ->
+                    let
+                        (state2, cmd1) = update
+                            (PageMsg Page.doneDeleteThemeMsg)
+                            state1
+
+                        cmd2 = Util.msgToCmd <| Left <| FlashMsg <|
                             FlashMessage.ErrorMsg <|
                                 "Error deleting theme: "
                                     ++ Util.httpErrorToString err
-
-                cmd2 =
-                    Util.msgToCmd <| Left <| FlashMsg outMsg
-
-                cmd3 =
-                    Cmd.batch
-                        [ Cmd.map Right cmd1, cmd2 ]
-            in
-            ( state2, cmd3 )
+                    in
+                    (state2, Cmd.batch [ cmd1, cmd2 ])
 
         BrandingSavedMsg res ->
             let
@@ -370,12 +372,11 @@ update msg1 state1 =
                                 "Error saving branding: "
                                     ++ Util.httpErrorToString err
 
-                cmd2 =
-                    Util.msgToCmd <| Left <| FlashMsg outMsg
-
                 cmd3 =
                     Cmd.batch
-                        [ Cmd.map Right cmd1, cmd2 ]
+                        [ Cmd.map Right cmd1
+                        , Util.msgToCmd <| Left <| FlashMsg outMsg
+                        ]
             in
             ( state2, cmd3 )
 

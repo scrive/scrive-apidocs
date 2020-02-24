@@ -1,4 +1,4 @@
-module Component.Branding.CreateTheme exposing (Config, Init, Msg, NewTheme, OutMsg, State, Theme, UpdateHandler, ViewHandler, initialize, update, view)
+module Component.Branding.CreateTheme exposing (Config, Init, Msg, NewTheme, OutMsg, State, Theme, UpdateHandler, ViewHandler, initialize, update, view, doneCreateThemeMsg)
 
 import Component.Input.Button as Button
 import Component.Input.Select as Select
@@ -144,3 +144,7 @@ view themes ( selectState, ( textState, buttonState ) ) =
         , textBody
         , buttonBody2
         ]
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.SecondMsg <| Pair.SecondMsg Button.enableMsg

@@ -6,8 +6,8 @@ import Component.Branding.DeleteTheme.Data as Data
 import Component.Theme.Data exposing (Theme)
 import Compose.Util as Util
 import Either exposing (Either(..))
-import Html exposing (Html, button, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, button, text, b, p)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 
 
@@ -73,8 +73,13 @@ view : State -> Html Msg
 view state =
     Modal.config CancelMsg
         |> Modal.h5 [] [ text "Confirm Theme Deletion" ]
-        |> Modal.body []
-            [ text "Are you sure you want to delete the theme?"
+        |> Modal.body [ style "text-align" "center" ]
+            [ p []
+                [ text "Are you sure you want to delete the following theme:" ]
+            , p [style "font-size" "1.2em"] <|
+                [ b []
+                    [ text state.theme.name ]
+                ]
             , Button.button
                 [ Button.danger
                 , Button.attrs

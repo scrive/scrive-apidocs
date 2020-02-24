@@ -1,4 +1,4 @@
-module Component.UserGroup.Page.Level1 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, update, view)
+module Component.UserGroup.Page.Level1 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneCreateThemeMsg, doneSaveThemeMsg, initialize, update, view)
 
 import Component.Branding.BrandingPage as BrandingPage
 import Component.UserGroup.Data exposing (ThemeSet)
@@ -78,6 +78,10 @@ view ( state1, state2 ) =
 doneSaveBrandingMsg : Msg
 doneSaveBrandingMsg =
     Pair.FirstMsg Sections.doneSaveBrandingMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.FirstMsg Sections.doneCreateThemeMsg
 
 
 doneSaveThemeMsg : Msg
