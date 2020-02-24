@@ -30,6 +30,11 @@
         version = "5.2.0";
       };
 
+      "elm/regex" = {
+        sha256 = "0lijsp50w7n1n57mjg6clpn9phly8vvs07h0qh2rqcs0f1jqvsa2";
+        version = "1.0.0";
+      };
+
       "elm/html" = {
         sha256 = "1n3gpzmpqqdsldys4ipgyl1zacn0kbpc3g4v3hdpiyfjlgh8bf3k";
         version = "1.0.0";
