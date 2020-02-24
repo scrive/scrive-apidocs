@@ -1,4 +1,4 @@
-module Component.Input.Button exposing (Config, Init, ButtonType (..), Msg(..), OutMsg(..), State, UpdateHandler, ViewHandler, enableMsg, disableMsg, initialize, update, view)
+module Component.Input.Button exposing (Config, Init, ButtonType (..), Msg(..), OutMsg(..), ButtonStatus (..), State, UpdateHandler, ViewHandler, enableMsg, disableMsg, initialize, update, view, viewOverride)
 
 import Bootstrap.Button as Button
 import Compose.Util as Util
@@ -9,6 +9,8 @@ import Html.Events exposing (onClick)
 
 
 type ButtonType = Ok | Danger
+
+type ButtonStatus = Enabled | Disabled
 
 type OutMsg data
     = ClickMsg data
@@ -26,7 +28,7 @@ type Msg data
 
 
 type alias State =
-    { isDisabled : Bool
+    { status : ButtonStatus
     , caption : String
     , buttonType : ButtonType
     }
@@ -48,7 +50,7 @@ type alias Init data =
 
 initialize : Init data
 initialize config =
-    ( { isDisabled = False
+    ( { status = Enabled
       , caption = config.caption
       , buttonType = config.buttonType
       }
@@ -59,12 +61,12 @@ update : UpdateHandler data
 update msg1 state1 =
     case msg1 of
         EnableMsg ->
-            ( { state1 | isDisabled = False }
+            ( { state1 | status = Enabled }
             , Cmd.none
             )
 
         DisableMsg ->
-            ( { state1 | isDisabled = True }
+            ( { state1 | status = Disabled }
             , Cmd.none
             )
 
@@ -75,7 +77,7 @@ update msg1 state1 =
                         Left <|
                             ClickMsg fields
             in
-            ( { state1 | isDisabled = True }
+            ( { state1 | status = Disabled }
             , cmd
             )
 
@@ -94,11 +96,15 @@ view data state =
             [ class "ml-sm-2"
             , onClick <|
                 ButtonClickedMsg data
-            , disabled state.isDisabled
+            , disabled <|
+                state.status == Disabled
             ]
         ]
         [ text state.caption ]
 
+viewOverride : data -> ButtonStatus -> ViewHandler data
+viewOverride data status state =
+    view data { state | status = status }
 
 enableMsg : Msg data
 enableMsg =

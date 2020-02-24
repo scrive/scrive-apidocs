@@ -7,7 +7,7 @@ import Compose.Handler as Handler
 import Compose.Pair as Pair
 import Either exposing (Either(..))
 import Html exposing (Html, div)
-
+import Regex
 
 type alias Config =
     ()
@@ -91,6 +91,12 @@ update =
             Button.update
 
 
+emptyString : String -> Bool
+emptyString = Regex.contains <|
+    Maybe.withDefault Regex.never <|
+            Regex.fromString "^\\s*$"
+
+
 view : List Theme -> ViewHandler
 view themes ( selectState, ( textState, buttonState ) ) =
     let
@@ -121,12 +127,16 @@ view themes ( selectState, ( textState, buttonState ) ) =
             Html.map (Pair.SecondMsg << Pair.FirstMsg) <|
                 TextField.view textState
 
-        buttonBody =
-            Html.map (Pair.SecondMsg << Pair.SecondMsg) <|
-                Button.view themeData buttonState
+        buttonBody1 =
+            if emptyString textState.value
+            then Button.viewOverride themeData Button.Disabled buttonState
+            else Button.view themeData buttonState
+
+        buttonBody2 =
+            Html.map (Pair.SecondMsg << Pair.SecondMsg) buttonBody1
     in
     div []
         [ selectBody
         , textBody
-        , buttonBody
+        , buttonBody2
         ]
