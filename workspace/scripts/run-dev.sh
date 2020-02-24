@@ -14,6 +14,6 @@ echo "KONTRAKCJA_WORKSPACE: $KONTRAKCJA_WORKSPACE"
 "$script_dir/run-services.sh" &
 sleep 5
 
-"$script_dir/run-servers.sh" &
+"$script_dir/run-servers.sh" "$@" &
 
 wait
