@@ -1,4 +1,4 @@
-module Component.UserGroup.Tabs exposing (Config, Msg(..), OutMsg, State(..), UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, doneSaveThemeMsg, doneDeleteThemeMsg, unMsg, unState, update, view)
+module Component.UserGroup.Tabs exposing (Config, Msg(..), OutMsg, State(..), UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, unMsg, unState, update, view)
 
 import Component.UserGroup.Tabs.Internal as Internal
 import Compose.Util as Util
@@ -89,6 +89,7 @@ doneSaveBrandingMsg =
 doneSaveThemeMsg : Msg
 doneSaveThemeMsg =
     Msg Internal.doneSaveThemeMsg
+
 
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =

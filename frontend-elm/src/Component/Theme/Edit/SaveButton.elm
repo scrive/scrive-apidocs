@@ -1,4 +1,4 @@
-module Component.Theme.Edit.SaveButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, initialize, doneSaveThemeMsg, update, view)
+module Component.Theme.Edit.SaveButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveThemeMsg, initialize, update, view)
 
 import Component.Input.Button as Button
 import Component.Theme.Data exposing (Theme)

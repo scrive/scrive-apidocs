@@ -1,12 +1,12 @@
-module Component.BrandedDomain.Page.Level1 exposing (Config, Init, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, doneSaveThemeMsg, doneDeleteThemeMsg, update, view)
+module Component.BrandedDomain.Page.Level1 exposing (Config, Init, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, update, view)
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
 import Component.BrandedDomain.Tabs as Tabs
 import Component.BrandedDomain.Tabs.Data as TabsData
 import Component.Branding.BrandingPage as BrandingPage
 import Component.Theme.Data exposing (Theme)
-import Compose.Pair as Pair
 import Compose.Handler as Handler
+import Compose.Pair as Pair
 import Either exposing (Either(..))
 import Html exposing (Html)
 
@@ -19,7 +19,8 @@ type alias Config =
     }
 
 
-type State = State (Pair.State Tabs.State BrandingPage.State)
+type State
+    = State (Pair.State Tabs.State BrandingPage.State)
 
 
 type alias Msg =
@@ -69,11 +70,13 @@ initialize =
                         }
                     }
 
-                (state, cmd) = inInit ( config2, () )
+                ( state, cmd ) =
+                    inInit ( config2, () )
             in
-            (State state, cmd)
+            ( State state, cmd )
     in
     init
+
 
 update : UpdateHandler
 update =
@@ -85,9 +88,10 @@ update =
     in
     \msg (State state1) ->
         let
-            (state2, cmd) = inUpdate msg state1
+            ( state2, cmd ) =
+                inUpdate msg state1
         in
-        (State state2, cmd)
+        ( State state2, cmd )
 
 
 view : ViewHandler
@@ -107,6 +111,7 @@ doneSaveBrandingMsg =
 doneSaveThemeMsg : Msg
 doneSaveThemeMsg =
     Pair.FirstMsg Tabs.doneSaveThemeMsg
+
 
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =

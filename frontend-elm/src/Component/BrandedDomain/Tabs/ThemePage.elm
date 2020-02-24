@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.ThemePage exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, initialize, stateToThemes, doneSaveThemeMsg, doneDeleteThemeMsg, update, view)
+module Component.BrandedDomain.Tabs.ThemePage exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveThemeMsg, initialize, stateToThemes, update, view)
 
 import Component.BrandedDomain.Tabs.ThemePage.BrandingPreview as Preview
 import Component.Branding.ThemePage as ThemePage
@@ -83,6 +83,7 @@ stateToThemes ( state, _ ) =
 doneSaveThemeMsg : Msg
 doneSaveThemeMsg =
     Pair.FirstMsg ThemeEdit.doneSaveThemeMsg
+
 
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =

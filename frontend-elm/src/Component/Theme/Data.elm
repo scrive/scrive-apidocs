@@ -1,4 +1,4 @@
-module Component.Theme.Data exposing (ColorPair, OutMsg (..), Theme, ThemeColors)
+module Component.Theme.Data exposing (ColorPair, OutMsg(..), Theme, ThemeColors)
 
 import Color exposing (Color)
 

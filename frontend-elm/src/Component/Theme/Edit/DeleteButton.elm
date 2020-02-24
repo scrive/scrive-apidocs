@@ -1,4 +1,4 @@
-module Component.Theme.Edit.DeleteButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, initialize, doneDeleteThemeMsg, update, view)
+module Component.Theme.Edit.DeleteButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, initialize, update, view)
 
 import Component.Input.Button as Button
 import Component.Theme.Data exposing (Theme)

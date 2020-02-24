@@ -1,4 +1,4 @@
-module Component.UserGroup.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, mapPageMsg, doneSaveThemeMsg, doneDeleteThemeMsg, update, view)
+module Component.UserGroup.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, mapPageMsg, update, view)
 
 import Component.Theme.Data exposing (Theme)
 import Component.UserGroup.Data exposing (Branding, ThemeSet)

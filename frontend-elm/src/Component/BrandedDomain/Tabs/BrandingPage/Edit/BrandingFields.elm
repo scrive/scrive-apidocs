@@ -111,6 +111,7 @@ stateToBrandingFields availableThemes ( state1, state2 ) =
     , brandingFields = settingsFields
     }
 
+
 stateToThemeSet : List Theme -> State -> Maybe ThemeSet
 stateToThemeSet availableThemes state =
     (stateToBrandingFields availableThemes state).mThemeSet

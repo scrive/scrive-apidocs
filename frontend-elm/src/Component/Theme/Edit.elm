@@ -1,10 +1,10 @@
-module Component.Theme.Edit exposing (Config, InConfig, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, currentTheme, initialize, stateToThemes, doneSaveThemeMsg, doneDeleteThemeMsg, update, view)
+module Component.Theme.Edit exposing (Config, InConfig, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, currentTheme, doneDeleteThemeMsg, doneSaveThemeMsg, initialize, stateToThemes, update, view)
 
-import Component.Input.Button exposing (OutMsg (..))
+import Component.Input.Button exposing (OutMsg(..))
 import Component.Theme.Data as Data exposing (Theme)
 import Component.Theme.Edit.CurrentTheme as CurrentTheme
-import Component.Theme.Edit.SaveButton as SaveButton
 import Component.Theme.Edit.DeleteButton as DeleteButton
+import Component.Theme.Edit.SaveButton as SaveButton
 import Component.Theme.Edit.SelectMenu as SelectMenu
 import Component.Theme.Single as Theme
 import Compose.Handler as Handler
@@ -21,27 +21,18 @@ type alias Config =
 
 
 type alias InConfig =
-    Pair.Config CurrentTheme.Config
-        (Pair.Config
-            SaveButton.Config
-            DeleteButton.Config)
+    Pair.Config CurrentTheme.Config (Pair.Config SaveButton.Config DeleteButton.Config)
 
 
 type alias State =
     { inState :
-        Pair.State CurrentTheme.State
-            (Pair.State
-                SaveButton.State
-                DeleteButton.State)
+        Pair.State CurrentTheme.State (Pair.State SaveButton.State DeleteButton.State)
     , currentThemes : List Theme
     }
 
 
 type alias Msg =
-    Pair.Msg CurrentTheme.Msg
-        (Pair.Msg
-            SaveButton.Msg
-            DeleteButton.Msg)
+    Pair.Msg CurrentTheme.Msg (Pair.Msg SaveButton.Msg DeleteButton.Msg)
 
 
 type alias OutMsg =
@@ -65,7 +56,8 @@ initialize =
     let
         inInit =
             Pair.liftInit
-                CurrentTheme.initialize <|
+                CurrentTheme.initialize
+            <|
                 Pair.liftInit
                     SaveButton.initialize
                     DeleteButton.initialize
@@ -74,9 +66,9 @@ initialize =
         init config1 =
             let
                 config2 =
-                    ( config1.inConfig, ((), ()) )
+                    ( config1.inConfig, ( (), () ) )
 
-                (state1, cmd1) =
+                ( state1, cmd1 ) =
                     inInit config2
 
                 state2 =
@@ -84,7 +76,7 @@ initialize =
                     , currentThemes = config1.currentThemes
                     }
             in
-            (state2, cmd1)
+            ( state2, cmd1 )
     in
     init
 
@@ -94,21 +86,28 @@ update =
     let
         inUpdate =
             Pair.liftUpdate
-                (Handler.outerMapUpdate never CurrentTheme.update) <|
+                (Handler.outerMapUpdate never CurrentTheme.update)
+            <|
                 Pair.liftUpdate
                     (Handler.outerMapUpdate
                         (\(ClickMsg theme) -> Data.SaveThemeMsg theme)
-                        SaveButton.update)
+                        SaveButton.update
+                    )
                     (Handler.outerMapUpdate
                         (\(ClickMsg theme) -> Data.DeleteThemeMsg theme)
-                        DeleteButton.update)
+                        DeleteButton.update
+                    )
     in
     \msg state1 ->
         let
-            (state2, cmd1) = inUpdate msg state1.inState
-            state3 = { state1 | inState = state2 }
+            ( state2, cmd1 ) =
+                inUpdate msg state1.inState
+
+            state3 =
+                { state1 | inState = state2 }
         in
-        (state3, cmd1)
+        ( state3, cmd1 )
+
 
 themeInThemeSet : Theme -> List Theme -> Bool
 themeInThemeSet theme themes =
@@ -116,11 +115,15 @@ themeInThemeSet theme themes =
         (\theme2 -> theme2.id == theme.id)
         themes
 
+
 view : ViewHandler
 view state =
     let
-        currentThemes = state.currentThemes
-        ( state1, (state2, state3) ) = state.inState
+        currentThemes =
+            state.currentThemes
+
+        ( state1, ( state2, state3 ) ) =
+            state.inState
 
         mState3 =
             CurrentTheme.currentThemeState state1
@@ -140,9 +143,11 @@ view state =
                             Html.map (Pair.SecondMsg << Pair.SecondMsg) <|
                                 DeleteButton.view theme state3
                     in
-                    if themeInThemeSet theme currentThemes
-                    then [ saveButton ]
-                    else [ saveButton, deleteButton ]
+                    if themeInThemeSet theme currentThemes then
+                        [ saveButton ]
+
+                    else
+                        [ saveButton, deleteButton ]
                 )
                 mTheme
 
@@ -171,19 +176,26 @@ view state =
 
 currentTheme : State -> Maybe Theme
 currentTheme state1 =
-    let ( state2, _ )  = state1.inState
+    let
+        ( state2, _ ) =
+            state1.inState
     in
     CurrentTheme.currentTheme state2
 
+
 stateToThemes : State -> List Theme
 stateToThemes state1 =
-    let ( state2, _ )  = state1.inState
+    let
+        ( state2, _ ) =
+            state1.inState
     in
     CurrentTheme.stateToThemes state2
+
 
 doneSaveThemeMsg : Msg
 doneSaveThemeMsg =
     Pair.SecondMsg <| Pair.FirstMsg SaveButton.doneSaveThemeMsg
+
 
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =

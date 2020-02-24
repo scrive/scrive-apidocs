@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, doneDeleteThemeMsg, initialize, mapPageMsg, doneSaveThemeMsg, update, view)
+module Component.BrandedDomain.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, mapPageMsg, update, view)
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
 import Component.BrandedDomain.Page.Level1 as Base
@@ -88,11 +88,12 @@ mapPageMsg msg1 =
         Left (Base.BaseOutMsg msg2) ->
             Right <| HandleBaseOutMsg msg2
 
-        Left (Base.GoBack) ->
+        Left Base.GoBack ->
             Left <| GoBack
 
         Right msg2 ->
             Right <| PageMsg msg2
+
 
 update : UpdateHandler
 update msg1 state1 =
@@ -124,7 +125,6 @@ update msg1 state1 =
                     in
                     ( state1, cmd1 )
 
-
                 Tabs.DeleteThemeMsg theme ->
                     let
                         brandingId =
@@ -136,7 +136,6 @@ update msg1 state1 =
                                     DeleteThemeMsg brandingId theme
                     in
                     ( state1, cmd1 )
-
 
                 Tabs.SaveBrandingMsg fields ->
                     let
@@ -184,7 +183,6 @@ update msg1 state1 =
                         Nothing ->
                             ( state1, Cmd.none )
 
-
                 Tabs.CreateThemeMsg newTheme ->
                     let
                         newTheme2 =
@@ -215,6 +213,7 @@ doneSaveThemeMsg =
 doneSaveBrandingMsg : Msg
 doneSaveBrandingMsg =
     PageMsg Base.doneSaveBrandingMsg
+
 
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =

@@ -9,6 +9,7 @@ import Either exposing (Either(..))
 import Html exposing (Html, div)
 import Regex
 
+
 type alias Config =
     ()
 
@@ -92,8 +93,9 @@ update =
 
 
 emptyString : String -> Bool
-emptyString = Regex.contains <|
-    Maybe.withDefault Regex.never <|
+emptyString =
+    Regex.contains <|
+        Maybe.withDefault Regex.never <|
             Regex.fromString "^\\s*$"
 
 
@@ -128,9 +130,11 @@ view themes ( selectState, ( textState, buttonState ) ) =
                 TextField.view textState
 
         buttonBody1 =
-            if emptyString textState.value
-            then Button.viewOverride themeData Button.Disabled buttonState
-            else Button.view themeData buttonState
+            if emptyString textState.value then
+                Button.viewOverride themeData Button.Disabled buttonState
+
+            else
+                Button.view themeData buttonState
 
         buttonBody2 =
             Html.map (Pair.SecondMsg << Pair.SecondMsg) buttonBody1

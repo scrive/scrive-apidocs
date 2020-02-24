@@ -2,10 +2,10 @@ module Component.BrandedDomain.Page exposing (Config, Init, Msg(..), OutMsg, Sta
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
 import Component.BrandedDomain.Json as BrandingJson
-import Component.BrandedDomain.Page.Level4 as Page
 import Component.BrandedDomain.Page.Level2 as SuccessPage exposing (NewTheme)
-import Component.Branding.DeleteTheme.Optional as DeleteTheme
+import Component.BrandedDomain.Page.Level4 as Page
 import Component.Branding.DeleteTheme.Data as DeleteThemeData
+import Component.Branding.DeleteTheme.Optional as DeleteTheme
 import Component.Global.Msg as Global exposing (GlobalMsg(..))
 import Component.Theme.Data exposing (Theme)
 import Component.Theme.Json as ThemeJson
@@ -136,12 +136,16 @@ updatePageError error1 state =
     in
     updatePage msg2 state
 
+
 mapDeleteThemeMsg : Either DeleteTheme.OutMsg DeleteTheme.Msg -> Either OutMsg Msg
-mapDeleteThemeMsg msg1 = case msg1 of
-    Left msg2 ->
-        Right <| DeleteThemeOutMsg msg2
-    Right msg2 ->
-        Right <| DeleteThemeMsg msg2
+mapDeleteThemeMsg msg1 =
+    case msg1 of
+        Left msg2 ->
+            Right <| DeleteThemeOutMsg msg2
+
+        Right msg2 ->
+            Right <| DeleteThemeMsg msg2
+
 
 update : UpdateHandler
 update msg1 state1 =
@@ -151,26 +155,30 @@ update msg1 state1 =
 
         PageOutMsg msg2 ->
             let
-                (state2, cmd1) =
+                ( state2, cmd1 ) =
                     handlePageOutMsg msg2 state1
             in
             ( state2, cmd1 )
 
         DeleteThemeMsg msg2 ->
             let
-                (state2, cmd1) =
+                ( state2, cmd1 ) =
                     DeleteTheme.update msg2 state1.deleteThemeState
 
-                state3 = { state1 | deleteThemeState = state2 }
+                state3 =
+                    { state1 | deleteThemeState = state2 }
             in
-            (state3, Cmd.map mapDeleteThemeMsg cmd1)
+            ( state3, Cmd.map mapDeleteThemeMsg cmd1 )
 
         DeleteThemeOutMsg msg2 ->
             case msg2 of
                 DeleteThemeData.ConfirmDeleteMsg theme ->
                     ( state1
-                    , Cmd.map Right <| deleteThemeCmd
-                        state1.xtoken state1.brandedDomainId theme
+                    , Cmd.map Right <|
+                        deleteThemeCmd
+                            state1.xtoken
+                            state1.brandedDomainId
+                            theme
                     )
 
                 DeleteThemeData.CancelDeleteMsg ->
@@ -350,8 +358,9 @@ defaultView =
 view : ViewHandler
 view state =
     let
-        mPage1 = Maybe.map (Html.map PageMsg) <|
-            Page.view state.pageState
+        mPage1 =
+            Maybe.map (Html.map PageMsg) <|
+                Page.view state.pageState
 
         page2 =
             Maybe.withDefault
@@ -366,7 +375,6 @@ view state =
             Maybe.withDefault
                 (div [] [])
                 mDeleteThemeModal1
-
     in
     div []
         [ page2
@@ -472,6 +480,7 @@ saveThemeCmd xtoken brandedDomainId theme =
     in
     cmd1
 
+
 deleteThemeCmd : String -> String -> Theme -> Cmd Msg
 deleteThemeCmd xtoken brandedDomainId theme =
     let
@@ -530,7 +539,7 @@ createThemeCmd xtoken newTheme =
     cmd1
 
 
-handlePageOutMsg : Page.OutMsg -> State -> (State, Cmd (Either OutMsg Msg))
+handlePageOutMsg : Page.OutMsg -> State -> ( State, Cmd (Either OutMsg Msg) )
 handlePageOutMsg outMsg state =
     case outMsg of
         SuccessPage.SaveBrandingMsg branding ->
@@ -547,11 +556,13 @@ handlePageOutMsg outMsg state =
 
         SuccessPage.DeleteThemeMsg _ theme ->
             let
-                (state2, cmd1) = DeleteTheme.initialize <| Just theme
+                ( state2, cmd1 ) =
+                    DeleteTheme.initialize <| Just theme
 
-                state3 = { state | deleteThemeState = state2 }
+                state3 =
+                    { state | deleteThemeState = state2 }
             in
-            (state3, Cmd.map (Right << DeleteThemeMsg) cmd1)
+            ( state3, Cmd.map (Right << DeleteThemeMsg) cmd1 )
 
         SuccessPage.CreateThemeMsg newTheme ->
             ( state
@@ -563,6 +574,7 @@ handlePageOutMsg outMsg state =
             ( state
             , Util.msgToCmd <| Left Global.GoToBrandedDomainsTabMsg
             )
+
 
 pageMsgToMsg : Either Page.OutMsg Page.Msg -> Either OutMsg Msg
 pageMsgToMsg msg1 =

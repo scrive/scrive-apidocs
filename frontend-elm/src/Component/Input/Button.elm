@@ -1,4 +1,4 @@
-module Component.Input.Button exposing (Config, Init, ButtonType (..), Msg(..), OutMsg(..), ButtonStatus (..), State, UpdateHandler, ViewHandler, enableMsg, disableMsg, initialize, update, view, viewOverride)
+module Component.Input.Button exposing (ButtonStatus(..), ButtonType(..), Config, Init, Msg(..), OutMsg(..), State, UpdateHandler, ViewHandler, disableMsg, enableMsg, initialize, update, view, viewOverride)
 
 import Bootstrap.Button as Button
 import Compose.Util as Util
@@ -8,9 +8,15 @@ import Html.Attributes exposing (class, disabled)
 import Html.Events exposing (onClick)
 
 
-type ButtonType = Ok | Danger
+type ButtonType
+    = Ok
+    | Danger
 
-type ButtonStatus = Enabled | Disabled
+
+type ButtonStatus
+    = Enabled
+    | Disabled
+
 
 type OutMsg data
     = ClickMsg data
@@ -20,6 +26,7 @@ type alias Config =
     { caption : String
     , buttonType : ButtonType
     }
+
 
 type Msg data
     = EnableMsg
@@ -54,7 +61,8 @@ initialize config =
       , caption = config.caption
       , buttonType = config.buttonType
       }
-    , Cmd.none )
+    , Cmd.none
+    )
 
 
 update : UpdateHandler data
@@ -85,11 +93,14 @@ update msg1 state1 =
 view : data -> ViewHandler data
 view data state =
     let
-        buttonClass = case state.buttonType of
-            Ok -> Button.success
-            Danger -> Button.danger
-    in
+        buttonClass =
+            case state.buttonType of
+                Ok ->
+                    Button.success
 
+                Danger ->
+                    Button.danger
+    in
     Button.button
         [ buttonClass
         , Button.attrs
@@ -97,18 +108,23 @@ view data state =
             , onClick <|
                 ButtonClickedMsg data
             , disabled <|
-                state.status == Disabled
+                state.status
+                    == Disabled
             ]
         ]
         [ text state.caption ]
+
 
 viewOverride : data -> ButtonStatus -> ViewHandler data
 viewOverride data status state =
     view data { state | status = status }
 
+
 enableMsg : Msg data
 enableMsg =
     EnableMsg
 
+
 disableMsg : Msg data
-disableMsg = DisableMsg
+disableMsg =
+    DisableMsg

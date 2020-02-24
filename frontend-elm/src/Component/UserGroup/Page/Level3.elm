@@ -1,4 +1,4 @@
-module Component.UserGroup.Page.Level3 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, clearMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, doneSaveThemeMsg, doneDeleteThemeMsg, update, view)
+module Component.UserGroup.Page.Level3 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, clearMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, update, view)
 
 import Component.Error.Fail as Fail
 import Component.UserGroup.Page.Level2 as Page
@@ -92,6 +92,7 @@ doneSaveThemeMsg =
 doneDeleteThemeMsg : Msg
 doneDeleteThemeMsg =
     Loader.inRightMsg Page.doneDeleteThemeMsg
+
 
 initEmpty : ( State, Cmd Msg )
 initEmpty =
