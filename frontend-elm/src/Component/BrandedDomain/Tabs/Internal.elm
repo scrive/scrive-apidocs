@@ -79,11 +79,14 @@ initialize =
                 availableThemes =
                     config1.availableThemes
 
+                currentThemeSet =
+                    config1.currentThemeSet
+
                 config2 : BrandingPage.Config
                 config2 =
                     { themesConfig =
                         { mDefaultThemes = config1.mDefaultThemeSet
-                        , currentThemes = config1.currentThemeSet
+                        , currentThemes = currentThemeSet
                         , availableThemes = availableThemes
                         }
                     , brandingInfo = config1.brandingInfo
@@ -91,8 +94,16 @@ initialize =
 
                 config3 : ThemePage.Config
                 config3 =
-                    { availableThemes = availableThemes
-                    , initialThemeIndex = Just 0
+                    { currentThemes =
+                        [ currentThemeSet.emailTheme
+                        , currentThemeSet.signViewTheme
+                        , currentThemeSet.serviceTheme
+                        , currentThemeSet.loginTheme
+                        ]
+                    , inConfig =
+                        { availableThemes = availableThemes
+                        , initialThemeIndex = Just 0
+                        }
                     }
             in
             inInit ( config2, config3 )
@@ -110,12 +121,12 @@ update =
 view : ViewHandler
 view ( state1, state2 ) =
     let
+        themes =
+            ThemePage.stateToThemes state2
+
         themeBody =
             Html.map Pair.SecondMsg <|
                 ThemePage.view state2
-
-        themes =
-            ThemePage.stateToThemes state2
 
         brandingBody =
             Html.map Pair.FirstMsg <|

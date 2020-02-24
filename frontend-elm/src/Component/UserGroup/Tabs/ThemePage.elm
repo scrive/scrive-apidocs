@@ -79,7 +79,6 @@ stateToThemes : State -> List Theme
 stateToThemes ( state, _ ) =
     ThemeEdit.stateToThemes state
 
-
 themeSavedMsg : Msg
 themeSavedMsg =
     Pair.FirstMsg ThemeEdit.themeSavedMsg

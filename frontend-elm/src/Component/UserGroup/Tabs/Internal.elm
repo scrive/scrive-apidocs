@@ -82,11 +82,13 @@ initialize =
             availableThemes =
                 config1.availableThemes
 
+            currentThemeSet = config1.currentThemeSet
+
             config2 : BrandingPage.Config
             config2 =
                 { themesConfig =
                     { mDefaultThemes = Just config1.defaultThemeSet
-                    , currentThemes = config1.currentThemeSet
+                    , currentThemes = currentThemeSet
                     , availableThemes = availableThemes
                     }
                 , commonFields = config1.brandingSettings
@@ -94,8 +96,15 @@ initialize =
 
             config3 : ThemePage.Config
             config3 =
-                { availableThemes = availableThemes
-                , initialThemeIndex = Just 0
+                { currentThemes =
+                    [ currentThemeSet.emailTheme
+                    , currentThemeSet.signViewTheme
+                    , currentThemeSet.serviceTheme
+                    ]
+                , inConfig =
+                    { availableThemes = availableThemes
+                    , initialThemeIndex = Just 0
+                    }
                 }
         in
         inInit ( config2, config3 )

@@ -11,10 +11,13 @@ import Compose.Handler as Handler
 import Compose.Pair as Pair
 import Either exposing (Either(..))
 import Html exposing (Html, div)
+import List.Extra as List
 
 
 type alias Config =
-    CurrentTheme.Config
+    { inConfig : CurrentTheme.Config
+    , currentThemes : List Theme
+    }
 
 
 type alias InConfig =
@@ -25,10 +28,13 @@ type alias InConfig =
 
 
 type alias State =
-    Pair.State CurrentTheme.State
-        (Pair.State
-            SaveButton.State
-            DeleteButton.State)
+    { inState :
+        Pair.State CurrentTheme.State
+            (Pair.State
+                SaveButton.State
+                DeleteButton.State)
+    , currentThemes : List Theme
+    }
 
 
 type alias Msg =
@@ -63,31 +69,59 @@ initialize =
                 Pair.liftInit
                     SaveButton.initialize
                     DeleteButton.initialize
+
+        init : Init
+        init config1 =
+            let
+                config2 =
+                    ( config1.inConfig, ((), ()) )
+
+                (state1, cmd1) =
+                    inInit config2
+
+                state2 =
+                    { inState = state1
+                    , currentThemes = config1.currentThemes
+                    }
+            in
+            (state2, cmd1)
     in
-    \config1 ->
-        let
-            config2 =
-                ( config1, ((), ()) )
-        in
-        inInit config2
+    init
 
 
 update : UpdateHandler
 update =
-    Pair.liftUpdate
-        (Handler.outerMapUpdate never CurrentTheme.update) <|
-        Pair.liftUpdate
-            (Handler.outerMapUpdate
-                (\(ClickMsg theme) -> Data.SaveThemeMsg theme)
-                SaveButton.update)
-            (Handler.outerMapUpdate
-                (\(ClickMsg theme) -> Data.DeleteThemeMsg theme)
-                DeleteButton.update)
+    let
+        inUpdate =
+            Pair.liftUpdate
+                (Handler.outerMapUpdate never CurrentTheme.update) <|
+                Pair.liftUpdate
+                    (Handler.outerMapUpdate
+                        (\(ClickMsg theme) -> Data.SaveThemeMsg theme)
+                        SaveButton.update)
+                    (Handler.outerMapUpdate
+                        (\(ClickMsg theme) -> Data.DeleteThemeMsg theme)
+                        DeleteButton.update)
+    in
+    \msg state1 ->
+        let
+            (state2, cmd1) = inUpdate msg state1.inState
+            state3 = { state1 | inState = state2 }
+        in
+        (state3, cmd1)
 
+themeInThemeSet : Theme -> List Theme -> Bool
+themeInThemeSet theme themes =
+    List.any
+        (\theme2 -> theme2.id == theme.id)
+        themes
 
 view : ViewHandler
-view ( state1, (state2, state3) ) =
+view state =
     let
+        currentThemes = state.currentThemes
+        ( state1, (state2, state3) ) = state.inState
+
         mState3 =
             CurrentTheme.currentThemeState state1
 
@@ -97,11 +131,18 @@ view ( state1, (state2, state3) ) =
         mButtonBody =
             Maybe.map
                 (\theme ->
-                    [ Html.map (Pair.SecondMsg << Pair.FirstMsg) <|
-                        SaveButton.view theme state2
-                    , Html.map (Pair.SecondMsg << Pair.SecondMsg) <|
-                        DeleteButton.view theme state3
-                    ]
+                    let
+                        saveButton =
+                            Html.map (Pair.SecondMsg << Pair.FirstMsg) <|
+                                SaveButton.view theme state2
+
+                        deleteButton =
+                            Html.map (Pair.SecondMsg << Pair.SecondMsg) <|
+                                DeleteButton.view theme state3
+                    in
+                    if themeInThemeSet theme currentThemes
+                    then [ saveButton ]
+                    else [ saveButton, deleteButton ]
                 )
                 mTheme
 
@@ -129,14 +170,16 @@ view ( state1, (state2, state3) ) =
 
 
 currentTheme : State -> Maybe Theme
-currentTheme ( state, _ ) =
-    CurrentTheme.currentTheme state
-
+currentTheme state1 =
+    let ( state2, _ )  = state1.inState
+    in
+    CurrentTheme.currentTheme state2
 
 stateToThemes : State -> List Theme
-stateToThemes ( state, _ ) =
-    CurrentTheme.stateToThemes state
-
+stateToThemes state1 =
+    let ( state2, _ )  = state1.inState
+    in
+    CurrentTheme.stateToThemes state2
 
 themeSavedMsg : Msg
 themeSavedMsg =

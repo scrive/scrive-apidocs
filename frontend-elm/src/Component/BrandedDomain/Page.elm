@@ -313,9 +313,10 @@ update msg1 state1 =
         BrandingSavedMsg res ->
             let
                 ( state2, cmd1 ) =
-                    update
-                        (PageMsg Page.brandingSavedMsg)
-                        state1
+                    initialize
+                        { xtoken = state1.xtoken
+                        , brandedDomainId = state1.brandedDomainId
+                        }
 
                 outMsg =
                     case res of
@@ -333,7 +334,7 @@ update msg1 state1 =
 
                 cmd3 =
                     Cmd.batch
-                        [ cmd1, cmd2 ]
+                        [ Cmd.map Right cmd1, cmd2 ]
             in
             ( state2, cmd3 )
 
@@ -542,7 +543,7 @@ handlePageOutMsg outMsg state =
                 saveThemeCmd state.xtoken brandedDomainId theme
             )
 
-        SuccessPage.DeleteThemeMsg brandedDomainId theme ->
+        SuccessPage.DeleteThemeMsg _ theme ->
             let
                 (state2, cmd1) = DeleteTheme.initialize <| Just theme
 
