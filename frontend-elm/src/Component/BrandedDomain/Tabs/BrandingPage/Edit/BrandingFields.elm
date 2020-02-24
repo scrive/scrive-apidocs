@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.BrandingPage.Edit.BrandingFields exposing (BrandingFields, Config, InConfig, Msg, OutMsg, State, UpdateHandler, ViewHandler, initialize, stateToBrandingFields, stateToThemeSet, update, view, viewPreview)
+module Component.BrandedDomain.Tabs.BrandingPage.Edit.BrandingFields exposing (BrandingFields, Config, InConfig, Msg, OutMsg, State, UpdateHandler, ViewHandler, initialize, stateToBrandingFields, update, view, viewPreview)
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage.Edit.BrandingFields.SettingsFields2 as SettingsFields exposing (SettingsFields)
@@ -110,8 +110,3 @@ stateToBrandingFields availableThemes ( state1, state2 ) =
     { mThemeSet = mThemeSet
     , brandingFields = settingsFields
     }
-
-
-stateToThemeSet : List Theme -> State -> Maybe ThemeSet
-stateToThemeSet availableThemes state =
-    (stateToBrandingFields availableThemes state).mThemeSet

@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.BrandingPage.Edit exposing (Config, InConfig, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, stateToThemeSet, update, view, viewPreview)
+module Component.BrandedDomain.Tabs.BrandingPage.Edit exposing (Config, InConfig, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, update, view, viewPreview)
 
 import Component.BrandedDomain.Data exposing (ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage.Edit.BrandingFields as BrandingFields
@@ -98,8 +98,3 @@ doneSaveBrandingMsg =
 viewPreview : List Theme -> State -> List ( String, Html Never )
 viewPreview themes ( state1, _ ) =
     BrandingFields.viewPreview themes state1
-
-
-stateToThemeSet : List Theme -> State -> Maybe ThemeSet
-stateToThemeSet themes ( state, _ ) =
-    BrandingFields.stateToThemeSet themes state

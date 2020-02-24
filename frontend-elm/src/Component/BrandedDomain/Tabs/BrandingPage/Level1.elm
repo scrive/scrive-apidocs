@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, settingsMsg, stateToThemeSet, update, view)
+module Component.BrandedDomain.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, settingsMsg, update, view)
 
 import Component.BrandedDomain.Data exposing (ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage.Edit as EditBranding
@@ -115,8 +115,3 @@ doneSaveBrandingMsg =
 settingsMsg : Settings.Msg -> Msg
 settingsMsg =
     Pair.SecondMsg
-
-
-stateToThemeSet : List Theme -> State -> Maybe ThemeSet
-stateToThemeSet themes ( ( _, state ), _ ) =
-    EditBranding.stateToThemeSet themes state
