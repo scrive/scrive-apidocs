@@ -1,4 +1,4 @@
-module Component.Theme.Edit exposing (Config, InConfig, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, currentTheme, initialize, stateToThemes, themeSavedMsg, update, view)
+module Component.Theme.Edit exposing (Config, InConfig, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, currentTheme, initialize, stateToThemes, doneSaveThemeMsg, doneDeleteThemeMsg, update, view)
 
 import Component.Input.Button exposing (OutMsg (..))
 import Component.Theme.Data as Data exposing (Theme)
@@ -181,6 +181,10 @@ stateToThemes state1 =
     in
     CurrentTheme.stateToThemes state2
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    Pair.SecondMsg <| Pair.FirstMsg SaveButton.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    Pair.SecondMsg <| Pair.FirstMsg SaveButton.doneSaveThemeMsg
+
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    Pair.SecondMsg <| Pair.SecondMsg DeleteButton.doneDeleteThemeMsg

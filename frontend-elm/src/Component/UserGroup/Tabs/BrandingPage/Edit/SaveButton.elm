@@ -1,4 +1,4 @@
-module Component.UserGroup.Tabs.BrandingPage.Edit.SaveButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, update, view)
+module Component.UserGroup.Tabs.BrandingPage.Edit.SaveButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, update, view)
 
 import Component.Input.Button as Button
 import Component.UserGroup.Data exposing (BrandingFields)
@@ -52,6 +52,6 @@ view =
     Button.view
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    Button.dataSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    Button.enableMsg

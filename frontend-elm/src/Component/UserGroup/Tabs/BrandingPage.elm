@@ -1,4 +1,4 @@
-module Component.UserGroup.Tabs.BrandingPage exposing (Config, Init, Msg(..), OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapMessage, messagePos, themeFieldPos, update, view)
+module Component.UserGroup.Tabs.BrandingPage exposing (Config, Init, Msg(..), OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, mapMessage, messagePos, themeFieldPos, update, view)
 
 import Component.Branding.Settings as Settings
 import Component.Input.Button as Button
@@ -118,6 +118,6 @@ view availableThemes state =
         Base.view availableThemes state
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    BaseMsg Base.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    BaseMsg Base.doneSaveBrandingMsg

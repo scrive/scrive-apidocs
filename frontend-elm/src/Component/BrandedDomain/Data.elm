@@ -3,7 +3,6 @@ module Component.BrandedDomain.Data exposing (ActionColors, Branding, Participan
 import Color exposing (Color)
 import Component.Theme.Data exposing (Theme)
 
-
 type alias ThemeSet =
     { emailTheme : Theme
     , signViewTheme : Theme

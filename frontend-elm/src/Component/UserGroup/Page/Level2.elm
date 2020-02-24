@@ -1,4 +1,4 @@
-module Component.UserGroup.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapPageMsg, themeSavedMsg, update, view)
+module Component.UserGroup.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, mapPageMsg, doneSaveThemeMsg, doneDeleteThemeMsg, update, view)
 
 import Component.Theme.Data exposing (Theme)
 import Component.UserGroup.Data exposing (Branding, ThemeSet)
@@ -199,11 +199,16 @@ view state =
         Page.view state.inState
 
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    PageMsg Page.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    PageMsg Page.doneSaveThemeMsg
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    PageMsg Page.brandingSavedMsg
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    PageMsg Page.doneDeleteThemeMsg
+
+
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    PageMsg Page.doneSaveBrandingMsg

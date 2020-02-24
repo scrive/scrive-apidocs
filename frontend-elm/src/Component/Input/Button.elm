@@ -1,4 +1,4 @@
-module Component.Input.Button exposing (Config, Init, ButtonType (..), Msg(..), OutMsg(..), State, UpdateHandler, ViewHandler, dataSavedMsg, initialize, update, view)
+module Component.Input.Button exposing (Config, Init, ButtonType (..), Msg(..), OutMsg(..), State, UpdateHandler, ViewHandler, enableMsg, disableMsg, initialize, update, view)
 
 import Bootstrap.Button as Button
 import Compose.Util as Util
@@ -20,8 +20,9 @@ type alias Config =
     }
 
 type Msg data
-    = DataSavedMsg
-    | SaveButtonClickedMsg data
+    = EnableMsg
+    | DisableMsg
+    | ButtonClickedMsg data
 
 
 type alias State =
@@ -57,12 +58,17 @@ initialize config =
 update : UpdateHandler data
 update msg1 state1 =
     case msg1 of
-        DataSavedMsg ->
+        EnableMsg ->
             ( { state1 | isDisabled = False }
             , Cmd.none
             )
 
-        SaveButtonClickedMsg fields ->
+        DisableMsg ->
+            ( { state1 | isDisabled = True }
+            , Cmd.none
+            )
+
+        ButtonClickedMsg fields ->
             let
                 cmd =
                     Util.msgToCmd <|
@@ -87,13 +93,16 @@ view data state =
         , Button.attrs
             [ class "ml-sm-2"
             , onClick <|
-                SaveButtonClickedMsg data
+                ButtonClickedMsg data
             , disabled state.isDisabled
             ]
         ]
         [ text state.caption ]
 
 
-dataSavedMsg : Msg data
-dataSavedMsg =
-    DataSavedMsg
+enableMsg : Msg data
+enableMsg =
+    EnableMsg
+
+disableMsg : Msg data
+disableMsg = DisableMsg

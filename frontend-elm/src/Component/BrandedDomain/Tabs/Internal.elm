@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.Internal exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingOutMsg, brandingSavedMsg, initialize, themeOutMsg, themeSavedMsg, update, view)
+module Component.BrandedDomain.Tabs.Internal exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingOutMsg, doneSaveBrandingMsg, doneDeleteThemeMsg, initialize, themeOutMsg, doneSaveThemeMsg, update, view)
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage as BrandingPage
@@ -135,11 +135,15 @@ view ( state1, state2 ) =
     ( brandingBody, themeBody )
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    Pair.FirstMsg BrandingPage.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    Pair.FirstMsg BrandingPage.doneSaveBrandingMsg
 
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    Pair.SecondMsg ThemePage.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    Pair.SecondMsg ThemePage.doneSaveThemeMsg
+
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    Pair.SecondMsg ThemePage.doneDeleteThemeMsg

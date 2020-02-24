@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.BrandingPage exposing (Config, Init, Msg(..), OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapMessage, themeFieldPos, update, view, stateToThemeSet)
+module Component.BrandedDomain.Tabs.BrandingPage exposing (Config, Init, Msg(..), OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, mapMessage, themeFieldPos, update, view, stateToThemeSet)
 
 import Component.BrandedDomain.Data exposing (ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage.Data as Data
@@ -112,9 +112,9 @@ view availableThemes state =
         Base.view availableThemes state
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    BaseMsg Base.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    BaseMsg Base.doneSaveBrandingMsg
 
 stateToThemeSet : List Theme -> State -> Maybe ThemeSet
 stateToThemeSet = Base.stateToThemeSet

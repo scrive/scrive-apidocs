@@ -27,9 +27,9 @@ type alias Config =
 type alias State =
     { xtoken : String
     , pageState : Page.State
+    , deleteThemeState : DeleteTheme.State
     , brandedDomainId : String
     , brandingInfo : Maybe Branding
-    , deleteThemeState : DeleteTheme.State
     , availableThemes : Maybe (List Theme)
     }
 
@@ -174,7 +174,9 @@ update msg1 state1 =
                     )
 
                 DeleteThemeData.CancelDeleteMsg ->
-                    (state1, Cmd.none)
+                    update
+                        (PageMsg Page.doneDeleteThemeMsg)
+                        state1
 
         SetBrandedDomainId brandedDomainId ->
             let
@@ -231,7 +233,7 @@ update msg1 state1 =
             let
                 ( state2, cmd1 ) =
                     update
-                        (PageMsg Page.themeSavedMsg)
+                        (PageMsg Page.doneSaveThemeMsg)
                         state1
 
                 outMsg =
