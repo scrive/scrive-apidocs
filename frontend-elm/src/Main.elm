@@ -15,6 +15,8 @@ import Dict exposing (Dict)
 import FlashMessage
 import Html exposing (Html, br, div, footer, h1, header, img, text)
 import Html.Attributes exposing (class, href, src, width)
+import Html.Events exposing (onClick)
+import Http
 import Json.Decode as JD exposing (Decoder, Value)
 import Json.Decode.Pipeline as JDP
 import List as L
@@ -23,6 +25,7 @@ import Monocle.Optional exposing (Optional)
 import Url exposing (Url)
 import Url.Builder as UB
 import Url.Parser as UP exposing ((</>))
+import Util.Http as Util
 import Utils exposing (..)
 
 
@@ -81,6 +84,8 @@ type Msg
     | FlashMessageMsg FlashMessage.Msg
     | SetPageUrl PageUrl
     | SetPageUrlFromModel
+    | Logout
+    | OnLoggedOut (Result Http.Error ())
 
 
 init : Value -> Url -> Navigation.Key -> ( Model, Cmd Msg )
@@ -398,6 +403,24 @@ update msg model =
             in
             ( model, Navigation.pushUrl model.navKey newUrl )
 
+        Logout ->
+            ( model, logoutCmd )
+
+        OnLoggedOut res ->
+            case res of
+                Ok () ->
+                    ( model, Navigation.load "/login" )
+
+                Err err ->
+                    let
+                        cmd =
+                            model.globals.flashMessage <|
+                                FlashMessage.error <|
+                                    "Error logging out: "
+                                        ++ Util.httpErrorToString err
+                    in
+                    ( model, cmd )
+
 
 pageFromModel : Model -> Page
 pageFromModel model =
@@ -453,7 +476,9 @@ menu model =
                 , Navbar.itemLink [ href "/d" ] [ text "E-Archive" ]
                 , Navbar.itemLink [ href "/account" ] [ text "Account" ]
                 , Navbar.itemLink [ href "/adminonly-old" ] [ text "Old AdminOnly" ]
-                , Navbar.itemLink [ href "#" ] [ text "Log out" ]
+                , Navbar.itemLink
+                    [ href "#", onClick Logout ]
+                    [ text "Log out" ]
                 ]
             |> Navbar.view model.navbarState
         ]
@@ -498,3 +523,12 @@ pageNotFound =
     [ h1 [] [ text "Not found" ]
     , text "Sorry couldn't find that page"
     ]
+
+
+logoutCmd : Cmd Msg
+logoutCmd =
+    Http.post
+        { url = "/logout_ajax"
+        , expect = Http.expectWhatever OnLoggedOut
+        , body = Http.emptyBody
+        }

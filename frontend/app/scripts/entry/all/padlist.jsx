@@ -29,12 +29,13 @@ $(function () {
     React.render(React.createElement(Header,{
          linkText : fromTemplate.headerLogOut,
          linkOnClick : function() {
-           new Submit({
-             url : "/logout_ajax",
-             ajax : true,
-             ajaxsuccess : function() {
-               window.location.reload();}
-           }).send();
+            new Submit({
+              url : "/logout_ajax",
+              ajax : true,
+              method: "POST",
+              ajaxsuccess : function() {
+              window.location.reload();}
+            }).send();
          }
       }), headerDiv[0]);
 
