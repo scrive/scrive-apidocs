@@ -13,13 +13,6 @@ let
       {}
   ;
 
-  callScrivePackage = self: name: version:
-    callPackage self
-        name
-        (builtins.fetchTarball
-          "http://hackage.scrive.com/package/${name}-${version}.tar.gz")
-    ;
-
   callGitPackage = self: name: url: rev:
     callPackage self
         name
@@ -114,9 +107,14 @@ let
           "7596e2959d58cbd1bf70ce3af57c0a5db4967add"
         ;
 
-        resource-pool = callScrivePackage super
-          "resource-pool"
-          "0.2.3.2.1"
+        resource-pool = haskellLib.appendPatch
+          (
+            callGitPackage super
+            "resource-pool"
+            "https://github.com/bos/pool.git"
+            "f4be4fbe253ac2927d62153a79df9b5957c125e2"
+          )
+          ../patches/resource-pool.patch
         ;
 
         unjson = haskellLib.dontCheck
@@ -139,20 +137,21 @@ let
         ;
 
         test-framework =
-        haskellLib.appendPatch
-          (haskellLib.dontCheck
-            (super.callHackage
-              "test-framework"
-              "0.8.2.0"
-              {}
+          haskellLib.appendPatch
+            (haskellLib.dontCheck
+              (super.callHackage
+                "test-framework"
+                "0.8.2.0"
+                {}
+                )
               )
-            )
-          ../patches/test-framework.patch
+            ../patches/test-framework.patch
         ;
 
-        kontrakcja-templates = callScrivePackage super
+        kontrakcja-templates = callGitPackage super
           "kontrakcja-templates"
-          "0.10"
+          "https://github.com/scrive/kontrakcja-templates.git"
+          "4aebd3ca85c0058f387e5ca90397c753bdad62dd"
         ;
 
         log-base = callPackage super "log-base"
@@ -167,9 +166,9 @@ let
         mixpanel = haskellLib.appendPatch
           (
             callGitPackage super
-            "mixpanel"
-            "ssh://git@github.com/scrive/mixpanel.git"
-            "d6c378d738f936d7f7950ee278d955726c255535"
+              "mixpanel"
+              "ssh://git@github.com/scrive/mixpanel.git"
+              "d6c378d738f936d7f7950ee278d955726c255535"
           )
           ../patches/mixpanel.patch
         ;

@@ -1,0 +1,13 @@
+diff --git a/Data/Pool.hs b/Data/Pool.hs
+index 6764e8b..e4ecc28 100644
+--- a/Data/Pool.hs
++++ b/Data/Pool.hs
+@@ -30,7 +30,7 @@
+ module Data.Pool
+     (
+       Pool(idleTime, maxResources, numStripes)
+-    , LocalPool
++    , LocalPool(inUse, entries)
+     , createPool
+     , withResource
+     , takeResource
