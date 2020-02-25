@@ -7,5 +7,6 @@ import Component.Theme.Data exposing (Theme)
 
 type OutMsg
     = SaveThemeMsg Theme
+    | DeleteThemeMsg Theme
     | SaveBrandingMsg BrandingFields
     | CreateThemeMsg CreateTheme.NewTheme

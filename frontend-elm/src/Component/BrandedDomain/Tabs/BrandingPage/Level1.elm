@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.BrandingPage.One exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, settingsMsg, update, view)
+module Component.BrandedDomain.Tabs.BrandingPage.Level1 exposing (Config, Msg, OutMsg(..), State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, doneCreateThemeMsg, initialize, settingsMsg, update, view)
 
 import Component.BrandedDomain.Tabs.BrandingPage.Edit as EditBranding
 import Component.Branding.CreateTheme as CreateTheme
@@ -104,12 +104,17 @@ view availableThemes ( ( state1, state2 ), state3 ) =
     Settings.viewBranding state3 brandingBody previewTabs1
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
     Pair.FirstMsg <|
         Pair.SecondMsg
-            EditBranding.brandingSavedMsg
+            EditBranding.doneSaveBrandingMsg
 
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.FirstMsg <|
+        Pair.FirstMsg
+            CreateTheme.doneCreateThemeMsg
 
 settingsMsg : Settings.Msg -> Msg
 settingsMsg =

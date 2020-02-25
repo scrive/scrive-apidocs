@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.Internal exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingOutMsg, brandingSavedMsg, initialize, themeOutMsg, themeSavedMsg, update, view)
+module Component.BrandedDomain.Tabs.Internal exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingOutMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, doneCreateThemeMsg, initialize, themeOutMsg, update, view)
 
 import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
 import Component.BrandedDomain.Tabs.BrandingPage as BrandingPage
@@ -6,7 +6,6 @@ import Component.BrandedDomain.Tabs.BrandingPage.Data as BrandingData
 import Component.BrandedDomain.Tabs.Data as Data
 import Component.BrandedDomain.Tabs.ThemePage as ThemePage
 import Component.Branding.Data exposing (BrandingSettings)
-import Component.Input.SaveButton as SaveButton
 import Component.Theme.Data as ThemeData exposing (Theme)
 import Compose.Handler as Handler
 import Compose.Pair as Pair
@@ -50,8 +49,11 @@ type alias Init =
 themeOutMsg : ThemeData.OutMsg -> OutMsg
 themeOutMsg msg =
     case msg of
-        SaveButton.SaveMsg theme ->
+        ThemeData.SaveThemeMsg theme ->
             Data.SaveThemeMsg theme
+
+        ThemeData.DeleteThemeMsg theme ->
+            Data.DeleteThemeMsg theme
 
 
 brandingOutMsg : BrandingData.OutMsg -> OutMsg
@@ -78,11 +80,14 @@ initialize =
                 availableThemes =
                     config1.availableThemes
 
+                currentThemeSet =
+                    config1.currentThemeSet
+
                 config2 : BrandingPage.Config
                 config2 =
                     { themesConfig =
                         { mDefaultThemes = config1.mDefaultThemeSet
-                        , currentThemes = config1.currentThemeSet
+                        , currentThemes = currentThemeSet
                         , availableThemes = availableThemes
                         }
                     , brandingInfo = config1.brandingInfo
@@ -90,8 +95,16 @@ initialize =
 
                 config3 : ThemePage.Config
                 config3 =
-                    { availableThemes = availableThemes
-                    , initialThemeIndex = Just 0
+                    { currentThemes =
+                        [ currentThemeSet.emailTheme
+                        , currentThemeSet.signViewTheme
+                        , currentThemeSet.serviceTheme
+                        , currentThemeSet.loginTheme
+                        ]
+                    , inConfig =
+                        { availableThemes = availableThemes
+                        , initialThemeIndex = Just 0
+                        }
                     }
             in
             inInit ( config2, config3 )
@@ -109,12 +122,12 @@ update =
 view : ViewHandler
 view ( state1, state2 ) =
     let
+        themes =
+            ThemePage.stateToThemes state2
+
         themeBody =
             Html.map Pair.SecondMsg <|
                 ThemePage.view state2
-
-        themes =
-            ThemePage.stateToThemes state2
 
         brandingBody =
             Html.map Pair.FirstMsg <|
@@ -123,11 +136,20 @@ view ( state1, state2 ) =
     ( brandingBody, themeBody )
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    Pair.FirstMsg BrandingPage.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    Pair.FirstMsg BrandingPage.doneSaveBrandingMsg
 
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    Pair.SecondMsg ThemePage.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    Pair.SecondMsg ThemePage.doneSaveThemeMsg
+
+
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    Pair.SecondMsg ThemePage.doneDeleteThemeMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.FirstMsg BrandingPage.doneCreateThemeMsg

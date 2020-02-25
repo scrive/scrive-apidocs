@@ -1,7 +1,7 @@
-module Component.UserGroup.Tabs.BrandingPage.Edit.SaveButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, update, view)
+module Component.Theme.Edit.DeleteButton exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, initialize, update, view)
 
 import Component.Input.Button as Button
-import Component.UserGroup.Data exposing (BrandingFields)
+import Component.Theme.Data exposing (Theme)
 import Either exposing (Either(..))
 import Html exposing (Html)
 
@@ -11,11 +11,11 @@ type alias Config =
 
 
 type alias OutMsg =
-    Button.OutMsg BrandingFields
+    Button.OutMsg Theme
 
 
 type alias Msg =
-    Button.Msg BrandingFields
+    Button.Msg Theme
 
 
 type alias State =
@@ -37,8 +37,8 @@ type alias Init =
 initialize : Init
 initialize _ =
     Button.initialize
-        { caption = "Save"
-        , buttonType = Button.Ok
+        { caption = "Delete"
+        , buttonType = Button.Danger
         }
 
 
@@ -47,11 +47,11 @@ update =
     Button.update
 
 
-view : BrandingFields -> ViewHandler
+view : Theme -> ViewHandler
 view =
     Button.view
 
 
-doneSaveBrandingMsg : Msg
-doneSaveBrandingMsg =
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
     Button.enableMsg

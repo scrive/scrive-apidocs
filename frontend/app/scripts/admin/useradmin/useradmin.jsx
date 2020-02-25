@@ -16,7 +16,7 @@ var UserAdminView = React.createClass({
   render: function () {
     return (
       <TabViewer.TabViewer>
-        <TabViewer.TabViewerTab title="<" url="/adminonly#useradminforsales" />
+        <TabViewer.TabViewerTab title="<" url="/adminonly-old#useradminforsales" />
         <TabViewer.TabViewerTab
           initial={true}
           hash="details"

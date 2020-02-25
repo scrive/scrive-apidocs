@@ -1,4 +1,4 @@
-module Component.UserGroup.Tabs.ThemePage exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, initialize, stateToThemes, themeSavedMsg, update, view)
+module Component.UserGroup.Tabs.ThemePage exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneSaveThemeMsg, initialize, stateToThemes, update, view)
 
 import Component.Branding.ThemePage as ThemePage
 import Component.Theme.Data exposing (Theme)
@@ -80,6 +80,11 @@ stateToThemes ( state, _ ) =
     ThemeEdit.stateToThemes state
 
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    Pair.FirstMsg ThemeEdit.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    Pair.FirstMsg ThemeEdit.doneSaveThemeMsg
+
+
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    Pair.FirstMsg ThemeEdit.doneDeleteThemeMsg

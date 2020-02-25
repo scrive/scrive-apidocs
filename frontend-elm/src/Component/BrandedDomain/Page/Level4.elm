@@ -1,6 +1,6 @@
-module Component.BrandedDomain.Page.Four exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, clearMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, themeSavedMsg, unMsg, unState, update, view)
+module Component.BrandedDomain.Page.Level4 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, clearMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, doneCreateThemeMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, unMsg, unState, update, view)
 
-import Component.BrandedDomain.Page.Three as Page
+import Component.BrandedDomain.Page.Level3 as Page
 import Compose.Util as Util
 import Either exposing (Either(..))
 import Html exposing (Html)
@@ -88,14 +88,23 @@ initErrorMsg =
     Msg << Page.initErrorMsg
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    Msg Page.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    Msg Page.doneSaveBrandingMsg
 
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    Msg Page.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    Msg Page.doneSaveThemeMsg
+
+
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    Msg Page.doneDeleteThemeMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Msg Page.doneCreateThemeMsg
 
 
 initEmpty : ( State, Cmd Msg )

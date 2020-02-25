@@ -1,9 +1,9 @@
-module Component.UserGroup.Page.Two exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapPageMsg, themeSavedMsg, update, view)
+module Component.BrandedDomain.Page.Level2 exposing (Config, Init, Msg(..), NewTheme, OutMsg(..), State, UpdateHandler, ViewHandler, doneDeleteThemeMsg, doneCreateThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initialize, mapPageMsg, update, view)
 
+import Component.BrandedDomain.Data exposing (Branding, ThemeSet)
+import Component.BrandedDomain.Page.Level1 as Base
+import Component.BrandedDomain.Tabs.Data as Tabs
 import Component.Theme.Data exposing (Theme)
-import Component.UserGroup.Data exposing (Branding, ThemeSet)
-import Component.UserGroup.Page.One as Page
-import Component.UserGroup.Tabs.Internal as Sections
 import Compose.Util as Util
 import Either exposing (Either(..))
 import Html exposing (Html)
@@ -12,33 +12,35 @@ import Html exposing (Html)
 type alias Config =
     { brandingInfo : Branding
     , availableThemes : List Theme
-    , defaultThemeSet : ThemeSet
+    , mDefaultThemeSet : Maybe ThemeSet
     , currentThemeSet : ThemeSet
     }
 
 
+type alias State =
+    { inState : Base.State
+    , brandingInfo : Branding
+    }
+
+
 type alias NewTheme =
-    { userGroupId : String
+    { brandedDomainId : String
     , originalThemeId : String
     , newThemeName : String
     }
 
 
-type alias State =
-    { inState : Page.State
-    , brandingInfo : Branding
-    }
-
-
 type Msg
-    = PageMsg Page.Msg
-    | PageOutMsg Page.OutMsg
+    = PageMsg Base.Msg
+    | HandleBaseOutMsg Tabs.OutMsg
 
 
 type OutMsg
     = SaveBrandingMsg Branding
     | SaveThemeMsg String Theme
+    | DeleteThemeMsg String Theme
     | CreateThemeMsg NewTheme
+    | GoBack
 
 
 type alias UpdateHandler =
@@ -60,19 +62,14 @@ initialize config1 =
             config1.brandingInfo
 
         config2 =
-            { browserTitle =
-                Maybe.withDefault ""
-                    branding.browserTitle
-            , smsOriginator =
-                Maybe.withDefault ""
-                    branding.smsOriginator
-            , defaultThemeSet = config1.defaultThemeSet
+            { mDefaultThemeSet = config1.mDefaultThemeSet
             , currentThemeSet = config1.currentThemeSet
             , availableThemes = config1.availableThemes
+            , brandingInfo = branding
             }
 
         ( state1, cmd1 ) =
-            Page.initialize config2
+            Base.initialize config2
 
         state2 =
             { inState = state1
@@ -85,11 +82,14 @@ initialize config1 =
     ( state2, cmd2 )
 
 
-mapPageMsg : Either Page.OutMsg Page.Msg -> Either OutMsg Msg
+mapPageMsg : Either Base.OutMsg Base.Msg -> Either OutMsg Msg
 mapPageMsg msg1 =
     case msg1 of
-        Left msg2 ->
-            Right <| PageOutMsg msg2
+        Left (Base.BaseOutMsg msg2) ->
+            Right <| HandleBaseOutMsg msg2
+
+        Left Base.GoBack ->
+            Left <| GoBack
 
         Right msg2 ->
             Right <| PageMsg msg2
@@ -101,7 +101,7 @@ update msg1 state1 =
         PageMsg msg2 ->
             let
                 ( state2, cmd1 ) =
-                    Page.update msg2 state1.inState
+                    Base.update msg2 state1.inState
 
                 cmd2 =
                     Cmd.map mapPageMsg cmd1
@@ -111,12 +111,12 @@ update msg1 state1 =
             in
             ( state3, cmd2 )
 
-        PageOutMsg msg2 ->
+        HandleBaseOutMsg msg2 ->
             case msg2 of
-                Sections.SaveThemeMsg theme ->
+                Tabs.SaveThemeMsg theme ->
                     let
                         brandingId =
-                            state1.brandingInfo.userGroupId
+                            state1.brandingInfo.brandedDomainId
 
                         cmd1 =
                             Util.msgToCmd <|
@@ -125,28 +125,47 @@ update msg1 state1 =
                     in
                     ( state1, cmd1 )
 
-                Sections.SaveBrandingMsg brandingFields ->
+                Tabs.DeleteThemeMsg theme ->
+                    let
+                        brandingId =
+                            state1.brandingInfo.brandedDomainId
+
+                        cmd1 =
+                            Util.msgToCmd <|
+                                Left <|
+                                    DeleteThemeMsg brandingId theme
+                    in
+                    ( state1, cmd1 )
+
+                Tabs.SaveBrandingMsg fields ->
                     let
                         branding1 =
                             state1.brandingInfo
 
-                        commonFields =
-                            brandingFields.commonFields
+                        brandingFields =
+                            fields.brandingFields
                     in
-                    case brandingFields.mThemeSet of
+                    case fields.mThemeSet of
                         Just themeSet ->
                             let
                                 branding2 =
                                     { branding1
-                                        | browserTitle =
-                                            Just commonFields.browserTitle
+                                        | url = brandingFields.url
+                                        , favicon = brandingFields.favicon
+                                        , browserTitle =
+                                            brandingFields.browserTitle
                                         , smsOriginator =
-                                            Just commonFields.smsOriginator
+                                            brandingFields.smsOriginator
+                                        , emailOriginator =
+                                            brandingFields.emailOriginator
                                         , themeIds =
-                                            { emailTheme = Just themeSet.emailTheme.id
-                                            , signViewTheme = Just themeSet.signViewTheme.id
-                                            , serviceTheme = Just themeSet.serviceTheme.id
+                                            { emailTheme = themeSet.emailTheme.id
+                                            , signViewTheme = themeSet.signViewTheme.id
+                                            , serviceTheme = themeSet.serviceTheme.id
+                                            , loginTheme = themeSet.loginTheme.id
                                             }
+                                        , participantColors = brandingFields.participantColors
+                                        , brandingColors = brandingFields.actionColors
                                     }
 
                                 state2 =
@@ -164,10 +183,10 @@ update msg1 state1 =
                         Nothing ->
                             ( state1, Cmd.none )
 
-                Sections.CreateThemeMsg newTheme ->
+                Tabs.CreateThemeMsg newTheme ->
                     let
                         newTheme2 =
-                            { userGroupId = state1.brandingInfo.userGroupId
+                            { brandedDomainId = state1.brandingInfo.brandedDomainId
                             , originalThemeId = newTheme.originalThemeId
                             , newThemeName = newTheme.newThemeName
                             }
@@ -183,14 +202,24 @@ update msg1 state1 =
 view : ViewHandler
 view state =
     Html.map PageMsg <|
-        Page.view state.inState
+        Base.view state.inState
 
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    PageMsg Page.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    PageMsg Base.doneSaveThemeMsg
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    PageMsg Page.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    PageMsg Base.doneSaveBrandingMsg
+
+
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    PageMsg Base.doneDeleteThemeMsg
+
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    PageMsg Base.doneCreateThemeMsg

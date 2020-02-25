@@ -1,7 +1,6 @@
-module Component.Theme.Data exposing (ColorPair, OutMsg, Theme, ThemeColors)
+module Component.Theme.Data exposing (ColorPair, OutMsg(..), Theme, ThemeColors)
 
 import Color exposing (Color)
-import Component.Input.SaveButton as SaveButton
 
 
 type alias ColorPair =
@@ -28,5 +27,6 @@ type alias ThemeColors =
     }
 
 
-type alias OutMsg =
-    SaveButton.OutMsg Theme
+type OutMsg
+    = SaveThemeMsg Theme
+    | DeleteThemeMsg Theme

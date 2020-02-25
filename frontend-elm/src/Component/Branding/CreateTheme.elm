@@ -1,12 +1,13 @@
-module Component.Branding.CreateTheme exposing (Config, Init, Msg, NewTheme, OutMsg, State, Theme, UpdateHandler, ViewHandler, initialize, update, view)
+module Component.Branding.CreateTheme exposing (Config, Init, Msg, NewTheme, OutMsg, State, Theme, UpdateHandler, ViewHandler, initialize, update, view, doneCreateThemeMsg)
 
-import Component.Input.SaveButton as SaveButton
+import Component.Input.Button as Button
 import Component.Input.Select as Select
 import Component.Input.TextField as TextField
 import Compose.Handler as Handler
 import Compose.Pair as Pair
 import Either exposing (Either(..))
 import Html exposing (Html, div)
+import Regex
 
 
 type alias Config =
@@ -26,15 +27,15 @@ type alias NewTheme =
 
 
 type alias Msg =
-    Pair.Msg Select.Msg (Pair.Msg TextField.Msg (SaveButton.Msg NewTheme))
+    Pair.Msg Select.Msg (Pair.Msg TextField.Msg (Button.Msg NewTheme))
 
 
 type alias OutMsg =
-    SaveButton.OutMsg NewTheme
+    Button.OutMsg NewTheme
 
 
 type alias State =
-    Pair.State Select.State (Pair.State TextField.State SaveButton.State)
+    Pair.State Select.State (Pair.State TextField.State Button.State)
 
 
 type alias UpdateHandler =
@@ -58,7 +59,7 @@ initialize =
             <|
                 Pair.liftInit
                     TextField.initialize
-                    SaveButton.initialize
+                    Button.initialize
     in
     \_ ->
         let
@@ -72,8 +73,13 @@ initialize =
                 { fieldLabel = "Create New Theme From"
                 , selectedIndex = Just 0
                 }
+
+            buttonConfig =
+                { caption = "Create"
+                , buttonType = Button.Ok
+                }
         in
-        inInit ( selectConfig, ( fieldConfig, "Create" ) )
+        inInit ( selectConfig, ( fieldConfig, buttonConfig ) )
 
 
 update : UpdateHandler
@@ -83,7 +89,14 @@ update =
     <|
         Pair.liftUpdate
             (Handler.outerMapUpdate never TextField.update)
-            SaveButton.update
+            Button.update
+
+
+emptyString : String -> Bool
+emptyString =
+    Regex.contains <|
+        Maybe.withDefault Regex.never <|
+            Regex.fromString "^\\s*$"
 
 
 view : List Theme -> ViewHandler
@@ -116,12 +129,22 @@ view themes ( selectState, ( textState, buttonState ) ) =
             Html.map (Pair.SecondMsg << Pair.FirstMsg) <|
                 TextField.view textState
 
-        buttonBody =
-            Html.map (Pair.SecondMsg << Pair.SecondMsg) <|
-                SaveButton.view themeData buttonState
+        buttonBody1 =
+            if emptyString textState.value then
+                Button.viewOverride themeData Button.Disabled buttonState
+
+            else
+                Button.view themeData buttonState
+
+        buttonBody2 =
+            Html.map (Pair.SecondMsg << Pair.SecondMsg) buttonBody1
     in
     div []
         [ selectBody
         , textBody
-        , buttonBody
+        , buttonBody2
         ]
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Pair.SecondMsg <| Pair.SecondMsg Button.enableMsg

@@ -1,11 +1,11 @@
-module Component.UserGroup.Tabs.BrandingPage exposing (Config, Init, Msg(..), OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, mapMessage, messagePos, themeFieldPos, update, view)
+module Component.UserGroup.Tabs.BrandingPage exposing (Config, Init, Msg(..), OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, doneCreateThemeMsg, initialize, mapMessage, messagePos, themeFieldPos, update, view)
 
 import Component.Branding.Settings as Settings
-import Component.Input.SaveButton as SaveButton
+import Component.Input.Button as Button
 import Component.Theme.Data exposing (Theme)
 import Component.UserGroup.Tabs.BrandingPage.Data as Data
 import Component.UserGroup.Tabs.BrandingPage.Edit.BrandingFields as BrandingFields
-import Component.UserGroup.Tabs.BrandingPage.One as Base
+import Component.UserGroup.Tabs.BrandingPage.Level1 as Base
 import Compose.Pair as Pair
 import Either exposing (Either(..))
 import Html exposing (Html)
@@ -59,10 +59,10 @@ mapMessage msg1 =
                         Pair.FirstMsg msg4 ->
                             Right <| ThemeFieldsMsg msg4
 
-                        Pair.SecondMsg (SaveButton.SaveMsg msg4) ->
+                        Pair.SecondMsg (Button.ClickMsg msg4) ->
                             Left <| Data.SaveBrandingMsg msg4
 
-                Base.CreateThemeMsg (SaveButton.SaveMsg msg3) ->
+                Base.CreateThemeMsg (Button.ClickMsg msg3) ->
                     Left <| Data.CreateThemeMsg msg3
 
         Right msg2 ->
@@ -118,6 +118,10 @@ view availableThemes state =
         Base.view availableThemes state
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    BaseMsg Base.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    BaseMsg Base.doneSaveBrandingMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    BaseMsg Base.doneCreateThemeMsg

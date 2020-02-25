@@ -1,4 +1,4 @@
-module Component.BrandedDomain.Tabs.BrandingPage.Edit exposing (Config, InConfig, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, initialize, update, view, viewPreview)
+module Component.BrandedDomain.Tabs.BrandingPage.Edit exposing (Config, InConfig, Msg, OutMsg, State, UpdateHandler, ViewHandler, doneSaveBrandingMsg, initialize, update, view, viewPreview)
 
 import Component.BrandedDomain.Tabs.BrandingPage.Edit.BrandingFields as BrandingFields
 import Component.BrandedDomain.Tabs.BrandingPage.Edit.SaveButton as SaveButton
@@ -89,9 +89,9 @@ view availableThemes ( state1, state2 ) =
     body
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    Pair.SecondMsg SaveButton.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    Pair.SecondMsg SaveButton.doneSaveBrandingMsg
 
 
 viewPreview : List Theme -> State -> List ( String, Html Never )

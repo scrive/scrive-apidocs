@@ -184,7 +184,7 @@ module.exports = Backbone.Model.extend({
   save : function(callback) {
     var self = this;
     new Submit({
-      url : "/adminonly/brandeddomain/details/change/" + self.domainid(), 
+      url : "/adminonly/brandeddomain/details/change/" + self.domainid(),
       method : "POST",
       ajax : true,
       ajaxsuccess : function() {

@@ -1,7 +1,7 @@
-module Component.UserGroup.Page.Three exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, brandingSavedMsg, clearMsg, initEmpty, initErrorMsg, initFailure, initMsg, initSuccess, initThemesMsg, initialize, themeSavedMsg, update, view)
+module Component.UserGroup.Page.Level3 exposing (Config, Init, Msg, OutMsg, State, UpdateHandler, ViewHandler, clearMsg, doneDeleteThemeMsg, doneSaveBrandingMsg, doneSaveThemeMsg, initEmpty, initErrorMsg, initFailure, doneCreateThemeMsg, initMsg, initSuccess, initThemesMsg, initialize, update, view)
 
 import Component.Error.Fail as Fail
-import Component.UserGroup.Page.Two as Page
+import Component.UserGroup.Page.Level2 as Page
 import Compose.Handler as Handler
 import Compose.Loader as Loader
 import Either exposing (Either(..))
@@ -79,14 +79,23 @@ initErrorMsg =
     Loader.loadLeftMsg
 
 
-brandingSavedMsg : Msg
-brandingSavedMsg =
-    Loader.inRightMsg Page.brandingSavedMsg
+doneSaveBrandingMsg : Msg
+doneSaveBrandingMsg =
+    Loader.inRightMsg Page.doneSaveBrandingMsg
 
 
-themeSavedMsg : Msg
-themeSavedMsg =
-    Loader.inRightMsg Page.themeSavedMsg
+doneSaveThemeMsg : Msg
+doneSaveThemeMsg =
+    Loader.inRightMsg Page.doneSaveThemeMsg
+
+
+doneDeleteThemeMsg : Msg
+doneDeleteThemeMsg =
+    Loader.inRightMsg Page.doneDeleteThemeMsg
+
+doneCreateThemeMsg : Msg
+doneCreateThemeMsg =
+    Loader.inRightMsg Page.doneCreateThemeMsg
 
 
 initEmpty : ( State, Cmd Msg )
