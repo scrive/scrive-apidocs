@@ -13,7 +13,7 @@ lightTextLogo =
 tableBrandedDomains :: Table
 tableBrandedDomains = tblTable
   { tblName         = "branded_domains"
-  , tblVersion      = 13
+  , tblVersion      = 14
   , tblColumns      =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "url", colType = TextT, colNullable = False }
@@ -89,16 +89,16 @@ tableBrandedDomains = tblTable
                       , uniqueIndexOnColumnWithCondition "main_domain" "main_domain" -- Constrain to have only one main domain
                       ]
   , tblForeignKeys  =
-    [ (fkOnColumn "mail_theme" "themes" "id") { fkOnDelete = ForeignKeyCascade
+    [ (fkOnColumn "mail_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
                                               , fkDeferred = True
                                               }
-    , (fkOnColumn "signview_theme" "themes" "id") { fkOnDelete = ForeignKeyCascade
+    , (fkOnColumn "signview_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
                                                   , fkDeferred = True
                                                   }
-    , (fkOnColumn "service_theme" "themes" "id") { fkOnDelete = ForeignKeyCascade
+    , (fkOnColumn "service_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
                                                  , fkDeferred = True
                                                  }
-    , (fkOnColumn "login_theme" "themes" "id") { fkOnDelete = ForeignKeyCascade
+    , (fkOnColumn "login_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
                                                , fkDeferred = True
                                                }
     ]

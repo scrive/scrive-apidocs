@@ -1,6 +1,7 @@
 module BrandedDomain.Migrations (
     brandedDomainDropNoreplyEmail
   , brandedDomainChangeLightLogo
+  , brandedDomainDeleteThemeConstraint
 ) where
 
 import Control.Monad.Catch
@@ -33,4 +34,39 @@ brandedDomainChangeLightLogo = Migration
         sqlSet "logo" $ B64.decodeLenient $ BS.fromString lightTextLogo
         sqlWhereInSql "id" $ mainTheme "service_theme" $ Just $ sqlUnion
           [mainTheme "login_theme" Nothing, mainTheme "signview_theme" Nothing]
+  }
+
+brandedDomainDeleteThemeConstraint :: (MonadThrow m, MonadDB m) => Migration m
+brandedDomainDeleteThemeConstraint = Migration
+  { mgrTableName = tblName tableBrandedDomains
+  , mgrFrom      = 13
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableBrandedDomains)
+        [ sqlDropFK "branded_domains" (fkOnColumn "mail_theme" "themes" "id")
+        , sqlAddValidFK
+          "branded_domains"
+          (fkOnColumn "mail_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
+                                                  , fkDeferred = True
+                                                  }
+        , sqlDropFK "branded_domains" (fkOnColumn "signview_theme" "themes" "id")
+        , sqlAddValidFK
+          "branded_domains"
+          (fkOnColumn "signview_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
+                                                      , fkDeferred = True
+                                                      }
+        , sqlDropFK "branded_domains" (fkOnColumn "service_theme" "themes" "id")
+        , sqlAddValidFK
+          "branded_domains"
+          (fkOnColumn "service_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
+                                                     , fkDeferred = True
+                                                     }
+        , sqlDropFK "branded_domains" (fkOnColumn "login_theme" "themes" "id")
+        , sqlAddValidFK
+          "branded_domains"
+          (fkOnColumn "login_theme" "themes" "id") { fkOnDelete = ForeignKeyNoAction
+                                                   , fkDeferred = True
+                                                   }
+        ]
   }

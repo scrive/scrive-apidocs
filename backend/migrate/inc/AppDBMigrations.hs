@@ -239,4 +239,5 @@ kontraMigrations =
   , addUGIDForEIDToDocuments
   , addUserGroupGarbageCollectionJob
   , brandedDomainChangeLightLogo
+  , brandedDomainDeleteThemeConstraint
   ]
