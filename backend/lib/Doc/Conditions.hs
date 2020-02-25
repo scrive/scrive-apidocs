@@ -487,6 +487,12 @@ sqlWhereDocumentIsDeleted = sqlWhereEVVV
   "signatory_links.deleted IS NOT NULL"
 
 ------------------------------------------------------------
+
+sqlWhereDocumentIsNotDeletedByAuthor :: (MonadState v m, SqlWhere v) => m ()
+sqlWhereDocumentIsNotDeletedByAuthor = sqlWhere "documents.author_deleted IS NULL"
+
+------------------------------------------------------------
+
 data DocumentIsReallyDeleted =
   DocumentIsReallyDeleted DocumentID String SignatoryLinkID UTCTime
   deriving (Eq, Ord, Show, Typeable)
@@ -510,6 +516,12 @@ sqlWhereDocumentIsNotReallyDeleted = sqlWhereEVVVV
   , "signatory_links.really_deleted"
   )
   "signatory_links.really_deleted IS NULL"
+
+------------------------------------------------------------
+
+sqlWhereDocumentIsNotReallyDeletedByAuthor :: (MonadState v m, SqlWhere v) => m ()
+sqlWhereDocumentIsNotReallyDeletedByAuthor =
+  sqlWhere "documents.author_really_deleted IS NULL"
 
 ------------------------------------------------------------
 

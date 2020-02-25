@@ -1,5 +1,8 @@
 module Doc.Model.Filter
   ( DocumentFilter(..)
+  , DocumentFilterMap
+  , legacyFilterMap
+  , folderFilterMap
   , documentFilterToSQL
   , FilterString(..) -- Exported for Tests
   , processSearchStringToFilter
@@ -46,12 +49,33 @@ data DocumentFilter
   | DocumentFilterSignable                    -- ^ Document is signable
   | DocumentFilterTemplate                    -- ^ Document is template
   | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents.
+  | DocumentFilterAuthorDeleted Bool          -- ^ Only documents deleted (=True) or non-deleted (=False) by author.
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
   | DocumentFilterByFolderID FolderID         -- ^ Documents only in given folder
   | DocumentFilterByFolderTree FolderID       -- ^ Documents that are in any of subfolder of given folder
   deriving Show
+
+-- | Mapping for filtering/substitution for specific combinations of
+-- filters/domain pairs.
+type DocumentFilterMap = DocumentFilter -> Maybe DocumentFilter
+
+-- | Legacy filter mapping, allow everything.
+legacyFilterMap :: DocumentFilterMap
+legacyFilterMap = Just
+
+-- | Folder filter mapping that discards filters using signatory links table (as
+-- it's not available in folder spcific domains) and substitutes filtering by
+-- deletion by all signatory links with filtering by deletion by the author of a
+-- document.
+folderFilterMap :: DocumentFilterMap
+folderFilterMap = \case
+  DocumentFilterLinkIsAuthor _ -> Nothing
+  DocumentFilterByCanSign _  -> Nothing
+  DocumentFilterSignNowOnPad -> Nothing
+  DocumentFilterDeleted flag -> Just $ DocumentFilterAuthorDeleted flag
+  filter_                    -> Just filter_
 
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
@@ -143,8 +167,7 @@ documentFilterToSQL (DocumentFilterUnsavedDraft flag) = sqlWhereAny
   ]
 
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
-  sqlWhere "documents.author_id = signatory_links.id"
-  sqlWhereEq "signatory_links.user_id" userid
+  sqlWhereEq "documents.author_user_id" userid
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhereSignatoryRoleIsSigningParty
@@ -179,6 +202,12 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
   if flag1
     then sqlWhere "signatory_links.deleted IS NOT NULL"
     else sqlWhere "signatory_links.deleted IS NULL"
+
+documentFilterToSQL (DocumentFilterAuthorDeleted flag1) = do
+  sqlWhere "documents.author_really_deleted IS NULL"
+  if flag1
+    then sqlWhere "documents.author_deleted IS NOT NULL"
+    else sqlWhere "documents.author_deleted IS NULL"
 
 documentFilterToSQL (DocumentFilterByFolderID fid) = do
   sqlWhereEq "documents.folder_id" fid

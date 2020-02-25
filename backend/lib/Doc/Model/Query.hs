@@ -177,19 +177,19 @@ selectDocuments docDomain docFilters orders limit extend = sqlSelect "documents"
               $ "documents.id"
             -- Include sort expressions as DISTINCT demands it.
               : map (\dobr -> dobrExpr dobr <+> "AS" <+> dobrName dobr) orderList
-          filters = mapM_ documentFilterToSQL docFilters
       when (documentDomainNeedsDistinct docDomain) $ do
         sqlDistinct
       case documentDomainToSQL docDomain of
-        []                  -> unexpectedError "selectDocuments: empty domain"
-        (mainDomain : rest) -> do
+        [] -> unexpectedError "selectDocuments: empty domain"
+        ((mainFilterMap, mainDomain) : rest) -> do
           mainDomain
           results
-          filters
-          sqlUnion $ for rest $ \domain -> toSQLCommand . sqlSelect "documents" $ do
-            domain
-            results
-            filters
+          mapM_ documentFilterToSQL . catMaybes $ map mainFilterMap docFilters
+          sqlUnion $ for rest $ \(filterMap, domain) -> do
+            toSQLCommand . sqlSelect "documents" $ do
+              domain
+              results
+              mapM_ documentFilterToSQL . catMaybes $ map filterMap docFilters
           mapM_ (sqlOrderBy . (\dobr -> dobrName dobr <+> dobrOrder dobr)) orderList
           sqlLimit limit
     -- Enumerate rows only if order is specified.
