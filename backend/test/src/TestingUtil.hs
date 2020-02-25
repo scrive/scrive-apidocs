@@ -975,8 +975,7 @@ data UserTemplate m = UserTemplate
 -- `instantiateUser`. An instance of this template has random name and email; no
 -- password, phone or personal number set; is a non-admin member of a freshly
 -- created (with `instantiateRandomUserGroup`) user group and has a home folder
--- that is a sub-folder of the user group home folder. tags, a home folder and
--- no parent group.
+-- that is a sub-folder of the user group home folder.
 --
 -- To create a user with specific features, update the corresponding fields in
 -- the template; e.g. `instantiateUser $ randomUserTemplate {email = return
@@ -1027,7 +1026,11 @@ instantiateUser
   :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => UserTemplate m
   -> m User
-instantiateUser = fmap fromJust . tryInstantiateUser
+instantiateUser = fmap (fromMaybe $ unexpectedError hint) . tryInstantiateUser
+  where
+    hint
+      = "Failed to instantiate user template; you probably tried to\
+        \ create two users with the same email address."
 
 tryInstantiateUser
   :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
