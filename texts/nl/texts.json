@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Dit bericht is alleen toegankelijk voor uitnodiging via e-mail, voor een andere partij dan u. ",
 "_emptyOrNotValidEmail":"U heeft geen e-mailadres ingevoerd of het e-mailadres is incorrect. Probeer het a.u.b. opnieuw.",
 "_entityname":"Bedrijf",
-"_entitynameExtraInfo":"Weergegeven als Bedrijfsveld in de documenten:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Bewijsbijlagen",
 "_february":"Februari",
 "_fieldWithSameNameExists":"U heeft al een veld met deze naam. Elk veld moet een unieke naam hebben.",

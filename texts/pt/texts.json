@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Mensagem apenas disponível para convite por email, para uma parte que não é você. ",
 "_emptyOrNotValidEmail":"Não introduziu um email ou o email está incorrecto. Tente novamente.",
 "_entityname":"Empresa",
-"_entitynameExtraInfo":"Mostrado como campo da Empresa nos documentos:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Anexos de prova",
 "_february":"Fevereiro",
 "_fieldWithSameNameExists":"Já tem um campo com este nome. Cada campo deve ter um nome único.",

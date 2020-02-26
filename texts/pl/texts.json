@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Wiadomość umożliwiająca przesłanie zaproszenia tylko poprzez e-mail, dostępna dla strony, nie będącej Tobą.",
 "_emptyOrNotValidEmail":"Nie podałeś adresu e-mail lub podany przez Ciebie adres e-mail jest nieprawidłowy. Spróbuj ponownie.",
 "_entityname":"Firma",
-"_entitynameExtraInfo":"Wyświetla się jako pole Firma w dokumentach:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Załączniki poświadczające",
 "_february":"Luty",
 "_fieldWithSameNameExists":"Istnieje już pole o tej nazwie. Każde pole musi posiadać unikalną nazwę.",

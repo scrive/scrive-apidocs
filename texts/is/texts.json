@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Skilaboð aðeins tiltæk fyrir boð í gegnum tölvupóst, til aðila sem er ekki þú.",
 "_emptyOrNotValidEmail":"Þú hefur ekki slegið inn netfang eða netfangið er ekki rétt. Vinsamlegast reyndu aftur.",
 "_entityname":"Fyrirtæki",
-"_entitynameExtraInfo":"Sýnt sem fyrirtækisreitur í skjölum:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Sönnunarfylgiskjöl",
 "_february":"Febrúar",
 "_fieldWithSameNameExists":"Þú ert þegar með reit með þessu heiti. Hver reitur verður að bera einstakt heiti.",

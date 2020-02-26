@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Sõnum on kättesaadav ainult kutse saatmiseks e-maili teel poolele, kes pole Teie.",
 "_emptyOrNotValidEmail":"Te pole sisestanud e-maili aadressi või e-maili aadress on vale. Palun proovige uuesti.",
 "_entityname":"Ettevõte",
-"_entitynameExtraInfo":"Kuvatakse dokumentide all Ettevõtte väljana:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Manustatud tõendid",
 "_february":"Veebruar",
 "_fieldWithSameNameExists":"Selle nimega väli on juba olemas. Iga väli peab olema unikaalse nimega.",

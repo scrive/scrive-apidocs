@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Message uniquement disponible pour invitation par mail, à une partie autre que vous.",
 "_emptyOrNotValidEmail":"Vous n'avez pas entré d'adresse mail ou l'adresse mail entrée est incorrecte. Veuillez réessayer.",
 "_entityname":"Entreprise",
-"_entitynameExtraInfo":"Indiqué comme Entreprise dans les documents :",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Pièces jointes tenant lieu de preuves",
 "_february":"février",
 "_fieldWithSameNameExists":"Vous disposez déjà d'un champ portant ce nom. Chaque champ doit comporter un nom unique.",

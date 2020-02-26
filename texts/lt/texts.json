@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Pasiūlymo pranešimą galima siųsti el. paštu tik šaliai, kuria nesate Jūs.",
 "_emptyOrNotValidEmail":"Jūs neįrašėte el. pašto adreso arba jis neteisingas. Pabandykite dar kartą.",
 "_entityname":"Įmonė",
-"_entitynameExtraInfo":"Kaip Įmonės laukelis vaizduojamas šiuose dokumentuose:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Įrodymų priedai",
 "_february":"Vasaris",
 "_fieldWithSameNameExists":"Jau yra laukelis tokiu pavadinimu. Kiekvienas laukelis turi turėti unikalų pavadinimą.",

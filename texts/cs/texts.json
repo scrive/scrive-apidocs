@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"E-mail s pozvánkou můžete zaslat kterékoliv straně, jen ne sami sobě.",
 "_emptyOrNotValidEmail":"Nezadali jste e-mailovou adresu, nebo je zadaná e-mailová adresa chybná. Zkuste to prosím znovu.",
 "_entityname":"Společnost",
-"_entitynameExtraInfo":"V těchto dokumentech se zobrazuje jako pole Společnost:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Přílohy s evidencí postupu",
 "_february":"Únor",
 "_fieldWithSameNameExists":"Pole s tímto názvem již existuje. Každé pole musí mít jedinečný název.",

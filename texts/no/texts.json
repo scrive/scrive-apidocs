@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Melding er kun tilgjengelig for invitasjon via e-post til en annen part enn deg selv.",
 "_emptyOrNotValidEmail":"Du har ikke skrevet inn en e-postadresse eller så er e-postadressen feil. Vennligst prøv igjen.",
 "_entityname":"Bedrift",
-"_entitynameExtraInfo":"Vis som bedriftsfelt i dokumenter: ",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Bevisvedlegg",
 "_february":"Februar",
 "_fieldWithSameNameExists":"Du har allerede et felt med dette navnet. Hvert felt må ha et unikt navn.",

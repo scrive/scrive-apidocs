@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Μήνυμα μόνο διαθέσιμο για πρόσκληση μέσω email, σε συμμετέχοντα που δεν είστε εσείς.",
 "_emptyOrNotValidEmail":"Δεν έχετε εισάγει μια διεύθυνση email ή η διεύθυνση email είναι λανθασμένη. Παρακαλώ προσπαθήστε ξανά. ",
 "_entityname":"Εταιρεία",
-"_entitynameExtraInfo":"Εμφανίζεται ως πεδίο της Εταιρείας στα έγγραφα:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Ένδειξη συνημμένων ",
 "_february":"Φεβρουάριος",
 "_fieldWithSameNameExists":"Έχετε ήδη ένα πεδίο με αυτό το όνομα. Κάθε πεδίο πρέπει να έχει μοναδικό όνομα. ",

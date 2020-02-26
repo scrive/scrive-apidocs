@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Viesti käytettävissä ainoastaan kutsuun sähköpostitse, osapuolelle, joka et ole sinä.",
 "_emptyOrNotValidEmail":"Et ole täyttänyt sähköpostiosoitettasi tai sähköpostiosoite on virheellinen. Ole hyvä ja yritä uudelleen. ",
 "_entityname":"Yritys",
-"_entitynameExtraInfo":"Näytetään yrityskenttänä dokumenteissa: ",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Todisteliitteet",
 "_february":"Helmikuu",
 "_fieldWithSameNameExists":"Sinulla on jo kenttä tällä nimellä. Jokaisella kentällä tulee olla ainutlaatuinen nimi.",

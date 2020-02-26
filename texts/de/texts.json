@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Eine Nachricht ist nur verfügbar als Einladung per E-Mail an eine andere Partei als Sie.",
 "_emptyOrNotValidEmail":"Sie haben keine E-Mailadresse eingegeben oder die E-Mailadresse ist falsch. Bitte versuchen Sie es erneut.",
 "_entityname":"Unternehmen",
-"_entitynameExtraInfo":"Wird in den Dokumenten als Unternehmens-Feld angezeigt:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Beleg-Anhänge",
 "_february":"Februar",
 "_fieldWithSameNameExists":"Es gibt bereits ein Feld mit diesem Namen. Jedes Feld muss einen eindeutigen Namen haben.",

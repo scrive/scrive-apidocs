@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Messaggio disponibile solo per l'invito via e-mail, per una parte ache non sei tu.",
 "_emptyOrNotValidEmail":"Non hai inserito l'indirizzo email o lo hai inserito in modo scorretto. Ti preghiamo di riprovare.",
 "_entityname":"Azienda",
-"_entitynameExtraInfo":"Mostra come campo Azienda nei documenti:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Prove in allegato",
 "_february":"Febbraio",
 "_fieldWithSameNameExists":"Hai già un campo con questo nome. Ogni campo deve avere un proprio specifico nome.",

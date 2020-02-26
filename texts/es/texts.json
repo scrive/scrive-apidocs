@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Mensaje de invitación disponible sólo vía email para otra parte que no es usted.",
 "_emptyOrNotValidEmail":"No ha introducido una dirección de email o la dirección de email es incorrecta. Por favor inténtelo de nuevo. ",
 "_entityname":"Empresa",
-"_entitynameExtraInfo":"El campo Empresa se muestra en los documentos como:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Anexos de pruebas",
 "_february":"Febrero",
 "_fieldWithSameNameExists":"Usted ya ha rellenado este campo con otro nombre. Cada campo debe tener escrito solamente un nombre.",

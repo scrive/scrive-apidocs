@@ -610,7 +610,7 @@
 "_editInvitationMessagePlaceholder":"Meddelande endast möjligt för inbjudan via e-post till en annan part än du själv.",
 "_emptyOrNotValidEmail":"Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.",
 "_entityname":"Företag",
-"_entitynameExtraInfo":"Visas som företagsfält i dokumenten:",
+"_entitynameExtraInfo":"",
 "_evidenceAttachmentBoxHeader":"Bevisbilagor",
 "_february":"februari",
 "_fieldWithSameNameExists":"Du har redan ett fält med detta namn. Varje fält måste ha ett unikt namn.",
