@@ -204,12 +204,12 @@ instance CompositeFromSQL UserGroupInvoicing where
 ----------------------------------------
 
 data UserGroupTag = UserGroupTag
-  { tagName  :: !Text
-  , tagValue :: !Text
+  { name  :: !Text
+  , value :: !Text
   } deriving (Eq, Show)
 
 instance Ord UserGroupTag where
-  compare = compare `on` tagName
+  compare = compare `on` (name :: UserGroupTag -> Text)
 
 type instance CompositeRow UserGroupTag = (Text, Text)
 
@@ -217,7 +217,7 @@ instance PQFormat UserGroupTag where
   pqFormat = compositeTypePqFormat ctUserGroupTag
 
 instance CompositeFromSQL UserGroupTag where
-  toComposite (name, value) = UserGroupTag { tagName = name, tagValue = value }
+  toComposite (name, value) = UserGroupTag { .. }
 
 instance FromJSON UserGroupTag where
   parseJSON =
@@ -344,4 +344,4 @@ makeFieldLabelsWith noPrefixFieldLabels ''UserGroupUI
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupAddress
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupRoot
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupWithChildren
-makeFieldLabelsWith abbreviatedFields ''UserGroupTag
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupTag
