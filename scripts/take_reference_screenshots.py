@@ -4,6 +4,7 @@ import contextlib
 import json
 import os
 import os.path as path
+import subprocess
 import time
 import base64
 import ipdb
@@ -163,7 +164,13 @@ def send_keys(keys, times=1):
 
 
 def screenshot_json(file_path):
-    with open(file_path, 'rb') as f:
+    result_file_path = '/tmp/output.png'
+    try:
+        os.remove(result_file_path)
+    except:
+        pass
+    subprocess.call(['pngquant', '--speed', '10', file_path, '--output', result_file_path])
+    with open(result_file_path, 'rb') as f:
         contents = base64.b64encode(f.read())
         now = datetime.now()
         return {'time': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -180,7 +187,8 @@ def make_driver():
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1268,899')
-    return webdriver.Chrome(executable_path='/usr/local/bin/chromedriver',
+    chrome_options.add_argument('--force-device-scale-factor=1')
+    return webdriver.Chrome(executable_path='chromedriver',
                             chrome_options=chrome_options)
 
 if __name__ == '__main__':

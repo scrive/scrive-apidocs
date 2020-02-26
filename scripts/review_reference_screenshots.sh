@@ -10,5 +10,5 @@ esac
 
 for x in `ls files/reference_screenshots/`; do
   jq '.image' < files/reference_screenshots/$x | perl -pe 's/"$//' | perl -pe 's#"data:image/jpeg;base64,##' | base64 -d > /tmp/test_$x.png
-  open /tmp/test_$x.png
+  $VIEWER /tmp/test_$x.png
 done
