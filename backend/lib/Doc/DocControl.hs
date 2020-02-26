@@ -62,7 +62,10 @@ import DB.TimeZoneName
 import Doc.Action
 import Doc.API.Callback.Model
 import Doc.API.V2.DocumentUpdateUtils
-import Doc.API.V2.Guards (guardDocumentStatus, guardThatDocumentCanBeStarted)
+import Doc.API.V2.Guards
+  ( guardDocumentStatus, guardGetSignatoryFromIdForDocument
+  , guardThatDocumentCanBeStarted
+  )
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocMails
@@ -285,10 +288,17 @@ handleSignShowSaveMagicHash did slid mh =
         dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
           `withDocumentM` do
                             guardThatDocumentIsReadableBySignatories =<< theDocument
-                            sid <- getNonTempSessionID
-                            dbUpdate $ AddDocumentSession sid slid
-                            -- Redirect to propper page
-                            sendRedirect $ LinkSignDocNoMagicHash did slid
+                            sl <- guardGetSignatoryFromIdForDocument slid
+                            if isJust (signatorylinkdeleted sl)
+                               || isJust (signatorylinkreallydeleted sl)
+                            then
+                              respondLinkInvalid
+                            else
+                              do
+                                sid <- getNonTempSessionID
+                                dbUpdate $ AddDocumentSession sid slid
+                                -- Redirect to propper page
+                                sendRedirect $ LinkSignDocNoMagicHash did slid
       )
     `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
     `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
@@ -621,8 +631,12 @@ handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     signlink      <- guardJust . getSigLinkFor signlinkid =<< theDocument
     customMessage <- fmap T.strip <$> getField "customtext"
-    actor         <- guardJustM $ fmap mkAuthorActor getContext
-    void $ sendReminderEmail customMessage actor False signlink
+    let mCustomMessage = case customMessage of
+          Just s | T.null s  -> Nothing
+                 | otherwise -> customMessage
+          Nothing -> Nothing
+    actor <- guardJustM $ fmap mkAuthorActor getContext
+    void $ sendReminderEmail mCustomMessage actor False signlink
     return ()
 
 handlePadList :: Kontrakcja m => m Response
@@ -792,12 +806,17 @@ addEventForVisitingSigningPageIfNeeded
 addEventForVisitingSigningPageIfNeeded ev sl = do
   ctx <- getContext
   doc <- theDocument
-  when (isPending doc && isSignatoryAndHasNotSigned sl) $ do
-    updateMTimeAndObjectVersion $ ctx ^. #time
-    void
-      $   dbUpdate
-      .   InsertEvidenceEventWithAffectedSignatoryAndMsg ev (return ()) (Just sl) Nothing
-      =<< signatoryActor ctx sl
+  when
+      (isPending doc && (isSignatoryAndHasNotSigned sl || isApproverAndHasNotApproved sl))
+    $ do
+        updateMTimeAndObjectVersion $ ctx ^. #time
+        void
+          $   dbUpdate
+          .   InsertEvidenceEventWithAffectedSignatoryAndMsg ev
+                                                             (return ())
+                                                             (Just sl)
+                                                             Nothing
+          =<< signatoryActor ctx sl
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc =

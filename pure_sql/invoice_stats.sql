@@ -300,6 +300,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "User group ID" BIGINT,
         "User group root ID" BIGINT,
         "Company number" TEXT,
+        "Salesforce ID" TEXT,
         "User group admin" TEXT,
         "Invoice/BillItem contact email" TEXT,
         "Is invoice" TEXT,
@@ -346,6 +347,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , user_groups.id AS "User group ID"
            , (select coalesce(user_groups.parent_group_path[(select array_length(user_groups.parent_group_path, 1))] :: bigint, user_groups.id :: bigint )) AS "User group root ID"
            , escape_for_csv(user_group_addresses.company_number :: TEXT) AS "Company number"
+           , escape_for_csv(user_group_tags.value :: TEXT) AS "Salesforce ID"
            , escape_for_csv((SELECT get_user_group_contact(user_groups.id)) :: TEXT) AS "User group admin"
            , escape_for_csv(get_user_group_contact(
                  array_last_id(
@@ -494,6 +496,8 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
          FROM user_groups
          JOIN user_group_addresses ON user_groups.id = user_group_addresses.user_group_id
          JOIN user_group_invoicings ON user_groups.id = user_group_invoicings.user_group_id
+         JOIN user_group_tags ON (    user_groups.id=user_group_tags.user_group_id
+                                  AND user_group_tags.name='sf-account-id')
         CROSS JOIN period
         WHERE (   user_group_invoicings.payment_plan <> 0
                OR user_groups.parent_group_id IS NOT NULL);
@@ -532,6 +536,7 @@ CREATE TABLE report_master AS
   "User group ID",
   escape_for_csv((SELECT name FROM user_groups WHERE id="User group root ID") :: TEXT) AS "User group root name",
   "User group root ID",
+  "Salesforce ID",
   "User group admin",
   "Is invoice",
   "Is billitem",

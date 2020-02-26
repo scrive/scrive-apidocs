@@ -70,7 +70,7 @@ var TransferModal = React.createClass({
         active={this.props.active}
       >
         <Modal.Header
-          title="Transfer document to different user"
+          title="Transfer template to different user"
           showClose={true}
           onClose={this.props.onCancel}
         />
@@ -139,7 +139,7 @@ var TemplateTransfer = React.createClass({
           onCancel={this.onTransferModalClose}
         />
         <Button
-          text="Transfer document to different user"
+          text="Transfer template to different user"
           onClick={this.onTransferButtonClick}
           type="action"
           />

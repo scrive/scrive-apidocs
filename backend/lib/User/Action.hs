@@ -61,7 +61,14 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
     & (#lastName .~ fromMaybe "" msndname)
     & (#phone .~ phone)
     & (#companyPosition .~ position)
+
   void $ dbUpdate . UserGroupUpdate . set #name ugname $ ug
+  case ug ^. #address of
+    Just addr -> do
+      let newAddress = Just $ set #entityName ugname addr
+      void $ dbUpdate $ UserGroupUpdateAddress (ug ^. #id) newAddress
+    Nothing -> return () -- dont udate entity name for inherited addresses
+
   void $ dbUpdate $ LogHistoryUserInfoChanged
     (actvuser ^. #id)
     (ctx ^. #ipAddr)

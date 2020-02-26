@@ -1456,7 +1456,7 @@ apiCallV1Get did = logDocument did . api $ do
                                   msiglink
                                   doc
                   )
-          | admin -> do
+          | admin && False -> do -- disable temporarily
             logInfo "GOD DOCUMENT ACCESS" $ object ["god" .= show (user ^. #id)]
             Ok <$> documentJSONV1 (Just user) external False msiglink doc
           | otherwise -> throwM . SomeDBExtraException $ serverError

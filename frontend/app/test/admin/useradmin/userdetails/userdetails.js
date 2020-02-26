@@ -65,7 +65,8 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
       var company = new CompanyModel({
         companyid: "companyid",
-        companyname: "companyname"
+        companyname: "companyname",
+        entityname: "entityname"
       });
       actualProps.user.company = sinon.stub().returns(company);
     }
@@ -179,7 +180,7 @@ describe("admin/useradmin/userdetails/userdetails", function () {
     assert.equal(setCall.args[0].phone, "phone");
     assert.equal(setCall.args[0].lang, "lang");
     assert.equal(setCall.args[0].companyposition, "companyposition");
-    assert.equal(setCall.args[0].companyname, "companyname");
+    assert.equal(setCall.args[0].companyname, "entityname");
     assert.equal(setCall.args[0].companyid, "companyid");
     assert.equal(
       setCall.args[0].accountType,

@@ -248,6 +248,21 @@ var DetailsEditorView = React.createClass({
             </td>
           </tr>
           <tr>
+            <td><label>Entity Name</label></td>
+            <td>
+              <input
+                name="entityname"
+                type="text"
+                value={ this.props.addressIsInherited
+                      ? this.props.inheritedAddress.entityname
+                      : this.props.entityname }
+                disabled={this.props.addressIsInherited}
+                onChange={this.onEntityNameChange}
+              />
+            </td>
+            <td>"Company" field in documents</td>
+          </tr>
+          <tr>
             <td><label>User Group Name</label></td>
             <td>
               <input
@@ -329,21 +344,6 @@ var DetailsEditorView = React.createClass({
                 onChange={this.onNumberChange}
               />
             </td>
-          </tr>
-          <tr>
-            <td><label>Entity Name</label></td>
-            <td>
-              <input
-                name="entityname"
-                type="text"
-                value={ this.props.addressIsInherited
-                      ? this.props.inheritedAddress.entityname
-                      : this.props.entityname }
-                disabled={this.props.addressIsInherited}
-                onChange={this.onEntityNameChange}
-              />
-            </td>
-            <td>"Company" field in documents</td>
           </tr>
           <tr>
             <td><label>Address</label></td>

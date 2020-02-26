@@ -802,7 +802,7 @@ guardDocumentReadAccess mslid doc = do
             _
               | userIsAuthorOrCompanyAdminOrDocumentIsShared user doc author
               -> return $ documentAccessForUser user doc
-              | admin
+              | admin && False -- disable temporarily
               -> do
                 logInfo "GOD DOCUMENT ACCESS" $ object ["god" .= show (user ^. #id)]
                 return $ documentAccessForAdminonly doc
