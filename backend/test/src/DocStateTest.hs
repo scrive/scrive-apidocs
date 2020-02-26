@@ -3518,6 +3518,25 @@ testSinatoryNameMatch = do
     $ SigningData.matchSignatoryName (mkSignatoryLink "guido" "van rossum")
                                      (mkTransactionData "G van Rossum")
 
+  assertEqual "signatory with tussenvoegsel in first name should still match"
+              SigningData.Match
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido van" "Rossum")
+                                     (mkTransactionData "G van Rossum")
+
+  assertEqual "signatory with full name in first name should still match"
+              SigningData.Match
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido van Rossum" "")
+                                     (mkTransactionData "G van Rossum")
+
+  assertEqual "signatory with full name in last name should still match" SigningData.Match
+    $ SigningData.matchSignatoryName (mkSignatoryLink "" "Guido van Rossum")
+                                     (mkTransactionData "G van Rossum")
+
+  assertEqual "signatory with unicode initials should match" SigningData.Match
+    $ SigningData.matchSignatoryName
+        (mkSignatoryLink "Γohannes Δiderik" "van der Waals")
+        (mkTransactionData "ΓΔ van der Waals")
+
   assertEqual "signatory with matched initials and last name should match"
               SigningData.Match
     $ SigningData.matchSignatoryName
@@ -3527,8 +3546,8 @@ testSinatoryNameMatch = do
   -- The first name and last name is currently split in the front end
   -- with the first name being just the first word. This means the
   -- matching would fail for first name with 2 or more words.
-  assertEqual "part of first name incorrectly placed as last name should mismatch"
-              SigningData.Mismatch
+  assertEqual "part of first name incorrectly placed as last name should still match"
+              SigningData.Match
     $ SigningData.matchSignatoryName
         (mkSignatoryLink "Johannes" "Diderik van der Waals")
         (mkTransactionData "JD van der Waals")
@@ -3558,7 +3577,6 @@ testSinatoryNameMatch = do
   assertEqual "signatory with different initials should mismatch" SigningData.Mismatch
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "K van Rossum")
-
   where
     mkSignatoryLink firstName lastName = defaultSignatoryLink
       { signatoryfields = [ fieldForTests (NameFI (NameOrder 1)) firstName

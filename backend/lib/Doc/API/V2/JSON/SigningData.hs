@@ -10,6 +10,7 @@ import Data.Algorithm.Diff (Diff, getGroupedDiff)
 import Data.Unjson
 import qualified Data.Algorithm.Diff as Diff
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
@@ -111,6 +112,11 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
       Right (LegacyNordeaSignature_       _) -> []
       Right (LegacyMobileBankIDSignature_ _) -> []
 
+splitFirstSpace :: Text -> (Text, Text)
+splitFirstSpace str = case T.words str of
+  (x : xs) -> (x, T.unwords xs)
+  []       -> ("", "")
+
 -- Compare the name registered in the signatory link against
 -- the name returned from IDIN authentication. IDIN returns
 -- the initials of the first name, combined with the legal
@@ -121,20 +127,32 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
 matchSignatoryName
   :: SignatoryLink -> CompleteIDINEIDServiceTransactionData -> NameMatchResult
 matchSignatoryName signatory details
-  | T.isPrefixOf slInitials eidName = matchName eidName slFullName
-  | otherwise = Mismatch
+  | slInitials == eidInitials = matchName eidLastName slRestName
+  | otherwise                 = Mismatch
   where
     slFirstName = T.toLower $ getFirstName signatory
     slLastName  = T.toLower $ getLastName signatory
 
+    slNameWords = T.words slFirstName <> T.words slLastName
+
+    eidFullName :: Text
+    eidFullName = T.toLower $ eiditdName details
+
+    eidInitials :: Text
+    eidLastName :: Text
+    (eidInitials, eidLastName) = splitFirstSpace eidFullName
+
+    eidInitialsCount :: Int
+    eidInitialsCount = T.length eidInitials
+
+    -- Fuzzy match the initials from IDIN by taking the words
+    -- from full name, so that misplaced first/last names still matches
     slInitials :: Text
-    slInitials = T.concat . map (T.take 1) . T.words $ slFirstName
+    slInitials = T.concat . map (T.take 1) $ L.take eidInitialsCount slNameWords
 
-    slFullName :: Text
-    slFullName = slInitials <> " " <> slLastName
+    slRestName :: Text
+    slRestName = T.unwords $ L.drop eidInitialsCount slNameWords
 
-    eidName :: Text
-    eidName = T.toLower $ eiditdName details
 
 matchName :: Text -> Text -> NameMatchResult
 matchName s1 s2 | s1 == s2      = Match
