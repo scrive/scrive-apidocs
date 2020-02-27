@@ -382,32 +382,21 @@ formValues ug =
 
 tagsToUpdatesJson : D.Dict String String -> D.Dict String String -> JE.Value
 tagsToUpdatesJson newTags oldTags =
-    D.keys newTags
-        ++ D.keys oldTags
-        |> S.fromList
-        |> S.toList
-        |> L.filterMap
-            (\key ->
-                case ( D.get key newTags, D.get key oldTags ) of
-                    -- this cannot happen
-                    ( Nothing, Nothing ) ->
-                        Nothing
-
-                    ( Nothing, Just _ ) ->
-                        Just <|
-                            JE.object
-                                [ ( "name", JE.string key )
-                                , ( "value", JE.null )
-                                ]
-
-                    ( Just newValue, _ ) ->
-                        Just <|
-                            JE.object
-                                [ ( "name", JE.string key )
-                                , ( "value", JE.string newValue )
-                                ]
+    D.merge
+        (\key newValue -> D.insert key <| Just newValue)
+        (\key newValue oldValue -> ite (newValue == oldValue) identity (D.insert key <| Just newValue))
+        (\key _ -> D.insert key Nothing)
+        newTags
+        oldTags
+        D.empty
+        |> D.toList
+        |> JE.list
+            (\( key, mValue ) ->
+                JE.object
+                    [ ( "name", JE.string key )
+                    , ( "value", M.withDefault JE.null <| M.map JE.string mValue )
+                    ]
             )
-        |> JE.list identity
 
 
 formValuesSettings : Settings -> List ( String, String )
