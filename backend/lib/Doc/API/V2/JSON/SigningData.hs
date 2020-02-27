@@ -127,13 +127,15 @@ splitFirstSpace str = case T.words str of
 matchSignatoryName
   :: SignatoryLink -> CompleteIDINEIDServiceTransactionData -> NameMatchResult
 matchSignatoryName signatory details
+  | slFullName == eidFullName = Match
   | slInitials == eidInitials = matchName eidLastName slRestName
   | otherwise                 = Mismatch
   where
     slFirstName = T.toLower $ getFirstName signatory
     slLastName  = T.toLower $ getLastName signatory
+    slFullName  = slFirstName <> " " <> slLastName
 
-    slNameWords = T.words slFirstName <> T.words slLastName
+    slNameWords = T.words slFullName
 
     eidFullName :: Text
     eidFullName = T.toLower $ eiditdName details
