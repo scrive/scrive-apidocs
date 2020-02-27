@@ -3573,9 +3573,22 @@ testSinatoryNameMatch = do
         (mkSignatoryLink "Johannes" "Diderik van der Waals")
         (mkTransactionData "JD van der Waals")
 
-  assertEqual "signatory with missing tussenvoegsel should mismatch" SigningData.Mismatch
+  assertEqual "signatory with part of first name missing should not match"
+              SigningData.Mismatch
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Johannes" "van der Waals")
+                                     (mkTransactionData "JD van der Waals")
+
+  assertEqual "signatory with partially initialized name should match" SigningData.Match
+    $ SigningData.matchSignatoryName (mkSignatoryLink "J" "Diderik van der Waals")
+                                     (mkTransactionData "JD van der Waals")
+
+  assertEqual "signatory with extra tussenvoegsel should mismatch" SigningData.Mismatch
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "G Rossum")
+
+  assertEqual "signatory with missing tussenvoegsel should mismatch" SigningData.Mismatch
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "Rossum")
+                                     (mkTransactionData "G van Rossum")
 
   assertEqual "signatory with one letter difference should misspell"
               SigningData.Misspelled
