@@ -3537,6 +3537,12 @@ testSinatoryNameMatch = do
     $ SigningData.matchSignatoryName (mkSignatoryLink "G" "van Rossum")
                                      (mkTransactionData "G van Rossum")
 
+  assertEqual
+      "signatory with already initialized name with additional . should still match"
+      SigningData.Match
+    $ SigningData.matchSignatoryName (mkSignatoryLink "G." "van Rossum")
+                                     (mkTransactionData "G van Rossum")
+
   assertEqual "signatory with already initialized name in first name should still match"
               SigningData.Match
     $ SigningData.matchSignatoryName (mkSignatoryLink "G van Rossum" "")

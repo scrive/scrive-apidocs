@@ -117,6 +117,9 @@ splitFirstSpace str = case T.words str of
   (x : xs) -> (x, T.unwords xs)
   []       -> ("", "")
 
+normalizeName :: Text -> Text
+normalizeName = T.toLower . T.replace "." ""
+
 -- Compare the name registered in the signatory link against
 -- the name returned from IDIN authentication. IDIN returns
 -- the initials of the first name, combined with the legal
@@ -131,14 +134,14 @@ matchSignatoryName signatory details
   | slInitials == eidInitials = matchName eidLastName slRestName
   | otherwise                 = Mismatch
   where
-    slFirstName = T.toLower $ getFirstName signatory
-    slLastName  = T.toLower $ getLastName signatory
+    slFirstName = normalizeName $ getFirstName signatory
+    slLastName  = normalizeName $ getLastName signatory
     slFullName  = slFirstName <> " " <> slLastName
 
     slNameWords = T.words slFullName
 
     eidFullName :: Text
-    eidFullName = T.toLower $ eiditdName details
+    eidFullName = normalizeName $ eiditdName details
 
     eidInitials :: Text
     eidLastName :: Text
