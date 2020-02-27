@@ -129,23 +129,29 @@ normalizeName = T.toLower . T.replace "." ""
 --   Mismatch - if the initials don't match or if more misspellings in the last name.
 matchSignatoryName
   :: SignatoryLink -> CompleteIDINEIDServiceTransactionData -> NameMatchResult
-matchSignatoryName signatory details
+matchSignatoryName signatory details = matchSignatoryName' slFullName
+                                                           eidInitials
+                                                           eidLastName
+  where
+    slFirstName                = normalizeName $ getFirstName signatory
+    slLastName                 = normalizeName $ getLastName signatory
+    slFullName                 = slFirstName <> " " <> slLastName
+    eidFullName                = normalizeName $ eiditdName details
+    (eidInitials, eidLastName) = splitFirstSpace eidFullName
+
+matchSignatoryName' :: Text -> Text -> Text -> NameMatchResult
+matchSignatoryName' slFullName eidInitials eidLastName
   | slFullName == eidFullName = Match
   | slInitials == eidInitials = matchName eidLastName slRestName
-  | otherwise                 = Mismatch
+  | T.length slInitials <= 1 = Mismatch
+  | otherwise = case
+      matchSignatoryName' slFullName (T.dropEnd 1 eidInitials) eidLastName
+    of
+      Match      -> Misspelled
+      Misspelled -> Misspelled
+      Mismatch   -> Mismatch
   where
-    slFirstName = normalizeName $ getFirstName signatory
-    slLastName  = normalizeName $ getLastName signatory
-    slFullName  = slFirstName <> " " <> slLastName
-
     slNameWords = T.words slFullName
-
-    eidFullName :: Text
-    eidFullName = normalizeName $ eiditdName details
-
-    eidInitials :: Text
-    eidLastName :: Text
-    (eidInitials, eidLastName) = splitFirstSpace eidFullName
 
     eidInitialsCount :: Int
     eidInitialsCount = T.length eidInitials
@@ -156,8 +162,9 @@ matchSignatoryName signatory details
     slInitials = T.concat . map (T.take 1) $ L.take eidInitialsCount slNameWords
 
     slRestName :: Text
-    slRestName = T.unwords $ L.drop eidInitialsCount slNameWords
+    slRestName  = T.unwords $ L.drop eidInitialsCount slNameWords
 
+    eidFullName = eidInitials <> " " <> eidLastName
 
 matchName :: Text -> Text -> NameMatchResult
 matchName s1 s2 | s1 == s2      = Match
