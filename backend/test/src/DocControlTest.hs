@@ -6,6 +6,7 @@ import Data.Bifunctor
 import Data.Int
 import Happstack.Server
 import Test.Framework
+import Test.QuickCheck
 import Text.JSON.Gen (toJSValue)
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
@@ -56,6 +57,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
+import qualified Util.SMSLinkShortening as SMSLinkShortening
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup
@@ -117,6 +119,9 @@ docControlTests env = testGroup
   , testThat "Timeouting document can trigger info mail sendout to author"
              env
              testSendEmailOnTimeout
+  , testThat "Short link handler either redirects or returns 404"
+             env
+             testShortLinkRedirectTest
   ]
 
 testUploadingFile :: TestEnv ()
@@ -1041,3 +1046,26 @@ testSendEmailOnTimeout = do
   runSQL_ $ ("SELECT COUNT(*) FROM mails WHERE receivers ILIKE '%bob@blue.com%'")
   c <- fetchOne runIdentity
   assertEqual "One mail should be sent to the author" (1 :: Int64) c
+
+
+testShortLinkRedirectTest :: TestEnv ()
+testShortLinkRedirectTest = do
+  user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
+                                               , lastName  = return "Blue"
+                                               , email     = return "bob@blue.com"
+                                               }
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaStatuses    = OneOf [Pending]
+    , rdaTypes       = OneOf [Signable]
+    , rdaSignatories = let signatory = OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                       in  OneOf $ map (`replicate` signatory) [2 .. 10]
+    }
+  let sl = head . reverse $ documentsignatorylinks doc
+  ctx               <- mkContext defaultLang
+  (mh :: MagicHash) <- rand 10 arbitrary -- We don't check mh value here at all
+  req               <- mkRequest GET []
+  let goodParam = SMSLinkShortening.short (signatorylinkid sl, mh)
+  (res1, _) <- runTestKontra req ctx $ handleSignShowShortRedirect goodParam
+  assertEqual "handleSignShowShortRedirect redirects with 303" 303 (rsCode res1)
+  assertRaises404 (void $ runTestKontra req ctx $ handleSignShowShortRedirect "bad_param")
+

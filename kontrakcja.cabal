@@ -540,6 +540,7 @@ Library
                  , Util.PDFUtil
                  , Util.QRCode
                  , Util.SignatoryLinkUtils
+                 , Util.SMSLinkShortening
                  , Util.ZipUtil
                  , Utils.Color
                  , Utils.Directory
@@ -1307,6 +1308,7 @@ Test-suite kontrakcja-test
                  SMS.FromKontra.Tables
                  SMS.Migrations
                  SMS.Tables
+                 SMSLinkShorteningTest
                  Session.Tables
                  SessionsTest
                  SignupTest

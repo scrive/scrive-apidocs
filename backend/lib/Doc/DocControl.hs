@@ -11,6 +11,7 @@ module Doc.DocControl (
     , handleDownloadClosedFile
     , handleSignShow
     , handleSignShowSaveMagicHash
+    , handleSignShowShortRedirect
     , handleSignFromTemplate
     , handleEvidenceAttachment
     , handleIssueShowGet
@@ -114,6 +115,7 @@ import Util.PDFUtil
 import Util.SignatoryLinkUtils
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
+import qualified Util.SMSLinkShortening as SMSLinkShortening
 
 handleNewDocument :: Kontrakcja m => m InternalKontraResponse
 handleNewDocument = withUser . with2FACheck $ \user -> do
@@ -304,6 +306,25 @@ handleSignShowSaveMagicHash did slid mh =
     `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
     `catchDBExtraException` (\SignatoryLinkIsForwarded -> respondLinkInvalid)
     `catchDBExtraException` (\(_ :: DocumentWasPurged) -> respondLinkInvalid)
+
+handleSignShowShortRedirect :: Kontrakcja m => T.Text -> m Response
+handleSignShowShortRedirect text = do
+  case (SMSLinkShortening.unshort text) of
+    Just (slid, mh) -> do
+      mdid <- dbQuery $ GetDocumentIDBySignatoryLinkIDWithoutAnyChecks slid
+      case mdid of
+        Just did -> do
+          logInfo "Redirecting signatory from short link worked"
+            $ object [identifier did, identifier slid]
+          sendRedirect $ LinkSignDocMagicHash did slid mh
+        Nothing -> do
+          logInfo "Redirecting signatory from short link failed (no document)"
+            $ object ["segment" .= text]
+          respond404
+    Nothing -> do
+      logInfo "Redirecting signatory from short link failed (invalid text)"
+        $ object ["segment" .= text]
+      respond404
 
 handleSignFromTemplate :: Kontrakcja m => DocumentID -> MagicHash -> m Response
 handleSignFromTemplate tplID mh = logDocument tplID $ do

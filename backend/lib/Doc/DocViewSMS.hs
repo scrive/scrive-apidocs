@@ -113,8 +113,8 @@ smsPartyProcessFinalizedNotification document signatoryLink action = do
       fields = do
         smsFields document
         if isClosed document
-          then smsConfirmationLinkFields document signatoryLink
-          else smsInvitationLinkFields document signatoryLink
+          then smsConfirmationLinkFields signatoryLink
+          else smsInvitationLinkFields signatoryLink
   content <- renderLocalTemplate document (templateName template) fields
   mkSMS document signatoryLink (Just info) content
 
@@ -132,7 +132,7 @@ smsInvitation
   -> m SMS
 smsInvitation invitationTo sl doc = do
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl))
-    =<< renderLocalTemplate doc template (smsFields doc >> smsInvitationLinkFields doc sl)
+    =<< renderLocalTemplate doc template (smsFields doc >> smsInvitationLinkFields sl)
   where
     template = case invitationTo of
       Sign    -> templateName "_smsInvitationToSign"
@@ -154,7 +154,7 @@ smsInvitationToAuthor doc sl = do
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl))
     =<< renderLocalTemplate doc
                             "_smsInvitationToAuthor"
-                            (smsFields doc >> smsInvitationLinkFields doc sl)
+                            (smsFields doc >> smsInvitationLinkFields sl)
 
 -- brittany-disable-next-binding
 smsReminder
@@ -173,8 +173,8 @@ smsReminder automatic doc sl = do
   contents <- renderLocalTemplate doc template $ do
     smsFields doc
     if isClosed doc
-      then smsConfirmationLinkFields doc sl
-      else smsInvitationLinkFields doc sl
+      then smsConfirmationLinkFields sl
+      else smsInvitationLinkFields sl
   mkSMS doc sl smstypesignatory contents
  where
   (smstypesignatory, template) = if
@@ -206,10 +206,7 @@ smsClosedNotification
   -> m SMS
 smsClosedNotification doc sl withEmail sealFixed = do
   mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc)
-    =<< (  renderLocalTemplate doc template
-        $  smsFields doc
-        >> smsConfirmationLinkFields doc sl
-        )
+    =<< (renderLocalTemplate doc template $ smsFields doc >> smsConfirmationLinkFields sl)
   where
     template = case (sealFixed, withEmail) of
       (True , True ) -> templateName "_smsCorrectedNotificationWithEmail"
@@ -278,7 +275,7 @@ smsForwardSigningForNewSignatory originalsl newsl doc = do
           (templateName "_smsForwardSigningForNewSignatoryApproving")
   message <- doRender $ do
     smsFields doc
-    smsInvitationLinkFields doc newsl
+    smsInvitationLinkFields newsl
     F.value "fromName" (getSmartName originalsl)
     F.value "toName" (getSmartName newsl)
   mkSMS doc
@@ -322,16 +319,15 @@ smsInvitationLinkFields
      , MonadTime m
      , TemplatesMonad m
      )
-  => Document
-  -> SignatoryLink
+  => SignatoryLink
   -> Fields m ()
-smsInvitationLinkFields doc sl = do
+smsInvitationLinkFields sl = do
   mctx <- lift $ getMailContext
   mh   <- lift $ dbUpdate $ NewSignatoryAccessToken
     (signatorylinkid sl)
     SignatoryAccessTokenForSMSBeforeClosing
     Nothing
-  let link = LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh
+  let link = LinkSignDocMagicHashShort (signatorylinkid sl) mh
   F.value "link" $ mctx ^. #brandedDomain % #url <> showt link
 
 smsConfirmationLinkFields
@@ -342,14 +338,13 @@ smsConfirmationLinkFields
      , MonadTime m
      , TemplatesMonad m
      )
-  => Document
-  -> SignatoryLink
+  => SignatoryLink
   -> Fields m ()
-smsConfirmationLinkFields doc sl = do
+smsConfirmationLinkFields sl = do
   mctx             <- lift $ getMailContext
   (mh, expiration) <- lift $ makeConfirmationMagicHash sl
   F.value "link" $ mctx ^. #brandedDomain % #url <> showt
-    (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
+    (LinkSignDocMagicHashShort (signatorylinkid sl) mh)
   F.value "availabledate" $ formatTimeYMD expiration
 
 -- | Create a temporary hash valid for 30 days.

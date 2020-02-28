@@ -85,6 +85,7 @@ import QRCodeTest
 import ReferenceScreenshotsTest
 import SessionsTest
 import SignupTest
+import SMSLinkShorteningTest
 import SSO.GuardsTest
 import Templates (readGlobalTemplates)
 import TestConf
@@ -154,6 +155,7 @@ allTests =
   , padAplicationAPITests
   , partnerAPITests
   , qrCodeTests
+  , smsLinkShorteningTest
   , sessionsTests
   , signupTests
   , thirdPartyStatsTests

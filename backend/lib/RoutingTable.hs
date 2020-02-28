@@ -73,6 +73,7 @@ staticRoutes production = choice
   , dir "s" $ hGet $ toK0 $ sendRedirect $ LinkArchive
   , dir "s" $ hGet $ toK2 $ DocControl.handleSignShow
   , dir "s" $ hGet $ toK3 $ DocControl.handleSignShowSaveMagicHash
+  , dir "z" $ hGet $ toK1 $ DocControl.handleSignShowShortRedirect
   , dir "t" $ hGet $ toK2 $ DocControl.handleSignFromTemplate
 
      -- E-ID stuff

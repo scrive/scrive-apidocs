@@ -17,6 +17,7 @@ module Doc.Model.Query
   , GetDocumentsBySignatoryLinkIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkID(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
+  , GetDocumentIDBySignatoryLinkIDWithoutAnyChecks(..)
   , GetDocumentByDocumentIDAndShareableLinkHash(..)
   , CheckIfMagicHashIsValid(..)
   , GetDocumentsByAuthor(..)
@@ -239,6 +240,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAPICallbackResult (Ma
       sqlResult "callback_result"
       sqlWhereEq "document_id" did
       sqlLimit 1
+    fetchMaybe runIdentity
+
+data GetDocumentIDBySignatoryLinkIDWithoutAnyChecks = GetDocumentIDBySignatoryLinkIDWithoutAnyChecks SignatoryLinkID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentIDBySignatoryLinkIDWithoutAnyChecks (Maybe DocumentID) where
+  query (GetDocumentIDBySignatoryLinkIDWithoutAnyChecks slid) = do
+    runQuery_ . sqlSelect "signatory_links" $ do
+      sqlResult "signatory_links.document_id"
+      sqlWhereEq "signatory_links.id" slid
     fetchMaybe runIdentity
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID

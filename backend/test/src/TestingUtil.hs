@@ -54,6 +54,7 @@ module TestingUtil (
   , assertNotEqual
   , assertEqualJson
   , assertRaisesInternalError
+  , assertRaises404
   , assertRaisesDBException
   , assertRaisesKontra
   , assertSQLCount
@@ -1532,6 +1533,16 @@ assertRaisesInternalError a = catchJust
     KE.LinkInvalid     -> Nothing
   )
   (a >>= assertFailure . ("Expecting InternalError but got " <>) . show)
+  return
+
+assertRaises404 :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
+assertRaises404 a = catchJust
+  (\case
+    KE.Respond404      -> Just ()
+    KE.InternalError _ -> Nothing
+    KE.LinkInvalid     -> Nothing
+  )
+  (a >>= assertFailure . ("Expecting Respond404 but got " <>) . show)
   return
 
 assertRaisesDBException :: (Show v, MonadIO m, MonadMask m) => m v -> m ()

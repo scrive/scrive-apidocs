@@ -19,6 +19,7 @@ import OAuth.Model
 import User.Email
 import User.Model
 import UserGroup.Types
+import qualified Util.SMSLinkShortening as SMSLinkShortening
 
 {- |
    All the links available for responses
@@ -35,6 +36,7 @@ data KontraLink
     | LinkMainFile Document SignatoryLink MagicHash
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkSignDocMagicHash DocumentID SignatoryLinkID MagicHash
+    | LinkSignDocMagicHashShort SignatoryLinkID MagicHash
     | LinkIssueDoc DocumentID
     | LinkEvidenceAttachment DocumentID Text
     | LinkCompanyTakeover UserGroupID
@@ -94,6 +96,8 @@ instance Show KontraLink where
     (<>) $ "/s/" <> show documentid <> "/" <> show signatorylinkid
   showsPrec _ (LinkSignDocMagicHash documentid signatorylinkid mh) =
     (<>) $ "/s/" <> show documentid <> "/" <> show signatorylinkid <> "/" <> show mh
+  showsPrec _ (LinkSignDocMagicHashShort signatorylinkid mh) =
+    (<>) $ "/z/" <> T.unpack (SMSLinkShortening.short (signatorylinkid, mh))
   showsPrec _ (LinkPasswordReminder aid hash) =
     (<>) $ "/amnesia/" <> show aid <> "/" <> show hash
   showsPrec _ (LinkAccountCreated lang uid hash sm) =
