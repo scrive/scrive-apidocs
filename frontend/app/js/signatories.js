@@ -946,7 +946,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       });
     }
     // maximum of 1 national EID is allowed per signatory
-    var eids = ["se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "nl_idin"];
+    var eids = ["se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "nl_idin", "verimi"];
     return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
     },
     setAuthenticationToView: function(a) {
