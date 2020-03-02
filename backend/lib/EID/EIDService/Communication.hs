@@ -11,6 +11,9 @@ module EID.EIDService.Communication (
   , createNemIDTransactionWithEIDService
   , startNemIDTransactionWithEIDService
   , checkNemIDTransactionWithEIDService
+  , createNOBankIDTransactionWithEIDService
+  , startNOBankIDTransactionWithEIDService
+  , checkNOBankIDTransactionWithEIDService
   , dateOfBirthFromDKPersonalNumber
   ) where
 
@@ -42,6 +45,19 @@ createNemIDTransactionWithEIDService conf locale redirect = do
       $ object ["dkNemID" .= object ["limitedClientMode" .= True, "uiLocale" .= locale]]
   createTransactionWithEIDService conf "dkNemID" providerParams redirect
 
+createNOBankIDTransactionWithEIDService
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> Text
+  -> Maybe Text
+  -> Text
+  -> m (EIDServiceTransactionID)
+createNOBankIDTransactionWithEIDService conf ssn mPhone redirect = do
+  let phonePair = maybe [] (\p -> ["phoneNumber" .= p]) mPhone
+      providerParams =
+        Just $ object ["noBankID" .= object (["personalNumber" .= ssn] <> phonePair)]
+  createTransactionWithEIDService conf "noBankID" providerParams redirect
+
 startNemIDTransactionWithEIDService
   :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
 startNemIDTransactionWithEIDService conf tid = do
@@ -53,6 +69,24 @@ startNemIDTransactionWithEIDService conf tid = do
       murl <-
         fromJSValueFieldCustom "providerInfo"
         $ fromJSValueFieldCustom "dkNemIDAuth"
+        $ fromJSValueField "authUrl"
+      case (murl) of
+        (Just url) -> return (T.pack url)
+        _          -> do
+          logAttention_ "Failed to read 'url' from start transaction response"
+          internalError
+
+startNOBankIDTransactionWithEIDService
+  :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
+startNOBankIDTransactionWithEIDService conf tid = do
+  response <- startTransactionWithEIDService conf "noBankID" tid
+  extractUrl response
+  where
+    extractUrl :: Kontrakcja m => JSValue -> m Text
+    extractUrl jsValue = withJSValue jsValue $ do
+      murl <-
+        fromJSValueFieldCustom "providerInfo"
+        $ fromJSValueFieldCustom "noBankIDAuth"
         $ fromJSValueField "authUrl"
       case (murl) of
         (Just url) -> return (T.pack url)
@@ -128,6 +162,64 @@ checkNemIDTransactionWithEIDService conf tid = do
       Just "EmployeeKeyFile" -> EIDServiceNemIDKeyFile
       Just t ->
         unexpectedError $ "unknown internal provider returned from EID service" <> t
+
+checkNOBankIDTransactionWithEIDService
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> EIDServiceTransactionID
+  -> m
+       ( Maybe EIDServiceTransactionStatus
+       , Maybe CompleteNOBankIDEIDServiceTransactionData
+       )
+checkNOBankIDTransactionWithEIDService conf tid = do
+  mtd <- getTransactionFromEIDService conf "noBankID" tid
+  case mtd of
+    Just td -> getTransactionDataAndStatus td
+    _       -> return (Nothing, Nothing)
+  where
+    getTransactionDataAndStatus
+      :: Kontrakcja m
+      => JSValue
+      -> m
+           ( Maybe EIDServiceTransactionStatus
+           , Maybe CompleteNOBankIDEIDServiceTransactionData
+           )
+    getTransactionDataAndStatus jsValue = withJSValue jsValue $ do
+      (mstatus :: Maybe String) <- fromJSValueField "status"
+      case (mstatus) of
+        (Just "new"     ) -> return (Just EIDServiceTransactionStatusNew, Nothing)
+        (Just "started" ) -> return (Just EIDServiceTransactionStatusStarted, Nothing)
+        (Just "failed"  ) -> return (Just EIDServiceTransactionStatusFailed, Nothing)
+        (Just "complete") -> do
+          td <-
+            fromJSValueFieldCustom "providerInfo"
+            $ fromJSValueFieldCustom "noBankIDAuth"
+            $ fromJSValueFieldCustom "completionData"
+            $ do
+                mpid <- fromJSValueField "pid"
+                mcer <- fromJSValueFieldCustom "certificateData"
+                  $ fromJSValueField "certificate"
+                mdn <- fromJSValueFieldCustom "certificateData"
+                  $ fromJSValueField "distinguishedName"
+                mdob <- fromJSValueFieldCustom "profileData"
+                  $ fromJSValueField "birthdate"
+                mphone            <- fromJSValueField "phoneNumber"
+                mUsedMobileBankID <- fromJSValueField "usedMobileBankID"
+                case (mpid, mUsedMobileBankID) of
+                  (Just pid, Just usedMobileBankID) -> return $ Just
+                    CompleteNOBankIDEIDServiceTransactionData
+                      { eidnobidInternalProvider  = if usedMobileBankID
+                                                      then EIDServiceNOBankIDMobile
+                                                      else EIDServiceNOBankIDStandard
+                      , eidnobidBirthDate         = mdob
+                      , eidnobidCertificate       = mcer
+                      , eidnobidDistinguishedName = mdn
+                      , eidnobidPhoneNumber       = mphone
+                      , eidnobidPid               = pid
+                      }
+                  _ -> return Nothing
+          return (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
+        _ -> return (Nothing, Nothing)
 
 dateOfBirthFromDKPersonalNumber :: Text -> Text
 dateOfBirthFromDKPersonalNumber personalnumber =

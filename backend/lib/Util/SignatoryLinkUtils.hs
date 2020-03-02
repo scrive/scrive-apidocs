@@ -280,14 +280,16 @@ authenticationMethodsCanMix authToView authToSign authToViewArchived =
 ----------------------------------------
 
 authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
-authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True
-authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{} = True
-authViewMatchesAuth DKNemIDAuthenticationToView NetsDKNemIDAuthentication_{} = True
-authViewMatchesAuth FITupasAuthenticationToView NetsFITupasAuthentication_{} = True
-authViewMatchesAuth SMSPinAuthenticationToView SMSPinAuthentication_{} = True
-authViewMatchesAuth VerimiAuthenticationToView EIDServiceVerimiAuthentication_{} = True
-authViewMatchesAuth IDINAuthenticationToView EIDServiceIDINAuthentication_{} = True
-authViewMatchesAuth DKNemIDAuthenticationToView EIDServiceNemIDAuthentication_{} = True
+authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{}     = True
+authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}      = True
+authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}      = True
+authViewMatchesAuth FITupasAuthenticationToView  NetsFITupasAuthentication_{}      = True
+authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}           = True
+authViewMatchesAuth VerimiAuthenticationToView   EIDServiceVerimiAuthentication_{} = True
+authViewMatchesAuth IDINAuthenticationToView     EIDServiceIDINAuthentication_{}   = True
+authViewMatchesAuth DKNemIDAuthenticationToView  EIDServiceNemIDAuthentication_{}  = True
+authViewMatchesAuth NOBankIDAuthenticationToView EIDServiceNOBankIDAuthentication_{} =
+  True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or

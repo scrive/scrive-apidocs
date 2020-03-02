@@ -15,7 +15,8 @@ $(function () {
     React.render(React.createElement(IdentifyView, {
       doc: doc,
       siglinkid: fromTemplate.sigLinkId,
-      useEIDHubForNemID: fromTemplate.useEIDHubForNemID
+      useEIDHubForNemID: fromTemplate.useEIDHubForNemID,
+      useEIDHubForNOBankIDView: fromTemplate.useEIDHubForNOBankIDView
     }), $(".global-table-cell")[0]);
 
     FlashMessages.FlashMessageTryFromCookie();

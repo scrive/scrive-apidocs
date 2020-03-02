@@ -16,6 +16,10 @@ module EID.EIDService.Types (
     , EIDServiceNemIDInternalProvider(..)
     , unsafeEIDServiceNemIDInternalProviderFromInt16
     , CompleteNemIDEIDServiceTransactionData(..)
+    , EIDServiceNOBankIDAuthentication(..)
+    , EIDServiceNOBankIDInternalProvider(..)
+    , unsafeEIDServiceNOBankIDInternalProviderFromInt16
+    , CompleteNOBankIDEIDServiceTransactionData(..)
   ) where
 
 import Control.Monad.Catch
@@ -59,6 +63,7 @@ data EIDServiceTransactionProvider =
     EIDServiceTransactionProviderVerimi
   | EIDServiceTransactionProviderIDIN
   | EIDServiceTransactionProviderNemID
+  | EIDServiceTransactionProviderNOBankID
   deriving (Eq, Ord, Show)
 
 instance PQFormat EIDServiceTransactionProvider where
@@ -72,13 +77,15 @@ instance FromSQL EIDServiceTransactionProvider where
       1 -> return EIDServiceTransactionProviderVerimi
       2 -> return EIDServiceTransactionProviderIDIN
       3 -> return EIDServiceTransactionProviderNemID
-      _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
+      4 -> return EIDServiceTransactionProviderNOBankID
+      _ -> throwM RangeError { reRange = [(1, 4)], reValue = n }
 
 instance ToSQL EIDServiceTransactionProvider where
   type PQDest EIDServiceTransactionProvider = PQDest Int16
-  toSQL EIDServiceTransactionProviderVerimi = toSQL (1 :: Int16)
-  toSQL EIDServiceTransactionProviderIDIN   = toSQL (2 :: Int16)
-  toSQL EIDServiceTransactionProviderNemID  = toSQL (3 :: Int16)
+  toSQL EIDServiceTransactionProviderVerimi   = toSQL (1 :: Int16)
+  toSQL EIDServiceTransactionProviderIDIN     = toSQL (2 :: Int16)
+  toSQL EIDServiceTransactionProviderNemID    = toSQL (3 :: Int16)
+  toSQL EIDServiceTransactionProviderNOBankID = toSQL (4 :: Int16)
 
 -- In statuses we separate complete into two statuses, since
 -- we can't force email/phone number validation on eid service side
@@ -165,6 +172,21 @@ data EIDServiceIDINAuthentication = EIDServiceIDINAuthentication
   , eidServiceIDINCustomerID      :: !(Maybe T.Text)
 } deriving (Eq, Ord, Show)
 
+data EIDServiceNemIDAuthentication = EIDServiceNemIDAuthentication
+  { eidServiceNemIDInternalProvider :: !(EIDServiceNemIDInternalProvider)
+  , eidServiceNemIDSignatoryName    :: !(T.Text)
+  , eidServiceNemIDDateOfBirth      :: !(T.Text)
+  , eidServiceNemIDCertificate      :: !(ByteString)
+  } deriving (Eq, Ord, Show)
+
+data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
+  { eidServiceNOBankIDInternalProvider     :: !(EIDServiceNOBankIDInternalProvider)
+  , eidServiceNOBankIDSignatoryName        :: !Text
+  , eidServiceNOBankIDPhoneNumber          :: !(Maybe Text)
+  , eidServiceNOBankIDDateOfBirth          :: !Text
+  , eidServiceNOBankIDCertificate          :: !(Maybe ByteString)
+  } deriving (Eq, Ord, Show)
+
 data EIDServiceIDINSignature = EIDServiceIDINSignature
   { unEIDServiceIDINSignature :: CompleteIDINEIDServiceTransactionData
   }
@@ -175,6 +197,24 @@ data CompleteIDINEIDServiceTransactionData = CompleteIDINEIDServiceTransactionDa
   , eiditdVerifiedEmail :: T.Text
   , eiditdBirthDate :: T.Text
   , eiditdCustomerID :: T.Text
+  } deriving (Eq, Ord, Show)
+
+data CompleteNemIDEIDServiceTransactionData = CompleteNemIDEIDServiceTransactionData
+  { eidnidInternalProvider :: !(EIDServiceNemIDInternalProvider)
+  , eidnidSSN :: !(T.Text)
+  , eidnidBirthDate :: !(T.Text)
+  , eidnidCertificate :: !(T.Text)
+  , eidnidDistinguishedName :: !(T.Text)
+  , eidnidPid :: !(T.Text)
+  } deriving (Eq, Ord, Show)
+
+data CompleteNOBankIDEIDServiceTransactionData = CompleteNOBankIDEIDServiceTransactionData
+  { eidnobidInternalProvider :: !(EIDServiceNOBankIDInternalProvider)
+  , eidnobidBirthDate :: !(Maybe T.Text)
+  , eidnobidCertificate :: !(Maybe T.Text)
+  , eidnobidDistinguishedName :: !(Maybe T.Text)
+  , eidnobidPhoneNumber :: !(Maybe T.Text)
+  , eidnobidPid :: !(T.Text)
   } deriving (Eq, Ord, Show)
 
 data EIDServiceNemIDInternalProvider
@@ -206,18 +246,33 @@ instance ToSQL EIDServiceNemIDInternalProvider where
   toSQL EIDServiceNemIDKeyCard = toSQL (1 :: Int16)
   toSQL EIDServiceNemIDKeyFile = toSQL (2 :: Int16)
 
-data EIDServiceNemIDAuthentication = EIDServiceNemIDAuthentication
-  { eidServiceNemIDInternalProvider :: !(EIDServiceNemIDInternalProvider)
-  , eidServiceNemIDSignatoryName    :: !(T.Text)
-  , eidServiceNemIDDateOfBirth      :: !(T.Text)
-  , eidServiceNemIDCertificate      :: !(ByteString)
-  } deriving (Eq, Ord, Show)
+data EIDServiceNOBankIDInternalProvider
+  = EIDServiceNOBankIDStandard
+  | EIDServiceNOBankIDMobile
+  deriving (Eq, Ord, Show)
 
-data CompleteNemIDEIDServiceTransactionData = CompleteNemIDEIDServiceTransactionData
-  { eidnidInternalProvider :: !(EIDServiceNemIDInternalProvider)
-  , eidnidSSN :: !(T.Text)
-  , eidnidBirthDate :: !(T.Text)
-  , eidnidCertificate :: !(T.Text)
-  , eidnidDistinguishedName :: !(T.Text)
-  , eidnidPid :: !(T.Text)
-  } deriving (Eq, Ord, Show)
+unsafeEIDServiceNOBankIDInternalProviderFromInt16
+  :: Int16 -> EIDServiceNOBankIDInternalProvider
+unsafeEIDServiceNOBankIDInternalProviderFromInt16 v = case v of
+  1 -> EIDServiceNOBankIDStandard
+  2 -> EIDServiceNOBankIDMobile
+  _ ->
+    unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
+
+instance PQFormat EIDServiceNOBankIDInternalProvider where
+  pqFormat = pqFormat @Int16
+
+instance FromSQL EIDServiceNOBankIDInternalProvider where
+  type PQBase EIDServiceNOBankIDInternalProvider = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return EIDServiceNOBankIDStandard
+      2 -> return EIDServiceNOBankIDMobile
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
+
+instance ToSQL EIDServiceNOBankIDInternalProvider where
+  type PQDest EIDServiceNOBankIDInternalProvider = PQDest Int16
+  toSQL EIDServiceNOBankIDStandard = toSQL (1 :: Int16)
+  toSQL EIDServiceNOBankIDMobile   = toSQL (2 :: Int16)
+

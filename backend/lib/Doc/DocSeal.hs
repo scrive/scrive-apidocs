@@ -145,6 +145,10 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       renderTextTemplate "_identifiedByDKNemIDText"
         . F.value "name"
         $ eidServiceNemIDSignatoryName authentication
+    Just (EIDServiceNOBankIDAuthentication_ authentication) ->
+      renderTextTemplate "_identifiedByNOBankIDText"
+        . F.value "name"
+        $ eidServiceNOBankIDSignatoryName authentication
     Just (SMSPinAuthentication_ _) -> return ""
     Nothing -> return ""
 
