@@ -493,11 +493,11 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
                  AND users.deleted < period.to) AS "Users deleted during period"
            , escape_for_csv(substring((period.from :: DATE :: TEXT) for 10)) AS "Start date"
            , escape_for_csv(substring((period.to :: DATE :: TEXT) for 10)) AS "End date"
-         FROM user_groups
-         JOIN user_group_addresses ON user_groups.id = user_group_addresses.user_group_id
-         JOIN user_group_invoicings ON user_groups.id = user_group_invoicings.user_group_id
-         JOIN user_group_tags ON (    user_groups.id=user_group_tags.user_group_id
-                                  AND user_group_tags.name='sf-account-id')
+         FROM      user_groups
+              JOIN user_group_addresses ON user_groups.id = user_group_addresses.user_group_id
+              JOIN user_group_invoicings ON user_groups.id = user_group_invoicings.user_group_id
+         LEFT JOIN user_group_tags ON (    user_groups.id=user_group_tags.user_group_id
+                                       AND user_group_tags.name='sf-account-id')
         CROSS JOIN period
         WHERE (   user_group_invoicings.payment_plan <> 0
                OR user_groups.parent_group_id IS NOT NULL);
