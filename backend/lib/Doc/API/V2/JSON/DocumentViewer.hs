@@ -50,9 +50,8 @@ dvSignatoryLinkID _ = Nothing
 dvRole :: DocumentViewer -> Text
 dvRole (SignatoryDocumentViewer    _) = "signatory"
 dvRole (CompanyAdminDocumentViewer _) = "company_admin"
-dvRole CompanySharedDocumentViewer    = "company_shared"
--- This is done to stay somewhat backwards compatible
-dvRole (FolderDocumentViewer _)       = "company_admin"
+dvRole (CompanySharedDocumentViewer ) = "company_shared"
+dvRole (FolderDocumentViewer _      ) = "folder"
 
 -- We should not introduce instance for DocumentViewer since this can't be really parsed. And instance for Maybe DocumentViewer would be missleading
 unjsonDocumentViewer :: UnjsonDef (Maybe DocumentViewer)

@@ -1547,8 +1547,8 @@ apiCallV1History did = logDocument did . api $ do
   mlang <- (langFromCode =<<) <$> getField "lang"
   switchLang $ fromMaybe (user ^. #settings % #lang) mlang
 
-  doc         <- getDocByDocID did
-  evidenceLog <- dbQuery $ GetEvidenceLog did
+  doc         <- getDocumentByCurrentUser did
+  evidenceLog <- dbQuery $ GetEvidenceLog $ did
   events      <- eventsJSListFromEvidenceLog doc evidenceLog
   res         <- J.runJSONGenT $ do
     J.value "list" . for (reverse events) $ J.runJSONGen . J.value "fields"
@@ -1590,10 +1590,10 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
           then do
             ctx <- getContext
             modifyContext $ set #maybeUser (Just user)
-            res <- getDocByDocID did
+            res <- getDocumentByCurrentUser did
             modifyContext $ set #maybeUser (ctx ^. #maybeUser)
             return res
-          else getDocByDocID did
+          else getDocumentByCurrentUser did
 
   content <- case documentstatus doc of
     Closed -> do
@@ -1642,10 +1642,10 @@ apiCallV1DownloadFile did fileid nameForBrowser =
             then do
               ctx <- getContext
               modifyContext $ set #maybeUser (Just user)
-              res <- getDocByDocID did
+              res <- getDocumentByCurrentUser did
               modifyContext $ set #maybeUser (ctx ^. #maybeUser)
               return res
-            else getDocByDocID did
+            else getDocumentByCurrentUser did
     let allfiles =
           maybeToList (mainfileid <$> documentfile doc)
             <> maybeToList (mainfileid <$> documentsealedfile doc)

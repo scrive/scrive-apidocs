@@ -14,6 +14,7 @@ module Util.SignatoryLinkUtils (
   isSigLinkFor,
   getAuthorSigLink,
   getAuthorName,
+  getAuthorUserId,
   getCompanyName,
   getCompanyNumber,
   getAuthorCompanyName,
@@ -128,6 +129,11 @@ getAuthorSigLink = getSigLinkFor signatoryisauthor
 --     * email address if no name info
 getAuthorName :: Document -> Text
 getAuthorName doc = maybe "" getSmartName $ getAuthorSigLink doc
+
+getAuthorUserId :: Document -> Maybe UserID
+getAuthorUserId doc = do
+  sigLink <- getAuthorSigLink doc
+  maybesignatory sigLink
 
 getCompanyName :: SignatoryLink -> Text
 getCompanyName = getTextValueOfField CompanyFI . signatoryfields

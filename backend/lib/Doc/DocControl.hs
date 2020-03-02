@@ -32,6 +32,7 @@ module Doc.DocControl (
     , handleToStart
     , handleToStartShow
     , handleNewDocumentWithBPID
+    , checkFileAccess
 ) where
 
 import Control.Conditional (unlessM, whenM)
@@ -55,6 +56,7 @@ import qualified Text.JSON.Gen as J
 import Analytics.Include
 import API.V2.Errors
 import API.V2.MonadUtils
+import API.V2.User
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
@@ -62,9 +64,11 @@ import Chargeable
 import Cookies
 import DB
 import DB.TimeZoneName
+import Doc.AccessControl
 import Doc.Action
 import Doc.API.Callback.Model
 import Doc.API.V2.DocumentUpdateUtils
+import Doc.API.V2.Guards (getMaybeAuthenticatedSignatory)
 import Doc.API.V2.Guards
   ( guardDocumentStatus, guardGetSignatoryFromIdForDocument
   , guardThatDocumentCanBeStarted
@@ -101,6 +105,7 @@ import Kontra
 import KontraLink
 import Log.Identifier
 import MagicHash
+import OAuth.Model (APIPrivilege(..))
 import Redirect
 import Session.Model
 import Templates (renderTextTemplate, renderTextTemplate_)
@@ -457,7 +462,7 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
  -}
 handleIssueGoToSignview :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueGoToSignview docid = withUser $ \user -> do
-  doc <- getDocByDocID docid
+  doc <- getDocumentByCurrentUser docid
   case getMaybeSignatoryLink (doc, user) of
     Just sl -> do
       sid <- getNonTempSessionID
@@ -487,8 +492,8 @@ handleIssueGoToSignviewPad docid slid = do
 
 handleEvidenceAttachment :: Kontrakcja m => DocumentID -> Text -> m InternalKontraResponse
 handleEvidenceAttachment docid aname =
-  logDocument docid . localData ["attachment_name" .= aname] . withUser $ \_ -> do
-    doc <- getDocByDocID docid
+  logDocument docid $ localData ["attachment_name" .= aname] $ withUser $ \_ -> do
+    doc <- getDocumentByCurrentUser docid
     es  <- guardJustM $ EvidenceAttachments.extractAttachment doc aname
     return . internalResponse $ toResponseBS "text/html" es
 
@@ -499,7 +504,7 @@ handleEvidenceAttachment docid aname =
  -}
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
-  document      <- getDocByDocID docid
+  document      <- getDocumentByCurrentUser docid
   muser         <- view #maybeUser <$> getContext
 
   authorsiglink <- guardJust $ getAuthorSigLink document
@@ -593,13 +598,13 @@ showPreview :: Kontrakcja m => DocumentID -> FileID -> m InternalKontraResponse
 showPreview did fid = logDocumentAndFile did fid . withUser $ \_ -> do
   pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
   let clampedPixelWidth = min 2000 (max 100 pixelwidth)
-  void $ getDocByDocID did
+  void $ getDocumentByCurrentUser did
   if fid == unsafeFileID 0
     then do
       emptyPreview <- liftIO $ BS.readFile "frontend/app/img/empty-preview.jpg"
       return . internalResponse . toResponseBS "image/jpeg" $ BSL.fromStrict emptyPreview
     else do
-      checkFileAccessWith fid Nothing Nothing (Just did) Nothing
+      checkFileAccessWithLoggedInUser fid did
       internalResponse <$> previewResponse fid clampedPixelWidth
 
 -- | Preview from mail client with magic hash
@@ -612,15 +617,18 @@ showPreviewForSignatory
   -> m Response
 showPreviewForSignatory did slid mmh fid = logDocumentAndFile did fid $ do
   case mmh of
-    Nothing -> showActualPreviewForSignatoryWithFileAccessCheck
+    Nothing -> do
+      checkFileAccessWithSignatory fid did slid
+      showActualPreviewForSignatoryWithFileAccessCheck
     Just mh -> do
       hasAccess <- dbQuery $ CheckIfMagicHashIsValid did slid mh
       if hasAccess
-        then showActualPreviewForSignatoryWithFileAccessCheck
+        then do
+          checkFileAccessWithMagicHash fid did slid mh
+          showActualPreviewForSignatoryWithFileAccessCheck
         else showFallbackImage
   where
     showActualPreviewForSignatoryWithFileAccessCheck = do
-      checkFileAccessWith fid (Just slid) mmh (Just did) Nothing
       pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
       let clampedPixelWidth = min 2000 (max 100 pixelwidth)
       previewResponse fid clampedPixelWidth
@@ -680,7 +688,7 @@ handleToStart = do
     Nothing -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx ad
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
-checkFileAccess fid = do
+checkFileAccess fileId = do
 
   -- If we have documentid then we look for logged in user and
   -- signatorylinkid and magichash (in cookie). Then we check if file is
@@ -698,81 +706,77 @@ checkFileAccess fid = do
   -- Warning take into account when somebody has saved document into
   -- hers account but we still refer using signatorylinkid.
 
-  msid   <- readField "signatory_id"
-  mdid   <- readField "document_id"
-  mattid <- readField "attachment_id"
+  mSignatoryId <- readField "signatory_id"
+  mDocId       <- readField "document_id"
+  mAttachId    <- readField "attachment_id"
 
-  checkFileAccessWith fid msid Nothing mdid mattid
+  case (mSignatoryId, mDocId, mAttachId) of
+    (Nothing, Nothing, Just attachId) -> checkFileAccessWithAttachmentId fileId attachId
+    (_, Just docId, _) ->
+      docAccessControl docId mSignatoryId $ checkFileInDocument fileId docId
+    _ -> internalError
 
-checkFileAccessWith
-  :: Kontrakcja m
-  => FileID
-  -> Maybe SignatoryLinkID
-  -> Maybe MagicHash
-  -> Maybe DocumentID
-  -> Maybe AttachmentID
-  -> m ()
-checkFileAccessWith fid msid mmh mdid mattid = case (msid, mdid, mattid) of
-  (Just slid, Just did, _) -> do
-    (validSession, doc) <- case mmh of
-      Just mh -> do
-        doc' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-        return (True, doc')
-      Nothing -> do
-        sid  <- view #sessionID <$> getContext
-        doc' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
-        vs   <- dbQuery $ CheckDocumentSession sid slid
-        return (vs, doc')
-    if validSession
-      then do -- Valid magic hash or session
-        guardThatDocumentIsReadableBySignatories doc
-        sl <- guardJust $ getSigLinkFor slid doc
-        whenM (signatoryNeedsToIdentifyToView sl doc) $ do
-          -- If document is not closed, author never needs to identify to
-          -- view. However if it's closed, then he might need to.
-          when (isClosed doc || not (isAuthor sl)) $ do
-            internalError
-        checkFileInDocument did
-      else guardLoggedInOrThrowInternalError $ do
-        _doc <- getDocByDocID did
-        checkFileInDocument did
-  (_, Just did, _) -> guardLoggedInOrThrowInternalError $ do
-    _doc <- getDocByDocID did
-    checkFileInDocument did
-  (_, _, Just attid) -> guardLoggedInOrThrowInternalError $ do
-    user <- guardJustM $ view #maybeUser <$> getContext
-    atts <- dbQuery $ GetAttachments
-      [ AttachmentsSharedInUsersUserGroup (user ^. #id)
-      , AttachmentsOfAuthorDeleteValue (user ^. #id) True
-      , AttachmentsOfAuthorDeleteValue (user ^. #id) False
-      ]
-      [AttachmentFilterByID attid, AttachmentFilterByFileID fid]
-      []
-    when (length atts /= 1) internalError
-  _ -> internalError
+checkFileInDocument :: Kontrakcja m => FileID -> DocumentID -> m ()
+checkFileInDocument fileId docId = do
+  doc <- dbQuery $ FileInDocument docId fileId
+  when (not doc) $ internalError
 
-  where
-    checkFileInDocument :: Kontrakcja m => DocumentID -> m ()
-    checkFileInDocument did = do
-      indoc <- dbQuery $ FileInDocument did fid
-      unless indoc internalError
+checkFileAccessWithLoggedInUser :: Kontrakcja m => FileID -> DocumentID -> m ()
+checkFileAccessWithLoggedInUser fileId docId = do
+  doc       <- dbQuery $ GetDocumentByDocumentID docId
+  mAuthUser <- (fmap fst) <$> getMaybeAuthenticatedAPIUser APIDocCheck
+  docAccessControlWithUserSignatory doc mAuthUser Nothing
+    $ checkFileInDocument fileId docId
+
+checkFileAccessWithSignatory
+  :: Kontrakcja m => FileID -> DocumentID -> SignatoryLinkID -> m ()
+checkFileAccessWithSignatory fileId docId signatoryId = do
+  doc        <- dbQuery $ GetDocumentByDocumentID docId
+  mSignatory <- getMaybeAuthenticatedSignatory doc signatoryId
+  docAccessControlWithUserSignatory doc Nothing mSignatory
+    $ checkFileInDocument fileId docId
+
+checkFileAccessWithMagicHash
+  :: Kontrakcja m => FileID -> DocumentID -> SignatoryLinkID -> MagicHash -> m ()
+checkFileAccessWithMagicHash fileId docId signatoryId hash = do
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docId signatoryId hash
+  guardThatDocumentIsReadableBySignatories doc
+  sl <- guardJust $ getSigLinkFor signatoryId doc
+  whenM (signatoryNeedsToIdentifyToView sl doc) $ do
+    -- If document is not closed, author never needs to identify to
+    -- view. However if it's closed, then he might need to.
+    when (isClosed doc || not (isAuthor sl)) $ do
+      internalError
+  checkFileInDocument fileId $ documentid doc
+
+checkFileAccessWithAttachmentId :: Kontrakcja m => FileID -> AttachmentID -> m ()
+checkFileAccessWithAttachmentId fileId attachId = guardLoggedInOrThrowInternalError $ do
+  user <- guardJustM $ view #maybeUser <$> getContext
+  atts <- dbQuery $ GetAttachments
+    [ AttachmentsSharedInUsersUserGroup (user ^. #id)
+    , AttachmentsOfAuthorDeleteValue (user ^. #id) True
+    , AttachmentsOfAuthorDeleteValue (user ^. #id) False
+    ]
+    [AttachmentFilterByID attachId, AttachmentFilterByFileID fileId]
+    []
+  when (length atts /= 1) $ internalError
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
   mailtype <- getField' "mailtype"
   content  <- flip E.catch (\(E.SomeException _) -> return "") $ case mailtype of
     "remind" -> do
-      doc <- getDocByDocID docid
+      doc <- getDocumentByCurrentUser docid
       sl  <- guardJust $ getSigLinkFor slid doc
       let forceLink = shouldForceEmailLink sl
       mailattachments <- makeMailAttachments doc True
       let documentAttach = not forceLink && not (null mailattachments)
       mailDocumentRemindContent Nothing doc sl documentAttach forceLink
     "invite" -> do
-      doc <- getDocByDocID docid
+      doc <- getDocumentByCurrentUser docid
       mailInvitationContent False Sign Nothing doc
     "confirm" -> do
-      doc <- getDocByDocID docid
+      doc <- getDocumentByCurrentUser docid
       mailClosedContent True doc
     _ -> fail "prepareEmailPreview"
   J.runJSONGenT . J.value "content" $ T.unpack content
@@ -804,7 +808,7 @@ handleVerify = do
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = guardLoggedInOrThrowInternalError $ do
-  getDocByDocID docid `withDocumentM` do
+  getDocumentByCurrentUser docid `withDocumentM` do
     whenM (isPreparation <$> theDocument) $ dbUpdate (SetDocumentUnsavedDraft False)
     J.runJSONGenT $ return ()
 

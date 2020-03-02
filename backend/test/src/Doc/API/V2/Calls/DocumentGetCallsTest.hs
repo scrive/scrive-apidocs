@@ -1,12 +1,14 @@
 module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
-import Control.Monad.IO.Class
+import Control.Monad.Trans
 import Data.Time (UTCTime(..), addUTCTime, fromGregorian)
 import Happstack.Server
 import Log
 import Test.Framework
 import qualified Data.Text as T
 
+import AccessControl.Model
+import AccessControl.Types
 import Context
 import DB.Query (dbQuery, dbUpdate)
 import DB.TimeZoneName (mkTimeZoneName)
@@ -29,8 +31,6 @@ import Doc.Types.SignatoryAttachment
   ( SignatoryAttachment(..), defaultSignatoryAttachment
   )
 import Doc.Types.SignatoryLink
-  ( AuthenticationToSignMethod(..), SignatoryLink(..)
-  )
 import File.Storage (saveNewFile)
 import Folder.Model
 import Session.Model
@@ -276,10 +276,14 @@ testDocApiV2GetByAdmin = do
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctxauthor <- mkContextWithUser defaultLang author
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
+  void $ testDocApiV2Start' ctxauthor did
 
-  admin     <- instantiateUser
+  let (Just folderId) = author ^. #homeFolderID
+  admin <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return ugid }
-  ctx        <- mkContextWithUser defaultLang admin
+  ctx <- mkContextWithUser defaultLang admin
+  void . dbUpdate . AccessControlCreateForUser (admin ^. #id) $ FolderAdminAR folderId
+
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
               "company_admin"
@@ -302,14 +306,15 @@ testDocApiV2GetShared = do
     dbUpdate $ SetDocumentSharing [did] True
   assert setshare
 
-  user       <- instantiateUser $ randomUserTemplate { groupID = return ugid }
+  let (Just folderId) = author ^. #homeFolderID
+  user <- instantiateUser $ randomUserTemplate { groupID = return ugid }
+  void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ FolderUserAR folderId
+
   ctx        <- mkContextWithUser defaultLang user
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
-  assertEqual "Document viewer should be"
-              "company_shared"
-              (getMockDocViewerRole getMockDoc)
-  assertEqual "Document should be template" True (getMockDocIsTemplate getMockDoc)
-  assertEqual "Document should be shared"   True (getMockDocIsShared getMockDoc)
+  assertEqual "Document viewer should be"   "folder" (getMockDocViewerRole getMockDoc)
+  assertEqual "Document should be template" True     (getMockDocIsTemplate getMockDoc)
+  assertEqual "Document should be shared"   True     (getMockDocIsShared getMockDoc)
 
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do

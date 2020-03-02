@@ -39,6 +39,9 @@ module Doc.API.V2.Guards (
 , guardDocumentReadAccess
 , guardThatDocumentIsReadableBySignatories
 , guardAccessToDocumentWithSignatory
+, getMaybeSignatory
+, getMaybeAuthenticatedSignatory
+, getAuthor
 ) where
 
 import Control.Conditional (whenM)
@@ -813,20 +816,29 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
 -- the API call (e.g. document GET call), but not that this function is focused only
 -- on ability to read document
 
+getMaybeAuthenticatedSignatory
+  :: Kontrakcja m => Document -> SignatoryLinkID -> m (Maybe AuthenticatedSignatoryLink)
+getMaybeAuthenticatedSignatory doc signatoryId = do
+  mSignatory <- getMaybeSignatory doc signatoryId
+  return $ unsafeCreateAuthenticatedSignatoryLink <$> mSignatory
+
+getMaybeSignatory
+  :: Kontrakcja m => Document -> SignatoryLinkID -> m (Maybe SignatoryLink)
+getMaybeSignatory doc slid = do
+  sid          <- view #sessionID <$> getContext
+  validSession <- dbQuery $ CheckDocumentSession sid slid
+  if validSession
+    then do
+      fmap Just . apiGuardJust (documentNotFound (documentid doc)) $ getSigLinkFor slid
+                                                                                   doc
+    else return Nothing
+
 guardDocumentReadAccess
   :: Kontrakcja m => Maybe SignatoryLinkID -> Document -> m DocumentAccess
 guardDocumentReadAccess mslid doc = do
   mSessionSignatory <- case mslid of
     Nothing   -> return Nothing
-    Just slid -> do
-      sid          <- view #sessionID <$> getContext
-      validSession <- dbQuery $ CheckDocumentSession sid slid
-      if validSession
-        then do
-          fmap Just . apiGuardJust (documentNotFound (documentid doc)) $ getSigLinkFor
-            slid
-            doc
-        else return Nothing
+    Just slid -> getMaybeSignatory doc slid
 
   case mSessionSignatory of
     Just sl -> do

@@ -1,4 +1,3 @@
-{-# LANGUAGE ExistentialQuantification #-}
 module AccessControl.Types
   ( toAccessRoleType
   , AccessAction(..)
@@ -11,21 +10,22 @@ module AccessControl.Types
   , accessRoleGetTargetFolderID
   , accessRoleGetTargetUserID
   , accessRoleGetTargetUserGroupID
+  , accessRoleGetAccessRoleId
   , AccessRoleTarget(..)
   , AccessRoleType(..)
-  , NeededPermissionsExpr(..)
   , UserGroupNonExistent(..)
   , UserNonExistent(..)
   , FolderNonExistent(..)
   , Permission(..)
   , PermissionKind(..)
   , AccessRoleID
+  , PermissionCondition(..)
   , unsafeAccessRoleID
   , emptyAccessRoleID
   , fromAccessRoleID
   , extractDeleteUserUGID
   )
-  where
+where
 
 import Data.Aeson
 import Data.Int
@@ -38,6 +38,7 @@ import qualified Data.Binary as B
 import qualified Data.Text as T
 
 import DB
+import Doc.DocumentID (DocumentID)
 import Folder.Model
 import Log.Identifier
 import User.UserID
@@ -113,6 +114,11 @@ accessRoleGetSourceUserGroupID role = case role of
   AccessRoleImplicitUser      _    _ -> Nothing
   AccessRoleImplicitUserGroup ugid _ -> Just ugid
 
+accessRoleGetAccessRoleId :: AccessRole -> Maybe AccessRoleID
+accessRoleGetAccessRoleId (AccessRoleUser roleId _ _) = Just roleId
+accessRoleGetAccessRoleId (AccessRoleUserGroup roleId _ _) = Just roleId
+accessRoleGetAccessRoleId _ = Nothing
+
 -- | The roles we use are mostly rooted in some user group; rather than have
 -- this implicit in implementation we expose it in the constructors. The meaning
 -- is that for the supplied UserGroupID, say, the user has the role thus defined
@@ -166,6 +172,7 @@ data AccessResource
   | SharedTemplateR FolderID
   -- Document after starting (not Draft, not Template) in Folderor any subfolder
   | DocumentAfterPreparationR FolderID
+  | DocumentR DocumentID
   -- Assignee of this role can use UserGroup (but not subgroups) for EID purposes (Display name and charging)
   | EidIdentityR UserGroupID
   deriving (Eq, Ord)
@@ -182,6 +189,7 @@ instance Show AccessResource where
   show (FolderR                   _) = "folder"
   show (SharedTemplateR           _) = "shared_template"
   show (DocumentAfterPreparationR _) = "document_after_preparation"
+  show (DocumentR                 _) = "document"
   show (EidIdentityR              _) = "eid_identity"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
@@ -207,12 +215,12 @@ data Permission =
     }
   deriving (Eq, Ord, Show)
 
--- | An 'NeededPermissionsExpr' is evaluated by means of 'evalNeededPermExpr' and is a
+-- | An 'PermissionCondition' is evaluated by means of 'evalPermissionCondition' and is a
 -- wrapper to do boolean logic on several levels.
-data NeededPermissionsExpr
-  = NeededPermissionsExprBase Permission
-  | NeededPermissionsExprOr [NeededPermissionsExpr]
-  | NeededPermissionsExprAnd [NeededPermissionsExpr]
+data PermissionCondition
+  = Cond Permission
+  | OrCond [PermissionCondition]
+  | AndCond [PermissionCondition]
   deriving Eq
 
 newtype UserGroupNonExistent = UserGroupNonExistent UserGroupID

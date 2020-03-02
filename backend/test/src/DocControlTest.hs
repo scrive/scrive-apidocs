@@ -1018,4 +1018,3 @@ testShortLinkRedirectTest = do
   (res1, _) <- runTestKontra req ctx $ handleSignShowShortRedirect goodParam
   assertEqual "handleSignShowShortRedirect redirects with 303" 303 (rsCode res1)
   assertRaises404 (void . runTestKontra req ctx $ handleSignShowShortRedirect "bad_param")
-

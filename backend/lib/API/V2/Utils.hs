@@ -20,7 +20,8 @@ import Kontra
 import User.Model
 import Util.MonadUtils
 
-apiAccessControlWithError :: Kontrakcja m => User -> [Permission] -> m a -> m a -> m a
+apiAccessControlWithError
+  :: (Kontrakcja m, ToPermissionCondition m perm) => User -> perm -> m a -> m a -> m a
 apiAccessControlWithError apiuser perms failAction successAction = do
   roles <- dbQuery . GetRoles $ apiuser
   accessControl roles perms failAction successAction
@@ -28,15 +29,18 @@ apiAccessControlWithError apiuser perms failAction successAction = do
     `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
 
-apiAccessControl :: Kontrakcja m => User -> [Permission] -> m a -> m a
+apiAccessControl
+  :: (Kontrakcja m, ToPermissionCondition m perm) => User -> perm -> m a -> m a
 apiAccessControl user perms successAction = do
   apiAccessControlWithError user perms (apiError insufficientPrivileges) successAction
 
-apiAccessControlCheck :: Kontrakcja m => User -> [Permission] -> m Bool
+apiAccessControlCheck
+  :: (Kontrakcja m, ToPermissionCondition m perm) => User -> perm -> m Bool
 apiAccessControlCheck apiUser perms = do
   apiAccessControlWithError apiUser perms (return False) (return True)
 
-apiAccessControlOrIsAdmin :: Kontrakcja m => User -> [Permission] -> m a -> m a
+apiAccessControlOrIsAdmin
+  :: (Kontrakcja m, ToPermissionCondition m perm) => User -> perm -> m a -> m a
 apiAccessControlOrIsAdmin apiuser perms successAction = do
   isAdminOrSales <- checkAdminOrSales
   -- If scrive admin or sales, should perform action anyway (unless non-existance error)
@@ -44,7 +48,8 @@ apiAccessControlOrIsAdmin apiuser perms successAction = do
         if isAdminOrSales then successAction else apiError insufficientPrivileges
   apiAccessControlWithError apiuser perms failAction successAction
 
-accessControlLoggedIn :: Kontrakcja m => [Permission] -> m a -> m a
+accessControlLoggedIn
+  :: (Kontrakcja m, ToPermissionCondition m perm) => perm -> m a -> m a
 accessControlLoggedIn perms successAction = do
   user  <- guardJustM (view #maybeUser <$> getContext)
   roles <- dbQuery . GetRoles $ user

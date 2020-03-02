@@ -2,6 +2,8 @@ module User.Types.User
   ( User(User)
   , UserInfo(UserInfo)
   , UserSettings(UserSettings)
+  , AuthenticatedUser (getAuthenticatedUser)
+  , unsafeCreateAuthenticatedUser
   , composeFullName
   , defaultUser
   , defaultUserInfo

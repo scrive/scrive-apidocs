@@ -1162,6 +1162,7 @@ data RandomDocumentAllows = RandomDocumentAllows
   , rdaAuthor      :: User
   , rdaSharedLink  :: Bool
   , rdaTimeoutTime :: Bool
+  , rdaFolderID :: Maybe FolderID
   , rdaTemplateId  :: Maybe DocumentID
   , rdaSealingMethods :: OneOf SealingMethod
   , rdaFolderId      :: FolderID
@@ -1176,6 +1177,7 @@ rdaDefault user = RandomDocumentAllows
   , rdaAuthor         = user
   , rdaSharedLink     = False
   , rdaTimeoutTime    = True
+  , rdaFolderID       = Nothing
   , rdaTemplateId     = Nothing
   , rdaSealingMethods = OneOf documentAllSealingMethods
   , rdaFolderId       = fromJust $ user ^. #homeFolderID
@@ -1337,7 +1339,7 @@ addRandomDocumentWithFile fileid rda = do
           , documenttitle             = title
           , documentfromshareablelink = rdaSharedLink rda
           , documenttemplateid        = rdaTemplateId rda
-          , documentfolderid          = rdaFolderId rda
+          , documentfolderid = fromJust $ rdaFolderID rda <|> user ^. #homeFolderID
           , documenttimeouttime       = if rdaTimeoutTime rda
                                           then documenttimeouttime doc'
                                           else Nothing

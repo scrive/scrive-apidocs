@@ -25,7 +25,7 @@
 -----------------------------------------------------------------------------
 
 module Doc.DocStateQuery
-    ( getDocByDocID
+    ( getDocumentByCurrentUser
     , getDocByDocIDAndAccessTokenV1
     , getDocByDocIDAndAccessTokenV2
     , getDocByDocIDForAuthor
@@ -49,7 +49,6 @@ import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import EID.Authentication.Model
 import Kontra
-import Log.Identifier
 import MagicHash
 import User.Model
 import Util.MonadUtils
@@ -57,58 +56,42 @@ import Util.SignatoryLinkUtils
 
 -- TODO: clean this up, try combining it with DocumentMonad.
 
-getDocByDocID :: Kontrakcja m => DocumentID -> m Document
-getDocByDocID docid = getDocByDocIDAndAccessTokenV1 docid Nothing
+getDocumentByCurrentUser :: Kontrakcja m => DocumentID -> m Document
+getDocumentByCurrentUser docId = do
+  user <- guardJust . contextUser =<< getContext
+  dbQuery $ GetDocument (DocumentsVisibleToUser $ user ^. #id)
+                        [DocumentFilterByDocumentID docId]
 
 getDocByDocIDAndAccessTokenV1
   :: Kontrakcja m => DocumentID -> Maybe MagicHash -> m Document
-getDocByDocIDAndAccessTokenV1 did mhash =
-  getDocByDocIDAndAccessToken did mhash TryUserDocuments
+getDocByDocIDAndAccessTokenV1 docId mToken = do
+  mDoc <- case mToken of
+    Just accessToken -> getMaybeDocumentByAccessToken docId accessToken
+    Nothing          -> return Nothing
+  case mDoc of
+    Just doc -> return doc
+    Nothing  -> getDocumentByCurrentUser docId
 
 getDocByDocIDAndAccessTokenV2 :: Kontrakcja m => DocumentID -> MagicHash -> m Document
-getDocByDocIDAndAccessTokenV2 did hash =
-  getDocByDocIDAndAccessToken did (Just hash) DontTryUserDocuments
+getDocByDocIDAndAccessTokenV2 did hash = getDocumentByAccessToken did hash
 
+getMaybeDocumentByAccessToken
+  :: Kontrakcja m => DocumentID -> MagicHash -> m (Maybe Document)
+getMaybeDocumentByAccessToken docId accessToken = do
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleViaAccessToken accessToken)
+                                 [DocumentFilterByDocumentID docId]
+                                 []
+                                 1
+  return $ listToMaybe docs
 
-data TryUserDocuments = TryUserDocuments | DontTryUserDocuments
-  deriving Eq
-
--- | Common implementation of
--- getDocByDocIDAndAccessToken{V1,V2}. TryUserDocuments case only
--- happens in V1.
-getDocByDocIDAndAccessToken
-  :: Kontrakcja m => DocumentID -> Maybe MagicHash -> TryUserDocuments -> m Document
-getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
-  Just accessToken -> do
-    logInfo "Trying to get a document via access token"
-      $ object [identifier did, "access_token" .= show accessToken]
-    mdoc <- dbQuery $ GetDocuments (DocumentsVisibleViaAccessToken accessToken)
-                                   [DocumentFilterByDocumentID did]
-                                   []
-                                   1
-    case mdoc of
-      [doc] -> return doc
-      _
-        | tryuser == TryUserDocuments -> do
-          logInfo "Access token was invalid, trying user documents"
-            $ object [identifier did]
-          getDocumentOfUser
-        | otherwise -> do
-          logInfo "Access token was invalid" $ object [identifier did]
-          throwM . SomeDBExtraException $ invalidAuthorizationWithMsg
-            "Access token was invalid."
-
-  Nothing
-    | tryuser == TryUserDocuments -> getDocumentOfUser
-    | otherwise -> do
-      logInfo "No access token provided" $ object [identifier did]
+getDocumentByAccessToken :: Kontrakcja m => DocumentID -> MagicHash -> m Document
+getDocumentByAccessToken docId accessToken = do
+  mDoc <- getMaybeDocumentByAccessToken docId accessToken
+  case mDoc of
+    Just doc -> return doc
+    Nothing  -> do
       throwM . SomeDBExtraException $ invalidAuthorizationWithMsg
-        "No access token provided."
-  where
-    getDocumentOfUser = do
-      user <- guardJust . contextUser =<< getContext
-      dbQuery $ GetDocument (DocumentsVisibleToUser $ user ^. #id)
-                            [DocumentFilterByDocumentID did]
+        "Access token was invalid."
 
 -- | Same as getDocByDocID, but works only for author
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document

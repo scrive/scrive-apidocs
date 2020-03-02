@@ -59,6 +59,7 @@ module Doc.API.V2.Mock.TestUtils (
 , setMockDocSigLinkAttachments
 , setMockDocSigLinkSignatoryRole
 , setMockSigLinkStandardField
+, setMockDocSigLinkUserID
 , setMockDocSigLinkStandardField
 , getMockDocUserGroupForEid
 , getMockDocUserSigLinkId
@@ -390,6 +391,9 @@ setMockDocSigLinkDeliveryMethod deliveryMethod sigLink =
 setMockDocSigLinkConfirmationDeliveryMethod :: String -> MockSigLink -> MockSigLink
 setMockDocSigLinkConfirmationDeliveryMethod deliveryMethod sigLink =
   sigLink { mockSigLinkConfirmationDelivery = deliveryMethod }
+
+setMockDocSigLinkUserID :: String -> MockSigLink -> MockSigLink
+setMockDocSigLinkUserID userId sigLink = sigLink { mockSigLinkUserId = Just userId }
 
 setMockDocSigLinkSignatoryRole :: SignatoryRole -> MockSigLink -> MockSigLink
 setMockDocSigLinkSignatoryRole role sigLink = sigLink { mockSigLinkSignatoryRole = role }
