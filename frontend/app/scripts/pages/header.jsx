@@ -33,7 +33,7 @@ module.exports = React.createClass({
         ajax: true,
         method: "POST",
         ajaxsuccess: function () {
-          window.location = "/login";
+          window.location = "/";
         }
       }).send();
     });

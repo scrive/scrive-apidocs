@@ -409,7 +409,7 @@ update msg model =
         OnLoggedOut res ->
             case res of
                 Ok () ->
-                    ( model, Navigation.load "/login" )
+                    ( model, Navigation.load "/" )
 
                 Err err ->
                     let
