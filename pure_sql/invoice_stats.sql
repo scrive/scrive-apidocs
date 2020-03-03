@@ -323,6 +323,9 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "Danish NemID signatures" BIGINT,
         "Danish NemID authorization" BIGINT,
         "Finnish TUPAS authorization" BIGINT,
+        "Verimi authentications" BIGINT,
+        "iDIN authentications" BIGINT,
+        "iDIN signatures" BIGINT,
         "Shareable links used" BIGINT,
         "Telia SMSes sent (physical)" BIGINT,
         "Users at start of period" BIGINT,
@@ -458,6 +461,24 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 14 -- CIVerimiAuthentication
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Verimi authentications"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 15 -- CIIDINAuthentication
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "iDIN authentications"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 16 -- CIIDINSignature
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "iDIN signatures"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 13
                  AND chi.time >= period.from
                  AND chi.time <= period.to) AS "Shareable links used"
@@ -514,6 +535,9 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
              OR report."Danish NemID signatures" > 0
              OR report."Danish NemID authorization" > 0
              OR report."Finnish TUPAS authorization" > 0
+             OR report."Verimi authentications" > 0
+             OR report."iDIN authentications" > 0
+             OR report."iDIN signatures" > 0
              OR report."Shareable links used" > 0
              OR report."Users at start of period" > 0
              OR report."Users at end of period" > 0
@@ -608,6 +632,9 @@ CREATE TABLE report_aggregated AS
         sum("Danish NemID signatures") AS "Danish NemID signatures",
         sum("Danish NemID authorization") AS "Danish NemID authorization",
         sum("Finnish TUPAS authorization") AS "Finnish TUPAS authorization",
+        sum("Verimi authentications") AS "Verimi authentications",
+        sum("iDIN authentications") AS "iDIN authentications",
+        sum("iDIN signatures") AS "iDIN signatures",
         sum("Shareable links used") AS "Shareable links used",
         sum("Telia SMSes sent (physical)") AS "Telia SMSes sent (physical)",
         sum("Users at start of period") AS "Users at start of period",
