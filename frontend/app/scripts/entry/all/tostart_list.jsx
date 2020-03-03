@@ -18,6 +18,7 @@ $(function () {
          new Submit({
             url : "/logout_ajax",
             ajax : true,
+            method: "POST",
             ajaxsuccess : function() {
               window.location.reload();}
          }).send();

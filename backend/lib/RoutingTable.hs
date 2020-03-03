@@ -144,7 +144,9 @@ staticRoutes production = choice
      -- account stuff
   , allLangDirs $ dir "enter" $ hGet $ toK0 $ handleLoginGet
   , dir "logout" $ hGet $ toK0 $ handleLogout
+  , dir "logout" $ hPost $ toK0 $ handleLogout
   , dir "logout_ajax" $ hGet $ toK0 $ handleLogoutAJAX
+  , dir "logout_ajax" $ hPost $ toK0 $ handleLogoutAJAX
   , (allLangDirs . dir "login" . hGet . toK0)
     (LinkLoginDirect <$> view #lang <$> getContext) -- Drop this after EE is migrated
   , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost

@@ -3,6 +3,7 @@ var Button = require("../common/button");
 var Track = require("../common/track");
 var BlockingModal = require("../blocking/blockingmodal");
 var Subscription = require("../account/subscription");
+var Submit = require("../../js/submits").Submit;
 
 module.exports = React.createClass({
   propTypes: {
@@ -27,7 +28,14 @@ module.exports = React.createClass({
   },
   handleLogout: function () {
     Track.track_timeout("Click Logout", {}, function (e) {
-            window.location.href = "/logout";
+      new Submit({
+        url: "/logout_ajax",
+        ajax: true,
+        method: "POST",
+        ajaxsuccess: function () {
+          window.location = "/";
+        }
+      }).send();
     });
     return false;
   },
