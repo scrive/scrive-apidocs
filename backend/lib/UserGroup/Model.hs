@@ -17,7 +17,6 @@ module UserGroup.Model (
   , UserGroupIsInvalidAsRoot(..)
   , UserGroupFilter(..)
   , ugGetChildrenInheritingProperty
-  , unsafeUserGroupIDToPartnerID
   , minUserGroupIdleDocTimeout
   , maxUserGroupIdleDocTimeout
   ) where
@@ -33,7 +32,6 @@ import qualified Data.Text as T
 import DB
 import FeatureFlags.Model
 import FeatureFlags.Tables
-import Partner.Model
 import User.UserID
 import UserGroup.Tables
 import UserGroup.Types
@@ -478,9 +476,6 @@ ugInvoicingSelectors = ["invoicing_type", "payment_plan"]
 
 ugTagSelectors :: [SQL]
 ugTagSelectors = ["name", "value"]
-
-unsafeUserGroupIDToPartnerID :: UserGroupID -> PartnerID
-unsafeUserGroupIDToPartnerID = unsafePartnerID . fromUserGroupID
 
 data UserGroupFilter
   = UGFilterByString Text    -- ^ Contains the string anywhere

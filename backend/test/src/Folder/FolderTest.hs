@@ -95,7 +95,20 @@ testSignuUsersHaveHomeFolders = do
 
 testPartnerUsersWithFolders :: TestEnv ()
 testPartnerUsersWithFolders = do
-  (partnerAdminUser, partnerAdminUserGroup) <- addNewRandomPartnerUser
+  partnerAdminUserGroup <- instantiateRandomUserGroup
+  partnerAdminUser      <- instantiateUser $ randomUserTemplate
+    { firstName      = return "Arthur"
+    , lastName       = return "Dent"
+    , email          = return "arthur.dent@scrive.com"
+    , groupID        = return $ partnerAdminUserGroup ^. #id
+    , isCompanyAdmin = True
+    }
+  void
+    .  dbUpdate
+    .  AccessControlCreateForUser (partnerAdminUser ^. #id)
+    .  UserGroupAdminAR
+    $  partnerAdminUserGroup
+    ^. #id
   assertCountAllFolders "Partner and Partner admin have Folders" 2
 
   (ctx, cid) <- partnerCompanyCreate partnerAdminUser partnerAdminUserGroup
@@ -116,7 +129,20 @@ testPartnerUsersWithFolders = do
 
 testPartnerUsersWithoutFolders :: TestEnv ()
 testPartnerUsersWithoutFolders = do
-  (partnerAdminUser, partnerAdminUserGroup) <- addNewRandomPartnerUser
+  partnerAdminUserGroup <- instantiateRandomUserGroup
+  partnerAdminUser      <- instantiateUser $ randomUserTemplate
+    { firstName      = return "Arthur"
+    , lastName       = return "Dent"
+    , email          = return "arthur.dent@scrive.com"
+    , groupID        = return $ partnerAdminUserGroup ^. #id
+    , isCompanyAdmin = True
+    }
+  void
+    .  dbUpdate
+    .  AccessControlCreateForUser (partnerAdminUser ^. #id)
+    .  UserGroupAdminAR
+    $  partnerAdminUserGroup
+    ^. #id
   assertCountAllFolders "Partner and Partner admin have Folders" 2
 
   (ctx, cid) <- partnerCompanyCreate partnerAdminUser partnerAdminUserGroup
@@ -137,20 +163,19 @@ partnerCompanyCreate partnerAdminUser partnerAdminUserGroup = do
   let rq_newCompany_params = [("json", inTextBS newCompanyJSON)]
       rq_newCompany_resp_fp =
         inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
-  respValue <- runApiJSONTest
-    ctx
-    POST
-    (partnerApiCallV1CompanyCreate $ fromUserGroupID partnerUgID)
-    rq_newCompany_params
-    201
-    rq_newCompany_resp_fp
+  respValue <- runApiJSONTest ctx
+                              POST
+                              (partnerApiCallV1CompanyCreate partnerUgID)
+                              rq_newCompany_params
+                              201
+                              rq_newCompany_resp_fp
   let Object respObject      = snd respValue
       Just   (String cidStr) = H.lookup "id" respObject
       cid                    = read cidStr
   return (ctx, cid)
 
 partnerUserCreate :: Context -> UserGroupID -> UserGroupID -> TestEnv ()
-partnerUserCreate ctx cid pid = do
+partnerUserCreate ctx cid partnerUgID = do
   newUserGoodJSON <- readTestFile
     "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [("json", inTextBS newUserGoodJSON)]
@@ -158,7 +183,7 @@ partnerUserCreate ctx cid pid = do
         inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
   void $ runApiJSONTest ctx
                         POST
-                        (partnerApiCallV1UserCreate (fromUserGroupID pid) cid)
+                        (partnerApiCallV1UserCreate partnerUgID cid)
                         rq_newUserGood_params
                         201
                         rq_newUserGood_resp_fp

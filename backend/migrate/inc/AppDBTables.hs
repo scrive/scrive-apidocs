@@ -39,7 +39,6 @@ import HostClock.Tables
 import Mails.FromKontra.Tables
 import Mails.Tables
 import OAuth.Tables
-import Partner.Tables
 import Session.Tables
 import SMS.FromKontra.Tables
 import SMS.Tables
@@ -107,7 +106,6 @@ kontraTables =
     , tableBrandedDomains
     , tableFolders
     , tableUserGroups
-    , tablePartners
     , tableUsers
     , tableUsersHistory
     , tableCompanyInvites

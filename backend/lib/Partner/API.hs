@@ -14,7 +14,6 @@ module Partner.API
 
 import Control.Monad.Catch (MonadCatch, SomeException(..), try)
 import Data.Either (isLeft)
-import Data.Int (Int64)
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
@@ -33,7 +32,6 @@ import Kontra
 import OAuth.Model
 import Partner.JSON
 import Partner.Logging
-import Partner.Model
 import Routing
 import User.Action
 import User.Email (Email(..))
@@ -64,10 +62,9 @@ partnerAPIV1 = dir "partner" $ choice
   ]
 
 -- | Create a user group as a child of the partner's user group (root of the tree).
-partnerApiCallV1CompanyCreate :: Kontrakcja m => Int64 -> m Response
-partnerApiCallV1CompanyCreate ptOrUgID = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartner mPartnerID partnerUsrGrpID . api $ do
+partnerApiCallV1CompanyCreate :: Kontrakcja m => UserGroupID -> m Response
+partnerApiCallV1CompanyCreate partnerUsrGrpID = do
+  logPartner partnerUsrGrpID . api $ do
     let acc = [canDo CreateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
@@ -99,13 +96,9 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
             <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 
 partnerApiCallV1CompanyUpdate
-  :: (MonadCatch m, Kontrakcja m) => Int64 -> UserGroupID -> m Response
-partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
-    -- for backwards compatibility we check _both_ that the user is allowed
-    -- to update the specified partner _and_ the user group. In the future
-    -- this should be unnecessary.
+  :: (MonadCatch m, Kontrakcja m) => UserGroupID -> UserGroupID -> m Response
+partnerApiCallV1CompanyUpdate partnerUsrGrpID ugid = do
+  logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     let acc =
           [canDo UpdateA $ UserGroupR ugid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
@@ -135,15 +128,10 @@ partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
             . Ok
             $ (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp_updated)
 
-partnerApiCallV1CompanyGet :: Kontrakcja m => Int64 -> UserGroupID -> m Response
-partnerApiCallV1CompanyGet ptOrUgID ugid = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
-    -- for backwards compatibility we check _both_ that the user is allowed
-    -- to update the specified partner _and_ the user group. In the future
-    -- this should be unnecessary.
+partnerApiCallV1CompanyGet :: Kontrakcja m => UserGroupID -> UserGroupID -> m Response
+partnerApiCallV1CompanyGet partnerUsrGrpID ugid = do
+  logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     let acc = [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
-        -- see @note for `partnerApiCallV1CompaniesGet`
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
       (dbQuery $ UserGroupGetWithParents ugid) >>= \case
@@ -151,10 +139,9 @@ partnerApiCallV1CompanyGet ptOrUgID ugid = do
         Just ugwp -> do
           Ok <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 
-partnerApiCallV1CompaniesGet :: Kontrakcja m => Int64 -> m Response
-partnerApiCallV1CompaniesGet ptOrUgID = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartner mPartnerID partnerUsrGrpID . api $ do
+partnerApiCallV1CompaniesGet :: Kontrakcja m => UserGroupID -> m Response
+partnerApiCallV1CompaniesGet partnerUsrGrpID = do
+  logPartner partnerUsrGrpID . api $ do
     let acc =
           [ canDo ReadA $ UserGroupR partnerUsrGrpID
           , canDo CreateA $ UserGroupR partnerUsrGrpID
@@ -175,10 +162,9 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
         , userGroupToUserGroupForUpdate <$> user_groups_with_parents
         )
 
-partnerApiCallV1UserCreate :: Kontrakcja m => Int64 -> UserGroupID -> m Response
-partnerApiCallV1UserCreate ptOrUgID ugid = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
+partnerApiCallV1UserCreate :: Kontrakcja m => UserGroupID -> UserGroupID -> m Response
+partnerApiCallV1UserCreate partnerUsrGrpID ugid = do
+  logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     let acc =
           [canDo CreateA $ UserInGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
               {- This last one is blocking for all but partner admins.             -}
@@ -220,12 +206,10 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
       -- Result
       Created <$> return (unjsonUserForUpdate, userToUserForUpdate userRefreshed)
 
-partnerApiCallV1UserGet :: Kontrakcja m => Int64 -> UserID -> m Response
-partnerApiCallV1UserGet ptOrUgID uid = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
+partnerApiCallV1UserGet :: Kontrakcja m => UserGroupID -> UserID -> m Response
+partnerApiCallV1UserGet partnerUsrGrpID uid = do
+  logPartnerAndUser partnerUsrGrpID uid . api $ do
     let acc = [canDo ReadA $ UserR uid, canDo CreateA $ UserGroupR partnerUsrGrpID]
-        -- see @note for `partnerApiCallV1CompaniesGet`
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser acc $ do
       (dbQuery . GetUserByID $ uid) >>= \case
@@ -234,23 +218,20 @@ partnerApiCallV1UserGet ptOrUgID uid = do
         Just user -> do
           Ok <$> return (unjsonUserForUpdate, userToUserForUpdate user)
 
-partnerApiCallV1CompanyUsersGet :: Kontrakcja m => Int64 -> UserGroupID -> m Response
-partnerApiCallV1CompanyUsersGet ptOrUgID ugid = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
+partnerApiCallV1CompanyUsersGet
+  :: Kontrakcja m => UserGroupID -> UserGroupID -> m Response
+partnerApiCallV1CompanyUsersGet partnerUsrGrpID ugid = do
+  logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     let acc = [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
-        -- see @note for `partnerApiCallV1CompaniesGet`
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
       users <- dbQuery $ UserGroupGetUsers ugid
       Ok <$> return (unjsonUsersForUpdate, userToUserForUpdate <$> users)
 
-partnerApiCallV1UserUpdate :: Kontrakcja m => Int64 -> UserID -> m Response
-partnerApiCallV1UserUpdate ptOrUgID uid = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
+partnerApiCallV1UserUpdate :: Kontrakcja m => UserGroupID -> UserID -> m Response
+partnerApiCallV1UserUpdate partnerUsrGrpID uid = do
+  logPartnerAndUser partnerUsrGrpID uid . api $ do
     let acc = [canDo UpdateA $ UserR uid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
-        -- see @note for `partnerApiCallV1CompaniesGet`
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser acc $ do
       user    <- guardThatUserExists uid
@@ -274,10 +255,10 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
         (dbQuery $ GetUserByID uid)
       Ok <$> return (unjsonUserForUpdate, userToUserForUpdate userFromDB)
 
-partnerApiCallV1UserGetPersonalToken :: Kontrakcja m => Int64 -> UserID -> m Response
-partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
-  (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
-  logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
+partnerApiCallV1UserGetPersonalToken
+  :: Kontrakcja m => UserGroupID -> UserID -> m Response
+partnerApiCallV1UserGetPersonalToken partnerUsrGrpID uid = do
+  logPartnerAndUser partnerUsrGrpID uid . api $ do
     let acc =
           [ canDo CreateA $ UserPersonalTokenR uid
           , canDo ReadA $ UserPersonalTokenR uid
@@ -322,50 +303,7 @@ srvLogErr t = do
 noUsrGrpErr :: (Kontrakcja m) => m a
 noUsrGrpErr = srvLogErr "The user group could not be retrieved."
 
-noUsrGrpErrPartner :: (Kontrakcja m) => m a
-noUsrGrpErrPartner =
-  srvLogErr $ "The user group could not be retrieved for the given partner identifier."
-
 rqPrmErr :: (Kontrakcja m) => Text -> m a
 rqPrmErr t = do
   logInfo "Partner API" $ object ["error_message" .= t]
   apiError . requestParameterParseError "json" $ t
-
-resolveUserGroupID
-  :: Kontrakcja m
-  => Int64
-  -- ^ Argument to be checked whether it is a 'PartnerID' or a
-  -- 'UserGroupID'.
-  -> m (Maybe PartnerID, UserGroupID)
-  -- ^ If the original argument is a 'PartnerID', return this along
-  -- with the 'UserGroupID' (mostly for logging purposes).
-resolveUserGroupID k = do
-  (ePartner :: Either SomeException Partner) <- do
-    try . dbQuery . GetPartnerByID . unsafePartnerID $ k
-  mUserGroup <- do
-    dbQuery . UserGroupGet . unsafeUserGroupID $ k
-  case (ePartner, mUserGroup) of
-    (Right partner, Nothing) -> do
-      case ptUserGroupID partner of
-        Nothing     -> noUsrGrpErrPartner
-        (Just ugid) -> return (Just . ptID $ partner, ugid)
-
-    (Left _, Just ug) -> do
-      return (Nothing, ug ^. #id)
-
-    (Right partner, Just ug) -> do
-      -- This won't ever happen *except* in tests the way they're implemented now.
-      -- Should it happen anyway it's actually OK, but let's log it.
-      logInfo "Partner API" $ object
-        [ "message"
-          .= ("Identifier corresponds to a partner ID" <+> "as well as a user group ID" :: Text
-             )
-        , "identifier" .= k
-        ]
-      let mpID = ptUserGroupID partner
-      unless (isJust mpID && (Just $ ug ^. #id) == mpID) $ do
-        srvLogErr $ "The partner ID and the user group ID are not connected"
-      return (Just . ptID $ partner, ug ^. #id)
-
-    (_, _) -> do
-      srvLogErr "No partner, no user group for the given identifier"

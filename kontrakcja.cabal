@@ -413,10 +413,6 @@ Library
                  , Partner.JSON
                  , Partner.JSON.Internal
                  , Partner.Logging
-                 , Partner.Model
-                 , Partner.Partner
-                 , Partner.PartnerID
-                 , Partner.Tables
                  , PasswordService.Conf
                  , PasswordService.Control
                  , PdfToolsLambda.Conf
@@ -836,7 +832,6 @@ Executable kontrakcja-migrate
                  MinutesTime
                  OAuth.Tables
                  Partner.Migrations
-                 Partner.Tables
                  SMS.FromKontra.Migrations
                  SMS.FromKontra.Tables
                  SMS.Migrations
@@ -1301,7 +1296,6 @@ Test-suite kontrakcja-test
                  PadApplication.APITest
                  Partner.APITest
                  Partner.Migrations
-                 Partner.Tables
                  QRCodeTest
                  ReferenceScreenshotsTest
                  SMS.FromKontra.Migrations

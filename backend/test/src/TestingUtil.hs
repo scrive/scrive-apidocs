@@ -24,7 +24,6 @@ module TestingUtil (
   , instantiateUser
   , tryInstantiateUser
   , randomPersonalNumber
-  , addNewRandomPartnerUser
   , anyRandomSignatoryCondition
   , RandomDocumentAllows(..)
   , rdaDefault
@@ -111,8 +110,6 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Test.HUnit as T
 
-import AccessControl.Model
-import AccessControl.Types
 import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
@@ -148,7 +145,6 @@ import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
 import PadApplication.Types
-import Partner.Model
 import PdfToolsLambda.Conf
 import Session.SessionID
 import SMS.Types (SMSProvider(..))
@@ -248,9 +244,6 @@ newtype ArbitraryUnicode = ArbitraryUnicode
 
 instance Arbitrary ArbitraryUnicode where
   arbitrary = ArbitraryUnicode <$> arbitraryUnicodeText
-
-instance Arbitrary PartnerID where
-  arbitrary = unsafePartnerID . abs <$> arbitrary
 
 instance Arbitrary SMSProvider where
   arbitrary = elements [SMSDefault, SMSTeliaCallGuide]
@@ -1067,40 +1060,6 @@ tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = gene
 
 randomPersonalNumber :: CryptoRNG m => m Text
 randomPersonalNumber = rand 10 $ arbText 3 30
-
-addNewRandomPartnerUser :: TestEnv (User, UserGroup)
-addNewRandomPartnerUser = do
-  -- To use UserGroups as if they are Partners, we need to generate a
-  -- UserGroupID which is not a PartnerID.
-  partners <- dbQuery GetPartners
-  -- Try to generate a userGroup and always check whether the ugid is
-  -- already a partnerID.
-  mresult  <- (\folder -> foldM folder Nothing [1 .. 100]) $ \mres _counter -> do
-    case mres of
-      Just res -> return . Just $ res
-      Nothing  -> do
-        partnerAdminUser      <- instantiateRandomUser
-        partnerAdminUserGroup <- dbQuery $ UserGroupGetByUserID (partnerAdminUser ^. #id)
-        let partnerIDAlreadyExists =
-              (unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #id)
-                `elem` map ptID partners
-        case partnerIDAlreadyExists of
-          True  -> return Nothing
-          False -> return $ Just (partnerAdminUser, partnerAdminUserGroup)
-  case mresult of
-    Nothing -> unexpectedError "UserGroupID - PartnerID collision"
-    Just (partnerAdminUser, partnerAdminUserGroup) -> do
-      -- insert new partner row with the same ID as the UserGroup
-      True <- dbUpdate . InsertPartnerForTests $ Partner
-        { ptID             = unsafeUserGroupIDToPartnerID $ partnerAdminUserGroup ^. #id
-        , ptName           = T.unpack $ partnerAdminUserGroup ^. #name
-        , ptDefaultPartner = False
-        , ptUserGroupID    = Just $ partnerAdminUserGroup ^. #id
-        }
-      let uid  = partnerAdminUser ^. #id
-          ugid = partnerAdminUserGroup ^. #id
-      void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-      return (partnerAdminUser, partnerAdminUserGroup)
 
 newtype OneOf a = OneOf { fromOneOf :: [a] }
   deriving (Eq, Show)

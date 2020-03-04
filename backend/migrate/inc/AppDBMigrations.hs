@@ -240,4 +240,5 @@ kontraMigrations =
   , brandedDomainChangeLightLogo
   , addUserGroupGarbageCollectionJob
   , brandedDomainDeleteThemeConstraint
+  , dropPartners
   ]

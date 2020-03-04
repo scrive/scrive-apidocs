@@ -3,16 +3,18 @@ module Partner.Migrations (
 , createTablePartnerAdmins
 , partnersAddUserGroupID
 , dropPartnerAdmins
+, dropPartners
 ) where
+
+-- THIS MODULE CAN BE REMOVED ONCE ITS MIGRATIONS ARE ALL ON PROD
 
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
-import Partner.Tables
 
 createTablePartners :: MonadDB m => Migration m
 createTablePartners = Migration
-  { mgrTableName = tblName tablePartners
+  { mgrTableName = "partners"
   , mgrFrom      = 0
   , mgrAction    =
     StandardMigration $ do
@@ -68,11 +70,11 @@ createTablePartnerAdmins = Migration
 
 partnersAddUserGroupID :: MonadDB m => Migration m
 partnersAddUserGroupID = Migration
-  { mgrTableName = tblName tablePartners
+  { mgrTableName = "partners"
   , mgrFrom      = 1
   , mgrAction    =
     StandardMigration $ do
-      let tname = tblName tablePartners
+      let tname = "partners"
       runQuery_ $ sqlAlterTable
         tname
         [ sqlAddColumn
@@ -89,3 +91,9 @@ dropPartnerAdmins = Migration { mgrTableName = "partner_admins"
                               , mgrFrom      = 1
                               , mgrAction    = DropTableMigration DropTableRestrict
                               }
+
+dropPartners :: MonadDB m => Migration m
+dropPartners = Migration { mgrTableName = "partners"
+                         , mgrFrom      = 2
+                         , mgrAction    = DropTableMigration DropTableRestrict
+                         }
