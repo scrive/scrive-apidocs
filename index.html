@@ -666,7 +666,7 @@
                     <a href="#usergroupcontactdetailswithinheritable" class="toc-h2 toc-link" data-title="usergroupcontactdetailswithinheritable">UserGroupContactDetailsWithInheritable</a>
                   </li>
                   <li>
-                    <a href="#usergrouptags" class="toc-h2 toc-link" data-title="usergrouptags">UserGroupTags</a>
+                    <a href="#tag" class="toc-h2 toc-link" data-title="tag">Tag</a>
                   </li>
                   <li>
                     <a href="#accessrole" class="toc-h2 toc-link" data-title="accessrole">AccessRole</a>
@@ -3947,7 +3947,8 @@ It is not necessary to minify the JSON, but also not prohibited.</p>
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New UG that's the child of user group 1"</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"side"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dark"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"side"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dark"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -3967,7 +3968,7 @@ field.</p>
 to create root User Groups. In order to create a new child, you must have
 the requisite permissions upon the parent.</p>
 
-<p>You can also set <code>tags</code>, which are arbitrary key/value pairs.</p>
+<p>You can also set <code>tags</code>, which are arbitrary name/value pairs.</p>
 
 <p>A full User Group JSON response is returned which displays the state <em>after</em>
 the create operation has been performed. Performing <code>/update</code> and then
@@ -4042,10 +4043,12 @@ exists with this ID or that you do not have permission to update it)</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"founded"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"founded"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"status"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -4115,10 +4118,12 @@ exists with this ID or that you do not have permission to update it)</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"founded"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"founded"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"status"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -4185,10 +4190,12 @@ It is not necessary to minify the JSON, but also not prohibited.</p>
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UG that's now the child of user group 1"</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"station"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ISS"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"station"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ISS"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"lifeform"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lifeform"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -4220,9 +4227,9 @@ the old parent.</li>
 
 <ul>
 <li>Only the provided tags are affected on the server.</li>
-<li>If the value of a tag is a string, the key/value pair is stored,
-overwriting the previous value associated with that key.</li>
-<li>If the value of a tag is <code>null</code>, the key/value pair is removed.</li>
+<li>If the value of a tag is a string, the name/value pair is stored,
+overwriting the previous value associated with that name.</li>
+<li>If the value of a tag is <code>null</code>, the name/value pair is removed.</li>
 <li>Other value types lead to 400 Bad Request response.</li>
 </ul>
 
@@ -8570,7 +8577,8 @@ The list API call can filter based on document tags.</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"alignment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chaotic good"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alignment"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chaotic good"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -8790,10 +8798,10 @@ The list API call can filter based on document tags.</p>
 
 <div class="json-schema">
 
-<p><strong>User defined set of keys and values.</strong></p>
-<p>Each tag must have <code>{key: value}</code> format.
+<p><strong>User defined set of name/value pairs.</strong></p>
+<p>Each tag must have <code>{&quot;name&quot;: &quot;some-name&quot;, &quot;value&quot;: &quot;some-value&quot;}</code> format.
 In the responses value is always a string.
-In the requests you can also provide <code>null</code> to delete a tag.
+In the requests you can also provide <code>null</code> value to delete a tag.
 Other value types lead to 400 Bad Request response.</p>
 
 
@@ -8809,12 +8817,22 @@ Other value types lead to 400 Bad Request response.</p>
 
 <div class="json-schema">
 
-<p>Additional restrictions:</p>
+<p>This object has the following properties:</p>
 
-<ul>
-</ul>
+<h6><code>name</code> (string)</h6>
+
+
+<div class="json-schema">
 
 </div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -8888,7 +8906,8 @@ Other value types lead to 400 Bad Request response.</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"home-planet"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Earth"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"home-planet"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Earth"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -9253,10 +9272,10 @@ Preview).</p>
 
 <div class="json-schema">
 
-<p><strong>User defined set of keys and values.</strong></p>
-<p>Each tag must have <code>{key: value}</code> format.
+<p><strong>User defined set of name/value pairs.</strong></p>
+<p>Each tag must have <code>{&quot;name&quot;: &quot;some-name&quot;, &quot;value&quot;: &quot;some-value&quot;}</code> format.
 In the responses value is always a string.
-In the requests you can also provide <code>null</code> to delete a tag.
+In the requests you can also provide <code>null</code> value to delete a tag.
 Other value types lead to 400 Bad Request response.</p>
 
 
@@ -9272,12 +9291,22 @@ Other value types lead to 400 Bad Request response.</p>
 
 <div class="json-schema">
 
-<p>Additional restrictions:</p>
+<p>This object has the following properties:</p>
 
-<ul>
-</ul>
+<h6><code>name</code> (string)</h6>
+
+
+<div class="json-schema">
 
 </div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -18448,7 +18477,8 @@ count of documents on different stages of the process</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"alignment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chaotic good"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alignment"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chaotic good"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -18668,10 +18698,10 @@ count of documents on different stages of the process</p>
 
 <div class="json-schema">
 
-<p><strong>User defined set of keys and values.</strong></p>
-<p>Each tag must have <code>{key: value}</code> format.
+<p><strong>User defined set of name/value pairs.</strong></p>
+<p>Each tag must have <code>{&quot;name&quot;: &quot;some-name&quot;, &quot;value&quot;: &quot;some-value&quot;}</code> format.
 In the responses value is always a string.
-In the requests you can also provide <code>null</code> to delete a tag.
+In the requests you can also provide <code>null</code> value to delete a tag.
 Other value types lead to 400 Bad Request response.</p>
 
 
@@ -18687,12 +18717,22 @@ Other value types lead to 400 Bad Request response.</p>
 
 <div class="json-schema">
 
-<p>Additional restrictions:</p>
+<p>This object has the following properties:</p>
 
-<ul>
-</ul>
+<h5><code>name</code> (string)</h5>
+
+
+<div class="json-schema">
 
 </div>
+
+<h5><code>value</code> (string)</h5>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -18764,7 +18804,8 @@ Other value types lead to 400 Bad Request response.</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"home-planet"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Earth"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"home-planet"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Earth"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -19129,10 +19170,10 @@ Preview).</p>
 
 <div class="json-schema">
 
-<p><strong>User defined set of keys and values.</strong></p>
-<p>Each tag must have <code>{key: value}</code> format.
+<p><strong>User defined set of name/value pairs.</strong></p>
+<p>Each tag must have <code>{&quot;name&quot;: &quot;some-name&quot;, &quot;value&quot;: &quot;some-value&quot;}</code> format.
 In the responses value is always a string.
-In the requests you can also provide <code>null</code> to delete a tag.
+In the requests you can also provide <code>null</code> value to delete a tag.
 Other value types lead to 400 Bad Request response.</p>
 
 
@@ -19148,12 +19189,22 @@ Other value types lead to 400 Bad Request response.</p>
 
 <div class="json-schema">
 
-<p>Additional restrictions:</p>
+<p>This object has the following properties:</p>
 
-<ul>
-</ul>
+<h5><code>name</code> (string)</h5>
+
+
+<div class="json-schema">
 
 </div>
+
+<h5><code>value</code> (string)</h5>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -19684,26 +19735,28 @@ Preview).</p>
 <p></div></p>
 
 <p></div></p>
-<h2 id='usergrouptags'>UserGroupTags</h2>
+<h2 id='tag'>Tag</h2>
 <p><code>(array)</code></p>
 
 <blockquote>
-<h3 id='example-json-for-quot-usergrouptags-quot'>Example JSON: for &quot;UserGroupTags&quot;</h3></blockquote>
+<h3 id='example-json-for-quot-tag-quot'>Example JSON: for &quot;Tag&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">[</span><span class="w">
   </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"founded"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
+    </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"founded"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1846"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
+    </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"status"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">]</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
 
-<p><strong>User defined set of keys and values.</strong></p>
-<p>Each tag must have <code>{key: value}</code> format.
+<p><strong>User defined set of name/value pairs.</strong></p>
+<p>Each tag must have <code>{&quot;name&quot;: &quot;some-name&quot;, &quot;value&quot;: &quot;some-value&quot;}</code> format.
 In the responses value is always a string.
-In the requests you can also provide <code>null</code> to delete a tag.
+In the requests you can also provide <code>null</code> value to delete a tag.
 Other value types lead to 400 Bad Request response.</p>
 
 
@@ -19719,12 +19772,22 @@ Other value types lead to 400 Bad Request response.</p>
 
 <div class="json-schema">
 
-<p>Additional restrictions:</p>
+<p>This object has the following properties:</p>
 
-<ul>
-</ul>
+<h4><code>name</code> (string)</h4>
+
+
+<div class="json-schema">
 
 </div>
+
+<h4><code>value</code> (string)</h4>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 <h2 id='accessrole'>AccessRole</h2>
