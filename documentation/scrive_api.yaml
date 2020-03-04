@@ -991,10 +991,10 @@ paths:
   /dataretentionpolicy/set:
     $ref: ./api/user/post-dataretentionpolicy.yaml
 
-  /tags:
+  /usertags:
     $ref: ./api/user/get-tags.yaml
 
-  /tags/update:
+  /usertags/update:
     $ref: ./api/user/post-tags.yaml
 
   /usagestats/days:
