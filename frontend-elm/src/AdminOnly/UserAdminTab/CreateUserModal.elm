@@ -158,7 +158,7 @@ responseDecoder =
 
 show : Model -> Model
 show model =
-    { model | modalVisibility = Modal.shown, response = Nothing }
+    { model | modalVisibility = Modal.shown, response = Nothing, firstName = "", secondName = "", email = "", language = Language.English, isUserGroupAdmin = False }
 
 
 view : Model -> Html Msg
@@ -204,19 +204,19 @@ view model =
                 [ Form.row []
                     [ Form.colLabel labelColAttrs [ text "First name" ]
                     , Form.col inputColAttrs
-                        [ Input.text [ Input.attrs [ onInput <| SetFirstName ] ]
+                        [ Input.text [ Input.attrs [ onInput <| SetFirstName, value model.firstName ] ]
                         ]
                     ]
                 , Form.row []
                     [ Form.colLabel labelColAttrs [ text "Second name" ]
                     , Form.col inputColAttrs
-                        [ Input.text [ Input.attrs [ onInput <| SetSecondName ] ]
+                        [ Input.text [ Input.attrs [ onInput <| SetSecondName, value model.secondName ] ]
                         ]
                     ]
                 , Form.row []
                     [ Form.colLabel labelColAttrs [ text "Email" ]
                     , Form.col inputColAttrs
-                        [ Input.email [ Input.attrs [ onInput <| SetEmail ] ]
+                        [ Input.email [ Input.attrs [ onInput <| SetEmail, value model.email ] ]
                         , Form.help [] [ text "We'll never share your email with anyone else." ]
                         ]
                     ]
