@@ -7,6 +7,7 @@ module Partner.Migrations (
 ) where
 
 -- THIS MODULE CAN BE REMOVED ONCE ITS MIGRATIONS ARE ALL ON PROD
+-- FC NOTES THAT WE SHOULD CHECK THE CGI MODULE FIRST THOUGH
 
 import Database.PostgreSQL.PQTypes.Checks
 
