@@ -41,7 +41,8 @@ example: {
   },
   "tags": [
     {
-      "alignment": "chaotic good"
+      "name": "alignment",
+      "value": "chaotic good"
     }
   ]
 }
@@ -69,4 +70,4 @@ properties:
   contact_details:
     $ref: ./UserGroupContactDetails.yaml
   tags:
-    $ref: ./UserGroupTags.yaml
+    $ref: ./Tags.yaml

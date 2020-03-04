@@ -17,10 +17,12 @@ post:
       "name": "UG that's now the child of user group 1"
       "tags": [
         {
-          "station": "ISS"
+          "name": "station",
+          "value": "ISS"
         },
         {
-          "lifeform": null
+          "name": "lifeform",
+          "value": null
         }
       ]
     }
@@ -48,9 +50,9 @@ post:
     Tags are updated as follows:
 
     + Only the provided tags are affected on the server.
-    + If the value of a tag is a string, the key/value pair is stored,
-      overwriting the previous value associated with that key.
-    + If the value of a tag is `null`, the key/value pair is removed.
+    + If the value of a tag is a string, the name/value pair is stored,
+      overwriting the previous value associated with that name.
+    + If the value of a tag is `null`, the name/value pair is removed.
     + Other value types lead to 400 Bad Request response.
 
     The endpoint supports partial updates. This means that only the fields you
@@ -76,7 +78,11 @@ post:
       description: |
         JSON object containing the new `name`, `parent_id` or `tags` for the User
         Group.
-      example: { "name": "new user group", "parent_id": 1, "tags": [ { "foo": "bar" } ] }
+      example: {
+          "name": "new user group",
+          "parent_id": 1,
+          "tags": [ {"name": "foo", "value": "bar" } ]
+        }
       required: true
     - name: include-inheritable
       in: formData
