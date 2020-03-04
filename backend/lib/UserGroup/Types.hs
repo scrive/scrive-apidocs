@@ -36,7 +36,7 @@ module UserGroup.Types
   , UserGroupRoot
   , ugFromUGRoot
   , UserGroupWithChildren
-  , UserGroupTag
+  , Tag
   ) where
 
 import Data.Text (Text)
@@ -48,6 +48,7 @@ import FeatureFlags.Model
 import Folder.Types
 import PadApplication.Types
 import SMS.Types
+import Tag
 import UserGroup.Internal
 import UserGroup.Types.PaymentPlan
 
@@ -106,8 +107,8 @@ fetchUserGroup
      , Composite UserGroupUI
      , Maybe (Composite FeatureFlags)  -- for admins
      , Maybe (Composite FeatureFlags)
-     , CompositeArray1 UserGroupTag
-     , CompositeArray1 UserGroupTag
+     , CompositeArray1 Tag
+     , CompositeArray1 Tag
      )  -- for regular users
   -> UserGroup
 fetchUserGroup (id, parentGroupID, name, homeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags, CompositeArray1 iTags, CompositeArray1 eTags)

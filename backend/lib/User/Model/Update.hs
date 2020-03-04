@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 module User.Model.Update (
     AddUser(..)
   , AcceptTermsOfService(..)
@@ -14,6 +15,7 @@ module User.Model.Update (
   , SetUserTOTPKey(..)
   , ConfirmUserTOTPSetup(..)
   , DisableUserTOTP(..)
+  , SetUserTags(..)
   , SetUserSettings(..)
   , SetLoginAuth(..)
   , SetUserTotpIsMandatory(..)
@@ -23,6 +25,7 @@ import Control.Monad.Catch
 import Control.Monad.Time
 import Data.ByteString (ByteString)
 import Log
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
@@ -33,6 +36,7 @@ import Doc.Types.SignatoryField
 import Folder.Types
 import IPAddress
 import LoginAuth.LoginAuthMethod
+import Tag
 import User.Email
 import User.Lang
 import User.Model.Query
@@ -60,9 +64,11 @@ data AddUser = AddUser
   Lang
   BrandedDomainID
   SignupMethod
+  (S.Set Tag)
+  (S.Set Tag)
 
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm) = do
+  update (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm it et) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _  -> return Nothing -- user with the same email address exists
@@ -87,7 +93,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
           sqlSet "user_group_id"        ugid
           sqlSet "home_folder_id"       mFid
           mapM_ sqlResult selectUsersSelectorsList
-        fetchMaybe fetchUser
+        muser <- fetchMaybe fetchUser
+        case muser of
+          Just user -> do
+            insertUserTags (user ^. #id) Tag.Internal it
+            insertUserTags (user ^. #id) Tag.External et
+            return . Just $ user & #internalTags .~ it & #externalTags .~ et
+          Nothing -> return Nothing
 
 -- | Mark a user as deleted so that queries won't return it anymore and delete
 -- sensitive information.
@@ -114,14 +126,13 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
 
     -- Give the shared attachments and templates to the oldest admin or user if
     -- there are no admins left.
-    runQuery_ $ sqlSelect "users u" $ do
-      mapM_ (sqlResult . ("u." <>)) selectUsersSelectorsList
+    runQuery_ $ sqlSelect "users" $ do
+      mapM_ sqlResult selectUsersSelectorsList
       -- In either the same user group or a subgroup.
-      sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
-      sqlWhereEq "ug.id" $ user ^. #groupID
-      sqlWhereIsNULL "u.deleted"
-      sqlWhereNotEq "u.id" uid
-      sqlOrderBy "u.is_company_admin DESC, u.has_accepted_terms_of_service ASC"
+      sqlWhereEq "user_group_id" $ user ^. #groupID
+      sqlWhereIsNULL "deleted"
+      sqlWhereNotEq "id" uid
+      sqlOrderBy "is_company_admin DESC, has_accepted_terms_of_service ASC"
       sqlLimit 1
     mNewOwner <- fetchMaybe fetchUser
 
@@ -393,3 +404,25 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetLoginAuth Bool where
       sqlSet "sysauth" sysauth
       sqlWhereEq "id" userid
       sqlWhereIsNULL "deleted"
+
+data SetUserTags = SetUserTags {
+    userID :: UserID
+  , internalTags :: S.Set Tag
+  , externalTags :: S.Set Tag
+}
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTags () where
+  update SetUserTags {..} = do
+    runQuery_ . sqlDelete "user_tags" $ sqlWhereEq "user_id" userID
+    insertUserTags userID Tag.Internal internalTags
+    insertUserTags userID Tag.External externalTags
+
+insertUserTags :: MonadDB m => UserID -> TagDomain -> S.Set Tag -> m ()
+insertUserTags uid domain tags
+  | S.null tags = return ()
+  | otherwise = do
+    let tags_list = S.toList tags
+    runQuery_ . sqlInsert "user_tags" $ do
+      sqlSet "user_id" uid
+      sqlSetList "name" $ (view #name) <$> tags_list
+      sqlSetList "value" $ (view #value) <$> tags_list
+      sqlSet "internal" (domain == Tag.Internal)

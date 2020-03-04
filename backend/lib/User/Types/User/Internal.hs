@@ -8,6 +8,7 @@ module User.Types.User.Internal
 import Data.Aeson
 import Data.ByteString (ByteString)
 import Optics.TH
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
@@ -16,6 +17,7 @@ import Folder.Types
 import Log.Identifier
 import LoginAuth.LoginAuthMethod
 import MinutesTime
+import Tag
 import User.Email
 import User.Lang
 import User.Password
@@ -40,6 +42,8 @@ data User = User
   , groupID            :: UserGroupID
   , homeFolderID       :: Maybe FolderID
   , sysAuth            :: LoginAuthMethod
+  , internalTags       :: !(S.Set Tag)
+  , externalTags       :: !(S.Set Tag)
   } deriving (Eq, Ord, Show)
 
 instance HasSomeUserInfo User where

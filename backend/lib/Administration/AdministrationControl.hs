@@ -38,7 +38,6 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
-import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
@@ -82,6 +81,7 @@ import PadApplication.Types (padAppModeFromText)
 import Routing
 import Session.Constant
 import Session.Model
+import Tag
 import Templates (renderTextTemplate)
 import Theme.Control
 import User.CallbackScheme.Model
@@ -90,7 +90,6 @@ import User.History.Model
 import User.JSON
 import User.UserControl
 import UserGroup.FreeDocumentTokens.Model
-import UserGroup.JSON
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -342,7 +341,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
         dbQuery $ GetUserByID uid
       return newuser
     _ -> return olduser
-  infoChange <- getUserInfoChange
+  infoChange     <- getUserInfoChange
+  internalTagOps <- fromMaybe [] <$> getFieldTags "userinternaltags"
+  externalTagOps <- fromMaybe [] <$> getFieldTags "companyexternaltags"
   let applyChanges = do
         void $ dbUpdate $ SetUserInfo uid $ infoChange $ user ^. #info
         void $ dbUpdate $ LogHistoryUserInfoChanged uid
@@ -353,6 +354,11 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                                     (ctx ^? #maybeUser % _Just % #id)
         settingsChange <- getUserSettingsChange
         void $ dbUpdate $ SetUserSettings uid $ settingsChange $ user ^. #settings
+        void $ dbUpdate SetUserTags
+          { userID       = user ^. #id
+          , internalTags = updateTags (user ^. #internalTags) internalTagOps
+          , externalTags = updateTags (user ^. #externalTags) externalTagOps
+          }
         return ()
   if infoChange (user ^. #info) ^. #email /= user ^. #info % #email
     then do
@@ -461,8 +467,8 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   mUGAddressIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companyaddressisinherited"
   ugAddressChange       <- getUserGroupAddressChange
-  mInternalTagOps       <- parseTags "companyinternaltags"
-  mExternalTagOps       <- parseTags "companyexternaltags"
+  mInternalTagOps       <- getFieldTags "companyinternaltags"
+  mExternalTagOps       <- getFieldTags "companyexternaltags"
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
   let oldUG       = ugwpUG ugwp
@@ -492,10 +498,9 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
   return $ ()
-  where updateTags oldTags = S.fromList . foldl' updateTag (S.toList oldTags)
 
-parseTags :: Kontrakcja m => Text -> m (Maybe [TagUpdate])
-parseTags fieldName = do
+getFieldTags :: Kontrakcja m => Text -> m (Maybe [TagUpdate])
+getFieldTags fieldName = do
   mValue <- getFieldBS fieldName
   case mValue of
     Nothing  -> return Nothing
@@ -517,6 +522,7 @@ handleCreateUser = onlySalesOrAdmin $ do
     . UserGroupCreate
     . set #homeFolderID (Just $ ugFolder ^. #id)
     $ defaultUserGroup
+
   muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang
   freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
   let freeDocumentsCount = 3

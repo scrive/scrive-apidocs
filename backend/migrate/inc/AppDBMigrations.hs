@@ -241,4 +241,6 @@ kontraMigrations =
   , addUserGroupGarbageCollectionJob
   , brandedDomainDeleteThemeConstraint
   , dropPartners
+  , renameUserGroupTagComposite
+  , createTableUserTags
   ]

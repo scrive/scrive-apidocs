@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TemplateHaskell #-}
 module TestingUtil (
   arbitraryText
   , genUnicodeString
@@ -94,6 +96,7 @@ import Data.Word
 import Happstack.Server
 import Log
 import Optics (gview)
+import Optics.TH
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
@@ -149,6 +152,7 @@ import PdfToolsLambda.Conf
 import Session.SessionID
 import SMS.Types (SMSProvider(..))
 import System.Random.CryptoRNG ()
+import Tag
 import Templates
 import TestFileStorage (liftTestFileStorageT, runTestFileStorageT)
 import TestKontra
@@ -298,8 +302,8 @@ instance Arbitrary DataRetentionPolicy where
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> arbitrary
 
-instance Arbitrary UserGroupTag where
-  arbitrary = I.UserGroupTag <$> arbitraryUnicodeText <*> arbitraryUnicodeText
+instance Arbitrary Tag where
+  arbitrary = Tag <$> arbitraryUnicodeText <*> arbitraryUnicodeText
 
 instance Arbitrary UserGroupSettings where
   arbitrary =
@@ -746,6 +750,8 @@ instance Arbitrary User where
       <*> pure (unsafeUserGroupID 0)
       <*> pure Nothing
       <*> pure LoginAuthNative
+      <*> arbitrary
+      <*> arbitrary
 
 instance Arbitrary CgiGrpTransaction where
   arbitrary =
@@ -899,8 +905,8 @@ data UserGroupTemplate m = UserGroupTemplate
   , invoicing :: UserGroupInvoicing
   , ui :: UserGroupUI
   , features :: Maybe Features
-  , internalTags :: m (Set UserGroupTag)
-  , externalTags :: m (Set UserGroupTag)
+  , internalTags :: m (Set Tag)
+  , externalTags :: m (Set Tag)
   }
 
 -- | `randomUserGroupTemplate` represents 'sane defaults' for use with
@@ -962,6 +968,8 @@ data UserTemplate m = UserTemplate
   , associatedDomainID :: m BrandedDomainID
   , groupID :: m UserGroupID
   , homeFolderID :: Maybe FolderID -> m (Maybe FolderID)
+  , internalTags :: m (Set Tag)
+  , externalTags :: m (Set Tag)
   -- ^ takes the group's home folder as parameter
   }
 
@@ -1006,6 +1014,8 @@ randomUserTemplate = UserTemplate
                              #parentID
                              groupHomeFolderID
                              defaultFolder
+  , internalTags       = rand 10 arbitrary
+  , externalTags       = rand 10 arbitrary
   }
 
 instantiateRandomUser
@@ -1030,7 +1040,7 @@ tryInstantiateUser
   :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => UserTemplate m
   -> m (Maybe User)
-tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = generateLastName, email = generateEmail, groupID = generateGroupID, associatedDomainID = generateAssociatedDomainID, homeFolderID = generateHomeFolderID, password = generatePassword, ..}
+tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = generateLastName, email = generateEmail, groupID = generateGroupID, associatedDomainID = generateAssociatedDomainID, homeFolderID = generateHomeFolderID, password = generatePassword, internalTags = generateInternalTags, externalTags = generateExternalTags, ..}
   = do
     firstName          <- generateFirstName
     lastName           <- generateLastName
@@ -1042,13 +1052,17 @@ tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = gene
     password           <- case generatePassword of
       Nothing           -> return Nothing
       Just passwordText -> fmap Just $ createPassword passwordText
-    mUser <- dbUpdate $ AddUser (firstName, lastName)
-                                email
-                                password
-                                (groupID, homeFolderID, isCompanyAdmin)
-                                lang
-                                associatedDomainID
-                                signupMethod
+    internalTags <- generateInternalTags
+    externalTags <- generateExternalTags
+    mUser        <- dbUpdate $ AddUser (firstName, lastName)
+                                       email
+                                       password
+                                       (groupID, homeFolderID, isCompanyAdmin)
+                                       lang
+                                       associatedDomainID
+                                       signupMethod
+                                       internalTags
+                                       externalTags
     case mUser of
       Nothing   -> return Nothing
       Just user -> do
@@ -1632,3 +1646,6 @@ assertSQLCount msg expectedCount sql = do
   runSQL_ sql
   count <- fetchOne runIdentity
   assertEqual msg expectedCount count
+
+makeFieldLabelsWith noPrefixFieldLabels ''UserTemplate
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupTemplate

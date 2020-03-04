@@ -364,24 +364,19 @@ testUserGroupRootMustHaveSettings = do
 
 testTags :: TestEnv ()
 testTags = do
-  protoUg <- ugFromUGRoot <$> rand 10 arbitrary
-  iTags   <- rand 10 arbitrary
-  eTags   <- rand 10 arbitrary
-  ug      <-
-    dbUpdate
-    . UserGroupCreate
-    . set #internalTags iTags
-    . set #externalTags eTags
-    $ protoUg
-  let ugid = ug ^. #id
-  Just ugRes <- dbQuery $ UserGroupGet ugid
-  assertEqual "Internal tags match after create" iTags (ugRes ^. #internalTags)
-  assertEqual "External tags match after create" eTags (ugRes ^. #externalTags)
+  ug         <- instantiateRandomUserGroup
+  Just ugRes <- dbQuery $ UserGroupGet (ug ^. #id)
+  assertEqual "Internal tags match after create"
+              (ug ^. #internalTags)
+              (ugRes ^. #internalTags)
+  assertEqual "External tags match after create"
+              (ug ^. #externalTags)
+              (ugRes ^. #externalTags)
 
   iTags2 <- rand 10 arbitrary
   eTags2 <- rand 10 arbitrary
   _      <-
     dbUpdate . UserGroupUpdate . set #internalTags iTags2 . set #externalTags eTags2 $ ug
-  Just ugRes2 <- dbQuery $ UserGroupGet ugid
+  Just ugRes2 <- dbQuery $ UserGroupGet (ug ^. #id)
   assertEqual "Internal tags match after update" iTags2 (ugRes2 ^. #internalTags)
   assertEqual "External tags match after update" eTags2 (ugRes2 ^. #externalTags)

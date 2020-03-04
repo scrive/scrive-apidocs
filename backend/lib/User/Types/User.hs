@@ -15,6 +15,7 @@ module User.Types.User
 
 import Data.ByteString (ByteString)
 import Data.Int (Int16)
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
@@ -23,6 +24,7 @@ import DB
 import Folder.Types
 import LoginAuth.LoginAuthMethod
 import MinutesTime
+import Tag.Tables
 import User.Email
 import User.Lang
 import User.Password
@@ -48,6 +50,8 @@ defaultUser = I.User { id                 = unsafeUserID 0
                      , groupID            = emptyUserGroupID
                      , homeFolderID       = Nothing
                      , sysAuth            = LoginAuthNative
+                     , internalTags       = S.empty
+                     , externalTags       = S.empty
                      }
 
 defaultUserInfo :: I.UserInfo
@@ -61,6 +65,25 @@ defaultUserInfo = I.UserInfo { firstName       = ""
 
 defaultUserSettings :: I.UserSettings
 defaultUserSettings = I.UserSettings LANG_EN defaultDataRetentionPolicy
+
+internalUserTagsSelector :: SQL
+internalUserTagsSelector =
+  "ARRAY(SELECT ("
+    <>  mintercalate ", " tagSelectors
+    <>  ")::"
+    <>  raw (ctName ctTag)
+    <+> "FROM user_tags ut WHERE users.id = ut.user_id AND ut.internal ORDER BY ut.name)"
+
+externalUserTagsSelector :: SQL
+externalUserTagsSelector =
+  "ARRAY(SELECT ("
+    <>  mintercalate ", " tagSelectors
+    <>  ")::"
+    <>  raw (ctName ctTag)
+    <+> "FROM user_tags ut WHERE users.id = ut.user_id AND NOT ut.internal ORDER BY ut.name)"
+
+tagSelectors :: [SQL]
+tagSelectors = ["name", "value"]
 
 selectUsersSelectorsList :: [SQL]
 selectUsersSelectorsList =
@@ -93,6 +116,8 @@ selectUsersSelectorsList =
   , "home_folder_id"
   , "totp_is_mandatory"
   , "sysauth"
+  , internalUserTagsSelector
+  , externalUserTagsSelector
   ]
 
 selectUsersSelectors :: SQL
@@ -134,6 +159,10 @@ selectUsersWithUserGroupNamesSQL =
     <> ", users.home_folder_id"
     <> ", users.totp_is_mandatory"
     <> ", users.sysauth"
+    <> ", "
+    <> internalUserTagsSelector
+    <> ", "
+    <> externalUserTagsSelector
     <> ", ug.name"
     <> "  FROM users"
     <> "  LEFT JOIN user_groups ug ON users.user_group_id = ug.id"
@@ -173,15 +202,19 @@ fetchUser
      , Maybe FolderID
      , Bool
      , LoginAuthMethod
+     , CompositeArray1 Tag
+     , CompositeArray1 Tag
      )
   -> I.User
-fetchUser (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth)
+fetchUser (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags)
   = I.User
     { password = maybeMkPassword password salt (int16ToPwdAlgorithm <$> passwordAlgorithm)
-    , info     = I.UserInfo { .. }
-    , settings = I.UserSettings { lang                = lang
-                                , dataRetentionPolicy = I.DataRetentionPolicy { .. }
-                                }
+    , info         = I.UserInfo { .. }
+    , settings     = I.UserSettings { lang                = lang
+                                    , dataRetentionPolicy = I.DataRetentionPolicy { .. }
+                                    }
+    , internalTags = S.fromList iTags
+    , externalTags = S.fromList eTags
     , ..
     }
 
@@ -215,19 +248,23 @@ fetchUserWithUserGroupName
      , Maybe FolderID
      , Bool
      , LoginAuthMethod
+     , CompositeArray1 Tag
+     , CompositeArray1 Tag
      , Text
      )
   -> (I.User, Text)
-fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, name)
+fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags, name)
   = (user, name)
   where
     user = I.User
-      { password = maybeMkPassword password
-                                   salt
-                                   (int16ToPwdAlgorithm <$> passwordAlgorithm)
-      , info     = I.UserInfo { .. }
-      , settings = I.UserSettings { lang                = lang
-                                  , dataRetentionPolicy = I.DataRetentionPolicy { .. }
-                                  }
+      { password     = maybeMkPassword password
+                                       salt
+                                       (int16ToPwdAlgorithm <$> passwordAlgorithm)
+      , info         = I.UserInfo { .. }
+      , settings     = I.UserSettings { lang                = lang
+                                      , dataRetentionPolicy = I.DataRetentionPolicy { .. }
+                                      }
+      , internalTags = S.fromList iTags
+      , externalTags = S.fromList eTags
       , ..
       }

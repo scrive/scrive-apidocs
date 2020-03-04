@@ -15,13 +15,16 @@ import Test.QuickCheck
 import qualified Codec.Binary.Base32 as B32
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
 import Attachment.Model
 import DataRetentionPolicy
 import DB
+import Doc.API.V2.AesonTestUtils
 import Doc.DocumentMonad
 import Doc.Model.Query
 import Doc.Model.Update
@@ -30,6 +33,7 @@ import Doc.Types.Document
 import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import MinutesTime
+import Tag
 import TestingUtil
 import TestKontra as T
 import User.API
@@ -67,6 +71,8 @@ userAPITests env = testGroup
              \ at least as strict as company's one"
     env
     testUserSetDataRetentionPolicyOnlyIfAsStrict
+  , testThat "Test User API get tags"    env testUserGetTags
+  , testThat "Test User API update tags" env testUserUpdateTags
   ]
 
 testUserLoginAndGetSession :: TestEnv ()
@@ -420,3 +426,31 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
     check l drp1 drp2 = case (drp1 ^. l, drp2 ^. l) of
       (Just x1, Just x2) -> x1 <= x2
       _                  -> True
+
+testUserGetTags :: TestEnv ()
+testUserGetTags = do
+  user         <- instantiateRandomUser
+  ctx          <- set #maybeUser (Just user) <$> mkContext defaultLang
+  (Array tags) <- jsonTestRequestHelper ctx GET [] apiCallGetTags 200
+  assertEqual "user can view tags" (length $ user ^. #externalTags) (length tags)
+
+testUserUpdateTags :: TestEnv ()
+testUserUpdateTags = do
+  user     <- instantiateUser $ randomUserTemplate & #externalTags .~ return initialTags
+  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req      <- mkRequest POST [("tags", inText tagUpdateJson)]
+  (res, _) <- runTestKontra req ctx apiCallUpdateTags
+  assertEqual "should return" 200 (rsCode res)
+
+  Just user' <- dbQuery $ GetUserByID $ user ^. #id
+  assertEqual "user can update tags" expectUpdatedTags (user' ^. #externalTags)
+  where
+    tagUpdates =
+      [ TagUpdate "legs" (SetTo "six")
+      , TagUpdate "size" Delete
+      , TagUpdate "eyes" (SetTo "big")
+      ]
+    tagUpdateJson = TE.decodeUtf8 . BSL.toStrict . encode $ toJSON tagUpdates
+    initialTags   = S.fromList [Tag "legs" "four", Tag "size" "tiny", Tag "color" "black"]
+    expectUpdatedTags =
+      S.fromList [Tag "color" "black", Tag "eyes" "big", Tag "legs" "six"]

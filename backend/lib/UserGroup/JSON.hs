@@ -5,14 +5,10 @@ module UserGroup.JSON (
   , updateUserGroupContactDetailsFromRequest
   , encodeUserGroupSettings
   , updateUserGroupDataRetentionFromRequest
-  , updateTag
-  , TagOp(..)
-  , TagUpdate(..)
 ) where
 
 import Data.Aeson
 import Data.Aeson.Encoding
-import Data.Aeson.Types
 import Data.Unjson
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as L
@@ -21,6 +17,7 @@ import qualified Data.Text as T
 
 import DataRetentionPolicy
 import InputValidation
+import Tag
 import UserGroup.Types
 import qualified UserGroup.Internal as I
 
@@ -45,12 +42,12 @@ updateUserGroupFromRequest :: UserGroup -> Value -> Either Text UserGroup
 updateUserGroupFromRequest ug ugChanges =
   case update ugReq unjsonUserGroupRequestJSON ugChanges of
     (Result ugUpdated []) -> do
-      let newTags = foldl' updateTag (S.toList $ ug ^. #externalTags) (reqTags ugUpdated)
+      let newTags = updateTags (ug ^. #externalTags) (reqTags ugUpdated)
       Right
         $ ug
         & (#parentGroupID .~ reqParentID ugUpdated)
         & (#name .~ reqName ugUpdated)
-        & (#externalTags .~ S.fromList newTags)
+        & (#externalTags .~ newTags)
     (Result _ problems) -> Left $ T.pack $ show problems
   where
     ugReq = UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID
@@ -58,39 +55,6 @@ updateUserGroupFromRequest ug ugChanges =
                                  , reqTags     = []
                                  }
 
-updateTag :: [UserGroupTag] -> TagUpdate -> [UserGroupTag]
-updateTag tags (TagUpdate k op) = case op of
-  SetTo v -> (I.UserGroupTag k v) : deleted
-  Delete  -> deleted
-  where deleted = filter (\ugt -> ugt ^. #name /= k) tags
-
-data TagOp = SetTo Text | Delete
-  deriving (Eq, Ord, Show)
-
-instance ToJSON TagOp where
-  toJSON = \case
-    SetTo t -> String t
-    Delete  -> Null
-
-instance FromJSON TagOp where
-  parseJSON = \case
-    String s -> pure $ SetTo s
-    Null     -> pure $ Delete
-    invalid  -> typeMismatch "Expected a string or `null`" invalid
-
-data TagUpdate = TagUpdate {
-    tagName :: Text
-  , tagValue :: TagOp
-}
-
-instance FromJSON TagUpdate where
-  parseJSON = withObject "TagUpdate" $ \v -> TagUpdate <$> v .: "name" <*> v .: "value"
-
-instance ToJSON TagUpdate where
-  toJSON (TagUpdate name val) = object ["name" .= name, "value" .= val]
-
-instance Unjson TagUpdate where
-  unjsonDef = unjsonAeson
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
 unjsonUserGroupRequestJSON =

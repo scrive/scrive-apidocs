@@ -8,7 +8,6 @@ module UserGroup.Internal (
   , unsafeUserGroupID
   , fromUserGroupID
   , UserGroupSettings(..)
-  , UserGroupTag(..)
   , UserGroupAddress(..)
   , UserGroupUI(..)
   , UserGroupInvoicing(..)
@@ -18,7 +17,6 @@ module UserGroup.Internal (
   ) where
 
 import Data.Aeson
-import Data.Function
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
@@ -39,6 +37,7 @@ import IPAddress
 import Log.Identifier
 import PadApplication.Types
 import SMS.Types
+import Tag
 import Theme.ThemeID
 import UserGroup.Tables
 import UserGroup.Types.PaymentPlan
@@ -113,8 +112,8 @@ data UserGroup = UserGroup
   , invoicing     :: !UserGroupInvoicing
   , ui            :: !UserGroupUI
   , features      :: !(Maybe Features)
-  , internalTags  :: !(S.Set UserGroupTag)
-  , externalTags  :: !(S.Set UserGroupTag)
+  , internalTags  :: !(S.Set Tag)
+  , externalTags  :: !(S.Set Tag)
   } deriving (Show, Eq)
 
 data UserGroupRoot = UserGroupRoot
@@ -126,8 +125,8 @@ data UserGroupRoot = UserGroupRoot
   , paymentPlan   :: !PaymentPlan  -- user group root always must have Invoice
   , ui            :: !UserGroupUI
   , features      :: !Features
-  , internalTags  :: !(S.Set UserGroupTag)
-  , externalTags  :: !(S.Set UserGroupTag)
+  , internalTags  :: !(S.Set Tag)
+  , externalTags  :: !(S.Set Tag)
   } deriving (Show, Eq)
 
 -- UserGroup list is ordered from Leaf to Child of Root)
@@ -200,31 +199,6 @@ instance CompositeFromSQL UserGroupInvoicing where
     (InvoicingTypeBillItem, _) -> BillItem mpayplan
     (InvoicingTypeInvoice, Just payplan) -> Invoice payplan
     _ -> unexpectedError "invalid invoicing row in database"
-
-----------------------------------------
-
-data UserGroupTag = UserGroupTag
-  { name  :: !Text
-  , value :: !Text
-  } deriving (Eq, Show)
-
-instance Ord UserGroupTag where
-  compare = compare `on` (name :: UserGroupTag -> Text)
-
-type instance CompositeRow UserGroupTag = (Text, Text)
-
-instance PQFormat UserGroupTag where
-  pqFormat = compositeTypePqFormat ctUserGroupTag
-
-instance CompositeFromSQL UserGroupTag where
-  toComposite (name, value) = UserGroupTag { .. }
-
-instance FromJSON UserGroupTag where
-  parseJSON =
-    withObject "UserGroupTag" $ \v -> UserGroupTag <$> v .: "name" <*> v .: "value"
-
-instance ToJSON UserGroupTag where
-  toJSON (UserGroupTag name val) = object ["name" .= name, "value" .= val]
 
 ----------------------------------------
 
@@ -344,4 +318,3 @@ makeFieldLabelsWith noPrefixFieldLabels ''UserGroupUI
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupAddress
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupRoot
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupWithChildren
-makeFieldLabelsWith noPrefixFieldLabels ''UserGroupTag

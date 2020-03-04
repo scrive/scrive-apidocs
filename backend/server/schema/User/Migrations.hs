@@ -242,3 +242,27 @@ addUserSysAuthColumn = Migration
                                                 }
                      ]
   }
+
+createTableUserTags :: MonadDB m => Migration m
+createTableUserTags = Migration
+  { mgrTableName = tblName tableUserTags
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration $ do
+      createTable
+        True
+        tblTable
+          { tblName        = "user_tags"
+          , tblVersion     = 1
+          , tblColumns     =
+            [ tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
+            , tblColumn { colName = "name", colType = TextT, colNullable = False }
+            , tblColumn { colName = "value", colType = TextT, colNullable = False }
+            , tblColumn { colName = "internal", colType = BoolT, colNullable = False }
+            ]
+          , tblPrimaryKey  = pkOnColumns ["user_id", "name", "internal"]
+          , tblIndexes     = [indexOnColumns ["value", "internal"]]
+          , tblForeignKeys =
+            [(fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }]
+          }
+  }

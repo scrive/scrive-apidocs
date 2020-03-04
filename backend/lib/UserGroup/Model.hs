@@ -32,6 +32,8 @@ import qualified Data.Text as T
 import DB
 import FeatureFlags.Model
 import FeatureFlags.Tables
+import Tag (TagDomain(..))
+import Tag.Tables
 import User.UserID
 import UserGroup.Tables
 import UserGroup.Types
@@ -62,8 +64,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
     whenJust (ug ^. #settings) $ insertUserGroupSettings ugid
     -- insert group address
     whenJust (ug ^. #address) $ insertUserGroupAddress ugid
-    insertUserGroupTags ugid Internal (ug ^. #internalTags)
-    insertUserGroupTags ugid External (ug ^. #externalTags)
+    insertUserGroupTags ugid Tag.Internal (ug ^. #internalTags)
+    insertUserGroupTags ugid Tag.External (ug ^. #externalTags)
     -- insert invoicing
     runQuery_ . sqlInsert "user_group_invoicings" $ do
       sqlSet "user_group_id" ugid
@@ -92,11 +94,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupDelete ()
       sqlSet "deleted" now
       sqlWhereEq "id" $ Just ugid
 
-data UserGroupTagDomain = Internal | External
-  deriving (Eq)
-
-insertUserGroupTags
-  :: MonadDB m => UserGroupID -> UserGroupTagDomain -> S.Set UserGroupTag -> m ()
+insertUserGroupTags :: MonadDB m => UserGroupID -> TagDomain -> S.Set Tag -> m ()
 insertUserGroupTags ugid domain tags
   | S.null tags = return ()
   | otherwise = do
@@ -105,7 +103,7 @@ insertUserGroupTags ugid domain tags
       sqlSet "user_group_id" ugid
       sqlSetList "name" $ (view #name) <$> tags_list
       sqlSetList "value" $ (view #value) <$> tags_list
-      sqlSet "internal" (domain == Internal)
+      sqlSet "internal" (domain == Tag.Internal)
 
 insertUserGroupSettings
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupSettings -> m ()
@@ -269,8 +267,8 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
     dbUpdate . UserGroupUpdateAddress ugid $ new_ug ^. #address
     -- update group tags
     runQuery_ . sqlDelete "user_group_tags" $ sqlWhereEq "user_group_id" ugid
-    insertUserGroupTags ugid Internal $ new_ug ^. #internalTags
-    insertUserGroupTags ugid External $ new_ug ^. #externalTags
+    insertUserGroupTags ugid Tag.Internal $ new_ug ^. #internalTags
+    insertUserGroupTags ugid Tag.External $ new_ug ^. #externalTags
     -- update invoicing
     runQuery_ . sqlUpdate "user_group_invoicings" $ do
       sqlWhereEq "user_group_id" ugid
@@ -422,12 +420,12 @@ userGroupSelectors =
   , "ARRAY(SELECT ("
     <>  mintercalate ", " ugTagSelectors
     <>  ")::"
-    <>  raw (ctName ctUserGroupTag)
+    <>  raw (ctName ctTag)
     <+> "FROM user_group_tags ugt WHERE user_groups.id = ugt.user_group_id AND ugt.internal ORDER BY ugt.name)"
   , "ARRAY(SELECT ("
     <>  mintercalate ", " ugTagSelectors
     <>  ")::"
-    <>  raw (ctName ctUserGroupTag)
+    <>  raw (ctName ctTag)
     <+> "FROM user_group_tags ugt WHERE user_groups.id = ugt.user_group_id AND NOT ugt.internal ORDER BY ugt.name)"
   ]
 

@@ -453,6 +453,8 @@ Library
                  , StatsD.Config
                  , LoginAuth.LoginAuthMethod
                  , System.Random.CryptoRNG
+                 , Tag
+                 , Tag.Tables
                  , Templates
                  , Text.JSON.Convert
                  , Text.JSON.Orphans
@@ -696,6 +698,7 @@ Executable kontrakcja-server
                , kontrakcja
                , bytestring
                , cmdargs
+               , containers
                , crypto-rng
                , curl
                , directory
@@ -837,6 +840,7 @@ Executable kontrakcja-migrate
                  SMS.Migrations
                  SMS.Tables
                  Session.Tables
+                 Tag.Tables
                  Theme.Migrations
                  Theme.Tables
                  ThirdPartyStats.Migrations
@@ -1307,6 +1311,7 @@ Test-suite kontrakcja-test
                  SessionsTest
                  SignupTest
                  SSO.GuardsTest
+                 Tag.Tables
                  TestConf
                  TestCron
                  TestEnvSt

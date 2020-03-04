@@ -672,7 +672,6 @@ createTableUserGroupFreeDocumentTokens = Migration
             sqlWhereEq "i.payment_plan"   (0 :: Int16) -- Free plan
   }
 
-
 createTableUserGroupTags :: MonadDB m => Migration m
 createTableUserGroupTags = Migration
   { mgrTableName = tblName tableUserGroupTags
@@ -706,4 +705,18 @@ createTableUserGroupTags = Migration
                       , CompositeColumn { ccName = "value", ccType = TextT }
                       ]
         }
+  }
+
+renameUserGroupTagComposite :: MonadDB m => Migration m
+renameUserGroupTagComposite = Migration
+  { mgrTableName = tblName tableUserGroupTags
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlDropComposite "user_group_tag_c1"
+                     runQuery_ $ sqlCreateComposite $ CompositeType
+                       { ctName = "tag_c1"
+                       , ctColumns = [ CompositeColumn { ccName = "name", ccType = TextT }
+                                     , CompositeColumn { ccName = "value", ccType = TextT }
+                                     ]
+                       }
   }

@@ -14,6 +14,7 @@ import System.Console.CmdArgs hiding (def)
 import System.Environment
 import System.FilePath ((</>), FilePath)
 import qualified Control.Exception.Lifted as E
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
@@ -174,6 +175,8 @@ initDatabaseEntries appConf = do
                                   LANG_EN
                                   (bd ^. #id)
                                   ByAdmin
+                                  S.empty
+                                  S.empty
         let features = fromJust $ ug ^. #features
         -- enable everything for initial admins
         let adminFeatures = (fromJust $ ug ^. #features)

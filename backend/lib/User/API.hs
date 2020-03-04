@@ -13,7 +13,9 @@ module User.API (
     disable2FA,
     apiCallDeleteUser,
     apiCallSetDataRetentionPolicy,
-    apiCallGetTokenForPersonalCredentials
+    apiCallGetTokenForPersonalCredentials,
+    apiCallGetTags,
+    apiCallUpdateTags
   ) where
 
 import Control.Monad (when)
@@ -56,6 +58,7 @@ import Routing
 import Salesforce.AuthorizationWorkflow
 import Session.Cookies
 import Session.Model
+import Tag
 import ThirdPartyStats.Core
 import User.Action
 import User.CallbackScheme.Model
@@ -131,6 +134,8 @@ userAPIV2 = choice
   , dir "checkpassword" $ hPost $ toK0 $ apiCallCheckPassword
   , dir "activateuser" $ hPost $ toK0 $ apiCallActivateAccount
   , dir "getusersfeatures" $ hGet $ toK0 $ apiCallGetUsersFeatures
+  , dir "usertags" $ hGet $ toK0 $ apiCallGetTags
+  , dir "usertags" $ dir "update" $ hPost $ toK0 $ apiCallUpdateTags
   , userAPIV1
   ]
 
@@ -931,3 +936,16 @@ apiCallActivateAccount = V2.api $ do
                                                 Nothing
       return $ V2.Ok $ runJSONGen $ do
         value "activated" True
+
+apiCallGetTags :: Kontrakcja m => m Response
+apiCallGetTags = V2.api $ do
+  user <- V2.getAPIUserWithAPIPersonal
+  return $ V2.Ok $ toJSON (user ^. #externalTags)
+
+apiCallUpdateTags :: Kontrakcja m => m Response
+apiCallUpdateTags = V2.api $ do
+  user       <- V2.getAPIUserWithAPIPersonal
+  tagUpdates <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterAeson "tags"
+  let tags = updateTags (user ^. #externalTags) tagUpdates
+  void $ dbUpdate $ SetUserTags (user ^. #id) (user ^. #internalTags) tags
+  return $ V2.Ok ()

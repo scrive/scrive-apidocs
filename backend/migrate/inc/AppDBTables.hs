@@ -42,6 +42,7 @@ import OAuth.Tables
 import Session.Tables
 import SMS.FromKontra.Tables
 import SMS.Tables
+import Tag.Tables
 import Theme.Tables
 import ThirdPartyStats.Tables
 import User.APILog.Tables
@@ -74,7 +75,6 @@ kontraComposites =
 
   -- user group composites
     , ctUserGroupInvoicing
-    , ctUserGroupTag
     , ctUserGroupSettings
     , ctUserGroupSettings1
     , ctUserGroupSettings2
@@ -84,6 +84,7 @@ kontraComposites =
     , ctUserGroupUI
     , ctUserGroupAddress
     , ctUserGroupAddress1
+    , ctTag
     ]
     ++ mailerComposites
 
@@ -155,6 +156,7 @@ kontraTables =
     , tableFeatureFlags
     , tableNetsSignOrders
     , tableEIDServiceTransactions
+    , tableUserTags
     ]
     ++ cronTables
     ++ mailerTables

@@ -1,6 +1,7 @@
 module UserStateTest (userStateTests) where
 
 import Test.Framework
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import Chargeable.Model
@@ -9,6 +10,7 @@ import Doc.DocumentID
 import Doc.Types.Document
 import Doc.Types.DocumentStatus
 import MinutesTime
+import Tag
 import TestingUtil
 import TestKontra
 import User.Email
@@ -84,6 +86,7 @@ userStateTests env = testGroup
   , testThat "SetUserSettings works"      env test_setUserSettings
   , testThat "AcceptTermsOfService works" env test_acceptTermsOfService
   , testThat "SetSignupMethod works"      env test_setSignupMethod
+  , testThat "SetUserTags works"          env test_setUserTags
   ]
 
 test_getUserByEmail_returnsNothing :: TestEnv ()
@@ -424,3 +427,15 @@ test_setSignupMethod = do
   Just newUser <- dbQuery $ GetUserByID (user ^. #id)
   assertBool "User's updated signup method is correct"
              (newUser ^. #signupMethod == method)
+
+test_setUserTags :: TestEnv ()
+test_setUserTags = do
+  user <- instantiateRandomUser
+  let internalTags = S.fromList [Tag "foo" "bar"]
+  let externalTags = S.fromList [Tag "bar" "baz"]
+  dbUpdate $ SetUserTags (user ^. #id) internalTags externalTags
+  Just updatedUser <- dbQuery $ GetUserByID (user ^. #id)
+  assertBool "User's internal tags are updated correctly"
+             (updatedUser ^. #internalTags == internalTags)
+  assertBool "User's external tags are updated correctly"
+             (updatedUser ^. #externalTags == externalTags)

@@ -14,15 +14,14 @@ import AccessControl.Model
 import AccessControl.Types
 import DB
 import Doc.API.V2.AesonTestUtils (jsonTestRequestHelper, lookupObjectArray)
+import Tag
 import TestingUtil
 import TestKontra
 import User.Email
 import User.Model
 import UserGroup.API
-import UserGroup.JSON
 import UserGroup.Model
 import UserGroup.Types
-import qualified UserGroup.Internal as I
 
 userGroupApiTests :: TestEnvSt -> Test
 userGroupApiTests env = testGroup
@@ -1370,17 +1369,11 @@ testNonGodModeUserCanViewUsersInUserGroupWithPermissions = do
 
 testUserCanUpdateTags :: TestEnv ()
 testUserCanUpdateTags = do
-  ug   <- instantiateRandomUserGroup
-  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
-                                               , lastName       = return "Arkleseizure"
-                                               , email          = return emailAddress
-                                               , groupID        = return $ ug ^. #id
-                                               , isCompanyAdmin = True
-                                               , signupMethod   = CompanyInvitation
-                                               }
-  let uid  = user ^. #id
-      ugid = ug ^. #id
-  void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
+  ug <-
+    instantiateUserGroup $ randomUserGroupTemplate & #externalTags .~ return initialTags
+  user <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
+  let ugid = ug ^. #id
+  void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ UserGroupAdminAR ugid
   void . dbUpdate . UserGroupUpdate $ ug & #externalTags .~ initialTags
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   val <- jsonTestRequestHelper ctx
@@ -1391,7 +1384,6 @@ testUserCanUpdateTags = do
   tags <- lookupObjectArray "tags" val
   assertEqual "user can update tags" expectUpdatedTags tags
   where
-    emailAddress = "great.green.arkleseizure@scrive.com"
     tagUpdates =
       [ TagUpdate "legs" (SetTo "six")
       , TagUpdate "size" Delete
@@ -1399,33 +1391,17 @@ testUserCanUpdateTags = do
       ]
     tagUpdateJson =
       TE.decodeUtf8 . BSL.toStrict . encode $ object ["tags" .= toJSON tagUpdates]
-    initialTags = S.fromList
-      [ I.UserGroupTag "legs" "four"
-      , I.UserGroupTag "size" "tiny"
-      , I.UserGroupTag "color" "black"
-      ]
-    expectUpdatedTags = map
-      toJSON
-      [ I.UserGroupTag "color" "black"
-      , I.UserGroupTag "eyes" "big"
-      , I.UserGroupTag "legs" "six"
-      ]
+    initialTags = S.fromList [Tag "legs" "four", Tag "size" "tiny", Tag "color" "black"]
+    expectUpdatedTags =
+      map toJSON [Tag "color" "black", Tag "eyes" "big", Tag "legs" "six"]
 
 testUserCanViewTags :: TestEnv ()
 testUserCanViewTags = do
   ug   <- instantiateRandomUserGroup
-  user <- instantiateUser $ randomUserTemplate { firstName      = return "Great Green"
-                                               , lastName       = return "Arkleseizure"
-                                               , email          = return emailAddress
-                                               , groupID        = return $ ug ^. #id
-                                               , isCompanyAdmin = True
-                                               , signupMethod   = CompanyInvitation
-                                               }
-  let uid  = user ^. #id
-      ugid = ug ^. #id
-  void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
+  user <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
+  let ugid = ug ^. #id
+  void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ UserGroupAdminAR ugid
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   val  <- jsonTestRequestHelper ctx GET [] (userGroupApiV2Get ugid) 200
   tags <- lookupObjectArray "tags" val
   assertEqual "user can view tags" (length $ ug ^. #externalTags) (length tags)
-  where emailAddress = "great.green.arkleseizure@scrive.com"

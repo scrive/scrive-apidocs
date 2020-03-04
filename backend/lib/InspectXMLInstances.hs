@@ -59,6 +59,9 @@ instance ( InspectXML a, InspectXML b, InspectXML c
   inspectXML (a, b, c) =
     "(" <> inspectXML a <> "," <> inspectXML b <> "," <> inspectXML c <> ")"
 
+instance InspectXML (S.Set Tag) where
+  inspectXML = inspectXML . S.toList
+
 $(deriveInspectXML ''MainFile)
 $(deriveInspectXML ''Document)
 $(deriveInspectXML ''AuthorAttachment)

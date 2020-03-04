@@ -423,7 +423,7 @@ tableUserGroupFreeDocumentTokens = tblTable
 tableUserGroupTags :: Table
 tableUserGroupTags = tblTable
   { tblName        = "user_group_tags"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
@@ -434,12 +434,4 @@ tableUserGroupTags = tblTable
   , tblIndexes     = [indexOnColumns ["value", "internal"]]
   , tblForeignKeys =
     [(fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }]
-  }
-
-ctUserGroupTag :: CompositeType
-ctUserGroupTag = CompositeType
-  { ctName    = "user_group_tag_c1"
-  , ctColumns = [ CompositeColumn { ccName = "name", ccType = TextT }
-                , CompositeColumn { ccName = "value", ccType = TextT }
-                ]
   }

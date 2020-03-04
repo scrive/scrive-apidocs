@@ -71,6 +71,8 @@ userJSONUserDetails user = do
   value "companyposition" $ user ^. #info % #companyPosition
   value "lang" $ codeFromLang $ getLang user
   value "tos_accepted_time" $ utcTimeToAPIFormat <$> user ^. #hasAcceptedTOS
+  objects "internaltags" . tagsJsons $ user ^. #internalTags
+  objects "externaltags" . tagsJsons $ user ^. #externalTags
 
 unjsonUser :: UnjsonDef User
 unjsonUser = unjsonUserPartial identity
@@ -139,7 +141,7 @@ companyJSON ugwp = do
     value "companyhomefolderid" $ ug ^. #homeFolderID
     companyAddressJson $ ugwpAddress ugwp
     companySettingsJson $ ugwpSettings ugwp
-    objects "companyexternaltags" . companyTagsJsons $ ug ^. #externalTags
+    objects "companyexternaltags" . tagsJsons $ ug ^. #externalTags
 
 companyJSONAdminOnly :: UserGroupWithParents -> JSValue
 companyJSONAdminOnly ugwp = do
@@ -156,8 +158,8 @@ companyJSONAdminOnly ugwp = do
     companyAddressJson activeAddress
     value "companyname" $ ug ^. #name
     companySettingsJson $ activeSettings
-    objects "companyinternaltags" . companyTagsJsons $ ug ^. #internalTags
-    objects "companyexternaltags" . companyTagsJsons $ ug ^. #externalTags
+    objects "companyinternaltags" . tagsJsons $ ug ^. #internalTags
+    objects "companyexternaltags" . tagsJsons $ ug ^. #externalTags
 
     whenJust (mInheritedAddress) $ object "companyinheritedaddress" . companyAddressJson
     value "companyaddressisinherited" ugAddressIsInherited
@@ -172,11 +174,11 @@ companyJSONAdminOnly ugwp = do
       value "group_id" . show $ parent ^. #id
       value "group_name" $ parent ^. #name
 
-companyTagsJsons :: S.Set UserGroupTag -> [JSONGenT Identity ()]
-companyTagsJsons = map companyTagJson . S.toList
+tagsJsons :: S.Set Tag -> [JSONGenT Identity ()]
+tagsJsons = map tagJson . S.toList
 
-companyTagJson :: UserGroupTag -> JSONGenT Identity ()
-companyTagJson tag = do
+tagJson :: Tag -> JSONGenT Identity ()
+tagJson tag = do
   value "name" $ tag ^. #name
   value "value" $ tag ^. #value
 

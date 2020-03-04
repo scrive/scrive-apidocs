@@ -10,6 +10,7 @@ import Control.Conditional (unlessM, whenM)
 import Control.Monad.Catch
 import Crypto.RNG
 import Log
+import qualified Data.Set as S
 
 import BrandedDomain.Model
 import DB
@@ -167,6 +168,8 @@ createUser email names (ugid, iscompanyadmin) lang sm ctx = do
                                   lang
                                   ((brandedDomain ctx) ^. #id)
                                   sm
+                                  S.empty
+                                  S.empty
       whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
         (user ^. #id)
         (ipAddr ctx)
