@@ -120,6 +120,12 @@ splitFirstSpace str = case T.words str of
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.replace "." ""
 
+joinText :: Text -> Text -> Text
+joinText "" "" = ""
+joinText "" b  = b
+joinText a  "" = a
+joinText a  b  = a <> " " <> b
+
 -- Compare the name registered in the signatory link against
 -- the name returned from IDIN authentication. IDIN returns
 -- the initials of the first name, combined with the legal
@@ -135,7 +141,7 @@ matchSignatoryName signatory details = matchSignatoryName' slFullName
   where
     slFirstName                = normalizeName $ getFirstName signatory
     slLastName                 = normalizeName $ getLastName signatory
-    slFullName                 = slFirstName <> " " <> slLastName
+    slFullName                 = joinText slFirstName slLastName
     eidFullName                = normalizeName $ eiditdName details
     (eidInitials, eidLastName) = splitFirstSpace eidFullName
 
