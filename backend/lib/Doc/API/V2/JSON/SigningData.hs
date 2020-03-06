@@ -10,6 +10,7 @@ import Data.Algorithm.Diff (Diff, getGroupedDiff)
 import Data.Unjson
 import qualified Data.Algorithm.Diff as Diff
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
@@ -111,6 +112,14 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
       Right (LegacyNordeaSignature_       _) -> []
       Right (LegacyMobileBankIDSignature_ _) -> []
 
+splitFirstSpace :: Text -> (Text, Text)
+splitFirstSpace str = case T.words str of
+  (x : xs) -> (x, T.unwords xs)
+  []       -> ("", "")
+
+normalizeName :: Text -> Text
+normalizeName = T.toLower . T.replace "." ""
+
 -- Compare the name registered in the signatory link against
 -- the name returned from IDIN authentication. IDIN returns
 -- the initials of the first name, combined with the legal
@@ -120,21 +129,42 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
 --   Mismatch - if the initials don't match or if more misspellings in the last name.
 matchSignatoryName
   :: SignatoryLink -> CompleteIDINEIDServiceTransactionData -> NameMatchResult
-matchSignatoryName signatory details
-  | T.isPrefixOf slInitials eidName = matchName eidName slFullName
-  | otherwise = Mismatch
+matchSignatoryName signatory details = matchSignatoryName' slFullName
+                                                           eidInitials
+                                                           eidLastName
   where
-    slFirstName = T.toLower $ getFirstName signatory
-    slLastName  = T.toLower $ getLastName signatory
+    slFirstName                = normalizeName $ getFirstName signatory
+    slLastName                 = normalizeName $ getLastName signatory
+    slFullName                 = slFirstName <> " " <> slLastName
+    eidFullName                = normalizeName $ eiditdName details
+    (eidInitials, eidLastName) = splitFirstSpace eidFullName
 
+matchSignatoryName' :: Text -> Text -> Text -> NameMatchResult
+matchSignatoryName' slFullName eidInitials eidLastName
+  | slFullName == eidFullName = Match
+  | slInitials == eidInitials = matchName eidLastName slRestName
+  | T.length slInitials <= 1 = Mismatch
+  | otherwise = case
+      matchSignatoryName' slFullName (T.dropEnd 1 eidInitials) eidLastName
+    of
+      Match      -> Misspelled
+      Misspelled -> Misspelled
+      Mismatch   -> Mismatch
+  where
+    slNameWords = T.words slFullName
+
+    eidInitialsCount :: Int
+    eidInitialsCount = T.length eidInitials
+
+    -- Fuzzy match the initials from IDIN by taking the words
+    -- from full name, so that misplaced first/last names still matches
     slInitials :: Text
-    slInitials = T.concat . map (T.take 1) . T.words $ slFirstName
+    slInitials = T.concat . map (T.take 1) $ L.take eidInitialsCount slNameWords
 
-    slFullName :: Text
-    slFullName = slInitials <> " " <> slLastName
+    slRestName :: Text
+    slRestName  = T.unwords $ L.drop eidInitialsCount slNameWords
 
-    eidName :: Text
-    eidName = T.toLower $ eiditdName details
+    eidFullName = eidInitials <> " " <> eidLastName
 
 matchName :: Text -> Text -> NameMatchResult
 matchName s1 s2 | s1 == s2      = Match
