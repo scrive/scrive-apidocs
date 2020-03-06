@@ -133,6 +133,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "session_timeout" $ ugs ^. #sessionTimeoutSecs
   sqlSet "portal_url" $ ugs ^. #portalUrl
   sqlSet "eid_service_token" $ ugs ^. #eidServiceToken
+  sqlSet "sealing_method" $ ugs ^. #sealingMethod
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -452,6 +453,7 @@ ugSettingsSelectors =
   , "session_timeout"
   , "portal_url"
   , "eid_service_token"
+  , "sealing_method"
   ]
 
 

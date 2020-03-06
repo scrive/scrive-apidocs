@@ -243,4 +243,6 @@ kontraMigrations =
   , dropPartners
   , renameUserGroupTagComposite
   , createTableUserTags
+  , userGroupSettingsAddSealingMethod
+  , addSealingMethodToDocuments
   ]

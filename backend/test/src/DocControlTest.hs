@@ -46,6 +46,7 @@ import KontraError
 import MagicHash
 import Mails.Model
 import MinutesTime
+import SealingMethod
 import Session.Model
 import TestCron
 import TestingUtil
@@ -300,11 +301,12 @@ testSigningWithPin = do
   addRandomDocumentWithFile
       file
       (rdaDefault user1)
-        { rdaTypes       = OneOf [Signable]
-        , rdaStatuses    = OneOf [Preparation]
-        , rdaSignatories = let signatory =
-                                 OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
-                           in  OneOf $ map (`replicate` signatory) [1 .. 10]
+        { rdaTypes          = OneOf [Signable]
+        , rdaStatuses       = OneOf [Preparation]
+        , rdaSignatories    = let signatory =
+                                    OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                              in  OneOf $ map (`replicate` signatory) [1 .. 10]
+        , rdaSealingMethods = OneOf [Guardtime]
         }
     `withDocumentM` do
                       d       <- theDocument

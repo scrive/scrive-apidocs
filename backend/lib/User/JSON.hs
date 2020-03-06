@@ -27,6 +27,7 @@ import qualified Data.Set as S
 import Doc.API.V2.JSON.Misc
 import MinutesTime
 import PadApplication.Types
+import SealingMethod
 import User.CallbackScheme.Model (UserCallbackScheme(..))
 import User.Model
 import UserGroup.Types
@@ -212,6 +213,7 @@ companySettingsJson ugs = do
   value "sessiontimeout" $ ugs ^. #sessionTimeoutSecs
   value "portalurl" $ ugs ^. #portalUrl
   value "eidservicetoken" $ ugs ^. #eidServiceToken
+  value "sealingmethod" . sealingMethodText $ ugs ^. #sealingMethod
 
 userStatsToJSON
   :: (UTCTime -> Text)

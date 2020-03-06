@@ -3,9 +3,9 @@ AttachExtendedSealedFileEvidenceLog=Scrive eSign sealed the Evidence Package (as
 AttachExtendedSealedFileEvidenceArchive=$_AttachExtendedSealedFileEvidenceTextSimple()$
 ###
 ###
-AttachGuardtimeSealedFileEvidenceLog=Scrive eSign sealed the final PDF with a digital signature.
+AttachDigitalSignatureSealedFileEvidenceLog=Scrive eSign sealed the final PDF with a digital signature.
 ###
-AttachGuardtimeSealedFileEvidenceArchive=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
+AttachDigitalSignatureSealedFileEvidenceArchive=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
 ###
 ###
 AttachSealedFileEvidenceLog=Scrive eSign prepared the final PDF, including evidence collected by Scrive eSign, before sealing with a digital signature.

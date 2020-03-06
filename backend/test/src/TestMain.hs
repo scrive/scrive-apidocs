@@ -79,6 +79,7 @@ import Monitor.APITest
 import NetsXMLTest
 import OAuth
 import PadApplication.APITest
+import PadesTest
 import Partner.APITest
 import PdfToolsLambda.Conf
 import QRCodeTest
@@ -169,7 +170,7 @@ allTests =
   ]
 
 stagingTests :: [TestEnvSt -> Test]
-stagingTests = [screenshotTests, gtWorkflowTests]
+stagingTests = [screenshotTests, gtWorkflowTests, padesTests]
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], identity)

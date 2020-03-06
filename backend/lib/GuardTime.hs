@@ -216,7 +216,7 @@ instance ToJSValue VerifyResult where
         " (stdout: " ++ BSL.toString stdout ++ ", stderr: " ++ BSL.toString stderr ++ ")"
 
 
-verify :: (MonadIO m, MonadMask m) => GuardTimeConf -> String -> m VerifyResult
+verify :: (MonadIO m, MonadMask m) => GuardTimeConf -> FilePath -> m VerifyResult
 verify conf inputFileName = do
   (code, stdout, stderr) <- withGuardtimeConf conf GTExtendingCredentials $ \confPath ->
     do

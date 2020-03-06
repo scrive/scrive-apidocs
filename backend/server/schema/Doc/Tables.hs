@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable
   { tblName        = "documents"
-  , tblVersion     = 55
+  , tblVersion     = 56
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -98,6 +98,7 @@ tableDocuments = tblTable
                 , colType     = BigIntT
                 , colNullable = True
                 }
+    , tblColumn { colName = "sealing_method", colType = SmallIntT, colNullable = False }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys = [
@@ -185,6 +186,7 @@ ctDocument = CompositeType
     , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
     , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
     , CompositeColumn { ccName = "user_group_to_impersonate_for_eid", ccType = BigIntT }
+    , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
     ]
   }
 

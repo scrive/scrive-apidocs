@@ -1,7 +1,7 @@
 # Evidence Package
 
 ## Requirements
-You will need at least: `optipng`, `mcp`, `ghc` & `python`.
+You will need at least: `optipng`, `ghc` & Python 2.
 Plus any Haskell packages `ghc` will complain about.
 
 ## Short instructions

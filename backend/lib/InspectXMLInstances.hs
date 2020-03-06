@@ -36,6 +36,7 @@ import KontraLink
 import LoginAuth.LoginAuthMethod
 import MagicHash (MagicHash)
 import MinutesTime
+import SealingMethod
 import User.Email
 import User.History.Model
 import User.Model
@@ -205,3 +206,4 @@ instance InspectXML UserGroupID
 instance InspectXML UserGroup
 instance InspectXML Folder
 instance InspectXML FolderID
+instance InspectXML SealingMethod

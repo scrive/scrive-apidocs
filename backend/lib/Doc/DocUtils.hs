@@ -27,6 +27,8 @@ module Doc.DocUtils (
   , fileFromMainFile
   , allRequiredAttachmentsAreOnList
   , detailsOfGroupedPortalSignatoriesThatCanSignNow
+  , hasDigitalSignature
+  , hasGuardtimeSignature
 ) where
 
 import Control.Monad.Catch
@@ -37,6 +39,7 @@ import qualified Text.StringTemplates.Fields as F
 import DB
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.SealStatus
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import File.File
@@ -314,3 +317,9 @@ detailsOfPortalSignatoriesThatCanSignNow doc = map slToData $ portalSigs
       signatorylinkdeliverymethod sl == PortalDelivery && canSignatorySignNow doc sl
     portalSigs = filter portalSig $ documentsignatorylinks doc
     slToData sl = (Email $ getEmail sl, getFullName sl)
+
+hasGuardtimeSignature :: Document -> Bool
+hasGuardtimeSignature doc = (isGuardtime <$> documentsealstatus doc) == Just True
+
+hasDigitalSignature :: Document -> Bool
+hasDigitalSignature doc = (isSealed <$> documentsealstatus doc) == Just True

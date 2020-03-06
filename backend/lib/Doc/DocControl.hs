@@ -778,11 +778,11 @@ handleShowAfterForward :: Kontrakcja m => DocumentID -> m Response
 handleShowAfterForward did =
   withAnonymousContext $ simpleHtmlResponse =<< afterForwardPage did
 
--- GuardTime verification page. This can't be external since its a
+-- Digital signature verification page. This can't be external since its a
 -- page in our system.  withAnonymousContext so the verify page looks
 -- like the user is not logged in (e.g. for default footer & header)
 handleShowVerificationPage :: Kontrakcja m => m Response
-handleShowVerificationPage = withAnonymousContext gtVerificationPage
+handleShowVerificationPage = withAnonymousContext verificationPage
 
 handleVerify :: Kontrakcja m => m JSValue
 handleVerify = do
@@ -796,6 +796,7 @@ handleVerify = do
       return pth
     _ -> internalError
   ctx <- getContext
+  -- NOTE: PAdES verification is not supported
   J.toJSValue <$> GuardTime.verify (ctx ^. #gtConf) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue

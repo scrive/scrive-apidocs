@@ -418,7 +418,6 @@ Library
                  , PdfToolsLambda.Conf
                  , PdfToolsLambda.Conf.Internal
                  , PdfToolsLambda.Control
-                 , PdfToolsLambda.Response
                  , PdfToolsLambda.Spec
                  , Planhat
                  , Planhat.Communication
@@ -428,6 +427,7 @@ Library
                  , Redirect
                  , Routing
                  , RoutingTable
+                 , SealingMethod
                  , SMS.Types
                  , SMS.Events
                  , SMS.FromKontra.Tables
@@ -1297,6 +1297,7 @@ Test-suite kontrakcja-test
                  NetsXMLTest
                  OAuth
                  OAuth.Tables
+                 PadesTest
                  PadApplication.APITest
                  Partner.APITest
                  Partner.Migrations

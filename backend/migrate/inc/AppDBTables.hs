@@ -81,6 +81,7 @@ kontraComposites =
     , ctUserGroupSettings3
     , ctUserGroupSettings4
     , ctUserGroupSettings5
+    , ctUserGroupSettings6
     , ctUserGroupUI
     , ctUserGroupAddress
     , ctUserGroupAddress1

@@ -942,7 +942,9 @@ testAppendFirstSealedFileEvidenceLog = do
 
                       lg <- dbQuery . GetEvidenceLog =<< theDocumentID
                       assertJust $ find
-                        (\e -> evType e == Current AttachGuardtimeSealedFileEvidence)
+                        (\e ->
+                          evType e == Current AttachDigitalSignatureSealedFileEvidence
+                        )
                         lg
 
 testCancelDocumentEvidenceLog :: TestEnv ()

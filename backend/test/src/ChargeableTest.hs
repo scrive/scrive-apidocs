@@ -17,6 +17,7 @@ import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import File.Storage
+import SealingMethod
 import SMS.SMS
 import SMS.Types (SMSProvider(..))
 import TestingUtil
@@ -137,11 +138,12 @@ test_startDocumentCharging = do
       doc         <- addRandomDocumentWithFile
         file
         (rdaDefault user)
-          { rdaTypes       = OneOf [Signable]
-          , rdaStatuses    = OneOf [Preparation]
-          , rdaSignatories = let signatory =
-                                   OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
-                             in  OneOf $ map (`replicate` signatory) [1 .. 10]
+          { rdaTypes          = OneOf [Signable]
+          , rdaStatuses       = OneOf [Preparation]
+          , rdaSignatories    = let signatory =
+                                      OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                                in  OneOf $ map (`replicate` signatory) [1 .. 10]
+          , rdaSealingMethods = OneOf [Guardtime]
           }
 
       True <- withDocument doc $ do

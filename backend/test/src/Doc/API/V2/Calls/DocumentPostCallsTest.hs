@@ -34,6 +34,7 @@ import File.Model
 import Folder.Model
 import Generators.DocumentGenerators
 import Generators.OccurenceControl
+import SealingMethod
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
@@ -52,6 +53,7 @@ apiV2DocumentPostCallsTests env = testGroup
              testDocApiV2NewFromTemplateWithBPID
   , testThat "API v2 Update"            env testDocApiV2Update
   , testThat "API v2 Start"             env testDocApiV2Start
+  , testThat "API v2 Start for PAdES"   env testDocApiV2StartPades
   , testThat "API v2 Prolong"           env testDocApiV2Prolong
   , testThat "API v2 Prolong before document timeout" env testDocApiV2ProlongBeforeTimeout
   , testThat "API v2 Cancel"            env testDocApiV2Cancel
@@ -268,6 +270,14 @@ testDocApiV2Start = do
   user <- instantiateRandomUser
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   void $ testDocApiV2StartNew ctx
+
+testDocApiV2StartPades :: TestEnv ()
+testDocApiV2StartPades = do
+  user <- instantiateRandomPadesUser
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  mdoc <- testDocApiV2StartNew ctx
+  doc  <- dbQuery $ GetDocumentByDocumentID (getMockDocId mdoc)
+  assertEqual "Document's sealing method should be" Pades (documentsealingmethod doc)
 
 testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do

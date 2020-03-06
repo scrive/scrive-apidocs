@@ -365,7 +365,7 @@ data CurrentEvidenceEventType =
   ChangeSignatoryPhoneWhenUndeliveredEvidence      |
   InvitationDeliveredBySMS                         |
   InvitationUndeliveredBySMS                       |
-  AttachGuardtimeSealedFileEvidence                |
+  AttachDigitalSignatureSealedFileEvidence         |
   AttachExtendedSealedFileEvidence                 |
   ErrorSealingDocumentEvidence                     |
   AutomaticReminderSent                            |
@@ -702,7 +702,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeSignatoryPhoneWhenUndeliveredEvidence) = toSQL (75 :: Int16)
   toSQL (Current  InvitationDeliveredBySMS       ) = toSQL (76 :: Int16)
   toSQL (Current  InvitationUndeliveredBySMS     ) = toSQL (77 :: Int16)
-  toSQL (Current AttachGuardtimeSealedFileEvidence) = toSQL (78 :: Int16)
+  toSQL (Current AttachDigitalSignatureSealedFileEvidence) = toSQL (78 :: Int16)
   toSQL (Current AttachExtendedSealedFileEvidence) = toSQL (79 :: Int16)
   toSQL (Current  ErrorSealingDocumentEvidence   ) = toSQL (80 :: Int16)
   toSQL (Current  AutomaticReminderSent          ) = toSQL (81 :: Int16)
@@ -1079,7 +1079,7 @@ instance FromSQL EvidenceEventType where
       75  -> return (Current ChangeSignatoryPhoneWhenUndeliveredEvidence)
       76  -> return (Current InvitationDeliveredBySMS)
       77  -> return (Current InvitationUndeliveredBySMS)
-      78  -> return (Current AttachGuardtimeSealedFileEvidence)
+      78  -> return (Current AttachDigitalSignatureSealedFileEvidence)
       79  -> return (Current AttachExtendedSealedFileEvidence)
       80  -> return (Current ErrorSealingDocumentEvidence)
       81  -> return (Current AutomaticReminderSent)

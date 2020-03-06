@@ -48,18 +48,16 @@ apiV1JSONTests env = testGroup
     testUpdateWithReplacementFields
   , testThat
     "Test 6: JSON structure for API V1 'update' with small subset of\
-             \ Document JSON still works "
+             \ Document JSON still works"
     env
     testUpdateWithSubset
-  , testThat
-    "Test 7: JSON structure for API V1 'update'\
-             \ with all features I know "
-    env
-    testUpdateWithAllFeatures
+  , testThat "Test 7: JSON structure for API V1 'update' with all features I know"
+             env
+             testUpdateWithAllFeatures
   , testThat "Test 8: JSON structure for API V1 'list' with 3 documents " env testList
   , testThat
     "Test 9: JSON structure for API V1 'update', 'sign' and 'get'\
-             \ with signature "
+             \ with signature"
     env
     testSignWithSignature
   ]

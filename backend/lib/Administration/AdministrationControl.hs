@@ -79,6 +79,7 @@ import Mails.Model
 import MinutesTime
 import PadApplication.Types (padAppModeFromText)
 import Routing
+import SealingMethod
 import Session.Constant
 import Session.Model
 import Tag
@@ -577,6 +578,8 @@ getUserGroupSettingsChange = do
   mcompanysessiontimeout <- getSessionTimeoutField "companysessiontimeout"
   mcompanyportalurl <- fmap emptyToNothing <$> getField "companyportalurl"
   mcompanyeidservicetoken <- fmap emptyToNothing <$> getField "companyeidservicetoken"
+  mcompanysealingmethod <-
+    fmap sealingMethodFromText <$> getField' $ "companysealingmethod"
 
   return
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
@@ -613,6 +616,8 @@ getUserGroupSettingsChange = do
     . maybe identity (set #sessionTimeoutSecs)            mcompanysessiontimeout
     . maybe identity (set #portalUrl)                     mcompanyportalurl
     . maybe identity (set #eidServiceToken)               mcompanyeidservicetoken
+    . maybe identity (set #sealingMethod)                 mcompanysealingmethod
+
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))
@@ -755,11 +760,20 @@ sendInviteAgain = onlySalesOrAdmin $ do
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ withDocumentID docid $ do
   logInfo_ "Trying to reseal document (only superadmin can do that)"
-  ctx   <- getContext
-  actor <- guardJust $ mkAdminActor ctx
+  ctx      <- getContext
+  actor    <- guardJust $ mkAdminActor ctx
+  document <- dbQuery $ GetDocumentByDocumentID docid
+  guardNoPades document
   void $ dbUpdate $ InsertEvidenceEvent ResealedPDF (return ()) actor
   void $ postDocumentClosedActions False True
   return LoopBack
+
+guardNoPades :: Kontrakcja m => Document -> m ()
+guardNoPades doc = do
+  let sealingMethod = documentsealingmethod doc
+  when (sealingMethod == Pades) $ do
+    logInfo "Cannot reseal a document with PAdES" $ logObject_ doc
+    internalError
 
 -- This method can be used to force postDocumentPendingChange on a doc
 -- e.g. when everybody signed but doc is still pending
@@ -797,13 +811,18 @@ daveDocument documentid = onlyAdmin $ do
                 --> isApproverAndHasApproved
                 )
                 (documentsignatorylinks document)
+            couldBeResealed =
+              everybodySignedAndStatusIn [Closed, DocumentError]
+                && (documentsealingmethod document)
+                == Guardtime
+            couldBeClosed  = everybodySignedAndStatusIn [DocumentError, Pending]
             callbackResult = fromMaybe "Unknown" mCallbackResult
             extraDoc       = ExtraDocument callbackResult
         F.value "daveBody" $ inspectXML document
         F.value "extraDaveBody" $ inspectXML extraDoc
         F.value "id" $ show documentid
-        F.value "couldBeResealed" $ everybodySignedAndStatusIn [Closed, DocumentError]
-        F.value "couldBeClosed" $ everybodySignedAndStatusIn [DocumentError, Pending]
+        F.value "couldBeResealed" couldBeResealed
+        F.value "couldBeClosed" couldBeClosed
         F.value "istemplate" $ documenttype document == Template
         entryPointFields ctx
       return $ Right r

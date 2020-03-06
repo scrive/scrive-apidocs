@@ -117,7 +117,7 @@ eventJSValue doc sim dee = do
 -- | Events to be included in archive history. They have translations.
 historyEventType :: EvidenceEventType -> Bool
 historyEventType (Current AttachExtendedSealedFileEvidence) = True
-historyEventType (Current AttachGuardtimeSealedFileEvidence) = True
+historyEventType (Current AttachDigitalSignatureSealedFileEvidence) = True
 historyEventType (Obsolete CancelDocumenElegEvidence) = True
 historyEventType (Current CancelDocumentEvidence) = True
 historyEventType (Current InvitationDeliveredByEmail) = True
@@ -168,7 +168,7 @@ getEvidenceEventStatusClass (Current  ResealedPDF                 ) = SCSigned
 getEvidenceEventStatusClass (Obsolete CancelDocumenElegEvidence   ) = SCCancelled
 getEvidenceEventStatusClass (Current  ProlongDocumentEvidence     ) = SCProlonged
 getEvidenceEventStatusClass (Current  AttachSealedFileEvidence    ) = SCSigned
-getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed
+getEvidenceEventStatusClass (Current AttachDigitalSignatureSealedFileEvidence) = SCSealed
 getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence) = SCExtended
 getEvidenceEventStatusClass (Current  SMSPinSendEvidence          ) = SCSent
 getEvidenceEventStatusClass (Current  SMSPinDeliveredEvidence     ) = SCDelivered

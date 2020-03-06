@@ -47,6 +47,7 @@ import DB
 import FeatureFlags.Model
 import Folder.Types
 import PadApplication.Types
+import SealingMethod
 import SMS.Types
 import Tag
 import UserGroup.Internal
@@ -244,6 +245,7 @@ defaultUserGroupSettings = UserGroupSettings
   , sessionTimeoutSecs      = Nothing
   , portalUrl               = Nothing
   , eidServiceToken         = Nothing
+  , sealingMethod           = Guardtime
   }
 
 -- UI

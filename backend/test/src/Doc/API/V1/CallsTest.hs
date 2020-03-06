@@ -17,6 +17,9 @@ import DB
 import Doc.Action
 import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
+import Doc.API.V2.AesonTestUtils
+import Doc.API.V2.Calls.CallsTestUtils
+import Doc.API.V2.Mock.TestUtils
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.DocUtils
@@ -66,6 +69,8 @@ apiV1CallsTests env =
        , testThat "Closing a document has the right Evidence Attachments"
                   env
                   testCloseEvidenceAttachments
+       , testThat "Cannot start PAdES document" env testCannotStartPadesDocument
+       , testThat "Cannot sign PAdES document"  env testCannotSignPadesDocument
        ]
 
 jsonDocs :: [String]
@@ -900,3 +905,37 @@ testCloseEvidenceAttachments = do
     , "Appendix 6 Digital Signature Documentation.html"
     ]
     attachmentNames
+
+testCannotStartPadesDocument :: TestEnv ()
+testCannotStartPadesDocument = do
+  user   <- instantiateRandomPadesUser
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+
+  reqDoc <- mkRequestWithHeaders
+    POST
+    [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
+    []
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  let rds = BS.toString $ rsBody resDoc
+      Ok   (JSObject rdsr    ) = decode rds
+      Just (JSString docidStr) = lookup "id" $ fromJSObject rdsr
+  did           <- liftIO $ readIO (fromJSString docidStr)
+
+  reqReady      <- mkRequest POST []
+  (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready did
+  assertEqual "We should get a 500 response" 500 (rsCode resReady)
+
+testCannotSignPadesDocument :: TestEnv ()
+testCannotSignPadesDocument = do
+  user      <- instantiateRandomPadesUser
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+
+  mockDocV1 <- testDocApiV2StartNew ctx
+  let didV1  = getMockDocId mockDocV1
+  let slidV1 = getMockDocSigLinkId 1 mockDocV1
+
+  void $ testRequestHelper ctx
+                           POST
+                           [("fields", inText "[]")]
+                           (apiCallV1Sign didV1 slidV1)
+                           500

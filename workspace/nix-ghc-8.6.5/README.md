@@ -81,6 +81,12 @@ as `pdftools-lambda.local.json` with something like:
 {
   "gateway_url": "https://xxxxx.execute-api.eu-west-1.amazonaws.com/local/kontra_local",
   "api_key": "xxxxxx",
+  "global_sign": {
+    "api_key": "xxxxxx",
+    "api_password": "xxxxxx",
+    "certificate": "xxxxxx",
+    "certificate_password": "xxxxxx"
+  },
   "amazon_s3": {
     "bucket": "xxxxxxxx",
     "access_key": "xxxxxxx",

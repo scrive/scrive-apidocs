@@ -94,6 +94,7 @@ sealStatusGen = oneof
   , pure Missing
   , pure TrustWeaver
   , Guardtime <$> arbitrary <*> arbitrary
+  , pure Pades
   ]
 
 signatoryLinkOC :: OccurenceControl SignatoryLink

@@ -3,21 +3,29 @@ module PdfToolsLambda.Control (
   , callPdfToolsPresealing
   , callPdfToolsCleaning
   , callPdfToolsAddImage
+  , callPdfToolsPadesSign
+  , PadesSignSpec(..)
 ) where
 
 import Control.Monad.Base
 import Control.Monad.Catch
 import Crypto.RNG
 import Crypto.RNG.Utils
+import Data.Aeson (ToJSON)
 import Data.Char
 import Data.Time
+import GHC.Generics
 import Log
 import System.Exit
+import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Text.JSON as JSON
+import qualified Text.JSON.FromJSValue as JSON
 import qualified Text.JSON.Gen as JSON
 
 import DB
@@ -28,7 +36,6 @@ import FileStorage.Amazon.S3Env
 import FileStorage.Class
 import Log.Utils
 import PdfToolsLambda.Conf
-import PdfToolsLambda.Response
 import PdfToolsLambda.Spec
 import Utils.IO
 
@@ -36,11 +43,16 @@ data PdfToolsAction =
     PdfToolsActionSealing
   | PdfToolsActionCleaning
   | PdfToolsActionAddImage
+  | PdfToolsActionPadesSign
+  deriving (Generic)
+
+instance ToJSON PdfToolsAction
 
 pdfToolsActionName :: PdfToolsAction -> Text
-pdfToolsActionName PdfToolsActionSealing  = "seal"
-pdfToolsActionName PdfToolsActionCleaning = "clean"
-pdfToolsActionName PdfToolsActionAddImage = "addimage"
+pdfToolsActionName PdfToolsActionSealing   = "seal"
+pdfToolsActionName PdfToolsActionCleaning  = "clean"
+pdfToolsActionName PdfToolsActionAddImage  = "addimage"
+pdfToolsActionName PdfToolsActionPadesSign = "padesSign"
 
 callPdfToolsSealing
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
@@ -77,6 +89,39 @@ callPdfToolsAddImage lc spec = do
   inputData <- addImageSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionAddImage inputData
 
+data PadesSignSpec = PadesSignSpec {
+    inputFileContent   :: BS.ByteString
+  , documentNumberText :: Text
+}
+
+padesSignSpecToLambdaSpec :: GlobalSignConfig -> PadesSignSpec -> BSL.ByteString
+padesSignSpecToLambdaSpec gs PadesSignSpec {..} =
+  Aeson.encode
+    $ Aeson.object
+    $ [ "documentNumberText" .= documentNumberText
+      , "mainFileInput"
+        .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode inputFileContent)]
+      , "apiKey" .= (gs ^. #apiKey)
+      , "apiPassword" .= (gs ^. #apiPassword)
+      , "sslCertBase64" .= (gs ^. #certificate)
+      , "sslCertSecret" .= (gs ^. #certificatePassword)
+      ]
+
+callPdfToolsPadesSign
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
+  => PdfToolsLambdaEnv
+  -> PadesSignSpec
+  -> m (Maybe BS.ByteString)
+callPdfToolsPadesSign lc spec = do
+  case lc ^. #globalSign of
+    Just gs -> do
+      let inputData = padesSignSpecToLambdaSpec gs spec
+      executePdfToolsLambdaActionCall lc PdfToolsActionPadesSign inputData
+    Nothing -> do
+      logInfo_
+        "Error calling padesSign lambda: global_sign field not available in pdftools_lambda config."
+      return Nothing
+
 --
 executePdfToolsLambdaActionCall
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
@@ -85,7 +130,7 @@ executePdfToolsLambdaActionCall
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 executePdfToolsLambdaActionCall lc action inputData = do
-  logInfo_ "Uploading data to s3 for lamda"
+  logInfo_ "Uploading data to s3 for lambda"
   uploadedDataFileName <- sendDataFileToAmazon (lc ^. #s3Env) inputData
   case uploadedDataFileName of
     Nothing -> do
@@ -97,12 +142,12 @@ executePdfToolsLambdaActionCall lc action inputData = do
         [ "-X"
         , "POST"
         , "-H"
-        , "x-api-key: " ++ lc ^. #apiKey
+        , "x-api-key: " ++ T.unpack (lc ^. #lambda ^. #apiKey)
         , "-H"
         , "Content-Type: text/plain"
         , "--data"
         , "@-"
-        , lc ^. #gatewayUrl
+        , T.unpack $ lc ^. #lambda ^. #gatewayUrl
         ]
         (BSL.fromString $ JSON.encode $ JSON.runJSONGen $ do
           JSON.value "action" $ T.unpack $ pdfToolsActionName action
@@ -118,74 +163,45 @@ executePdfToolsLambdaActionCall lc action inputData = do
           return $ Nothing
         ExitSuccess -> do
           logInfo_ "Response from lambda received"
-          case action of
-            PdfToolsActionSealing  -> parseSealingResponse lc stdout
-            PdfToolsActionAddImage -> parseAddImageResponse lc stdout
-            PdfToolsActionCleaning -> parseCleaningResponse lc stdout
+          parseResponse action lc stdout
 
-parseSealingResponse
+parseResponse
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaEnv
+  => PdfToolsAction
+  -> PdfToolsLambdaEnv
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
-parseSealingResponse lc stdout = do
-  case (parsePdfToolsLambdaSealingResponse stdout) of
-    SealSuccess resultS3Name -> do
+parseResponse action lc stdout = do
+  case parsePdfToolsLambdaResponse stdout of
+    Right resultS3Name -> do
       mresdata <- getDataFromAmazon (lc ^. #s3Env) resultS3Name
       case mresdata of
         Just resdata -> return $ Just $ BSL.toStrict resdata
         Nothing      -> do
-          logAttention "Failed to fetch lambda sealing result from S3"
-            $ object
-            $ ["stdout" `equalsExternalBSL` stdout, "resultS3Name" .= resultS3Name]
+          logAttention "Failed to fetch lambda call result from S3" $ object
+            [ "action" .= action
+            , "stdout" `equalsExternalBSL` stdout
+            , "resultS3Name" .= resultS3Name
+            ]
           return Nothing
-    SealFail errorMessage -> do
-      logInfo "Lambda sealing failed"
-        $ object ["stdout" `equalsExternalBSL` stdout, "errorMessage" .= errorMessage]
+    Left errorMessage -> do
+      logInfo "Lambda call failed" $ object
+        [ "action" .= action
+        , "stdout" `equalsExternalBSL` stdout
+        , "errorMessage" .= errorMessage
+        ]
       return $ Nothing
 
-parseCleaningResponse
-  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaEnv
-  -> BSL.ByteString
-  -> m (Maybe BS.ByteString)
-parseCleaningResponse lc stdout = do
-  case (parsePdfToolsLambdaCleaningResponse stdout) of
-    CleanSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon (lc ^. #s3Env) resultS3Name
-      case mresdata of
-        Just resdata -> return $ Just $ BSL.toStrict resdata
-        Nothing      -> do
-          logAttention "Failed to fetch lambda cleaning result from S3"
-            $ object
-            $ ["stdout" `equalsExternalBSL` stdout, "resultS3Name" .= resultS3Name]
-          return Nothing
-    CleanFail errorMessage -> do
-      logInfo "Lambda cleaning failed"
-        $ object ["stdout" `equalsExternalBSL` stdout, "errorMessage" .= errorMessage]
-      return $ Nothing
-
-parseAddImageResponse
-  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaEnv
-  -> BSL.ByteString
-  -> m (Maybe BS.ByteString)
-parseAddImageResponse lc stdout = do
-  case (parsePdfToolsLambdaAddImageResponse stdout) of
-    AddImageSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon (lc ^. #s3Env) resultS3Name
-      case mresdata of
-        Just resdata -> return $ Just $ BSL.toStrict resdata
-        Nothing      -> do
-          logAttention "Failed to fetch lambda add image result from S3"
-            $ object
-            $ ["stdout" `equalsExternalBSL` stdout, "resultS3Name" .= resultS3Name]
-          return Nothing
-    AddImageFail errorMessage -> do
-      logInfo "Lambda add image failed"
-        $ object ["stdout" `equalsExternalBSL` stdout, "errorMessage" .= errorMessage]
-      return $ Nothing
-
+parsePdfToolsLambdaResponse :: BSL.ByteString -> Either Text Text
+parsePdfToolsLambdaResponse bsj = case JSON.decode (BSL.toString bsj) of
+  JSON.Ok jsvalue -> runIdentity $ JSON.withJSValue jsvalue $ do
+    ms3FileName <- JSON.fromJSValueField "resultS3FileName"
+    case ms3FileName of
+      Just s3FileName -> return $ Right s3FileName
+      _               -> do
+        merror <- JSON.fromJSValueField "error"
+        return . Left $ fromMaybe "No error message provided" merror
+  _ -> Left "Response is not a valid json"
 
 sendDataFileToAmazon
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m, MonadThrow m)

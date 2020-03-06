@@ -1,5 +1,7 @@
 module PdfToolsLambda.Conf
-  ( I.PdfToolsLambdaConf
+  ( I.GlobalSignConfig
+  , I.LambdaConfig
+  , I.PdfToolsLambdaConf
   , I.PdfToolsLambdaEnv
   , I.pdfToolsLambdaEnvFromConf
   , PdfToolsLambdaMonad(..)

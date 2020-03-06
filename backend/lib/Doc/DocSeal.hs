@@ -46,7 +46,7 @@ import Doc.Model
 import Doc.RadiobuttonPlacementsUtils
   ( RadiobuttonImagesMapping, getRadiobuttonImage, readRadiobuttonImagesMapping
   )
-import Doc.SealStatus (SealStatus(..))
+import Doc.SealStatus (SealStatus(Missing))
 import Doc.SignatoryIdentification
   ( SignatoryIdentifierMap, siInitials, signatoryIdentifier
   )
@@ -66,6 +66,7 @@ import Kontra
 import Log.Identifier
 import PdfToolsLambda.Conf
 import PdfToolsLambda.Control
+import SealingMethod
 import Templates
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -550,25 +551,19 @@ createSealingTextsForDocument document hostpart = do
         F.value "hostpart" hostpart
         F.value "verifyurl" ("https://scrive.com/verify" :: String)
 
-  verificationTitle'           <- render "_contractsealingtexts"
-  partnerText'                 <- render "_contractsealingtextspartnerText"
-  initiatorText'               <- render "_contractsealingtextsinitiatorText"
-  documentText'                <- render "_documentText"
-  verificationPageDescription' <- render "_verificationPageDescription"
-  hiddenAttachmentText'        <- render "_contractsealingtextshiddenAttachment"
-  onePageText'                 <- render "_numberOfPagesIs1"
+  let verificationPageDescriptionTemplate = case documentsealingmethod document of
+        Guardtime -> templateName "_verificationPageDescription"
+        Pades     -> templateName "_verificationPageDescriptionPades"
 
-  let sealingTexts = Seal.SealingTexts
-        { verificationTitle           = verificationTitle'
-        , partnerText                 = partnerText'
-        , initiatorText               = initiatorText'
-        , documentText                = documentText'
-        , verificationPageDescription = verificationPageDescription'
-        , hiddenAttachmentText        = hiddenAttachmentText'
-        , onePageText                 = onePageText'
-        }
+  verificationTitle           <- render "_contractsealingtexts"
+  partnerText                 <- render "_contractsealingtextspartnerText"
+  initiatorText               <- render "_contractsealingtextsinitiatorText"
+  documentText                <- render "_documentText"
+  verificationPageDescription <- render verificationPageDescriptionTemplate
+  hiddenAttachmentText        <- render "_contractsealingtextshiddenAttachment"
+  onePageText                 <- render "_numberOfPagesIs1"
 
-  return sealingTexts
+  return Seal.SealingTexts { .. }
 
 sealSpecFromDocument
   :: ( MonadIO m
@@ -597,7 +592,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
     sim                   <- getSignatoryIdentifierMap False elog
 
     additionalAttachments <- findOutAttachmentDesc sim tmppath document
-    docs                  <- mapM
+    documentationFiles    <- mapM
       (\f -> (takeFileName f, ) <$> liftIO (BS.readFile f))
       [ "files/Evidence Quality of Scrive E-signed Documents.html"
       , "files/Appendix 1 Evidence Quality Framework.html"
@@ -657,7 +652,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
     let htmlevents = suppressRepeatedEvents elog
     elogsim  <- getSignatoryIdentifierMap True htmlevents
     htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elogsim htmlevents
-    let evidenceattachment = Seal.SealAttachment
+    let evidenceLog = Seal.SealAttachment
           { Seal.fileName    = "Appendix 3 Evidence Log.html"
           , Seal.mimeType    = Nothing
           , Seal.fileContent = BS.fromString htmllogs
@@ -678,7 +673,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
                                 , Seal.mimeType    = Nothing
                                 , Seal.fileContent = doc
                                 }
-          | (name, doc) <- docs
+          | (name, doc) <- documentationFiles
           ]
 
     eNumberOfPages <- liftIO $ getNumberOfPDFPages content
@@ -718,7 +713,8 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
     initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
       F.value "initials" $ initials
 
-    let title = ICU.normalize ICU.NFC $ documenttitle document
+    let title       = ICU.normalize ICU.NFC $ documenttitle document
+    let attachments = docAttachments <> [evidenceLog, evidenceOfTime, evidenceOfIntent]
 
     return $ Seal.SealSpec
       { Seal.input              = inputpath
@@ -730,8 +726,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
       , Seal.initialsText       = initialsText
       , Seal.hostpart           = hostpart
       , Seal.staticTexts        = staticTexts
-      , Seal.attachments        = docAttachments
-                                    <> [evidenceattachment, evidenceOfTime, evidenceOfIntent]
+      , Seal.attachments        = attachments
       , Seal.disableFooter      = documentisreceipt document
       , Seal.filesList          = [ Seal.FileDesc { fileTitle = title
                                                   , fileRole = mainDocumentText

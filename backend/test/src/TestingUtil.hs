@@ -22,6 +22,7 @@ module TestingUtil (
   , instantiateRandomUserGroup
   , UserTemplate(..)
   , randomUserTemplate
+  , instantiateRandomPadesUser
   , instantiateRandomUser
   , instantiateUser
   , tryInstantiateUser
@@ -125,7 +126,7 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model
-import Doc.SealStatus (SealStatus(..))
+import Doc.SealStatus (SealStatus(Missing))
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.TestInvariants
@@ -149,6 +150,7 @@ import MailContext
 import MinutesTime
 import PadApplication.Types
 import PdfToolsLambda.Conf
+import SealingMethod
 import Session.SessionID
 import SMS.Types (SMSProvider(..))
 import System.Random.CryptoRNG ()
@@ -258,6 +260,9 @@ instance Arbitrary PadAppMode where
 instance Arbitrary PaymentPlan where
   arbitrary = elements [FreePlan, OnePlan, TeamPlan, EnterprisePlan, TrialPlan]
 
+instance Arbitrary SealingMethod where
+  arbitrary = elements documentAllSealingMethods
+
 -- PostgreSQL will not store \NUL in DB
 genUnicodeString :: Gen String
 genUnicodeString = filter (/= '\NUL') <$> QCU.string
@@ -323,6 +328,7 @@ instance Arbitrary UserGroupSettings where
       <*> pure Nothing -- do not set custom session expiry
       <*> pure Nothing -- no portal url
       <*> pure Nothing -- no custom eidService token
+      <*> arbitrary
 
 instance Arbitrary UserGroupAddress where
   arbitrary =
@@ -500,6 +506,9 @@ documentAllSharings = [Private, Shared]
 
 instance Arbitrary DocumentSharing where
   arbitrary = elements documentAllSharings
+
+documentAllSealingMethods :: [SealingMethod]
+documentAllSealingMethods = [Guardtime, Pades]
 
 instance Arbitrary Document where
   arbitrary = do
@@ -1119,18 +1128,20 @@ data RandomDocumentAllows = RandomDocumentAllows
   , rdaSharedLink  :: Bool
   , rdaTimeoutTime :: Bool
   , rdaTemplateId  :: Maybe DocumentID
+  , rdaSealingMethods :: OneOf SealingMethod
   }
 
 rdaDefault :: User -> RandomDocumentAllows
 rdaDefault user = RandomDocumentAllows
-  { rdaTypes       = OneOf documentAllTypes
-  , rdaStatuses    = OneOf documentAllStatuses
-  , rdaSharings    = OneOf documentAllSharings
-  , rdaSignatories = OneOf $ map (`replicate` freeSignatory) [1 .. 10]
-  , rdaAuthor      = user
-  , rdaSharedLink  = False
-  , rdaTimeoutTime = True
-  , rdaTemplateId  = Nothing
+  { rdaTypes          = OneOf documentAllTypes
+  , rdaStatuses       = OneOf documentAllStatuses
+  , rdaSharings       = OneOf documentAllSharings
+  , rdaSignatories    = OneOf $ map (`replicate` freeSignatory) [1 .. 10]
+  , rdaAuthor         = user
+  , rdaSharedLink     = False
+  , rdaTimeoutTime    = True
+  , rdaTemplateId     = Nothing
+  , rdaSealingMethods = OneOf documentAllSealingMethods
   }
   where
     freeSignatory :: OneOf (AllOf RandomSignatoryCondition)
@@ -1230,8 +1241,9 @@ addRandomDocumentWithFile fileid rda = do
       sharing <- if xtype == Template
         then rand 10 (elements . fromOneOf $ rdaSharings rda)
         else return Private
-      title    <- rand 1 $ arbText 10 25
-      sigspecs <- rand 10 (elements . fromOneOf $ rdaSignatories rda)
+      sealingMethod <- rand 1 (elements . fromOneOf $ rdaSealingMethods rda)
+      title         <- rand 1 $ arbText 10 25
+      sigspecs      <- rand 10 (elements . fromOneOf $ rdaSignatories rda)
       -- First signatory link is the author
       let genFuns = randomAuthorLinkByStatus : repeat randomSigLinkByStatus
       asl' : siglinks <- forM (zip sigspecs genFuns) $ \(OneOf sigconds, genSigLink) -> do
@@ -1297,6 +1309,7 @@ addRandomDocumentWithFile fileid rda = do
           , documenttimeouttime       = if rdaTimeoutTime rda
                                           then documenttimeouttime doc'
                                           else Nothing
+          , documentsealingmethod     = sealingMethod
           }
       userDetails <- signatoryFieldsFromUser user
       let asl =
@@ -1346,13 +1359,17 @@ sealTestDocument ctx did = void $ TestEnv $ liftTestFileStorageT $ \fsEnv -> do
         res <- postDocumentClosedActions True False
           `catch` \(_ :: KE.KontraError) -> return False
         when res $ do
-          extendingJobCount <-
+          sealingMethod <- documentsealingmethod <$> theDocument
+          let expectedJobCount = case sealingMethod of
+                Guardtime -> 1
+                Pades     -> 0
+          actualJobCount <-
             runSQL $ "SELECT * FROM document_extending_jobs WHERE id =" <?> did
           assertEqual
             "postDocumentClosedActions should add task to\
                       \ document_extending_jobs"
-            1
-            extendingJobCount
+            expectedJobCount
+            actualJobCount
         return res
 
 rand :: CryptoRNG m => Int -> Gen a -> m a
@@ -1646,6 +1663,15 @@ assertSQLCount msg expectedCount sql = do
   runSQL_ sql
   count <- fetchOne runIdentity
   assertEqual msg expectedCount count
+
+instantiateRandomPadesUser
+  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => m User
+instantiateRandomPadesUser = do
+  let padesSettings = defaultUserGroupSettings & #sealingMethod .~ SealingMethod.Pades
+  userGroup <- instantiateUserGroup
+    $ randomUserGroupTemplate { settings = Just padesSettings }
+  instantiateUser $ randomUserTemplate { groupID = pure $ userGroup ^. #id }
 
 makeFieldLabelsWith noPrefixFieldLabels ''UserTemplate
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupTemplate

@@ -84,10 +84,16 @@
     "pdftools_lambda" : {
       "gateway_url": "",
       "api_key": "",
+      "global_sign": {
+        "api_key": "",
+        "api_password": "",
+        "certificate": "",
+        "certificate_password": ""
+      },
       "amazon_s3": {
-          "bucket" : ""
-        , "access_key":""
-        , "secret_key": ""
+        "bucket" : "",
+        "access_key":"",
+        "secret_key": ""
       }
     },
     "_eid_service" : {
@@ -95,8 +101,8 @@
       "token": ""
     },
     "_sso": {
-      "idps": [ 
-          { 
+      "idps": [
+          {
               "idp_id": "http://uri.of.idp/path",
               "idp_public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmBpZFP2vX0C77Gb/MsrF\nxUcNKMKZKsH24VZLp+Fo/oUgO7PKOkhXpEMP2qPa8FJHCg/wvgWWpnsg6rfKVVZr\nSbSQbiB2+3HJwxGE6Ciy2VJeGk0XdvWFuYFe63bCACNOw4pC7JJEQwgY4V5dfep9\newFQS2UT9JxFhQ+OEpTTphCu04zw0btwNjoNpEyLUiutaNqsvjCXt7p2uEGuHVPd\nP0319QtqksyY43CkDW6EUV6wWLHaaJEoRzWKhNLd4/F9N6PIGQGxFdrVn264SDVC\nwf0Kmf4c0LT8KgJfJeXLYripWpRumlnzbQpo4tWE8vAl4rSYq3x7vdHlY3P45tKP\nBwIDAQAB\n-----END PUBLIC KEY-----\n",
               "idp_init_ug": "0",

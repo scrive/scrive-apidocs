@@ -20,6 +20,7 @@ module Doc.API.V1.Calls (
   ) where
 
 import Control.Conditional ((<|), (|>), ifM, unlessM, whenM)
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Aeson (Value(..))
@@ -81,7 +82,7 @@ import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
 import Doc.Model.OrderBy
-import Doc.SealStatus (SealStatus(..))
+import Doc.SealStatus (SealStatus(Missing))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
   ( SignatoryScreenshots, emptySignatoryScreenshots
@@ -103,6 +104,7 @@ import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model
 import Routing
+import SealingMethod
 import Templates (renderTextTemplate, renderTextTemplate_)
 import Text.JSON.Convert
 import User.Model
@@ -415,6 +417,9 @@ apiCallV1Ready :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Ready did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
+    -- We do not support PAdES in API V1
+    guardNoPades =<< getSealingMethodForDocument =<< theDocument
+
     auid <-
       apiGuardJustM (serverError "No author found")
       $   (maybesignatory <=< getAuthorSigLink)
@@ -723,6 +728,8 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   fields                    <- getFieldForSigning
   acceptedAuthorAttachments <- getAcceptedAuthorAttachments
   olddoc                    <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid -- We store old document, as it is needed by postDocumentXXX calls
+  -- We do not support PAdES in API V1
+  guardNoPades (documentsealingmethod olddoc)
   olddoc
     `withDocument`          (do
                               document <- theDocument
@@ -1697,7 +1704,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
         now <- currentTime
         -- Give Guardtime signing a few seconds to complete before we respond
         when (diffUTCTime now (documentmtime doc) < 8) $ do
-          logInfo "Waiting for Guardtime signing" $ object
+          logInfo "Waiting for the document to be signed" $ object
             [ "document_last_modified_ago"
                 .= (realToFrac $ diffUTCTime now $ documentmtime doc :: Double)
             ]
@@ -2086,3 +2093,13 @@ guardThatDocumentIsReadableBySignatories doc = do
     $  "The document has expired or has been withdrawn. (status: "
     <> show (documentstatus doc)
     <> ")"
+
+guardNoPades :: (MonadBase IO m, MonadDB m, MonadThrow m) => SealingMethod -> m ()
+guardNoPades sealingMethod = do
+  when (sealingMethod == Pades) $ do
+    throwM
+      .  SomeDBExtraException
+      $  actionNotAvailable
+      $  "This document or the user group of its author is configured "
+      <> "to only use PAdES signatures, which is not supported in this API. "
+      <> "Please use API V2 instead."

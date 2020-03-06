@@ -40,7 +40,7 @@ import Doc.Extending.Model
 import Doc.Logging
 import Doc.Model
 import Doc.Sealing.Model
-import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
+import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
 import Doc.Types.SignatoryAccessToken
@@ -315,8 +315,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
     theDocument >>= triggerAPICallbackIfThereIsOne
 
   unlessM (isDocumentError <$> theDocument) $ do
-
-    unlessM (hasGuardtimeSignature <$> theDocument) $ do
+    unlessM (hasDigitalSignature <$> theDocument) $ do
       unlessM addDigitalSignature $ do
         internalError
 
@@ -331,7 +330,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
                         -- digital signature, that means we sent out an
                         -- earlier confirmation mail without a digital
                         -- seal in the attached document.
-          && hasGuardtimeSignature d
+          && hasDigitalSignature d
                         -- and now it has a digital signature, so we
                         -- fixed something and we will indicate that
                         -- this is a correction to the earlier
@@ -344,8 +343,9 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
       <$> theDocument
 
   when resultisok $ do
-    now <- currentTime
-    theDocument >>= \d -> dbUpdate $ ScheduleDocumentExtending (documentid d) now
+    whenM (hasGuardtimeSignature <$> theDocument) $ do
+      now <- currentTime
+      theDocument >>= \d -> dbUpdate $ ScheduleDocumentExtending (documentid d) now
 
   -- Sealing or signing of document could have failed. We need to tell the caller,
   -- so that the action can be re-scheduled

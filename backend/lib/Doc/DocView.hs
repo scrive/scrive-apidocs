@@ -17,7 +17,7 @@ module Doc.DocView (
   , pageDocumentToStartList
   , pageDocumentToStartLogin
   , pageDocumentToStartView
-  , gtVerificationPage
+  , verificationPage
   , afterForwardPage
   ) where
 
@@ -195,14 +195,14 @@ documentStatusFields document = do
   -- currently it means: is the next turn for author to sign?
   F.value "awaitingauthor" $ canAuthorSignNow document
 
--- Page for GT verification
-gtVerificationPage :: Kontrakcja m => m Response
-gtVerificationPage = do
+-- Page for digital signature verification
+verificationPage :: Kontrakcja m => m Response
+verificationPage = do
   ctx <- getContext
   ad  <- getAnalyticsData
   if ctx ^. #brandedDomain % #mainDomain
     then do
-      content <- renderTextTemplate "gtVerificationPage" $ do
+      content <- renderTextTemplate "verificationPage" $ do
         standardPageFields ctx Nothing ad
       simpleHtmlResponse content
     else respond404

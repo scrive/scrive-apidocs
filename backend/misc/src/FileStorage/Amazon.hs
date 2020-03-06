@@ -40,7 +40,7 @@ saveContentsToAmazon env url contents = go True =<< awsLogger
           (AWS.toBody contents)
       case result of
         Right res -> do
-          logInfo "Filed saved to AWS"
+          logInfo "File saved to AWS"
             $ object ["url" .= url, "result" .= show res, "time" .= diff]
         Left err -> do
           if retry

@@ -24,8 +24,9 @@ if [ -n "$tmp_dir" ]; then
 			# Change all 'src' attributes in the HTML to prepend directory name
 			sed -e "s/src=['\"]images\/\([A-z0-9]*\).png['\"]/src=\"images\/${dir}_\1.png\"/g" $html > "../../$tmp_dir/$html"
 		done
-		# Use 'mcp' to bulk copy images with new file name prefix
-		mcp "images/*.png" "../../$tmp_dir/images/${dir}_#1.png"
+		for img in images/*.png; do
+			cp $img "../../$tmp_dir/images/${dir}_$(basename $img .png).png"
+		done
 		cd ..
 	done
 	cd ..
@@ -33,7 +34,7 @@ if [ -n "$tmp_dir" ]; then
 
 	# Make images smaller
 	printf "Optimising files in '$tmp_dir/images/'...\t"
-	optipng $tmp_dir/images/* 2> /dev/null
+	optipng $tmp_dir/images/*
 	echo "Done."
 
 else

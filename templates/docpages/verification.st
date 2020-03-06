@@ -2,7 +2,7 @@
 ####  This template does not check if user is logged in, since this page
 ####  always behaves as if the user is *not* logged in.
 ####
-gtVerificationPage=$doctype()$
+verificationPage=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>

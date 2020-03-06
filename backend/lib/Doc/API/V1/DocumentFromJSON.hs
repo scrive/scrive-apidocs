@@ -525,7 +525,6 @@ instance FromJSValue Lang where
       Just l    -> langFromCode l
       _         -> Nothing
 
-
 instance FromJSValueWithUpdate Document where
   fromJSValueWithUpdate mdoc = do
     (title :: Maybe Text                    ) <- fromJSValueField "title"

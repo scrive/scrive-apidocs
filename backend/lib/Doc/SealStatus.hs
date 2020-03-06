@@ -1,7 +1,8 @@
 
 module Doc.SealStatus
   ( SealStatus(..)
-  , HasGuardtimeSignature(..)
+  , isSealed
+  , isGuardtime
   ) where
 
 import Data.Function (on)
@@ -12,26 +13,30 @@ import GHC.Generics
 import qualified Control.Exception.Lifted as E
 
 data SealStatus
- -- | File's digital signature status has not been determined
- = UnknownSealStatus
- -- | The file lacks any form of digital signature
- | Missing
- -- | The file has a TrustWeaver signature
- | TrustWeaver
- -- | The file has a Guardtime signature
- | Guardtime {
-    extended :: Bool -- ^ The signature has been extended
-  , private  :: Bool -- ^ The signature was created using Scrive's own gateway
+  -- | File's digital signature status has not been determined
+  -- State: unused
+  = UnknownSealStatus
+  -- | File lacks any form of digital signature
+  | Missing
+  -- | File has a TrustWeaver signature
+  -- State: obsolete
+  | TrustWeaver
+  -- | File has a Guardtime signature
+  | Guardtime {
+      extended :: Bool -- ^ The signature has been extended
+    , private  :: Bool -- ^ The signature was created using Scrive's own gateway
   }
+  -- | File has a Pades signature
+  | Pades
   deriving (Eq, Show, Generic, Typeable)
 
-class HasGuardtimeSignature a where
-  hasGuardtimeSignature :: a -> Bool
+isSealed :: SealStatus -> Bool
+isSealed s = isGuardtime s || s == Pades
 
--- How can 'SealStatus' "have" digital signature?
-instance HasGuardtimeSignature SealStatus where
-  hasGuardtimeSignature Guardtime{} = True
-  hasGuardtimeSignature _           = False
+isGuardtime :: SealStatus -> Bool
+isGuardtime = \case
+  Guardtime{} -> True
+  _           -> False
 
 instance Enum SealStatus where
   toEnum (-1) = UnknownSealStatus
@@ -41,6 +46,7 @@ instance Enum SealStatus where
   toEnum 3    = Guardtime { extended = True, private = False }
   toEnum 4    = Guardtime { extended = False, private = True }
   toEnum 5    = Guardtime { extended = True, private = True }
+  toEnum 6    = Pades
   toEnum i    = unexpectedError $ "invalid value:" <+> (showt i)
 
   fromEnum UnknownSealStatus = -1
@@ -50,6 +56,7 @@ instance Enum SealStatus where
   fromEnum Guardtime { extended = True, private = False } = 3
   fromEnum Guardtime { extended = False, private = True } = 4
   fromEnum Guardtime { extended = True, private = True } = 5
+  fromEnum Pades             = 6
 
 instance Ord SealStatus where
   compare = compare `on` fromEnum
@@ -61,8 +68,8 @@ instance FromSQL SealStatus where
   type PQBase SealStatus = PQBase Int16
   fromSQL mbase = do
     n :: Int16 <- fromSQL mbase
-    if n < -1 || n > 5
-      then E.throwIO $ RangeError { reRange = [(-1, 5)], reValue = n }
+    if n < -1 || n > 6
+      then E.throwIO $ RangeError { reRange = [(-1, 6)], reValue = n }
       else return . toEnum . fromIntegral $ n
 
 instance ToSQL SealStatus where

@@ -29,9 +29,9 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
-import Doc.SealStatus
 import File.Storage
 import KontraError
 import Log.Identifier
@@ -433,9 +433,11 @@ callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
   V1 -> do
     dJSON <- documentJSONV1 Nothing False True Nothing doc
     return $ BSLU.fromString $ urlEncodeVars
-      [ ("documentid"     , show (documentid doc))
-      , ("signedAndSealed", if isClosed doc && hasGuardtime then "true" else "false")
-      , ("json"           , encode dJSON)
+      [ ("documentid", show (documentid doc))
+      , ( "signedAndSealed"
+        , if isClosed doc && hasDigitalSignature doc then "true" else "false"
+        )
+      , ("json", encode dJSON)
       ]
   V2 -> do
     let json = unjsonToByteStringLazy'
@@ -445,14 +447,10 @@ callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
     return $ Utils.HTTP.urlEncodeVars
       [ ("document_id", BSLU.fromString $ show (documentid doc))
       , ( "document_signed_and_sealed"
-        , if isClosed doc && hasGuardtime then "true" else "false"
+        , if isClosed doc && hasDigitalSignature doc then "true" else "false"
         )
       , ("document_json", json)
       ]
-  where
-    hasGuardtime = case (documentsealstatus doc) of
-      Just (Guardtime _ _) -> True
-      _                    -> False
 
 executeSalesforceCallback
   :: ( MonadDB m

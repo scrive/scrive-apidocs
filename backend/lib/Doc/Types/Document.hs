@@ -9,8 +9,10 @@ module Doc.Types.Document (
   , documentfile
   , documentsealedfile
   , documentsealstatus
+  , getSealingMethodForDocument
   ) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Aeson.Types hiding ((<?>))
 import Data.Int
@@ -19,10 +21,11 @@ import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Database.PostgreSQL.PQTypes.SQL.Builder
 import qualified Data.Set as S
 
+import DB (MonadDB, dbQuery)
 import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
 import Doc.DocumentID
-import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
+import Doc.SealStatus (SealStatus)
 import Doc.Tables
 import Doc.Types.AuthorAttachment
 import Doc.Types.DocumentStatus
@@ -34,8 +37,11 @@ import IPAddress
 import Log.Identifier
 import MagicHash
 import MinutesTime
+import SealingMethod
 import User.Lang
+import UserGroup.Model (UserGroupGetWithParents(..))
 import UserGroup.Types
+import Util.MonadUtils
 
 data DocumentType = Signable | Template
   deriving (Eq, Ord, Show, Read)
@@ -231,6 +237,7 @@ data Document = Document
   -- mainly affects the 'display name', i.e. the name presented to the user as
   -- the party they are entering into a transaction with. Implements CORE-1633.
   , documentusergroupforeid        :: !(Maybe UserGroupID)
+  , documentsealingmethod          :: !SealingMethod
   } deriving (Show)
 
 type instance ID Document = DocumentID
@@ -280,11 +287,8 @@ defaultDocument = Document { documentid                = unsafeDocumentID 0
                            , documentshowarrow         = True
                            , documentfolderid          = Nothing
                            , documentusergroupforeid   = Nothing
+                           , documentsealingmethod     = Guardtime
                            }
-
-instance HasGuardtimeSignature Document where
-  hasGuardtimeSignature doc =
-    (hasGuardtimeSignature <$> documentsealstatus doc) == Just True
 
 instance HasID Document where
   getID = documentid
@@ -353,6 +357,7 @@ documentsSelectors =
   , "documents.show_arrow"
   , "documents.folder_id"
   , "documents.user_group_to_impersonate_for_eid"
+  , "documents.sealing_method"
   ]
 
 documentStatusClassExpression :: SQL
@@ -453,13 +458,14 @@ type instance CompositeRow Document
     , Bool
     , Maybe FolderID
     , Maybe UserGroupID
+    , SealingMethod
     )
 
 instance PQFormat Document where
   pqFormat = compositeTypePqFormat ctDocument
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid)
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid, sealing_method)
     = Document
       { documentid                = did
       , documenttitle             = title
@@ -504,6 +510,7 @@ instance CompositeFromSQL Document where
       , documentshowarrow         = show_arrow
       , documentfolderid          = fid
       , documentusergroupforeid   = user_group_to_impersonate_for_eid
+      , documentsealingmethod     = sealing_method
       }
 
 ---------------------------------
@@ -517,3 +524,10 @@ documentsealedfile = find ((Preparation /=) . mainfiledocumentstatus) . document
 
 documentsealstatus :: Document -> Maybe SealStatus
 documentsealstatus = fmap mainfilesealstatus . documentsealedfile
+
+getSealingMethodForDocument
+  :: (MonadBase IO m, MonadDB m, MonadThrow m) => Document -> m SealingMethod
+getSealingMethodForDocument doc = do
+  ugid <- guardJust $ documentauthorugid doc
+  ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
+  return $ ugwpSettings ugwp ^. #sealingMethod

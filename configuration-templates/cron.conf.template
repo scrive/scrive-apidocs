@@ -80,10 +80,16 @@
     "pdftools_lambda" : {
       "gateway_url": "",
       "api_key": "",
+      "global_sign": {
+        "api_key": "",
+        "api_password": "",
+        "certificate": "",
+        "certificate_password": ""
+      },
       "amazon_s3": {
-          "bucket" : ""
-        , "access_key":""
-        , "secret_key": ""
+        "bucket" : "",
+        "access_key":"",
+        "secret_key": ""
       }
     },
     "monthly_invoice": {

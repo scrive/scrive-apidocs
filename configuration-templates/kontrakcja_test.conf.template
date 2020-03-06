@@ -3,6 +3,12 @@
   "pdftools_lambda" : {
     "gateway_url": "",
     "api_key": "",
+    "global_sign": {
+        "api_key": ""
+      , "api_password": ""
+      , "certificate": ""
+      , "certificate_password": ""
+    },
     "amazon_s3": {
         "_host": "example.com"
       , "_port": 1234

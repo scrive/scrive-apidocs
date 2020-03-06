@@ -36,6 +36,7 @@ import Folder.Types
 import IPAddress
 import Log.Identifier
 import PadApplication.Types
+import SealingMethod
 import SMS.Types
 import Tag
 import Theme.ThemeID
@@ -218,6 +219,7 @@ data UserGroupSettings = UserGroupSettings
   , sessionTimeoutSecs        :: !(Maybe Int32)
   , portalUrl                 :: !(Maybe Text)
   , eidServiceToken           :: !(Maybe Text)
+  , sealingMethod             :: SealingMethod
   } deriving (Show, Eq)
 
 type instance CompositeRow UserGroupSettings
@@ -242,13 +244,14 @@ type instance CompositeRow UserGroupSettings
     , Maybe Int32
     , Maybe Text
     , Maybe Text
+    , SealingMethod
     )
 
 instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = I.DataRetentionPolicy { .. }

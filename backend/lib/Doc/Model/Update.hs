@@ -114,11 +114,12 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model.Query
-import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
+import Doc.SealStatus (SealStatus(..), isSealed)
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Tables
+import Doc.Types.Document (getSealingMethodForDocument)
 import Doc.Types.SignatoryAccessToken
 import EID.EIDService.Types
 import EID.Signature.Model
@@ -447,6 +448,7 @@ insertDocument document@(Document {..}) = do
     sqlSet "show_arrow"          documentshowarrow
     sqlSet "folder_id"           documentfolderid
     sqlSet "user_group_to_impersonate_for_eid" documentusergroupforeid
+    sqlSet "sealing_method"      documentsealingmethod
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -611,15 +613,15 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m DetachFile () where
     updateMTimeAndObjectVersion (actorTime a)
 
 -- | Append a sealed file to a document, updating modification time.
--- If it has a Guardtime signature, generate an event.
+-- If it has a digital signature, generate an event.
 data AppendSealedFile = AppendSealedFile FileID SealStatus Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendSealedFile () where
   update (AppendSealedFile fid status actor) = do
     updateDocumentWithID $ \did -> do
       appendSealedFile did fid status
       updateMTimeAndObjectVersion (actorTime actor)
-    when (hasGuardtimeSignature status) $ do
-      void $ update $ InsertEvidenceEvent AttachGuardtimeSealedFileEvidence
+    when (isSealed status) $ do
+      void $ update $ InsertEvidenceEvent AttachDigitalSignatureSealedFileEvidence
                                           (return ())
                                           actor
 
@@ -1075,9 +1077,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
       mapM_ insertEvidence (authToSignChangeEvidence oldAuthToSign newAuthToSign)
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
-instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m PreparationToPending () where
+instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBUpdate m PreparationToPending () where
   update (PreparationToPending actor tzn) = do
-    (lang, tot) <- updateDocumentWithID $ \docid -> do
+    sealingMethod <- getSealingMethodForDocument =<< theDocument
+    -- We determine the sealing method (currently Guardtime or PAdES) using
+    -- the author's user group settings and store it with the document so that
+    -- it doesn't accidentally change later in the process, if the author
+    -- or the user group changes.
+
+    (lang, tot)   <- updateDocumentWithID $ \docid -> do
       let time = actorTime actor
 
       -- If we know actor's time zone:
@@ -1100,7 +1108,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
       withTimeZone defaultTimeZoneName $ do
         lang :: Lang <-
           kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "documents" $ do
-            sqlSet "status" Pending
+            sqlSet "status"         Pending
+            sqlSet "sealing_method" sealingMethod
             sqlSetCmd "timeout_time"
               $   "cast ("
               <?> timestamp
