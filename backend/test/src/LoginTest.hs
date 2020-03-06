@@ -263,11 +263,12 @@ assertResettingPasswordRecordsALoginEvent = do
 
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist = do
-  ctx <- mkContext defaultLang
-  req <- mkRequest GET []
-  let uid = unsafeUserID 999
+  user <- createTestUser
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  req  <- mkRequest GET []
+  let uid = unsafeUserID . (+ 1) . unUserID $ user ^. #id
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
-  let expCode = 404
+  let expCode = 403
   assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission

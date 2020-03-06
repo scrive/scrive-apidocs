@@ -1,5 +1,6 @@
 module API.V2.Utils
     ( apiAccessControl
+    , apiAccessControlWithError
     , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
     , apiAccessControlCheck
@@ -18,8 +19,8 @@ import Kontra
 import User.Model
 import Util.MonadUtils
 
-userAccessControlImpl :: Kontrakcja m => User -> [Permission] -> m a -> m a -> m a
-userAccessControlImpl apiuser perms failAction successAction = do
+apiAccessControlWithError :: Kontrakcja m => User -> [Permission] -> m a -> m a -> m a
+apiAccessControlWithError apiuser perms failAction successAction = do
   roles <- dbQuery . GetRoles $ apiuser
   accessControl roles perms failAction successAction
     `catchDBExtraException` (\(UserNonExistent _) -> apiError insufficientPrivileges)
@@ -28,11 +29,11 @@ userAccessControlImpl apiuser perms failAction successAction = do
 
 apiAccessControl :: Kontrakcja m => User -> [Permission] -> m a -> m a
 apiAccessControl user perms successAction = do
-  userAccessControlImpl user perms (apiError insufficientPrivileges) successAction
+  apiAccessControlWithError user perms (apiError insufficientPrivileges) successAction
 
 apiAccessControlCheck :: Kontrakcja m => User -> [Permission] -> m Bool
 apiAccessControlCheck apiUser perms = do
-  userAccessControlImpl apiUser perms (return False) (return True)
+  apiAccessControlWithError apiUser perms (return False) (return True)
 
 apiAccessControlOrIsAdmin :: Kontrakcja m => User -> [Permission] -> m a -> m a
 apiAccessControlOrIsAdmin apiuser perms successAction = do
@@ -40,7 +41,7 @@ apiAccessControlOrIsAdmin apiuser perms successAction = do
   -- If scrive admin or sales, should perform action anyway (unless non-existance error)
   let failAction =
         if isAdminOrSales then successAction else apiError insufficientPrivileges
-  userAccessControlImpl apiuser perms failAction successAction
+  apiAccessControlWithError apiuser perms failAction successAction
 
 accessControlLoggedIn :: Kontrakcja m => [Permission] -> m a -> m a
 accessControlLoggedIn perms successAction = do

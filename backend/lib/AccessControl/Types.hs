@@ -234,7 +234,7 @@ evalNeededPermExpr f (NeededPermissionsExprAnd aces) =
 hasPermissions :: AccessRoleTarget -> [Permission]
 hasPermissions (UserAR uid) =
   -- user can read and update himself and cannot grant it to anyone
-  [ Permission PermCanDo action $ UserR uid | action <- [ReadA, UpdateA] ]
+  [ Permission PermCanDo action $ UserR uid | action <- [ReadA, UpdateA, DeleteA] ]
 hasPermissions (UserGroupMemberAR _) =
   -- no special permissions for members
   []
@@ -248,7 +248,7 @@ hasPermissions (UserAdminAR ugid) =
     ]
     <>
        -- can read group and sub-groups
-       -- can allow someone else to Read groups and subgroups 
+       -- can allow someone else to Read groups and subgroups
        [ Permission kind ReadA $ UserGroupR ugid | kind <- [PermCanDo, PermCanGrant] ]
     <>
        -- can CRUD tokens for all users of this group and subgroups

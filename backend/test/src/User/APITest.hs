@@ -373,7 +373,7 @@ testUserSetDataRetentionPolicy = do
     let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy drp
     req      <- mkRequest POST [("data_retention_policy", inTextBS drpBS)]
     (res, _) <- runTestKontra req ctx apiCallSetDataRetentionPolicy
-    assertEqual "should return 200" (rsCode res) 200
+    assertEqual "should return 200" 200 (rsCode res)
 
     Just user' <- dbQuery $ GetUserByID $ user ^. #id
     assertEqual "policy should have been saved"

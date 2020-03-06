@@ -41,7 +41,6 @@ import API.V2.Utils
 import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
-import Doc.API.V2.Guards (guardThatUserExists)
 import Folder.Model
 import Happstack.Fields
 import InputValidation
@@ -214,24 +213,24 @@ apiCallGetUserPersonalToken = api $ do
               -- whether a user has an account with Scrive
                  throwM . SomeDBExtraException $ forbidden wrongPassMsg
 
-
 setup2FA :: Kontrakcja m => m Response
 setup2FA = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
-  if user ^. #totpActive
-    then V2.Ok <$> runJSONGenT (value "twofactor_active" True)
-    else do
-      key <- createTOTPKey
-      ok  <- dbUpdate $ SetUserTOTPKey (user ^. #id) key
-      if ok
-        then do
-          let email = user ^. #info % #email
-          url    <- view (#brandedDomain % #url) <$> getContext
-          qrCode <- liftIO $ makeQRFromURLEmailAndKey (T.unpack url) email key
-          return . V2.Ok <$> runJSONGen $ do
-            value "twofactor_active" False
-            value "qr_code"          (BS.unpack . Base64.encode . unQRCode $ qrCode)
-        else V2.apiError $ V2.serverError "Could not set TOTP key"
+  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+    if user ^. #totpActive
+      then V2.Ok <$> runJSONGenT (value "twofactor_active" True)
+      else do
+        key <- createTOTPKey
+        ok  <- dbUpdate $ SetUserTOTPKey (user ^. #id) key
+        if ok
+          then do
+            let email = user ^. #info % #email
+            url    <- view (#brandedDomain % #url) <$> getContext
+            qrCode <- liftIO $ makeQRFromURLEmailAndKey (T.unpack url) email key
+            return . V2.Ok <$> runJSONGen $ do
+              value "twofactor_active" False
+              value "qr_code"          (BS.unpack . Base64.encode . unQRCode $ qrCode)
+          else V2.apiError $ V2.serverError "Could not set TOTP key"
 
 confirm2FA :: Kontrakcja m => m Response
 confirm2FA = V2.api $ do
@@ -239,56 +238,61 @@ confirm2FA = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
   totpcode  <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterInt "totp"
   now       <- currentTime
-  case (user ^. #totpKey, user ^. #totpActive) of
-    (Just totpkey, False) -> if verifyTOTPCode totpkey now (fromIntegral totpcode)
-      then do
-        r <- dbUpdate $ ConfirmUserTOTPSetup (user ^. #id)
-        if r
-          then do
-            void $ dbUpdate $ LogHistoryTOTPEnable (user ^. #id)
-                                                   (ctx ^. #ipAddr)
-                                                   (ctx ^. #time)
-            return . V2.Ok <$> runJSONGen $ do
-              value "twofactor_active" r
-              value "totp_valid"       True
-          else V2.apiError $ V2.serverError "Could not confirm user TOTP setup"
-      else V2.apiError $ V2.requestParameterInvalid "totp" "The code is not valid"
-    (_, tfa) -> V2.Ok <$> runJSONGenT (value "twofactor_active" tfa)
+  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+    case (user ^. #totpKey, user ^. #totpActive) of
+      (Just totpkey, False) -> if verifyTOTPCode totpkey now (fromIntegral totpcode)
+        then do
+          r <- dbUpdate $ ConfirmUserTOTPSetup (user ^. #id)
+          if r
+            then do
+              void $ dbUpdate $ LogHistoryTOTPEnable (user ^. #id)
+                                                     (ctx ^. #ipAddr)
+                                                     (ctx ^. #time)
+              return . V2.Ok <$> runJSONGen $ do
+                value "twofactor_active" r
+                value "totp_valid"       True
+            else V2.apiError $ V2.serverError "Could not confirm user TOTP setup"
+        else V2.apiError $ V2.requestParameterInvalid "totp" "The code is not valid"
+      (_, tfa) -> V2.Ok <$> runJSONGenT (value "twofactor_active" tfa)
 
 disable2FA :: Kontrakcja m => m Response
 disable2FA = V2.api $ do
   ctx       <- getContext
   (user, _) <- V2.getAPIUserWithAnyPrivileges
-  if user ^. #totpActive
-    then do
-      r <- dbUpdate $ DisableUserTOTP (user ^. #id)
-      if r
-        then do
-          void $ dbUpdate $ LogHistoryTOTPDisable (user ^. #id)
-                                                  (ctx ^. #ipAddr)
-                                                  (ctx ^. #time)
-          V2.Ok <$> runJSONGenT (value "twofactor_active" False)
-        else V2.apiError $ V2.serverError "Could not disable TOTP"
-    else V2.Ok <$> runJSONGenT (value "twofactor_active" False)
+  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+    if user ^. #totpActive
+      then do
+        r <- dbUpdate $ DisableUserTOTP (user ^. #id)
+        if r
+          then do
+            void $ dbUpdate $ LogHistoryTOTPDisable (user ^. #id)
+                                                    (ctx ^. #ipAddr)
+                                                    (ctx ^. #time)
+            V2.Ok <$> runJSONGenT (value "twofactor_active" False)
+          else V2.apiError $ V2.serverError "Could not disable TOTP"
+      else V2.Ok <$> runJSONGenT (value "twofactor_active" False)
 
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile = api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
-  return $ Ok $ userJSONWithCompany user ugwp
+  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+    ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+    return . Ok $ userJSONWithCompany user ugwp
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription = api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
-  sub          <- getSubscription ugwp
-  return . Ok $ unjsonToJSON unjsonDef sub
+  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+    ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+    sub  <- getSubscription ugwp
+    return . Ok $ unjsonToJSON unjsonDef sub
 
 apiCallGetUsersFeatures :: Kontrakcja m => m Response
 apiCallGetUsersFeatures = V2.api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
-  jsonWithData <- getUserFeaturesJSON user
-  return . V2.Ok $ jsonWithData
+  user <- V2.getAPIUserWithAPIPersonal
+  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+    jsonWithData <- getUserFeaturesJSON user
+    return . V2.Ok $ jsonWithData
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
@@ -333,9 +337,10 @@ apiCallUpdateUserProfile :: forall  m . Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
   user <- V2.getAPIUserWithAPIPersonal
   ctx  <- getContext
-
-  -- allow empty strings through validation
-  let getParameter :: Text -> (Text -> InputValidation.Result Text) -> Text -> m Text
+  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+    -- allow empty strings through validation
+    let
+      getParameter :: Text -> (Text -> InputValidation.Result Text) -> Text -> m Text
       getParameter name validation prevValue = do
         mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation name $ emptyOK
           validation
@@ -345,130 +350,136 @@ apiCallUpdateUserProfile = api $ do
         :: Text -> (Text -> InputValidation.Result Text) -> (UserInfo -> Text) -> m Text
       getUserParameter n v getPrevValue = getParameter n v $ getPrevValue $ user ^. #info
 
-  companyposition <- getUserParameter "companyposition"
-                                      asValidPosition
-                                      (^. #companyPosition)
-  phone          <- getUserParameter "phone" asValidPhone (^. #phone)
-  personalnumber <- getUserParameter "personalnumber"
-                                     asValidPersonalNumber
-                                     (^. #personalNumber)
-  fstname         <- getUserParameter "fstname" asValidName (^. #firstName)
-  sndname         <- getUserParameter "sndname" asValidName (^. #lastName)
-  mHasAcceptedTOS <- apiV2ParameterOptional $ ApiV2ParameterBool "has_accepted_tos"
+    companyposition <- getUserParameter "companyposition"
+                                        asValidPosition
+                                        (^. #companyPosition)
+    phone          <- getUserParameter "phone" asValidPhone (^. #phone)
+    personalnumber <- getUserParameter "personalnumber"
+                                       asValidPersonalNumber
+                                       (^. #personalNumber)
+    fstname         <- getUserParameter "fstname" asValidName (^. #firstName)
+    sndname         <- getUserParameter "sndname" asValidName (^. #lastName)
+    mHasAcceptedTOS <- apiV2ParameterOptional $ ApiV2ParameterBool "has_accepted_tos"
 
-  let ui =
-        (user ^. #info)
-          & (#firstName .~ fstname)
-          & (#lastName .~ sndname)
-          & (#personalNumber .~ personalnumber)
-          & (#companyPosition .~ companyposition)
-          & (#phone .~ phone)
+    let ui =
+          (user ^. #info)
+            & (#firstName .~ fstname)
+            & (#lastName .~ sndname)
+            & (#personalNumber .~ personalnumber)
+            & (#companyPosition .~ companyposition)
+            & (#phone .~ phone)
 
-  mlang <- (join . (fmap langFromCode)) <$> getField "lang"
-  when_ (isJust mlang) $ dbUpdate $ SetUserSettings
-    (user ^. #id)
-    (user ^. #settings & #lang .~ fromJust mlang)
+    mlang <- (join . (fmap langFromCode)) <$> getField "lang"
+    when_ (isJust mlang) $ dbUpdate $ SetUserSettings
+      (user ^. #id)
+      (user ^. #settings & #lang .~ fromJust mlang)
 
-  void $ dbUpdate $ SetUserInfo (user ^. #id) ui
-  void $ dbUpdate $ LogHistoryUserInfoChanged (user ^. #id)
-                                              (ctx ^. #ipAddr)
-                                              (ctx ^. #time)
-                                              (user ^. #info)
-                                              ui
-                                              (ctx ^? #maybeUser % _Just % #id)
+    void $ dbUpdate $ SetUserInfo (user ^. #id) ui
+    void $ dbUpdate $ LogHistoryUserInfoChanged (user ^. #id)
+                                                (ctx ^. #ipAddr)
+                                                (ctx ^. #time)
+                                                (user ^. #info)
+                                                ui
+                                                (ctx ^? #maybeUser % _Just % #id)
 
-  whenJust mHasAcceptedTOS $ \case
-    True  -> void $ dbUpdate $ AcceptTermsOfService (user ^. #id) (ctx ^. #time)
-    False -> V2.apiError $ V2.requestParameterParseError
-      "has_accepted_tos"
-      "TOS acceptance cannot be revoked"
+    whenJust mHasAcceptedTOS $ \case
+      True  -> void $ dbUpdate $ AcceptTermsOfService (user ^. #id) (ctx ^. #time)
+      False -> V2.apiError $ V2.requestParameterParseError
+        "has_accepted_tos"
+        "TOS acceptance cannot be revoked"
 
-  if user ^. #isCompanyAdmin
-    then do
-      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
-      let ug = ugwpUG ugwp
-      companyname <- getParameter "companyname" asValidCompanyName $ ug ^. #name
-      let getAddrParameter n v prevValue =
-            getParameter n v $ ugwpAddress ugwp ^. prevValue
-      number     <- getAddrParameter "companynumber" asValidCompanyNumber #companyNumber
-      entityname <- getAddrParameter "companyentityname" asValidCompanyName #entityName
-      address    <- getAddrParameter "companyaddress" asValidAddress #address
-      zip'       <- getAddrParameter "companyzip" asValidZip #zipCode
-      city       <- getAddrParameter "companycity" asValidCity #city
-      country    <- getAddrParameter "companycountry" asValidCountry #country
-      let ug'         = set #name companyname ug
-          new_address = I.UserGroupAddress { companyNumber = number
-                                           , entityName    = entityname
-                                           , address       = address
-                                           , zipCode       = zip'
-                                           , city          = city
-                                           , country       = country
-                                           }
-          ug'' = case ug' ^. #address of
-            Just _ ->
-              -- change address directly if it wasn't inherited
-              set #address (Just new_address) ug'
-            Nothing -> case new_address == ugwpAddress ugwp of
-              True  -> ug'  -- no change => we keep inheriting the address
-              False -> set #address (Just new_address) ug'  -- stop inheriting
-      void $ dbUpdate $ UserGroupUpdate ug''
-      Ok <$> (runJSONGenT $ value "changed" True)
-    else do
-      fs <- mapM
-        getField
-        [ "companyname"
-        , "companynumber"
-        , "companyentityname"
-        , "companyaddress"
-        , "companyzip"
-        , "companycity"
-        , "companycountry"
-        ]
-      when (any isJust fs) $ V2.apiError $ V2.APIError
-        { errorType     = V2.InsufficientPrivileges
-        , errorHttpCode = 403
-        , errorMessage  =
-          "You do not have permission to perform this action on company settings"
-        }
-      Ok <$> (runJSONGenT $ value "changed" True)
+    if user ^. #isCompanyAdmin
+      then do
+        ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+        let ug = ugwpUG ugwp
+        companyname <- getParameter "companyname" asValidCompanyName $ ug ^. #name
+        let getAddrParameter n v prevValue =
+              getParameter n v $ ugwpAddress ugwp ^. prevValue
+        number     <- getAddrParameter "companynumber" asValidCompanyNumber #companyNumber
+        entityname <- getAddrParameter "companyentityname" asValidCompanyName #entityName
+        address    <- getAddrParameter "companyaddress" asValidAddress #address
+        zip'       <- getAddrParameter "companyzip" asValidZip #zipCode
+        city       <- getAddrParameter "companycity" asValidCity #city
+        country    <- getAddrParameter "companycountry" asValidCountry #country
+        let ug'         = set #name companyname ug
+            new_address = I.UserGroupAddress { companyNumber = number
+                                             , entityName    = entityname
+                                             , address       = address
+                                             , zipCode       = zip'
+                                             , city          = city
+                                             , country       = country
+                                             }
+            ug'' = case ug' ^. #address of
+              Just _ ->
+                -- change address directly if it wasn't inherited
+                set #address (Just new_address) ug'
+              Nothing -> case new_address == ugwpAddress ugwp of
+                True  -> ug'  -- no change => we keep inheriting the address
+                False -> set #address (Just new_address) ug'  -- stop inheriting
+        void $ dbUpdate $ UserGroupUpdate ug''
+        Ok <$> (runJSONGenT $ value "changed" True)
+      else do
+        fs <- mapM
+          getField
+          [ "companyname"
+          , "companynumber"
+          , "companyentityname"
+          , "companyaddress"
+          , "companyzip"
+          , "companycity"
+          , "companycountry"
+          ]
+        when (any isJust fs) $ V2.apiError $ V2.APIError
+          { errorType     = V2.InsufficientPrivileges
+          , errorHttpCode = 403
+          , errorMessage  =
+            "You do not have permission to perform this action on company settings"
+          }
+        Ok <$> (runJSONGenT $ value "changed" True)
 
 apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do
   ctx       <- getContext
   user      <- V2.getAPIUserWithAPIPersonal
   mnewemail <- getOptionalField asValidEmail "newemail"
-  case (Email <$> mnewemail) of
-    (Just newemail) -> do
-      mexistinguser <- dbQuery $ GetUserByEmail newemail
-      case mexistinguser of
-        Just _existinguser -> do
-          sendChangeToExistingEmailInternalWarningMail user newemail
-          Ok <$> (runJSONGenT $ value "send" False)
-        Nothing -> do
-          changeemaillink <- newEmailChangeRequestLink (user ^. #id) newemail
-          mailRequest <- mailEmailChangeRequest ctx Nothing user newemail changeemaillink
-          scheduleEmailSendout
-            (mailRequest
-              { to = [ MailAddress { fullname = getFullName user
-                                   , email    = unEmail newemail
-                                   }
-                     ]
-              }
-            )
-          let oldemail = user ^. #info ^. #email
-          mailNotification <- mailEmailChangeRequestedNotification ctx False user newemail
-          scheduleEmailSendout
-            (mailNotification
-              { to = [ MailAddress { fullname = getFullName user
-                                   , email    = unEmail oldemail
-                                   }
-                     ]
-              }
-            )
-          Ok <$> (runJSONGenT $ value "send" True)
-    Nothing -> Ok <$> (runJSONGenT $ value "send" False)
-
-
+  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+    case (Email <$> mnewemail) of
+      (Just newemail) -> do
+        mexistinguser <- dbQuery $ GetUserByEmail newemail
+        case mexistinguser of
+          Just _existinguser -> do
+            sendChangeToExistingEmailInternalWarningMail user newemail
+            Ok <$> (runJSONGenT $ value "send" False)
+          Nothing -> do
+            changeemaillink <- newEmailChangeRequestLink (user ^. #id) newemail
+            mailRequest     <- mailEmailChangeRequest ctx
+                                                      Nothing
+                                                      user
+                                                      newemail
+                                                      changeemaillink
+            scheduleEmailSendout
+              (mailRequest
+                { to = [ MailAddress { fullname = getFullName user
+                                     , email    = unEmail newemail
+                                     }
+                       ]
+                }
+              )
+            let oldemail = user ^. #info ^. #email
+            mailNotification <- mailEmailChangeRequestedNotification ctx
+                                                                     False
+                                                                     user
+                                                                     newemail
+            scheduleEmailSendout
+              (mailNotification
+                { to = [ MailAddress { fullname = getFullName user
+                                     , email    = unEmail oldemail
+                                     }
+                       ]
+                }
+              )
+            Ok <$> (runJSONGenT $ value "send" True)
+      Nothing -> Ok <$> (runJSONGenT $ value "send" False)
 
 {- |
    Handles submission of the signup form.
@@ -578,38 +589,38 @@ sendPasswordReminder user = do
 
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do
-  user   <- V2.getAPIUserWithAPIPersonal
-  scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
-  fmap Ok $ case scheme of
-    Just (ConstantUrlScheme url) -> runJSONGenT $ do
-      value "scheme"      ("constant" :: String)
-      value "api_version" (1 :: Int)
-      value "url"         url
-    Just (ConstantUrlSchemeV2 url) -> runJSONGenT $ do
-      value "scheme"      ("constant" :: String)
-      value "api_version" (2 :: Int)
-      value "url"         url
-    Just (SalesforceScheme _key) -> runJSONGenT $ do
-      value "scheme" ("salesforce" :: String)
-    Just (BasicAuthScheme _lg _pwd) -> runJSONGenT $ do
-      value "scheme" ("basic_auth" :: String)
-    Just (OAuth2Scheme _name _password _url _scope) -> runJSONGenT $ do
-      value "scheme" ("oauth2" :: String)
-    Just (Hi3GScheme _name _password _url _scope) -> runJSONGenT $ do
-      value "scheme" ("hi3g" :: String)
-    Nothing -> runJSONGenT $ do
-      value "scheme" ("none" :: String)
-
+  user <- V2.getAPIUserWithAPIPersonal
+  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+    scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
+    fmap Ok $ case scheme of
+      Just (ConstantUrlScheme url) -> runJSONGenT $ do
+        value "scheme"      ("constant" :: String)
+        value "api_version" (1 :: Int)
+        value "url"         url
+      Just (ConstantUrlSchemeV2 url) -> runJSONGenT $ do
+        value "scheme"      ("constant" :: String)
+        value "api_version" (2 :: Int)
+        value "url"         url
+      Just (SalesforceScheme _key) -> runJSONGenT $ do
+        value "scheme" ("salesforce" :: String)
+      Just (BasicAuthScheme _lg _pwd) -> runJSONGenT $ do
+        value "scheme" ("basic_auth" :: String)
+      Just (OAuth2Scheme _name _password _url _scope) -> runJSONGenT $ do
+        value "scheme" ("oauth2" :: String)
+      Just (Hi3GScheme _name _password _url _scope) -> runJSONGenT $ do
+        value "scheme" ("hi3g" :: String)
+      Nothing -> runJSONGenT $ do
+        value "scheme" ("none" :: String)
 
 apiCallTestSalesforceIntegration :: Kontrakcja m => m Response
-apiCallTestSalesforceIntegration = do
-  api $ do
-    (user, _, _) <- getAPIUser APIDocCheck
-    scheme       <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
-    murl         <- getField "url"
-    when (isNothing murl) $ do
-      throwM . SomeDBExtraException $ badInput $ "No 'url' parameter provided"
-    let url = fromJust murl
+apiCallTestSalesforceIntegration = api $ do
+  (user, _, _) <- getAPIUser APIDocCheck
+  scheme       <- dbQuery $ GetUserCallbackSchemeByUserID $ user ^. #id
+  murl         <- getField "url"
+  url          <- case murl of
+    Nothing  -> throwM . SomeDBExtraException . badInput $ "No 'url' parameter provided"
+    Just url -> return url
+  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
     fmap Ok $ case scheme of
       Just (SalesforceScheme token) -> do
         logInfo "Testing salesforce integration with user that has sf callback scheme"
@@ -651,23 +662,24 @@ apiCallSetSalesforceCallbacks = do
       $ object ["rq_headers" .= (show (rqHeaders rq))]
     -- END
 
-    (user, _) <- V2.getAPIUserWithAnyPrivileges
-    ctx       <- getContext
-    case (ctx ^. #salesforceConf) of
-      Nothing ->
-        V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
-      Just sc -> do
-        code   <- V2.apiV2ParameterObligatory (V2.ApiV2ParameterText "code")
-        mtoken <- flip runReaderT sc (getRefreshTokenFromCode code)
-        case mtoken of
-          Left emsg -> do
-            logAttention "Setting sf callback scheme failed"
-              $ object ["user_id" .= (user ^. #id), "msg" .= emsg]
-            V2.apiError $ V2.requestFailed emsg
-          Right token -> do
-            logInfo "Setting sf callback scheme worked" $ logObject_ user
-            dbUpdate $ UpdateUserCallbackScheme (user ^. #id) (SalesforceScheme token)
-            return $ V2.Ok $ runJSONGen $ value "status" ("ok" :: String)
+    user <- fst <$> V2.getAPIUserWithAnyPrivileges
+    apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+      ctx <- getContext
+      case (ctx ^. #salesforceConf) of
+        Nothing ->
+          V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
+        Just sc -> do
+          code   <- V2.apiV2ParameterObligatory (V2.ApiV2ParameterText "code")
+          mtoken <- flip runReaderT sc (getRefreshTokenFromCode code)
+          case mtoken of
+            Left emsg -> do
+              logAttention "Setting sf callback scheme failed"
+                $ object ["user_id" .= (user ^. #id), "msg" .= emsg]
+              V2.apiError $ V2.requestFailed emsg
+            Right token -> do
+              logInfo "Setting sf callback scheme worked" $ logObject_ user
+              dbUpdate $ UpdateUserCallbackScheme (user ^. #id) (SalesforceScheme token)
+              return $ V2.Ok $ runJSONGen $ value "status" ("ok" :: String)
 
 apiCallLoginUserAndGetSession :: Kontrakcja m => m Response
 apiCallLoginUserAndGetSession = V2.api $ do
@@ -692,73 +704,70 @@ apiCallLoginUserAndGetSession = V2.api $ do
 
 apiCallIsUserDeletable :: Kontrakcja m => m Response
 apiCallIsUserDeletable = V2.api $ do
-  user    <- V2.getAPIUserWithAPIPersonal
-  mReason <- dbQuery $ IsUserDeletable user
-  return $ V2.Ok $ runJSONGen $ case mReason of
-    Just reason -> do
-      value "deletable" False
-      value "reason"    reason
-    Nothing -> do
-      value "deletable" True
+  user <- V2.getAPIUserWithAPIPersonal
+  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+    mReason <- dbQuery $ IsUserDeletable user
+    return $ V2.Ok $ runJSONGen $ case mReason of
+      Just reason -> do
+        value "deletable" False
+        value "reason"    reason
+      Nothing -> do
+        value "deletable" True
 
 apiCallDeleteUser :: Kontrakcja m => m Response
 apiCallDeleteUser = V2.api $ do
   user  <- V2.getAPIUserWithAPIPersonal
   ctx   <- getContext
   email <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
-  unless (unEmail (user ^. #info % #email) == email)
-    $ V2.apiError
-    $ V2.requestParameterParseError
-        "email"
-        "the email provided does not match that of the user account"
-
-  mReason <- dbQuery $ IsUserDeletable user
-  case mReason of
-    Just reason -> V2.apiError $ V2.conflictError $ userNotDeletableReasonToString reason
-    Nothing     -> return ()
-
-  void $ dbUpdate $ DeleteUser (user ^. #id)
-  void $ dbUpdate $ LogHistoryAccountDeleted (user ^. #id)
-                                             (user ^. #id)
-                                             (ctx ^. #ipAddr)
-                                             (ctx ^. #time)
-
-  return $ V2.Ok ()
+  apiAccessControl user [canDo DeleteA . UserR $ user ^. #id] $ do
+    unless (unEmail (user ^. #info % #email) == email)
+      $ V2.apiError
+      $ V2.requestParameterParseError
+          "email"
+          "the email provided does not match that of the user account"
+    mReason <- dbQuery $ IsUserDeletable user
+    case mReason of
+      Just reason ->
+        V2.apiError $ V2.conflictError $ userNotDeletableReasonToString reason
+      Nothing -> return ()
+    void $ dbUpdate $ DeleteUser (user ^. #id)
+    void $ dbUpdate $ LogHistoryAccountDeleted (user ^. #id)
+                                               (user ^. #id)
+                                               (ctx ^. #ipAddr)
+                                               (ctx ^. #time)
+    return $ V2.Ok ()
 
 {-
  - User's data retention policy
  -}
-
 apiCallGetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallGetDataRetentionPolicy = V2.api $ do
   user <- V2.getAPIUserWithAPIPersonal
-  let drp = user ^. #settings % #dataRetentionPolicy
-  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
-  let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
-
-  return $ V2.Ok $ object
-    [ "data_retention_policy" .= unjsonToJSON unjsonDataRetentionPolicy drp
-    , "company_data_retention_policy" .= unjsonToJSON unjsonDataRetentionPolicy ugDRP
-    ]
+  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+    let drp = user ^. #settings % #dataRetentionPolicy
+    ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+    let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
+    return $ V2.Ok $ object
+      [ "data_retention_policy" .= unjsonToJSON unjsonDataRetentionPolicy drp
+      , "company_data_retention_policy" .= unjsonToJSON unjsonDataRetentionPolicy ugDRP
+      ]
 
 apiCallSetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallSetDataRetentionPolicy = V2.api $ do
   user <- V2.getAPIUserWithAPIPersonal
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
-  let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
-  drp <- V2.apiV2ParameterObligatory
-    $ V2.ApiV2ParameterJSON "data_retention_policy" unjsonDataRetentionPolicy
-  guardThatDataRetentionPolicyIsValid drp $ Just ugDRP
-
-  let settings' = user ^. #settings & #dataRetentionPolicy .~ drp
-  void $ dbUpdate $ SetUserSettings (user ^. #id) settings'
-
-  return $ V2.Ok ()
+  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+    let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
+    drp <- V2.apiV2ParameterObligatory
+      $ V2.ApiV2ParameterJSON "data_retention_policy" unjsonDataRetentionPolicy
+    guardThatDataRetentionPolicyIsValid drp $ Just ugDRP
+    let settings' = user ^. #settings & #dataRetentionPolicy .~ drp
+    void $ dbUpdate $ SetUserSettings (user ^. #id) settings'
+    return $ V2.Ok ()
 
 apiCallGetTokenForPersonalCredentials :: Kontrakcja m => UserID -> m Response
 apiCallGetTokenForPersonalCredentials uid = V2.api $ do
   -- Guards
-  void $ guardThatUserExists uid
   user <- V2.getAPIUserWithAPIPersonal
   apiAccessControl user [canDo UpdateA $ UserR uid] $ do
     minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
@@ -846,7 +855,6 @@ apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
 
       return $ V2.Ok $ (runJSONGen $ value "changed" True)
 
-
 apiCallChangeOtherUserEmail :: Kontrakcja m => UserID -> m Response
 apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
   ctx             <- getContext
@@ -897,8 +905,6 @@ apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
             )
           return $ V2.Ok $ (runJSONGen $ value "sent" True)
 
-
-
 apiCallActivateAccount :: Kontrakcja m => m Response
 apiCallActivateAccount = V2.api $ do
   ctx         <- getContext
@@ -909,33 +915,35 @@ apiCallActivateAccount = V2.api $ do
   email <- apiV2ParameterObligatory
     $ ApiV2ParameterTextWithValidation "email" asValidEmail
   muser <- dbQuery $ GetUserByEmail $ Email $ email
-  let errMsgToPreventAddressHarvesting = "Token is not valid"
+  -- we are throwing same error in all places to prevent address harvesting
+  let throwApiTokenInvalid = V2.apiError $ V2.requestFailed "Token is not valid"
   case (muser, view #hasAcceptedTOS =<< muser) of
-    (Nothing, _) -> V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
-    (_, Just _) -> V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
+    (Nothing  , _      ) -> throwApiTokenInvalid
+    (_        , Just _ ) -> throwApiTokenInvalid
     (Just user, Nothing) -> do
-      token        <- apiV2ParameterObligatory (ApiV2ParameterRead "token")
-      validRequest <- isJust <$> getUserAccountRequestUser (user ^. #id) token
-      unless (validRequest) $ do
-        V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
-      void $ dbUpdate $ DeleteUserAccountRequest (user ^. #id)
-      void $ dbUpdate $ AcceptTermsOfService (user ^. #id) (ctx ^. #time)
-      void $ dbUpdate $ LogHistoryTOSAccept (user ^. #id)
-                                            (ctx ^. #ipAddr)
-                                            (ctx ^. #time)
-                                            Nothing
-      password      <- apiV2ParameterObligatory (ApiV2ParameterText "password")
-      validPassword <- checkPassword (ctx ^. #passwordServiceConf) password
-      unless (validPassword) $ do
-        V2.apiError $ V2.requestParameterInvalid "password" "Password is weak"
-      passwordhash <- createPassword password
-      void . dbUpdate $ SetUserPassword (user ^. #id) passwordhash
-      void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
-                                                (ctx ^. #ipAddr)
-                                                (ctx ^. #time)
-                                                Nothing
-      return $ V2.Ok $ runJSONGen $ do
-        value "activated" True
+      let permissions = [canDo UpdateA . UserR $ user ^. #id]
+      apiAccessControlWithError user permissions throwApiTokenInvalid $ do
+        token        <- apiV2ParameterObligatory (ApiV2ParameterRead "token")
+        validRequest <- isJust <$> getUserAccountRequestUser (user ^. #id) token
+        unless validRequest $ void throwApiTokenInvalid
+        void $ dbUpdate $ DeleteUserAccountRequest (user ^. #id)
+        void $ dbUpdate $ AcceptTermsOfService (user ^. #id) (ctx ^. #time)
+        void $ dbUpdate $ LogHistoryTOSAccept (user ^. #id)
+                                              (ctx ^. #ipAddr)
+                                              (ctx ^. #time)
+                                              Nothing
+        password      <- apiV2ParameterObligatory (ApiV2ParameterText "password")
+        validPassword <- checkPassword (ctx ^. #passwordServiceConf) password
+        unless (validPassword) $ do
+          V2.apiError $ V2.requestParameterInvalid "password" "Password is weak"
+        passwordhash <- createPassword password
+        void . dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+        void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
+                                                  (ctx ^. #ipAddr)
+                                                  (ctx ^. #time)
+                                                  Nothing
+        return $ V2.Ok $ runJSONGen $ do
+          value "activated" True
 
 apiCallGetTags :: Kontrakcja m => m Response
 apiCallGetTags = V2.api $ do
