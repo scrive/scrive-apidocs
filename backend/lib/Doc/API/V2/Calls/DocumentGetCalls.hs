@@ -181,7 +181,7 @@ docApiV2GetByShortID shortDid = api $ do
 -- 'scrive://$domain/s/$did/$signatorylinkid/$signatorymagichash'.
 docApiV2GetQRCode :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
-  doc <- dbQuery $ GetDocumentByDocumentID did
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
 
   void $ guardDocumentReadAccess Nothing doc
   guardDocumentStatus Pending doc
@@ -279,7 +279,7 @@ docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
 docApiV2SigningData :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
   user <- getAPIUserWithAPIPersonal
-  doc  <- dbQuery $ GetDocumentByDocumentID did
+  doc  <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
   sl   <-
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid

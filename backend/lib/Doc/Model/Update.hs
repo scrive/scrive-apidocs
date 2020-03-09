@@ -583,6 +583,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AttachF
       sqlWhereExists $ sqlSelect "documents" $ do
         sqlWhereDocumentIDIs did
         sqlWhereDocumentStatusIs Preparation
+        sqlWhereDocumentWasNotPurged
+        sqlWhereDocumentIsNotReallyDeletedByAuthor
       -- FIXME:
       --
       -- We do not need to check if the file really exists because if
@@ -610,6 +612,8 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m DetachFile () where
       sqlWhereExists $ sqlSelect "documents" $ do
         sqlWhereDocumentIDIs did
         sqlWhereDocumentStatusIs Preparation
+        sqlWhereDocumentWasNotPurged
+        sqlWhereDocumentIsNotReallyDeletedByAuthor
     updateMTimeAndObjectVersion (actorTime a)
 
 -- | Append a sealed file to a document, updating modification time.
@@ -649,6 +653,7 @@ appendSealedFile did fid status = do
     sqlWhereExists $ sqlSelect "documents" $ do
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Closed
+      sqlWhereDocumentWasNotPurged
 
 data FixClosedErroredDocument = FixClosedErroredDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m FixClosedErroredDocument () where
@@ -689,6 +694,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpd
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
           sqlWhereDocumentStatusIs Pending
+          sqlWhereDocumentWasNotPurged
       updateMTimeAndObjectVersion (actorTime actor)
       return oldemail
     update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForMailBeforeClosing
@@ -718,6 +724,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
           sqlWhereDocumentStatusIs Pending
+          sqlWhereDocumentWasNotPurged
       updateMTimeAndObjectVersion (actorTime actor)
       return oldphone
     update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForSMSBeforeClosing
@@ -758,6 +765,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
           sqlWhereExists $ sqlSelect "documents" $ do
             sqlWhere "documents.id = signatory_links.document_id"
             sqlWhereDocumentStatusIs Pending
+            sqlWhereDocumentWasNotPurged
         -- If the AuthenticationToViewMethod does *not* need a personal number we
         -- need to check if it is still needed, otherwise make the field
         -- non-obligatory If it *does* need it, we need to make sure the field is
@@ -945,6 +953,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
           sqlWhereDocumentStatusIs Pending
+          sqlWhereDocumentWasNotPurged
       -- Make previously obligatory fields (due to authentication to sign)
       -- non-obligatory when the new authentication is different and they don't
       -- have placements
@@ -2146,6 +2155,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
               sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
               sqlWhereEq "documents.status" Pending
               sqlWhere "signatory_links.sign_time IS NULL"
+              sqlWhereDocumentWasNotPurged
 
           let oldValue = case oldField of
                 Just (SignatoryCheckboxField (chf@CheckboxField{})) ->
@@ -2262,6 +2272,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
           sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
           sqlWhereEq "documents.status" Pending
           sqlWhere "signatory_links.sign_time IS NULL"
+          sqlWhereDocumentWasNotPurged
       unless success $ do
         unexpectedError "Failed to update phone number after identification to view"
       void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
@@ -2285,6 +2296,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateS
           sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
           sqlWhereEq "documents.status" Pending
           sqlWhere "signatory_links.sign_time IS NULL"
+          sqlWhereDocumentWasNotPurged
       unless success $ do
         unexpectedError "Failed to update personal number after identification to view"
       void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
@@ -2308,6 +2320,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocu
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhereEq "id"     did
           sqlWhereEq "status" Preparation
+          sqlWhereDocumentWasNotPurged
 
 data RemoveDocumentAttachments = RemoveDocumentAttachments FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveDocumentAttachments Bool where
