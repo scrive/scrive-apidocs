@@ -107,8 +107,8 @@ unjsonDocument da =
     <**> (    field "is_saved" (not . documentunsaveddraft) "Whether document is saved"
          <**> (pure (\t d -> d { documentunsaveddraft = not t }))
          )
-    <**> (fieldOpt "folder_id" documentfolderid "ID of folder where document is stored"
-         <**> (pure $ \mFid d -> d { documentfolderid = mFid })
+    <**> (    field "folder_id" documentfolderid "ID of folder where document is stored"
+         <**> (pure $ \folderId d -> d { documentfolderid = folderId })
          )
     <*   (fieldReadonly "is_shared"
                         isDocumentShared

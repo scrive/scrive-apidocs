@@ -1232,7 +1232,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
       actor
     return success
 
-data NewDocument = NewDocument User Text DocumentType TimeZoneName Int Actor (Maybe FolderID)
+data NewDocument = NewDocument User Text DocumentType TimeZoneName Int Actor FolderID
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MonadBase IO m) => DBUpdate m NewDocument Document where
   update (NewDocument user title documenttype timezone nrOfOtherSignatories actor desiredFolderId)
     = do
@@ -1254,18 +1254,17 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
                                       []
 
       token <- random
-      let doc = defaultDocument
-            { documenttitle             = title
-            , documentsignatorylinks    = authorlink : othersignatories
-            , documenttype              = documenttype
-            , documentlang              = getLang user
-            , documentctime             = ctime
-            , documentmtime             = ctime
-            , documentauthorattachments = []
-            , documentmagichash         = token
-            , documenttimezonename      = timezone
-            , documentfolderid          = desiredFolderId <|> user ^. #homeFolderID
-            }
+      let doc = defaultDocument { documenttitle             = title
+                                , documentsignatorylinks = authorlink : othersignatories
+                                , documenttype              = documenttype
+                                , documentlang              = getLang user
+                                , documentctime             = ctime
+                                , documentmtime             = ctime
+                                , documentauthorattachments = []
+                                , documentmagichash         = token
+                                , documenttimezonename      = timezone
+                                , documentfolderid          = desiredFolderId
+                                }
 
       insertDocument doc
 
@@ -1955,8 +1954,8 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime             = actorTime actor
       , documentmtime             = actorTime actor
       , documentshareablelinkhash = Nothing
-      , documentfolderid          = (view #homeFolderID =<< mAuthorUser)
-                                      `mplus` (documentfolderid doc)
+      , documentfolderid          = fromMaybe (documentfolderid doc)
+                                              (view #homeFolderID =<< mAuthorUser)
       }
 
     return $ documentid <$> mDoc
@@ -2397,9 +2396,7 @@ data UpdateDraft = UpdateDraft Document Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateDraft Bool where
   update (UpdateDraft document actor) = updateDocument $ const $ and <$> sequence
     [ update $ SetDocumentTitle (documenttitle document) actor
-    , update $ maybe (unexpectedError "folder_id should have a value")
-                     (\fid -> SetDocumentFolderID fid actor)
-                     (documentfolderid document)
+    , update $ SetDocumentFolderID (documentfolderid document) actor
     , update $ SetDaysToSign (documentdaystosign document) actor
     , update $ SetDaysToRemind (documentdaystoremind document) actor
     , update $ SetDocumentLang (getLang document) actor

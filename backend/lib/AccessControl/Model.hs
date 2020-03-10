@@ -105,7 +105,7 @@ derivedRoles user ug =
                      mGroupHomeFolderID
       userRoles =
           maybe [] (\hfid -> [SharedTemplateUserAR hfid]) mGroupHomeFolderID
-            <> maybe [] (\hfid -> [FolderUserAR hfid]) (user ^. #homeFolderID)
+            <> maybe [] (\folderId -> [FolderUserAR folderId]) (user ^. #homeFolderID)
             <> [UserAR uid]
   in  AccessRoleImplicitUser uid <$> adminOrUserRoles <> userRoles
 

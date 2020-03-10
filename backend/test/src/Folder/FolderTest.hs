@@ -17,7 +17,6 @@ import qualified Data.Unjson as Unjson
 
 import AccessControl.Model
 import AccessControl.Types
-import Administration.AdministrationControl
 import Context
 import DB
 import Doc.API.V2.AesonTestUtils
@@ -56,11 +55,10 @@ folderTests env = testGroup
   , testThat "Cannot delete a Folder with subfolders"
              env
              testCannotDeleteFolderWithSubfolders
-  , testThat "Migration triggers work"                    env testMigrationTriggersWork
-  , testThat "Test creating groups works in API "         env testFolderAPICreate
-  , testThat "Test updating groups works in API"          env testFolderAPIUpdate
-  , testThat "Test reading groups works in API"           env testFolderAPIGet
-  , testThat "Test folder deletion endpoint works in API" env testFolderAPIDelete
+  , testThat "Test creating groups works in API "              env testFolderAPICreate
+  , testThat "Test updating groups works in API"               env testFolderAPIUpdate
+  , testThat "Test reading groups works in API"                env testFolderAPIGet
+  , testThat "Test folder deletion endpoint works in API"      env testFolderAPIDelete
   , testThat "Test listing documents in a folder works in API" env testFolderAPIListDocs
   ]
 
@@ -120,8 +118,7 @@ testPartnerUsersWithFolders = do
   ug <- guardJustM . dbQuery $ UserGroupGet cid
   assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
-  user <- fmap head . dbQuery $ UserGroupGetUsers cid
-  assertBool "User has home Folder" . isJust $ user ^. #homeFolderID
+  user       <- fmap head . dbQuery $ UserGroupGetUsers cid
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ user ^. #homeFolderID
   assertEqual "User home folder is child of UserGroup home folder"
               (ug ^. #homeFolderID)
@@ -211,9 +208,7 @@ testNewCompanyAccount = do
     ]
   void . runTestKontra bobReq ctx $ handleAddUserGroupAccount
   Just userBob <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  assertBool "User has home Folder" . isJust $ userBob ^. #homeFolderID
-
-  userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userBob ^. #homeFolderID
+  userFolder   <- guardJustM . dbQuery . FolderGet . fromJust $ userBob ^. #homeFolderID
   assertEqual "User home folder is child of UserGroup home folder"
               (ug ^. #homeFolderID)
               (userFolder ^. #parentID)
@@ -312,48 +307,6 @@ testCannotDeleteFolderWithSubfolders = do
   commit
   -- deleting folder B works
   runSQL_ $ "DELETE from folders where id = " <?> folderB ^. #id
-
-testMigrationTriggersWork :: TestEnv ()
-testMigrationTriggersWork = do
-  let templateWithoutFolders = randomUserTemplate
-        { groupID      = fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
-                           { groupHomeFolderID = return Nothing
-                           }
-        , homeFolderID = \_ -> return Nothing
-        }
-
-  user <- instantiateUser templateWithoutFolders
-  void $ instantiateUser templateWithoutFolders
-  void $ instantiateUser templateWithoutFolders
-  assertCountAllFolders "Created no folders" 0
-
-  void $ addRandomDocumentWithAuthor user
-
-  ctx0 <- mkContext defaultLang
-  let ctx =
-        set #adminAccounts [user ^. #info % #email] . set #maybeUser (Just user) $ ctx0
-  req <- mkRequest GET []
-  void $ runTestKontra req ctx $ handleTriggerMigrateFolders 1
-  assertCountAllFolders "Added Folders for 1 UserGroup with 1 User" 2
-
-  void $ runTestKontra req ctx $ handleTriggerMigrateFolders 2
-  assertCountAllFolders "Added the rest of Folders" 6
-
-  Just user' <- dbQuery . GetUserByID $ user ^. #id
-
-  void $ addRandomDocumentWithAuthor user'
-
-  assertSQLCount "All documents" 2 "SELECT COUNT(*) FROM documents"
-  -- only 1 document was added after migration
-  assertSQLCount "Documents without folders"
-                 1
-                 "SELECT COUNT(*) FROM documents where folder_id IS NULL"
-
-  void $ runTestKontra req ctx $ handleTriggerMigrateDocuments 1
-
-  assertSQLCount "Documents without folders"
-                 0
-                 "SELECT COUNT(*) FROM documents where folder_id IS NULL"
 
 -- API tests
 testFolderAPICreate :: TestEnv ()

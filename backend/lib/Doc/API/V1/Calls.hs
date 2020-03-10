@@ -183,7 +183,10 @@ apiCallV1CreateFromFile = api $ do
       return (Just fileid', T.pack $ takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone  <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
-  (dbUpdate $ NewDocument user title doctype timezone 0 actor Nothing) `withDocumentM` do
+  folderId  <- case user ^. #homeFolderID of
+    Just fid -> return fid
+    Nothing  -> throwM $ SomeDBExtraException $ serverError "user has no home folder"
+  (dbUpdate $ NewDocument user title doctype timezone 0 actor folderId) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
       Nothing      -> return ()

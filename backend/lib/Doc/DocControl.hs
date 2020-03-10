@@ -53,6 +53,8 @@ import qualified Data.Traversable as T
 import qualified Text.JSON.Gen as J
 
 import Analytics.Include
+import API.V2.Errors
+import API.V2.MonadUtils
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
@@ -148,13 +150,17 @@ handleNewDocument' user ugwp = do
   timezone <- fromMaybe defaultTimeZoneName
     <$> T.sequence (mkTimeZoneName <$> mtimezonename)
   timestamp <- formatTimeSimpleWithTZ timezone (ctx ^. #time)
-  doc       <- dbUpdate $ NewDocument user
-                                      (T.replace "  " " " $ title <> " " <> timestamp)
-                                      Signable
-                                      timezone
-                                      1
-                                      actor
-                                      Nothing
+  folderId  <- case user ^. #homeFolderID of
+    Just fid -> return fid
+    Nothing ->
+      apiError $ requestFailed "Unable to create document for user without home folder"
+  doc <- dbUpdate $ NewDocument user
+                                (T.replace "  " " " $ title <> " " <> timestamp)
+                                Signable
+                                timezone
+                                1
+                                actor
+                                folderId
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
   (authToView, authToSign, invitationDelivery, confirmationDelivery) <- do

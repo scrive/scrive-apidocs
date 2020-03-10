@@ -166,7 +166,7 @@ getMockDocStatus md = case mockDocStatus md of
       $  "Could not parse MockDoc status to DocumentStatus: "
       <> mockDocStatus md
 
-getMockDocFolderId :: MockDoc -> Maybe FolderID
+getMockDocFolderId :: MockDoc -> FolderID
 getMockDocFolderId = mockDocFolderId
 
 getMockDocDaysToSign :: MockDoc -> Int
@@ -492,4 +492,4 @@ setForSigNumberFromMockDoc i f md = md
     updatedSigLinks = insert updatedSL . delete originalSL . sort . mockDocParties $ md
 
 moveMockDoc :: MockDoc -> FolderID -> MockDoc
-moveMockDoc md fid = md { mockDocFolderId = Just fid }
+moveMockDoc md fid = md { mockDocFolderId = fid }
