@@ -1,7 +1,7 @@
 module UserGroup.FreeDocumentTokens.Model (
     UserGroupFreeDocumentTokensGet(..)
   , UserGroupFreeDocumentTokensUpdate(..)
-  , UserGroupFreeDocumentTokensUseOneIfOnFreePlan(..)
+  , UserGroupFreeDocumentTokensUseOneIfIfPossible(..)
   , module UserGroup.FreeDocumentTokens.Types
   ) where
 
@@ -12,7 +12,6 @@ import Log
 import DB
 import UserGroup.FreeDocumentTokens.Types
 import UserGroup.Types
-import UserGroup.Types.PaymentPlan
 
 fetchFreeDocumentTokens :: (Int32, UTCTime) -> FreeDocumentTokens
 fetchFreeDocumentTokens (count, validity) = freeDocumentTokensFromValues count validity
@@ -23,16 +22,14 @@ userGroupFreeDocumentTokensSelectors =
   , "user_group_free_document_tokens.tokens_validity"
   ]
 
-data UserGroupFreeDocumentTokensUseOneIfOnFreePlan = UserGroupFreeDocumentTokensUseOneIfOnFreePlan UserGroupID
-instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupFreeDocumentTokensUseOneIfOnFreePlan () where
-  update (UserGroupFreeDocumentTokensUseOneIfOnFreePlan ugid) = do
-    runQuery_ . sqlUpdate "user_group_free_document_tokens" $ do
+data UserGroupFreeDocumentTokensUseOneIfIfPossible = UserGroupFreeDocumentTokensUseOneIfIfPossible UserGroupID
+instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupFreeDocumentTokensUseOneIfIfPossible Bool where
+  update (UserGroupFreeDocumentTokensUseOneIfIfPossible ugid) = do
+    count <- runQuery . sqlUpdate "user_group_free_document_tokens" $ do
       sqlSetCmd "tokens_count" "tokens_count - 1"
+      sqlWhere "tokens_count > 0"
       sqlWhereEq "user_group_id" ugid
-      sqlWhereExists . sqlSelect "user_group_invoicings" $ do
-        sqlResult "TRUE"
-        sqlWhereEq "user_group_id" $ ugid
-        sqlWhereEq "payment_plan" $ FreePlan
+    return $ count == 1
 
 data UserGroupFreeDocumentTokensUpdate = UserGroupFreeDocumentTokensUpdate UserGroupID FreeDocumentTokens
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupFreeDocumentTokensUpdate () where

@@ -82,8 +82,11 @@ import OAuth.Model
 import User.Action
 import User.Email (Email(..))
 import User.Model
+import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
 import UserGroup.Types
+import UserGroup.Types.PaymentPlan
+import UserGroup.Types.Subscription
 import Util.Actor (Actor)
 import Util.HasSomeUserInfo (getEmail, getMobile)
 import Util.PDFUtil
@@ -231,6 +234,16 @@ docApiV2Start did = logDocument did . api $ do
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime t actor
     postDocumentPreparationChange authorSignsNow timezone
+    ugwp         <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+    subscription <- getSubscription ugwp
+    case ugSubPaymentPlan subscription of
+      Just FreePlan -> do
+        updated <- dbUpdate
+          $ UserGroupFreeDocumentTokensUseOneIfIfPossible (user ^. #groupID)
+        case updated of
+          True  -> return ()
+          False -> apiError $ documentActionForbiddenBecauseNotEnoughTokens
+      _ -> return ()
     dbUpdate $ ChargeUserGroupForStartingDocument did
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument

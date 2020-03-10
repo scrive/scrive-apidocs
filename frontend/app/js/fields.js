@@ -362,6 +362,7 @@ var Field = exports.Field = Backbone.Model.extend({
               || signatory.emailMobileDelivery()
               || signatory.smsPinAuthenticationToSign()
               || signatory.smsPinAuthenticationToView()
+              || signatory.smsPinAuthenticationToViewArchived()
               || signatory.mobileConfirmationDelivery()
               || signatory.emailMobileConfirmationDelivery()
       ) {

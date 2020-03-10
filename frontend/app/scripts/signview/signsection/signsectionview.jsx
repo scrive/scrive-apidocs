@@ -401,6 +401,10 @@ var Task = require("../navigation/task");
         document.checkingSigning(
           function () { self.handleAfterSignOrApproveRedirectOrReload(); },
           function (s) {
+            if (!self.isOnStep("eid-nets-process")) {
+              // must have been cancelled, no reason to continue
+              return;
+            }
             netsSigning.setStatus(s);
             setTimeout(checkSigning, 1000);
           },

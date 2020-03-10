@@ -526,10 +526,28 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
     Left
       $ documentStateError
           "Some parties have an invalid personal/mobile numbers, their 'authentication_to_sign' requires it to be valid or empty."
-  unless (all signatoryHasValidMobileForIdentifyToView $ documentsignatorylinks doc) $ do
-    Left
-      $ documentStateError
-          "Some parties have an invalid mobile number and it is required for identification to view document."
+  unless
+      ( all
+          (signatoryHasValidMobileForIdentifyToView
+            signatorylinkauthenticationtoviewmethod
+          )
+      $ documentsignatorylinks doc
+      )
+    $ do
+        Left
+          $ documentStateError
+              "Some parties have an invalid mobile number and it is required for identification to view document."
+  unless
+      ( all
+          (signatoryHasValidMobileForIdentifyToView
+            signatorylinkauthenticationtoviewarchivedmethod
+          )
+      $ documentsignatorylinks doc
+      )
+    $ do
+        Left
+          $ documentStateError
+              "Some parties have an invalid mobile number and it is required for identification to view archived document."
   when (any (isAuthor && isApprover) $ documentsignatorylinks doc) $ do
     Left $ documentStateError "Author can't be an approver"
   unless (all signatoryThatIsApproverHasStandardAuthToSign $ documentsignatorylinks doc)
@@ -613,13 +631,12 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
         VerimiAuthenticationToView   -> isValidEmail $ getEmail sl
         IDINAuthenticationToView     -> isValidEmail $ getEmail sl
 
-    signatoryHasValidMobileForIdentifyToView sl =
-      case (signatorylinkauthenticationtoviewmethod sl) of
-        NOBankIDAuthenticationToView ->
-          (isGood $ asValidPhoneForNorwegianBankID (getMobile sl))
-            || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))
-        SMSPinAuthenticationToView -> isGood $ asValidPhoneForSMS (getMobile sl)
-        _ -> True
+    signatoryHasValidMobileForIdentifyToView viewmethod sl = case viewmethod sl of
+      NOBankIDAuthenticationToView ->
+        (isGood $ asValidPhoneForNorwegianBankID (getMobile sl))
+          || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))
+      SMSPinAuthenticationToView -> isGood $ asValidPhoneForSMS (getMobile sl)
+      _ -> True
 
     signatoryThatIsApproverHasStandardAuthToSign sl =
       (not $ isApprover sl)

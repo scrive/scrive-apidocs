@@ -3629,6 +3629,7 @@ testSinatoryNameMatch = do
   assertEqual "signatory with two dot initials should match" SigningData.Match
     $ SigningData.matchSignatoryName (mkSignatoryLink "" "A.A. Battery")
                                      (mkTransactionData "AA Battery")
+
   where
     mkSignatoryLink firstName lastName = defaultSignatoryLink
       { signatoryfields = [ fieldForTests (NameFI (NameOrder 1)) firstName

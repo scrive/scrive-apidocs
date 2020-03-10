@@ -161,6 +161,7 @@ import TestKontra
 import User.Email
 import User.Model
 import User.Password.Internal (Password(..))
+import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -961,7 +962,11 @@ instantiateUserGroup UserGroupTemplate { groupHomeFolderID = generateHomeFolderI
     homeFolderID <- generateHomeFolderID
     internalTags <- generateInternalTags
     externalTags <- generateExternalTags
-    dbUpdate . UserGroupCreate $ I.UserGroup { .. }
+    ug           <- dbUpdate . UserGroupCreate $ I.UserGroup { .. }
+    now          <- currentTime
+    let fdts = freeDocumentTokensFromValues 10 (10 `minutesAfter` now)
+    dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) fdts
+    return ug
 
 data UserTemplate m = UserTemplate
   { password :: Maybe Text

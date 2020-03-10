@@ -11,6 +11,7 @@ module API.V2.Errors (
   , signatoryStateError
   , signatoryLinkForDocumentNotFound
   , documentActionForbidden
+  , documentActionForbiddenBecauseNotEnoughTokens
   , documentNotFound
   , resourceNotFound
   -- * Internal to API.V2
@@ -229,6 +230,15 @@ documentActionForbidden = APIError { errorType     = DocumentActionForbidden
                                    , errorMessage  = msg
                                    }
   where msg = "You do not have permission to perform this action on the document"
+
+documentActionForbiddenBecauseNotEnoughTokens :: APIError
+documentActionForbiddenBecauseNotEnoughTokens = APIError
+  { errorType     = DocumentActionForbidden
+  , errorHttpCode = 403
+  , errorMessage  = msg
+  }
+  where
+    msg = "You do not have enough document tokens to perform this action on the document"
 
 documentNotFound :: DocumentID -> APIError
 documentNotFound did =

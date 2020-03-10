@@ -654,14 +654,6 @@ apiCallSetSalesforceCallbacks = do
   V2.api $ do
     -- We allow all permission although workflow with Partners API
     -- should use APIPersonal.
-
-    -- START: Following code is placed just for debuging purposes for Telia/SF case (29.01.2020).
-    -- It should be removed within 7 days of that date as it is a security risk.
-    rq <- askRq
-    logInfo "Started setting sf callback scheme (!REMOVE_IT! !IMPORTANT!)"
-      $ object ["rq_headers" .= (show (rqHeaders rq))]
-    -- END
-
     user <- fst <$> V2.getAPIUserWithAnyPrivileges
     apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
       ctx <- getContext

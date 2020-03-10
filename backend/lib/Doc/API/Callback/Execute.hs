@@ -250,6 +250,8 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
             , "\n%{http_code}"
             , "-L" -- make curl follow redirects
             , "-H"
+            , "Content-type: application/x-www-form-urlencoded; charset=UTF-8"
+            , "-H"
             , T.unpack $ "Authorization: Bearer " <> t
             , "--data-binary"
             , "@-"          -- take binary data from stdin
