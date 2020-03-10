@@ -29,6 +29,7 @@ type alias Document =
     , status : DocumentStatus
     , isTemplate : Bool
     , isShared : Bool
+    , shareableLink : M.Maybe String
     }
 
 
@@ -86,6 +87,7 @@ documentDecoder =
         |> DP.required "status" documentStatusDecoder
         |> DP.required "is_template" D.bool
         |> DP.required "is_shared" D.bool
+        |> DP.required "shareable_link" (D.nullable D.string)
 
 
 documentsDecoder : Decoder (List Document)
