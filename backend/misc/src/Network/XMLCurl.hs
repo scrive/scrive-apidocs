@@ -112,7 +112,7 @@ curlTransport ssl curlAuth url on_failure debug_fun xml_request_bin additionalHe
       curl
       [ CurlWriteFunction $ gatherOutput_ fetch_body
       , CurlNoSignal True
-      , CurlTimeout 2
+      , CurlTimeout 5
       , CurlURL url
       , CurlSSLVerifyPeer $ case ssl of
         SecureSSL   -> True
