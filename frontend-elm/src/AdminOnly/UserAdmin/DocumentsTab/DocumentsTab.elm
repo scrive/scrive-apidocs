@@ -37,6 +37,7 @@ import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
 import List as L
 import Maybe as M
+import Maybe.Extra as M
 import Time exposing (Month(..), Posix, toDay, toHour, toMinute, toMonth, toYear, utc)
 import Utils exposing (..)
 
@@ -299,7 +300,8 @@ viewDocuments model documents =
                         [ th "col-3" SCMtime [ text "Last event", sortIndicator SCMtime sorting ]
                         , th "col-4" SCTitle [ text "Title", sortIndicator SCTitle sorting ]
                         , th "col-3" SCAuthor [ text "Owner", sortIndicator SCAuthor sorting ]
-                        , Table.th [ Table.cellAttr <| class "col-2" ] [ text "Shared" ]
+                        , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Shareable link" ]
+                        , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Shared" ]
                         ]
                 , tbody =
                     Table.tbody [] <|
@@ -382,6 +384,7 @@ viewTemplate template =
             |> L.filterMap (\ft -> M.map text <| authorFieldText ft template)
             |> L.intersperse (br [] [])
             |> td
+        , td [ text <| ite (isJust template.shareableLink) "✔" "" ] -- \{2714}
         , td [ text <| ite template.isShared "✔" "" ] -- \{2714}
         ]
 
