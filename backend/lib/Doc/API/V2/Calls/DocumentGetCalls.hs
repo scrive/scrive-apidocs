@@ -28,6 +28,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Text.JSON as J
 
+import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.V2

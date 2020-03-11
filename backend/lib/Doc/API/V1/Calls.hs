@@ -51,6 +51,7 @@ import qualified Text.JSON as J
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
+import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.Monad.V1

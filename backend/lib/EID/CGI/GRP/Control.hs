@@ -21,6 +21,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Text.StringTemplates.Fields as F
 
+import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import Chargeable.Model

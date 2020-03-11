@@ -47,6 +47,7 @@ import Log
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
+import AccessControl.Check
 import AccessControl.Types
 import API.V2
 import API.V2.Errors

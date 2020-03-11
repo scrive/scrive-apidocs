@@ -34,6 +34,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 import qualified Text.JSON as J
 
+import AccessControl.Check
 import AccessControl.Types
 import API.Monad.V1
 import API.V2.Parameters

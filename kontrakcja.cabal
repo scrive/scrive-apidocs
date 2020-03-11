@@ -122,6 +122,7 @@ Library
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   Exposed-modules: AccessControl.API
+                 , AccessControl.Check
                  , AccessControl.JSON
                  , AccessControl.Migrations
                  , AccessControl.Model

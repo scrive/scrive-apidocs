@@ -19,6 +19,7 @@ import Data.Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
 
+import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.V2
