@@ -1,4 +1,4 @@
-module Utils exposing (Action, Globals, PageUrl, Render, SortOrder(..), Sorting, Status(..), boolToJson, datetimeDecoder, emptyPageUrl, encodeSortOrder, enumSortOrder, firstJust, flip, formBody, fromStatus, handleSub, httpErrorToString, innerCmd, innerHtml, innerLiftCmd, isInteger, isJust, ite, joinCmd, joinEither, joinHtml, liftCmd, liftHtml, liftInnerHtml, liftOptionalUpdateHandler, liftOptionalViewHandler, liftUpdateHandler, mSearchToQuery, mSortingFromSortByOrder, mSortingToQuery, mapGlobals, monthToInt, outerCmd, outerHtml, perform, render, returnModel, sortIndicator, statusMap, statusMerge2, statusMerge3, stringNonEmpty, toggleOrder, toggleSorting, viewError, viewMonth)
+module Utils exposing (..)
 
 import Either exposing (Either(..))
 import EnumExtra as Enum exposing (Enum)
@@ -300,7 +300,6 @@ firstJust maybes =
 stringNonEmpty : String -> Maybe String
 stringNonEmpty str =
     ite (String.isEmpty str) Nothing (Just str)
-
 
 viewError : Html msg
 viewError =

@@ -16,14 +16,12 @@ import AdminOnly.UserGroupAdmin.DetailsTab.DetailsTab as DetailsTab
 import AdminOnly.UserGroupAdmin.PaymentsTab as PaymentsTab
 import AdminOnly.UserGroupAdmin.StatisticsTab as StatisticsTab exposing (Config(..))
 import AdminOnly.UserGroupAdmin.StructureTab as StructureTab
+import AdminOnly.UserGroupAdmin.UserGroupBrandingTab as UserGroupBrandingTab
 import AdminOnly.UserGroupAdmin.UsersTab as UsersTab
 import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Spacing as Spacing
-import Component.FlashMessage as FlashMessage
-import Component.UserGroup.Page as BrandingComponent
 import Dict
 import Either exposing (Either(..))
-import FlashMessage
 import Html exposing (text)
 import Maybe as M
 import Monocle.Optional exposing (Optional)
@@ -42,7 +40,7 @@ type Tab
     = DetailsTab
     | UsersTab UsersTab.Page
     | StructureTab
-    | BrandingTab
+    | BrandingTab UserGroupBrandingTab.Page
     | PaymentsTab
     | StatisticsTab StatisticsTab.Page
     | TemplatesTab DocumentsTab.Page
@@ -55,11 +53,12 @@ type alias Model =
     , mDetailsTab : Maybe DetailsTab.Model
     , mUsersTab : Maybe UsersTab.Model
     , mStructureTab : Maybe StructureTab.Model
-    , brandingTab : BrandingComponent.State
+    , mBrandingTab : Maybe UserGroupBrandingTab.State
     , mPaymentsTab : Maybe PaymentsTab.Model
     , mStatisticsTab : Maybe StatisticsTab.Model
     , mTemplatesTab : Maybe DocumentsTab.Model
     , mDocumentsTab : Maybe DocumentsTab.Model
+    , xtoken : String
     }
 
 
@@ -110,8 +109,7 @@ type Msg
     | DetailsTabMsg DetailsTab.Msg
     | UsersTabMsg UsersTab.Msg
     | StructureTabMsg StructureTab.Msg
-    | BrandingTabMsg BrandingComponent.Msg
-    | BrandingOutMsg BrandingComponent.OutMsg
+    | BrandingTabMsg UserGroupBrandingTab.Msg
     | PaymentsTabMsg PaymentsTab.Msg
     | StatisticsTabMsg StatisticsTab.Msg
     | TemplatesTabMsg DocumentsTab.Msg
@@ -120,36 +118,21 @@ type Msg
 
 init : Globals msg -> Page -> ( Model, Cmd Msg )
 init globals page =
-    let
-        ( brandingTabState, cmd1 ) =
-            BrandingComponent.initialize
-                { xtoken = globals.xtoken
-                , userGroupId = page.ugid
-                }
-
-        model =
+    let model =
             { page = Page "" DetailsTab
             , mDetailsTab = Nothing
             , mUsersTab = Nothing
             , mStructureTab = Nothing
-            , brandingTab = brandingTabState
+            , mBrandingTab = Nothing
             , mPaymentsTab = Nothing
             , mStatisticsTab = Nothing
             , mTemplatesTab = Nothing
             , mDocumentsTab = Nothing
             , tabState = Tab.customInitialState DetailsTab.tabName
+            , xtoken = globals.xtoken
             }
 
-        ( model2, cmd2 ) =
-            updatePage page model
-
-        cmd3 =
-            Cmd.batch
-                [ Cmd.map BrandingTabMsg cmd1
-                , cmd2
-                ]
-    in
-    ( model2, cmd3 )
+    in updatePage page model
 
 
 fromPage : Page -> PageUrl
@@ -166,10 +149,13 @@ fromPage page =
                 StructureTab ->
                     ( StructureTab.tabName, emptyPageUrl )
 
-                BrandingTab ->
+                BrandingTab UserGroupBrandingTab.EditBrandingTab  ->
                     ( "branding"
-                    , emptyPageUrl
-                    )
+                    , emptyPageUrl )
+
+                BrandingTab UserGroupBrandingTab.EditThemeTab  ->
+                    ( "theme"
+                    , emptyPageUrl )
 
                 PaymentsTab ->
                     ( PaymentsTab.tabName, emptyPageUrl )
@@ -228,7 +214,10 @@ parseTab mFragment mSearch mSortBy mOrder mSubTab _ _ _ =
                   )
                 , ( StructureTab.tabName, StructureTab )
                 , ( "branding"
-                  , BrandingTab
+                  , BrandingTab UserGroupBrandingTab.EditBrandingTab
+                  )
+                , ( "theme"
+                  , BrandingTab UserGroupBrandingTab.EditThemeTab
                   )
                 , ( PaymentsTab.tabName, PaymentsTab )
                 , ( StatisticsTab.tabName
@@ -259,8 +248,9 @@ pageFromModel model =
         StructureTab ->
             Just model.page
 
-        BrandingTab ->
-            Just model.page
+        BrandingTab _ ->
+            model.mBrandingTab
+                |> M.map (Page model.page.ugid << BrandingTab << UserGroupBrandingTab.pageFromModel)
 
         PaymentsTab ->
             Just model.page
@@ -279,17 +269,6 @@ pageFromModel model =
             model.mDocumentsTab
                 |> M.andThen DocumentsTab.pageFromModel
                 |> M.map (Page model.page.ugid << DocumentsTab)
-
-
-mergePageMsg : Either BrandingComponent.OutMsg BrandingComponent.Msg -> Msg
-mergePageMsg msg1 =
-    case msg1 of
-        Left msg2 ->
-            BrandingOutMsg msg2
-
-        Right msg2 ->
-            BrandingTabMsg msg2
-
 
 update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
 update globals =
@@ -313,6 +292,19 @@ update globals =
                 structureTabModelLens
                 StructureTabMsg
                 StructureTab.update
+
+        updateUserGroupBranding : UserGroupBrandingTab.Msg -> Model -> ( Model, Cmd (Either msg Msg) )
+        updateUserGroupBranding msg model =
+            case model.mBrandingTab of
+              Nothing -> (model, Cmd.none)  -- this really should be an internal error
+              Just brandingTab ->
+                let (newBrandingTab, cmd) =
+                      UserGroupBrandingTab.update
+                        { embed = Right << BrandingTabMsg
+                        , presentFlashMessage = Cmd.map Left << globals.flashMessage
+                        , formBody = formBody globals
+                        } msg brandingTab
+                in ({ model | mBrandingTab = Just newBrandingTab }, cmd)
 
         updatePayments =
             liftOptionalUpdateHandler
@@ -363,35 +355,7 @@ update globals =
                 updateStructure tabMsg model
 
             BrandingTabMsg tabMsg ->
-                let
-                    ( state, cmd1 ) =
-                        BrandingComponent.update tabMsg model.brandingTab
-
-                    model2 =
-                        { model
-                            | brandingTab = state
-                        }
-
-                    cmd2 =
-                        Cmd.map (Right << mergePageMsg) cmd1
-                in
-                ( model2, cmd2 )
-
-            BrandingOutMsg msg2 ->
-                case msg2 of
-                    BrandingComponent.FlashMsg msg3 ->
-                        let
-                            cmd =
-                                case msg3 of
-                                    FlashMessage.SuccessMsg msg4 ->
-                                        globals.flashMessage <|
-                                            FlashMessage.success msg4
-
-                                    FlashMessage.ErrorMsg msg4 ->
-                                        globals.flashMessage <|
-                                            FlashMessage.error msg4
-                        in
-                        ( model, Cmd.map Left cmd )
+                updateUserGroupBranding tabMsg model
 
             PaymentsTabMsg tabMsg ->
                 updatePayments tabMsg model
@@ -459,23 +423,25 @@ updatePage page model =
             , liftCmd StructureTabMsg tabCmd
             )
 
-        BrandingTab ->
+        BrandingTab tabPage ->
             let
-                ( state, cmd1 ) =
-                    BrandingComponent.update
-                        (BrandingComponent.SetUserGroupId page.ugid)
-                        model.brandingTab
-
-                model2 =
-                    { model
-                        | brandingTab = state
-                        , tabState = Tab.customInitialState "branding"
-                    }
-
-                cmd2 =
-                    Cmd.map mergePageMsg cmd1
+                ( tab, tabCmd ) =
+                    model.mBrandingTab
+                        |> M.map (UserGroupBrandingTab.updatePage { ugid = page.ugid, page = tabPage, embed = BrandingTabMsg })
+                        |> M.withDefault
+                            (UserGroupBrandingTab.init
+                              { page = tabPage
+                              , ugid = page.ugid
+                              , embed = BrandingTabMsg
+                              } )
             in
-            ( model2, cmd2 )
+            ( { model
+                | tabState = Tab.customInitialState UserGroupBrandingTab.tabName
+                , page = page
+                , mBrandingTab = Just tab
+              }
+            , tabCmd
+            )
 
         PaymentsTab ->
             let
@@ -587,9 +553,9 @@ view model =
                 , link = Tab.link [] [ text "Branding" ]
                 , pane =
                     Tab.pane [ Spacing.mt3 ] <|
-                        [ Html.map (Right << BrandingTabMsg) <|
-                            BrandingComponent.view
-                                model.brandingTab
+                        [ model.mBrandingTab
+                            |> M.map (innerHtml << liftHtml BrandingTabMsg << UserGroupBrandingTab.view)
+                            |> M.withDefault viewError
                         ]
                 }
             , Tab.item
