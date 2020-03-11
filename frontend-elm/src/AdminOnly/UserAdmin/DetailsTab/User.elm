@@ -32,6 +32,7 @@ type alias User =
     , callbackUrl : String
     , callbackUrlIsEditable : Bool
     , twoFAActive : Bool
+    , twoFAMandatory : Bool
     }
 
 
@@ -51,6 +52,7 @@ decoder =
         |> DP.required "callbackurl" D.string
         |> DP.required "callback_is_editable" D.bool
         |> DP.required "twofactor_active" D.bool
+        |> DP.required "twofactor_is_mandatory" D.bool
 
 
 formValues : User -> List ( String, String )
@@ -64,6 +66,7 @@ formValues user =
     , ( "userlang", Enum.toString enumLanguage user.language )
     , ( "useraccounttype", Enum.toString enumAccountType user.accountType )
     , ( "usercallbackurl", user.callbackUrl )
+    , ( "usertotpismandatory", ite user.twoFAMandatory "true" "false")
     ]
 
 

@@ -14,11 +14,13 @@ import AdminOnly.UserAdmin.DetailsTab.MoveUserModal as MoveUserModal
 import AdminOnly.UserAdmin.DetailsTab.User as User exposing (User, enumAccountType)
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
+import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Utilities.Spacing as Spacing
 import Either exposing (Either(..))
 import EnumExtra as Enum exposing (Enum, findEnumValue)
 import FlashMessage
@@ -42,6 +44,7 @@ type alias Model =
     , mMoveUserModal : Maybe MoveUserModal.Model
     , mChangePasswordModal : Maybe ChangePasswordModal.Model
     , sResend : Status String
+    , sDisableTwoFA : Status String
     }
 
 
@@ -71,6 +74,10 @@ type Msg
       -- CHANGE PASSWORD
     | ChangePasswordClicked
     | ChangePasswordModalMsg ChangePasswordModal.Msg
+      -- DISABLE TWO-FACTOR AUTHENTICATION
+    | DisableTwoFAClicked
+    | GotDisableTwoFAResponse (Result Http.Error String)
+    | SetTwoFAMandatory Bool
 
 
 deleteUserModelLens : Optional Model DeleteUserModal.Model
@@ -102,6 +109,7 @@ init uid =
         model =
             { sUser = Loading
             , sResend = Failure
+            , sDisableTwoFA = Failure
             , mDeleteUserModal = Nothing
             , mMoveUserModal = Nothing
             , mChangePasswordModal = Nothing
@@ -331,6 +339,51 @@ update globals msg model =
         ChangePasswordModalMsg modalMsg ->
             changePassword modalMsg model
 
+        -- DISABLE TWO-FACTOR AUTHENTICATION
+        DisableTwoFAClicked ->
+            case fromStatus model.sUser of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just user ->
+                    case model.sDisableTwoFA of
+                        Loading ->
+                            ( model, Cmd.none )
+
+                        _ ->
+                            ( { model | sDisableTwoFA = Loading }
+                            , innerCmd <|
+                                Http.post
+                                    { url = "/adminonly/useradmin/disable2fa/" ++ user.id
+                                    , body = formBody globals []
+                                    , expect = Http.expectString GotDisableTwoFAResponse
+                                    }
+                            )
+
+        GotDisableTwoFAResponse response ->
+            case (fromStatus model.sUser, response) of
+                (Just user, Ok str) ->
+                    ( { model | sDisableTwoFA = Success str }
+                    , Cmd.batch
+                        [ innerCmd <| getUserCmd user.id
+                        , outerCmd <|
+                            globals.flashMessage <|
+                                FlashMessage.success "Two-factor authentication was disabled."
+                        ]
+                    )
+
+                (Nothing, Ok _) -> ( model, Cmd.none )
+
+                (_, Err _) ->
+                    ( { model | sDisableTwoFA = Failure }
+                    , outerCmd <|
+                        globals.flashMessage <|
+                            FlashMessage.error "Error disabling two-factor authentication."
+                    )
+
+        SetTwoFAMandatory newMandatory ->
+            ( modifyUser (\u -> { u | twoFAMandatory = newMandatory }) model, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
@@ -446,8 +499,20 @@ viewUser user =
                 ]
             , Form.row []
                 [ Form.colLabel labelColAttrs [ text "Two-factor authentication" ]
+                , Form.colLabel inputColAttrs <|
+                    ite user.twoFAActive
+                        [ text "Active"
+                        , a [ onClick DisableTwoFAClicked, href <| "#", Spacing.ml2 ] [ text "Disable" ]
+                        ]
+                        [ text "Not active"]
+                ]
+            , Form.row []
+                [ Form.colLabel labelColAttrs [ text "Two-factor authentication is mandatory" ]
                 , Form.colLabel inputColAttrs
-                    [ text <| ite user.twoFAActive "Active" "Not active" ]
+                    [ Checkbox.checkbox
+                        [ Checkbox.checked user.twoFAMandatory, Checkbox.onCheck SetTwoFAMandatory ]
+                        "2FA can also be enforced for all users in the company."
+                    ]
                 ]
             , formTextRowM "First name" user.firstName SetFirstName []
             , formTextRowM "Second name" user.secondName SetSecondName []
