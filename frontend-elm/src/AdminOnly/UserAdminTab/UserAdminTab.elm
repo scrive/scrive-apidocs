@@ -157,14 +157,18 @@ update globals =
                         updateCreateUserModal createUserModalMsg model.createUserModal
 
                     reloadCmd =
-                        if userWasCreated then
-                            Cmd.batch
-                                [ innerCmd <| getUsersCmd model
-                                , outerCmd <| globals.flashMessage <| FlashMessage.success "User was created."
-                                ]
+                        case userWasCreated of
+                            Just (Ok str) -> -- User created successfully
+                                Cmd.batch
+                                    [ innerCmd <| getUsersCmd model
+                                    , outerCmd <| globals.flashMessage <| FlashMessage.success str
+                                    ]
 
-                        else
-                            Cmd.none
+                            Just (Err str) -> -- Failed to create a user
+                                outerCmd <| globals.flashMessage <| FlashMessage.error str
+
+                            Nothing -> -- No attempt was made to create a user
+                                Cmd.none
                 in
                 ( { model | createUserModal = createUserModal }
                 , Cmd.batch [ innerCmd <| liftCmd CreateUserModalMsg createUserModalCmd, reloadCmd ]
