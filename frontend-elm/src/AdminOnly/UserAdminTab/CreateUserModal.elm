@@ -2,6 +2,7 @@ module AdminOnly.UserAdminTab.CreateUserModal exposing
     ( Config(..)
     , Model
     , Msg
+    , UserCreated
     , init
     , show
     , update
@@ -16,6 +17,7 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Modal as Modal
 import EnumExtra as Enum exposing (findEnumValue)
+import FlashMessage
 import Html exposing (Html, p, text)
 import Html.Attributes exposing (checked, selected, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
@@ -23,13 +25,13 @@ import Http
 import Json.Decode as D exposing (Decoder)
 import Language exposing (Language, enumLanguage)
 import List as L
+import Maybe as M
 import Utils exposing (..)
 
 
 type alias Model =
     { modalVisibility : Modal.Visibility
     , config : Config
-    , response : Maybe (Result Http.Error Response)
     , email : String
     , firstName : String
     , secondName : String
@@ -60,7 +62,6 @@ init config =
         model =
             { modalVisibility = Modal.hidden
             , config = config
-            , response = Nothing
             , email = ""
             , firstName = ""
             , secondName = ""
@@ -71,11 +72,15 @@ init config =
     ( model, Cmd.none )
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Cmd Msg, Bool )
+type alias UserCreated
+    = Maybe (Result String String)
+
+
+update : Globals msg -> Msg -> Model -> ( Model, Cmd Msg, UserCreated )
 update globals msg model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none, False )
+            ( { model | modalVisibility = Modal.hidden }, Cmd.none, Nothing )
 
         SubmitForm ->
             let
@@ -89,7 +94,7 @@ update globals msg model =
                             , ite model.isUserGroupAdmin [ ( "iscompanyadmin", "" ) ] []
                             )
             in
-            ( { model | response = Nothing }
+            ( model
             , Http.post
                 { url = url
                 , body =
@@ -102,17 +107,17 @@ update globals msg model =
                             ++ moreParams
                 , expect = Http.expectJson GotResponse responseDecoder
                 }
-            , False
+            , Nothing
             )
 
         SetEmail email ->
-            ( { model | email = email }, Cmd.none, False )
+            ( { model | email = email }, Cmd.none, Nothing )
 
         SetFirstName firstName ->
-            ( { model | firstName = firstName }, Cmd.none, False )
+            ( { model | firstName = firstName }, Cmd.none, Nothing )
 
         SetSecondName secondName ->
-            ( { model | secondName = secondName }, Cmd.none, False )
+            ( { model | secondName = secondName }, Cmd.none, Nothing )
 
         SetLanguage languageString ->
             ( case findEnumValue enumLanguage languageString of
@@ -122,25 +127,28 @@ update globals msg model =
                 Ok language ->
                     { model | language = language }
             , Cmd.none
-            , False
+            , Nothing
             )
 
         SetIsUserGroupAdmin isAdmin ->
-            ( { model | isUserGroupAdmin = isAdmin }, Cmd.none, False )
+            ( { model | isUserGroupAdmin = isAdmin }, Cmd.none, Nothing )
 
         GotResponse result ->
             case result of
-                Ok _ ->
-                    ( { model
-                        | response = Just result
-                        , modalVisibility = Modal.hidden
-                      }
-                    , Cmd.none
-                    , True
-                    )
+                Ok r ->
+                    if r.success then
+                        ( { model | modalVisibility = Modal.hidden }
+                        , Cmd.none
+                        , Just <| Ok "User created."
+                        )
 
+                    else
+                        ( model
+                        , Cmd.none
+                        , Just <| Err <| M.withDefault "Error creating a user." r.error
+                        )
                 Err _ ->
-                    ( { model | response = Just result }, Cmd.none, False )
+                    ( model, Cmd.none, Just <| Err "Error creating a user." )
 
 
 type alias Response =
@@ -158,7 +166,7 @@ responseDecoder =
 
 show : Model -> Model
 show model =
-    { model | modalVisibility = Modal.shown, response = Nothing, firstName = "", secondName = "", email = "", language = Language.English, isUserGroupAdmin = False }
+    { model | modalVisibility = Modal.shown, firstName = "", secondName = "", email = "", language = Language.English, isUserGroupAdmin = False }
 
 
 view : Model -> Html Msg

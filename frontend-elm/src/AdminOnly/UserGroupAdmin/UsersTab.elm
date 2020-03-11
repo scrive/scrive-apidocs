@@ -120,7 +120,7 @@ update globals =
         updateCreateUser0 =
             CreateUserModal.update globals
 
-        updateCreateUser : CreateUserModal.Msg -> Model -> ( Model, Cmd Msg, Bool )
+        updateCreateUser : CreateUserModal.Msg -> Model -> ( Model, Cmd Msg, CreateUserModal.UserCreated )
         updateCreateUser msg model1 =
             let
                 ( model2, cmd1, flag ) =
@@ -164,15 +164,19 @@ update globals =
                         updateCreateUser createUserModalMsg model
 
                     reloadCmd =
-                        if userWasCreated then
-                            outerCmd <|
-                                Cmd.batch
-                                    [ globals.setPageUrlFromModel
-                                    , globals.flashMessage <| FlashMessage.success "User was created."
-                                    ]
+                        case userWasCreated of
+                            Just (Ok str) -> -- User created successfully
+                                outerCmd <|
+                                    Cmd.batch
+                                        [ globals.setPageUrlFromModel
+                                        , globals.flashMessage <| FlashMessage.success str
+                                        ]
 
-                        else
-                            Cmd.none
+                            Just (Err str) -> -- Failed to create a user
+                                outerCmd  <| globals.flashMessage <| FlashMessage.error str
+
+                            Nothing -> -- No attempt was made to create a user
+                                Cmd.none
                 in
                 ( model2
                 , Cmd.batch [ innerCmd createUserModalCmd, reloadCmd ]
