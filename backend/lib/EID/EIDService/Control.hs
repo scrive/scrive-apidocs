@@ -706,13 +706,13 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
               mDnFromEIDService = eidnobidDistinguishedName cd
           if (isNothing mDnFromEIDService)
             then do
-              logAttention_ "Date of birth not provided by EIDService."
+              logAttention_ "Distinguished name not provided by EIDService."
               flashErrWithMessage
                 =<< renderTemplate_ "flashMessageNoDOBProvidedByEIDService"
               return $ EIDServiceTransactionStatusCompleteAndFailed
             else if (isNothing mDobFromEIDService)
               then do
-                logAttention_ "Distinguished name not provided by EIDService."
+                logAttention_ "Date of birth not provided by EIDService."
                 flashErrWithMessage
                   =<< renderTemplate_ "flashMessageNoDNProvidedByEIDService"
                 return $ EIDServiceTransactionStatusCompleteAndFailed
