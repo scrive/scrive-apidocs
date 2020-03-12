@@ -329,6 +329,10 @@ var Task = require("../navigation/task");
         document.checkingSigning(
           function () { self.handleAfterSignOrApproveRedirectOrReload(); },
           function (s) {
+            if (!self.isOnStep("eid-process")) {
+              // must have been cancelled, no reason to continue
+              return;
+            }
             bankIDSigning.setStatus(s);
             setTimeout(checkSigning, 1000);
           },
