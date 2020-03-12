@@ -243,7 +243,7 @@ view model =
         [ Grid.row [ Row.betweenXs ]
             [ Grid.col []
                 [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
-                    [ text "Create user with empty company" ]
+                    [ text "Add new user in company" ]
                 ]
             , Grid.col []
                 [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
