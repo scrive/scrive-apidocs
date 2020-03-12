@@ -148,10 +148,13 @@ var DetailsEditorView = React.createClass({
 
   onIdledoctimeoutChange: function (name) {
     var self = this;
+    var clamp = function (number, min, max) {
+      return Math.max(min, Math.min(number, max));
+    };
     return function (event) {
       var newValue = event.target.value;
       if (newValue !== "") {
-        newValue = parseInt(newValue, 10);
+        newValue = clamp(parseInt(newValue, 10), 1, 365);
       }
       self.props.onFieldChange(
         name, newValue

@@ -401,6 +401,11 @@ tagsToUpdatesJson newTags oldTags =
 
 formValuesSettings : Settings -> List ( String, String )
 formValuesSettings settings =
+    let
+        -- Allows empty idle doc timeout values
+        docTimeoutField (label, mVal) =
+            Just (label, M.map String.fromInt mVal |> M.withDefault "")
+    in
     [ ( "companyipaddressmasklist", settings.ipAddressMaskList )
     , ( "companysmsprovider", encodeSmsProvider settings.smsProvider )
     , ( "companypadappmode", encodePadAppMode settings.padAppMode )
@@ -410,12 +415,12 @@ formValuesSettings settings =
         ++ L.filterMap identity
             [ mField identity ( "companycgiserviceid", settings.cgiServiceID )
             , mField identity ( "companycgidisplayname", settings.cgiDisplayName )
-            , mField String.fromInt ( "companyidledoctimeoutpreparation", settings.idleDocTimeoutPreparation )
-            , mField String.fromInt ( "companyidledoctimeoutclosed", settings.idleDocTimeoutClosed )
-            , mField String.fromInt ( "companyidledoctimeoutcanceled", settings.idleDocTimeoutCancelled )
-            , mField String.fromInt ( "companyidledoctimeouttimedout", settings.idleDocTimeoutTimeout )
-            , mField String.fromInt ( "companyidledoctimeoutrejected", settings.idleDocTimeoutRejected )
-            , mField String.fromInt ( "companyidledoctimeouterror", settings.idleDocTimeoutError )
+            , docTimeoutField ( "companyidledoctimeoutpreparation", settings.idleDocTimeoutPreparation )
+            , docTimeoutField ( "companyidledoctimeoutclosed", settings.idleDocTimeoutClosed )
+            , docTimeoutField ( "companyidledoctimeoutcanceled", settings.idleDocTimeoutCancelled )
+            , docTimeoutField ( "companyidledoctimeouttimedout", settings.idleDocTimeoutTimeout )
+            , docTimeoutField ( "companyidledoctimeoutrejected", settings.idleDocTimeoutRejected )
+            , docTimeoutField ( "companyidledoctimeouterror", settings.idleDocTimeoutError)
             ]
 
 

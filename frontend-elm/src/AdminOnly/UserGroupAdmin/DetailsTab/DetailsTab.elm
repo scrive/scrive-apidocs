@@ -46,7 +46,7 @@ type Msg
       -- EDIT USER GROUP
     | SetStringField String String
     | SetBoolField String Bool
-    | SetIntField String String
+    | SetIntField String (Maybe Range) String
     | SetAddressIsInherited Bool
     | SetSettingsIsInherited Bool
     | SetParentID String
@@ -57,6 +57,12 @@ type Msg
       -- MERGE TO DIFFERENT USER GROUP
     | MergeUserGroupModalMsg MergeUserGroupModal.Msg
     | MergeUserGroupClicked
+
+
+type alias Range =
+    { min : Int
+    , max : Int
+    }
 
 
 mergeUserGroupModelLens : Optional Model MergeUserGroupModal.Model
@@ -147,10 +153,16 @@ update globals =
             SetBoolField name value ->
                 ( modifyUserGroup (UserGroup.setBoolField name value) model, Cmd.none )
 
-            SetIntField name value ->
+            SetIntField name mRange value ->
                 let
+                    mClamp = case mRange of
+                        Just range -> clamp range.min range.max
+                        Nothing -> identity
+
                     mInt =
-                        stringNonEmpty value |> M.andThen String.toInt
+                        stringNonEmpty value
+                            |> M.andThen String.toInt
+                            |> M.map mClamp
                 in
                 ( modifyUserGroup (UserGroup.setIntField name mInt) model, Cmd.none )
 
@@ -391,6 +403,8 @@ viewUserGroup model ug address settings =
 
                             Success userGroupName ->
                                 ( True, [ Input.success ], [ Form.validFeedback [] [ text <| "Company with name: " ++ userGroupName ] ] )
+
+        docTimeoutRange = Just (Range 1 365)
     in
     Grid.container []
         [ Form.form [ onSubmit SubmitForm ]
@@ -499,32 +513,32 @@ viewUserGroup model ug address settings =
             , formIntRowM "In preparation"
                 ""
                 (M.withDefault "" <| M.map String.fromInt settings.idleDocTimeoutPreparation)
-                (SetIntField "idleDocTimeoutPreparation")
+                (SetIntField "idleDocTimeoutPreparation" docTimeoutRange)
                 [ readonly ug.settingsIsInherited ]
             , formIntRowM "Closed"
                 ""
                 (M.withDefault "" <| M.map String.fromInt settings.idleDocTimeoutClosed)
-                (SetIntField "idleDocTimeoutClosed")
+                (SetIntField "idleDocTimeoutClosed" docTimeoutRange)
                 [ readonly ug.settingsIsInherited ]
             , formIntRowM "Cancelled"
                 ""
                 (M.withDefault "" <| M.map String.fromInt settings.idleDocTimeoutCancelled)
-                (SetIntField "idleDocTimeoutCancelled")
+                (SetIntField "idleDocTimeoutCancelled" docTimeoutRange)
                 [ readonly ug.settingsIsInherited ]
             , formIntRowM "Timed out"
                 ""
                 (M.withDefault "" <| M.map String.fromInt settings.idleDocTimeoutTimeout)
-                (SetIntField "idleDocTimeoutTimeout")
+                (SetIntField "idleDocTimeoutTimeout" docTimeoutRange)
                 [ readonly ug.settingsIsInherited ]
             , formIntRowM "Rejected"
                 ""
                 (M.withDefault "" <| M.map String.fromInt settings.idleDocTimeoutRejected)
-                (SetIntField "idleDocTimeoutRejected")
+                (SetIntField "idleDocTimeoutRejected" docTimeoutRange)
                 [ readonly ug.settingsIsInherited ]
             , formIntRowM "Error"
                 ""
                 (M.withDefault "" <| M.map String.fromInt settings.idleDocTimeoutError)
-                (SetIntField "idleDocTimeoutError")
+                (SetIntField "idleDocTimeoutError" docTimeoutRange)
                 [ readonly ug.settingsIsInherited ]
             ]
         , Grid.row [ Row.leftSm ]
