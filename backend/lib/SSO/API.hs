@@ -4,7 +4,8 @@
 module SSO.API(sso)
   where
 
-import Data.Text as T
+import Data.Foldable (asum)
+import Data.Text as T hiding (map)
 import Data.Time.Clock (addUTCTime, nominalDay)
 import Data.Time.Format
 import Happstack.Server hiding (dir, host, https, path, simpleHTTP)
@@ -60,11 +61,13 @@ consumeAssertions = guardHttps $ do
                                           (const currentTime)
                                           verifiedAssertions
           (mNameID, memailRaw, mFirstName, mLastName) <- do
-            (maybe noAssertionsApiErr
-                   (\a -> return (T.pack <$> (getNonEmptyNameID a),
-                                  T.pack <$> (getFirstNonEmptyAttribute "email" a),
-                                  T.pack <$> (getFirstNonEmptyAttribute "firstname" a),
-                                  T.pack <$> (getFirstNonEmptyAttribute "lastname" a)))
+            (maybe noAssertionsApiErr (\a -> do
+                   let maybeGetSomeAttribute as =
+                         T.pack <$> (asum . map (`getFirstNonEmptyAttribute` a) $ as)
+                   return (T.pack <$> (getNonEmptyNameID a),
+                           maybeGetSomeAttribute ["email", "emailaddress"],
+                           maybeGetSomeAttribute ["firstname", "givenname"],
+                           maybeGetSomeAttribute ["lastname", "surname"]))
                    (listToMaybe verifiedAssertions))
           case memailRaw of
                   Just emailRaw -> do
