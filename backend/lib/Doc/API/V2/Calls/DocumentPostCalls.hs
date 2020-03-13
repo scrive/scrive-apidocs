@@ -107,30 +107,24 @@ docApiV2New = api $ do
       ctx   <- getContext
       title <- renderTemplate_ "newDocumentTitle"
       return $ title <> " " <> formatTimeSimple (ctx ^. #time)
-  case mFolderId <|> (user ^. #homeFolderID) of
-    Just folderId -> do
-      guardDocumentCreateInFolderIsAllowed user folderId
-      withDocumentM
-          (dbUpdate $ NewDocument user
-                                  (T.pack title)
-                                  Signable
-                                  defaultTimeZoneName
-                                  0
-                                  actor
-                                  folderId
-          )
-        $ do
-            dbUpdate $ SetDocumentUnsavedDraft (not saved)
-            case mFile of
-              Nothing -> return ()
-              Just f  -> do
-                dbUpdate $ AttachFile (fileid f) actor
-            theDocument >>= \doc -> logInfo "New document created" $ logObject_ doc
-            Created
-              <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d))
-              <$> theDocument
-    Nothing -> apiError $ requestParameterMissing "folder_id"
-
+  folderId <- case mFolderId <|> (user ^. #homeFolderID) of
+    Just folderId -> return folderId
+    Nothing       -> apiError $ requestParameterMissing "folder_id"
+  guardDocumentCreateInFolderIsAllowed user folderId
+  withDocumentM
+      ( dbUpdate
+      $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor folderId
+      )
+    $ do
+        dbUpdate $ SetDocumentUnsavedDraft (not saved)
+        case mFile of
+          Nothing -> return ()
+          Just f  -> do
+            dbUpdate $ AttachFile (fileid f) actor
+        theDocument >>= \doc -> logInfo "New document created" $ logObject_ doc
+        Created
+          <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d))
+          <$> theDocument
 
 docApiV2NewFromTemplate :: Kontrakcja m => DocumentID -> m Response
 docApiV2NewFromTemplate did = logDocument did . api $ do

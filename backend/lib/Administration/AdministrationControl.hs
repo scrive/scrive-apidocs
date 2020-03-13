@@ -15,15 +15,11 @@ module Administration.AdministrationControl (
           , showAdminMainPage
           , jsonCompanies -- for tests
           , handleCompanyChange -- for tests
-          , handleTriggerMigrateFolders -- for tests
-          , handleTriggerMigrateDocuments -- for tests
           ) where
 
-import Control.Monad.IO.Class (liftIO)
 import Data.Aeson.Types
 import Data.Functor.Invariant
 import Data.Int (Int16, Int32)
-import Data.Time (diffUTCTime)
 import Data.Unjson
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir, param, remainingPath)
@@ -165,10 +161,6 @@ adminonlyRoutes =
         handleUpdateThemeForDomain
       , (dir "brandeddomain" . dir "deletetheme" . hPost . toK2)
         handleDeleteThemeForDomain
-
-        -- migration trigging endpoints
-      , dir "triggermigratefolders" $ hGet $ toK1 handleTriggerMigrateFolders
-      , dir "triggermigratedocuments" $ hGet $ toK1 handleTriggerMigrateDocuments
       ]
 
 adminonlyOldRoutes :: Route (Kontra Response)
@@ -991,51 +983,6 @@ handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
     ugWithChildrenToJson (I.UserGroupWithChildren ug children) = object
       [ "group" .= object ["name" .= (ug ^. #name), identifier $ ug ^. #id]
       , "children" .= map ugWithChildrenToJson children
-      ]
-
-handleTriggerMigrateDocuments :: Kontrakcja m => Integer -> m Aeson.Value
-handleTriggerMigrateDocuments limit = onlyAdmin $ do
-  logInfo_ "Starting migration batch for documents"
-  let limitWithUpperBound = minimum [limit, 50000]
-  startTime     <- liftIO currentTime
-  numberUpdated <- do
-    runQuery . sqlUpdate "documents" $ do
-      sqlWith "docs_to_update" . sqlSelect "documents d" $ do
-        sqlJoinOn "users u" "u.id = d.author_user_id"
-        sqlResult "d.id as doc_id"
-        sqlResult "u.home_folder_id as folder_id"
-        sqlWhereIsNULL "d.folder_id"
-        sqlLimit limitWithUpperBound
-      sqlSetCmd "folder_id" "docs_to_update.folder_id"
-      sqlFrom "docs_to_update"
-      sqlWhere "id = docs_to_update.doc_id"
-  endTime <- liftIO currentTime
-  return
-    . object
-    $ [ "documents_linked" .= numberUpdated
-      , "limit_used" .= limitWithUpperBound
-      , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)
-      ]
-
--- `limit` is an `Integer` to not have to deal with overflows.
-handleTriggerMigrateFolders :: Kontrakcja m => Integer -> m Aeson.Value
-handleTriggerMigrateFolders limit = onlyAdmin $ do
-  logInfo_ "Starting migration batch for folders"
-  let limitWithUpperBound = minimum [limit, 10000]
-  startTime <- liftIO currentTime
-  (idsToUpdate :: [UserGroupID]) <- do
-    runQuery_ . sqlSelect "user_groups ug" $ do
-      sqlResult "ug.id as ug_id"
-      sqlWhereIsNULL "ug.home_folder_id"
-      sqlLimit limitWithUpperBound
-    fetchMany runIdentity
-  numberDone <- dbUpdate . AddFoldersToUserGroups $ idsToUpdate
-  endTime    <- liftIO currentTime
-  return
-    . object
-    $ [ "home_folders_created" .= numberDone
-      , "limit_used" .= limitWithUpperBound
-      , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)
       ]
 
 jsonBrandedDomainsList :: Kontrakcja m => m Aeson.Value

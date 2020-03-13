@@ -118,7 +118,8 @@ testPartnerUsersWithFolders = do
   ug <- guardJustM . dbQuery $ UserGroupGet cid
   assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
-  user       <- fmap head . dbQuery $ UserGroupGetUsers cid
+  user <- fmap head . dbQuery $ UserGroupGetUsers cid
+  assertBool "User has home Folder" . isJust $ user ^. #homeFolderID
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ user ^. #homeFolderID
   assertEqual "User home folder is child of UserGroup home folder"
               (ug ^. #homeFolderID)
@@ -208,7 +209,9 @@ testNewCompanyAccount = do
     ]
   void . runTestKontra bobReq ctx $ handleAddUserGroupAccount
   Just userBob <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  userFolder   <- guardJustM . dbQuery . FolderGet . fromJust $ userBob ^. #homeFolderID
+  assertBool "User has home Folder" . isJust $ userBob ^. #homeFolderID
+
+  userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userBob ^. #homeFolderID
   assertEqual "User home folder is child of UserGroup home folder"
               (ug ^. #homeFolderID)
               (userFolder ^. #parentID)
