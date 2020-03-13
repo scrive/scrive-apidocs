@@ -11,8 +11,8 @@ import qualified MailContext.Internal as I
 class Monad m => MailContextMonad m where
   getMailContext :: m I.MailContext
 
--- | Generic, overlapping instance.
-instance (
+-- | Generic, overlappable instance.
+instance {-# OVERLAPPABLE #-} (
     MailContextMonad m
   , Monad (t m)
   , MonadTrans t

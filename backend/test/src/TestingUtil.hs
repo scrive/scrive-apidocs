@@ -1393,10 +1393,10 @@ untilCondition cond gen = do
 class RandomQuery a b where
   randomQuery :: a -> TestEnv b
 
-instance (DBQuery TestEnv ev res) => RandomQuery ev res where
+instance {-# OVERLAPPABLE #-} (DBQuery TestEnv ev res) => RandomQuery ev res where
   randomQuery = dbQuery
 
-instance {-# OVERLAPPING #-}
+instance
   (Arbitrary a, RandomQuery c b) =>
   RandomQuery (a -> c) b where
 
@@ -1408,10 +1408,10 @@ instance {-# OVERLAPPING #-}
 class RandomUpdate a b m where
   randomUpdate :: a -> m b
 
-instance (DBUpdate m ev res) => RandomUpdate ev res m where
+instance {-# OVERLAPPABLE #-} (DBUpdate m ev res) => RandomUpdate ev res m where
   randomUpdate = dbUpdate
 
-instance {-# OVERLAPPING #-}
+instance
   (CryptoRNG m, Arbitrary a, RandomUpdate c b m) =>
   RandomUpdate (a -> c) b m where
 

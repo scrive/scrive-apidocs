@@ -35,7 +35,7 @@ instance NFData Response where
 
 ----------------------------------------
 
-instance (
+instance {-# OVERLAPPABLE #-} (
     Monad (t m)
   , MonadTrans t
   , MonadTransControl t
@@ -47,7 +47,7 @@ instance (
     (stT, f) <- liftWith $ \run -> getFilter (run m)
     (, f) `liftM` restoreT (return stT)
 
-instance (
+instance {-# OVERLAPPABLE #-} (
     Monad m
   , Monad (t m)
   , MonadTrans t
@@ -58,7 +58,7 @@ instance (
   localRqEnv f m = controlT $ \run -> localRqEnv f (run m)
   rqDataError = lift . rqDataError
 
-instance (
+instance {-# OVERLAPPABLE #-} (
     Monad (t m)
   , MonadTrans t
   , MonadTransControl t
@@ -67,7 +67,7 @@ instance (
   askRq = lift askRq
   localRq f m = controlT $ \run -> localRq f (run m)
 
-instance (
+instance {-# OVERLAPPABLE #-} (
     Monad (t m)
   , MonadTrans t
   , WebMonad r m

@@ -48,7 +48,7 @@ instance MonadTransControl DocumentT where
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
-instance {-# OVERLAPPING #-} (GetRow Document m, MonadDB m) => DocumentMonad (DocumentT m) where
+instance (GetRow Document m, MonadDB m) => DocumentMonad (DocumentT m) where
   theDocument   = DocumentT rowCache
   theDocumentID = DocumentT rowCacheID
   updateDocument m = DocumentT $ updateRow $ unDocumentT . m

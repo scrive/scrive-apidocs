@@ -42,8 +42,8 @@ instance Unjson GuardTimeConf where
 class Monad m => GuardTimeConfMonad m where
   getGuardTimeConf :: m GuardTimeConf
 
--- | Generic, overlapping instance.
-instance (
+-- | Generic, overlappable instance.
+instance {-# OVERLAPPABLE #-} (
     GuardTimeConfMonad m
   , Monad (t m)
   , MonadTrans t

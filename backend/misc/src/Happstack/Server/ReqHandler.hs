@@ -95,10 +95,10 @@ instance MonadBaseControl b m => MonadBaseControl b (ReqHandlerT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance {-# OVERLAPPING #-} Monad m => MonadTime (ReqHandlerT m) where
+instance Monad m => MonadTime (ReqHandlerT m) where
   currentTime = ReqHandlerT $ gets hsTime
 
-instance {-# OVERLAPPING #-} Monad m => FilterMonad Response (ReqHandlerT m) where
+instance Monad m => FilterMonad Response (ReqHandlerT m) where
   setFilter f = ReqHandlerT . modify $ \st -> st { hsFilter = f }
   composeFilter f = ReqHandlerT . modify $ \st -> st { hsFilter = f . hsFilter st }
   getFilter m = ReqHandlerT . StateT $ \st -> do
@@ -106,12 +106,12 @@ instance {-# OVERLAPPING #-} Monad m => FilterMonad Response (ReqHandlerT m) whe
     -- Make Response filters local to the passed computation.
     return ((res, hsFilter st'), st' { hsFilter = hsFilter st })
 
-instance {-# OVERLAPPING #-} (MonadIO m, MonadThrow m) => HasRqData (ReqHandlerT m) where
+instance (MonadIO m, MonadThrow m) => HasRqData (ReqHandlerT m) where
   askRqEnv    = smAskRqEnv
   rqDataError = throwM . RqDataError
   localRqEnv  = smLocalRqEnv
 
-instance {-# OVERLAPPING #-} Monad m => ServerMonad (ReqHandlerT m) where
+instance Monad m => ServerMonad (ReqHandlerT m) where
   askRq = ReqHandlerT $ gets hsRequest
   localRq f m = ReqHandlerT . StateT $ \st -> do
     let req = hsRequest st
@@ -124,11 +124,8 @@ instance {-# OVERLAPPING #-} Monad m => ServerMonad (ReqHandlerT m) where
 -- Note that this is NOT a valid instance of 'MonadMask'.
 newtype PlusSandboxT m a = PlusSandboxT { unPlusSandboxT :: MaybeT m a }
   deriving ( Applicative, Functor, HasRqData, Monad, MonadBase b
-           , MonadCatch, MonadIO, MonadThrow, MonadTrans )
-
-deriving instance {-# OVERLAPPING #-} ServerMonad m => ServerMonad (PlusSandboxT m)
-deriving instance {-# OVERLAPPING #-} FilterMonad r m =>
-  FilterMonad r (PlusSandboxT m)
+           , MonadCatch, MonadIO, MonadThrow, MonadTrans
+           , FilterMonad r, ServerMonad)
 
 runPlusSandboxT :: PlusSandboxT m a -> m (Maybe a)
 runPlusSandboxT = runMaybeT . unPlusSandboxT
@@ -153,11 +150,8 @@ instance Monad m => MonadPlus (PlusSandboxT m) where
 -- its instance for ErrorT throws away information.
 newtype WebSandboxT m a = WebSandboxT { unWebSandboxT :: ExceptT Response m a }
   deriving ( Applicative, Functor, HasRqData, Monad, MonadBase b
-           , MonadCatch, MonadIO, MonadThrow, MonadTrans )
-
-deriving instance {-# OVERLAPPING #-} ServerMonad m => ServerMonad (WebSandboxT m)
-deriving instance {-# OVERLAPPING #-} FilterMonad r m =>
-  FilterMonad r (WebSandboxT m)
+           , MonadCatch, MonadIO, MonadThrow, MonadTrans
+           , FilterMonad r, ServerMonad)
 
 runWebSandboxT :: WebSandboxT m a -> m (Either Response a)
 runWebSandboxT = runExceptT . unWebSandboxT
@@ -168,5 +162,5 @@ mapWebSandboxT
   -> WebSandboxT n b
 mapWebSandboxT f = WebSandboxT . mapExceptT f . unWebSandboxT
 
-instance {-# OVERLAPPING #-} Monad m => WebMonad Response (WebSandboxT m) where
+instance Monad m => WebMonad Response (WebSandboxT m) where
   finishWith = WebSandboxT . throwError
