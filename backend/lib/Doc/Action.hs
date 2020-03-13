@@ -50,7 +50,7 @@ import GuardTime (GuardTimeConfMonad)
 import Kontra
 import Log.Identifier
 import MailContext
-import PdfToolsLambda.Conf
+import PdfToolsLambda.Class
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
 import ThirdPartyStats.Planhat

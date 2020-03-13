@@ -37,8 +37,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
 
 import Log.Utils
-import PdfToolsLambda.Conf
-import PdfToolsLambda.Control
+import PdfToolsLambda.Class
 import Utils.Directory
 
 renderPage
@@ -159,8 +158,7 @@ preCheckPDFsHelper contents tmppath = runExceptT $ do
 
     checkRemoveJavaScript = do
       forM_ (zip [1 ..] contents) $ \(num, content) -> do
-        lc <- lift $ getPdfToolsLambdaEnv
-        nc <- lift $ callPdfToolsCleaning lc $ BSL.fromChunks [content]
+        nc <- callPdfToolsCleaning $ BSL.fromStrict content
         case nc of
           Just c  -> liftBase $ BS.writeFile (jsremovedpath num) c
           Nothing -> throwError $ FileRemoveJavaScriptError

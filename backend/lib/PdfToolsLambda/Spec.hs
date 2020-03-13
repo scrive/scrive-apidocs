@@ -13,12 +13,10 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
-import DB
 import Doc.AddImageSpec
 import Doc.SealSpec
 
-sealSpecToLambdaSpec
-  :: (MonadDB m, MonadLog m, MonadBase IO m) => SealSpec -> m BSL.ByteString
+sealSpecToLambdaSpec :: (MonadLog m, MonadBase IO m) => SealSpec -> m BSL.ByteString
 sealSpecToLambdaSpec spec = do
   mfc          <- liftBase $ BS.readFile $ T.unpack $ input spec
   persons_     <- mapM sealSpecForPerson (persons spec)
@@ -44,8 +42,7 @@ sealSpecToLambdaSpec spec = do
        , "staticTexts" .= staticTextsJSON (staticTexts spec)
        ]
 
-presealSpecToLambdaSpec
-  :: (MonadDB m, MonadLog m, MonadBase IO m) => PreSealSpec -> m BSL.ByteString
+presealSpecToLambdaSpec :: (MonadLog m, MonadBase IO m) => PreSealSpec -> m BSL.ByteString
 presealSpecToLambdaSpec spec = do
   mfc     <- liftBase $ BS.readFile $ T.unpack $ pssInput spec
   fields_ <- mapM sealSpecForField (pssFields spec)
@@ -58,7 +55,7 @@ presealSpecToLambdaSpec spec = do
         .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode mfc)]
       ]
 
-sealSpecForPerson :: (MonadDB m, MonadLog m, MonadBase IO m) => Person -> m Aeson.Value
+sealSpecForPerson :: (MonadLog m, MonadBase IO m) => Person -> m Aeson.Value
 sealSpecForPerson person = do
   highlightedImages_ <- mapM sealSpecForHighlightedImage (highlightedImages person)
   fields_            <- mapM sealSpecForField (fields person)
@@ -86,7 +83,7 @@ sealSpecForPerson person = do
 
 
 sealSpecForHighlightedImage
-  :: (MonadDB m, MonadLog m, MonadBase IO m) => HighlightedImage -> m Aeson.Value
+  :: (MonadLog m, MonadBase IO m) => HighlightedImage -> m Aeson.Value
 sealSpecForHighlightedImage hi = do
   return $ Aeson.object
     [ "page" .= hiPage hi
@@ -94,7 +91,7 @@ sealSpecForHighlightedImage hi = do
       .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode $ hiImage hi)]
     ]
 
-sealSpecForField :: (MonadDB m, MonadLog m, MonadBase IO m) => Field -> m Aeson.Value
+sealSpecForField :: (MonadLog m, MonadBase IO m) => Field -> m Aeson.Value
 sealSpecForField field = do
   return
     $  Aeson.object
@@ -118,7 +115,7 @@ sealSpecForField field = do
            ]
 
 sealSpecForSealAttachment
-  :: (MonadDB m, MonadLog m, MonadBase IO m) => SealAttachment -> m Aeson.Value
+  :: (MonadLog m, MonadBase IO m) => SealAttachment -> m Aeson.Value
 sealSpecForSealAttachment a = do
   return $ Aeson.object
     [ "fileName" .= fileName a
@@ -127,7 +124,7 @@ sealSpecForSealAttachment a = do
       .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode $ fileContent a)]
     ]
 
-sealSpecForFile :: (MonadDB m, MonadLog m, MonadBase IO m) => FileDesc -> m Aeson.Value
+sealSpecForFile :: (MonadLog m, MonadBase IO m) => FileDesc -> m Aeson.Value
 sealSpecForFile fd = do
   mfc <- case (fileInput fd) of
     Just fn -> Just <$> liftBase (BS.readFile $ T.unpack fn)
@@ -149,8 +146,7 @@ sealSpecForFile fd = do
          _ -> []
 
 
-addImageSpecToLambdaSpec
-  :: (MonadDB m, MonadLog m, MonadBase IO m) => AddImageSpec -> m BSL.ByteString
+addImageSpecToLambdaSpec :: MonadBase IO m => AddImageSpec -> m BSL.ByteString
 addImageSpecToLambdaSpec spec = do
   mfc <- liftBase $ BS.readFile $ addImageInput spec
   return

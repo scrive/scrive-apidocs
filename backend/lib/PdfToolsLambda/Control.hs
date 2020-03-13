@@ -1,11 +1,10 @@
-module PdfToolsLambda.Control (
-    callPdfToolsSealing
-  , callPdfToolsPresealing
-  , callPdfToolsCleaning
-  , callPdfToolsAddImage
-  , callPdfToolsPadesSign
-  , PadesSignSpec(..)
-) where
+module PdfToolsLambda.Control
+  ( callPdfToolsSealingPrim
+  , callPdfToolsPresealingPrim
+  , callPdfToolsCleaningPrim
+  , callPdfToolsAddImagePrim
+  , callPdfToolsPadesSignPrim
+  ) where
 
 import Control.Monad.Base
 import Control.Monad.Catch
@@ -35,6 +34,7 @@ import FileStorage.Amazon
 import FileStorage.Amazon.S3Env
 import FileStorage.Class
 import Log.Utils
+import PdfToolsLambda.Class
 import PdfToolsLambda.Conf
 import PdfToolsLambda.Spec
 import Utils.IO
@@ -54,45 +54,40 @@ pdfToolsActionName PdfToolsActionCleaning  = "clean"
 pdfToolsActionName PdfToolsActionAddImage  = "addimage"
 pdfToolsActionName PdfToolsActionPadesSign = "padesSign"
 
-callPdfToolsSealing
-  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
-  => PdfToolsLambdaEnv
-  -> SealSpec
+callPdfToolsSealingPrim
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => SealSpec
+  -> PdfToolsLambdaEnv
   -> m (Maybe BS.ByteString)
-callPdfToolsSealing lc spec = do
+callPdfToolsSealingPrim spec lc = do
   inputData <- sealSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionSealing inputData
 
-callPdfToolsPresealing
-  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
-  => PdfToolsLambdaEnv
-  -> PreSealSpec
+callPdfToolsPresealingPrim
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => PreSealSpec
+  -> PdfToolsLambdaEnv
   -> m (Maybe BS.ByteString)
-callPdfToolsPresealing lc spec = do
+callPdfToolsPresealingPrim spec lc = do
   inputData <- presealSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionSealing inputData
 
-callPdfToolsCleaning
+callPdfToolsCleaningPrim
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaEnv
-  -> BSL.ByteString
+  => BSL.ByteString
+  -> PdfToolsLambdaEnv
   -> m (Maybe BS.ByteString)
-callPdfToolsCleaning lc inputFileContent = do
+callPdfToolsCleaningPrim inputFileContent lc = do
   executePdfToolsLambdaActionCall lc PdfToolsActionCleaning inputFileContent
 
-callPdfToolsAddImage
-  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
-  => PdfToolsLambdaEnv
-  -> AddImageSpec
+callPdfToolsAddImagePrim
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => AddImageSpec
+  -> PdfToolsLambdaEnv
   -> m (Maybe BS.ByteString)
-callPdfToolsAddImage lc spec = do
+callPdfToolsAddImagePrim spec lc = do
   inputData <- addImageSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionAddImage inputData
-
-data PadesSignSpec = PadesSignSpec {
-    inputFileContent   :: BS.ByteString
-  , documentNumberText :: Text
-}
 
 padesSignSpecToLambdaSpec :: GlobalSignConfig -> PadesSignSpec -> BSL.ByteString
 padesSignSpecToLambdaSpec gs PadesSignSpec {..} =
@@ -107,12 +102,12 @@ padesSignSpecToLambdaSpec gs PadesSignSpec {..} =
       , "sslCertSecret" .= (gs ^. #certificatePassword)
       ]
 
-callPdfToolsPadesSign
-  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
-  => PdfToolsLambdaEnv
-  -> PadesSignSpec
+callPdfToolsPadesSignPrim
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => PadesSignSpec
+  -> PdfToolsLambdaEnv
   -> m (Maybe BS.ByteString)
-callPdfToolsPadesSign lc spec = do
+callPdfToolsPadesSignPrim spec lc = do
   case lc ^. #globalSign of
     Just gs -> do
       let inputData = padesSignSpecToLambdaSpec gs spec

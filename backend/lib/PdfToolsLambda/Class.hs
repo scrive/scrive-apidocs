@@ -1,0 +1,39 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+module PdfToolsLambda.Class
+  ( SealSpec(..)
+  , PreSealSpec(..)
+  , AddImageSpec(..)
+  , PadesSignSpec(..)
+  , PdfToolsLambdaMonad(..)
+  ) where
+
+import Control.Monad.Trans
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
+
+import Doc.AddImageSpec
+import Doc.SealSpec
+
+data PadesSignSpec = PadesSignSpec
+  { inputFileContent   :: BS.ByteString
+  , documentNumberText :: Text
+  }
+
+class Monad m => PdfToolsLambdaMonad m where
+  callPdfToolsSealing    :: SealSpec       -> m (Maybe BS.ByteString)
+  callPdfToolsPresealing :: PreSealSpec    -> m (Maybe BS.ByteString)
+  callPdfToolsCleaning   :: BSL.ByteString -> m (Maybe BS.ByteString)
+  callPdfToolsAddImage   :: AddImageSpec   -> m (Maybe BS.ByteString)
+  callPdfToolsPadesSign  :: PadesSignSpec  -> m (Maybe BS.ByteString)
+
+-- | Generic, overlappable instance.
+instance {-# OVERLAPPABLE #-}
+  ( PdfToolsLambdaMonad m
+  , Monad (t m)
+  , MonadTrans t
+  ) => PdfToolsLambdaMonad (t m) where
+  callPdfToolsSealing    = lift . callPdfToolsSealing
+  callPdfToolsPresealing = lift . callPdfToolsPresealing
+  callPdfToolsAddImage   = lift . callPdfToolsAddImage
+  callPdfToolsPadesSign  = lift . callPdfToolsPadesSign
+  callPdfToolsCleaning   = lift . callPdfToolsCleaning
