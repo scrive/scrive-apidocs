@@ -20,6 +20,7 @@ import File exposing (File)
 import File.Select as FileSelect
 import Task
 
+import Lib.Theme.Types exposing (..)
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 
 type alias EditUserGroupBrandingReadonly =
@@ -63,10 +64,10 @@ viewThemeSelector embed kind read state =
 
       themeItem : Theme -> Select.Item msg
       themeItem theme = Select.item
-        [ value <| if isJust theme.fromDomainTheme then "null" else String.fromInt theme.id
+        [ value <| if theme.id <= 0 then "null" else String.fromInt theme.id
         , selected <| case Enum.get kind state.themes of
             Just id -> theme.id == id
-            Nothing -> isJust theme.fromDomainTheme ]
+            Nothing -> theme.id <= 0 ]
         [ text theme.name ]
   in  Form.col
         [ Col.sm8, Col.md8, Col.lg8 ]

@@ -1,14 +1,15 @@
 module AdminOnly.UserGroupAdmin.UserGroupBrandingTab.ThemePreview exposing (viewPreviewTheme)
 
-import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 import Component.Preview.Email
 import Component.Preview.SignView
 import Component.Preview.Service
 import Component.Theme.Data
 import Color exposing (rgb)
 import EnumExtra as Enum
-
 import Html exposing (Html)
+
+import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
+import Lib.Theme.Types exposing (..)
 
 -- 'massage' `Theme` into `Component.Theme.Data.Theme`
 massage : Theme -> Component.Theme.Data.Theme

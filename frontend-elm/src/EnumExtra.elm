@@ -72,3 +72,6 @@ toList d = Maybe.values
 
 values : Dict k v -> List v
 values = DictOrig.values << .dict
+
+member : k -> Dict k v -> Bool
+member k v = Maybe.isJust <| get k v

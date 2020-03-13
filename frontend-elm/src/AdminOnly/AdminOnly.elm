@@ -12,7 +12,7 @@ module AdminOnly.AdminOnly exposing
     , view
     )
 
-import AdminOnly.BrandedDomain.BrandedDomain as BrandedDomain
+import AdminOnly.BrandedDomain.BrandedDomainTab as BrandedDomain
 import AdminOnly.BrandedDomain.BrandedDomainsTab as BrandedDomainsTab
 import AdminOnly.UserAdmin.DocumentsTab.DocumentsTab as DocumentsTab exposing (Config(..))
 import AdminOnly.UserAdmin.UserAdmin as UserAdmin
@@ -21,7 +21,7 @@ import AdminOnly.UserGroupAdmin.UserGroupAdmin as UserGroupAdmin
 import AdminOnly.UserGroupAdmin.UserGroupAdminTab as UserGroupAdminTab
 import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Spacing as Spacing
-import Either
+import Either exposing (Either(..))
 import Html exposing (text)
 import Html.Attributes exposing (href)
 import Maybe as M
@@ -54,7 +54,7 @@ type alias Model =
     , mBrandedDomainsTab : Maybe BrandedDomainsTab.Model
     , mUserAdmin : Maybe UserAdmin.Model
     , mUserGroupAdmin : Maybe UserGroupAdmin.Model
-    , mBrandedDomain : Maybe BrandedDomain.Model
+    , mBrandedDomain : Maybe BrandedDomain.State
     }
 
 
@@ -94,7 +94,7 @@ userGroupAdminModelLens =
         (\b a -> { a | mUserGroupAdmin = Just b })
 
 
-brandedDomainModelLens : Optional Model BrandedDomain.Model
+brandedDomainModelLens : Optional Model BrandedDomain.State
 brandedDomainModelLens =
     Optional .mBrandedDomain
         (\b a -> { a | mBrandedDomain = Just b })
@@ -307,12 +307,19 @@ update globals =
             <|
                 UserGroupAdmin.update globals
 
-        updateBrandedDomain =
-            liftOptionalUpdateHandler
-                brandedDomainModelLens
-                BrandedDomainMsg
-            <|
-                BrandedDomain.update globals
+        updateBrandedDomain : BrandedDomain.Msg -> Model -> ( Model, Cmd (Either msg Msg) )
+        updateBrandedDomain msg model =
+            case model.mBrandedDomain of
+              Nothing -> (model, Cmd.none)  -- this really should be an internal error
+              Just brandedDomainTab ->
+                let (newBrandedDomainTab, cmd) =
+                      BrandedDomain.update
+                        { embed = Right << BrandedDomainMsg
+                        , presentFlashMessage = Cmd.map Left << globals.flashMessage
+                        , formBody = formBody globals
+                        , gotoBrandedDomainsTab = Cmd.map Left globals.gotoBrandedDomainsTab
+                        } msg brandedDomainTab
+                in ({ model | mBrandedDomain = Just newBrandedDomainTab }, cmd)
     in
     \msg model ->
         case msg of
@@ -444,10 +451,10 @@ updatePage globals page model =
             let
                 ( sub, subCmd ) =
                     model.mBrandedDomain
-                        |> M.map (BrandedDomain.updatePage subPage)
+                        |> M.map (BrandedDomain.updatePage identity subPage)
                         |> M.withDefault
                             (BrandedDomain.init
-                                globals.xtoken
+                                identity
                                 subPage
                             )
             in
@@ -474,7 +481,7 @@ view model =
 
         BrandedDomain _ ->
             model.mBrandedDomain
-                |> M.map (liftInnerHtml BrandedDomainMsg << BrandedDomain.view)
+                |> M.map (innerHtml << liftHtml BrandedDomainMsg << BrandedDomain.view)
                 |> M.withDefault viewError
 
         Home _ ->

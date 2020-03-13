@@ -2,9 +2,11 @@ module AdminOnly.UserGroupAdmin.UserGroupBrandingTab exposing (..)
 
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Json exposing (..)
-import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.EditTheme as EditTheme
+import Lib.Theme.EditTheme as EditTheme
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.EditUserGroupBranding as EditUserGroupBranding
-import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.ThemePreview exposing (viewPreviewTheme)
+import Lib.Theme.PreviewTheme exposing (..)
+import Lib.Theme.Types exposing (..)
+import Lib.Theme.Json exposing (..)
 import Bootstrap.Tab as Tab
 import Json.Decode as JD
 import Json.Encode as JE
@@ -23,12 +25,21 @@ import Vendor.Popover as Popover
 import Maybe exposing (withDefault)
 import FlashMessage exposing (FlashMessage)
 import List.Extra as List
-import EnumExtra as Enum
+import EnumExtra as Enum exposing (Enum)
 
 tabName : String
 tabName = "branding"
 
 type Page = EditBrandingTab | EditThemeTab
+
+enumEditTab : Enum Page
+enumEditTab =
+  let allValues = [EditBrandingTab, EditThemeTab]
+      toString t = case t of
+        EditBrandingTab -> "branding"
+        EditThemeTab -> "theme"
+      toHumanString = toString
+  in Enum.makeEnum allValues toString toHumanString
 
 type alias LoadingState =
   { domainThemesLoaded : Bool
@@ -87,8 +98,7 @@ update {embed, presentFlashMessage, formBody} msg = case msg of
   DoSaveUserGroupBrandingMsg -> doSaveUserGroupBranding embed formBody
   EditThemeMsg msg_ -> \state ->
     let editThemeReadonly =
-          { availableThemes = state.availableThemes
-          , domainThemes = state.domainThemes
+          { availableThemes = Enum.values state.domainThemes ++ state.availableThemes
           }
         (newEditThemeState, cmd) =
           EditTheme.update (embed << EditThemeMsg) msg_ editThemeReadonly state.editThemeState
@@ -96,25 +106,14 @@ update {embed, presentFlashMessage, formBody} msg = case msg of
   EditUserGroupBrandingMsg msg_ -> \state ->
     let branding = state.editUserGroupBrandingState
         (newBranding, cmd) = EditUserGroupBranding.update (embed << EditUserGroupBrandingMsg) msg_ state.editUserGroupBrandingState
-        themeChanged kind = Enum.get kind newBranding.themes /= Enum.get kind branding.themes
-        previewTabState =
-          if themeChanged EmailTheme then Tab.customInitialState <| previewTabName EmailTheme
-          else if themeChanged SignViewTheme then Tab.customInitialState <| previewTabName SignViewTheme
-          else if themeChanged ServiceTheme then Tab.customInitialState <| previewTabName ServiceTheme
-          else state.previewTabState
-    in ({ state | editUserGroupBrandingState = newBranding, previewTabState = previewTabState }, cmd)
+        mPreviewThemeKind =
+            List.find (\kind -> Enum.get kind newBranding.themes /= Enum.get kind branding.themes)
+            <| Enum.allValues enumThemeKind
+        newPreviewTabState =
+            Maybe.withDefault state.previewTabState
+              <| Maybe.map (Tab.customInitialState << Enum.toString enumThemeKind) mPreviewThemeKind
+    in ({ state | editUserGroupBrandingState = newBranding, previewTabState = newPreviewTabState }, cmd)
   PresentFlashMessage message -> \state -> (state, presentFlashMessage message)
-
-editTabName : Page -> String
-editTabName editPage = case editPage of
-        EditBrandingTab -> "branding"
-        EditThemeTab -> "theme"
-
-previewTabName : ThemeKind -> String
-previewTabName kind = case kind of
-  EmailTheme -> "email"
-  SignViewTheme -> "signview"
-  ServiceTheme -> "service"
 
 updatePage : { ugid : String, page : Page, embed : Msg -> msg } -> State -> (State, Cmd msg)
 updatePage params state =
@@ -133,8 +132,8 @@ init {page, ugid, embed} =
           , userGroupBrandingLoaded = False
           , userGroupThemesLoaded = False }
         , editTabPage = page
-        , editTabState = Tab.customInitialState <| editTabName page
-        , previewTabState = Tab.customInitialState <| previewTabName EmailTheme
+        , editTabState = Tab.customInitialState <| Enum.toString enumEditTab page
+        , previewTabState = Tab.customInitialState <| Enum.toString enumThemeKind EmailTheme
         , availableThemes = []
         , domainThemes = Enum.empty enumThemeKind
         , editThemeState =
@@ -179,8 +178,7 @@ viewLoaded state =
         , doDeleteTheme = DoDeleteThemeMsg
         , doCreateTheme = DoCreateThemeMsg
         }
-        { availableThemes = state.availableThemes
-        , domainThemes = state.domainThemes
+        { availableThemes = Enum.values state.domainThemes ++ state.availableThemes
         } state.editThemeState
 
       brandingTab = EditUserGroupBranding.viewEditUserGroupBranding
@@ -201,17 +199,28 @@ viewLoaded state =
               Nothing -> Enum.get kind state.domainThemes
               Just id -> List.find (\theme -> theme.id == id) state.availableThemes
 
+      viewThemePreview kind = case kind of
+            EmailTheme -> viewEmailThemePreview
+            SignViewTheme -> viewSignViewThemePreview
+            ServiceTheme -> viewServiceThemePreview
+
+      themePreviewItems = List.map (\kind -> Tab.item
+                  { id = Enum.toString enumThemeKind kind
+                  , link = Tab.link [] [ text <| Enum.toHumanString enumThemeKind kind ]
+                  , pane = Tab.pane [ Spacing.mt3 ]
+                    [ viewThemePreview kind <| previewThemeSet kind ]
+                  }) <| Enum.allValues enumThemeKind
   in Grid.row []
       [ Grid.col [ Col.sm12, Col.md5 ]
         [ Tab.view state.editTabState <|
             Tab.items
               [ Tab.item
-                  { id = editTabName EditBrandingTab
+                  { id = Enum.toString enumEditTab EditBrandingTab
                   , link = Tab.link [] [ text "User Group Branding" ]
                   , pane = Tab.pane [ Spacing.mt3 ] [ brandingTab ]
                   }
               , Tab.item
-                  { id = editTabName EditThemeTab
+                  { id = Enum.toString enumEditTab EditThemeTab
                   , link = Tab.link [] [ text "Manage Themes" ]
                   , pane = Tab.pane [ Spacing.mt3 ] [ themeTab ]
                   }
@@ -219,26 +228,7 @@ viewLoaded state =
         ]
       , Grid.col [ Col.sm12, Col.md7 ]
         [ div [ class "scrive" ] [ Tab.view state.previewTabState <|
-            Tab.items
-              [ Tab.item
-                  { id = previewTabName EmailTheme
-                  , link = Tab.link [] [ text "Email" ]
-                  , pane = Tab.pane [ Spacing.mt3 ]
-                    [ viewPreviewTheme EmailTheme <| previewThemeSet EmailTheme ]
-                  }
-              , Tab.item
-                  { id = previewTabName SignViewTheme
-                  , link = Tab.link [] [ text "Sign View" ]
-                  , pane = Tab.pane [ Spacing.mt3 ]
-                    [ viewPreviewTheme SignViewTheme <| previewThemeSet SignViewTheme ]
-                  }
-              , Tab.item
-                  { id = previewTabName ServiceTheme
-                  , link = Tab.link [] [ text "Service" ]
-                  , pane = Tab.pane [ Spacing.mt3 ]
-                    [ viewPreviewTheme ServiceTheme <| previewThemeSet ServiceTheme ]
-                  }
-            ] previewTabConfig
+            Tab.items themePreviewItems previewTabConfig
         ]
       ] ]
 
@@ -266,13 +256,16 @@ getDomainThemes embed =
         Ok domainThemes -> embed <| SetDomainThemesMsg domainThemes
         _ -> embed <| PresentFlashMessage <| FlashMessage.error "Failed to get domain themes."
 
-      -- domain themes are what we get if we set an id to null in the branding
+      -- Domain themes are the themes we implicitly get if we set a theme id to
+      -- null in the branding. We manually assign negative ids as a hack to a)
+      -- express that these should be read-only and b) disambiguate between
+      -- them, since they might correspond to the same underlying theme.
       toDomainThemes : Theme -> Theme -> Theme -> (Enum.Dict ThemeKind Theme)
       toDomainThemes mailTheme signViewTheme serviceTheme =
         Enum.fromList enumThemeKind
-          [ (EmailTheme, { mailTheme | name = "Domain Email Theme", fromDomainTheme = Just EmailTheme })
-          , (SignViewTheme, { signViewTheme | name = "Domain Sign View Theme", fromDomainTheme = Just SignViewTheme })
-          , (ServiceTheme, { serviceTheme | name = "Domain Service Theme", fromDomainTheme = Just ServiceTheme })
+          [ (EmailTheme, { mailTheme | name = "Domain Email Theme", id = -1 })
+          , (SignViewTheme, { signViewTheme | name = "Domain Sign View Theme", id = -2 })
+          , (ServiceTheme, { serviceTheme | name = "Domain Service Theme", id = -3 })
           ]
 
       decoder : JD.Decoder (Enum.Dict ThemeKind Theme)
@@ -410,7 +403,6 @@ createThemeCallback embed formBody blueprint newThemeID state =
   let newTheme =
         { blueprint
         | id = newThemeID
-        , fromDomainTheme = Nothing
         , name = "Copy of " ++ blueprint.name }
       editThemeState = state.editThemeState
       newState =

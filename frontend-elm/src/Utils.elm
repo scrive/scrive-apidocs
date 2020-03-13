@@ -19,6 +19,7 @@ import Time.DateTime exposing (toPosix)
 import Time.Iso8601 exposing (toDateTime)
 import Url
 import Url.Builder as UB exposing (QueryParameter)
+import Json.Decode as JD exposing (Decoder)
 
 
 type alias Globals msg =
@@ -547,3 +548,28 @@ monthToInt month =
 
         Dec ->
             12
+
+decodeJust : Decoder (Maybe a) -> Decoder a
+decodeJust d =
+  d |> JD.andThen (\ma -> case ma of
+          Just a -> JD.succeed a
+          Nothing -> JD.fail "Decoder (Maybe a) return Nothing but we expected Just.")
+
+decodeFullDict : Enum k -> (k -> Decoder v) -> Decoder (Enum.Dict k v)
+decodeFullDict e d =
+  let verify dict =
+        if List.all (\k -> Enum.member k dict) (Enum.allValues e)
+        then JD.succeed dict
+        else JD.fail "Decoded dict not full!"
+  in decodeDict e d |> JD.andThen verify
+
+decodeDict : Enum k -> (k -> Decoder v) -> Decoder (Enum.Dict k v)
+decodeDict e d =
+  let go : List k -> Decoder (Enum.Dict k v)
+      go ks = case ks of
+        [] -> JD.succeed <| Enum.empty e
+        k :: ks_ -> JD.maybe (d k)
+          |> JD.andThen (\mv -> case mv of
+              Just v -> JD.map (Enum.insert k v) <| go ks_
+              Nothing -> go ks_)
+  in go <| Enum.allValues e

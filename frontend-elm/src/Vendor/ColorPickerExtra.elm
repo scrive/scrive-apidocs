@@ -263,7 +263,7 @@ view col (State model) =
             , pickerIndicator col
             ]
         , div (pickerStyles ++ sliderContainerStyles "hue")
-            [ huePalette model.mouseTarget
+            [ huePalette model.id model.mouseTarget
             , hueMarker hue
             ]
 
@@ -358,8 +358,8 @@ pickerIndicator col =
 -- --------------------------
 
 
-huePalette : MouseTarget -> Svg Msg
-huePalette mouseTarget =
+huePalette : String -> MouseTarget -> Svg Msg
+huePalette id mouseTarget =
     let
         mkStop ( os, sc ) =
             stop [ offset os, stopColor sc, stopOpacity "1" ] []
@@ -375,11 +375,11 @@ huePalette mouseTarget =
             , ( "100%", "#FF0000" )
             ]
     in
-    svg
+        svg
         (SvgAttrs.class "hue-picker" :: sliderStyles)
         [ defs []
             [ linearGradient
-                [ SvgAttrs.id "gradient-hsv", x1 "100%", y1 "0%", x2 "0%", y2 "0%" ]
+                [ SvgAttrs.id ("gradient-hsv-" ++ id), x1 "100%", y1 "0%", x2 "0%", y2 "0%" ]
                 (stops |> List.map mkStop)
             ]
         , rect
@@ -387,7 +387,7 @@ huePalette mouseTarget =
              , y "0"
              , SvgAttrs.width (String.fromInt widgetWidth)
              , SvgAttrs.height "100%"
-             , SvgAttrs.fill "url(#gradient-hsv)"
+             , SvgAttrs.fill <| "url(#gradient-hsv-" ++ id ++ ")"
              ]
                 ++ svgDragAttrs mouseTarget HueSlider (OnMouseMove HueSlider)
             )

@@ -366,7 +366,7 @@ update msg model =
                     updateAdminOnly adminOnlyMsg model
 
                 cmd2 =
-                    joinCmd (\x -> x) cmd1
+                    joinCmd identity cmd1
             in
             ( model2, cmd2 )
 

@@ -28,6 +28,7 @@ import Monocle.Optional exposing (Optional)
 import Url.Parser as UP exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as UPQ
 import Utils exposing (..)
+import EnumExtra as Enum
 
 
 type alias Page =
@@ -150,11 +151,11 @@ fromPage page =
                     ( StructureTab.tabName, emptyPageUrl )
 
                 BrandingTab UserGroupBrandingTab.EditBrandingTab  ->
-                    ( "branding"
+                    ( Enum.toString UserGroupBrandingTab.enumEditTab UserGroupBrandingTab.EditBrandingTab
                     , emptyPageUrl )
 
                 BrandingTab UserGroupBrandingTab.EditThemeTab  ->
-                    ( "theme"
+                    ( Enum.toString UserGroupBrandingTab.enumEditTab UserGroupBrandingTab.EditThemeTab
                     , emptyPageUrl )
 
                 PaymentsTab ->
@@ -213,10 +214,10 @@ parseTab mFragment mSearch mSortBy mOrder mSubTab _ _ _ =
                   , UsersTab <| UsersTab.pageFromSearchSortByOrder mSearch mSortBy mOrder
                   )
                 , ( StructureTab.tabName, StructureTab )
-                , ( "branding"
+                , ( Enum.toString UserGroupBrandingTab.enumEditTab UserGroupBrandingTab.EditBrandingTab
                   , BrandingTab UserGroupBrandingTab.EditBrandingTab
                   )
-                , ( "theme"
+                , ( Enum.toString UserGroupBrandingTab.enumEditTab UserGroupBrandingTab.EditThemeTab
                   , BrandingTab UserGroupBrandingTab.EditThemeTab
                   )
                 , ( PaymentsTab.tabName, PaymentsTab )
