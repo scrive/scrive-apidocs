@@ -107,6 +107,12 @@ setStringField name value ug =
         "cgiServiceID" ->
             modifySettings (\s -> { s | cgiServiceID = stringNonEmpty value }) ug
 
+        "portalUrl" ->
+            modifySettings (\s -> { s | portalUrl = stringNonEmpty value }) ug
+
+        "eidServiceToken" ->
+            modifySettings (\s -> { s | eidServiceToken = stringNonEmpty value }) ug
+
         "parentID" ->
             { ug | parentID = stringNonEmpty value }
 
@@ -137,6 +143,12 @@ setBoolField name value ug =
 
         "immediateTrash" ->
             modifySettings (\s -> { s | immediateTrash = value }) ug
+
+        "sendTimeoutNotification" ->
+            modifySettings (\s -> { s | sendTimeoutNotification = value }) ug
+
+        "twoFAMandatory" ->
+            modifySettings (\s -> { s | twoFAMandatory = value }) ug
 
         "addressIsInherited" ->
             { ug | addressIsInherited = value }
@@ -170,6 +182,9 @@ setIntField name value ug =
 
                 "idleDocTimeoutError" ->
                     { s | idleDocTimeoutError = value }
+
+                "sessionTimeout" ->
+                    { s | sessionTimeout = value }
 
                 _ ->
                     s
@@ -225,6 +240,11 @@ type alias Settings =
     , idleDocTimeoutRejected : Maybe Int
     , idleDocTimeoutError : Maybe Int
     , immediateTrash : Bool
+    , sendTimeoutNotification : Bool
+    , twoFAMandatory : Bool
+    , sessionTimeout : Maybe Int
+    , portalUrl : Maybe String
+    , eidServiceToken : Maybe String
     }
 
 
@@ -244,6 +264,11 @@ settingsDecoder =
         |> DP.required "idledoctimeoutrejected" (JD.int |> JD.nullable)
         |> DP.required "idledoctimeouterror" (JD.int |> JD.nullable)
         |> DP.required "immediatetrash" JD.bool
+        |> DP.required "sendtimeoutnotification" JD.bool
+        |> DP.required "totpismandatory" JD.bool
+        |> DP.required "sessiontimeout" (JD.int |> JD.nullable)
+        |> DP.required "portalurl" (JD.string |> JD.nullable)
+        |> DP.required "eidservicetoken" (JD.string |> JD.nullable)
 
 
 type alias ParentUserGroup =
@@ -402,25 +427,29 @@ tagsToUpdatesJson newTags oldTags =
 formValuesSettings : Settings -> List ( String, String )
 formValuesSettings settings =
     let
-        -- Allows empty idle doc timeout values
-        docTimeoutField (label, mVal) =
-            Just (label, M.map String.fromInt mVal |> M.withDefault "")
+        fromIntWithEmpty mVal =
+            M.map String.fromInt mVal |> M.withDefault ""
     in
     [ ( "companyipaddressmasklist", settings.ipAddressMaskList )
     , ( "companysmsprovider", encodeSmsProvider settings.smsProvider )
     , ( "companypadappmode", encodePadAppMode settings.padAppMode )
     , ( "companypadearchiveenabled", boolToJson settings.padEarchiveEnabled )
     , ( "companyimmediatetrash", boolToJson settings.immediateTrash )
+    , ( "companyidledoctimeoutpreparation", fromIntWithEmpty settings.idleDocTimeoutPreparation )
+    , ( "companyidledoctimeoutclosed", fromIntWithEmpty settings.idleDocTimeoutClosed )
+    , ( "companyidledoctimeoutcanceled", fromIntWithEmpty settings.idleDocTimeoutCancelled )
+    , ( "companyidledoctimeouttimedout", fromIntWithEmpty settings.idleDocTimeoutTimeout )
+    , ( "companyidledoctimeoutrejected", fromIntWithEmpty settings.idleDocTimeoutRejected )
+    , ( "companyidledoctimeouterror", fromIntWithEmpty settings.idleDocTimeoutError )
+    , ( "companysendtimeoutnotification", boolToJson settings.sendTimeoutNotification )
+    , ( "companytotpismandatory", boolToJson settings.twoFAMandatory )
+    , ( "companysessiontimeout", fromIntWithEmpty settings.sessionTimeout )
+    , ( "companyportalurl", M.withDefault "" settings.portalUrl )
+    , ( "companyeidservicetoken", M.withDefault "" settings.eidServiceToken )
     ]
         ++ L.filterMap identity
             [ mField identity ( "companycgiserviceid", settings.cgiServiceID )
             , mField identity ( "companycgidisplayname", settings.cgiDisplayName )
-            , docTimeoutField ( "companyidledoctimeoutpreparation", settings.idleDocTimeoutPreparation )
-            , docTimeoutField ( "companyidledoctimeoutclosed", settings.idleDocTimeoutClosed )
-            , docTimeoutField ( "companyidledoctimeoutcanceled", settings.idleDocTimeoutCancelled )
-            , docTimeoutField ( "companyidledoctimeouttimedout", settings.idleDocTimeoutTimeout )
-            , docTimeoutField ( "companyidledoctimeoutrejected", settings.idleDocTimeoutRejected )
-            , docTimeoutField ( "companyidledoctimeouterror", settings.idleDocTimeoutError)
             ]
 
 

@@ -540,6 +540,31 @@ viewUserGroup model ug address settings =
                 (M.withDefault "" <| M.map String.fromInt settings.idleDocTimeoutError)
                 (SetIntField "idleDocTimeoutError" docTimeoutRange)
                 [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "Send timeout notifications"
+                ""
+                settings.sendTimeoutNotification
+                (SetBoolField "sendTimeoutNotification")
+                [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "2FA is mandatory"
+                "If enabled, 2FA is mandatory/enforced for all users. 2FA can also be enforced for a single user."
+                settings.twoFAMandatory
+                (SetBoolField "twoFAMandatory")
+                [ readonly ug.settingsIsInherited ]
+            , formIntRowM "Session timeout"
+                "If set, users cookie session expiry is set based on the provided seconds. Valid values are between 5 minutes to 30 days. Leave field empty to use the default session timeout."
+                (M.withDefault "" <| M.map String.fromInt settings.sessionTimeout)
+                (SetIntField "sessionTimeout" (Just <| Range 300 2592000)) -- 5 mins to 30 days
+                [ readonly ug.settingsIsInherited ]
+            , formTextRowM "Portal URL"
+                ""
+                (M.withDefault "" settings.portalUrl)
+                (SetStringField "portalUrl")
+                [ readonly ug.settingsIsInherited ]
+            , formTextRowM "EID Hub token"
+                "If set, then customer specific branding in EID Hub is used (must be also defined in EID Hub). If not set, then EID Hub Scrive branding is used."
+                (M.withDefault "" settings.eidServiceToken)
+                (SetStringField "eidServiceToken")
+                [ readonly ug.settingsIsInherited ]
             ]
         , Grid.row [ Row.leftSm ]
             [ Grid.col [ Col.sm12 ]
