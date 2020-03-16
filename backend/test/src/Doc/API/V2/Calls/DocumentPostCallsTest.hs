@@ -119,7 +119,7 @@ testDocApiV2NewFromTemplate = do
   did  <- getMockDocId <$> testDocApiV2New' ctx
   tmpl <- dbQuery $ GetDocumentByDocumentID did
   assertEqual "Document is in user's folder"
-              (documentfolderid tmpl)
+              (Just $ documentfolderid tmpl)
               (user ^. #homeFolderID)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -132,7 +132,7 @@ testDocApiV2NewFromTemplate = do
     assertEqual "Document should be template" True is_template
     tmpl2 <- dbQuery $ GetDocumentByDocumentID did
     assertEqual "Template is still in user's folder"
-                (documentfolderid tmpl2)
+                (Just $ documentfolderid tmpl2)
                 (user ^. #homeFolderID)
 
 
@@ -141,7 +141,7 @@ testDocApiV2NewFromTemplate = do
     assertEqual "New document should NOT be template" False (getMockDocIsTemplate mDoc)
     doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
     assertEqual "New document is in user's folder"
-                (documentfolderid doc)
+                (Just $ documentfolderid doc)
                 (user ^. #homeFolderID)
 
 testDocApiV2NewFromTemplateShared :: TestEnv ()
@@ -171,7 +171,7 @@ testDocApiV2NewFromTemplateShared = do
 
     doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
     assertEqual "New document is in user's folder"
-                (documentfolderid doc)
+                (Just $ documentfolderid doc)
                 (user ^. #homeFolderID)
 
 testDocApiV2NewFromTemplateWithBPID :: TestEnv ()
@@ -181,7 +181,7 @@ testDocApiV2NewFromTemplateWithBPID = do
   did  <- getMockDocId <$> testDocApiV2New' ctx
   tmpl <- dbQuery $ GetDocumentByDocumentID did
   assertEqual "Document is in user's folder"
-              (documentfolderid tmpl)
+              (Just $ documentfolderid tmpl)
               (user ^. #homeFolderID)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -194,7 +194,7 @@ testDocApiV2NewFromTemplateWithBPID = do
     assertEqual "Document should be template" True is_template
     tmpl2 <- dbQuery $ GetDocumentByDocumentID did
     assertEqual "Template is still in user's folder"
-                (documentfolderid tmpl2)
+                (Just $ documentfolderid tmpl2)
                 (user ^. #homeFolderID)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -207,7 +207,7 @@ testDocApiV2NewFromTemplateWithBPID = do
     assertEqual "New document should NOT be template" False (getMockDocIsTemplate mDoc)
     doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
     assertEqual "New document is in user's folder"
-                (documentfolderid doc)
+                (Just $ documentfolderid doc)
                 (user ^. #homeFolderID)
     assertEqual "New document has BPID tag"
                 (S.singleton (DocumentTag "bpid" testbpid))
@@ -930,8 +930,9 @@ testDocApiV2GenerateShareableLink = replicateM_ 100 $ do
   doc  <- do
     fid  <- addNewRandomFile
     file <- randomQuery $ GetFileByFileID fid
-    doc' <- rand 10 $ runOccurenceControl 0.5 $ startableDocumentOC (user ^. #id) file
-    did  <- randomUpdate $ StoreDocumentForTesting doc'
+    doc2 <- rand 10 $ runOccurenceControl 0.5 $ startableDocumentOC (user ^. #id) file
+    let doc3 = doc2 { documentfolderid = fromJust $ user ^. #homeFolderID }
+    did <- randomUpdate $ StoreDocumentForTesting doc3
     randomQuery $ GetDocumentByDocumentID did
 
   if isTemplate doc && isNothing (documentCanBeStarted (doc { documenttype = Signable }))
@@ -1005,17 +1006,18 @@ testDocInFolder = do
     $ randomUserTemplate { groupID = return $ admin ^. #groupID }
   nonAdminCtx <- return $ set #maybeUser (Just nonAdmin) adminCtx
 
+  let adminHomeFolderId = fromJust $ admin ^. #homeFolderID
   -- user tries to create document in admins home folder - should fail
   let createInNonOwnedFolder =
         [ ("file", inFile $ inTestDir "pdfs/simple.pdf")
         , ("saved"    , inText "false")
-        , ("folder_id", inText . showt . fromJust $ admin ^. #homeFolderID)
+        , ("folder_id", inText . showt $ adminHomeFolderId)
         ]
   _ <- mockDocTestRequestHelper nonAdminCtx POST createInNonOwnedFolder docApiV2New 403
 
   -- create subfolder
   adminSubfolder <- dbUpdate . FolderCreate $ set #parentID
-                                                  (admin ^. #homeFolderID)
+                                                  (Just adminHomeFolderId)
                                                   defaultFolder
   let subfolderID = adminSubfolder ^. #id
   -- create document in subfolder
@@ -1028,13 +1030,13 @@ testDocInFolder = do
   let did_2 = getMockDocId doc2
   void $ mockDocTestRequestHelper adminCtx POST [] (docApiV2Get did_2) 200
   assertEqual "Returned document has provided folder_id"
-              (Just subfolderID)
+              subfolderID
               (getMockDocFolderId doc2)
 
   -- verify that document has subfolderID
   docFromDB <- dbQuery $ GetDocumentByDocumentID did_2
   assertEqual "Created document has the provided folder_id"
-              (Just $ adminSubfolder ^. #id)
+              (adminSubfolder ^. #id)
               (documentfolderid docFromDB)
 
   -- create document from template in subfolder
@@ -1050,15 +1052,12 @@ testDocInFolder = do
                                    (docApiV2NewFromTemplate did_2)
                                    201
   assertEqual "Returned document has provided folder id"
-              (Just subfolderID)
+              subfolderID
               (getMockDocFolderId doc3)
 
   -- update document and move it to user home folder
   let docMove =
-        inText
-          $  T.pack "{\"folder_id\": \""
-          <> (showt $ fromJust $ admin ^. #homeFolderID)
-          <> "\"}"
+        inText $ T.pack "{\"folder_id\": \"" <> (showt adminHomeFolderId) <> "\"}"
       rq_update_params = [("document", docMove)]
       rq_update_code   = 200
 
@@ -1086,7 +1085,7 @@ testDocInFolder = do
 
   -- verify that document has home folderID now
   assertEqual "Moved document has user home folderID returned"
-              (admin ^. #homeFolderID)
+              adminHomeFolderId
               (getMockDocFolderId doc4)
 
 testDocApiV2AddEvidenceLogEvent :: TestEnv ()

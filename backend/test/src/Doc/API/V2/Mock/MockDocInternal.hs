@@ -32,7 +32,7 @@ data MockDoc = MockDoc
   , mockDocAccessToken        :: !(Maybe String)
   , mockDocTimezone           :: !String
   , mockDocTags               :: !(S.Set DocumentTag)
-  , mockDocFolderId           :: !(Maybe FolderID)
+  , mockDocFolderId           :: !FolderID
   , mockDocIsTemplate         :: !Bool
   , mockDocIsSaved            :: !Bool
   , mockDocIsShared           :: !Bool
@@ -71,7 +71,7 @@ mockDocUnjson =
                 mockDocTags
                 "MockDoc Tags"
                 (invmap S.fromList S.toList $ arrayOf unjsonDocumentTag)
-    <*> fieldOpt "folder_id" mockDocFolderId "MockDoc FolderID"
+    <*> field "folder_id"   mockDocFolderId   "MockDoc FolderID"
     <*> field "is_template" mockDocIsTemplate "MockDoc IsTemplate"
     <*> field "is_saved"    mockDocIsSaved    "MockDoc IsSaved"
     <*> field "is_shared"   mockDocIsShared   "MockDoc IsShared"

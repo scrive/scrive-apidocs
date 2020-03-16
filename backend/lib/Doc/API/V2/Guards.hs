@@ -220,17 +220,10 @@ guardDocumentCreateInFolderIsAllowed :: Kontrakcja m => User -> FolderID -> m ()
 guardDocumentCreateInFolderIsAllowed user location =
   guardFolderActionIsAllowed user [(CreateA, location)]
 
-guardDocumentMoveIsAllowed
-  :: Kontrakcja m => User -> Maybe FolderID -> Maybe FolderID -> m ()
-guardDocumentMoveIsAllowed user mOldLocation mNewLocation = do
-  when (mOldLocation /= mNewLocation) $ do
-    case mNewLocation of
-      Nothing -> apiError
-        $ requestParameterInvalid "document" "folder_id has to be set to some value"
-      _ ->
-        guardFolderActionIsAllowed user
-          . catMaybes
-          $ [(CreateA, ) <$> mNewLocation, (DeleteA, ) <$> mOldLocation]
+guardDocumentMoveIsAllowed :: Kontrakcja m => User -> FolderID -> FolderID -> m ()
+guardDocumentMoveIsAllowed user oldLocation newLocation =
+  when (oldLocation /= newLocation)
+    $ guardFolderActionIsAllowed user [(CreateA, oldLocation), (DeleteA, oldLocation)]
 
 -- | Make sure the given user (the document author) is allowed to use the
 -- display name and service id of the given user group.

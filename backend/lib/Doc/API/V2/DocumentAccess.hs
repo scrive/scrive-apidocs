@@ -152,8 +152,7 @@ documentAccessModeByFolder user document roles =
         <+> showt (documentid document)
         <+> "by folder without any permission. This should be caught earlier."
   where
-    hasReadAccessForDocByFolder =
-      maybe False hasReadAccessForFolder (documentfolderid document)
+    hasReadAccessForDocByFolder = hasReadAccessForFolder (documentfolderid document)
     hasReadAccessForFolder fid =
       (accessControlPure roles [canDo ReadA $ DocumentInFolderR fid])
         || (accessControlPure roles [canDo ReadA $ DocumentAfterPreparationR fid])

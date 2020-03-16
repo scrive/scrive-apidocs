@@ -57,11 +57,19 @@ sendDocumentMails author = do
       -- make  the context, user and document all use the same lang
     ctx <- mkContext l
     void $ dbUpdate $ SetUserSettings (author ^. #id) (author ^. #settings & #lang .~ l)
-    let aa = authorActor ctx author
+    let aa           = authorActor ctx author
+        homeFolderId = fromJust $ author ^. #homeFolderID
     req <- mkRequest POST []
     runTestKontra req ctx
       $               (randomUpdate
-                        (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa Nothing)
+                        (NewDocument author
+                                     "Document title"
+                                     Signable
+                                     defaultTimeZoneName
+                                     0
+                                     aa
+                                     homeFolderId
+                        )
                       )
       `withDocumentM` do
                         res <- dbUpdate $ SetDocumentLang l (systemActor $ ctx ^. #time)

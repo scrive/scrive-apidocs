@@ -229,9 +229,8 @@ data Document = Document
   , documentfromshareablelink      :: !Bool
   , documentshowarrow              :: !Bool
   -- | Folder, where the document belongs. The folder facilitates access to the
-  -- document.  Initially Maybe because of initial migration After initial
-  -- migration, Maybe will be removed
-  , documentfolderid               :: !(Maybe FolderID)
+  -- document.
+  , documentfolderid               :: !FolderID
   -- | When set, use the EID settings of the specified user group (rather than
   -- that of the author) for EID transactions related to the document. This
   -- mainly affects the 'display name', i.e. the name presented to the user as
@@ -285,7 +284,7 @@ defaultDocument = Document { documentid                = unsafeDocumentID 0
                            , documenttemplateid        = Nothing
                            , documentfromshareablelink = False
                            , documentshowarrow         = True
-                           , documentfolderid          = Nothing
+                           , documentfolderid          = unsafeFolderID 0
                            , documentusergroupforeid   = Nothing
                            , documentsealingmethod     = Guardtime
                            }
@@ -456,7 +455,7 @@ type instance CompositeRow Document
     , Maybe DocumentID
     , Bool
     , Bool
-    , Maybe FolderID
+    , FolderID
     , Maybe UserGroupID
     , SealingMethod
     )

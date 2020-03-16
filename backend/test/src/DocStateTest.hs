@@ -1027,9 +1027,10 @@ performNewDocumentWithRandomUser mug doctype title = do
                   Nothing -> fmap (view #id) $ instantiateRandomUserGroup
     }
   ctx <- mkContext defaultLang
-  let aa = authorActor ctx user
+  let aa           = authorActor ctx user
+      homeFolderId = fromJust $ user ^. #homeFolderID
   doc <- randomUpdate
-    $ NewDocument user (T.pack title) doctype defaultTimeZoneName 0 aa Nothing
+    $ NewDocument user (T.pack title) doctype defaultTimeZoneName 0 aa homeFolderId
   return (user, ctx ^. #time, doc)
 
 assertGoodNewDocument
@@ -1655,11 +1656,17 @@ testNewDocumentDependencies = replicateM_ 10 $ do
   author <- instantiateRandomUser
   -- execute
   ctx    <- mkContext defaultLang
-  let aa = authorActor ctx author
+  let aa           = authorActor ctx author
+      homeFolderId = fromJust $ author ^. #homeFolderID
   doc <-
     randomUpdate
-      $ (\title doctype ->
-          NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa Nothing
+      $ (\title doctype -> NewDocument author
+                                       (fromSNN title)
+                                       doctype
+                                       defaultTimeZoneName
+                                       0
+                                       aa
+                                       homeFolderId
         )
   -- assert
   assertInvariants doc
@@ -1669,11 +1676,17 @@ testDocumentCanBeCreatedAndFetchedByID = replicateM_ 10 $ do
   -- setup
   author <- instantiateRandomUser
   ctx    <- mkContext defaultLang
-  let aa = authorActor ctx author
+  let aa           = authorActor ctx author
+      homeFolderId = fromJust $ author ^. #homeFolderID
   doc <-
     randomUpdate
-      $ (\title doctype ->
-          NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa Nothing
+      $ (\title doctype -> NewDocument author
+                                       (fromSNN title)
+                                       doctype
+                                       defaultTimeZoneName
+                                       0
+                                       aa
+                                       homeFolderId
         )
   -- execute
   ndoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)

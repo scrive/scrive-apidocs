@@ -80,14 +80,16 @@ testDocApiV2List useFolderListCalls = do
   listJSON <- jsonTestRequestHelper ctx GET [] docApiV2List 200
   assertListResponseLengthAndStatus listJSON 3 Preparation
 
-  let homeFolderID = user ^. #homeFolderID
-  userSubFolder <- dbUpdate . FolderCreate $ set #parentID homeFolderID defaultFolder
+  let homeFolderID = fromJust $ user ^. #homeFolderID
+  userSubFolder <- dbUpdate . FolderCreate $ set #parentID
+                                                 (Just homeFolderID)
+                                                 defaultFolder
   let subFolderID = userSubFolder ^. #id
       movedDoc1   = moveMockDoc doc1 subFolderID
   void $ testDocApiV2Update' ctx movedDoc1
   listJSON2 <- jsonTestRequestHelper ctx
                                      GET
-                                     [filterByFolderID $ fromJust homeFolderID]
+                                     [filterByFolderID $ homeFolderID]
                                      docApiV2List
                                      200
   assertListResponseLengthAndStatus listJSON2 3 Preparation

@@ -1310,7 +1310,7 @@ addRandomDocumentWithFile fileid rda = do
           , documenttitle             = title
           , documentfromshareablelink = rdaSharedLink rda
           , documenttemplateid        = rdaTemplateId rda
-          , documentfolderid          = user ^. #homeFolderID
+          , documentfolderid          = fromJust $ user ^. #homeFolderID
           , documenttimeouttime       = if rdaTimeoutTime rda
                                           then documenttimeouttime doc'
                                           else Nothing

@@ -284,9 +284,7 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  folderID <- apiGuardJust (serverError "Document is not in a Folder")
-    $ documentfolderid doc
-  let acc = [canDo ReadA $ DocumentInFolderR folderID]
+  let acc = [canDo ReadA $ DocumentInFolderR $ documentfolderid doc]
   apiAccessControl user acc $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl
