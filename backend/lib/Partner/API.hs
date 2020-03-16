@@ -40,7 +40,6 @@ import User.Email (Email(..))
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
-import UserGroup.Types.PaymentPlan
 import qualified User.Types.User.Internal as I
 
 partnerAPI :: Route (Kontra Response)
@@ -81,7 +80,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
             defaultUserGroup
               & (#parentGroupID ?~ partnerUsrGrpID)
               & (#homeFolderID ?~ newUgFolder ^. #id)
-              & (#invoicing .~ BillItem (Just FreePlan))
+              & (#invoicing .~ BillItem Nothing)
       ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug =
             updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu
