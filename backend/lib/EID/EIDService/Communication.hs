@@ -199,23 +199,27 @@ checkNOBankIDTransactionWithEIDService conf tid = do
                 mpid <- fromJSValueField "pid"
                 mcer <- fromJSValueFieldCustom "certificateData"
                   $ fromJSValueField "certificate"
-                mdn <- fromJSValueFieldCustom "certificateData"
+                midn <- fromJSValueField "issuerDN"
+                mdn  <- fromJSValueFieldCustom "certificateData"
                   $ fromJSValueField "distinguishedName"
                 mdob <- fromJSValueFieldCustom "profileData"
                   $ fromJSValueField "birthdate"
-                mphone            <- fromJSValueField "phoneNumber"
+                mn <- fromJSValueFieldCustom "profileData" $ fromJSValueField "name"
+                mphone <- fromJSValueField "phoneNumber"
                 mUsedMobileBankID <- fromJSValueField "usedMobileBankID"
-                case (mpid, mUsedMobileBankID) of
-                  (Just pid, Just usedMobileBankID) -> return $ Just
+                case (mpid, mdn, midn, mUsedMobileBankID) of
+                  (Just pid, Just dn, Just idn, Just usedMobileBankID) -> return $ Just
                     CompleteNOBankIDEIDServiceTransactionData
-                      { eidnobidInternalProvider  = if usedMobileBankID
-                                                      then EIDServiceNOBankIDMobile
-                                                      else EIDServiceNOBankIDStandard
-                      , eidnobidBirthDate         = mdob
-                      , eidnobidCertificate       = mcer
-                      , eidnobidDistinguishedName = mdn
-                      , eidnobidPhoneNumber       = mphone
-                      , eidnobidPid               = pid
+                      { eidnobidInternalProvider        = if usedMobileBankID
+                                                            then EIDServiceNOBankIDMobile
+                                                            else EIDServiceNOBankIDStandard
+                      , eidnobidName                    = mn
+                      , eidnobidBirthDate               = mdob
+                      , eidnobidDistinguishedName       = dn
+                      , eidnobidIssuerDistinguishedName = idn
+                      , eidnobidCertificate             = mcer
+                      , eidnobidPhoneNumber             = mphone
+                      , eidnobidPid                     = pid
                       }
                   _ -> return Nothing
           return (Just EIDServiceTransactionStatusCompleteAndSuccess, td)

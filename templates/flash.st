@@ -24,7 +24,7 @@ flashMessageBecomeCompanyLogInDifferentUser=$_flashMessageBecomeCompanyLogInDiff
 ####
 flashMessageUserHasIdentifiedWithDifferentSSN=$_flashMessageUserHasIdentifiedWithDifferentSSN()$
 ###
-flashMessageNoDNProvidedByEIDService=$_flashMessageNoDNProvidedByEIDService()$
+flashMessageNoNameProvidedByEIDService=$_flashMessageNoNameProvidedByEIDService()$
 ###
 flashMessageNoDOBProvidedByEIDService=$_flashMessageNoDOBProvidedByEIDService()$
 ###
