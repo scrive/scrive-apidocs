@@ -709,6 +709,12 @@ elegVerificationAuth=
   $if(signatory_email)$
   <br/>Email: $signatory_email$
   $endif$
+  $if(signatory_distinguished_name)$
+  <br/>Signatory distinguished Name: $signatory_distinguished_name$
+  $endif$
+  $if(issuer_distinguished_name)$
+  <br/>Issuer distinguished Name: $issuer_distinguished_name$
+  $endif$
   $if(provider_customer_id)$
   <br/>EID Provider Customer ID: $provider_customer_id$
   $endif$
@@ -721,9 +727,9 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
-provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$endif$
+provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$endif$
 ###
-providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$endif$
+providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$endif$
 ###
 AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$

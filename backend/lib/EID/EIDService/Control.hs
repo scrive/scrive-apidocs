@@ -703,18 +703,18 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
           let mDobFromEIDService = eidnobidBirthDate cd
               dobFromSignatoryLink =
                 resolveDateOfBirthFromSSN $ getPersonalNumber signatoryLink
-              mDnFromEIDService = eidnobidDistinguishedName cd
-          if (isNothing mDnFromEIDService)
+              mNameFromEIDService = eidnobidName cd
+          if (isNothing mDobFromEIDService)
             then do
               logAttention_ "Distinguished name not provided by EIDService."
               flashErrWithMessage
                 =<< renderTemplate_ "flashMessageNoDOBProvidedByEIDService"
               return $ EIDServiceTransactionStatusCompleteAndFailed
-            else if (isNothing mDobFromEIDService)
+            else if (isNothing mNameFromEIDService)
               then do
-                logAttention_ "Date of birth not provided by EIDService."
+                logAttention_ "Name not provided by EIDService."
                 flashErrWithMessage
-                  =<< renderTemplate_ "flashMessageNoDNProvidedByEIDService"
+                  =<< renderTemplate_ "flashMessageNoNameProvidedByEIDService"
                 return $ EIDServiceTransactionStatusCompleteAndFailed
               else if (mDobFromEIDService /= (Just dobFromSignatoryLink))
                 then do
@@ -729,7 +729,7 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
                     =<< renderTemplate_ "flashMessageUserHasIdentifiedWithDifferentSSN"
                   return $ EIDServiceTransactionStatusCompleteAndFailed
                 else do
-                  signatoryName <- guardJust $ cnFromDN <$> eidnobidDistinguishedName cd
+                  signatoryName <- guardJust $ eidnobidName cd
                   birthDate     <- guardJust mDobFromEIDService
                   let certificate      = decodeCertificate <$> eidnobidCertificate cd
                       phoneNumber      = eidnobidPhoneNumber cd
@@ -748,12 +748,16 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
                                                                    auth
                   ctx <- getContext
                   let pid         = eidnobidPid cd
+                      signatoryDN = eidnobidDistinguishedName cd
+                      issuerDN    = eidnobidIssuerDistinguishedName cd
                       eventFields = do
                         F.value "signatory_name" signatoryName
                         F.value "signatory_mobile" phoneNumber
-                        F.value "provider_nobankid" True
+                        F.value "provider_nobankid_eidservice" True
                         F.value "signatory_dob" birthDate
                         F.value "signatory_pid" pid
+                        F.value "signatory_distinguished_name" signatoryDN
+                        F.value "issuer_distinguished_name" issuerDN
                         F.value "signature" $ B64.encode <$> certificate
                   withDocument doc $ do
                     actor <- signatoryActor ctx signatoryLink
@@ -807,19 +811,6 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
       either (unexpectedError $ "invalid base64 of NOBankID certificate") identity
         . B64.decode
         . T.encodeUtf8
-    cnFromDN :: Text -> Text
-    cnFromDN dn =
-      fromMaybe parseError
-        $ lookup "CN"
-        $ fmap parsePair
-        $ concatMap (T.splitOn " + ")
-        $ T.splitOn ", "
-        $ dn
-      where
-        parsePair s = case T.splitOn "=" s of
-          (name : values) -> (name, T.intercalate "=" values)
-          _               -> unexpectedError $ "Cannot parse DN value: " <> dn
-        parseError = unexpectedError $ "Cannot parse DN value: " <> dn
     flashErrWithMessage :: Kontrakcja m => String -> m ()
     flashErrWithMessage message =
       addFlashCookie . toCookieValue . toFlashMsg OperationFailed $ message

@@ -212,7 +212,9 @@ data CompleteNOBankIDEIDServiceTransactionData = CompleteNOBankIDEIDServiceTrans
   { eidnobidInternalProvider :: !(EIDServiceNOBankIDInternalProvider)
   , eidnobidBirthDate :: !(Maybe T.Text)
   , eidnobidCertificate :: !(Maybe T.Text)
-  , eidnobidDistinguishedName :: !(Maybe T.Text)
+  , eidnobidDistinguishedName :: !T.Text
+  , eidnobidIssuerDistinguishedName :: !T.Text
+  , eidnobidName :: !(Maybe Text)
   , eidnobidPhoneNumber :: !(Maybe T.Text)
   , eidnobidPid :: !(T.Text)
   } deriving (Eq, Ord, Show)
