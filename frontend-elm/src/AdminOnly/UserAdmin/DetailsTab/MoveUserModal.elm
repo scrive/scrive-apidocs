@@ -39,8 +39,8 @@ type Msg
     | GotUserGroup (Result Http.Error UserGroup)
 
 
-init : User -> ( Model, Action msg Msg )
-init user =
+init : (Msg -> msg) -> User -> ( Model, Cmd msg )
+init embed user =
     let
         model =
             { modalVisibility = Modal.hidden
@@ -50,7 +50,7 @@ init user =
             , sNewUserGroupName = Success user.userGroup.name
             }
     in
-    ( model, innerCmd <| getUserGroupCmd model )
+    ( model, Cmd.map embed <| getUserGroupCmd model )
 
 
 getUserGroupCmd : Model -> Cmd Msg
@@ -61,8 +61,8 @@ getUserGroupCmd model =
         }
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
     case msg of
         CloseModal ->
             ( { model | modalVisibility = Modal.hidden }, Cmd.none )
@@ -76,7 +76,7 @@ update globals msg model =
                             , sNewUserGroupName = Loading
                         }
                 in
-                ( model1, innerCmd <| getUserGroupCmd model1 )
+                ( model1, Cmd.map embed <| getUserGroupCmd model1 )
 
             else
                 ( { model | newUserGroupID = userGroupID }, Cmd.none )
@@ -89,8 +89,8 @@ update globals msg model =
                         , modalVisibility = Modal.hidden
                       }
                     , Cmd.batch
-                        [ outerCmd <| globals.setPageUrlFromModel -- reloads User Details
-                        , outerCmd <| globals.flashMessage <| FlashMessage.success "User was moved"
+                        [ globals.setPageUrlFromModel -- reloads User Details
+                        , globals.flashMessage <| FlashMessage.success "User was moved"
                         ]
                     )
 
@@ -109,11 +109,10 @@ update globals msg model =
 
         SubmitForm ->
             ( { model | response = Nothing }
-            , innerCmd <|
-                Http.post
+            , Http.post
                     { url = "/adminonly/useradmin/move/" ++ model.user.id
                     , body = formBody globals [ ( "companyid", model.newUserGroupID ) ]
-                    , expect = Http.expectString GotResponse
+                    , expect = Http.expectString (embed << GotResponse)
                     }
             )
 
@@ -123,8 +122,8 @@ show model =
     { model | modalVisibility = Modal.shown, response = Nothing }
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     let
         ( newUserGroupIDIsValid, inputValidity, feedback ) =
             if isInteger model.newUserGroupID then
@@ -181,3 +180,4 @@ view model =
                 [ text "Move" ]
             ]
         |> Modal.view model.modalVisibility
+        |> Html.map embed

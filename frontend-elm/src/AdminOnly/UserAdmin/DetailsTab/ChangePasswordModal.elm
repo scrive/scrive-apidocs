@@ -38,7 +38,7 @@ type Msg
     | SetPassword String
 
 
-init : User -> ( Model, Action msg Msg )
+init : User -> ( Model, Cmd msg )
 init user =
     let
         model =
@@ -51,8 +51,8 @@ init user =
     ( model, Cmd.none )
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
     case msg of
         CloseModal ->
             ( { model | modalVisibility = Modal.hidden }, Cmd.none )
@@ -68,9 +68,8 @@ update globals msg model =
                         , modalVisibility = Modal.hidden
                       }
                     , Cmd.batch
-                        [ outerCmd <| globals.setPageUrlFromModel -- reloads User Details
-                        , outerCmd <|
-                            globals.flashMessage <|
+                        [ globals.setPageUrlFromModel -- reloads User Details
+                        , globals.flashMessage <|
                                 if changed then
                                     FlashMessage.success "Changed"
 
@@ -84,12 +83,11 @@ update globals msg model =
 
         SubmitForm ->
             ( { model | response = Nothing }
-            , innerCmd <|
-                Http.post
+            , Http.post
                     { url = "/adminonly/useradmin/changepassword/" ++ model.user.id
                     , body = formBody globals [ ( "password", model.newPassword ) ]
                     , expect =
-                        Http.expectJson GotResponse
+                        Http.expectJson (embed << GotResponse)
                             (D.field "changed" D.bool)
                     }
             )
@@ -100,8 +98,8 @@ show model =
     { model | modalVisibility = Modal.shown, response = Nothing }
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     Modal.config CloseModal
         --|> Modal.large
         |> Modal.hideOnBackdropClick True
@@ -134,4 +132,4 @@ view model =
                 ]
                 [ text "Change" ]
             ]
-        |> Modal.view model.modalVisibility
+        |> Modal.view model.modalVisibility |> Html.map embed

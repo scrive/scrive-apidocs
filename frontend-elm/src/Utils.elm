@@ -8,8 +8,6 @@ import Http
 import Json.Decode as D exposing (Decoder)
 import List as L
 import Maybe as M
-import Monocle.Lens exposing (Lens)
-import Monocle.Optional exposing (Optional)
 import Parser as P exposing ((|.))
 import Platform.Cmd as Cmd
 import Result as R
@@ -19,7 +17,6 @@ import Time.DateTime exposing (toPosix)
 import Time.Iso8601 exposing (toDateTime)
 import Url
 import Url.Builder as UB exposing (QueryParameter)
-import Json.Decode as JD exposing (Decoder)
 
 
 type alias Globals msg =
@@ -45,19 +42,11 @@ type alias PageUrl =
     }
 
 
-type alias Action msg1 msg2 =
-    Cmd (Either msg1 msg2)
-
-
-type alias Render msg1 msg2 =
-    Html (Either msg1 msg2)
-
-
 mapGlobals : (msg1 -> msg2) -> Globals msg1 -> Globals msg2
 mapGlobals liftMessage globals =
     let
         mapper =
-            liftCmd liftMessage
+            Cmd.map liftMessage
     in
     { xtoken = globals.xtoken
     , cdnBaseUrl = globals.cdnBaseUrl
@@ -74,125 +63,11 @@ mapGlobals liftMessage globals =
     }
 
 
-liftCmd : (msg1 -> msg2) -> Cmd msg1 -> Cmd msg2
-liftCmd =
-    Cmd.map
-
-
-innerCmd : Cmd msg1 -> Cmd (Either msg2 msg1)
-innerCmd =
-    liftCmd Right
-
-
-outerCmd : Cmd msg2 -> Cmd (Either msg2 msg1)
-outerCmd =
-    liftCmd Left
-
-
-innerLiftCmd : (msg1 -> msg2) -> Cmd (Either msg3 msg1) -> Cmd (Either msg3 msg2)
-innerLiftCmd liftMessage =
-    liftCmd (Either.map liftMessage)
-
-
-joinEither : (a -> b) -> Either b a -> b
-joinEither mapper x =
-    case x of
-        Left y ->
-            y
-
-        Right y ->
-            mapper y
-
-
-joinCmd : (msg1 -> msg2) -> Cmd (Either msg2 msg1) -> Cmd msg2
-joinCmd liftMessage cmd =
-    liftCmd (joinEither liftMessage) cmd
-
-
-liftHtml : (msg1 -> msg2) -> Html msg1 -> Html msg2
-liftHtml =
-    Html.map
-
-
-liftInnerHtml : (msg1 -> msg2) -> Render msg3 msg1 -> Render msg3 msg2
-liftInnerHtml liftMessage =
-    liftHtml (Either.map liftMessage)
-
-
-innerHtml : Html msg1 -> Html (Either msg2 msg1)
-innerHtml =
-    liftHtml Right
-
-
-outerHtml : Html msg2 -> Html (Either msg2 msg1)
-outerHtml =
-    liftHtml Left
-
-
-returnModel : model -> ( model, Cmd msg )
-returnModel model =
-    ( model, Cmd.none )
-
-
-joinHtml : (msg1 -> msg2) -> Html (Either msg2 msg1) -> Html msg2
-joinHtml liftMessage html =
-    liftHtml (joinEither liftMessage) html
-
-
-liftOptionalUpdateHandler :
-    Optional model1 model2
-    -> (msg1 -> msg2)
-    -> (msg1 -> model2 -> ( model2, Action msg3 msg1 ))
-    -> (msg1 -> model1 -> ( model1, Action msg3 msg2 ))
-liftOptionalUpdateHandler modelLens liftMessage handler =
-    \msg model1 ->
-        case modelLens.getOption model1 of
-            Just model2 ->
-                let
-                    ( model3, cmd ) =
-                        handler msg model2
-                in
-                ( modelLens.set model3 model1, innerLiftCmd liftMessage cmd )
-
-            Nothing ->
-                ( model1, Cmd.none )
-
-
-liftUpdateHandler :
-    Lens model1 model2
-    -> (msg1 -> msg2)
-    -> (msg1 -> model2 -> ( model2, Action msg3 msg1 ))
-    -> (msg1 -> model1 -> ( model1, Action msg3 msg2 ))
-liftUpdateHandler modelLens liftMessage handler =
-    \msg model1 ->
-        let
-            model2 =
-                modelLens.get model1
-
-            ( model3, cmd ) =
-                handler msg model2
-        in
-        ( modelLens.set model3 model1, innerLiftCmd liftMessage cmd )
-
-
-liftOptionalViewHandler :
-    Optional model1 model2
-    -> (msg1 -> msg2)
-    -> (model2 -> Html msg1)
-    -> (model1 -> Maybe (Html msg2))
-liftOptionalViewHandler modelLens liftMessage handler =
-    \model1 ->
-        Maybe.map
-            (\model2 ->
-                liftHtml liftMessage <| handler model2
-            )
-        <|
-            modelLens.getOption model1
-
-
-render : (model -> Html msg1) -> (model -> Render msg2 msg1)
-render handler model =
-    innerHtml <| handler model
+maybeUpdate : (state -> (state, Cmd cmd)) -> Maybe state -> (Maybe state, Cmd cmd)
+maybeUpdate update mState = case mState of
+  Just state -> let (newState, cmd) = update state
+                in (Just newState, cmd)
+  Nothing -> (Nothing, Cmd.none)
 
 
 emptyPageUrl : PageUrl
@@ -551,25 +426,25 @@ monthToInt month =
 
 decodeJust : Decoder (Maybe a) -> Decoder a
 decodeJust d =
-  d |> JD.andThen (\ma -> case ma of
-          Just a -> JD.succeed a
-          Nothing -> JD.fail "Decoder (Maybe a) return Nothing but we expected Just.")
+  d |> D.andThen (\ma -> case ma of
+          Just a -> D.succeed a
+          Nothing -> D.fail "Decoder (Maybe a) return Nothing but we expected Just.")
 
 decodeFullDict : Enum k -> (k -> Decoder v) -> Decoder (Enum.Dict k v)
 decodeFullDict e d =
   let verify dict =
         if List.all (\k -> Enum.member k dict) (Enum.allValues e)
-        then JD.succeed dict
-        else JD.fail "Decoded dict not full!"
-  in decodeDict e d |> JD.andThen verify
+        then D.succeed dict
+        else D.fail "Decoded dict not full!"
+  in decodeDict e d |> D.andThen verify
 
 decodeDict : Enum k -> (k -> Decoder v) -> Decoder (Enum.Dict k v)
 decodeDict e d =
   let go : List k -> Decoder (Enum.Dict k v)
       go ks = case ks of
-        [] -> JD.succeed <| Enum.empty e
-        k :: ks_ -> JD.maybe (d k)
-          |> JD.andThen (\mv -> case mv of
-              Just v -> JD.map (Enum.insert k v) <| go ks_
+        [] -> D.succeed <| Enum.empty e
+        k :: ks_ -> D.maybe (d k)
+          |> D.andThen (\mv -> case mv of
+              Just v -> D.map (Enum.insert k v) <| go ks_
               Nothing -> go ks_)
   in go <| Enum.allValues e

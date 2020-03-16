@@ -22,10 +22,9 @@ import AdminOnly.UserGroupAdmin.UserGroupAdminTab as UserGroupAdminTab
 import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Spacing as Spacing
 import Either exposing (Either(..))
-import Html exposing (text)
+import Html exposing (Html, text)
 import Html.Attributes exposing (href)
 import Maybe as M
-import Monocle.Optional exposing (Optional)
 import Url.Parser as UP exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as UPQ
 import Utils exposing (..)
@@ -58,48 +57,6 @@ type alias Model =
     }
 
 
-userAdminTabModelLens : Optional Model UserAdminTab.Model
-userAdminTabModelLens =
-    Optional .mUserAdminTab
-        (\b a -> { a | mUserAdminTab = Just b })
-
-
-userGroupAdminTabModelLens : Optional Model UserGroupAdminTab.Model
-userGroupAdminTabModelLens =
-    Optional .mUserGroupAdminTab
-        (\b a -> { a | mUserGroupAdminTab = Just b })
-
-
-documentsTabModelLens : Optional Model DocumentsTab.Model
-documentsTabModelLens =
-    Optional .mDocumentsTab
-        (\b a -> { a | mDocumentsTab = Just b })
-
-
-brandedDomainsTabModelLens : Optional Model BrandedDomainsTab.Model
-brandedDomainsTabModelLens =
-    Optional .mBrandedDomainsTab
-        (\b a -> { a | mBrandedDomainsTab = Just b })
-
-
-userAdminModelLens : Optional Model UserAdmin.Model
-userAdminModelLens =
-    Optional .mUserAdmin
-        (\b a -> { a | mUserAdmin = Just b })
-
-
-userGroupAdminModelLens : Optional Model UserGroupAdmin.Model
-userGroupAdminModelLens =
-    Optional .mUserGroupAdmin
-        (\b a -> { a | mUserGroupAdmin = Just b })
-
-
-brandedDomainModelLens : Optional Model BrandedDomain.State
-brandedDomainModelLens =
-    Optional .mBrandedDomain
-        (\b a -> { a | mBrandedDomain = Just b })
-
-
 type Msg
     = TabMsg Tab.State
     | UserAdminTabMsg UserAdminTab.Msg
@@ -111,8 +68,8 @@ type Msg
     | BrandedDomainMsg BrandedDomain.Msg
 
 
-init : Globals msg -> Page -> ( Model, Cmd Msg )
-init globals page =
+init : (Msg -> msg) -> Globals msg -> Page -> ( Model, Cmd msg )
+init embed globals page =
     let
         model =
             { page = Home (UserAdminTab <| UserAdminTab.Page Nothing Nothing)
@@ -126,7 +83,7 @@ init globals page =
             , mBrandedDomain = Nothing
             }
     in
-    updatePage globals page model
+    updatePage embed globals page model
 
 
 fromPage : Page -> PageUrl
@@ -262,143 +219,99 @@ pageFromModel model =
             model.mBrandedDomain |> M.andThen BrandedDomain.pageFromModel |> M.map BrandedDomain
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals =
-    let
-        updateUserAdminTab =
-            liftOptionalUpdateHandler
-                userAdminTabModelLens
-                UserAdminTabMsg
-            <|
-                UserAdminTab.update globals
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
+    case msg of
+        TabMsg state ->
+            ( { model | tabState = state }
+            , Cmd.none
+            )
 
-        updateUserGroupAdminTab =
-            liftOptionalUpdateHandler
-                userGroupAdminTabModelLens
-                UserGroupAdminTabMsg
-            <|
-                UserGroupAdminTab.update globals
+        UserAdminTabMsg tabMsg ->
+            let updateUserAdminTab = UserAdminTab.update (embed << UserAdminTabMsg) globals tabMsg
+                (newUserAdminTab, cmd) = maybeUpdate updateUserAdminTab model.mUserAdminTab
+            in ({ model | mUserAdminTab = newUserAdminTab}, cmd)
 
-        updateDocumentsTab =
-            liftOptionalUpdateHandler
-                documentsTabModelLens
-                DocumentsTabMsg
-            <|
-                DocumentsTab.update globals
+        UserGroupAdminTabMsg tabMsg ->
+            let updateUserGroupAdminTab = UserGroupAdminTab.update (embed << UserGroupAdminTabMsg) globals tabMsg
+                (newUserGroupAdminTab, cmd) = maybeUpdate updateUserGroupAdminTab model.mUserGroupAdminTab
+            in ({ model | mUserGroupAdminTab = newUserGroupAdminTab}, cmd)
 
-        updateBrandedDomainsTab =
-            liftOptionalUpdateHandler
-                brandedDomainsTabModelLens
-                BrandedDomainsTabMsg
-            <|
-                BrandedDomainsTab.update globals
+        DocumentsTabMsg tabMsg ->
+            let updateDocumentsTab = DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
+                (newDocumentsTab, cmd) = maybeUpdate updateDocumentsTab model.mDocumentsTab
+            in ({ model | mDocumentsTab = newDocumentsTab}, cmd)
 
-        updateUserAdmin =
-            liftOptionalUpdateHandler
-                userAdminModelLens
-                UserAdminMsg
-            <|
-                UserAdmin.update globals
+        BrandedDomainsTabMsg tabMsg ->
+            let updateBrandedDomainsTab = BrandedDomainsTab.update (embed << BrandedDomainsTabMsg) globals tabMsg
+                (newBrandedDomainsTab, cmd) = maybeUpdate updateBrandedDomainsTab model.mBrandedDomainsTab
+            in ({ model | mBrandedDomainsTab = newBrandedDomainsTab}, cmd)
 
-        updateUserGroupAdmin =
-            liftOptionalUpdateHandler
-                userGroupAdminModelLens
-                UserGroupAdminMsg
-            <|
-                UserGroupAdmin.update globals
+        UserAdminMsg subMsg ->
+            let updateUserAdmin = UserAdmin.update (embed << UserAdminMsg) globals subMsg
+                (newUserAdmin, cmd) = maybeUpdate updateUserAdmin model.mUserAdmin
+            in ({ model | mUserAdmin = newUserAdmin}, cmd)
 
-        updateBrandedDomain : BrandedDomain.Msg -> Model -> ( Model, Cmd (Either msg Msg) )
-        updateBrandedDomain msg model =
-            case model.mBrandedDomain of
-              Nothing -> (model, Cmd.none)  -- this really should be an internal error
-              Just brandedDomainTab ->
-                let (newBrandedDomainTab, cmd) =
-                      BrandedDomain.update
-                        { embed = Right << BrandedDomainMsg
-                        , presentFlashMessage = Cmd.map Left << globals.flashMessage
-                        , formBody = formBody globals
-                        , gotoBrandedDomainsTab = Cmd.map Left globals.gotoBrandedDomainsTab
-                        } msg brandedDomainTab
-                in ({ model | mBrandedDomain = Just newBrandedDomainTab }, cmd)
-    in
-    \msg model ->
-        case msg of
-            TabMsg state ->
-                ( { model | tabState = state }
-                , Cmd.none
-                )
+        UserGroupAdminMsg subMsg ->
+            let updateUserGroupAdmin = UserGroupAdmin.update (embed << UserGroupAdminMsg) globals subMsg
+                (newUserGroupAdmin, cmd) = maybeUpdate updateUserGroupAdmin model.mUserGroupAdmin
+            in ({ model | mUserGroupAdmin = newUserGroupAdmin}, cmd)
 
-            UserAdminTabMsg tabMsg ->
-                updateUserAdminTab tabMsg model
-
-            UserGroupAdminTabMsg tabMsg ->
-                updateUserGroupAdminTab tabMsg model
-
-            DocumentsTabMsg tabMsg ->
-                updateDocumentsTab tabMsg model
-
-            BrandedDomainsTabMsg tabMsg ->
-                updateBrandedDomainsTab tabMsg model
-
-            UserAdminMsg subMsg ->
-                updateUserAdmin subMsg model
-
-            UserGroupAdminMsg subMsg ->
-                updateUserGroupAdmin subMsg model
-
-            BrandedDomainMsg subMsg ->
-                updateBrandedDomain subMsg model
+        BrandedDomainMsg subMsg ->
+            let updateBrandedDomain = BrandedDomain.update (embed << BrandedDomainMsg) globals subMsg
+                (newBrandedDomain, cmd) = maybeUpdate updateBrandedDomain model.mBrandedDomain
+            in ({ model | mBrandedDomain = newBrandedDomain}, cmd)
 
 
-updatePage : Globals msg -> Page -> Model -> ( Model, Cmd Msg )
-updatePage globals page model =
+updatePage : (Msg -> msg) -> Globals msg -> Page -> Model -> ( Model, Cmd msg )
+updatePage embed globals page model =
     case page of
         Home (UserAdminTab tabPage) ->
             let
                 ( tab, tabCmd ) =
                     model.mUserAdminTab
-                        |> M.map (UserAdminTab.updatePage tabPage)
+                        |> M.map (UserAdminTab.updatePage (embed << UserAdminTabMsg) tabPage)
                         |> M.withDefault
-                            (UserAdminTab.init tabPage)
+                            (UserAdminTab.init (embed << UserAdminTabMsg) tabPage)
             in
             ( { model
                 | page = page
                 , tabState = Tab.customInitialState UserAdminTab.tabName
                 , mUserAdminTab = Just tab
               }
-            , liftCmd UserAdminTabMsg tabCmd
+            , tabCmd
             )
 
         Home (UserGroupAdminTab tabPage) ->
             let
                 ( tab, tabCmd ) =
                     model.mUserGroupAdminTab
-                        |> M.map (UserGroupAdminTab.updatePage tabPage)
+                        |> M.map (UserGroupAdminTab.updatePage (embed << UserGroupAdminTabMsg) tabPage)
                         |> M.withDefault
-                            (UserGroupAdminTab.init tabPage)
+                            (UserGroupAdminTab.init (embed << UserGroupAdminTabMsg) tabPage)
             in
             ( { model
                 | page = page
                 , tabState = Tab.customInitialState UserGroupAdminTab.tabName
                 , mUserGroupAdminTab = Just tab
               }
-            , liftCmd UserGroupAdminTabMsg tabCmd
+            , tabCmd
             )
 
         Home (DocumentsTab tabPage) ->
             let
                 ( tab, tabCmd ) =
                     model.mDocumentsTab
-                        |> M.map (DocumentsTab.updatePage ConfigForAllDocuments tabPage)
+                        |> M.map (DocumentsTab.updatePage (embed << DocumentsTabMsg) ConfigForAllDocuments tabPage)
                         |> M.withDefault
-                            (DocumentsTab.init ConfigForAllDocuments)
+                            (DocumentsTab.init (embed << DocumentsTabMsg) ConfigForAllDocuments)
             in
             ( { model
                 | page = page
                 , tabState = Tab.customInitialState DocumentsTab.tabName
                 , mDocumentsTab = Just tab
               }
-            , liftCmd DocumentsTabMsg tabCmd
+            , tabCmd
             )
 
         Home BrandedDomainsTab ->
@@ -407,85 +320,82 @@ updatePage globals page model =
                     model.mBrandedDomainsTab
                         |> M.map (\bd -> ( bd, Cmd.none ))
                         |> M.withDefault
-                            BrandedDomainsTab.init
+                            (BrandedDomainsTab.init (embed << BrandedDomainsTabMsg))
             in
             ( { model
                 | page = page
                 , tabState = Tab.customInitialState BrandedDomainsTab.tabName
                 , mBrandedDomainsTab = Just tab
               }
-            , liftCmd BrandedDomainsTabMsg tabCmd
+            , tabCmd
             )
 
         UserAdmin subPage ->
             let
                 ( sub, subCmd ) =
                     model.mUserAdmin
-                        |> M.map (UserAdmin.updatePage subPage)
+                        |> M.map (UserAdmin.updatePage (embed << UserAdminMsg) subPage)
                         |> M.withDefault
-                            (UserAdmin.init subPage)
+                            (UserAdmin.init (embed << UserAdminMsg) subPage)
             in
             ( { model
                 | page = page
                 , mUserAdmin = Just sub
               }
-            , liftCmd UserAdminMsg subCmd
+            , subCmd
             )
 
         UserGroupAdmin subPage ->
             let
                 ( sub, subCmd ) =
                     model.mUserGroupAdmin
-                        |> M.map (UserGroupAdmin.updatePage subPage)
+                        |> M.map (UserGroupAdmin.updatePage (embed << UserGroupAdminMsg) subPage)
                         |> M.withDefault
-                            (UserGroupAdmin.init globals subPage)
+                            (UserGroupAdmin.init (embed << UserGroupAdminMsg) globals subPage)
             in
             ( { model
                 | page = page
                 , mUserGroupAdmin = Just sub
               }
-            , liftCmd UserGroupAdminMsg subCmd
+            , subCmd
             )
 
         BrandedDomain subPage ->
             let
                 ( sub, subCmd ) =
                     model.mBrandedDomain
-                        |> M.map (BrandedDomain.updatePage identity subPage)
+                        |> M.map (BrandedDomain.updatePage (embed << BrandedDomainMsg) subPage)
                         |> M.withDefault
-                            (BrandedDomain.init
-                                identity
-                                subPage
-                            )
+                            (BrandedDomain.init (embed << BrandedDomainMsg) subPage)
             in
             ( { model
                 | page = page
                 , mBrandedDomain = Just sub
               }
-            , liftCmd BrandedDomainMsg subCmd
+            , subCmd
             )
 
 
-view : Model -> Render msg Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     case model.page of
         UserAdmin _ ->
             model.mUserAdmin
-                |> M.map (innerHtml << liftHtml UserAdminMsg << UserAdmin.view)
+                |> M.map (UserAdmin.view <| embed << UserAdminMsg)
                 |> M.withDefault viewError
 
         UserGroupAdmin _ ->
             model.mUserGroupAdmin
-                |> M.map (liftInnerHtml UserGroupAdminMsg << UserGroupAdmin.view)
+                |> M.map (UserGroupAdmin.view <| embed << UserGroupAdminMsg)
                 |> M.withDefault viewError
 
         BrandedDomain _ ->
             model.mBrandedDomain
-                |> M.map (innerHtml << liftHtml BrandedDomainMsg << BrandedDomain.view)
+                |> M.map (BrandedDomain.view <| embed << BrandedDomainMsg)
                 |> M.withDefault viewError
 
         Home _ ->
-            Tab.config (Either.Right << TabMsg)
+            Tab.config (embed << TabMsg)
                 |> Tab.useHash True
                 |> Tab.items
                     [ Tab.item
@@ -494,7 +404,7 @@ view model =
                         , pane =
                             Tab.pane [ Spacing.mt3 ] <|
                                 [ model.mUserAdminTab
-                                    |> M.map (innerHtml << liftHtml UserAdminTabMsg << UserAdminTab.view)
+                                    |> M.map (UserAdminTab.view <| embed << UserAdminTabMsg)
                                     |> M.withDefault viewError
                                 ]
                         }
@@ -504,7 +414,7 @@ view model =
                         , pane =
                             Tab.pane [ Spacing.mt3 ] <|
                                 [ model.mUserGroupAdminTab
-                                    |> M.map (innerHtml << liftHtml UserGroupAdminTabMsg << UserGroupAdminTab.view)
+                                    |> M.map (UserGroupAdminTab.view <| embed << UserGroupAdminTabMsg)
                                     |> M.withDefault viewError
                                 ]
                         }
@@ -514,7 +424,7 @@ view model =
                         , pane =
                             Tab.pane [ Spacing.mt3 ] <|
                                 [ model.mDocumentsTab
-                                    |> M.map (innerHtml << liftHtml DocumentsTabMsg << DocumentsTab.view)
+                                    |> M.map (DocumentsTab.view <| embed << DocumentsTabMsg)
                                     |> M.withDefault viewError
                                 ]
                         }
@@ -524,7 +434,7 @@ view model =
                         , pane =
                             Tab.pane [ Spacing.mt3 ] <|
                                 [ model.mBrandedDomainsTab
-                                    |> M.map (innerHtml << liftHtml BrandedDomainsTabMsg << BrandedDomainsTab.view)
+                                    |> M.map (BrandedDomainsTab.view <| embed << BrandedDomainsTabMsg)
                                     |> M.withDefault viewError
                                 ]
                         }

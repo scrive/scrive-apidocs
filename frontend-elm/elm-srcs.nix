@@ -50,11 +50,6 @@
         version = "1.0.0";
       };
 
-      "arturopala/elm-monocle" = {
-        sha256 = "1vqjx5b90iaxs9kd3l7wa0qngnfis16isx9vfnbm29y1fndzy7a3";
-        version = "2.1.0";
-      };
-
       "elm/parser" = {
         sha256 = "0a3cxrvbm7mwg9ykynhp7vjid58zsw03r63qxipxp3z09qks7512";
         version = "1.1.0";

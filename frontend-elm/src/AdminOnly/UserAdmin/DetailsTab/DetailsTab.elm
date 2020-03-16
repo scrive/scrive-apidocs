@@ -32,7 +32,7 @@ import Json.Decode as D
 import Language exposing (enumLanguage)
 import List as L
 import Maybe as M
-import Monocle.Optional exposing (Optional)
+import Maybe.Extra as M
 import Time exposing (Month(..))
 import Url.Parser exposing (map)
 import Utils exposing (..)
@@ -80,31 +80,13 @@ type Msg
     | SetTwoFAMandatory Bool
 
 
-deleteUserModelLens : Optional Model DeleteUserModal.Model
-deleteUserModelLens =
-    Optional .mDeleteUserModal
-        (\b a -> { a | mDeleteUserModal = Just b })
-
-
-moveUserModelLens : Optional Model MoveUserModal.Model
-moveUserModelLens =
-    Optional .mMoveUserModal
-        (\b a -> { a | mMoveUserModal = Just b })
-
-
-changePasswordModelLens : Optional Model ChangePasswordModal.Model
-changePasswordModelLens =
-    Optional .mChangePasswordModal
-        (\b a -> { a | mChangePasswordModal = Just b })
-
-
 tabName : String
 tabName =
     "details"
 
 
-init : String -> ( Model, Cmd Msg )
-init uid =
+init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init embed uid =
     let
         model =
             { sUser = Loading
@@ -115,7 +97,7 @@ init uid =
             , mChangePasswordModal = Nothing
             }
     in
-    ( model, getUserCmd uid )
+    ( model, Cmd.map embed <| getUserCmd uid )
 
 
 getUserCmd : String -> Cmd Msg
@@ -141,30 +123,8 @@ handleSetEnum model enum str setter =
             modifyUser (\u -> setter u value) model
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
-    let
-        deleteUser =
-            liftOptionalUpdateHandler
-                deleteUserModelLens
-                DeleteUserModalMsg
-            <|
-                DeleteUserModal.update globals
-
-        moveUser =
-            liftOptionalUpdateHandler
-                moveUserModelLens
-                MoveUserModalMsg
-            <|
-                MoveUserModal.update globals
-
-        changePassword =
-            liftOptionalUpdateHandler
-                changePasswordModelLens
-                ChangePasswordModalMsg
-            <|
-                ChangePasswordModal.update globals
-    in
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
     case msg of
         GotUser result ->
             case result of
@@ -174,7 +134,7 @@ update globals msg model =
                             DeleteUserModal.init user
 
                         ( moveUserModal, moveUserModalCmd ) =
-                            MoveUserModal.init user
+                            MoveUserModal.init (embed << MoveUserModalMsg) user
 
                         ( changePasswordModal, changePasswordModalCmd ) =
                             ChangePasswordModal.init user
@@ -186,9 +146,9 @@ update globals msg model =
                         , mChangePasswordModal = Just changePasswordModal
                       }
                     , Cmd.batch
-                        [ innerLiftCmd DeleteUserModalMsg deleteUserModalCmd
-                        , innerLiftCmd MoveUserModalMsg moveUserModalCmd
-                        , innerLiftCmd ChangePasswordModalMsg changePasswordModalCmd
+                        [ deleteUserModalCmd
+                        , moveUserModalCmd
+                        , changePasswordModalCmd
                         ]
                     )
 
@@ -231,12 +191,11 @@ update globals msg model =
             case fromStatus model.sUser of
                 Just user ->
                     ( model
-                    , innerCmd <|
-                        Http.post
+                    , Http.post
                             { url = "/adminonly/useradmin/" ++ user.id
                             , body = formBody globals (User.formValues user)
                             , expect =
-                                Http.expectJson GotSaveResponse
+                                Http.expectJson (embed << GotSaveResponse)
                                     (D.field "changed" D.bool)
                             }
                     )
@@ -248,7 +207,7 @@ update globals msg model =
             case response of
                 Err _ ->
                     ( model
-                    , outerCmd <| globals.flashMessage <| FlashMessage.error "Request failed."
+                    , globals.flashMessage <| FlashMessage.error "Request failed."
                     )
 
                 Ok changed ->
@@ -261,7 +220,7 @@ update globals msg model =
                                 FlashMessage.error "Failure. User already exists."
                     in
                     ( model
-                    , outerCmd <| globals.flashMessage flashMessage
+                    , globals.flashMessage flashMessage
                     )
 
         -- DELETE USER
@@ -276,7 +235,9 @@ update globals msg model =
                     )
 
         DeleteUserModalMsg modalMsg ->
-            deleteUser modalMsg model
+            let updateDeleteUserModal = DeleteUserModal.update (embed << DeleteUserModalMsg) globals modalMsg
+                (newDeleteUserModal, cmd) = maybeUpdate updateDeleteUserModal model.mDeleteUserModal
+            in ({ model | mDeleteUserModal = newDeleteUserModal}, cmd)
 
         -- RESEND STATUS
         ResendInvitationClicked ->
@@ -291,11 +252,10 @@ update globals msg model =
 
                         _ ->
                             ( { model | sResend = Loading }
-                            , innerCmd <|
-                                Http.post
+                            , Http.post
                                     { url = "/adminonly/useradmin/sendinviteagain"
                                     , body = formBody globals [ ( "userid", user.id ) ]
-                                    , expect = Http.expectString GotResendInvitationResponse
+                                    , expect = Http.expectString (embed << GotResendInvitationResponse)
                                     }
                             )
 
@@ -303,15 +263,13 @@ update globals msg model =
             case response of
                 Ok str ->
                     ( { model | sResend = Success str }
-                    , outerCmd <|
-                        globals.flashMessage <|
+                    , globals.flashMessage <|
                             FlashMessage.success "Invitation was sent"
                     )
 
                 Err _ ->
                     ( { model | sResend = Failure }
-                    , outerCmd <|
-                        globals.flashMessage <|
+                    , globals.flashMessage <|
                             FlashMessage.error "Resending invitation failed"
                     )
 
@@ -323,7 +281,9 @@ update globals msg model =
                 |> M.withDefault ( model, Cmd.none )
 
         MoveUserModalMsg modalMsg ->
-            moveUser modalMsg model
+            let updateMoveUserModal = MoveUserModal.update (embed << MoveUserModalMsg) globals modalMsg
+                (newMoveUserModal, cmd) = maybeUpdate updateMoveUserModal model.mMoveUserModal
+            in ({ model | mMoveUserModal = newMoveUserModal}, cmd)
 
         -- CHANGE PASSWORD
         ChangePasswordClicked ->
@@ -337,7 +297,9 @@ update globals msg model =
                 |> M.withDefault ( model, Cmd.none )
 
         ChangePasswordModalMsg modalMsg ->
-            changePassword modalMsg model
+            let updateChangePasswordModal = ChangePasswordModal.update (embed << ChangePasswordModalMsg) globals modalMsg
+                (newChangePasswordModal, cmd) = maybeUpdate updateChangePasswordModal model.mChangePasswordModal
+            in ({ model | mChangePasswordModal = newChangePasswordModal}, cmd)
 
         -- DISABLE TWO-FACTOR AUTHENTICATION
         DisableTwoFAClicked ->
@@ -352,11 +314,10 @@ update globals msg model =
 
                         _ ->
                             ( { model | sDisableTwoFA = Loading }
-                            , innerCmd <|
-                                Http.post
+                            , Http.post
                                     { url = "/adminonly/useradmin/disable2fa/" ++ user.id
                                     , body = formBody globals []
-                                    , expect = Http.expectString GotDisableTwoFAResponse
+                                    , expect = Http.expectString (embed << GotDisableTwoFAResponse)
                                     }
                             )
 
@@ -365,9 +326,8 @@ update globals msg model =
                 (Just user, Ok str) ->
                     ( { model | sDisableTwoFA = Success str }
                     , Cmd.batch
-                        [ innerCmd <| getUserCmd user.id
-                        , outerCmd <|
-                            globals.flashMessage <|
+                        [ Cmd.map embed <| getUserCmd user.id
+                        , globals.flashMessage <|
                                 FlashMessage.success "Two-factor authentication was disabled."
                         ]
                     )
@@ -376,8 +336,7 @@ update globals msg model =
 
                 (_, Err _) ->
                     ( { model | sDisableTwoFA = Failure }
-                    , outerCmd <|
-                        globals.flashMessage <|
+                    , globals.flashMessage <|
                             FlashMessage.error "Error disabling two-factor authentication."
                     )
 
@@ -385,27 +344,8 @@ update globals msg model =
             ( modifyUser (\u -> { u | twoFAMandatory = newMandatory }) model, Cmd.none )
 
 
-view : Model -> Html Msg
-view model =
-    let
-        deleteUser =
-            liftOptionalViewHandler
-                deleteUserModelLens
-                DeleteUserModalMsg
-                DeleteUserModal.view
-
-        moveUser =
-            liftOptionalViewHandler
-                moveUserModelLens
-                MoveUserModalMsg
-                MoveUserModal.view
-
-        changePassword =
-            liftOptionalViewHandler
-                changePasswordModelLens
-                ChangePasswordModalMsg
-                ChangePasswordModal.view
-    in
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     case model.sUser of
         Loading ->
             h4 [] [ text "Loading ..." ]
@@ -415,13 +355,12 @@ view model =
 
         Success user ->
             div [] <|
-                [ viewUser user ]
-                    ++ (L.filterMap identity <|
-                            [ deleteUser model
-                            , moveUser model
-                            , changePassword model
-                            ]
-                       )
+                [ Html.map embed <| viewUser user ]
+                ++ M.values
+                    [ Maybe.map (DeleteUserModal.view <| embed << DeleteUserModalMsg) model.mDeleteUserModal
+                    , Maybe.map (MoveUserModal.view <| embed << MoveUserModalMsg) model.mMoveUserModal
+                    , Maybe.map (ChangePasswordModal.view <| embed << ChangePasswordModalMsg) model.mChangePasswordModal
+                    ]
 
 
 formTextRow :

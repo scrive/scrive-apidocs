@@ -31,7 +31,7 @@ type Msg
     | GotResponse (Result Http.Error String)
 
 
-init : User -> ( Model, Action msg Msg )
+init : User -> ( Model, Cmd msg )
 init user =
     let
         model =
@@ -43,19 +43,18 @@ init user =
     ( model, Cmd.none )
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
     case msg of
         CloseModal ->
             ( { model | modalVisibility = Modal.hidden }, Cmd.none )
 
         SubmitForm ->
             ( { model | response = Nothing }
-            , innerCmd <|
-                Http.post
+            , Http.post
                     { url = "/adminonly/useradmin/delete/" ++ model.user.id
                     , body = formBody globals []
-                    , expect = Http.expectString GotResponse
+                    , expect = Http.expectString (embed << GotResponse)
                     }
             )
 
@@ -68,8 +67,8 @@ update globals msg model =
                       }
                       -- redirect to list of company users
                     , Cmd.batch
-                        [ outerCmd <| globals.gotoUserGroupUsers model.user.userGroup.id
-                        , outerCmd <| globals.flashMessage <| FlashMessage.success "User was deleted"
+                        [ globals.gotoUserGroupUsers model.user.userGroup.id
+                        , globals.flashMessage <| FlashMessage.success "User was deleted"
                         ]
                     )
 
@@ -84,8 +83,8 @@ show model =
     { model | modalVisibility = Modal.shown, response = Nothing }
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     Modal.config CloseModal
         |> Modal.hideOnBackdropClick True
         |> Modal.h3 [] [ text "Delete" ]
@@ -108,3 +107,4 @@ view model =
                 [ text "Delete" ]
             ]
         |> Modal.view model.modalVisibility
+        |> Html.map embed

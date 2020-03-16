@@ -109,8 +109,8 @@ tabShareableLinkName =
     "stats-shareable-link"
 
 
-init : Page -> Config -> ( Model, Cmd Msg )
-init page config =
+init : (Msg -> msg) -> Page -> Config -> ( Model, Cmd msg )
+init embed page config =
     let
         model =
             { config = config
@@ -122,7 +122,7 @@ init page config =
             , sSLMonthsStats = Loading
             }
     in
-    updatePage page config model
+    updatePage embed page config model
 
 
 getStatsCmd : DaysOrMonths -> Model -> Cmd Msg
@@ -187,8 +187,8 @@ fromPage isShareableLink =
     }
 
 
-updatePage : Page -> Config -> Model -> ( Model, Cmd Msg )
-updatePage page config model0 =
+updatePage : (Msg -> msg) -> Page -> Config -> Model -> ( Model, Cmd msg )
+updatePage embed page config model0 =
     let
         model =
             { model0
@@ -197,11 +197,11 @@ updatePage page config model0 =
                 , tabState = Tab.customInitialState <| ite page tabShareableLinkName tabName
             }
     in
-    ( model, Cmd.batch [ getStatsCmd Days model, getStatsCmd Months model ] )
+    ( model, Cmd.map embed <| Cmd.batch [ getStatsCmd Days model, getStatsCmd Months model ] )
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update _ globals msg model =
     case msg of
         TabMsg state ->
             let
@@ -212,7 +212,7 @@ update globals msg model =
                     }
             in
             ( model1
-            , outerCmd globals.setPageUrlFromModel
+            , globals.setPageUrlFromModel
             )
 
         GotStats daysOrMonths result ->
@@ -284,8 +284,8 @@ toggleDateRow date stats =
     }
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     Tab.config TabMsg
         |> Tab.useHash False
         |> Tab.items
@@ -313,6 +313,7 @@ view model =
                 }
             ]
         |> Tab.view model.tabState
+        |> Html.map embed
 
 
 viewStats : DaysOrMonths -> Model -> Status (Stats StatsRowData) -> Html Msg

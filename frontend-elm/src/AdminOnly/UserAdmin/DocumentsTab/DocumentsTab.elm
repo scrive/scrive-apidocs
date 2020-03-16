@@ -93,8 +93,8 @@ defaultSorting =
     Sorting SCMtime SODesc
 
 
-init : Config -> ( Model, Cmd Msg )
-init config =
+init : (Msg -> msg) -> Config -> ( Model, Cmd msg )
+init embed config =
     let
         model =
             { page = Page Nothing Nothing
@@ -103,7 +103,7 @@ init config =
             , search = ""
             }
     in
-    ( model, getDocumentsCmd model )
+    ( model, Cmd.map embed <| getDocumentsCmd model )
 
 
 getDocumentsCmd : Model -> Cmd Msg
@@ -149,8 +149,8 @@ getDocumentsCmd model =
         }
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update _ globals msg model =
     let
         page =
             model.page
@@ -163,7 +163,7 @@ update globals msg model =
             ( { model | page = { page | mSearch = stringNonEmpty model.search } }
             , -- we do not initiate the search from here, because it will be
               -- triggered by the Url change
-              outerCmd <| globals.setPageUrlFromModel
+              globals.setPageUrlFromModel
             )
 
         GotDocumentList result ->
@@ -176,19 +176,19 @@ update globals msg model =
 
         TableRowClicked documentID ->
             ( model
-            , outerCmd <| globals.gotoDaveDocument documentID
+            , globals.gotoDaveDocument documentID
             )
 
         TableHeaderClicked column ->
             ( { model | page = { page | mSorting = Just <| toggleSorting column defaultSorting model.page.mSorting } }
             , -- we do not initiate the search from here, because it will be
               -- triggered by the Url change
-              outerCmd <| globals.setPageUrlFromModel
+              globals.setPageUrlFromModel
             )
 
 
-updatePage : Config -> Page -> Model -> ( Model, Cmd Msg )
-updatePage config page model =
+updatePage : (Msg -> msg) -> Config -> Page -> Model -> ( Model, Cmd msg )
+updatePage embed config page model =
     let
         model1 =
             { model
@@ -197,7 +197,7 @@ updatePage config page model =
                 , search = M.withDefault "" page.mSearch
             }
     in
-    ( model1, getDocumentsCmd model1 )
+    ( model1, Cmd.map embed <| getDocumentsCmd model1 )
 
 
 pageFromSearchSortByOrder : Maybe String -> Maybe String -> Maybe String -> Page
@@ -220,8 +220,8 @@ pageFromModel model =
     Just model.page
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     let
         viewSearchForm =
             [ Form.formInline [ class "justify-content-end", onSubmit <| FormSubmitted ]
@@ -246,7 +246,7 @@ view model =
                 ]
             ]
     in
-    div [] <|
+    Html.map embed <| div [] <|
         (if useSortingAndSearch model then
             viewSearchForm
 

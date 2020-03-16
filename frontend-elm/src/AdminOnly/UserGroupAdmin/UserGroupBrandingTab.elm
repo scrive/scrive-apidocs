@@ -79,23 +79,20 @@ type Msg = EditThemeMsg EditTheme.Msg
          | PresentFlashMessage FlashMessage
 
 update :
-  { embed : Msg -> msg
-  , presentFlashMessage : FlashMessage -> Cmd msg
-  , formBody : List (String, String) -> Http.Body
-  } -> Msg -> State -> (State, Cmd msg)
-update {embed, presentFlashMessage, formBody} msg = case msg of
+  (Msg -> msg) -> Globals msg -> Msg -> State -> (State, Cmd msg)
+update embed globals msg = case msg of
   SetEditTabStateMsg tabState -> setEditTabState tabState
   SetPreviewTabStateMsg tabState -> setPreviewTabState tabState
   SetDomainThemesMsg domainThemes -> setDomainThemes domainThemes
   SetAvailableThemesMsg availableThemes -> setAvailableThemes availableThemes
   SetUserGroupBrandingMsg branding -> setUserGroupBranding branding
-  DeleteThemeCallbackMsg id -> deleteThemeCallback presentFlashMessage id
-  CreateThemeCallbackMsg blueprint newThemeID -> createThemeCallback embed formBody blueprint newThemeID
-  SaveThemeMsg theme -> saveTheme presentFlashMessage theme
-  DoCreateThemeMsg blueprint -> doCreateTheme embed formBody blueprint
-  DoDeleteThemeMsg -> doDeleteTheme embed formBody
-  DoSaveThemeMsg -> doSaveTheme embed formBody
-  DoSaveUserGroupBrandingMsg -> doSaveUserGroupBranding embed formBody
+  DeleteThemeCallbackMsg id -> deleteThemeCallback globals.flashMessage id
+  CreateThemeCallbackMsg blueprint newThemeID -> createThemeCallback embed (formBody globals) blueprint newThemeID
+  SaveThemeMsg theme -> saveTheme globals.flashMessage theme
+  DoCreateThemeMsg blueprint -> doCreateTheme embed (formBody globals) blueprint
+  DoDeleteThemeMsg -> doDeleteTheme embed (formBody globals)
+  DoSaveThemeMsg -> doSaveTheme embed (formBody globals)
+  DoSaveUserGroupBrandingMsg -> doSaveUserGroupBranding embed (formBody globals)
   EditThemeMsg msg_ -> \state ->
     let editThemeReadonly =
           { availableThemes = Enum.values state.domainThemes ++ state.availableThemes
@@ -113,19 +110,19 @@ update {embed, presentFlashMessage, formBody} msg = case msg of
             Maybe.withDefault state.previewTabState
               <| Maybe.map (Tab.customInitialState << Enum.toString enumThemeKind) mPreviewThemeKind
     in ({ state | editUserGroupBrandingState = newBranding, previewTabState = newPreviewTabState }, cmd)
-  PresentFlashMessage message -> \state -> (state, presentFlashMessage message)
+  PresentFlashMessage message -> \state -> (state, globals.flashMessage message)
 
-updatePage : { ugid : String, page : Page, embed : Msg -> msg } -> State -> (State, Cmd msg)
-updatePage params state =
+updatePage : (Msg -> msg) -> { ugid : String, page : Page } -> State -> (State, Cmd msg)
+updatePage embed params state =
   if params.ugid == state.ugid
   then ({ state | editTabPage = params.page }, Cmd.none)
-  else init { page = params.page, ugid = params.ugid, embed = params.embed }
+  else init embed { page = params.page, ugid = params.ugid }
 
 pageFromModel : State -> Page
 pageFromModel = .editTabPage
 
-init : { page : Page, ugid : String, embed : Msg -> msg } -> (State, Cmd msg)
-init {page, ugid, embed} =
+init : (Msg -> msg) -> { page : Page, ugid : String } -> (State, Cmd msg)
+init embed {page, ugid} =
   let initialState =
         { loadingState =
           { domainThemesLoaded = False
@@ -159,12 +156,12 @@ setEditTabState tabState state = ({ state | editTabState = tabState }, Cmd.none)
 setPreviewTabState : Tab.State -> State -> (State, Cmd msg)
 setPreviewTabState tabState state = ({ state | previewTabState = tabState }, Cmd.none)
 
-view : State -> Html Msg
-view state =
+view : (Msg -> msg) -> State -> Html msg
+view embed state =
   if state.loadingState.userGroupBrandingLoaded
     && state.loadingState.userGroupThemesLoaded
     && state.loadingState.domainThemesLoaded
-  then viewLoaded state
+  then Html.map embed <| viewLoaded state
   else text "Loading"
 
 viewLoaded : State -> Html Msg

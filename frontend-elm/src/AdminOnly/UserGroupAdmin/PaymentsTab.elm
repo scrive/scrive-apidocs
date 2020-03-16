@@ -67,15 +67,15 @@ tabName =
     "payments"
 
 
-init : String -> ( Model, Cmd Msg )
-init ugid =
+init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init embed ugid =
     let
         model =
             { sSubscription = Loading
             , ugid = ugid
             }
     in
-    ( model, getSubscriptionCmd model )
+    ( model, Cmd.map embed <| getSubscriptionCmd model )
 
 
 getSubscriptionCmd : Model -> Cmd Msg
@@ -86,13 +86,13 @@ getSubscriptionCmd model =
         }
 
 
-setUserGroupID : String -> Model -> ( Model, Cmd Msg )
-setUserGroupID ugid model0 =
+setUserGroupID : (Msg -> msg) -> String -> Model -> ( Model, Cmd msg )
+setUserGroupID embed ugid model0 =
     let
         model =
             { model0 | ugid = ugid }
     in
-    ( model, getSubscriptionCmd model )
+    ( model, Cmd.map embed <| getSubscriptionCmd model )
 
 
 modifySubscription : (Subscription -> Subscription) -> Model -> Model
@@ -179,8 +179,8 @@ setPaidFeatures features =
     }
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
     case msg of
         GotSubscription result ->
             case result of
@@ -201,7 +201,7 @@ update globals msg model =
         SetFeaturesIsInherited value ->
             case statusMap (setFeaturesIsInherited value) model.sSubscription of
                 Success Nothing ->
-                    ( model, outerCmd <| globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
+                    ( model, globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
 
                 Success (Just subscription) ->
                     ( { model | sSubscription = Success subscription }, Cmd.none )
@@ -263,8 +263,7 @@ update globals msg model =
                 |> M.map
                     (\subscription ->
                         ( model
-                        , innerCmd <|
-                            Http.post
+                        , Http.post
                                 { url = "/adminonly/companyadmin/updatesubscription/" ++ model.ugid
                                 , body =
                                     formBody globals
@@ -272,7 +271,7 @@ update globals msg model =
                                           , JE.encode 0 <| Subscription.toPostJson subscription
                                           )
                                         ]
-                                , expect = Http.expectString GotSaveResponse
+                                , expect = Http.expectString (embed << GotSaveResponse)
                                 }
                         )
                     )
@@ -281,20 +280,19 @@ update globals msg model =
         GotSaveResponse response ->
             case response of
                 Err _ ->
-                    ( model, outerCmd <| globals.flashMessage <| FlashMessage.error "Request failed." )
+                    ( model, globals.flashMessage <| FlashMessage.error "Request failed." )
 
                 Ok _ ->
                     ( model
-                    , outerCmd <|
-                        Cmd.batch
+                    , Cmd.batch
                             [ globals.flashMessage <| FlashMessage.success "Saved"
                             , globals.setPageUrlFromModel -- reloads UserGroup Details
                             ]
                     )
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     case model.sSubscription of
         Loading ->
             h4 [] [ text "Loading ..." ]
@@ -304,7 +302,7 @@ view model =
 
         Success subscription ->
             div [] <|
-                [ viewSubscription subscription ]
+                [ Html.map embed <| viewSubscription subscription ]
 
 
 formCheckbox :

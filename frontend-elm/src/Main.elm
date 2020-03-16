@@ -21,7 +21,6 @@ import Json.Decode as JD exposing (Decoder, Value)
 import Json.Decode.Pipeline as JDP
 import List as L
 import Maybe as M
-import Monocle.Optional exposing (Optional)
 import Url exposing (Url)
 import Url.Builder as UB
 import Url.Parser as UP exposing ((</>))
@@ -62,12 +61,6 @@ type alias Model =
     , globals : Globals Msg
     , state : State
     }
-
-
-adminOnlyModelLens : Optional Model AdminOnly.Model
-adminOnlyModelLens =
-    Optional .mAdminOnly
-        (\b a -> { a | mAdminOnly = Just b })
 
 
 type State
@@ -211,7 +204,7 @@ init flagsValue url0 navKey =
         ( mAdminOnly, adminOnlyCmd ) =
             case page of
                 AdminOnly adminOnlyPage ->
-                    AdminOnly.init globals adminOnlyPage
+                    AdminOnly.init AdminOnlyMsg globals adminOnlyPage
                         |> (\( ao, aoCmd ) -> ( Just ao, aoCmd ))
 
                 NotFound ->
@@ -221,7 +214,7 @@ init flagsValue url0 navKey =
     , Cmd.batch
         [ navbarCmd
         , flashCmd
-        , liftCmd AdminOnlyMsg adminOnlyCmd
+        , adminOnlyCmd
         ]
     )
 
@@ -251,17 +244,19 @@ urlUpdate url model =
                             case model.mAdminOnly of
                                 Nothing ->
                                     AdminOnly.init
+                                        AdminOnlyMsg
                                         model.globals
                                         adminOnlyPage
 
                                 Just adminOnly0 ->
                                     AdminOnly.updatePage
+                                        AdminOnlyMsg
                                         model.globals
                                         adminOnlyPage
                                         adminOnly0
                     in
                     ( { model | mAdminOnly = Just adminOnly, url = newUrl }
-                    , liftCmd AdminOnlyMsg adminOnlyCmd
+                    , adminOnlyCmd
                     )
 
                 _ ->
@@ -324,14 +319,6 @@ replacePageUrl url pageUrl =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        updateAdminOnly =
-            liftOptionalUpdateHandler
-                adminOnlyModelLens
-                AdminOnlyMsg
-            <|
-                AdminOnly.update model.globals
-    in
     case msg of
         ClickedLink req ->
             case req of
@@ -361,14 +348,9 @@ update msg model =
             )
 
         AdminOnlyMsg adminOnlyMsg ->
-            let
-                ( model2, cmd1 ) =
-                    updateAdminOnly adminOnlyMsg model
-
-                cmd2 =
-                    joinCmd identity cmd1
-            in
-            ( model2, cmd2 )
+            let updateAdminOnly = AdminOnly.update AdminOnlyMsg model.globals adminOnlyMsg
+                (newAdminOnly, cmd) = maybeUpdate updateAdminOnly model.mAdminOnly
+            in ({ model | mAdminOnly = newAdminOnly}, cmd)
 
         AddFlashMessage flash ->
             ( { model | flashMessage = FlashMessage.addFlashMessage flash model.flashMessage }
@@ -495,7 +477,7 @@ mainContent model =
         case model.page of
             AdminOnly _ ->
                 [ model.mAdminOnly
-                    |> M.map (joinHtml AdminOnlyMsg << AdminOnly.view)
+                    |> M.map (AdminOnly.view AdminOnlyMsg)
                     |> M.withDefault viewError
                 ]
 

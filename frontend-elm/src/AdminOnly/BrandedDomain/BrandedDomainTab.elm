@@ -62,7 +62,9 @@ type alias State =
     }
   }
 
-type alias Page = { bdID : Int, editTab : EditTab }
+type alias Page =
+  { bdID : Int
+  , editTab : EditTab }
 
 type Msg = SetAvailableThemesMsg (List Theme)
          | PresentFlashMessage FlashMessage
@@ -137,12 +139,8 @@ pageFromModel : State -> Maybe Page
 pageFromModel state = Just { bdID = state.bdID, editTab = state.editTab }
 
 update :
-  { embed : Msg -> msg
-  , presentFlashMessage : FlashMessage -> Cmd msg
-  , formBody : List (String, String) -> Http.Body
-  , gotoBrandedDomainsTab : Cmd msg
-  } -> Msg -> State -> (State, Cmd msg)
-update {embed, presentFlashMessage, formBody, gotoBrandedDomainsTab} msg state =
+  (Msg -> msg) -> Globals msg -> Msg -> State -> (State, Cmd msg)
+update embed globals msg state =
   let pure : State -> (State, Cmd msg)
       pure newState = (newState, Cmd.none)
   in case msg of
@@ -165,8 +163,8 @@ update {embed, presentFlashMessage, formBody, gotoBrandedDomainsTab} msg state =
       in pure { state | editBrandedDomainState =
                         { editBrandedDomainState | brandedDomainBeingEdited = brandedDomain }
                       , loadingState = { loadingState | domainBrandingLoaded = True } }
-    DoSaveBrandedDomainMsg -> (state, doSaveBrandedDomain embed formBody state)
-    PresentFlashMessage flashMsg -> (state, presentFlashMessage flashMsg)
+    DoSaveBrandedDomainMsg -> (state, doSaveBrandedDomain embed (formBody globals) state)
+    PresentFlashMessage flashMsg -> (state, globals.flashMessage flashMsg)
     EditBrandedDomainMsg msg_ ->
       let (newEditBrandedDomainState, cmd) =
             EditBrandedDomain.update (embed << EditBrandedDomainMsg)
@@ -183,7 +181,7 @@ update {embed, presentFlashMessage, formBody, gotoBrandedDomainsTab} msg state =
                   , previewTabState = newPreviewTabState }, cmd)
     SetEditTabStateMsg editTabState ->
       if editTabState == Tab.customInitialState "goback"
-      then (state, gotoBrandedDomainsTab)
+      then (state, globals.gotoBrandedDomainsTab)
       else pure {state | editTabState = editTabState}
     SetPreviewTabStateMsg previewTabState -> pure {state | previewTabState = previewTabState}
     EditThemeMsg msg_ ->
@@ -191,9 +189,9 @@ update {embed, presentFlashMessage, formBody, gotoBrandedDomainsTab} msg state =
           (newEditThemeState, cmd) =
             EditTheme.update (embed << EditThemeMsg) msg_ editThemeReadonly state.editThemeState
       in ({ state | editThemeState = newEditThemeState }, cmd)
-    DoSaveThemeMsg -> doSaveTheme embed formBody state
+    DoSaveThemeMsg -> doSaveTheme embed (formBody globals) state
     SaveThemeMsg theme ->
-      let cmd = presentFlashMessage <| FlashMessage.success "Theme saved."
+      let cmd = globals.flashMessage <| FlashMessage.success "Theme saved."
           newState =
             { state
             | availableThemes =
@@ -202,9 +200,9 @@ update {embed, presentFlashMessage, formBody, gotoBrandedDomainsTab} msg state =
                   state.availableThemes
               }
       in (newState, cmd)
-    DoDeleteThemeMsg -> doDeleteTheme embed formBody state
+    DoDeleteThemeMsg -> doDeleteTheme embed (formBody globals) state
     DeleteThemeCallbackMsg id ->
-      let cmd = presentFlashMessage <| FlashMessage.success "Theme deleted."
+      let cmd = globals.flashMessage <| FlashMessage.success "Theme deleted."
           newAvailableThemes = List.filter (\theme -> theme.id /= id) state.availableThemes
           editThemeState = state.editThemeState
           newThemeBeingEdited = if editThemeState.themeBeingEdited.id /= id
@@ -216,7 +214,7 @@ update {embed, presentFlashMessage, formBody, gotoBrandedDomainsTab} msg state =
             , editThemeState = { editThemeState | themeBeingEdited = newThemeBeingEdited }
             }
       in (newState, cmd)
-    DoCreateThemeMsg blueprint -> doCreateTheme embed formBody blueprint state
+    DoCreateThemeMsg blueprint -> doCreateTheme embed (formBody globals) blueprint state
     CreateThemeCallbackMsg blueprint newThemeID ->
       let newTheme =
             { blueprint
@@ -228,7 +226,7 @@ update {embed, presentFlashMessage, formBody, gotoBrandedDomainsTab} msg state =
             | editThemeState = {editThemeState | themeBeingEdited = newTheme}
             , availableThemes = state.availableThemes ++ [newTheme]
             }
-      in doSaveTheme embed formBody newState
+      in doSaveTheme embed (formBody globals) newState
 
 doSaveTheme : (Msg -> msg) -> (List (String, String) -> Http.Body) -> State -> (State, Cmd msg)
 doSaveTheme embed formBody state =
@@ -287,10 +285,10 @@ updatePage embed page state =
   then ({ state | editTab = page.editTab }, Cmd.none)
   else init embed page
 
-view : State -> Html Msg
-view state =
+view : (Msg -> msg) -> State -> Html msg
+view embed state =
   if state.loadingState.domainThemesLoaded && state.loadingState.domainBrandingLoaded
-  then viewLoaded state
+  then Html.map embed <| viewLoaded state
   else text "Loading"
 
 viewLoaded : State -> Html Msg

@@ -20,15 +20,7 @@ import Json.Decode as JD
 import List as L
 import Time exposing (Month(..))
 import Url.Parser exposing (map)
-import Utils
-    exposing
-        ( Action
-        , Globals
-        , Status(..)
-        , formBody
-        , innerCmd
-        , outerCmd
-        )
+import Utils exposing (..)
 
 
 type alias Model =
@@ -48,14 +40,14 @@ tabName =
     "brandeddomain"
 
 
-init : ( Model, Cmd Msg )
-init =
+init : (Msg -> msg) -> ( Model, Cmd msg )
+init embed =
     let
         model =
             { sBrandedDomains = Loading
             }
     in
-    ( model, getBrandedDomainsCmd )
+    ( model, Cmd.map embed getBrandedDomainsCmd )
 
 
 getBrandedDomainsCmd : Cmd Msg
@@ -66,8 +58,8 @@ getBrandedDomainsCmd =
         }
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
     case msg of
         GotBrandedDomainList result ->
             case result of
@@ -79,40 +71,38 @@ update globals msg model =
 
         TableRowClicked brandedDomainID ->
             ( model
-            , outerCmd <| globals.gotoBrandedDomain brandedDomainID
+            , globals.gotoBrandedDomain brandedDomainID
             )
 
         CreateBrandedDomainClicked ->
             ( model
-            , innerCmd <|
-                Http.post
-                    { url = "/adminonly/brandeddomain/create"
-                    , body = formBody globals []
-                    , expect =
-                        Http.expectJson GotCreateBrandedDomainResponse
-                            (JD.field "id" JD.string)
-                    }
+            , Http.post
+                { url = "/adminonly/brandeddomain/create"
+                , body = formBody globals []
+                , expect =
+                    Http.expectJson (embed << GotCreateBrandedDomainResponse)
+                        (JD.field "id" JD.string)
+                }
             )
 
         GotCreateBrandedDomainResponse response ->
             case response of
                 Ok bdID ->
                     ( model
-                    , outerCmd <|
-                        Cmd.batch
-                            [ globals.flashMessage <| FlashMessage.success "New Branded domain created."
-                            , globals.gotoBrandedDomain bdID
-                            ]
+                    , Cmd.batch
+                        [ globals.flashMessage <| FlashMessage.success "New Branded domain created."
+                        , globals.gotoBrandedDomain bdID
+                        ]
                     )
 
                 Err _ ->
                     ( model
-                    , outerCmd <| globals.flashMessage <| FlashMessage.error "Cannot create Branded domain."
+                    , globals.flashMessage <| FlashMessage.error "Cannot create Branded domain."
                     )
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model = Html.map embed <|
     div []
         [ Grid.row []
             [ Grid.col []

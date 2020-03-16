@@ -41,15 +41,15 @@ tabName =
     "structure"
 
 
-init : String -> ( Model, Cmd Msg )
-init ugid =
+init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init embed ugid =
     let
         model =
             { ugid = ugid
             , sStructure = Loading
             }
     in
-    ( model, getStructureCmd model )
+    ( model, Cmd.map embed <| getStructureCmd model )
 
 
 getStructureCmd : Model -> Cmd Msg
@@ -62,13 +62,13 @@ getStructureCmd model =
         }
 
 
-setUserGroupID : String -> Model -> ( Model, Cmd Msg )
-setUserGroupID ugid model0 =
+setUserGroupID : (Msg -> msg) -> String -> Model -> ( Model, Cmd msg )
+setUserGroupID embed ugid model0 =
     let
         model =
             { model0 | ugid = ugid }
     in
-    ( model, getStructureCmd model )
+    ( model, Cmd.map embed <| getStructureCmd model )
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -83,8 +83,8 @@ update msg model =
                     ( { model | sStructure = Failure }, Cmd.none )
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     div [] <|
         case model.sStructure of
             Loading ->
@@ -94,7 +94,7 @@ view model =
                 [ h4 [] [ text "Failure ..." ] ]
 
             Success structure ->
-                [ ul [ class "user-group-structure" ] [ viewStructure model structure ] ]
+                [ ul [ class "user-group-structure" ] [ Html.map embed <| viewStructure model structure ] ]
 
 
 viewStructure : Model -> Structure Node -> Html Msg

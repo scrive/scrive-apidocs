@@ -17,7 +17,6 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Modal as Modal
 import EnumExtra as Enum exposing (findEnumValue)
-import FlashMessage
 import Html exposing (Html, p, text)
 import Html.Attributes exposing (checked, selected, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
@@ -75,12 +74,11 @@ init config =
 type alias UserCreated
     = Maybe (Result String String)
 
-
-update : Globals msg -> Msg -> Model -> ( Model, Cmd Msg, UserCreated )
-update globals msg model =
+update : (Msg -> msg) -> (UserCreated -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed userCreatedMsg globals msg model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none, Nothing )
+            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
 
         SubmitForm ->
             let
@@ -105,19 +103,18 @@ update globals msg model =
                         , ( "lang", Enum.toString enumLanguage model.language )
                         ]
                             ++ moreParams
-                , expect = Http.expectJson GotResponse responseDecoder
+                , expect = Http.expectJson (embed << GotResponse) responseDecoder
                 }
-            , Nothing
             )
 
         SetEmail email ->
-            ( { model | email = email }, Cmd.none, Nothing )
+            ( { model | email = email }, Cmd.none )
 
         SetFirstName firstName ->
-            ( { model | firstName = firstName }, Cmd.none, Nothing )
+            ( { model | firstName = firstName }, Cmd.none )
 
         SetSecondName secondName ->
-            ( { model | secondName = secondName }, Cmd.none, Nothing )
+            ( { model | secondName = secondName }, Cmd.none )
 
         SetLanguage languageString ->
             ( case findEnumValue enumLanguage languageString of
@@ -127,28 +124,27 @@ update globals msg model =
                 Ok language ->
                     { model | language = language }
             , Cmd.none
-            , Nothing
             )
 
         SetIsUserGroupAdmin isAdmin ->
-            ( { model | isUserGroupAdmin = isAdmin }, Cmd.none, Nothing )
+            ( { model | isUserGroupAdmin = isAdmin }, Cmd.none )
 
         GotResponse result ->
+            let callback = perform << userCreatedMsg
+            in
             case result of
                 Ok r ->
                     if r.success then
                         ( { model | modalVisibility = Modal.hidden }
-                        , Cmd.none
-                        , Just <| Ok "User created."
+                        , callback <| Just <| Ok "User created."
                         )
 
                     else
                         ( model
-                        , Cmd.none
-                        , Just <| Err <| M.withDefault "Error creating a user." r.error
+                        , callback <| Just <| Err <| M.withDefault "Error creating a user." r.error
                         )
                 Err _ ->
-                    ( model, Cmd.none, Just <| Err "Error creating a user." )
+                    ( model, callback <| Just <| Err "Error creating a user." )
 
 
 type alias Response =
@@ -169,8 +165,8 @@ show model =
     { model | modalVisibility = Modal.shown, firstName = "", secondName = "", email = "", language = Language.English, isUserGroupAdmin = False }
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     let
         ( headingText, description, isAdminCheckbox ) =
             case model.config of
@@ -260,3 +256,4 @@ view model =
                 [ text "Create" ]
             ]
         |> Modal.view model.modalVisibility
+        |> Html.map embed

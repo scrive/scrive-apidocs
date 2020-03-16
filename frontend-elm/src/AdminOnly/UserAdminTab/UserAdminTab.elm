@@ -61,6 +61,7 @@ defaultSorting =
 type Msg
     = GotUserList (Result Http.Error (List User))
     | CreateUserModalMsg CreateUserModal.Msg
+    | UserCreatedCallback CreateUserModal.UserCreated
     | CreateUserClicked
     | SetSearch String
     | FormSubmitted
@@ -73,8 +74,8 @@ tabName =
     "salesuseradmin"
 
 
-init : Page -> ( Model, Cmd Msg )
-init page =
+init : (Msg -> msg) -> Page -> ( Model, Cmd msg )
+init embed page =
     let
         ( createUserModal, createUserModalCmd ) =
             CreateUserModal.init CreateUserWithRootUserGroup
@@ -88,8 +89,8 @@ init page =
     in
     ( model
     , Cmd.batch
-        [ liftCmd CreateUserModalMsg createUserModalCmd
-        , getUsersCmd model
+        [ Cmd.map (embed << CreateUserModalMsg) createUserModalCmd
+        , Cmd.map embed <| getUsersCmd model
         ]
     )
 
@@ -121,84 +122,74 @@ getUsersCmd model =
         }
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals =
-    let
-        updateCreateUserModal =
-            CreateUserModal.update globals
-    in
-    \msg model ->
-        let
-            page =
-                model.page
-        in
-        case msg of
-            SetSearch search ->
-                ( { model | search = search }, Cmd.none )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
+    case msg of
+        SetSearch search ->
+            ( { model | search = search }, Cmd.none )
 
-            FormSubmitted ->
-                ( { model | page = { page | mSearch = stringNonEmpty model.search } }
-                , -- we do not initiate the search from here, because it will be
-                  -- triggered by the Url change
-                  outerCmd globals.setPageUrlFromModel
-                )
+        FormSubmitted ->
+            let page = model.page
+            in
+            ( { model | page = { page | mSearch = stringNonEmpty model.search } }
+            , -- we do not initiate the search from here, because it will be
+              -- triggered by the Url change
+              globals.setPageUrlFromModel
+            )
 
-            GotUserList result ->
-                case result of
-                    Ok usersList ->
-                        ( { model | sUserList = Success usersList }, Cmd.none )
+        GotUserList result ->
+            case result of
+                Ok usersList ->
+                    ( { model | sUserList = Success usersList }, Cmd.none )
 
-                    Err _ ->
-                        ( { model | sUserList = Failure }, Cmd.none )
+                Err _ ->
+                    ( { model | sUserList = Failure }, Cmd.none )
 
-            CreateUserModalMsg createUserModalMsg ->
-                let
-                    ( createUserModal, createUserModalCmd, userWasCreated ) =
-                        updateCreateUserModal createUserModalMsg model.createUserModal
+        CreateUserModalMsg createUserModalMsg ->
+            let (createUserModal2, cmd) =
+                  CreateUserModal.update (embed << CreateUserModalMsg) (embed << UserCreatedCallback) globals createUserModalMsg model.createUserModal
+            in ( { model | createUserModal = createUserModal2 }, cmd)
 
-                    reloadCmd =
-                        case userWasCreated of
-                            Just (Ok str) -> -- User created successfully
-                                Cmd.batch
-                                    [ innerCmd <| getUsersCmd model
-                                    , outerCmd <| globals.flashMessage <| FlashMessage.success str
-                                    ]
+        UserCreatedCallback userCreated -> case userCreated of
+            Just (Ok str) -> -- User created successfully
+                (model, Cmd.batch
+                        [ Cmd.map embed <| getUsersCmd model
+                        , globals.flashMessage <| FlashMessage.success str
+                        ])
 
-                            Just (Err str) -> -- Failed to create a user
-                                outerCmd <| globals.flashMessage <| FlashMessage.error str
+            Just (Err str) -> -- Failed to create a user
+                (model, globals.flashMessage <| FlashMessage.error str)
 
-                            Nothing -> -- No attempt was made to create a user
-                                Cmd.none
-                in
-                ( { model | createUserModal = createUserModal }
-                , Cmd.batch [ innerCmd <| liftCmd CreateUserModalMsg createUserModalCmd, reloadCmd ]
-                )
+            Nothing -> -- No attempt was made to create a user
+                (model, Cmd.none)
 
-            CreateUserClicked ->
-                ( { model | createUserModal = CreateUserModal.show model.createUserModal }, Cmd.none )
+        CreateUserClicked ->
+            ( { model | createUserModal = CreateUserModal.show model.createUserModal }, Cmd.none )
 
-            TableRowClicked uid ->
-                ( model, outerCmd <| globals.gotoUser uid )
+        TableRowClicked uid ->
+            ( model, globals.gotoUser uid )
 
-            TableHeaderClicked column ->
-                let
-                    nameOnlyAsc sorting =
-                        ite (sorting.column == SCName) { sorting | order = SOAsc } sorting
-                in
-                ( { model | page = { page | mSorting = Just <| nameOnlyAsc <| toggleSorting column defaultSorting model.page.mSorting } }
-                , -- we do not initiate the search from here, because it will be
-                  -- triggered by the Url change
-                  outerCmd globals.setPageUrlFromModel
-                )
+        TableHeaderClicked column ->
+            let
+                nameOnlyAsc sorting =
+                    ite (sorting.column == SCName) { sorting | order = SOAsc } sorting
+
+                page = model.page
+            in
+            ( { model | page = { page | mSorting = Just <| nameOnlyAsc <| toggleSorting column defaultSorting model.page.mSorting } }
+            , -- we do not initiate the search from here, because it will be
+              -- triggered by the Url change
+              globals.setPageUrlFromModel
+            )
 
 
-updatePage : Page -> Model -> ( Model, Cmd Msg )
-updatePage page model =
+updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
+updatePage embed page model =
     let
         model1 =
             { model | page = page, search = M.withDefault "" page.mSearch }
     in
-    ( model1, getUsersCmd model1 )
+    ( model1, Cmd.map embed <| getUsersCmd model1 )
 
 
 fromPage : Page -> PageUrl
@@ -237,9 +228,9 @@ pageFromSearchOrder mSearch0 mOrderStr =
     Page mSearch <| M.map (Sorting SCTosDate) mOrder
 
 
-view : Model -> Html Msg
-view model =
-    div []
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
+    Html.map embed <| div []
         [ Grid.row [ Row.betweenXs ]
             [ Grid.col []
                 [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
@@ -274,7 +265,7 @@ view model =
                 Success sUserList ->
                     viewUsers model sUserList
             ]
-        , liftHtml CreateUserModalMsg <| CreateUserModal.view model.createUserModal
+        , CreateUserModal.view CreateUserModalMsg model.createUserModal
         ]
 
 

@@ -19,7 +19,6 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Dict
 import Html exposing (Html, text)
 import Maybe as M
-import Monocle.Optional exposing (Optional)
 import Url.Parser as UP exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as UPQ
 import Utils exposing (..)
@@ -58,26 +57,8 @@ type Msg
     | DocumentsTabMsg DocumentsTab.Msg
 
 
-detailsModelLens : Optional Model DetailsTab.Model
-detailsModelLens =
-    Optional .mDetailsTab
-        (\b a -> { a | mDetailsTab = Just b })
-
-
-statisticsModelLens : Optional Model StatisticsTab.Model
-statisticsModelLens =
-    Optional .mStatisticsTab
-        (\b a -> { a | mStatisticsTab = Just b })
-
-
-documentsModelLens : Optional Model DocumentsTab.Model
-documentsModelLens =
-    Optional .mDocumentsTab
-        (\b a -> { a | mDocumentsTab = Just b })
-
-
-init : Page -> ( Model, Cmd Msg )
-init page =
+init : (Msg -> msg) -> Page -> ( Model, Cmd msg )
+init embed page =
     let
         model =
             { page = Home "" DetailsTab
@@ -87,7 +68,7 @@ init page =
             , tabState = Tab.customInitialState DetailsTab.tabName
             }
     in
-    updatePage page model
+    updatePage embed page model
 
 
 fromPage : Page -> PageUrl
@@ -154,77 +135,61 @@ pageFromModel model =
                 |> M.map (Home uid << DocumentsTab)
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals =
-    let
-        updateDetails =
-            liftOptionalUpdateHandler
-                detailsModelLens
-                DetailsTabMsg
-            <|
-                DetailsTab.update globals
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
+    case msg of
+        TabMsg state ->
+            ( { model | tabState = state }
+            , if state == Tab.customInitialState "goback" then
+                globals.gotoUserAdminTab
 
-        updateStatistics =
-            liftOptionalUpdateHandler
-                statisticsModelLens
-                StatisticsTabMsg
-            <|
-                StatisticsTab.update globals
+              else
+                Cmd.none
+            )
 
-        updateDocuments =
-            liftOptionalUpdateHandler
-                documentsModelLens
-                DocumentsTabMsg
-            <|
-                DocumentsTab.update globals
-    in
-    \msg model ->
-        case msg of
-            TabMsg state ->
-                ( { model | tabState = state }
-                , if state == Tab.customInitialState "goback" then
-                    outerCmd globals.gotoUserAdminTab
+        DetailsTabMsg tabMsg ->
+            let updateDetailsTab = DetailsTab.update (embed << DetailsTabMsg) globals tabMsg
+                (newDetailsTab, cmd) = maybeUpdate updateDetailsTab model.mDetailsTab
+            in ({ model | mDetailsTab = newDetailsTab}, cmd)
 
-                  else
-                    Cmd.none
-                )
+        StatisticsTabMsg tabMsg ->
+            let updateStatisticsTab = StatisticsTab.update (embed << StatisticsTabMsg) globals tabMsg
+                (newStatisticsTab, cmd) = maybeUpdate updateStatisticsTab model.mStatisticsTab
+            in ({ model | mStatisticsTab = newStatisticsTab}, cmd)
 
-            DetailsTabMsg tabMsg ->
-                updateDetails tabMsg model
-
-            StatisticsTabMsg tabMsg ->
-                updateStatistics tabMsg model
-
-            DocumentsTabMsg tabMsg ->
-                updateDocuments tabMsg model
+        DocumentsTabMsg tabMsg ->
+            let updateDocumentsTab = DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
+                (newDocumentsTab, cmd) = maybeUpdate updateDocumentsTab model.mDocumentsTab
+            in ({ model | mDocumentsTab = newDocumentsTab}, cmd)
 
 
-updatePage : Page -> Model -> ( Model, Cmd Msg )
-updatePage page model =
+updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
+updatePage embed page model =
     case page of
         Home _ DetailsTab ->
             let
                 ( tab, tabCmd ) =
                     model.mDetailsTab
-                        |> M.map (\t -> ( t, DetailsTab.getUserCmd (userID page) ))
+                        |> M.map (\t -> ( t, Cmd.map (embed << DetailsTabMsg)
+                                              <| DetailsTab.getUserCmd (userID page) ))
                         |> M.withDefault
-                            (DetailsTab.init (userID page))
+                            (DetailsTab.init (embed << DetailsTabMsg) (userID page))
             in
             ( { model
                 | tabState = Tab.customInitialState DetailsTab.tabName
                 , page = page
                 , mDetailsTab = Just tab
               }
-            , liftCmd DetailsTabMsg tabCmd
+            , tabCmd
             )
 
         Home _ (StatisticsTab tabPage) ->
             let
                 ( tab, tabCmd ) =
                     model.mStatisticsTab
-                        |> M.map (StatisticsTab.updatePage tabPage (StatisticsTab.ConfigForUser <| userID page))
+                        |> M.map (StatisticsTab.updatePage (embed << StatisticsTabMsg) tabPage (StatisticsTab.ConfigForUser <| userID page))
                         |> M.withDefault
-                            (StatisticsTab.init tabPage
+                            (StatisticsTab.init (embed << StatisticsTabMsg) tabPage
                                 (StatisticsTab.ConfigForUser <| userID page)
                             )
             in
@@ -233,29 +198,29 @@ updatePage page model =
                 , page = page
                 , tabState = Tab.customInitialState StatisticsTab.tabName
               }
-            , liftCmd StatisticsTabMsg tabCmd
+            , tabCmd
             )
 
         Home _ (DocumentsTab tabPage) ->
             let
                 ( tab, tabCmd ) =
                     model.mDocumentsTab
-                        |> M.map (DocumentsTab.updatePage (ConfigForUser <| userID page) tabPage)
+                        |> M.map (DocumentsTab.updatePage (embed << DocumentsTabMsg) (ConfigForUser <| userID page) tabPage)
                         |> M.withDefault
-                            (DocumentsTab.init (ConfigForUser <| userID page))
+                            (DocumentsTab.init (embed << DocumentsTabMsg) (ConfigForUser <| userID page))
             in
             ( { model
                 | mDocumentsTab = Just tab
                 , page = page
                 , tabState = Tab.customInitialState DocumentsTab.tabName
               }
-            , liftCmd DocumentsTabMsg tabCmd
+            , tabCmd
             )
 
 
-view : Model -> Html Msg
-view model =
-    Tab.config TabMsg
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
+    Tab.config (embed << TabMsg)
         |> Tab.useHash True
         |> Tab.items
             [ Tab.item
@@ -270,9 +235,7 @@ view model =
                     Tab.pane [ Spacing.mt3 ] <|
                         [ model.mDetailsTab
                             |> M.map
-                                (\model2 ->
-                                    liftHtml DetailsTabMsg <| DetailsTab.view model2
-                                )
+                                (DetailsTab.view <| embed << DetailsTabMsg)
                             |> M.withDefault viewError
                         ]
                 }
@@ -282,7 +245,7 @@ view model =
                 , pane =
                     Tab.pane [ Spacing.mt3 ] <|
                         [ model.mStatisticsTab
-                            |> M.map (liftHtml StatisticsTabMsg << StatisticsTab.view)
+                            |> M.map (StatisticsTab.view <| embed << StatisticsTabMsg)
                             |> M.withDefault viewError
                         ]
                 }
@@ -292,7 +255,7 @@ view model =
                 , pane =
                     Tab.pane [ Spacing.mt3 ] <|
                         [ model.mDocumentsTab
-                            |> M.map (liftHtml DocumentsTabMsg << DocumentsTab.view)
+                            |> M.map (DocumentsTab.view <| embed << DocumentsTabMsg)
                             |> M.withDefault viewError
                         ]
                 }

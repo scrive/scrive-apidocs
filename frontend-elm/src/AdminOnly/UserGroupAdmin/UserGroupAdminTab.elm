@@ -69,8 +69,8 @@ tabName =
     "companyadmin"
 
 
-init : Page -> ( Model, Cmd Msg )
-init page =
+init : (Msg -> msg) -> Page -> ( Model, Cmd msg )
+init embed page =
     let
         model =
             { page = page
@@ -78,7 +78,7 @@ init page =
             , search = ""
             }
     in
-    ( model, getUserGroupsCmd model )
+    ( model, Cmd.map embed <| getUserGroupsCmd model )
 
 
 getUserGroupsCmd : Model -> Cmd Msg
@@ -126,8 +126,8 @@ pageFromFilterSearch mFilterStr mSearch =
     { mFilter = mFilter, mSearch = mSearch }
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals msg model =
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update _ globals msg model =
     let
         page =
             model.page
@@ -145,14 +145,14 @@ update globals msg model =
                     ( { model | page = { page | mFilter = Just filter } }
                     , -- we do not initiate the search from here, because it will be
                       -- triggered by the Url change
-                      outerCmd globals.setPageUrlFromModel
+                      globals.setPageUrlFromModel
                     )
 
         FormSubmitted ->
             ( { model | page = { page | mSearch = stringNonEmpty model.search } }
             , -- we do not initiate the search from here, because it will be
               -- triggered by the Url change
-              outerCmd globals.setPageUrlFromModel
+              globals.setPageUrlFromModel
             )
 
         GotUserGroupList result ->
@@ -165,12 +165,12 @@ update globals msg model =
 
         TableRowClicked userGroupID ->
             ( model
-            , outerCmd <| globals.gotoUserGroup userGroupID
+            , globals.gotoUserGroup userGroupID
             )
 
 
-updatePage : Page -> Model -> ( Model, Cmd Msg )
-updatePage page model0 =
+updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
+updatePage embed page model0 =
     let
         model =
             { model0
@@ -178,7 +178,7 @@ updatePage page model0 =
                 , search = M.withDefault "" page.mSearch
             }
     in
-    ( model, getUserGroupsCmd model )
+    ( model, Cmd.map embed <| getUserGroupsCmd model )
 
 
 fromPage : Page -> PageUrl
@@ -210,13 +210,13 @@ pageFromModel model =
     Just model.page
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     let
         filter =
             M.withDefault WithNonFreePricePlan <| model.page.mFilter
     in
-    div []
+    Html.map embed <| div []
         [ Form.formInline [ class "justify-content-end", method "get", onSubmit FormSubmitted ]
             [ Select.select [ Select.onChange <| SetFilter ] <|
                 L.map

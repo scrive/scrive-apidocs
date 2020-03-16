@@ -25,7 +25,6 @@ import Json.Decode.Pipeline as DP
 import Json.Encode as JE
 import List as L
 import Maybe as M
-import Set as S
 import Utils exposing (boolToJson, ite, stringNonEmpty)
 
 

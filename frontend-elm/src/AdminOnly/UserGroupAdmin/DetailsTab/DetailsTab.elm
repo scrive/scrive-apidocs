@@ -18,7 +18,6 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Dict as D
 import EnumExtra as Enum exposing (Enum)
 import FlashMessage
 import Html exposing (Html, a, div, h4, hr, text)
@@ -27,7 +26,7 @@ import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
 import Http
 import List as L
 import Maybe as M
-import Monocle.Optional exposing (Optional)
+import Maybe.Extra as M
 import Time exposing (Month(..))
 import Url.Parser exposing (map)
 import Utils exposing (..)
@@ -65,19 +64,13 @@ type alias Range =
     }
 
 
-mergeUserGroupModelLens : Optional Model MergeUserGroupModal.Model
-mergeUserGroupModelLens =
-    Optional .mMergeUserGroupModal
-        (\b a -> { a | mMergeUserGroupModal = Just b })
-
-
 tabName : String
 tabName =
     "details"
 
 
-init : String -> ( Model, Cmd Msg )
-init ugid =
+init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init embed ugid =
     let
         model =
             { sUserGroup = Loading
@@ -86,7 +79,7 @@ init ugid =
             , mMergeUserGroupModal = Nothing
             }
     in
-    ( model, getUserGroupCmd ugid model )
+    ( model, Cmd.map embed <| getUserGroupCmd ugid model )
 
 
 getUserGroupCmd : String -> Model -> Cmd Msg
@@ -105,9 +98,9 @@ getParentUserGroupCmd ugid _ =
         }
 
 
-setUserGroupID : String -> Model -> Cmd Msg
-setUserGroupID =
-    getUserGroupCmd
+setUserGroupID : (Msg -> msg) -> String -> Model -> Cmd msg
+setUserGroupID embed ugid =
+    Cmd.map embed << getUserGroupCmd ugid
 
 
 modifyUserGroup : (UserGroup -> UserGroup) -> Model -> Model
@@ -115,149 +108,140 @@ modifyUserGroup modify model =
     { model | sUserGroup = statusMap modify model.sUserGroup }
 
 
-update : Globals msg -> Msg -> Model -> ( Model, Action msg Msg )
-update globals =
-    let
-        mergeUserGroup =
-            liftOptionalUpdateHandler
-                mergeUserGroupModelLens
-                MergeUserGroupModalMsg
-            <|
-                MergeUserGroupModal.update globals
-    in
-    \msg model ->
-        case msg of
-            GotUserGroup result ->
-                case result of
-                    Ok userGroup ->
-                        let
-                            ( mergeModal, mergeModalCmd ) =
-                                MergeUserGroupModal.init userGroup
-                        in
-                        ( { model
-                            | sUserGroup = Success userGroup
-                            , origParentID = userGroup.parentID
-                            , sNewParentName = Loading
-                            , mMergeUserGroupModal = Just mergeModal
-                          }
-                        , innerCmd <| liftCmd MergeUserGroupModalMsg mergeModalCmd
-                        )
-
-                    Err _ ->
-                        ( { model | sUserGroup = Failure }, Cmd.none )
-
-            -- FORM SETTERS
-            SetStringField name value ->
-                ( modifyUserGroup (UserGroup.setStringField name value) model, Cmd.none )
-
-            SetBoolField name value ->
-                ( modifyUserGroup (UserGroup.setBoolField name value) model, Cmd.none )
-
-            SetIntField name mRange value ->
-                let
-                    mClamp = case mRange of
-                        Just range -> clamp range.min range.max
-                        Nothing -> identity
-
-                    mInt =
-                        stringNonEmpty value
-                            |> M.andThen String.toInt
-                            |> M.map mClamp
-                in
-                ( modifyUserGroup (UserGroup.setIntField name mInt) model, Cmd.none )
-
-            SetAddressIsInherited value ->
-                case ( value, statusMap .inheritedAddress model.sUserGroup ) of
-                    ( True, Success Nothing ) ->
-                        ( model, outerCmd <| globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
-
-                    _ ->
-                        ( modifyUserGroup (UserGroup.setBoolField "addressIsInherited" value) model, Cmd.none )
-
-            SetSettingsIsInherited value ->
-                case ( value, statusMap .inheritedSettings model.sUserGroup ) of
-                    ( True, Success Nothing ) ->
-                        ( model, outerCmd <| globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
-
-                    _ ->
-                        ( modifyUserGroup (UserGroup.setBoolField "settingsIsInherited" value) model, Cmd.none )
-
-            SetParentID newParentID ->
-                let
-                    model1 =
-                        { model
-                            | sUserGroup = statusMap (\ug -> { ug | parentID = stringNonEmpty newParentID }) model.sUserGroup
-                        }
-                in
-                if isInteger newParentID then
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update embed globals msg model =
+    case msg of
+        GotUserGroup result ->
+            case result of
+                Ok userGroup ->
                     let
-                        model2 =
-                            { model1 | sNewParentName = Loading }
+                        ( mergeModal, mergeModalCmd ) =
+                            MergeUserGroupModal.init (embed << MergeUserGroupModalMsg) userGroup
                     in
-                    ( model2, innerCmd <| getParentUserGroupCmd newParentID model2 )
+                    ( { model
+                        | sUserGroup = Success userGroup
+                        , origParentID = userGroup.parentID
+                        , sNewParentName = Loading
+                        , mMergeUserGroupModal = Just mergeModal
+                      }
+                    , mergeModalCmd
+                    )
 
-                else
-                    ( model1, Cmd.none )
+                Err _ ->
+                    ( { model | sUserGroup = Failure }, Cmd.none )
 
-            SetSfAccountID newSfAccountID ->
+        -- FORM SETTERS
+        SetStringField name value ->
+            ( modifyUserGroup (UserGroup.setStringField name value) model, Cmd.none )
+
+        SetBoolField name value ->
+            ( modifyUserGroup (UserGroup.setBoolField name value) model, Cmd.none )
+
+        SetIntField name mRange value ->
+            let
+                mClamp = case mRange of
+                    Just range -> clamp range.min range.max
+                    Nothing -> identity
+
+                mInt =
+                    stringNonEmpty value
+                        |> M.andThen String.toInt
+                        |> M.map mClamp
+            in
+            ( modifyUserGroup (UserGroup.setIntField name mInt) model, Cmd.none )
+
+        SetAddressIsInherited value ->
+            case ( value, statusMap .inheritedAddress model.sUserGroup ) of
+                ( True, Success Nothing ) ->
+                    ( model, globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
+
+                _ ->
+                    ( modifyUserGroup (UserGroup.setBoolField "addressIsInherited" value) model, Cmd.none )
+
+        SetSettingsIsInherited value ->
+            case ( value, statusMap .inheritedSettings model.sUserGroup ) of
+                ( True, Success Nothing ) ->
+                    ( model, globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
+
+                _ ->
+                    ( modifyUserGroup (UserGroup.setBoolField "settingsIsInherited" value) model, Cmd.none )
+
+        SetParentID newParentID ->
+            let
+                model1 =
+                    { model
+                        | sUserGroup = statusMap (\ug -> { ug | parentID = stringNonEmpty newParentID }) model.sUserGroup
+                    }
+            in
+            if isInteger newParentID then
                 let
-                    model1 =
-                        { model
-                            | sUserGroup = statusMap (UserGroup.setInternalTag "sf-account-id" <| stringNonEmpty newSfAccountID) model.sUserGroup
-                        }
+                    model2 =
+                        { model1 | sNewParentName = Loading }
                 in
+                ( model2, Cmd.map embed <| getParentUserGroupCmd newParentID model2 )
+
+            else
                 ( model1, Cmd.none )
 
-            GotParentUserGroup response ->
-                case response of
-                    Err _ ->
-                        ( { model | sNewParentName = Failure }, Cmd.none )
+        SetSfAccountID newSfAccountID ->
+            let
+                model1 =
+                    { model
+                        | sUserGroup = statusMap (UserGroup.setInternalTag "sf-account-id" <| stringNonEmpty newSfAccountID) model.sUserGroup
+                    }
+            in
+            ( model1, Cmd.none )
 
-                    Ok userGroup ->
-                        ( { model | sNewParentName = Success userGroup.name }, Cmd.none )
+        GotParentUserGroup response ->
+            case response of
+                Err _ ->
+                    ( { model | sNewParentName = Failure }, Cmd.none )
 
-            SubmitForm ->
-                case fromStatus model.sUserGroup of
-                    Just userGroup ->
-                        ( model
-                        , innerCmd <|
-                            Http.post
-                                { url = "/adminonly/companyadmin/" ++ userGroup.id
-                                , body = formBody globals <| UserGroup.formValues userGroup
-                                , expect = Http.expectString GotSaveResponse
-                                }
-                        )
+                Ok userGroup ->
+                    ( { model | sNewParentName = Success userGroup.name }, Cmd.none )
 
-                    Nothing ->
-                        ( model, Cmd.none )
+        SubmitForm ->
+            case fromStatus model.sUserGroup of
+                Just userGroup ->
+                    ( model
+                    , Http.post
+                            { url = "/adminonly/companyadmin/" ++ userGroup.id
+                            , body = formBody globals <| UserGroup.formValues userGroup
+                            , expect = Http.expectString <| embed << GotSaveResponse
+                            }
+                    )
 
-            GotSaveResponse response ->
-                case response of
-                    Err _ ->
-                        ( model, outerCmd <| globals.flashMessage <| FlashMessage.error "Request failed." )
+                Nothing ->
+                    ( model, Cmd.none )
 
-                    Ok _ ->
-                        ( { model | sUserGroup = statusMap UserGroup.afterSaved model.sUserGroup }
-                        , outerCmd <|
-                            Cmd.batch
-                                [ globals.flashMessage <| FlashMessage.success "Saved"
-                                , globals.setPageUrlFromModel -- reloads UserGroup Details
-                                ]
-                        )
+        GotSaveResponse response ->
+            case response of
+                Err _ ->
+                    ( model, globals.flashMessage <| FlashMessage.error "Request failed." )
 
-            -- MOVE USER
-            MergeUserGroupClicked ->
-                model.mMergeUserGroupModal
-                    |> M.map
-                        (\modal -> ( { model | mMergeUserGroupModal = Just <| MergeUserGroupModal.show modal }, Cmd.none ))
-                    |> M.withDefault ( model, Cmd.none )
+                Ok _ ->
+                    ( { model | sUserGroup = statusMap UserGroup.afterSaved model.sUserGroup }
+                    , Cmd.batch
+                            [ globals.flashMessage <| FlashMessage.success "Saved"
+                            , globals.setPageUrlFromModel -- reloads UserGroup Details
+                            ]
+                    )
 
-            MergeUserGroupModalMsg modalMsg ->
-                mergeUserGroup modalMsg model
+        -- MOVE USER
+        MergeUserGroupClicked ->
+            model.mMergeUserGroupModal
+                |> M.map
+                    (\modal -> ( { model | mMergeUserGroupModal = Just <| MergeUserGroupModal.show modal }, Cmd.none ))
+                |> M.withDefault ( model, Cmd.none )
+
+        MergeUserGroupModalMsg modalMsg ->
+            let updateMergeUserGroupModal = MergeUserGroupModal.update (embed << MergeUserGroupModalMsg) globals modalMsg
+                (newMergeUserGroupModal, cmd) = maybeUpdate updateMergeUserGroupModal model.mMergeUserGroupModal
+            in ({ model | mMergeUserGroupModal = newMergeUserGroupModal}, cmd)
 
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view embed model =
     let
         mAddressSettings ug =
             ( ite ug.addressIsInherited ug.inheritedAddress (Just ug.address)
@@ -275,17 +259,17 @@ view model =
             div [] <|
                 [ case mAddressSettings ug of
                     ( Just address, Just settings ) ->
-                        viewUserGroup model ug address settings
+                        Html.map embed <| viewUserGroup model ug address settings
 
                     _ ->
                         text "Inheritance inconsistency. Report to bugs@scrive.com."
                 ]
-                    ++ (L.filterMap identity <|
+                    ++ M.values
                             [ M.map
-                                (liftHtml MergeUserGroupModalMsg << MergeUserGroupModal.view)
+                                (MergeUserGroupModal.view <| embed << MergeUserGroupModalMsg)
                                 model.mMergeUserGroupModal
                             ]
-                       )
+
 
 
 formText :
