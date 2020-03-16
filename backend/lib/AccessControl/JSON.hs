@@ -10,6 +10,7 @@ import GHC.Generics
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
 
+import AccessControl.Check
 import AccessControl.Types
 import API.V2
 import API.V2.Parameters

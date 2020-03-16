@@ -9,6 +9,7 @@ module API.V2.Utils
     , isApiSales
     ) where
 
+import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.V2

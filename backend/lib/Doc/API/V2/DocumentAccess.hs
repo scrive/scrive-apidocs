@@ -10,6 +10,7 @@ module Doc.API.V2.DocumentAccess (
 , documentAccessByFolder
 ) where
 
+import AccessControl.Check
 import AccessControl.Types
 import Doc.DocInfo
 import Doc.DocStateData

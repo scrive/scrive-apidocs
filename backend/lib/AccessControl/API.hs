@@ -10,6 +10,7 @@ import Happstack.Server.Types
 import Happstack.StaticRouting
 import qualified Text.JSON.Gen as J
 
+import AccessControl.Check
 import AccessControl.JSON
 import AccessControl.Model
 import AccessControl.Types

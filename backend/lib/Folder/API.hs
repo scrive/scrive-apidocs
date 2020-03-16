@@ -18,6 +18,7 @@ import Happstack.StaticRouting
 import Log
 import qualified Data.Text as T
 
+import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.V2

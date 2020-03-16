@@ -19,6 +19,7 @@ import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
 
+import AccessControl.Check
 import AccessControl.Types
 import API.V2
 import API.V2.Parameters
