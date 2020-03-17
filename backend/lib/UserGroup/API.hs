@@ -84,7 +84,11 @@ userGroupApiV2Create = api $ do
     Nothing -> do
       -- Guard against non-Admins being able to create root UserGroups
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
-      dbUpdate $ UserGroupCreate (defaultUserGroup & #name .~ ugIn ^. #name)
+      dbUpdate
+        . UserGroupCreate
+        $ defaultUserGroup
+        & (#name .~ ugIn ^. #name)
+        & (#externalTags .~ ugIn ^. #externalTags)
           -- _externalIDs = ....      -- TODO: Implement external_ids
     Just parent_ugid -> do
       -- Check user has permissions to create child UserGroup

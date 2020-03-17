@@ -231,6 +231,12 @@ userGroupApiTests env = testGroup
   , testThat "non-god-mode and non-sales can view Users in UserGroup with permissions"
              env
              testNonGodModeUserCanViewUsersInUserGroupWithPermissions
+  , testThat "user can create tags on root user group"
+             env
+             testUserCanCreateTagsOnRootUserGroup
+  , testThat "user can create tags on child user group"
+             env
+             testUserCanCreateTagsOnChildUserGroup
   , testThat "user can update tags" env testUserCanUpdateTags
   , testThat "user can view tags"   env testUserCanViewTags
   ]
@@ -1366,6 +1372,44 @@ testNonGodModeUserCanViewUsersInUserGroupWithPermissions = do
   assertEqual "non-admin user can view Users in UserGroup with permissions" 200
     $ rsCode res
   where emailAddress = "googleplex.starthinker@scrive.com"
+
+testUserCanCreateTagsOnRootUserGroup :: TestEnv ()
+testUserCanCreateTagsOnRootUserGroup = do
+  user       <- instantiateUser $ randomUserTemplate { email = return emailAddress }
+  ctx        <- setUser user <$> mkContext defaultLang
+  val        <- jsonTestRequestHelper ctx POST params userGroupApiV2Create 200
+  outputTags <- lookupObjectArray "tags" val
+  assertEqual "admin user can create tags" (length inputTags) (length outputTags)
+  where
+    emailAddress = "trillian@scrive.com"
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
+    inputTags = [TagUpdate "foo" (SetTo "bar")]
+    ug =
+      object ["tags" .= toJSON inputTags, "name" .= toJSON ("testing user group" :: Text)]
+    params = [("usergroup", valueToInput ug)]
+
+testUserCanCreateTagsOnChildUserGroup :: TestEnv ()
+testUserCanCreateTagsOnChildUserGroup = do
+  ug   <- instantiateRandomUserGroup
+  user <- instantiateUser $ randomUserTemplate { email = return emailAddress }
+  let inputUg =
+        object
+          $ [ "tags" .= toJSON inputTags
+            , "name" .= toJSON ("testing user group" :: Text)
+            , "parent_id" .= toJSON (ug ^. #id)
+            ]
+  let params = [("usergroup", valueToInput inputUg)]
+  ctx        <- setUser user <$> mkContext defaultLang
+  val        <- jsonTestRequestHelper ctx POST params userGroupApiV2Create 200
+  outputTags <- lookupObjectArray "tags" val
+  assertEqual "admin user can create tags" (length inputTags) (length outputTags)
+  where
+    emailAddress = "trillian@scrive.com"
+    setUser user = set #maybeUser (Just user) . set #adminAccounts [Email emailAddress]
+    inputTags = [TagUpdate "foo" (SetTo "bar")]
+
+valueToInput :: Value -> Input
+valueToInput = inText . TE.decodeUtf8 . BSL.toStrict . encode
 
 testUserCanUpdateTags :: TestEnv ()
 testUserCanUpdateTags = do
