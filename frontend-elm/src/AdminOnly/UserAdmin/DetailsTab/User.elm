@@ -77,6 +77,7 @@ formValues user =
 type alias UserGroup =
     { id : String
     , name : String
+    , entityName : String
     , address : String
     , city : String
     , country : String
@@ -103,6 +104,7 @@ userGroupDecoder =
     D.succeed UserGroup
         |> DP.required "companyid" D.string
         |> DP.required "companyname" D.string
+        |> DP.required "entityname" D.string
         |> DP.required "address" D.string
         |> DP.required "city" D.string
         |> DP.required "country" D.string

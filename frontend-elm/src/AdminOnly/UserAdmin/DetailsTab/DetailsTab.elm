@@ -464,7 +464,7 @@ viewUser user =
                 [ Form.colLabel labelColAttrs [ text "Company" ]
                 , Form.colLabel inputColAttrs
                     [ a [ href <| "/adminonly/page/companyadmin/" ++ user.userGroup.id ]
-                        [ text "Link to company" ]
+                        [ text <| "Link to company " ++ user.userGroup.entityName ]
                     ]
                 ]
             , formSelectRowM enumAccountType "Account type" user.accountType SetAccountType
