@@ -393,14 +393,18 @@ viewUserGroup model ug address settings =
     Grid.container []
         [ Form.form [ onSubmit SubmitForm ]
             [ Form.row []
-                [ Form.colLabel labelColAttrs [ text "Company ID" ]
+                [ Form.colLabel labelColAttrs [ text "User group ID" ]
                 , Form.col inputColAttrs
                     [ Input.text [ Input.attrs [ readonly True, value ug.id ] ] ]
                 ]
-            , formTextRowM "Name" "" ug.name (SetStringField "name") []
+            , formTextRowM "User group name"
+                "This is the internal-use User Group name (for example \"HR\")"
+                ug.name
+                (SetStringField "name")
+                []
             , Form.row
                 []
-                [ Form.colLabel labelColAttrs [ text "Parent User Group ID" ]
+                [ Form.colLabel labelColAttrs [ text "Parent user group ID" ]
                 , Form.col inputColAttrs <|
                     [ Input.text <|
                         [ Input.attrs <|
@@ -442,7 +446,12 @@ viewUserGroup model ug address settings =
                 ug.addressIsInherited
                 SetAddressIsInherited
                 []
-            , formTextRowM "Number" "" address.companyNumber (SetStringField "companyNumber") [ readonly ug.addressIsInherited ]
+            , formTextRowM "Company name (Entity)"
+                "\"Company\" field in documents"
+                ug.entityName
+                (SetStringField "entityName")
+                []
+            , formTextRowM "Company reg. no." "" address.companyNumber (SetStringField "companyNumber") [ readonly ug.addressIsInherited ]
             , formTextRowM "Address" "" address.address (SetStringField "address") [ readonly ug.addressIsInherited ]
             , formTextRowM "Zip" "" address.zip (SetStringField "zip") [ readonly ug.addressIsInherited ]
             , formTextRowM "City" "" address.city (SetStringField "city") [ readonly ug.addressIsInherited ]

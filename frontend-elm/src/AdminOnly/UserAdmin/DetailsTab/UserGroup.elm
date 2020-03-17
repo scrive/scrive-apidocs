@@ -35,6 +35,7 @@ import Utils exposing (boolToJson, ite, stringNonEmpty)
 type alias UserGroup =
     { id : String
     , name : String
+    , entityName : String
     , parentID : Maybe String
     , parentGroupPath : List ParentUserGroup
     , address : Address
@@ -53,6 +54,7 @@ decoder =
     JD.succeed UserGroup
         |> DP.required "companyid" JD.string
         |> DP.required "companyname" JD.string
+        |> DP.required "entityname" JD.string
         |> DP.required "parentid" (JD.string |> JD.nullable)
         |> DP.required "parentgrouppath" (JD.list parentUserGroupDecoder)
         |> DP.custom addressDecoder
@@ -81,6 +83,9 @@ setStringField name value ug =
     case name of
         "name" ->
             { ug | name = value }
+
+        "entityName" ->
+            { ug | entityName = value }
 
         "address" ->
             modifyAddress (\a -> { a | address = value }) ug
@@ -388,6 +393,7 @@ enumSmsProvider =
 formValues : UserGroup -> List ( String, String )
 formValues ug =
     [ ( "companyname", ug.name )
+    , ( "entityname", ug.entityName )
     , ( "companysettingsisinherited", boolToJson ug.settingsIsInherited )
     , ( "companyaddressisinherited", boolToJson ug.addressIsInherited )
     ]
