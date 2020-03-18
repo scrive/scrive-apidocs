@@ -100,7 +100,6 @@ mailForwardSigningForAuthorMail=
       $nicemail(
         mailheader = _mailForwardSigningForAuthorHeader();
         mailp1 = mailForwardSigningForAuthorContent();
-        mailspacing2 = "";
         mailp2 = _mailForwardSigningForAuthorButton();
         mailp3 = mailForwardSigningForAuthorButton();
         footer = null
