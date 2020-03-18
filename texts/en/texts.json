@@ -641,7 +641,7 @@
 "_flashMessageMustAcceptTOS":"Please accept the Scrive Terms of Service to get started.",
 "_flashMessageNewActivationLinkSend":"We have resent your account activation link. Please go to your email and follow the instructions in the email to activate your account.",
 "_flashMessageNoBulkDocumentRemindsSent":"No reminders were sent because none of the selected documents can be signed by additional parties.",
-"_flashMessageNoDOBProvidedByEIDService":"Your EID profile lacks birth date.",
+"_flashMessageNoDOBProvidedByEIDService":"Your eID profile lacks birth date.",
 "_flashMessageNoNameProvidedByEIDService":"Your EID profile lacks name.",
 "_flashMessagePasswordChangeLinkNotValid":"We are sorry. This link is no longer valid.<br/>Click on \\\\\"$_forgotpassword()$\\\\\" to generate a new link.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"We are sorry. This link is no longer valid. Click on \"$_forgotpassword()$\" to generate a new link.",
