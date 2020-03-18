@@ -802,14 +802,12 @@ instance Arbitrary NetsDKNemIDSignature where
 instance Arbitrary EIDServiceIDINSignature where
   arbitrary = do
     a <- arbText 20 30
-    b <- arbText 200 300
     c <- arbText 10 20
     d <- arbText 10 10
     return $ EIDServiceIDINSignature $ CompleteIDINEIDServiceTransactionData
-      { eiditdName          = a
-      , eiditdVerifiedEmail = b
-      , eiditdBirthDate     = c
-      , eiditdCustomerID    = d
+      { eiditdName       = a
+      , eiditdBirthDate  = c
+      , eiditdCustomerID = d
       }
 
 instance Arbitrary ESignature where

@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Samþykkja",
 "_CompanyAccounts":"Notendur",
 "_CompanySettings":"Merking",
@@ -704,7 +704,7 @@
 "_historyTime":"Tími",
 "_identifiedByDKNemIDText":"Auðkenndur af dönsku NemID sem \"$name$\"",
 "_identifiedByFITupasText":"Auðkenndur af finnsku TUPAS sem \"$name$\"",
-"_identifiedByIDINText":"Auðkenndur af iDIN sem \"$email$\"",
+"_identifiedByIDINText":"Auðkenndur af iDIN sem \"$name$\"",
 "_identifiedByNOBankIDText":"Auðkenndur af norsku BankID sem \"$name$\"",
 "_identifiedBySwedishBankIDText":"Auðkenndur af sænsku BankID sem \"$name$\"",
 "_identifiedByVerimiText":"Auðkenndur af Verimi sem \"$email$\"",

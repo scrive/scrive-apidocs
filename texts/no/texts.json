@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Godta",
 "_CompanyAccounts":"Brukere",
 "_CompanySettings":"Branding",
@@ -704,7 +704,7 @@
 "_historyTime":"Tid",
 "_identifiedByDKNemIDText":"Identifisert av dansk NemID som \"$name$\"",
 "_identifiedByFITupasText":"Identifisert av finsk TUPAS som \"$name$\"",
-"_identifiedByIDINText":"Identifisert av iDIN som \"$email$\"",
+"_identifiedByIDINText":"Identifisert av iDIN som \"$name$\"",
 "_identifiedByNOBankIDText":"Identifisert av norsk BankID som \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identifisert av svensk BankID som \"$name$\"",
 "_identifiedByVerimiText":"Identifisert av Verimi som \"$email$\"",

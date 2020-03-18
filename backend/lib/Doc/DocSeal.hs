@@ -139,9 +139,8 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         . F.value "email"
         $ eidServiceVerimiVerifiedEmail authentication
     Just (EIDServiceIDINAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByIDINText"
-        . F.value "email"
-        $ eidServiceIDINVerifiedEmail authentication
+      renderTextTemplate "_identifiedByIDINText" . F.value "name" $ eidServiceIDINName
+        authentication
     Just (EIDServiceNemIDAuthentication_ authentication) ->
       renderTextTemplate "_identifiedByDKNemIDText"
         . F.value "name"

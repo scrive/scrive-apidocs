@@ -322,7 +322,6 @@ simplifiedEventText mactor sim dee = do
                         F.value "signatory_mobile" $ eidServiceVerimiVerifiedPhone n
                       EIDServiceIDINAuthentication_ n -> do
                         F.value "provider_idin" True
-                        F.value "signatory_email" $ eidServiceIDINVerifiedEmail n
                         F.value "signatory_mobile" $ eidServiceIDINVerifiedPhone n
                         F.value "provider_customer_id" $ eidServiceIDINCustomerID n
                       EIDServiceNemIDAuthentication_ n -> do

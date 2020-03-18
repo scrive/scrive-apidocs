@@ -3651,8 +3651,7 @@ testSinatoryNameMatch = do
       }
 
     mkTransactionData name = CompleteIDINEIDServiceTransactionData
-      { eiditdName          = name
-      , eiditdVerifiedEmail = ""
-      , eiditdBirthDate     = ""
-      , eiditdCustomerID    = ""
+      { eiditdName       = name
+      , eiditdBirthDate  = ""
+      , eiditdCustomerID = ""
       }

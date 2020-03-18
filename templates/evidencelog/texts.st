@@ -625,7 +625,6 @@ $if(provider_idin)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   $if(signatory_dob)$<br/>Date of birth: $signatory_dob$$endif$
-  $if(signatory_verified_email)$<br/>Verified email: $signatory_verified_email$$endif$
   $if(signatory_customer_id)$<br/>Customer ID: $signatory_customer_id$$endif$
 </p>
 $endif$

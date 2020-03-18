@@ -193,7 +193,6 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINAuthenticatio
       dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                IDINAuth
         sqlSet "signatory_name"          eidServiceIDINName
-        sqlSet "signatory_email"         eidServiceIDINVerifiedEmail
         sqlSet "signatory_phone_number"  eidServiceIDINVerifiedPhone
         sqlSet "signatory_date_of_birth" eidServiceIDINBirthDate
         sqlSet "provider_customer_id"    eidServiceIDINCustomerID
@@ -305,7 +304,6 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
       }
     IDINAuth -> EIDServiceIDINAuthentication_ EIDServiceIDINAuthentication
       { eidServiceIDINName          = fromJust msignatory_name
-      , eidServiceIDINVerifiedEmail = signatory_email
       , eidServiceIDINVerifiedPhone = signatory_phone_number
       , eidServiceIDINBirthDate     = signatory_dob
       , eidServiceIDINCustomerID    = customer_id

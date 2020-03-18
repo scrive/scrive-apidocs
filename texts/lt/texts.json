@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Sutikti",
 "_CompanyAccounts":"Naudotojai",
 "_CompanySettings":"Prekės ženklo integravimas",
@@ -704,7 +704,7 @@
 "_historyTime":"Laikas",
 "_identifiedByDKNemIDText":"Danijos „NemID“ identifikuota kaip „$name$“",
 "_identifiedByFITupasText":"Suomijos „TUPAS“ identifikuota kaip „$name$“ ",
-"_identifiedByIDINText":"iDIN identifikuota kaip  „$email$“ ",
+"_identifiedByIDINText":"iDIN identifikuota kaip  „$name$“ ",
 "_identifiedByNOBankIDText":"Norvegijos „BankID“ identifikuota kaip „$name$“ ",
 "_identifiedBySwedishBankIDText":"Švedijos „BankID“ identifikuota kaip „$name$“ ",
 "_identifiedByVerimiText":"Verimi identifikuota kaip „$email$“ ",

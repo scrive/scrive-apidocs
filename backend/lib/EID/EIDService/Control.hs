@@ -293,7 +293,6 @@ updateIDINTransactionAfterCheck slid est ts mctd = do
             EIDServiceTransactionStatusCompleteAndSuccess
           let auth = EIDServiceIDINAuthentication
                 { eidServiceIDINName          = eiditdName cd
-                , eidServiceIDINVerifiedEmail = Just $ eiditdVerifiedEmail cd
                 , eidServiceIDINVerifiedPhone = Nothing
                 , eidServiceIDINBirthDate     = Just $ eiditdBirthDate cd
                 , eidServiceIDINCustomerID    = Just $ eiditdCustomerID cd

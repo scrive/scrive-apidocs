@@ -166,7 +166,6 @@ data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication
 
 data EIDServiceIDINAuthentication = EIDServiceIDINAuthentication
   { eidServiceIDINName            :: !(T.Text)
-  , eidServiceIDINVerifiedEmail   :: !(Maybe T.Text)
   , eidServiceIDINVerifiedPhone   :: !(Maybe T.Text)
   , eidServiceIDINBirthDate       :: !(Maybe T.Text)
   , eidServiceIDINCustomerID      :: !(Maybe T.Text)
@@ -194,7 +193,6 @@ data EIDServiceIDINSignature = EIDServiceIDINSignature
 
 data CompleteIDINEIDServiceTransactionData = CompleteIDINEIDServiceTransactionData
   { eiditdName :: T.Text
-  , eiditdVerifiedEmail :: T.Text
   , eiditdBirthDate :: T.Text
   , eiditdCustomerID :: T.Text
   } deriving (Eq, Ord, Show)

@@ -217,7 +217,6 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINSignature () 
         sqlSet "provider"                  EIDServiceIDIN
         sqlSet "signatory_date_of_birth"   eiditdBirthDate
         sqlSet "signatory_personal_number" eiditdCustomerID
-        sqlSet "signatory_email"           eiditdVerifiedEmail
         sqlSet "signatory_name"            eiditdName
 
 -- | Get signature for a given signatory.
@@ -234,7 +233,6 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature)
       sqlResult "ocsp_response"
       sqlResult "signatory_ip"
       sqlResult "signatory_date_of_birth"
-      sqlResult "signatory_email"
       sqlWhereEq "signatory_link_id" slid
     fetchMaybe fetchESignature
 
@@ -249,10 +247,9 @@ fetchESignature
      , Maybe ByteString
      , Maybe Text
      , Maybe Text
-     , Maybe Text
      )
   -> ESignature
-fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip, msignatory_dob, msignatory_email)
+fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip, msignatory_dob)
   = case provider of
     LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature
       { lbidsSignedText  = fromJust sdata
@@ -297,8 +294,7 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       }
     EIDServiceIDIN -> EIDServiceIDINSignature_ $ EIDServiceIDINSignature
       CompleteIDINEIDServiceTransactionData
-        { eiditdName          = fromJust msignatory_name
-        , eiditdVerifiedEmail = fromJust msignatory_email
-        , eiditdBirthDate     = fromJust msignatory_dob
-        , eiditdCustomerID    = fromJust msignatory_personal_number
+        { eiditdName       = fromJust msignatory_name
+        , eiditdBirthDate  = fromJust msignatory_dob
+        , eiditdCustomerID = fromJust msignatory_personal_number
         }

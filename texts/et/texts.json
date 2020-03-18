@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Kinnita",
 "_CompanyAccounts":"Kasutajad",
 "_CompanySettings":"Bränding",
@@ -704,7 +704,7 @@
 "_historyTime":"Kellaaeg",
 "_identifiedByDKNemIDText":"Tuvastatud Taani NemID abil kasutajana \"$name$\"",
 "_identifiedByFITupasText":"Tuvastatud Soome TUPAS teenuse abil kasutajana \"$name$\"",
-"_identifiedByIDINText":"Tuvastatud iDIN teenuse abil kasutajana \"$email$\"",
+"_identifiedByIDINText":"Tuvastatud iDIN teenuse abil kasutajana \"$name$\"",
 "_identifiedByNOBankIDText":"Tuvastatud Norra BankID abil kasutajana \"$name$\"",
 "_identifiedBySwedishBankIDText":"Tuvastatud Rootsi BankID abil kasutajana \"$name$\"",
 "_identifiedByVerimiText":"Tuvastatud Verimi platvormi abil kasutajana \"$email$\"",

@@ -1894,7 +1894,6 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             F.value "signatory_name" eiditdName
             F.value "signatory_dob" eiditdBirthDate
             F.value "signatory_customer_id" eiditdCustomerID
-            F.value "signatory_verified_email" eiditdVerifiedEmail
         (Nothing, Just _) -> do
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl

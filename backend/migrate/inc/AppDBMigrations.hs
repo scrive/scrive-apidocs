@@ -245,4 +245,5 @@ kontraMigrations =
   , createTableUserTags
   , userGroupSettingsAddSealingMethod
   , addSealingMethodToDocuments
+  , dropEmailFromEIDSignatures
   ]

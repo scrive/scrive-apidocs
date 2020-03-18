@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Hyväksy",
 "_CompanyAccounts":"Käyttäjät",
 "_CompanySettings":"Brändäys",
@@ -704,7 +704,7 @@
 "_historyTime":"Aika",
 "_identifiedByDKNemIDText":"Tanskalainen NemID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedByFITupasText":"Suomalainen TUPAS-tunnistautuminen henkilöksi \"$name$\"",
-"_identifiedByIDINText":"iDIN-tunnistautuminen sähköpostiosoitteeksi \"$email$\"",
+"_identifiedByIDINText":"iDIN-tunnistautuminen sähköpostiosoitteeksi \"$name$\"",
 "_identifiedByNOBankIDText":"Norjalainen BankID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedBySwedishBankIDText":"Ruotsalainen BankID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedByVerimiText":"Verimi-tunnistautuminen sähköpostiosoitteeksi \"$email$\"",

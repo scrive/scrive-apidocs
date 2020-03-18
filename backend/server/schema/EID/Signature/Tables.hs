@@ -5,7 +5,7 @@ import DB
 tableEIDSignatures :: Table
 tableEIDSignatures = tblTable
   { tblName        = "eid_signatures"
-  , tblVersion     = 4
+  , tblVersion     = 5
   , tblColumns     =
     [ tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -18,7 +18,6 @@ tableEIDSignatures = tblTable
     , tblColumn { colName = "ocsp_response", colType = BinaryT }
     , tblColumn { colName = "signatory_ip", colType = TextT }
     , tblColumn { colName = "signatory_date_of_birth", colType = TextT }
-    , tblColumn { colName = "signatory_email", colType = TextT }
     ]
 -- only one signature per signatory. can be relaxed later if necessary.
   , tblPrimaryKey  = pkOnColumn "signatory_link_id"

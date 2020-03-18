@@ -97,7 +97,6 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
         -> [ "nl_idin_data"
                .= (  object
                   $  [ "signatory_name" .= eiditdName
-                     , "signatory_verified_email" .= eiditdVerifiedEmail
                      , "signatory_customer_id" .= eiditdCustomerID
                      , "signatory_name_match"
                        .= (showt $ matchSignatoryName signatory details)

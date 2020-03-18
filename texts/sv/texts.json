@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Acceptera",
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
@@ -704,7 +704,7 @@
 "_historyTime":"Tid",
 "_identifiedByDKNemIDText":"Identifierad med danskt NemID som \"$name$\"",
 "_identifiedByFITupasText":"Identifierad med finskt TUPAS som \"$name$\"",
-"_identifiedByIDINText":"Identifierades av iDIN som \"$email$\"",
+"_identifiedByIDINText":"Identifierades av iDIN som \"$name$\"",
 "_identifiedByNOBankIDText":"Identifierad med norskt BankID som \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identifierad med svenskt BankID som \"$name$\"",
 "_identifiedByVerimiText":"Identifierad av Verimi som \"$email$\"",

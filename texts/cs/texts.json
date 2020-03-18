@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Přijmout",
 "_CompanyAccounts":"Uživatelé",
 "_CompanySettings":"Vzhled",
@@ -704,7 +704,7 @@
 "_historyTime":"Čas",
 "_identifiedByDKNemIDText":"Identifikováno dánskou službou NemID jako \"$name$\"",
 "_identifiedByFITupasText":"Identifikováno finskou službou TUPAS jako \"$name$\"",
-"_identifiedByIDINText":"Identifikováno službou iDIN jako \"$email$\"",
+"_identifiedByIDINText":"Identifikováno službou iDIN jako \"$name$\"",
 "_identifiedByNOBankIDText":"Identifikováno norskou službou BankID jako \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identifikováno švédskou službou BankID jako \"$name$\"",
 "_identifiedByVerimiText":"Identifikováno službou Verimi jako \"$email$\"",

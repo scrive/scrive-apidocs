@@ -557,7 +557,6 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
                     let valOrEmptyString = maybe "" T.pack
                     surname <- valOrEmptyString <$> fromJSValueField "legalLastName"
                     initials       <- valOrEmptyString <$> fromJSValueField "initials"
-                    email          <- valOrEmptyString <$> fromJSValueField "email"
                     dob            <- valOrEmptyString <$> fromJSValueField "birthDate"
                     customerId     <- valOrEmptyString <$> fromJSValueField "customerId"
                     mTussenvoegsel <- fromJSValueField "legalLastNamePrefix"
@@ -566,10 +565,9 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
                             initials <> " " <> tussenvoegsel <> " " <> surname
                           Nothing -> initials <> " " <> surname
                     return $ Just $ CompleteIDINEIDServiceTransactionData
-                      { eiditdName          = eiditdName
-                      , eiditdVerifiedEmail = email
-                      , eiditdBirthDate     = dob
-                      , eiditdCustomerID    = customerId
+                      { eiditdName       = eiditdName
+                      , eiditdBirthDate  = dob
+                      , eiditdCustomerID = customerId
                       }
               return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
             _ -> return (Nothing, Nothing)
