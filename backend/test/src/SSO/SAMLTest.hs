@@ -55,9 +55,13 @@ testWAMESignatureVerifies :: TestEnv ()
 testWAMESignatureVerifies = liftBase $ do
   parsedXml  <- readBase64XmlFromFile "backend/test/src/SSO/wame-response.b64"
   publicKeys <- readPubKeyRSA "backend/test/src/SSO/wame-pubkey.pem"
-  result     <- verifySignature publicKeys "FIMRSP_ed7abb99-0170-145f-beea-d0d544148baa" parsedXml
+  result     <- verifySignature publicKeys
+                                "FIMRSP_ed7abb99-0170-145f-beea-d0d544148baa"
+                                parsedXml
   assertEqual "WAME response signature verified" result (Just True)
-  result2 <- verifySignature publicKeys "Assertion-uuided7abb95-0170-1012-96b2-d0d544148baa" parsedXml
+  result2 <- verifySignature publicKeys
+                             "Assertion-uuided7abb95-0170-1012-96b2-d0d544148baa"
+                             parsedXml
   assertEqual "WAME assertion signature verified" result2 (Just True)
   return ()
 
