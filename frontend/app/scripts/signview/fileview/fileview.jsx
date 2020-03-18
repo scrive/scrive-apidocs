@@ -13,6 +13,7 @@ import viewSize from "../viewsize";
 import isTouchDevice from "../../common/is_touch_device";
 import BackboneMixin from "../../common/backbone_mixin";
 import Controls from "./controls";
+import ErrorModal from "../errormodal";
 import FilePageView from "./filepageview";
 import Instructions from "../instructionsview/instructions";
 
@@ -200,6 +201,14 @@ module.exports = React.createClass({
       };
       img.addEventListener("load", callback);
       img.src = pagelink;
+      img.addEventListener("error", function () {
+        var fakeXHR = {getResponseHeader: () => {return undefined;},
+                       status: 0};
+        var doc = file.document();
+        var details = {"Document ID": doc.documentid(),
+                       "Signatory ID": doc.currentSignatory().signatoryid()};
+        new ErrorModal(fakeXHR, details);
+      });
       return img;
     });
 
