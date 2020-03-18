@@ -45,6 +45,7 @@ type alias Model =
     , mChangePasswordModal : Maybe ChangePasswordModal.Model
     , sResend : Status String
     , sDisableTwoFA : Status String
+    , resetPasswordLoading: Bool
     }
 
 
@@ -74,6 +75,9 @@ type Msg
       -- CHANGE PASSWORD
     | ChangePasswordClicked
     | ChangePasswordModalMsg ChangePasswordModal.Msg
+      -- SEND RESET PASSWORD LINK
+    | ResetPasswordClicked
+    | GotResetPasswordResponse (Result Http.Error String)
       -- DISABLE TWO-FACTOR AUTHENTICATION
     | DisableTwoFAClicked
     | GotDisableTwoFAResponse (Result Http.Error String)
@@ -92,6 +96,7 @@ init embed uid =
             { sUser = Loading
             , sResend = Failure
             , sDisableTwoFA = Failure
+            , resetPasswordLoading = False
             , mDeleteUserModal = Nothing
             , mMoveUserModal = Nothing
             , mChangePasswordModal = Nothing
@@ -301,6 +306,36 @@ update embed globals msg model =
                 (newChangePasswordModal, cmd) = maybeUpdate updateChangePasswordModal model.mChangePasswordModal
             in ({ model | mChangePasswordModal = newChangePasswordModal}, cmd)
 
+        -- SEND RESET PASSWORD LINK
+        ResetPasswordClicked ->
+            case (fromStatus model.sUser, model.resetPasswordLoading) of
+                (Just user, False) ->
+                    ( { model | resetPasswordLoading = True }
+                    , Http.post
+                        { url = "/api/frontend/sendpasswordresetmail"
+                        , body = formBody globals [ ( "email", user.email ) ]
+                        , expect = Http.expectString (embed << GotResetPasswordResponse)
+                        }
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GotResetPasswordResponse response ->
+            ( { model | resetPasswordLoading = False }
+            , case (fromStatus model.sUser, response) of
+                (Just user, Ok _) ->
+                    globals.flashMessage <|
+                        FlashMessage.success "A password reset link was sent to the user's email address."
+
+                (Nothing, Ok _) ->
+                    Cmd.none
+
+                (_, Err _) ->
+                    globals.flashMessage <|
+                        FlashMessage.error "Error sending the password reset link."
+            )
+
         -- DISABLE TWO-FACTOR AUTHENTICATION
         DisableTwoFAClicked ->
             case fromStatus model.sUser of
@@ -470,16 +505,11 @@ viewUser user =
             , formSelectRowM enumAccountType "Account type" user.accountType SetAccountType
             , formTextRowM "Callback URL" user.callbackUrl SetCallbackUrl [ readonly <| not user.callbackUrlIsEditable ]
             ]
-        , Grid.row [ Row.leftSm ]
+        , Grid.row [ Row.leftSm, Row.attrs [ class "mb-sm-2" ] ]
             [ Grid.col [ Col.sm12 ]
                 [ Button.button
-                    [ Button.danger
-                    , Button.attrs [ onClick DeleteUserClicked ]
-                    ]
-                    [ text "Delete user" ]
-                , Button.button
                     [ Button.primary
-                    , Button.attrs [ class "ml-sm-2", onClick ResendInvitationClicked ]
+                    , Button.attrs [ onClick ResendInvitationClicked ]
                     ]
                     [ text "Resend invitation" ]
                 , Button.button
@@ -492,6 +522,20 @@ viewUser user =
                     , Button.attrs [ class "ml-sm-2", onClick ChangePasswordClicked ]
                     ]
                     [ text "Change password" ]
+                , Button.button
+                    [ Button.primary
+                    , Button.attrs [ class "ml-sm-2", onClick ResetPasswordClicked ]
+                    ]
+                    [ text "Send password reset link" ]
+                ]
+            ]
+        , Grid.row [ Row.leftSm ]
+            [ Grid.col [ Col.sm12 ]
+                [ Button.button
+                    [ Button.danger
+                    , Button.attrs [ onClick DeleteUserClicked ]
+                    ]
+                    [ text "Delete user" ]
                 , Button.button
                     [ Button.success
                     , Button.attrs [ class "ml-sm-2", onClick SubmitForm ]
