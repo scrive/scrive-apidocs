@@ -23,14 +23,12 @@ parseSAMLXML txt = liftBase $ do
   eXmlTree <-
     try
       $ (   Prelude.head
-        <$> (   HXT.runX
-            $   HXT.readString
-                  [ HXT.withCheckNamespaces HXT.yes
-                  , HXT.withHTTP []
-                  , HXT.withRemoveWS HXT.no
-                  ]
-                  decoded
-            >>> HXT.uniqueNamespaces
+        <$> (HXT.runX $ HXT.readString
+              [ HXT.withCheckNamespaces HXT.yes
+              , HXT.withHTTP []
+              , HXT.withRemoveWS HXT.no
+              ]
+              decoded
             )
         )
   return $ first (\e -> show $ (e :: IOException)) eXmlTree
@@ -59,14 +57,13 @@ getVerifiedAssertionsFromSAML publicKeys xmlTree = liftBase $ do
       return . Left $ "Encryption of assertions is not supported (for now at least)"
 
 getIDPID :: HXT.XmlTree -> Maybe String
-getIDPID xmlTree = listToMaybe $ HXT.runLA
+getIDPID = listToMaybe . HXT.runLA
   (   HXT.getChildren
   >>> HXT.isElem
   />  HXT.hasQName (HXT.mkQName "saml2" "Issuer" "urn:oasis:names:tc:SAML:2.0:assertion")
   >>> HXT.getChildren
   >>> HXT.getText
   )
-  xmlTree
 
 getFirstNonEmptyAttribute :: String -> A.Assertion -> Maybe String
 getFirstNonEmptyAttribute attributeName assertion =

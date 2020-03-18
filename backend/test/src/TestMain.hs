@@ -88,6 +88,7 @@ import SessionsTest
 import SignupTest
 import SMSLinkShorteningTest
 import SSO.GuardsTest
+import SSO.SAMLTest
 import Templates (readGlobalTemplates)
 import TestConf
 import TestKontra
@@ -167,6 +168,7 @@ allTests =
   , documentGeneratorsTests
   , occurenceControlTests
   , samlConditionsGuardsTests
+  , samlSignatureTest
   ]
 
 stagingTests :: [TestEnvSt -> Test]

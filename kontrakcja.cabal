@@ -1313,6 +1313,7 @@ Test-suite kontrakcja-test
                  SessionsTest
                  SignupTest
                  SSO.GuardsTest
+                 SSO.SAMLTest
                  Tag.Tables
                  TestConf
                  TestCron
@@ -1365,6 +1366,7 @@ Test-suite kontrakcja-test
                , containers
                , crypto-rng
                , cryptonite
+               , cryptostore
                , data-default
                , directory
                , exceptions
@@ -1380,6 +1382,7 @@ Test-suite kontrakcja-test
                , hsaml2
                , http-client
                , http-client-tls
+               , hxt
                , invariant
                , json
                , kontrakcja-templates
@@ -1413,6 +1416,7 @@ Test-suite kontrakcja-test
                , unordered-containers
                , utf8-string
                , vector
+               , x509
                , xml-conduit
 
 Executable config-checker
