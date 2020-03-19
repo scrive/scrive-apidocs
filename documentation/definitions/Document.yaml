@@ -38,9 +38,7 @@ properties:
       Can be `null` while a document is in preparation, but needs a file before
       the signing process can start.
   sealed_file:
-    oneOf:
-      - type: 'null'
-      - $ref: ./File.yaml
+    $ref: ./File.yaml
     description: |
       **The cryptographically sealed file.**
 
@@ -48,6 +46,7 @@ properties:
       This field may be `null` for a short period of time after a document has
       been signed by all parties, while the Scrive eSign system seals the
       document.
+      Can be `null`.
   author_attachments:
     description: |
       **List of author attachments.**
@@ -83,13 +82,14 @@ properties:
   timeout_time:
     description: |
       Time after which the document will timeout if it has not been signed.
+      Can be `null`.
     type: string
-    nullable: true
     format: date-time
     readOnly: true
   auto_remind_time:
+    description: |
+      Can be `null`.
     type: string
-    nullable: true
     format: date-time
     readOnly: true
   status:
@@ -99,7 +99,8 @@ properties:
     default: 90
   days_to_remind:
     type: integer
-    nullable: true
+    description: |
+      Can be `null`.
   display_options:
     type: object
     properties:
@@ -160,8 +161,8 @@ properties:
       The URL to perform an API callback request.
 
       Please see [Callbacks](#callbacks) for details.
+      Can be `null`.
     type: string
-    nullable: true
     format: uri
   object_version:
     description: |

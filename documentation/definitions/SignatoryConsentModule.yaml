@@ -20,11 +20,11 @@ properties:
             Question text.
         positive_option:
           type: string
-          desription: |
+          description: |
             Text for the positive answer.
         negative_option:
           type: string
-          desription: |
+          description: |
             Text for the negative answer.
         response:
           type: boolean

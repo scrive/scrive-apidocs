@@ -16,8 +16,8 @@ properties:
     description: |
       If this party has an account on the Scrive eSign system, it will be set
       here.
+      Can be `null`.
     type: string
-    nullable: true
     format: int64
     readOnly: true
   is_author:
@@ -78,44 +78,48 @@ properties:
     default: 1
   sign_time:
     type: string
-    nullable: true
+    description: |
+      Can be `null`.
     format: date-time
     readOnly: true
   seen_time:
     type: string
-    nullable: true
+    description: |
+      Can be `null`.
     format: date-time
     readOnly: true
   read_invitation_time:
     type: string
-    nullable: true
+    description: |
+      Can be `null`.
     format: date-time
     readOnly: true
   rejected_time:
     type: string
-    nullable: true
+    description: |
+      Can be `null`.
     format: date-time
     readOnly: true
   rejection_reason:
     type: string
-    nullable: true
     readOnly: true
     description: |
       Will only have a value if the signatory rejected the document, and will
       contain the message from the signatory to explain rejection.
       The Document `display_options` needs to allow the signatory to write a
       reject reason (`allow_reject_reason`).
+      Can be `null`.
   sign_success_redirect_url:
     description: |
       The URL to redirect this party after they have signed the document.
+      Can be `null`.
     type: string
-    nullable: true
     format: uri
   reject_redirect_url:
     description: |
       The URL to redirect this party if they reject the document.
+      Can be `null`.
     type: string
-    nullable: true
     format: uri
   email_delivery_status:
     $ref: ./SignatoryDeliveryStatus.yaml
@@ -123,7 +127,8 @@ properties:
     $ref: ./SignatoryDeliveryStatus.yaml
   csv:
     type: array
-    nullable: true
+    description: |
+      Can be `null`.
     items:
       type: array
       items:
@@ -292,13 +297,14 @@ properties:
 
       This will only be available after the signing process has been started,
       and will only be visible when accessing the document as the author.
+
+      Can be `null`.
     type: string
-    nullable: true
     format: uri
   consent_module:
-    oneOf:
-      - type: 'null'
-      - $ref: ./SignatoryConsentModule.yaml
+    $ref: ./SignatoryConsentModule.yaml
+    description: |
+      Can be `null`.
 example:
   {
     "id": "189256",
