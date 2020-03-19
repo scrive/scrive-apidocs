@@ -60,14 +60,11 @@ eidServiceRoutes = choice
   , dir "start" . dir "idin-sign" . hPost . toK2 $ startIDINSignEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "idin-sign" . hGet . toK2)
     redirectEndpointFromIDINSignEIDServiceTransaction
-  , dir "start" $ dir "nemid" . hPost . toK2 $ startNemIDViewEIDServiceTransaction
+  , dir "start" . dir "nemid" . hPost . toK2 $ startNemIDViewEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "nemid-view" . hGet . toK2)
     redirectEndpointFromNemIDViewEIDServiceTransaction
-  , dir "start"
-  $ dir "nobankid-view"
-  . hPost
-  . toK2
-  $ startNOBankIDViewEIDServiceTransaction
+  , (dir "start" . dir "nobankid-view" . hPost . toK2)
+    startNOBankIDViewEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "nobankid-view" . hGet . toK2)
     redirectEndpointFromNOBankIDViewEIDServiceTransaction
   ]

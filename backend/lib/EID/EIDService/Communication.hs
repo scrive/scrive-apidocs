@@ -273,89 +273,24 @@ createVerimiTransactionWithEIDService conf did slid redirect = do
           <> showt slid
           <> "?redirect="
           <> redirect
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "POST"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , "--data"
-    , "@-"
-    , T.unpack (eidServiceUrl conf) <> "/api/v1/transaction/new"
-    ]
-    (A.encode . A.toJSON $ object
-      [ "method" .= ("auth" :: String)
-      , "provider" .= ("verimi" :: String)
-      , "redirectUrl" .= redirectUrl
-      ]
-    )
-  case exitcode of
-    ExitFailure msg -> do
-      logAttention "Failed to create new transaction (eidservice/verimi)" $ object
-        [ "stdout" `equalsExternalBSL` stdout
-        , "stderr" `equalsExternalBSL` stderr
-        , "errorMessage" .= msg
-        ]
-      internalError
-    ExitSuccess -> do
-      logInfo "Created new transaction (eidservice/verimi) " $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> withJSValue jsvalue $ do
-          mtid <- fromJSValueField "id"
-          case (mtid) of
-            (Just tid) -> return (unsafeEIDServiceTransactionID $ T.pack tid)
-            _          -> do
-              logAttention_ "Failed to read 'id' from create transaction response"
-              internalError
-        _ -> do
-          logAttention_ "Failed to parse create transaction response"
-          internalError
+  createTransactionWithEIDService conf "verimi" Nothing redirectUrl
 
 startVerimiTransactionWithEIDService
   :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
 startVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "POST"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , "--data"
-    , "@-"
-    , T.unpack
-    $  (eidServiceUrl conf)
-    <> "/api/v1/transaction/"
-    <> (fromEIDServiceTransactionID tid)
-    <> "/start"
-    ]
-    (A.encode . A.toJSON $ object [])
-  case exitcode of
-    ExitFailure msg -> do
-      logInfo "Failed to start transaction (eidservice/verimi)" $ object
-        [ "stdout" `equalsExternalBSL` stdout
-        , "stderr" `equalsExternalBSL` stderr
-        , "errorMessage" .= msg
-        ]
-      internalError
-    ExitSuccess -> do
-      logInfo "Started transaction (eidservice/verimi) " $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> withJSValue jsvalue $ do
-          murl <-
-            fromJSValueFieldCustom "providerInfo"
-            $ fromJSValueFieldCustom "verimiAuth"
-            $ fromJSValueField "authUrl"
-          case (murl) of
-            (Just url) -> return (T.pack url)
-            _          -> do
-              logAttention_ "Failed to read 'url' from start transaction response"
-              internalError
-        _ -> do
-          logAttention_ "Failed to parse start transaction response"
+  response <- startTransactionWithEIDService conf "verimi" tid
+  extractUrl response
+  where
+    extractUrl :: Kontrakcja m => JSValue -> m Text
+    extractUrl jsValue = withJSValue jsValue $ do
+      murl <-
+        fromJSValueFieldCustom "providerInfo"
+        $ fromJSValueFieldCustom "verimiAuth"
+        $ fromJSValueField "authUrl"
+      case (murl) of
+        (Just url) -> return (T.pack url)
+        _          -> do
+          logAttention_ "Failed to read 'url' from start transaction response"
           internalError
 
 checkVerimiTransactionWithEIDService
@@ -367,145 +302,65 @@ checkVerimiTransactionWithEIDService
        , Maybe CompleteVerimiEIDServiceTransactionData
        )
 checkVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "GET"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , T.unpack
-    $  (eidServiceUrl conf)
-    <> "/api/v1/transaction/"
-    <> (fromEIDServiceTransactionID tid)
-    ]
-    BSL.empty
-  case exitcode of
-    ExitFailure msg -> do
-      logAttention "Failed to fetch transaction (eidservice/verimi)" $ object
-        [ "stdout" `equalsExternalBSL` stdout
-        , "stderr" `equalsExternalBSL` stderr
-        , "errorMessage" .= msg
-        ]
-      internalError
-    ExitSuccess -> do
-      logInfo "Fetched new transaction (eidservice/verimi) " $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> withJSValue jsvalue $ do
-          (mstatus :: Maybe String) <- fromJSValueField "status"
-          case (mstatus) of
-            (Just "new"     ) -> return (Just EIDServiceTransactionStatusNew, Nothing)
-            (Just "started" ) -> return (Just EIDServiceTransactionStatusStarted, Nothing)
-            (Just "failed"  ) -> return (Just EIDServiceTransactionStatusFailed, Nothing)
-            (Just "complete") -> do
-              td <-
-                fromJSValueFieldCustom "providerInfo"
-                $ fromJSValueFieldCustom "verimiAuth"
-                $ fromJSValueFieldCustom "completionData"
-                $ do
-                    mname          <- fromJSValueField "name"
-                    memail         <- fromJSValueField "email"
-                    memailVerified <- fromJSValueField "emailVerified"
-                    case (mname, memail, memailVerified) of
-                      (Just name, Just email, Just True) ->
-                        return $ Just $ CompleteVerimiEIDServiceTransactionData
-                          { eidvtdName          = T.pack $ name
-                          , eidvtdVerifiedEmail = T.pack $ email
-                          }
-                      _ -> return Nothing
-              return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
-            _ -> return (Nothing, Nothing)
+  mtd <- getTransactionFromEIDService conf "verimi" tid
+  case mtd of
+    Just td -> getTransactionDataAndStatus td
+    _       -> return (Nothing, Nothing)
+  where
+    getTransactionDataAndStatus
+      :: Kontrakcja m
+      => JSValue
+      -> m
+           ( Maybe EIDServiceTransactionStatus
+           , Maybe CompleteVerimiEIDServiceTransactionData
+           )
+    getTransactionDataAndStatus jsValue = withJSValue jsValue $ do
+      (mstatus :: Maybe String) <- fromJSValueField "status"
+      case (mstatus) of
+        (Just "new"     ) -> return (Just EIDServiceTransactionStatusNew, Nothing)
+        (Just "started" ) -> return (Just EIDServiceTransactionStatusStarted, Nothing)
+        (Just "failed"  ) -> return (Just EIDServiceTransactionStatusFailed, Nothing)
+        (Just "complete") -> do
+          td <-
+            fromJSValueFieldCustom "providerInfo"
+            $ fromJSValueFieldCustom "verimiAuth"
+            $ fromJSValueFieldCustom "completionData"
+            $ do
+                mname          <- fromJSValueField "name"
+                memail         <- fromJSValueField "email"
+                memailVerified <- fromJSValueField "emailVerified"
+                case (mname, memail, memailVerified) of
+                  (Just name, Just email, Just True) ->
+                    return $ Just $ CompleteVerimiEIDServiceTransactionData
+                      { eidvtdName          = T.pack $ name
+                      , eidvtdVerifiedEmail = T.pack $ email
+                      }
+                  _ -> return Nothing
+          return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
         _ -> return (Nothing, Nothing)
-
 
 createIDINTransactionWithEIDService
   :: Kontrakcja m => EIDServiceConf -> Text -> m EIDServiceTransactionID
 createIDINTransactionWithEIDService conf redirectUrl = do
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "POST"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , "--data"
-    , "@-"
-    , T.unpack (eidServiceUrl conf) <> "/api/v1/transaction/new"
-    ]
-    (A.encode . A.toJSON $ object
-      [ "method" .= ("auth" :: String)
-      , "provider" .= ("nlIDIN" :: String)
-      , "redirectUrl" .= redirectUrl
-      , "providerParameters" .= object ["nlIDIN" .= object ["requestBirthdate" .= True]]
-      ]
-    )
-  case exitcode of
-    ExitFailure msg -> do
-      logAttention "Failed to create new transaction (eidservice/idin)" $ object
-        [ "stdout" `equalsExternalBSL` stdout
-        , "stderr" `equalsExternalBSL` stderr
-        , "errorMessage" .= msg
-        ]
-      internalError
-    ExitSuccess -> do
-      logInfo "Created new transaction (eidservice/idin) " $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> withJSValue jsvalue $ do
-          mtid <- fromJSValueField "id"
-          case (mtid) of
-            (Just tid) -> return (unsafeEIDServiceTransactionID $ T.pack tid)
-            _          -> do
-              logAttention_ "Failed to read 'id' from create transaction response"
-              internalError
-        _ -> do
-          logAttention_ "Failed to parse create transaction response"
-          internalError
+  let providerParams = Just $ object ["nlIDIN" .= object ["requestBirthdate" .= True]]
+  createTransactionWithEIDService conf "nlIDIN" providerParams redirectUrl
 
 startIDINTransactionWithEIDService
   :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
 startIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "POST"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , "--data"
-    , "@-"
-    , T.unpack
-    $  (eidServiceUrl conf)
-    <> "/api/v1/transaction/"
-    <> (fromEIDServiceTransactionID tid)
-    <> "/start"
-    ]
-    (A.encode . A.toJSON $ object [])
-  case exitcode of
-    ExitFailure msg -> do
-      logInfo "Failed to start transaction (eidservice/idin)" $ object
-        [ "stdout" `equalsExternalBSL` stdout
-        , "stderr" `equalsExternalBSL` stderr
-        , "errorMessage" .= msg
-        ]
-      internalError
-    ExitSuccess -> do
-      logInfo "Started transaction (eidservice/idin) " $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> withJSValue jsvalue $ do
-          murl <-
-            fromJSValueFieldCustom "providerInfo"
-            $ fromJSValueFieldCustom "nlIDINAuth"
-            $ fromJSValueField "authUrl"
-          case (murl) of
-            (Just url) -> return (T.pack url)
-            _          -> do
-              logAttention_ "Failed to read 'url' from start transaction response"
-              internalError
-        _ -> do
-          logAttention_ "Failed to parse start transaction response"
+  response <- startTransactionWithEIDService conf "nlIDIN" tid
+  extractUrl response
+  where
+    extractUrl :: Kontrakcja m => JSValue -> m Text
+    extractUrl jsValue = withJSValue jsValue $ do
+      murl <-
+        fromJSValueFieldCustom "providerInfo"
+        $ fromJSValueFieldCustom "nlIDINAuth"
+        $ fromJSValueField "authUrl"
+      case (murl) of
+        (Just url) -> return (T.pack url)
+        _          -> do
+          logAttention_ "Failed to read 'url' from start transaction response"
           internalError
 
 checkIDINTransactionWithEIDService
@@ -517,60 +372,46 @@ checkIDINTransactionWithEIDService
        , Maybe CompleteIDINEIDServiceTransactionData
        )
 checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "GET"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , T.unpack
-    $  (eidServiceUrl conf)
-    <> "/api/v1/transaction/"
-    <> (fromEIDServiceTransactionID tid)
-    ]
-    BSL.empty
-  case exitcode of
-    ExitFailure msg -> do
-      logAttention "Failed to fetch transaction (eidservice/idin)" $ object
-        [ "stdout" `equalsExternalBSL` stdout
-        , "stderr" `equalsExternalBSL` stderr
-        , "errorMessage" .= msg
-        ]
-      internalError
-    ExitSuccess -> do
-      logInfo "Fetched new transaction (eidservice/idin) " $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> withJSValue jsvalue $ do
-          (mstatus :: Maybe String) <- fromJSValueField "status"
-          case (mstatus) of
-            (Just "new"     ) -> return (Just EIDServiceTransactionStatusNew, Nothing)
-            (Just "started" ) -> return (Just EIDServiceTransactionStatusStarted, Nothing)
-            (Just "failed"  ) -> return (Just EIDServiceTransactionStatusFailed, Nothing)
-            (Just "complete") -> do
-              td <-
-                fromJSValueFieldCustom "providerInfo"
-                $ fromJSValueFieldCustom "nlIDINAuth"
-                $ fromJSValueFieldCustom "completionData"
-                $ do
-                    let valOrEmptyString = maybe "" T.pack
-                    surname <- valOrEmptyString <$> fromJSValueField "legalLastName"
-                    initials       <- valOrEmptyString <$> fromJSValueField "initials"
-                    dob            <- valOrEmptyString <$> fromJSValueField "birthDate"
-                    customerId     <- valOrEmptyString <$> fromJSValueField "customerId"
-                    mTussenvoegsel <- fromJSValueField "legalLastNamePrefix"
-                    let eiditdName = case mTussenvoegsel of
-                          Just tussenvoegsel ->
-                            initials <> " " <> tussenvoegsel <> " " <> surname
-                          Nothing -> initials <> " " <> surname
-                    return $ Just $ CompleteIDINEIDServiceTransactionData
-                      { eiditdName       = eiditdName
-                      , eiditdBirthDate  = dob
-                      , eiditdCustomerID = customerId
-                      }
-              return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
-            _ -> return (Nothing, Nothing)
+  mtd <- getTransactionFromEIDService conf "nlIDIN" tid
+  case mtd of
+    Just td -> getTransactionDataAndStatus td
+    _       -> return (Nothing, Nothing)
+  where
+    getTransactionDataAndStatus
+      :: (MonadLog m, MonadBaseControl IO m)
+      => JSValue
+      -> m
+           ( Maybe EIDServiceTransactionStatus
+           , Maybe CompleteIDINEIDServiceTransactionData
+           )
+    getTransactionDataAndStatus jsValue = withJSValue jsValue $ do
+      (mstatus :: Maybe String) <- fromJSValueField "status"
+      case (mstatus) of
+        (Just "new"     ) -> return (Just EIDServiceTransactionStatusNew, Nothing)
+        (Just "started" ) -> return (Just EIDServiceTransactionStatusStarted, Nothing)
+        (Just "failed"  ) -> return (Just EIDServiceTransactionStatusFailed, Nothing)
+        (Just "complete") -> do
+          td <-
+            fromJSValueFieldCustom "providerInfo"
+            $ fromJSValueFieldCustom "nlIDINAuth"
+            $ fromJSValueFieldCustom "completionData"
+            $ do
+                let valOrEmptyString = maybe "" T.pack
+                surname        <- valOrEmptyString <$> fromJSValueField "legalLastName"
+                initials       <- valOrEmptyString <$> fromJSValueField "initials"
+                dob            <- valOrEmptyString <$> fromJSValueField "birthDate"
+                customerId     <- valOrEmptyString <$> fromJSValueField "customerId"
+                mTussenvoegsel <- fromJSValueField "legalLastNamePrefix"
+                let eiditdName = case mTussenvoegsel of
+                      Just tussenvoegsel ->
+                        initials <> " " <> tussenvoegsel <> " " <> surname
+                      Nothing -> initials <> " " <> surname
+                return $ Just $ CompleteIDINEIDServiceTransactionData
+                  { eiditdName       = eiditdName
+                  , eiditdBirthDate  = dob
+                  , eiditdCustomerID = customerId
+                  }
+          return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
         _ -> return (Nothing, Nothing)
 
 -- FIXME those 3 functions below are supposed to be a basis for further refactoring of this file
@@ -628,7 +469,7 @@ createTransactionWithEIDService conf provider providerParams redirectUrl = do
           internalError
 
 getTransactionFromEIDService
-  :: (Kontrakcja m)
+  :: (MonadLog m, MonadBaseControl IO m)
   => EIDServiceConf
   -> Text
   -> EIDServiceTransactionID
