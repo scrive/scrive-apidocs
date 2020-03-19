@@ -16,7 +16,8 @@ properties:
     description: |
       If this party has an account on the Scrive eSign system, it will be set
       here.
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: int64
     readOnly: true
   is_author:
@@ -76,23 +77,28 @@ properties:
     type: integer
     default: 1
   sign_time:
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: date-time
     readOnly: true
   seen_time:
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: date-time
     readOnly: true
   read_invitation_time:
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: date-time
     readOnly: true
   rejected_time:
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: date-time
     readOnly: true
   rejection_reason:
-    type: ['string', 'null']
+    type: string
+    nullable: true
     readOnly: true
     description: |
       Will only have a value if the signatory rejected the document, and will
@@ -102,19 +108,22 @@ properties:
   sign_success_redirect_url:
     description: |
       The URL to redirect this party after they have signed the document.
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: uri
   reject_redirect_url:
     description: |
       The URL to redirect this party if they reject the document.
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: uri
   email_delivery_status:
     $ref: ./SignatoryDeliveryStatus.yaml
   mobile_delivery_status:
     $ref: ./SignatoryDeliveryStatus.yaml
   csv:
-    type: ['array', 'null']
+    type: array
+    nullable: true
     items:
       type: array
       items:
@@ -283,7 +292,8 @@ properties:
 
       This will only be available after the signing process has been started,
       and will only be visible when accessing the document as the author.
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: uri
   consent_module:
     oneOf:

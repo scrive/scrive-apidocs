@@ -83,11 +83,13 @@ properties:
   timeout_time:
     description: |
       Time after which the document will timeout if it has not been signed.
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: date-time
     readOnly: true
   auto_remind_time:
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: date-time
     readOnly: true
   status:
@@ -96,7 +98,8 @@ properties:
     type: integer
     default: 90
   days_to_remind:
-    type: ['integer', 'null']
+    type: integer
+    nullable: true
   display_options:
     type: object
     properties:
@@ -157,7 +160,8 @@ properties:
       The URL to perform an API callback request.
 
       Please see [Callbacks](#callbacks) for details.
-    type: ['string', 'null']
+    type: string
+    nullable: true
     format: uri
   object_version:
     description: |
