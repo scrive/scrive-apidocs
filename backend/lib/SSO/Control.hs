@@ -181,7 +181,7 @@ renderMetadata :: Kontrakcja m => m Response
 renderMetadata = do
   conf <- guardJustM getConf
   let baseURI = scSamlEntityBaseURI conf
-  validUntil <- formatTime defaultTimeLocale (iso8601DateFormat $ Just "%H:%M:%SZ") . calculateValidUntil <$> currentTime
+  validUntil <- formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" <$> calculateValidUntil <$> currentTime
   response <- renderTextTemplate "samlMetadata" $ do
     F.value "samlEntityBaseURI" . show $ baseURI
     F.value "samlLogoutURI" . show $ relativeURI baseURI "logout"

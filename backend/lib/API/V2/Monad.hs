@@ -10,7 +10,6 @@ module API.V2.Monad (
 ) where
 
 import Control.Monad.Catch
-import Data.Aeson ((.=), object)
 import Data.Unjson
 import Happstack.Server (askRq, body, lookPairsBS, queryString, toResponse)
 import Happstack.Server.Types

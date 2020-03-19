@@ -50,7 +50,7 @@ getTextTemplates templatesFile = do
 type KontrakcjaGlobalTemplates = TL.GlobalTemplates
 type KontrakcjaTemplates = TL.Templates
 
-readGlobalTemplates :: MonadIO m => m KontrakcjaGlobalTemplates
+readGlobalTemplates :: (MonadFail m, MonadIO m) => m KontrakcjaGlobalTemplates
 readGlobalTemplates = do
   readGlobalTemplatesFrom textsDirectory templateFilesDir
 

@@ -2,7 +2,7 @@ module EID.EIDService.Control (
     eidServiceRoutes
   ) where
 
-import Data.Aeson ((.=), Value, object)
+import Data.Aeson (Value)
 import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
 import Log

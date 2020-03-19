@@ -6,7 +6,6 @@ module EID.Nets.Control (
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
-import Data.Aeson ((.=), object)
 import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
 import Log

@@ -139,34 +139,35 @@ expExps e = e `S.insert` case e of
   EnumFromThenTo _ e1 e2 e3 -> expExps e1 `S.union` expExps e2 `S.union` expExps e3
   ListComp _ e' qualStmts   -> expExps e' `S.union` S.unions (map qualStmtExps qualStmts)
   ParComp _ e' qualStmts ->
-    expExps e' `S.union` S.unions (map (S.unions . map qualStmtExps) qualStmts)
-  ExpTypeSig _ e' _       -> expExps e'
-  VarQuote   _ _          -> S.empty
-  TypQuote   _ _          -> S.empty
-  BracketExp _ _          -> S.empty
-  SpliceExp  _ _          -> S.empty
-  QuasiQuote{}            -> S.empty
-  TypeApp _ _             -> S.empty
-  XETag _ _ _ me          -> S.unions . map expExps $ catMaybes [me]
-  XTag _ _ _ me es        -> S.unions . map expExps $ catMaybes [me] ++ es
-  XPcdata   _ _           -> S.empty
-  XExpTag   _ e'          -> expExps e'
-  XChildTag _ es          -> S.unions $ map expExps es
-  CorePragma{}            -> S.empty
-  SCCPragma{}             -> S.empty
-  GenPragma{}             -> S.empty
-  Proc            _ _  e' -> expExps e'
-  LeftArrApp      _ e1 e2 -> expExps e1 `S.union` expExps e2
-  RightArrApp     _ e1 e2 -> expExps e1 `S.union` expExps e2
-  LeftArrHighApp  _ e1 e2 -> expExps e1 `S.union` expExps e2
-  RightArrHighApp _ e1 e2 -> expExps e1 `S.union` expExps e2
-  MultiIf  _ ifs          -> S.unions $ map guardedRhsExps ifs
-  ParArray _ _            -> error "ParArray"
-  ParArrayFromTo{}        -> error "ParArrayFromTo"
-  ParArrayComp{}          -> error "ParArrayComp"
-  ParArrayFromThenTo{}    -> error "ParArrayFromThenTo"
-  LCase _ alts            -> S.unions $ map altExps alts
-  UnboxedSum _ _ _ e'     -> expExps e'
+    expExps e' `S.union` (S.unions $ map (S.unions . map qualStmtExps) qualStmts)
+  ExpTypeSig _ e' _          -> expExps e'
+  VarQuote   _ _             -> S.empty
+  TypQuote   _ _             -> S.empty
+  BracketExp _ _             -> S.empty
+  SpliceExp  _ _             -> S.empty
+  QuasiQuote _ _ _           -> S.empty
+  TypeApp _ _                -> S.empty
+  XETag _ _ _ me             -> S.unions $ map expExps $ catMaybes [me]
+  XTag _ _ _ me es           -> S.unions $ map expExps $ catMaybes [me] ++ es
+  XPcdata   _ _              -> S.empty
+  XExpTag   _ e'             -> expExps e'
+  XChildTag _ es             -> S.unions $ map expExps es
+  CorePragma _ _ _           -> S.empty
+  SCCPragma  _ _ _           -> S.empty
+  GenPragma _ _ _ _ _        -> S.empty
+  ArrOp _ _                  -> error "ArrOp"
+  Proc            _ _  e'    -> expExps e'
+  LeftArrApp      _ e1 e2    -> expExps e1 `S.union` expExps e2
+  RightArrApp     _ e1 e2    -> expExps e1 `S.union` expExps e2
+  LeftArrHighApp  _ e1 e2    -> expExps e1 `S.union` expExps e2
+  RightArrHighApp _ e1 e2    -> expExps e1 `S.union` expExps e2
+  MultiIf  _ ifs             -> S.unions $ map guardedRhsExps ifs
+  ParArray _ _               -> error "ParArray"
+  ParArrayFromTo _ _ _       -> error "ParArrayFromTo"
+  ParArrayComp   _ _ _       -> error "ParArrayComp"
+  ParArrayFromThenTo _ _ _ _ -> error "ParArrayFromThenTo"
+  LCase _ alts               -> S.unions $ map altExps alts
+  UnboxedSum _ _ _ e'        -> expExps e'
 
 
 bindsExps :: Maybe (Binds SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)

@@ -10,7 +10,7 @@ module Folder.Internal (
 
 import Data.Aeson
 import Data.Int
-import Data.Text (Text, pack)
+import Data.Text (pack)
 import Data.Unjson
 import Happstack.Server
 import Optics.TH

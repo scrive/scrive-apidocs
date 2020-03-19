@@ -22,7 +22,6 @@ import Control.Monad.Except
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Aeson
-import Data.Text (Text)
 import Data.Typeable
 import Log
 import Numeric

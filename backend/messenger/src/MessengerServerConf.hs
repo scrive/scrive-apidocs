@@ -7,7 +7,6 @@ module MessengerServerConf (
   , unjsonMessengerServerConf
   ) where
 
-import Data.Text (Text)
 import Data.Unjson
 import Data.Word
 

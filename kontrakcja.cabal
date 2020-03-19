@@ -652,6 +652,7 @@ Library
                , monad-time
                , mtl
                , network
+               , network-bsd
                , network-uri
                , one-time-password
                , pem
@@ -1047,6 +1048,7 @@ Executable mailing-server
                , monad-time
                , mtl
                , network
+               , network-bsd
                , process
                , process-extras
                , psqueues
@@ -1157,6 +1159,7 @@ Executable messenger-server
                , monad-time
                , mtl
                , network
+               , network-bsd
                , process
                , process-extras
                , regex-tdfa

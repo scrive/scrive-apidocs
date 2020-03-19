@@ -154,7 +154,7 @@ accessRoleTargetToJSON (FolderUserAR         fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (SharedTemplateUserAR fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (EidImpersonatorAR    ugid) = UserGroupTargetJSON ugid
 
-jsonToAccessRole :: Monad m => AccessRoleJSON -> m AccessRole
+jsonToAccessRole :: AccessRoleJSON -> Either String AccessRole
 jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson
   where
     constructor target = case source roleJson of
@@ -162,19 +162,19 @@ jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson
       AccessRoleUserGroupSourceJSON ugid ->
         return $ AccessRoleImplicitUserGroup ugid target
 
-jsonToAccessRoleTarget :: Monad m => AccessRoleJSON -> m AccessRoleTarget
+jsonToAccessRoleTarget :: AccessRoleJSON -> Either String AccessRoleTarget
 jsonToAccessRoleTarget roleJson = case target roleJson of
   UserTargetJSON uid -> case roleType roleJson of
     -- valid
     UserART               -> return $ UserAR uid
     -- invalid
-    UserGroupMemberART    -> fail invalidTargetErr
-    UserAdminART          -> fail invalidTargetErr
-    UserGroupAdminART     -> fail invalidTargetErr
-    FolderAdminART        -> fail invalidTargetErr
-    FolderUserART         -> fail invalidTargetErr
-    SharedTemplateUserART -> fail invalidTargetErr
-    EidImpersonatorART    -> fail invalidTargetErr
+    UserGroupMemberART    -> Left invalidTargetErr
+    UserAdminART          -> Left invalidTargetErr
+    UserGroupAdminART     -> Left invalidTargetErr
+    FolderAdminART        -> Left invalidTargetErr
+    FolderUserART         -> Left invalidTargetErr
+    SharedTemplateUserART -> Left invalidTargetErr
+    EidImpersonatorART    -> Left invalidTargetErr
   UserGroupTargetJSON ugid -> case roleType roleJson of
     -- valid
     UserAdminART          -> return $ UserAdminAR ugid
@@ -182,21 +182,21 @@ jsonToAccessRoleTarget roleJson = case target roleJson of
     UserGroupMemberART    -> return $ UserGroupMemberAR ugid
     EidImpersonatorART    -> return $ EidImpersonatorAR ugid
     -- invalid
-    UserART               -> fail invalidTargetErr
-    FolderAdminART        -> fail invalidTargetErr
-    FolderUserART         -> fail invalidTargetErr
-    SharedTemplateUserART -> fail invalidTargetErr
+    UserART               -> Left invalidTargetErr
+    FolderAdminART        -> Left invalidTargetErr
+    FolderUserART         -> Left invalidTargetErr
+    SharedTemplateUserART -> Left invalidTargetErr
   FolderTargetJSON fid -> case roleType roleJson of
     -- valid
     FolderAdminART        -> return $ FolderAdminAR fid
     FolderUserART         -> return $ FolderUserAR fid
     -- invalid
-    UserART               -> fail invalidTargetErr
-    UserGroupMemberART    -> fail invalidTargetErr
-    UserAdminART          -> fail invalidTargetErr
-    UserGroupAdminART     -> fail invalidTargetErr
-    SharedTemplateUserART -> fail invalidTargetErr
-    EidImpersonatorART    -> fail invalidTargetErr
+    UserART               -> Left invalidTargetErr
+    UserGroupMemberART    -> Left invalidTargetErr
+    UserAdminART          -> Left invalidTargetErr
+    UserGroupAdminART     -> Left invalidTargetErr
+    SharedTemplateUserART -> Left invalidTargetErr
+    EidImpersonatorART    -> Left invalidTargetErr
   where invalidTargetErr = "Can't parse AccessRole - Role type doesn't match target type"
 
 encodeAccessRole :: AccessRole -> Encoding

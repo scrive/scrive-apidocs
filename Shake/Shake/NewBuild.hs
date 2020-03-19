@@ -92,8 +92,7 @@ componentSubDir cabalInstallVer optlevel cname = ctype </> cbuilddir
   where
     ctype
       | useSeparateComponentDirs cabalInstallVer = case cname of
-        CLibName      -> ""
-        CSubLibName _ -> "l"
+        CLibName    _ -> ""
         CExeName    _ -> "x"
         CTestName   _ -> "t"
         CBenchName  _ -> "b"
@@ -101,7 +100,7 @@ componentSubDir cabalInstallVer optlevel cname = ctype </> cbuilddir
       | otherwise = "c"
 
     cbuilddir = case cname of
-      CLibName -> unComponentName cname </> coptlevel </> "build"
+      CLibName _ -> unComponentName cname </> coptlevel </> "build"
       _ -> unComponentName cname </> coptlevel </> "build" </> unComponentName cname
 
     coptlevel = case optlevel of
@@ -114,8 +113,7 @@ componentArtifactName :: CabalComponentName -> String
 componentArtifactName c =
   let libname = "libHS" <> unComponentName c <> "1.0-inplace" <.> "a"
   in  case c of
-        CLibName      -> libname
-        CSubLibName _ -> libname
+        CLibName _    -> libname
         _             -> unComponentName c <.> exe
 
 -- | Given a component name and type, return the path to the
@@ -148,7 +146,7 @@ hpcPaths cabalFile newBuild opt =
           </> unComponentName c
           </> hdm
           </> (case c of
-                CLibName -> packageId cabalFile
+                (CLibName _) -> packageId cabalFile
                 _        -> unComponentName c
               )
 

@@ -9,7 +9,7 @@ import Data.Either.Validation
 import Data.Unjson
 import System.Environment
 import System.Exit
-import System.FilePath ((</>), FilePath)
+import System.FilePath ((</>))
 import System.IO
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO

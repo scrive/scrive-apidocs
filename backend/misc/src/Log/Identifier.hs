@@ -17,7 +17,6 @@ module Log.Identifier (
 
 import Data.Aeson.Types as Aeson
 import Data.Int (Int64)
-import Data.Text (Text)
 import GHC.Exts (fromList)
 
 -- | We use String identifiers for everything to workaround issues

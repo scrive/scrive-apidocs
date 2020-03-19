@@ -55,7 +55,6 @@ import Session.Model
 import Session.Types
 import Templates
 import User.Model
-import User.Model.Query (GetUserByID(..))
 import UserGroup.Model
 import UserGroup.Types
 import Util.Actor

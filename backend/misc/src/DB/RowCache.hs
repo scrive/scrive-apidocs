@@ -37,7 +37,7 @@ class Monad m => GetRow r m  where
 -- | Monad transformer for maintaining a cached row value or an invalid
 -- mark, and remembering the row's identifier
 newtype RowCacheT r m a = RowCacheT { unRowCacheT :: InnerRowCacheT r m a }
-  deriving (Applicative, Functor, Monad, MonadDB, MonadIO, MonadBase b, MonadThrow, MonadCatch, MonadMask, MonadFileStorage)
+  deriving (Applicative, Functor, Monad, MonadFail, MonadDB, MonadIO, MonadBase b, MonadThrow, MonadCatch, MonadMask, MonadFileStorage)
 
 -- | Fetch the row and perform an operation that updates the stored row (and therefore marks the cached row as invalid)
 updateRow :: GetRow r m => (r -> RowCacheT r m a) -> RowCacheT r m a

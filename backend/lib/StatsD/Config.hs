@@ -1,6 +1,5 @@
 module StatsD.Config where
 
-import Data.Text (Text)
 import Data.Unjson
 
 data StatsDConf = StatsDConf

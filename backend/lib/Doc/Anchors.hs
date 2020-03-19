@@ -6,7 +6,6 @@ module Doc.Anchors (
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Int
-import Data.Text (Text)
 import Log
 import System.Exit
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
@@ -32,7 +31,7 @@ import Log.Utils
 import Utils.Directory
 
 getAnchorPositions
-  :: (Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m)
+  :: (MonadFail m, Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m)
   => BS.ByteString
   -> [PlacementAnchor]
   -> m (Map.Map PlacementAnchor (Int32, Double, Double))

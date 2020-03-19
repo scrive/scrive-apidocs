@@ -4,7 +4,6 @@
 module DB.XML () where
 
 import Control.Exception (throwIO)
-import Data.Text (Text)
 import Database.PostgreSQL.PQTypes
 
 import qualified Text.XML.Content as C

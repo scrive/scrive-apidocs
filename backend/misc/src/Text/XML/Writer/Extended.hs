@@ -4,7 +4,6 @@ module Text.XML.Writer.Extended (
   ) where
 
 import Data.Default ()
-import Data.Text (Text)
 import Text.XML
 import Text.XML.Writer
 import qualified Data.Map as M

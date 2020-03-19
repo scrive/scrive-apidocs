@@ -22,7 +22,7 @@ import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Database.PostgreSQL.PQTypes.SQL.Builder
 import qualified Data.Set as S
 
-import DB (MonadDB, dbQuery)
+import DB (dbQuery)
 import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
 import Doc.DocumentID

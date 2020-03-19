@@ -7,7 +7,6 @@ where
 import Data.Maybe (fromMaybe)
 import System.Directory (setCurrentDirectory)
 import System.Environment (lookupEnv)
-import System.FilePath (FilePath)
 
 data AppPaths = AppPaths
   -- The project root directory for reading file assets.

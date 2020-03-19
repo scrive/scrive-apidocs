@@ -14,7 +14,6 @@ import Data.Either (lefts, rights)
 import Data.Functor.Invariant (invmap)
 import Data.List.NonEmpty (fromList)
 import Data.Semigroup
-import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Checks

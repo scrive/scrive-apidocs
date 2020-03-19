@@ -35,7 +35,6 @@ import User.Model.Filter
 import User.Model.OrderBy
 import User.Types.Stats
 import User.Types.User
-import User.Types.User.Internal (User(..))
 import User.UserID
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan

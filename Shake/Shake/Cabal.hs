@@ -50,7 +50,7 @@ unComponentName = maybe "" unUnqualComponentName . componentNameString
 
 mkExeName, mkSubLibName, mkTestName, mkBenchName :: String -> ComponentName
 mkExeName = CExeName . mkUnqualComponentName
-mkSubLibName = CSubLibName . mkUnqualComponentName
+mkSubLibName = CLibName . LSubLibName . mkUnqualComponentName
 mkTestName = CTestName . mkUnqualComponentName
 mkBenchName = CBenchName . mkUnqualComponentName
 
@@ -58,8 +58,7 @@ class ComponentNameHasType t where
   componentNameHasType :: ComponentName -> Bool
 
 instance ComponentNameHasType Library where
-  componentNameHasType CLibName        = True
-  componentNameHasType (CSubLibName _) = True
+  componentNameHasType (CLibName _)    = True
   componentNameHasType _               = False
 instance ComponentNameHasType Executable where
   componentNameHasType (CExeName _) = True

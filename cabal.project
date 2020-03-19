@@ -8,9 +8,6 @@
 packages: . Shake
 write-ghc-environment-files: always
 
-repository hackage.scrive.com
-    url: https://hackage.scrive.com/
-
 package kontrakcja
     ghc-options: -j4 +RTS -A32m -RTS
 
@@ -30,5 +27,51 @@ source-repository-package
 
 source-repository-package
     type: git
-    location: https://github.com/kubek2k/hsaml2.git
-    tag: a09ab6fc87fe2311e7bfa56e0dd5141edc758fe7
+    location: https://github.com/scrive/pool.git
+    tag: 902e01e8a5b250b63971c0fbd0724c1288fb18d6
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/crypto-rng.git
+    tag: 82231d00dd1eeb669fc833aa7b30ee42abafbb61
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/hsaml2.git
+    tag: 163922ed0ece4f96efe9052f5f4328eccb8ae335
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/bloodhound.git
+    tag: 546f9252d739493acdf2ea08882d249941f0c8ff
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/unjson.git
+    tag: 63c8e2d9f90d9a938a34b27d6170cbd5b0cfdbca
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/hpqtypes.git
+    tag: 99e843ea97a5fefb6299778a1682527a14220768
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/log
+    tag: 5a6ff1833cfa5eb6d41c0a972279c5d64f16e828
+    subdir: log-base
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/missingh
+    tag: 3d37b6062a00877c018b2eff5ceefefa90bdb937
+
+source-repository-package
+    type: git
+    location: git@github.com:scrive/kontrakcja-templates.git
+    tag: ee9d5b672c962ae68a363c2c5478961b1ad79929
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/mixpanel
+    tag: d6c378d738f936d7f7950ee278d955726c255535

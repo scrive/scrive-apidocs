@@ -5,7 +5,6 @@ module Text.XML.XMLDSig (
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson ((.=), object)
 import Log
 import System.Exit
 import System.FilePath ((</>))
