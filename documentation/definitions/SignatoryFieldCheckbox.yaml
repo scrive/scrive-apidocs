@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: SignatoryFieldCheckbox
 description: |
   A signatory field for placing checkboxes on the document.

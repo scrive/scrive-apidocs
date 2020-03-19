@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: List Sorting
 description: Parameter used to sort documents for the `list` API call.
 type: array

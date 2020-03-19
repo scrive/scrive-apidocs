@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: SignatoryFieldSignature
 description: |
   A signatory field for placing signature boxes on the document.

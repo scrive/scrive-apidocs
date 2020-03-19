@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: SignatoryFieldEmailMobile
 description: |
   A signatory field for email addresses and mobile numbers.

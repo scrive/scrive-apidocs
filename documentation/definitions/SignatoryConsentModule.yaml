@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 description: |
   If present, a section will be shown asking the signatory to answer some
   questions which must be answered by the signatory with either the positive

@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: Attachment List Filter
 description: Parameter used to filter attachments for the `list` API call.
 type: array

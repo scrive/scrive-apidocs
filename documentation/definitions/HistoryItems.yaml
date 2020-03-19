@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: History Items
 description: |
   The type returned by the Document History API call.

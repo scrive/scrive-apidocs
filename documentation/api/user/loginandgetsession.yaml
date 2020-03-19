@@ -44,7 +44,6 @@ post:
         The string format may change at any time, please treat it as an opaque
         string.
       schema:
-        $schema: "http://json-schema.org/draft-04/schema#"
         title: SessionIDObject
         type: object
         properties:

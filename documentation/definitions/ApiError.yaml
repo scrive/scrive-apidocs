@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: API Error
 description: The structure of errors returned by the Scrive Document API.
 type: object

@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: SignatoryFieldName
 description: |
   A signatory field for the name(s) of the party.

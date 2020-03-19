@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: Author Attachments
 description: Attachments that have been added to a document by the author.
 type: array

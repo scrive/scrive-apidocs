@@ -1,5 +1,4 @@
 ---
-$schema: "http://json-schema.org/draft-04/schema#"
 title: SignatoryFieldStandard
 description: |
   A signatory field for placing a number of standard text fields on the
