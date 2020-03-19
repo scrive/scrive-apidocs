@@ -1,11 +1,15 @@
 ---
 title: List Filter
-description: Parameter used to filter documents for the `list` API call.
+description: |
+  Parameter used to filter documents for the `list` API call.
+
+  **Note:** the description below says **&ast;all&ast;** because Swagger 2.0. format cannot express
+  `oneOf` property but **&ast;one&ast;** is what is meant.
 type: array
 default: []
 example: [ { "filter_by":"status", "statuses": ["preparation","pending"] } ]
 items:
-  anyOf:
+  allOf:
   - title: Filter by status
     type: object
     properties:

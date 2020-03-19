@@ -1,0 +1,47 @@
+---
+title: UserStatsNumbers
+type: object
+example: {
+  "sent":1,
+  "closed":1,
+  "signatures":1,
+  "sms_sent":1,
+  "sms_sent_via_telia":1,
+  "se_bankid_signatures":1,
+  "se_bankid_authentications":1,
+  "no_bankid_signatures":1,
+  "no_bankid_authentications":1,
+  "nemid_signatures":1,
+  "nemid_authentications":1,
+  "tupas_authentications":1,
+  "shareable_links":1
+  }
+description: |
+  A JSON object with the count of documents in different stages of the process
+properties:
+  sent:
+    type: integer
+  closed:
+    type: integer
+  signatures:
+    type: integer
+  sms_sent:
+    type: integer
+  sms_sent_via_telia:
+    type: integer
+  se_bankid_signatures:
+    type: integer
+  se_bankid_authentications:
+    type: integer
+  no_bankid_signatures:
+    type: integer
+  no_bankid_authentications:
+    type: integer
+  nemid_signatures:
+    type: integer
+  nemid_authentications:
+    type: integer
+  tupas_authentications:
+    type: integer
+  shareable_links:
+    type: integer

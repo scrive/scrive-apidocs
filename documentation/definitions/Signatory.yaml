@@ -63,9 +63,12 @@ properties:
       Similarly, a single field can have multiple placements on the document.
 
       **Note:** Some field types have _no effect_ without at least one placement.
+
+      **Note:** the description below says **&ast;all&ast;** because Swagger 2.0. format cannot express
+      `oneOf` property but **&ast;one&ast;** is what is meant.
     type: array
     items:
-      anyOf:
+      allOf:
         - $ref: ./SignatoryFieldName.yaml
         - $ref: ./SignatoryFieldEmailMobile.yaml
         - $ref: ./SignatoryFieldSignature.yaml

@@ -7,48 +7,62 @@ example: {"stats":[{
   "sent":1,
   "closed":1,
   "signatures":1,
+  "sms_sent":1,
+  "sms_sent_via_telia":1,
+  "se_bankid_signatures":1,
+  "se_bankid_authentications":1,
+  "no_bankid_signatures":1,
+  "no_bankid_authentications":1,
+  "nemid_signatures":1,
+  "nemid_authentications":1,
+  "tupas_authentications":1,
+  "shareable_links":1,
   "user_stats":[{
     "date":"2019-01-03",
     "email":"demo@scrive.com",
     "name":" ",
     "sent":1,
     "closed":1,
-    "signatures":1}]
+    "signatures":1,
+    "sms_sent":1,
+    "sms_sent_via_telia":1,
+    "se_bankid_signatures":1,
+    "se_bankid_authentications":1,
+    "no_bankid_signatures":1,
+    "no_bankid_authentications":1,
+    "nemid_signatures":1,
+    "nemid_authentications":1,
+    "tupas_authentications":1,
+    "shareable_links":1
+    }]
   }]}
 description: |
   A JSON object with the statistics on usage:
-    count of documents on different stages of the process
+    count of documents in various stages of the process
 properties:
   stats:
     type: array
     items:
-      type: object
-      properties:
-        date:
-          type: string
-        sent:
-          type: integer
-        closed:
-          type: integer
-        signatures:
-          type: integer
-        user_stats:
-          type: array
-          required: false
-          description: |
-            Only present when the `withCompany` flag is set
-          items:
-            type: object
-            properties:
-              date:
-                type: string
-              email:
-                type: string
-              name:
-                type: string
-              sent:
-                type: integer
-              closed:
-                type: integer
-              signatures:
-                type: integer
+      allOf:
+        - $ref: ./UserStatsNumbers.yaml
+        - type: object
+          properties:
+            date:
+              type: string
+            name:
+              type: string
+            user_stats:
+              type: array
+              description: |
+                Only present when the `withCompany` flag is set
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      date:
+                        type: string
+                      email:
+                        type: string
+                      name:
+                        type: string
+                  - $ref: ./UserStatsNumbers.yaml

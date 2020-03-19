@@ -5,13 +5,12 @@ type: array
 default: []
 example: [ { "filter_by":"text", "text":"keyword" } ]
 items:
-  anyOf:
-  - title: Filter by text
-    type: object
-    properties:
-      filter_by:
-        type: string
-        enum:
-        - text
-      text:
-        type: string
+  title: Filter by text
+  type: object
+  properties:
+    filter_by:
+      type: string
+      enum:
+      - text
+    text:
+      type: string

@@ -56,7 +56,6 @@ ObjectVersion:
     Otherwise you will get a `HTTP 409`.
 
 SignParamFields:
-  internalUseOnly: true
   name: fields
   in: formData
   type: string
@@ -66,7 +65,6 @@ SignParamFields:
   description: Updated information as entered by the signatory.
 
 SignParamAuthType:
-  internalUseOnly: true
   name: authentication_type
   in: formData
   type: string
@@ -83,7 +81,6 @@ SignParamAuthType:
     requires it.
 
 SignParamAuthValue:
-  internalUseOnly: true
   name: authentication_value
   in: formData
   type: string
@@ -92,7 +89,6 @@ SignParamAuthValue:
     associated with it (e.g. mobile number for `sms_pin`).
 
 SignParamSMSPIN:
-  internalUseOnly: true
   name: sms_pin
   in: formData
   type: integer
@@ -103,7 +99,6 @@ SignParamSMSPIN:
     This is independant of other parameters in this call.
 
 SignParamAcceptedAttachments:
-  internalUseOnly: true
   name: accepted_author_attachments
   in: formData
   type: array
