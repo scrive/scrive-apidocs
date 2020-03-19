@@ -74,7 +74,7 @@ tableUsers = tblTable
   , tblIndexes     =
     [ indexOnColumn "user_group_id"
     , indexOnColumn "home_folder_id"
-    , (indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") }
+    , (indexOnColumn "email") { idxUnique = True, idxWhere = Just "deleted IS NULL" }
     ]
   }
 

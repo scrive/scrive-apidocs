@@ -192,15 +192,15 @@ unAutoStartToken (AutoStartToken t) = t
 instance {-# OVERLAPPING #-} Unjson (AutoStartToken,SessionCookieInfo) where
   unjsonDef =
     objectOf
-      $   (pure $ \at si -> (AutoStartToken at, si))
-      <*> field "auto_start_token"
+      $   (\at si -> (AutoStartToken at, si))
+      <$> field "auto_start_token"
                 (unAutoStartToken . fst)
                 "Token for starting the application"
       <*> fieldBy
             "session_id"
             snd
             "Token for starting the application"
-            (unjsonInvmapR ((maybe (fail "SessionCookieInfo") return) . maybeRead)
+            (unjsonInvmapR (maybe (fail "SessionCookieInfo") return . maybeRead)
                            (showt :: SessionCookieInfo -> Text)
                            unjsonDef
             )

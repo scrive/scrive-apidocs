@@ -28,8 +28,8 @@ evidenceLogTests env = testGroup
   ]
 
 evidenceEventTypes :: [(Int16, EvidenceEventType)]
-evidenceEventTypes = zip [1 ..]
-  $ concat [map Current [minBound .. maxBound], map Obsolete [minBound .. maxBound]]
+evidenceEventTypes =
+  zip [1 ..] $ map Current [minBound .. maxBound] ++ map Obsolete [minBound .. maxBound]
 
 conversionEq :: TestEnv ()
 conversionEq = do
@@ -124,7 +124,7 @@ evidenceLogTemplatesWellDefined :: TestEnv ()
 evidenceLogTemplatesWellDefined = do
   vars <-
     fmap (Set.fromList . concat)
-    $ forM
+    . forM
         [ (ty, l, ta)
         | (_, ty) <- evidenceEventTypes
         , l       <- allLangs
@@ -135,7 +135,7 @@ evidenceLogTemplatesWellDefined = do
         case ty of
           Obsolete _  -> return []
           Current  ct -> do
-            ts <- getTextTemplatesByLanguage $ T.unpack $ codeFromLang l
+            ts <- getTextTemplatesByLanguage . T.unpack $ codeFromLang l
             let tn = eventTextTemplateName ta ct
             case getStringTemplate (T.unpack tn) ts of
               Nothing -> do
@@ -147,9 +147,8 @@ evidenceLogTemplatesWellDefined = do
                 -- reported by MR.
                 let (pe, freevars, te') = checkTemplateDeep st
                 let te                  = filter (/= "noescape") te'
-                let
-                  errcontext =
-                    " in template " ++ (T.unpack tn) ++ " for language " ++ show l ++ ": "
+                let errcontext =
+                      " in template " ++ T.unpack tn ++ " for language " ++ show l ++ ": "
                 unless (null pe) $ do
                   assertFailure $ "Parse error" ++ errcontext ++ show pe
                 unless (null te) $ do

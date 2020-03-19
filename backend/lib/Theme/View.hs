@@ -19,18 +19,16 @@ import Theme.Model
 unjsonTheme :: UnjsonDef Theme
 unjsonTheme =
   objectOf
-    $   pure Theme
-    <*> field "id"   themeID   "Id of a theme (unique)"
+    $   Theme
+    <$> field "id"   themeID   "Id of a theme (unique)"
     <*> field "name" themeName "Name of a theme"
     <*> fieldBy
           "logo"
           themeLogo
           "Logo of a theme"
           (invmap
-            (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') l)
-            (\l ->
-              BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode l
-            )
+            (B64.decodeLenient . BSC8.pack . drop 1 . dropWhile (',' /=))
+            (BSC8.unpack . BS.append (BSC8.pack "data:image/png;base64,") . B64.encode)
             unjsonDef
           )
     <*> field "brandColor"      themeBrandColor      "Color of brand"

@@ -27,5 +27,5 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
       -- day. However, as GuardTime Java tools induce a relatively high CPU
       -- load, we want to spread this out more evenly; we thus agreed to
       -- schedule it 40 days after we close it.
-      sqlSetCmd "run_at" $ (sqlParam now) <+> "+ interval '40 days'"
+      sqlSetCmd "run_at" $ sqlParam now <+> "+ interval '40 days'"
       sqlSet "attempts" (0 :: Int32)

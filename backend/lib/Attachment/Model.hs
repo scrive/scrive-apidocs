@@ -100,7 +100,7 @@ data PurgeAttachments = PurgeAttachments
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeAttachments Int where
   update PurgeAttachments = do
     now <- currentTime
-    runQuery $ sqlUpdate "attachments a" $ do
+    runQuery . sqlUpdate "attachments a" $ do
       sqlSet "mtime"   now
       sqlSet "deleted" True
       sqlWhereEq "a.deleted" False

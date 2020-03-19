@@ -31,7 +31,7 @@ import SMS.Model
 import SMS.Types
 import Utils.IO
 
-data Sender = Sender {
+newtype Sender = Sender {
   sendSMS
     :: forall m. ( MonadDB m, MonadThrow m, CryptoRNG m, MonadIO m
                  , MonadBase IO m, MonadLog m )
@@ -44,7 +44,7 @@ createSender (SendersConfig getConf) = Sender
   }
 
 clearMobileNumber :: Text -> Text
-clearMobileNumber = T.filter (\c -> not (c `elem` (" -()." :: String)))
+clearMobileNumber = T.filter (\c -> c `notElem` (" -()." :: String))
 
 sendSMSHelper
   :: (MonadDB m, MonadThrow m, CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m)
@@ -63,16 +63,16 @@ sendSMSHelper MbloxSender {..} sm@ShortMessage {..} = localData [identifier smID
       originator          = if northAmericanNumber then "18556644314" else smOriginator
       sm'                 = sm { smOriginator = originator }
   logInfoSendSMS "Mblox" sm'
-  let smsDataJSON = encode $ runJSONGen $ do
-        value "from" originator
-        value "to" $ [clearmsisdn]
+  let smsDataJSON = encode . runJSONGen $ do
+        value "from"            originator
+        value "to"              [clearmsisdn]
         value "body"            smBody
         value "delivery_report" ("per_recipient" :: String)
   (success, resp) <- curlSMSSender
     [ "-X"
     , "POST"
     , "-H"
-    , "Authorization: Bearer " <> (T.pack mbToken)
+    , "Authorization: Bearer " <> T.pack mbToken
     , "-H"
     , "Content-Type: application/json"
     , "-d"
@@ -81,12 +81,11 @@ sendSMSHelper MbloxSender {..} sm@ShortMessage {..} = localData [identifier smID
     ]
     clearmsisdn
   case (success, decode $ T.unpack resp) of
-    (True, Ok jresp) -> case (runIdentity $ withJSValue jresp $ fromJSValueField "id") of
+    (True, Ok jresp) -> case runIdentity . withJSValue jresp $ fromJSValueField "id" of
       Just mbloxID -> do
         logInfo "SMS sent through MBlox"
           $ object [logPair_ sm', "mbloxid" .= show mbloxID]
-        res <- dbUpdate $ UpdateSMSWithMbloxID smID mbloxID
-        return res
+        dbUpdate $ UpdateSMSWithMbloxID smID mbloxID
       Nothing -> do
         logAttention
             "Sendout with Mblox failed  - \
@@ -116,12 +115,12 @@ sendSMSHelper TeliaCallGuideSender {..} sm@ShortMessage {..} =
           urlEnc
             $  "originatingAddress="
                             -- Telia Callguide has 11 alphanum char limit on this
-            <> (T.unpack $ T.take 11 $ toLatin smOriginator)
+            <> T.unpack (T.take 11 $ toLatin smOriginator)
         correlationId =
           urlEnc
             $  "correlationId="
                             -- Telia Callguide has a 100 char limit on this
-            <> (take 100 $ show smID)
+            <> take 100 (show smID)
         statusReportFlags = urlEnc "statusReportFlags=1"
         args :: [Text]    = concat
           [ ["--user", userpass]
@@ -183,15 +182,15 @@ sendSMSHelper LocalSender {..} ShortMessage {..} = localData [identifier smID] $
 
     content :: Text =
       "<html><head><title>SMS - "
-        <> (showt smID)
+        <> showt smID
         <> " to "
         <> clearmsisdn
         <> "</title></head><body>"
         <> "ID: "
-        <> (showt smID)
+        <> showt smID
         <> "<br>"
         <> "Provider: "
-        <> (showt smProvider)
+        <> showt smProvider
         <> "<br>"
         <> "<br>"
         <> "Originator: "
@@ -210,12 +209,10 @@ sendSMSHelper LocalSender {..} ShortMessage {..} = localData [identifier smID] $
   logInfo "SMS saved to file" $ object ["path" .= filename]
   case localOpenCommand of
     Nothing  -> return ()
-    Just cmd -> do
-      void $ liftBase $ createProcess (proc cmd [filename]) { std_in  = Inherit
-                                                            , std_out = Inherit
-                                                            , std_err = Inherit
-                                                            }
-      return ()
+    Just cmd -> void . liftBase $ createProcess (proc cmd [filename]) { std_in  = Inherit
+                                                                      , std_out = Inherit
+                                                                      , std_err = Inherit
+                                                                      }
   return True
 
 curlSMSSender
@@ -231,7 +228,7 @@ curlSMSSender params msisdn = do
   let (stdout_without_code, http_code) = case reverse . lines . BSC.unpack $ stdout of
         [] -> ("", Nothing)
         (lastline : otherlinesreversed) ->
-          (unlines $ reverse $ otherlinesreversed, maybeRead $ T.pack lastline)
+          (unlines $ reverse otherlinesreversed, maybeRead $ T.pack lastline)
   case (code, http_code) of
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode < 300 -> do
       logInfo "curlSMSSender success" $ object

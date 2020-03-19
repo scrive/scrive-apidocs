@@ -18,10 +18,8 @@ createIndexesForChargeableItems = Migration
   , mgrFrom      = 1
   , mgrAction    = StandardMigration $ do
                      let tname = tblName tableChargeableItems
-                     runQuery_
-                       . sqlCreateIndexSequentially tname
-                       $ (indexOnColumn "\"time\"")
-                     runQuery_ . sqlCreateIndexSequentially tname $ (indexOnColumn "type")
+                     runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "\"time\""
+                     runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "type"
   }
 
 
@@ -31,9 +29,8 @@ createJointTypeCompanyIDTimeIndexForChargeableItems = Migration
   , mgrFrom      = 2
   , mgrAction    = StandardMigration $ do
                      let tname = tblName tableChargeableItems
-                     runQuery_
-                       . sqlCreateIndexSequentially tname
-                       $ (indexOnColumns ["type", "company_id", "\"time\""])
+                     runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumns
+                       ["type", "company_id", "\"time\""]
   }
 
 chargeableItemsAddUserGroupID :: (MonadThrow m, MonadDB m) => Migration m
@@ -60,9 +57,8 @@ createJointTypeUserGroupIDTimeIndexForChargeableItems = Migration
   , mgrFrom      = 4
   , mgrAction    = StandardMigration $ do
                      let tname = tblName tableChargeableItems
-                     runQuery_
-                       . sqlCreateIndexSequentially tname
-                       $ (indexOnColumns ["type", "user_group_id", "\"time\""])
+                     runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumns
+                       ["type", "user_group_id", "\"time\""]
   }
 
 dropFKCascadeForUserGroupID :: MonadDB m => Migration m
@@ -87,13 +83,13 @@ dropCompanyIDForChargeableItems = Migration
   , mgrFrom      = 6
   , mgrAction    = StandardMigration $ do
                      let tname = tblName tableChargeableItems
-                     runQuery_
-                       $ sqlDropIndex tname
-                       $ (indexOnColumns ["type", "company_id", "\"time\""])
-                     runQuery_ $ sqlDropIndex tname $ (indexOnColumn "company_id")
+                     runQuery_ $ sqlDropIndex
+                       tname
+                       (indexOnColumns ["type", "company_id", "\"time\""])
+                     runQuery_ $ sqlDropIndex tname (indexOnColumn "company_id")
                      runQuery_ $ sqlAlterTable
                        tname
-                       [ sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
+                       [ sqlDropFK tname (fkOnColumn "company_id" "companies" "id")
                        , sqlDropColumn "company_id"
                        ]
   }

@@ -16,7 +16,7 @@ import User.Model
 
 -- | Get the result of concatenating the different strings that we expose for
 -- searching purposes. For testing purposes only.
-data GetDocumentSearchDataByFunction = GetDocumentSearchDataByFunction DocumentID
+newtype GetDocumentSearchDataByFunction = GetDocumentSearchDataByFunction DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentSearchDataByFunction (Maybe String) where
   query (GetDocumentSearchDataByFunction docID) = do
     runQuery_
@@ -25,7 +25,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentSearchDataByFunction 
 
 -- | Get the contents of the field `documents.archive_search_terms`. For testing
 -- purposes only.
-data GetDocumentSearchDataByField = GetDocumentSearchDataByField DocumentID
+newtype GetDocumentSearchDataByField = GetDocumentSearchDataByField DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentSearchDataByField (Maybe String) where
   query (GetDocumentSearchDataByField docID) = do
     runQuery_ . sqlSelect "documents" $ do
@@ -42,7 +42,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSLFValueTextField () where
       sqlWhereEq "id" sfid
       sqlSet "value_text" valueText
 
-data GetAuthorUserID = GetAuthorUserID DocumentID
+newtype GetAuthorUserID = GetAuthorUserID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetAuthorUserID (Maybe UserID) where
   query (GetAuthorUserID docID) = do
     runQuery_ . sqlSelect "documents" $ do

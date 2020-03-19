@@ -49,11 +49,11 @@ updateRowWithID = updateRow' rowCacheID
 
 -- | Run a RowCache computation given a row identifier
 runRowCacheTID :: (Monad m, HasID r) => ID r -> RowCacheT r m a -> m a
-runRowCacheTID i (RowCacheT m) = flip runReaderT i $ flip evalStateT Invalid m
+runRowCacheTID i (RowCacheT m) = flip runReaderT i $ evalStateT m Invalid
 
 -- | Run a RowCache computation given a row
 runRowCacheT :: (Monad m, HasID r) => r -> RowCacheT r m a -> m a
-runRowCacheT r (RowCacheT m) = flip runReaderT (getID r) $ flip evalStateT (Row r) m
+runRowCacheT r (RowCacheT m) = flip runReaderT (getID r) $ evalStateT m (Row r)
 
 -- | Run a RowCache computation given a computation that obtains a row
 runRowCacheTM :: (Monad m, HasID r) => m r -> RowCacheT r m a -> m a
@@ -77,7 +77,7 @@ rowCache = RowCacheT S.get >>= \case
 
 -- | Return the row's ID
 rowCacheID :: Monad m => RowCacheT r m (ID r)
-rowCacheID = RowCacheT $ StateT $ \s -> ReaderT $ return . (, s)
+rowCacheID = RowCacheT . StateT $ \s -> ReaderT $ return . (, s)
 
 -- | Mark the cache as invalid
 setRowInvalid :: Monad m => RowCacheT r m ()
@@ -104,8 +104,8 @@ instance MonadBaseControl b m => MonadBaseControl b (RowCacheT r m) where
 
 instance MonadTransControl (RowCacheT r) where
   type StT (RowCacheT r) a = StT (ReaderT (ID r)) (StT (StateT (RowState r)) a)
-  liftWith = \f -> RowCacheT $ liftWith $ \run ->
-    liftWith $ \innerRun -> f $ innerRun . run . unRowCacheT
+  liftWith f = RowCacheT
+    $ liftWith (\run -> liftWith $ \innerRun -> f $ innerRun . run . unRowCacheT)
   restoreT = RowCacheT . restoreT . restoreT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}

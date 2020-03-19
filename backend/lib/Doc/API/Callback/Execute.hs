@@ -46,7 +46,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.IO
 import Utils.String
-import qualified Utils.HTTP as Utils.HTTP
+import qualified Utils.HTTP
 
 execute
   :: ( MonadFileStorage m
@@ -71,13 +71,13 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
       doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
       case maybesignatory =<< getAuthorSigLink doc of
         Nothing ->
-          unexpectedError $ "Document" <+> (showt dacDocumentID) <+> "has no author"
+          unexpectedError $ "Document" <+> showt dacDocumentID <+> "has no author"
         Just uid -> do
           mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID uid
           case mcallbackschema of
             Just (SalesforceScheme rtoken) -> do
               sd <- ask
-              case (ceSalesforceConf sd) of
+              case ceSalesforceConf sd of
                 Nothing -> do
                   noConfigurationWarning "Salesforce" -- log a warning rather than raising an error not to disturb cron
                   return False
@@ -116,11 +116,8 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
     (ExitSuccess, n) | n < 300 -> do
       logInfo "API callback executeStandardCallback succeeded" $ logObject_ dac
       now <- currentTime
-      dbUpdate
-        $  SetDocumentApiCallbackResult (documentid doc)
-        $  Just
-        $  "Success "
-        <> (showt now)
+      dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just
+        ("Success " <> showt now)
       return True
     (ExitSuccess, _) -> do
       logInfo "API callback executeStandardCallback failed" $ object
@@ -131,13 +128,13 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
       now <- currentTime
       let msg = T.concat
             [ "Failure "
-            , (showt now) <> "\n"
+            , showt now <> "\n"
             , "stdout: "
             , T.pack $ BSL.unpack stdout <> "\n"
             , "stderr: "
             , T.pack $ BSL.unpack stderr
             ]
-      dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+      dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just msg
       return False
     (ExitFailure ec, _) -> do
       logInfo "API callback executeStandardCallback failed" $ object
@@ -149,13 +146,13 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
       now <- currentTime
       let msg = T.concat
             [ "Failure "
-            , (showt now) <> "\n"
+            , showt now <> "\n"
             , "stdout: "
             , T.pack $ BSL.unpack stdout <> "\n"
             , "stderr: "
             , T.pack $ BSL.unpack stderr
             ]
-      dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+      dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just msg
       return False
   where
     curlParams =
@@ -173,7 +170,7 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
              Just (lg, pwd) ->
                [ "-H"
                , "Authorization: Basic "
-                 <> (BSC8.unpack $ B64.encode $ TE.encodeUtf8 $ lg <> ":" <> pwd)
+                 <> BSC8.unpack (B64.encode . TE.encodeUtf8 $ lg <> ":" <> pwd)
                ]
              _ -> []
            )
@@ -199,12 +196,12 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
       , "POST"
       , "-L" -- make curl follow redirects
       , "-d"
-      , "grant_type=" <> (T.unpack scope) <> ""
+      , "grant_type=" <> T.unpack scope <> ""
       , "-H"
       , "Content-Type: application/x-www-form-urlencoded"
       , "-H"
       , "Authorization: Basic "
-        <> (BSC8.unpack $ B64.encode $ TE.encodeUtf8 $ lg <> ":" <> pwd)
+        <> BSC8.unpack (B64.encode . TE.encodeUtf8 $ lg <> ":" <> pwd)
       , T.unpack tokenUrl
       ]
       BSL.empty
@@ -219,13 +216,13 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
               ]
         let msg = T.concat
               [ "Failure "
-              , (showt now) <> "\n"
+              , showt now <> "\n"
               , "stdout: "
               , T.pack $ BSL.unpack stdout1 <> "\n"
               , "stderr: "
               , T.pack $ BSL.unpack stderr1
               ]
-        dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+        dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just msg
         return False
       ExitSuccess -> case parseAccessToken stdout1 of
         Nothing -> do
@@ -233,13 +230,13 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
             $ object ["stdout" .= show stdout1, "stderr" .= show stderr1]
           let msg = T.concat
                 [ "Parsing failure "
-                , (showt now) <> "\n"
+                , showt now <> "\n"
                 , "stdout: "
                 , T.pack $ BSL.unpack stdout1 <> "\n"
                 , "stderr: "
                 , T.pack $ BSL.unpack stderr1
                 ]
-          dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+          dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just msg
           return False
         Just t -> do
           callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
@@ -264,23 +261,21 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
           httpCode <- case reads httpCodeStr of
             [(n :: Int, "")] -> return n
             _                -> do
-              let msg = T.concat
-                    [ "Parsing http failure "
-                    , (showt now) <> "\n"
-                    , "httpCodeStr: "
-                    , T.pack $ httpCodeStr
-                    ]
-              dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+              let msg =
+                    T.concat
+                      [ "Parsing http failure "
+                      , showt now <> "\n"
+                      , "httpCodeStr: "
+                      , T.pack httpCodeStr
+                      ]
+              dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just msg
               unexpectedError "Couldn't parse http status from curl output"
           case (exitcode2, httpCode) of
             (ExitSuccess, n)
               | n < 300 -> do
                 logInfo "API callback executeOAuth2Callback succeeded" $ logObject_ dac
-                dbUpdate
-                  $  SetDocumentApiCallbackResult (documentid doc)
-                  $  Just
-                  $  "Success "
-                  <> (showt now)
+                dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just
+                  ("Success " <> showt now)
                 return True
               | otherwise -> do
                 logInfo "API callback executeOAuth2Callback failed" $ object
@@ -292,13 +287,13 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
                   ]
                 let msg = T.concat
                       [ "Failure "
-                      , (showt now) <> "\n"
+                      , showt now <> "\n"
                       , "stdout: "
                       , T.pack $ BSL.unpack stdout2 <> "\n"
                       , "stderr: "
                       , T.pack $ BSL.unpack stderr2
                       ]
-                dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+                dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just msg
                 return False
             (ExitFailure ec2, _) -> do
               logInfo "API callback executeOAuth2Callback failed" $ object
@@ -309,19 +304,19 @@ executeOAuth2Callback (lg, pwd, tokenUrl, scope) doc dac =
                 ]
               let msg = T.concat
                     [ "Failure "
-                    , (showt now) <> "\n"
+                    , showt now <> "\n"
                     , "stdout: "
                     , T.pack $ BSL.unpack stdout2 <> "\n"
                     , "stderr: "
                     , T.pack $ BSL.unpack stderr2
                     ]
-              dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
+              dbUpdate . SetDocumentApiCallbackResult (documentid doc) $ Just msg
               return False
   where
     parseAccessToken :: BSLU.ByteString -> Maybe Text
     parseAccessToken str = do
       case decode $ BSLU.toString str of
-        J.Ok js -> join $ withJSValue js $ fromJSValueField "access_token"
+        J.Ok js -> join . withJSValue js $ fromJSValueField "access_token"
         _       -> Nothing
 
 executeHi3GCallback
@@ -343,12 +338,12 @@ executeHi3GCallback (lg, pwd, tokenUrl, scope) doc dac =
       , "POST"
       , "-L" -- make curl follow redirects
       , "-d"
-      , "{\"login\":{\"scope\":[\"" <> (T.unpack scope) <> "\"]}}\""
+      , "{\"login\":{\"scope\":[\"" <> T.unpack scope <> "\"]}}\""
       , "-H"
       , "Content-Type: application/json; charset=UTF-8"
       , "-H"
       , "Authorization: Basic "
-        <> (BSC8.unpack $ B64.encode $ TE.encodeUtf8 $ lg <> ":" <> pwd)
+        <> BSC8.unpack (B64.encode . TE.encodeUtf8 $ lg <> ":" <> pwd)
       , T.unpack tokenUrl
       ]
       BSL.empty
@@ -414,9 +409,9 @@ executeHi3GCallback (lg, pwd, tokenUrl, scope) doc dac =
     parseAccessToken :: BSLU.ByteString -> Maybe String
     parseAccessToken str = do
       case decode $ BSLU.toString str of
-        J.Ok js ->
-          join $ withJSValue js $ fromJSValueFieldCustom "auth" $ fromJSValueField
-            "access_token"
+        J.Ok js -> join . withJSValue js $ fromJSValueFieldCustom
+          "auth"
+          (fromJSValueField "access_token")
         _ -> Nothing
 
 
@@ -434,7 +429,7 @@ callbackParamsWithDocumentJSON
 callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
   V1 -> do
     dJSON <- documentJSONV1 Nothing False True Nothing doc
-    return $ BSLU.fromString $ urlEncodeVars
+    return . BSLU.fromString $ urlEncodeVars
       [ ("documentid", show (documentid doc))
       , ( "signedAndSealed"
         , if isClosed doc && hasDigitalSignature doc then "true" else "false"
@@ -494,10 +489,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
         , urlEncodeVars
           [ ("documentid", show (documentid doc))
           , ( "signedAndSealed"
-            , (if (isClosed doc && (isJust $ documentsealedfile doc))
-                then "true"
-                else "false"
-              )
+            , if isClosed doc && isJust (documentsealedfile doc) then "true" else "false"
             )
           ]
         , "-H"
@@ -526,13 +518,13 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
               , showt httpCode
               )
             return False
-      case (exitcode) of
-        (ExitSuccess) -> if (httpCode < 300)
+      case exitcode of
+        ExitSuccess -> if httpCode < 300
           then do
             logInfo_ "Salesforce API callback succeeded"
             return True
           else sendAndFail Nothing
-        (ExitFailure err) -> sendAndFail $ Just $ showt err
+        (ExitFailure err) -> sendAndFail . Just $ showt err
 
   where
     emailErrorIfNeeded (msg, curl_err, stdout, stderr, http_code :: Text) = do
@@ -542,7 +534,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
         muser <- dbQuery $ GetUserByID uid
         let userEmail = maybe "<unknown>" getEmail muser
             userName  = maybe "<unknown>" getFullName muser
-        ug <- dbQuery $ UserGroupGetByUserID $ uid
+        ug <- dbQuery $ UserGroupGetByUserID uid
 
         let mail = emptyMail
               { to      = [ MailAddress { fullname = "Salesforce Admin"
@@ -557,7 +549,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           <> (ug ^. #name)
                           <> ") "
                           <> "(documentid: "
-                          <> (showt (documentid doc))
+                          <> showt (documentid doc)
                           <> ") "
                           <> "(http_code: "
                           <> http_code
@@ -588,13 +580,13 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           <> "<br />\r\n"
                           <> "<br />"
                           <> "<strong>User ID:</strong> "
-                          <> (showt uid)
+                          <> showt uid
                           <> "<br />\r\n"
                           <> "<strong>Document ID:</strong> "
-                          <> (showt (documentid doc))
+                          <> showt (documentid doc)
                           <> "<br />\r\n"
                           <> "<strong>User Company ID:</strong> "
-                          <> (showt (ug ^. #id))
+                          <> showt (ug ^. #id)
                           <> "<br />\r\n"
                           <> "<strong>User Name:</strong> "
                           <> escapeHTML userName

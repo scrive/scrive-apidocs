@@ -50,7 +50,7 @@ saveContentsToAmazon env url contents = go True =<< awsLogger
             else do
               logAttention "Saving file to AWS failed"
                 $ object ["url" .= url, "error" .= show err, "time" .= diff]
-              throwM $ FileStorageException $ showt err
+              throwM . FileStorageException $ showt err
 
 getContentsFromAmazon
   :: (MonadBase IO m, MonadLog m, MonadThrow m) => AmazonS3Env -> Text -> m BSL.ByteString
@@ -77,7 +77,7 @@ getContentsFromAmazon env url = go True =<< awsLogger
             else do
               logAttention "Fetching file from AWS failed"
                 $ object ["url" .= url, "error" .= show err, "time" .= diff]
-              throwM $ FileStorageException $ showt err
+              throwM . FileStorageException $ showt err
 
 deleteContentsFromAmazon
   :: (MonadBase IO m, MonadLog m, MonadThrow m) => AmazonS3Env -> Text -> m ()
@@ -94,7 +94,7 @@ deleteContentsFromAmazon env url = do
     Left err -> do
       logAttention "AWS failed to delete file"
         $ object ["url" .= url, "result" .= show err, "time" .= diff]
-      throwM $ FileStorageException $ showt err
+      throwM . FileStorageException $ showt err
 
 ----------------------------------------
 

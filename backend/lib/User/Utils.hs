@@ -58,7 +58,7 @@ withTosCheck
   -> m InternalKontraResponse
 withTosCheck action user = case user ^. #hasAcceptedTOS of
   Just _  -> action user
-  Nothing -> return $ internalResponse (LinkAcceptTOS)
+  Nothing -> return $ internalResponse LinkAcceptTOS
 
 {- |
    Guard against a GET with logged in users who should have 2FA enabled, but they have not.

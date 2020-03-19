@@ -35,7 +35,7 @@ evidenceOfTimeHTML title clockErrors EvidenceOfTime {..} = do
       endTime   = maximum (map HC.time clockErrors)
       absoluteCDF dist v = cumulative dist v - cumulative dist (-v)
       showCDFInPercent dist v =
-        (++ "%") (show $ realFracToDecimal 3 $ 100 * absoluteCDF dist v)
+        (++ "%") (show . realFracToDecimal 3 $ 100 * absoluteCDF dist v)
   renderTemplate "evidenceOfTime" $ do
     F.value "documenttitle" title
     F.value "graph_image" eotGraph
@@ -46,9 +46,9 @@ evidenceOfTimeHTML title clockErrors EvidenceOfTime {..} = do
     F.value "EvidenceOfTimeLT10" $ showCDFInPercent eotDistribution 0.01
     F.value "EvidenceOfTimeStartDate" $ formatTimeUTC startTime ++ " UTC"
     F.value "EvidenceOfTimeEndDate" $ formatTimeUTC endTime ++ " UTC"
-    F.objects "entries" $ for clockErrors $ \entry -> do
-      F.value "offset" $ HC.showClockError 1 $ HC.offset entry
-      F.value "offset_time" $ formatTimeUTC $ HC.time entry
+    F.objects "entries" . for clockErrors $ \entry -> do
+      F.value "offset" . HC.showClockError 1 $ HC.offset entry
+      F.value "offset_time" . formatTimeUTC $ HC.time entry
 
 -- | Given intervals, a temporary file path for input and output of data and
 -- SVG, and a list of `Double` representing clock errors, returns evidence of
@@ -59,10 +59,8 @@ generateEvidenceOfTimeData intervals inputFilePath outputFilePath offsets' = do
       offsets          = V.fromList offsets'
   writeFile inputFilePath ""
   V.forM_ distData $ \(x, emp_x, est_x, err) ->
-    appendFile inputFilePath
-      $  (intercalate " " . map show $ [x, emp_x, est_x, err])
-      ++ "\n"
-  void $ system $ smconcat
+    appendFile inputFilePath $ (unwords . map show $ [x, emp_x, est_x, err]) ++ "\n"
+  void . system $ smconcat
     [ "gnuplot -e"
     , "\""
     , "inputfile='" ++ inputFilePath ++ "';"
@@ -126,7 +124,7 @@ computeDist intervals (mins, maxs) samples =
         -- from the zero vector which represents perfect estimation. The greater
         -- the distance, the greater the error.
         estimationError :: NormalDistribution -> Double
-        estimationError dist = sqrt $ V.sum $ V.map
+        estimationError dist = sqrt . V.sum $ V.map
           (\(v, emp) -> (emp - cumulative dist v) ** 2)
           empiricalCdf
 

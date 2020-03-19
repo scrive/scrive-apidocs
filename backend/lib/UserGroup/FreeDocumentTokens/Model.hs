@@ -22,7 +22,7 @@ userGroupFreeDocumentTokensSelectors =
   , "user_group_free_document_tokens.tokens_validity"
   ]
 
-data UserGroupFreeDocumentTokensUseOneIfIfPossible = UserGroupFreeDocumentTokensUseOneIfIfPossible UserGroupID
+newtype UserGroupFreeDocumentTokensUseOneIfIfPossible = UserGroupFreeDocumentTokensUseOneIfIfPossible UserGroupID
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupFreeDocumentTokensUseOneIfIfPossible Bool where
   update (UserGroupFreeDocumentTokensUseOneIfIfPossible ugid) = do
     count <- runQuery . sqlUpdate "user_group_free_document_tokens" $ do
@@ -43,7 +43,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupFreeDocum
       sqlSet "tokens_validity" tv
       sqlSet "user_group_id"   ugid
 
-data UserGroupFreeDocumentTokensGet = UserGroupFreeDocumentTokensGet UserGroupID
+newtype UserGroupFreeDocumentTokensGet = UserGroupFreeDocumentTokensGet UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupFreeDocumentTokensGet FreeDocumentTokens where
   query (UserGroupFreeDocumentTokensGet ugid) = do
     mfdt <- query $ UserGroupFreeDocumentTokensGetInternal ugid
@@ -51,7 +51,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupFreeDocumentTokensGet F
       Just fdt -> return fdt
       Nothing  -> return noFreeDocumentTokens
 
-data UserGroupFreeDocumentTokensGetInternal = UserGroupFreeDocumentTokensGetInternal UserGroupID
+newtype UserGroupFreeDocumentTokensGetInternal = UserGroupFreeDocumentTokensGetInternal UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupFreeDocumentTokensGetInternal (Maybe FreeDocumentTokens) where
   query (UserGroupFreeDocumentTokensGetInternal ugid) = do
     runQuery_ . sqlSelect "user_group_free_document_tokens" $ do

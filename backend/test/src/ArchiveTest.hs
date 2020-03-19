@@ -19,7 +19,7 @@ import User.Model
 
 archiveTests :: TestEnvSt -> Test
 archiveTests env =
-  testGroup "Archive" $ [testThat "Archive lists docs correctly" env testListDocs]
+  testGroup "Archive" [testThat "Archive lists docs correctly" env testListDocs]
 
 testListDocs :: TestEnv ()
 testListDocs = do
@@ -30,38 +30,38 @@ testListDocs = do
                                                }
 
   -- send a doc as author
-  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  void $ runTestKontra req ctx $ apiCallV1CreateFromFile
+  void $ runTestKontra req ctx apiCallV1CreateFromFile
   doc : _ <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   req'    <- mkRequest POST [("json", inText cont)]
-  void $ runTestKontra req' ctx $ apiCallV1Update $ documentid doc
+  void . runTestKontra req' ctx $ apiCallV1Update (documentid doc)
   req'' <- mkRequest POST []
-  void $ runTestKontra req'' ctx $ apiCallV1Ready $ documentid doc
+  void . runTestKontra req'' ctx $ apiCallV1Ready (documentid doc)
 
   -- send a doc to author from someoneelse
   user2 <- instantiateUser $ randomUserTemplate { firstName = return "Jackie"
                                                 , lastName  = return "Chan"
                                                 , email     = return "jackie@chan.com"
                                                 }
-  ctx2 <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
+  ctx2 <- set #maybeUser (Just user2) <$> mkContext defaultLang
   req2 <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  void $ runTestKontra req2 ctx2 $ apiCallV1CreateFromFile
+  void $ runTestKontra req2 ctx2 apiCallV1CreateFromFile
   doc2 : _ <- randomQuery $ GetDocumentsByAuthor (user2 ^. #id)
   let cont2 = T.replace "example@example.com" "bob@blue.com"
         $ -- send to bob
           T.replace "\"signorder\":2" "\"signorder\":1" cont -- reset sign order to 1
   req2' <- mkRequest POST [("json", inText cont2)]
-  void $ runTestKontra req2' ctx2 $ apiCallV1Update $ documentid doc2
+  void . runTestKontra req2' ctx2 $ apiCallV1Update (documentid doc2)
   req2'' <- mkRequest POST []
-  void $ runTestKontra req2'' ctx2 $ apiCallV1Ready $ documentid doc2
+  void . runTestKontra req2'' ctx2 $ apiCallV1Ready (documentid doc2)
 
   req3     <- mkRequest GET []
-  (rsp, _) <- runTestKontra req3 ctx $ apiCallV1List
+  (rsp, _) <- runTestKontra req3 ctx apiCallV1List
   let rspString  = BS.unpack $ rsBody rsp
 
   let Right json = runGetJSON readJSObject rspString
@@ -71,10 +71,9 @@ testListDocs = do
     assertBool "Test apiCallV1List number of docs" $ length list == 2
 
     Just (authors :: [String]) <-
-      fromJSValueFieldCustom "list"
-      $ fromJSValueCustomMany
-      $ fromJSValueFieldCustom "fields"
-      $ fromJSValueField "author"
+      fromJSValueFieldCustom "list" . fromJSValueCustomMany $ fromJSValueFieldCustom
+        "fields"
+        (fromJSValueField "author")
     let (doc1Index, doc2Index) = case head authors of
           "Bob Blue" -> (0, 1)
           _          -> (1, 0)
@@ -83,9 +82,7 @@ testListDocs = do
       $ fromJSValueCustomMany (fromJSValueField "isauthor")
     assertBool "Test apiCallV1List isauthor for author is True" $ isAuthors !! doc1Index
     assertBool "Test apiCallV1List isauthor for recipient is False"
-      $  not
-      $  isAuthors
-      !! doc2Index
+      $ not (isAuthors !! doc2Index)
 
     Just (docauthorcompanysameasusers :: [Bool]) <- fromJSValueFieldCustom "list"
       $ fromJSValueCustomMany (fromJSValueField "docauthorcompanysameasuser")
@@ -93,8 +90,6 @@ testListDocs = do
       $  docauthorcompanysameasusers
       !! doc1Index
     assertBool "Test apiCallV1List docauthorcompanysameasuser for recipient is False"
-      $  not
-      $  docauthorcompanysameasusers
-      !! doc2Index
+      $ not (docauthorcompanysameasusers !! doc2Index)
 
   return ()

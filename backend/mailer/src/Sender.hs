@@ -79,10 +79,12 @@ createSMTPSender cs config = createExternalSender cs
     mailRcpt addr = ["--mail-rcpt", "<" <> punyEncode (addrEmail addr) <> ">"]
 
     createArgs Mail { mailFrom, mailTo } =
-      let smtpUserForThisMail =
-              fromMaybe (smtpUser config) $ fmap smtpDedicatedUser $ find
-                (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom)
-                (smtpDedicatedUsers config)
+      let smtpUserForThisMail = maybe
+            (smtpUser config)
+            smtpDedicatedUser
+            (find (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom)
+                  (smtpDedicatedUsers config)
+            )
       in
         [ "-s"
         , "-S"                   -- show no progress information but show error messages
@@ -111,13 +113,13 @@ createLocalSender (ConnectionSource pool) config = Sender
                    let filename :: FilePath =
                          localDirectory config
                            <> "/Email-"
-                           <> (T.unpack $ addrEmail (head mailTo))
+                           <> T.unpack (addrEmail (head mailTo))
                            <> "-"
                            <> show mailID
                            <> ".eml"
                    liftBase $ BSL.writeFile filename content
                    logInfo "Email saved to file" $ object ["file" .= filename]
-                   liftBase $ F.forM_ (localOpenCommand config) $ \cmd -> createProcess
+                   liftBase . F.forM_ (localOpenCommand config) $ \cmd -> createProcess
                      (proc (T.unpack cmd) [filename]) { std_in  = Inherit
                                                       , std_out = Inherit
                                                       , std_err = Inherit

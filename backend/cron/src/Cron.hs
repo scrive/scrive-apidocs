@@ -40,9 +40,9 @@ import ThirdPartyStats.Planhat
 import Utils.IO
 import qualified CronEnv
 
-data CmdConf = CmdConf
+newtype CmdConf = CmdConf
   { config :: String
-  } deriving (Data, Typeable)
+  } deriving Data
 
 cmdConf :: FilePath -> String -> CmdConf
 cmdConf workspaceRoot progName =

@@ -28,7 +28,7 @@ selectEIDServiceTransaction =
   ]
 
 -- | Insert new transaction or replace the existing one.
-data MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransaction
+newtype MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransaction
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeEIDServiceTransaction () where
   update (MergeEIDServiceTransaction EIDServiceTransaction {..}) = do
@@ -61,7 +61,7 @@ instance (MonadDB m, MonadThrow m)
 
 getEIDServiceTransactionInternal
   :: (MonadDB m, MonadThrow m)
-  => (Maybe SessionID)
+  => Maybe SessionID
   -> SignatoryLinkID
   -> EIDServiceAuthenticationKind
   -> m (Maybe EIDServiceTransaction)
@@ -69,7 +69,7 @@ getEIDServiceTransactionInternal mSessionId slid eidAuthKind = do
   runQuery_ . sqlSelect "eid_service_transactions" $ do
     mapM_ sqlResult selectEIDServiceTransaction
     sqlWhereEq "signatory_link_id" slid
-    sqlWhereEq "auth_kind" $ eidAuthKind
+    sqlWhereEq "auth_kind"         eidAuthKind
     -- When the sessionId is included, we check that it matches. This is used in
     -- authToView for example. Cron signing consumer does not have the sessionId, but
     -- it still needs the EID transaction status.
@@ -79,7 +79,7 @@ getEIDServiceTransactionInternal mSessionId slid eidAuthKind = do
 data PurgeTimeoutedEIDTransactions = PurgeTimeoutedEIDTransactions
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBUpdate m PurgeTimeoutedEIDTransactions Int where
-  update (PurgeTimeoutedEIDTransactions) = do
+  update PurgeTimeoutedEIDTransactions = do
     ct <- currentTime
     runSQL $ "DELETE FROM eid_service_transactions WHERE deadline <" <?> ct
 

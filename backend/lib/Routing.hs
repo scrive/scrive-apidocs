@@ -79,9 +79,7 @@ instance (ToResp a , ToResp b) => ToResp (Either a b) where
 instance ToResp InternalKontraResponse where
   toResp ikr = do
     case getFlashMessage ikr of
-      Just f -> do
-        void $ addFlashCookie (toCookieValue f)
-        return ()
+      Just f  -> void $ addFlashCookie (toCookieValue f)
       Nothing -> return ()
     toResp (eitherify ikr)
 
@@ -204,8 +202,8 @@ toK6 m a b c d e f = m a b c d e f >>= toResp
 guardXToken :: Kontra Response -> Kontra Response
 guardXToken action = do
   ctx <- getContext
-  let unQuote          = filter (not . (== '"'))
-      tokensFromString = catMaybes . map (maybeRead . T.pack . unQuote) . splitOn ";"
+  let unQuote          = filter (/= '"')
+      tokensFromString = mapMaybe (maybeRead . T.pack . unQuote) . splitOn ";"
   mxtokenString <- getField cookieNameXToken
   case mxtokenString of
     Just xtokenString | ctx ^. #xToken `elem` tokensFromString (T.unpack xtokenString) ->

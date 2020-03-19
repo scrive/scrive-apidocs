@@ -23,14 +23,14 @@ samlSignatureTest env = testGroup
 
 readBase64XmlFromFile :: FilePath -> IO HXT.XmlTree
 readBase64XmlFromFile path = do
-  eXml <- Data.ByteString.readFile path >>= return . decodeUtf8 >>= parseSAMLXML
+  eXml <- decodeUtf8 <$> Data.ByteString.readFile path >>= parseSAMLXML
   case eXml of
     Right xml -> return xml
     Left  msg -> fail $ path <> "can't be read: " <> msg
 
 readPubKeyRSA :: FilePath -> IO PublicKeys
 readPubKeyRSA path = do
-  (PubKeyRSA rsaPublicKey) <- Prelude.head <$> (readPubKeyFile path)
+  (PubKeyRSA rsaPublicKey) <- Prelude.head <$> readPubKeyFile path
   return $ PublicKeys Nothing (Just rsaPublicKey)
 
 testAzureSignatureVerifies :: TestEnv ()

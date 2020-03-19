@@ -33,7 +33,7 @@ import SMS.Types
 import Utils.IO
 import Utils.Network
 
-data CmdConf = CmdConf
+newtype CmdConf = CmdConf
   { config :: String
   } deriving (Data, Typeable)
 
@@ -74,11 +74,11 @@ main = do
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings)
       $ checkDatabaseAllowUnknownObjects extrasOptions [] [] messengerTables
     cs@(ConnectionSource pool) <-
-      ($ (maxConnectionTracker $ messengerMaxDBConnections conf))
+      ($ maxConnectionTracker (messengerMaxDBConnections conf))
         <$> liftBase (createPoolSource pgSettings (messengerMaxDBConnections conf))
 
     let cron   = jobsWorker cs
-        sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf
+        sender = smsConsumer rng cs . createSender $ sendersConfigFromMessengerConf conf
     E.bracket (startServer cs rng conf) (liftBase killThread)
       . const
       . finalize (localDomain "cron" $ runConsumer cron pool)

@@ -29,7 +29,7 @@ fromRedisKey (RedisKey rk) = rk
 
 ----------------------------------------
 
-data UnknownRedisReply = UnknownRedisReply R.Reply
+newtype UnknownRedisReply = UnknownRedisReply R.Reply
   deriving (Eq, Show, Typeable)
 
 instance Exception UnknownRedisReply
@@ -38,17 +38,17 @@ runRedis :: MonadBase IO m => R.Connection -> R.Redis (Either R.Reply a) -> m a
 runRedis conn re = runRedis' conn (re >>= fromRedisResp)
 
 runRedis' :: MonadBase IO m => R.Connection -> R.Redis a -> m a
-runRedis' conn r = liftBase . R.runRedis conn $ r
+runRedis' conn = liftBase . R.runRedis conn
 
 fromRedisResp :: Monad m => Either R.Reply a -> m a
-fromRedisResp e = either (throw . UnknownRedisReply) (return) e
+fromRedisResp = either (throw . UnknownRedisReply) return
 
 checkRedisConnection :: MonadBaseControl IO m => R.Connection -> m ()
 checkRedisConnection conn = do
   ereply <- tryAny $ runRedis conn R.ping
   case ereply :: Either SomeException R.Status of
     Right R.Pong -> return ()
-    Right status -> unexpectedError $ "expected Pong, got" <+> (showt status)
+    Right status -> unexpectedError $ "expected Pong, got" <+> showt status
     Left  err    -> unexpectedError $ T.concat
       [ "couldn't execute command 'ping':"
       , showt err

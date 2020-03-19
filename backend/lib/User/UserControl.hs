@@ -62,7 +62,7 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import qualified API.V2 as V2
 
-handleAccountGet :: Kontrakcja m => m (InternalKontraResponse)
+handleAccountGet :: Kontrakcja m => m InternalKontraResponse
 handleAccountGet = withUser . withTosCheck $ \user -> do
   ctx <- getContext
   pb  <- renderTextTemplate "showAccount" $ do
@@ -77,7 +77,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         "User "
           <> getEmail user
           <> " ("
-          <> (showt (user ^. #id))
+          <> showt (user ^. #id)
           <> ")"
           <> " has requested that their email be changed to "
           <> unEmail newemail
@@ -101,7 +101,7 @@ handleGetChangeEmail uid hash = withUser $ \_ -> do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   case mnewemail of
     Just newemail ->
-      internalResponse <$> T.unpack <$> pageDoYouWantToChangeEmail ctx newemail
+      internalResponse . T.unpack <$> pageDoYouWantToChangeEmail ctx newemail
     Nothing -> do
       flashmessage <- flashMessageProblemWithEmailChange
       return $ internalResponseWithFlash flashmessage LinkAccount
@@ -113,13 +113,13 @@ handlePostChangeEmail uid hash = withUser $ \user -> do
   let (ipnumber, time) = (ctx ^. #ipAddr, ctx ^. #time)
   mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
-    Nothing -> return $ internalResponse $ LinkAccount
+    Nothing -> return $ internalResponse LinkAccount
     -- No need to check TOTP here, withUser gives us logged in user
     Just password | maybeVerifyPassword (user ^. #password) password -> do
       changed <- maybe (return False) (dbUpdate . SetUserEmail (user ^. #id)) mnewemail
       flashmessage <- if changed
         then do
-          void $ dbUpdate $ LogHistoryDetailsChanged
+          void . dbUpdate $ LogHistoryDetailsChanged
             (user ^. #id)
             ipnumber
             time
@@ -127,11 +127,11 @@ handlePostChangeEmail uid hash = withUser $ \user -> do
             (Just $ user ^. #id)
           flashMessageYourEmailHasChanged
         else flashMessageProblemWithEmailChange
-      void $ dbUpdate $ DeleteEmailChangeRequest uid
-      return $ internalResponseWithFlash flashmessage $ LinkAccount
+      void . dbUpdate $ DeleteEmailChangeRequest uid
+      return $ internalResponseWithFlash flashmessage LinkAccount
     Just _password -> do
       flashmessage <- flashMessageProblemWithPassword
-      return $ internalResponseWithFlash flashmessage $ LinkAccount
+      return $ internalResponseWithFlash flashmessage LinkAccount
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m Response
 handleUsageStatsJSONForUserDays = V2.api $ do
@@ -140,7 +140,7 @@ handleUsageStatsJSONForUserDays = V2.api $ do
   includeZeroRecords <- isFieldSet "includeZeroRecords"
   stats              <-
     getUsageStats PartitionByDay includeZeroRecords
-      $ if (user ^. #isCompanyAdmin && withCompany)
+      $ if user ^. #isCompanyAdmin && withCompany
           then UsageStatsForUserGroup $ user ^. #groupID
           else UsageStatsForUser $ user ^. #id
   return $ V2.Ok stats
@@ -152,7 +152,7 @@ handleUsageStatsJSONForUserMonths = V2.api $ do
   includeZeroRecords <- isFieldSet "includeZeroRecords"
   stats              <-
     getUsageStats PartitionByMonth includeZeroRecords
-      $ if (user ^. #isCompanyAdmin && withCompany)
+      $ if user ^. #isCompanyAdmin && withCompany
           then UsageStatsForUserGroup $ user ^. #groupID
           else UsageStatsForUser $ user ^. #id
   return $ V2.Ok stats
@@ -239,7 +239,7 @@ allTimestampsForPartition PartitionByMonth (UTCTime today _sec) = do
 timeFormat :: StatsPartition -> UTCTime -> Text
 timeFormat statsPartition = case statsPartition of
   PartitionByDay   -> T.pack . formatTimeYMD
-  PartitionByMonth -> T.pack . (formatTime' "%Y-%m")
+  PartitionByMonth -> T.pack . formatTime' "%Y-%m"
 {- |
     Checks for live documents owned by the user.
 -}
@@ -280,19 +280,18 @@ createNewUserByAdmin email names usergroupandrole lg = do
 
 handleAcceptTOSGet :: Kontrakcja m => m InternalKontraResponse
 handleAcceptTOSGet =
-  withUser $ \_ -> internalResponse <$> T.unpack <$> (pageAcceptTOS =<< getContext)
+  withUser $ \_ -> internalResponse . T.unpack <$> (pageAcceptTOS =<< getContext)
 
 handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
   ctx <- getContext
   let (maybeuser, time, ipnumber) = (ctx ^. #maybeUser, ctx ^. #time, ctx ^. #ipAddr)
-  userid <- guardJustM $ return $ view #id <$> maybeuser
+  userid <- guardJustM . return $ view #id <$> maybeuser
   tos    <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
-      void $ dbUpdate $ AcceptTermsOfService userid time
-      void $ dbUpdate $ LogHistoryTOSAccept userid ipnumber time (Just userid)
-      return ()
+      void . dbUpdate $ AcceptTermsOfService userid time
+      void . dbUpdate $ LogHistoryTOSAccept userid ipnumber time (Just userid)
     _ -> internalError
 
 
@@ -316,8 +315,8 @@ handleAccountSetupGet uid token sm = do
         F.value "companyPosition" $ user ^. #info % #companyPosition
         F.value "mobile" $ getMobile user
         F.value "signupmethod" $ show sm
-      internalResponse <$> (simpleHtmlResponse content)
-    (Just _user, Just _) -> return $ internalResponse $ LinkDesignView
+      internalResponse <$> simpleHtmlResponse content
+    (Just _user, Just _) -> return $ internalResponse LinkDesignView
     _                    -> do
       flashmessage <- case sm of
         CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
@@ -337,9 +336,9 @@ handleAccountSetupPost uid token sm = do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
       void $ handleActivate mfstname msndname (user, ug) sm
-      void $ dbUpdate $ DeleteUserAccountRequest uid
+      void . dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
-      void $ dbUpdate $ SetUserSettings (user ^. #id)
+      void . dbUpdate $ SetUserSettings (user ^. #id)
                                         (user ^. #settings & #lang .~ ctx ^. #lang)
       link <- getHomeOrDesignViewLink
       J.runJSONGenT $ do
@@ -362,13 +361,13 @@ handlePasswordReminderGet uid token = do
       ctx     <- getContext
       ad      <- getAnalyticsData
       content <- renderTextTemplate "changePasswordPageWithBranding" $ do
-        F.value "linkchangepassword" $ show $ LinkPasswordReminder uid token
+        F.value "linkchangepassword" . show $ LinkPasswordReminder uid token
         standardPageFields ctx Nothing ad
-      internalResponse <$> (simpleHtmlResponse content)
+      internalResponse <$> simpleHtmlResponse content
     Nothing -> do
       ctx          <- getContext
       flashmessage <- flashMessagePasswordChangeLinkNotValid
-      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (ctx ^. #lang)
+      return . internalResponseWithFlash flashmessage $ LinkLoginDirect (ctx ^. #lang)
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
@@ -376,10 +375,10 @@ handlePasswordReminderPost uid token = do
   muser  <- getPasswordReminderUser uid token
   ipIsOK <- case muser of
     Just u -> do
-      ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ u ^. #id
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ u ^. #id
       let masklist = ugwpSettings ugwp ^. #ipAddressMaskList
       ctx <- getContext
-      return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
+      return $ null masklist || any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist
     Nothing -> return True
   case muser of
     Just user | not (user ^. #accountSuspended) && ipIsOK -> do
@@ -390,12 +389,12 @@ handlePasswordReminderPost uid token = do
           maybeuser = ctx ^. #maybeUser
       password     <- guardJustM $ getField "password"
       goodPassword <- checkPassword (ctx ^. #passwordServiceConf) password
-      if (goodPassword)
+      if goodPassword
         then do
-          void $ dbUpdate $ DeletePasswordReminder uid
+          void . dbUpdate $ DeletePasswordReminder uid
           passwordhash <- createPassword password
-          void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
-          void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
+          void . dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+          void . dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
                                                     ipnumber
                                                     time
                                                     (view #id <$> maybeuser)

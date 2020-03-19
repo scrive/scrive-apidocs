@@ -21,7 +21,7 @@ import User.UserID
 import UserGroup.Types
 import qualified Folder.Internal as I
 
-data FolderGet = FolderGet FolderID
+newtype FolderGet = FolderGet FolderID
 instance (MonadDB m, MonadThrow m) => DBQuery m FolderGet (Maybe Folder) where
   query (FolderGet dgid) = do
     runQuery_ . sqlSelect "folders" $ do
@@ -30,7 +30,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FolderGet (Maybe Folder) where
       sqlWhereIsNULL "deleted"
     fetchMaybe fetchFolder
 
-data FolderGetUserGroupHome =
+newtype FolderGetUserGroupHome =
     FolderGetUserGroupHome UserGroupID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderGetUserGroupHome (Maybe Folder) where
@@ -45,7 +45,7 @@ instance (MonadDB m, MonadThrow m)
       Nothing       -> return Nothing
       Just folderId -> query . FolderGet $ folderId
 
-data FolderGetUserHome = FolderGetUserHome UserID
+newtype FolderGetUserHome = FolderGetUserHome UserID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderGetUserHome (Maybe Folder) where
   query (FolderGetUserHome uid) = do
@@ -59,7 +59,7 @@ instance (MonadDB m, MonadThrow m)
       Nothing       -> return Nothing
       Just folderId -> query . FolderGet $ folderId
 
-data FolderIsAHomeFolder = FolderIsAHomeFolder FolderID
+newtype FolderIsAHomeFolder = FolderIsAHomeFolder FolderID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderIsAHomeFolder Bool where
   query (FolderIsAHomeFolder fid) = do
@@ -71,7 +71,7 @@ instance (MonadDB m, MonadThrow m)
       sqlLimit 1
     return $ userRows || ugRows
 
-data FolderHasDocuments = FolderHasDocuments FolderID
+newtype FolderHasDocuments = FolderHasDocuments FolderID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderHasDocuments Bool where
   query (FolderHasDocuments fid) = do
@@ -82,13 +82,13 @@ instance (MonadDB m, MonadThrow m)
       sqlLimit 1
 
 -- Get all children recursively
-data FolderGetAllChildrenRecursive = FolderGetAllChildrenRecursive FolderID
+newtype FolderGetAllChildrenRecursive = FolderGetAllChildrenRecursive FolderID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderGetAllChildrenRecursive [FolderWithChildren] where
   query (FolderGetAllChildrenRecursive fid) = do
-    runQuery_ $ sqlSelect "folders" $ do
+    runQuery_ . sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
-      sqlWhere $ "parent_path @> " <?> (Array1 [fid])
+      sqlWhere $ "parent_path @> " <?> Array1 [fid]
     allChildren <- fetchMany fetchFolder
     let directChildren parentID =
           filter ((== Just parentID) . view #parentID) allChildren
@@ -96,7 +96,7 @@ instance (MonadDB m, MonadThrow m)
         mkChild folder = I.FolderWithChildren folder . mkChildren $ folder ^. #id
     return $ mkChildren fid
 
-data FolderGetParents = FolderGetParents FolderID
+newtype FolderGetParents = FolderGetParents FolderID
 instance (MonadDB m, MonadThrow m)
     => DBQuery m FolderGetParents [Folder] where
   query (FolderGetParents fid) = do
@@ -124,7 +124,7 @@ instance (MonadDB m, MonadThrow m)
           sqlOrderBy "ordinality"
         fetchMany fetchFolder
 
-data FolderGetImmediateChildren = FolderGetImmediateChildren FolderID
+newtype FolderGetImmediateChildren = FolderGetImmediateChildren FolderID
 instance (MonadDB m, MonadThrow m) => DBQuery m FolderGetImmediateChildren [Folder] where
   query (FolderGetImmediateChildren ugid) = do
     runQuery_ . sqlSelect "folders" $ do
@@ -133,7 +133,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FolderGetImmediateChildren [Fold
       sqlWhereIsNULL "deleted"
     fetchMany fetchFolder
 
-data FolderDelete = FolderDelete FolderID
+newtype FolderDelete = FolderDelete FolderID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m FolderDelete () where
   update (FolderDelete fdrid) = do
     now <- currentTime

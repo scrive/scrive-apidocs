@@ -67,24 +67,24 @@ assembleContent Mail {..} = do
           <> createAddrString mailFrom
           <> "\r\n"
           <> "Date: "
-          <> (T.pack $ formatTimeForMail time)
+          <> T.pack (formatTimeForMail time)
           <> "\r\n"
           <> lineReplyTo
           <> "X-SMTPAPI: "
-          <> (T.pack $ J.encode xsmtpapi)
+          <> T.pack (J.encode xsmtpapi)
           <> "\r\n"
           <> "X-Mailgun-Variables: "
-          <> (T.pack $ J.encode mailgundata)
+          <> T.pack (J.encode mailgundata)
           <> "\r\n"
           <> "X-xsMessageId: "
-          <> (showt mailID)
+          <> showt mailID
           <> "-"
-          <> (showt mailToken)
+          <> showt mailToken
           <> "\r\n"
           <> "X-MJ-CustomID: "
-          <> (showt mailID)
+          <> showt mailID
           <> "-"
-          <> (showt mailToken)
+          <> showt mailToken
           <> "\r\n"
           <> "MIME-Version: 1.0\r\n"
           <> "Content-Type: multipart/mixed;\r\n boundary="
@@ -131,13 +131,10 @@ assembleContent Mail {..} = do
         T.replace "<br/>\r\n\r\n" "<br/>\r\n" . T.replace "<br/>" "<br/>\r\n" . T.replace
           "<BR/>"
           "<br/>"
-      attachmentType fname = if (".pdf" `T.isSuffixOf` (T.toLower fname))
-        then "application/pdf"
-        else if (".png" `T.isSuffixOf` (T.toLower fname))
-          then "image/png"
-          else if (".jpg" `T.isSuffixOf` (T.toLower fname))
-            then "image/jpeg"
-            else "application/octet-stream"
+      attachmentType fname | ".pdf" `T.isSuffixOf` T.toLower fname = "application/pdf"
+                           | ".png" `T.isSuffixOf` T.toLower fname = "image/png"
+                           | ".jpg" `T.isSuffixOf` T.toLower fname = "image/jpeg"
+                           | otherwise = "application/octet-stream"
 
       headerRelated Attachment {..} =
         let filename = mailEncode Nothing attName
@@ -179,22 +176,20 @@ assembleContent Mail {..} = do
   relatedAttContent <- forM relatedAtt $ \att -> do
     content <- either return getFileIDContents $ attContent att
     return
-      $            (BSL.fromStrict $ TE.encodeUtf8 (headerRelated att))
+      $            BSL.fromStrict (TE.encodeUtf8 (headerRelated att))
       `BSL.append` BSL.fromChunks
                      [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode content]
   mixedAttContent <- forM mixedAtt $ \att -> do
     content <- either return getFileIDContents $ attContent att
-    return
-      $            (BSL.fromStrict $ TE.encodeUtf8 $ (headerMixed att))
-      `BSL.append` BSL.fromChunks
-                     [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode content]
+    return $ BSL.fromStrict (TE.encodeUtf8 (headerMixed att)) `BSL.append` BSL.fromChunks
+      [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode content]
 
   return
-    $  BSL.concat
+    .  BSL.concat
     $  [ BSL.fromStrict $ TE.encodeUtf8 headerEmail
        , BSL.fromStrict $ TE.encodeUtf8 headerContent
        , BSL.fromStrict $ TE.encodeUtf8 headerContentText
-       , BSLU.fromString $ htmlToTxt $ T.unpack mailContent
+       , BSLU.fromString . htmlToTxt $ T.unpack mailContent
        , BSL.fromStrict $ TE.encodeUtf8 headerContentRelated
        , BSL.fromStrict $ TE.encodeUtf8 headerContentHtml
        , BSL.fromChunks [TE.encodeUtf8 $ fixLineLengths mailContent]
@@ -222,7 +217,7 @@ mailEncode mFirstLineLength source
 
 -- only line breaking
 asciiMailEncode :: Maybe Int -> Text -> Text
-asciiMailEncode mFirstLineLength source = T.concat $ intersperse "\r\n " $ map
+asciiMailEncode mFirstLineLength source = T.concat . intersperse "\r\n " $ map
   T.unwords
   linesWithWords
   where
@@ -265,7 +260,7 @@ asciiMailEncode mFirstLineLength source = T.concat $ intersperse "\r\n " $ map
 
 -- from simple utf-8 to =?UTF-8?B?zzzzzzz?=
 unicodeMailEncode :: Maybe Int -> Text -> Text
-unicodeMailEncode mFirstLineLength source = T.concat $ intersperse "\r\n\t" $ map
+unicodeMailEncode mFirstLineLength source = T.concat . intersperse "\r\n\t" $ map
   encodeWord
   chunksBeforeEncoding
   where
@@ -281,7 +276,7 @@ unicodeMailEncode mFirstLineLength source = T.concat $ intersperse "\r\n\t" $ ma
 
     -- encode utf-8 encoded byte string with base64 and add encoded-word syntax
     encodeWord :: BS.ByteString -> Text
-    encodeWord chunk = "=?UTF-8?B?" <> (TE.decodeUtf8 $ Base64.encode chunk) <> "?="
+    encodeWord chunk = "=?UTF-8?B?" <> TE.decodeUtf8 (Base64.encode chunk) <> "?="
 
     -- calculate number of bytes that will fit in desired encoded chunk size
     -- 12 chars for encoded-word syntax, (`div` 4) . (*3) for base64 overhead
@@ -290,14 +285,14 @@ unicodeMailEncode mFirstLineLength source = T.concat $ intersperse "\r\n\t" $ ma
     cleanedUpSource = T.unwords $ T.words source
     (firstLineBeforeEncoding, restBeforeEncoding) =
       BS.splitAt (preEncodeChunkSize $ fromMaybe 75 mFirstLineLength)
-        $ BSU.fromString
+        . BSU.fromString
         $ T.unpack cleanedUpSource
-    chunksBeforeEncoding = if (BS.null restBeforeEncoding)
+    chunksBeforeEncoding = if BS.null restBeforeEncoding
       then [firstLineBeforeEncoding] -- Lets not encode empty lines
       else firstLineBeforeEncoding : splitEvery (preEncodeChunkSize 75) restBeforeEncoding
 
 createMailTos :: [Address] -> Text
-createMailTos = T.intercalate ", " . map (\a -> createAddrString a)
+createMailTos = T.intercalate ", " . map createAddrString
 
 createAddrString :: Address -> Text
 createAddrString Address {..}
@@ -315,4 +310,4 @@ createBoundaries :: forall  m . CryptoRNG m => m (Text, Text, Text)
 createBoundaries = return (,,) `ap` f `ap` f `ap` f
   where
     f :: m Text
-    f = fmap T.pack $ randomString 32 $ ['0' .. '9'] <> ['a' .. 'z']
+    f = fmap T.pack . randomString 32 $ ['0' .. '9'] <> ['a' .. 'z']

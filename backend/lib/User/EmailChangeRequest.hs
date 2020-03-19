@@ -60,7 +60,7 @@ newEmailChangeRequest uid new_email = do
   -- being logged in on more than one machine), but the possibility that
   -- two users logged to the same account will invoke this function at
   -- the same time is basically 0.
-  void $ dbUpdate $ DeleteEmailChangeRequest uid
+  void . dbUpdate $ DeleteEmailChangeRequest uid
   dbUpdate . CreateEmailChangeRequest $ EmailChangeRequest uid expires new_email token
 
 newEmailChangeRequestLink
@@ -79,31 +79,31 @@ data DeleteExpiredEmailChangeRequests = DeleteExpiredEmailChangeRequests
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredEmailChangeRequests () where
   update DeleteExpiredEmailChangeRequests = do
     now <- currentTime
-    runQuery_ . sqlDelete "email_change_requests" $ sqlWhere $ "expires <" <?> now
+    (runQuery_ . sqlDelete "email_change_requests") . sqlWhere $ "expires <" <?> now
 
 data GetExpiredEmailChangeRequestsForTesting = GetExpiredEmailChangeRequestsForTesting
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredEmailChangeRequestsForTesting [EmailChangeRequest] where
   query GetExpiredEmailChangeRequestsForTesting = do
     now <- currentTime
-    runQuery_ $ sqlSelect "email_change_requests" $ do
+    runQuery_ . sqlSelect "email_change_requests" $ do
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
       sqlWhere $ "expires <" <?> now
     fetchMany fetchEmailChangeRequest
 
-data GetEmailChangeRequest = GetEmailChangeRequest UserID
+newtype GetEmailChangeRequest = GetEmailChangeRequest UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailChangeRequest (Maybe EmailChangeRequest) where
   query (GetEmailChangeRequest user_id) = do
     now <- currentTime
-    runQuery_ $ sqlSelect "email_change_requests" $ do
+    runQuery_ . sqlSelect "email_change_requests" $ do
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
       sqlWhereEq "user_id" user_id
       sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchEmailChangeRequest
 
-data CreateEmailChangeRequest = CreateEmailChangeRequest EmailChangeRequest
+newtype CreateEmailChangeRequest = CreateEmailChangeRequest EmailChangeRequest
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmailChangeRequest EmailChangeRequest where
   update (CreateEmailChangeRequest EmailChangeRequest {..}) = do
-    runQuery_ $ sqlInsert "email_change_requests" $ do
+    runQuery_ . sqlInsert "email_change_requests" $ do
       sqlSet "user_id"   ecrUserID
       sqlSet "new_email" ecrNewEmail
       sqlSet "token"     ecrToken
@@ -111,7 +111,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmailChangeRequest EmailC
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
     fetchOne fetchEmailChangeRequest
 
-data DeleteEmailChangeRequest = DeleteEmailChangeRequest UserID
+newtype DeleteEmailChangeRequest = DeleteEmailChangeRequest UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteEmailChangeRequest Bool where
   update (DeleteEmailChangeRequest user_id) = do
     runQuery01 . sqlDelete "email_change_requests" $ do

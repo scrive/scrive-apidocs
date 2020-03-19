@@ -109,7 +109,7 @@ deriving instance MonadFail m => MonadFail (DBT m)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
-  can_be_run <- fst <$> atomically (readTVar $ st ^. #activeTests)
+  can_be_run <- fst <$> readTVarIO (st ^. #activeTests)
   when can_be_run $ do
     atomically . modifyTVar' (st ^. #activeTests) $ second (succ $!)
     E.finally
@@ -121,7 +121,7 @@ runTestEnv st m = do
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st =
-  (unRunLogger $ st ^. #runLogger)
+  unRunLogger (st ^. #runLogger)
     . flip runReaderT st
   -- for each test start with no time delay
     . flip
@@ -176,14 +176,14 @@ instance MonadTime TestEnv where
         return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getTextTemplatesByLanguage $ T.unpack $ codeFromLang defaultLang
+  getTemplates = getTextTemplatesByLanguage . T.unpack $ codeFromLang defaultLang
   getTextTemplatesByLanguage langStr = do
     globaltemplates <- gview #globalTemplates
     return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
   type StM TestEnv a = StM InnerTestEnv a
-  liftBaseWith f = TestEnv $ liftBaseWith $ \run -> f $ run . unTestEnv
+  liftBaseWith f = TestEnv $ liftBaseWith (\run -> f $ run . unTestEnv)
   restoreM = TestEnv . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
@@ -209,7 +209,7 @@ newtype TestKontra a = TestKontra { unTestKontra :: InnerTestKontra a }
 
 instance MonadBaseControl IO TestKontra where
   type StM TestKontra a = StM InnerTestKontra a
-  liftBaseWith f = TestKontra $ liftBaseWith $ \run -> f $ run . unTestKontra
+  liftBaseWith f = TestKontra $ liftBaseWith (\run -> f $ run . unTestKontra)
   restoreM = TestKontra . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
@@ -319,7 +319,7 @@ setRequestURI uri = assign #requestUri $ T.unpack uri
 -- | Creates GET/POST input text variable
 inText :: Text -> Input
 inText val = Input
-  { inputValue       = Right $ BSL.fromStrict $ TE.encodeUtf8 val
+  { inputValue       = Right . BSL.fromStrict $ TE.encodeUtf8 val
   , inputFilename    = Nothing
   , inputContentType = ContentType { ctType       = "text"
                                    , ctSubtype    = "plain"
@@ -330,7 +330,7 @@ inText val = Input
 -- | Creates GET/POST input text variable
 inTextBS :: BSLU.ByteString -> Input
 inTextBS val = Input
-  { inputValue       = Right $ val
+  { inputValue       = Right val
   , inputFilename    = Nothing
   , inputContentType = ContentType { ctType       = "text"
                                    , ctSubtype    = "plain"
@@ -366,11 +366,11 @@ mkCookies = map $ \(n, v) -> (n, mkCookie (T.unpack n) (T.unpack v))
 -- | Retrieves specific header value
 getHeader :: Text -> Headers -> Maybe Text
 getHeader name hdrs =
-  TE.decodeUtf8 <$> join (listToMaybe . hValue <$> M.lookup (TE.encodeUtf8 name) hdrs)
+  TE.decodeUtf8 <$> (listToMaybe . hValue =<< M.lookup (TE.encodeUtf8 name) hdrs)
 
 -- | Retrieves specific cookie value
 getCookie :: Text -> [(Text, Cookie)] -> Maybe Text
-getCookie name cookies = (T.pack . cookieValue) <$> lookup name cookies
+getCookie name cookies = T.pack . cookieValue <$> lookup name cookies
 
 -- | Constructs initial request with given data (POST or GET)
 mkRequest
@@ -384,7 +384,7 @@ mkRequestWithHeaders
   -> [(Text, [Text])]
   -> m Request
 mkRequestWithHeaders method vars headers = do
-  let vars' :: [(String, Input)] = fmap (\(t1, t2) -> (T.unpack t1, t2)) vars
+  let vars' :: [(String, Input)] = fmap (first T.unpack) vars
   uri <- use #requestUri
   liftIO $ do
     rqbody <- newEmptyMVar
@@ -399,7 +399,7 @@ mkRequestWithHeaders method vars headers = do
                    , rqInputsBody  = ib
                    , rqCookies     = []
                    , rqVersion     = HttpVersion 1 1
-                   , rqHeaders     = mkHeaders $ headers
+                   , rqHeaders     = mkHeaders headers
                    , rqBody        = rqbody
                    , rqPeer        = ("", 0)
                    }
@@ -411,7 +411,7 @@ mkContext lang = do
   pdfSealLambdaEnv <- gview #pdfToolsLambdaEnv
   globaltemplates  <- gview #globalTemplates
   time             <- currentTime
-  bd               <- dbQuery $ GetMainBrandedDomain
+  bd               <- dbQuery GetMainBrandedDomain
   liftIO $ do
     filecache <- newFileMemCache 52428800
     return I.Context { maybeUser           = Nothing

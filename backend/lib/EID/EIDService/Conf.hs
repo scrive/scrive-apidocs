@@ -16,8 +16,8 @@ data EIDServiceConf = EIDServiceConf
 unjsonEIDServiceConf :: UnjsonDef EIDServiceConf
 unjsonEIDServiceConf =
   objectOf
-    $   pure EIDServiceConf
-    <*> field "url"   eidServiceUrl   "EIDService url"
+    $   EIDServiceConf
+    <$> field "url"   eidServiceUrl   "EIDService url"
     <*> field "token" eidServiceToken "EIDService token"
     <*> fieldDef "useForDK"
                  False

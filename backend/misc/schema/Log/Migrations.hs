@@ -32,7 +32,7 @@ addColumnDomain = Migration
   , mgrFrom      = 1
   , mgrAction    = StandardMigration $ do
                      let tname = tblName tableLogs
-                     runQuery_ $ sqlCreateIndexSequentially tname $ indexOnColumn "component"
+                     runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "component"
                      runQuery_ $ sqlAlterTable
                        tname
                        [ sqlAddColumn tblColumn { colName     = "domain"

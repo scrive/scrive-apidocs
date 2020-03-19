@@ -42,10 +42,8 @@ eventsJSListFromEvidenceLog
   -> [DocumentEvidenceEvent]
   -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = do
-  let evs =
-        filter ((historyEventType . evType) && (not . emptyEvent))
-          $ cleanUnimportantAfterSigning
-          $ dees
+  let evs = filter ((historyEventType . evType) && (not . emptyEvent))
+        $ cleanUnimportantAfterSigning dees
   sim <- getSignatoryIdentifierMap True evs
   mapM (J.runJSONGenT . eventJSValue doc sim) evs
 
@@ -56,9 +54,9 @@ getSignatoryIdentifierMap
   -> [DocumentEvidenceEvent]
   -> m SignatoryIdentifierMap
 getSignatoryIdentifierMap includeviewers evs = do
-  let sigs = Set.fromList $ catMaybes $ concat
+  let sigs = Set.fromList . catMaybes $ concat
         [ [evSigLink ev, evAffectedSigLink ev] | ev <- evs ]
-  docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList sigs
+  docs <- dbQuery . GetDocumentsBySignatoryLinkIDs $ Set.toList sigs
   return $ signatoryIdentifierMap includeviewers docs sigs
 
 -- TODO: Consider saving actor name in event instead, this is likely
@@ -77,20 +75,20 @@ approximateActor doc sim dee
     case evSigLink dee >>= sigid emptyNamePlaceholder of
       Just i  -> return i
       Nothing -> case evUserID dee of
-        Just uid -> if (isAuthor (doc, uid))
+        Just uid -> if isAuthor (doc, uid)
           then authorName emptyNamePlaceholder
           else do
             muser <- dbQuery $ GetUserByID uid
             case muser of
               Just user -> return $ getSmartName user <> " (" <> getEmail user <> ")"
               Nothing   -> return "Scrive" -- This should not happen
-        Nothing -> if (authorEvents $ evType dee)
-          then authorName $ emptyNamePlaceholder
+        Nothing -> if authorEvents $ evType dee
+          then authorName emptyNamePlaceholder
           else return "Scrive"
   where
     authorName :: Text -> m Text
     authorName emptyNamePlaceholder =
-      case (getAuthorSigLink doc >>= sigid emptyNamePlaceholder . signatorylinkid) of
+      case getAuthorSigLink doc >>= sigid emptyNamePlaceholder . signatorylinkid of
         Just i  -> return i
         Nothing -> renderTextTemplate_ "_authorParty"
 
@@ -106,7 +104,7 @@ eventJSValue
   -> DocumentEvidenceEvent
   -> JSONGenT m ()
 eventJSValue doc sim dee = do
-  J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
+  J.value "status" . show $ getEvidenceEventStatusClass (evType dee)
   J.value "time" $ formatTimeISO (evTime dee)
   J.valueM "party" $ approximateActor doc sim dee
   J.valueM "text" $ simplifiedEventText Nothing sim dee
@@ -226,9 +224,9 @@ systemEvents _ = False
 -- Empty events - they should be skipped, as they don't provide enough
 -- information to show to user.
 emptyEvent :: DocumentEvidenceEvent -> Bool
-emptyEvent (DocumentEvidenceEvent { evType = Current InvitationEvidence, evAffectedSigLink = Nothing })
+emptyEvent DocumentEvidenceEvent { evType = Current InvitationEvidence, evAffectedSigLink = Nothing }
   = True
-emptyEvent (DocumentEvidenceEvent { evType = Current ReminderSend, evAffectedSigLink = Nothing })
+emptyEvent DocumentEvidenceEvent { evType = Current ReminderSend, evAffectedSigLink = Nothing }
   = True
 emptyEvent _ = False
 
@@ -315,7 +313,7 @@ simplifiedEventText mactor sim dee = do
                         F.value "signatory_dob" $ netsFITupasDateOfBirth n
                       SMSPinAuthentication_ mobile -> do
                         F.value "provider_sms_pin" True
-                        F.value "signatory_mobile" $ mobile
+                        F.value "signatory_mobile" mobile
                       EIDServiceVerimiAuthentication_ n -> do
                         F.value "provider_verimi" True
                         F.value "signatory_email" $ eidServiceVerimiVerifiedEmail n

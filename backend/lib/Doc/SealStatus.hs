@@ -47,7 +47,7 @@ instance Enum SealStatus where
   toEnum 4    = Guardtime { extended = False, private = True }
   toEnum 5    = Guardtime { extended = True, private = True }
   toEnum 6    = Pades
-  toEnum i    = unexpectedError $ "invalid value:" <+> (showt i)
+  toEnum i    = unexpectedError $ "invalid value:" <+> showt i
 
   fromEnum UnknownSealStatus = -1
   fromEnum Missing           = 0

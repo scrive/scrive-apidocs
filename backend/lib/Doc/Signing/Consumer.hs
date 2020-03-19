@@ -148,7 +148,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                         }
     , ccJobIndex            = signingSignatoryID
     , ccNotificationChannel = Nothing
-    , ccNotificationTimeout = (fromIntegral secondsToRetry) * 1000000
+    , ccNotificationTimeout = fromIntegral secondsToRetry * 1000000
     , ccMaxRunningJobs      = maxRunningJobs
     , ccProcessJob          =
       \ds@DocumentSigning {..} ->
@@ -165,10 +165,10 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
               runTemplatesT (signingLang, templates)
                 . runMailContextT mc
                 . runGuardTimeConfT guardTimeConf
-                $ if (signingCancelled)
+                $ if signingCancelled
                     then
-                      if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
-                        then return $ Ok $ RerunAfter $ iminutes
+                      if minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now
+                        then return . Ok . RerunAfter $ iminutes
                           minutesTillPurgeOfFailedAction
                         else return $ Ok Remove
                     else runHandler $ case signingSignatureProvider of
@@ -176,16 +176,14 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                       NetsNOBankID   -> handleNets netsSignConf ds now
                       NetsDKNemID    -> handleNets netsSignConf ds now
                       EIDServiceIDIN -> handleEidService
-                        (flip getTransactionFromEIDService
-                              EIDServiceTransactionProviderNLIDIN
+                        (`getTransactionFromEIDService` EIDServiceTransactionProviderNLIDIN
                         )
                         processCompleteIDINTransaction
                         mEidServiceConf
                         ds
                         now
                       EIDServiceTupas -> handleEidService
-                        (flip getTransactionFromEIDService
-                              EIDServiceTransactionProviderFITupas
+                        (`getTransactionFromEIDService` EIDServiceTransactionProviderFITupas
                         )
                         processCompleteFITupasTransaction
                         mEidServiceConf
@@ -199,8 +197,8 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
     , ccOnException         =
       \_ DocumentSigning {..} -> do
         now <- currentTime
-        if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
-          then return $ RerunAfter $ iseconds secondsToRetry
+        if minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now
+          then return . RerunAfter $ iseconds secondsToRetry
           else return Remove
     }
   where
@@ -233,13 +231,13 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
 
         msl <- getSigLinkFor signingSignatoryID <$> theDocument
         let personalNumberMatchesSiglink
-              | Just sl <- msl = or
-                [ T.null (getPersonalNumber sl)
-                , isNothing eidtupasSSN  -- 'legal persons' don't always have an SSN
-                , getPersonalNumber sl == fromMaybe "" eidtupasSSN
-                ]
-              | otherwise = False
-        when (not personalNumberMatchesSiglink) $ throwE (Failed Remove)
+              | Just sl <- msl
+              = T.null (getPersonalNumber sl)
+                || isNothing eidtupasSSN -- 'legal persons' don't always have an SSN
+                || (getPersonalNumber sl == fromMaybe "" eidtupasSSN)
+              | otherwise
+              = False
+        unless personalNumberMatchesSiglink $ throwE (Failed Remove)
 
         dbUpdate $ MergeEIDServiceFITupasSignature signingSignatoryID sig
         logInfo_ . ("EidHub FI TUPAS Sign succeeded: " <>) . showt $ est
@@ -278,11 +276,11 @@ handleCgiGrpBankID mCgiGrpConf ds@DocumentSigning {..} now = do
     CGISignStatusAlreadySigned   -> return $ Ok Remove
     CGISignStatusFailed grpFault -> do
       dbUpdate $ UpdateDocumentSigning signingSignatoryID True (grpFaultText grpFault)
-      return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
+      return . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
     CGISignStatusInProgress status -> do
       dbUpdate
         $ UpdateDocumentSigning signingSignatoryID False (progressStatusText status)
-      return $ Ok $ RerunAfter $ iseconds secondsToRetry
+      return . Ok . RerunAfter $ iseconds secondsToRetry
     CGISignStatusSuccess -> do
       signFromESignature ds now
       return $ Ok Remove
@@ -321,10 +319,10 @@ handleNets mNetsSignConf ds@DocumentSigning {..} now = do
       return $ Ok Remove
     NetsSignStatusFailure fault -> do
       dbUpdate $ UpdateDocumentSigning signingSignatoryID True (netsFaultText fault)
-      return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
+      return . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
     NetsSignStatusInProgress -> do
       dbUpdate $ UpdateDocumentSigning signingSignatoryID False "nets_in_progress"
-      return $ Ok $ RerunAfter $ iseconds secondsToRetry
+      return . Ok . RerunAfter $ iseconds secondsToRetry
     NetsSignStatusAlreadySigned -> return $ Ok Remove
 
 
@@ -367,9 +365,8 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
       noConfigurationWarning "EIDService Esigning"
       throwE $ Failed Remove
 
-    let serviceToken =
-          fromMaybe (eidServiceConf ^. #eidServiceToken)
-            $ (ugwpSettings ugwp ^. #eidServiceToken)
+    let serviceToken = fromMaybe (eidServiceConf ^. #eidServiceToken)
+                                 (ugwpSettings ugwp ^. #eidServiceToken)
     return $ eidServiceConf & #eidServiceToken .~ serviceToken
 
   est <- do
@@ -381,7 +378,7 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
   ts          <- whenNothing mts $ throwE (Failed Remove)
 
   let mergeWithStatus newStatus =
-        dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newStatus }
+        dbUpdate . MergeEIDServiceTransaction $ est { estStatus = newStatus }
 
   case ts of
     EIDServiceTransactionStatusCompleteAndSuccess -> do
@@ -432,10 +429,9 @@ signFromESignature DocumentSigning {..} now = do
                                           sl
   fieldsWithFiles <- fieldsToFieldsWithFiles signingFields
 
-  dbUpdate
-    $ UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) initialActor
+  dbUpdate $ uncurry (UpdateFieldsForSigning sl) fieldsWithFiles initialActor
 
-  slWithUpdatedName    <- fromJust <$> getSigLinkFor signingSignatoryID <$> theDocument
+  slWithUpdatedName    <- fromJust . getSigLinkFor signingSignatoryID <$> theDocument
   actorWithUpdatedName <- recreatedSignatoryActor signingTime
                                                   signingClientTime
                                                   signingClientName

@@ -132,8 +132,8 @@ toOAuthAuthorizationHideSecrets oauth = OAuthAuthorizationHideSecrets
 unjsonOAuthAuthorization :: UnjsonDef OAuthAuthorization
 unjsonOAuthAuthorization =
   objectOf
-    $   pure OAuthAuthorization
-    <*> fieldBy "apitoken" oaAPIToken "OAuth API token" unjsonAPIToken
+    $   OAuthAuthorization
+    <$> fieldBy "apitoken" oaAPIToken "OAuth API token" unjsonAPIToken
     <*> field "apisecret" oaAPISecret "OAuth API secret"
     <*> fieldBy "accesstoken" oaAccessToken "OAuth access token" unjsonAPIToken
     <*> field "accesssecret" oaAccessSecret "OAuth access secret"
@@ -141,8 +141,8 @@ unjsonOAuthAuthorization =
 unjsonOAuthAuthorizationHideSecrets :: UnjsonDef OAuthAuthorizationHideSecrets
 unjsonOAuthAuthorizationHideSecrets =
   objectOf
-    $   pure OAuthAuthorizationHideSecrets
-    <*> fieldBy "apitoken" oahsAPIToken "OAuth API token" unjsonAPIToken
+    $   OAuthAuthorizationHideSecrets
+    <$> fieldBy "apitoken" oahsAPIToken "OAuth API token" unjsonAPIToken
     <*> field "apisecret" oahsAPISecret "OAuth API secret"
     <*> fieldBy "accesstoken" oahsAccessToken "OAuth access token" unjsonAPIToken
     <*> field "accesssecret" oahsAccessSecret "OAuth access secret"
@@ -153,7 +153,7 @@ unjsonOAuthAuthorizationHideSecrets =
 {- |
    Create a new API Token for a User. A User can have an unlimited number of API Tokens.
  -}
-data CreateAPIToken = CreateAPIToken UserID
+newtype CreateAPIToken = CreateAPIToken UserID
 instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreateAPIToken Bool where
   update (CreateAPIToken userid) = do
     token :: MagicHash  <- random
@@ -182,7 +182,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAPIToken Bool where
 {- |
    Get the API Tokens for a particular user, along with their API Secrets.
  -}
-data GetAPITokensForUser = GetAPITokensForUser UserID
+newtype GetAPITokensForUser = GetAPITokensForUser UserID
 instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] where
   query (GetAPITokensForUser uid) = do
     runQuery_ $ rawSQL
@@ -208,11 +208,11 @@ instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] wher
  -}
 data RequestTempCredentials = RequestTempCredentials OAuthTempCredRequest UTCTime
 instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestTempCredentials (Maybe (APIToken, MagicHash)) where
-  update (RequestTempCredentials (OAuthTempCredRequest { tcPrivileges = [] }) _) =
+  update (RequestTempCredentials OAuthTempCredRequest { tcPrivileges = [] } _) =
     return Nothing
-  update (RequestTempCredentials (OAuthTempCredRequest { tcPrivileges }) _)
+  update (RequestTempCredentials OAuthTempCredRequest { tcPrivileges } _)
     | APIPersonal `elem` tcPrivileges = return Nothing
-  update (RequestTempCredentials (OAuthTempCredRequest {..}) time) = do
+  update (RequestTempCredentials OAuthTempCredRequest {..} time) = do
     temptoken :: MagicHash  <- random
     tempsecret :: MagicHash <- random
     verifier :: MagicHash   <- random
@@ -259,10 +259,9 @@ data VerifyCredentials = VerifyCredentials APIToken UserID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m VerifyCredentials (Maybe (URI, MagicHash)) where
   update (VerifyCredentials token uid time) = do
     runQuery_ $ rawSQL
-      ("UPDATE oauth_temp_credential SET user_id = $1 WHERE user_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = $2) AND id = $3 AND temp_token = $4 AND expires > $5 RETURNING callback, verifier"
-      )
+      "UPDATE oauth_temp_credential SET user_id = $1 WHERE user_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = $2) AND id = $3 AND temp_token = $4 AND expires > $5 RETURNING callback, verifier"
       (uid, uid, atID token, atToken token, time)
-    join <$> (fetchMaybe $ \(cb, vr) -> (, vr) <$> parseURI cb)
+    join <$> fetchMaybe (\(cb, vr) -> (, vr) <$> parseURI cb)
 
 {- |
    If the User does not want to grant privileges, we delete the request and return the callback URL.
@@ -273,7 +272,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DenyCredentials (Maybe URI) whe
     runQuery_ $ rawSQL
       "DELETE FROM oauth_temp_credential WHERE (id = $1 AND temp_token = $2) RETURNING callback"
       (atID token, atToken token)
-    join <$> (fetchMaybe $ parseURI . runIdentity)
+    join <$> fetchMaybe (parseURI . runIdentity)
 
 {- |
    For a given temp token, return the company name and list of requested privileges.
@@ -311,7 +310,7 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
  -}
 data RequestAccessToken = RequestAccessToken OAuthTokenRequest UTCTime
 instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestAccessToken (Maybe (APIToken, MagicHash)) where
-  update (RequestAccessToken (OAuthTokenRequest {..}) time) = do
+  update (RequestAccessToken OAuthTokenRequest {..} time) = do
     accesstoken :: MagicHash  <- random
     accesssecret :: MagicHash <- random
     runQuery_ $ rawSQL
@@ -418,7 +417,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Ma
 
    Returns the Access Token ID, the Company name, and the list of granted privileges
  -}
-data GetGrantedPrivileges = GetGrantedPrivileges UserID
+newtype GetGrantedPrivileges = GetGrantedPrivileges UserID
 instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivilege])] where
   query (GetGrantedPrivileges userid) = do
     runQuery_ $ rawSQL
@@ -483,7 +482,7 @@ instance MonadDB m => DBUpdate m DeletePrivilege Bool where
 {- |
    Each user has a single personal token used to access the api for their own account.
  -}
-data GetPersonalToken = GetPersonalToken UserID
+newtype GetPersonalToken = GetPersonalToken UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe OAuthAuthorization) where
   query (GetPersonalToken userid) = do
     runQuery_ $ rawSQL
@@ -527,7 +526,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBQuery m GetRecentPersonalTo
    Create a personal token. Each User can have only one, so we should fail
    if we already have one
  -}
-data CreatePersonalToken = CreatePersonalToken UserID
+newtype CreatePersonalToken = CreatePersonalToken UserID
 instance (MonadDB m, MonadTime m, MonadThrow m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
   update (CreatePersonalToken userid) = do
     m <- DB.query $ GetPersonalToken userid
@@ -569,7 +568,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m, CryptoRNG m) => DBUpdate m Creat
 {- |
    Delete the personal token for a user.
  -}
-data DeletePersonalToken = DeletePersonalToken UserID
+newtype DeletePersonalToken = DeletePersonalToken UserID
 instance MonadDB m => DBUpdate m DeletePersonalToken Bool where
   update (DeletePersonalToken userid) = do
     r <- runQuery $ rawSQL

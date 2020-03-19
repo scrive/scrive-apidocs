@@ -20,7 +20,6 @@ import Data.Unjson
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard ()
-import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
 import qualified Data.Set as S
 
@@ -53,12 +52,12 @@ userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
     Just (ConstantUrlScheme _) -> "Existing ConstantUrlScheme"
     Just (SalesforceScheme _) -> "Existing SalesforceScheme"
     Just (BasicAuthScheme _ _) -> "Existing BasicAuthScheme"
-    Just (OAuth2Scheme _ _ _ _) -> "Existing OAuth2Scheme"
-    Just (Hi3GScheme _ _ _ _) -> "Existing Hi3GScheme"
+    Just OAuth2Scheme{} -> "Existing OAuth2Scheme"
+    Just Hi3GScheme{} -> "Existing Hi3GScheme"
 
 userJSONUserDetails :: User -> JSONGen ()
 userJSONUserDetails user = do
-  value "id" $ showt $ user ^. #id
+  value "id" . showt $ user ^. #id
   value "fstname" $ getFirstName user
   value "sndname" $ getLastName user
   value "email" $ getEmail user
@@ -70,7 +69,7 @@ userJSONUserDetails user = do
   value "phone" $ user ^. #info % #phone
   value "companyadmin" $ user ^. #isCompanyAdmin
   value "companyposition" $ user ^. #info % #companyPosition
-  value "lang" $ codeFromLang $ getLang user
+  value "lang" . codeFromLang $ getLang user
   value "tos_accepted_time" $ utcTimeToAPIFormat <$> user ^. #hasAcceptedTOS
   objects "internaltags" . tagsJsons $ user ^. #internalTags
   objects "externaltags" . tagsJsons $ user ^. #externalTags
@@ -80,15 +79,15 @@ unjsonUser = unjsonUserPartial identity
 
 unjsonUserWithPassword :: Text -> UnjsonDef User
 unjsonUserWithPassword password =
-  unjsonUserPartial (<* (fieldReadonly "password" (const password) "User password"))
+  unjsonUserPartial (<* fieldReadonly "password" (const password) "User password")
 
 -- This is a duplicate def since the UserGroup API needs to support parsing Users
 -- This JSON structure mimics userJSONUserDetails rather than the actual data structure
 unjsonUserPartial
   :: (CAF.Ap (FieldDef User) User -> CAF.Ap (FieldDef User) User) -> UnjsonDef User
 unjsonUserPartial passwordDef = objectOf $ passwordDef
-  (    pure defaultUser
-  <*   (fieldReadonly "id" (^. #id) "User ID")
+  (    defaultUser
+  <$   fieldReadonly "id" (^. #id) "User ID"
   <**> (    fieldBy "fstname" getFirstName "User First Name" unjsonDef
        <**> pure (#info % #firstName .~)
        )
@@ -129,7 +128,7 @@ unjsonUserPartial passwordDef = objectOf $ passwordDef
   where
     unjsonUserLang :: UnjsonDef Lang
     unjsonUserLang = unjsonInvmapR
-      ((maybe (fail "Can't parse Lang") return) . langFromCode)
+      (maybe (fail "Can't parse Lang") return . langFromCode)
       codeFromLang
       unjsonDef
 
@@ -155,19 +154,17 @@ companyJSONAdminOnly ugwp = do
       ugSettingsIsInherited = isNothing $ ug ^. #settings
       ugAddressIsInherited  = isNothing $ ug ^. #address
   runJSONGen $ do
-    value "companyid" $ show $ ug ^. #id
+    value "companyid" . show $ ug ^. #id
     companyAddressJson activeAddress
     value "companyname" $ ug ^. #name
-    companySettingsJson $ activeSettings
+    companySettingsJson activeSettings
     objects "companyinternaltags" . tagsJsons $ ug ^. #internalTags
     objects "companyexternaltags" . tagsJsons $ ug ^. #externalTags
 
-    whenJust (mInheritedAddress) $ object "companyinheritedaddress" . companyAddressJson
+    whenJust mInheritedAddress $ object "companyinheritedaddress" . companyAddressJson
     value "companyaddressisinherited" ugAddressIsInherited
 
-    whenJust (mInheritedSettings)
-      $ object "companyinheritedsettings"
-      . companySettingsJson
+    whenJust mInheritedSettings $ object "companyinheritedsettings" . companySettingsJson
     value "companysettingsisinherited" ugSettingsIsInherited
 
     value "parentid" . fmap show $ ug ^. #parentGroupID
@@ -263,7 +260,7 @@ companyStatsToJSON formatTime textName timestamps uuss =
         documentStatsToJSON summary
 
         objects "user_stats" . for uusGroup $ \uus -> do
-          value "date" $ formatTime $ uusTimeWindowStart uus
+          value "date" . formatTime $ uusTimeWindowStart uus
           value "email" $ uusUserEmail uus
           value "name" $ uusUserName uus
           documentStatsToJSON $ uusDocumentStats uus

@@ -195,7 +195,7 @@ testAllInheritedRolesAreReturned = do
     roleTypes =
       map (\(Object o) -> H.lookup "role_type" o) . V.toList $ vectorOfJsonRoles
   assertEqual "2 UserAdminAR roles are returned" 2
-    $ length
+    . length
     . filter (== Just "user_admin")
     $ roleTypes
 
@@ -377,7 +377,7 @@ testNonGodModeUserCannotAddRoleFromNonExistentUser = do
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   let jsonString = roleJSON (user ^. #id) (unsafeUserID 321)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
-  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
+  res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
   assertEqual "non-admin user can't add role for non-existent user (src)" 403 $ rsCode res
 
 testNonGodModeUserCannotAddRoleForNonExistentUser :: TestEnv ()
@@ -389,7 +389,7 @@ testNonGodModeUserCannotAddRoleForNonExistentUser = do
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   let jsonString = roleJSON (unsafeUserID 321) (user ^. #id)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
-  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
+  res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
   assertEqual "non-admin user can't add role for non-existent user (trg)" 403 $ rsCode res
 
 testGodModeUserCannotAddRoleFromNonExistentUser :: TestEnv ()
@@ -401,7 +401,7 @@ testGodModeUserCannotAddRoleFromNonExistentUser = do
   ctx <- setUser user <$> mkContext defaultLang
   let jsonString = roleJSON (user ^. #id) (unsafeUserID 321)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
-  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
+  res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
   assertEqual "admin user can't add role for non-existent user (src)" 403 $ rsCode res
   where
     emailAddress = "dave.lister@scrive.com"
@@ -416,7 +416,7 @@ testGodModeUserCannotAddRoleForNonExistentUser = do
   ctx <- setUser user <$> mkContext defaultLang
   let jsonString = roleJSON (unsafeUserID 321) (user ^. #id)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
-  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
+  res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
   assertEqual "admin user can't add role for non-existent user (trg)" 403 $ rsCode res
   where
     emailAddress = "dave.lister@scrive.com"
@@ -436,7 +436,7 @@ testNonGodModeUserCannotAddRoleWithoutPermissions = do
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   let jsonString = roleJSON (user ^. #id) uid2
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
-  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
+  res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
   assertEqual "non-admin user can't add role without permissions (trg)" 403 $ rsCode res
 
 testNonGodModeUserCanAddRoleWithPermissions :: TestEnv ()
@@ -448,7 +448,7 @@ testNonGodModeUserCanAddRoleWithPermissions = do
     (user2 ^. #groupID)
   let jsonText = roleUserAdminJSON (user2 ^. #id) (user2 ^. #groupID)
   req <- mkRequest POST [("role", inText jsonText)]
-  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
+  res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
   assertEqual "non-admin user can add role with permissions (trg)" 200 $ rsCode res
 
 roleUserAdminJSON :: UserID -> UserGroupID -> Text
@@ -484,7 +484,7 @@ testGodModeUserCanAddRoleWithoutPermissions = do
   ctx <- setUser user <$> mkContext defaultLang
   let jsonString = roleJSON (user ^. #id) uid2
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
-  res <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
+  res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
   assertEqual "admin user can add role without permissions (trg)" 200 $ rsCode res
   where
     emailAddress = "dave.lister@scrive.com"

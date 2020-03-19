@@ -99,24 +99,31 @@ instance ToSQL AuthenticationProvider where
 
 ----------------------------------------
 
--- | General version of inserting some authentication for a given signatory or replacing existing one.
-data MergeAuthenticationInternal = MergeAuthenticationInternal AuthenticationKind SessionID SignatoryLinkID (forall v n. (MonadState v n, SqlSet v) => n ())
-instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () where
-  -- Note: after document is signed, existing eid_authentication record will
-  -- keep being overwritten every time authenticate to view archived routine
-  -- is completed.
-  update (MergeAuthenticationInternal authKind sid slid setDedicatedAuthFields) = do
-    runQuery_ . sqlInsert "eid_authentications" $ do
+-- | General version of inserting some authentication for a given signatory or
+-- replacing existing one.
+--
+-- Note: after document is signed, existing eid_authentication record will keep
+-- being overwritten every time authenticate to view archived routine is
+-- completed.
+mergeAuthenticationInternal
+  :: (MonadDB m, MonadMask m)
+  => AuthenticationKind
+  -> SessionID
+  -> SignatoryLinkID
+  -> (forall  v n . (MonadState v n, SqlSet v) => n ())
+  -> m ()
+mergeAuthenticationInternal authKind sid slid setDedicatedAuthFields = do
+  runQuery_ . sqlInsert "eid_authentications" $ do
+    setFields
+    sqlOnConflictOnColumns ["signatory_link_id", "auth_kind"] . sqlUpdate "" $ do
       setFields
-      sqlOnConflictOnColumns ["signatory_link_id", "auth_kind"] . sqlUpdate "" $ do
-        setFields
-    where
-      setFields :: (MonadState v n, SqlSet v) => n ()
-      setFields = do
-        sqlSet "signatory_link_id" slid
-        sqlSet "auth_kind"         authKind
-        sqlSet "session_id"        sid
-        setDedicatedAuthFields
+  where
+    setFields :: (MonadState v n, SqlSet v) => n ()
+    setFields = do
+      sqlSet "signatory_link_id" slid
+      sqlSet "auth_kind"         authKind
+      sqlSet "session_id"        sid
+      setDedicatedAuthFields
 
 
 -- | Insert bank id authentication for a given signatory or replace the existing one.
@@ -124,7 +131,7 @@ data MergeCGISEBankIDAuthentication = MergeCGISEBankIDAuthentication Authenticat
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication () where
   update (MergeCGISEBankIDAuthentication authKind sid slid CGISEBankIDAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                  CgiGrpBankID
         sqlSet "signature"                 cgisebidaSignature
         sqlSet "signatory_name"            cgisebidaSignatoryName
@@ -137,7 +144,7 @@ data MergeNetsNOBankIDAuthentication = MergeNetsNOBankIDAuthentication Authentic
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDAuthentication () where
   update (MergeNetsNOBankIDAuthentication authKind sid slid NetsNOBankIDAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                NetsNOBankID
         sqlSet "internal_provider"       netsNOBankIDInternalProvider
         sqlSet "signature"               netsNOBankIDCertificate
@@ -150,7 +157,7 @@ data MergeNetsDKNemIDAuthentication = MergeNetsDKNemIDAuthentication Authenticat
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDAuthentication () where
   update (MergeNetsDKNemIDAuthentication authKind sid slid NetsDKNemIDAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                NetsDKNemID
         sqlSet "internal_provider"       netsDKNemIDInternalProvider
         sqlSet "signature"               netsDKNemIDCertificate
@@ -160,7 +167,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDAuthentication (
 data MergeSMSPinAuthentication = MergeSMSPinAuthentication AuthenticationKind SessionID SignatoryLinkID Text
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeSMSPinAuthentication () where
   update (MergeSMSPinAuthentication authKind sid slid mobile) = do
-    dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+    mergeAuthenticationInternal authKind sid slid $ do
       sqlSet "provider"               SMSPinAuth
       sqlSet "signatory_phone_number" mobile
 
@@ -169,7 +176,7 @@ data MergeNetsFITupasAuthentication = MergeNetsFITupasAuthentication Authenticat
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsFITupasAuthentication () where
   update (MergeNetsFITupasAuthentication authKind sid slid NetsFITupasAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                NetsFITupas
         sqlSet "signatory_name"          netsFITupasSignatoryName
         sqlSet "signatory_date_of_birth" netsFITupasDateOfBirth
@@ -179,7 +186,7 @@ data MergeEIDServiceVerimiAuthentication = MergeEIDServiceVerimiAuthentication A
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceVerimiAuthentication () where
   update (MergeEIDServiceVerimiAuthentication authKind sid slid EIDServiceVerimiAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"               VerimiAuth
         sqlSet "signatory_name"         eidServiceVerimiName
         sqlSet "signatory_email"        eidServiceVerimiVerifiedEmail
@@ -190,7 +197,7 @@ data MergeEIDServiceIDINAuthentication = MergeEIDServiceIDINAuthentication Authe
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINAuthentication () where
   update (MergeEIDServiceIDINAuthentication authKind sid slid EIDServiceNLIDINAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                IDINAuth
         sqlSet "signatory_name"          eidServiceIDINName
         sqlSet "signatory_phone_number"  eidServiceIDINVerifiedPhone
@@ -202,7 +209,7 @@ data MergeEIDServiceNemIDAuthentication = MergeEIDServiceNemIDAuthentication Aut
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNemIDAuthentication () where
   update (MergeEIDServiceNemIDAuthentication authKind sid slid EIDServiceDKNemIDAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                NemIDAuth
         sqlSet "internal_provider"       eidServiceNemIDInternalProvider
         sqlSet "signature"               eidServiceNemIDCertificate
@@ -214,7 +221,7 @@ data MergeEIDServiceNOBankIDAuthentication = MergeEIDServiceNOBankIDAuthenticati
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNOBankIDAuthentication () where
   update (MergeEIDServiceNOBankIDAuthentication authKind sid slid EIDServiceNOBankIDAuthentication {..})
     = do
-      dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+      mergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                NOBankIDAuth
         sqlSet "internal_provider"       eidServiceNOBankIDInternalProvider
         sqlSet "signature"               eidServiceNOBankIDCertificate
@@ -256,7 +263,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthe
 
 fetchEAuthentication
   :: ( AuthenticationProvider
-     , (Maybe Int16)
+     , Maybe Int16
      , Maybe ByteString
      , Maybe Text
      , Maybe Text

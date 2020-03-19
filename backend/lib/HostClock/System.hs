@@ -10,7 +10,7 @@ import qualified Data.Text as T
 getOffset :: [Text] -> IO Double
 getOffset ntpservers = do
   a <- readProcess "ntpdate" (words "-q -p 1" <> (T.unpack <$> ntpservers)) ""
-  case take 3 $ reverse $ words $ last $ lines a of
+  case take 3 . reverse $ words (last $ lines a) of
     ["sec", offset, "offset"] -> return (read $ T.pack offset)
     _ -> fail $ "HostClock.System.getOffset:  cannot parse " <> show a
 

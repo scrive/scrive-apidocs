@@ -15,6 +15,7 @@ module Doc.API.V2.Calls.SignatoryCalls (
 
 import Control.Conditional (whenM)
 import Control.Monad.Extra (whenMaybe)
+import Data.Bifunctor
 import Data.Unjson
 import Happstack.Server.Types
 import Log
@@ -69,13 +70,12 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
 
     -- Parameters
-    rejectReason <- (fmap T.strip)
-      <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
+    rejectReason <- fmap T.strip <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
 
     -- API call actions
-    sl    <- guardGetSignatoryFromIdForDocument slid
-    ctx   <- getContext
-    actor <- signatoryActor ctx sl
+    sl           <- guardGetSignatoryFromIdForDocument slid
+    ctx          <- getContext
+    actor        <- signatoryActor ctx sl
 
     switchLang . getLang =<< theDocument
     dbUpdate $ RejectDocument slid (isApprover sl) rejectReason actor
@@ -83,7 +83,7 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
 
     -- Result
     doc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
+    return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
 
 
 docApiV2SigForwardSigning :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -119,7 +119,7 @@ docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
 
     -- Result
     doc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
+    return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
 
 docApiV2SigSigningStatusCheck
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -139,14 +139,14 @@ docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api 
         internalError
     logInfo "Status Check" $ object
       ["in_progress" .= inProgress, "signed" .= signed, "status" .= mLastStatus]
-    return $ Ok $ JSObject
-      ( J.toJSObject
-      $ [ ("in_progress", JSBool inProgress)
+    return . Ok $ JSObject
+      (J.toJSObject
+        [ ("in_progress", JSBool inProgress)
         , ("signed"     , JSBool signed)
         , ( "last_check_status"
           , case mLastStatus of
             Nothing -> JSNull
-            Just t  -> JSString $ J.toJSString $ T.unpack t
+            Just t  -> JSString . J.toJSString $ T.unpack t
           )
         ]
       )
@@ -160,7 +160,7 @@ docApiV2SigSigningCancel did slid = logDocumentAndSignatory did slid . api $ do
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
     dbUpdate $ CleanAllScheduledDocumentSigning slid
-    return $ Ok $ ()
+    return $ Ok ()
 
 
 docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -188,8 +188,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     fields <- apiV2ParameterObligatory
       (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     let SignatoryFieldsValuesForSigning tmpFields = fields
-        fieldsShortLog =
-          map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
+        fieldsShortLog = map (second signatoryFieldTMPValueShortLog) tmpFields
     logInfo "Fields provided for signing" $ object ["fields" .= show fieldsShortLog]
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     consentResponses <- apiV2ParameterDefault
@@ -201,9 +200,8 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     when (signatorylinkauthenticationtosignmethod sl == SMSPinAuthenticationToSign) $ do
       pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
       validPin <- checkSignatoryPinToSign slid fields pin
-      if not validPin
-        then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
-        else return ()
+      unless validPin $ do
+        apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
     -- Return
     return $ Ok ()
 
@@ -232,7 +230,7 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
 
     -- Result
     doc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
+    return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
 
 -- | In the case of SMS or 'standard' (i.e. none) authentication, sign the
 -- document for the given signatory right away; otherwise schedule a signing
@@ -263,8 +261,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     fields <- apiV2ParameterObligatory
       (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     let SignatoryFieldsValuesForSigning tmpFields = fields
-        fieldsShortLog =
-          map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
+        fieldsShortLog = map (second signatoryFieldTMPValueShortLog) tmpFields
     logInfo "Fields provided for signing" $ object ["fields" .= show fieldsShortLog]
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     guardThatSignaturesAreFilled slid fields =<< theDocument
@@ -329,7 +326,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
                                            provider
                                            consentResponses
     doc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
+    return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
 
 docApiV2SigSendSmsPinToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ do
@@ -345,11 +342,13 @@ docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ 
       apiError
         $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
     -- Parameters
-    let
-      mobileEditableBySignatory = Just True == join
-        (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
+    let mobileEditableBySignatory =
+          Just True
+            == (   fieldEditableBySignatory
+               =<< getFieldByIdentity MobileFI (signatoryfields sl)
+               )
     let slidMobile = getMobile sl
-    mobile <- if (not (T.null slidMobile) && not mobileEditableBySignatory)
+    mobile <- if not (T.null slidMobile) && not mobileEditableBySignatory
       then case asValidPhoneForSMS slidMobile of
         Good v -> return v
         _ ->
@@ -422,9 +421,9 @@ docApiV2SigIdentifyToViewWithSmsPin did slid =
       -- Record evidence only for auth-to-view (i.e. if the document is not
       -- closed).
       whenM ((== AuthenticationToView) . mkAuthKind <$> theDocument) $ do
-        void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           AuthenticatedToViewEvidence
-          (eventFields)
+          eventFields
           (Just sl)
           Nothing
           sActor
@@ -467,8 +466,7 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
                                   )
     -- Return
     updatedDoc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid updatedDoc), d))
-      updatedDoc
+    return $ Ok (unjsonDocument (documentAccessForSlid slid updatedDoc), updatedDoc)
 
 docApiV2SetHighlightForPage :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ do
@@ -493,4 +491,4 @@ docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ 
         dbUpdate $ ClearHighlightingForPageAndSignatory sl (fromIntegral page) actor
     -- Result
     doc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
+    return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)

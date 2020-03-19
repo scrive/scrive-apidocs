@@ -17,7 +17,7 @@ import TestKontra
 flashMessagesTests :: TestEnvSt -> Test
 flashMessagesTests _ = testGroup
   "FlashMessages"
-  [testProperty "Flash cookie value is json in expected format" $ flashCookieParse]
+  [testProperty "Flash cookie value is json in expected format" flashCookieParse]
 
 
 instance Arbitrary FlashMessage where
@@ -28,12 +28,12 @@ instance Arbitrary FlashType where
 
 flashCookieParse :: Property
 flashCookieParse = mapSize (`div` 2) $ \f -> ioProperty $ do -- scale back a bit or it takes too long
-  case (decode $ toCookieValue f) of
+  case decode $ toCookieValue f of
     (Ok jresp) -> do
-      r <- return $ runIdentity $ withJSValue jresp $ do
-        (t :: Maybe String) <- fromJSValueField "type"
-        (c :: Maybe String) <- fromJSValueField "content"
-        return (t, c)
+      let r = runIdentity . withJSValue jresp $ do
+            (t :: Maybe String) <- fromJSValueField "type"
+            (c :: Maybe String) <- fromJSValueField "content"
+            return (t, c)
       case r of
         (Just t, Just c) ->
           return $ (t `elem` ["success", "error"]) && (urlDecode c == flashMessage f)

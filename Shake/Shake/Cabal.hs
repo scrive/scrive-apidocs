@@ -20,6 +20,7 @@ module Shake.Cabal ( CabalFile(packageId, allExtensions)
                    , allFLibHsSourceDirs
                    ) where
 
+import Data.Bifunctor
 import Data.Maybe
 import Distribution.Backpack.ComponentsGraph
 import Distribution.Compat.Graph as Graph
@@ -45,7 +46,7 @@ import Shake.Utils
 type CabalComponentName = ComponentName
 
 unComponentName :: CabalComponentName -> String
-unComponentName = fromMaybe "" . fmap unUnqualComponentName . componentNameString
+unComponentName = maybe "" unUnqualComponentName . componentNameString
 
 mkExeName, mkSubLibName, mkTestName, mkBenchName :: String -> ComponentName
 mkExeName = CExeName . mkUnqualComponentName
@@ -115,15 +116,14 @@ parseCabalFile cabalFile = do
     , allExtensions    = exts
     , hsSourceDirsMap  = M.map (srcDirs . Graph.nodeValue) . Graph.toMap $ compGraph
     , componentDepsMap = M.fromList
-                         . map (\(comp, cnames) -> (componentName comp, cnames))
+                         . map (first componentName)
                          . componentsGraphToList
                          $ compGraph
     }
 
 -- | All components that this component depends on.
 componentDependencies :: ComponentName -> CabalFile -> [ComponentName]
-componentDependencies cname cabalFile =
-  M.findWithDefault [] cname . componentDepsMap $ cabalFile
+componentDependencies cname = M.findWithDefault [] cname . componentDepsMap
 
 -- | List of hs-source-dirs of all components.
 allHsSourceDirs :: CabalFile -> [FilePath]

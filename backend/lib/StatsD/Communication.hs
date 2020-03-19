@@ -21,8 +21,8 @@ sendStats
   -> m ()
 sendStats conf namespace nvs = do
   addrinfos <- liftBase
-    $ getAddrInfo Nothing (Just $ statsdHost conf) (Just $ show $ statsdPort conf)
-  case (addrinfos) of
+    $ getAddrInfo Nothing (Just $ statsdHost conf) (Just . show $ statsdPort conf)
+  case addrinfos of
     []               -> logAttention_ "Can resolve StatsD server address"
     (serveraddr : _) -> liftBase $ E.bracket (open serveraddr) close sendData
   where
@@ -32,4 +32,4 @@ sendStats conf namespace nvs = do
       return sock
     sendData sock = forM_ nvs $ \(n, v) -> do
       let statName = statsdPrefix conf <> "_" <> namespace <> "." <> n
-      liftBase $ sendAll sock $ T.encodeUtf8 $ statName <> ":" <> showt v <> "|g"
+      liftBase . sendAll sock $ T.encodeUtf8 (statName <> ":" <> showt v <> "|g")

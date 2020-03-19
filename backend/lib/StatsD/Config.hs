@@ -12,8 +12,8 @@ data StatsDConf = StatsDConf
 unjsonStatsDConf :: UnjsonDef StatsDConf
 unjsonStatsDConf =
   objectOf
-    $   pure StatsDConf
-    <*> field "host"   statsdHost   "StatsD host"
+    $   StatsDConf
+    <$> field "host"   statsdHost   "StatsD host"
     <*> field "port"   statsdPort   "StatsD server port"
     <*> field "prefix" statsdPrefix "StatsD tenant ID"
 

@@ -52,13 +52,13 @@ handleMailGunEvents = localDomain "handleMailGunEvents" $ do
 readEventType :: Maybe Text -> Mailer (Maybe MailGunEvent)
 readEventType (Just "opened"      ) = return $ Just MG_Opened
 readEventType (Just "delivered"   ) = return $ Just MG_Delivered
-readEventType (Just "clicked"     ) = getField "url" >>= return . fmap MG_Clicked
-readEventType (Just "unsubscribed") = getField "domain" >>= return . fmap MG_Unsubscribed
-readEventType (Just "complained"  ) = getField "domain" >>= return . fmap MG_Complained
+readEventType (Just "clicked"     ) = fmap MG_Clicked <$> getField "url"
+readEventType (Just "unsubscribed") = fmap MG_Unsubscribed <$> getField "domain"
+readEventType (Just "complained"  ) = fmap MG_Complained <$> getField "domain"
 readEventType (Just "bounced"     ) = do
   domain <- getField "domain"
   code   <- getField "code"
   err    <- getField "error"
   return (MG_Bounced <$> domain <*> code <*> err)
-readEventType (Just "dropped") = getField "reason" >>= return . fmap MG_Dropped
+readEventType (Just "dropped") = fmap MG_Dropped <$> getField "reason"
 readEventType _                = return Nothing

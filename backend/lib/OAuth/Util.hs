@@ -35,7 +35,7 @@ getAuthorizationHeader = do
     Just (HeaderPair _ auths) -> do
       case BS.toString <$> listToMaybe auths of
         Nothing   -> return $ Just []
-        Just auth -> return $ Just $ splitAuthorization $ T.pack auth
+        Just auth -> return . Just $ splitAuthorization (T.pack auth)
 
 getTempCredRequest :: Kontrakcja m => m (Either Text OAuthTempCredRequest)
 getTempCredRequest = do
@@ -48,8 +48,8 @@ getTempCredRequest = do
     Just params -> do
       mprivilegesstring <- getDataFn' (look "privileges")
       let customParseURI s = case parseURI s of
-            Just (URI { uriScheme = "data:" }) -> Nothing
-            Just (URI { uriScheme = "javascript:" }) -> Nothing
+            Just URI { uriScheme = "data:" } -> Nothing
+            Just URI { uriScheme = "javascript:" } -> Nothing
             _ -> parseURI s
       let
         msigtype   = lookupAndRead "oauth_signature_method" params
@@ -85,10 +85,10 @@ getTempCredRequest = do
           )
       if not $ T.null errors
         then return $ Left errors
-        else return $ Right $ OAuthTempCredRequest
+        else return . Right $ OAuthTempCredRequest
           { tcCallback   = fromJust mcallback
           , tcAPIToken   = fromJust mapitoken
-          , tcAPISecret  = fromJust $ fst $ fromJust mapisecret
+          , tcAPISecret  = fromJust . fst $ fromJust mapisecret
           , tcPrivileges = fromJust mprivileges
           }
 
@@ -130,11 +130,11 @@ getTokenRequest = do
             )
       if not $ T.null errors
         then return $ Left errors
-        else return $ Right $ OAuthTokenRequest
+        else return . Right $ OAuthTokenRequest
           { trAPIToken   = fromJust mapitoken
-          , trAPISecret  = fromJust $ fst $ fromJust mapisecret
+          , trAPISecret  = fromJust . fst $ fromJust mapisecret
           , trTempToken  = fromJust mtemptoken
-          , trTempSecret = fromJust $ snd $ fromJust mapisecret
+          , trTempSecret = fromJust . snd $ fromJust mapisecret
           , trVerifier   = fromJust mverifier
           }
 
@@ -143,7 +143,7 @@ getAuthorization :: Kontrakcja m => m (Maybe (Either Text OAuthAuthorization))
 getAuthorization = do
   eparams <- getAuthorizationHeader
   case eparams of
-    Nothing     -> return $ Nothing
+    Nothing     -> return Nothing
     Just params -> do
       let msigtype   = lookupAndRead "oauth_signature_method" params
           mapisecret = splitSignature =<< lookupAndRead "oauth_signature" params
@@ -172,12 +172,12 @@ getAuthorization = do
             |> []
             )
       if not $ T.null errors
-        then return $ Just $ Left errors
-        else return $ Just $ Right $ OAuthAuthorization
+        then return . Just $ Left errors
+        else return . Just . Right $ OAuthAuthorization
           { oaAPIToken     = fromJust mapitoken
-          , oaAPISecret    = fromJust $ fst $ fromJust mapisecret
+          , oaAPISecret    = fromJust . fst $ fromJust mapisecret
           , oaAccessToken  = fromJust macctoken
-          , oaAccessSecret = fromJust $ snd $ fromJust mapisecret
+          , oaAccessSecret = fromJust . snd $ fromJust mapisecret
           }
 
 getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either Text (User, Actor)))
@@ -185,7 +185,7 @@ getOAuthUser privs = do
   eauth <- getAuthorization
   case eauth of
     Nothing           -> return Nothing
-    Just (Left  l   ) -> return $ Just $ Left $ "OAuth headers could not be parsed: " <> l
+    Just (Left  l   ) -> return . Just $ Left ("OAuth headers could not be parsed: " <> l)
     Just (Right auth) -> Just <$> getUserFromOAuth auth privs
 
 getUserFromOAuth

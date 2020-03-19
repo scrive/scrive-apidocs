@@ -28,7 +28,7 @@ data ShakeFlag = TransifexUser     String
                | TransifexPassword String
                | TransifexLang     String
                | SrcSubdir         FilePath
-               | QuickFormatBranch String
+               | QuickBranch       String
                | NewBuild
                | OldBuild
                | OptimisationLevel OptimisationLevel
@@ -47,15 +47,15 @@ shakeFlags =
            (reqArg SrcSubdir "DIR")
            "Source subdirectory (for 'hindent'/'stylish-haskell'/'hlint')"
   , Option ""
-           ["quick-format-branch"]
-           (reqArg QuickFormatBranch "GIT_MAIN_BRANCH")
-           "Git branch to compare for quick formatting"
+           ["quick-branch"]
+           (reqArg QuickBranch "GIT_MAIN_BRANCH")
+           "Git branch to compare for quick hlint/refactor/formatting"
   , Option "" ["new-build"] (noArg NewBuild) "Use 'v2-build' (default)."
   , Option "" ["old-build"] (noArg OldBuild) "Don't use 'v2-build'."
   , Option
     "O"
     ["enable-optimisation", "enable-optimization", "optimisation", "optimization"]
-    (optArg (bimap id OptimisationLevel . optimisationLevelFromString)
+    (optArg (second OptimisationLevel . optimisationLevelFromString)
             (OptimisationLevel DefaultOptimisation)
             "NUM"
     )
@@ -75,5 +75,5 @@ shakeFlags =
   ]
   where
     noArg flagVal = NoArg (Right flagVal)
-    reqArg toFlag name = ReqArg (Right . toFlag) name
-    optArg toFlag def name = OptArg (maybe (Right def) toFlag) name
+    reqArg toFlag = ReqArg (Right . toFlag)
+    optArg toFlag def = OptArg (maybe (Right def) toFlag)

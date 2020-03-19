@@ -161,7 +161,7 @@ testDocApiV2NewFromTemplateShared = do
       200
     assertEqual "Document should be template" True is_template
 
-  void $ randomUpdate $ SetDocumentSharing [did] True
+  void . randomUpdate $ SetDocumentSharing [did] True
   user <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
 
@@ -234,7 +234,7 @@ testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty = do
   ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
   did      <- getMockDocId <$> testDocApiV2New' ctx
 
-  contents <- liftIO $ readFile $ inTestDir
+  contents <- liftIO . readFile $ inTestDir
     "json/api_v2/test-DocUpdateConsentModuleOnNonSigningParty.json"
   response <- testRequestHelper ctx
                                 POST
@@ -251,7 +251,7 @@ testDocApiV2SigUpdateNoConsentResponses = do
   ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
   did      <- getMockDocId <$> testDocApiV2New' ctx
 
-  contents <- liftIO $ readFile $ inTestDir
+  contents <- liftIO . readFile $ inTestDir
     "json/api_v2/test-DocUpdateNoConsentResponses.json"
   void $ testRequestHelper ctx
                            POST
@@ -518,7 +518,7 @@ testDocApiV2SetAttachments = do
 testDocApiV2SetAttachmentsIncrementally :: TestEnv ()
 testDocApiV2SetAttachmentsIncrementally = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
   void $ mockDocTestRequestHelper
@@ -902,7 +902,7 @@ testDocApiV2SigChangeEmailAndMobile = do
                                   (docApiV2SigChangeEmailAndMobile did slid)
                                   200
     sl <- dbQuery $ GetSignatoryLinkByID did slid
-    assert $ not $ any ((== mhForEmail) . signatoryAccessTokenHash)
+    assert . not $ any ((== mhForEmail) . signatoryAccessTokenHash)
                        (signatoryaccesstokens sl)
     assert $ any ((== mhForSMS) . signatoryAccessTokenHash) (signatoryaccesstokens sl)
 
@@ -919,7 +919,7 @@ testDocApiV2SigChangeEmailAndMobile = do
                                   200
     sl <- dbQuery $ GetSignatoryLinkByID did slid
     assert $ any ((== mhForEmail) . signatoryAccessTokenHash) (signatoryaccesstokens sl)
-    assert $ not $ any ((== mhForSMS) . signatoryAccessTokenHash)
+    assert . not $ any ((== mhForSMS) . signatoryAccessTokenHash)
                        (signatoryaccesstokens sl)
 
 testDocApiV2GenerateShareableLink :: TestEnv ()
@@ -930,7 +930,7 @@ testDocApiV2GenerateShareableLink = replicateM_ 100 $ do
   doc  <- do
     fid  <- addNewRandomFile
     file <- randomQuery $ GetFileByFileID fid
-    doc2 <- rand 10 $ runOccurenceControl 0.5 $ startableDocumentOC (user ^. #id) file
+    doc2 <- rand 10 . runOccurenceControl 0.5 $ startableDocumentOC (user ^. #id) file
     let doc3 = doc2 { documentfolderid = fromJust $ user ^. #homeFolderID }
     did <- randomUpdate $ StoreDocumentForTesting doc3
     randomQuery $ GetDocumentByDocumentID did
@@ -943,7 +943,7 @@ testDocApiV2GenerateShareableLink = replicateM_ 100 $ do
                                (docApiV2GenerateShareableLink (documentid doc))
                                200
 
-      doc' <- randomQuery $ GetDocumentByDocumentID $ documentid doc
+      doc' <- randomQuery . GetDocumentByDocumentID $ documentid doc
 
       assertNotEqual "Shareable link hash should have changed"
                      (documentshareablelinkhash doc)
@@ -963,7 +963,7 @@ testDocApiV2DiscardShareableLink = replicateM_ 10 $ do
 
   void $ testRequestHelper ctx POST [] (docApiV2DiscardShareableLink (documentid doc)) 202
 
-  doc' <- randomQuery $ GetDocumentByDocumentID $ documentid doc
+  doc' <- randomQuery . GetDocumentByDocumentID $ documentid doc
   assertNothing $ documentshareablelinkhash doc'
 
 testDocApiV2AddImage :: TestEnv ()
@@ -1001,10 +1001,10 @@ testDocApiV2AddImage = do
 testDocInFolder :: TestEnv ()
 testDocInFolder = do
   admin    <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }
-  adminCtx <- (set #maybeUser (Just admin)) <$> mkContext defaultLang
+  adminCtx <- set #maybeUser (Just admin) <$> mkContext defaultLang
   nonAdmin <- instantiateUser
     $ randomUserTemplate { groupID = return $ admin ^. #groupID }
-  nonAdminCtx <- return $ set #maybeUser (Just nonAdmin) adminCtx
+  let nonAdminCtx       = set #maybeUser (Just nonAdmin) adminCtx
 
   let adminHomeFolderId = fromJust $ admin ^. #homeFolderID
   -- user tries to create document in admins home folder - should fail
@@ -1056,10 +1056,9 @@ testDocInFolder = do
               (getMockDocFolderId doc3)
 
   -- update document and move it to user home folder
-  let docMove =
-        inText $ T.pack "{\"folder_id\": \"" <> (showt adminHomeFolderId) <> "\"}"
+  let docMove = inText $ T.pack "{\"folder_id\": \"" <> showt adminHomeFolderId <> "\"}"
       rq_update_params = [("document", docMove)]
-      rq_update_code   = 200
+      rq_update_code = 200
 
   -- moving the document as regular user should not work
   _ <- mockDocTestRequestHelper nonAdminCtx
@@ -1097,7 +1096,7 @@ testDocApiV2AddEvidenceLogEvent = do
 
   _    <- testRequestHelper ctx
                             POST
-                            [("text", inText $ "blarg")]
+                            [("text", inText "blarg")]
                             (docApiV2AddEvidenceEvent did)
                             201
 
@@ -1133,7 +1132,7 @@ testDocUpdateImpersonateEID = do
     (rsCode res)
 
   -- grant impersonate role
-  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+  void . dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
 
   mdoc <- mockDocTestRequestHelper ctx POST params (docApiV2Update did) 200
   assertEqual "'user_group_to_impersonate_for_eid' should match"
@@ -1179,7 +1178,7 @@ testDocApiV2StartImpersonateEID = do
     (rsCode resFail)
 
   -- grant impersonate role again
-  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+  void . dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
 
   (resSucc, _) <- runTestKontra emptyPOSTRequest ctx $ docApiV2Start did
   assertEqual
@@ -1228,7 +1227,7 @@ testDocApiV2NewFromTemplateImpersonateEID = do
     (rsCode resFail)
 
   -- grant impersonate role again
-  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+  void . dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
 
   (resSucc, _) <- runTestKontra emptyPOSTRequest ctx $ docApiV2NewFromTemplate did
   assertEqual

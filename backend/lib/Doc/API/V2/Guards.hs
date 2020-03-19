@@ -82,25 +82,25 @@ import Util.SignatoryLinkUtils
 --
 -- Prefer to use a more specific guard if this satisfies your need.
 guardThatDocumentIs :: Kontrakcja m => (Document -> Bool) -> Text -> Document -> m ()
-guardThatDocumentIs f text doc = unless (f doc) $ apiError $ documentStateError text
+guardThatDocumentIs f text doc = unless (f doc) . apiError $ documentStateError text
 
 -- | Guard that the document status matches, otherwise throw a `documentStateError`
 guardDocumentStatus :: Kontrakcja m => DocumentStatus -> Document -> m ()
-guardDocumentStatus s doc =
-  unless (documentstatus doc == s) $ (apiError . documentStateError $ errorMsg)
-  where errorMsg = "The document status should be '" <> (showt s) <> "'."
+guardDocumentStatus s doc = unless (documentstatus doc == s)
+                                   (apiError . documentStateError $ errorMsg)
+  where errorMsg = "The document status should be '" <> showt s <> "'."
 
 
 guardThatDocumentCanBeTrashedByUser :: Kontrakcja m => User -> DocumentID -> m ()
 guardThatDocumentCanBeTrashedByUser =
   guardThatDocumentCanBeTrashedOrDeletedByUserWithCond
-    (not . isJust . signatorylinkdeleted)
+    (isNothing . signatorylinkdeleted)
     "The document is in Trash"
 
 guardThatDocumentCanBeDeletedByUser :: Kontrakcja m => User -> DocumentID -> m ()
 guardThatDocumentCanBeDeletedByUser =
   guardThatDocumentCanBeTrashedOrDeletedByUserWithCond
-    (not . isJust . signatorylinkreallydeleted)
+    (isNothing . signatorylinkreallydeleted)
     "Document was purged"
 
 guardThatDocumentCanBeTrashedOrDeletedByUserWithCond
@@ -109,16 +109,16 @@ guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did =
   withDocumentID did $ do
     let condAPIError = apiError . documentStateError $ errorMsg
     msl <- getSigLinkFor user <$> theDocument
-    case (msl) of -- This might be a user with an account
+    case msl of -- This might be a user with an account
       (Just sl) -> do
-        unless (cond sl) $ condAPIError
+        unless (cond sl) condAPIError
       Nothing -> do
         let msgNoAuthor =
               "Document doesn't have author signatory link connected with user account"
         asl <-
           apiGuardJust (serverError msgNoAuthor) =<< (getAuthorSigLink <$> theDocument)
         guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
-        unless (cond asl) $ condAPIError
+        unless (cond asl) condAPIError
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (not . isPending)
                         "Pending documents can not be trashed or deleted"
@@ -130,13 +130,11 @@ getAuthor :: Kontrakcja m => Document -> m User
 getAuthor doc = do
   let msgNoAuthor =
         "Document doesn't have author signatory link connected with user account"
-  authorUserId <-
-    apiGuardJust (serverError msgNoAuthor) $ (getAuthorSigLink doc >>= maybesignatory)
+  authorUserId <- apiGuardJust (serverError msgNoAuthor)
+                               (getAuthorSigLink doc >>= maybesignatory)
   let msgNoUser =
         "Document doesn't have author user account for the author signatory link"
-  author <- apiGuardJustM (serverError msgNoUser) $ dbQuery $ GetUserByIDIncludeDeleted
-    authorUserId
-  return author
+  apiGuardJustM (serverError msgNoUser) . dbQuery $ GetUserByIDIncludeDeleted authorUserId
 
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent
@@ -190,14 +188,14 @@ guardThatObjectVersionMatchesIfProvided did = do
   case reqObjectVersion of
     Nothing -> return ()
     Just ov ->
-      (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
+      dbQuery (CheckDocumentObjectVersionIs did (fromIntegral ov))
         `catchDBExtraException` (\e@DocumentObjectVersionDoesNotMatch{} ->
                                   apiError $ documentObjectVersionMismatch e
                                 )
 
 guardThatAttachmentDetailsAreConsistent :: Kontrakcja m => [AttachmentDetails] -> m ()
 guardThatAttachmentDetailsAreConsistent ads = do
-  guardUnique $ rights $ map aadFileOrFileParam ads
+  guardUnique . rights $ map aadFileOrFileParam ads
   guardUnique $ map aadName ads
 
   where
@@ -272,34 +270,34 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
     guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
     -- Check if either a valid SSN for authToView is set or is provided
     case mSSN of
-      Nothing ->
-        unless (isValidSSNForAuthenticationToView authType $ getPersonalNumber sl)
-          $ (  apiStateError
-            $  "Signatory does not have a valid personal number "
-            <> "for the authentication method and you did not provide one"
-            )
+      Nothing -> unless
+        (isValidSSNForAuthenticationToView authType $ getPersonalNumber sl)
+        (  apiStateError
+        $  "Signatory does not have a valid personal number "
+        <> "for the authentication method and you did not provide one"
+        )
 
-      Just ssn ->
-        unless (isValidSSNForAuthenticationToView authType ssn)
-          $ (  apiStateError
-            $  "The personal number you provided is not valid "
-            <> "for the authentication method"
-            )
+      Just ssn -> unless
+        (isValidSSNForAuthenticationToView authType ssn)
+        (  apiStateError
+        $  "The personal number you provided is not valid "
+        <> "for the authentication method"
+        )
     -- Check if either a valid mobile for authToView is set or is provided
     case mMobile of
-      Nothing ->
-        unless (isValidMobileForAuthenticationToView authType $ getMobile sl)
-          $ (  apiStateError
-            $  "Party does not have a valid mobile number set "
-            <> "for the authentication method and you did not provide one"
-            )
+      Nothing -> unless
+        (isValidMobileForAuthenticationToView authType $ getMobile sl)
+        (  apiStateError
+        $  "Party does not have a valid mobile number set "
+        <> "for the authentication method and you did not provide one"
+        )
 
-      Just mobile ->
-        unless (isValidMobileForAuthenticationToView authType mobile)
-          $ (  apiStateError
-            $  "The mobile number you provided is not valid "
-            <> "for the authentication method"
-            )
+      Just mobile -> unless
+        (isValidMobileForAuthenticationToView authType mobile)
+        (  apiStateError
+        $  "The mobile number you provided is not valid "
+        <> "for the authentication method"
+        )
   where
     sl            = fromJust $ getSigLinkFor slid doc
     apiStateError = apiError . signatoryStateError
@@ -374,13 +372,15 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             $ signatoryStateError
                 "You provided an empty authentication value, needs a value for authentication to view"
         Bad -> do
-          let name = case authToSign of
-                SEBankIDAuthenticationToSign -> "Swedish BankID"
-                DKNemIDAuthenticationToSign -> "Danish NemID"
-                _ -> ""  -- never happens
+          let
+            name = case authToSign of
+              SEBankIDAuthenticationToSign -> "Swedish BankID"
+              DKNemIDAuthenticationToSign  -> "Danish NemID"
+              auth ->
+                unexpectedError $ "unexpected authentication to sign: " <> showt auth
           apiError
             .  signatoryStateError
-            $  "The authentication value provided is not a valid for "
+            $  "The authentication value provided is not valid for "
             <> name
         Good _ -> return ()
 
@@ -400,7 +400,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
               , mobile /= getMobile sl
               ]
             )
-          $ apiError
+          . apiError
           $ signatoryStateError
               "The party has authenticated to view with Norwegian BankID, therefore you can't change the mobile number"
         -- If given a mobile number we need to make sure it doesn't invalidate
@@ -425,7 +425,7 @@ guardAuthenticationMethodsCanMix
 guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived = do
   unless
     (authenticationMethodsCanMix authToView authToSign authToViewArchived)
-    (apiError $ signatoryStateError $ mconcat
+    (apiError . signatoryStateError $ mconcat
       [ "Can't mix "
       , showt authToView
       , ", "
@@ -442,43 +442,44 @@ guardSignatoryRoleIs roleExpected slid doc = do
   let msl            = getSigLinkFor slid doc
       roleActual     = signatoryrole <$> msl
       showRoleActual = maybe "<none>" show roleActual
-  when (maybe True ((/=) roleExpected) roleActual)
-    $ (  apiError
-      .  signatoryStateError
-      .  T.pack
-      $  "Wrong signatory role, expected '"
-      ++ show roleExpected
-      ++ "', but got '"
-      ++ showRoleActual
-      ++ "'"
-      )
+  when
+    (maybe True (roleExpected /=) roleActual)
+    (  apiError
+    .  signatoryStateError
+    .  T.pack
+    $  "Wrong signatory role, expected '"
+    ++ show roleExpected
+    ++ "', but got '"
+    ++ showRoleActual
+    ++ "'"
+    )
 
 guardApproverHasNotApproved :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
-guardApproverHasNotApproved slid doc =
-  when (isApproverAndHasApproved $ getSigLinkFor slid doc)
-    $ (apiError . signatoryStateError $ "The approver has already approved")
+guardApproverHasNotApproved slid doc = when
+  (isApproverAndHasApproved $ getSigLinkFor slid doc)
+  (apiError . signatoryStateError $ "The approver has already approved")
 
 guardSignatoryHasNotSigned :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
-guardSignatoryHasNotSigned slid doc =
-  when (isSignatoryAndHasSigned $ getSigLinkFor slid doc)
-    $ (apiError . signatoryStateError $ "The signatory has already signed")
+guardSignatoryHasNotSigned slid doc = when
+  (isSignatoryAndHasSigned $ getSigLinkFor slid doc)
+  (apiError . signatoryStateError $ "The signatory has already signed")
 
 guardSigningPartyHasNeitherSignedNorApproved
   :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
-guardSigningPartyHasNeitherSignedNorApproved slid doc =
-  when ((isApproverAndHasApproved || isSignatoryAndHasSigned) $ getSigLinkFor slid doc)
-    $ ( apiError
-      . signatoryStateError
-      $ "The signing party has either signed or approved already"
-      )
+guardSigningPartyHasNeitherSignedNorApproved slid doc = when
+  ((isApproverAndHasApproved || isSignatoryAndHasSigned) $ getSigLinkFor slid doc)
+  ( apiError
+  . signatoryStateError
+  $ "The signing party has either signed or approved already"
+  )
 
 guardThatDocumentHasntBeenForwadedTooManyTimes :: Kontrakcja m => Document -> m ()
-guardThatDocumentHasntBeenForwadedTooManyTimes doc =
-  when (length (filter isForwarded $ documentsignatorylinks doc) > 100)
-    $ ( apiError
-      . documentStateError
-      $ "This document has been forwarded too many times already"
-      )
+guardThatDocumentHasntBeenForwadedTooManyTimes doc = when
+  (length (filter isForwarded $ documentsignatorylinks doc) > 100)
+  ( apiError
+  . documentStateError
+  $ "This document has been forwarded too many times already"
+  )
 
 -- Checks if document can be started. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()
@@ -487,7 +488,7 @@ guardThatDocumentCanBeStarted = maybe (return ()) apiError . documentCanBeStarte
 documentCanBeStarted :: Document -> Maybe APIError
 documentCanBeStarted doc = either Just (const Nothing) $ do
   when (isTemplate doc) $ do
-    Left $ (documentStateError "Document is a template, templates can not be started")
+    Left (documentStateError "Document is a template, templates can not be started")
   unless (all signatoryHasValidDeliverySettings $ documentsignatorylinks doc) $ do
     Left
       $ documentStateError
@@ -543,15 +544,14 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
     Left $ documentStateError "Document has to have at least one signing party"
   when (isNothing $ documentfile doc) $ do
     Left $ documentStateError "Document must have a file before it can be started"
-  return ()
 
   where
     signatoryHasValidDeliverySettings sl =
-      (isAuthor sl) || case (signatorylinkdeliverymethod sl) of
+      isAuthor sl || case signatorylinkdeliverymethod sl of
         EmailDelivery  -> isValidEmail $ getEmail sl
         MobileDelivery -> isValidPhoneForSMS $ getMobile sl
         EmailAndMobileDelivery ->
-          (isValidPhoneForSMS $ getMobile sl) && (isValidEmail $ getEmail sl)
+          isValidPhoneForSMS (getMobile sl) && isValidEmail (getEmail sl)
         PortalDelivery -> isValidEmail $ getEmail sl
         _              -> True
 
@@ -592,16 +592,14 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
              SEBankIDAuthenticationToSign ->
                isJust (getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
                  && (  T.null (getPersonalNumber sl)
-                    || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
+                    || isGood (asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
                     )
-             NOBankIDAuthenticationToSign ->
-               T.null (getPersonalNumber sl)
-                 || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
+             NOBankIDAuthenticationToSign -> T.null (getPersonalNumber sl)
+               || isGood (asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
              -- How does `T.null (getPersonalNumber sl)` square with
              -- `authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign = True`?
-             DKNemIDAuthenticationToSign ->
-               T.null (getPersonalNumber sl)
-                 || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
+             DKNemIDAuthenticationToSign -> T.null (getPersonalNumber sl)
+               || isGood (asValidDanishSSN $ getPersonalNumber sl)
              SMSPinAuthenticationToSign ->
                isJust (getFieldByIdentity MobileFI $ signatoryfields sl)
                  && (T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
@@ -611,14 +609,13 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
                || isGood (asValidFinnishSSN $ getPersonalNumber sl)
 
     signatoryHasValidSSNOrEmailForIdentifyToView sl =
-      case (signatorylinkauthenticationtoviewmethod sl) of
-        SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN $ getPersonalNumber sl
+      case signatorylinkauthenticationtoviewmethod sl of
+        SEBankIDAuthenticationToView -> isGood . asValidSwedishSSN $ getPersonalNumber sl
         NOBankIDAuthenticationToView ->
-          isGood $ asValidNorwegianSSN $ getPersonalNumber sl
-        DKNemIDAuthenticationToView -> isGood $ asValidDanishSSN $ getPersonalNumber sl
-        FITupasAuthenticationToView ->
-          T.null (getPersonalNumber sl)
-            || (isGood $ asValidFinnishSSN $ getPersonalNumber sl)
+          isGood . asValidNorwegianSSN $ getPersonalNumber sl
+        DKNemIDAuthenticationToView -> isGood . asValidDanishSSN $ getPersonalNumber sl
+        FITupasAuthenticationToView -> T.null (getPersonalNumber sl)
+          || isGood (asValidFinnishSSN $ getPersonalNumber sl)
         SMSPinAuthenticationToView   -> True
         StandardAuthenticationToView -> True
         VerimiAuthenticationToView   -> isValidEmail $ getEmail sl
@@ -626,17 +623,17 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
 
     signatoryHasValidMobileForIdentifyToView viewmethod sl = case viewmethod sl of
       NOBankIDAuthenticationToView ->
-        (isGood $ asValidPhoneForNorwegianBankID (getMobile sl))
-          || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))
+        isGood (asValidPhoneForNorwegianBankID (getMobile sl))
+          || isEmpty (asValidPhoneForNorwegianBankID (getMobile sl))
       SMSPinAuthenticationToView -> isGood $ asValidPhoneForSMS (getMobile sl)
       _ -> True
 
     signatoryThatIsApproverHasStandardAuthToSign sl =
-      (not $ isApprover sl)
+      not (isApprover sl)
         || (signatorylinkauthenticationtosignmethod sl == StandardAuthenticationToSign)
 
     signatoryThatIsApproverHasNoPlacements sl =
-      (not $ isApprover sl) || (null $ concat $ fieldPlacements <$> signatoryfields sl)
+      not (isApprover sl) || null (concat $ fieldPlacements <$> signatoryfields sl)
 
     isEmailValidOrEmpty sl = T.null (getEmail sl) || isValidEmail (getEmail sl)
     isMobileValidOrEmpty sl = T.null (getMobile sl) || isValidPhoneForSMS (getMobile sl)
@@ -655,7 +652,7 @@ guardThatRadioButtonValuesAreValid slid (SignatoryFieldsValuesForSigning signfie
           SignatoryRadioGroupField srgf <- getFieldByIdentity fi $ signatoryfields sl
           return $ signval `elem` srgfValues srgf
         radioValIsValid _ = True -- non radio group fields are skipped
-    unless (all radioValIsValid signfields) $ apiError $ signatoryStateError
+    unless (all radioValIsValid signfields) . apiError $ signatoryStateError
       "RadioGroup selected value is not in allowed values."
 
 guardThatSignaturesAreFilled
@@ -670,39 +667,37 @@ guardThatSignaturesAreFilled slid (SignatoryFieldsValuesForSigning signfields) d
         SignatorySignatureField ssf <- getFieldByIdentity fi $ signatoryfields sl
         return
           $  not (ssfObligatory ssf)
-          || length (ssfPlacements ssf)
-          == 0
+          || null (ssfPlacements ssf)
           || BS.length contents
           >  0
       signatureIsFilled _ = True -- non signature fields are skipped
-  unless (all signatureIsFilled signfields) $ apiError $ signatoryStateError
+  unless (all signatureIsFilled signfields) . apiError $ signatoryStateError
     "Signature missing."
 
 guardThatAllAttachmentsAreAcceptedOrIsAuthor
   :: Kontrakcja m => SignatoryLinkID -> [FileID] -> Document -> m ()
 guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do
   unless (allRequiredAttachmentsAreOnList acceptedAttachments doc)
-    $ unless (isAuthor $ fromJust $ getSigLinkFor slid doc)
+    . unless (isAuthor . fromJust $ getSigLinkFor slid doc)
     $ -- Author does not need to accept attachments
-      apiError
-    $ (signatoryStateError "Some mandatory author attachments aren't accepted")
+      apiError (signatoryStateError "Some mandatory author attachments aren't accepted")
 
 guardThatAllSignatoryAttachmentsAreUploadedOrMarked
   :: Kontrakcja m => SignatoryLinkID -> [Text] -> Document -> m ()
 guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments doc
   = do
     let
-      sigAttachments = signatoryattachments $ fromJust $ getSigLinkFor slid doc
+      sigAttachments = signatoryattachments . fromJust $ getSigLinkFor slid doc
       requiredSigAttachments = filter signatoryattachmentrequired sigAttachments
       optionalSigAttachments = filter (not . signatoryattachmentrequired) sigAttachments
       optionalSigAttachmentsNames = map signatoryattachmentname optionalSigAttachments
     -- all not uploaded signatory attachment names must exist
     when (any (`notElem` optionalSigAttachmentsNames) notUploadedSignatoryAttachments)
-      $ apiError
+      . apiError
       $ signatoryStateError "Optional signatory attachment name does not exist"
     -- all required signatory attachments must be uploaded
     when (any (isNothing . signatoryattachmentfile) requiredSigAttachments)
-      $ apiError
+      . apiError
       $ signatoryStateError "Some mandatory signatory attachments aren't uploaded"
     -- all optional signatory attachments must be uploaded XOR marked as not uploaded
     when
@@ -714,7 +709,7 @@ guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAtt
           )
           optionalSigAttachments
         )
-      $ apiError
+      . apiError
       $ signatoryStateError
           "Some optional signatory attachments are uploaded but are marked as not uploaded"
     when
@@ -726,7 +721,7 @@ guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAtt
           )
           optionalSigAttachments
         )
-      $ apiError
+      . apiError
       $ signatoryStateError
           "Some optional signatory attachments are not uploaded and are not marked as such"
 
@@ -740,10 +735,9 @@ guardThatConsentModulesAreOnSigningParties doc =
       _ -> return ()
 
 guardThatAuthorIsNotApprover :: Kontrakcja m => Document -> m ()
-guardThatAuthorIsNotApprover doc =
-  if any (isAuthor && isApprover) (documentsignatorylinks doc)
-    then apiError $ requestParameterInvalid "document" "Author can't be an approver"
-    else return ()
+guardThatAuthorIsNotApprover doc = do
+  when (any (isAuthor && isApprover) (documentsignatorylinks doc)) $ do
+    apiError $ requestParameterInvalid "document" "Author can't be an approver"
 
 guardThatAllConsentQuestionsHaveResponse
   :: Kontrakcja m
@@ -757,10 +751,10 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
         qs          = signatorylinkconsentquestions sl
         questionIDs = map scqID qs
         responseIDs = map fst responses
-    unless (all (`elem` responseIDs) questionIDs) $ apiError $ requestParameterInvalid
+    unless (all (`elem` responseIDs) questionIDs) . apiError $ requestParameterInvalid
       "consent_responses"
       "Some consent questions have not been answered"
-    unless (all (`elem` questionIDs) responseIDs) $ apiError $ requestParameterInvalid
+    unless (all (`elem` questionIDs) responseIDs) . apiError $ requestParameterInvalid
       "consent_responses"
       "Consent responses are corrupted"
 
@@ -821,12 +815,12 @@ guardDocumentReadAccess mslid doc = do
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do
-  unless (isAccessibleBySignatories doc)
-    $  apiError
-    $  documentStateErrorWithCode 410
-    $  "The document has expired or has been withdrawn. (status: "
+  unless (isAccessibleBySignatories doc) . apiError $ documentStateErrorWithCode
+    410
+    (  "The document has expired or has been withdrawn. (status: "
     <> showt (documentstatus doc)
     <> ")"
+    )
 
 -- | Check the session for the `DocumentID` and `SignatoryLinkID`
 --

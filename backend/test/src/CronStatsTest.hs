@@ -14,5 +14,5 @@ cronStatsTest env = testGroup
 
 test_CronStatsGeneration :: TestEnv ()
 test_CronStatsGeneration = do
-  _ <- dbQuery $ GetCronStats
+  _ <- dbQuery GetCronStats
   return ()

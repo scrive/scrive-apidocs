@@ -21,8 +21,7 @@ data SQLTrigger =
      }
 
 triggerNameSuffix :: SQLTrigger -> RawSQL ()
-triggerNameSuffix SQLTrigger {..} =
-  sqlTrigTbl <> maybe "" (\colName -> "__" <> colName) sqlTrigCol
+triggerNameSuffix SQLTrigger {..} = sqlTrigTbl <> maybe "" ("__" <>) sqlTrigCol
 
 triggerDefName :: SQLTrigger -> RawSQL ()
 triggerDefName t = "trgdef__" <> triggerNameSuffix t
@@ -37,9 +36,9 @@ triggerFunName t = "trgfun__" <> triggerNameSuffix t
 -- supported.
 toTriggerDef :: SQLTrigger -> RawSQL ()
 toTriggerDef t@SQLTrigger {..} =
-  let mColumn = maybe "" (\colName -> "of" <+> colName) sqlTrigCol
+  let mColumn = maybe "" ("of" <+>) sqlTrigCol
   in  "create trigger"
-        <+> (triggerDefName t)
+        <+> triggerDefName t
         <+> "after insert or update"
         <+> mColumn
         <+> "on"
@@ -57,7 +56,7 @@ toTriggerFun t@SQLTrigger {..} = sqlTrigFun . triggerFunName $ t
 -- these.
 dropTriggerIfExists :: SQLTrigger -> RawSQL ()
 dropTriggerIfExists t@SQLTrigger {..} =
-  "drop trigger if exists" <+> (triggerDefName t) <+> "on" <+> sqlTrigTbl <+> ";"
+  "drop trigger if exists" <+> triggerDefName t <+> "on" <+> sqlTrigTbl <+> ";"
 
 -- | Define a collection of triggers.
 defineTriggers :: MonadDB m => [SQLTrigger] -> m ()

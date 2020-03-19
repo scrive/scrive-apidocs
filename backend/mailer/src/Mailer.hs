@@ -23,7 +23,7 @@ newtype Mailer a = Mailer { unMailer :: InnerMailer a }
 
 instance MonadBaseControl IO Mailer where
   type StM Mailer a = StM InnerMailer a
-  liftBaseWith f = Mailer $ liftBaseWith $ \run -> f $ run . unMailer
+  liftBaseWith f = Mailer $ liftBaseWith (\run -> f $ run . unMailer)
   restoreM = Mailer . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}

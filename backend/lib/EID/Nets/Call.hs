@@ -22,9 +22,6 @@ import Kontra hiding (InternalError)
 import Log.Identifier
 import MinutesTime
 import Network.XMLCurl
-import Network.XMLCurl
-  ( CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction
-  )
 import Text.XML.Parser
 import Text.XML.XMLDSig
 import qualified Text.XML.Writer.Extended as X
@@ -60,24 +57,21 @@ netsCall NetsSignConfig {..} request response_parser tmpdirsuffix = do
   let runCurl = liftIO $ curlTransport
         SecureSSL
         (CurlAuthCertKey netssignCertFile netssignPrivKeyFile)
-        (T.unpack $ netssignAPIUrl)
+        (T.unpack netssignAPIUrl)
         certErrorHandler
         debugFunction
         (BC8.unpack signedRq)
         []
   rsXML <- parseLBS_ def <$> runCurl
   logInfo ("Succesfully received Nets XML for " <> rqname <> " response")
-    $ object ["xml" .= (renderText def $ rsXML)]
+    $ object ["xml" .= renderText def rsXML]
   let rsCursor = fromDocument rsXML
   rs <- case runParser response_parser rsCursor of
     Just response -> return response
-    Nothing ->
-      throwM
-        $  NetsSignParsingError
-        $  "UnsuccessfulNetsSignXMLParse("
-        <> rqname
-        <> " response):"
-        <> T.pack (ppCursor rsCursor)
+    Nothing       -> throwM $ NetsSignParsingError
+      ("UnsuccessfulNetsSignXMLParse(" <> rqname <> " response):" <> T.pack
+        (ppCursor rsCursor)
+      )
   logInfo ("Succesfully parsed Nets" <> rqname <> " response") $ logObject_ rs
   return rs
 
@@ -86,7 +80,7 @@ rqName xml = case X.render xml of
   [NodeElement el] -> nameLocalName . elementName $ el
   _                -> "SomeXMLElementName" -- fallback for unexpected XML, which does not have element as top node
 
-data NetsSignParsingError = NetsSignParsingError Text deriving (Show, Typeable)
+newtype NetsSignParsingError = NetsSignParsingError Text deriving (Show, Typeable)
 instance Exception NetsSignParsingError
 
 wrapTrustSignMessage :: TrustSignMessageUUID -> Text -> UTCTime -> X.XML -> X.XML

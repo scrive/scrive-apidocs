@@ -248,7 +248,7 @@ jsonRootUG = "{\"name\":\"Test UserGroup blah blah\"}"
 
 jsonWithParentUG :: UserGroupID -> String
 jsonWithParentUG ugid =
-  "{\"name\":\"Test UserGroup blah blah\",\"parent_id\":" <> "\"" <> (show ugid) <> "\"}"
+  "{\"name\":\"Test UserGroup blah blah\",\"parent_id\":" <> "\"" <> show ugid <> "\"}"
 
 testNonGodModeUserCannotCreateRootUserGroup :: TestEnv ()
 testNonGodModeUserCannotCreateRootUserGroup = do
@@ -328,7 +328,7 @@ testNonGodModeUserCannotCreateChildUserGroupWithoutUGAdminPermissions = do
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
   req <- mkRequest
     POST
-    [("usergroup", inText $ T.pack $ jsonWithParentUG $ user ^. #groupID)]
+    [("usergroup", inText . T.pack $ jsonWithParentUG (user ^. #groupID))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 403 $ rsCode res
   where emailAddress = "prostetnic.vogon.jeltz@scrive.com"
@@ -345,7 +345,7 @@ testUserCanCreateChildUserGroupWithPermissions = do
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugid)]
+  req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG ugid)]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 200 $ rsCode res
   where emailAddress = "great.green.arkleseizure@scrive.com"
@@ -358,7 +358,7 @@ testGodModeUserCanCreateChildUserGroupWithoutPermissions = do
                                                }
   ctx <- setUser user <$> mkContext defaultLang
   ug  <- instantiateRandomUserGroup
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG (ug ^. #id))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
   where
@@ -373,7 +373,7 @@ testSalesUserCanCreateChildUserGroupWithoutPermissions = do
                                                }
   ctx <- setUser user <$> mkContext defaultLang
   ug  <- instantiateRandomUserGroup
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG (ug ^. #id))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
   where
@@ -415,7 +415,7 @@ testUserCanEditChildUserGroupWithPermissions = do
     { parentGroupID = Just ugidParent
     }
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  let field = ("usergroup", inText $ T.pack $ jsonExistingChildUG ugidParent)
+  let field = ("usergroup", inText . T.pack $ jsonExistingChildUG ugidParent)
   req <- mkRequest POST [field]
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Update ugidChild)
   assertEqual "users can edit child UserGroup as UG Admin" 200 $ rsCode res
@@ -425,7 +425,7 @@ testUserCanEditChildUserGroupWithPermissions = do
     jsonExistingChildUG ugidParent =
       "{\"name\":\"Test UserGroup blah blah\""
         <> ",\"parent_id\":\""
-        <> (show ugidParent)
+        <> show ugidParent
         <> "\"}"
 
 -- UserGroup GET endpoint tests
@@ -1392,12 +1392,11 @@ testUserCanCreateTagsOnChildUserGroup :: TestEnv ()
 testUserCanCreateTagsOnChildUserGroup = do
   ug   <- instantiateRandomUserGroup
   user <- instantiateUser $ randomUserTemplate { email = return emailAddress }
-  let inputUg =
-        object
-          $ [ "tags" .= toJSON inputTags
-            , "name" .= toJSON ("testing user group" :: Text)
-            , "parent_id" .= toJSON (ug ^. #id)
-            ]
+  let inputUg = object
+        [ "tags" .= toJSON inputTags
+        , "name" .= toJSON ("testing user group" :: Text)
+        , "parent_id" .= toJSON (ug ^. #id)
+        ]
   let params = [("usergroup", valueToInput inputUg)]
   ctx        <- setUser user <$> mkContext defaultLang
   val        <- jsonTestRequestHelper ctx POST params userGroupApiV2Create 200

@@ -61,13 +61,13 @@ testChangeEmailAddress = do
                                                 , email     = return "bob@blue.com"
                                                 }
   passwordhash <- createPassword "abc123"
-  void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user <- dbQuery $ GetUserByID (user' ^. #id)
-  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req1 <- mkRequest POST
                     [("changeemail", inText "true"), ("newemail", inText "jim@bob.com")]
-  (res1, ctx1) <- runTestKontra req1 ctx $ apiCallChangeEmail
+  (res1, ctx1) <- runTestKontra req1 ctx apiCallChangeEmail
   assertEqual "Response code is 200" 200 (rsCode res1)
   Just uuser <- dbQuery $ GetUserByID (user ^. #id)
   assertEqual "Email hasn't changed yet" "bob@blue.com" (getEmail uuser)
@@ -75,7 +75,7 @@ testChangeEmailAddress = do
   modifyTestTime (30 `daysAfter`)
   actions <- dbQuery GetExpiredEmailChangeRequestsForTesting
 
-  assertEqual "A request change email action was made" 1 (length $ actions)
+  assertEqual "A request change email action was made" 1 (length actions)
   let EmailChangeRequest {..} = head actions
   assertEqual "Inviter id is correct"   (user ^. #id)         ecrUserID
   assertEqual "Action email is correct" (Email "jim@bob.com") ecrNewEmail
@@ -97,11 +97,11 @@ testNeedEmailToBeUniqueToRequestChange = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  void $ fmap Just . instantiateUser $ randomUserTemplate { firstName = return "Jim"
+  void . fmap Just . instantiateUser $ randomUserTemplate { firstName = return "Jim"
                                                           , lastName = return "Bob"
                                                           , email = return "jim@bob.com"
                                                           }
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req1 <- mkRequest
     POST
@@ -109,12 +109,12 @@ testNeedEmailToBeUniqueToRequestChange = do
     , ("newemail"     , inText "jim@bob.com")
     , ("newemailagain", inText "jim@bob.com")
     ]
-  (res1, _) <- runTestKontra req1 ctx $ apiCallChangeEmail
+  (res1, _) <- runTestKontra req1 ctx apiCallChangeEmail
   assertEqual "Response code is 200" 200 (rsCode res1)
   -- move test time, so that email change requests expire
   modifyTestTime (30 `daysAfter`)
   actions <- dbQuery GetExpiredEmailChangeRequestsForTesting
-  assertEqual "No request email action was made" 0 (length $ actions)
+  assertEqual "No request email action was made" 0 (length actions)
 
 testEmailChangeFailsIfActionIDIsWrong :: TestEnv ()
 testEmailChangeFailsIfActionIDIsWrong = do
@@ -123,9 +123,9 @@ testEmailChangeFailsIfActionIDIsWrong = do
                                                 , email     = return "bob@blue.com"
                                                 }
   passwordhash <- createPassword "abc123"
-  void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
-  ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx                     <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req                     <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
@@ -141,9 +141,9 @@ testEmailChangeFailsIfMagicHashIsWrong = do
                                                 , email     = return "bob@blue.com"
                                                 }
   passwordhash <- createPassword "abc123"
-  void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
-  ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx                     <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req                     <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
@@ -161,13 +161,13 @@ testEmailChangeIfForAnotherUser = do
                                                 , email     = return "bob@blue.com"
                                                 }
   passwordhash <- createPassword "abc123"
-  void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user   <- dbQuery $ GetUserByID (user' ^. #id)
   anotheruser <- instantiateUser $ randomUserTemplate { firstName = return "Fred"
                                                       , lastName  = return "Frog"
                                                       , email     = return "fred@frog.com"
                                                       }
-  ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx                     <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req                     <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest {..} <- newEmailChangeRequest (anotheruser ^. #id)
@@ -183,9 +183,9 @@ testEmailChangeFailsIfEmailInUse = do
                                                 , email     = return "bob@blue.com"
                                                 }
   passwordhash <- createPassword "abc123"
-  void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
-  ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx                     <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req                     <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
@@ -204,9 +204,9 @@ testEmailChangeFailsIfPasswordWrong = do
                                                 , email     = return "bob@blue.com"
                                                 }
   passwordhash <- createPassword "abc123"
-  void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
-  ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx                     <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req                     <- mkRequest POST [("password", inText "wrongpassword")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
@@ -225,9 +225,9 @@ testEmailChangeFailsIfNoPassword = do
                                                 , email     = return "bob@blue.com"
                                                 }
   passwordhash <- createPassword "abc123"
-  void $ dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user' ^. #id) passwordhash
   Just user               <- dbQuery $ GetUserByID (user' ^. #id)
-  ctx                     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx                     <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   req                     <- mkRequest POST [("password", inText "")]
   EmailChangeRequest {..} <- newEmailChangeRequest (user ^. #id) (Email "jim@bob.com")
@@ -241,10 +241,10 @@ testEmailChangeFailsIfNoPassword = do
 testGetUserInfoWithOAuthTokens :: TestEnv ()
 testGetUserInfoWithOAuthTokens = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   -- Create OAuth API tokens
   let uid = user ^. #id
-  void $ dbUpdate $ CreateAPIToken uid
+  void . dbUpdate $ CreateAPIToken uid
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
   time            <- rand 10 arbitrary
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials
@@ -280,18 +280,18 @@ testGetUserInfoWithOAuthTokens = do
           ++ "\""
 
   reqUserInfo      <- mkRequestWithHeaders GET [] [("authorization", [T.pack authStr])]
-  (resUserInfo, _) <- runTestKontra reqUserInfo ctx $ apiCallGetUserProfile
+  (resUserInfo, _) <- runTestKontra reqUserInfo ctx apiCallGetUserProfile
   assertEqual "We should get a 200 response" 200 (rsCode resUserInfo)
 
 testLoginUsingAPI :: TestEnv ()
 testLoginUsingAPI = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   let uid = user ^. #id
-  void $ dbUpdate $ DeletePersonalToken uid
-  void $ dbUpdate $ CreatePersonalToken uid
-  Just (OAuthAuthorization {..}) <- dbQuery $ GetPersonalToken uid
+  void . dbUpdate $ DeletePersonalToken uid
+  void . dbUpdate $ CreatePersonalToken uid
+  Just OAuthAuthorization {..} <- dbQuery $ GetPersonalToken uid
 
   let authStr =
         "oauth_signature_method=\"PLAINTEXT\""
@@ -310,5 +310,5 @@ testLoginUsingAPI = do
   reqLogin <- mkRequestWithHeaders POST
                                    [("redirect", inText "/newdocument")]
                                    [("authorization", [T.pack authStr])]
-  (resLogin, _) <- runTestKontra reqLogin ctx $ apiCallLoginUser
+  (resLogin, _) <- runTestKontra reqLogin ctx apiCallLoginUser
   assertEqual "We should get a 303 response" 303 (rsCode resLogin)

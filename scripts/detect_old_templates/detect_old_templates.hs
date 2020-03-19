@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 module Main where
 
+import Data.Bifunctor
 import Data.List (isSuffixOf)
 import Data.Maybe
 import Debug.Trace
@@ -85,29 +86,29 @@ fileExps path = do
       return Nothing
   where mode' = defaultParseMode { fixities = Just [], extensions = kontraExtensions }
 
-moduleExps :: (Module SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+moduleExps :: Module SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 moduleExps (Module _ _ _ _ decls) = S.unions $ map declExps decls
 moduleExps XmlPage{}              = S.empty
 moduleExps XmlHybrid{}            = S.empty
 
 -- TODO: declExps should cover more patterns
-declExps :: (Decl SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+declExps :: Decl SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 declExps (PatBind _ _ rhs binds') = rhsExps rhs `S.union` bindsExps binds'
 declExps (FunBind _ matches) = S.unions $ map matchExps matches
 declExps _ = S.empty
 
-matchExps :: (Match SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+matchExps :: Match SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 matchExps (Match _ _ _ rhs binds'       ) = rhsExps rhs `S.union` bindsExps binds'
 matchExps (InfixMatch _ _ _ _ rhs binds') = rhsExps rhs `S.union` bindsExps binds'
 
-rhsExps :: (Rhs SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+rhsExps :: Rhs SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 rhsExps (UnGuardedRhs _ e          ) = expExps e
 rhsExps (GuardedRhss  _ guardedRhss) = S.unions $ map guardedRhsExps guardedRhss
 
-guardedRhsExps :: (GuardedRhs SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+guardedRhsExps :: GuardedRhs SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 guardedRhsExps (GuardedRhs _ stmts e) = S.unions (map stmtExps stmts) `S.union` expExps e
 
-expExps :: (Exp SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+expExps :: Exp SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 expExps e = e `S.insert` case e of
   Var             _ _            -> S.empty
   OverloadedLabel _ _            -> S.empty
@@ -124,48 +125,48 @@ expExps e = e `S.insert` case e of
   Do  _ stmts                    -> S.unions $ map stmtExps stmts
   MDo _ stmts                    -> S.unions $ map stmtExps stmts
   Tuple        _ _ exps          -> S.unions $ map expExps exps
-  TupleSection _ _ mexps         -> S.unions $ map expExps $ catMaybes mexps
+  TupleSection _ _ mexps         -> S.unions . map expExps $ catMaybes mexps
   List  _ exps                   -> S.unions $ map expExps exps
   Paren _ e'                     -> expExps e'
   LeftSection  _ e' _            -> expExps e'
   RightSection _ _  e'           -> expExps e'
   RecConstr    _ _  fieldUpdates -> S.unions $ map fieldUpdateExps fieldUpdates
   RecUpdate _ e' fieldUpdates ->
-    expExps e' `S.union` (S.unions $ map fieldUpdateExps fieldUpdates)
+    expExps e' `S.union` S.unions (map fieldUpdateExps fieldUpdates)
   EnumFrom _ e'             -> expExps e'
   EnumFromTo   _ e1 e2      -> expExps e1 `S.union` expExps e2
   EnumFromThen _ e1 e2      -> expExps e1 `S.union` expExps e2
   EnumFromThenTo _ e1 e2 e3 -> expExps e1 `S.union` expExps e2 `S.union` expExps e3
-  ListComp _ e' qualStmts -> expExps e' `S.union` (S.unions $ map qualStmtExps qualStmts)
+  ListComp _ e' qualStmts   -> expExps e' `S.union` S.unions (map qualStmtExps qualStmts)
   ParComp _ e' qualStmts ->
-    expExps e' `S.union` (S.unions $ map (S.unions . map qualStmtExps) qualStmts)
-  ExpTypeSig _ e' _          -> expExps e'
-  VarQuote   _ _             -> S.empty
-  TypQuote   _ _             -> S.empty
-  BracketExp _ _             -> S.empty
-  SpliceExp  _ _             -> S.empty
-  QuasiQuote _ _ _           -> S.empty
-  TypeApp _ _                -> S.empty
-  XETag _ _ _ me             -> S.unions $ map expExps $ catMaybes [me]
-  XTag _ _ _ me es           -> S.unions $ map expExps $ catMaybes [me] ++ es
-  XPcdata   _ _              -> S.empty
-  XExpTag   _ e'             -> expExps e'
-  XChildTag _ es             -> S.unions $ map expExps es
-  CorePragma _ _ _           -> S.empty
-  SCCPragma  _ _ _           -> S.empty
-  GenPragma _ _ _ _ _        -> S.empty
-  Proc            _ _  e'    -> expExps e'
-  LeftArrApp      _ e1 e2    -> expExps e1 `S.union` expExps e2
-  RightArrApp     _ e1 e2    -> expExps e1 `S.union` expExps e2
-  LeftArrHighApp  _ e1 e2    -> expExps e1 `S.union` expExps e2
-  RightArrHighApp _ e1 e2    -> expExps e1 `S.union` expExps e2
-  MultiIf  _ ifs             -> S.unions $ map guardedRhsExps ifs
-  ParArray _ _               -> error "ParArray"
-  ParArrayFromTo _ _ _       -> error "ParArrayFromTo"
-  ParArrayComp   _ _ _       -> error "ParArrayComp"
-  ParArrayFromThenTo _ _ _ _ -> error "ParArrayFromThenTo"
-  LCase _ alts               -> S.unions $ map altExps alts
-  UnboxedSum _ _ _ e'        -> expExps e'
+    expExps e' `S.union` S.unions (map (S.unions . map qualStmtExps) qualStmts)
+  ExpTypeSig _ e' _       -> expExps e'
+  VarQuote   _ _          -> S.empty
+  TypQuote   _ _          -> S.empty
+  BracketExp _ _          -> S.empty
+  SpliceExp  _ _          -> S.empty
+  QuasiQuote{}            -> S.empty
+  TypeApp _ _             -> S.empty
+  XETag _ _ _ me          -> S.unions . map expExps $ catMaybes [me]
+  XTag _ _ _ me es        -> S.unions . map expExps $ catMaybes [me] ++ es
+  XPcdata   _ _           -> S.empty
+  XExpTag   _ e'          -> expExps e'
+  XChildTag _ es          -> S.unions $ map expExps es
+  CorePragma{}            -> S.empty
+  SCCPragma{}             -> S.empty
+  GenPragma{}             -> S.empty
+  Proc            _ _  e' -> expExps e'
+  LeftArrApp      _ e1 e2 -> expExps e1 `S.union` expExps e2
+  RightArrApp     _ e1 e2 -> expExps e1 `S.union` expExps e2
+  LeftArrHighApp  _ e1 e2 -> expExps e1 `S.union` expExps e2
+  RightArrHighApp _ e1 e2 -> expExps e1 `S.union` expExps e2
+  MultiIf  _ ifs          -> S.unions $ map guardedRhsExps ifs
+  ParArray _ _            -> error "ParArray"
+  ParArrayFromTo{}        -> error "ParArrayFromTo"
+  ParArrayComp{}          -> error "ParArrayComp"
+  ParArrayFromThenTo{}    -> error "ParArrayFromThenTo"
+  LCase _ alts            -> S.unions $ map altExps alts
+  UnboxedSum _ _ _ e'     -> expExps e'
 
 
 bindsExps :: Maybe (Binds SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
@@ -173,23 +174,23 @@ bindsExps Nothing                    = S.empty
 bindsExps (Just (BDecls  _ decls  )) = S.unions $ map declExps decls
 bindsExps (Just (IPBinds _ ipbinds)) = S.unions $ map ipBindExp ipbinds
 
-altExps :: (Alt SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+altExps :: Alt SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 altExps (Alt _ _ rhs binds') = rhsExps rhs `S.union` bindsExps binds'
 
 ipBindExp :: IPBind SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 ipBindExp (IPBind _ _ e) = S.singleton e
 
-stmtExps :: (Stmt SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+stmtExps :: Stmt SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 stmtExps (Generator _ _ e   ) = expExps e
 stmtExps (Qualifier _ e     ) = expExps e
 stmtExps (LetStmt   _ binds') = bindsExps (Just binds')
 stmtExps (RecStmt   _ stmts ) = S.unions $ map stmtExps stmts
 
-fieldUpdateExps :: (FieldUpdate SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+fieldUpdateExps :: FieldUpdate SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 fieldUpdateExps (FieldUpdate _ _ e) = expExps e
 fieldUpdateExps _                   = S.empty
 
-qualStmtExps :: (QualStmt SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
+qualStmtExps :: QualStmt SrcSpanInfo -> S.Set (Exp SrcSpanInfo)
 qualStmtExps _ = S.empty
 --------------------------------------------------
 -- returns list of constructors of EvidenceEventType datatype
@@ -207,9 +208,9 @@ elogEvents = do
       = Just ctors
     documentObsoleteEvidenceEventDeclCtors _ = Nothing
     currentEventCtorDecls =
-      head $ catMaybes $ map documentCurrentEvidenceEventDeclCtors decls
+      head . catMaybes $ map documentCurrentEvidenceEventDeclCtors decls
     obsoleteEventCtorDecls =
-      head $ catMaybes $ map documentObsoleteEvidenceEventDeclCtors decls
+      head . catMaybes $ map documentObsoleteEvidenceEventDeclCtors decls
 
     nameToString (Ident  _ x) = x
     nameToString (Symbol _ x) = x
@@ -218,7 +219,7 @@ elogEvents = do
     eventCtor (QualConDecl _ _ _ (InfixConDecl _ _ name' _)) = nameToString name'
     eventCtor (QualConDecl _ _ _ (RecDecl _ name' _       )) = nameToString name'
 
-  return $ S.fromList $ map eventCtor (currentEventCtorDecls ++ obsoleteEventCtorDecls)
+  return . S.fromList $ map eventCtor (currentEventCtorDecls ++ obsoleteEventCtorDecls)
 
 --------------------------------------------------
 -- returns template name from expression of certain forms
@@ -226,7 +227,7 @@ elogEvents = do
 -- for expressions that don't look like funcalls to template rendering functions
 -- returns nothing
 -- TODO: support qualified fun names
-expTemplateName :: (Exp SrcSpanInfo) -> Maybe String
+expTemplateName :: Exp SrcSpanInfo -> Maybe String
 expTemplateName (App _ (Var _ (UnQual _ (Ident _ funName))) (Lit _ (String _ template _)))
   | funName
     `elem` [ "renderTemplate"
@@ -253,7 +254,7 @@ expTemplateName (App _ (App _ (Var _ (UnQual _ (Ident _ funName))) _) (Lit _ (St
   | otherwise
   = Nothing
 expTemplateName (App _ (App _ (App _ (Var _ (UnQual _ (Ident _ funName))) _) _) (Lit _ (String _ template _)))
-  | funName `elem` ["documentMailWithDocLang"]
+  | funName == "documentMailWithDocLang"
   = Just template
   | otherwise
   = Nothing
@@ -263,7 +264,7 @@ expTemplateName (App _ (App _ (App _ (App _ (Var _ (UnQual _ (Ident _ funName)))
   | otherwise
   = Nothing
 expTemplateName (App _ (App _ (App _ (App _ (App _ (Var _ (UnQual _ (Ident _ funName))) _) _) _) _) (Lit _ (String _ template _)))
-  | funName `elem` ["kontramaillocal"]
+  | funName == "kontramaillocal"
   = Just template
   | otherwise
   = Nothing
@@ -271,7 +272,7 @@ expTemplateName _ = Nothing
 
 -- takes a string template and returns names of (immediately) dependent templates
 templateDeps :: String -> S.Set String
-templateDeps tmpl = fromMaybe S.empty $ S.fromList <$> deps
+templateDeps tmpl = maybe S.empty S.fromList deps
   where
     parsedTmpl      = newSTMP tmpl :: StringTemplate String
     (_, _, immDeps) = checkTemplate parsedTmpl
@@ -308,7 +309,7 @@ main = do
 
   files <- filter (".hs" `isSuffixOf`) <$> directoryFilesRecursive "backend"
   mexps <- mapM fileExps files
-  when (Nothing `elem` mexps) $ exitFailure
+  when (Nothing `elem` mexps) exitFailure
   let exps = S.unions . catMaybes $ mexps
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents
@@ -319,7 +320,7 @@ main = do
         ]
   let topLevelTemplates =
         S.unions [elogTemplates, topLevelTemplatesFromSources, whiteList]
-  translations       <- fmap concat $ mapM (fetchLocal "en") allResources
+  translations       <- concat <$> mapM (fetchLocal "en") allResources
   templatesFilesPath <- filter (".st" `isSuffixOf`)
     <$> directoryFilesRecursive "templates"
   templates <- concat <$> mapM getTemplates templatesFilesPath
@@ -327,7 +328,7 @@ main = do
       allTemplates    = S.fromList $ Map.keys templatesMap
       knownTemplates  = go elogTemplates templatesMap S.empty topLevelTemplates
       unusedTemplates = allTemplates S.\\ knownTemplates
-  let couldBeRemoved = filter (not . null) $ S.toList $ unusedTemplates
+  let couldBeRemoved = filter (not . null) . S.toList $ unusedTemplates
   if null couldBeRemoved
     then do
       putStrLn "Template check returned no unused templates."
@@ -356,7 +357,7 @@ directoryEntriesRecursive path
         let (dirs, files) = biConcat results
         return (path : dirs, files)
       else return ([], [path])
-  where biConcat = (\(x, y) -> (concat x, concat y)) . unzip
+  where biConcat = bimap concat concat . unzip
 
 directoryFilesRecursive
   :: FilePath      -- ^ dir path to be searched for recursively

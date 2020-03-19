@@ -36,7 +36,7 @@ instance Identifier SignatoryLinkID where
 
 instance Unjson SignatoryLinkID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse SignatoryLinkID") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse SignatoryLinkID") return . maybeRead . T.pack)
     show
     unjsonDef
 

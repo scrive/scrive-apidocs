@@ -20,7 +20,7 @@ handleSendGridEvents = localDomain "handleSendGridEvents" $ do
   logInfo_ "Processing sendgrid events"
   rqVar <- rqBody <$> askRq
   rq    <- liftIO $ fmap unBody <$> tryTakeMVar rqVar
-  case (decode <$> BS.toString <$> rq) of
+  case decode . BS.toString <$> rq of
     Just (Ok (JSArray a)) -> do
       logInfo "JSON with events parsed" $ object ["events" .= length a]
       mapM_ processSendGridEvent a
@@ -33,8 +33,8 @@ handleSendGridEvents = localDomain "handleSendGridEvents" $ do
 processSendGridEvent :: JSValue -> Mailer ()
 processSendGridEvent js = do
   withJSValue js $ do
-    mmid <- join . fmap maybeRead <$> fromJSValueField "email_id"
-    mmtk <- join . fmap maybeRead <$> fromJSValueField "email_token"
+    mmid <- (maybeRead =<<) <$> fromJSValueField "email_id"
+    mmtk <- (maybeRead =<<) <$> fromJSValueField "email_token"
     case (mmid, mmtk) of
       (Just mid, Just token) -> localData [identifier mid] $ do
         mmail <- dbQuery $ GetEmail mid token
@@ -80,7 +80,7 @@ sendgridEventFromJSValueM = do
       return (SG_Bounce <$> status <*> reason <*> btype)
     (Just "deferred") -> do
       response <- fromJSValueField "response"
-      attempt  <- join <$> fmap maybeRead <$> fromJSValueField "attempt"  -- SG returns ints as strings for this field
+      attempt  <- (maybeRead =<<) <$> fromJSValueField "attempt"  -- SG returns ints as strings for this field
       return (SG_Deferred <$> response <*> (fromIntegral <$> attempt))
     (Just "spamreport" ) -> return $ Just SG_SpamReport
     (Just "unsubscribe") -> return $ Just SG_Unsubscribe

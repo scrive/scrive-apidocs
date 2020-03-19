@@ -20,14 +20,14 @@ import Utils.IO
 
 checkPassword
   :: (MonadBase IO m, MonadLog m, MonadThrow m) => PasswordServiceConf -> Text -> m Bool
-checkPassword config pwd = if (T.length pwd < 12)
+checkPassword config pwd = if T.length pwd < 12
   then do
     logInfo_ "Password is too short"
     return False
   else do
     let sha1           = map toUpper . show . H.hashWith H.SHA1 $ TE.encodeUtf8 pwd
         (sha1p, sha1r) = splitAt 5 sha1
-        url            = (passwordServiceUrl config) ++ "/range/" ++ sha1p
+        url            = passwordServiceUrl config ++ "/range/" ++ sha1p
     (exitcode, stdout, _stderr) <- readCurl
       [ "--tlsv1.2"
       , "-L" -- make curl follow redirects
@@ -35,9 +35,9 @@ checkPassword config pwd = if (T.length pwd < 12)
       , url
       ]
       BSL.empty
-    case (exitcode) of
+    case exitcode of
       ExitSuccess -> do
-        if (any (BS.isPrefixOf $ BSC.fromString sha1r) (BSC.lines (BSL.toStrict stdout)))
+        if any (BS.isPrefixOf $ BSC.fromString sha1r) (BSC.lines (BSL.toStrict stdout))
           then do
             logInfo "Password service reported hash as compromised"
               $ object ["sha" .= sha1p]

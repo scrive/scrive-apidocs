@@ -41,14 +41,14 @@ scheduleSMS doc SMS {..} = do
   when (T.null smsMSISDN) $ do
     unexpectedError "no mobile phone number defined"
   sid <- dbUpdate $ CreateSMS smsProvider
-                              (T.pack $ fixOriginator $ T.unpack smsOriginator)
+                              (T.pack . fixOriginator $ T.unpack smsOriginator)
                               smsMSISDN
                               smsBody
   -- charge company of the author of the document for the smses
   chargeForItemSimple (mapSMSToChargeableItem smsProvider) (documentid doc) smsCount
   case kontraInfoForSMS of
     Nothing   -> return ()
-    Just kifs -> void $ dbUpdate $ AddKontraInfoForSMS sid kifs
+    Just kifs -> void . dbUpdate $ AddKontraInfoForSMS sid kifs
   logInfo "SMS scheduled for sendout" $ object
     [ identifier $ documentid doc
     , identifier sid
@@ -89,7 +89,7 @@ scheduleSMS doc SMS {..} = do
     mapSMSToChargeableItem SMSTeliaCallGuide = CISMSTelia
 
 isGSM7PermissibleString :: Text -> Bool
-isGSM7PermissibleString s = T.all (`member` gsm7PermissibleChars) s
+isGSM7PermissibleString = T.all (`member` gsm7PermissibleChars)
   where
     gsm7PermissibleChars :: Set Char
     gsm7PermissibleChars = fromList
@@ -99,9 +99,9 @@ isGSM7PermissibleString s = T.all (`member` gsm7PermissibleChars) s
       )
 
 fixOriginator :: String -> String
-fixOriginator s = notEmpty $ map fixChars $ take 11 s
+fixOriginator s = notEmpty . map fixChars $ take 11 s
   where
-    fixChars c = if (isAlphaNum c || isSpace c) then c else ' '
-    notEmpty s' = case (trim s') of
+    fixChars c = if isAlphaNum c || isSpace c then c else ' '
+    notEmpty s' = case trim s' of
       "" -> "Scrive"
       v  -> v

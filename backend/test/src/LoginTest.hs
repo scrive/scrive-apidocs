@@ -106,14 +106,13 @@ testSuccessfulLogin = do
     , ("password" , inText "password_8866")
     , ("loginType", inText "RegularLogin")
     ]
-  (res, ctx') <- runTestKontra req ctx $ handleLoginPost
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
+  (res, ctx') <- runTestKontra req ctx handleLoginPost
+  assertBool "Response is propper JSON" $ res == runJSONGen (value "logged" True)
   assertBool "User was logged into context"
     $  (ctx' ^? #maybeUser % _Just % #id)
     == Just uid
   assertBool "User was not logged into context as pad user"
-    $  (ctx' ^. #maybePadUser)
-    == Nothing
+    $ isNothing (ctx' ^. #maybePadUser)
 
 testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue = do
@@ -125,16 +124,16 @@ testSuccessfulLoginToPadQueue = do
     , ("password", inText "password_8866")
     , ("pad"     , inText "true")
     ]
-  (res, ctx') <- runTestKontra req ctx $ handleLoginPost
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
+  (res, ctx') <- runTestKontra req ctx handleLoginPost
+  assertBool "Response is propper JSON" $ res == runJSONGen (value "logged" True)
   assertBool "User was logged into context as pad user"
     $  (ctx' ^? #maybePadUser % _Just % #id)
     == Just uid
-  assertBool "User was not logged into context" $ ctx' ^. #maybeUser == Nothing
+  assertBool "User was not logged into context" $ isNothing (ctx' ^. #maybeUser)
 
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
-  void $ createTestUser
+  void createTestUser
   ctx <- mkContext defaultLang
   req <- mkRequest
     POST
@@ -142,12 +141,12 @@ testCantLoginWithInvalidUser = do
     , ("password" , inText "password_8866")
     , ("loginType", inText "RegularLogin")
     ]
-  (res, ctx') <- runTestKontra req ctx $ handleLoginPost
+  (res, ctx') <- runTestKontra req ctx handleLoginPost
   loginFailureChecks res ctx'
 
 testCantLoginWithInvalidPassword :: TestEnv ()
 testCantLoginWithInvalidPassword = do
-  void $ createTestUser
+  void createTestUser
   ctx <- mkContext defaultLang
   req <- mkRequest
     POST
@@ -155,7 +154,7 @@ testCantLoginWithInvalidPassword = do
     , ("password" , inText "too_short")
     , ("loginType", inText "RegularLogin")
     ]
-  (res, ctx') <- runTestKontra req ctx $ handleLoginPost
+  (res, ctx') <- runTestKontra req ctx handleLoginPost
   loginFailureChecks res ctx'
 
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
@@ -168,7 +167,7 @@ testSuccessfulLoginSavesAStatEvent = do
     , ("password" , inText "password_8866")
     , ("loginType", inText "RegularLogin")
     ]
-  (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
+  (_res, ctx') <- runTestKontra req ctx handleLoginPost
   assertBool "User was logged into context"
     $  (ctx' ^? #maybeUser % _Just % #id)
     == Just uid
@@ -183,39 +182,37 @@ testCanLoginWithRedirect = do
   ctx        <- mkContext defaultLang
   req1       <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+    [ ("email", inText . unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
-  (res1, _) <- runTestKontra req1 ctx $ apiCallGetUserPersonalToken
+  (res1, _) <- runTestKontra req1 ctx apiCallGetUserPersonalToken
   -- use access tokens to log in and get cookie-like session id
   req2      <- mkRequest GET [("personal_token", inTextBS $ rsBody res1)]
-  (res2, _) <- runTestKontra req2 ctx $ apiCallLoginUserAndGetSession
+  (res2, _) <- runTestKontra req2 ctx apiCallLoginUserAndGetSession
   let Just (Object respObject2) = decode (rsBody res2) :: Maybe Value
       Just (String sessionid  ) = H.lookup "session_id" respObject2
   -- get cookie and redirect
   let redirecturl1 = "/arbitrary/url/path"
   req3 <- mkRequest GET [("session_id", inText sessionid), ("url", inText redirecturl1)]
-  (res3, ctx3) <- runTestKontra req3 ctx $ handleLoginWithRedirectGet
+  (res3, ctx3) <- runTestKontra req3 ctx handleLoginWithRedirectGet
   assertBool "Session was set" $ ctx ^. #sessionID /= ctx3 ^. #sessionID
   assertBool "Redirect was set to provided url"
              (isRedirect (LinkExternal redirecturl1) res3)
 
     -- Test that call with fail if "url" for redirection is not provided
   req4 <- mkRequest GET [("session_id", inText sessionid)]
-  assertRaisesInternalError $ do
-    void $ runTestKontra req4 ctx handleLoginWithRedirectGet
-    return ()
+  assertRaisesInternalError . void $ runTestKontra req4 ctx handleLoginWithRedirectGet
 
   -- Test that session_id is valid for more than one redirect
   let redirecturl2 = "/otherarbitrary/url/path"
   req5 <- mkRequest GET [("session_id", inText sessionid), ("url", inText redirecturl2)]
-  (res5, ctx5) <- runTestKontra req5 ctx $ handleLoginWithRedirectGet
+  (res5, ctx5) <- runTestKontra req5 ctx handleLoginWithRedirectGet
   assertBool "Session was set again" $ ctx ^. #sessionID /= ctx5 ^. #sessionID
   assertBool "Redirect was set to other url" (isRedirect (LinkExternal redirecturl2) res5)
 
   -- Test that usage of invalid session_id will work
   req6 <- mkRequest GET [("session_id", inText "1-100000"), ("url", inText redirecturl2)]
-  (res6, ctx6) <- runTestKontra req6 ctx $ handleLoginWithRedirectGet
+  (res6, ctx6) <- runTestKontra req6 ctx handleLoginWithRedirectGet
   assertBool "sessionID will not be changed if session_id is invalid"
     $  (ctx ^. #sessionID)
     == (ctx6 ^. #sessionID)
@@ -224,7 +221,7 @@ testCanLoginWithRedirect = do
 
 testCantLoginAfterFailedAttempts :: TestEnv ()
 testCantLoginAfterFailedAttempts = do
-  void $ createTestUser
+  void createTestUser
   ctx  <- mkContext defaultLang
   -- we fail to login 6 times
   req1 <- mkRequest
@@ -234,7 +231,7 @@ testCantLoginAfterFailedAttempts = do
     , ("loginType", inText "RegularLogin")
     ]
   forM_ [1 .. 6] $ \_ -> do
-    (res1, ctx1) <- runTestKontra req1 ctx $ handleLoginPost
+    (res1, ctx1) <- runTestKontra req1 ctx handleLoginPost
     loginFailureChecks res1 ctx1
 
   -- now even correct password does not work
@@ -244,7 +241,7 @@ testCantLoginAfterFailedAttempts = do
     , ("password" , inText "password_8866")
     , ("loginType", inText "RegularLogin")
     ]
-  (res2, ctx2) <- runTestKontra req2 ctx $ handleLoginPost
+  (res2, ctx2) <- runTestKontra req2 ctx handleLoginPost
   loginFailureChecks res2 ctx2
 
 assertResettingPasswordLogsIn :: TestEnv ()
@@ -356,7 +353,7 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   -- Generate an expired login_token for uid2
-  hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
+  hash <- dbUpdate . NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]
   res  <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
   let expCode = 403
@@ -375,7 +372,7 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   -- Generate a valid login_token for uid2
-  hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
+  hash <- dbUpdate . NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
   req  <- mkRequest POST [("login_token", inText $ showt hash)]
   res  <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
   let expCode = 200
@@ -384,7 +381,7 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
 testResetPasswordRemovesAllOtherUserSessions :: TestEnv ()
 testResetPasswordRemovesAllOtherUserSessions = do
   ct                  <- currentTime
-  bd                  <- dbQuery $ GetMainBrandedDomain
+  bd                  <- dbQuery GetMainBrandedDomain
   (user, ctxwithuser) <- createUserAndResetPassword
   let
     assertSessions t c = do
@@ -422,7 +419,7 @@ testResetPasswordRemovesAllOtherUserSessions = do
   req2 <- mkRequest
     POST
     [("oldpassword", inText "password_8866"), ("password", inText "password_8867")]
-  (_, _) <- runTestKontra req2 ctxwithuser $ apiCallChangeUserPassword
+  (_, _) <- runTestKontra req2 ctxwithuser apiCallChangeUserPassword
   assertSessions "We expect not to have any sessions because we changed password again" 0
 
 
@@ -479,11 +476,7 @@ testUser2FAEnforced = do
       qrText <- liftIO
         $ decodeQR (QRCode . Base64.decodeLenient $ TE.encodeUtf8 setupQRCode)
       let encsecret =
-            Prelude.head
-              . Prelude.drop 1
-              . Prelude.dropWhile (/= "secret")
-              . splitOneOf "?&="
-              $ qrText
+            (!! 1) . Prelude.dropWhile (/= "secret") . splitOneOf "?&=" $ qrText
           Right secret = B32.decode $ BSC.pack encsecret
           totpcode     = T.filter (/= '"') . showt $ totp SHA1 secret now 30 6
 
@@ -500,8 +493,8 @@ testUser2FAEnforced = do
 
 loginFailureChecks :: JSValue -> Context -> TestEnv ()
 loginFailureChecks res ctx = do
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" False)
-  assertBool "User wasn't logged into context" $ ctx ^. #maybeUser == Nothing
+  assertBool "Response is propper JSON" $ res == runJSONGen (value "logged" False)
+  assertBool "User wasn't logged into context" $ isNothing (ctx ^. #maybeUser)
 
 createTestUser :: TestEnv User
 createTestUser = createTestUser' "andrzej@skrivapa.se"

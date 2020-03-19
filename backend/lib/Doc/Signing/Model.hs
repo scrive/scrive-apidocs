@@ -37,12 +37,12 @@ instance FromSQL SignatoryFieldsValuesForSigning where
     JSON s <- fromSQL mbase
     case Aeson.eitherDecode s of
       Left _ ->
-        hpqTypesError $ "fromSQL (SignatoryFieldsValuesForSigning): can't parse json"
-      Right ae -> case (Unjson.parse unjsonSignatoryFieldsValuesForSigning ae) of
-        (Result res []) -> return $ res
+        hpqTypesError "fromSQL (SignatoryFieldsValuesForSigning): can't parse json"
+      Right ae -> case Unjson.parse unjsonSignatoryFieldsValuesForSigning ae of
+        (Result res []) -> return res
         (Result _ _) ->
           hpqTypesError
-            $ "fromSQL (SignatoryFieldsValuesForSigning): can't parse SignatoryFieldsValuesForSigning"
+            "fromSQL (SignatoryFieldsValuesForSigning): can't parse SignatoryFieldsValuesForSigning"
 
 instance ToSQL SignatoryFieldsValuesForSigning where
   type PQDest SignatoryFieldsValuesForSigning = PQDest (JSON BS.ByteString)
@@ -60,12 +60,11 @@ instance FromSQL SignatoryScreenshots where
   fromSQL mbase = do
     JSON s <- fromSQL mbase
     case Aeson.eitherDecode s of
-      Left  _  -> hpqTypesError $ "fromSQL (SignatoryScreenshots): can't parse json"
-      Right ae -> case (Unjson.parse unjsonSignatoryScreenshots ae) of
-        (Result res []) -> return $ res
+      Left  _  -> hpqTypesError "fromSQL (SignatoryScreenshots): can't parse json"
+      Right ae -> case Unjson.parse unjsonSignatoryScreenshots ae of
+        (Result res []) -> return res
         (Result _ _) ->
-          hpqTypesError
-            $ "fromSQL (SignatoryScreenshots): can't parse SignatoryScreenshots"
+          hpqTypesError "fromSQL (SignatoryScreenshots): can't parse SignatoryScreenshots"
 
 instance ToSQL SignatoryScreenshots where
   type PQDest SignatoryScreenshots = PQDest (JSON BS.ByteString)
@@ -92,12 +91,12 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
         sqlSet "accepted_attachments" $ Array1 saas
         sqlSet "screenshots" ss
         sqlSet "not_uploaded_sig_attachments" $ Array1 nusa
-        sqlSet "signature_provider" $ sp
+        sqlSet "signature_provider" sp
         sqlSetCmd "run_at" $ sqlParam now
         sqlSet "attempts"          (0 :: Int32)
         sqlSet "consent_responses" crs
 
-data GetDocumentSigningStatus = GetDocumentSigningStatus SignatoryLinkID
+newtype GetDocumentSigningStatus = GetDocumentSigningStatus SignatoryLinkID
 instance (MonadDB m, MonadLog m, MonadMask m) => DBQuery m GetDocumentSigningStatus (Maybe (Bool, Maybe Text)) where
   query (GetDocumentSigningStatus slid) = do
     runQuery_ . sqlSelect "document_signing_jobs" $ do
@@ -114,7 +113,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m Upd
       sqlSet "last_check_status" (Just text)
       sqlWhereEq "id" slid
 
-data CleanAllScheduledDocumentSigning = CleanAllScheduledDocumentSigning SignatoryLinkID
+newtype CleanAllScheduledDocumentSigning = CleanAllScheduledDocumentSigning SignatoryLinkID
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m CleanAllScheduledDocumentSigning () where
   update (CleanAllScheduledDocumentSigning slid) = do
     runQuery_ . sqlDelete "document_signing_jobs" $ do

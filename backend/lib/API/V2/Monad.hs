@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies, ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module API.V2.Monad (
   -- * Response types
     APIResponse(..)
@@ -47,34 +47,33 @@ instance ToAPIResponse Response where
 
 instance ToAPIResponse BSL.ByteString where
   toAPIResponse bs =
-    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ bs
+    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse bs
 
 instance ToAPIResponse JSValue where
   toAPIResponse jv =
-    setHeader "Content-Type" "application/json; charset=UTF-8" $ Web.toResponse $ encode
+    setHeader "Content-Type" "application/json; charset=UTF-8" . Web.toResponse $ encode
       jv
 
 instance ToAPIResponse A.Value where
   toAPIResponse aesonvalue =
-    setHeader "Content-Type" "application/json; charset=UTF-8" $ Web.toResponse $ A.encode
+    setHeader "Content-Type" "application/json; charset=UTF-8" . Web.toResponse $ A.encode
       aesonvalue
 
 instance ToAPIResponse A.Encoding where
   toAPIResponse aesonencoding =
     setHeader "Content-Type" "application/json; charset=UTF-8"
-      $ Web.toResponse
+      . Web.toResponse
       $ AE.encodingToLazyByteString aesonencoding
 
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson, a) =
     setHeader "Content-Type" "application/json; charset=UTF-8"
-      $ Web.toResponse
+      . Web.toResponse
       $ unjsonToByteStringLazy' unjsonOpts unjson a
     where unjsonOpts = Options { pretty = False, indent = 0, nulls = True }
 
 instance ToAPIResponse CSV where
-  toAPIResponse v =
-    let r1 = Web.toResponse $ v in setHeader "Content-Type" "text/csv" r1
+  toAPIResponse v = let r1 = Web.toResponse v in setHeader "Content-Type" "text/csv" r1
 
 instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
   toAPIResponse = either toAPIResponse toAPIResponse
@@ -117,12 +116,12 @@ apiLog acc = do
   ctx      <- getContext
   when (ctx ^. #isApiLogEnabled && isAPIV2Call request) $ do
     mUser <- catchDBExtraException
-      ((Just . fst) <$> getAPIUserWithAnyPrivileges)
-      (\(APIError { errorType = InvalidAuthorization }) -> return Nothing)
+      (Just . fst <$> getAPIUserWithAnyPrivileges)
+      (\APIError { errorType = InvalidAuthorization } -> return Nothing)
     case mUser of
       Just user -> do
-        queryPairs <- queryString $ lookPairsBS
-        bodyPairs  <- body $ lookPairsBS
+        queryPairs <- queryString lookPairsBS
+        bodyPairs  <- body lookPairsBS
         let logData = CallLogData
               { cldRequest  = CallLogRequest { clrqURI        = rqUri request
                                              , clrqParamsGet = apiCallParam <$> queryPairs
@@ -141,17 +140,17 @@ apiLog acc = do
     -- developer, that this was a file
     apiCallParam (name, Left _filename) = CallLogParam name "transferred file"
     -- to save space, we will not store more than 50kB parameter
-    apiCallParam (name, Right contents) = case BSU.length contents > 50000 of
-      False -> CallLogParam name (BSU.toString contents)
-      True  -> CallLogParam
+    apiCallParam (name, Right contents) = if BSU.length contents > 50000
+      then CallLogParam
         name
         (BSU.toString $ BS.concat
-          [ BS.take 50000 $ contents
+          [ BS.take 50000 contents
           , "..."
           , BSU.fromString . show . BS.length $ contents
           , " bytes of data"
           ]
         )
+      else CallLogParam name (BSU.toString contents)
 
 isAPIV2Call :: Request -> Bool
 isAPIV2Call rq = "/api/v2/" `isPrefixOf` rqUri rq

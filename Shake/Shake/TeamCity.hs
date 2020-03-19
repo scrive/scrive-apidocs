@@ -12,7 +12,7 @@ import System.Exit
 hUnitForTeamCity :: ExitCode -> String -> IO ()
 hUnitForTeamCity c out = do
   allErrs <- mapM parseHUnit $ lines out
-  let errs = unlines $ fmap fromJust $ filter isJust allErrs
+  let errs = unlines . fmap fromJust $ filter isJust allErrs
   case c of
     ExitSuccess   -> return ()
     ExitFailure _ -> error errs
@@ -22,7 +22,7 @@ hUnitForTeamCity c out = do
       putStrLn s
       putStrLn $ teamcityFailureMessage s
       return $ Just s
-    parseHUnit s | otherwise = do
+    parseHUnit s = do
       putStrLn s
       return Nothing
 

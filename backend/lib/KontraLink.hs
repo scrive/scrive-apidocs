@@ -3,6 +3,7 @@ module KontraLink (
   , getHomeOrDesignViewLink
   ) where
 
+import Data.Bifunctor
 import Data.List.Split
 import Network.HTTP
 import Network.URI
@@ -60,26 +61,26 @@ data KontraLink
     | LinkPortalInviteWithoutAccount Text Email MagicHash UTCTime
 
 langFolder :: Lang -> Text
-langFolder lang = "/" <> (codeFromLang lang)
+langFolder lang = "/" <> codeFromLang lang
 
 {- |
    Shows each link as a relative url
 -}
 instance Show KontraLink where
-  showsPrec _ (LinkHome  lang) = (<>) $ (T.unpack $ langFolder lang) <> "/"
-  showsPrec _ (LinkLogin lang) = (<>) $ (T.unpack $ langFolder lang) <> "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
+  showsPrec _ (LinkHome  lang) = (<>) $ T.unpack (langFolder lang) <> "/"
+  showsPrec _ (LinkLogin lang) = (<>) $ T.unpack (langFolder lang) <> "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
   showsPrec _ (LinkLoginDirect lang) =
-    (<>) $ (T.unpack $ langFolder lang) <> "/enter#log-in"  -- THIS ONE IS NOT USED. CHECK sendRedirect
-  showsPrec _ (LinkSignup lang) = (<>) $ (T.unpack $ langFolder lang) <> "/enter#sign-up"
-  showsPrec _ (LinkArchive    ) = (<>) $ "/d"
+    (<>) $ T.unpack (langFolder lang) <> "/enter#log-in"  -- THIS ONE IS NOT USED. CHECK sendRedirect
+  showsPrec _ (LinkSignup lang) = (<>) $ T.unpack (langFolder lang) <> "/enter#sign-up"
+  showsPrec _ LinkArchive       = (<>) "/d"
   showsPrec _ LinkAcceptTOS     = (<>) "/accepttos"
-  showsPrec _ (LinkAccount)     = (<>) "/account"
+  showsPrec _ LinkAccount       = (<>) "/account"
   showsPrec _ (LinkChangeUserEmail actionid magichash) =
     (<>) $ "/account/" <> show actionid <> "/" <> show magichash
   showsPrec _ (LinkCompanyTakeover ugid) = (<>) $ "/companyaccounts/join/" <> show ugid
   showsPrec _ (LinkIssueDoc documentid) = (<>) $ "/d/" <> show documentid
   showsPrec _ (LinkEvidenceAttachment did filename) =
-    (<>) $ "/d/evidenceattachment/" <> show did <> "/" <> (T.unpack filename)
+    (<>) $ "/d/evidenceattachment/" <> show did <> "/" <> T.unpack filename
   showsPrec _ (LinkSignDocPad did slid) = (<>) $ "/sp/" <> show did <> "/" <> show slid
   showsPrec _ (LinkMainFile document signatorylink mh) =
     (<>)
@@ -102,18 +103,18 @@ instance Show KontraLink where
     (<>) $ "/amnesia/" <> show aid <> "/" <> show hash
   showsPrec _ (LinkAccountCreated lang uid hash sm) =
     (<>)
-      $  (T.unpack $ langFolder lang)
+      $  T.unpack (langFolder lang)
       <> "/accountsetup/"
       <> show uid
       <> "/"
       <> show hash
       <> "/"
       <> show sm
-  showsPrec _ LoopBack                 = (<>) $ "/" -- this should never be used
+  showsPrec _ LoopBack                 = (<>) "/" -- this should never be used
   showsPrec _ (LinkDaveDocument docid) = (<>) ("/dave/document/" <> show docid <> "/")
   showsPrec _ (LinkDaveFile fileid filename) =
-    (<>) $ "/dave/file/" <> show fileid <> "/" <> (T.unpack filename)
-  showsPrec _ (LinkEnableCookies) = (<>) ("/enable-cookies/enable-cookies.html")
+    (<>) $ "/dave/file/" <> show fileid <> "/" <> T.unpack filename
+  showsPrec _ LinkEnableCookies = (<>) "/enable-cookies/enable-cookies.html"
   showsPrec _ (LinkDocumentPreview did (Just (sl, Just mh)) fid width) = (<>)
     (  "/preview/"
     <> show did
@@ -146,10 +147,10 @@ instance Show KontraLink where
     )
   showsPrec _ (LinkOAuthCallback url token Nothing) =
     (<>) (show $ setParams url [("oauth_token", showt token), ("denied", "true")])
-  showsPrec _ (LinkDesignView         ) = (<>) "/newdocument"
-  showsPrec _ (LinkPadList            ) = (<>) "/to-sign"
-  showsPrec _ (LinkExternal s         ) = (<>) (T.unpack s)
-  showsPrec _ (LinkPreviewLockedImage ) = (<>) "/img/preview_locked.png"
+  showsPrec _ LinkDesignView            = (<>) "/newdocument"
+  showsPrec _ LinkPadList               = (<>) "/to-sign"
+  showsPrec _ (LinkExternal s)          = (<>) (T.unpack s)
+  showsPrec _ LinkPreviewLockedImage    = (<>) "/img/preview_locked.png"
   showsPrec _ (LinkPermanentRedirect s) = (<>) (T.unpack s)
   showsPrec _ (LinkTemplateShareableLink did mh) =
     (<>) ("/t/" <> show did <> "/" <> show mh)
@@ -171,7 +172,7 @@ setParams :: URI -> [(Text, Text)] -> URI
 setParams uri params = uri { uriQuery = "?" <> vars }
   where
     params' :: [(String, String)]
-    params' = fmap (\(t1, t2) -> (T.unpack t1, T.unpack t2)) params
+    params' = fmap (bimap T.unpack T.unpack) params
 
     mvars   = urlDecodeVars $ uriQuery uri
     vars    = urlEncodeVars $ maybe params' (<> params') mvars

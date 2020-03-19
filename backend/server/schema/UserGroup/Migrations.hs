@@ -167,9 +167,9 @@ createTableUserGroupUIs = Migration
         , tblForeignKeys =
           [ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade
                                                             }
-          , (fkOnColumn "mail_theme" "themes" "id")
-          , (fkOnColumn "signview_theme" "themes" "id")
-          , (fkOnColumn "service_theme" "themes" "id")
+          , fkOnColumn "mail_theme"     "themes" "id"
+          , fkOnColumn "signview_theme" "themes" "id"
+          , fkOnColumn "service_theme"  "themes" "id"
           ]
         }
   }
@@ -234,7 +234,7 @@ usergroupsAddDeleted :: MonadDB m => Migration m
 usergroupsAddDeleted = Migration
   { mgrTableName = tblName tableUserGroups
   , mgrFrom      = 3
-  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
                      (tblName tableUserGroups)
                      [ sqlAddColumn
                          $ tblColumn { colName = "deleted", colType = TimestampWithZoneT }
@@ -245,7 +245,7 @@ userGroupSettingsAddLegalText :: MonadDB m => Migration m
 userGroupSettingsAddLegalText = Migration
   { mgrTableName = tblName tableUserGroupSettings
   , mgrFrom      = 1
-  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
                      (tblName tableUserGroupSettings)
                      [ sqlAddColumn $ tblColumn { colName     = "legal_text"
                                                 , colType     = BoolT
@@ -313,7 +313,7 @@ userGroupAddGINIdx = Migration
   , mgrAction    = StandardMigration $ do
                      runQuery_
                        . sqlCreateIndexSequentially (tblName tableUserGroups)
-                       $ (indexOnColumnWithMethod "parent_group_path" GIN)
+                       $ indexOnColumnWithMethod "parent_group_path" GIN
   }
 
 addUserGroupHomeFolderID :: MonadDB m => Migration m
@@ -366,8 +366,8 @@ userGroupSettingsAddSendTimeoutNotification = Migration
                                    , colDefault  = Just "false"
                                    }
         ]
-      runQuery_ $ sqlDropComposite $ "user_group_settings_c1"
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ $ sqlDropComposite "user_group_settings_c1"
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -398,7 +398,7 @@ userGroupSettingsAddFolderListCallFlag = Migration
   , mgrFrom      = 6
   , mgrAction    =
     StandardMigration $ do
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c2"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -446,7 +446,7 @@ userGroupSettingsAddTotpIsMandatory = Migration
                                    , colDefault  = Just "false"
                                    }
         ]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c3"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -488,7 +488,7 @@ userGroupSettingsAddSessionTimeout = Migration
                                    }
         ]
 
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c4"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -525,7 +525,7 @@ userGroupSettingsAddPortalUrl = Migration
       runQuery_ $ sqlAlterTable
         (tblName tableUserGroupSettings)
         [sqlAddColumn $ tblColumn { colName = "portal_url", colType = TextT }]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c5"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -568,7 +568,7 @@ userGroupAddressAddEntityNameField = Migration
                                    , colDefault  = Just "''::text"
                                    }
         ]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_address_c2"
         , ctColumns = [ CompositeColumn { ccName = "company_number", ccType = TextT }
                       , CompositeColumn { ccName = "entity_name", ccType = TextT }
@@ -579,7 +579,7 @@ userGroupAddressAddEntityNameField = Migration
                       ]
         }
       -- Populate Entity Name from the User Group name
-      runQuery_ $ sqlUpdate "user_group_addresses" $ do
+      runQuery_ . sqlUpdate "user_group_addresses" $ do
         sqlSetCmd "entity_name" "user_groups.name"
         sqlFrom "user_groups"
         sqlWhere "user_group_addresses.user_group_id = user_groups.id"
@@ -594,7 +594,7 @@ userGroupSettingsAddEidServiceToken = Migration
       runQuery_ $ sqlAlterTable
         (tblName tableUserGroupSettings)
         [sqlAddColumn $ tblColumn { colName = "eid_service_token", colType = TextT }]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c6"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -699,7 +699,7 @@ createTableUserGroupTags = Migration
                                                               }
             ]
           }
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_tag_c1"
         , ctColumns = [ CompositeColumn { ccName = "name", ccType = TextT }
                       , CompositeColumn { ccName = "value", ccType = TextT }
@@ -713,7 +713,7 @@ renameUserGroupTagComposite = Migration
   , mgrFrom      = 1
   , mgrAction    = StandardMigration $ do
                      runQuery_ $ sqlDropComposite "user_group_tag_c1"
-                     runQuery_ $ sqlCreateComposite $ CompositeType
+                     runQuery_ . sqlCreateComposite $ CompositeType
                        { ctName = "tag_c1"
                        , ctColumns = [ CompositeColumn { ccName = "name", ccType = TextT }
                                      , CompositeColumn { ccName = "value", ccType = TextT }
@@ -735,7 +735,7 @@ userGroupSettingsAddSealingMethod = Migration
                                    , colDefault  = Just "1"
                                    }
         ]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c7"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -780,7 +780,7 @@ userGroupSettingsAddDocumentSessionTimeout = Migration
                                    , colDefault  = Nothing
                                    }
         ]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c8"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }

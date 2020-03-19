@@ -4,18 +4,20 @@ import Control.Exception (IOException, SomeException, catch, evaluate)
 import Control.Monad
 import Control.Monad.Writer (execWriter, tell)
 import Data.Char
-import Data.List (intersect)
+import Data.List (intercalate)
 import Data.List.Extra (intersperse, trim)
 import Data.Maybe
 import Data.Version.Extra (makeVersion, readVersion, showVersion)
 import Development.Shake
 import Development.Shake.FilePath
 import Distribution.Text (display)
+import GHC.Conc
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (lookupEnv)
 import System.Exit (ExitCode(..), exitFailure)
 import System.IO (hPutStrLn, stderr)
 import System.Process (callProcess, readProcess)
+import qualified Data.Set as S
 
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
@@ -25,21 +27,22 @@ import Shake.Oracles
 import Shake.TeamCity
 import Shake.Utils
 
-opts :: String -> ShakeOptions
-opts v = shakeOptions { shakeVersion   = v
-                      , shakeFiles     = "_build"
-                      , shakeVerbosity = Loud
-                      -- When running on multiple threads, a build
-                      -- failure on one thread does not stop other
-                      -- threads from continuing.
-                      --
-                      -- Maybe this is default Shake behaviour, but it is
-                      -- annoying as the build error gets lost in
-                      -- output.
-                      --
-                      -- Run on single thread until we figure this out
-                      , shakeThreads   = 1
-                      }
+opts :: Int -> String -> ShakeOptions
+opts threads v = shakeOptions { shakeVersion   = v
+                              , shakeFiles     = "_build"
+                              , shakeVerbosity = Loud
+                              -- When running on multiple threads, a build
+                              -- failure on one thread does not stop other
+                              -- threads from continuing.
+                              --
+                              -- Maybe this is default Shake behaviour, but it is
+                              -- annoying as the build error gets lost in
+                              -- output.
+                              --
+                              -- Can be overriden by RTS -Nx option for running
+                              -- hlint/refactor/brittany in parallel.
+                              , shakeThreads   = threads
+                              }
 usageMsg :: String
 usageMsg = unlines
   [ ""
@@ -83,12 +86,14 @@ usageMsg = unlines
   , "   hindent                   : Format code with hindent"
   , "   stylish-haskell           : Format code with stylish-haskell"
   , "   hlint                     : Run hlint, printing output to stdout"
+  , "   hlint-quick               : Run hlint, printing output to stdout, only on files changed against master"
   , "   hlint-report              : Run hlint, generating an HTML report"
   , "   hlint-refactor            : Run hlint, applying all hints automatically"
+  , "   hlint-refactor-quick      : Run hlint, applying all hints automatically, only on files changed against master"
   , "   test-formatting           : Test whether code base has run through fix-formatting"
   , "   test-hs-import-order      : Run Haskell Import Order checking script"
   , "   fix-formatting            : Format code base using brittany and sort_import"
-  , "   fix-formatting-quick       : Format code base using brittany and sort_import, only on changed files against master"
+  , "   fix-formatting-quick      : Format code base using brittany and sort_import, only on changed files against master"
   , "   fix-hs-import-order       : Sort Haskell imports"
   , "   test-hs-outdated-deps     : Check for outdated Haskell dependencies"
   , ""
@@ -139,7 +144,10 @@ checkPrerequisites = do
                  ["--version"]
                  (makeVersion [0, 12, 0, 0])
                  (takeWhile dotOrNum . drop 17)
-
+  requireVersion "hlint"
+                 ["--version"]
+                 (makeVersion [2, 2, 11])
+                 (takeWhile dotOrNum . drop 7)
   where
     dotOrNum c = c == '.' || isNumber c
 
@@ -180,14 +188,15 @@ main = do
   -- correct.
   checkPrerequisites
 
-  sourceRoot <- fromMaybe "." <$> (lookupEnv "KONTRAKCJA_ROOT")
+  sourceRoot <- fromMaybe "." <$> lookupEnv "KONTRAKCJA_ROOT"
 
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
   hsDeps     <- getHsDeps $ sourceRoot </> "Shake"
-  ver        <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
+  threads    <- getNumCapabilities
+  ver        <- getHashedShakeVersion $ "shake.sh" : hsDeps
   -- Dependency information needed by our rules.
   cabalFile  <- parseCabalFile $ sourceRoot </> "kontrakcja.cabal"
-  shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
+  shakeArgsWith (opts threads ver) shakeFlags $ \flags targets -> return . Just $ do
     newBuild <- liftIO $ mkUseNewBuild flags cabalFile
     let opt        = getOptimisationLevel flags
         exeDynamic = DisableExecutableDynamic `notElem` flags
@@ -248,7 +257,7 @@ main = do
                     cabalFile
                     (mkCreateDBWithTestConf flags)
                     [ pat | TestPattern pat <- flags ]
-    serverFormatLintRules sourceRoot newBuild opt cabalFile flags
+    serverFormatLintRules sourceRoot newBuild threads opt cabalFile flags
     frontendBuildRules newBuild
     frontendTestRules newBuild
     distributionRules newBuild opt
@@ -368,7 +377,7 @@ serverOldBuildRules opt exeDynamic cabalFile = do
     -- Need to rebuild on TeamCity because version code for resources
     -- that is generated in src/Version.hs is used for stuff that is
     -- rebuilt with new version code by `grunt build`.
-    when tc $ alwaysRerun
+    when tc alwaysRerun
     -- Need to clean for flags to be effective.
     command_ [] "cabal" ["clean"]
 
@@ -383,7 +392,7 @@ serverOldBuildRules opt exeDynamic cabalFile = do
     cabalFlags   <- askOracleWith (BuildCabalConfigureOptions ()) ""
     if tc || testCoverage || (not . null) cabalFlags
       then need ["_build/cabal-configure-with-flags"]
-      else cmd (Shell) $ "cabal configure --enable-tests"
+      else cmd Shell "cabal configure --enable-tests"
 
   "_build/cabal-build" %>>> do
     need ["dist/setup-config"]
@@ -454,7 +463,7 @@ serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
     sourceRoot <- askOracle (SourceRoot ())
-    withDB createDBWithConf $ forM_ testSuiteExePaths $ \testSuiteExe -> do
+    withDB createDBWithConf . forM_ testSuiteExePaths $ \testSuiteExe -> do
       let testPatterns' | null testPatterns = []
                         | otherwise         = "-t" : intersperse "-t" testPatterns
       target <- askOracle (BuildTarget ())
@@ -496,9 +505,9 @@ serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
   where
     withDB DontCreateTestConf      act = act
     withDB CreateTestDBWithNewConf act = do
-      (dbName, connString, (_ :: String), (_ :: String), (_ :: String)) <- askOracle
+      (dbName, connString, _ :: String, _ :: String, _ :: String) <- askOracle
         $ CreateTestDBWithConfData ()
-      (mkDB connString dbName >> act) `actionFinally` (rmDB connString dbName)
+      (mkDB connString dbName >> act) `actionFinally` rmDB connString dbName
       where
         mkDB connString dbName = do
           unit $ cmd
@@ -529,8 +538,14 @@ needServerHaskellFiles :: CabalFile -> Action ()
 needServerHaskellFiles = needHaskellFilesInDirectories . allLibExeHsSourceDirs
 
 serverFormatLintRules
-  :: FilePath -> UseNewBuild -> OptimisationLevel -> CabalFile -> [ShakeFlag] -> Rules ()
-serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
+  :: FilePath
+  -> UseNewBuild
+  -> Int
+  -> OptimisationLevel
+  -> CabalFile
+  -> [ShakeFlag]
+  -> Rules ()
+serverFormatLintRules sourceRoot newBuild threads opt cabalFile flags = do
   "_build/hs-import-order" %>>> do
     needAllHaskellFiles cabalFile
     need [componentTargetPath newBuild opt (mkExeName "sort_imports")]
@@ -567,56 +582,32 @@ serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
     forM_ srcSubdirs $ \subdir -> onEachHsFile subdir ["stylish-haskell", "-i"]
 
   "hlint" ~> do
-    cmd "hlint" (commonHLintOpts <> srcSubdirs)
+    cmd "hlint" $ hlintJobs <> srcSubdirs
+
+  "hlint-quick" ~> do
+    hsFiles <- listChangedHsFiles
+    cmd "hlint" $ hlintJobs <> hsFiles
 
   "hlint-report" ~> do
-    unit $ cmd "hlint" (commonHLintOpts <> ("-q" : "--report" : srcSubdirs))
+    unit . cmd "hlint" $ hlintJobs <> ("-q" : "--report" : srcSubdirs)
     putNormal "Output written to report.html"
 
   "hlint-refactor" ~> do
-    forM_ srcSubdirs $ \subdir -> onEachHsFile
-      subdir
-      (["hlint"] <> commonHLintOpts <> ["--refactor", "--refactor-options=-i"])
+    mapP_ runRefactor =<< listHsFiles
+
+  "hlint-refactor-quick" ~> do
+    mapP_ runRefactor =<< listChangedHsFiles
 
   "brittany" ~> do
-    hsFiles <- listHsFiles
-    forM_ hsFiles $ \srcPath -> do
-      unit
-        $ command [] "brittany"
-        $ [ "--config-file"
-          , sourceRoot </> "brittany.yaml"
-          , "--write-mode"
-          , "inplace"
-          , srcPath
-          ]
+    mapP_ runBrittany =<< listHsFiles
 
   "brittany-quick" ~> do
-    hsFiles <- listHsFiles
-    (Exit code, Stdout res, Stderr err) <- command
-      [Cwd sourceRoot]
-      "git"
-      ["diff", quickFormatBranch, "--name-only"]
-    case code of
-      ExitSuccess -> do
-        let changedFiles   = fmap (\file -> sourceRoot </> file) $ lines res
-        let changedHsFiles = intersect hsFiles changedFiles
-        forM_ changedHsFiles $ \srcPath -> do
-          unit
-            $ command [] "brittany"
-            $ [ "--config-file"
-              , sourceRoot </> "brittany.yaml"
-              , "--write-mode"
-              , "inplace"
-              , srcPath
-              ]
-
-        return ()
-      ExitFailure _ -> fail $ "Failed to run git diff: " <> err
+    mapP_ runBrittany =<< listChangedHsFiles
 
   "brittany-check" ~> do
     hsFiles          <- listHsFiles
-    unformattedFiles <- fmap join $ forM hsFiles $ \srcPath -> do
-      formatted <- checkFormatted $ srcPath
+    unformattedFiles <- fmap concat . forP hsFiles $ \srcPath -> do
+      formatted <- checkFormatted srcPath
       if formatted
         then return []
         else do
@@ -627,44 +618,82 @@ serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
       _ ->
         fail
           $  "formatting check failed. the following files are unformatted:\n"
-          <> (concat $ intersperse "\n" unformattedFiles)
+          <> intercalate "\n" unformattedFiles
 
   where
     srcSubdirs :: [FilePath]
     srcSubdirs = case [ subdir | SrcSubdir subdir <- flags ] of
-      [] -> fmap (sourceRoot </>) $ "Shake" : allHsSourceDirs cabalFile
+      [] -> (sourceRoot </>) <$> "Shake" : allHsSourceDirs cabalFile
       ds -> ds
 
-    quickFormatBranch :: String
-    quickFormatBranch = case [ branch | QuickFormatBranch branch <- flags ] of
-      []           -> "master"
-      (branch : _) -> branch
-
-    commonHLintOpts = ["-XNoPatternSynonyms", "--no-exit-code", "--cross"]
+    hlintJobs = ["-j" ++ show threads]
 
     listHsFiles :: Action [String]
-    listHsFiles = fmap join $ forM srcSubdirs $ \subdir -> do
+    listHsFiles = fmap concat . forM srcSubdirs $ \subdir -> do
       files <- getDirectoryFiles subdir ["//*.hs"]
-      return $ fmap (\file -> subdir </> file) files
+      return $ fmap (subdir </>) files
+
+    listChangedHsFiles :: Action [FilePath]
+    listChangedHsFiles = do
+      hsFiles <- listHsFiles
+      let gitBranch = case [ branch | QuickBranch branch <- flags ] of
+            []           -> "master"
+            (branch : _) -> branch
+      (Exit code, Stdout res, Stderr err) <- command [Cwd sourceRoot]
+                                                     "git"
+                                                     ["diff", gitBranch, "--name-only"]
+      case code of
+        ExitSuccess -> do
+          let changedFiles = (sourceRoot </>) <$> lines res
+          pure . S.toList $ S.fromList hsFiles `S.intersection` S.fromList changedFiles
+        ExitFailure _ -> fail $ "Failed to run git diff: " <> err
 
     onEachHsFile :: String -> [String] -> Action ()
     onEachHsFile subdir act =
       unit
-        $  cmd "find"
+        .  cmd "find"
         $  [subdir, "-type", "f", "-name", "*.hs", "-exec"]
         <> act
         <> ["{}", ";"]
 
+    runBrittany :: FilePath -> Action ()
+    runBrittany srcPath = command
+      []
+      "brittany"
+      [ "--config-file"
+      , sourceRoot </> "brittany.yaml"
+      , "--write-mode"
+      , "inplace"
+      , srcPath
+      ]
+
+    runRefactor :: FilePath -> Action ()
+    runRefactor srcPath = cmd
+      "hlint"
+      ["--refactor", "--refactor-options=" <> unwords refactorOptions, srcPath]
+      where
+        refactorOptions =
+          [ "-XBangPatterns"
+          , "-XExplicitForAll"
+          , "-XLambdaCase"
+          , "-XMultiWayIf"
+          , "-XOverloadedLabels"
+          , "-XRecordWildCards"
+          , "-XTypeApplications"
+          , "-i"
+          ]
+
     checkFormatted srcPath = do
-      Exit code <-
-        command [] "brittany"
-          $ ["--config-file", sourceRoot </> "brittany.yaml", "--check-mode", srcPath]
+      Exit code <- command
+        []
+        "brittany"
+        ["--config-file", sourceRoot </> "brittany.yaml", "--check-mode", srcPath]
       case code of
         ExitSuccess   -> return True
         ExitFailure _ -> return False
 
     hsImportOrderAction checkOnly dirs = do
-      let sortImportsFlags = if checkOnly then ("--check" : dirs) else dirs
+      let sortImportsFlags = if checkOnly then "--check" : dirs else dirs
       command ([Shell] <> langEnv)
               (componentTargetPath newBuild opt . mkExeName $ "sort_imports")
               sortImportsFlags
@@ -720,14 +749,14 @@ frontendTestRules newBuild = do
     sourceRoot <- askOracle (SourceRoot ())
     need ["_build/grunt-build"]
     testCoverage <- askOracle (BuildTestCoverage ())
-    case testCoverage of
-      False -> cmd [Cwd $ sourceRoot </> "frontend"]
-                   "grunt"
-                   ["test:fast", gruntNewBuildArg newBuild]
-      True -> do
+    if testCoverage
+      then do
         need ["grunt-coverage"]
         command_ [Shell] "zip -r _build/JS_coverage.zip frontend/coverage/" []
         removeFilesAfter "frontend/coverage" ["//*"]
+      else cmd [Cwd $ sourceRoot </> "frontend"]
+               "grunt"
+               ["test:fast", gruntNewBuildArg newBuild]
 
 -- * Create distribution
 distributionRules :: UseNewBuild -> OptimisationLevel -> Rules ()
@@ -756,15 +785,15 @@ distributionRules newBuild opt = do
              ["urls_list.txt", nginxconfdefaultrule]
     removeFilesAfter "." ["urls.txt", "urls_list.txt"]
 
-  let binaryNames =
-        map mkExeName
-          $ [ "kontrakcja-server"
-            , "cron"
-            , "kontrakcja-migrate"
-            , "mailing-server"
-            , "messenger-server"
-            , "config-checker"
-            ]
+  let binaryNames = map
+        mkExeName
+        [ "kontrakcja-server"
+        , "cron"
+        , "kontrakcja-migrate"
+        , "mailing-server"
+        , "messenger-server"
+        , "config-checker"
+        ]
 
   copyBinariesRules binaryNames
 
@@ -808,112 +837,110 @@ distributionRules newBuild opt = do
 -- * Utility scripts.
 
 scriptsUsageMsg :: String
-scriptsUsageMsg =
-  unlines
-    $ [ "Using utility scripts"
-      , "====================="
-      , ""
-      , "transifex-fix"
-      , "-------------"
-      , "Sort local Transifex .json translation files."
-      , "To use, run 'shake.sh transifex-fix ARGS'."
-      , ""
-      , "transifex-push"
-      , "-------------"
-      , "Push local translation to the Transifex server."
-      , "To use, run 'shake.sh transifex-push ARGS'."
-      , "Required arguments: --user, --password."
-      , "Optional argument:  --lang."
-      , ""
-      , "transifex-diff"
-      , "-------------"
-      , "Diff local translation against the version on the server."
-      , "To use, run 'shake.sh transifex-diff ARGS'."
-      , "Required arguments: --user, --password."
-      , "Optional argument:  --lang."
-      , ""
-      , "transifex-merge"
-      , "-------------"
-      , "Merge local translation with the remote one."
-      , "To use, run 'shake.sh transifex-merge ARGS'."
-      , "Required arguments: --user, --password."
-      , "Optional argument:  --lang."
-      , ""
-      , "transifex-help"
-      , "--------------"
-      , "Help on using Transifex."
-      , ""
-      , "detect-old-localizations"
-      , "------------------------"
-      , "Detect old localizations. To use, run 'shake.sh detect-old-localizations'."
-      , ""
-      , "detect-old-templates"
-      , "--------------------"
-      , "Detect old templates. To use, run 'shake.sh detect-old-templates'."
-      , ""
-      , "take-reference-screenshots"
-      , "--------------------------"
-      , "Update reference screenshots."
-      , "After running 'shake.sh take-reference-screenshots',"
-      , "do the following steps:"
-      , ""
+scriptsUsageMsg = unlines
+  [ "Using utility scripts"
+  , "====================="
+  , ""
+  , "transifex-fix"
+  , "-------------"
+  , "Sort local Transifex .json translation files."
+  , "To use, run 'shake.sh transifex-fix ARGS'."
+  , ""
+  , "transifex-push"
+  , "-------------"
+  , "Push local translation to the Transifex server."
+  , "To use, run 'shake.sh transifex-push ARGS'."
+  , "Required arguments: --user, --password."
+  , "Optional argument:  --lang."
+  , ""
+  , "transifex-diff"
+  , "-------------"
+  , "Diff local translation against the version on the server."
+  , "To use, run 'shake.sh transifex-diff ARGS'."
+  , "Required arguments: --user, --password."
+  , "Optional argument:  --lang."
+  , ""
+  , "transifex-merge"
+  , "-------------"
+  , "Merge local translation with the remote one."
+  , "To use, run 'shake.sh transifex-merge ARGS'."
+  , "Required arguments: --user, --password."
+  , "Optional argument:  --lang."
+  , ""
+  , "transifex-help"
+  , "--------------"
+  , "Help on using Transifex."
+  , ""
+  , "detect-old-localizations"
+  , "------------------------"
+  , "Detect old localizations. To use, run 'shake.sh detect-old-localizations'."
+  , ""
+  , "detect-old-templates"
+  , "--------------------"
+  , "Detect old templates. To use, run 'shake.sh detect-old-templates'."
+  , ""
+  , "take-reference-screenshots"
+  , "--------------------------"
+  , "Update reference screenshots."
+  , "After running 'shake.sh take-reference-screenshots',"
+  , "do the following steps:"
+  , ""
   -- TODO: Explain the process better.
-      , "x = concatLines base64 /tmp/author.png"
-      , "authorJson = {\"time\":str(now()), in format 2015-09-22T16:00:00Z"
-      , "              \"image\":\"data:image/jpeg;base64,\" + x}"
-      , "writeFile files/reference_screenshots/author.json (dumps(authorJson))"
-      , "same thing for /tmp/desktop2.png into "
-        <> "files/reference_screenshots/standard.json"
-      , "same thing for /tmp/mobile2.png into"
-      , "files/reference_screenshots/mobile.json"
-      , ""
-      , "run-localization"
-      , "--------------------------"
-      , "Update the pre-generated localization files in"
-      , "'frontend/app/localization/ for all languages."
-      , "To use, run 'shake.sh run-localization'."
-      ]
+  , "x = concatLines base64 /tmp/author.png"
+  , "authorJson = {\"time\":str(now()), in format 2015-09-22T16:00:00Z"
+  , "              \"image\":\"data:image/jpeg;base64,\" + x}"
+  , "writeFile files/reference_screenshots/author.json (dumps(authorJson))"
+  , "same thing for /tmp/desktop2.png into "
+    <> "files/reference_screenshots/standard.json"
+  , "same thing for /tmp/mobile2.png into"
+  , "files/reference_screenshots/mobile.json"
+  , ""
+  , "run-localization"
+  , "--------------------------"
+  , "Update the pre-generated localization files in"
+  , "'frontend/app/localization/ for all languages."
+  , "To use, run 'shake.sh run-localization'."
+  ]
 
 transifexUsageMsg :: String
-transifexUsageMsg =
-  unlines
-    $ [ "------------------------------------"
-      , "How to do Transifex synchronisation:"
-      , "------------------------------------"
-      , ""
-      , "First make sure that you are on good branch - the one that is"
-      , "synched with TX. Right now it's staging."
-      , ""
-      , "WARNING: If you're on a different branch, you can destroy texts."
-      , ""
-      , "First, do:"
-      , ""
-      , " ./shake.sh transifex-diff --user USER --password PASS --lang en"
-      , ""
-      , "And check if response looks reasonable. If there are 500 texts"
-      , "changed, it's bad, but 50 are ok. Now push your local source texts"
-      , "to transifex. This will make all English texts available to"
-      , "translators."
-      , ""
-      , "./shake.sh transifex-push --user USER --password PASS --lang en"
-      , ""
-      , "You should never do this with any other language, since it will"
-      , "overwrite translations. And translations should be done in TX, not"
-      , "in sources."
-      , ""
-      , "Now it's time to fetch stuff from TX. You do that with"
-      , ""
-      , "./shake.sh transifex-merge --user USER --password PASS"
-      , ""
-      , "This will fetch all source files for all languages. It will include"
-      , "English, and it is possible that TX will drop some spaces, etc. It"
-      , "still should be fine. For every change it will overwrite local file."
-      , ""
-      , "After you merged it is always good to run tests with -t"
-      , "Localization. Errors should be fixed in TX, and then you just do"
-      , "synchronization again. But at this point you will not need to push"
-      , "English texts."
-      ]
+transifexUsageMsg = unlines
+  [ "------------------------------------"
+  , "How to do Transifex synchronisation:"
+  , "------------------------------------"
+  , ""
+  , "First make sure that you are on good branch - the one that is"
+  , "synched with TX. Right now it's staging."
+  , ""
+  , "WARNING: If you're on a different branch, you can destroy texts."
+  , ""
+  , "First, do:"
+  , ""
+  , " ./shake.sh transifex-diff --user USER --password PASS --lang en"
+  , ""
+  , "And check if response looks reasonable. If there are 500 texts"
+  , "changed, it's bad, but 50 are ok. Now push your local source texts"
+  , "to transifex. This will make all English texts available to"
+  , "translators."
+  , ""
+  , "./shake.sh transifex-push --user USER --password PASS --lang en"
+  , ""
+  , "You should never do this with any other language, since it will"
+  , "overwrite translations. And translations should be done in TX, not"
+  , "in sources."
+  , ""
+  , "Now it's time to fetch stuff from TX. You do that with"
+  , ""
+  , "./shake.sh transifex-merge --user USER --password PASS"
+  , ""
+  , "This will fetch all source files for all languages. It will include"
+  , "English, and it is possible that TX will drop some spaces, etc. It"
+  , "still should be fine. For every change it will overwrite local file."
+  , ""
+  , "After you merged it is always good to run tests with -t"
+  , "Localization. Errors should be fixed in TX, and then you just do"
+  , "synchronization again. But at this point you will not need to push"
+  , "English texts."
+  ]
 
 runTX :: UseNewBuild -> OptimisationLevel -> String -> [String] -> Action ()
 runTX newBuild opt a args = do

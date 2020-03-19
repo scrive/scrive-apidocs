@@ -30,19 +30,19 @@ import Utils.List
 
 oauth :: Route (Kontra Response)
 oauth = choice
-  [ dir "oauth" $ dir "temporarycredentials" $ hGet $ toK0 $ tempCredRequest
-  , dir "oauth" $ dir "authorization" $ hGet $ toK0 $ authorization
-  , dir "oauth" $ dir "authorizationconfirm" $ hPost $ toK0 $ authorizationGranted
-  , dir "oauth" $ dir "authorizationdeny" $ hPost $ toK0 $ authorizationDenied
-  , dir "oauth" $ dir "tokencredentials" $ hGet $ toK0 $ tokenCredRequest
-  , dir "oauth" $ dir "createapitoken" $ hPost $ toK0 $ createAPIToken
-  , dir "oauth" $ dir "deleteapitoken" $ hPost $ toK0 $ deleteAPIToken
-  , dir "oauth" $ dir "createpersonaltoken" $ hPost $ toK0 $ createPersonalToken
-  , dir "oauth" $ dir "deletepersonaltoken" $ hPost $ toK0 $ deletePersonalToken
-  , dir "oauth" $ dir "deleteprivilege" $ hPost $ toK0 $ deletePrivilege
+  [ (dir "oauth" . dir "temporarycredentials" . hGet . toK0) tempCredRequest
+  , (dir "oauth" . dir "authorization" . hGet . toK0) authorization
+  , (dir "oauth" . dir "authorizationconfirm" . hPost . toK0) authorizationGranted
+  , (dir "oauth" . dir "authorizationdeny" . hPost . toK0) authorizationDenied
+  , (dir "oauth" . dir "tokencredentials" . hGet . toK0) tokenCredRequest
+  , (dir "oauth" . dir "createapitoken" . hPost . toK0) createAPIToken
+  , (dir "oauth" . dir "deleteapitoken" . hPost . toK0) deleteAPIToken
+  , (dir "oauth" . dir "createpersonaltoken" . hPost . toK0) createPersonalToken
+  , (dir "oauth" . dir "deletepersonaltoken" . hPost . toK0) deletePersonalToken
+  , (dir "oauth" . dir "deleteprivilege" . hPost . toK0) deletePrivilege
   , (dir "oauth" . dir "dashboard" . dir "personaltoken" . hGet . toK0)
     apiDashboardPersonalTokens
-  , dir "oauth" $ dir "dashboard" $ dir "apitokens" $ hGet $ toK0 $ apiDashboardAPITokens
+  , (dir "oauth" . dir "dashboard" . dir "apitokens" . hGet . toK0) apiDashboardAPITokens
   , (dir "oauth" . dir "dashboard" . dir "grantedprivileges" . hGet . toK0)
     apiDashboardGrantedPrivileges
   ]
@@ -55,13 +55,13 @@ tempCredRequest = api $ do
 
   etcr <- getTempCredRequest
   case etcr of
-    Left  errors -> (throwM . SomeDBExtraException) $ badInput $ T.unpack errors
+    Left  errors -> (throwM . SomeDBExtraException) . badInput $ T.unpack errors
     Right tcr    -> do
       logInfo "TempCredRequest got successfully" $ logObject_ tcr
-      (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
+      (temptoken, tempsecret) <- apiGuardL' . dbUpdate $ RequestTempCredentials tcr time
       return
-        $ setHeader "Content-Type" "application/x-www-form-urlencoded"
-        $ Web.toResponse
+        . setHeader "Content-Type" "application/x-www-form-urlencoded"
+        . Web.toResponse
         $ urlEncodeVars
             [ ("oauth_token"             , show temptoken)
             , ("oauth_token_secret"      , show tempsecret)
@@ -82,7 +82,7 @@ authorization = do
   case mprivs of
     Just (companyname, p : ps) ->
       Right <$> pagePrivilegesConfirm ctx (p : ps) companyname token
-    _ -> return $ Left $ LinkHome lang -- no privileges recorded? we just take the traffic
+    _ -> return . Left $ LinkHome lang -- no privileges recorded? we just take the traffic
 
 
 authorizationDenied :: Kontrakcja m => m KontraLink
@@ -107,23 +107,23 @@ authorizationGranted = do
   case muser of
     Nothing   -> return $ LinkOAuthAuthorization token
     Just user -> do
-      (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token
+      (url, verifier) <- guardJustM . dbUpdate $ VerifyCredentials token
                                                                    (user ^. #id)
                                                                    time
 
-      return $ LinkOAuthCallback url token $ Just verifier
+      return . LinkOAuthCallback url token $ Just verifier
 
 tokenCredRequest :: Kontrakcja m => m Response
 tokenCredRequest = api $ do
   time <- view #time <$> getContext
   etr  <- getTokenRequest
   case etr of
-    Left  errors -> (throwM . SomeDBExtraException) $ badInput $ T.unpack errors
+    Left  errors -> (throwM . SomeDBExtraException) . badInput $ T.unpack errors
     Right tr     -> do
-      (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken tr time
+      (accesstoken, accesssecret) <- apiGuardL' . dbUpdate $ RequestAccessToken tr time
       return
-        $ setHeader "Content-Type" "application/x-www-form-urlencoded"
-        $ Web.toResponse
+        . setHeader "Content-Type" "application/x-www-form-urlencoded"
+        . Web.toResponse
         $ urlEncodeVars
             [("oauth_token", show accesstoken), ("oauth_token_secret", show accesssecret)]
 
@@ -135,7 +135,7 @@ apiDashboardPersonalTokens = do
   user <- guardJust $ ctx ^. #maybeUser
   let mRecentToken = dbQuery $ GetRecentPersonalToken (user ^. #id) 5 -- created in the last 5 min
   recentAsList <-
-    map (unjsonToJSON unjsonOAuthAuthorization) <$> maybeToList <$> mRecentToken
+    map (unjsonToJSON unjsonOAuthAuthorization) . maybeToList <$> mRecentToken
   if (not . null) recentAsList
     then return $ object ["personal_tokens" .= recentAsList]
     else do
@@ -145,7 +145,7 @@ apiDashboardPersonalTokens = do
           ( unjsonToJSON unjsonOAuthAuthorizationHideSecrets
           . toOAuthAuthorizationHideSecrets
           )
-        <$> maybeToList
+        .   maybeToList
         <$> mToken
       return $ object ["personal_tokens" .= tokenAsList]
 
@@ -153,20 +153,19 @@ apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do
   ctx  <- getContext
   user <- guardJust $ ctx ^. #maybeUser
-  ls   <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (user ^. #id))
-  return $ J.runJSONGen $ do
-    J.value "api_tokens" $ ls
+  ls   <- map jsonFromAPIToken <$> dbQuery (GetAPITokensForUser (user ^. #id))
+  return . J.runJSONGen $ do
+    J.value "api_tokens" ls
 
 apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
   ctx  <- getContext
   user <- guardJust $ ctx ^. #maybeUser
   ds   <- mapKeepM privilegeDescription [APIDocCreate, APIDocSend, APIDocCheck]
-  ls   <-
-    concatMap (\p -> jsonFromGrantedPrivilege p ds)
-      <$> (dbQuery $ GetGrantedPrivileges (user ^. #id))
-  return $ J.runJSONGen $ do
-    J.value "granted_privileges" $ ls
+  ls   <- concatMap (`jsonFromGrantedPrivilege` ds)
+    <$> dbQuery (GetGrantedPrivileges (user ^. #id))
+  return . J.runJSONGen $ do
+    J.value "granted_privileges" ls
 
 -- Manipulate dashboard stuff
 
@@ -187,7 +186,7 @@ deleteAPIToken = do
   mtk   <- getDataFn' (look "apitoken")
   case maybeRead =<< (T.pack <$> mtk) of
     Nothing    -> return ()
-    Just token -> void $ dbUpdate $ DeleteAPIToken (user ^. #id) token
+    Just token -> void . dbUpdate $ DeleteAPIToken (user ^. #id) token
   return success
 
 createPersonalToken :: Kontrakcja m => m JSValue
@@ -214,6 +213,6 @@ deletePrivilege = do
     Just tokenid -> do
       mpr <- getDataFn' (look "privilege")
       case maybeRead =<< (T.pack <$> mpr) of
-        Nothing -> void $ dbUpdate $ DeletePrivileges (user ^. #id) tokenid
-        Just pr -> void $ dbUpdate $ DeletePrivilege (user ^. #id) tokenid pr
+        Nothing -> void . dbUpdate $ DeletePrivileges (user ^. #id) tokenid
+        Just pr -> void . dbUpdate $ DeletePrivilege (user ^. #id) tokenid pr
   return success

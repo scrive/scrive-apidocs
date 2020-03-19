@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies, ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module API.V2.Errors (
     serverError
   , requestFailed
@@ -47,9 +47,9 @@ data APIError = APIError {
 
 instance ToJSValue APIError where
   toJSValue a = runJSONGen $ do
-    value "error_type"    (T.unpack $ errorIDFromAPIErrorType $ errorType a)
+    value "error_type"    (T.unpack . errorIDFromAPIErrorType $ errorType a)
     value "error_message" (T.unpack $ errorMessage a)
-    value "http_code"     (errorHttpCode $ a)
+    value "http_code"     (errorHttpCode a)
 
 instance DBExtraException APIError
 
@@ -188,7 +188,7 @@ requestParameterInvalid param reason = APIError { errorType     = RequestParamet
 -- Document calls errors
 
 documentObjectVersionMismatch :: DocumentObjectVersionDoesNotMatch -> APIError
-documentObjectVersionMismatch (DocumentObjectVersionDoesNotMatch {..}) = APIError
+documentObjectVersionMismatch DocumentObjectVersionDoesNotMatch {..} = APIError
   { errorType     = DocumentObjectVersionMismatch
   , errorHttpCode = 409
   , errorMessage  = msg
@@ -198,9 +198,9 @@ documentObjectVersionMismatch (DocumentObjectVersionDoesNotMatch {..}) = APIErro
       "The document has a different object_version to the one provided \
               \and so the request was not processed."
         <+> "You gave"
-        <+> (showt documentObjectVersionShouldBe)
+        <+> showt documentObjectVersionShouldBe
         <+> "but the document had"
-        <+> (showt documentObjectVersionIs)
+        <+> showt documentObjectVersionIs
 
 documentStateError :: Text -> APIError
 documentStateError msg =
@@ -303,28 +303,28 @@ convertShortDocumentIDHasNoMatch (SomeDBExtraException ex) = case cast ex of
 
 convertDocumentTypeShouldBe :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentTypeShouldBe (SomeDBExtraException ex) = case cast ex of
-  Just (DocumentTypeShouldBe { documentTypeShouldBe = Template }) ->
+  Just DocumentTypeShouldBe { documentTypeShouldBe = Template } ->
     SomeDBExtraException . documentStateError $ "Document is not a template"
-  Just (DocumentTypeShouldBe { documentTypeShouldBe = Signable }) ->
+  Just DocumentTypeShouldBe { documentTypeShouldBe = Signable } ->
     SomeDBExtraException . documentStateError $ "Document is a template"
   Nothing -> SomeDBExtraException ex
 
 convertDocumentStatusShouldBe :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentStatusShouldBe (SomeDBExtraException ex) = case cast ex of
-  Just (DocumentStatusShouldBe{}) ->
+  Just DocumentStatusShouldBe{} ->
     SomeDBExtraException . documentStateError $ "Invalid document state"
   Nothing -> SomeDBExtraException ex
 
 convertUserShouldBeSelfOrCompanyAdmin :: SomeDBExtraException -> SomeDBExtraException
 convertUserShouldBeSelfOrCompanyAdmin (SomeDBExtraException ex) = case cast ex of
-  Just (UserShouldBeSelfOrCompanyAdmin{}) -> SomeDBExtraException insufficientPrivileges
+  Just UserShouldBeSelfOrCompanyAdmin{} -> SomeDBExtraException insufficientPrivileges
   Nothing -> SomeDBExtraException ex
 
 convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument
   :: SomeDBExtraException -> SomeDBExtraException
 convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument (SomeDBExtraException ex) =
   case cast ex of
-    Just (UserShouldBeDirectlyOrIndirectlyRelatedToDocument{}) ->
+    Just UserShouldBeDirectlyOrIndirectlyRelatedToDocument{} ->
       SomeDBExtraException insufficientPrivileges
     Nothing -> SomeDBExtraException ex
 
@@ -341,57 +341,55 @@ convertSignatoryLinkDoesNotExist (SomeDBExtraException ex) = case cast ex of
 convertSigningPartyHasNotYetSignedOrApproved
   :: SomeDBExtraException -> SomeDBExtraException
 convertSigningPartyHasNotYetSignedOrApproved (SomeDBExtraException ex) = case cast ex of
-  Just (SigningPartyHasNotYetSignedOrApproved{}) ->
-    SomeDBExtraException
-      $ signatoryStateError
-      $ "Signing party has not signed or approved yet"
-  Nothing -> (SomeDBExtraException ex)
+  Just SigningPartyHasNotYetSignedOrApproved{} -> SomeDBExtraException
+    $ signatoryStateError "Signing party has not signed or approved yet"
+  Nothing -> SomeDBExtraException ex
 
 convertSignatoryRoleIsNotSigningParty :: SomeDBExtraException -> SomeDBExtraException
 convertSignatoryRoleIsNotSigningParty (SomeDBExtraException ex) = case cast ex of
-  Just (SignatoryRoleIsNotSigningParty{}) ->
+  Just SignatoryRoleIsNotSigningParty{} ->
     SomeDBExtraException . signatoryStateError $ "Signatory should not sign this document"
   Nothing -> SomeDBExtraException ex
 
 convertSignatoryHasAlreadySigned :: SomeDBExtraException -> SomeDBExtraException
 convertSignatoryHasAlreadySigned (SomeDBExtraException ex) = case cast ex of
-  Just (SignatoryHasAlreadySigned{}) ->
+  Just SignatoryHasAlreadySigned{} ->
     SomeDBExtraException . signatoryStateError $ "Signatory already signed"
   Nothing -> SomeDBExtraException ex
 
 convertSignatoryTokenDoesNotMatch :: SomeDBExtraException -> SomeDBExtraException
 convertSignatoryTokenDoesNotMatch (SomeDBExtraException ex) = case cast ex of
-  Just (SignatoryTokenDoesNotMatch{}) ->
+  Just SignatoryTokenDoesNotMatch{} ->
     SomeDBExtraException . invalidAuthorizationWithMsg $ "Signatory token does not match"
-  Nothing -> (SomeDBExtraException ex)
+  Nothing -> SomeDBExtraException ex
 
 convertDocumentObjectVersionDoesNotMatch :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentObjectVersionDoesNotMatch (SomeDBExtraException ex) = case cast ex of
-  Just (e@DocumentObjectVersionDoesNotMatch{}) ->
+  Just e@DocumentObjectVersionDoesNotMatch{} ->
     SomeDBExtraException $ documentObjectVersionMismatch e
   Nothing -> SomeDBExtraException ex
 
 convertDocumentWasPurged :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentWasPurged (SomeDBExtraException ex) = case cast ex of
-  Just (DocumentWasPurged{}) ->
+  Just DocumentWasPurged{} ->
     SomeDBExtraException . documentStateError $ "Document was purged"
   Nothing -> SomeDBExtraException ex
 
 convertDocumentIsDeleted :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentIsDeleted (SomeDBExtraException ex) = case cast ex of
-  Just (DocumentIsDeleted{}) ->
+  Just DocumentIsDeleted{} ->
     SomeDBExtraException . documentStateError $ "The document is in Trash"
   Nothing -> SomeDBExtraException ex
 
 convertDocumentIsNotDeleted :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentIsNotDeleted (SomeDBExtraException ex) = case cast ex of
-  Just (DocumentIsNotDeleted{}) ->
+  Just DocumentIsNotDeleted{} ->
     SomeDBExtraException . documentStateError $ "The document is not in Trash"
   Nothing -> SomeDBExtraException ex
 
 convertDocumentIsReallyDeleted :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentIsReallyDeleted (SomeDBExtraException ex) = case cast ex of
-  Just (DocumentIsReallyDeleted{}) ->
+  Just DocumentIsReallyDeleted{} ->
     SomeDBExtraException
       . documentStateError
       $ "The document is deleted. It is not available and will be purged soon"
@@ -401,6 +399,6 @@ convertSignatoryAuthenticationToSignDoesNotMatch
   :: SomeDBExtraException -> SomeDBExtraException
 convertSignatoryAuthenticationToSignDoesNotMatch (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryAuthenticationToSignDoesNotMatch{}) ->
+    Just SignatoryAuthenticationToSignDoesNotMatch{} ->
       SomeDBExtraException . signatoryStateError $ "Invalid authorization for signatory"
     Nothing -> SomeDBExtraException ex

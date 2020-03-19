@@ -73,7 +73,7 @@ instance SignatoryLinkIdentity UserID where
   isJustSigLinkFor uid sl = Just uid == maybesignatory sl
 
 instance SignatoryLinkIdentity (SignatoryLink -> Bool) where
-  isJustSigLinkFor p sl = p sl
+  isJustSigLinkFor p = p
 
 --instance MaybeSignatoryLink a => SignatoryLinkIdentity (a -> Bool) where
 --  isJustSigLinkFor p sl = p sl
@@ -121,7 +121,7 @@ instance (SignatoryLinkIdentity a) => MaybeSignatoryLink (Document, a) where
    Get the author's signatory link.
  -}
 getAuthorSigLink :: Document -> Maybe SignatoryLink
-getAuthorSigLink doc = getSigLinkFor signatoryisauthor doc
+getAuthorSigLink = getSigLinkFor signatoryisauthor
 
 -- | Given a Document, return the best guess at the author's name:
 --     * First Name + Last Name
@@ -234,6 +234,7 @@ getSigLinkFor a d = find (isSigLinkFor a) (documentsignatorylinks d)
 
 ----------------------------------------
 
+{-# ANN type MixAuthMethod ("HLint: ignore Use camelCase" :: String) #-}
 -- | Internal helper type for checking whether authentication types can mix.
 data MixAuthMethod
   = MAM_Standard

@@ -37,23 +37,23 @@ import UserGroup.Types
 
 userGroupAPI :: Route (Kontra Response)
 userGroupAPI =
-  dir "api" $ choice [dir "frontend" $ userGroupAPIV2, dir "v2" $ userGroupAPIV2]
+  dir "api" $ choice [dir "frontend" userGroupAPIV2, dir "v2" userGroupAPIV2]
 
 userGroupAPIV2 :: Route (Kontra Response)
 userGroupAPIV2 = dir "usergroups" $ choice
-  [ hGet . toK1 $ userGroupApiV2Get
-  , dir "create" . hPost . toK0 $ userGroupApiV2Create
-  , param . dir "update" . hPost . toK1 $ userGroupApiV2Update
-  , param . dir "delete" . hPost . toK1 $ userGroupApiV2Delete
-  , param . dir "contact_details" . hGet . toK1 $ userGroupApiContactDetailsV2Get
+  [ (hGet . toK1) userGroupApiV2Get
+  , (dir "create" . hPost . toK0) userGroupApiV2Create
+  , (param . dir "update" . hPost . toK1) userGroupApiV2Update
+  , (param . dir "delete" . hPost . toK1) userGroupApiV2Delete
+  , (param . dir "contact_details" . hGet . toK1) userGroupApiContactDetailsV2Get
   , (param . dir "contact_details" . dir "update" . hPost . toK1)
     userGroupApiContactDetailsV2Update
   , (param . dir "contact_details" . dir "delete" . hPost . toK1)
     userGroupApiContactDetailsV2Delete
-  , param . dir "settings" . hGet . toK1 $ userGroupApiSettingsV2Get
-  , param . dir "settings" . dir "update" . hPost . toK1 $ userGroupApiSettingsV2Update
-  , param . dir "settings" . dir "delete" . hPost . toK1 $ userGroupApiSettingsV2Delete
-  , param . dir "users" . hGet . toK1 $ userGroupApiUsersV2Get
+  , (param . dir "settings" . hGet . toK1) userGroupApiSettingsV2Get
+  , (param . dir "settings" . dir "update" . hPost . toK1) userGroupApiSettingsV2Update
+  , (param . dir "settings" . dir "delete" . hPost . toK1) userGroupApiSettingsV2Delete
+  , (param . dir "users" . hGet . toK1) userGroupApiUsersV2Get
   ]
 
 constructUserGroupResponse :: Kontrakcja m => Bool -> UserGroupID -> m Encoding
@@ -208,7 +208,7 @@ userGroupApiContactDetailsV2Delete ugid = api $ do
   apiuser     <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [canDo UpdateA $ UserGroupR ugid] $ do
     ug <- ugGetOrErrNotFound ugid
-    when (isNothing $ ug ^. #parentGroupID) $ apiError $ requestFailed
+    when (isNothing $ ug ^. #parentGroupID) . apiError $ requestFailed
       "A root usergroup must have an address object."
     dbUpdate $ UserGroupUpdateAddress ugid Nothing
     -- Return response
@@ -257,7 +257,7 @@ userGroupApiSettingsV2Delete ugid = api $ do
   apiuser     <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser [canDo UpdateA $ UserGroupR ugid] $ do
     ug <- ugGetOrErrNotFound ugid
-    when (isNothing $ ug ^. #parentGroupID) $ apiError $ requestFailed
+    when (isNothing $ ug ^. #parentGroupID) . apiError $ requestFailed
       "A root usergroup must have a settings object."
     dbUpdate $ UserGroupUpdateSettings ugid Nothing
     -- Return response

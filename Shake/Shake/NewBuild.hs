@@ -53,7 +53,7 @@ mkUseNewBuild flags cabalFile = if OldBuild `elem` flags
     cabalVer <- readVersion <$> numericVersion "cabal"
     if cabalVer < makeVersion [1, 25]
       then do
-        putStrLn $ "Warning: --v2-build only works with cabal-install >= 1.25."
+        putStrLn "Warning: --v2-build only works with cabal-install >= 1.25."
         putStrLn "Falling back to old code path."
         return DontUseNewBuild
       else
@@ -62,18 +62,18 @@ mkUseNewBuild flags cabalFile = if OldBuild `elem` flags
         <*> (newBuildBuildDir <$> readGhcInfo)
   where
     numericVersion prog = trim <$> readProcess prog ["--numeric-version"] ""
-    readGhcInfo = M.fromList . read . trim <$> readProcess "ghc" ["--info"] ""
-    lookupGhcVersion ghcInfo = M.findWithDefault "???" "Project version" ghcInfo
+    readGhcInfo      = M.fromList . read . trim <$> readProcess "ghc" ["--info"] ""
+    lookupGhcVersion = M.findWithDefault "???" "Project version"
     lookupGhcTarget ghcInfo =
-      fromMaybe "???" . join . fmap (fmap display . platformFromTriple) $ M.lookup
+      fromMaybe "???" . ((fmap display . platformFromTriple) =<<) $ M.lookup
         "Target platform"
         ghcInfo
     newBuildBuildDir ghcInfo =
       "dist-newstyle"
         </> "build"
-        </> (lookupGhcTarget ghcInfo)
+        </> lookupGhcTarget ghcInfo
         </> ("ghc-" <> lookupGhcVersion ghcInfo)
-        </> (packageId cabalFile)
+        </> packageId cabalFile
 
 -- | Branch based on whether v2-build is enabled.
 ifNewBuild :: UseNewBuild -> (FilePath -> a) -> a -> a
@@ -174,5 +174,5 @@ componentBuildRules sourceRoot newBuild optlevel cabalFile =
                                 ["//*.hs"]
                                 (ordNub $ sourceDirs <> depsSourceDirs)
       if useNewBuild newBuild
-        then cmd $ "cabal v2-build " <> (unComponentName cname)
-        else cmd $ "cabal build " <> (unComponentName cname)
+        then cmd $ "cabal v2-build " <> unComponentName cname
+        else cmd $ "cabal build " <> unComponentName cname

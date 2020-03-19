@@ -46,7 +46,7 @@ apiAccessControlOrIsAdmin apiuser perms successAction = do
 
 accessControlLoggedIn :: Kontrakcja m => [Permission] -> m a -> m a
 accessControlLoggedIn perms successAction = do
-  user  <- guardJustM $ (view #maybeUser <$> getContext)
+  user  <- guardJustM (view #maybeUser <$> getContext)
   roles <- dbQuery . GetRoles $ user
   accessControl roles perms internalError successAction
 

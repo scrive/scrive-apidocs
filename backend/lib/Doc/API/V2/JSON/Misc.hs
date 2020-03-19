@@ -144,8 +144,8 @@ unjsonLang = unjsonEnum "Lang" langFromCode codeFromLang
 unjsonAuthorAttachment :: UnjsonDef AuthorAttachment
 unjsonAuthorAttachment =
   objectOf
-    $   pure AuthorAttachment
-    <*> field "name" authorattachmentname "Name of file"
+    $   AuthorAttachment
+    <$> field "name" authorattachmentname "Name of file"
     <*> field "required"
               authorattachmentrequired
               "Are signatories required to accept attachment before signing"
@@ -157,8 +157,8 @@ unjsonAuthorAttachment =
 unjsonSignatoryAttachment :: UnjsonDef SignatoryAttachment
 unjsonSignatoryAttachment =
   objectOf
-    $   pure (SignatoryAttachment Nothing Nothing)
-    <*> field "name"        signatoryattachmentname        "Name of attachment"
+    $   SignatoryAttachment Nothing Nothing
+    <$> field "name"        signatoryattachmentname        "Name of attachment"
     <*> field "description" signatoryattachmentdescription "Description of attachment"
     <*> fieldDef "required"
                  True
@@ -170,31 +170,30 @@ unjsonSignatoryAttachment =
 unjsonHighlightedPage :: UnjsonDef HighlightedPage
 unjsonHighlightedPage =
   objectOf
-    $   pure HighlightedPage
-    <*> field "page"    highlightedPagePage   "Page that was highlighted"
+    $   HighlightedPage
+    <$> field "page"    highlightedPagePage   "Page that was highlighted"
     <*> field "file_id" highlightedPageFileID "File ID of image with highlighting"
 
 unjsonDocumentTag :: UnjsonDef DocumentTag
 unjsonDocumentTag =
-  objectOf $ pure DocumentTag <*> field "name" tagname "Name of tag" <*> field
-    "value"
-    tagvalue
-    "Value of tag"
+  objectOf $ DocumentTag <$> field "name" tagname "Name of tag" <*> field "value"
+                                                                          tagvalue
+                                                                          "Value of tag"
 
 -- We should not introduce instance for MainFile since this can't be really parsed. And instance for Maybe MainFile would be missleading
 unjsonMaybeMainFile :: UnjsonDef (Maybe MainFile)
 unjsonMaybeMainFile =
   nothingToNullDef
-    $  objectOf
-    $  pure Nothing
-    <* fieldOpt "id"   (fmap mainfileid)   "Id of file"
+    .  objectOf
+    $  Nothing
+    <$ fieldOpt "id"   (fmap mainfileid)   "Id of file"
     <* fieldOpt "name" (fmap mainfilename) "Name of file"
 
 unjsonScreenshots :: UnjsonDef Screenshot.Screenshot
 unjsonScreenshots =
   objectOf
-    $   pure Screenshot.Screenshot
-    <*> field "time" Screenshot.time "Time when screenshot was taken"
+    $   Screenshot.Screenshot
+    <$> field "time" Screenshot.time "Time when screenshot was taken"
     <*> fieldBy "image"
                 Screenshot.image
                 "Image with screenshot, base64 encoded with content type"
@@ -204,7 +203,7 @@ unjsonScreenshots =
     unjsonImage = SimpleUnjsonDef
       "Screenshot"
       parseScreenshot
-      (Aeson.String . decodeUtf8 . (RFC2397.encode "image/jpeg"))
+      (Aeson.String . decodeUtf8 . RFC2397.encode "image/jpeg")
     parseScreenshot :: Aeson.Value -> Result BS.ByteString
     parseScreenshot (Aeson.String t) = case RFC2397.decode $ encodeUtf8 t of
       Just (_, v) -> pure v
@@ -215,8 +214,8 @@ unjsonScreenshots =
 unjsonSignatoryScreenshots :: UnjsonDef SignatoryScreenshots.SignatoryScreenshots
 unjsonSignatoryScreenshots =
   objectOf
-    $   pure combineSignatoryScreenshots
-    <*> fieldOptBy "first"
+    $   combineSignatoryScreenshots
+    <$> fieldOptBy "first"
                    SignatoryScreenshots.first
                    "Screenshot taken when signatory looked at document"
                    unjsonScreenshots
@@ -224,15 +223,13 @@ unjsonSignatoryScreenshots =
                    SignatoryScreenshots.signing
                    "Screenshot taken when signatory was about to sign"
                    unjsonScreenshots
-    <*> fieldOpt
-          "referenceName"
-          (join . fmap (either Just (const Nothing)) . SignatoryScreenshots.reference)
-          "Reference screenshot"
-    <*> fieldOptBy
-          "reference"
-          (join . fmap (either (const Nothing) Just) . SignatoryScreenshots.reference)
-          "Reference screenshot"
-          unjsonScreenshots
+    <*> fieldOpt "referenceName"
+                 ((either Just (const Nothing) =<<) . SignatoryScreenshots.reference)
+                 "Reference screenshot"
+    <*> fieldOptBy "reference"
+                   ((either (const Nothing) Just =<<) . SignatoryScreenshots.reference)
+                   "Reference screenshot"
+                   unjsonScreenshots
   where
     combineSignatoryScreenshots f s (Just rn) _ =
       SignatoryScreenshots.SignatoryScreenshots f s (Just $ Left rn)
@@ -243,20 +240,20 @@ unjsonSignatoryScreenshots =
 
 evidenceAttachmentsToJSONBS :: DocumentID -> [Text] -> BSC.ByteString
 evidenceAttachmentsToJSONBS did eas =
-  toLazyByteString $ "{ \"attachments\": [" <> (eaList (sortBy eaSorter eas)) <> "]}"
+  toLazyByteString $ "{ \"attachments\": [" <> eaList (sortBy eaSorter eas) <> "]}"
   where
     eaList :: [Text] -> Builder
     eaList []       = ""
-    eaList [l     ] = (eaJSON l)
-    eaList (l : ls) = (eaJSON l) <> "," <> eaList ls
+    eaList [l     ] = eaJSON l
+    eaList (l : ls) = eaJSON l <> "," <> eaList ls
 
     eaJSON :: Text -> Builder
     eaJSON name =
       "{\"name\":\""
-        <> (lazyByteString $ BSC.fromString $ T.unpack $ name)
+        <> lazyByteString (BSC.fromString $ T.unpack name)
         <> "\""
         <> ",\"download_url\":\""
-        <> (lazyByteString $ BSC.fromString $ show $ LinkEvidenceAttachment did name)
+        <> lazyByteString (BSC.fromString . show $ LinkEvidenceAttachment did name)
         <> "\""
         <> "}"
 

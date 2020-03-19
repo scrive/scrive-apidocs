@@ -122,83 +122,87 @@ tableBrandedDomains = tblTable
               = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAACxMAAAsTAQCanBgAAABCUExURVBQUFJSUktLS/r6+lBQUP///0VFRVBQUFBQUE5OTmVlZVpaWvDw8MLCwrKysubm5t3d3Y+Pj4ODg3d3d6WlpdLS0jBFWHAAAAAJdFJOU5n///////8ImNkf7DAAAAFcSURBVDjLhVNbloMgDCUR0kbeAvvf6gTUam3H5sN66DW5j6AeT31Tz4dS+raUgnsA/GggLQ4sAPeS368AQEKw1moigk+A/F1qi8652GoR6AUAaL05qs1HkxWANprJGJdackbe3PzqMQBAXk59AUa2S5P3pPkMwFk+90T9kGmgl32IGg2WcWQ3Piv8A1AJuZshVZalfI6YQhkmEGF/6HeSwUwdE1uoucxMcJHJfLZhShn54iTT0tx0YDxenAQgsnPJ1bfYZwnlk4quXeznQQ5hrtIiAh8AhhpCFnNhRI3ilJnEbDhGRGMS6q2pFU2SxiZV7Spl6mo1kpXAEs116VpeRvWwLKNQyD3ZbIVrEKabUdnsccch1lPtqVveZVJJJ6dcZfmkh36sHHEJ68oln63Q4zDFgvBaWtC0Lq1sJzF0b4TRZe31WHu9BSVOwRvgv4vz8+r9aPFUD3V//f8ANZsWxjENgZ8AAAAASUVORK5CYII="
           runQuery_ . sqlInsert "themes" $ do
             sqlSet "name" ("Scrive email theme" :: String)
-            sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ darkTextLogo
-            sqlSet "brand_color" $ ("#ffffff" :: String)
-            sqlSet "brand_text_color" $ ("#495259" :: String)
-            sqlSet "action_color" $ ("#53b688" :: String)
-            sqlSet "action_text_color" $ ("#ffffff" :: String)
-            sqlSet "action_secondary_color" $ ("#33b1dd" :: String)
-            sqlSet "action_secondary_text_color" $ ("#ffffff" :: String)
-            sqlSet "positive_color" $ ("#53b688" :: String)
-            sqlSet "positive_text_color" $ ("#ffffff" :: String)
-            sqlSet "negative_color" $ ("#b9322f" :: String)
-            sqlSet "negative_text_color" $ ("#ffffff" :: String)
-            sqlSet "font"
-              $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
+            sqlSet "logo" . B64.decodeLenient $ BS.fromString darkTextLogo
+            sqlSet "brand_color"                 ("#ffffff" :: String)
+            sqlSet "brand_text_color"            ("#495259" :: String)
+            sqlSet "action_color"                ("#53b688" :: String)
+            sqlSet "action_text_color"           ("#ffffff" :: String)
+            sqlSet "action_secondary_color"      ("#33b1dd" :: String)
+            sqlSet "action_secondary_text_color" ("#ffffff" :: String)
+            sqlSet "positive_color"              ("#53b688" :: String)
+            sqlSet "positive_text_color"         ("#ffffff" :: String)
+            sqlSet "negative_color"              ("#b9322f" :: String)
+            sqlSet "negative_text_color"         ("#ffffff" :: String)
+            sqlSet
+              "font"
+              ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
             sqlResult "id"
           (mailThemeId :: Int64) <- fetchOne runIdentity
           runQuery_ . sqlInsert "themes" $ do
             sqlSet "name" ("Scrive signing theme" :: String)
-            sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ lightTextLogo
-            sqlSet "brand_color" $ ("#495259" :: String)
-            sqlSet "brand_text_color" $ ("#ffffff" :: String)
-            sqlSet "action_color" $ ("#53b688" :: String)
-            sqlSet "action_text_color" $ ("#ffffff" :: String)
-            sqlSet "action_secondary_color" $ ("#33b1dd" :: String)
-            sqlSet "action_secondary_text_color" $ ("#ffffff" :: String)
-            sqlSet "positive_color" $ ("#53b688" :: String)
-            sqlSet "positive_text_color" $ ("#ffffff" :: String)
-            sqlSet "negative_color" $ ("#b9322f" :: String)
-            sqlSet "negative_text_color" $ ("#ffffff" :: String)
-            sqlSet "font"
-              $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
+            sqlSet "logo" . B64.decodeLenient $ BS.fromString lightTextLogo
+            sqlSet "brand_color"                 ("#495259" :: String)
+            sqlSet "brand_text_color"            ("#ffffff" :: String)
+            sqlSet "action_color"                ("#53b688" :: String)
+            sqlSet "action_text_color"           ("#ffffff" :: String)
+            sqlSet "action_secondary_color"      ("#33b1dd" :: String)
+            sqlSet "action_secondary_text_color" ("#ffffff" :: String)
+            sqlSet "positive_color"              ("#53b688" :: String)
+            sqlSet "positive_text_color"         ("#ffffff" :: String)
+            sqlSet "negative_color"              ("#b9322f" :: String)
+            sqlSet "negative_text_color"         ("#ffffff" :: String)
+            sqlSet
+              "font"
+              ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
             sqlResult "id"
           (signviewThemeId :: Int64) <- fetchOne runIdentity
           runQuery_ . sqlInsert "themes" $ do
             sqlSet "name" ("Scrive service theme" :: String)
-            sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ lightTextLogo
-            sqlSet "brand_color" $ ("#495259" :: String)
-            sqlSet "brand_text_color" $ ("#ffffff" :: String)
-            sqlSet "action_color" $ ("#53b688" :: String)
-            sqlSet "action_text_color" $ ("#ffffff" :: String)
-            sqlSet "action_secondary_color" $ ("#33b1dd" :: String)
-            sqlSet "action_secondary_text_color" $ ("#ffffff" :: String)
-            sqlSet "positive_color" $ ("#53b688" :: String)
-            sqlSet "positive_text_color" $ ("#ffffff" :: String)
-            sqlSet "negative_color" $ ("#b9322f" :: String)
-            sqlSet "negative_text_color" $ ("#ffffff" :: String)
-            sqlSet "font"
-              $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
+            sqlSet "logo" . B64.decodeLenient $ BS.fromString lightTextLogo
+            sqlSet "brand_color"                 ("#495259" :: String)
+            sqlSet "brand_text_color"            ("#ffffff" :: String)
+            sqlSet "action_color"                ("#53b688" :: String)
+            sqlSet "action_text_color"           ("#ffffff" :: String)
+            sqlSet "action_secondary_color"      ("#33b1dd" :: String)
+            sqlSet "action_secondary_text_color" ("#ffffff" :: String)
+            sqlSet "positive_color"              ("#53b688" :: String)
+            sqlSet "positive_text_color"         ("#ffffff" :: String)
+            sqlSet "negative_color"              ("#b9322f" :: String)
+            sqlSet "negative_text_color"         ("#ffffff" :: String)
+            sqlSet
+              "font"
+              ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
             sqlResult "id"
           (mainThemeId :: Int64) <- fetchOne runIdentity
           runQuery_ . sqlInsert "themes" $ do
             sqlSet "name" ("Scrive login theme" :: String)
-            sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ lightTextLogo
-            sqlSet "brand_color" $ ("#495259" :: String)
-            sqlSet "brand_text_color" $ ("#ffffff" :: String)
-            sqlSet "action_color" $ ("#53b688" :: String)
-            sqlSet "action_text_color" $ ("#ffffff" :: String)
-            sqlSet "action_secondary_color" $ ("#33b1dd" :: String)
-            sqlSet "action_secondary_text_color" $ ("#ffffff" :: String)
-            sqlSet "positive_color" $ ("#53b688" :: String)
-            sqlSet "positive_text_color" $ ("#ffffff" :: String)
-            sqlSet "negative_color" $ ("#b9322f" :: String)
-            sqlSet "negative_text_color" $ ("#ffffff" :: String)
-            sqlSet "font"
-              $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
+            sqlSet "logo" . B64.decodeLenient $ BS.fromString lightTextLogo
+            sqlSet "brand_color"                 ("#495259" :: String)
+            sqlSet "brand_text_color"            ("#ffffff" :: String)
+            sqlSet "action_color"                ("#53b688" :: String)
+            sqlSet "action_text_color"           ("#ffffff" :: String)
+            sqlSet "action_secondary_color"      ("#33b1dd" :: String)
+            sqlSet "action_secondary_text_color" ("#ffffff" :: String)
+            sqlSet "positive_color"              ("#53b688" :: String)
+            sqlSet "positive_text_color"         ("#ffffff" :: String)
+            sqlSet "negative_color"              ("#b9322f" :: String)
+            sqlSet "negative_text_color"         ("#ffffff" :: String)
+            sqlSet
+              "font"
+              ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
             sqlResult "id"
           (loginThemeId :: Int64) <- fetchOne runIdentity
           runQuery_ . sqlInsert "branded_domains" $ do
-            sqlSet "url"            ("https://scrive.com" :: String)
-            sqlSet "mail_theme"     mailThemeId
-            sqlSet "signview_theme" signviewThemeId
-            sqlSet "service_theme"  mainThemeId
-            sqlSet "login_theme"    loginThemeId
-            sqlSet "main_domain" $ True
+            sqlSet "url"              ("https://scrive.com" :: String)
+            sqlSet "mail_theme"       mailThemeId
+            sqlSet "signview_theme"   signviewThemeId
+            sqlSet "service_theme"    mainThemeId
+            sqlSet "login_theme"      loginThemeId
+            sqlSet "main_domain"      True
             sqlSet "sms_originator"   ("Scrive" :: String)
             sqlSet "email_originator" ("Scrive" :: String)
             sqlSet "browser_title"    ("Scrive" :: String)
-            sqlSet "favicon" $ B64.decodeLenient $ BS.fromString $ favicon
+            sqlSet "favicon" . B64.decodeLenient $ BS.fromString favicon
             sqlSet "participant_color_1" ("#ff3377" :: String)
             sqlSet "participant_color_2" ("#009999" :: String)
             sqlSet "participant_color_3" ("#ffd700" :: String)
@@ -216,16 +220,16 @@ tableBrandedDomains = tblTable
             sqlResult "id"
           (domainId :: Int64) <- fetchOne runIdentity
           runQuery_ . sqlInsert "theme_owners" $ do
-            sqlSet "theme_id" mailThemeId
-            sqlSet "domain_id" $ domainId
+            sqlSet "theme_id"  mailThemeId
+            sqlSet "domain_id" domainId
           runQuery_ . sqlInsert "theme_owners" $ do
-            sqlSet "theme_id" signviewThemeId
-            sqlSet "domain_id" $ domainId
+            sqlSet "theme_id"  signviewThemeId
+            sqlSet "domain_id" domainId
           runQuery_ . sqlInsert "theme_owners" $ do
-            sqlSet "theme_id" mainThemeId
-            sqlSet "domain_id" $ domainId
+            sqlSet "theme_id"  mainThemeId
+            sqlSet "domain_id" domainId
           runQuery_ . sqlInsert "theme_owners" $ do
-            sqlSet "theme_id" loginThemeId
-            sqlSet "domain_id" $ domainId
+            sqlSet "theme_id"  loginThemeId
+            sqlSet "domain_id" domainId
       }
   }

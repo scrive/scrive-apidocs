@@ -45,7 +45,7 @@ instance {-# OVERLAPPABLE #-} (
   composeFilter = lift . composeFilter
   getFilter m = do
     (stT, f) <- liftWith $ \run -> getFilter (run m)
-    (, f) `liftM` restoreT (return stT)
+    (, f) <$> restoreT (return stT)
 
 instance {-# OVERLAPPABLE #-} (
     Monad m

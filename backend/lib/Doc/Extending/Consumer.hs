@@ -73,13 +73,11 @@ documentExtendingConsumer guardTimeConf templates pool maxRunningJobs = Consumer
     runExtending dec = do
       resultisok <-
         withPostgreSQL pool
-        . withDocumentM (dbQuery $ GetDocumentByDocumentID $ decDocumentID dec)
+        . withDocumentM (dbQuery . GetDocumentByDocumentID $ decDocumentID dec)
         . runTemplatesT (defaultLang, templates)
         . runGuardTimeConfT guardTimeConf
         $ extendDigitalSignature
-      case resultisok of
-        True  -> return $ Ok Remove
-        False -> Failed <$> onFailure dec
+      if resultisok then return $ Ok Remove else Failed <$> onFailure dec
     onFailure DocumentExtendingConsumer {..} = do
       when (decAttempts > 1) $ do
         logAttention "Document extending failed more than 1 time"

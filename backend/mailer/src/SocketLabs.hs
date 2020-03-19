@@ -21,7 +21,7 @@ handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
   logInfo_ "Processing SocketLabs event"
   withCallbackValidation (callbackValidationsFromConfig conf) $ do
     messageId <- getField "MessageId"
-    case (T.split (== '-') <$> messageId) of
+    case T.split (== '-') <$> messageId of
       Just [messageIdMID, messageIdToken] ->
         case (maybeRead messageIdMID, maybeRead messageIdToken) of
           (Just mid, Just token) -> localData [identifier mid] $ do
@@ -30,7 +30,7 @@ handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
               Nothing -> logInfo "Email doesn't exist" $ object ["token" .= show token]
               Just Mail {..} -> localData [identifier mailID] $ do
                 typeField <- getField "Type"
-                mevent    <- readEventType $ typeField
+                mevent    <- readEventType typeField
                 case mevent of
                   Nothing    -> logInfo_ "No event object received"
                   Just event -> do
@@ -67,7 +67,7 @@ readEventType (Just "Tracking") = do
     Just "0" -> return $ Just SL_Clicked
     Just "1" -> return $ Just SL_Opened
     Just "2" -> return $ Just SL_Unsubscribed
-    _        -> return $ Nothing
+    _        -> return Nothing
 readEventType (Just "Complaint") = return $ Just SL_Complained
 readEventType _                  = return Nothing
 
@@ -92,18 +92,17 @@ withCallbackValidation cvks handler = do
 -- Callback validation keys can located in multiple places in config file (master sender, slave sender, dedicated sended)
 -- We need to get all possible validation keys, and then find a one that matches secret key of current request
 callbackValidationsFromConfig :: MailingServerConf -> [CallbackValidationKeys]
-callbackValidationsFromConfig conf =
-  (cvFromSender (mailerMasterSender conf))
-    <> (concat $ maybeToList (cvFromSender <$> mailerSlaveSender conf))
+callbackValidationsFromConfig conf = cvFromSender (mailerMasterSender conf)
+  <> concat (maybeToList (cvFromSender <$> mailerSlaveSender conf))
   where
-    cvFromSender (SMTPSender { smtpUser, smtpDedicatedUsers }) = catMaybes
-      ( (callbackValidationKeys smtpUser)
-      : (callbackValidationKeys <$> smtpDedicatedUser <$> smtpDedicatedUsers)
+    cvFromSender SMTPSender { smtpUser, smtpDedicatedUsers } = catMaybes
+      ( callbackValidationKeys smtpUser
+      : (callbackValidationKeys . smtpDedicatedUser <$> smtpDedicatedUsers)
       )
     cvFromSender _ = []
 
 findValidationKey :: [CallbackValidationKeys] -> Text -> Maybe Text
-findValidationKey (cvk : cvks) sc = if (callbackValidationSecretKey cvk == sc)
+findValidationKey (cvk : cvks) sc = if callbackValidationSecretKey cvk == sc
   then Just $ callbackValidationValidationKey cvk
   else findValidationKey cvks sc
 findValidationKey _ _ = Nothing

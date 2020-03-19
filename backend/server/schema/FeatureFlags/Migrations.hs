@@ -201,8 +201,8 @@ featureFlagsDropCompanyID = Migration
       runQuery_ $ sqlAlterTable
         tname
         [ sqlAlterColumn "user_group_id" "SET NOT NULL"
-        , sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
-        , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id")
+        , sqlDropFK tname (fkOnColumn "company_id" "companies" "id")
+        , sqlDropFK tname (fkOnColumn "user_group_id" "user_groups" "id")
         , sqlAddValidFK tname $ (fkOnColumn "user_group_id" "user_groups" "id")
           { fkOnDelete = ForeignKeyCascade
           }
@@ -210,7 +210,7 @@ featureFlagsDropCompanyID = Migration
         , sqlAddPK tname (fromJust $ pkOnColumn "user_group_id")
         , sqlDropColumn "company_id"
         ]
-      runQuery_ $ sqlDropIndex tname $ (indexOnColumn "user_group_id")
+      runQuery_ $ sqlDropIndex tname (indexOnColumn "user_group_id")
   }
 
 featureFlagsAddStandardAuthAndFlagsForAdmin :: MonadDB m => Migration m
@@ -419,7 +419,7 @@ featureFlagsAddVerimiAuthenticationToView1 = Migration
                                    , colDefault  = Just "true"
                                    }
         ]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "feature_flags_c2"
         , ctColumns =
           [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
@@ -505,7 +505,7 @@ featureFlagsAddIDINAuthenticationToView1 = Migration
                                    , colDefault  = Just "true"
                                    }
         ]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "feature_flags_c3"
         , ctColumns =
           [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
@@ -594,7 +594,7 @@ featureFlagsAddPortalFlag = Migration
         ]
       runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)
                                 [sqlAlterColumn "can_use_portal" "DROP DEFAULT"]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "feature_flags_c4"
         , ctColumns =
           [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
@@ -674,7 +674,7 @@ featureFlagsAddIDINAuthToSign = Migration
       runQuery_ $ sqlAlterTable
         (tblName tableFeatureFlags)
         [sqlAlterColumn "can_use_idin_authentication_to_sign" "DROP DEFAULT"]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "feature_flags_c5"
         , ctColumns =
           [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
@@ -757,7 +757,7 @@ featureFlagsAddCustomSMSTexts = Migration
       runQuery_ $ sqlAlterTable
         (tblName tableFeatureFlags)
         [sqlAlterColumn "can_use_custom_sms_texts" "DROP DEFAULT"]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "feature_flags_c6"
         , ctColumns =
           [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
@@ -841,7 +841,7 @@ featureFlagsAddFIAuthToSign = Migration
       runQuery_ $ sqlAlterTable
         (tblName tableFeatureFlags)
         [sqlAlterColumn "can_use_fi_authentication_to_sign" "DROP DEFAULT"]
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "feature_flags_c7"
         , ctColumns =
           [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }

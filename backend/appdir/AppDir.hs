@@ -35,8 +35,8 @@ data AppPaths = AppPaths
 -- variables in the service configuration.
 setupAppPaths :: IO AppPaths
 setupAppPaths = do
-  sourceRoot    <- fromMaybe "." <$> (lookupEnv "KONTRAKCJA_ROOT")
-  workspaceRoot <- fromMaybe sourceRoot <$> (lookupEnv "KONTRAKCJA_WORKSPACE")
+  sourceRoot    <- fromMaybe "." <$> lookupEnv "KONTRAKCJA_ROOT"
+  workspaceRoot <- fromMaybe sourceRoot <$> lookupEnv "KONTRAKCJA_WORKSPACE"
 
   putStrLn $ "KONTRAKCJA_ROOT: " <> sourceRoot
   putStrLn $ "KONTRAKCJA_WORKSPACE: " <> workspaceRoot

@@ -51,16 +51,16 @@ import Util.SignatoryLinkUtils
 
 eidServiceRoutes :: Route (Kontra Response)
 eidServiceRoutes = choice
-  [ dir "start" . dir "verimi" . hPost . toK2 $ startVerimiEIDServiceTransaction
+  [ (dir "start" . dir "verimi" . hPost . toK2) startVerimiEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "verimi" . hGet . toK2)
     redirectEndpointFromVerimiEIDServiceTransaction
-  , dir "start" . dir "idin-view" . hPost . toK2 $ startIDINViewEIDServiceTransaction
+  , (dir "start" . dir "idin-view" . hPost . toK2) startIDINViewEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "idin-view" . hGet . toK2)
     redirectEndpointFromIDINViewEIDServiceTransaction
-  , dir "start" . dir "idin-sign" . hPost . toK2 $ startIDINSignEIDServiceTransaction
+  , (dir "start" . dir "idin-sign" . hPost . toK2) startIDINSignEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "idin-sign" . hGet . toK2)
     redirectEndpointFromIDINSignEIDServiceTransaction
-  , dir "start" . dir "nemid" . hPost . toK2 $ startNemIDViewEIDServiceTransaction
+  , (dir "start" . dir "nemid" . hPost . toK2) startNemIDViewEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "nemid-view" . hGet . toK2)
     redirectEndpointFromNemIDViewEIDServiceTransaction
   , (dir "start" . dir "nobankid-view" . hPost . toK2)
@@ -200,7 +200,7 @@ startEIDServiceTransaction doc sl eidserviceAuthKind provider = do
     EIDServiceTransactionProviderVerimi ->
       return EIDServiceProviderParamsVerimi { esppRedirectURL = redirectUrl }
     EIDServiceTransactionProviderDKNemID -> do
-      let locale = case (documentlang doc) of
+      let locale = case documentlang doc of
             LANG_SV -> "sv-SE"
             LANG_NO -> "nb-NO"
             LANG_DA -> "da-DK"
@@ -245,14 +245,14 @@ updateVerimiTransactionAfterCheck
   -> Maybe CompleteVerimiEIDServiceTransactionData
   -> m EIDServiceTransactionStatus
 updateVerimiTransactionAfterCheck slid est ts mctd = do
-  if (estStatus est == ts)
+  if estStatus est == ts
     then return $ estStatus est
     else do
       case (ts, mctd) of
         (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
           doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
           let sl = fromJust $ getSigLinkFor slid doc
-          if (eidvtdVerifiedEmail cd == getEmail sl)
+          if eidvtdVerifiedEmail cd == getEmail sl
             then do
               mergeEIDServiceTransactionWithStatus
                 EIDServiceTransactionStatusCompleteAndSuccess
@@ -275,7 +275,7 @@ updateVerimiTransactionAfterCheck slid est ts mctd = do
                   $   dbUpdate
                   .   InsertEvidenceEventWithAffectedSignatoryAndMsg
                         AuthenticatedToViewEvidence
-                        (eventFields)
+                        eventFields
                         (Just sl)
                         Nothing
                   =<< signatoryActor ctx sl
@@ -294,7 +294,7 @@ updateVerimiTransactionAfterCheck slid est ts mctd = do
           return ts
   where
     mergeEIDServiceTransactionWithStatus newstatus =
-      dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newstatus }
+      dbUpdate . MergeEIDServiceTransaction $ est { estStatus = newstatus }
 
 checkVerimiEIDServiceTransactionForSignatory
   :: Kontrakcja m
@@ -358,12 +358,12 @@ redirectEndpointFromFITupasSignEIDServiceTransaction did slid = do
   sl <- dbQuery $ GetSignatoryLinkByID did slid
   let redirectUrl = "/s/" <> show did <> "/" <> show slid
       correctData
-        | Just (_, EIDServiceTransactionStatusCompleteAndSuccess, Just cd) <- res = or
-          [ T.null (getPersonalNumber sl)
-          , isNothing $ eidtupasSSN cd  -- 'legal persons' don't always have an SSN
-          , getPersonalNumber sl == fromMaybe "" (eidtupasSSN cd)
-          ]
-        | otherwise = False  -- the transaction cannot be just New or Started now,
+        | Just (_, EIDServiceTransactionStatusCompleteAndSuccess, Just cd) <- res
+        = T.null (getPersonalNumber sl)
+          || isNothing (eidtupasSSN cd)
+          || (getPersonalNumber sl == fromMaybe "" (eidtupasSSN cd))
+        | otherwise
+        = False  -- the transaction cannot be just New or Started now,
                              -- we were redirected here at the end of EID Auth
 
   redirectPage <- renderTextTemplate "postFITupasSignRedirect" $ do
@@ -406,7 +406,7 @@ updateIDINTransactionAfterCheck
   -> Maybe CompleteNLIDINEIDServiceTransactionData
   -> m EIDServiceTransactionStatus
 updateIDINTransactionAfterCheck slid est ts mctd = do
-  if (estStatus est == ts)
+  if estStatus est == ts
     then return $ estStatus est
     else do
       case (ts, mctd) of
@@ -433,7 +433,7 @@ updateIDINTransactionAfterCheck slid est ts mctd = do
               $   dbUpdate
               .   InsertEvidenceEventWithAffectedSignatoryAndMsg
                     AuthenticatedToViewEvidence
-                    (eventFields)
+                    eventFields
                     (Just sl)
                     Nothing
               =<< signatoryActor ctx sl
@@ -448,7 +448,7 @@ updateIDINTransactionAfterCheck slid est ts mctd = do
           return ts
   where
     mergeEIDServiceTransactionWithStatus newstatus =
-      dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newstatus }
+      dbUpdate . MergeEIDServiceTransaction $ est { estStatus = newstatus }
 
 checkIDINEIDServiceTransactionForSignatory
   :: Kontrakcja m
@@ -553,7 +553,7 @@ updateNemIDTransactionAfterCheck
   -> Maybe CompleteDKNemIDEIDServiceTransactionData
   -> m EIDServiceTransactionStatus
 updateNemIDTransactionAfterCheck slid est ts mctd = do
-  if (estStatus est == ts)
+  if estStatus est == ts
     then return $ estStatus est
     else do
       case (ts, mctd) of
@@ -564,7 +564,7 @@ updateNemIDTransactionAfterCheck slid est ts mctd = do
             EIDServiceTransactionStatusCompleteAndSuccess
           let ssnFromEIDService    = normalizeSSN $ eidnidSSN cd
               ssnFromSignatoryLink = normalizeSSN $ getPersonalNumber signatoryLink
-          if (ssnFromEIDService /= ssnFromSignatoryLink)
+          if ssnFromEIDService /= ssnFromSignatoryLink
             then do
               logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object
                 [ "ssn_sl" .= ssnFromSignatoryLink
@@ -574,7 +574,7 @@ updateNemIDTransactionAfterCheck slid est ts mctd = do
               flashMessageUserHasIdentifiedWithDifferentSSN
                 >>= addFlashCookie
                 .   toCookieValue
-              return $ EIDServiceTransactionStatusCompleteAndFailed
+              return EIDServiceTransactionStatusCompleteAndFailed
             else do
               let signatoryName = cnFromDN $ eidnidDistinguishedName cd
                   birthDate     = eidnidBirthDate cd
@@ -604,7 +604,7 @@ updateNemIDTransactionAfterCheck slid est ts mctd = do
                     $   dbUpdate
                     .   InsertEvidenceEventWithAffectedSignatoryAndMsg
                           AuthenticatedToViewEvidence
-                          (eventFields)
+                          eventFields
                           (Just signatoryLink)
                           Nothing
                     =<< signatoryActor ctx signatoryLink
@@ -619,20 +619,16 @@ updateNemIDTransactionAfterCheck slid est ts mctd = do
           return ts
   where
     mergeEIDServiceTransactionWithStatus newstatus =
-      dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newstatus }
+      dbUpdate . MergeEIDServiceTransaction $ est { estStatus = newstatus }
     decodeCertificate :: Text -> BSC8.ByteString
     decodeCertificate =
-      either (unexpectedError $ "invalid base64 of NemID certificate") identity
+      either (unexpectedError "invalid base64 of NemID certificate") identity
         . B64.decode
         . T.encodeUtf8
     cnFromDN :: Text -> Text
-    cnFromDN dn =
-      fromMaybe parseError
-        $ lookup "CN"
-        $ fmap parsePair
-        $ concatMap (T.splitOn " + ")
-        $ T.splitOn ", "
-        $ dn
+    cnFromDN dn = fromMaybe parseError . lookup "CN" $ fmap
+      parsePair
+      (concatMap (T.splitOn " + ") $ T.splitOn ", " dn)
       where
         parsePair s = case T.splitOn "=" s of
           (name : values) -> (name, T.intercalate "=" values)
@@ -746,7 +742,7 @@ updateNOBankIDTransactionAfterCheck
   -> Maybe CompleteNOBankIDEIDServiceTransactionData
   -> m EIDServiceTransactionStatus
 updateNOBankIDTransactionAfterCheck slid est ts mctd = do
-  if (estStatus est == ts)
+  if estStatus est == ts
     then return $ estStatus est
     else do
       case (ts, mctd) of
@@ -759,19 +755,19 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
               dobFromSignatoryLink =
                 resolveDateOfBirthFromSSN $ getPersonalNumber signatoryLink
               mNameFromEIDService = eidnobidName cd
-          if (isNothing mDobFromEIDService)
+          if isNothing mDobFromEIDService
             then do
               logAttention_ "Distinguished name not provided by EIDService."
               flashErrWithMessage
                 =<< renderTemplate_ "flashMessageNoDOBProvidedByEIDService"
-              return $ EIDServiceTransactionStatusCompleteAndFailed
-            else if (isNothing mNameFromEIDService)
+              return EIDServiceTransactionStatusCompleteAndFailed
+            else if isNothing mNameFromEIDService
               then do
                 logAttention_ "Name not provided by EIDService."
                 flashErrWithMessage
                   =<< renderTemplate_ "flashMessageNoNameProvidedByEIDService"
-                return $ EIDServiceTransactionStatusCompleteAndFailed
-              else if (mDobFromEIDService /= (Just dobFromSignatoryLink))
+                return EIDServiceTransactionStatusCompleteAndFailed
+              else if mDobFromEIDService /= Just dobFromSignatoryLink
                 then do
                   logAttention
                       "Date of birth from EIDService does not match the one from SignatoryLink."
@@ -782,7 +778,7 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
                         ]
                   flashErrWithMessage
                     =<< renderTemplate_ "flashMessageUserHasIdentifiedWithDifferentSSN"
-                  return $ EIDServiceTransactionStatusCompleteAndFailed
+                  return EIDServiceTransactionStatusCompleteAndFailed
                 else do
                   signatoryName <- guardJust $ eidnobidName cd
                   birthDate     <- guardJust mDobFromEIDService
@@ -818,21 +814,22 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
                     actor <- signatoryActor ctx signatoryLink
                     when (mkAuthKind doc == AuthenticationToView) $ do
                       void
-                        $ dbUpdate
+                        . dbUpdate
                         . InsertEvidenceEventWithAffectedSignatoryAndMsg
                             AuthenticatedToViewEvidence
-                            (eventFields)
+                            eventFields
                             (Just signatoryLink)
                             Nothing
                         $ actor
 
                     -- Updating phone number - mobile workflow only and only if not provided
                     forM_ phoneNumber $ \phone -> do
-                      let formattedPhoneFromEIDService = "+47" <> phone
-                          slPhoneNumber                = getMobile signatoryLink
-                          signatoryLinkIsEmpty         = slPhoneNumber == ""
-                          formattedPhoneFromSignatory =
-                            T.filter (\c -> not (c `elem` (" -" :: String))) slPhoneNumber
+                      let
+                        formattedPhoneFromEIDService = "+47" <> phone
+                        slPhoneNumber                = getMobile signatoryLink
+                        signatoryLinkIsEmpty         = slPhoneNumber == ""
+                        formattedPhoneFromSignatory =
+                          T.filter (\c -> c `notElem` (" -" :: String)) slPhoneNumber
                       when
                           (  not signatoryLinkIsEmpty
                           && formattedPhoneFromSignatory
@@ -860,18 +857,17 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
           return ts
   where
     mergeEIDServiceTransactionWithStatus newstatus =
-      dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newstatus }
+      dbUpdate . MergeEIDServiceTransaction $ est { estStatus = newstatus }
     decodeCertificate :: Text -> BSC8.ByteString
     decodeCertificate =
-      either (unexpectedError $ "invalid base64 of NOBankID certificate") identity
+      either (unexpectedError "invalid base64 of NOBankID certificate") identity
         . B64.decode
         . T.encodeUtf8
     flashErrWithMessage :: Kontrakcja m => String -> m ()
-    flashErrWithMessage message =
-      addFlashCookie . toCookieValue . toFlashMsg OperationFailed $ message
+    flashErrWithMessage = addFlashCookie . toCookieValue . toFlashMsg OperationFailed
     resolveDateOfBirthFromSSN :: Text -> Text
     resolveDateOfBirthFromSSN personalnumber =
-      case T.chunksOf 2 (T.take 6 $ personalnumber) of
+      case T.chunksOf 2 (T.take 6 personalnumber) of
         [day, month, year] ->
           let yearWithoutCentury = read year
               sequenceNumber = read . T.take 3 . T.drop 6 $ personalnumber

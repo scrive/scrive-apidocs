@@ -9,7 +9,8 @@ module TextSearchQuery
   , mkTerm
   ) where
 
-import Data.List (foldl', intersperse, nub)
+import Data.List (foldl', intersperse)
+import Data.List.Extra (nubOrd)
 import Data.Monoid ((<>))
 import Data.Text (Text)
 import Database.PostgreSQL.PQTypes.SQL (SQL, mkSQL)
@@ -35,21 +36,21 @@ data TSQuery =
 -- | Construct the SQL string from a @TSQuery@ recursively.
 mkRawQuery :: TSQuery -> Text
 mkRawQuery (Term t    ) = "'" <> t <> "'" <> "::tsquery"
-mkRawQuery (t :&&:  t') = (mkRawQuery t) <> " && " <> (mkRawQuery t')
-mkRawQuery (t :<->: t') = (mkRawQuery t) <> " <-> " <> (mkRawQuery t')
+mkRawQuery (t :&&:  t') = mkRawQuery t <> " && " <> mkRawQuery t'
+mkRawQuery (t :<->: t') = mkRawQuery t <> " <-> " <> mkRawQuery t'
 
 -- | Construct the SQL string from a @TSQuery@ recursively and clean by means of
 -- PostgreSQL's `to_tsquery`.
 mkSimpleQuery :: TSQuery -> Text
 mkSimpleQuery (Term t) =
   "to_tsquery('simple', '"
-    <> (mconcat $ intersperse " & " $ map addTSWildcard $ cleanUnallowedTSChars t)
+    <> mconcat (intersperse " & " . map addTSWildcard $ cleanUnallowedTSChars t)
     <> "')"
     -- intersperse: when cleaning, e.g. `'asdf:bool'` -> `'asdf bool'` so we
     -- protect against this by inserting `&`; alternative is to analyse and call
     -- recursively.
-mkSimpleQuery (t :&&:  t') = (mkSimpleQuery t) <> " && " <> (mkSimpleQuery t')
-mkSimpleQuery (t :<->: t') = (mkSimpleQuery t) <> " <-> " <> (mkSimpleQuery t')
+mkSimpleQuery (t :&&:  t') = mkSimpleQuery t <> " && " <> mkSimpleQuery t'
+mkSimpleQuery (t :<->: t') = mkSimpleQuery t <> " <-> " <> mkSimpleQuery t'
 
 -- | Make a `Term`, lowercasing first.
 mkTerm :: Text -> TSQuery
@@ -58,22 +59,22 @@ mkTerm = Term . T.toLower
 -- | Our equivalent of the `@@` FTS matching operator.
 infixl 2 <@@>
 (<@@>) :: SQL -> TSQuery -> SQL
-(<@@>) tsvector qry = tsvector <> " @@ " <> "(" <> (mkSQL $ mkSimpleQuery qry) <> ")"
+(<@@>) tsvector qry = tsvector <> " @@ " <> "(" <> mkSQL (mkSimpleQuery qry) <> ")"
 
 -- helpers
 
 cleanUnallowedTSChars :: Text -> [Text]
-cleanUnallowedTSChars t = go notAllowed (nub . T.words $ t)
+cleanUnallowedTSChars t = go notAllowed (nubOrd . T.words $ t)
   where
     notAllowed :: [Text]
     notAllowed = ["|", "&", ":", "!", "<->", "<", "*", "'", "(", ")"]
 
     go :: [Text] -> [Text] -> [Text]
     go []           acc = Prelude.filter (/= "") acc
-    go (sym : syms) acc = go syms (nub $ splitAll sym acc)
+    go (sym : syms) acc = go syms (nubOrd $ splitAll sym acc)
 
     splitAll :: Text -> [Text] -> [Text]
-    splitAll symbol texts = concatMap (T.splitOn symbol) texts
+    splitAll = concatMap . T.splitOn
 
 addTSWildcard :: Text -> Text
 addTSWildcard t = t <> ":*"

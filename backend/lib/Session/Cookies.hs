@@ -62,13 +62,12 @@ startSessionCookie
 startSessionCookie s = do
   ishttps <- isHTTPS
   addHttpOnlyCookie ishttps (MaxAge maxSessionTimeoutSecs)
-    $ mkCookieFromText cookieNameSessionID
+    . mkCookieFromText cookieNameSessionID
     . showt
     $ sessionCookieInfoFromSession s
   addCookie ishttps (MaxAge maxSessionTimeoutSecs)
-    $ mkCookieFromText cookieNameXToken
-    $ showt
-    $ sesCSRFToken s
+    . mkCookieFromText cookieNameXToken
+    $ showt (sesCSRFToken s)
 
 -- | Remove session cookie from browser.
 stopSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m) => m ()
@@ -93,5 +92,4 @@ isXTokenCookieBroken = do
 -- | Read current session cookie from request.
 currentSessionInfoCookies :: ServerMonad m => m [SessionCookieInfo]
 currentSessionInfoCookies =
-  (catMaybes . fmap maybeRead . lookCookieValues cookieNameSessionID . rqHeaders)
-    <$> askRq
+  mapMaybe maybeRead . lookCookieValues cookieNameSessionID . rqHeaders <$> askRq

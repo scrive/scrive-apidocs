@@ -76,15 +76,11 @@ logDocEvent
 logDocEvent name user extraProps doc = do
   ug  <- dbQuery . UserGroupGetByUserID $ user ^. #id
   now <- currentTime
-  let
-    uid      = user ^. #id
-    email    = Email $ getEmail user
-    fullname = getFullName user
-    deliverymethod =
-      fromMaybe "undefined"
-        $   showt
-        .   signatorylinkdeliverymethod
-        <$> getSigLinkFor uid doc
+  let uid      = user ^. #id
+      email    = Email $ getEmail user
+      fullname = getFullName user
+      deliverymethod =
+        maybe "undefined" (showt . signatorylinkdeliverymethod) (getSigLinkFor uid doc)
   asyncLogEvent
     name
     (  extraProps
@@ -98,7 +94,7 @@ logDocEvent name user extraProps doc = do
        , stringProp "Type"            (showt $ documenttype doc)
        , stringProp "Language"        (showt $ documentlang doc)
        , numProp "Days to sign" (fromIntegral $ documentdaystosign doc)
-       , numProp "Signatories"  (fromIntegral $ length $ documentsignatorylinks doc)
+       , numProp "Signatories"  (fromIntegral . length $ documentsignatorylinks doc)
        , stringProp "Signup Method" (showt $ user ^. #signupMethod)
        ]
     )
@@ -112,7 +108,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
     $   theDocument
     >>= stateMismatchError "postDocumentPreparationChange" Pending
   logInfo_ "Preparation -> Pending; Sending invitation emails"
-  updateDocument $ \_ -> initialiseSignatoryAPIMagicHashes
+  updateDocument $ const initialiseSignatoryAPIMagicHashes
   saveDocumentForSignatories
   theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject_ d
 
@@ -139,7 +135,7 @@ initialiseSignatoryAPIMagicHashes = do
   sls <- documentsignatorylinks <$> theDocument
   forM_ sls $ \sl -> when (signatorylinkdeliverymethod sl == APIDelivery) $ do
     mh <- random
-    void $ dbUpdate $ NewSignatoryAccessTokenWithHash (signatorylinkid sl)
+    void . dbUpdate $ NewSignatoryAccessTokenWithHash (signatorylinkid sl)
                                                       SignatoryAccessTokenForAPI
                                                       Nothing
                                                       mh
@@ -217,7 +213,7 @@ postDocumentPendingChange olddoc signatoryLink = do
             dbUpdate $ CloseDocument (systemActor time)
             chargeForItemSingle CIClosingDocument $ documentid olddoc
             when (documentfromshareablelink olddoc)
-              $ chargeForItemSingle CIShareableLink
+              . chargeForItemSingle CIShareableLink
               $ documentid olddoc
             mauthor <- getDocAuthor document
             case mauthor of
@@ -234,15 +230,19 @@ postDocumentPendingChange olddoc signatoryLink = do
               .   ScheduleDocumentSealing
               .   view (#brandedDomain % #id)
               =<< getMailContext
-            if signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
-              then sendPartyProcessFinalizedNotification document signatoryLink
-              else return ()
+            when
+                (  signatorylinkconfirmationdeliverymethod signatoryLink
+                == NoConfirmationDelivery
+                )
+              $ do
+                  sendPartyProcessFinalizedNotification document signatoryLink
           )
   {-else-}$ do
               document <- theDocument
               theDocument >>= triggerAPICallbackIfThereIsOne
               whenM
-                  (   ((/=) (documentcurrentsignorder olddoc) . documentcurrentsignorder)
+                  (   (/=) (documentcurrentsignorder olddoc)
+                  .   documentcurrentsignorder
                   <$> theDocument
                   )
                 $ do
@@ -392,10 +392,10 @@ sendInbetweenPortalInvitations
   => m ()
 sendInbetweenPortalInvitations = do
   auser <- getDocAuthor =<< theDocument
-  case (auser) of
+  case auser of
     Nothing   -> return ()
     Just user -> do
-      ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
       case ugwpSettings ugwp ^. #portalUrl of
         Nothing        -> return ()
         Just portalUrl -> do
@@ -406,8 +406,7 @@ sendInbetweenPortalInvitations = do
             saveDocumentForSignatory sig
   where
     inbetweenPortalSignatories d = filter
-      (\sl ->
-        (signatorylinkdeliverymethod sl == PortalDelivery) && (matchingSignOrder d sl)
+      (\sl -> (signatorylinkdeliverymethod sl == PortalDelivery) && matchingSignOrder d sl
       )
       (documentsignatorylinks d)
     matchingSignOrder d sl =
@@ -432,7 +431,7 @@ saveDocumentForSignatory
   -> m ()
 saveDocumentForSignatory sl = do
   let sigemail = getEmail sl
-  muser <- case (sigemail) of
+  muser <- case sigemail of
     "" -> return Nothing
     _  -> dbQuery $ GetUserByEmail (Email sigemail)
   whenJust muser $ \user -> do
@@ -452,17 +451,17 @@ findAndTimeoutDocuments
   => m ()
 findAndTimeoutDocuments = do
   now            <- currentTime
-  noreplyAddress <- ceMailNoreplyAddress <$> ask
+  noreplyAddress <- asks ceMailNoreplyAddress
   gt             <- asks ceTemplates
   docs           <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 10
-  forM_ docs $ flip withDocument $ do
+  forM_ docs . flip withDocument $ do
     lang    <- documentlang <$> theDocument
     mauthor <- getDocAuthor =<< theDocument
-    runTemplatesT (lang, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
+    runTemplatesT (lang, gt) . dbUpdate $ TimeoutDocument (systemActor now)
     case mauthor of
       Nothing     -> return ()
       Just author -> do
-        ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (author ^. #groupID)
+        ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents (author ^. #groupID)
         bd   <- dbQuery $ GetBrandedDomainByUserID (author ^. #id)
         let mc = I.MailContext { lang               = lang
                                , brandedDomain      = bd

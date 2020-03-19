@@ -7,6 +7,7 @@ module Doc.SignatoryIdentification
   ) where
 
 import Data.Function (on)
+import Data.List.Extra (nubOrdOn)
 import Data.Map (Map)
 import Data.Set (Set)
 import qualified Data.Map as Map
@@ -64,7 +65,7 @@ signatoryIdentifierMap includenonsigning docs slids = Map.fromList $ zipWith3
     -- docs passed to this usually come from the signatories, but
     -- usually multiple signatories have the same doc (except for restarts)
     -- so if there are copies of the same doc, everything will be screwed up
-    docs' = sortBy (compare `on` documentid) $ nubBy ((==) `on` documentid) docs
+    docs'            = sortOn documentid $ nubOrdOn documentid docs
 
     esignatorylinkid = either signatorylinkid identity
 
@@ -73,14 +74,14 @@ signatoryIdentifierMap includenonsigning docs slids = Map.fromList $ zipWith3
     names = map (either getFullName (const "")) slsAndMissing
     -- Get initial of each name words, e.g. "John Smith" to "JS"
     initials =
-      uniqueStrings $ enumerateEmpty $ map (T.concat . map (T.take 1) . T.words) names
+      uniqueStrings . enumerateEmpty $ map (T.concat . map (T.take 1) . T.words) names
     sls =
       filter
           (\s -> includenonsigning || isSignatory s || isApprover s || signatoryisauthor s
           )
         $ concatMap documentsignatorylinks docs'
     slsAndMissing =
-      sortBy (compare `on` esignatorylinkid) $ (map Left sls) ++ (map Right missing)
+      sortBy (compare `on` esignatorylinkid) $ map Left sls ++ map Right missing
     missing = Set.toList $ slids Set.\\ Set.fromList (map signatorylinkid sls)
 
 -- | Replace all empty strings in a list with "1", "2", ...
@@ -97,7 +98,7 @@ uniqueStrings ss = snd . mapAccumL (go 1) Set.empty $ ss  where
     go n used s | normalize sn `Set.member` used = go (n + 1) used' s
                 | otherwise = (used', sn)
       where
-        sn | n > 1 || Map.lookup (normalize s) ssOccurrences > Just 1 = s <> (showt n)
+        sn | n > 1 || Map.lookup (normalize s) ssOccurrences > Just 1 = s <> showt n
            | -- Attempt to only append "1" if there are more occurrences down the list.
              otherwise = s
         used' = Set.insert (normalize sn) used

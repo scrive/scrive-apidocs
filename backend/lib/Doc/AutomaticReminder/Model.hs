@@ -41,7 +41,7 @@ setAutomaticReminder
   -> TimeZoneName
   -> m ()
 setAutomaticReminder did mdays tzn = do
-  void $ dbUpdate $ DeleteAutomaticReminder did
+  void . dbUpdate $ DeleteAutomaticReminder did
   case mdays of
     Nothing   -> return ()
     Just days -> void . dbUpdate $ CreateAutomaticReminder did days tzn
@@ -64,17 +64,17 @@ expireDocumentAutomaticReminders
 expireDocumentAutomaticReminders = do
   templates          <- asks ceTemplates
   mailNoreplyAddress <- asks ceMailNoreplyAddress
-  dars               <- dbQuery $ GetExpiredAutomaticReminders
+  dars               <- dbQuery GetExpiredAutomaticReminders
   forM_ dars $ \dar@DocumentAutomaticReminder {..} -> do
     res <- try . localData [identifier darDocumentID] $ do
       now    <- currentTime
-      exists <-
-        dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor $ darDocumentID
+      exists <- dbQuery
+        $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor darDocumentID
       if exists
         then do
           void $ dbQuery (GetDocumentByDocumentID darDocumentID) >>= \doc ->
             runMailT templates mailNoreplyAddress doc
-              $ withDocument doc
+              . withDocument doc
               $ sendAllReminderEmails (systemActor now) True
         else do
           logInfo
@@ -92,7 +92,7 @@ data GetExpiredAutomaticReminders = GetExpiredAutomaticReminders
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredAutomaticReminders [DocumentAutomaticReminder] where
   query GetExpiredAutomaticReminders = do
     now <- currentTime
-    runQuery_ $ sqlSelect "document_automatic_reminders" $ do
+    runQuery_ . sqlSelect "document_automatic_reminders" $ do
       mapM_ sqlResult selectAutomaticReminderSelectorsList
       sqlWhere $ "expires <" <?> now
     fetchMany fetchAutomaticReminder
@@ -101,8 +101,7 @@ data CreateAutomaticReminder = CreateAutomaticReminder DocumentID Int32 TimeZone
 instance (MonadDB m, MonadThrow m, MonadTime m, MonadMask m) => DBUpdate m CreateAutomaticReminder DocumentAutomaticReminder where
   update (CreateAutomaticReminder did days tzn) = withTimeZone defaultTimeZoneName $ do
     time <- currentTime
-    let timestamp =
-          formatTime' "%F" time <> " " <> (T.unpack $ TimeZoneName.toString tzn)
+    let timestamp = formatTime' "%F" time <> " " <> T.unpack (TimeZoneName.toString tzn)
     runQuery_ . sqlInsert "document_automatic_reminders" $ do
       -- send the reminder at 10:15 in the time zone of the document
       sqlSetCmd "expires"
@@ -116,7 +115,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m, MonadMask m) => DBUpdate m Creat
       mapM_ sqlResult selectAutomaticReminderSelectorsList
     fetchOne fetchAutomaticReminder
 
-data DeleteAutomaticReminder = DeleteAutomaticReminder DocumentID
+newtype DeleteAutomaticReminder = DeleteAutomaticReminder DocumentID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAutomaticReminder Bool where
   update (DeleteAutomaticReminder did) = do
     runQuery01 . sqlDelete "document_automatic_reminders" $ do

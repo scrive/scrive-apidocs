@@ -96,7 +96,7 @@ triggerAPICallbackIfThereIsOne doc@Document {..} =
     _           -> case (documentapiv2callbackurl, documentapiv1callbackurl) of
       (Just url, _       ) -> addAPICallback url V2
       (_       , Just url) -> addAPICallback url V1
-      _                    -> case (maybesignatory =<< getAuthorSigLink doc) of
+      _                    -> case maybesignatory =<< getAuthorSigLink doc of
         -- FIXME: this should be modified so it's not Maybe
         Just userid -> do
           mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
@@ -120,7 +120,7 @@ triggerAPICallbackIfThereIsOne doc@Document {..} =
 apiCallbackNotificationChannel :: Channel
 apiCallbackNotificationChannel = "api_callback"
 
-data CheckQueuedCallbacksFor = CheckQueuedCallbacksFor DocumentID
+newtype CheckQueuedCallbacksFor = CheckQueuedCallbacksFor DocumentID
 instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool where
   query (CheckQueuedCallbacksFor did) = do
     runSQL01_

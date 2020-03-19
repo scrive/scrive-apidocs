@@ -70,7 +70,7 @@ readCheckboxImagesMapping = do
         -- If no size matches, fallback to small size
                                              checked            = smallChecked
                                            | otherwise          = smallNotChecked
-  return $ CheckboxImagesMapping $ checkboxMappingFunction
+  return $ CheckboxImagesMapping checkboxMappingFunction
 
 
 getCheckboxImage :: CheckboxImagesMapping -> Double -> Bool -> BS.ByteString

@@ -39,14 +39,12 @@ guardConditionsAreMet audienceURI nowF Conditions { conditionsNotBefore = mNotBe
         $ authErr ("Assertion used too early " <> showt notBefore)
       )
       mNotBefore
-    when (not . any isMatchingAudience $ conditions)
-      $  authErr
-      $  "No matching audience condition in assertion"
-      <> showt conditions
+    unless (any isMatchingAudience conditions)
+      $ authErr ("No matching audience condition in assertion" <> showt conditions)
   where
     isMatchingAudience :: Condition -> Bool
     isMatchingAudience (AudienceRestriction restriction) =
-      elem Audience { audience = audienceURI } restriction
+      Audience { audience = audienceURI } `elem` restriction
     isMatchingAudience _ = False
 
 

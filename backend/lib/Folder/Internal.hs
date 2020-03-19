@@ -66,7 +66,7 @@ instance Identifier FolderID where
 
 instance Unjson FolderID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse FolderID") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse FolderID") return . maybeRead . T.pack)
     show
     unjsonDef
 

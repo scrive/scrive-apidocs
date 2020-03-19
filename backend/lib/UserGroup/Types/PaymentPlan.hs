@@ -61,10 +61,6 @@ instance Unjson PaymentPlan where
       produce TrialPlan      = "trial"
 
 instance Unjson (Maybe PaymentPlan) where
-  unjsonDef = SimpleUnjsonDef
-    "Maybe payment plan"
-    (parse unjsonDef)
-    (\mv -> case mv of
-      Nothing -> A.Null
-      Just v  -> unjsonToJSON unjsonDef v
-    )
+  unjsonDef = SimpleUnjsonDef "Maybe payment plan"
+                              (parse unjsonDef)
+                              (maybe A.Null $ unjsonToJSON unjsonDef)

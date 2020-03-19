@@ -144,7 +144,7 @@ cleanMockDocForComparison md = md
 ----------------------------------------
 
 getMockDocId :: MockDoc -> DocumentID
-getMockDocId md = case (maybeRead $ T.pack $ mockDocId md) of
+getMockDocId md = case maybeRead . T.pack $ mockDocId md of
   Just did -> did
   Nothing  -> unexpectedError $ "Could not read DocumentID from MockDoc:\n" <> showt md
 
@@ -160,11 +160,8 @@ getMockDocStatus md = case mockDocStatus md of
   "timedout"       -> Timedout
   "rejected"       -> Rejected
   "document_error" -> DocumentError
-  _ ->
-    unexpectedError
-      $  T.pack
-      $  "Could not parse MockDoc status to DocumentStatus: "
-      <> mockDocStatus md
+  _                -> unexpectedError
+    $ T.pack ("Could not parse MockDoc status to DocumentStatus: " <> mockDocStatus md)
 
 getMockDocFolderId :: MockDoc -> FolderID
 getMockDocFolderId = mockDocFolderId
@@ -176,12 +173,12 @@ getMockDocHasFile :: MockDoc -> Bool
 getMockDocHasFile = isJust . mockDocFile
 
 getMockDocFileName :: MockDoc -> String
-getMockDocFileName md = case (mockMainFileName <$> (mockDocFile md)) of
+getMockDocFileName md = case mockMainFileName <$> mockDocFile md of
   Just n  -> n
   Nothing -> unexpectedError $ "No mockDocFile for MockDoc:\n" <> showt md
 
 getMockDocFileId :: MockDoc -> FileID
-getMockDocFileId md = case maybeRead $ T.pack $ mockMainFileId mockFile of
+getMockDocFileId md = case maybeRead . T.pack $ mockMainFileId mockFile of
   Just fid -> fid
   Nothing ->
     unexpectedError
@@ -193,27 +190,27 @@ getMockDocFileId md = case maybeRead $ T.pack $ mockMainFileId mockFile of
       Nothing -> unexpectedError $ "No mockDocFile for MockDoc:\n" <> showt md
 
 getMockDocAuthorAttachmentLength :: MockDoc -> Int
-getMockDocAuthorAttachmentLength md = length . mockDocAuthorAttachments $ md
+getMockDocAuthorAttachmentLength = length . mockDocAuthorAttachments
 
 getMockDocAuthorAttachmentName :: Int -> MockDoc -> String
-getMockDocAuthorAttachmentName i md =
-  mockAuthorAttachmentName . mockDocAuthorAttachmentNumber i $ md
+getMockDocAuthorAttachmentName i =
+  mockAuthorAttachmentName . mockDocAuthorAttachmentNumber i
 
 getMockDocAuthorAttachmentRequired :: Int -> MockDoc -> Bool
-getMockDocAuthorAttachmentRequired i md =
-  mockAuthorAttachmentRequired . mockDocAuthorAttachmentNumber i $ md
+getMockDocAuthorAttachmentRequired i =
+  mockAuthorAttachmentRequired . mockDocAuthorAttachmentNumber i
 
 getMockAuthorAttachmentAddedToSealedFile :: Int -> MockDoc -> Bool
-getMockAuthorAttachmentAddedToSealedFile i md =
-  mockAuthorAttachmentAddedToSealedFile . mockDocAuthorAttachmentNumber i $ md
+getMockAuthorAttachmentAddedToSealedFile i =
+  mockAuthorAttachmentAddedToSealedFile . mockDocAuthorAttachmentNumber i
 
 getMockDocAuthorAttachmentHasFile :: Int -> MockDoc -> Bool
-getMockDocAuthorAttachmentHasFile i md =
-  not . null . mockAuthorAttachmentFileId . mockDocAuthorAttachmentNumber i $ md
+getMockDocAuthorAttachmentHasFile i =
+  not . null . mockAuthorAttachmentFileId . mockDocAuthorAttachmentNumber i
 
 getMockDocAuthorAttachmentFileId :: Int -> MockDoc -> FileID
 getMockDocAuthorAttachmentFileId i md =
-  case maybeRead $ T.pack $ (mockAuthorAttachmentFileId maa) of
+  case maybeRead $ T.pack (mockAuthorAttachmentFileId maa) of
     Just fid -> fid
     Nothing ->
       unexpectedError
@@ -247,7 +244,7 @@ getMockDocViewerRole = mockViewerRole . mockDocViewer
 
 getMockDocSigLinkId :: Int -> MockDoc -> SignatoryLinkID
 getMockDocSigLinkId i md =
-  case (maybeRead $ T.pack $ mockSigLinkId $ getMockSigLinkNumber i md) of
+  case maybeRead . T.pack $ mockSigLinkId (getMockSigLinkNumber i md) of
     Just slid -> slid
     Nothing ->
       unexpectedError
@@ -258,7 +255,7 @@ getMockDocSigLinkId i md =
 
 getMockDocUserSigLinkId :: Int -> MockDoc -> SignatoryLinkID
 getMockDocUserSigLinkId userId md =
-  case (maybeRead $ T.pack $ mockSigLinkId $ getMockSigLinkFromUserId userId md) of
+  case maybeRead . T.pack $ mockSigLinkId (getMockSigLinkFromUserId userId md) of
     Just slid -> slid
     Nothing ->
       unexpectedError
@@ -269,18 +266,17 @@ getMockDocUserSigLinkId userId md =
 
 
 getMockDocSigLinkHasSigned :: Int -> MockDoc -> Bool
-getMockDocSigLinkHasSigned i md =
-  isJust . mockSigLinkSignTime . getMockSigLinkNumber i $ md
+getMockDocSigLinkHasSigned i = isJust . mockSigLinkSignTime . getMockSigLinkNumber i
 
 getMockDocSigLinkHasRejected :: Int -> MockDoc -> Bool
-getMockDocSigLinkHasRejected i md =
-  isJust . mockSigLinkRejectedTime . getMockSigLinkNumber i $ md
+getMockDocSigLinkHasRejected i =
+  isJust . mockSigLinkRejectedTime . getMockSigLinkNumber i
 
 getMockDocSigLinkAuthToViewMethod :: Int -> MockDoc -> AuthenticationToViewMethod
 getMockDocSigLinkAuthToViewMethod i md =
   case
       authenticationToViewMethodFromString
-      $ mockSigLinkAuthMethodToView
+      . mockSigLinkAuthMethodToView
       . getMockSigLinkNumber i
       $ md
     of
@@ -294,7 +290,7 @@ getMockDocSigLinkAuthToViewArchivedMethod :: Int -> MockDoc -> AuthenticationToV
 getMockDocSigLinkAuthToViewArchivedMethod i md =
   case
       authenticationToViewMethodFromString
-      $ mockSigLinkAuthMethodToViewArchived
+      . mockSigLinkAuthMethodToViewArchived
       . getMockSigLinkNumber i
       $ md
     of
@@ -411,8 +407,7 @@ setMockDocSigLinkStandardField i fieldType value =
   setForSigNumberFromMockDoc i (setMockSigLinkStandardField fieldType value)
 
 addStandardSigLinksToMockDoc :: Int -> MockDoc -> MockDoc
-addStandardSigLinksToMockDoc i md =
-  addSigLinksToMockDoc (replicate i defaultMockSigLink) md
+addStandardSigLinksToMockDoc i = addSigLinksToMockDoc (replicate i defaultMockSigLink)
 
 addSigLinksToMockDoc :: [MockSigLink] -> MockDoc -> MockDoc
 addSigLinksToMockDoc newParties md =
@@ -434,7 +429,7 @@ mockDocAuthorAttachmentNumber num mockdoc
     <> " from MockDoc:\n"
     <> showt mockdoc
   | otherwise
-  = (mockDocAuthorAttachments mockdoc) !! (num - 1)
+  = mockDocAuthorAttachments mockdoc !! (num - 1)
 
 -- | Internal use only
 getMockSigLinkNumber :: Int -> MockDoc -> MockSigLink
@@ -446,21 +441,19 @@ getMockSigLinkNumber num mockdoc
     <> " from MockDoc:\n"
     <> showt mockdoc
   | otherwise
-  = (mockDocParties mockdoc) !! (num - 1)
+  = mockDocParties mockdoc !! (num - 1)
 
 -- | Internal use only
 getMockSigLinkFromUserId :: Int -> MockDoc -> MockSigLink
 getMockSigLinkFromUserId userId mockDoc =
-  case
-      find (\link -> elem (show userId) (mockSigLinkUserId link)) (mockDocParties mockDoc)
-    of
-      Just link -> link
-      Nothing ->
-        unexpectedError
-          $  "getMockSigLinkFromUserId could not find a link for user "
-          <> showt userId
-          <> " from MockDoc:\n"
-          <> showt mockDoc
+  case find (elem (show userId) . mockSigLinkUserId) (mockDocParties mockDoc) of
+    Just link -> link
+    Nothing ->
+      unexpectedError
+        $  "getMockSigLinkFromUserId could not find a link for user "
+        <> showt userId
+        <> " from MockDoc:\n"
+        <> showt mockDoc
 
 -- | Internal use only
 getFieldValueOfTypeForSigNumberFromMockDoc :: Int -> String -> MockDoc -> String

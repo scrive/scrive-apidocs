@@ -71,16 +71,16 @@ setTarget target = case target of
   SharedTemplateUserAR fid  -> sqlSet "trg_folder_id" fid
   EidImpersonatorAR    ugid -> sqlSet "trg_user_group_id" ugid
 
-data AccessRoleGet = AccessRoleGet AccessRoleID
+newtype AccessRoleGet = AccessRoleGet AccessRoleID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m AccessRoleGet (Maybe AccessRole) where
   query (AccessRoleGet roleId) = do
     runQuery_ . sqlSelect "access_control" $ do
-      mapM_ sqlResult $ rolesSelector
+      mapM_ sqlResult rolesSelector
       sqlWhereEq "id" roleId
     fetchMaybe fetchAccessRole
 
-data GetRoles = GetRoles User
+newtype GetRoles = GetRoles User
 instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
   query (GetRoles u) = do
     let ugid = u ^. #groupID
@@ -128,24 +128,19 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRolesIncludingInherited [Acce
           sqlWhereAny [sqlWhereEq "src_user_id" uid, sqlWhereEq "src_user_group_id" ugid]
         let
           derivedRolesVALUES =
-            (   parenthesize
-              $   "VALUES"
-              <+> (sqlConcatComma . for roles $ \role ->
-                    parenthesize
-                      . sqlConcatComma
-                      $ [ "NULL::bigint"
-                        , ""
-                        <?> (toAccessRoleType $ accessRoleTarget role)
-                        <+> "::smallint"
-                        , "" <?> (accessRoleGetSourceUserID role) <+> "::bigint"
-                        , "" <?> (accessRoleGetSourceUserGroupID role) <+> "::bigint"
-                        , "" <?> (accessRoleGetTargetUserID role) <+> "::bigint"
-                        , "" <?> (accessRoleGetTargetUserGroupID role) <+> "::bigint"
-                        , "" <?> (accessRoleGetTargetFolderID role) <+> "::bigint"
-                        ]
-                  )
-              )
-              <+> "AS t (id, role, src_user_id, src_user_group_id, trg_user_id, trg_user_group_id, trg_folder_id)"
+            let values = sqlConcatComma . for roles $ \role ->
+                  parenthesize $ sqlConcatComma
+                    [ "NULL::bigint"
+                    , sqlParam (toAccessRoleType $ accessRoleTarget role) <+> "::smallint"
+                    , sqlParam (accessRoleGetSourceUserID role) <+> "::bigint"
+                    , sqlParam (accessRoleGetSourceUserGroupID role) <+> "::bigint"
+                    , sqlParam (accessRoleGetTargetUserID role) <+> "::bigint"
+                    , sqlParam (accessRoleGetTargetUserGroupID role) <+> "::bigint"
+                    , sqlParam (accessRoleGetTargetFolderID role) <+> "::bigint"
+                    ]
+            in
+              parenthesize ("VALUES" <+> values)
+                <+> "AS t (id, role, src_user_id, src_user_group_id, trg_user_id, trg_user_group_id, trg_folder_id)"
         sqlWith "access_control_derived" . sqlSelect derivedRolesVALUES $ do
           sqlResult "*"
         sqlResult
@@ -171,10 +166,10 @@ instance (MonadDB m, MonadThrow m)
   query (AccessControlGetExplicitRoles uid ugid) = do
     runQuery_ . sqlSelect "access_control" $ do
       sqlWhereAny [sqlWhereEq "src_user_id" uid, sqlWhereEq "src_user_group_id" ugid]
-      mapM_ sqlResult $ rolesSelector
+      mapM_ sqlResult rolesSelector
     fetchMany fetchAccessRole
 
-data AccessControlDeleteRolesByUserGroup
+newtype AccessControlDeleteRolesByUserGroup
   = AccessControlDeleteRolesByUserGroup UserGroupID
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m AccessControlDeleteRolesByUserGroup () where
@@ -184,14 +179,14 @@ instance (MonadDB m, MonadThrow m) =>
       , sqlWhereEq "trg_user_group_id" $ Just ugid
       ]
 
-data AccessControlDeleteRolesByFolder
+newtype AccessControlDeleteRolesByFolder
   = AccessControlDeleteRolesByFolder FolderID
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m AccessControlDeleteRolesByFolder () where
   update (AccessControlDeleteRolesByFolder fdrid) = do
-    runQuery_ . sqlDelete "access_control" $ sqlWhereEq "trg_folder_id" $ Just fdrid
+    runQuery_ . sqlDelete "access_control" . sqlWhereEq "trg_folder_id" $ Just fdrid
 
-data AccessControlRemoveRole = AccessControlRemoveRole AccessRoleID
+newtype AccessControlRemoveRole = AccessControlRemoveRole AccessRoleID
 instance (MonadDB m, MonadThrow m)
   => DBUpdate m AccessControlRemoveRole Bool where
   update (AccessControlRemoveRole roleId) =

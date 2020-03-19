@@ -204,7 +204,7 @@ data ProcRes
 
 newtype EventProcessor m =
   EventProcessor
-  { unEventProcessor :: (EventName -> [EventProperty] -> m ProcRes) }
+  { unEventProcessor :: EventName -> [EventProperty] -> m ProcRes }
 
 -- | Combine two event processors into one. The first event processor is always
 --   executed. If it fails, the second is not. Unfortunately, there is no way
@@ -254,9 +254,9 @@ asyncProcessEvents getEventProcessor numEvts = do
   deleteEvents lastEvt
   where
     processEvent (AsyncEvent ename eprops etype) = do
-      result <- case (getEventProcessor etype) of
+      result <- case getEventProcessor etype of
         Nothing      -> return . Ignored $ "No event processor defined"
-        Just process -> (unEventProcessor process) ename eprops
+        Just process -> unEventProcessor process ename eprops
       case result of
         PutBack    -> asyncLogEvent ename eprops etype
         Failed msg -> logInfo "Event processing failed" $ object
@@ -296,8 +296,8 @@ asyncProcessEvents getEventProcessor numEvts = do
 --   constructor, whereas others may be arbitrarily named using `someProp`.
 asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> EventType -> m ()
 asyncLogEvent ename eprops etype = do
-  runQuery_ $ sqlInsert "async_event_queue" $ do
-    sqlSet "event" $ mkBinary $ AsyncEvent ename eprops etype
+  runQuery_ . sqlInsert "async_event_queue" $ do
+    sqlSet "event" . mkBinary $ AsyncEvent ename eprops etype
   where mkBinary = B.concat . BL.toChunks . encode
 
 arbitraryText :: Gen Text

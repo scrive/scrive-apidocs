@@ -4,8 +4,9 @@ module AccessControl.API (
   , accessControlAPIV2Get
   , accessControlAPIV2Delete
   , accessControlAPIV2Add
-) where
+  ) where
 
+import Data.List.Extra (nubOrd)
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import qualified Text.JSON.Gen as J
@@ -25,19 +26,19 @@ import User.UserID
 
 accessControlAPI :: Route (Kontra Response)
 accessControlAPI =
-  dir "api" $ choice [dir "frontend" $ accessControlAPIV2, dir "v2" $ accessControlAPIV2]
+  dir "api" $ choice [dir "frontend" accessControlAPIV2, dir "v2" accessControlAPIV2]
 
 accessControlAPIV2 :: Route (Kontra Response)
 accessControlAPIV2 = choice
-  [ dir "getuserroles" . hGet . toK1 $ accessControlAPIV2GetUserRoles
+  [ (dir "getuserroles" . hGet . toK1) accessControlAPIV2GetUserRoles
   , accessControlRolesAPIV2
   ]
 
 accessControlRolesAPIV2 :: Route (Kontra Response)
 accessControlRolesAPIV2 = dir "accesscontrol" . dir "roles" $ choice
-  [ hGet . toK1 $ accessControlAPIV2Get
-  , param . dir "delete" . hPost . toK1 $ accessControlAPIV2Delete
-  , dir "add" . hPost . toK0 $ accessControlAPIV2Add
+  [ (hGet . toK1) accessControlAPIV2Get
+  , (param . dir "delete" . hPost . toK1) accessControlAPIV2Delete
+  , (dir "add" . hPost . toK0) accessControlAPIV2Add
   ]
 
 accessControlAPIV2GetUserRoles :: Kontrakcja m => UserID -> m Response
@@ -51,7 +52,7 @@ accessControlAPIV2GetUserRoles uid = api $ do
         apiError $ serverError "Impossible happened (No user with ID, or deleted)"
       Just user -> do
         roles <- addInheritedRoles =<< dbQuery (GetRoles user)
-        return . Ok . encodeAccessRoles $ nub roles
+        return . Ok . encodeAccessRoles $ nubOrd roles
 
 accessControlAPIV2Get :: Kontrakcja m => AccessRoleID -> m Response
 accessControlAPIV2Get roleId = api $ do
@@ -61,7 +62,7 @@ accessControlAPIV2Get roleId = api $ do
       apiuser <- getAPIUserWithAPIPersonal
       -- to read a role it is enough to ReadA its source
       let acc = [canDoActionOnSource ReadA role]
-      apiAccessControlOrIsAdmin apiuser acc $ return . Ok $ encodeAccessRole role
+      apiAccessControlOrIsAdmin apiuser acc . return . Ok $ encodeAccessRole role
 
 accessControlAPIV2Delete :: Kontrakcja m => AccessRoleID -> m Response
 accessControlAPIV2Delete roleId = api $ do
@@ -70,7 +71,7 @@ accessControlAPIV2Delete roleId = api $ do
     Just role -> do
       apiuser <- getAPIUserWithAPIPersonal
       -- to delete a role one must UpdateA source and be able to grant the role
-      let acc = [canDoActionOnSource UpdateA role] ++ canGrant (accessRoleTarget role)
+      let acc = canDoActionOnSource UpdateA role : canGrant (accessRoleTarget role)
       apiAccessControlOrIsAdmin apiuser acc $ do
         void . dbUpdate $ AccessControlRemoveRole roleId
         return . Ok . J.runJSONGen $ do
@@ -82,7 +83,7 @@ accessControlAPIV2Add = api $ do
   role    <- getApiRoleParameter
   apiuser <- getAPIUserWithAPIPersonal
   -- to add a role one must UpdateA source and be able to grant the role
-  let acc = [canDoActionOnSource UpdateA role] ++ canGrant (accessRoleTarget role)
+  let acc = canDoActionOnSource UpdateA role : canGrant (accessRoleTarget role)
   apiAccessControlOrIsAdmin apiuser acc $ do
     mrole <- case role of
       AccessRoleUser _ uid target -> dbUpdate $ AccessControlCreateForUser uid target

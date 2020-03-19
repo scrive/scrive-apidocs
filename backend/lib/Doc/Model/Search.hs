@@ -17,7 +17,7 @@ updateHistoricalSearchData
 updateHistoricalSearchData = do
   docIDs <- dbQuery $ GetDocumentIdsWithNullSearchField 1000
   t0     <- currentTime
-  ress   <- forM docIDs $ flip withDocumentID $ do
+  ress   <- forM docIDs . flip withDocumentID $ do
     docID <- theDocumentID
     dbUpdate $ SetDocumentSearchField docID
   unless (null docIDs) commit
@@ -31,7 +31,7 @@ updateHistoricalSearchData = do
   return numberOfItemsUpdated
 
 
-data GetDocumentIdsWithNullSearchField = GetDocumentIdsWithNullSearchField Int
+newtype GetDocumentIdsWithNullSearchField = GetDocumentIdsWithNullSearchField Int
 instance MonadDB m => DBQuery m GetDocumentIdsWithNullSearchField [DocumentID] where
   query (GetDocumentIdsWithNullSearchField limit) = do
     runQuery_ . sqlSelect "documents" $ do
@@ -40,7 +40,7 @@ instance MonadDB m => DBQuery m GetDocumentIdsWithNullSearchField [DocumentID] w
       sqlLimit limit
     fetchMany runIdentity
 
-data SetDocumentSearchField = SetDocumentSearchField DocumentID
+newtype SetDocumentSearchField = SetDocumentSearchField DocumentID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetDocumentSearchField Bool where
   -- We do a raw query here, since we rely on a stored procedure in the DB:
   -- `archive_search_terms_func(bigint)`, defined by means of

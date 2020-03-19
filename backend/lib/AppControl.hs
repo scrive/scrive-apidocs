@@ -86,13 +86,12 @@ getStandardLang
   -> m Lang
 getStandardLang muser = do
   rq <- askRq
-  let
-    mlangcookie = lookCookieValue "lang" $ rqHeaders rq
-    mcookielang = join $ langFromCode <$> mlangcookie
-    browserlang =
-      langFromHTTPHeader (fromMaybe "" $ TE.decodeUtf8 <$> getHeader "Accept-Language" rq)
-    newlang       = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
-    newlangcookie = mkCookie "lang" (T.unpack $ codeFromLang newlang)
+  let mlangcookie = lookCookieValue "lang" $ rqHeaders rq
+      mcookielang = langFromCode =<< mlangcookie
+      browserlang =
+        langFromHTTPHeader (maybe "" TE.decodeUtf8 (getHeader "Accept-Language" rq))
+      newlang       = fromMaybe browserlang $ msum [getLang <$> muser, mcookielang]
+      newlangcookie = mkCookie "lang" (T.unpack $ codeFromLang newlang)
   addCookie (MaxAge (60 * 60 * 24 * 366)) newlangcookie
   return newlang
 
@@ -132,9 +131,9 @@ showNamedInput (name, input) = name ++ ": " ++ case inputFilename input of
 logRequest :: Request -> Maybe [(String, Input)] -> [Pair]
 logRequest rq maybeInputsBody =
   [ "request" .= (show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq)
-  , "post variables" .= (map showNamedInput $ fromMaybe [] maybeInputsBody)
+  , "post variables" .= map showNamedInput (fromMaybe [] maybeInputsBody)
   , "http headers" .= (concatMap showNamedHeader . Map.toList $ rqHeaders rq)
-  , "http cookies" .= (map showNamedCookie $ rqCookies rq)
+  , "http cookies" .= map showNamedCookie (rqCookies rq)
   ]
 
 -- | Outer handler monad
@@ -150,8 +149,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
   let quota = 30000000
       -- Just like defaultFileSaver, but accepts filenames containing
       -- full paths (only the filename part of the path is used, though).
-      fileSaver tmpDir diskQuota filename b =
-        defaultFileSaver tmpDir diskQuota (Windows.takeFileName filename) b
+      fileSaver tmpDir diskQuota filename =
+        defaultFileSaver tmpDir diskQuota (Windows.takeFileName filename)
       bodyPolicy = (defaultBodyPolicy temp quota quota quota)
         { inputWorker = defaultInputIter fileSaver temp 0 0 0
         }
@@ -271,8 +270,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                           mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
                           logAttention "InternalError"
                             .  object
-                            $  ["stacktrace" .= reverse stack]
-                            ++ logRequest rq mbody
+                            $  "stacktrace"
+                            .= reverse stack
+                            :  logRequest rq mbody
                           internalServerErrorPage >>= internalServerError
                         Respond404 -> do
                           -- there is no way to get stacktrace here as Respond404
@@ -338,7 +338,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         let peerhost :: HostName
             peerhost =
               head
-                $  catMaybes
+                .  catMaybes
                 $  [ BS.toString <$> getHeader h rq
                    | h <- ["x-forwarded-for", "x-real-ip"]
                    ]

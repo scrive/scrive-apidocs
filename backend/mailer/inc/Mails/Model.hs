@@ -58,17 +58,17 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately 
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "finished_at" (Nothing :: Maybe UTCTime)
       sqlWhereEq "id" job
-    unless success $ unexpectedError $ (showt job) <+> "doesn't exist"
+    unless success . unexpectedError $ showt job <+> "doesn't exist"
     where job = CollectServiceTestResult
 
-data CollectServiceTestResultIn = CollectServiceTestResultIn Interval
+newtype CollectServiceTestResultIn = CollectServiceTestResultIn Interval
 instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CollectServiceTestResultIn () where
   update (CollectServiceTestResultIn int) = do
     now     <- currentTime
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSetCmd "run_at" $ sqlParam now <+> "+" <?> int
       sqlWhereEq "id" job
-    unless success $ unexpectedError $ (showt job) <+> "doesn't exist"
+    unless success . unexpectedError $ showt job <+> "doesn't exist"
     where job = CollectServiceTestResult
 
 data ScheduleServiceTest = ScheduleServiceTest
@@ -77,7 +77,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "run_at" unixEpoch
       sqlWhereEq "id" job
-    unless success $ unexpectedError $ (showt job) <+> "doesn't exist"
+    unless success . unexpectedError $ showt job <+> "doesn't exist"
     where job = PerformServiceTest
 
 ----------------------------------------
@@ -131,11 +131,11 @@ mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 att
 
 type EmailData = (MagicHash, Address, [Address], Maybe Address, Text, Text, [Attachment])
 
-data CreateEmail = CreateEmail EmailData
+newtype CreateEmail = CreateEmail EmailData
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmail MailID where
   update (CreateEmail mdata) = insertEmail False mdata
 
-data CreateServiceTest = CreateServiceTest EmailData
+newtype CreateServiceTest = CreateServiceTest EmailData
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateServiceTest MailID where
   update (CreateServiceTest mdata) = do
     runQuery_ . sqlDelete "mails" $ do
@@ -151,7 +151,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmail (Maybe Mail) where
       sqlWhereEq "token" token
     fetchMaybe mailFetcher
 
-data GetEmailSendoutTime = GetEmailSendoutTime MailID
+newtype GetEmailSendoutTime = GetEmailSendoutTime MailID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetEmailSendoutTime (Maybe UTCTime) where
   query (GetEmailSendoutTime mid) = do
     runQuery01_ . sqlSelect "mails" $ do
@@ -195,7 +195,7 @@ instance MonadDB m => DBUpdate m ResendEmailsSentAfterServiceTest Int where
       notify mailNotificationChannel ""
     return n
 
-data CleanEmailsOlderThanDays = CleanEmailsOlderThanDays Int
+newtype CleanEmailsOlderThanDays = CleanEmailsOlderThanDays Int
 instance (MonadDB m, MonadTime m) => DBUpdate m CleanEmailsOlderThanDays Int where
   update (CleanEmailsOlderThanDays days) = do
     past <- (days `daysBefore`) <$> currentTime
@@ -213,7 +213,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithEvent Bool where
 
 data MarkEventAsRead = MarkEventAsRead EventID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m MarkEventAsRead Bool where
-  update (MarkEventAsRead eid time) = runQuery01 $ sqlUpdate "mail_events" $ do
+  update (MarkEventAsRead eid time) = runQuery01 . sqlUpdate "mail_events" $ do
     sqlSet "event_read" time
     sqlWhereEq "id" eid
 
@@ -232,11 +232,14 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     sqlSet "service_test" service_test
     sqlResult "id"
   mid <- fetchOne runIdentity
-  unless (null attachments) $ runQuery_ $ sqlInsert "mail_attachments" $ do
-    sqlSet "mail_id" mid
-    sqlSetList "name" names
-    sqlSetList "content" $ either Just (const Nothing) `map` contents
-    sqlSetList "file_id" $ either (const Nothing) Just `map` contents
+  unless (null attachments) . runQuery_ $ sqlInsert
+    "mail_attachments"
+    (do
+      sqlSet "mail_id" mid
+      sqlSetList "name" names
+      sqlSetList "content" $ either Just (const Nothing) `map` contents
+      sqlSetList "file_id" $ either (const Nothing) Just `map` contents
+    )
   notify mailNotificationChannel ""
   return mid
   where

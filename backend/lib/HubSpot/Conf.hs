@@ -13,8 +13,8 @@ data HubSpotConf = HubSpotConf
 unjsonHubSpotConf :: UnjsonDef HubSpotConf
 unjsonHubSpotConf =
   objectOf
-    $   pure HubSpotConf
-    <*> fieldDef "hub_id" ""        hubspotHubId   "HubSpot Hub Id"
+    $   HubSpotConf
+    <$> fieldDef "hub_id" ""        hubspotHubId   "HubSpot Hub Id"
     <*> fieldDef "forms"  Map.empty hubspotFormIds "HubSpot form ID:s by name"
 
 instance Unjson HubSpotConf where
@@ -22,5 +22,5 @@ instance Unjson HubSpotConf where
 
 instance J.ToJSValue HubSpotConf where
   toJSValue HubSpotConf {..} = J.runJSONGen $ do
-    J.value "hub_id" $ hubspotHubId
+    J.value "hub_id" hubspotHubId
     J.value "forms" $ J.toJSValue hubspotFormIds

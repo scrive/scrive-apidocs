@@ -44,7 +44,7 @@ instance ToSQL UserCallbackScheme where
   type PQDest UserCallbackScheme = PQDest String
   toSQL = jsonToSQL
 
-data GetUserCallbackSchemeByUserID = GetUserCallbackSchemeByUserID UserID
+newtype GetUserCallbackSchemeByUserID = GetUserCallbackSchemeByUserID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserCallbackSchemeByUserID (Maybe UserCallbackScheme) where
   query (GetUserCallbackSchemeByUserID uid) = do
     runQuery_ . sqlSelect "user_callback_scheme" $ do
@@ -52,7 +52,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserCallbackSchemeByUserID (M
       sqlWhereEq "user_id" uid
     fetchMaybe runIdentity
 
-data DeleteUserCallbackScheme = DeleteUserCallbackScheme UserID
+newtype DeleteUserCallbackScheme = DeleteUserCallbackScheme UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteUserCallbackScheme () where
   update (DeleteUserCallbackScheme uid) = do
     runQuery01_ $ "DELETE FROM user_callback_scheme WHERE user_id =" <?> uid

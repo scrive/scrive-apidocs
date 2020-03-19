@@ -117,17 +117,17 @@ instance ToSQL UserHistoryEventType where
   toSQL UserTOTPDisable                = toSQL (14 :: Int32)
   toSQL UserAccountDeleted             = toSQL (15 :: Int32)
 
-data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
+newtype GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
   query (GetUserHistoryByUserID uid) = do
     runQuery_ $ selectUserHistorySQL <+> "WHERE user_id =" <?> uid <+> "ORDER BY time"
     fetchMany fetchUserHistory
 
-data GetUserRecentAuthFailureCount = GetUserRecentAuthFailureCount UserID
+newtype GetUserRecentAuthFailureCount = GetUserRecentAuthFailureCount UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserRecentAuthFailureCount Int64 where
   query (GetUserRecentAuthFailureCount uid) = do
     now <- currentTime
-    runQuery_ $ sqlSelect "users_history" $ do
+    runQuery_ . sqlSelect "users_history" $ do
       sqlWhereEq "user_id" uid
       sqlWhereIn
         "event_type"
@@ -256,9 +256,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountCreated Bool w
     userid
     UserHistoryEvent
       { uheventtype = UserAccountCreated
-      , uheventdata = Just
-                      $ JSArray
-                      $ [ runJSONGen $ do
+      , uheventdata = Just $ JSArray
+                        [ runJSONGen $ do
                             value "field"  ("email" :: String)
                             value "oldval" ("" :: String)
                             value "newval" $ unEmail email
@@ -289,11 +288,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryDetailsChanged Bool w
     userid
     UserHistoryEvent
       { uheventtype = UserDetailsChange
-      , uheventdata = Just $ JSArray $ for details $ \(field, oldv, newv) ->
-                        runJSONGen $ do
+      , uheventdata = Just . JSArray $ for
+                        details
+                        (\(field, oldv, newv) -> runJSONGen $ do
                           value "field"  field
                           value "oldval" oldv
                           value "newval" newv
+                        )
       }
     ip
     time
@@ -352,13 +353,13 @@ addUserHistory
   -> UTCTime
   -> Maybe UserID
   -> m Bool
-addUserHistory user event ip time mpuser = runQuery01 $ sqlInsert "users_history" $ do
+addUserHistory user event ip time mpuser = runQuery01 . sqlInsert "users_history" $ do
   sqlSet "user_id" user
   sqlSet "event_type" $ uheventtype event
-  sqlSet "event_data" $ maybe "" encode $ uheventdata event
-  sqlSet "ip"   ip
-  sqlSet "time" time
-  sqlSet "system_version" $ VersionTH.versionID
+  sqlSet "event_data" . maybe "" encode $ uheventdata event
+  sqlSet "ip"                 ip
+  sqlSet "time"               time
+  sqlSet "system_version"     VersionTH.versionID
   sqlSet "performing_user_id" mpuser
 
 selectUserHistorySQL :: SQL
@@ -380,13 +381,11 @@ fetchUserHistory (userid, eventtype, meventdata, ip, time, sysver, mpuser) = Use
   { uhuserid           = userid
   , uhevent            = UserHistoryEvent
                            { uheventtype = eventtype
-                           , uheventdata = maybe
-                                             Nothing
-                                             (\d -> case decode $ T.unpack d of
-                                               Ok a -> Just a
-                                               _    -> Nothing
-                                             )
-                                             meventdata
+                           , uheventdata = (\d -> case decode $ T.unpack d of
+                                             Ok a -> Just a
+                                             _    -> Nothing
+                                           )
+                                             =<< meventdata
                            }
   , uhip               = ip
   , uhtime             = time

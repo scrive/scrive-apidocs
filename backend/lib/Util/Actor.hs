@@ -101,7 +101,7 @@ recreatedSignatoryActor
   -> SignatoryLink
   -> m Actor
 recreatedSignatoryActor time mctime mcname mipaddress s =
-  return $ toSignatoryActor s $ Actor { actorTime       = time
+  return . toSignatoryActor s $ Actor { actorTime       = time
                                       , actorClientTime = mctime
                                       , actorClientName = mcname
                                       , actorIP         = Just mipaddress

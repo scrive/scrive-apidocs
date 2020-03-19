@@ -98,7 +98,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
   stime                <- case maybesigninfo signatory of
     Nothing -> return ""
     Just si -> formatUTCTimeForVerificationPage tz $ signtime si
-  signedAtText <- if (T.null stime)
+  signedAtText <- if T.null stime
     then return ""
     else renderTextTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
   let personalnumber =
@@ -114,7 +114,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       $ F.value "idnumber" personalnumber
 
   eauthentication <-
-    dbQuery $ GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid
+    dbQuery . GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid
       signatory
   identifiedNameText <- case eauthentication of
     Just (CGISEBankIDAuthentication_ authentication) ->
@@ -151,7 +151,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     Just (SMSPinAuthentication_ _) -> return ""
     Nothing -> return ""
 
-  esignature   <- dbQuery $ GetESignature $ signatorylinkid signatory
+  esignature   <- dbQuery . GetESignature $ signatorylinkid signatory
   nameFromText <- case esignature of
     Just (CGISEBankIDSignature_ sig) ->
       renderTextTemplate "_nameFromSwedishBankIDText"
@@ -262,14 +262,14 @@ fieldsFromSignatory
   -> SignatoryLink
   -> m [Seal.Field]
 fieldsFromSignatory checkboxMapping radiobuttonMapping SignatoryLink { signatoryfields }
-  = silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
+  = silenceJPEGFieldsFromFirstSignature . concat <$> mapM makeSealField signatoryfields
   where
     silenceJPEGFieldsToTheEnd [] = []
-    silenceJPEGFieldsToTheEnd (field@(Seal.FieldJPG{}) : xs) =
+    silenceJPEGFieldsToTheEnd (field@Seal.FieldJPG{} : xs) =
       (field { Seal.includeInSummary = False }) : silenceJPEGFieldsToTheEnd xs
     silenceJPEGFieldsToTheEnd (x : xs) = x : silenceJPEGFieldsToTheEnd xs
     silenceJPEGFieldsFromFirstSignature [] = []
-    silenceJPEGFieldsFromFirstSignature (field@(Seal.FieldJPG { Seal.includeInSummary = True }) : xs)
+    silenceJPEGFieldsFromFirstSignature (field@Seal.FieldJPG { Seal.includeInSummary = True } : xs)
       = field : silenceJPEGFieldsToTheEnd xs
     silenceJPEGFieldsFromFirstSignature (x : xs) =
       x : silenceJPEGFieldsFromFirstSignature xs
@@ -278,7 +278,7 @@ fieldsFromSignatory checkboxMapping radiobuttonMapping SignatoryLink { signatory
     makeSealField sf = case sf of
       SignatorySignatureField ssf -> case (fieldPlacements sf, ssfValue ssf) of
         (_ , Nothing) -> return []  -- We skip signature that don't have a drawing
-        ([], Just f ) -> (\x -> [x]) <$> fieldJPEGFromSignatureField f
+        ([], Just f ) -> (: []) <$> fieldJPEGFromSignatureField f
         (_ , Just f ) -> mapM (fieldJPEGFromPlacement f) (fieldPlacements sf)
       SignatoryCheckboxField schf ->
         return $ map (checkboxJPEG $ schfValue schf) (fieldPlacements sf)
@@ -287,7 +287,7 @@ fieldsFromSignatory checkboxMapping radiobuttonMapping SignatoryLink { signatory
         (srgfValues srgf)
         (fieldPlacements sf)
 
-      _ -> return $ for (fieldPlacements sf) $ fieldFromPlacement False sf
+      _ -> return . for (fieldPlacements sf) $ fieldFromPlacement False sf
     fieldFromPlacement greyed sf placement = Seal.Field
       { Seal.value            = fromMaybe "" $ fieldTextValue sf
       , Seal.x                = placementxrel placement
@@ -360,7 +360,7 @@ highlightedImageFromHighlightedPage
   -> HighlightedPage
   -> m Seal.HighlightedImage
 highlightedImageFromHighlightedPage inputpath HighlightedPage {..} = do
-  pdfContent     <- liftBase $ BS.readFile $ T.unpack inputpath
+  pdfContent     <- liftBase . BS.readFile $ T.unpack inputpath
   content        <- getFileIDContents highlightedPageFileID
   mMaskedContent <- clipHighlightImageFromPage pdfContent
                                                content
@@ -375,7 +375,7 @@ highlightedImageFromHighlightedPage inputpath HighlightedPage {..} = do
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment, SignatoryLink)]
 listAttachmentsFromDocument document = concatMap extract
                                                  (documentsignatorylinks document)
-  where extract sl = map (\at -> (at, sl)) (signatoryattachments sl)
+  where extract sl = map (, sl) (signatoryattachments sl)
 
 
 findOutAttachmentDesc
@@ -438,15 +438,9 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
             Right x -> return x
           return (contents, numberOfPages, filename file)
       numberOfPagesText <-
-        if (              ".png"
-           `T.isSuffixOf` (T.toLower name)
-           ||             ".jpg"
-           `T.isSuffixOf` (T.toLower name)
-           )
-        then
-          return ""
-        else
-          if numberOfPages == 1
+        if ".png" `T.isSuffixOf` T.toLower name || ".jpg" `T.isSuffixOf` T.toLower name
+          then return ""
+          else if numberOfPages == 1
             then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
             else renderLocalTemplate document "_numberOfPages" $ do
               F.value "pages" numberOfPages
@@ -460,10 +454,10 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
       attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
         F.value "number" num
       let attachmentPath =
-            (T.unpack tmppath)
-              </> ((T.unpack attachmentNumText) <> takeExtension (T.unpack name))
+            T.unpack tmppath
+              </> (T.unpack attachmentNumText <> takeExtension (T.unpack name))
       logInfo "Temp file write" $ object
-        [ "bytes_written" .= (BS.length contents)
+        [ "bytes_written" .= BS.length contents
         , "originator" .= ("findOutAttachmentDesc" :: Text)
         ]
       liftIO $ BS.writeFile attachmentPath contents
@@ -479,7 +473,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
         , fileAttachedBy               = attachedByText
         , fileSealedOn                 = Nothing
         , fileAttachedToSealedFileText = Just attachedToSealedFileText
-        , fileInput = if addContent then (Just $ T.pack attachmentPath) else Nothing
+        , fileInput = if addContent then Just $ T.pack attachmentPath else Nothing
         }
 
 
@@ -611,7 +605,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
                                       radiobuttonMapping
                                       s
           | s <- documentsignatorylinks document
-          , isSignatory $ s
+          , isSignatory s
           ]
 
     secretaries <-
@@ -621,22 +615,21 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
                                 sim
                                 checkboxMapping
                                 radiobuttonMapping
-              $ s
+                                s
           | s <- documentsignatorylinks document
           , not . isSignatory $ s
           ]
 
-    initiator <- if (isSignatory authorsiglink)
+    initiator <- if isSignatory authorsiglink
       then return Nothing
       else
         Just
-          <$> (personFromSignatory inputpath
-                                   (documenttimezonename document)
-                                   sim
-                                   checkboxMapping
-                                   radiobuttonMapping
-                                   authorsiglink
-              )
+          <$> personFromSignatory inputpath
+                                  (documenttimezonename document)
+                                  sim
+                                  checkboxMapping
+                                  radiobuttonMapping
+                                  authorsiglink
 
     let initials = T.intercalate ", " $ catMaybes
           [ siInitials <$> Map.lookup (signatorylinkid s) sim
@@ -702,14 +695,14 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
           (documenttimezonename document)
           (getLastSignedOrApprovedTime document)
 
-    mainDocumentText   <- renderLocalTemplate document "_mainDocument" $ (return ())
+    mainDocumentText   <- renderLocalTemplate document "_mainDocument" (return ())
 
     documentNumberText <-
       renderLocalTemplate document "_contractsealingtextsDocumentNumber" $ do
-        F.value "documentnumber" $ paddeddocid
+        F.value "documentnumber" paddeddocid
 
     initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
-      F.value "initials" $ initials
+      F.value "initials" initials
 
     let title       = ICU.normalize ICU.NFC $ documenttitle document
     let attachments = docAttachments <> [evidenceLog, evidenceOfTime, evidenceOfIntent]
@@ -818,19 +811,19 @@ sealDocumentFile hostpart file@File { fileid, filename } =
           content <- getFileContents file
           liftIO $ BS.writeFile tmpin content
           logInfo "Temp file write" $ object
-            [ "bytes_written" .= (BS.length content)
+            [ "bytes_written" .= BS.length content
             , "originator" .= ("sealDocumentFile" :: Text)
             ]
 
-          checkboxMapping    <- liftIO $ readCheckboxImagesMapping
-          radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
+          checkboxMapping    <- liftIO readCheckboxImagesMapping
+          radiobuttonMapping <- liftIO readRadiobuttonImagesMapping
           elog               <- dbQuery $ GetEvidenceLog documentid
           -- Evidence of Time documentation says we collect last 1000 samples
           offsets            <- dbQuery $ HC.GetNClockErrorEstimates 1000
           unless (HC.enoughClockErrorOffsetSamples offsets) $ do
             logAttention_
               "Cannot seal document because there are no valid host_clock samples"
-            void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
+            void . dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
                                             (return ())
                                             (systemActor now)
           eotData <- liftBase $ generateEvidenceOfTimeData
@@ -878,11 +871,11 @@ presealDocumentFile document@Document { documentid } file@File { fileid } =
         content <- getFileContents file
         liftIO $ BS.writeFile tmpin content
         logInfo "Temp file write" $ object
-          [ "bytes_written" .= (BS.length content)
+          [ "bytes_written" .= BS.length content
           , "originator" .= ("presealDocumentFile" :: Text)
           ]
-        checkboxMapping    <- liftIO $ readCheckboxImagesMapping
-        radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
+        checkboxMapping    <- liftIO readCheckboxImagesMapping
+        radiobuttonMapping <- liftIO readRadiobuttonImagesMapping
         spec               <- presealSpecFromDocument checkboxMapping
                                                       radiobuttonMapping
                                                       document
@@ -905,18 +898,16 @@ addSealedEvidenceEvents
 addSealedEvidenceEvents actor = do
   notAddedAttachments <-
     filter (not . authorattachmentaddtosealedfile)
-    <$> documentauthorattachments
+    .   documentauthorattachments
     <$> theDocument
   forM_ notAddedAttachments $ \a -> do
     contents <- getFileIDContents $ authorattachmentfileid a
     let hash = show $ H.hashWith H.SHA256 contents
-    void $ update $ InsertEvidenceEvent
+    void . update $ InsertEvidenceEvent
       AuthorAttachmentHashComputed
       (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash)
       actor
-    return ()
-  void $ update $ InsertEvidenceEvent AttachSealedFileEvidence (return ()) actor
-  return ()
+  void . update $ InsertEvidenceEvent AttachSealedFileEvidence (return ()) actor
 
 runLambdaSealing
   :: ( CryptoRNG m
@@ -945,7 +936,7 @@ runLambdaSealing _tmppath fn spec = do
       dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
     _ -> do
       logAttention_ "Sealing document with lambda failed"
-      void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
+      void . dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
                                       (return ())
                                       (systemActor now)
 

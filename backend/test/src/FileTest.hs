@@ -81,7 +81,7 @@ testFilePurgingConsumer = do
   -- This file is not referenced anywhere, it should therefore be purged.
   fid             <- saveNewFile (T.pack name) content
 
-  void $ dbUpdate $ MarkOrphanFilesForPurgeAfter mempty
+  void . dbUpdate $ MarkOrphanFilesForPurgeAfter mempty
 
   ctx <- mkContext defaultLang
   runTestCronUntilIdle ctx

@@ -54,7 +54,7 @@ netsSignOrdersDropSSN :: MonadDB m => Migration m
 netsSignOrdersDropSSN = Migration
   { mgrTableName = tblName tableNetsSignOrders
   , mgrFrom      = 1
-  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
                      (tblName tableNetsSignOrders)
                      [sqlDropColumn "ssn"]
   }
@@ -73,7 +73,7 @@ netsSignOrdersAddProviderAndSSN = Migration
           $ tblColumn { colName = "ssn", colType = TextT, colNullable = True }
         ]
       -- set the provider for current orders, which are all Norwegian
-      runSQL_ $ "UPDATE nets_sign_orders SET provider = 1"
+      runSQL_ "UPDATE nets_sign_orders SET provider = 1"
       runQuery_ $ sqlAlterTable
         (tblName tableNetsSignOrders)
         [ sqlAlterColumn "provider" "SET NOT NULL"

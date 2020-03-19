@@ -1449,6 +1449,7 @@ Executable config-checker
                , filepath
   Default-Language: Haskell2010
   Default-Extensions: OverloadedStrings
+                    , LambdaCase
                     , RecordWildCards
   Other-Extensions:   TemplateHaskell
 
@@ -1507,6 +1508,7 @@ Executable routinglist
   Build-depends: aeson
                , base-noprelude
                , bytestring
+               , extra
                , kontrakcja
                , kontrakcja-appdir
                , kontrakcja-prelude

@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns      #-}
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# OPTIONS_GHC -Wall          #-}
@@ -26,8 +25,8 @@ import qualified Data.Text.IO as T
 
 import AppDir (setupAppPaths)
 
-max_line_length :: Int
-max_line_length = 80
+maxLineLength :: Int
+maxLineLength = 80
 
 (<&&>) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (<&&>) = liftA2 (&&)
@@ -104,7 +103,7 @@ parseImport = do
                       (Just <$> (P.char '"' *> parsePkgId <* P.char '"') <* P.skipSpace)
   module_ <- P.takeWhile1 $ (not . isSpace) <&&> (/= '(')
   P.skipSpace
-  alias <- P.option Nothing (Just <$> parseAlias)
+  alias <- optional parseAlias
   P.skipSpace
   impspec <- parseImpSpec
   return Import { imQualified      = is_qualified
@@ -148,7 +147,7 @@ showImport Style {..} Import {..} = withImpSpec import_module
 
     qualified_ = " qualified"
 
-    withImpSpec imp = if T.length oneline <= max_line_length then oneline else multiline
+    withImpSpec imp = if T.length oneline <= maxLineLength then oneline else multiline
 
       where
         oneline = imp <> case imImpSpec of
@@ -181,9 +180,9 @@ showImport Style {..} Import {..} = withImpSpec import_module
 
             go [] = Nothing
             go (e : es) =
-              -- Handle the case when 'e' is longer than max_line_length.
+              -- Handle the case when 'e' is longer than maxLineLength.
               let e0          = "  " <> e
-                  (line, es') = buildLine es (max_line_length - T.length e0)
+                  (line, es') = buildLine es (maxLineLength - T.length e0)
               in  Just (e0 <> line, es')
 
 ----------------------------------------
@@ -208,14 +207,14 @@ convert style@Style {..} modules source =
     $ [ reverse . dropWhile T.null $ reverse header
       , separator_if True
       , map (showImport style) first_import_group
-      , separator_if $ not $ null first_import_group
+      , separator_if . not $ null first_import_group
       , map (showImport style) second_import_group
-      , separator_if $ ((not . null $ second_import_group) && (not . null $ rest))
+      , separator_if ((not . null $ second_import_group) && (not . null $ rest))
       , rest
       ]
   where
     (header, body) = break is_import . T.lines $ source
-    (import_section, rest) = break (not . (T.null <||> is_import <||> is_indented)) body
+    (import_section, rest) = span (T.null <||> is_import <||> is_indented) body
 
     imports = case P.parseOnly (many parseImport) (T.unlines import_section) of
       Right imps -> sortBy (compareImport alignUnqualified) imps
@@ -342,7 +341,7 @@ main = do
       if not check
         then sortImports style suffix dirs
         else onException (checkConsistency style dirs) $ do
-          putStrLn $ "Run SortImports.sh without --check to fix the problem."
+          putStrLn "Run SortImports.sh without --check to fix the problem."
   where
     is_config_option      = ("--" `isPrefixOf`)
 

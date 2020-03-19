@@ -9,7 +9,9 @@ module Doc.API.V2.JSON.Fields (
 , signatoryFieldTMPValueShortLog
 ) where
 
+import Data.Bifunctor
 import Data.Functor.Invariant
+import Data.List.Extra (nubOrd)
 import Data.Text.Encoding
 import Data.Unjson
 import qualified Control.Applicative.Free as AltF
@@ -33,52 +35,52 @@ unjsonSignatoryField :: UnjsonDef SignatoryField
 unjsonSignatoryField = DisjointUnjsonDef
   "type"
   [ ( fieldTypeToText NameFT
-    , (\f -> fieldType f == NameFT)
-    , (return . SignatoryNameField <$> unjsonNameField)
+    , \f -> fieldType f == NameFT
+    , return . SignatoryNameField <$> unjsonNameField
     )
   , ( fieldTypeToText CompanyFT
-    , (\f -> fieldType f == CompanyFT)
-    , (return . SignatoryCompanyField <$> unjsonCompanyField)
+    , \f -> fieldType f == CompanyFT
+    , return . SignatoryCompanyField <$> unjsonCompanyField
     )
   , ( fieldTypeToText PersonalNumberFT
-    , (\f -> fieldType f == PersonalNumberFT)
-    , (return . SignatoryPersonalNumberField <$> unjsonPersonalNumberField)
+    , \f -> fieldType f == PersonalNumberFT
+    , return . SignatoryPersonalNumberField <$> unjsonPersonalNumberField
     )
   , ( fieldTypeToText CompanyNumberFT
-    , (\f -> fieldType f == CompanyNumberFT)
-    , (return . SignatoryCompanyNumberField <$> unjsonCompanyNumberField)
+    , \f -> fieldType f == CompanyNumberFT
+    , return . SignatoryCompanyNumberField <$> unjsonCompanyNumberField
     )
   , ( fieldTypeToText EmailFT
-    , (\f -> fieldType f == EmailFT)
-    , (return . SignatoryEmailField <$> unjsonEmailField)
+    , \f -> fieldType f == EmailFT
+    , return . SignatoryEmailField <$> unjsonEmailField
     )
   , ( fieldTypeToText MobileFT
-    , (\f -> fieldType f == MobileFT)
-    , (return . SignatoryMobileField <$> unjsonMobileField)
+    , \f -> fieldType f == MobileFT
+    , return . SignatoryMobileField <$> unjsonMobileField
     )
   , ( fieldTypeToText TextFT
-    , (\f -> fieldType f == TextFT)
-    , (return . SignatoryTextField <$> unjsonTextField)
+    , \f -> fieldType f == TextFT
+    , return . SignatoryTextField <$> unjsonTextField
     )
   , ( fieldTypeToText CheckboxFT
-    , (\f -> fieldType f == CheckboxFT)
-    , (return . SignatoryCheckboxField <$> unjsonCheckboxField)
+    , \f -> fieldType f == CheckboxFT
+    , return . SignatoryCheckboxField <$> unjsonCheckboxField
     )
   , ( fieldTypeToText SignatureFT
-    , (\f -> fieldType f == SignatureFT)
-    , (return . SignatorySignatureField <$> unjsonSignatureField)
+    , \f -> fieldType f == SignatureFT
+    , return . SignatorySignatureField <$> unjsonSignatureField
     )
   , ( fieldTypeToText RadioGroupFT
-    , (\f -> fieldType f == RadioGroupFT)
-    , (fmap SignatoryRadioGroupField <$> unjsonRadioGroupField)
+    , \f -> fieldType f == RadioGroupFT
+    , fmap SignatoryRadioGroupField <$> unjsonRadioGroupField
     )
   ]
 
 
 unjsonNameField :: AltF.Ap (FieldDef SignatoryField) SignatoryNameField
 unjsonNameField =
-  pure (\no v ob sfbs ps -> NameField (unsafeSignatoryFieldID 0) no v ob sfbs ps)
-    <*> field "order" (unsafeFromNameField snfNameOrder) "Order of name field"
+  NameField (unsafeSignatoryFieldID 0)
+    <$> field "order" (unsafeFromNameField snfNameOrder) "Order of name field"
     <*> fieldDef "value" "" (unsafeFromNameField snfValue) "Value of the field"
     <*> fieldDef "is_obligatory"
                  True
@@ -100,8 +102,8 @@ unjsonNameField =
 
 unjsonCompanyField :: AltF.Ap (FieldDef SignatoryField) SignatoryCompanyField
 unjsonCompanyField =
-  pure (\v ob sfbs ps -> CompanyField (unsafeSignatoryFieldID 0) v ob sfbs ps)
-    <*> fieldDef "value" "" (unsafeFromCompanyField scfValue) "Value of the field"
+  CompanyField (unsafeSignatoryFieldID 0)
+    <$> fieldDef "value" "" (unsafeFromCompanyField scfValue) "Value of the field"
     <*> fieldDef "is_obligatory"
                  True
                  (unsafeFromCompanyField scfObligatory)
@@ -123,11 +125,9 @@ unjsonCompanyField =
 unjsonPersonalNumberField
   :: AltF.Ap (FieldDef SignatoryField) SignatoryPersonalNumberField
 unjsonPersonalNumberField =
-  pure
-      (\v ob sfbs ps ->
-        PersonalNumberField (unsafeSignatoryFieldID 0) (T.strip v) ob sfbs ps
-      )
-    <*> fieldDef "value" "" (unsafeFromPersonalNumberField spnfValue) "Value of the field"
+
+  (\v ob sfbs ps -> PersonalNumberField (unsafeSignatoryFieldID 0) (T.strip v) ob sfbs ps)
+    <$> fieldDef "value" "" (unsafeFromPersonalNumberField spnfValue) "Value of the field"
     <*> fieldDef "is_obligatory"
                  True
                  (unsafeFromPersonalNumberField spnfObligatory)
@@ -149,8 +149,8 @@ unjsonPersonalNumberField =
 
 unjsonCompanyNumberField :: AltF.Ap (FieldDef SignatoryField) SignatoryCompanyNumberField
 unjsonCompanyNumberField =
-  pure (\v ob sfbs ps -> CompanyNumberField (unsafeSignatoryFieldID 0) v ob sfbs ps)
-    <*> fieldDef "value" "" (unsafeFromCompanyNumberField scnfValue) "Value of the field"
+  CompanyNumberField (unsafeSignatoryFieldID 0)
+    <$> fieldDef "value" "" (unsafeFromCompanyNumberField scnfValue) "Value of the field"
     <*> fieldDef "is_obligatory"
                  True
                  (unsafeFromCompanyNumberField scnfObligatory)
@@ -173,8 +173,8 @@ unjsonCompanyNumberField =
 
 unjsonEmailField :: AltF.Ap (FieldDef SignatoryField) SignatoryEmailField
 unjsonEmailField =
-  pure (\v ob sfbs ebs ps -> EmailField (unsafeSignatoryFieldID 0) v ob sfbs ebs ps)
-    <*> fieldDef "value" "" (unsafeFromEmailField sefValue) "Value of the field"
+  EmailField (unsafeSignatoryFieldID 0)
+    <$> fieldDef "value" "" (unsafeFromEmailField sefValue) "Value of the field"
     <*> fieldDef "is_obligatory"
                  True
                  (unsafeFromEmailField sefObligatory)
@@ -199,8 +199,8 @@ unjsonEmailField =
 
 unjsonMobileField :: AltF.Ap (FieldDef SignatoryField) SignatoryMobileField
 unjsonMobileField =
-  pure (\v ob sfbs ebs ps -> MobileField (unsafeSignatoryFieldID 0) v ob sfbs ebs ps)
-    <*> fieldDef "value" "" (unsafeFromMobileField smfValue) "Value of the field"
+  MobileField (unsafeSignatoryFieldID 0)
+    <$> fieldDef "value" "" (unsafeFromMobileField smfValue) "Value of the field"
     <*> fieldDef "is_obligatory"
                  True
                  (unsafeFromMobileField smfObligatory)
@@ -228,8 +228,8 @@ unjsonMobileField =
 
 unjsonTextField :: AltF.Ap (FieldDef SignatoryField) SignatoryTextField
 unjsonTextField =
-  pure (\n v ob sfbs ps -> TextField (unsafeSignatoryFieldID 0) n (v == "") v ob sfbs ps)
-    <*> field "name" (unsafeFromTextField stfName) "Name of the field"
+  (\n v ob sfbs ps -> TextField (unsafeSignatoryFieldID 0) n (v == "") v ob sfbs ps)
+    <$> field "name" (unsafeFromTextField stfName) "Name of the field"
     <*> fieldDef "value" "" (unsafeFromTextField stfValue) "Value of the field"
     <*> fieldDef "is_obligatory"
                  True
@@ -256,15 +256,15 @@ unjsonTextField =
 unjsonTextCustomValidation :: UnjsonDef TextCustomValidation
 unjsonTextCustomValidation =
   objectOf
-    $   pure TextCustomValidation
-    <*> field "pattern"          tcvPattern         "Regexp pattern for field validation"
+    $   TextCustomValidation
+    <$> field "pattern"          tcvPattern         "Regexp pattern for field validation"
     <*> field "positive_example" tcvPositiveExample "Example text, which matches pattern"
     <*> field "tooltip"          tcvTooltip         "Tooltip for the text field"
 
 unjsonCheckboxField :: AltF.Ap (FieldDef SignatoryField) SignatoryCheckboxField
 unjsonCheckboxField =
-  pure (\n v ob sfbs ps -> CheckboxField (unsafeSignatoryFieldID 0) n v ob sfbs ps)
-    <*> field "name" (unsafeFromCheckboxField schfName) "Name of the field"
+  CheckboxField (unsafeSignatoryFieldID 0)
+    <$> field "name" (unsafeFromCheckboxField schfName) "Name of the field"
     <*> fieldDef "is_checked"
                  False
                  (unsafeFromCheckboxField schfValue)
@@ -293,8 +293,8 @@ unjsonCheckboxField =
 
 unjsonSignatureField :: AltF.Ap (FieldDef SignatoryField) SignatorySignatureField
 unjsonSignatureField =
-  pure (\n ob sfbs ps -> SignatureField (unsafeSignatoryFieldID 0) n Nothing ob sfbs ps)
-    <*> field "name" (unsafeFromSignatureField ssfName) "Value of the field"
+  (\n ob sfbs ps -> SignatureField (unsafeSignatoryFieldID 0) n Nothing ob sfbs ps)
+    <$> field "name" (unsafeFromSignatureField ssfName) "Value of the field"
     <*  fieldReadOnlyOpt "signature" (unsafeFromSignatureField ssfValue) "Uploaded file"
     <*> fieldDef "is_obligatory"
                  True
@@ -317,11 +317,11 @@ unjsonSignatureField =
 unjsonRadioGroupField
   :: AltF.Ap (FieldDef SignatoryField) (Result SignatoryRadioGroupField)
 unjsonRadioGroupField =
-  pure
-      (\n sv ps vs ->
-        validateRadioGroup $ RadioGroupField (unsafeSignatoryFieldID 0) n sv ps vs
-      )
-    <*> field "name" (unsafeFromRadioGroupField srgfName) "Name of the field"
+
+  (\n sv ps vs ->
+      validateRadioGroup $ RadioGroupField (unsafeSignatoryFieldID 0) n sv ps vs
+    )
+    <$> field "name" (unsafeFromRadioGroupField srgfName) "Name of the field"
     <*> fieldOpt "selected_value"
                  (unsafeFromRadioGroupField srgfSelectedValue)
                  "Value of the selected radio button"
@@ -359,11 +359,12 @@ unjsonRadioGroupField =
     selectedValueIsNotInValues rg = case srgfSelectedValue rg of
       Nothing  -> False
       Just val -> val `notElem` srgfValues rg
-    anyValueEmpty rg = any T.null $ srgfValues $ rg
+    anyValueEmpty rg = any T.null $ srgfValues rg
     eachValueHasMatchingPlacement rg =
-      (length $ srgfValues $ rg) == (length $ srgfPlacements rg)
-    allPlacementsOnSamePage rg = 1 == length (nub $ placementpage <$> srgfPlacements rg)
-    twoOrMoreValues rg = (length $ srgfValues $ rg) >= 2
+      length (srgfValues rg) == length (srgfPlacements rg)
+    allPlacementsOnSamePage rg =
+      1 == length (nubOrd $ placementpage <$> srgfPlacements rg)
+    twoOrMoreValues rg = length (srgfValues rg) >= 2
 
 fieldTypeToText :: FieldType -> Text
 fieldTypeToText NameFT           = "name"
@@ -381,8 +382,8 @@ fieldTypeToText RadioGroupFT     = "radiogroup"
 unsonFieldPlacement :: UnjsonDef FieldPlacement
 unsonFieldPlacement =
   objectOf
-    $   pure (FieldPlacement tempPlacementID)
-    <*> field "xrel"  placementxrel  "Relative x position"
+    $   FieldPlacement tempPlacementID
+    <$> field "xrel"  placementxrel  "Relative x position"
     <*> field "yrel"  placementyrel  "Relative y position"
     <*> field "wrel"  placementwrel  "Relative width"
     <*> field "hrel"  placementhrel  "Relative height"
@@ -402,8 +403,8 @@ unsonFieldPlacement =
 unsonPlacementAnchor :: UnjsonDef PlacementAnchor
 unsonPlacementAnchor =
   objectOf
-    $   pure PlacementAnchor
-    <*> field "text"  placementanchortext  "Text to match with anchor"
+    $   PlacementAnchor
+    <$> field "text"  placementanchortext  "Text to match with anchor"
     <*> field "index" placementanchorindex "Occurrence of text to match with"
 
 unsonTipSide :: UnjsonDef TipSide
@@ -419,7 +420,7 @@ data SignatoryFieldTMPValue
 
 signatoryFieldTMPValueShortLog :: SignatoryFieldTMPValue -> Text
 signatoryFieldTMPValueShortLog (StringFTV s) | T.length s < 100 = s
-                                             | otherwise        = (T.take 100 s) <> "..."
+                                             | otherwise        = T.take 100 s <> "..."
 signatoryFieldTMPValueShortLog (BoolFTV b) = showt b
 signatoryFieldTMPValueShortLog (FileFTV bs)
   | BS.length bs < 100 = T.pack $ BS.unpack bs
@@ -475,52 +476,52 @@ unjsonSignatoryFieldValue :: UnjsonDef (FieldIdentity, SignatoryFieldTMPValue)
 unjsonSignatoryFieldValue = disjointUnionOf
   "type"
   [ ( fieldTypeToText NameFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == NameFT)
-    , (\(no, v) -> (NameFI no, StringFTV v)) <$> unjsonNameFieldFieldValue
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == NameFT
+    , bimap NameFI StringFTV <$> unjsonNameFieldFieldValue
     )
   , ( fieldTypeToText CompanyFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == CompanyFT)
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == CompanyFT
     , (\v -> (CompanyFI, StringFTV v)) <$> unjsonCompanyFieldFieldValue
     )
   , ( fieldTypeToText PersonalNumberFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == PersonalNumberFT)
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == PersonalNumberFT
     , (\v -> (PersonalNumberFI, StringFTV v)) <$> unjsonPersonalNumberFieldFieldValue
     )
   , ( fieldTypeToText CompanyNumberFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == CompanyNumberFT)
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == CompanyNumberFT
     , (\v -> (CompanyNumberFI, StringFTV v)) <$> unjsonCompanyNumberFieldFieldValue
     )
   , ( fieldTypeToText EmailFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == EmailFT)
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == EmailFT
     , (\v -> (EmailFI, StringFTV v)) <$> unjsonEmailFieldFieldValue
     )
   , ( fieldTypeToText MobileFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == MobileFT)
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == MobileFT
     , (\v -> (MobileFI, StringFTV v)) <$> unjsonMobileFieldFieldValue
     )
   , ( fieldTypeToText TextFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == TextFT)
-    , (\(n, v) -> (TextFI n, StringFTV v)) <$> unjsonTextFieldFieldValue
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == TextFT
+    , bimap TextFI StringFTV <$> unjsonTextFieldFieldValue
     )
   , ( fieldTypeToText CheckboxFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == CheckboxFT)
-    , (\(n, v) -> (CheckboxFI n, BoolFTV v)) <$> unjsonCheckboxFieldFieldValue
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == CheckboxFT
+    , bimap CheckboxFI BoolFTV <$> unjsonCheckboxFieldFieldValue
     )
   , ( fieldTypeToText SignatureFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == SignatureFT)
-    , (\(n, v) -> (SignatureFI n, FileFTV v)) <$> unjsonSignatureFieldFieldValue
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == SignatureFT
+    , bimap SignatureFI FileFTV <$> unjsonSignatureFieldFieldValue
     )
   , ( fieldTypeToText RadioGroupFT
-    , (\(fi, _) -> fieldTypeFromFieldIdentity fi == RadioGroupFT)
-    , (\(n, v) -> (RadioGroupFI n, StringFTV v)) <$> unjsonRadioGroupFieldFieldValue
+    , \(fi, _) -> fieldTypeFromFieldIdentity fi == RadioGroupFT
+    , bimap RadioGroupFI StringFTV <$> unjsonRadioGroupFieldFieldValue
     )
   ]
 
 unjsonNameFieldFieldValue
   :: AltF.Ap (FieldDef (FieldIdentity, SignatoryFieldTMPValue)) (NameOrder, Text)
 unjsonNameFieldFieldValue =
-  pure (\no v -> (no, v))
-    <*> field "order" (unsafeNameOrder . fst) "Order of name field"
+  (\no v -> (no, v))
+    <$> field "order" (unsafeNameOrder . fst) "Order of name field"
     <*> field "value" (unsafeStringFromSignatoryFieldTMPValue . snd) "Value of the field"
   where
     unsafeNameOrder :: FieldIdentity -> NameOrder
@@ -555,8 +556,8 @@ unjsonMobileFieldFieldValue =
 unjsonTextFieldFieldValue
   :: AltF.Ap (FieldDef (FieldIdentity, SignatoryFieldTMPValue)) (Text, Text)
 unjsonTextFieldFieldValue =
-  pure (\no v -> (no, v))
-    <*> field "name"  (unsafeTextName . fst) "Name of text field"
+  (\no v -> (no, v))
+    <$> field "name"  (unsafeTextName . fst) "Name of text field"
     <*> field "value" (unsafeStringFromSignatoryFieldTMPValue . snd) "Value of the field"
   where
     unsafeTextName :: FieldIdentity -> Text
@@ -566,8 +567,8 @@ unjsonTextFieldFieldValue =
 unjsonCheckboxFieldFieldValue
   :: AltF.Ap (FieldDef (FieldIdentity, SignatoryFieldTMPValue)) (Text, Bool)
 unjsonCheckboxFieldFieldValue =
-  pure (\no v -> (no, v))
-    <*> field "name" (unsafeCheckboxName . fst) "Name of checkbox field"
+  (\no v -> (no, v))
+    <$> field "name" (unsafeCheckboxName . fst) "Name of checkbox field"
     <*> field "is_checked"
               (unsafeBoolFromSignatoryFieldTMPValue . snd)
               "Value of the field"
@@ -579,8 +580,8 @@ unjsonCheckboxFieldFieldValue =
 unjsonRadioGroupFieldFieldValue
   :: AltF.Ap (FieldDef (FieldIdentity, SignatoryFieldTMPValue)) (Text, Text)
 unjsonRadioGroupFieldFieldValue =
-  pure (\no v -> (no, v))
-    <*> field "name" (unsafeRadioGroupName . fst) "Name of radio button group field"
+  (\no v -> (no, v))
+    <$> field "name" (unsafeRadioGroupName . fst) "Name of radio button group field"
     <*> field "selected_value"
               (unsafeStringFromSignatoryFieldTMPValue . snd)
               "Value of the field"
@@ -592,8 +593,8 @@ unjsonRadioGroupFieldFieldValue =
 unjsonSignatureFieldFieldValue
   :: AltF.Ap (FieldDef (FieldIdentity, SignatoryFieldTMPValue)) (Text, BS.ByteString)
 unjsonSignatureFieldFieldValue =
-  pure (\no v -> (no, v))
-    <*> field "name" (unsafeSignatureName . fst) "Name of checkbox field"
+  (\no v -> (no, v))
+    <$> field "name" (unsafeSignatureName . fst) "Name of checkbox field"
     <*> fieldBy "signature"
                 (unsafeFileFromSignatoryFieldTMPValue . snd)
                 "Value of the field"
@@ -607,7 +608,7 @@ unjsonSignatureFieldFieldValue =
     unjsonImage = SimpleUnjsonDef
       "Screenshot"
       parseImage
-      (Aeson.String . decodeUtf8 . (RFC2397.encode "image/png"))
+      (Aeson.String . decodeUtf8 . RFC2397.encode "image/png")
     parseImage :: Aeson.Value -> Result BS.ByteString
     parseImage (Aeson.String t) = case RFC2397.decode $ encodeUtf8 t of
       Just (_, v) -> pure v

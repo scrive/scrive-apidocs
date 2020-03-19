@@ -11,5 +11,5 @@ instance ToMessage ZipArchive where
   toContentType _ = BS.fromString "archive/zip"
   toResponse za@(ZipArchive fn _) =
     setHeader "Content-Disposition" ("attachment;filename=" ++ fn)
-      $ setHeader "Content-Type" (BS.toString $ toContentType za)
+      . setHeader "Content-Type" (BS.toString $ toContentType za)
       $ toResponse (toMessage za)

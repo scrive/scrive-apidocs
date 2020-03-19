@@ -34,9 +34,9 @@ import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 mailsTests :: TestEnvSt -> Test
 mailsTests env = testGroup
   "Mails"
-  [ testThat "Document emails" env $ testDocumentMails
-  , testThat "Branded document emails" env $ testBrandedDocumentMails
-  , testThat "User emails" env $ testUserMails
+  [ testThat "Document emails"         env testDocumentMails
+  , testThat "Branded document emails" env testBrandedDocumentMails
+  , testThat "User emails"             env testUserMails
   ]
 
 testBrandedDocumentMails :: TestEnv ()
@@ -56,12 +56,12 @@ sendDocumentMails author = do
   forM_ allLangs $ \l -> do
       -- make  the context, user and document all use the same lang
     ctx <- mkContext l
-    void $ dbUpdate $ SetUserSettings (author ^. #id) (author ^. #settings & #lang .~ l)
+    void . dbUpdate $ SetUserSettings (author ^. #id) (author ^. #settings & #lang .~ l)
     let aa           = authorActor ctx author
         homeFolderId = fromJust $ author ^. #homeFolderID
     req <- mkRequest POST []
     runTestKontra req ctx
-      $               (randomUpdate
+      $               randomUpdate
                         (NewDocument author
                                      "Document title"
                                      Signable
@@ -70,7 +70,6 @@ sendDocumentMails author = do
                                      aa
                                      homeFolderId
                         )
-                      )
       `withDocumentM` do
                         res <- dbUpdate $ SetDocumentLang l (systemActor $ ctx ^. #time)
                         unless res $ unexpectedError "Expected True"
@@ -168,7 +167,7 @@ sendDocumentMails author = do
                                            Nothing
                                            Nothing
                                            SignatoryScreenshots.emptySignatoryScreenshots
-                          =<< (signatoryActor (set #time (10 `minutesAfter` now) ctx) sl)
+                          =<< signatoryActor (set #time (10 `minutesAfter` now) ctx) sl
 
                         -- Sending closed email
                         checkMail "Closed"
@@ -203,7 +202,7 @@ testUserMails = do
     req  <- mkRequest POST []
     let checkMail s mg = do
           logInfo_ $ "Checking mail" <+> T.pack s
-          m <- fst <$> (runTestKontra req ctx $ mg)
+          m <- fst <$> runTestKontra req ctx mg
           validMail (T.pack s) m
     checkMail "New account" $ do
       al <- newUserAccountRequestLink (ctx ^. #lang) (user ^. #id) AccountRequest
@@ -225,21 +224,11 @@ validMail name m = do
       c'   = "<html>" <> TL.fromStrict c <> "</html>"
            -- ^ XML parser freaks out if there's content after root element.
       exml = XML.parseText XML.def c'
-  unless (T.any isAlphaNum $ title m)
-    $  assertFailure
-    $  T.unpack
-    $  "Empty title of mail "
-    <> name
+  unless (T.any isAlphaNum $ title m) . assertFailure $ T.unpack
+    ("Empty title of mail " <> name)
   case exml of
-    Left exc ->
-      assertFailure
-        $  T.unpack
-        $  "Invalid HTML mail "
-        <> name
-        <> " : "
-        <> c
-        <> " "
-        <> (showt exc)
+    Left exc -> assertFailure
+      $ T.unpack ("Invalid HTML mail " <> name <> " : " <> c <> " " <> showt exc)
     Right _ -> assertSuccess
 
 addNewRandomUserWithLang :: Lang -> TestEnv User

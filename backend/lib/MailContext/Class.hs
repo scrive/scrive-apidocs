@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+
 module MailContext.Class (
     I.MailContext
   , MailContextMonad(..)

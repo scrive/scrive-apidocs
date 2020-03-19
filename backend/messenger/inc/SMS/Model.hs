@@ -63,7 +63,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
     notify smsNotificationChannel ""
     return mid
 
-data CleanSMSesOlderThanDays = CleanSMSesOlderThanDays Int
+newtype CleanSMSesOlderThanDays = CleanSMSesOlderThanDays Int
 instance (MonadDB m, MonadTime m) => DBUpdate m CleanSMSesOlderThanDays Int where
   update (CleanSMSesOlderThanDays days) = do
     past <- (days `daysBefore`) <$> currentTime
@@ -135,7 +135,7 @@ instance
       sqlOrderBy "sms_events.id"
     fetchMany identity
 
-data MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
+newtype MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
 instance
   (MonadDB m, MonadThrow m, MonadTime m) =>
   DBUpdate m MarkSMSEventAsRead Bool where

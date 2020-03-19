@@ -47,15 +47,15 @@ data CgiGrpTransaction =
 
 
 cgiTransactionType :: CgiGrpTransaction -> CgiGrpTransactionType
-cgiTransactionType (CgiGrpAuthTransaction _ _ _ _  ) = CgiGrpAuth
-cgiTransactionType (CgiGrpSignTransaction _ _ _ _ _) = CgiGrpSign
+cgiTransactionType CgiGrpAuthTransaction{} = CgiGrpAuth
+cgiTransactionType CgiGrpSignTransaction{} = CgiGrpSign
 
 cgiSignatoryLinkID :: CgiGrpTransaction -> SignatoryLinkID
 cgiSignatoryLinkID (CgiGrpAuthTransaction slid _ _ _  ) = slid
 cgiSignatoryLinkID (CgiGrpSignTransaction slid _ _ _ _) = slid
 
 cgiTextToBeSigned :: CgiGrpTransaction -> Maybe Text
-cgiTextToBeSigned (CgiGrpAuthTransaction _ _ _ _    ) = Nothing
+cgiTextToBeSigned CgiGrpAuthTransaction{}             = Nothing
 cgiTextToBeSigned (CgiGrpSignTransaction _ tbs _ _ _) = Just tbs
 
 cgiTransactionID :: CgiGrpTransaction -> Text
@@ -73,7 +73,7 @@ cgiSessionID (CgiGrpSignTransaction _ _ _ _ session_id) = session_id
 ----------------------------------------
 
 -- | Insert new transaction or replace the existing one.
-data MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
+newtype MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeCgiGrpTransaction () where
   update (MergeCgiGrpTransaction cgiTransaction) = do
@@ -95,8 +95,8 @@ data DeleteCgiGrpTransaction = DeleteCgiGrpTransaction CgiGrpTransactionType Sig
 instance (MonadDB m, MonadMask m) => DBUpdate m DeleteCgiGrpTransaction () where
   update (DeleteCgiGrpTransaction cgitt slid) = do
     runQuery_ . sqlDelete "cgi_grp_transactions" $ do
-      sqlWhereEq "signatory_link_id" $ slid
-      sqlWhereEq "type" $ cgitt
+      sqlWhereEq "signatory_link_id" slid
+      sqlWhereEq "type"              cgitt
 
 
 data GetCgiGrpTransaction = GetCgiGrpTransaction CgiGrpTransactionType SignatoryLinkID

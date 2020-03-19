@@ -81,7 +81,7 @@ data EventRenderTarget =
   deriving (Enum, Eq, Ord, Bounded, Show)
 
 eventTextTemplateName :: EventRenderTarget -> CurrentEvidenceEventType -> Text
-eventTextTemplateName t e = (showt e) <> suffix t
+eventTextTemplateName t e = showt e <> suffix t
   where
     suffix EventForEvidenceLog = "Log"
     suffix EventForArchive     = "Archive"
@@ -135,23 +135,21 @@ evidenceLogText event textFields masl mmsg masg = do
       -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML for representing holes in all event texts.
         F.value "actor" ("$actor$" :: String)
         F.value "signatory" ("$signatory$" :: String)
-        maybe (return ()) (F.value "text")            (mmsg)
-        maybe (return ()) (F.value "additional_text") (masg)
+        maybe (return ()) (F.value "text")            mmsg
+        maybe (return ()) (F.value "additional_text") masg
         case masl of
           Nothing -> return ()
           Just sl -> do
             F.value "signatory_email" $ getEmail sl
             signatoryLinkTemplateFields sl
         textFields
-  ts <- getTextTemplatesByLanguage $ T.unpack $ codeFromLang LANG_EN
+  ts <- getTextTemplatesByLanguage . T.unpack $ codeFromLang LANG_EN
   let n                    = eventTextTemplateName EventForEvidenceLog event
       -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML holes for representing holes in all event texts.
       fixIdentityVariables = replace "$actor$" "<span class='actor'/>"
         . replace "$signatory$" "<span class='signatory'/>"
-  parseEventTextTemplate n $ T.pack $ fixIdentityVariables $ runIdentity $ renderHelper
-    ts
-    (T.unpack n)
-    fields
+  parseEventTextTemplate n . T.pack $ fixIdentityVariables
+    (runIdentity $ renderHelper ts (T.unpack n) fields)
 
 parseEventTextTemplate :: MonadThrow m => Text -> Text -> m XMLContent
 parseEventTextTemplate name s =
@@ -161,8 +159,7 @@ parseEventTextTemplate name s =
       . showt
       )
       (return . CleanXMLContent)
-    $ parseXMLContent
-    $ s
+    $ parseXMLContent s
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsgs Bool where
   -- FIXME: change to mmsg :: Maybe XMLContent
@@ -186,8 +183,8 @@ instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdat
         sqlSet "signatory_link_id" actorSLID
         sqlSet "api_user" $ actorAPIString actor
         sqlSet "affected_signatory_link_id" $ signatorylinkid <$> masl
-        sqlSet "message_text" $ mmsg
-        sqlSet "additional_message_text" $ mamsg
+        sqlSet "message_text"            mmsg
+        sqlSet "additional_message_text" mamsg
         sqlSet "client_time" $ actorClientTime actor
         sqlSet "client_name" $ actorClientName actor
         sqlSet "actor" $ actorWho actor
@@ -233,7 +230,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   }
   deriving (Eq, Ord, Show, Typeable)
 
-data GetEvidenceLog = GetEvidenceLog DocumentID
+newtype GetEvidenceLog = GetEvidenceLog DocumentID
 instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
   query (GetEvidenceLog docid) = do
     runQuery_
@@ -1324,7 +1321,7 @@ authToViewChangeEvidence
   -> AuthenticationToViewMethod
   -> [CurrentEvidenceEventType]
 authToViewChangeEvidence aFrom aTo =
-  if (aFrom == aTo) then [] else [authToViewChangeFrom aFrom, authToViewChangeTo aTo]
+  if aFrom == aTo then [] else [authToViewChangeFrom aFrom, authToViewChangeTo aTo]
 
 authToViewChangeFrom :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewChangeFrom a = case a of
@@ -1352,7 +1349,7 @@ authToViewArchivedChangeEvidence
   :: AuthenticationToViewMethod
   -> AuthenticationToViewMethod
   -> [CurrentEvidenceEventType]
-authToViewArchivedChangeEvidence aFrom aTo = if (aFrom == aTo)
+authToViewArchivedChangeEvidence aFrom aTo = if aFrom == aTo
   then []
   else [authToViewArchivedChangeFrom aFrom, authToViewArchivedChangeTo aTo]
 
@@ -1383,7 +1380,7 @@ authToSignChangeEvidence
   -> AuthenticationToSignMethod
   -> [CurrentEvidenceEventType]
 authToSignChangeEvidence aFrom aTo =
-  if (aFrom == aTo) then [] else [authToSignChangeFrom aFrom, authToSignChangeTo aTo]
+  if aFrom == aTo then [] else [authToSignChangeFrom aFrom, authToSignChangeTo aTo]
 
 authToSignChangeFrom :: AuthenticationToSignMethod -> CurrentEvidenceEventType
 authToSignChangeFrom a = case a of

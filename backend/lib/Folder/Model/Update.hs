@@ -19,14 +19,14 @@ import UserGroup.Model
 import UserGroup.Types
 import qualified Folder.Internal as I
 
-data FolderCreate = FolderCreate I.Folder
+newtype FolderCreate = FolderCreate I.Folder
 instance (MonadDB m, MonadThrow m)
     => DBUpdate m FolderCreate I.Folder where
   update (FolderCreate folder) = do
     let name      = folder ^. #name
         mParentID = folder ^. #parentID
     newParentPath <- case mParentID of
-      Nothing       -> return . Array1 $ ([] :: [I.FolderID])
+      Nothing       -> return $ Array1 ([] :: [I.FolderID])
       Just parentID -> do
         runQuery_ . sqlSelect "folders" $ do
           sqlWhereEq "id" parentID
@@ -43,7 +43,7 @@ instance (MonadDB m, MonadThrow m)
       Nothing      -> unexpectedError "Folder could not be read from DB"
       Just folder' -> return folder'
 
-data FolderUpdate = FolderUpdate I.Folder
+newtype FolderUpdate = FolderUpdate I.Folder
 instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
   update (FolderUpdate newFolder) = do
     let fid = newFolder ^. #id
@@ -64,7 +64,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
           return . Array1 . (parentID :) $ parentpath
     -- verify, that groups will not form a cycle
     when (fid `elem` newParentPath)
-      $ throwM
+      . throwM
       . SomeDBExtraException
       . FoldersFormCycle
       $ fid
@@ -80,20 +80,19 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
       -- inside slicing, we must specify index of the last item
       -- we cut old items from start and then prepend the new parent path
       sqlSetCmd "parent_path" (arraySliceCmd oldParentPath newParentPath)
-      sqlWhere $ "parent_path @> " <?> (Array1 [fid])
+      sqlWhere $ "parent_path @> " <?> Array1 [fid]
     where
       arraySliceCmd oldParentPath newParentPath =
-        (   "array_cat(parent_path[ 1:"
-        <>  "(array_length(parent_path, 1) - "
-        <?> length oldParentPath
-        <+> ")]"
-        <>  ","
-        <?> Array1 newParentPath
-        <+> ")"
-        )
+        "array_cat(parent_path[ 1:"
+          <>  "(array_length(parent_path, 1) - "
+          <?> length oldParentPath
+          <+> ")]"
+          <>  ","
+          <?> Array1 newParentPath
+          <+> ")"
 
 -- Create a folder and link it to a user group.
-data FolderCreateByUserGroup = FolderCreateByUserGroup UserGroupID
+newtype FolderCreateByUserGroup = FolderCreateByUserGroup UserGroupID
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m FolderCreateByUserGroup (Maybe I.Folder) where
   update (FolderCreateByUserGroup ugid) = do
@@ -136,7 +135,7 @@ instance (MonadDB m, MonadThrow m) =>
         return . Just $ fdr
 
 
-data FolderCreateForUsersInUserGroup =
+newtype FolderCreateForUsersInUserGroup =
     FolderCreateForUsersInUserGroup UserGroupID
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m FolderCreateForUsersInUserGroup Int where
@@ -150,17 +149,16 @@ instance (MonadDB m, MonadThrow m) =>
             sqlResult "id"
             sqlWhereEq "user_group_id" ugid
           fetchMany runIdentity
-        length
-          .   catMaybes
-          <$> (forM uids $ \uid -> update (FolderCreateForUser uid homeFdrID))
+        length . catMaybes <$> forM uids
+                                    (\uid -> update (FolderCreateForUser uid homeFdrID))
 
-data AddFoldersToUserGroups = AddFoldersToUserGroups [UserGroupID]
+newtype AddFoldersToUserGroups = AddFoldersToUserGroups [UserGroupID]
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m AddFoldersToUserGroups Int where
   update (AddFoldersToUserGroups ugids) = do
     numActuallyCreatedFolders <- do
-      length . catMaybes <$> (forM ugids $ update . FolderCreateByUserGroup)
-    _ <- (forM ugids $ update . FolderCreateForUsersInUserGroup)
+      length . catMaybes <$> forM ugids (update . FolderCreateByUserGroup)
+    forM_ ugids $ update . FolderCreateForUsersInUserGroup
     return numActuallyCreatedFolders
 
 data FolderSetUserHomeFolder = FolderSetUserHomeFolder UserID I.FolderID
@@ -170,7 +168,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderSetUserHomeFolder () wher
       sqlWhereEq "id" uid
       sqlSet "home_folder_id" (Just fdrid)
 
-data FoldersFormCycle = FoldersFormCycle I.FolderID
+newtype FoldersFormCycle = FoldersFormCycle I.FolderID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue FoldersFormCycle where

@@ -34,12 +34,12 @@ addSMSPinAuthAdjustmentsToEIDAuthentications = Migration
                                 [sqlAlterColumn "signature" "DROP NOT NULL"]
       runQuery_ $ sqlAlterTable (tblName tableEIDAuthentications)
                                 [sqlAlterColumn "signatory_name" "DROP NOT NULL"]
-      runQuery_ $ sqlAlterTable (tblName tableEIDAuthentications) $ map
+      runQuery_ . sqlAlterTable (tblName tableEIDAuthentications) $ map
         sqlDropCheck
         [ "check_cgi_eid_authentications_have_all_required_fields"
         , "check_nets_eid_authentications_have_all_required_fields"
         ]
-      runQuery_ $ sqlAlterTable (tblName tableEIDAuthentications) $ map
+      runQuery_ . sqlAlterTable (tblName tableEIDAuthentications) $ map
         sqlAddValidCheck
         [ tblCheck
           { chkName      = "check_cgi_se_bankid_authentications_have_all_required_fields"
@@ -70,7 +70,7 @@ addFIAuthChecksToEIDAuthentications = Migration
   , mgrFrom      = 4
   , mgrAction    =
     StandardMigration $ do
-      runQuery_ $ sqlAlterTable (tblName tableEIDAuthentications) $ map
+      runQuery_ . sqlAlterTable (tblName tableEIDAuthentications) $ map
         sqlAddValidCheck
         [ tblCheck
             { chkName = "check_nets_fi_tupas_authentications_have_all_required_fields"

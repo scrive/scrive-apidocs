@@ -122,8 +122,8 @@ testHandlerForLoginAttempt = do
   ctx  <- mkContext defaultLang
   req  <- mkRequest POST
                     [("email", inText "karol@skrivapa.se"), ("password", inText "test")]
-  void $ runTestKontra req ctx $ handleLoginPost
-  history <- dbQuery $ GetUserHistoryByUserID $ user ^. #id
+  void $ runTestKontra req ctx handleLoginPost
+  history <- dbQuery . GetUserHistoryByUserID $ user ^. #id
   assertBool "History log exists" (not . null $ history)
   assertBool "History log contains login attempt event"
     $ compareEventTypeFromList UserLoginFailure history
@@ -135,8 +135,8 @@ testHandlerForLoginSuccess = do
   req  <- mkRequest
     POST
     [("email", inText "karol@skrivapa.se"), ("password", inText "test_password")]
-  void $ runTestKontra req ctx $ handleLoginPost
-  history <- dbQuery $ GetUserHistoryByUserID $ user ^. #id
+  void $ runTestKontra req ctx handleLoginPost
+  history <- dbQuery . GetUserHistoryByUserID $ user ^. #id
   assertBool "History log exists" (not . null $ history)
   assertBool "History log contains login success event"
     $ compareEventTypeFromList UserLoginSuccess history
@@ -144,50 +144,46 @@ testHandlerForLoginSuccess = do
 testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
   user <- createTestUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   req  <- mkRequest
     POST
     [("oldpassword", inText "test_password"), ("password", inText "test1111test")]
-  void $ runTestKontra req ctx $ apiCallChangeUserPassword
-  history <- dbQuery $ GetUserHistoryByUserID $ user ^. #id
+  void $ runTestKontra req ctx apiCallChangeUserPassword
+  history <- dbQuery . GetUserHistoryByUserID $ user ^. #id
   assertBool "History log exists" (not . null $ history)
   assertBool "History log contains password setup event"
-    $ compareEventTypeFromList UserPasswordSetup
-    $ history
+    $ compareEventTypeFromList UserPasswordSetup history
 
 testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
   user <- createTestUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   req  <- mkRequest POST
                     [("oldpassword", inText "test"), ("password", inText "test1111test")]
-  void $ runTestKontra req ctx $ apiCallChangeUserPassword
-  history <- dbQuery $ GetUserHistoryByUserID $ user ^. #id
+  void $ runTestKontra req ctx apiCallChangeUserPassword
+  history <- dbQuery . GetUserHistoryByUserID $ user ^. #id
   assertBool "History log exists" (not . null $ history)
   assertBool "History log contains password setup event"
-    $ compareEventTypeFromList UserPasswordSetupReq
-    $ history
+    $ compareEventTypeFromList UserPasswordSetupReq history
 
 testHandlerForAccountCreated :: TestEnv ()
 testHandlerForAccountCreated = do
   ctx <- mkContext defaultLang
   req <- mkRequest POST [("email", inText "test@test.com")]
-  void $ runTestKontra req ctx $ apiCallSignup
-  Just user <- dbQuery $ GetUserByEmail $ Email "test@test.com"
-  history   <- dbQuery $ GetUserHistoryByUserID $ user ^. #id
+  void $ runTestKontra req ctx apiCallSignup
+  Just user <- dbQuery . GetUserByEmail $ Email "test@test.com"
+  history   <- dbQuery . GetUserHistoryByUserID $ user ^. #id
   assertBool "History log exists" (not . null $ history)
   assertBool "History log contains account created event"
-    $ compareEventTypeFromList UserAccountCreated
-    $ history
+    $ compareEventTypeFromList UserAccountCreated history
   assertBool "History log contains user's email"
-    $ compareEventDataFromList [("email", "", "test@test.com")]
-    $ history
+    $ compareEventDataFromList [("email", "", "test@test.com")] history
 
 testHandlerForTOSAccept :: TestEnv ()
 testHandlerForTOSAccept = do
   ctx                     <- mkContext defaultLang
   req1                    <- mkRequest POST [("email", inText "karol@skrivapa.se")]
-  (_, ctx1)               <- runTestKontra req1 ctx $ apiCallSignup
+  (_, ctx1)               <- runTestKontra req1 ctx apiCallSignup
   UserAccountRequest {..} <- head <$> getAccountCreatedActions
   req2                    <- mkRequest
     POST
@@ -197,19 +193,18 @@ testHandlerForTOSAccept = do
     , ("password" , inText "test1111test")
     , ("password2", inText "test1111test")
     ]
-  void $ runTestKontra req2 ctx1 $ handleAccountSetupPost uarUserID
+  void . runTestKontra req2 ctx1 $ handleAccountSetupPost uarUserID
                                                           uarToken
                                                           AccountRequest
   history <- dbQuery $ GetUserHistoryByUserID uarUserID
   assertBool "History log exists" (not . null $ history)
   assertBool "History log contains TOS accept event"
-    $ compareEventTypeFromList UserTOSAccept
-    $ history
+    $ compareEventTypeFromList UserTOSAccept history
 
 testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
   user <- createTestUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
   req  <- mkRequest
     POST
     [ ("fstname"        , inText "Karol")
@@ -218,34 +213,30 @@ testHandlerForDetailsChanged = do
     , ("phone"          , inText "+222112233")
     , ("companyposition", inText "Engineer")
     ]
-  void $ runTestKontra req ctx $ apiCallUpdateUserProfile
-  history <- dbQuery $ GetUserHistoryByUserID $ user ^. #id
+  void $ runTestKontra req ctx apiCallUpdateUserProfile
+  history <- dbQuery . GetUserHistoryByUserID $ user ^. #id
   assertBool "History log exists" (not . null $ history)
   assertBool "History log contains details changed event"
-    $ compareEventTypeFromList UserDetailsChange
-    $ history
-  assertBool "History log contains valid data"
-    $ compareEventDataFromList
-        [ ("first_name"      , "", "Karol")
-        , ("last_name"       , "", "Samborski")
-        , ("personal_number" , "", "1234567890")
-        , ("company_position", "", "Engineer")
-        , ("phone"           , "", "+222112233")
-        ]
-    $ history
+    $ compareEventTypeFromList UserDetailsChange history
+  assertBool "History log contains valid data" $ compareEventDataFromList
+    [ ("first_name"      , "", "Karol")
+    , ("last_name"       , "", "Samborski")
+    , ("personal_number" , "", "1234567890")
+    , ("company_position", "", "Engineer")
+    , ("phone"           , "", "+222112233")
+    ]
+    history
 
 compareEventTypeFromList :: UserHistoryEventType -> [UserHistory] -> Bool
-compareEventTypeFromList t l =
-  not . null . filter (\h -> (uheventtype . uhevent $ h) == t) $ l
+compareEventTypeFromList t = any (\h -> (uheventtype . uhevent $ h) == t)
 
 compareEventDataFromList :: [(String, String, String)] -> [UserHistory] -> Bool
-compareEventDataFromList d l =
-  (uheventdata . uhevent . head $ l)
-    == (Just $ JSArray $ for d $ \(field, oldv, newv) -> runJSONGen $ do
-         value "field"  field
-         value "oldval" oldv
-         value "newval" newv
-       )
+compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == Just
+  (JSArray . for d $ \(field, oldv, newv) -> runJSONGen $ do
+    value "field"  field
+    value "oldval" oldv
+    value "newval" newv
+  )
 
 createTestUser :: TestEnv User
 createTestUser = do

@@ -54,14 +54,14 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
   ugname   <- fromMaybe (ug ^. #name) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
-  void
-    $ dbUpdate
-    $ SetUserInfo (actvuser ^. #id)
-    $ (actvuser ^. #info)
+  void . dbUpdate $ SetUserInfo
+    (actvuser ^. #id)
+    ( (actvuser ^. #info)
     & (#firstName .~ fromMaybe "" mfstname)
     & (#lastName .~ fromMaybe "" msndname)
     & (#phone .~ phone)
     & (#companyPosition .~ position)
+    )
 
   void
     . dbUpdate
@@ -70,7 +70,7 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
     & (#name .~ ugname)
     & (#address %~ fmap (#entityName .~ ugname))
 
-  void $ dbUpdate $ LogHistoryUserInfoChanged
+  void . dbUpdate $ LogHistoryUserInfoChanged
     (actvuser ^. #id)
     (ctx ^. #ipAddr)
     (ctx ^. #time)
@@ -80,23 +80,23 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
     & (#lastName .~ fromMaybe "" msndname)
     )
     (ctx ^? #maybeUser % _Just % #id)
-  void $ dbUpdate $ LogHistoryPasswordSetup (actvuser ^. #id)
+  void . dbUpdate $ LogHistoryPasswordSetup (actvuser ^. #id)
                                             (ctx ^. #ipAddr)
                                             (ctx ^. #time)
                                             (ctx ^? #maybeUser % _Just % #id)
-  void $ dbUpdate $ AcceptTermsOfService (actvuser ^. #id) (ctx ^. #time)
-  void $ dbUpdate $ LogHistoryTOSAccept (actvuser ^. #id)
+  void . dbUpdate $ AcceptTermsOfService (actvuser ^. #id) (ctx ^. #time)
+  void . dbUpdate $ LogHistoryTOSAccept (actvuser ^. #id)
                                         (ctx ^. #ipAddr)
                                         (ctx ^. #time)
                                         (ctx ^? #maybeUser % _Just % #id)
-  void $ dbUpdate $ SetSignupMethod (actvuser ^. #id) signupmethod
+  void . dbUpdate $ SetSignupMethod (actvuser ^. #id) signupmethod
 
   dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser)
                                       (actvuser ^. #id)
                                       (14 `daysBefore` (ctx ^. #time))
 
   mpassword <- getField "password"
-  case (mpassword) of
+  case mpassword of
     Just password -> do
       unlessM (checkPassword (ctx ^. #passwordServiceConf) password) $ do
         logInfo_ "Can't activate account, 'password' is not good"
@@ -106,7 +106,7 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
       terminateAllUserSessionsExceptCurrent (actvuser ^. #id)
     Nothing -> return ()
 
-  tosuser <- guardJustM $ dbQuery $ GetUserByID (actvuser ^. #id)
+  tosuser <- guardJustM . dbQuery $ GetUserByID (actvuser ^. #id)
 
   logInfo "Attempt successful, user logged in" $ logObject_ actvuser
 
@@ -135,7 +135,7 @@ getCreateUserContextWithoutContext
   :: (MonadDB m, MonadThrow m, MonadTime m, MonadLog m) => m CreateUserContext
 getCreateUserContextWithoutContext = do
   now <- currentTime
-  bd  <- dbQuery $ GetMainBrandedDomain
+  bd  <- dbQuery GetMainBrandedDomain
   return $ CreateUserContext { ipAddr        = noIP
                              , creationTime  = now
                              , creatingUser  = Nothing
@@ -166,7 +166,7 @@ createUser email names (ugid, iscompanyadmin) lang sm ctx = do
                                   (Just passwd)
                                   (ugid, view #id <$> mUserFolder, iscompanyadmin)
                                   lang
-                                  ((brandedDomain ctx) ^. #id)
+                                  (brandedDomain ctx ^. #id)
                                   sm
                                   S.empty
                                   S.empty
@@ -175,5 +175,5 @@ createUser email names (ugid, iscompanyadmin) lang sm ctx = do
         (ipAddr ctx)
         (creationTime ctx)
         email
-        (view #id <$> (creatingUser ctx))
+        (view #id <$> creatingUser ctx)
       return muser

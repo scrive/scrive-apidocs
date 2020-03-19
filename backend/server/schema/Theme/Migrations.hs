@@ -10,7 +10,7 @@ themeOwnershipAddUserGroupID = Migration
   { mgrTableName = tblName tableThemeOwnership
   , mgrFrom      = 1
   , mgrAction    =
-    StandardMigration $ runQuery_ $ do
+    StandardMigration . runQuery_ $ do
       sqlAlterTable
         (tblName tableThemeOwnership)
         [ sqlAddColumn
@@ -26,7 +26,7 @@ themeOwnershipMakeUserGroupIDMandatory = Migration
   { mgrTableName = tblName tableThemeOwnership
   , mgrFrom      = 2
   , mgrAction    =
-    StandardMigration $ runQuery_ $ do
+    StandardMigration . runQuery_ $ do
       let tname = tblName tableThemeOwnership
       sqlAlterTable
         tname
@@ -59,7 +59,7 @@ themeOwnershipDropCompanyID = Migration
       let tname = tblName tableThemeOwnership
       runQuery_ $ sqlAlterTable
         tname
-        [ sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
+        [ sqlDropFK tname (fkOnColumn "company_id" "companies" "id")
         , sqlDropCheck "check_theme_is_owned_by_user_group_or_domain"
         ]
       runQuery_ $ sqlAlterTable

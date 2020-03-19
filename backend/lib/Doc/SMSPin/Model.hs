@@ -64,7 +64,7 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
           newPin <- show <$> randomR (1000, 9999)
           logInfo "Generating new pin" $ object
             ["new pin" .= newPin, "reason" .= ("previous one was too old" :: String)]
-          runQuery_ $ sqlUpdate "signatory_sms_pins" $ do
+          runQuery_ . sqlUpdate "signatory_sms_pins" $ do
             sqlSet "pin"          newPin
             sqlSet "generated_at" now
             sqlWhereEq "signatory_link_id" slid
@@ -75,7 +75,7 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
         newPin <- show <$> randomR (1000, 9999)
         logInfo "Generating new pin"
           $ object ["new pin" .= newPin, "reason" .= ("no previous pin" :: String)]
-        runQuery_ $ sqlInsert "signatory_sms_pins" $ do
+        runQuery_ . sqlInsert "signatory_sms_pins" $ do
           sqlSet "pin"               newPin
           sqlSet "generated_at"      now
           sqlSet "signatory_link_id" slid

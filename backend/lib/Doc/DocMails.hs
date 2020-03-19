@@ -120,7 +120,7 @@ sendDocumentErrorEmail author document = do
           scheduleEmailSendoutWithAuthorSenderThroughService
             (documentid document)
             (mail { to                = [getMailAddress signatorylink]
-                  , kontraInfoForMail = (Just $ OtherDocumentMail $ documentid document)
+                  , kontraInfoForMail = Just . OtherDocumentMail $ documentid document
                   }
             )
         )
@@ -156,7 +156,7 @@ sendInvitationEmails authorsignsimmediately = do
     , signatorylinkdeliverymethod sl
       `elem` [EmailDelivery, MobileDelivery, EmailAndMobileDelivery]
     , notSignedOrNotApprovedOrIsAViewer sl
-    , ((not $ isAuthor sl) || (isAuthor sl && not authorsignsimmediately))
+    , not (isAuthor sl) || (isAuthor sl && not authorsignsimmediately)
     ]
   forM_ signlinks sendInvitationEmail1
   where
@@ -287,9 +287,8 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
         did
         (mail
           { to                = [getMailAddress signatorylink]
-          , kontraInfoForMail = (Just $ DocumentInvitationMail did $ signatorylinkid
+          , kontraInfoForMail = Just . DocumentInvitationMail did $ signatorylinkid
                                   signatorylink
-                                )
           }
         )
     )
@@ -308,7 +307,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
 
   when sent $ do
     documentinvitetext <$> theDocument >>= \text ->
-      void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         InvitationEvidence
         eventFields
         (Just signatorylink)
@@ -327,13 +326,13 @@ sendInvitationEmail1 authorsiglink = do
         scheduleEmailSendout
           (mail
             { to                = [getMailAddress authorsiglink]
-            , kontraInfoForMail = Just $ DocumentInvitationMail did $ signatorylinkid
+            , kontraInfoForMail = Just . DocumentInvitationMail did $ signatorylinkid
                                     authorsiglink
             }
           )
       )
       (do
-        sms <- (\doc -> smsInvitationToAuthor doc authorsiglink) =<< theDocument
+        sms <- (`smsInvitationToAuthor` authorsiglink) =<< theDocument
         theDocument >>= \doc -> scheduleSMS doc $ sms
           { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS
                                      (documentid doc)
@@ -365,7 +364,7 @@ sendReminderEmail custommessage actor automatic siglink =
       domail = do
         mailattachments <- makeMailAttachments doc True
         let forceLink      = shouldForceEmailLink siglink
-            documentAttach = if forceLink then False else not (null mailattachments)
+            documentAttach = not forceLink && not (null mailattachments)
         mail <- mailDocumentRemind automatic
                                    custommessage
                                    doc
@@ -381,7 +380,7 @@ sendReminderEmail custommessage actor automatic siglink =
                                   then Just $ DocumentInvitationMail
                                     (documentid doc)
                                     (signatorylinkid siglink)
-                                  else Just $ OtherDocumentMail $ documentid doc
+                                  else Just . OtherDocumentMail $ documentid doc
           -- We only add attachment after document is signed
           , attachments       = attachments mail
                                   <> (if documentstatus doc == DS.Closed && not forceLink
@@ -502,8 +501,8 @@ sendClosedEmails sealFixed document = do
     let sendSMS withMail =
           scheduleSMS document =<< smsClosedNotification document sl withMail sealFixed
 
-    let useMail = isGood $ asValidEmail $ getEmail sl
-        useSMS  = isGood $ asValidPhoneForSMS $ getMobile sl
+    let useMail = isGood . asValidEmail $ getEmail sl
+        useSMS  = isGood . asValidPhoneForSMS $ getMobile sl
 
     case signatorylinkconfirmationdeliverymethod sl of
       NoConfirmationDelivery             -> return ()
@@ -525,7 +524,7 @@ makeMailAttachments
   -> Bool
   -> m [(Text, Either BS.ByteString FileID)]
 makeMailAttachments doc withAttachments =
-  map (\(n, f) -> (n, Right $ fileid f)) <$> if (isClosed doc)
+  map (\(n, f) -> (n, Right $ fileid f)) <$> if isClosed doc
     then makeMailAttachmentsForClosedDocument doc withAttachments
     else makeMailAttachmentsForNotClosedDocument doc withAttachments
 
@@ -534,23 +533,18 @@ makeMailAttachmentsForClosedDocument
   :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(Text, File)]
 makeMailAttachmentsForClosedDocument doc withAttachments = do
   mainfile <- do
-    file <-
-      dbQuery
-      $       GetFileByFileID
-      $       mainfileid
-      $       fromJust
-      $       (documentsealedfile doc)
-      `mplus` (documentfile doc)
+    file <- dbQuery . GetFileByFileID $ mainfileid
+      (fromJust $ documentsealedfile doc `mplus` documentfile doc)
     return [(documenttitle doc <> ".pdf", file)]
-  aattachments <- case withAttachments of
-    False -> return []
-    True ->
+  aattachments <- if withAttachments
+    then
       forM
           (filter (not . authorattachmentaddtosealedfile) $ documentauthorattachments doc)
         $ \aatt -> do
-            file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
+            file <- dbQuery . GetFileByFileID $ authorattachmentfileid aatt
             return [(authorattachmentname aatt <> ".pdf", file)]
-  let allMailAttachments = mainfile <> (concat aattachments)
+    else return []
+  let allMailAttachments = mainfile <> concat aattachments
       maxFileSize        = 10 * 1024 * 1024
   if sum (map (filesize . snd) allMailAttachments) > maxFileSize
     then return []
@@ -560,23 +554,22 @@ makeMailAttachmentsForNotClosedDocument
   :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(Text, File)]
 makeMailAttachmentsForNotClosedDocument doc withAttachments = do
   mainfile <- do
-    file <- dbQuery $ GetFileByFileID $ mainfileid $ fromJust (documentfile doc)
+    file <- dbQuery . GetFileByFileID $ mainfileid (fromJust (documentfile doc))
     return [(documenttitle doc <> ".pdf", file)]
-  aattachments <- case withAttachments of
-    False -> return []
-    True  -> forM (documentauthorattachments doc) $ \aatt -> do
-      file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
+  aattachments <- if withAttachments
+    then forM (documentauthorattachments doc) $ \aatt -> do
+      file <- dbQuery . GetFileByFileID $ authorattachmentfileid aatt
       return [(authorattachmentname aatt <> ".pdf", file)]
-  sattachments <- case withAttachments of
-    False -> return []
-    True ->
-      forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt ->
-        case signatoryattachmentfile satt of
-          Nothing      -> return []
-          Just sattfid -> do
-            file <- dbQuery $ GetFileByFileID sattfid
-            return [(filename file, file)]
-  let allMailAttachments = mainfile <> (concat aattachments) <> (concat sattachments)
+    else return []
+  sattachments <- if withAttachments
+    then forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt ->
+      case signatoryattachmentfile satt of
+        Nothing      -> return []
+        Just sattfid -> do
+          file <- dbQuery $ GetFileByFileID sattfid
+          return [(filename file, file)]
+    else return []
+  let allMailAttachments = mainfile <> concat aattachments <> concat sattachments
       maxFileSize        = 10 * 1024 * 1024
   if sum (map (filesize . snd) allMailAttachments) > maxFileSize
     then return []
@@ -636,7 +629,6 @@ sendForwardSigningMessages customMessage originalSignatory newSignatory doc = do
                                             doc
   unless (isAuthor originalSignatory) $ do
     sendForwardSigningMessagesToAuthor originalSignatory newSignatory doc
-  return ()
 
 sendForwardSigningMessagesForNewSignatory
   :: Kontrakcja m => Maybe Text -> SignatoryLink -> SignatoryLink -> Document -> m ()
@@ -658,17 +650,17 @@ sendForwardSigningMessagesForNewSignatory customMessage originalsiglink newsigli
           scheduleSMS doc
             =<< smsForwardSigningForNewSignatory originalsiglink newsiglink doc
 
-    let useMail = isGood $ asValidEmail $ getEmail newsiglink
-        useSMS  = isGood $ asValidPhoneForSMS $ getMobile newsiglink
+    let useMail = isGood . asValidEmail $ getEmail newsiglink
+        useSMS  = isGood . asValidPhoneForSMS $ getMobile newsiglink
 
     case signatorylinkdeliverymethod newsiglink of
       APIDelivery            -> return ()
       PadDelivery            -> return ()
-      EmailDelivery          -> when useMail $ sendMail
-      MobileDelivery         -> when useSMS $ sendSMS
+      EmailDelivery          -> when useMail sendMail
+      MobileDelivery         -> when useSMS sendSMS
       EmailAndMobileDelivery -> do
-        when useMail $ sendMail
-        when useSMS $ sendSMS
+        when useMail sendMail
+        when useSMS  sendSMS
       PortalDelivery -> return ()
 
 sendForwardSigningMessagesToAuthor
@@ -679,26 +671,26 @@ sendForwardSigningMessagesToAuthor originalsiglink newsiglink doc = do
         mail <- mailForwardSigningForAuthor originalsiglink newsiglink doc
         scheduleEmailSendout $ mail
           { to                = [getMailAddress authorsiglink]
-          , kontraInfoForMail = Just $ OtherDocumentMail $ documentid doc
+          , kontraInfoForMail = Just . OtherDocumentMail $ documentid doc
           }
 
   let sendSMS =
         scheduleSMS doc =<< smsForwardSigningForAuthor originalsiglink newsiglink doc
 
-  let useMail = isGood $ asValidEmail $ getEmail authorsiglink
-      useSMS  = isGood $ asValidPhoneForSMS $ getMobile authorsiglink
+  let useMail = isGood . asValidEmail $ getEmail authorsiglink
+      useSMS  = isGood . asValidPhoneForSMS $ getMobile authorsiglink
 
   case signatorylinkconfirmationdeliverymethod authorsiglink of
     NoConfirmationDelivery             -> return ()
-    EmailConfirmationDelivery          -> when useMail $ sendMail
-    EmailLinkConfirmationDelivery      -> when useMail $ sendMail
-    MobileConfirmationDelivery         -> when useSMS $ sendSMS
+    EmailConfirmationDelivery          -> when useMail sendMail
+    EmailLinkConfirmationDelivery      -> when useMail sendMail
+    MobileConfirmationDelivery         -> when useSMS sendSMS
     EmailAndMobileConfirmationDelivery -> do
-      when useMail $ sendMail
-      when useSMS $ sendSMS
+      when useMail sendMail
+      when useSMS  sendSMS
     EmailLinkAndMobileConfirmationDelivery -> do
-      when useMail $ sendMail
-      when useSMS $ sendSMS
+      when useMail sendMail
+      when useSMS  sendSMS
 
 
 
@@ -796,9 +788,9 @@ sendForwardEmail email noContent noAttachments asiglink = do
   did             <- documentid <$> theDocument
   scheduleEmailSendoutWithAuthorSenderThroughService did $ mail
     { to                = [MailAddress "" email]
-    , content           = if (noContent) then "" else content mail
+    , content           = if noContent then "" else content mail
     , attachments       = attachments mail <> mailattachments
-    , kontraInfoForMail = Just $ OtherDocumentMail $ documentid doc
+    , kontraInfoForMail = Just . OtherDocumentMail $ documentid doc
     }
   return ()
 
@@ -830,7 +822,7 @@ sendPinCode sl phone pin = do
                                                          (return ())
                                                          (Just sl)
                                                          (Just phone)
-      =<< (signatoryActor ctx sl)
+      =<< signatoryActor ctx sl
   scheduleSMS doc =<< smsPinCodeSendout doc sl phone pin
 
 sendPortalInvite
@@ -903,7 +895,7 @@ createUserForPortal
   -> m User
 createUserForPortal lang email cuctx = do
   ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-  let ug0 = set #homeFolderID (Just $ ugFolder ^. #id) $ defaultUserGroup
+  let ug0 = set #homeFolderID (Just $ ugFolder ^. #id) defaultUserGroup
   ug     <- dbUpdate $ UserGroupCreate ug0
   mnuser <- createUser email ("", "") (ug ^. #id, True) lang PortalInvite cuctx
   case mnuser of
@@ -953,7 +945,7 @@ sendNotifications
 sendNotifications sl alwaysEmailAuthor domail dosms = do
   logInfo "Delivery method chosen for a signatory" $ object
     [ identifier $ signatorylinkid sl
-    , "method" .= (show $ signatorylinkdeliverymethod sl)
+    , "method" .= show (signatorylinkdeliverymethod sl)
     , "phone" .= getMobile sl
     , "email" .= getEmail sl
     ]
@@ -968,6 +960,7 @@ sendNotifications sl alwaysEmailAuthor domail dosms = do
 
 type MailT m = MailContextT (TemplatesT m)
 
+{-# ANN runMailT ("HLint: ignore Too strict maybe" :: String) #-}
 -- | Set up mail and template context, with language and branding
 -- based on document data, and the rest from CronEnv
 runMailT
@@ -981,9 +974,8 @@ runMailT templates mailNoreplyAddress doc m = do
   now     <- currentTime
   mauthor <-
     maybe (return Nothing) (dbQuery . GetUserByID)
-    $   join
     $   maybesignatory
-    <$> getAuthorSigLink doc
+    =<< getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain)
               (dbQuery . GetBrandedDomainByUserID)
               (view #id <$> mauthor)

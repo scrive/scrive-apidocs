@@ -21,17 +21,13 @@ import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP.Types.URI as URI
 
 currentDomain :: ServerMonad m => m Text
-currentDomain = do
-  rq <- askRq
-  return $ maybe "scrive.com" TE.decodeUtf8 $ getHeader "host" rq
+currentDomain = maybe "scrive.com" TE.decodeUtf8 . getHeader "host" <$> askRq
 
 currentScheme :: ServerMonad m => m Text
-currentScheme = do
-  rq <- askRq
-  return $ maybe "http" TE.decodeUtf8 $ getHeader "scheme" rq
+currentScheme = maybe "http" TE.decodeUtf8 . getHeader "scheme" <$> askRq
 
 isSecure :: ServerMonad m => m Bool
-isSecure = (Just (BS.fromString "http") /=) `liftM` getHeaderM "scheme"
+isSecure = (Just (BS.fromString "http") /=) <$> getHeaderM "scheme"
 
 isHTTPS :: ServerMonad m => m Bool
 isHTTPS = do
@@ -66,12 +62,12 @@ currentLinkBody :: ServerMonad m => m Text
 currentLinkBody = do
   rq       <- askRq
   hostpart <- currentDomain
-  return $ hostpart <> (T.pack $ rqUri rq) <> (T.pack $ rqQuery rq)
+  return $ hostpart <> T.pack (rqUri rq) <> T.pack (rqQuery rq)
 
 urlEncodeVars :: [(BSLU.ByteString, BSLU.ByteString)] -> BSLU.ByteString
-urlEncodeVars ((n, v) : []) =
-  (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict n)])
+urlEncodeVars [(n, v)] =
+  BSL.fromChunks [URI.urlEncode True $ BSL.toStrict n]
     `BSL.append` "="
-    `BSL.append` (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict v)])
+    `BSL.append` BSL.fromChunks [URI.urlEncode True $ BSL.toStrict v]
 urlEncodeVars []       = BSL.empty
 urlEncodeVars (p : pp) = urlEncodeVars [p] `BSL.append` "&" `BSL.append` urlEncodeVars pp

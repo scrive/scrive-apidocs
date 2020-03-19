@@ -26,8 +26,8 @@ data TestConf = TestConf
 unjsonTestConf :: UnjsonDef TestConf
 unjsonTestConf =
   objectOf
-    $   pure TestConf
-    <*> field "database"        testDBConfig           "Database connection string"
+    $   TestConf
+    <$> field "database"        testDBConfig           "Database connection string"
     <*> field "pdftools_lambda" testPdfToolsLambdaConf "Configuration of PdfTools Lambda"
     <*> fieldOpt "amazon" testAmazonConfig "Optional configuration for S3"
     <*> fieldOpt "local_file_cache_size"

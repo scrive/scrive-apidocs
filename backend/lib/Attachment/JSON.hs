@@ -18,32 +18,27 @@ unjsonAttachments = objectOf
 unjsonAttachment :: UnjsonDef Attachment
 unjsonAttachment =
   objectOf
-    $  pure defaultAttachment
-    <* (fieldReadonly "id" attachmentid "Attachment ID")
-    <* (fieldReadonly "title" attachmenttitle "User ID for the signatory")
-    <* (fieldReadonly "time"
-                      (utcTimeToAPIFormat . attachmentmtime)
-                      "Time of attachment creation"
-       )
-    <* (fieldReadonly "shared" attachmentshared "Is attachment shared")
-    <* (fieldReadonly "file" attachmentfile "Is attachment shared")
+    $  defaultAttachment
+    <$ fieldReadonly "id"    attachmentid    "Attachment ID"
+    <* fieldReadonly "title" attachmenttitle "User ID for the signatory"
+    <* fieldReadonly "time"
+                     (utcTimeToAPIFormat . attachmentmtime)
+                     "Time of attachment creation"
+    <* fieldReadonly "shared" attachmentshared "Is attachment shared"
+    <* fieldReadonly "file"   attachmentfile   "Is attachment shared"
 
 unjsonAttachmentSorting :: UnjsonDef [AscDesc AttachmentOrderBy]
 unjsonAttachmentSorting =
-  arrayOf
-    $   objectOf
-    $   pure (\f v -> (order f) v)
-    <*> field "order" askDesc "Sorting value"
-    <*> fieldBy
-          "sort_by"
-          sorting
-          "Asc/Desc"
-          (unjsonEnumBy
-            "Order"
-            [ (AttachmentOrderByTitle, ("title" :: Text))
-            , (AttachmentOrderByMTime, ("time" :: Text))
-            ]
-          )
+  arrayOf . objectOf $ order <$> field "order" askDesc "Sorting value" <*> fieldBy
+    "sort_by"
+    sorting
+    "Asc/Desc"
+    (unjsonEnumBy
+      "Order"
+      [ (AttachmentOrderByTitle, "title" :: Text)
+      , (AttachmentOrderByMTime, "time" :: Text)
+      ]
+    )
   where
     order :: Text -> (a -> AscDesc a)
     order "ascending"  = Asc
@@ -57,13 +52,14 @@ unjsonAttachmentSorting =
 unjsonAttachmentFiltering :: UnjsonDef [AttachmentFilter]
 unjsonAttachmentFiltering =
   arrayOf
-    $   objectOf
-    $   pure AttachmentFilterByString
-    <*  fieldBy "filter_by"
+    .   objectOf
+    $   AttachmentFilterByString
+    <$  fieldBy "filter_by"
                 (const ())
                 "Type of filter"
                 (unjsonEnum "Attachment filtering" textFilterParser (const "text"))
     <*> field "text" unsafeFilterText "Text to filter on"
+
   where
     unsafeFilterText :: AttachmentFilter -> Text
     unsafeFilterText (AttachmentFilterByString text) = text

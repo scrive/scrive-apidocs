@@ -30,11 +30,11 @@ table a b =
 deriveInspectXML :: TH.Name -> TH.Q [TH.Dec]
 deriveInspectXML name = do
   info <- TH.reify name
-  let namesOfNormal fields = map (\_x -> "") fields
-  let namesOfRec fields = map (\(x, _, _) -> TH.nameBase x) fields
+  let namesOfNormal = map (const "")
+  let namesOfRec = map (\(x, _, _) -> TH.nameBase x)
   let u :: TH.Name -> [String] -> TH.MatchQ
       u fname fields = do
-        n <- mapM (\f -> TH.newName f) fields
+        n <- mapM TH.newName fields
         let s = TH.nameBase fname
         TH.match (TH.conP fname (map TH.varP n))
                    (TH.normalB [|  table s (T.concat (zipWith table fields $(TH.listE (map (\x -> TH.varE 'inspectXML `TH.appE` TH.varE x) n))))
@@ -54,4 +54,4 @@ deriveInspectXML name = do
   case info of
     TH.TyConI (TH.DataD _ _ _ _ cons _fields) -> d name cons
     TH.TyConI (TH.NewtypeD _ _ _ _ con _fields) -> d name [con]
-    _ -> unexpectedError $ "deriveInspectXML cannot handle: " <> (showt info)
+    _ -> unexpectedError $ "deriveInspectXML cannot handle: " <> showt info

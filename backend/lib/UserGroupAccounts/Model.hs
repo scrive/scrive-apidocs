@@ -26,7 +26,7 @@ data UserGroupInvite = UserGroupInvite
   , invitingusergroup :: UserGroupID --the usergroup they are invited to
   } deriving (Eq, Ord, Show)
 
-data AddUserGroupInvite = AddUserGroupInvite UserGroupInvite
+newtype AddUserGroupInvite = AddUserGroupInvite UserGroupInvite
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUserGroupInvite UserGroupInvite where
   update (AddUserGroupInvite UserGroupInvite {..}) = do
     runSQL_ "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
@@ -36,7 +36,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUserGroupInvite UserGroupInv
     runQuery_ . sqlInsert "companyinvites" $ do
       sqlSet "user_id"       inviteduserid
       sqlSet "user_group_id" invitingusergroup
-    fromJust `liftM` query (GetUserGroupInvite invitingusergroup inviteduserid)
+    fromJust <$> query (GetUserGroupInvite invitingusergroup inviteduserid)
 
 data RemoveUserGroupInvite = RemoveUserGroupInvite [UserGroupID] UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveUserGroupInvite Bool where
@@ -45,7 +45,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveUserGroupInvite Bool wher
       sqlWhereIn "user_group_id" ugids
       sqlWhereEq "user_id" user_id
 
-data RemoveUserUserGroupInvites = RemoveUserUserGroupInvites UserID
+newtype RemoveUserUserGroupInvites = RemoveUserUserGroupInvites UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveUserUserGroupInvites Bool where
   update (RemoveUserUserGroupInvites user_id) = do
     runQuery01 . sqlDelete "companyinvites" $ do
@@ -59,14 +59,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupInvite (Maybe UserGr
       sqlWhereEq "ci.user_id"       uid
     fetchMaybe fetchUserGroupInvite
 
-data UserGroupGetInvites = UserGroupGetInvites UserGroupID
+newtype UserGroupGetInvites = UserGroupGetInvites UserGroupID
 instance MonadDB m => DBQuery m UserGroupGetInvites [UserGroupInvite] where
   query (UserGroupGetInvites ugid) = do
     runQuery_ . selectUserGroupInvites $ do
       sqlWhereEq "ci.user_group_id" ugid
     fetchMany fetchUserGroupInvite
 
-data UserGroupGetInvitesWithUsersData = UserGroupGetInvitesWithUsersData UserGroupID
+newtype UserGroupGetInvitesWithUsersData = UserGroupGetInvitesWithUsersData UserGroupID
 instance MonadDB m => DBQuery m UserGroupGetInvitesWithUsersData [(UserGroupInvite,Text,Text,Text)] where
   query (UserGroupGetInvitesWithUsersData ugid) = do
     runQuery_ . sqlSelect "companyinvites as i, users as u" $ do

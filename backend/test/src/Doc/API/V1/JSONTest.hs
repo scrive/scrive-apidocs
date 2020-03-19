@@ -70,13 +70,13 @@ testFromFileAndReadySimple = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_1_create.json") (rsBody resDoc)
   did           <- getDocumentID (rsBody resDoc)
@@ -93,13 +93,13 @@ testFromFileAndUpdate = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_2_create.json") (rsBody resDoc)
   did            <- getDocumentID (rsBody resDoc)
@@ -117,13 +117,13 @@ testFromTemplateAndReadySimple = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_3_create.json") (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
@@ -157,13 +157,13 @@ testUpdateFields = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_4_create.json") (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
@@ -199,13 +199,13 @@ testUpdateWithReplacementFields = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_5_create.json") (rsBody resDoc)
   did             <- getDocumentID (rsBody resDoc)
@@ -240,10 +240,10 @@ testUpdateWithSubset = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders POST [] []
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_6_create.json") (rsBody resDoc)
   did            <- getDocumentID (rsBody resDoc)
@@ -262,14 +262,14 @@ testUpdateWithAllFeatures = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
 
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_7_create.json") (rsBody resDoc)
   did                  <- getDocumentID (rsBody resDoc)
@@ -304,33 +304,33 @@ testList = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
 
-  (resDoc1, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc1, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc1)
   did1         <- getDocumentID (rsBody resDoc1)
 
-  (resDoc2, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc2, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc2)
   did2         <- getDocumentID (rsBody resDoc2)
 
-  (resDoc3, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc3, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc3)
   did3         <- getDocumentID (rsBody resDoc3)
   did3sig      <- head <$> getSignatoryLinksID (rsBody resDoc3)
 
-  (resDoc4, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc4, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc4)
   did4          <- getDocumentID (rsBody resDoc4)
   did4sig       <- head <$> getSignatoryLinksID (rsBody resDoc4)
 
   reqList1      <- mkRequestWithHeaders GET [] []
-  (resList1, _) <- runTestKontra reqList1 ctx $ apiCallV1List
+  (resList1, _) <- runTestKontra reqList1 ctx apiCallV1List
   testJSONWith (inTestDir "json/api_v1/test_8_list_of_documents_before_saving.json")
                (rsBody resList1)
 
@@ -338,42 +338,42 @@ testList = do
     dbUpdate $ SetDocumentUnsavedDraft False
 
   reqList2      <- mkRequestWithHeaders GET [] []
-  (resList2, _) <- runTestKontra reqList2 ctx $ apiCallV1List
+  (resList2, _) <- runTestKontra reqList2 ctx apiCallV1List
   testJSONWith (inTestDir "json/api_v1/test_8_list_of_documents_after_saving.json")
                (rsBody resList2)
 
   reqReady1 <- mkRequestWithHeaders POST [] []
-  void $ runTestKontra reqReady1 ctx $ apiCallV1Ready did1
+  void . runTestKontra reqReady1 ctx $ apiCallV1Ready did1
 
   reqReady2 <- mkRequestWithHeaders POST [] []
-  void $ runTestKontra reqReady2 ctx $ apiCallV1Ready did2
+  void . runTestKontra reqReady2 ctx $ apiCallV1Ready did2
 
   reqReady3 <- mkRequestWithHeaders POST [] []
-  void $ runTestKontra reqReady3 ctx $ apiCallV1Ready did3
+  void . runTestKontra reqReady3 ctx $ apiCallV1Ready did3
 
   reqReady4 <- mkRequestWithHeaders POST [] []
-  void $ runTestKontra reqReady4 ctx $ apiCallV1Ready did4
+  void . runTestKontra reqReady4 ctx $ apiCallV1Ready did4
 
   reqCancel <- mkRequestWithHeaders POST [] []
-  void $ runTestKontra reqCancel ctx $ apiCallV1Cancel did2
+  void . runTestKontra reqCancel ctx $ apiCallV1Cancel did2
 
   reqSign <- mkRequestWithHeaders POST [("fields", inText "[]")] []
-  void $ runTestKontra reqSign ctx $ apiCallV1Sign did3 did3sig
+  void . runTestKontra reqSign ctx $ apiCallV1Sign did3 did3sig
 
   reqReject <- mkRequestWithHeaders POST [] []
-  void $ runTestKontra reqReject ctx $ apiCallV1Reject did4 did4sig
+  void . runTestKontra reqReject ctx $ apiCallV1Reject did4 did4sig
 
   reqList3      <- mkRequestWithHeaders GET [("sort", inText "status")] []
-  (resList3, _) <- runTestKontra reqList3 ctx $ apiCallV1List
+  (resList3, _) <- runTestKontra reqList3 ctx apiCallV1List
   testJSONWith (inTestDir "json/api_v1/test_8_list_of_documents_after_operations.json")
                (rsBody resList3)
 
   -- Check is file field on list is a number encoded as string. After IPad issue 01.06.2015
   let (Just (Object m)) = decode (rsBody resList3)
-  case (H.lookup "list" m) of
-    Just (Array v) -> case (V.head v) of
-      (Object m') -> case (H.lookup "fields" m') of
-        Just (Object m'') -> case (H.lookup "file" m'') of
+  case H.lookup "list" m of
+    Just (Array v) -> case V.head v of
+      (Object m') -> case H.lookup "fields" m' of
+        Just (Object m'') -> case H.lookup "file" m'' of
           Just (String s) -> assertBool "file field from list call parses as Int"
             $ isJust (maybeRead s :: Maybe Int)
           _ -> assertFailure "Can't find file field"
@@ -391,14 +391,14 @@ testSignWithSignature = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
 
-  (resDoc1, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc1, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc1)
   testJSONWith (inTestDir "json/api_v1/test_9_create.json") (rsBody resDoc1)
   did          <- getDocumentID (rsBody resDoc1)
@@ -410,7 +410,7 @@ testSignWithSignature = do
   didSig       <- head <$> getSignatoryLinksID (rsBody resDoc2)
 
   reqReady     <- mkRequestWithHeaders POST [] []
-  void $ runTestKontra reqReady ctx $ apiCallV1Ready did
+  void . runTestKontra reqReady ctx $ apiCallV1Ready did
 
   reqSign <- mkRequestWithHeaders
     POST
@@ -420,7 +420,7 @@ testSignWithSignature = do
       )
     ]
     []
-  void $ runTestKontra reqSign ctx $ apiCallV1Sign did didSig
+  void . runTestKontra reqSign ctx $ apiCallV1Sign did didSig
   sealTestDocument ctx did
 
   reqGet           <- mkRequestWithHeaders GET [] []
@@ -443,8 +443,8 @@ getSignatoryLinksID jsonBS = do
   fmap unsafeSignatoryLinkID <$> mapM getID (V.toList s)
 
 getID :: Value -> TestEnv Int64
-getID (Object m) = case (H.lookup "id" m) of
-  Just (String s) -> case (maybeRead s) of
+getID (Object m) = case H.lookup "id" m of
+  Just (String s) -> case maybeRead s of
     Just i -> return i
     _      -> unexpectedError "error while parsing id (not a string representing number)"
   _ -> unexpectedError "error while parsing id (not a string)"
@@ -453,14 +453,10 @@ getID _ = unexpectedError "error while parsing id (not found)"
 getField :: Text -> BS.ByteString -> TestEnv Text
 getField key jsonBS = do
   let (Just (Object m)) = decode jsonBS
-  case (H.lookup key m) of
+  case H.lookup key m of
     Just (String s) -> return s
-    _ ->
-      unexpectedError
-        $  T.pack
-        $  "error while looking for a field "
-        ++ unpack key
-        ++ " (not a string)"
+    _               -> unexpectedError
+      $ T.pack ("error while looking for a field " ++ unpack key ++ " (not a string)")
 
 -- Deap replacement. There are some integrations that work with replacemente of #EMAIL etc. This operation
 setDocValuesBySimpleReplacement :: Text -> Text -> Value -> Value
@@ -469,7 +465,7 @@ setDocValuesBySimpleReplacement v nv (Object m) =
 setDocValuesBySimpleReplacement v nv (Array a) =
   Array $ V.map (setDocValuesBySimpleReplacement v nv) a
 setDocValuesBySimpleReplacement v nv (String v') =
-  if (v == v') then String nv else String v'
+  if v == v' then String nv else String v'
 setDocValuesBySimpleReplacement _ _ jv = jv
 
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()

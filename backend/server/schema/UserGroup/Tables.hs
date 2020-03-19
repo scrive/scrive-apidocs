@@ -261,9 +261,9 @@ tableUserGroupUIs = tblTable
   , tblPrimaryKey  = pkOnColumn "user_group_id"
   , tblForeignKeys =
     [ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
-    , (fkOnColumn "mail_theme" "themes" "id")
-    , (fkOnColumn "signview_theme" "themes" "id")
-    , (fkOnColumn "service_theme" "themes" "id")
+    , fkOnColumn "mail_theme"     "themes" "id"
+    , fkOnColumn "signview_theme" "themes" "id"
+    , fkOnColumn "service_theme"  "themes" "id"
     ]
   }
 

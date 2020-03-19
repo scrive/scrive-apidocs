@@ -105,89 +105,81 @@ import qualified UserGroup.Internal as I
 import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 adminonlyRoutes :: Route (Kontra Response)
-adminonlyRoutes =
-  fmap onlySalesOrAdmin
-    $ choice
-    $ [ hGet $ showAdminElmMainPage
-      , dir "page" $ remainingPath GET showAdminElmMainPage
-      , dir "createuser" $ hPost $ toK0 $ handleCreateUser
-      , dir "userslist" $ hGet $ toK0 $ jsonUsersList
-      , dir "useradmin" $ dir "details" $ hGet $ toK1 $ handleUserGetProfile
-      , dir "useradmin" $ hPost $ toK1 $ handleUserChange
-      , dir "useradmin" $ dir "changepassword" $ hPost $ toK1 $ handleUserPasswordChange
-      , dir "useradmin" $ dir "deleteinvite" $ hPost $ toK2 $ handleDeleteInvite
-      , dir "useradmin" $ dir "delete" $ hPost $ toK1 $ handleDeleteUser
-      , dir "useradmin" $ dir "move" $ hPost $ toK1 $ handleMoveUserToDifferentCompany
-      , dir "useradmin" $ dir "disable2fa" $ hPost $ toK1 $ handleDisable2FAForUser
-      , dir "useradmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1
-        handleAdminUserUsageStatsDays
-      , dir "useradmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1
-        handleAdminUserUsageStatsMonths
-      , (dir "useradmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
-        $ handleAdminUserShareableLinksStats PartitionByDay
-      , (dir "useradmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
-        $ handleAdminUserShareableLinksStats PartitionByMonth
-      , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
-      , dir "companyadmin" $ dir "details" $ hGet $ toK1 $ handleCompanyGetProfile
-      , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
-      , dir "companyadmin" $ dir "merge" $ hPost $ toK1 $ handleMergeToOtherCompany
-      , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
-      , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
-      , (dir "companyaccounts" . hGet . toK1)
-        UserGroupAccounts.handleUserGroupAccountsForAdminOnly
-      , dir "companyadmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1
-        handleAdminCompanyUsageStatsDays
-      , dir "companyadmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1
-        handleAdminCompanyUsageStatsMonths
-      , (dir "companyadmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
-        $ handleAdminCompanyShareableLinksStats PartitionByDay
-      , (dir "companyadmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
-        $ handleAdminCompanyShareableLinksStats PartitionByMonth
-      , (dir "companyadmin" . dir "getsubscription" . hGet . toK1)
-        handleCompanyGetSubscription
-      , (dir "companyadmin" . dir "updatesubscription" . hPost . toK1)
-        handleCompanyUpdateSubscription
-      , dir "companyadmin" $ dir "getstructure" $ hGet $ toK1 $ handleCompanyGetStructure
-      , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
-      , dir "companies" $ hGet $ toK0 $ jsonCompanies
-      , dir "brandeddomainslist" $ hGet $ toK0 $ jsonBrandedDomainsList
-      , dir "brandeddomain" $ dir "create" $ hPost $ toK0 $ createBrandedDomain
-      , dir "brandeddomain" $ dir "details" $ hGet $ toK1 $ jsonBrandedDomain
-      , (dir "brandeddomain" . dir "details" . dir "change" . hPost . toK1)
-        updateBrandedDomain
-      , dir "brandeddomain" $ dir "themes" $ hGet $ toK1 $ handleGetThemesForDomain
-      , dir "brandeddomain" $ dir "newtheme" $ hPost $ toK2 $ handleNewThemeForDomain
-      , (dir "brandeddomain" . dir "updatetheme" . hPost . toK2)
-        handleUpdateThemeForDomain
-      , (dir "brandeddomain" . dir "deletetheme" . hPost . toK2)
-        handleDeleteThemeForDomain
-      ]
+adminonlyRoutes = onlySalesOrAdmin <$> choice
+  [ hGet showAdminElmMainPage
+  , (dir "page" . remainingPath GET) showAdminElmMainPage
+  , (dir "createuser" . hPost . toK0) handleCreateUser
+  , (dir "userslist" . hGet . toK0) jsonUsersList
+  , (dir "useradmin" . dir "details" . hGet . toK1) handleUserGetProfile
+  , (dir "useradmin" . hPost . toK1) handleUserChange
+  , (dir "useradmin" . dir "changepassword" . hPost . toK1) handleUserPasswordChange
+  , (dir "useradmin" . dir "deleteinvite" . hPost . toK2) handleDeleteInvite
+  , (dir "useradmin" . dir "delete" . hPost . toK1) handleDeleteUser
+  , (dir "useradmin" . dir "move" . hPost . toK1) handleMoveUserToDifferentCompany
+  , (dir "useradmin" . dir "disable2fa" . hPost . toK1) handleDisable2FAForUser
+  , (dir "useradmin" . dir "usagestats" . dir "days" . hGet . toK1)
+    handleAdminUserUsageStatsDays
+  , (dir "useradmin" . dir "usagestats" . dir "months" . hGet . toK1)
+    handleAdminUserUsageStatsMonths
+  , (dir "useradmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
+    $ handleAdminUserShareableLinksStats PartitionByDay
+  , (dir "useradmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
+    $ handleAdminUserShareableLinksStats PartitionByMonth
+  , (dir "useradmin" . dir "sendinviteagain" . hPost . toK0) sendInviteAgain
+  , (dir "companyadmin" . dir "details" . hGet . toK1) handleCompanyGetProfile
+  , (dir "companyadmin" . hPost . toK1) handleCompanyChange
+  , (dir "companyadmin" . dir "merge" . hPost . toK1) handleMergeToOtherCompany
+  , (dir "companyadmin" . dir "branding") Company.adminRoutes
+  , (dir "companyadmin" . dir "users" . hPost . toK1) handlePostAdminCompanyUsers
+  , (dir "companyaccounts" . hGet . toK1)
+    UserGroupAccounts.handleUserGroupAccountsForAdminOnly
+  , (dir "companyadmin" . dir "usagestats" . dir "days" . hGet . toK1)
+    handleAdminCompanyUsageStatsDays
+  , (dir "companyadmin" . dir "usagestats" . dir "months" . hGet . toK1)
+    handleAdminCompanyUsageStatsMonths
+  , (dir "companyadmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
+    $ handleAdminCompanyShareableLinksStats PartitionByDay
+  , (dir "companyadmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
+    $ handleAdminCompanyShareableLinksStats PartitionByMonth
+  , (dir "companyadmin" . dir "getsubscription" . hGet . toK1)
+    handleCompanyGetSubscription
+  , (dir "companyadmin" . dir "updatesubscription" . hPost . toK1)
+    handleCompanyUpdateSubscription
+  , (dir "companyadmin" . dir "getstructure" . hGet . toK1) handleCompanyGetStructure
+  , (dir "documentslist" . hGet . toK0) jsonDocuments
+  , (dir "companies" . hGet . toK0) jsonCompanies
+  , (dir "brandeddomainslist" . hGet . toK0) jsonBrandedDomainsList
+  , (dir "brandeddomain" . dir "create" . hPost . toK0) createBrandedDomain
+  , (dir "brandeddomain" . dir "details" . hGet . toK1) jsonBrandedDomain
+  , (dir "brandeddomain" . dir "details" . dir "change" . hPost . toK1)
+    updateBrandedDomain
+  , (dir "brandeddomain" . dir "themes" . hGet . toK1) handleGetThemesForDomain
+  , (dir "brandeddomain" . dir "newtheme" . hPost . toK2) handleNewThemeForDomain
+  , (dir "brandeddomain" . dir "updatetheme" . hPost . toK2) handleUpdateThemeForDomain
+  , (dir "brandeddomain" . dir "deletetheme" . hPost . toK2) handleDeleteThemeForDomain
+  ]
 
 adminonlyOldRoutes :: Route (Kontra Response)
-adminonlyOldRoutes =
-  fmap onlySalesOrAdmin
-    $ choice
-    $ [ hGet $ toK0 showAdminMainPage
-      , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
-      , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
-      ]
+adminonlyOldRoutes = onlySalesOrAdmin <$> choice
+  [ hGet $ toK0 showAdminMainPage
+  , dir "useradmin" . hGet $ toK1 showAdminUsers
+  , dir "companyadmin" . hGet $ toK1 showAdminCompany
+  ]
 
 daveRoutes :: Route (Kontra Response)
-daveRoutes =
-  fmap onlyAdmin
-    $ choice
-    $ [ dir "document" $ hGet $ toK1 $ daveDocument
-      , dir "document" $ hGet $ toK2 $ daveSignatoryLink
-      , dir "document" $ param $ dir "transfer" $ hPost $ toK1 $ handleTransferDocument
-      , dir "user" $ hGet $ toK1 $ daveUser
-      , dir "userhistory" $ hGet $ toK1 $ daveUserHistory
-      , dir "usergroup" $ hGet $ toK1 $ daveUserGroup
-      , dir "reseal" $ hPost $ toK1 $ resealFile
-      , dir "postpending" $ hPost $ toK1 $ triggerPostPending
-      , dir "file" $ hGet $ toK2 $ daveFile
-      , dir "backdoor" $ hGet $ handleBackdoorQuery
-      , dir "randomscreenshot" $ hGet $ toK0 $ randomScreenshotForTest
-      ]
+daveRoutes = onlyAdmin <$> choice
+  [ dir "document" . hGet $ toK1 daveDocument
+  , dir "document" . hGet $ toK2 daveSignatoryLink
+  , dir "document" . param $ dir "transfer" (hPost $ toK1 handleTransferDocument)
+  , dir "user" . hGet $ toK1 daveUser
+  , dir "userhistory" . hGet $ toK1 daveUserHistory
+  , dir "usergroup" . hGet $ toK1 daveUserGroup
+  , dir "reseal" . hPost $ toK1 resealFile
+  , dir "postpending" . hPost $ toK1 triggerPostPending
+  , dir "file" . hGet $ toK2 daveFile
+  , dir "backdoor" $ hGet handleBackdoorQuery
+  , dir "randomscreenshot" . hGet $ toK0 randomScreenshotForTest
+  ]
 {- | Main page. Redirects users to other admin panels -}
 
 showAdminMainPage :: Kontrakcja m => m String
@@ -210,7 +202,7 @@ showAdminUsers uid = onlySalesOrAdmin $ do
 
 handleUserGetProfile :: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
-  user     <- guardJustM $ dbQuery $ GetUserByID uid
+  user     <- guardJustM . dbQuery $ GetUserByID uid
   callback <- dbQuery $ GetUserCallbackSchemeByUserID uid
   ugwp     <- dbQuery . UserGroupGetWithParentsByUserID $ uid
   return $ userJSONWithCallBackInfo user ugwp callback
@@ -245,10 +237,11 @@ jsonCompanies = onlySalesOrAdmin $ do
   ugsWithAddress <- forM ugs $ \ug -> case ug ^. #address of
     Just uga -> return (ug, uga)
     Nothing ->
-      ((ug, ) . ugwpAddress)
+      (ug, )
+        .   ugwpAddress
         <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id)
   runJSONGenT $ do
-    valueM "companies" $ forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
+    valueM "companies" . forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
       value "id" . show $ ug ^. #id
       value "companyname" . T.unpack $ ug ^. #name
       value "companynumber" . T.unpack $ uga ^. #companyNumber
@@ -272,13 +265,13 @@ jsonUsersList = onlySalesOrAdmin $ do
   allUsers <- dbQuery $ GetUsersWithUserGroupNames textFilter sorting (offset, limit)
 
   runJSONGenT $ do
-    valueM "users" $ forM (allUsers) $ \(user, ugname) -> runJSONGenT $ do
-      value "id" $ show $ user ^. #id
-      value "username" $ T.unpack $ getFullName user
-      value "email" $ T.unpack $ getEmail user
-      value "companyposition" $ T.unpack $ user ^. #info % #companyPosition
+    valueM "users" . forM allUsers $ \(user, ugname) -> runJSONGenT $ do
+      value "id" . show $ user ^. #id
+      value "username" . T.unpack $ getFullName user
+      value "email" . T.unpack $ getEmail user
+      value "companyposition" . T.unpack $ user ^. #info % #companyPosition
       value "company" . T.unpack $ ugname
-      value "phone" $ T.unpack $ user ^. #info % #phone
+      value "phone" . T.unpack $ user ^. #info % #phone
       value "tos" $ formatTimeISO <$> (user ^. #hasAcceptedTOS)
       value "twofactor_active" $ user ^. #totpActive
 
@@ -299,7 +292,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
         (True , _   ) -> dbUpdate $ DeleteUserCallbackScheme uid -- Delete callback if textbox emptied
         (False, True) -> return () -- Don't update if no change
         (False, False) ->
-          dbUpdate $ UpdateUserCallbackScheme uid (ConstantUrlSchemeV2 $ newUrl)
+          dbUpdate $ UpdateUserCallbackScheme uid (ConstantUrlSchemeV2 newUrl)
     Just _ -> return () -- Do not allow changing the callback if an existing other type is there
 
   -- Set whether 2FA is mandatory
@@ -307,52 +300,49 @@ handleUserChange uid = onlySalesOrAdmin $ do
   void . dbUpdate . SetUserTotpIsMandatory uid $ Just "true" == maybeNewTotpIsMandatory
 
   museraccounttype <- getField "useraccounttype"
-  olduser          <- guardJustM $ dbQuery $ GetUserByID uid
+  olduser          <- guardJustM . dbQuery $ GetUserByID uid
   user             <- case (museraccounttype, olduser ^. #isCompanyAdmin) of
     (Just "companyadminaccount", False) -> do
       --then we just want to make this account an admin
-      newuser <- guardJustM $ do
-        void $ dbUpdate $ SetUserCompanyAdmin uid True
-        void $ dbUpdate $ LogHistoryDetailsChanged
+      guardJustM $ do
+        void . dbUpdate $ SetUserCompanyAdmin uid True
+        void . dbUpdate $ LogHistoryDetailsChanged
           uid
           (ctx ^. #ipAddr)
           (ctx ^. #time)
           [("is_company_admin", "false", "true")]
           (ctx ^? #maybeUser % _Just % #id)
         dbQuery $ GetUserByID uid
-      return newuser
     (Just "companystandardaccount", True) -> do
       --then we just want to downgrade this account to a standard
-      newuser <- guardJustM $ do
-        void $ dbUpdate $ SetUserCompanyAdmin uid False
-        void $ dbUpdate $ LogHistoryDetailsChanged
+      guardJustM $ do
+        void . dbUpdate $ SetUserCompanyAdmin uid False
+        void . dbUpdate $ LogHistoryDetailsChanged
           uid
           (ctx ^. #ipAddr)
           (ctx ^. #time)
           [("is_company_admin", "true", "false")]
           (ctx ^? #maybeUser % _Just % #id)
         dbQuery $ GetUserByID uid
-      return newuser
     _ -> return olduser
   infoChange     <- getUserInfoChange
   internalTagOps <- fromMaybe [] <$> getFieldTags "userinternaltags"
   externalTagOps <- fromMaybe [] <$> getFieldTags "companyexternaltags"
   let applyChanges = do
-        void $ dbUpdate $ SetUserInfo uid $ infoChange $ user ^. #info
-        void $ dbUpdate $ LogHistoryUserInfoChanged uid
+        void . dbUpdate $ SetUserInfo uid (infoChange $ user ^. #info)
+        void . dbUpdate $ LogHistoryUserInfoChanged uid
                                                     (ctx ^. #ipAddr)
                                                     (ctx ^. #time)
                                                     (user ^. #info)
                                                     (infoChange $ user ^. #info)
                                                     (ctx ^? #maybeUser % _Just % #id)
         settingsChange <- getUserSettingsChange
-        void $ dbUpdate $ SetUserSettings uid $ settingsChange $ user ^. #settings
+        void . dbUpdate $ SetUserSettings uid (settingsChange $ user ^. #settings)
         void $ dbUpdate SetUserTags
           { userID       = user ^. #id
           , internalTags = updateTags (user ^. #internalTags) internalTagOps
           , externalTags = updateTags (user ^. #externalTags) externalTagOps
           }
-        return ()
   if infoChange (user ^. #info) ^. #email /= user ^. #info % #email
     then do
       -- email address changed, check if new one is not used
@@ -370,15 +360,15 @@ handleUserChange uid = onlySalesOrAdmin $ do
 {- | Handling user password change. -}
 handleUserPasswordChange :: Kontrakcja m => UserID -> m JSValue
 handleUserPasswordChange uid = onlySalesOrAdmin $ do
-  user         <- guardJustM $ dbQuery $ GetUserByID uid
+  user         <- guardJustM . dbQuery $ GetUserByID uid
   password     <- guardJustM $ getField "password"
   passwordhash <- createPassword password
   ctx          <- getContext
   let time     = ctx ^. #time
       ipnumber = ctx ^. #ipAddr
       admin    = ctx ^. #maybeUser
-  void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
-  void $ dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
+  void . dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+  void . dbUpdate $ LogHistoryPasswordSetup (user ^. #id)
                                             ipnumber
                                             time
                                             (view #id <$> admin)
@@ -387,41 +377,35 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
 
 handleDeleteInvite :: Kontrakcja m => UserGroupID -> UserID -> m ()
 handleDeleteInvite ugid uid = onlySalesOrAdmin $ do
-  void $ dbUpdate $ RemoveUserGroupInvite [ugid] uid
-  return ()
+  void . dbUpdate $ RemoveUserGroupInvite [ugid] uid
 
 handleDeleteUser :: Kontrakcja m => UserID -> m ()
 handleDeleteUser uid = onlySalesOrAdmin $ do
-  void $ dbUpdate $ RemoveUserUserGroupInvites uid
-  void $ dbUpdate $ DeleteUserCallbackScheme uid
-  void $ dbUpdate $ DeleteUser uid
-  return ()
+  void . dbUpdate $ RemoveUserUserGroupInvites uid
+  void . dbUpdate $ DeleteUserCallbackScheme uid
+  void . dbUpdate $ DeleteUser uid
 
 handleDisable2FAForUser :: Kontrakcja m => UserID -> m ()
 handleDisable2FAForUser uid = onlySalesOrAdmin $ do
   ctx  <- getContext
-  user <- guardJustM $ dbQuery $ GetUserByID uid
-  if user ^. #totpActive
-    then do
-      r <- dbUpdate $ DisableUserTOTP uid
-      if r
-        then do
-          void $ dbUpdate $ LogHistoryTOTPDisable uid (ctx ^. #ipAddr) (ctx ^. #time)
-          return ()
-        else internalError
-    else return ()
+  user <- guardJustM . dbQuery $ GetUserByID uid
+  when (user ^. #totpActive) $ do
+    r <- dbUpdate $ DisableUserTOTP uid
+    if r
+      then void . dbUpdate $ LogHistoryTOTPDisable uid (ctx ^. #ipAddr) (ctx ^. #time)
+      else internalError
 
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
   newugid <- guardJustM $ readField "companyid"
-  (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome newugid) >>= \case
+  (view #id <$>) <$> dbQuery (FolderGetUserGroupHome newugid) >>= \case
     Nothing         -> internalError
     Just newugfdrid -> do
-      void $ dbUpdate $ SetUserUserGroup uid newugid
-      void $ dbUpdate $ SetUserCompanyAdmin uid False
+      void . dbUpdate $ SetUserUserGroup uid newugid
+      void . dbUpdate $ SetUserCompanyAdmin uid False
       let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
-      void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
+      newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
+      void . dbUpdate . SetUserHomeFolder uid $ newhomefdrid
 
 handleMergeToOtherCompany :: Kontrakcja m => UserGroupID -> m ()
 handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
@@ -435,15 +419,15 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
         <+> "and retry."
     else do
       ugid_target <- guardJustM $ readField "companyid"
-      (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid_target) >>= \case
+      (view #id <$>) <$> dbQuery (FolderGetUserGroupHome ugid_target) >>= \case
         Nothing          -> internalError
         Just targetfdrid -> do
           users <- dbQuery $ UserGroupGetUsers ugid_source
           forM_ users $ \u -> do
-            void $ dbUpdate $ SetUserUserGroup (u ^. #id) ugid_target
+            void . dbUpdate $ SetUserUserGroup (u ^. #id) ugid_target
             let newhomefdr = set #parentID (Just targetfdrid) defaultFolder
-            newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
-            void $ dbUpdate . SetUserHomeFolder (u ^. #id) $ newhomefdrid
+            newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
+            void . dbUpdate . SetUserHomeFolder (u ^. #id) $ newhomefdrid
           invites <- dbQuery $ UserGroupGetInvites ugid_source
           forM_ invites $ \i ->
             void . dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)
@@ -451,8 +435,8 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
 handleCompanyChange ugid = onlySalesOrAdmin $ do
-  ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents ugid
-  logInfo "ugwp" $ object ["ugwp" .= (showt ugwp)]
+  ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
+  logInfo "ugwp" $ object ["ugwp" .= showt ugwp]
   mCompanyName           <- getField "companyname"
   mUGSettingsIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companysettingsisinherited"
@@ -487,10 +471,10 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
     . listToMaybe
     . catMaybes
     $ [newUG ^. #settings, ugwpSettings <$> ugwpOnlyParents ugwp]
-  logInfo "newsettings" $ object ["newsettings" .= (showt newSettings)]
+  logInfo "newsettings" $ object ["newsettings" .= showt newSettings]
   guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
   dbUpdate $ UserGroupUpdate newUG
-  return $ ()
+  return ()
 
 getFieldTags :: Kontrakcja m => Text -> m (Maybe [TagUpdate])
 getFieldTags fieldName = do
@@ -505,10 +489,10 @@ getFieldTags fieldName = do
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do
-  email    <- T.filter (/= ' ') <$> T.toLower <$> (guardJustM $ getField "email")
+  email    <- T.filter (/= ' ') . T.toLower <$> guardJustM (getField "email")
   fstname  <- guardJustM $ getField "fstname"
   sndname  <- guardJustM $ getField "sndname"
-  lang     <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
+  lang     <- guardJustM $ (langFromCode =<<) <$> getField "lang"
   ugFolder <- dbUpdate . FolderCreate $ defaultFolder
   ug       <-
     dbUpdate
@@ -520,7 +504,7 @@ handleCreateUser = onlySalesOrAdmin $ do
   freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
   let freeDocumentsCount = 3
       freeDocuments =
-        (freeDocumentTokensFromValues freeDocumentsCount freeDocumentsValidity)
+        freeDocumentTokensFromValues freeDocumentsCount freeDocumentsValidity
   dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) freeDocuments
   runJSONGenT $ case muser of
     Nothing -> do
@@ -535,7 +519,7 @@ handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
   email   <- getCriticalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
-  lang    <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
+  lang    <- guardJustM $ (langFromCode =<<) <$> getField "lang"
   admin   <- isFieldSet "iscompanyadmin"
   muser   <- createNewUserByAdmin email (fstname, sndname) (ugid, admin) lang
   runJSONGenT $ case muser of
@@ -671,7 +655,7 @@ getUserGroupAddressChange = do
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
-  mlang <- join <$> fmap langFromCode <$> getField "userlang"
+  mlang <- (langFromCode =<<) <$> getField "userlang"
   return $ maybe identity (#lang .~) mlang
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
@@ -685,12 +669,12 @@ getUserInfoChange = do
   museremail           <- fmap Email <$> getField "useremail"
   return $ \userInfo ->
     userInfo
-      & (maybe identity (#firstName .~) muserfstname)
-      & (maybe identity (#lastName .~) musersndname)
-      & (maybe identity (#personalNumber .~) muserpersonalnumber)
-      & (maybe identity (#companyPosition .~) musercompanyposition)
-      & (maybe identity (#phone .~) muserphone)
-      & (maybe identity (#email .~) museremail)
+      & maybe identity (#firstName .~)       muserfstname
+      & maybe identity (#lastName .~)        musersndname
+      & maybe identity (#personalNumber .~)  muserpersonalnumber
+      & maybe identity (#companyPosition .~) musercompanyposition
+      & maybe identity (#phone .~)           muserphone
+      & maybe identity (#email .~)           museremail
 
 jsonDocuments :: Kontrakcja m => m Response
 jsonDocuments = onlyAdmin $ do
@@ -702,15 +686,15 @@ jsonDocuments = onlyAdmin $ do
 
   requestedFilters <- getFieldBS "filter" >>= \case
     Just paramValue -> case Aeson.eitherDecode paramValue of
-      Right js -> case (Unjson.parse Unjson.unjsonDef js) of
-        (Result res []) -> return $ join $ toDocumentFilter (adminUser ^. #id) <$> res
+      Right js -> case Unjson.parse Unjson.unjsonDef js of
+        (Result res []) -> return $ toDocumentFilter (adminUser ^. #id) =<< res
         _               -> internalError
       Left _ -> internalError
     Nothing -> return []
 
   requestedSorting <- getFieldBS "sorting" >>= \case
     Just paramValue -> case Aeson.eitherDecode paramValue of
-      Right js -> case (Unjson.parse Unjson.unjsonDef js) of
+      Right js -> case Unjson.parse Unjson.unjsonDef js of
         (Result res []) -> return $ toDocumentSorting <$> res
         _               -> internalError
       Left _ -> internalError
@@ -733,12 +717,11 @@ jsonDocuments = onlyAdmin $ do
 
 
 handleBackdoorQuery :: Kontrakcja m => m Response
-handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
+handleBackdoorQuery = onlySalesOrAdmin . onlyBackdoorOpen $ do
   emailAddress <- guardJustM $ getField "email_address"
   emailTitle   <- guardJustM $ getField "email_title"
-  startDate    <-
-    guardJustM
-      $ (join . fmap (MinutesTime.parseTimeISO . T.unpack) <$> getField "start_date")
+  startDate    <- guardJustM
+    (((MinutesTime.parseTimeISO . T.unpack) =<<) <$> getField "start_date")
   memail <- dbQuery $ GetEmailForRecipient emailAddress emailTitle startDate
   case memail of
     Nothing    -> respond404
@@ -747,18 +730,18 @@ handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
 sendInviteAgain :: Kontrakcja m => m ()
 sendInviteAgain = onlySalesOrAdmin $ do
   uid  <- guardJustM $ readField "userid"
-  user <- guardJustM $ dbQuery $ GetUserByID uid
+  user <- guardJustM . dbQuery $ GetUserByID uid
   sendNewUserMail user
 
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
-resealFile docid = onlyAdmin $ withDocumentID docid $ do
+resealFile docid = onlyAdmin . withDocumentID docid $ do
   logInfo_ "Trying to reseal document (only superadmin can do that)"
   ctx      <- getContext
   actor    <- guardJust $ mkAdminActor ctx
   document <- dbQuery $ GetDocumentByDocumentID docid
   guardNoPades document
-  void $ dbUpdate $ InsertEvidenceEvent ResealedPDF (return ()) actor
+  void . dbUpdate $ InsertEvidenceEvent ResealedPDF (return ()) actor
   void $ postDocumentClosedActions False True
   return LoopBack
 
@@ -772,7 +755,7 @@ guardNoPades doc = do
 -- This method can be used to force postDocumentPendingChange on a doc
 -- e.g. when everybody signed but doc is still pending
 triggerPostPending :: Kontrakcja m => DocumentID -> m KontraLink
-triggerPostPending did = onlyAdmin $ withDocumentID did $ do
+triggerPostPending did = onlyAdmin . withDocumentID did $ do
   logInfo_
     "Trying to trigger postDocumentPendingChange on document (only superadmin can do that)"
   doc <- dbQuery $ GetDocumentByDocumentID did
@@ -807,7 +790,7 @@ daveDocument documentid = onlyAdmin $ do
                 (documentsignatorylinks document)
             couldBeResealed =
               everybodySignedAndStatusIn [Closed, DocumentError]
-                && (documentsealingmethod document)
+                && documentsealingmethod document
                 == Guardtime
             couldBeClosed  = everybodySignedAndStatusIn [DocumentError, Pending]
             callbackResult = fromMaybe "Unknown" mCallbackResult
@@ -820,7 +803,7 @@ daveDocument documentid = onlyAdmin $ do
         F.value "istemplate" $ documenttype document == Template
         entryPointFields ctx
       return $ Right r
-    else return $ Left $ LinkDaveDocument documentid
+    else return . Left $ LinkDaveDocument documentid
 
 {- |
    Used by super users to inspect a particular signatory link.
@@ -839,7 +822,7 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
 -}
 daveUser :: Kontrakcja m => UserID -> m Text
 daveUser userid = onlyAdmin $ do
-  user <- guardJustM $ dbQuery $ GetUserByID userid
+  user <- guardJustM . dbQuery $ GetUserByID userid
   return $ inspectXML user
 
 {- |
@@ -874,17 +857,17 @@ daveFile fileid _title = onlyAdmin $ do
           -- http2 doesnt like non-normalized utf8
           fname' = T.unpack $ ICU.normalize ICU.NFC fname
       return
-        $ setHeader "Content-Disposition" ("attachment;filename=" <> fname')
+        . setHeader "Content-Disposition" ("attachment;filename=" <> fname')
         $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 randomScreenshotForTest :: Kontrakcja m => m Response
 randomScreenshotForTest = do
   now <- currentTime
   let lastWeek = 7 `daysBefore` now
-  slid <- guardJustM $ dbQuery $ GetRandomSignatoryLinkIDThatSignedRecently lastWeek
+  slid <- guardJustM . dbQuery $ GetRandomSignatoryLinkIDThatSignedRecently lastWeek
   screenshots <- map snd <$> dbQuery (GetSignatoryScreenshots [slid])
   doc         <- dbQuery $ GetDocumentBySignatoryLinkID slid
-  elogEvents  <- dbQuery $ GetEvidenceLog $ documentid doc
+  elogEvents  <- dbQuery . GetEvidenceLog $ documentid doc
   let sigElogEvents = filter ((== Just slid) . evSigLink) elogEvents
   content <- renderTextTemplate "screenshotReview" $ do
     F.value "userAgent" $ evClientName <$> find (isJust . evClientName) sigElogEvents
@@ -900,18 +883,18 @@ randomScreenshotForTest = do
 
 handleAdminUserUsageStatsDays :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
-  user        <- guardJustM $ dbQuery $ GetUserByID uid
+  user        <- guardJustM . dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
-  if (user ^. #isCompanyAdmin && withCompany)
+  if user ^. #isCompanyAdmin && withCompany
     then getUsageStats PartitionByDay False (UsageStatsForUserGroup $ user ^. #groupID)
     else getUsageStats PartitionByDay False (UsageStatsForUser $ user ^. #id)
 
 
 handleAdminUserUsageStatsMonths :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsMonths uid = onlySalesOrAdmin $ do
-  user        <- guardJustM $ dbQuery $ GetUserByID uid
+  user        <- guardJustM . dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
-  if (user ^. #isCompanyAdmin && withCompany)
+  if user ^. #isCompanyAdmin && withCompany
     then getUsageStats PartitionByMonth False (UsageStatsForUserGroup $ user ^. #groupID)
     else getUsageStats PartitionByMonth False (UsageStatsForUser $ user ^. #id)
 
@@ -949,7 +932,7 @@ handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
   let newInvoicing =
         case (ugSubInvoicingType subscription, ugSubPaymentPlan subscription) of
           (InvoicingTypeNone    , _      ) -> None
-          (InvoicingTypeBillItem, mpp@_  ) -> BillItem mpp
+          (InvoicingTypeBillItem, mpp    ) -> BillItem mpp
           (InvoicingTypeInvoice , Just pp) -> Invoice pp
           (InvoicingTypeInvoice, Nothing) ->
             unexpectedError "payment plan missing for Invoice type"
@@ -979,7 +962,7 @@ handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
   children <- dbQuery . UserGroupGetAllChildrenRecursive $ root ^. #id
   return $ object
     [ "user_group_structure"
-        .= (ugWithChildrenToJson $ I.UserGroupWithChildren root children)
+        .= ugWithChildrenToJson (I.UserGroupWithChildren root children)
     ]
   where
     ugWithChildrenToJson (I.UserGroupWithChildren ug children) = object
@@ -1010,26 +993,20 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     internalError
   -- keep this 1to1 consistent with fields in the database
   domainJSON <- guardJustM $ getFieldBS "domain"
-  case Aeson.eitherDecode $ domainJSON of
+  case Aeson.eitherDecode domainJSON of
     Left err -> do
       logInfo "Error while parsing branding for adminonly" $ object ["error" .= err]
       internalError
-    Right js -> case (Unjson.parse unjsonBrandedDomain js) of
-      (Result newDomain []) -> do
-        void
-          $ dbUpdate
-          $ UpdateBrandedDomain
-          $ copy #id         obd
-          $ copy #mainDomain obd
-          $ newDomain
-        return ()
+    Right js -> case Unjson.parse unjsonBrandedDomain js of
+      (Result newDomain []) -> void . dbUpdate $ UpdateBrandedDomain
+        (copy #id obd $ copy #mainDomain obd newDomain)
       _ -> internalError
 
 unjsonBrandedDomain :: UnjsonDef BrandedDomain
 unjsonBrandedDomain =
   objectOf
-    $   pure I.BrandedDomain
-    <*> field "id"              (^. #id)              "Id of a branded domain (unique)"
+    $   I.BrandedDomain
+    <$> field "id"              (^. #id)              "Id of a branded domain (unique)"
     <*> field "mainDomain"      (^. #mainDomain)      "Is this a main domain"
     <*> field "url"             (^. #url)             "URL that will match this domain"
     <*> field "smsOriginator"   (^. #smsOriginator)   "Originator for text messages"
@@ -1044,10 +1021,8 @@ unjsonBrandedDomain =
           (^. #favicon)
           "Favicon"
           (invmap
-            (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') l)
-            (\l ->
-              BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode l
-            )
+            (B64.decodeLenient . BSC8.pack . drop 1 . dropWhile (',' /=))
+            (BSC8.unpack . BS.append (BSC8.pack "data:image/png;base64,") . B64.encode)
             unjsonDef
           )
     <*> field "participantColor1" (^. #participantColor1) "Participant 1 color"
@@ -1072,7 +1047,7 @@ unjsonBrandedDomainsList = objectOf
 
 createBrandedDomain :: Kontrakcja m => m JSValue
 createBrandedDomain = do
-  bdID <- dbUpdate $ NewBrandedDomain
+  bdID <- dbUpdate NewBrandedDomain
   runJSONGenT $ do
     value "id" (show bdID)
 
@@ -1080,6 +1055,6 @@ handleTransferDocument :: Kontrakcja m => DocumentID -> m ()
 handleTransferDocument did = onlySalesOrAdmin $ do
   newuid <- guardJustM $ readField "userid"
   doc    <- dbQuery $ GetDocumentByDocumentID did
-  if (documenttype doc == Template)
+  if documenttype doc == Template
     then dbUpdate $ TransferDocument did newuid
     else internalError

@@ -14,7 +14,7 @@ ensureHexRGB c = case getAllTextSubmatches $ c =~ rgbNotationRegex of
     rgbNotationRegex = "rgb\\(([0-9]+),([0-9]+),([0-9]+)\\)" :: String
 
     dec2HEX :: String -> Text
-    dec2HEX s = T.pack $ pad0 $ showHex (read (T.pack s) :: Int) ""
+    dec2HEX s = T.pack . pad0 $ showHex (read (T.pack s) :: Int) ""
 
     pad0 [x] = ['0', x]
     pad0 s   = s

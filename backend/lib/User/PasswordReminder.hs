@@ -33,14 +33,14 @@ getPasswordReminderUser
 getPasswordReminderUser uid token = runMaybeT $ do
   Just pr <- dbQuery $ GetPasswordReminder uid
   guard $ prToken pr == token
-  Just user <- dbQuery $ GetUserByID $ prUserID pr
+  Just user <- dbQuery . GetUserByID $ prUserID pr
   return user
 
 newPasswordReminder
   :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m PasswordReminder
 newPasswordReminder uid = do
   token   <- random
-  expires <- minutesAfter (12 * 60) `liftM` currentTime
+  expires <- minutesAfter (12 * 60) <$> currentTime
   dbUpdate . CreatePasswordReminder $ PasswordReminder uid expires 9 token
 
 newPasswordReminderLink
@@ -56,22 +56,22 @@ data DeleteExpiredPasswordReminders = DeleteExpiredPasswordReminders
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredPasswordReminders () where
   update DeleteExpiredPasswordReminders = do
     now <- currentTime
-    runQuery_ $ sqlDelete "password_reminders" $ sqlWhere $ "expires <" <?> now
+    runQuery_ . sqlDelete "password_reminders" $ sqlWhere ("expires <" <?> now)
 
-data GetPasswordReminder = GetPasswordReminder UserID
+newtype GetPasswordReminder = GetPasswordReminder UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetPasswordReminder (Maybe PasswordReminder) where
   query (GetPasswordReminder user_id) = do
     now <- currentTime
-    runQuery_ $ sqlSelect "password_reminders" $ do
+    runQuery_ . sqlSelect "password_reminders" $ do
       mapM_ sqlResult selectPasswordReminderSelectorsList
       sqlWhereEq "user_id" user_id
       sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchPasswordReminder
 
-data CreatePasswordReminder = CreatePasswordReminder PasswordReminder
+newtype CreatePasswordReminder = CreatePasswordReminder PasswordReminder
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreatePasswordReminder PasswordReminder where
   update (CreatePasswordReminder PasswordReminder {..}) = do
-    runQuery_ $ sqlInsert "password_reminders" $ do
+    runQuery_ . sqlInsert "password_reminders" $ do
       sqlSet "user_id"         prUserID
       sqlSet "expires"         prExpires
       sqlSet "remained_emails" prRemainedEmails
@@ -79,16 +79,16 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreatePasswordReminder Password
       mapM_ sqlResult selectPasswordReminderSelectorsList
     fetchOne fetchPasswordReminder
 
-data UpdatePasswordReminder = UpdatePasswordReminder PasswordReminder
+newtype UpdatePasswordReminder = UpdatePasswordReminder PasswordReminder
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdatePasswordReminder Bool where
   update (UpdatePasswordReminder PasswordReminder {..}) = do
-    runQuery01 $ sqlUpdate "password_reminders" $ do
+    runQuery01 . sqlUpdate "password_reminders" $ do
       sqlSet "expires"         prExpires
       sqlSet "remained_emails" prRemainedEmails
       sqlSet "token"           prToken
       sqlWhereEq "user_id" prUserID
 
-data DeletePasswordReminder = DeletePasswordReminder UserID
+newtype DeletePasswordReminder = DeletePasswordReminder UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeletePasswordReminder Bool where
   update (DeletePasswordReminder user_id) = do
     runQuery01 . sqlDelete "password_reminders" $ do

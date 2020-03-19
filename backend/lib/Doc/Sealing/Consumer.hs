@@ -66,42 +66,37 @@ documentSealing guardTimeConf pdfToolsLambdaEnv templates pool mailNoreplyAddres
     , ccNotificationChannel = Just documentSealingNotificationChannel
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs      = maxRunningJobs
-    , ccProcessJob          = \docsealing@DocumentSealing {..} -> do
-                                logInfo "Document sealing started"
-                                  $ object [identifier dsDocumentID]
-                                mres <-
-                                  timeout fiveMins
-                                  . withPostgreSQL pool
-                                  . withDocumentID dsDocumentID
-                                  $ do
-                                      logInfo_ "Document lock acquired"
-                                      now0 <- currentTime
-                                      bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
-                                      doc <- theDocument
-                                      let lang = getLang doc
-                                          mc   = I.MailContext
-                                            { lang               = lang
-                                            , brandedDomain      = bd
-                                            , time               = now0
-                                            , mailNoreplyAddress = mailNoreplyAddress
-                                            }
-                                      logInfo_ "Running postDocumentClosedActions"
-                                      resultisok <-
-                                        runGuardTimeConfT guardTimeConf
-                                        . runPdfToolsLambdaT pdfToolsLambdaEnv
-                                        . runTemplatesT (lang, templates)
-                                        . runMailContextT mc
-                                        $ postDocumentClosedActions True False
+    , ccProcessJob          =
+      \docsealing@DocumentSealing {..} -> do
+        logInfo "Document sealing started" $ object [identifier dsDocumentID]
+        mres <- timeout fiveMins . withPostgreSQL pool . withDocumentID dsDocumentID $ do
+          logInfo_ "Document lock acquired"
+          now0 <- currentTime
+          bd   <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
+          doc  <- theDocument
+          let lang = getLang doc
+              mc   = I.MailContext { lang               = lang
+                                   , brandedDomain      = bd
+                                   , time               = now0
+                                   , mailNoreplyAddress = mailNoreplyAddress
+                                   }
+          logInfo_ "Running postDocumentClosedActions"
+          resultisok <-
+            runGuardTimeConfT guardTimeConf
+            . runPdfToolsLambdaT pdfToolsLambdaEnv
+            . runTemplatesT (lang, templates)
+            . runMailContextT mc
+            $ postDocumentClosedActions True False
 
-                                      case resultisok of
-                                        True  -> return $ Ok Remove
-                                        False -> Failed <$> onFailure Nothing docsealing
-                                case mres of
-                                  Nothing  -> fail "Document sealing timed out"
-                                  Just res -> do
-                                    logInfo_ "Document sealing finished"
-                                    return res
-    , ccOnException         = \ex -> onFailure (Just ex)
+          if resultisok
+            then return $ Ok Remove
+            else Failed <$> onFailure Nothing docsealing
+        case mres of
+          Nothing  -> fail "Document sealing timed out"
+          Just res -> do
+            logInfo_ "Document sealing finished"
+            return res
+    , ccOnException         = onFailure . Just
     }
   where
     fiveMins :: Int

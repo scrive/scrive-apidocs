@@ -27,21 +27,21 @@ import qualified API.V2 as V2
 
 padApplicationAPI :: Route (Kontra Response)
 padApplicationAPI = dir "api" $ choice
-  [ dir "frontend" $ padApplicationAPIV2
+  [ dir "frontend" padApplicationAPIV2
   , padApplicationAPIV1 -- Temporary backwards compatibility for clients accessing version-less API
-  , dir "v1" $ padApplicationAPIV1
-  , dir "v2" $ padApplicationAPIV2
+  , dir "v1" padApplicationAPIV1
+  , dir "v2" padApplicationAPIV2
   ]
 
 padApplicationAPIV1 :: Route (Kontra Response)
 padApplicationAPIV1 = choice
-  [ dir "checkclient" $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
-  , dir "padclienttheme" $ hGet $ toK0 $ apiCallGetPadClientTheme
+  [ (dir "checkclient" . hPostNoXTokenHttp . toK0) apiCallCheckClient
+  , (dir "padclienttheme" . hGet . toK0) apiCallGetPadClientTheme
   ]
 
 padApplicationAPIV2 :: Route (Kontra Response)
 padApplicationAPIV2 =
-  choice [dir "pad" $ dir "info" $ hGet $ toK0 $ apiCallGetPadInfo, padApplicationAPIV1]
+  choice [(dir "pad" . dir "info" . hGet . toK0) apiCallGetPadInfo, padApplicationAPIV1]
 
 apiCallCheckClient :: Kontrakcja m => m Response
 apiCallCheckClient = api $ do
@@ -60,7 +60,7 @@ apiCallGetPadClientTheme = api $ do
   ctx          <- getContext
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
-  theme        <- dbQuery $ GetTheme $ fromMaybe (ctx ^. #brandedDomain % #signviewTheme)
+  theme        <- dbQuery . GetTheme $ fromMaybe (ctx ^. #brandedDomain % #signviewTheme)
                                                  (ugwpUI ugwp ^. #signviewTheme)
   simpleAesonResponse $ Unjson.unjsonToJSON'
     (Options { pretty = True, indent = 2, nulls = True })
@@ -71,7 +71,7 @@ apiCallGetPadInfo :: Kontrakcja m => m Response
 apiCallGetPadInfo = V2.api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
-  return $ V2.Ok $ object
+  return . V2.Ok $ object
     [ "app_mode" .= padAppModeText (ugwpSettings ugwp ^. #padAppMode)
     , "e_archive_enabled" .= (ugwpSettings ugwp ^. #padEarchiveEnabled)
     ]

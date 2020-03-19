@@ -39,9 +39,9 @@ testAttachmentList = do
 
   now  <- currentTime
   fid  <- addNewRandomFile
-  attA <- dbUpdate $ NewAttachment (anna ^. #id) "a" fid $ systemActor now
-  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
-  _    <- dbUpdate $ NewAttachment (bob ^. #id) "c" fid $ systemActor now
+  attA <- dbUpdate . NewAttachment (anna ^. #id) "a" fid $ systemActor now
+  attB <- dbUpdate . NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  _    <- dbUpdate . NewAttachment (bob ^. #id) "c" fid $ systemActor now
   _    <- dbUpdate $ SetAttachmentsSharing (bob ^. #id) [attachmentid attB] True
 
   ctx  <- set #maybeUser (Just anna) <$> mkContext defaultLang
@@ -82,7 +82,7 @@ testAttachmentCreate = do
     $ GetAttachments [AttachmentsOfAuthorDeleteValue (bob ^. #id) False] [] []
 
   assertEqual "should set the title" (attachmenttitle att) "Terms and conditions"
-  assert $ not $ attachmentshared att
+  assert . not $ attachmentshared att
 
 testAttachmentSetSharing :: TestEnv ()
 testAttachmentSetSharing = do
@@ -94,8 +94,8 @@ testAttachmentSetSharing = do
   now  <- currentTime
 
   fid  <- addNewRandomFile
-  attA <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid $ systemActor now
-  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  attA <- dbUpdate . NewAttachment (bob ^. #id) "a" fid $ systemActor now
+  attB <- dbUpdate . NewAttachment (bob ^. #id) "b" fid $ systemActor now
 
   -- IDs are supposed to be sent as strings, e.g. ["3", "4"]
   let idsStr = show $ map (show . attachmentid) [attA, attB]
@@ -109,7 +109,7 @@ testAttachmentSetSharing = do
 
     attachments <- dbQuery
       $ GetAttachments [AttachmentsOfAuthorDeleteValue (bob ^. #id) False] [] []
-    assert $ not $ null attachments
+    assert . not $ null attachments
     assert $ all attachmentshared attachments
 
   do
@@ -121,8 +121,8 @@ testAttachmentSetSharing = do
 
     attachments <- dbQuery
       $ GetAttachments [AttachmentsOfAuthorDeleteValue (bob ^. #id) False] [] []
-    assert $ not $ null attachments
-    assert $ all (not . attachmentshared) attachments
+    assert . not $ null attachments
+    assert $ not (any attachmentshared attachments)
 
 testAttachmentDelete :: TestEnv ()
 testAttachmentDelete = do
@@ -134,8 +134,8 @@ testAttachmentDelete = do
   now  <- currentTime
 
   fid  <- addNewRandomFile
-  attA <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid $ systemActor now
-  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  attA <- dbUpdate . NewAttachment (bob ^. #id) "a" fid $ systemActor now
+  attB <- dbUpdate . NewAttachment (bob ^. #id) "b" fid $ systemActor now
 
   -- IDs are supposed to be sent as strings, e.g. ["3", "4"]
   let idsStr = show $ map (show . attachmentid) [attA, attB]
@@ -146,7 +146,7 @@ testAttachmentDelete = do
 
   attachments <- dbQuery
     $ GetAttachments [AttachmentsOfAuthorDeleteValue (bob ^. #id) True] [] []
-  assert $ not $ null attachments
+  assert . not $ null attachments
   assert $ all attachmentdeleted attachments
 
 testAttachmentDownload :: TestEnv ()
@@ -159,11 +159,11 @@ testAttachmentDownload = do
   now      <- currentTime
 
   fid      <- addNewRandomFile
-  att      <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid $ systemActor now
+  att      <- dbUpdate . NewAttachment (bob ^. #id) "a" fid $ systemActor now
   contents <- getFileIDContents fid
 
   req      <- mkRequest GET []
-  (res, _) <- runTestKontra req ctx $ attachmentsApiV2Download $ attachmentid att
+  (res, _) <- runTestKontra req ctx . attachmentsApiV2Download $ attachmentid att
   assertEqual "should return 200" (rsCode res) 200
   assertEqual "should return the contents of the file"
               (rsBody res)

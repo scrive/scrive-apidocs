@@ -23,7 +23,7 @@ readConfig
 readConfig logger path = readConfigEx logger path standardReadConfigOptions
 
 
-data ReadConfigOptions = ReadConfigOptions {
+newtype ReadConfigOptions = ReadConfigOptions {
   optReadConfigUncommentKeys :: Bool
   -- ^ Remove initial underscores from "commented out" keys (useful
   -- for testing).
@@ -70,7 +70,7 @@ readConfigEx logger path ReadConfigOptions {..} = do
     ud = unjsonDef
 
     removeTopLevelUnderscores :: Yaml.Value -> Yaml.Value
-    removeTopLevelUnderscores (Yaml.Object hm) = (Yaml.Object hm')
+    removeTopLevelUnderscores (Yaml.Object hm) = Yaml.Object hm'
       where
         hm' = H.foldlWithKey'
           (\m k v -> if "_" `Text.isPrefixOf` k
@@ -83,7 +83,7 @@ readConfigEx logger path ReadConfigOptions {..} = do
 
     logStringAndFail :: String -> m g
     logStringAndFail ex = do
-      logger $ ex
+      logger ex
       fail ex
     logYamlParseExceptionAndBlameJsonParser :: Yaml.ParseException -> m g
     logYamlParseExceptionAndBlameJsonParser ex = do
@@ -92,7 +92,7 @@ readConfigEx logger path ReadConfigOptions {..} = do
     logStringAndBlameJsonParser :: String -> m g
     logStringAndBlameJsonParser ex = do
       -- sadly parsing issues in aeson are reported as badly as anything else
-      logger $ ex
+      logger ex
       logStringAndFail
         $  "Configuration file '"
         ++ path

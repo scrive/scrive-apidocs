@@ -33,14 +33,14 @@ apiV1ForwardsCompatibilityTests env = testGroup
              testDocApiV1ReadyImpersonateEID
   ]
 
-jsonFP_new_file_saved :: FilePath
-jsonFP_new_file_saved = inTestDir "json/api_v1/forwards_comp_new_file_saved.json"
+jsonFpNewFileSaved :: FilePath
+jsonFpNewFileSaved = inTestDir "json/api_v1/forwards_comp_new_file_saved.json"
 
 testApiV1DoesNotBreakApiV2 :: TestEnv ()
 testApiV1DoesNotBreakApiV2 = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  (did, _)    <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
 
   updateAllBS <- readTestFile "json/api_v1/forwards_comp_req_update_all.json"
   let rq_update_params = [("document", inTextBS updateAllBS)]
@@ -57,8 +57,6 @@ testApiV1DoesNotBreakApiV2 = do
   -- API v2 does not, so results of update calls are different
   let rq_update_json2 = inTestDir "json/api_v1/forwards_comp_res_update_all2.json"
   void $ runApiJSONTest ctx POST (docApiV2Get did) [] 200 rq_update_json2
-
-  return ()
 
 testDocApiV1FromTemplateImpersonateEID :: TestEnv ()
 testDocApiV1FromTemplateImpersonateEID = do
@@ -100,7 +98,7 @@ testDocApiV1FromTemplateImpersonateEID = do
     (rsCode resFail)
 
   -- grant impersonate role again
-  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+  void . dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
 
   (resSucc, _) <- runTestKontra emptyPOSTRequest ctx $ apiCallV1CreateFromTemplate did
   assertEqual
@@ -148,7 +146,7 @@ testDocApiV1ReadyImpersonateEID = do
     (rsCode resFail)
 
   -- grant impersonate role again
-  void $ dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
+  void . dbUpdate . AccessControlCreateForUser uid $ EidImpersonatorAR ugid
 
   (resSucc, _) <- runTestKontra emptyPOSTRequest ctx $ apiCallV1Ready did
   assertEqual

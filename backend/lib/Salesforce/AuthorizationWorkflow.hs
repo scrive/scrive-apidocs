@@ -35,7 +35,7 @@ initAuthorizationWorkflowUrl mstate = do
     <> "&response_type=code"
     <> "&redirect_uri="
     <> salesforceRedirectUrl sc
-    <> maybe "" (\state -> "&state=" <> state) mstate
+    <> maybe "" ("&state=" <>) mstate
 
 {- Returns a refresh token, that we will get back when user agrees in salesforce to give us persmission (after following link from initAuthorizationWorkflowUrl) -}
 getRefreshTokenFromCode
@@ -69,7 +69,7 @@ getRefreshTokenFromCode code = do
     ExitFailure err -> do
       logInfo "Failed to receive token from Salesforce"
         $ object ["stderr" `equalsExternalBSL` stderr]
-      return $ Left $ "Connection to Salesforce (refresh) closed with " <> (showt err)
+      return . Left $ "Connection to Salesforce (refresh) closed with " <> showt err
     ExitSuccess -> case decode $ BSL.toString stdout of
       J.Ok js -> do
         mrt <- withJSValue js $ fromJSValueField "refresh_token"
@@ -212,7 +212,7 @@ stdoutFromStdoutWithHTTPCode stdoutWithCode =
 
 httpCodeFromStdoutWithHTTPCode :: BSL.ByteString -> Int
 httpCodeFromStdoutWithHTTPCode stdoutWithCode =
-  case reads $ BSL.unpack $ BSL.drop (lastEOLIndex stdoutWithCode + 1) stdoutWithCode of
+  case reads . BSL.unpack $ BSL.drop (lastEOLIndex stdoutWithCode + 1) stdoutWithCode of
     [(n, "")] -> n
     _         -> unexpectedError "Couldn't parse http status from curl output"
 

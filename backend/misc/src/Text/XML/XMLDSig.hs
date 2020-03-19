@@ -36,7 +36,7 @@ signXMLDSig user_privkey_file user_cert_file tmpdirsuffix xml = do
           xmlFileContent =
             T.encodeUtf8 . TL.toStrict . renderText TX.def . wrapXMLDSigTmpl . toXML $ xml
       logInfo "Temp file write" $ object
-        [ "bytes_written" .= (BS.length xmlFileContent)
+        [ "bytes_written" .= BS.length xmlFileContent
         , "originator" .= ("signXMLDSig" :: TL.Text)
         ]
 
@@ -51,19 +51,21 @@ signXMLDSig user_privkey_file user_cert_file tmpdirsuffix xml = do
             , xml_file
             ]
       (code, stdout, stderr) <- liftIO $ readProcessWithExitCode "xmlsec1" args BSL.empty
-      case (code == ExitSuccess) of
-        False -> do
-          logAttention "XMLDSig signing failed" $ object
-            [ "exit_code" .= show code
-            , "stdout" `equalsExternalBSL` stdout
-            , "stderr" `equalsExternalBSL` stderr
-            ]
-          return Nothing
-        True -> (Just <$>) . liftIO . BS.readFile $ signed_xml_file
+      if code == ExitSuccess
+        then (Just <$>) . liftIO . BS.readFile $ signed_xml_file
+        else
+          (do
+            logAttention "XMLDSig signing failed" $ object
+              [ "exit_code" .= show code
+              , "stdout" `equalsExternalBSL` stdout
+              , "stderr" `equalsExternalBSL` stderr
+              ]
+            return Nothing
+          )
   whenJust
     signed_xml_bs
     (\bs -> logInfo "Temp file read" $ object
-      ["bytes_read" .= (BS.length bs), "originator" .= ("signXMLDSig" :: TL.Text)]
+      ["bytes_read" .= BS.length bs, "originator" .= ("signXMLDSig" :: TL.Text)]
     )
   return signed_xml_bs
 
