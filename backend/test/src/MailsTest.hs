@@ -43,7 +43,7 @@ testBrandedDocumentMails :: TestEnv ()
 testBrandedDocumentMails = do
   ug     <- instantiateRandomUserGroup
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
-  void $ dbUpdate $ UserGroupUpdate (set #ui defaultUserGroupUI ug)
+  void . dbUpdate . UserGroupUpdate $ set #ui (Just defaultUserGroupUI) ug
   sendDocumentMails author
 
 testDocumentMails :: TestEnv ()

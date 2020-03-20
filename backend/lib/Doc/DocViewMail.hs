@@ -52,6 +52,7 @@ import User.Email
 import User.Model
 import User.UserAccountRequest
 import UserGroup.Model
+import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Color
@@ -709,43 +710,27 @@ documentMailWithDocLang
 documentMailWithDocLang doc mailname otherfields =
   documentMail doc doc mailname otherfields
 
-documentMailFields
-  :: (MonadDB m, MonadThrow m, Monad m') => Document -> MailContext -> m (Fields m' ())
-documentMailFields doc mctx = do
-  mug <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-    Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
-    Nothing   -> return Nothing
-  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #mailTheme % _Just) mug
-  theme <- dbQuery $ GetTheme themeid
-  return $ do
-    F.value "ctxhostpart" $ mctx ^. #brandedDomain % #url
-    F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
-    F.value "documenttitle" $ documenttitle doc
-    F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-    -- brandingdomainid and brandinguserid are needed only for
-    -- preview/email logo
-    F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
-    F.value "brandinguserid" (show <$> (maybesignatory =<< getAuthorSigLink doc))
-    brandingMailFields theme
+documentMailFields :: Monad m => Document -> MailContext -> Theme -> Fields m ()
+documentMailFields doc mctx theme = do
+  F.value "ctxhostpart" $ mctx ^. #brandedDomain % #url
+  F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
+  F.value "documenttitle" $ documenttitle doc
+  F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
+  -- brandingdomainid and brandinguserid are needed only for
+  -- preview/email logo
+  F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
+  F.value "brandinguserid" (show <$> (maybesignatory =<< getAuthorSigLink doc))
+  brandingMailFields theme
 
-otherMailFields
-  :: (MonadDB m, MonadThrow m, Monad m') => Maybe User -> MailContext -> m (Fields m' ())
-otherMailFields muser mctx = do
-  mug <- case view #id <$> muser of
-    Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
-    Nothing  -> return Nothing
-  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #mailTheme % _Just) mug
-  theme <- dbQuery $ GetTheme themeid
-  return $ do
-    F.value "ctxhostpart" $ mctx ^. #brandedDomain % #url
-    F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
-    -- brandingdomainid and brandinguserid are needed only for
-    -- preview/email logo
-    F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
-    F.value "brandinguserid" (show <$> view #id <$> muser)
-    brandingMailFields theme
+otherMailFields :: Monad m => Maybe User -> MailContext -> Theme -> Fields m ()
+otherMailFields muser mctx theme = do
+  F.value "ctxhostpart" $ mctx ^. #brandedDomain % #url
+  F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
+  -- brandingdomainid and brandinguserid are needed only for
+  -- preview/email logo
+  F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
+  F.value "brandinguserid" (show <$> view #id <$> muser)
+  brandingMailFields theme
 
 documentMail
   :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m)
@@ -756,19 +741,19 @@ documentMail
   -> m Mail
 documentMail haslang doc mailname otherfields = do
   mctx <- getMailContext
-  mug  <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-    Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
-    Nothing   -> return Nothing
-  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #mailTheme % _Just) mug
-  theme     <- dbQuery $ GetTheme themeid
-  allfields <- documentMailFields doc mctx
+  let domainthemeid = mctx ^. #brandedDomain % #mailTheme
+  themeid <- case join $ maybesignatory <$> getAuthorSigLink doc of
+    Just suid -> do
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ suid
+      return . fromMaybe domainthemeid $ ugwpUI ugwp ^. #mailTheme
+    Nothing -> return domainthemeid
+  theme <- dbQuery $ GetTheme themeid
   kontramaillocal (mctx ^. #mailNoreplyAddress)
                   (mctx ^. #brandedDomain)
                   theme
                   haslang
                   mailname
-    $  allfields
+    $  documentMailFields doc mctx theme
     >> otherfields
 
 otherMail
@@ -780,19 +765,19 @@ otherMail
 otherMail muser mailname otherfields = do
   let lang = fromMaybe defaultLang $ getLang <$> muser
   mctx <- getMailContext
-  mug  <- case view #id <$> muser of
-    Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
-    Nothing  -> return Nothing
-  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
-        $ preview (_Just % #ui % #mailTheme % _Just) mug
-  theme     <- dbQuery $ GetTheme themeid
-  allfields <- otherMailFields muser mctx
+  let domainthemeid = mctx ^. #brandedDomain % #mailTheme
+  themeid <- case view #id <$> muser of
+    Just uid -> do
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ uid
+      return . fromMaybe domainthemeid $ ugwpUI ugwp ^. #mailTheme
+    Nothing -> return domainthemeid
+  theme <- dbQuery $ GetTheme themeid
   kontramaillocal (mctx ^. #mailNoreplyAddress)
                   (mctx ^. #brandedDomain)
                   theme
                   lang
                   mailname
-    $  allfields
+    $  otherMailFields muser mctx theme
     >> otherfields
 
 brandingMailFields :: Monad m => Theme -> Fields m ()

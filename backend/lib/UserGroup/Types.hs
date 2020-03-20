@@ -17,6 +17,8 @@ module UserGroup.Types
   , ugwpFeaturesWithID
   , ugwpToList
   , ugwpUG
+  , ugwpUI
+  , ugwpUIWithID
   , ugwpRoot
   , ugwpAddChild
   , ugrFromUG
@@ -90,7 +92,7 @@ defaultChildUserGroup = UserGroup { id            = emptyUserGroupID
                                   , settings      = Nothing
                                   , invoicing     = None
                                   , address       = Nothing
-                                  , ui            = defaultUserGroupUI
+                                  , ui            = Nothing
                                   , features      = Nothing
                                   , internalTags  = S.empty
                                   , externalTags  = S.empty
@@ -105,7 +107,7 @@ fetchUserGroup
      , Composite UserGroupInvoicing
      , Maybe (Composite UserGroupSettings)
      , Maybe (Composite UserGroupAddress)
-     , Composite UserGroupUI
+     , Maybe (Composite UserGroupUI)
      , Maybe (Composite FeatureFlags)  -- for admins
      , Maybe (Composite FeatureFlags)
      , CompositeArray1 Tag
@@ -117,7 +119,7 @@ fetchUserGroup (id, parentGroupID, name, homeFolderID, cinvoicing, cinfos, caddr
     { settings     = unComposite <$> cinfos
     , invoicing    = unComposite cinvoicing
     , address      = unComposite <$> caddresses
-    , ui           = unComposite cuis
+    , ui           = unComposite <$> cuis
     , features     = Features
       <$> (unComposite <$> cAdminFeatureFlags)
       <*> (unComposite <$> cRegularFeatureFlags)
@@ -137,13 +139,13 @@ ugrFromUG ug = do
     BillItem _  -> Nothing         -- the root of usergroup tree must have:
     Invoice  pp -> Just pp         --   Invoice
   settings <- ug ^. #settings  --   Settings
-  address  <- ug ^. #address    --   Address
+  address  <- ug ^. #address   --   Address
   features <- ug ^. #features  --   Features
+  ui       <- ug ^. #ui        --   UI (aka user group branding)
   return $ UserGroupRoot
     { id           = ug ^. #id
     , name         = ug ^. #name
     , homeFolderID = ug ^. #homeFolderID
-    , ui           = ug ^. #ui
     , internalTags = ug ^. #internalTags
     , externalTags = ug ^. #externalTags
     , ..
@@ -157,7 +159,7 @@ ugFromUGRoot ugr = UserGroup { id            = ugr ^. #id
                              , invoicing     = Invoice $ ugr ^. #paymentPlan
                              , settings      = Just $ ugr ^. #settings
                              , address       = Just $ ugr ^. #address
-                             , ui            = ugr ^. #ui
+                             , ui            = Just $ ugr ^. #ui
                              , features      = Just $ ugr ^. #features
                              , internalTags  = ugr ^. #internalTags
                              , externalTags  = ugr ^. #externalTags
@@ -196,6 +198,12 @@ ugwpSettings = snd . ugwpInherit (^. #settings) (^. #settings)
 
 ugwpSettingsWithID :: UserGroupWithParents -> (UserGroupID, UserGroupSettings)
 ugwpSettingsWithID = ugwpInherit (^. #settings) (^. #settings)
+
+ugwpUI :: UserGroupWithParents -> UserGroupUI
+ugwpUI = snd . ugwpUIWithID
+
+ugwpUIWithID :: UserGroupWithParents -> (UserGroupID, UserGroupUI)
+ugwpUIWithID = ugwpInherit (^. #ui) (^. #ui)
 
 ugwpAddress :: UserGroupWithParents -> UserGroupAddress
 ugwpAddress = snd . ugwpInherit (^. #address) (^. #address)

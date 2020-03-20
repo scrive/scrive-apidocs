@@ -8,7 +8,8 @@ module.exports = React.createClass({
     description: React.PropTypes.string,
     maxLength: React.PropTypes.number,
     getValue: React.PropTypes.func,
-    setValue: React.PropTypes.func
+    setValue: React.PropTypes.func,
+    readonly: React.PropTypes.bool
   },
   render: function() {
     var self = this;
@@ -23,6 +24,7 @@ module.exports = React.createClass({
             infotext=""
             onChange={function(v) {self.props.setValue(v)}}
             maxLength={self.props.maxLength}
+            readonly={self.props.readonly}
           />
         </div>
       </div>

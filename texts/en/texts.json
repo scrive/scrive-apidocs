@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"If you delete the theme <strong class='put-theme-name-here'></strong> the <strong>Default</strong> theme will be used instead.",
 "_brandingEmailThemeTitle":"Email",
 "_brandingEnterNameOfThemeBellow":"Name of new theme",
+"_brandingIsInheritedExplanation":"No changes can be made to Themes and Settings. They are inherited from parent UserGroup.",
 "_brandingLoginThemeTitle":"Login",
 "_brandingNewTheme":"New theme",
 "_brandingNewThemeWithDots":"New theme...",

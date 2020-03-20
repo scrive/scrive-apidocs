@@ -426,7 +426,7 @@ testNewDocumentForNonCompanyUser = replicateM_ 10 $ do
 testNewDocumentForACompanyUser :: TestEnv ()
 testNewDocumentForACompanyUser = replicateM_ 10 $ do
   ug     <- instantiateRandomUserGroup
-  ugwp   <- guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id
+  ugwp   <- dbQuery . UserGroupGetWithParentsByUG $ ug
   result <- performNewDocumentWithRandomUser (Just ug) (Signable) "doc title"
   assertGoodNewDocument (Just ugwp) (Signable) "doc title" result
 

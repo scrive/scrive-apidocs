@@ -9,9 +9,10 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Button as Button
 import Bootstrap.Grid.Row as Row
-import Bootstrap.Form.Input as Input
 import Bootstrap.Form as Form
-import Html.Attributes exposing (selected, value, class, style, src, type_)
+import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.Form.Input as Input
+import Html.Attributes exposing (selected, value, class, style, src, type_, disabled)
 import Html.Events exposing (onInput, onClick)
 import Tuple exposing (..)
 import EnumExtra as Enum
@@ -26,6 +27,8 @@ import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 type alias EditUserGroupBrandingReadonly =
   { availableThemes : List Theme
   , domainThemes : Enum.Dict ThemeKind Theme
+  , brandingInheritable : Bool
+  , brandingInherited : Bool
   }
 
 type Msg = SetThemeMsg ThemeKind (Maybe ThemeID)
@@ -72,7 +75,7 @@ viewThemeSelector embed kind read state =
   in  Form.col
         [ Col.sm8, Col.md8, Col.lg8 ]
         [ Select.select
-          [ Select.onChange onSelect ]
+          [ Select.onChange onSelect, Select.disabled read.brandingInherited ]
           (List.map themeItem <| Maybe.cons (Enum.get kind read.domainThemes) read.availableThemes)
         ]
 
@@ -116,37 +119,71 @@ setFavicon content state =
 viewEditUserGroupBranding :
   { embed : Msg -> msg
   , doSaveUserGroupBranding : msg  -- does post request and pop-over
+  , doSetInheritUserGroupBranding : Bool -> msg
   } -> EditUserGroupBrandingReadonly -> UserGroupBranding -> Html msg
 viewEditUserGroupBranding
-  {embed, doSaveUserGroupBranding} read state =
+  {embed, doSaveUserGroupBranding, doSetInheritUserGroupBranding} read state =
   div []
     [ Form.row []
-        [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "Override favicon" ]
+      [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "Inheritance" ]
+      , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
+          [ Checkbox.checkbox
+            [ Checkbox.disabled <| not read.brandingInheritable
+            , Checkbox.onCheck doSetInheritUserGroupBranding
+            , Checkbox.checked read.brandingInherited ]
+            "Inherit branding"
+          , Form.help [] [ text "Inherit all branding options from the parent user group." ]
+          ]
+      ]
+    , Form.row []
+        [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "Favicon" ]
         , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
           [ div [] [case state.favicon of
               Just favicon -> img [ style "max-width" "50px", src favicon] []
               Nothing -> text "Not overridden"]
           , Button.button
-              [ Button.secondary, Button.attrs [ onClick (embed OpenFaviconFileSelectMsg), type_ "button" ] ]
+              [ Button.secondary
+              , Button.attrs
+                [ onClick (embed OpenFaviconFileSelectMsg)
+                , type_ "button"
+                , disabled read.brandingInherited
+                ]
+              ]
               [ text "Select image" ]
           , Button.button
-              [ Button.secondary, Button.attrs [ onClick (embed <| SetFaviconMsg ""), type_ "button" ] ]
+              [ Button.secondary
+              , Button.attrs
+                [ onClick (embed <| SetFaviconMsg "")
+                , type_ "button"
+                , disabled read.brandingInherited
+                ]
+              ]
               [ text "Reset" ]
           ]
         ]
     , Form.row []
       [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "Browser title" ]
       , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
-          [ Input.text [Input.attrs
-            [ value <| withDefault "" state.browserTitle, onInput (embed << SetBrowserTitleMsg) ] ]
+          [ Input.text
+            [ Input.attrs
+              [ value <| withDefault "" state.browserTitle
+              , onInput (embed << SetBrowserTitleMsg)
+              , disabled read.brandingInherited
+              ]
+            ]
           , Form.help [] [ text "The text at the top of the browser." ]
           ]
       ]
     , Form.row []
       [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "SMS Originator" ]
       , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
-          [ Input.text [Input.attrs
-            [ value <| withDefault "" state.smsOriginator, onInput (embed << SetSmsOriginatorMsg) ]]
+          [ Input.text
+            [ Input.attrs
+              [ value <| withDefault "" state.smsOriginator
+              , onInput (embed << SetSmsOriginatorMsg)
+              , disabled read.brandingInherited
+              ]
+            ]
           , Form.help [] [ text <| "The name displayed to the recipient when "
           ++ "receiving an SMS. Maximum 11 alpha-numeric characters." ]
           ]
@@ -162,7 +199,10 @@ viewEditUserGroupBranding
       , viewThemeSelector embed ServiceTheme read state ]
     , Form.row [ Row.rightSm ]
       [ Form.col [ Col.sm12 ]
-          [ Button.button [ Button.success, Button.attrs [ class "ml-sm-2", onClick doSaveUserGroupBranding ] ]
+          [ Button.button
+            [ Button.success
+            , Button.attrs [ class "ml-sm-2", onClick doSaveUserGroupBranding, disabled read.brandingInherited ]
+            ]
           [ text "Save changes" ] ]
       ]
     ]

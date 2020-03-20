@@ -3,7 +3,6 @@
 module Company.CompanyControl (
     routes
   , adminRoutes
-  , withCompanyAdmin
   -- Exported for tests
   , handleChangeCompanyBranding
   , handleGetCompanyBranding
@@ -22,6 +21,7 @@ import qualified Data.Unjson as Unjson
 
 import Company.JSON
 import DB
+import Doc.API.V2.JSON.Utils
 import Happstack.Fields
 import Kontra
 import Routing (hGet, hPost, toK0, toK1, toK2)
@@ -53,6 +53,7 @@ adminRoutes = choice
   , dir "companybranding" $ dir "domainthemes" $ hGet $ toK0 $ handleGetDomainThemes
   , (dir "companybranding" . dir "change" . hPost . toK1)
     (handleChangeCompanyBranding . Just)
+  , dir "companybranding" . dir "inherit" . hPost . toK1 $ handleInheritCompanyBranding
   , (dir "companybranding" . dir "newtheme" . hPost . toK2)
     $ \cid themeType -> handleNewTheme themeType (Just cid)
   , (dir "companybranding" . dir "updatetheme" . hPost . toK2)
@@ -65,13 +66,31 @@ adminRoutes = choice
  - Company branding
  -}
 
+-- modelled after user group api v2 and should be moved there!
 handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
-handleGetCompanyBranding mugid = do
-  withCompanyAdminOrAdminOnly mugid $ \ug -> do
-    return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
-                                  (unjsonUserGroupUIWithCompanyID $ ug ^. #id)
-                                  (ug ^. #ui)
+handleGetCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUG ug
+  let (ugforui, ui) = ugwpUIWithID ugwp
+      inheritedFrom = if ugforui == ug ^. #id then Nothing else Just ugforui
+      unjsonOptions = Options { pretty = True, indent = 2, nulls = True }
+      unjsonUserGroupUI' =
+        objectOf
+          $  unjsonUserGroupUIFields
+          <* fieldReadonly "companyid" (const $ ug ^. #id) "Company id"
+          <* fieldReadOnlyOpt "inherited_from"
+                              (const inheritedFrom)
+                              "Branding is inherited"
+          <* fieldReadOnlyOptBy unjsonOptions
+                                "inheritable_preview"
+                                (const . fmap ugwpUI $ ugwpOnlyParents ugwp)
+                                "What would be inherited"
+                                unjsonUserGroupUI
 
+  -- nulls in inheritable_preview are missing...
+  return $ Unjson.unjsonToJSON' unjsonOptions unjsonUserGroupUI' ui
+
+-- Note that this fails if we try to modify an inherited branding, since we
+-- don't _own_ the inherited themes!
 handleChangeCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m ()
 handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
   companyUIJSON <- guardJustM $ getFieldBS "companyui"
@@ -80,12 +99,22 @@ handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> d
       logInfo "Error while parsing company branding" $ object ["error" .= err]
       internalError
     Right js -> case (Unjson.parse unjsonUserGroupUI js) of
-      (Result ugui []) -> dbUpdate . UserGroupUpdate . set #ui ugui $ ug
+      (Result ugui []) -> dbUpdate . UserGroupUpdate . set #ui (Just ugui) $ ug
       _                -> internalError
+
+handleInheritCompanyBranding :: Kontrakcja m => UserGroupID -> m ()
+handleInheritCompanyBranding ugid = withSalesOrAdminOnly ugid $ \ug -> do
+  inherit <- guardJustM $ readField "inherit"
+  let newUI | inherit == ("true" :: String) = Nothing
+            | otherwise = Just . fromMaybe defaultUserGroupUI $ ug ^. #ui
+  dbUpdate $ UserGroupUpdateUI (ug ^. #id) newUI
 
 handleGetThemes :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  handleGetThemesForUserGroup $ ug ^. #id
+  inherited <- readField "inherited"
+  if inherited == Just ("true" :: String)
+    then handleGetThemesInheritableByUserGroup $ ug ^. #id
+    else handleGetThemesOwnedByUserGroup $ ug ^. #id
 
 handleGetDomainThemes :: Kontrakcja m => m Aeson.Value
 handleGetDomainThemes = do
@@ -93,9 +122,9 @@ handleGetDomainThemes = do
   handleGetThemesUsedByDomain bd
 
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
-handleGetSignviewTheme = withUserAndGroup $ \(_, ug) -> do
+handleGetSignviewTheme = withUserAndGroupWithParents $ \(_, ugwp) -> do
   bd <- view #brandedDomain <$> getContext
-  handleGetTheme $ fromMaybe (bd ^. #signviewTheme) (ug ^. #ui % #signviewTheme)
+  handleGetTheme $ fromMaybe (bd ^. #signviewTheme) (ugwpUI ugwp ^. #signviewTheme)
 
 handleNewTheme :: Kontrakcja m => String -> Maybe UserGroupID -> m Aeson.Value
 handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do

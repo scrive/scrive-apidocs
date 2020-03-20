@@ -29,8 +29,8 @@ brandingAdler32 ctx mugidandui = do
     case contextUser ctx of
       Nothing   -> return ""
       Just user -> do
-        ug <- dbQuery . UserGroupGetByUserID $ user ^. #id
-        userGroupUIAdler32 (ug ^. #id, ug ^. #ui)
+        ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+        userGroupUIAdler32 $ ugwpUIWithID ugwp
   return $ adler32Text $ T.concat $ [ad1, ad2, ad3, showt versionID]
 
 

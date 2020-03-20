@@ -19,6 +19,7 @@ import Theme.Model
 import User.Lang (defaultLang)
 import User.Types.SignupMethod
 import UserGroup.Model
+import UserGroup.Types
 import Util.MonadUtils
 
 companyControlTests :: TestEnvSt -> Test
@@ -45,7 +46,8 @@ test_handleGetCompanyJSON = do
                                                , signupMethod   = CompanyInvitation
                                                }
 
-  let ugui = ug ^. #ui
+  ugwp <- dbQuery . UserGroupGetWithParentsByUG $ ug
+  let ugui = ugwpUI ugwp
 
   ctx              <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
@@ -196,7 +198,8 @@ test_settingUIWithHandleChangeCompanyBranding = do
       )
     ]
   (_, _) <- runTestKontra req3 ctx $ handleChangeCompanyBranding Nothing
-  let ugui = ug ^. #ui
+  ugwp   <- dbQuery . UserGroupGetWithParentsByUG $ ug
+  let ugui = ugwpUI ugwp
   assertEqual "CompanyMailTheme  is empty"     (ugui ^. #mailTheme)     (Nothing)
   assertEqual "CompanySignviewTheme  is empty" (ugui ^. #signviewTheme) (Nothing)
   assertEqual "CompanyServiceTheme  is empty"  (ugui ^. #serviceTheme)  (Nothing)
@@ -229,12 +232,15 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
       <> "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
-  (_, _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
+  assertRaisesKontra (\(_ :: ThemesNotOwnedByUserGroup) -> True)
+    . void
+    . runTestKontra req1 ctx
+    $ handleChangeCompanyBranding Nothing
 
-  ug'    <- (dbQuery $ UserGroupGet (ug ^. #id))
+  ugwp' <- dbQuery . UserGroupGetWithParentsByUG $ ug
   assertEqual "Can't set domain theme as company theme"
-              (view (#ui % #mailTheme) <$> ug')
-              (Just $ ug ^. #ui % #mailTheme)
+              (ugwpUI ugwp' ^. #mailTheme)
+              Nothing
 
   -- Create theme for other company
   otherUg      <- instantiateRandomUserGroup
@@ -254,8 +260,11 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
       <> "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
-  (_, _) <- runTestKontra req2 ctx $ handleChangeCompanyBranding Nothing
-  ugui2  <- (view #ui <$>) <$> (dbQuery $ UserGroupGet (ug ^. #id))
+  assertRaisesKontra (\(_ :: ThemesNotOwnedByUserGroup) -> True)
+    . void
+    . runTestKontra req2 ctx
+    $ handleChangeCompanyBranding Nothing
+  ugwp2 <- dbQuery . UserGroupGetWithParentsByUG $ ug
   assertEqual "Can't set other company theme as company theme"
-              (view #mailTheme <$> ugui2)
-              (Just Nothing)
+              (ugwpUI ugwp2 ^. #mailTheme)
+              Nothing

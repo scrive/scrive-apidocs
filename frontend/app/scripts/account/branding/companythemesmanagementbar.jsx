@@ -25,31 +25,41 @@ module.exports = React.createClass({
       var selectedThemeID = getTheme();
       var availableThemesOptions = [];
 
-      _.each(themeList.list().models, function(t) {
+      if (model.companybranding().brandingIsInherited()) {
         availableThemesOptions.push({
-          name:  model.themeName(t.field("id")),
-          selected: selectedThemeID == t.field("id"),
-          onSelect : function() {
-            setTheme(t.field("id"));
-          }
+          name: "Inherited",
+          selected: true,
+          onSelect : function() {}
         });
-      });
-
-      availableThemesOptions = _.sortBy(availableThemesOptions,function(o) {return o.name.toLowerCase();});
-      availableThemesOptions.unshift({
-        name: localization.branding.defaultTheme,
-        value:"",
-        selected:selectedThemeID == undefined,
-        onSelect : function() {
-          setTheme(undefined);
-        }
-      })
-      availableThemesOptions.push({
-            name: localization.branding.newThemeWithDots,
+      } else {
+        _.each(themeList.list().models, function(t) {
+          availableThemesOptions.push({
+            name:  model.themeName(t.field("id")),
+            selected: selectedThemeID == t.field("id"),
             onSelect : function() {
-              self.opendNewThemeModal();
+              setTheme(t.field("id"));
             }
-      });
+          });
+        });
+
+        availableThemesOptions = _.sortBy(availableThemesOptions,function(o) {return o.name.toLowerCase();});
+        availableThemesOptions.unshift({
+          name: localization.branding.defaultTheme,
+          value:"",
+          selected:selectedThemeID == undefined,
+          onSelect : function() {
+            setTheme(undefined);
+          }
+        })
+
+        availableThemesOptions.push({
+              name: localization.branding.newThemeWithDots,
+              onSelect : function() {
+                self.opendNewThemeModal();
+              }
+        });
+      }
+
       return (
         <Select
           options={availableThemesOptions}
@@ -118,14 +128,16 @@ module.exports = React.createClass({
             }
           </div>
 
-          <div className="select-theme-save float-right">
-            <Button
-              text={localization.branding.save}
-              type="action"
-              className="save"
-              onClick={this.props.onSave}
-            />
-          </div>
+          {!model.companybranding().brandingIsInherited() &&
+            <div className="select-theme-save float-right">
+              <Button
+                text={localization.branding.save}
+                type="action"
+                className="save"
+                onClick={this.props.onSave}
+              />
+            </div>
+          }
 
         </div>
       );

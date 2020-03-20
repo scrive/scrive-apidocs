@@ -12,6 +12,7 @@ var _ = require("underscore");
 module.exports = Backbone.Model.extend({
   defaults: {
         companybranding: undefined,
+        inheritableThemesList : undefined,
         themeList : undefined,
         companyid : undefined,
         editedThemes : [],
@@ -23,6 +24,12 @@ module.exports = Backbone.Model.extend({
       companybranding : new CompanyBranding({companyid : this.companyid()}),
       themeList     : new ListModel({
         url: (this.companyid() ?  ("/adminonly/companyadmin/branding/companybranding/themes/" + this.companyid()) : "/account/company/companybranding/themes"),
+        dataFetcher:function(d) {return d.themes;},
+        idFetcher:function(d) {return d.field("id");},
+        loadLater:false
+      }),
+      inheritableThemesList : new ListModel({
+        url: (this.companyid() ?  ("/adminonly/companyadmin/branding/companybranding/themes/" + this.companyid() + "?inherited=true") : "/account/company/companybranding/themes?inherited=true"),
         dataFetcher:function(d) {return d.themes;},
         idFetcher:function(d) {return d.field("id");},
         loadLater:false

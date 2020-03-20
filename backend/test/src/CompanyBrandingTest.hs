@@ -21,6 +21,8 @@ import Theme.View
 import User.Lang (defaultLang)
 import User.Model
 import UserGroup.Model
+import UserGroup.Types
+import Util.MonadUtils
 
 companyBrandingTests :: TestEnvSt -> Test
 companyBrandingTests env = testGroup
@@ -210,6 +212,7 @@ testNormalUserCantChangeOrDeleteTheme = do
 testChangeCompanyUI :: TestEnv ()
 testChangeCompanyUI = do
   ug   <- instantiateRandomUserGroup
+  ugwp <- dbQuery . UserGroupGetWithParentsByUG $ ug
   user <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
@@ -220,7 +223,7 @@ testChangeCompanyUI = do
   newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   let ugui =
-        (ug ^. #ui)
+        ugwpUI ugwp
           & (#mailTheme ?~ themeID newTheme1)
           & (#signviewTheme ?~ themeID newTheme2)
           & (#serviceTheme ?~ themeID newTheme3)
@@ -232,12 +235,13 @@ testChangeCompanyUI = do
         ugui
   req1       <- mkRequest POST [("companyui", inTextBS newUgUIStr1)]
   ((), _)    <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
-  mugUIAfter <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
+  mugUIAfter <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
   assertEqual "User group UI has been changed" mugUIAfter (Just ugui)
 
 testNormalUseCantChangeCompanyUI :: TestEnv ()
 testNormalUseCantChangeCompanyUI = do
   ug         <- instantiateRandomUserGroup
+  ugwp       <- dbQuery . UserGroupGetWithParentsByUG $ ug
   user1      <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
   Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
@@ -249,7 +253,7 @@ testNormalUseCantChangeCompanyUI = do
   newTheme2  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   newTheme3  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
 
-  let oldUGUI = ug ^. #ui
+  let oldUGUI = ugwpUI ugwp
       newUGUI =
         oldUGUI
           & (#mailTheme ?~ themeID newTheme1)
@@ -265,12 +269,13 @@ testNormalUseCantChangeCompanyUI = do
   assertRaisesInternalError $ do
     ((), _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
     return ()
-  mugUIAfter <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
+  mugUIAfter <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
   assertEqual "User group UI has not been changed" mugUIAfter (Just oldUGUI)
 
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault :: TestEnv ()
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   ug            <- instantiateRandomUserGroup
+  ugwp          <- dbQuery . UserGroupGetWithParentsByUG $ ug
   ctx           <- mkContext defaultLang
 
   mainbd        <- dbQuery $ GetMainBrandedDomain
@@ -278,17 +283,17 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   newTheme      <- dbUpdate
     $ InsertNewThemeForUserGroup (ug ^. #id) signviewTheme { themeBrandColor = "#669713" }
   let newUgUI =
-        (ug ^. #ui)
+        ugwpUI ugwp
           & (#mailTheme ?~ themeID newTheme)
           & (#signviewTheme ?~ themeID newTheme)
           & (#serviceTheme ?~ themeID newTheme)
 
-  void $ dbUpdate $ UserGroupUpdate $ set #ui newUgUI ug
-  (Just ugui1) <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
+  void . dbUpdate . UserGroupUpdate $ set #ui (Just newUgUI) ug
+  (Just ugui1) <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
   adlerSum1    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui1)
 
-  void $ dbUpdate $ UserGroupUpdate $ set #ui (set #serviceTheme Nothing ugui1) ug
-  (Just ugui2) <- (view #ui <$>) <$> (dbQuery $ UserGroupGet $ ug ^. #id)
+  void $ dbUpdate $ UserGroupUpdate $ set #ui (Just $ set #serviceTheme Nothing ugui1) ug
+  (Just ugui2) <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
   adlerSum2    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui2)
 
   assertBool "Branding Adler32 should change after we stoped using theme for service"

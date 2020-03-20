@@ -98,8 +98,8 @@ userGroupUIForPage = do
   ctx <- getContext
   case ctx ^. #maybeUser of
     Just user -> do
-      ug <- dbQuery . UserGroupGetByUserID $ user ^. #id
-      return . Just $ (ug ^. #id, ug ^. #ui)
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+      return . Just $ ugwpUIWithID ugwp
     _ -> return Nothing
 
 currentSubscriptionJSON :: Kontrakcja m => m (Maybe A.Value)

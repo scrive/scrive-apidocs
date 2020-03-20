@@ -3,6 +3,7 @@ module Doc.API.V2.JSON.Utils (
 , unjsonEnum
 , nothingToNullDef
 , fieldReadOnlyOpt
+, fieldReadOnlyOptBy
 ) where
 
 import Data.Tuple
@@ -50,10 +51,32 @@ nothingToNullDef def =
 -- | Used for optional fields that are also read-only
 fieldReadOnlyOpt
   :: (Unjson a, Typeable a) => Text -> (s -> Maybe a) -> Text -> AltF.Ap (FieldDef s) ()
-fieldReadOnlyOpt name f desc = fieldReadonlyBy name f desc unjsonDefWithNull
+fieldReadOnlyOpt name f desc = fieldReadOnlyOptBy
+  (Options { pretty = False, indent = 4, nulls = False })
+  name
+  f
+  desc
+  unjsonDef
+
+-- | Used for optional fields that are also read-only with provided definition
+-- Hack! Should pattern match on UnjsonDef constructor instead of creating a
+-- SimpleUnjsonDef!
+fieldReadOnlyOptBy
+  :: (Typeable a)
+  => Options
+  -> Text
+  -> (s -> Maybe a)
+  -> Text
+  -> UnjsonDef a
+  -> AltF.Ap (FieldDef s) ()
+fieldReadOnlyOptBy opts name f desc def = fieldReadonlyBy name
+                                                          f
+                                                          desc
+                                                          (unjsonDefWithNull def)
   where
-    unjsonDefWithNull :: Unjson a => UnjsonDef (Maybe a)
-    unjsonDefWithNull =
-      SimpleUnjsonDef "ReadOnly" (\v -> Just <$> parse unjsonDef v) $ \mv -> case mv of
+    unjsonDefWithNull :: UnjsonDef a -> UnjsonDef (Maybe a)
+    unjsonDefWithNull def' =
+      SimpleUnjsonDef "ReadOnly" (\v -> Just <$> parse def' v) $ \mv -> case mv of
         Nothing -> Aeson.Null
-        Just v  -> unjsonToJSON unjsonDef v
+        Just v  -> unjsonToJSON' opts def' v
+

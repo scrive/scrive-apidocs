@@ -5,7 +5,8 @@
 -}
 module Theme.Control (
     handleGetTheme
-  , handleGetThemesForUserGroup
+  , handleGetThemesOwnedByUserGroup
+  , handleGetThemesInheritableByUserGroup
   , handleGetThemesForDomain
   , handleGetThemesUsedByDomain
   , handleNewThemeForDomain
@@ -28,6 +29,7 @@ import Happstack.Fields
 import Kontra
 import Theme.Model
 import Theme.View
+import UserGroup.Model
 import UserGroup.Types
 import Util.MonadUtils
 
@@ -38,8 +40,21 @@ handleGetTheme tid = do
                                 unjsonTheme
                                 theme
 
-handleGetThemesForUserGroup :: Kontrakcja m => UserGroupID -> m Aeson.Value
-handleGetThemesForUserGroup ugid = do
+handleGetThemesInheritableByUserGroup :: Kontrakcja m => UserGroupID -> m Aeson.Value
+handleGetThemesInheritableByUserGroup ugid = do
+  mugwp <- dbQuery $ UserGroupGetWithParents ugid
+  let themeIDs :: [ThemeID]
+      themeIDs = case ugwpOnlyParents =<< mugwp of
+        Just ugwop -> nub . catMaybes $ map (ugwpUI ugwop ^.)
+                                            [#mailTheme, #signviewTheme, #serviceTheme]
+        Nothing -> []  -- root user group can't inherit
+  themes <- mapM (dbQuery . GetTheme) themeIDs
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+                                unjsonThemesList
+                                themes
+
+handleGetThemesOwnedByUserGroup :: Kontrakcja m => UserGroupID -> m Aeson.Value
+handleGetThemesOwnedByUserGroup ugid = do
   themes <- dbQuery $ GetThemesForUserGroup ugid
   return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
                                 unjsonThemesList

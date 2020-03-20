@@ -2,6 +2,7 @@ var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var CompanyBrandingViewModel = require("./companybrandingviewmodel");
 var ThemeView = require("../../themes/themeview");
+var InheritedThemeView = require("../../themes/inheritedthemeview");
 var CompanySettingsView = require("./companybrandingsettingsview");
 var CompanyBrandingNewThemeView = require("./companybrandingnewthemeview");
 var CompanyThemesManagementBar = require("./companythemesmanagementbar");
@@ -111,12 +112,14 @@ module.exports = React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
+      var brandingIsInherited = model.companybranding().brandingIsInherited();
       if (!model.ready())
         return (<div/>);
       return (
         <div className="tab-container">
           <div className="tab-content">
             <div className="tab-viewer inner">
+              { /*if*/ brandingIsInherited && <h4> {localization.branding.isInheritedExplanation} </h4> }
               <div className="tab-viewer-header">
                 <ul className="tabs">
                   <li
@@ -154,7 +157,25 @@ module.exports = React.createClass({
                       onSave={function() {self.save();}}
                       onOpenNewThemeModal={this.props.onOpenNewThemeModal}
                     />
-                    {/*if*/ (model.mailThemeMode() && model.mailThemeForEditing() != undefined) &&
+                    {/*if*/ (brandingIsInherited && model.mailThemeMode()) &&
+                      <InheritedThemeView
+                        model={model.mailThemeForEditing() || model.domainMailTheme()}
+                        preview={EmailPreview}
+                      />
+                    }
+                    {/*else if*/ (brandingIsInherited && model.signviewThemeMode()) &&
+                      <InheritedThemeView
+                        model={model.signviewThemeForEditing() || model.domainSignviewTheme()}
+                        preview={SigningPreview}
+                      />
+                    }
+                    {/*else if*/ (brandingIsInherited && model.serviceThemeMode()) &&
+                      <InheritedThemeView
+                        model={model.serviceThemeForEditing() || model.domainServiceTheme()}
+                        preview={ServicePreview}
+                      />
+                    }
+                    {/*else if*/ (!brandingIsInherited && model.mailThemeMode() && model.mailThemeForEditing() != undefined) &&
                       <ThemeView
                         model={model.mailThemeForEditing()}
                         getDefaultName={function() {return model.newThemeDefaultName()}}
@@ -168,13 +189,13 @@ module.exports = React.createClass({
                         }
                       />
                     }
-                    {/*else*/ (model.mailThemeMode() && model.mailThemeForEditing() == undefined) &&
+                    {/*else if*/ (!brandingIsInherited && model.mailThemeMode() && model.mailThemeForEditing() == undefined) &&
                       <CompanyBrandingNewThemeView
                         model={model}
                         onOpenNewThemeModal={this.props.onOpenNewThemeModal}
                       />
                     }
-                    {/*else if*/ (model.signviewThemeMode() && model.signviewThemeForEditing() != undefined) &&
+                    {/*else if*/ (!brandingIsInherited && model.signviewThemeMode() && model.signviewThemeForEditing() != undefined) &&
                       <ThemeView
                         model={model.signviewThemeForEditing()}
                         getDefaultName={function() {return model.newThemeDefaultName()}}
@@ -188,13 +209,13 @@ module.exports = React.createClass({
                         }
                       />
                     }
-                    {/*else*/ (model.signviewThemeMode() && model.signviewThemeForEditing() == undefined) &&
+                    {/*else*/ (!brandingIsInherited && model.signviewThemeMode() && model.signviewThemeForEditing() == undefined) &&
                       <CompanyBrandingNewThemeView
                         model={model}
                         onOpenNewThemeModal={this.props.onOpenNewThemeModal}
                       />
                     }
-                    {/*else if*/ (model.serviceThemeMode() && model.serviceThemeForEditing() != undefined) &&
+                    {/*else if*/ (!brandingIsInherited && model.serviceThemeMode() && model.serviceThemeForEditing() != undefined) &&
                       <ThemeView
                         model={model.serviceThemeForEditing()}
                         getDefaultName={function() {return model.newThemeDefaultName()}}
@@ -208,7 +229,7 @@ module.exports = React.createClass({
                         }
                       />
                     }
-                    {/*else*/ (model.serviceThemeMode() && model.serviceThemeForEditing() == undefined) &&
+                    {/*else*/ (!brandingIsInherited && model.serviceThemeMode() && model.serviceThemeForEditing() == undefined) &&
                       <CompanyBrandingNewThemeView
                         model={model}
                         onOpenNewThemeModal={this.props.onOpenNewThemeModal}

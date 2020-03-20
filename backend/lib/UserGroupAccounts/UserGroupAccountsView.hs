@@ -28,6 +28,7 @@ import MinutesTime
 import Templates (renderTextTemplate)
 import Theme.Model
 import User.Model
+import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 
@@ -49,8 +50,9 @@ mailNewUserGroupUserInvite
   -> UTCTime
   -> m Mail
 mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
+  ugwp  <- dbQuery $ UserGroupGetWithParentsByUG ug
   theme <- dbQuery . GetTheme $ fromMaybe (ctx ^. #brandedDomain % #mailTheme)
-                                          (ug ^. #ui % #mailTheme)
+                                          (ugwpUI ugwp ^. #mailTheme)
   kontramaillocal (ctx ^. #mailNoreplyAddress)
                   (ctx ^. #brandedDomain)
                   theme
@@ -79,8 +81,9 @@ mailTakeoverSingleUserInvite
   -> KontraLink
   -> m Mail
 mailTakeoverSingleUserInvite ctx invited inviter ug link = do
+  ugwp  <- dbQuery $ UserGroupGetWithParentsByUG ug
   theme <- dbQuery . GetTheme $ fromMaybe (ctx ^. #brandedDomain % #mailTheme)
-                                          (ug ^. #ui % #mailTheme)
+                                          (ugwpUI ugwp ^. #mailTheme)
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal (ctx ^. #mailNoreplyAddress)
                   (ctx ^. #brandedDomain)

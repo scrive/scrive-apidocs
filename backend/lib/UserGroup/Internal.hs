@@ -111,7 +111,7 @@ data UserGroup = UserGroup
   , address       :: !(Maybe UserGroupAddress)
   , settings      :: !(Maybe UserGroupSettings)
   , invoicing     :: !UserGroupInvoicing
-  , ui            :: !UserGroupUI
+  , ui            :: !(Maybe UserGroupUI)
   , features      :: !(Maybe Features)
   , internalTags  :: !(S.Set Tag)
   , externalTags  :: !(S.Set Tag)

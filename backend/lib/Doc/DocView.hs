@@ -111,7 +111,7 @@ pageDocumentSignView ctx document siglink ad = do
       _ -> show LinkPreviewLockedImage
     F.value "b64documentdata" $ B64.encode $ docjson
     F.value "legaltext" $ ugwpSettings authorugwp ^. #legalText
-    standardPageFields ctx (Just (ugwpUG authorugwp ^. #id, ugwpUG authorugwp ^. #ui)) ad -- Branding for signview depends only on authors company
+    standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text
@@ -120,8 +120,8 @@ pageDocumentIdentifyView ctx document siglink ad = do
       useEIDHubForNemID = fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForDK
       useEIDHubForNOBankIDView =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOView
-  auser    <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  authorug <- dbQuery . UserGroupGetByUserID $ auser ^. #id
+  auser      <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  authorugwp <- dbQuery . UserGroupGetWithParentsByUserID $ auser ^. #id
 
   renderTextTemplate "pageDocumentIdentifyView" $ do
     F.value "documentid" . show $ documentid document
@@ -133,7 +133,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "useEIDHubForNemID" useEIDHubForNemID
     F.value "useEIDHubForNOBankIDView" useEIDHubForNOBankIDView
     F.value "previewLink" $ show LinkPreviewLockedImage
-    standardPageFields ctx (Just (authorug ^. #id, authorug ^. #ui)) ad -- Branding for signview depends only on authors company
+    standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company
 
 pageDocumentPadList :: Kontrakcja m => Context -> AnalyticsData -> m Text
 pageDocumentPadList ctx ad = do

@@ -5,17 +5,20 @@ module UserGroup.Model (
   , UserGroupGet(..)
   , UserGroupGetByUserID(..)
   , UserGroupGetWithParents(..)
+  , UserGroupGetWithParentsByUG(..)
   , UserGroupGetWithParentsByUserID(..)
   , UserGroupsGetFiltered(..)
   , FindOldUserGroups(..)
   , UserGroupUpdate(..)
   , UserGroupUpdateSettings(..)
   , UserGroupUpdateAddress(..)
+  , UserGroupUpdateUI(..)
   , UserGroupGetImmediateChildren(..)
   , UserGroupGetAllChildrenRecursive(..)
   , UserGroupsFormCycle(..)
   , UserGroupIsInvalidAsRoot(..)
   , UserGroupFilter(..)
+  , ThemesNotOwnedByUserGroup(..)
   , ugGetChildrenInheritingProperty
   , minUserGroupIdleDocTimeout
   , maxUserGroupIdleDocTimeout
@@ -34,6 +37,7 @@ import FeatureFlags.Model
 import FeatureFlags.Tables
 import Tag (TagDomain(..))
 import Tag.Tables
+import Theme.Model
 import User.UserID
 import UserGroup.Tables
 import UserGroup.Types
@@ -71,15 +75,16 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlSet "user_group_id" ugid
       sqlSet "invoicing_type" . ugInvoicingType $ ug
       sqlSet "payment_plan" . ugPaymentPlan $ ug
-    -- insert UI
-    let ugui = ug ^. #ui
-    runQuery_ . sqlInsert "user_group_uis" $ do
-      sqlSet "user_group_id" ugid
-      -- We are not setting themes here, because UserGroup, which does not
-      -- exist yet, cannot own any themes.
-      sqlSet "browser_title" $ ugui ^. #browserTitle
-      sqlSet "sms_originator" $ ugui ^. #smsOriginator
-      sqlSet "favicon" $ ugui ^. #favicon
+
+    -- Insert UI. We are not setting themes here, because a newly created
+    -- UserGroup doesn't _own_ any themes yet (they have to be created after the
+    -- user group has been created).
+    whenJust (ug ^. #ui) $ \ui ->
+      insertUserGroupUI ugid
+        $ ui
+        & (#mailTheme .~ Nothing)
+        & (#signviewTheme .~ Nothing)
+        & (#serviceTheme .~ Nothing)
 
     -- insert Features
     whenJust (ug ^. #features) $ insertFeatures ugid
@@ -145,6 +150,39 @@ insertUserGroupAddress ugid uga = runQuery_ . sqlInsert "user_group_addresses" $
   sqlSet "zip" $ uga ^. #zipCode
   sqlSet "city" $ uga ^. #city
   sqlSet "country" $ uga ^. #country
+
+insertUserGroupUI :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupUI -> m ()
+insertUserGroupUI ugid ui = do
+  runQuery_ . sqlInsert "user_group_uis" $ do
+    sqlSet "user_group_id" ugid
+    sqlSet "browser_title" $ ui ^. #browserTitle
+    sqlSet "sms_originator" $ ui ^. #smsOriginator
+    sqlSet "favicon" $ ui ^. #favicon
+
+  -- make sure we own the themes we are about to reference
+  ownedthemes <- dbQuery $ GetThemesForUserGroup ugid
+  let ownedids = map themeID ownedthemes
+  let themeids = catMaybes [ui ^. #mailTheme, ui ^. #signviewTheme, ui ^. #serviceTheme]
+  if all (`elem` ownedids) themeids
+    then runQuery_ . sqlUpdate "user_group_uis" $ do
+      sqlWhereEq "user_group_id" ugid
+      sqlSet "mail_theme" $ ui ^. #mailTheme
+      sqlSet "signview_theme" $ ui ^. #signviewTheme
+      sqlSet "service_theme" $ ui ^. #serviceTheme
+    else throwM . SomeDBExtraException . ThemesNotOwnedByUserGroup ugid $ filter
+      (not . (`elem` ownedids))
+      themeids
+
+data ThemesNotOwnedByUserGroup = ThemesNotOwnedByUserGroup UserGroupID [ThemeID]
+  deriving (Eq, Show, Typeable)
+
+instance ToJSValue ThemesNotOwnedByUserGroup where
+  toJSValue (ThemesNotOwnedByUserGroup ugid themeids) = runJSONGen $ do
+    value "message" ("Themes not owned by user group" :: String)
+    value "user_group_id" $ show ugid
+    value "offending_theme_ids" $ show themeids
+
+instance DBExtraException ThemesNotOwnedByUserGroup
 
 insertFeatures :: (MonadDB m, MonadThrow m) => UserGroupID -> Features -> m ()
 insertFeatures ugid features = do
@@ -276,24 +314,9 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
       sqlSet "invoicing_type" . ugInvoicingType $ new_ug
       sqlSet "payment_plan" . ugPaymentPlan $ new_ug
     -- update UI
-    let ugui = new_ug ^. #ui
-        chkUgOwnsTheme thmLbl ugui' ugid' = when (isJust $ ugui' ^. thmLbl) $ do
-          sqlWhereExists $ sqlSelect "theme_owners" $ do
-            sqlWhereEq "user_group_id" ugid'
-            sqlWhereEq "theme_id"      (ugui' ^. thmLbl)
-
-    runQuery_ . sqlUpdate "user_group_uis" $ do
+    runQuery_ . sqlDelete "user_group_uis" $ do
       sqlWhereEq "user_group_id" ugid
-      sqlSet "mail_theme" $ ugui ^. #mailTheme
-      sqlSet "signview_theme" $ ugui ^. #signviewTheme
-      sqlSet "service_theme" $ ugui ^. #serviceTheme
-      sqlSet "browser_title" $ ugui ^. #browserTitle
-      sqlSet "sms_originator" $ ugui ^. #smsOriginator
-      sqlSet "favicon" $ ugui ^. #favicon
-
-      chkUgOwnsTheme #mailTheme     ugui ugid
-      chkUgOwnsTheme #signviewTheme ugui ugid
-      chkUgOwnsTheme #serviceTheme  ugui ugid
+    whenJust (new_ug ^. #ui) $ insertUserGroupUI ugid
 
     -- update feature flags
     runQuery_ . sqlDelete "feature_flags" $ do
@@ -354,6 +377,12 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateAddr
   update (UserGroupUpdateAddress ugid mugAddr) = do
     runQuery_ . sqlDelete "user_group_addresses" $ sqlWhereEq "user_group_id" ugid
     whenJust mugAddr $ insertUserGroupAddress ugid
+
+data UserGroupUpdateUI = UserGroupUpdateUI UserGroupID (Maybe UserGroupUI)
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateUI () where
+  update (UserGroupUpdateUI ugid mugUI) = do
+    runQuery_ . sqlDelete "user_group_uis" $ sqlWhereEq "user_group_id" ugid
+    whenJust mugUI $ insertUserGroupUI ugid
 
 data UserGroupsFormCycle = UserGroupsFormCycle UserGroupID
   deriving (Eq, Ord, Show, Typeable)

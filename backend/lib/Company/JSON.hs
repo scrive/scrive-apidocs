@@ -1,6 +1,6 @@
 module Company.JSON
   ( unjsonUserGroupUI
-  , unjsonUserGroupUIWithCompanyID
+  , unjsonUserGroupUIFields
   ) where
 
 import Data.Functor.Invariant
@@ -14,14 +14,6 @@ import UserGroup.Types
 
 unjsonUserGroupUI :: UnjsonDef UserGroupUI
 unjsonUserGroupUI = objectOf $ unjsonUserGroupUIFields
-
--- Dedicated version of unjsonUserGroupUI that adds companyid field for
--- backward compatibility
-unjsonUserGroupUIWithCompanyID :: UserGroupID -> UnjsonDef UserGroupUI
-unjsonUserGroupUIWithCompanyID uid =
-  objectOf
-    $  unjsonUserGroupUIFields
-    <* (fieldReadonly "companyid" (const uid) "Company id")
 
 unjsonUserGroupUIFields :: AltF.Ap (FieldDef UserGroupUI) UserGroupUI
 unjsonUserGroupUIFields =

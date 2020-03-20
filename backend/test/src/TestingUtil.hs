@@ -911,7 +911,7 @@ data UserGroupTemplate m = UserGroupTemplate
   , address :: Maybe UserGroupAddress
   , settings  :: Maybe UserGroupSettings
   , invoicing :: UserGroupInvoicing
-  , ui :: UserGroupUI
+  , ui :: Maybe UserGroupUI
   , features :: Maybe Features
   , internalTags :: m (Set Tag)
   , externalTags :: m (Set Tag)

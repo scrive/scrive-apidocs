@@ -38,6 +38,9 @@ module.exports = Backbone.Model.extend({
   companyid: function() {
     return this.get("companyid");
   },
+  brandingIsInherited : function() {
+    return this.get("inherited_from") != null;
+  },
   mailTheme : function() {
     return this.get("mailTheme");
   },

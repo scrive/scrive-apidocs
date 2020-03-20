@@ -303,15 +303,15 @@ handleAccountSetupGet uid token sm = do
   muser <- getUserAccountRequestUser uid token
   case (muser, view #hasAcceptedTOS =<< muser) of
     (Just user, Nothing) -> do
-      ug      <- dbQuery . UserGroupGetByUserID $ user ^. #id
+      ugwp    <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
       ad      <- getAnalyticsData
       content <- renderTextTemplate "accountSetupPage" $ do
-        standardPageFields ctx (Just (ug ^. #id, ug ^. #ui)) ad
+        standardPageFields ctx (Just $ ugwpUIWithID ugwp) ad
         F.value "fstname" $ getFirstName user
         F.value "sndname" $ getLastName user
         F.value "email" $ getEmail user
         F.value "userid" $ show uid
-        F.value "company" $ ug ^. #name
+        F.value "company" $ ugwpUG ugwp ^. #name
         F.value "companyAdmin" $ user ^. #isCompanyAdmin
         F.value "companyPosition" $ user ^. #info % #companyPosition
         F.value "mobile" $ getMobile user

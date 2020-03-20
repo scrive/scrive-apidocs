@@ -9,7 +9,8 @@ module.exports = React.createClass({
     uploadText: React.PropTypes.string,
     alternativeImage: React.PropTypes.string,
     getValue: React.PropTypes.func,
-    setValue: React.PropTypes.func
+    setValue: React.PropTypes.func,
+    readonly: React.PropTypes.bool
   },
   render: function() {
     var self = this;
@@ -20,7 +21,8 @@ module.exports = React.createClass({
         </div>
         <div className="companybranding-text-property-edit">
           <img src={this.props.getValue() || this.props.alternativeImage} className="favicon-image"/>
-          <UploadImageButton
+          { !self.props.readonly &&
+              <UploadImageButton
                 text={self.props.uploadText}
                 width={160}
                 size="tiny"
@@ -29,7 +31,8 @@ module.exports = React.createClass({
                 onUploadComplete={function(image) {
                   self.props.setValue(image);
                 }}
-          />
+              />
+          }
         </div>
       </div>
     );

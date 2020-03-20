@@ -59,6 +59,11 @@ type alias State =
     , popovers : Enum.Dict ColorIdentifier Popover.State
     }
   , editUserGroupBrandingState : UserGroupBranding
+  , brandingInheritable : Bool
+  , brandingInherited : Bool
+  -- ^ If `True` then the branding is inherited from the parent group; this
+  -- means in particular that the themes referenced by the branding are owned by
+  -- that group and are therefore not editable!
   , ugid : String
   }
 
@@ -68,7 +73,7 @@ type Msg = EditThemeMsg EditTheme.Msg
          | SetPreviewTabStateMsg Tab.State
          | SetDomainThemesMsg (Enum.Dict ThemeKind Theme)
          | SetAvailableThemesMsg (List Theme)
-         | SetUserGroupBrandingMsg UserGroupBranding
+         | SetUserGroupBrandingMsg UserGroupBranding Bool Bool
          | DeleteThemeCallbackMsg ThemeID
          | CreateThemeCallbackMsg Theme ThemeID
          | SaveThemeMsg Theme
@@ -76,6 +81,8 @@ type Msg = EditThemeMsg EditTheme.Msg
          | DoDeleteThemeMsg
          | DoSaveThemeMsg
          | DoSaveUserGroupBrandingMsg
+         | DoSetInheritUserGroupBrandingMsg Bool
+         | ReloadPageMsg
          | PresentFlashMessage FlashMessage
 
 update :
@@ -85,7 +92,7 @@ update embed globals msg = case msg of
   SetPreviewTabStateMsg tabState -> setPreviewTabState tabState
   SetDomainThemesMsg domainThemes -> setDomainThemes domainThemes
   SetAvailableThemesMsg availableThemes -> setAvailableThemes availableThemes
-  SetUserGroupBrandingMsg branding -> setUserGroupBranding branding
+  SetUserGroupBrandingMsg branding brandingInherited brandingInheritable -> setUserGroupBranding embed branding brandingInherited brandingInheritable
   DeleteThemeCallbackMsg id -> deleteThemeCallback globals.flashMessage id
   CreateThemeCallbackMsg blueprint newThemeID -> createThemeCallback embed (formBody globals) blueprint newThemeID
   SaveThemeMsg theme -> saveTheme globals.flashMessage theme
@@ -93,6 +100,8 @@ update embed globals msg = case msg of
   DoDeleteThemeMsg -> doDeleteTheme embed (formBody globals)
   DoSaveThemeMsg -> doSaveTheme embed (formBody globals)
   DoSaveUserGroupBrandingMsg -> doSaveUserGroupBranding embed (formBody globals)
+  DoSetInheritUserGroupBrandingMsg brandingInherited -> doSetInheritUserGroupBranding embed (formBody globals) brandingInherited
+  ReloadPageMsg -> reloadPage embed
   EditThemeMsg msg_ -> \state ->
     let editThemeReadonly =
           { availableThemes = Enum.values state.domainThemes ++ state.availableThemes
@@ -127,7 +136,8 @@ init embed {page, ugid} =
         { loadingState =
           { domainThemesLoaded = False
           , userGroupBrandingLoaded = False
-          , userGroupThemesLoaded = False }
+          , userGroupThemesLoaded = False
+          }
         , editTabPage = page
         , editTabState = Tab.customInitialState <| Enum.toString enumEditTab page
         , previewTabState = Tab.customInitialState <| Enum.toString enumThemeKind EmailTheme
@@ -144,10 +154,12 @@ init embed {page, ugid} =
               <| Enum.allValues enumColorIdentifier
           }
         , editUserGroupBrandingState = fallbackUserGroupBranding
+        , brandingInheritable = False
+        , brandingInherited = True
         , ugid = ugid
         }
   in (initialState
-     , Cmd.batch [ getDomainThemes embed, getUserGroupThemes embed ugid, getUserGroupBranding embed ugid ]
+     , Cmd.batch [ getDomainThemes embed, getUserGroupBranding embed ugid ]
      )
 
 setEditTabState : Tab.State -> State -> (State, Cmd msg)
@@ -169,21 +181,27 @@ viewLoaded state =
   let editTabConfig = Tab.useHash True <| Tab.config SetEditTabStateMsg
       previewTabConfig = Tab.useHash False <| Tab.config SetPreviewTabStateMsg
 
-      themeTab = EditTheme.viewEditTheme
-        { embed = EditThemeMsg
-        , doSaveTheme = DoSaveThemeMsg
-        , doDeleteTheme = DoDeleteThemeMsg
-        , doCreateTheme = DoCreateThemeMsg
-        }
-        { availableThemes = Enum.values state.domainThemes ++ state.availableThemes
-        } state.editThemeState
+      themeTab =
+        if state.brandingInherited
+        then text "You can't edit inherited themes, sorry!"
+        else EditTheme.viewEditTheme
+              { embed = EditThemeMsg
+              , doSaveTheme = DoSaveThemeMsg
+              , doDeleteTheme = DoDeleteThemeMsg
+              , doCreateTheme = DoCreateThemeMsg
+              }
+              { availableThemes = Enum.values state.domainThemes ++ state.availableThemes
+              } state.editThemeState
 
       brandingTab = EditUserGroupBranding.viewEditUserGroupBranding
         { embed = EditUserGroupBrandingMsg
         , doSaveUserGroupBranding = DoSaveUserGroupBrandingMsg
+        , doSetInheritUserGroupBranding = DoSetInheritUserGroupBrandingMsg
         }
         { domainThemes = state.domainThemes
         , availableThemes = state.availableThemes
+        , brandingInheritable = state.brandingInheritable
+        , brandingInherited = state.brandingInherited
         }
         state.editUserGroupBrandingState
 
@@ -285,34 +303,36 @@ setAvailableThemes availableThemes state =
         }
   in (newState, Cmd.none)
 
-getUserGroupThemes : (Msg -> msg) -> String -> Cmd msg
-getUserGroupThemes embed ugid =
+getUserGroupThemes : (Msg -> msg) -> String -> Bool -> Cmd msg
+getUserGroupThemes embed ugid brandingInherited =
   let callback : Result Http.Error (List Theme) -> msg
       callback result = case result of
         Ok availableThemes -> embed <| SetAvailableThemesMsg availableThemes
         _ -> embed <| PresentFlashMessage <| FlashMessage.error "Failed to get user group themes."
   in Http.get
-      { url = "/adminonly/companyadmin/branding/companybranding/themes/" ++ ugid
+      { url = "/adminonly/companyadmin/branding/companybranding/themes/" ++ ugid ++ "?inherited=" ++ if brandingInherited then "true" else "false"
       , expect = Http.expectJson callback <| JD.field "themes" <| JD.list themeDecoder
       }
 
-setUserGroupBranding : UserGroupBranding -> State -> (State, Cmd msg)
-setUserGroupBranding branding state =
+setUserGroupBranding : (Msg -> msg) -> UserGroupBranding -> Bool -> Bool -> State -> (State, Cmd msg)
+setUserGroupBranding embed branding brandingInherited brandingInheritable state =
   let loadingState = state.loadingState
       newState =
         {state | loadingState = { loadingState | userGroupBrandingLoaded = True }
-               , editUserGroupBrandingState = branding }
-  in (newState, Cmd.none)
+               , editUserGroupBrandingState = branding
+               , brandingInherited = brandingInherited
+               , brandingInheritable = brandingInheritable }
+  in (newState, getUserGroupThemes embed state.ugid brandingInherited)
 
 getUserGroupBranding : (Msg -> msg) -> String -> Cmd msg
 getUserGroupBranding embed ugid =
-  let callback : Result Http.Error UserGroupBranding -> msg
+  let callback : Result Http.Error (UserGroupBranding, Maybe String, Maybe UserGroupBranding) -> msg
       callback result = case result of
-        Ok branding -> embed <| SetUserGroupBrandingMsg branding
+        Ok (branding, inherited_from, inheritable_preview) -> embed <| SetUserGroupBrandingMsg branding (isJust inherited_from) (isJust inheritable_preview)
         _ -> embed <| PresentFlashMessage <| FlashMessage.error "Failed to get user group branding."
   in Http.get
       { url = "/adminonly/companyadmin/branding/companybranding/" ++ ugid
-      , expect = Http.expectJson callback brandingDecoder
+      , expect = Http.expectJson callback <| JD.map3 (\a b c -> (a,b,c)) brandingDecoder (JD.field "inherited_from" <| JD.nullable JD.string) (JD.field "inheritable_preview" <| JD.maybe brandingDecoder)
       }
 
 doSaveUserGroupBranding : (Msg -> msg) -> (List (String, String) -> Http.Body) -> State -> (State, Cmd msg)
@@ -326,6 +346,20 @@ doSaveUserGroupBranding embed formBody state =
         { url = "/adminonly/companyadmin/branding/companybranding/change/" ++ state.ugid
         , body = formBody
             [ ( "companyui", JE.encode 0 <| encodeUserGroupBranding state.ugid state.editUserGroupBrandingState ) ]
+        , expect = Http.expectWhatever callback
+        }
+  in (state, cmd)
+
+reloadPage : (Msg -> msg) -> State -> (State, Cmd msg)
+reloadPage embed state = init embed { page = state.editTabPage, ugid = state.ugid }
+
+doSetInheritUserGroupBranding : (Msg -> msg) -> (List (String, String) -> Http.Body) -> Bool -> State -> (State, Cmd msg)
+doSetInheritUserGroupBranding embed formBody inheritBranding state =
+  let callback _ = embed ReloadPageMsg
+      cmd = Http.post
+        { url = "/adminonly/companyadmin/branding/companybranding/inherit/" ++ state.ugid
+        , body = formBody
+            [ ( "inherit", if inheritBranding then "true" else "false" ) ]
         , expect = Http.expectWhatever callback
         }
   in (state, cmd)

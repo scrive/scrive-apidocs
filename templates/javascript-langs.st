@@ -1481,6 +1481,7 @@ javascriptLocalisation =
             , faviconDescription : "$_brandingCompanySettingsFaviconDescription()$"
             , uploadFavicon : "$_brandingCompanySettingsUploadFavicon()$"
           }
+          , isInheritedExplanation : "$_brandingIsInheritedExplanation()$"
       }
       , notNamedParty : "$_notNamedParty()$"
       , imageFileFormatNotSpportedIco : "$_imageFileFormatNotSpportedIco()$"

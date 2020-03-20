@@ -34,6 +34,7 @@ module.exports = React.createClass({
                 description={localization.branding.companySettings.browserTitleDescription}
                 getValue={function() {return model.browserTitle()}}
                 setValue={function(v) {return model.setBrowserTitle(v)}}
+                readonly={model.brandingIsInherited()}
               />
               { /* if */ model.forAdminonly() &&
                 <CompanyBrandingTextEditor
@@ -42,6 +43,7 @@ module.exports = React.createClass({
                   getValue={function() {return model.smsOriginator()}}
                   setValue={function(v) {return model.setSmsOriginator(v)}}
                   maxLength={11}
+                  readonly={model.brandingIsInherited()}
                 />
               }
             </div>
@@ -55,17 +57,20 @@ module.exports = React.createClass({
                 uploadText={localization.branding.companySettings.uploadFavicon}
                 getValue={function() {return model.favicon()}}
                 setValue={function(v) {return model.setFavicon(v)}}
+                readonly={model.brandingIsInherited()}
               />
             </div>
           </div>
-          <div className='save-button-area'>
-            <Button
-              type="action"
-              text={localization.branding.save}
-              className="save"
-              onClick={function() {self.saveSettings();}}
-            />
-          </div>
+          {!model.brandingIsInherited() &&
+            <div className='save-button-area'>
+              <Button
+                type="action"
+                text={localization.branding.save}
+                className="save"
+                onClick={function() {self.saveSettings();}}
+              />
+            </div>
+          }
         </div>
       );
     }

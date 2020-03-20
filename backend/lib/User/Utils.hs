@@ -2,8 +2,10 @@ module User.Utils (
       guardLoggedInOrThrowInternalError
     , withTosCheck
     , with2FACheck
+    , withSalesOrAdminOnly
     , withUser
     , withUserAndGroup
+    , withUserAndGroupWithParents
     , withUserAndRoles
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
@@ -90,6 +92,20 @@ withUserAndGroup action = do
   action (user, ug)
 
 {- |
+    Guards that there is a user that is logged in and they are in a user group.
+    The user and user group (with parents) are passed as params to the given
+    action, to save you having to look them up yourself.
+-}
+withUserAndGroupWithParents
+  :: Kontrakcja m => ((User, UserGroupWithParents) -> m a) -> m a
+withUserAndGroupWithParents action = do
+  maybeuser <- view #maybeUser <$> getContext
+  user      <- guardJust maybeuser
+  ugwp      <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+  action (user, ugwp)
+
+
+{- |
     Guards that there is a user that is logged in. The user and roles are passed as params
     to the given action, to save you having to look them up yourself.
 -}
@@ -111,4 +127,8 @@ withCompanyAdminOrAdminOnly
   :: Kontrakcja m => Maybe UserGroupID -> (UserGroup -> m a) -> m a
 withCompanyAdminOrAdminOnly Nothing action = withCompanyAdmin (action . snd)
 withCompanyAdminOrAdminOnly (Just ugid) action =
+  onlySalesOrAdmin $ guardJustM (dbQuery (UserGroupGet ugid)) >>= action
+
+withSalesOrAdminOnly :: Kontrakcja m => UserGroupID -> (UserGroup -> m a) -> m a
+withSalesOrAdminOnly ugid action =
   onlySalesOrAdmin $ guardJustM (dbQuery (UserGroupGet ugid)) >>= action

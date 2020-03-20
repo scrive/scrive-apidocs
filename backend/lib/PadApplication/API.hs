@@ -59,9 +59,9 @@ apiCallGetPadClientTheme :: Kontrakcja m => m Response
 apiCallGetPadClientTheme = api $ do
   ctx          <- getContext
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  ug           <- dbQuery . UserGroupGetByUserID $ user ^. #id
+  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   theme        <- dbQuery $ GetTheme $ fromMaybe (ctx ^. #brandedDomain % #signviewTheme)
-                                                 (ug ^. #ui % #signviewTheme)
+                                                 (ugwpUI ugwp ^. #signviewTheme)
   simpleAesonResponse $ Unjson.unjsonToJSON'
     (Options { pretty = True, indent = 2, nulls = True })
     unjsonTheme
