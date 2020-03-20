@@ -65,9 +65,9 @@ consumeAssertions = guardHttps $ do
                    let maybeGetSomeAttribute as =
                          T.pack <$> (asum . map (`getFirstNonEmptyAttribute` a) $ as)
                    return (T.pack <$> (getNonEmptyNameID a),
-                           maybeGetSomeAttribute ["email", "emailaddress"],
-                           maybeGetSomeAttribute ["firstname", "givenname"],
-                           maybeGetSomeAttribute ["lastname", "surname"]))
+                           maybeGetSomeAttribute ["email", "emailaddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+                           maybeGetSomeAttribute ["firstname", "givenname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"],
+                           maybeGetSomeAttribute ["lastname", "surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"]))
                    (listToMaybe verifiedAssertions))
           case memailRaw of
                   Just emailRaw -> do
