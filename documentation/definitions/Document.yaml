@@ -31,22 +31,24 @@ properties:
       authentication method they must use, fields they must fill, fields placed
       on the PDF, etc.
   file:
-    $ref: ./File.yaml
-    description: |
-      **The document’s main file.**
+    allOf:
+      - $ref: ./File.yaml
+      - description: |
+          **The document’s main file.**
 
-      Can be `null` while a document is in preparation, but needs a file before
-      the signing process can start.
+          Can be `null` while a document is in preparation, but needs a file before
+          the signing process can start.
   sealed_file:
-    $ref: ./File.yaml
-    description: |
-      **The cryptographically sealed file.**
+    allOf:
+    - $ref: ./File.yaml
+    - description: |
+        **The cryptographically sealed file.**
 
-      Will only exist for documents that have been closed.
-      This field may be `null` for a short period of time after a document has
-      been signed by all parties, while the Scrive eSign system seals the
-      document.
-      Can be `null`.
+        Will only exist for documents that have been closed.
+        This field may be `null` for a short period of time after a document has
+        been signed by all parties, while the Scrive eSign system seals the
+        document.
+        Can be `null`.
   author_attachments:
     description: |
       **List of author attachments.**

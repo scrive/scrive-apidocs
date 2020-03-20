@@ -31,19 +31,20 @@ properties:
     type: boolean
     default: false
   placements:
-    description: |
-      **Needs to be set, otherwise the signatory will not be able to draw a signature.**
+    allOf:
+      - $ref: ./SignatoryFieldStandardPlacements.yaml
+      - description: |
+          **Needs to be set, otherwise the signatory will not be able to draw a signature.**
 
-      Defines where this field should be placed on the document.
-      This is both for the signatory to fill out on the signing page, and for
-      the final sealed PDF.
+          Defines where this field should be placed on the document.
+          This is both for the signatory to fill out on the signing page, and for
+          the final sealed PDF.
 
-      Note that this is an array, you can have multiple placements for the same
-      field.
+          Note that this is an array, you can have multiple placements for the same
+          field.
 
-      The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-      template in the document UI design view, and use those values.
-    $ref: ./SignatoryFieldStandardPlacements.yaml
+          The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+          template in the document UI design view, and use those values.
 required:
   - type
   - name

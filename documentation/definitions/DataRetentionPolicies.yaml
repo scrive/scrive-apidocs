@@ -15,8 +15,6 @@ example: {
   }}
 properties:
   company_data_retention_policy:
-    type: object
     $ref: ./DataRetentionPolicy.yaml
   data_retention_policy:
-    type: object
     $ref: ./DataRetentionPolicy.yaml
