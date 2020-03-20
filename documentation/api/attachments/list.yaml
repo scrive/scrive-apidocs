@@ -42,9 +42,6 @@ get:
 
         `[ { "filter_by":"text", "text":"some keywords"] } ]`
 
-      schema:
-        $ref: ../../scrive_api.yaml#/definitions/AttachmentListFilter
-
     - name: sorting
       in: query
       type: string
@@ -62,9 +59,6 @@ get:
         *i.e.*, sort by modification time, newest first.
 
         Must be of type [List Sorting](#list-sorting).
-
-      schema:
-        $ref: ../../scrive_api.yaml#/definitions/ListSorting
 
   responses:
     200:

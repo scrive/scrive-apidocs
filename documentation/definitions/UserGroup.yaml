@@ -1,5 +1,4 @@
 ---
-title: UserGroup
 type: object
 example: {
   "id": "1",

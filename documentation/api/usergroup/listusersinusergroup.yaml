@@ -41,9 +41,10 @@ get:
   responses:
     200:
       description: List of Users in the User Group
-      type: array
-      items:
-        $ref: ../../scrive_api.yaml#/definitions/User
+      schema:
+        type: array
+        items:
+          $ref: ../../scrive_api.yaml#/definitions/User
     403:
       description: |
         Insufficient Permissions error (this means that either no User Group

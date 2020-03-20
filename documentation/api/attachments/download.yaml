@@ -24,9 +24,9 @@ get:
     - name: filename
       in: path
       type: string
-      required: false
+      required: true
       description: |
-        Optional filename parameter.
+        Filename, can be empty.
 
   responses:
     200:

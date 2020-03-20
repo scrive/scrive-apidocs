@@ -82,14 +82,16 @@ get:
 
   parameters:
     - name: role_id
-      in: url
+      in: path
       type: integer
       description: The ID of the Access Role you wish to view
       required: true
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/AccessRole
+      description: Returns an access role.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/AccessRole
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough

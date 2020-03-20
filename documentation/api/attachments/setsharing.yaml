@@ -17,12 +17,7 @@ post:
       description: |
         List of attachment IDs of attachments to share or unshare.
 
-      schema:
-        type: array
-        default: []
-        example: ["3","4"]
-        items:
-          type: string
+        Example: ["3", "4"]
 
     - name: shared
       in: formData

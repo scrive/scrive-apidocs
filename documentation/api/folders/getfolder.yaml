@@ -31,14 +31,16 @@ get:
 
   parameters:
     - name: folder_id
-      in: url
+      in: path
       type: string
       description: The ID of the Folder you wish to view
       required: true
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/Folder
+      description: Returns folder.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/Folder
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough

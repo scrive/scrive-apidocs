@@ -58,7 +58,6 @@ post:
       description: |
         JSON object containing (partial or full) updates to the contact_details
         subtrees (currently only `data_retention_policy` is exposed by the API).
-      example: { "data_retention_policy": { "immediate_trash": false } }
       required: true
     - name: include-inheritable
       in: formData
@@ -70,7 +69,9 @@ post:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/UserGroupContactDetails
+      description: Returns updated user group contact details.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/UserGroupContactDetails
     403:
       description: |
         Insufficient Permissions error (this means that either no User Group

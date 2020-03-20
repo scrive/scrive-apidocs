@@ -15,7 +15,7 @@ post:
 
   parameters:
     - name: role_id
-      in: url
+      in: path
       type: integer
       description: The ID of the Access Role you wish to view
       required: true

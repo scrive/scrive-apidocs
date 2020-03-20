@@ -12,11 +12,11 @@ post:
   parameters:
     - name: data_retention_policy
       in: formData
+      type: string
       format: application/json
       required: true
       description: |
         Must be of type [`DataRetentionPolicy`](#dataretentionpolicy)
-      $ref: ../../scrive_api.yaml#/definitions/DataRetentionPolicy
 
   responses:
     200:

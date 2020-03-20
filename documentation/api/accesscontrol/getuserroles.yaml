@@ -117,7 +117,7 @@ get:
 
   parameters:
     - name: user_id
-      in: url
+      in: path
       type: integer
       description: The ID of the User whose roles you wish to view
       required: true

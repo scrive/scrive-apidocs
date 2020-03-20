@@ -19,4 +19,6 @@ get:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/UserStats
+      description: Returns usage stats for months
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/UserStats

@@ -47,21 +47,22 @@ post:
 
   parameters:
     - name: folder_id
-      in: url
+      in: path
       type: string
       description: The ID of the Folder whose contents you wish to list
       required: true
     - name: folder
       in: formData
       type: string
-      format: application/json
       description: |
         JSON object containing details of the folder to be updated.
-      example: { "name": "new child folder of 1", "parent_id": "1" }
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/Folder
+      description:
+        Returns the updated folder.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/Folder
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough

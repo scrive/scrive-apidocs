@@ -36,7 +36,7 @@ post:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/UserGroupSettings
+      description: User group deleted.
     403:
       description: |
         Insufficient Permissions error (this means that either no User Group

@@ -51,7 +51,6 @@ post:
       description: |
         JSON object containing the `name`, `parent_id`, and `tags` of the User
         Group to be created.
-      example: { "name": "new user group", "parent_id": 1, "tags": [] }
       required: true
     - name: include-inheritable
       in: query
@@ -63,7 +62,9 @@ post:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/UserGroup
+      description: Returns the created user group.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/UserGroup
     403:
       description: |
         Insufficient Permissions error (this means that either no User Group

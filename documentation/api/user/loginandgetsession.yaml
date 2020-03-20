@@ -33,7 +33,6 @@ post:
       required: true
       description: |
         Must be of type [`OAuthAuthorization`](#oauthauthorization)
-      $ref: ../../scrive_api.yaml#/definitions/OAuthAuthorization
 
   responses:
     200:

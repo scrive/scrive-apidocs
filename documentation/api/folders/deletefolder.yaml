@@ -16,7 +16,7 @@ post:
 
   parameters:
     - name: folder_id
-      in: url
+      in: path
       type: string
       description: The ID of the Folder you wish to delete
       required: true

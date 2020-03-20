@@ -876,9 +876,6 @@ paths:
   /documents/{document_id}/files/{file_id}/{filename}:
     $ref: ./api/documents/document_id/files/file_id.yaml
 
-  /documents/{document_id}/texts/{file_id}:
-    $ref: ./api/documents/document_id/texts.yaml
-
   /documents/{document_id}/history:
     $ref: ./api/documents/document_id/history.yaml
 
@@ -1056,7 +1053,7 @@ paths:
   /accesscontrol/roles/{role_id}:
     $ref: ./api/accesscontrol/getrole.yaml
 
-  /accesscontrol/roles/{role_id}/add:
+  /accesscontrol/roles/add:
     $ref: ./api/accesscontrol/createrole.yaml
 
   /accesscontrol/roles/{role_id}/delete:

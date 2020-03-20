@@ -78,11 +78,6 @@ post:
       description: |
         JSON object containing the new `name`, `parent_id` or `tags` for the User
         Group.
-      example: {
-          "name": "new user group",
-          "parent_id": 1,
-          "tags": [ {"name": "foo", "value": "bar" } ]
-        }
       required: true
     - name: include-inheritable
       in: formData
@@ -94,7 +89,9 @@ post:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/UserGroup
+      description: Returns updated user group.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/UserGroup
     403:
       description: |
         Insufficient Permissions error (this means that either no User Group

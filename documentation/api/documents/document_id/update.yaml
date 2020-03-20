@@ -40,8 +40,6 @@ post:
         details, those marked as read-only cannot be modified using this API
         call.
 
-      schema:
-        $ref: ../../../definitions/Document.yaml
     - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:

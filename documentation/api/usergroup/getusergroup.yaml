@@ -176,7 +176,9 @@ get:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/UserGroup
+      description: Returns a user group.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/UserGroup
     403:
       description: |
         Insufficient Permissions error (this means that either no User Group

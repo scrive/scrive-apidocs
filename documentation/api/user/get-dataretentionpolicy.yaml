@@ -11,4 +11,6 @@ get:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/DataRetentionPolicies
+      description: Returns a data retention policy
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/DataRetentionPolicies

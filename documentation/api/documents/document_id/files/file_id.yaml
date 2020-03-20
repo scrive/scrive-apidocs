@@ -20,6 +20,12 @@ get:
   parameters:
     - $ref: ../../../../extras/parameters.yaml#/DocumentID
     - $ref: ../../../../extras/parameters.yaml#/FileID
+    - name: filename
+      in: path
+      type: string
+      required: true
+      description: |
+        Filename parameter, can be empty.
     - $ref: ../../../../extras/parameters.yaml#/SignatoryParamForFile
 
   responses:

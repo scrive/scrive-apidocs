@@ -38,11 +38,12 @@ post:
       format: application/json
       description: |
         JSON object containing details of the folder to be created.
-      example: { "name": "new child folder of 1", "parent_id": "1" }
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/Folder
+      description: Returns the created folder.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/Folder
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough

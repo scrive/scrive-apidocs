@@ -22,7 +22,7 @@ post:
     }
     ```
 
-    > For examples of the JSON output, see 
+    > For examples of the JSON output, see
     > [View User Group Settings](#view-user-group-settings).
 
     This endpoint allows you to update the User Group's `settings` object.
@@ -53,7 +53,6 @@ post:
       description: |
         JSON object containing (partial or full) updates to the settings
         subtrees (currently only `data_retention_policy` is exposed by the API).
-      example: { "data_retention_policy": { "immediate_trash": false } }
       required: true
     - name: include-inheritable
       in: formData
@@ -65,7 +64,9 @@ post:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/UserGroupSettings
+      description: Returns updated user group settings.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/UserGroupSettings
     403:
       description: |
         Insufficient Permissions error (this means that either no User Group

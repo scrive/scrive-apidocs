@@ -17,6 +17,10 @@ properties:
 
       The signatory will not see the name of the radiogroup, however it will be
       used in the Evidence Log as a reference.
+  selected_value:
+    type: string
+    description: |
+      Selected value, must be one of the items in `values`.
   values:
     type: array
     # Note: does not currently work well with openapi2slate
@@ -114,7 +118,6 @@ properties:
 required:
   - type
   - name
-  - selected_value
   - placements
   - values
 example:

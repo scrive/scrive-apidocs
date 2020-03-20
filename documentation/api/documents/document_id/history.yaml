@@ -19,6 +19,7 @@ get:
     - $ref: ../../../extras/parameters.yaml#/DocumentID
     - name: lang
       in: query
+      type: string
       default: User language
       description: |
         **The language used to display the document history.**
@@ -27,7 +28,6 @@ get:
 
         Has to be a supported language code.
         Languages may be added or removed without notice.
-      $ref: ../../../definitions/LanguageCode.yaml
 
   responses:
     200:

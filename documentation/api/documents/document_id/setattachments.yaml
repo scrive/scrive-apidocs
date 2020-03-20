@@ -78,8 +78,6 @@ post:
 
         Must be of type [Author Attachments](#author-attachments).
 
-      schema:
-        $ref: ../../../scrive_api.yaml#/definitions/AuthorAttachments
     - name: "{attachment_name}"
       in: formData
       type: file

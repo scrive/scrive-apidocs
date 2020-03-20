@@ -31,22 +31,13 @@ post:
       format: application/json
       description: |
         JSON object containing details of the role to be granted.
-      example: {
-        "role_type": "user",
-        "source": {
-          "type": "user",
-          "id": "2"
-        },
-        "target": {
-          "type": "user",
-          "id": "4"
-        }
-      }
       required: true
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/AccessRole
+      description: Returns the created access role.
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/AccessRole
     403:
       description: |
         Insufficient Permissions error (this means that you don't have enough

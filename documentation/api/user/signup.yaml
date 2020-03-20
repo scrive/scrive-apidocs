@@ -19,7 +19,7 @@ post:
   parameters:
     - name: email
       in: formData
-      type: email
+      type: string
       required: true
       description: Has to be a valid email address format.
     - name: firstName
@@ -53,7 +53,6 @@ post:
       required: false
       description: |
         Has to be a valid lang code [`LanguageCode`](#language-code)
-      $ref: ../../definitions/LanguageCode.yaml
   responses:
     200:
       description: |

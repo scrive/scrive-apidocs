@@ -21,12 +21,7 @@ post:
       description: |
         List of document IDs to trash.
 
-      schema:
-        type: array
-        default: []
-        example: ["3","4"]
-        items:
-          type: string
+        Example: ["3", "4"]
 
   responses:
     200:
