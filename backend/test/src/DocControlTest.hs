@@ -186,7 +186,8 @@ testLastPersonSigningADocumentClosesIt = do
   filecontent <- liftIO $ BS.readFile filename
   file        <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithFile
+  let
+    genDoc = addRandomDocumentWithFile
       file
       (rdaDefault user)
         { rdaTypes       = OneOf [Signable]
@@ -195,79 +196,67 @@ testLastPersonSigningADocumentClosesIt = do
                                  OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
                            in  OneOf $ map (`replicate` signatory) [1 .. 10]
         }
-    `withDocumentM` do
+  withDocumentM genDoc $ do
 
-                      success <- do
-                        d <- theDocument
-                        randomUpdate $ ResetSignatoryDetails
-                          [ (defaultSignatoryLink
-                              { signatoryfields   =
-                                signatoryfields . fromJust $ getAuthorSigLink d
-                              , signatoryisauthor = True
-                              , signatoryrole     = SignatoryRoleViewer
-                              , maybesignatory    = Just $ user ^. #id
-                              }
-                            )
-                          , (defaultSignatoryLink
-                              { signatorysignorder = SignOrder 1
-                              , signatoryisauthor  = False
-                              , signatoryrole      = SignatoryRoleSigningParty
-                              , signatoryfields = [ fieldForTests (NameFI (NameOrder 1))
-                                                                  "Fred"
-                                                  , fieldForTests (NameFI (NameOrder 2))
-                                                                  "Frog"
-                                                  , fieldForTests EmailFI "fred@frog.com"
-                                                  ]
-                              }
-                            )
-                          ]
-                          (systemActor $ documentctime d)
-                      unless success $ unexpectedError "Expected True"
+    success <- do
+      d <- theDocument
+      randomUpdate $ ResetSignatoryDetails
+        [ (defaultSignatoryLink
+            { signatoryfields   = signatoryfields . fromJust $ getAuthorSigLink d
+            , signatoryisauthor = True
+            , signatoryrole     = SignatoryRoleViewer
+            , maybesignatory    = Just $ user ^. #id
+            }
+          )
+        , (defaultSignatoryLink
+            { signatorysignorder = SignOrder 1
+            , signatoryisauthor  = False
+            , signatoryrole      = SignatoryRoleSigningParty
+            , signatoryfields    = [ fieldForTests (NameFI (NameOrder 1)) "Fred"
+                                   , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                                   , fieldForTests EmailFI                "fred@frog.com"
+                                   ]
+            }
+          )
+        ]
+        (systemActor $ documentctime d)
+    unless success $ unexpectedError "Expected True"
 
-                      do
-                        t  <- documentctime <$> theDocument
-                        tz <- mkTimeZoneName "Europe/Stockholm"
-                        randomUpdate $ PreparationToPending (systemActor t) tz
-                      siglink <-
-                        head
-                        .   filter isSignatoryAndHasNotSigned
-                        .   documentsignatorylinks
-                        <$> theDocument
+    do
+      t  <- documentctime <$> theDocument
+      tz <- mkTimeZoneName "Europe/Stockholm"
+      randomUpdate $ PreparationToPending (systemActor t) tz
+    siglink <-
+      head . filter isSignatoryAndHasNotSigned . documentsignatorylinks <$> theDocument
 
-                      mh <- dbUpdate $ NewSignatoryAccessToken
-                        (signatorylinkid siglink)
-                        SignatoryAccessTokenForMailBeforeClosing
-                        Nothing
+    mh <- dbUpdate $ NewSignatoryAccessToken (signatorylinkid siglink)
+                                             SignatoryAccessTokenForMailBeforeClosing
+                                             Nothing
 
-                      do
-                        t <- documentctime <$> theDocument
-                        randomUpdate
-                          .   MarkDocumentSeen (signatorylinkid siglink)
-                          =<< signatoryActor (set #time t ctx) siglink
+    do
+      t <- documentctime <$> theDocument
+      randomUpdate
+        .   MarkDocumentSeen (signatorylinkid siglink)
+        =<< signatoryActor (set #time t ctx) siglink
 
-                      assertEqual "One left to sign" 1
-                        .   length
-                        .   filter isSignatoryAndHasNotSigned
-                        .   documentsignatorylinks
-                        =<< theDocument
+    assertEqual "One left to sign" 1
+      .   length
+      .   filter isSignatoryAndHasNotSigned
+      .   documentsignatorylinks
+      =<< theDocument
 
-                      preq      <- mkRequest GET []
-                      (_, ctx') <- updateDocumentWithID $ \did ->
-                        lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash
-                          did
-                          (signatorylinkid siglink)
-                          mh
+    preq      <- mkRequest GET []
+    (_, ctx') <- updateDocumentWithID $ \did ->
+      lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash
+        did
+        (signatorylinkid siglink)
+        mh
 
-                      req <- mkRequest POST [("fields", inText "[]"), signScreenshots]
-                      (_link, _ctx') <-
-                        updateDocumentWithID
-                          $ \did -> lift . runTestKontra req ctx' $ apiCallV1Sign
-                              did
-                              (signatorylinkid siglink)
+    req            <- mkRequest POST [("fields", inText "[]"), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+      lift . runTestKontra req ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
-                      assertEqual "In closed state" Closed
-                        .   documentstatus
-                        =<< theDocument
+    assertEqual "In closed state" Closed . documentstatus =<< theDocument
     -- TODO: this should be commented out really, I guess it's a bug
     -- assertEqual "None left to sign" 0 (length $ filter
     -- isSignatoryAndHasNotSigned (documentsignatorylinks doc)) emails
@@ -295,7 +284,8 @@ testSigningWithPin = do
   filecontent <- liftIO $ BS.readFile filename
   file        <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithFile
+  let
+    genDoc = addRandomDocumentWithFile
       file
       (rdaDefault user1)
         { rdaTypes          = OneOf [Signable]
@@ -305,128 +295,98 @@ testSigningWithPin = do
                               in  OneOf $ map (`replicate` signatory) [1 .. 10]
         , rdaSealingMethods = OneOf [Guardtime]
         }
-    `withDocumentM` do
-                      d       <- theDocument
-                      success <- randomUpdate $ ResetSignatoryDetails
-                        [ (defaultSignatoryLink
-                            { signatoryfields   =
-                              signatoryfields . fromJust $ getAuthorSigLink d
-                            , signatoryisauthor = True
-                            , signatoryrole     = SignatoryRoleViewer
-                            , maybesignatory    = Just $ user1 ^. #id
-                            }
-                          )
-                        , (defaultSignatoryLink
-                            { signatorysignorder          = SignOrder 1
-                            , signatoryisauthor           = False
-                            , signatoryrole               = SignatoryRoleSigningParty
-                            , signatorylinkauthenticationtosignmethod =
-                              SMSPinAuthenticationToSign
-                            , signatorylinkdeliverymethod = MobileDelivery
-                            , signatoryfields = [ fieldForTests (NameFI (NameOrder 1))
-                                                                "Fred"
-                                                , fieldForTests (NameFI (NameOrder 2))
-                                                                "Frog"
-                                                , fieldForTests EmailFI  "fred@frog.com"
-                                                , fieldForTests MobileFI "+47 666 111 777"
-                                                ]
-                            }
-                          )
-                        ]
-                        (systemActor $ documentctime d)
-                      unless success $ unexpectedError "Expected True"
+  withDocumentM genDoc $ do
+    d       <- theDocument
+    success <- randomUpdate $ ResetSignatoryDetails
+      [ (defaultSignatoryLink
+          { signatoryfields   = signatoryfields . fromJust $ getAuthorSigLink d
+          , signatoryisauthor = True
+          , signatoryrole     = SignatoryRoleViewer
+          , maybesignatory    = Just $ user1 ^. #id
+          }
+        )
+      , (defaultSignatoryLink
+          { signatorysignorder          = SignOrder 1
+          , signatoryisauthor           = False
+          , signatoryrole               = SignatoryRoleSigningParty
+          , signatorylinkauthenticationtosignmethod = SMSPinAuthenticationToSign
+          , signatorylinkdeliverymethod = MobileDelivery
+          , signatoryfields             = [ fieldForTests (NameFI (NameOrder 1)) "Fred"
+                                          , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                                          , fieldForTests EmailFI "fred@frog.com"
+                                          , fieldForTests MobileFI "+47 666 111 777"
+                                          ]
+          }
+        )
+      ]
+      (systemActor $ documentctime d)
+    unless success $ unexpectedError "Expected True"
 
-                      req         <- mkRequest POST []
-                      (rdyrsp, _) <-
-                        (lift . runTestKontra req ctx) . apiCallV1Ready $ documentid d
-                      lift $ do
-                        assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
-                        runSQL
-                            ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id ="
-                            <?> (user1 ^. #id)
-                            <+> "AND user_group_id ="
-                            <?> ugid1
-                            <+> "AND document_id ="
-                            <?> documentid d
-                            )
-                          >>= assertBool
-                                "Author and the company get charged for the delivery"
-                          .   (> 0)
-                      siglink <-
-                        head
-                        .   filter isSignatoryAndHasNotSigned
-                        .   documentsignatorylinks
-                        <$> theDocument
+    req         <- mkRequest POST []
+    (rdyrsp, _) <- (lift . runTestKontra req ctx) . apiCallV1Ready $ documentid d
+    lift $ do
+      assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
+      runSQL
+          (   "SELECT * FROM chargeable_items WHERE type = 1 AND user_id ="
+          <?> (user1 ^. #id)
+          <+> "AND user_group_id ="
+          <?> ugid1
+          <+> "AND document_id ="
+          <?> documentid d
+          )
+        >>= assertBool "Author and the company get charged for the delivery"
+        .   (> 0)
+    siglink <-
+      head . filter isSignatoryAndHasNotSigned . documentsignatorylinks <$> theDocument
 
-                      mh <- dbUpdate $ NewSignatoryAccessToken
-                        (signatorylinkid siglink)
-                        SignatoryAccessTokenForMailBeforeClosing
-                        Nothing
-                      pin <- dbQuery $ GetSignatoryPin SMSPinToSign
-                                                       (signatorylinkid siglink)
-                                                       (getMobile siglink)
-                      preq      <- mkRequest GET []
-                      (_, ctx') <- updateDocumentWithID $ \did ->
-                        lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash
-                          did
-                          (signatorylinkid siglink)
-                          mh
+    mh <- dbUpdate $ NewSignatoryAccessToken (signatorylinkid siglink)
+                                             SignatoryAccessTokenForMailBeforeClosing
+                                             Nothing
+    pin <- dbQuery
+      $ GetSignatoryPin SMSPinToSign (signatorylinkid siglink) (getMobile siglink)
+    preq      <- mkRequest GET []
+    (_, ctx') <- updateDocumentWithID $ \did ->
+      lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash
+        did
+        (signatorylinkid siglink)
+        mh
 
 
-                      req1 <- mkRequest POST [("fields", inText "[]"), signScreenshots]
-                      (_link, _ctx') <-
-                        updateDocumentWithID
-                          $ \did -> lift . runTestKontra req1 ctx' $ apiCallV1Sign
-                              did
-                              (signatorylinkid siglink)
+    req1           <- mkRequest POST [("fields", inText "[]"), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+      lift . runTestKontra req1 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
-                      assertEqual "Document is not closed if no pin is provided" Pending
-                        .   documentstatus
-                        =<< theDocument
+    assertEqual "Document is not closed if no pin is provided" Pending
+      .   documentstatus
+      =<< theDocument
 
-                      req2 <- mkRequest
-                        POST
-                        [ ("fields", inText "[]")
-                        , ("pin"   , inText $ pin <> "4")
-                        , signScreenshots
-                        ]
-                      (_link, _ctx') <-
-                        updateDocumentWithID
-                          $ \did -> lift . runTestKontra req2 ctx' $ apiCallV1Sign
-                              did
-                              (signatorylinkid siglink)
+    req2 <- mkRequest
+      POST
+      [("fields", inText "[]"), ("pin", inText $ pin <> "4"), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+      lift . runTestKontra req2 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
-                      assertEqual "Document is not closed if pin is not valid" Pending
-                        .   documentstatus
-                        =<< theDocument
+    assertEqual "Document is not closed if pin is not valid" Pending
+      .   documentstatus
+      =<< theDocument
 
-                      req3 <- mkRequest
-                        POST
-                        [("fields", inText "[]"), ("pin", inText pin), signScreenshots]
-                      (_link, _ctx') <-
-                        updateDocumentWithID
-                          $ \did -> lift . runTestKontra req3 ctx' $ apiCallV1Sign
-                              did
-                              (signatorylinkid siglink)
+    req3 <- mkRequest POST [("fields", inText "[]"), ("pin", inText pin), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+      lift . runTestKontra req3 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
-                      assertEqual "Document is closed if pin is valid" Closed
-                        .   documentstatus
-                        =<< theDocument
+    assertEqual "Document is closed if pin is valid" Closed
+      .   documentstatus
+      =<< theDocument
 
-                      -- make sure that smses are counted only for the designated company
-                      runSQL
-                          ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id <>"
-                          <?> (user1 ^. #id)
-                          )
-                        >>= assertEqual "Users other than author don't get charged" 0
+    -- make sure that smses are counted only for the designated company
+    runSQL
+        ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id <>" <?> (user1 ^. #id)
+        )
+      >>= assertEqual "Users other than author don't get charged" 0
 
-                      runSQL
-                          ("SELECT * FROM chargeable_items WHERE type = 1 AND user_group_id <>"
-                          <?> ugid1
-                          )
-                        >>= assertEqual
-                              "Companies other than author's one don't get charged"
-                              0
+    runSQL
+        ("SELECT * FROM chargeable_items WHERE type = 1 AND user_group_id <>" <?> ugid1)
+      >>= assertEqual "Companies other than author's one don't get charged" 0
 
 
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
@@ -628,28 +588,27 @@ testSendingReminderClearsDeliveryInformation = do
                                                , email     = return "bob@blue.com"
                                                }
   ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
-                                      , rdaStatuses = OneOf [Pending]
-                                      }
-    `withDocumentM` do
-                      sl <- last . documentsignatorylinks <$> theDocument
-                      let actor = systemActor $ ctx ^. #time
-                      void . dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
-                      -- who cares which one, just pick the last one
-                      req            <- mkRequest POST []
-                      (_link, _ctx') <- do
-                        updateDocumentWithID $ \did ->
-                          (lift . runTestKontra req ctx)
-                            . withDocumentID did
-                            $ sendReminderEmail Nothing actor False sl
-                      sl' <-
-                        guardJustM
-                        $   find (\t -> signatorylinkid t == signatorylinkid sl)
-                        .   documentsignatorylinks
-                        <$> theDocument
-                      assertEqual "Invitation is not delivered"
-                                  Unknown
-                                  (mailinvitationdeliverystatus sl')
+  let genDoc = addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
+                                                   , rdaStatuses = OneOf [Pending]
+                                                   }
+  withDocumentM genDoc $ do
+    sl <- last . documentsignatorylinks <$> theDocument
+    let actor = systemActor $ ctx ^. #time
+    void . dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
+    -- who cares which one, just pick the last one
+    req            <- mkRequest POST []
+    (_link, _ctx') <- do
+      updateDocumentWithID $ \did ->
+        (lift . runTestKontra req ctx) . withDocumentID did $ sendReminderEmail Nothing
+                                                                                actor
+                                                                                False
+                                                                                sl
+    sl' <-
+      guardJustM
+      $   find (\t -> signatorylinkid t == signatorylinkid sl)
+      .   documentsignatorylinks
+      <$> theDocument
+    assertEqual "Invitation is not delivered" Unknown (mailinvitationdeliverystatus sl')
 
 
 testDocumentFromTemplate :: TestEnv ()

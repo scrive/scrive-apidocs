@@ -289,33 +289,30 @@ handleSignShowSaveMagicHash
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleSignShowSaveMagicHash did slid mh =
   logDocumentAndSignatory did slid
-    $ (do
-        dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
-          `withDocumentM` do
-                            guardThatDocumentIsReadableBySignatories =<< theDocument
-                            sl <- guardGetSignatoryFromIdForDocument slid
-                            if isJust (signatorylinkdeleted sl)
-                               || isJust (signatorylinkreallydeleted sl)
-                            then
-                              respondLinkInvalid
-                            else
-                              do
-                                let authorId doc =
-                                      fromJust $ getAuthorSigLink doc >>= maybesignatory
-                                sid <-
-                                  theDocument
-                                  >>= (return . authorId)
-                                  >>= getDocumentSessionTimeoutSecs
-                                  >>= getNonTempSessionIDWithTimeout
-                                dbUpdate $ AddDocumentSession sid slid
-
-                                -- Redirect to propper page
-                                sendRedirect $ LinkSignDocNoMagicHash did slid
-      )
+    $ action
     `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
     `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
     `catchDBExtraException` (\SignatoryLinkIsForwarded -> respondLinkInvalid)
     `catchDBExtraException` (\(_ :: DocumentWasPurged) -> respondLinkInvalid)
+  where
+    action = do
+      let getDocM = dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+      withDocumentM getDocM $ do
+        guardThatDocumentIsReadableBySignatories =<< theDocument
+        sl <- guardGetSignatoryFromIdForDocument slid
+        if isJust (signatorylinkdeleted sl) || isJust (signatorylinkreallydeleted sl)
+          then respondLinkInvalid
+          else do
+            let authorId doc = fromJust $ getAuthorSigLink doc >>= maybesignatory
+            sid <-
+              theDocument
+              >>= (return . authorId)
+              >>= getDocumentSessionTimeoutSecs
+              >>= getNonTempSessionIDWithTimeout
+            dbUpdate $ AddDocumentSession sid slid
+
+            -- Redirect to propper page
+            sendRedirect $ LinkSignDocNoMagicHash did slid
 
 handleSignShowShortRedirect :: Kontrakcja m => T.Text -> m Response
 handleSignShowShortRedirect text = do

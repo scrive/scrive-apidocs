@@ -151,49 +151,44 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
     , ccNotificationTimeout = fromIntegral secondsToRetry * 1000000
     , ccMaxRunningJobs      = maxRunningJobs
     , ccProcessJob          =
-      \ds@DocumentSigning {..} ->
-        withPostgreSQL pool
-          . withDocumentM (dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID)
-          $ do
-              now <- currentTime
-              bd  <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
-              let mc = I.MailContext { lang               = signingLang
-                                     , brandedDomain      = bd
-                                     , time               = now
-                                     , mailNoreplyAddress = mailNoreplyAddress
-                                     }
-              runTemplatesT (signingLang, templates)
-                . runMailContextT mc
-                . runGuardTimeConfT guardTimeConf
-                $ if signingCancelled
-                    then
-                      if minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now
-                        then return . Ok . RerunAfter $ iminutes
-                          minutesTillPurgeOfFailedAction
-                        else return $ Ok Remove
-                    else runHandler $ case signingSignatureProvider of
-                      CgiGrpBankID   -> handleCgiGrpBankID cgiGrpConf ds now
-                      NetsNOBankID   -> handleNets netsSignConf ds now
-                      NetsDKNemID    -> handleNets netsSignConf ds now
-                      EIDServiceIDIN -> handleEidService
-                        (`getTransactionFromEIDService` EIDServiceTransactionProviderNLIDIN
-                        )
-                        processCompleteIDINTransaction
-                        mEidServiceConf
-                        ds
-                        now
-                      EIDServiceTupas -> handleEidService
-                        (`getTransactionFromEIDService` EIDServiceTransactionProviderFITupas
-                        )
-                        processCompleteFITupasTransaction
-                        mEidServiceConf
-                        ds
-                        now
-                      LegacyBankID -> legacyProviderFail signingSignatoryID LegacyBankID
-                      LegacyTelia  -> legacyProviderFail signingSignatoryID LegacyTelia
-                      LegacyNordea -> legacyProviderFail signingSignatoryID LegacyNordea
-                      LegacyMobileBankID ->
-                        legacyProviderFail signingSignatoryID LegacyMobileBankID
+      \ds@DocumentSigning {..} -> withPostgreSQL pool $ do
+        let getDocM = dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID
+        withDocumentM getDocM $ do
+          now <- currentTime
+          bd  <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
+          let mc = I.MailContext { lang               = signingLang
+                                 , brandedDomain      = bd
+                                 , time               = now
+                                 , mailNoreplyAddress = mailNoreplyAddress
+                                 }
+          runTemplatesT (signingLang, templates)
+            . runMailContextT mc
+            . runGuardTimeConfT guardTimeConf
+            $ if signingCancelled
+                then if minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now
+                  then return . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
+                  else return $ Ok Remove
+                else runHandler $ case signingSignatureProvider of
+                  CgiGrpBankID   -> handleCgiGrpBankID cgiGrpConf ds now
+                  NetsNOBankID   -> handleNets netsSignConf ds now
+                  NetsDKNemID    -> handleNets netsSignConf ds now
+                  EIDServiceIDIN -> handleEidService
+                    (`getTransactionFromEIDService` EIDServiceTransactionProviderNLIDIN)
+                    processCompleteIDINTransaction
+                    mEidServiceConf
+                    ds
+                    now
+                  EIDServiceTupas -> handleEidService
+                    (`getTransactionFromEIDService` EIDServiceTransactionProviderFITupas)
+                    processCompleteFITupasTransaction
+                    mEidServiceConf
+                    ds
+                    now
+                  LegacyBankID -> legacyProviderFail signingSignatoryID LegacyBankID
+                  LegacyTelia  -> legacyProviderFail signingSignatoryID LegacyTelia
+                  LegacyNordea -> legacyProviderFail signingSignatoryID LegacyNordea
+                  LegacyMobileBankID ->
+                    legacyProviderFail signingSignatoryID LegacyMobileBankID
     , ccOnException         =
       \_ DocumentSigning {..} -> do
         now <- currentTime

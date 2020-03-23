@@ -1562,19 +1562,16 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
   doc   <- do
     case (mslid, check, maccesstoken) of
       (Just slid, True, _) -> do
-        dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid)
-          `withDocumentM` theDocument
-          >>=             \doc -> do
-                            sl <-
-                              apiGuardJustM (serverError "Signatory does not exist")
-                              . pure
-                              $ getSigLinkFor slid doc
-                            guardThatDocumentIsReadableBySignatories doc
-                            whenM (signatoryNeedsToIdentifyToView sl doc) $ do
-                              when (isClosed doc || not (isAuthor sl)) $ do
-                                throwM . SomeDBExtraException $ forbidden
-                                  "Authorization to view is needed"
-                            return doc
+        doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
+        sl  <-
+          apiGuardJustM (serverError "Signatory does not exist") . pure $ getSigLinkFor
+            slid
+            doc
+        guardThatDocumentIsReadableBySignatories doc
+        whenM (signatoryNeedsToIdentifyToView sl doc) $ do
+          when (isClosed doc || not (isAuthor sl)) $ do
+            throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
+        return doc
       (_, _, Just _) -> getDocByDocIDAndAccessTokenV1 did maccesstoken
       _              -> do
         (user, _actor, external) <- getAPIUser APIDocCheck
@@ -1619,17 +1616,14 @@ apiCallV1DownloadFile did fileid nameForBrowser =
     doc   <- do
       case (mslid, check, maccesstoken) of
         (Just slid, True, _) -> do
-          dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid)
-            `withDocumentM` theDocument
-            >>=             \doc -> do
-                              sl <- apiGuardJustM (serverError "Signatory does not exist")
-                                $ pure (getSigLinkFor slid doc)
-                              guardThatDocumentIsReadableBySignatories doc
-                              whenM (signatoryNeedsToIdentifyToView sl doc) $ do
-                                when (isClosed doc || not (isAuthor sl)) $ do
-                                  throwM . SomeDBExtraException $ forbidden
-                                    "Authorization to view is needed"
-                              return doc
+          doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
+          sl  <- apiGuardJustM (serverError "Signatory does not exist")
+            $ pure (getSigLinkFor slid doc)
+          guardThatDocumentIsReadableBySignatories doc
+          whenM (signatoryNeedsToIdentifyToView sl doc) $ do
+            when (isClosed doc || not (isAuthor sl)) $ do
+              throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
+          return doc
         (_, _, Just _accesstoken) -> getDocByDocIDAndAccessTokenV1 did maccesstoken
         _ -> do
           (user, _actor, external) <- getAPIUser APIDocCheck
