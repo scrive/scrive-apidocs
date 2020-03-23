@@ -82,6 +82,9 @@ module.exports = Backbone.Model.extend({
   themeList : function() {
     return this.get("themeList");
   },
+  inheritableThemesList : function() {
+    return this.get("inheritableThemesList");
+  },
   domainThemesList : function() {
     return this.get("domainThemesList");
   },
@@ -154,7 +157,7 @@ module.exports = Backbone.Model.extend({
      return new Theme({ listobject : this.domainThemesList().list().models[2]});
   },
   ready : function() {
-    return this.companybranding().ready() && this.themeList().ready() && this.domainThemesList().ready();
+    return this.companybranding().ready() && this.themeList().ready() && this.domainThemesList().ready() && this.inheritableThemesList().ready();
   },
   mailThemeMode : function() {
      return this.get("mode") == "mail-theme";

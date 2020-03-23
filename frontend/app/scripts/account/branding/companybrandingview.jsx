@@ -1,6 +1,7 @@
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var CompanyBrandingViewModel = require("./companybrandingviewmodel");
+var Theme = require("../../themes/theme");
 var ThemeView = require("../../themes/themeview");
 var InheritedThemeView = require("../../themes/inheritedthemeview");
 var CompanySettingsView = require("./companybrandingsettingsview");
@@ -112,9 +113,16 @@ module.exports = React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
-      var brandingIsInherited = model.companybranding().brandingIsInherited();
       if (!model.ready())
         return (<div/>);
+      else {
+      var brandingIsInherited = model.companybranding().brandingIsInherited();
+      var inheritedTheme = function(id) {
+        var theme = _.find( model.inheritableThemesList().list().models
+                            , function(et) { return et.field("id") == id; });
+        return new Theme({listobject: theme});
+      };
+
       return (
         <div className="tab-container">
           <div className="tab-content">
@@ -159,19 +167,22 @@ module.exports = React.createClass({
                     />
                     {/*if*/ (brandingIsInherited && model.mailThemeMode()) &&
                       <InheritedThemeView
-                        model={model.mailThemeForEditing() || model.domainMailTheme()}
+                        model={ inheritedTheme(model.companybranding().mailTheme())
+                          || model.domainMailTheme()}
                         preview={EmailPreview}
                       />
                     }
                     {/*else if*/ (brandingIsInherited && model.signviewThemeMode()) &&
                       <InheritedThemeView
-                        model={model.signviewThemeForEditing() || model.domainSignviewTheme()}
+                        model={inheritedTheme(model.companybranding().signviewTheme())
+                          || model.domainSignviewTheme()}
                         preview={SigningPreview}
                       />
                     }
                     {/*else if*/ (brandingIsInherited && model.serviceThemeMode()) &&
                       <InheritedThemeView
-                        model={model.serviceThemeForEditing() || model.domainServiceTheme()}
+                        model={inheritedTheme(model.companybranding().serviceTheme())
+                          || model.domainServiceTheme()}
                         preview={ServicePreview}
                       />
                     }
@@ -247,5 +258,6 @@ module.exports = React.createClass({
           </div>
         </div>
       );
+      }
     }
   });

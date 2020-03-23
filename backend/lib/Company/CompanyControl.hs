@@ -104,15 +104,15 @@ handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> d
 
 handleInheritCompanyBranding :: Kontrakcja m => UserGroupID -> m ()
 handleInheritCompanyBranding ugid = withSalesOrAdminOnly ugid $ \ug -> do
-  inherit <- guardJustM $ readField "inherit"
-  let newUI | inherit == ("true" :: String) = Nothing
-            | otherwise = Just . fromMaybe defaultUserGroupUI $ ug ^. #ui
+  inherit <- guardJustM $ getField "inherit"
+  let newUI | inherit == "true" = Nothing
+            | otherwise         = Just . fromMaybe defaultUserGroupUI $ ug ^. #ui
   dbUpdate $ UserGroupUpdateUI (ug ^. #id) newUI
 
 handleGetThemes :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  inherited <- readField "inherited"
-  if inherited == Just ("true" :: String)
+  inherited <- getField "inherited"
+  if inherited == Just "true"
     then handleGetThemesInheritableByUserGroup $ ug ^. #id
     else handleGetThemesOwnedByUserGroup $ ug ^. #id
 

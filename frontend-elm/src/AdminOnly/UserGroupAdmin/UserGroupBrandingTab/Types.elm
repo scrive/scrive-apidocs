@@ -28,8 +28,8 @@ type alias UserGroupBranding =
     , favicon : Maybe String
     }
 
-fallbackUserGroupBranding : UserGroupBranding
-fallbackUserGroupBranding =
+defaultUserGroupBranding : UserGroupBranding
+defaultUserGroupBranding =
   { themes = Enum.empty enumThemeKind
   , browserTitle = Nothing
   , smsOriginator = Nothing

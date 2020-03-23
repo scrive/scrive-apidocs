@@ -25,11 +25,22 @@ import Lib.Theme.Types exposing (..)
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 
 type alias EditUserGroupBrandingReadonly =
-  { availableThemes : List Theme
+  { userGroupThemes : List Theme
   , domainThemes : Enum.Dict ThemeKind Theme
-  , brandingInheritable : Bool
-  , brandingInherited : Bool
+  , inheritableBranding : Maybe UserGroupBranding
+  , inheritedThemes : List Theme
   }
+
+type alias EditUserGroupBrandingState =
+  { brandingBeingEdited : UserGroupBranding
+  , inherit : Bool
+  }
+
+brandingPreview : EditUserGroupBrandingReadonly -> EditUserGroupBrandingState -> UserGroupBranding
+brandingPreview read state =
+  if state.inherit
+  then Maybe.withDefault defaultUserGroupBranding read.inheritableBranding
+  else state.brandingBeingEdited
 
 type Msg = SetThemeMsg ThemeKind (Maybe ThemeID)
          | SetBrowserTitleMsg String
@@ -37,15 +48,22 @@ type Msg = SetThemeMsg ThemeKind (Maybe ThemeID)
          | OpenFaviconFileSelectMsg
          | LoadFaviconFileMsg File
          | SetFaviconMsg String
+         | SetInheritBrandingMsg Bool
 
-update : (Msg -> msg) -> Msg -> UserGroupBranding -> (UserGroupBranding, Cmd msg)
-update embed msg = case msg of
-  SetThemeMsg kind mId -> setTheme kind mId
-  SetBrowserTitleMsg text -> setBrowserTitle text
-  SetSmsOriginatorMsg text -> setSmsOriginator text
-  OpenFaviconFileSelectMsg -> openFaviconFileSelect embed
-  LoadFaviconFileMsg file -> loadFaviconFile embed file
-  SetFaviconMsg contents -> setFavicon contents
+update : (Msg -> msg) -> Msg -> EditUserGroupBrandingState -> (EditUserGroupBrandingState, Cmd msg)
+update embed msg =
+  let updateBranding m state =
+        let (newBranding, cmd) = m state.brandingBeingEdited
+        in ({ state | brandingBeingEdited = newBranding }, cmd)
+  in
+  case msg of
+    SetThemeMsg kind mId -> updateBranding <| setTheme kind mId
+    SetBrowserTitleMsg text -> updateBranding <| setBrowserTitle text
+    SetSmsOriginatorMsg text -> updateBranding <| setSmsOriginator text
+    OpenFaviconFileSelectMsg -> updateBranding <| openFaviconFileSelect embed
+    LoadFaviconFileMsg file -> updateBranding <| loadFaviconFile embed file
+    SetFaviconMsg contents -> updateBranding <| setFavicon contents
+    SetInheritBrandingMsg inherit -> setInheritBranding inherit
 
 
 {- Theme selector -}
@@ -60,23 +78,29 @@ setTheme kind mId state =
 
 -- The 'theme selector' is a drop-down list of theme names to select.
 viewThemeSelector :
-  (Msg -> msg) -> ThemeKind -> EditUserGroupBrandingReadonly -> UserGroupBranding -> Form.Col msg
+  (Msg -> msg) -> ThemeKind -> EditUserGroupBrandingReadonly -> EditUserGroupBrandingState -> Form.Col msg
 viewThemeSelector embed kind read state =
-  let onSelect : String -> msg
+  let branding = brandingPreview read state
+
+      availableThemes = if state.inherit
+        then read.inheritedThemes
+        else read.userGroupThemes
+
+      onSelect : String -> msg
       onSelect = embed << SetThemeMsg kind << String.toInt
 
       themeItem : Theme -> Select.Item msg
       themeItem theme = Select.item
         [ value <| if theme.id <= 0 then "null" else String.fromInt theme.id
-        , selected <| case Enum.get kind state.themes of
+        , selected <| case Enum.get kind branding.themes of
             Just id -> theme.id == id
             Nothing -> theme.id <= 0 ]
         [ text theme.name ]
   in  Form.col
         [ Col.sm8, Col.md8, Col.lg8 ]
         [ Select.select
-          [ Select.onChange onSelect, Select.disabled read.brandingInherited ]
-          (List.map themeItem <| Maybe.cons (Enum.get kind read.domainThemes) read.availableThemes)
+          [ Select.onChange onSelect, Select.disabled state.inherit ]
+          (List.map themeItem <| Maybe.cons (Enum.get kind read.domainThemes) availableThemes)
         ]
 
 
@@ -111,6 +135,11 @@ setFavicon : String -> UserGroupBranding -> (UserGroupBranding, Cmd msg)
 setFavicon content state =
   ( { state | favicon = stringNonEmpty content }, Cmd.none )
 
+-- implements SetInheritBrandingMsg
+setInheritBranding : Bool -> EditUserGroupBrandingState -> (EditUserGroupBrandingState, Cmd msg)
+setInheritBranding inherit state =
+  ( { state | inherit = inherit }, Cmd.none )
+
 {- The user group branding editor consists of
 - a 'browser title' text field
 - an 'SMS originator' text field
@@ -119,26 +148,29 @@ setFavicon content state =
 viewEditUserGroupBranding :
   { embed : Msg -> msg
   , doSaveUserGroupBranding : msg  -- does post request and pop-over
-  , doSetInheritUserGroupBranding : Bool -> msg
-  } -> EditUserGroupBrandingReadonly -> UserGroupBranding -> Html msg
+  } -> EditUserGroupBrandingReadonly -> EditUserGroupBrandingState -> Html msg
 viewEditUserGroupBranding
-  {embed, doSaveUserGroupBranding, doSetInheritUserGroupBranding} read state =
+  {embed, doSaveUserGroupBranding} read state =
+  let branding = brandingPreview read state
+  in
   div []
     [ Form.row []
       [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "Inheritance" ]
       , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
           [ Checkbox.checkbox
-            [ Checkbox.disabled <| not read.brandingInheritable
-            , Checkbox.onCheck doSetInheritUserGroupBranding
-            , Checkbox.checked read.brandingInherited ]
+            [ Checkbox.disabled <| Maybe.isNothing read.inheritableBranding
+            , Checkbox.onCheck <| embed << SetInheritBrandingMsg
+            , Checkbox.checked state.inherit ]
             "Inherit branding"
-          , Form.help [] [ text "Inherit all branding options from the parent user group." ]
+          , Form.help [] [ text <| "Inherit all branding options from the "
+              ++ "parent user group. Discards any customisations made to the "
+              ++ "branding (but keeps any custom themes)." ]
           ]
       ]
     , Form.row []
         [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "Favicon" ]
         , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
-          [ div [] [case state.favicon of
+          [ div [] [case branding.favicon of
               Just favicon -> img [ style "max-width" "50px", src favicon] []
               Nothing -> text "Not overridden"]
           , Button.button
@@ -146,7 +178,7 @@ viewEditUserGroupBranding
               , Button.attrs
                 [ onClick (embed OpenFaviconFileSelectMsg)
                 , type_ "button"
-                , disabled read.brandingInherited
+                , disabled state.inherit
                 ]
               ]
               [ text "Select image" ]
@@ -155,7 +187,7 @@ viewEditUserGroupBranding
               , Button.attrs
                 [ onClick (embed <| SetFaviconMsg "")
                 , type_ "button"
-                , disabled read.brandingInherited
+                , disabled state.inherit
                 ]
               ]
               [ text "Reset" ]
@@ -166,9 +198,9 @@ viewEditUserGroupBranding
       , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
           [ Input.text
             [ Input.attrs
-              [ value <| withDefault "" state.browserTitle
+              [ value <| withDefault "" branding.browserTitle
               , onInput (embed << SetBrowserTitleMsg)
-              , disabled read.brandingInherited
+              , disabled state.inherit
               ]
             ]
           , Form.help [] [ text "The text at the top of the browser." ]
@@ -179,9 +211,9 @@ viewEditUserGroupBranding
       , Form.col [ Col.sm8, Col.md8, Col.lg8 ]
           [ Input.text
             [ Input.attrs
-              [ value <| withDefault "" state.smsOriginator
+              [ value <| withDefault "" branding.smsOriginator
               , onInput (embed << SetSmsOriginatorMsg)
-              , disabled read.brandingInherited
+              , disabled state.inherit
               ]
             ]
           , Form.help [] [ text <| "The name displayed to the recipient when "
@@ -201,7 +233,7 @@ viewEditUserGroupBranding
       [ Form.col [ Col.sm12 ]
           [ Button.button
             [ Button.success
-            , Button.attrs [ class "ml-sm-2", onClick doSaveUserGroupBranding, disabled read.brandingInherited ]
+            , Button.attrs [ class "ml-sm-2", onClick doSaveUserGroupBranding ]
             ]
           [ text "Save changes" ] ]
       ]
