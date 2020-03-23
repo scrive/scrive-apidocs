@@ -26,6 +26,8 @@ data MockDoc = MockDoc
   , mockDocDisplayOptions     :: !MockDocDisplayOptions
   , mockDocInvitationMsg      :: !String
   , mockDocConfirmationMsg    :: !String
+  , mockDocSMSInvitationMsg   :: !String
+  , mockDocSMSConfirmationMsg :: !String
   , mockDocLang               :: !String
   , mockDocAPICallbackURL     :: !(Maybe String)
   , mockDocObjectVersion      :: !Int
@@ -59,10 +61,14 @@ mockDocUnjson =
     <*> field "status"       mockDocStatus     "MockDoc Status"
     <*> field "days_to_sign" mockDocDaysToSign "MockDoc DaysToSign"
     <*> fieldOpt "days_to_remind" mockDocDaysToRemind "MockDoc DaysToRemind"
-    <*> field "display_options"      mockDocDisplayOptions  "MockDoc DisplayOptions"
-    <*> field "invitation_message"   mockDocInvitationMsg   "MockDoc InvitationMsg"
-    <*> field "confirmation_message" mockDocConfirmationMsg "MockDoc ConfirmationMsg"
-    <*> field "lang"                 mockDocLang            "MockDoc Lang"
+    <*> field "display_options"        mockDocDisplayOptions   "MockDoc DisplayOptions"
+    <*> field "invitation_message"     mockDocInvitationMsg    "MockDoc InvitationMsg"
+    <*> field "confirmation_message"   mockDocConfirmationMsg  "MockDoc ConfirmationMsg"
+    <*> field "sms_invitation_message" mockDocSMSInvitationMsg "MockDoc SMSInvitationMsg"
+    <*> field "sms_confirmation_message"
+              mockDocSMSConfirmationMsg
+              "MockDoc SMSConfirmationMsg"
+    <*> field "lang" mockDocLang "MockDoc Lang"
     <*> fieldOpt "api_callback_url" mockDocAPICallbackURL "MockDoc APICallbackURL"
     <*> field "object_version" mockDocObjectVersion "MockDoc ObjectVersion"
     <*> fieldOpt "access_token" mockDocAccessToken "MockDoc AccessToken"

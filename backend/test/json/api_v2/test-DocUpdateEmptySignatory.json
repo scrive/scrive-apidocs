@@ -87,6 +87,8 @@
   },
   "invitation_message": "",
   "confirmation_message": "",
+  "sms_invitation_message":"",
+  "sms_confirmation_message":"",
   "lang": "sv",
   "api_callback_url": null,
   "object_version": 5,

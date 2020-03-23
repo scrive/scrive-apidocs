@@ -54,7 +54,7 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox", component.getDOMNode());
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 58);
+    assert.equal(checkboxes.size(), 60);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 2);
@@ -71,7 +71,7 @@ describe("admin/paymentspanel", function () {
     component.forceUpdate();
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 58);
+    assert.equal(checkboxes.size(), 60);
   });
 
   it("should call subscriptions updateSubscriptionAsAdmin on button clicked", function () {
@@ -118,7 +118,8 @@ describe("admin/paymentspanel", function () {
           canUseAPIInvitations: true,
           canUsePadInvitations: true,
           canUseForwarding: true,
-          canUsePortal: true
+          canUsePortal: true,
+          canUseCustomSMSTexts: true
         },
         regularUsers: {
           canUseTemplates: true,
@@ -148,17 +149,18 @@ describe("admin/paymentspanel", function () {
           canUseAPIInvitations: true,
           canUsePadInvitations: true,
           canUseForwarding: true,
-          canUsePortal: true
+          canUsePortal: true,
+          canUseCustomSMSTexts: true
         }
       }
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 52); // 4 options were set to false
+    assert.equal(checkedCheckboxes.size(), 54); // 4 options were set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 51);
+    assert.equal(changedCheckedCheckboxes.size(), 53);
   });
 });

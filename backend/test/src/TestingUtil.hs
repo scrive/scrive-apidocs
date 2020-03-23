@@ -360,9 +360,9 @@ instance Arbitrary DeliveryStatus where
 
 instance Arbitrary FeatureFlags where
   arbitrary = do
-    (a, b, c, d, e, f, g, h, i, j) <- arbitrary
-    (k, l, m, n, o, p, q, r, s, t) <- arbitrary
-    (u, v, w, x, z, y, aa, bb, cc) <- arbitrary
+    (a, b, c, d, e, f, g , h , i , j ) <- arbitrary
+    (k, l, m, n, o, p, q , r , s , t ) <- arbitrary
+    (u, v, w, x, z, y, aa, bb, cc, dd) <- arbitrary
     return $ FeatureFlags { ffCanUseTemplates                  = a
                           , ffCanUseBranding                   = b
                           , ffCanUseAuthorAttachments          = c
@@ -392,6 +392,7 @@ instance Arbitrary FeatureFlags where
                           , ffCanUseForwarding                 = x
                           , ffCanUseDocumentPartyNotifications = y
                           , ffCanUsePortal                     = bb
+                          , ffCanUseCustomSMSTexts             = dd
                           }
 
 instance Arbitrary Features where

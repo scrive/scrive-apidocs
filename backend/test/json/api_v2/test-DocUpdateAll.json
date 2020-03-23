@@ -272,6 +272,8 @@
   },
   "invitation_message": "#☭ҖINVITATION_MESSAGE",
   "confirmation_message": "#☭ҖINVITATION_MESSAGE",
+  "sms_invitation_message":"1 and 2",
+  "sms_confirmation_message":"3 or 4",
   "lang": "fr",
   "api_callback_url": "#☭ҖCALLBACK_URL",
   "object_version": 58,

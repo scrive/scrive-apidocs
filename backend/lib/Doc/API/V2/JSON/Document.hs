@@ -80,6 +80,22 @@ unjsonDocument da =
     <**> (field "confirmation_message" documentconfirmtext "Document confirmation text"
          <**> (pure $ \t d -> d { documentconfirmtext = t })
          )
+    <**> (    field "sms_invitation_message"
+                    (fromMaybe "" . documentsmsinvitetext)
+                    "Document SMS invitation text"
+         <**> (pure $ \t d -> d
+                { documentsmsinvitetext = if (t == "") then Nothing else Just t
+                }
+              )
+         )
+    <**> (    field "sms_confirmation_message"
+                    (fromMaybe "" . documentsmsconfirmtext)
+                    "Document SMS confirmation text"
+         <**> (pure $ \t d -> d
+                { documentsmsconfirmtext = if (t == "") then Nothing else Just t
+                }
+              )
+         )
     <**> (    fieldBy "lang" documentlang "Document language" unjsonLang
          <**> (pure $ \l d -> d { documentlang = l })
          )

@@ -428,6 +428,8 @@ insertDocument document@(Document {..}) = do
     sqlSet "invite_ip" $ signipnumber <$> documentinvitetime
     sqlSet "invite_text"         documentinvitetext
     sqlSet "confirm_text"        documentconfirmtext
+    sqlSet "sms_invite_text"     documentsmsinvitetext
+    sqlSet "sms_confirm_text"    documentsmsconfirmtext
     sqlSet "show_header"         documentshowheader
     sqlSet "show_pdf_download"   documentshowpdfdownload
     sqlSet "show_reject_option"  documentshowrejectoption
@@ -1573,7 +1575,15 @@ data SetConfirmText = SetConfirmText Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetConfirmText Bool where
   update (SetConfirmText text _actor) = updateWithoutEvidence "confirm_text" text
 
+data SetSMSInvitationText = SetSMSInvitationText (Maybe Text) Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetSMSInvitationText Bool where
+  update (SetSMSInvitationText mtext _actor) =
+    updateWithoutEvidence "sms_invite_text" mtext
 
+data SetSMSConfirmationText = SetSMSConfirmationText (Maybe Text) Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetSMSConfirmationText Bool where
+  update (SetSMSConfirmationText mtext _actor) =
+    updateWithoutEvidence "sms_confirm_text" mtext
 
 data SetShowHeader = SetShowHeader Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowHeader Bool where
@@ -2401,6 +2411,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateD
     , update $ SetDocumentLang (getLang document) actor
     , update $ SetInviteText (documentinvitetext document) actor
     , update $ SetConfirmText (documentconfirmtext document) actor
+    , update $ SetSMSInvitationText (documentsmsinvitetext document) actor
+    , update $ SetSMSConfirmationText (documentsmsconfirmtext document) actor
     , update $ SetShowHeader (documentshowheader document) actor
     , update $ SetShowPDFDownload (documentshowpdfdownload document) actor
     , update $ SetShowRejectOption (documentshowrejectoption document) actor

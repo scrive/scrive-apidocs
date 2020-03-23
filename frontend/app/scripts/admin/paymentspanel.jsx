@@ -51,6 +51,7 @@ module.exports = React.createClass({
         canUseSEAuthenticationToSign: features.canUseSEAuthenticationToSign(),
         canUseSMSPinAuthenticationToView: features.canUseSMSPinAuthenticationToView(),
         canUseSMSPinAuthenticationToSign: features.canUseSMSPinAuthenticationToSign(),
+        canUseCustomSMSTexts: features.canUseCustomSMSTexts(),
         canUseStandardAuthenticationToView: features.canUseStandardAuthenticationToView(),
         canUseStandardAuthenticationToSign: features.canUseStandardAuthenticationToSign(),
         canUseVerimiAuthenticationToView: features.canUseVerimiAuthenticationToView(),
@@ -410,6 +411,7 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use sms confirmations","canUseSMSConfirmations")}
               {this.renderTRForOptionWithCheckbox("Can use SMS Pin authorization to view","canUseSMSPinAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use SMS Pin authorization to sign","canUseSMSPinAuthenticationToSign")}
+              {this.renderTRForOptionWithCheckbox("Can use custom SMS texts","canUseCustomSMSTexts")}
               {this.renderTROptionSeparator("eID to view and sign")}
               {this.renderTRForOptionWithCheckbox("Can use DK authorization to view","canUseDKAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use DK authorization to sign","canUseDKAuthenticationToSign")}

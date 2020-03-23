@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable
   { tblName        = "documents"
-  , tblVersion     = 56
+  , tblVersion     = 57
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -99,6 +99,8 @@ tableDocuments = tblTable
                 , colNullable = True
                 }
     , tblColumn { colName = "sealing_method", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "sms_invite_text", colType = TextT, colNullable = True }
+    , tblColumn { colName = "sms_confirm_text", colType = TextT, colNullable = True }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys = [
@@ -160,6 +162,8 @@ ctDocument = CompositeType
     , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
     , CompositeColumn { ccName = "invite_text", ccType = TextT }
     , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+    , CompositeColumn { ccName = "sms_invite_text", ccType = TextT }
+    , CompositeColumn { ccName = "sms_confirm_text", ccType = TextT }
     , CompositeColumn { ccName = "show_header", ccType = BoolT }
     , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
     , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }

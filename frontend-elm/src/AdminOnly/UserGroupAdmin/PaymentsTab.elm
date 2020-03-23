@@ -386,6 +386,7 @@ featureFlagsStructure =
         , ( "Can use sms confirmations", "can_use_sms_confirmations" )
         , ( "Can use SMS Pin authorization to view", "can_use_sms_pin_authentication_to_view" )
         , ( "Can use SMS Pin authorization to sign", "can_use_sms_pin_authentication_to_sign" )
+        , ( "Can use custom SMS texts", "can_use_custom_sms_texts" )
         ]
       )
     , ( "eID to view and sign"

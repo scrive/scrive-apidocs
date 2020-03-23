@@ -204,8 +204,10 @@ data Document = Document
   , documenttimeouttime            :: !(Maybe UTCTime)
   , documentautoremindtime         :: !(Maybe UTCTime)
   , documentinvitetime             :: !(Maybe SignInfo)
-  , documentinvitetext             :: !Text
-  , documentconfirmtext            :: !Text
+  , documentinvitetext             :: !Text -- TODO Should be changed to Maybe
+  , documentconfirmtext            :: !Text -- TODO Should be changed to Maybe
+  , documentsmsinvitetext          :: !(Maybe Text)
+  , documentsmsconfirmtext         :: !(Maybe Text)
   , documentshowheader             :: !Bool
   , documentshowpdfdownload        :: !Bool
   , documentshowrejectoption       :: !Bool
@@ -267,6 +269,8 @@ defaultDocument = Document { documentid                = unsafeDocumentID 0
                            , documentisreceipt         = False
                            , documentinvitetext        = ""
                            , documentconfirmtext       = ""
+                           , documentsmsinvitetext     = Nothing
+                           , documentsmsconfirmtext    = Nothing
                            , documentinvitetime        = Nothing
                            , documentsharing           = Private
                            , documenttags              = S.empty
@@ -323,6 +327,8 @@ documentsSelectors =
   , "documents.invite_ip"
   , "documents.invite_text"
   , "documents.confirm_text"
+  , "documents.sms_invite_text"
+  , "documents.sms_confirm_text"
   , "documents.show_header"
   , "documents.show_pdf_download"
   , "documents.show_reject_option"
@@ -433,6 +439,8 @@ type instance CompositeRow Document
     , Maybe IPAddress
     , Text
     , Text
+    , Maybe Text
+    , Maybe Text
     , Bool
     , Bool
     , Bool
@@ -464,7 +472,7 @@ instance PQFormat Document where
   pqFormat = compositeTypePqFormat ctDocument
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid, sealing_method)
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, sms_invite_text, sms_confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid, sealing_method)
     = Document
       { documentid                = did
       , documenttitle             = title
@@ -485,6 +493,8 @@ instance CompositeFromSQL Document where
                                       Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
       , documentinvitetext        = invite_text
       , documentconfirmtext       = confirm_text
+      , documentsmsinvitetext     = sms_invite_text
+      , documentsmsconfirmtext    = sms_confirm_text
       , documentshowheader        = show_header
       , documentshowpdfdownload   = show_pdf_download
       , documentshowrejectoption  = show_reject_option

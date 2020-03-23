@@ -213,6 +213,8 @@
   },
   "invitation_message": "#☭ҖINVITATION_MESSAGE",
   "confirmation_message": "#☭ҖINVITATION_MESSAGE",
+  "sms_invitation_message":"",
+  "sms_confirmation_message":"",
   "lang": "fr",
   "api_callback_url": "#☭ҖCALLBACK_URL",
   "object_version": 58,

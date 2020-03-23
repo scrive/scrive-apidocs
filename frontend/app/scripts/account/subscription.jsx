@@ -185,7 +185,8 @@ var Subscription = Backbone.Model.extend({
         can_use_pad_invitations: ff.canUsePadInvitations,
         can_use_forwarding: ff.canUseForwarding,
         can_use_document_party_notifications: ff.canUseDocumentPartyNotifications,
-        can_use_portal: ff.canUsePortal
+        can_use_portal: ff.canUsePortal,
+        can_use_custom_sms_texts: ff.canUseCustomSMSTexts
       });
     };
     var newSubscription = {
@@ -305,7 +306,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_api_invitations": true,
     "can_use_pad_invitations": true,
     "can_use_document_party_notifications": false,
-    "can_use_portal": false
+    "can_use_portal": false,
+    "canUseCustomSMSTexts": false
   },
   canUseTemplates: function () {
      return this.get("can_use_templates");
@@ -357,6 +359,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   },
   canUseSMSPinAuthenticationToSign: function () {
      return this.get("can_use_sms_pin_authentication_to_sign");
+  },
+  canUseCustomSMSTexts: function () {
+     return this.get("can_use_custom_sms_texts");
   },
   canUseStandardAuthenticationToView: function () {
      return this.get("can_use_standard_authentication_to_view");
@@ -496,7 +501,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_email_confirmations: args.can_use_email_confirmations,
       can_use_api_invitations: args.can_use_api_invitations,
       can_use_pad_invitations: args.can_use_pad_invitations,
-      can_use_portal: args.can_use_portal
+      can_use_portal: args.can_use_portal,
+      can_use_custom_sms_texts: args.can_use_custom_sms_texts
     };
   }
 });

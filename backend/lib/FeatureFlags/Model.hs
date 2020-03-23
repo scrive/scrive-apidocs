@@ -61,6 +61,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseForwarding :: Bool
   , ffCanUseDocumentPartyNotifications :: Bool
   , ffCanUsePortal :: Bool
+  , ffCanUseCustomSMSTexts :: Bool
   } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -130,11 +131,15 @@ instance Unjson FeatureFlags where
                 ffCanUseDocumentPartyNotifications
                 "Can use document notifications"
       <*> field "can_use_portal" ffCanUsePortal "TODO desc"
+      <*> field "can_use_custom_sms_texts"
+                ffCanUseCustomSMSTexts
+                "Can set a custom content of SMS for invitations and confirmations"
 
 
 
 type instance CompositeRow FeatureFlags
   = ( Bool
+    , Bool
     , Bool
     , Bool
     , Bool
@@ -169,7 +174,7 @@ instance PQFormat FeatureFlags where
   pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
-  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal)
+  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts)
     = FeatureFlags { .. }
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
@@ -245,6 +250,7 @@ defaultFeatures paymentPlan = Features ff ff
                              , ffCanUseForwarding                 = True
                              , ffCanUseDocumentPartyNotifications = False
                              , ffCanUsePortal                     = False
+                             , ffCanUseCustomSMSTexts             = False
                              }
     ff = case paymentPlan of
       FreePlan -> defaultFF { ffCanUseDKAuthenticationToView     = False
@@ -293,6 +299,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_forwarding" $ ffCanUseForwarding ff
   sqlSet "can_use_document_party_notifications" $ ffCanUseDocumentPartyNotifications ff
   sqlSet "can_use_portal" $ ffCanUsePortal ff
+  sqlSet "can_use_custom_sms_texts" $ ffCanUseCustomSMSTexts ff
 
 selectFeatureFlagsSelectors :: [SQL]
 selectFeatureFlagsSelectors =
@@ -325,4 +332,5 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_forwarding"
   , "feature_flags.can_use_document_party_notifications"
   , "feature_flags.can_use_portal"
+  , "feature_flags.can_use_custom_sms_texts"
   ]

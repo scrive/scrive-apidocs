@@ -3,6 +3,8 @@
   "days_to_remind": 11,
   "invitation_message": "#☭ҖINVITATION_MESSAGE",
   "confirmation_message": "#☭ҖINVITATION_MESSAGE",
+  "sms_invitation_message":"1 and 2",
+  "sms_confirmation_message":"3 or 4",
   "title": "#☭ҖDOCTITLE",
   "lang": "fr",
   "api_callback_url": "#☭ҖCALLBACK_URL",

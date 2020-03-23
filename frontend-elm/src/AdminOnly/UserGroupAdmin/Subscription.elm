@@ -133,6 +133,7 @@ type alias FeatureFlags =
     , canUseIdinAuthenticationToView : Bool
     , canUseIdinAuthenticationToSign : Bool
     , canUsePortal : Bool
+    , canUseCustomSMSTexts : Bool
     }
 
 
@@ -263,6 +264,7 @@ defaultFeatureFlags =
     , canUseIdinAuthenticationToView = False
     , canUseIdinAuthenticationToSign = False
     , canUsePortal = False
+    , canUseCustomSMSTexts = False
     }
 
 
@@ -297,7 +299,8 @@ ffKeyAccessPairs =
     , ( "can_use_idin_authentication_to_view", ( .canUseIdinAuthenticationToView, \ff v -> { ff | canUseIdinAuthenticationToView = v } ) )
     , ( "can_use_idin_authentication_to_sign", ( .canUseIdinAuthenticationToSign, \ff v -> { ff | canUseIdinAuthenticationToSign = v } ) )
     , ( "can_use_portal", ( .canUsePortal, \ff v -> { ff | canUsePortal = v } ) )
-    ]
+    , ( "can_use_custom_sms_texts", ( .canUseCustomSMSTexts, \ff v -> { ff | canUseCustomSMSTexts = v } ) )
+        ]
 
 
 featureFlagsDecoder : Decoder FeatureFlags

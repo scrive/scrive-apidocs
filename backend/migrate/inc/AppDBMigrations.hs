@@ -247,4 +247,6 @@ kontraMigrations =
   , addSealingMethodToDocuments
   , dropEmailFromEIDSignatures
   , addFreeUserFeatureFlagsJob
+  , addSMSInvitationAndConfirmationTextToDocuments
+  , featureFlagsAddCustomSMSTexts
   ]

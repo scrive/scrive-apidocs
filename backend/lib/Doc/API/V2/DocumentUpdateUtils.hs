@@ -48,6 +48,8 @@ applyDraftDataToDocument draft actor = do
       { documenttitle             = documenttitle draft
       , documentinvitetext        = documentinvitetext draft
       , documentconfirmtext       = documentconfirmtext draft
+      , documentsmsinvitetext     = documentsmsinvitetext draft
+      , documentsmsconfirmtext    = documentsmsconfirmtext draft
       , documentdaystosign        = documentdaystosign draft
       , documentdaystoremind      = min (documentdaystosign draft)
                                       <$> documentdaystoremind draft
