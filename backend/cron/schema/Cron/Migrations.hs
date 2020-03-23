@@ -22,6 +22,7 @@ module Cron.Migrations (
   , removeInvoicingUploadJob
   , addPopulateDocumentAuthorDeletedJob
   , addUserGroupGarbageCollectionJob
+  , addFreeUserFeatureFlagsJob
   ) where
 
 import Cron.Tables
@@ -244,4 +245,14 @@ addUserGroupGarbageCollectionJob = Migration
     StandardMigration
       $ runSQL_
           "INSERT INTO cron_jobs (id, run_at) VALUES ('user_group_garbage_collection', to_timestamp(0))"
+  }
+
+addFreeUserFeatureFlagsJob :: MonadDB m => Migration m
+addFreeUserFeatureFlagsJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom      = 27
+  , mgrAction    =
+    StandardMigration
+      $ runSQL_
+          "INSERT INTO cron_jobs (id, run_at) VALUES ('set_free_user_feature_flags', to_timestamp(0))"
   }

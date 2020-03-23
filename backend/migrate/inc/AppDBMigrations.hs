@@ -246,4 +246,5 @@ kontraMigrations =
   , userGroupSettingsAddSealingMethod
   , addSealingMethodToDocuments
   , dropEmailFromEIDSignatures
+  , addFreeUserFeatureFlagsJob
   ]

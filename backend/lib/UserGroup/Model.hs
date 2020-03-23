@@ -9,6 +9,7 @@ module UserGroup.Model (
   , UserGroupGetWithParentsByUserID(..)
   , UserGroupsGetFiltered(..)
   , FindOldUserGroups(..)
+  , FindFreeAndTrialUserGroups(..)
   , UserGroupUpdate(..)
   , UserGroupUpdateSettings(..)
   , UserGroupUpdateAddress(..)
@@ -292,6 +293,16 @@ instance (MonadDB m, MonadTime m) => DBQuery m FindOldUserGroups [UserGroup] whe
         sqlResult "1"
         sqlWhere "ug1.parent_group_id=user_groups.id"
         sqlWhereIsNULL "ug1.deleted"
+      sqlLimit batchLimit
+    fetchMany fetchUserGroup
+
+data FindFreeAndTrialUserGroups = FindFreeAndTrialUserGroups Int
+instance (MonadDB m, MonadTime m) => DBQuery m FindFreeAndTrialUserGroups [UserGroup] where
+  query (FindFreeAndTrialUserGroups batchLimit) = do
+    runQuery_ . sqlSelect "user_groups" $ do
+      mapM_ sqlResult userGroupSelectors
+      sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = user_groups.id"
+      sqlWhereAny [sqlWhere "payment_plan < 2", sqlWhere "payment_plan > 3"]
       sqlLimit batchLimit
     fetchMany fetchUserGroup
 
