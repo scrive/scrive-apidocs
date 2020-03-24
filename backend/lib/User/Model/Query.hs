@@ -24,7 +24,7 @@ import Control.Monad.State (MonadState)
 import Data.Int
 import qualified Data.Text as T
 
-import Chargeable.Model
+import Chargeable
 import DB
 import Doc.DocStateData (DocumentStatus(..))
 import MagicHash

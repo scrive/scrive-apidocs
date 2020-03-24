@@ -85,7 +85,7 @@ testJSONCtx = do
 runApiJSONTest
   :: Context             -- ^ Context to run the test in
   -> Method              -- ^ HTTP Method to use for API Call
-  -> KontraTest Response -- ^ The API call to use
+  -> TestKontra Response -- ^ The API call to use
   -> [(Text, Input)]    -- ^ List of API call parameters
   -> Int                 -- ^ Expected response code
   -> FilePath            -- ^ FilePath to JSON file to match against
@@ -106,7 +106,7 @@ runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
 runApiTest
   :: Context             -- ^ Context to run the test in
   -> Method              -- ^ HTTP Method to use for API Call
-  -> KontraTest Response -- ^ The API call to use
+  -> TestKontra Response -- ^ The API call to use
   -> [(Text, Input)]    -- ^ List of API call parameters
   -> Int                 -- ^ Expected response code
   -> TestEnv ()

@@ -11,6 +11,7 @@ import Database.Redis.Configuration
 import EID.CGI.GRP.Config
 import EID.EIDService.Conf
 import EID.Nets.Config
+import EventStream.Kinesis (KinesisConf(..))
 import FileStorage.Amazon.Config
 import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf (HubSpotConf(..))
@@ -81,14 +82,15 @@ data AppConf = AppConf
   , passwordServiceConf :: PasswordServiceConf
   , eidServiceConf     :: Maybe EIDServiceConf
   , ssoConf            :: Maybe SSOConf
+  , kinesisStream      :: Maybe KinesisConf
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
 unjsonAppConf =
   objectOf
-    $   pure AppConf
-    <*> (   pure (,)
-        <*> fieldDefBy "bind_ip"
+    $   AppConf
+    <$> (   (,)
+        <$> fieldDefBy "bind_ip"
                        0
                        (fst . httpBindAddress)
                        "IP to listen on, defaults to 0.0.0.0"
@@ -139,8 +141,9 @@ unjsonAppConf =
                  defaultPasswordService
                  passwordServiceConf
                  "Configuration of password service"
-    <*> fieldOpt "eid_service" eidServiceConf "Configuration of eid service"
-    <*> fieldOpt "sso"         ssoConf        "Configuration of SSO"
+    <*> fieldOpt "eid_service"    eidServiceConf "Configuration of eid service"
+    <*> fieldOpt "sso"            ssoConf        "Configuration of SSO"
+    <*> fieldOpt "kinesis_stream" kinesisStream  "Configuration of kinesis message stream"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

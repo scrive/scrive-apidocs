@@ -18,6 +18,7 @@ import AppConf
 import AppDir
 import Configuration
 import CronConf
+import EventStream.Kinesis
 import MailingServerConf
 import MessengerServerConf
 
@@ -101,7 +102,7 @@ checkFieldsEqualAppConfCronConf
     _gaToken            _trackjsToken       _zendeskKey         _hubspotConf
     salesforceConf      _netsConfig         _monitoringConfig   _isAPILogEnabled
     netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf eidServiceConf
-    _ssoConf)
+    _ssoConf            kinesisStream)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -111,7 +112,7 @@ checkFieldsEqualAppConfCronConf
     _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
     _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs _cronConsumerFilePurgingMaxJobs
      cronNetsSignConfig           cronPdfToolsLambdaConf          _cronMonthlyInvoiceConf
-    _cronStatsDConf               cronEIDServiceConf)
+    _cronStatsDConf               cronEIDServiceConf              cronKinesisStream)
 
   = checkEq "amazon"               amazonConfig       cronAmazonConfig       *>
     checkEq "database"             dbConfig           cronDBConfig           *>
@@ -123,7 +124,8 @@ checkFieldsEqualAppConfCronConf
     checkEq "salesforce"           salesforceConf     cronSalesforceConf     *>
     checkEq "nets_sign"            netsSignConfig     cronNetsSignConfig     *>
     checkEq "pdftools_lambda"      pdfToolsLambdaConf cronPdfToolsLambdaConf *>
-    checkEq "eid_service"          eidServiceConf cronEIDServiceConf
+    checkEq "eid_service"          eidServiceConf cronEIDServiceConf *>
+    checkEq "kinesis.region"       (kinesisConfRegion <$> kinesisStream) (kinesisConfRegion <$> cronKinesisStream)
 
   where
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
@@ -142,7 +144,7 @@ checkFieldsEqualAppConfMailerConf
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
-    _eidServiceConf     _ssoConf)
+    _eidServiceConf     _ssoConf            _kinesisStream)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -171,7 +173,7 @@ checkFieldsEqualAppConfMessengerConf
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
-    _eidServiceConf     _ssoConf)
+    _eidServiceConf     _ssoConf            _kinesisStream)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig
@@ -188,6 +190,6 @@ main = do
   prog <- T.pack <$> getProgName
   args <- fmap T.pack <$> getArgs
   if
-    | args == [] || head args `elem` ["help"] -> printHelpMessage prog
+    | null args || head args == "help" -> printHelpMessage prog
     | head args `elem` ["lint", "check"] -> lintConfigFiles
     | otherwise -> printHelpMessage prog

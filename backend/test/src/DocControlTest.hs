@@ -20,7 +20,7 @@ import qualified Text.JSON
 import Archive.Control
 import Branding.Control
 import Branding.CSS
-import Chargeable.Model
+import Chargeable
 import DB
 import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V1.Calls

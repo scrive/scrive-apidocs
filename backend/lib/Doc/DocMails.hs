@@ -42,6 +42,7 @@ import Doc.DocViewSMS
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryUtils
+import EventStream.Class
 import EvidenceLog.Model
   ( CurrentEvidenceEventType(..)
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
@@ -82,6 +83,8 @@ sendDocumentErrorEmail
      , MonadLog m
      , TemplatesMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => User
   -> Document
@@ -139,6 +142,8 @@ sendInvitationEmails
      , TemplatesMonad m
      , DocumentMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Bool
   -> m ()
@@ -170,6 +175,8 @@ sendPartyProcessFinalizedNotification
      , MonadThrow m
      , MonadTime m
      , TemplatesMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Document
   -> SignatoryLink
@@ -190,6 +197,8 @@ sendPartyProcessFinalizedNotification'
      , MonadThrow m
      , MonadTime m
      , TemplatesMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Document
   -> SignatoryLink
@@ -231,6 +240,8 @@ sendPartyProcessFinalizedNotificationSms
      , MonadThrow m
      , MonadTime m
      , TemplatesMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Document
   -> SignatoryLink
@@ -251,6 +262,8 @@ sendInvitationEmail1
      , TemplatesMonad m
      , DocumentMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => SignatoryLink
   -> m ()
@@ -337,6 +350,8 @@ sendReminderEmail
      , CryptoRNG m
      , DocumentMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Maybe Text
   -> Actor
@@ -451,6 +466,8 @@ sendClosedEmails
      , MonadLog m
      , TemplatesMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Bool
   -> Document
@@ -696,6 +713,8 @@ sendAllReminderEmails
      , CryptoRNG m
      , DocumentMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Actor
   -> Bool
@@ -714,6 +733,8 @@ sendAllReminderEmailsExceptAuthor
      , CryptoRNG m
      , DocumentMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => Actor
   -> Bool
@@ -730,6 +751,8 @@ sendAllReminderEmailsWithFilter
      , CryptoRNG m
      , DocumentMonad m
      , MailContextMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => (SignatoryLink -> Bool)
   -> Actor
@@ -789,6 +812,8 @@ sendPinCode
      , CryptoRNG m
      , MailContextMonad m
      , KontraMonad m
+     , MonadCatch m
+     , MonadEventStream m
      )
   => SignatoryLink
   -> Text

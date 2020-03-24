@@ -4,7 +4,7 @@ import Test.Framework
 import qualified Data.Set as S
 import qualified Data.Text as T
 
-import Chargeable.Model
+import Chargeable
 import DB
 import Doc.DocumentID
 import Doc.Types.Document
@@ -217,7 +217,8 @@ test_userUsageStatisticsByUser = do
   doc <- addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
                                              , rdaStatuses = OneOf [Closed]
                                              }
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
+
+  chargeForItemSingle CIClosingDocument (documentid doc)
   res <- dbQuery
     $ GetUsageStats (UsageStatsForUser $ user ^. #id) PartitionByMonth (iyears 2000)
   assertEqual "Document present in stats" 1 (length res)
@@ -242,8 +243,8 @@ test_userUsageStatisticsByCompany = do
   doc1 <- addRandomDocument (rdaDefault user2) { rdaTypes    = OneOf [Signable]
                                                , rdaStatuses = OneOf [Closed]
                                                }
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc0)
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
+  chargeForItemSingle CIClosingDocument (documentid doc0)
+  chargeForItemSingle CIClosingDocument (documentid doc1)
   res <- dbQuery
     $ GetUsageStats (UsageStatsForUserGroup ugid) PartitionByDay (iyears 2000)
   assertEqual "Documents present in stats" 2 $ length res
@@ -264,7 +265,7 @@ test_userShareableLinkStatisticsByUser = do
                                                }
   template <- addRandomDocumentWithAuthor' user
   doc      <- addRandomDocumentFromShareableLinkWithTemplateId user (documentid template)
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
+  chargeForItemSingle CIClosingDocument (documentid doc)
   res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUser $ user ^. #id)
                                                  PartitionByMonth
                                                  (iyears 2000)
@@ -291,8 +292,8 @@ test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
   template <- addRandomDocumentWithAuthor' user1
   doc1     <- addRandomDocumentFromShareableLinkWithTemplateId user1 (documentid template)
   doc2     <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc2)
+  chargeForItemSingle CIClosingDocument (documentid doc1)
+  chargeForItemSingle CIClosingDocument (documentid doc2)
   res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUser $ user2 ^. #id)
                                                  PartitionByMonth
                                                  (iyears 2000)
@@ -314,8 +315,8 @@ test_userShareableLinkStatisticsByGroup = do
   template <- addRandomDocumentWithAuthor' user1
   doc1     <- addRandomDocumentFromShareableLinkWithTemplateId user1 (documentid template)
   doc2     <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
-  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc2)
+  chargeForItemSingle CIClosingDocument (documentid doc1)
+  chargeForItemSingle CIClosingDocument (documentid doc2)
   res <- dbQuery $ GetUsageStatsOnShareableLinks (UsageStatsForUserGroup ugid)
                                                  PartitionByMonth
                                                  (iyears 2000)

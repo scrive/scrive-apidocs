@@ -159,7 +159,9 @@ Library
                  , Branding.Adler32
                  , Branding.CSS
                  , Branding.Control
+                 , Chargeable
                  , Chargeable.Model
+                 , Chargeable.Types
                  , Chargeable.Tables
                  , Company.CompanyControl
                  , Company.JSON
@@ -331,6 +333,9 @@ Library
                  , EID.EIDService.Model
                  , EID.EIDService.Tables
                  , EID.EIDService.Types
+                 , EventStream
+                 , EventStream.Kinesis
+                 , EventStream.Class
                  , EvidenceLog.Model
                  , EvidenceLog.Tables
                  , EvidenceLog.View
@@ -373,6 +378,7 @@ Library
                  , KontraLink
                  , KontraMonad
                  , LangRouting
+                 , Log.Amazon
                  , Log.Configuration
                  , Log.Identifier
                  , Log.Migrations
@@ -576,6 +582,7 @@ Library
                , aeson >= 1.4.4.0
                , amazonka
                , amazonka-core
+               , amazonka-kinesis
                , amazonka-s3
                , attoparsec
                , base16-bytestring
@@ -936,6 +943,7 @@ Executable mailing-server
                  Database.Redis.Helpers
                  Doc.DocumentID
                  Doc.SignatoryLinkID
+                 EventStream.Class
                  File.Conditions
                  File.File
                  File.FileID
@@ -957,6 +965,7 @@ Executable mailing-server
                  Log.Migrations
                  Log.Tables
                  Log.Utils
+                 Log.Amazon
                  MagicHash
                  MailGun
                  MailJet

@@ -51,7 +51,7 @@ newtype FileStorageT m a
   deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
            , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
            , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask
-           , MonadTransControl )
+           , MonadTransControl)
 
 runFileStorageT :: Monad m => FileStorageConfig -> FileStorageT m a -> m a
 runFileStorageT config = flip runReaderT config . unFileStorageT

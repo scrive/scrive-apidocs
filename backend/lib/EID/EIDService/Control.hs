@@ -16,7 +16,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-import Chargeable.Model
+import Chargeable
 import DB
 import Doc.DocStateData
 import Doc.DocStateQuery
@@ -150,7 +150,7 @@ updateVerimiTransactionAfterCheck slid est ts mctd = do
                         (Just sl)
                         Nothing
                   =<< signatoryActor ctx sl
-                dbUpdate $ ChargeUserGroupForVerimiAuthentication (documentid doc)
+                chargeForItemSingle CIVerimiAuthentication $ documentid doc
               return EIDServiceTransactionStatusCompleteAndSuccess
             else do
               mergeEIDServiceTransactionWithStatus
@@ -310,7 +310,7 @@ updateIDINTransactionAfterCheck slid est ts mctd = do
                     (Just sl)
                     Nothing
               =<< signatoryActor ctx sl
-            dbUpdate $ ChargeUserGroupForIDINAuthentication (documentid doc)
+            chargeForItemSingle CIIDINAuthentication $ documentid doc
           return EIDServiceTransactionStatusCompleteAndSuccess
         (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
           mergeEIDServiceTransactionWithStatus
@@ -519,7 +519,7 @@ updateNemIDTransactionAfterCheck slid est ts mctd = do
                           (Just signatoryLink)
                           Nothing
                     =<< signatoryActor ctx signatoryLink
-                dbUpdate $ ChargeUserGroupForDKNemIDAuthentication (documentid doc)
+                chargeForItemSingle CIDKNemIDAuthentication $ documentid doc
               return EIDServiceTransactionStatusCompleteAndSuccess
         (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
           mergeEIDServiceTransactionWithStatus
@@ -790,7 +790,7 @@ updateNOBankIDTransactionAfterCheck slid est ts mctd = do
                           formattedPhoneFromEIDService
                           actor
 
-                    dbUpdate $ ChargeUserGroupForNOBankIDAuthentication (documentid doc)
+                    chargeForItemSingle CINOBankIDAuthentication $ documentid doc
                   return EIDServiceTransactionStatusCompleteAndSuccess
         (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
           mergeEIDServiceTransactionWithStatus

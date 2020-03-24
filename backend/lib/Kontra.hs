@@ -2,7 +2,6 @@ module Kontra
     ( module KontraError
     , module KontraMonad
     , module Context
-    , KontraG(..)
     , Kontra
     , runKontra
     , logUserToContext
@@ -33,6 +32,7 @@ import qualified Text.StringTemplates.TemplatesLoader as TL
 import Context
 import Control.Monad.Trans.Instances ()
 import DB
+import EventStream.Kinesis
 import FileStorage
 import GuardTime (GuardTimeConfMonad(..))
 import Happstack.Server.Instances ()
@@ -48,7 +48,8 @@ import Templates
 import User.Model
 import Utils.HTTP
 
-type InnerKontra fst = DBT (fst (CryptoRNGT (LogT (ReqHandlerT IO))))
+type InnerKontra
+  = S.StateT Context (DBT (FileStorageT (KinesisT (CryptoRNGT (LogT (ReqHandlerT IO))))))
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not a WebMonad.
@@ -56,71 +57,44 @@ type InnerKontra fst = DBT (fst (CryptoRNGT (LogT (ReqHandlerT IO))))
 -- Note also that in Kontra we don't do backtracking, which is why it
 -- is not an instance of MonadPlus.  Errors are signaled explicitly
 -- through 'KontraError'.
-newtype KontraG fst a =
-  Kontra { unKontra :: S.StateT Context (InnerKontra fst) a }
+newtype Kontra a = Kontra { unKontra :: InnerKontra a }
+  deriving ( Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad
+           , MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow
+           , ServerMonad, MonadFileStorage, MonadEventStream, MonadLog)
 
-deriving instance Monad        (InnerKontra fst) => Applicative  (KontraG fst)
-deriving instance CryptoRNG    (InnerKontra fst) => CryptoRNG    (KontraG fst)
-deriving instance Functor      (InnerKontra fst) => Functor      (KontraG fst)
-deriving instance Monad        (InnerKontra fst) => Monad        (KontraG fst)
-deriving instance MonadBase IO (InnerKontra fst) => MonadBase IO (KontraG fst)
-deriving instance MonadCatch   (InnerKontra fst) => MonadCatch   (KontraG fst)
-deriving instance MonadDB      (InnerKontra fst) => MonadDB      (KontraG fst)
-deriving instance MonadIO      (InnerKontra fst) => MonadIO      (KontraG fst)
-deriving instance MonadMask    (InnerKontra fst) => MonadMask    (KontraG fst)
-deriving instance MonadThrow   (InnerKontra fst) => MonadThrow   (KontraG fst)
-deriving instance ServerMonad  (InnerKontra fst) => ServerMonad  (KontraG fst)
-deriving instance (MonadLog (InnerKontra fst), MonadTime (KontraG fst))
-  => MonadLog (KontraG fst)
-deriving instance (HasRqData (InnerKontra fst), Monad (InnerKontra fst))
-  => HasRqData (KontraG fst)
-deriving instance FilterMonad Response (InnerKontra fst)
-  => FilterMonad Response (KontraG fst)
-deriving instance MonadFileStorage (InnerKontra fst)
-  => MonadFileStorage (KontraG fst)
+runKontra
+  :: Context
+  -> Kontra a
+  -> DBT (FileStorageT (KinesisT (CryptoRNGT (LogT (ReqHandlerT IO))))) a
+runKontra ctx f = S.evalStateT (unKontra f) ctx
 
-type Kontra = KontraG FileStorageT
-
-runKontraG :: Monad (InnerKontra fst) => Context -> KontraG fst a -> InnerKontra fst a
-runKontraG ctx f = S.evalStateT (unKontra f) ctx
-
-runKontra :: Context -> Kontra a -> InnerKontra FileStorageT a
-runKontra = runKontraG
-
-instance MonadBaseControl IO (InnerKontra fst)
-    => MonadBaseControl IO (KontraG fst) where
-  type StM (KontraG fst) a = StM (S.StateT Context (InnerKontra fst)) a
+instance MonadBaseControl IO Kontra where
+  type StM Kontra a = StM InnerKontra a
   liftBaseWith f = Kontra $ liftBaseWith $ \run -> f $ run . unKontra
   restoreM = Kontra . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance (MonadTrans fst, Monad (InnerKontra fst), KontraMonad (KontraG fst))
-    => MonadTime (KontraG fst) where
+instance MonadTime Kontra where
   currentTime = view #time <$> getContext
 
-instance (MonadTrans fst, Monad (InnerKontra fst))
-    => KontraMonad (KontraG fst) where
+instance KontraMonad Kontra where
   getContext    = Kontra S.get
   modifyContext = Kontra . S.modify
 
-instance (MonadTrans fst, Monad (InnerKontra fst))
-    => TemplatesMonad (KontraG fst) where
+instance TemplatesMonad Kontra where
   getTemplates = view #templates <$> getContext
   getTextTemplatesByLanguage langStr = do
     globaltemplates <- view #globalTemplates <$> getContext
     return $ TL.localizedVersion langStr globaltemplates
 
-instance (MonadTrans fst, Monad (InnerKontra fst))
-    => GuardTimeConfMonad (KontraG fst) where
+instance GuardTimeConfMonad Kontra where
   getGuardTimeConf = view #gtConf <$> getContext
 
-instance (MonadTrans fst, Monad (InnerKontra fst))
-    => PdfToolsLambdaMonad (KontraG fst) where
+instance PdfToolsLambdaMonad Kontra where
   getPdfToolsLambdaEnv = view #pdfToolsLambdaEnv <$> getContext
 
-instance (MonadTrans fst, Monad (InnerKontra fst))
-    => MailContextMonad (KontraG fst) where
+instance MailContextMonad Kontra where
   getMailContext = contextToMailContext <$> getContext
 
 -- | Logged in user is admin with 2FA (2FA only enforced for production = true)

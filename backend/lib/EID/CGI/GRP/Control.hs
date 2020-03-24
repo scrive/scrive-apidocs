@@ -24,7 +24,7 @@ import qualified Text.StringTemplates.Fields as F
 import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
-import Chargeable.Model
+import Chargeable
 import DB hiding (InternalError)
 import Doc.DocInfo
 import Doc.DocStateData
@@ -39,6 +39,7 @@ import EID.CGI.GRP.Config
 import EID.CGI.GRP.Transaction.Model
 import EID.CGI.GRP.Types
 import EID.Signature.Model
+import EventStream.Class
 import EvidenceLog.Model
 import Happstack.Fields
 import Kontra hiding (InternalError)
@@ -204,7 +205,13 @@ handleCheckCGIAuthStatusWithRedirect did slid = do
 data CGISignStatus = CGISignStatusSuccess | CGISignStatusInProgress ProgressStatus | CGISignStatusFailed GrpFault | CGISignStatusAlreadySigned deriving Show
 
 checkCGISignStatus
-  :: (MonadDB m, MonadThrow m, MonadMask m, MonadLog m, MonadBaseControl IO m)
+  :: ( MonadDB m
+     , MonadThrow m
+     , MonadMask m
+     , MonadLog m
+     , MonadBaseControl IO m
+     , MonadEventStream m
+     )
   => CgiGrpConfig
   -> DocumentID
   -> SignatoryLinkID
@@ -275,7 +282,10 @@ checkCGISignStatus cgiGrpConfig@(CgiGrpConfig {..}) did slid = do
                                                           "Validation.ocsp.response"
                                                           crsAttributes
                               }
-                          dbUpdate $ ChargeUserGroupForSEBankIDSignature ugidforeid did
+                          chargeForItemSpecificUserGroup CISEBankIDSignature
+                                                         did
+                                                         ugidforeid
+                                                         1
                           return CGISignStatusSuccess
                         (CgiGrpAuthTransaction _ _ _ _) ->
                           unexpectedError
@@ -373,7 +383,7 @@ checkCGIAuthStatus did slid = do
                             (Just sl)
                             Nothing
                       =<< signatoryActor ctx sl
-                  dbUpdate $ ChargeUserGroupForSEBankIDAuthentication ugidforeid did
+                  chargeForItemSpecificUserGroup CISEBankIDAuthentication did ugidforeid 1
                   return $ Right Complete
                 (CgiGrpSignTransaction _ _ _ _ _) ->
                   unexpectedError

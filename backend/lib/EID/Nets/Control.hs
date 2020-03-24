@@ -22,7 +22,7 @@ import qualified Data.Text.Encoding as T
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
-import Chargeable.Model
+import Chargeable
 import DB
 import Doc.DocInfo (isPending)
 import Doc.DocStateData
@@ -38,6 +38,7 @@ import EID.Nets.Config
 import EID.Nets.Model
 import EID.Nets.SignID
 import EID.Nets.Types
+import EventStream.Class
 import EvidenceLog.Model
 import FlashMessage
 import Happstack.Fields
@@ -337,7 +338,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
                                                             formattedPhoneFromNets
                                                             actor
 
-      dbUpdate $ ChargeUserGroupForNOBankIDAuthentication (documentid doc)
+      chargeForItemSingle CINOBankIDAuthentication $ documentid doc
       return Success
 
 
@@ -404,7 +405,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
                                                              Nothing
           =<< signatoryActor ctx sl
 
-      dbUpdate $ ChargeUserGroupForDKNemIDAuthentication (documentid doc)
+      chargeForItemSingle CIDKNemIDAuthentication $ documentid doc
       return Success
 
 handleResolveNetsFITupas
@@ -498,7 +499,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
                                                              Nothing
           =<< signatoryActor ctx sl
 
-      dbUpdate $ ChargeUserGroupForFITupasAuthentication (documentid doc)
+      chargeForItemSingle CIFITupasAuthentication $ documentid doc
       return Success
 
 ------------------------------------------
@@ -656,7 +657,13 @@ textToBeSigned doc@Document {..} = do
         ending          = T.reverse . T.take preservedLength . T.reverse $ text
 
 checkNetsSignStatus
-  :: (MonadMask m, MonadBaseControl IO m, MonadIO m, DocumentMonad m, MonadLog m)
+  :: ( MonadMask m
+     , MonadBaseControl IO m
+     , MonadIO m
+     , DocumentMonad m
+     , MonadLog m
+     , MonadEventStream m
+     )
   => NetsSignConfig
   -> DocumentID
   -> SignatoryLinkID
@@ -712,7 +719,7 @@ checkNetsSignStatus nets_conf did slid = do
                           , netsnoSignedText    = nsoTextToBeSigned nso
                           , netsnoB64SDO        = gsdorsB64SDOBytes getSdoRs
                           }
-                      dbUpdate $ ChargeUserGroupForNOBankIDSignature (documentid doc)
+                      chargeForItemSingle CINOBankIDSignature $ documentid doc
                       return $ NetsSignStatusSuccess
                     NetsSignDK -> do
                       getSignerSSNAndIPAddress (gsdorsB64SDOBytes getSdoRs)
@@ -736,8 +743,7 @@ checkNetsSignStatus nets_conf did slid = do
                                   , netsdkSignatorySSN  = fromMaybe "" m_signer_ssn
                                   , netsdkSignatoryIP   = fromMaybe "" m_ipaddress
                                   }
-                              dbUpdate
-                                $ ChargeUserGroupForDKNemIDSignature (documentid doc)
+                              chargeForItemSingle CIDKNemIDSignature $ documentid doc
                               return $ NetsSignStatusSuccess
 
   where

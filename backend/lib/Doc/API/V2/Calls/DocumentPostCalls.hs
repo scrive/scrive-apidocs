@@ -46,7 +46,7 @@ import API.V2
 import API.V2.Errors
 import API.V2.Parameters
 import Attachment.Model
-import Chargeable.Model
+import Chargeable
 import DB
 import DB.TimeZoneName (defaultTimeZoneName)
 import Doc.Action
@@ -242,7 +242,7 @@ docApiV2Start did = logDocument did . api $ do
           True  -> return ()
           False -> apiError $ documentActionForbiddenBecauseNotEnoughTokens
       _ -> return ()
-    dbUpdate $ ChargeUserGroupForStartingDocument did
+    chargeForItemSingle CIStartingDocument did
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
@@ -269,7 +269,7 @@ docApiV2StartWithPortal = api $ do
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime time actor
     postDocumentPreparationChange False timezone
-    dbUpdate $ ChargeUserGroupForStartingDocument did
+    chargeForItemSingle CIStartingDocument did
     return =<< theDocument -- return changed
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of

@@ -42,6 +42,7 @@ import BrandedDomain.Model
 import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
+import EventStream.Kinesis
 import FileStorage
 import FileStorage.Amazon.S3Env
 import Happstack.Server.ReqHandler
@@ -139,7 +140,7 @@ logRequest rq maybeInputsBody =
 -- | Outer handler monad
 type HandlerM = LogT (ReqHandlerT IO)
 -- | Inner handler monad.
-type InnerHandlerM = DBT (FileStorageT (CryptoRNGT HandlerM))
+type InnerHandlerM = DBT (FileStorageT (KinesisT (CryptoRNGT HandlerM)))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
@@ -244,9 +245,14 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
     timeDiff :: UTCTime -> UTCTime -> Double
     timeDiff t = realToFrac . diffUTCTime t
 
-    runHandler :: FileStorageT (CryptoRNGT HandlerM) Response -> HandlerM Response
-    runHandler = catchEverything . runCryptoRNGT (cryptorng appGlobals) . runFileStorageT
-      (amazons3env appGlobals, mrediscache appGlobals, filecache appGlobals)
+    runHandler
+      :: FileStorageT (KinesisT (CryptoRNGT HandlerM)) Response -> HandlerM Response
+    runHandler =
+      catchEverything
+        . runCryptoRNGT (cryptorng appGlobals)
+        . runKinesisT (kinesisStream appConf)
+        . runFileStorageT
+            (amazons3env appGlobals, mrediscache appGlobals, filecache appGlobals)
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e :: E.SomeException) -> do

@@ -1,9 +1,8 @@
 module TestFileStorage
   ( module FileStorage.Class
-  , TestFileStorageT
+  , TestFileStorageT(..)
   , evalTestFileStorageT
   , runTestFileStorageT
-  , liftTestFileStorageT
   , getTestFSEnv
   ) where
 
@@ -40,10 +39,6 @@ evalTestFileStorageT mConfig action = do
 runTestFileStorageT
   :: MonadIO m => TestFileStorageT m a -> Either (TVar FakeFS) FileStorageConfig -> m a
 runTestFileStorageT = runReaderT . unTestFileStorageT
-
-liftTestFileStorageT
-  :: Monad m => (Either (TVar FakeFS) FileStorageConfig -> m a) -> TestFileStorageT m a
-liftTestFileStorageT = TestFileStorageT . ReaderT
 
 getTestFSEnv :: Monad m => TestFileStorageT m (Either (TVar FakeFS) FileStorageConfig)
 getTestFSEnv = TestFileStorageT ask

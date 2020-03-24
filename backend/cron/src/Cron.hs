@@ -25,6 +25,7 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
+import EventStream.Kinesis
 import FileStorage
 import FileStorage.Amazon.S3Env
 import KontraError
@@ -55,7 +56,7 @@ cmdConf workspaceRoot progName =
 
 ----------------------------------------
 
-type CronM = FileStorageT (CryptoRNGT (LogT IO))
+type CronM = FileStorageT (KinesisT (CryptoRNGT (LogT IO)))
 
 main :: IO ()
 main = do
@@ -147,6 +148,7 @@ main = do
       filePurging = filePurgingConsumer pool (cronConsumerFilePurgingMaxJobs cronConf)
 
     runCryptoRNGT rng
+      . runKinesisT (cronKinesisStream cronConf)
       . runFileStorageT (amazonEnv, mrediscache, filecache)
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
       . finalize (localDomain "document signing" $ runConsumer docSigning pool)

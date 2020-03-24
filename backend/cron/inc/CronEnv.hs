@@ -16,6 +16,8 @@ import Log
 
 import CronConf (CronConf, cronMailNoreplyAddress, cronSalesforceConf)
 import DB
+import EventStream.Class
+import EventStream.Kinesis
 import FileStorage
 import Salesforce.Conf
 import Templates (KontrakcjaGlobalTemplates)
@@ -37,13 +39,13 @@ runCronEnv cronConf templates x = do
         CronEnv (cronSalesforceConf cronConf) templates (cronMailNoreplyAddress cronConf)
   runReaderT (unCronEnvT x) cronEnvData
 
-type CronEnvM = CronEnvT (DBT (FileStorageT (CryptoRNGT (LogT IO)))) CronEnv
+type CronEnvM = CronEnvT (DBT (FileStorageT (KinesisT (CryptoRNGT (LogT IO))))) CronEnv
 
 -- hiding ReaderT prevents collision with ReaderT in TestEnvSt
 newtype CronEnvT m sd a = CronEnvT { unCronEnvT :: ReaderT sd m a }
   deriving ( Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO
            , MonadMask, MonadReader sd, MonadThrow, MonadFileStorage
-           , MonadBase b)
+           , MonadEventStream, MonadBase b)
 
 deriving newtype instance
             (Monad m, MonadTime m) => MonadTime (CronEnvT m sd)

@@ -57,7 +57,7 @@ import AccessControl.Types
 import API.Monad.V1
 import AppView (respondWithPDF)
 import Attachment.Model
-import Chargeable.Model
+import Chargeable
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.Action
@@ -507,7 +507,7 @@ apiCallV1Ready did = logDocument did . api $ do
                  dbUpdate $ SetDocumentInviteTime t actor
                  authorsignsimmediately <- isFieldSet "authorsignsimmediately"
                  postDocumentPreparationChange authorsignsimmediately timezone
-                 dbUpdate $ ChargeUserGroupForStartingDocument did
+                 chargeForItemSingle CIStartingDocument did
                  Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
   where

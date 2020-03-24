@@ -58,7 +58,7 @@ import API.V2.MonadUtils
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
-import Chargeable.Model
+import Chargeable
 import Cookies
 import DB
 import DB.TimeZoneName
@@ -381,7 +381,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
           respondLinkInvalid
         Just sl -> do
           sid <- getNonTempSessionID
-          dbUpdate $ ChargeUserGroupForStartingDocument docID
+          chargeForItemSingle CIStartingDocument docID
           dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
           sendRedirect $ LinkSignDocNoMagicHash docID $ signatorylinkid sl
 

@@ -203,7 +203,7 @@ testDocApiV2GetShortCode = do
               (rsCode resPrep)
 
 -- | A malicious Mallory should not be able to execute this request.
-testMallory :: Request -> KontraTest Response -> TestEnv ()
+testMallory :: Request -> TestKontra Response -> TestEnv ()
 testMallory getRequest req = do
   mallory         <- instantiateRandomUser
   ctxMallory      <- (set #maybeUser (Just mallory)) <$> mkContext defaultLang

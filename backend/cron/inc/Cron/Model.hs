@@ -22,6 +22,7 @@ import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
 import Doc.DocumentID
 import Doc.Model
 import EID.EIDService.Model
+import EventStream.Class
 import FeatureFlags.Model
 import File.Storage
 import HostClock.Collector (collectClockError)
@@ -156,6 +157,7 @@ cronConsumer
      , MonadIO cronenv
      , MonadLog cronenv
      , MonadMask cronenv
+     , MonadEventStream cronenv
      , MonadReader CronEnv.CronEnv cronenv
      , CryptoRNG dbt
      , MonadBaseControl IO dbt

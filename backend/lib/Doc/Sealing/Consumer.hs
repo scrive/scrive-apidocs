@@ -20,6 +20,7 @@ import Doc.Action
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Sealing.Model
+import EventStream.Class
 import FileStorage
 import GuardTime
 import Log.Identifier
@@ -42,6 +43,7 @@ documentSealing
      , MonadIO m
      , MonadLog m
      , MonadMask m
+     , MonadEventStream m
      )
   => GuardTimeConf
   -> PdfToolsLambdaEnv

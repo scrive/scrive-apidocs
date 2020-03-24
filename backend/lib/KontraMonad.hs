@@ -15,6 +15,7 @@ import Text.StringTemplates.Templates
 
 import Context
 import DB
+import EventStream.Class
 import FileStorage.Class
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
@@ -40,6 +41,7 @@ type Kontrakcja m
     , ServerMonad m
     , TemplatesMonad m
     , MonadFileStorage m
+    , MonadEventStream m
     )
 
 class Monad m => KontraMonad m where

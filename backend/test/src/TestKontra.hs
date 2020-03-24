@@ -1,8 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module TestKontra (
-      KontraTest
-    , inTestDir
+      inTestDir
     , readTestFile
     , readTestFileAsBS
     , readTestFileAsStr
@@ -10,6 +9,7 @@ module TestKontra (
     , module TestEnvSt
     , runTestEnv
     , ununTestEnv
+    , TestKontra
     , runTestKontra
     , inText
     , inTextBS
@@ -47,6 +47,7 @@ import Optics (assign, gview, to, use)
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.State.Strict as S
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
@@ -59,14 +60,17 @@ import qualified Text.StringTemplates.TemplatesLoader as TL
 import BrandedDomain.Model
 import DB
 import DB.PostgreSQL
+import EventStream.Class
 import FileStorage
 import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import Log.Configuration
+import MailContext (MailContextMonad(..))
 import MinutesTime
 import PasswordService.Conf
+import PdfToolsLambda.Conf
 import Session.SessionID as SessionID
 import Templates
 import TestEnvSt
@@ -87,7 +91,7 @@ readTestFileAsBS = liftIO . BS.readFile . inTestDir
 readTestFileAsStr :: MonadIO m => FilePath -> m Text
 readTestFileAsStr = fmap T.pack . liftIO . readFile . inTestDir
 
-type KontraTest = KontraG TestFileStorageT
+----------------------------------------
 
 type InnerTestEnv
   = TestFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
@@ -149,12 +153,13 @@ instance MonadDB TestEnv where
   withNewConnection (TestEnv m) = do
     ConnectionSource pool <- gview #connSource
     runLogger             <- gview (#runLogger % to unRunLogger)
-    TestEnv . liftTestFileStorageT $ \fsVar ->
-      StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-        res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT
-          (runStateT (runTestFileStorageT m fsVar) terw)
-          te
-        return (res, st)
+    TestEnv . TestFileStorageT . ReaderT $ \fsVar -> do
+      StateT $ \terw -> ReaderT $ \te -> do
+        LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
+          res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT
+            (runStateT (runTestFileStorageT m fsVar) terw)
+            te
+          return (res, st)
   getNotification = TestEnv . getNotification
 
 instance MonadTime TestEnv where
@@ -187,11 +192,57 @@ instance MonadFileStorage TestEnv where
   getSavedContents    = TestEnv . getSavedContents
   deleteSavedContents = TestEnv . deleteSavedContents
 
+instance MonadEventStream TestEnv where
+  pushEvent _ _ _ = pure ()
+
+----------------------------------------
+type InnerTestKontra
+  = S.StateT Context (DBT (TestFileStorageT (CryptoRNGT (LogT (ReqHandlerT IO)))))
+
+-- | TestKontra is the equivalent of 'Kontra' but with file storage and stream
+-- event transformers suitable for running request handlers during testing.
+newtype TestKontra a = TestKontra { unTestKontra :: InnerTestKontra a }
+  deriving ( Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad
+           , MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow
+           , ServerMonad, MonadFileStorage, MonadLog)
+
+instance MonadBaseControl IO TestKontra where
+  type StM TestKontra a = StM InnerTestKontra a
+  liftBaseWith f = TestKontra $ liftBaseWith $ \run -> f $ run . unTestKontra
+  restoreM = TestKontra . restoreM
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
+
+instance MonadTime TestKontra where
+  currentTime = view #time <$> getContext
+
+instance KontraMonad TestKontra where
+  getContext    = TestKontra S.get
+  modifyContext = TestKontra . S.modify
+
+instance TemplatesMonad TestKontra where
+  getTemplates = view #templates <$> getContext
+  getTextTemplatesByLanguage langStr = do
+    globaltemplates <- view #globalTemplates <$> getContext
+    return $ TL.localizedVersion langStr globaltemplates
+
+instance GuardTimeConfMonad TestKontra where
+  getGuardTimeConf = view #gtConf <$> getContext
+
+instance PdfToolsLambdaMonad TestKontra where
+  getPdfToolsLambdaEnv = view #pdfToolsLambdaEnv <$> getContext
+
+instance MailContextMonad TestKontra where
+  getMailContext = contextToMailContext <$> getContext
+
+instance MonadEventStream TestKontra where
+  pushEvent _ _ _ = pure ()
+
 runTestKontraHelper
   :: BasicConnectionSource
   -> Request
   -> Context
-  -> KontraG TestFileStorageT a
+  -> TestKontra a
   -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   now       <- currentTime
@@ -210,7 +261,7 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
       . runCryptoRNGT rng
       . flip runTestFileStorageT fsEnv
       . runDBT pool ts
-      $ runStateT (unKontra tk) ctx
+      $ runStateT (unTestKontra tk) ctx
       )
       (ReqHandlerSt rq identity now)
     )
@@ -220,7 +271,7 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
-  runTestKontra :: Request -> Context -> KontraG TestFileStorageT a
+  runTestKontra :: Request -> Context -> TestKontra a
                 -> TestEnv (a, Context)
 
 instance RunnableTestKontra a where
@@ -234,6 +285,8 @@ instance {-# OVERLAPPING #-} RunnableTestKontra Response where
     cs             <- gview #connSource
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
     return (f res, ctx')
+
+----------------------------------------
 
 -- | Modifies time, but does not change, whether the time is static or from IO.
 modifyTestTime :: (MonadState TestEnvStRW m) => (UTCTime -> UTCTime) -> m ()

@@ -19,6 +19,7 @@ import Doc.DocMails
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
+import EventStream.Class
 import Log.Identifier
 import MinutesTime
 import Util.Actor
@@ -57,6 +58,7 @@ expireDocumentAutomaticReminders
      , MonadLog m
      , MonadIO m
      , CryptoRNG m
+     , MonadEventStream m
      )
   => m ()
 expireDocumentAutomaticReminders = do

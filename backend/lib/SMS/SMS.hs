@@ -12,9 +12,10 @@ import Data.String.Utils
 import Log
 import qualified Data.Text as T
 
-import Chargeable.Model
+import Chargeable
 import DB
 import Doc.DocStateData
+import EventStream.Class
 import Log.Identifier
 import SMS.KontraInfoForSMS
 import SMS.Model
@@ -31,7 +32,11 @@ data SMS = SMS {
 -- | Schedule SMS sendout. The SMS sendout provider takes care of detecting the
 -- need to use UCS2 or GSM7 and the details of conversion, but unfortunately we
 -- also need to distinguish between these formats for billing reasons.
-scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
+scheduleSMS
+  :: (MonadLog m, MonadDB m, MonadThrow m, MonadCatch m, MonadEventStream m)
+  => Document
+  -> SMS
+  -> m ()
 scheduleSMS doc SMS {..} = do
   when (T.null smsMSISDN) $ do
     unexpectedError "no mobile phone number defined"
@@ -40,7 +45,7 @@ scheduleSMS doc SMS {..} = do
                               smsMSISDN
                               smsBody
   -- charge company of the author of the document for the smses
-  dbUpdate $ ChargeUserGroupForSMS (documentid doc) smsProvider smsCount
+  chargeForItemSimple (mapSMSToChargeableItem smsProvider) (documentid doc) smsCount
   case kontraInfoForSMS of
     Nothing   -> return ()
     Just kifs -> void $ dbUpdate $ AddKontraInfoForSMS sid kifs
@@ -78,6 +83,10 @@ scheduleSMS doc SMS {..} = do
         (count, 0) -> count
         (count, _) -> count + 1
       | otherwise = 1
+
+    mapSMSToChargeableItem :: SMSProvider -> ChargeableItem
+    mapSMSToChargeableItem SMSDefault        = CISMS
+    mapSMSToChargeableItem SMSTeliaCallGuide = CISMSTelia
 
 isGSM7PermissibleString :: Text -> Bool
 isGSM7PermissibleString s = T.all (`member` gsm7PermissibleChars) s

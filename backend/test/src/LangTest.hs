@@ -7,7 +7,6 @@ import AppControl
 import DB
 import Doc.DocStateData
 import Doc.Model
-import Kontra (KontraG(..))
 import Login
 import TestingUtil
 import TestKontra as T
@@ -54,7 +53,7 @@ testLoggedInLangSwitching = do
     assertContextLang uid ctx lang = do
       emptyReq      <- mkRequest GET []
       muser         <- dbQuery $ GetUserByID uid
-      (userlang, _) <- runTestKontra emptyReq ctx $ Kontra $ getStandardLang muser
+      (userlang, _) <- runTestKontra emptyReq ctx $ getStandardLang muser
       assertLang userlang lang
     assertLang :: HasLang a => a -> Lang -> TestEnv ()
     assertLang langlike lang = assertEqual "Lang" lang (getLang langlike)

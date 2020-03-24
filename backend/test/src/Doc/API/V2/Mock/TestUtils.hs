@@ -94,7 +94,7 @@ import TestKontra
 -- | For conveniently doing a test API call that returns Document JSON.
 -- Uses `jsonTestRequestHelper` but parses the result using `mockDocFromValue`
 mockDocTestRequestHelper
-  :: Context -> Method -> [(Text, Input)] -> KontraTest Response -> Int -> TestEnv MockDoc
+  :: Context -> Method -> [(Text, Input)] -> TestKontra Response -> Int -> TestEnv MockDoc
 mockDocTestRequestHelper c m p f i = mockDocFromValue <$> jsonTestRequestHelper c m p f i
 
 -- | For conveniently doing a test API call that returns a list of Document JSON.
@@ -103,7 +103,7 @@ mockDocTestRequestHelperMultiple
   :: Context
   -> Method
   -> [(Text, Input)]
-  -> KontraTest Response
+  -> TestKontra Response
   -> Int
   -> TestEnv [MockDoc]
 mockDocTestRequestHelperMultiple c m p f i = do

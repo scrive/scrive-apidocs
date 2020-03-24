@@ -19,7 +19,7 @@ import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
 import BrandedDomain.Model
-import Chargeable.Model
+import Chargeable
 import CronEnv
 import DB
 import DB.TimeZoneName
@@ -44,6 +44,7 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
 import Doc.Types.SignatoryAccessToken
+import EventStream.Class
 import File.Storage
 import GuardTime (GuardTimeConfMonad)
 import Kontra
@@ -195,6 +196,7 @@ postDocumentPendingChange
      , MonadIO m
      , MailContextMonad m
      , GuardTimeConfMonad m
+     , MonadEventStream m
      )
   => Document
   -> SignatoryLink
@@ -204,7 +206,7 @@ postDocumentPendingChange olddoc signatoryLink = do
     $   theDocument
     >>= stateMismatchError "postDocumentPendingChange" Pending
 
-  dbUpdate $ ChargeUserGroupForClosingSignature (documentid olddoc)
+  chargeForItemSingle CIClosingSignature $ documentid olddoc
 
   ifM
       (allPartiesSignedOrApproved <$> theDocument)
@@ -213,9 +215,10 @@ postDocumentPendingChange olddoc signatoryLink = do
             logInfo "All have signed, document will be closed" $ logObject_ document
             time <- view #time <$> getMailContext
             dbUpdate $ CloseDocument (systemActor time)
-            dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
-            when (documentfromshareablelink olddoc) $ do
-              dbUpdate $ ChargeUserGroupForShareableLink $ documentid olddoc
+            chargeForItemSingle CIClosingDocument $ documentid olddoc
+            when (documentfromshareablelink olddoc)
+              $ chargeForItemSingle CIShareableLink
+              $ documentid olddoc
             mauthor <- getDocAuthor document
             case mauthor of
               Nothing     -> return ()
@@ -272,6 +275,7 @@ postDocumentClosedActions
      , DocumentMonad m
      , GuardTimeConfMonad m
      , PdfToolsLambdaMonad m
+     , MonadEventStream m
      )
   => Bool -- ^ Commit to DB after we have sealed the document
   -> Bool -- ^ Prepare final PDF even if it has already been prepared

@@ -26,7 +26,7 @@ testRequestHelper
   :: Context
   -> Method
   -> [(Text, Input)]
-  -> KontraTest Response
+  -> TestKontra Response
   -> Int
   -> TestEnv BSL.ByteString
 testRequestHelper ctx httpMethod params func expectedRsCode = do
@@ -48,7 +48,7 @@ testRequestHelper ctx httpMethod params func expectedRsCode = do
 
 -- | Used to succinctly construct an API request without assertions
 testRequestHelperNoAssert_
-  :: Context -> Method -> [(String, Input)] -> KontraTest Response -> TestEnv ()
+  :: Context -> Method -> [(String, Input)] -> TestKontra Response -> TestEnv ()
 testRequestHelperNoAssert_ ctx httpMethod params func = do
   req      <- mkRequest httpMethod $ fmap (\(t1, t2) -> (T.pack t1, t2)) params
   (rsp, _) <- runTestKontra req ctx func
@@ -76,7 +76,7 @@ testRequestHelperNoAssert_ ctx httpMethod params func = do
 --   testSomething docJSON
 -- @
 jsonTestRequestHelper
-  :: Context -> Method -> [(Text, Input)] -> KontraTest Response -> Int -> TestEnv Value
+  :: Context -> Method -> [(Text, Input)] -> TestKontra Response -> Int -> TestEnv Value
 jsonTestRequestHelper ctx httpMethod params func expectedRsCode = do
   rsp <- testRequestHelper ctx httpMethod params func expectedRsCode
   let showTestDetails =

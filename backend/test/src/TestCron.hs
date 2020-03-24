@@ -63,6 +63,7 @@ runTestCronUntilIdle ctx = do
       , cronMonthlyInvoiceConf         = cronMonthlyInvoiceConf
       , cronStatsDConf                 = Nothing
       , cronEIDServiceConf             = Nothing
+      , cronKinesisStream              = unexpectedError "cronKinesisStream undefined"
       }
 
     -- make timeouts small, so that the test runs faster

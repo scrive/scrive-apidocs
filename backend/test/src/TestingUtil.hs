@@ -156,7 +156,6 @@ import SMS.Types (SMSProvider(..))
 import System.Random.CryptoRNG ()
 import Tag
 import Templates
-import TestFileStorage (liftTestFileStorageT, runTestFileStorageT)
 import TestKontra
 import User.Email
 import User.Model
@@ -1350,15 +1349,12 @@ addRandomDocumentWithFile fileid rda = do
 
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()
-sealTestDocument ctx did = void $ TestEnv $ liftTestFileStorageT $ \fsEnv -> do
-  cryptoSt <- newCryptoRNGState
+sealTestDocument ctx did = do
   withDocumentID did
     . runGuardTimeConfT (ctx ^. #gtConf)
     . runPdfToolsLambdaT (ctx ^. #pdfToolsLambdaEnv)
     . runTemplatesT (ctx ^. #lang, ctx ^. #globalTemplates)
     . runMailContextT (contextToMailContext ctx)
-    . runCryptoRNGT cryptoSt
-    . flip runTestFileStorageT fsEnv
     $ do
         res <- postDocumentClosedActions True False
           `catch` \(_ :: KE.KontraError) -> return False
@@ -1374,7 +1370,7 @@ sealTestDocument ctx did = void $ TestEnv $ liftTestFileStorageT $ \fsEnv -> do
                       \ document_extending_jobs"
             expectedJobCount
             actualJobCount
-        return res
+        return ()
 
 rand :: CryptoRNG m => Int -> Gen a -> m a
 rand i a = do

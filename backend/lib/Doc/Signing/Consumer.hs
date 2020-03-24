@@ -15,7 +15,7 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
-import Chargeable.Model
+import Chargeable
 import DB
 import DB.PostgreSQL
 import Doc.Action
@@ -43,6 +43,7 @@ import EID.Nets.Config
 import EID.Nets.Control (checkNetsSignStatus)
 import EID.Nets.Types (NetsSignStatus(..), netsFaultText)
 import EID.Signature.Model
+import EventStream.Class
 import File.FileID
 import FileStorage
 import GuardTime
@@ -85,6 +86,7 @@ documentSigning
      , MonadIO m
      , MonadLog m
      , MonadMask m
+     , MonadEventStream m
      )
   => GuardTimeConf
   -> Maybe CgiGrpConfig
@@ -275,7 +277,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                         . showt
                         $ (est, ts)
                       signFromESignature ds now
-                      dbUpdate $ ChargeUserGroupForIDINSignature (documentid doc)
+                      chargeForItemSingle CIIDINSignature $ documentid doc
                       mergeWithStatus EIDServiceTransactionStatusCompleteAndSuccess
                       return $ Ok Remove
                     (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
@@ -304,6 +306,7 @@ signFromESignature
      , CryptoRNG m
      , DocumentMonad m
      , TemplatesMonad m
+     , MonadEventStream m
      )
   => DocumentSigning
   -> UTCTime

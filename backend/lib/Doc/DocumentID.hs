@@ -4,6 +4,7 @@ module Doc.DocumentID (
   , fromDocumentID
   ) where
 
+import Data.Aeson
 import Data.Binary as B
 import Data.Int
 import Data.Unjson
@@ -31,9 +32,19 @@ instance FromReqURI DocumentID where
 
 instance Unjson DocumentID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse DocumentID") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse DocumentID") return . maybeRead . T.pack)
     show
     unjsonDef
+
+instance ToJSON DocumentID where
+  toJSON (DocumentID n) = toJSON $ show n
+
+instance FromJSON DocumentID where
+  parseJSON v = do
+    didStr <- parseJSON v
+    case maybeRead didStr of
+      Nothing  -> fail "Can't parse DocumentID"
+      Just did -> return did
 
 instance Binary DocumentID where
   put (DocumentID did) = put did

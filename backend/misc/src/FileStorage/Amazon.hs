@@ -10,10 +10,8 @@ import Data.Aeson.Types
 import Log
 import Optics (lensVL)
 import qualified Conduit as C
-import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import qualified Network.AWS as AWS
 import qualified Network.AWS.Data.Body as AWS
 import qualified Network.AWS.S3 as AWS
@@ -21,6 +19,7 @@ import qualified Network.HTTP as HTTP
 
 import FileStorage.Amazon.S3Env
 import FileStorage.Class
+import Log.Amazon
 import Log.Utils
 
 saveContentsToAmazon
@@ -107,23 +106,3 @@ withResourceT = try . C.runResourceT
 
 runAWS :: AmazonS3Env -> AWS.Logger -> AWS.AWS a -> C.ResourceT IO a
 runAWS env lgr = AWS.runAWS (as3eEnv env & lensVL AWS.envLogger .~ lgr)
-
-awsLogger :: MonadLog m => m AWS.Logger
-awsLogger = do
-  now    <- currentTime
-  logger <- getLoggerIO
-  return $ \awsLevel builder -> do
-    let level = adjustLevel awsLevel
-    -- We are not interested in trace messages.
-    when (level /= LogTrace) $ logger now level (builderToText builder) emptyObject
-  where
-    adjustLevel AWS.Error = LogAttention
-    adjustLevel AWS.Info  = LogInfo
-    adjustLevel AWS.Debug = LogInfo
-    adjustLevel AWS.Trace = LogTrace
-
-    builderToText =
-      either (T.append "decode error: " . showt) identity
-        . T.decodeUtf8'
-        . BSL.toStrict
-        . B.toLazyByteString
