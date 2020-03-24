@@ -101,7 +101,7 @@ viewStructure : Model -> Structure Node -> Html Msg
 viewStructure model (Structure node children) =
     let
         url =
-            "/adminonly/page/companyadmin/" ++ node.ugid ++ "#structure"
+            "/adminonly/page/companyadmin/" ++ node.ugid ++ "#details"
 
         displayItem item =
             if node.ugid == model.ugid then
