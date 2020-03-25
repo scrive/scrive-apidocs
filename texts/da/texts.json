@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Acceptér",
 "_CompanyAccounts":"Brugere",
 "_CompanySettings":"Branding",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Hvis du sletter temaet <strong class='put-theme-name-here'></strong>, vil <strong>standardtemaet</strong> blive anvendt i stedet. ",
 "_brandingEmailThemeTitle":"E-mail",
 "_brandingEnterNameOfThemeBellow":"Navn på nyt tema",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Log ind",
 "_brandingNewTheme":"Nyt tema",
 "_brandingNewThemeWithDots":"Nyt tema...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Vær venlig at acceptere Scrives servicevilkår for at komme i gang.",
 "_flashMessageNewActivationLinkSend":"Vi har gensendt dit aktiveringslink til din konto. Gå venligst til din indbakke og følg instruktionerne i e-mailen for at aktivere din konto. ",
 "_flashMessageNoBulkDocumentRemindsSent":"Ingen påmindelser blev sendt, fordi ingen af ​​de valgte dokumenter kan signeres af yderligere parter.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Vi beklager meget. Dette link er ikke længere gyldigt.<br/>Klik på \\\\\"$_forgotpassword()$\\\\\" for at generere et nyt link.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Vi beklager, men dette link er ikke længere gyldigt. Klik på \"$_forgotpassword()$\" og få genereret et nyt link. ",
 "_flashMessagePasswordsDontMatch":"De to adgangskoder er ikke ens.",
@@ -706,7 +707,7 @@
 "_historyTime":"Tid",
 "_identifiedByDKNemIDText":"Identificeret af det danske NemID som \"$name$\"",
 "_identifiedByFITupasText":"Identificeret af det finske TUPAS som \"$name$\"",
-"_identifiedByIDINText":"Identificeret af iDIN som \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Identificeret af det norske BankID som \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identificeret af det svenske BankID som \"$name$\"",
 "_identifiedByVerimiText":"Verificeret af Verimi som \"$email$\"",

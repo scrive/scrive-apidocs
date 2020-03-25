@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accepter",
 "_CompanyAccounts":"Utilisateurs",
 "_CompanySettings":"Personnalisation",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Si vous supprimez le thème <strong class='put-theme-name-here'></strong> le<strong>thème</strong> par défaut sera plutôt utilisé.",
 "_brandingEmailThemeTitle":"Email",
 "_brandingEnterNameOfThemeBellow":"Nom du nouveau thème",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Connexion",
 "_brandingNewTheme":"Nouveau thème",
 "_brandingNewThemeWithDots":"Nouveau thème...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Veuillez accepter les conditions d'utilisation de Scrive afin de démarrer.",
 "_flashMessageNewActivationLinkSend":"Nous avons renvoyé le lien d'activation de votre compte. Veuillez consulter votre boîte de réception et suivre les instructions figurant dans le mail, afin d'activer votre compte.",
 "_flashMessageNoBulkDocumentRemindsSent":"Aucun rappel n'a été envoyé car aucun des documents sélectionnés ne peut être signé par les autres parties.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Désolé, ce lien n'est plus valide.<br/>Cliquez sur \\\\\"$_forgotpassword()$\\\\\" pour générer un nouveau lien.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Nous sommes désolés. Ce lien n'est plus valid. Cliquez sur \"$_forgotpassword()$\" afin de générer un nouveau lien.",
 "_flashMessagePasswordsDontMatch":"Les mots de passe saisis ne sont pas identiques.",
@@ -706,7 +707,7 @@
 "_historyTime":"Heure",
 "_identifiedByDKNemIDText":"Identifié par le NemID danois comme \"$name$\"",
 "_identifiedByFITupasText":"Identifié par le TUPAS finlandais comme \"$name$\"",
-"_identifiedByIDINText":"Identifié par iDIN comme \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Identifié par le BankID norvégien comme \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identifié par le BankID suédois comme \"$name$\"",
 "_identifiedByVerimiText":"Identifié par Verimi comme \"$email$\"",

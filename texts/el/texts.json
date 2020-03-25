@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Αποδοχή",
 "_CompanyAccounts":"Χρήστες ",
 "_CompanySettings":"Επωνυμία ",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Αν διαγράψετε το θέμα <strong class='put-theme-name-here'></strong> το <strong>Default</strong> θέμα θα χρησιμοποιηθεί αντ' αυτού.",
 "_brandingEmailThemeTitle":"Email",
 "_brandingEnterNameOfThemeBellow":"Όνομα νέου θέματος",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Σύνδεση",
 "_brandingNewTheme":"Νέο θέμα",
 "_brandingNewThemeWithDots":"Νέο θέμα...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Παρακαλώ αποδεχτείτε του όρους της υπηρεσίας Scrive για να ξεκινήσετε. ",
 "_flashMessageNewActivationLinkSend":"Έχουμε αποστείλει ξανά τον σύνδεσμο ενεργοποίησης του λογαριασμού σας. Παρακαλώ πηγαίνετε στο email σας και ακολουθήστε τις οδηγίες στο email για να ενεργοποιήσετε τον λογαριασμό σας. ",
 "_flashMessageNoBulkDocumentRemindsSent":"Δεν εστάλησαν υπενθυμίσεις λόγω του ότι κανένα από τα επιλεγμένα έγγραφα δεν μπόρεσε να υπογραφεί από τους επιπρόσθετους μετέχοντες. ",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Λυπούμαστε. Αυτός ο σύνδεσμος δεν είναι πλέον έγκυρος.<br/>Πιέστε στο \\\\\"$_forgotpassword()$\\\\\" για να ενεργοποιήσετε ένα νέο σύνδεσμο. ",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Λυπούμαστε. Αυτός ο σύνδεσμος δεν είναι πλέον έγκυρος. Πιέστε  \"$_forgotpassword()$\" για να δημιουργήσετε ένα νέο σύνδεσμο. ",
 "_flashMessagePasswordsDontMatch":"Οι δύο κωδικοί πρόσβασης δεν ταιριάζουν.  ",
@@ -706,7 +707,7 @@
 "_historyTime":"Ώρα",
 "_identifiedByDKNemIDText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Danish NemID ως \"$name$\"",
 "_identifiedByFITupasText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Finnish TUPAS ως \"$name$\"",
-"_identifiedByIDINText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής iDIN ως \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Norwegian BankID ως \"$name$\"",
 "_identifiedBySwedishBankIDText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Swedish BankID ως \"$name$\"",
 "_identifiedByVerimiText":"Πραγματοποιήθηκε ταυτοποίηση μέσω Verimi ως \"$email$\"",

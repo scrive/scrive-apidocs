@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Akzeptieren",
 "_CompanyAccounts":"Benutzer",
 "_CompanySettings":"Kennzeichnung",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Wenn Sie das Theme <strong class='put-theme-name-here'></strong> löschen, wird stattdessen die <strong>Voreinstellung</strong> für das Theme verwendet.",
 "_brandingEmailThemeTitle":"E-Mail",
 "_brandingEnterNameOfThemeBellow":"Name für das neue Theme",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Anmeldung",
 "_brandingNewTheme":"Neues Theme",
 "_brandingNewThemeWithDots":"Neues Theme ...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Bitte akzeptieren Sie die Nutzungsbedingungen von Scrive, um anzufangen.",
 "_flashMessageNewActivationLinkSend":"Wir haben erneut Ihren Konto-Aktivierungslink gesendet. Bitte gehen Sie zu Ihrem Posteingang und folgen Sie den Anweisungen in der E-Mail, um Ihr Konto zu aktivieren.",
 "_flashMessageNoBulkDocumentRemindsSent":"Es wurden keine Erinnerungen verschickt, weil keines der ausgewählten Dokumente durch eine zusätzliche Partei signiert werden kann.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Es tut uns leid. Dieser Link ist nicht mehr gültig. <br/>Klicken Sie auf  \\\\\"$_forgotpassword()$\\\\\", um eine neue Verbindung zu erstellen.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Leider ist dieser Link nicht mehr gültig. Klicken Sie auf \"$_forgotpassword()$\", um einen neuen Link zu generieren.",
 "_flashMessagePasswordsDontMatch":"Die zwei Passwörter stimmen nicht überein.",
@@ -706,7 +707,7 @@
 "_historyTime":"Zeit",
 "_identifiedByDKNemIDText":"Durch dänische NemID identifiziert als \"$name$\"",
 "_identifiedByFITupasText":"Durch finnische TUPAS identifiziert als \"$name$\" ",
-"_identifiedByIDINText":"Von iDIN als \"$name$\" identifiziert",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Durch norwegische BankID identifiziert als \"$name$\" ",
 "_identifiedBySwedishBankIDText":"Durch schwedische BankID identifiziert als \"$name$\" ",
 "_identifiedByVerimiText":"Von Verimi als \"$email$\" identifiziert",

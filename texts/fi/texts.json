@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Hyväksy",
 "_CompanyAccounts":"Käyttäjät",
 "_CompanySettings":"Brändäys",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Jos poistat teeman <strong class='put-theme-name-here'></strong> <strong>Oletus</strong> teema otetaan käyttöön.",
 "_brandingEmailThemeTitle":"Sähköposti",
 "_brandingEnterNameOfThemeBellow":"Teeman nimi",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Kirjautumistunnukset",
 "_brandingNewTheme":"Uusi teema",
 "_brandingNewThemeWithDots":"Uusi teema...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Ole hyvä, ja hyväksy Scriven Palveluehdot aloittaaksesi.",
 "_flashMessageNewActivationLinkSend":"Olemme lähettäneet uudelleen tilin aktivointi linkkisi. Mene sähköpostiisi ja seuraa sähköpostiviestin ohjeita aktivoidaksesi tilisi.",
 "_flashMessageNoBulkDocumentRemindsSent":"Muistutuksia ei lähetetty, koska yhtäkään valituista dokumenteista ei voida allekirjoittaa lisäosapuolien toimesta.",
-"_flashMessageNoDNProvidedByEIDService":"EID-profiilistasi puuttuu erottava nimi.",
-"_flashMessageNoDOBProvidedByEIDService":"EID-profiilistasi puuttuu syntymäaika.",
+"_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Olemme pahoillamme. Tämä linkki ei ole enää voimassa.<br/>Klikkaa \\\\\"$_forgotpassword()$\\\\\" luodaksesi uuden linkin.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Olemme pahoillamme. Tämä linkki ei ole enää voimassa. Ole hyvä ja klikkaa kohtaa \"$_forgotpassword()$\" luodaksesi uuden linkin.",
 "_flashMessagePasswordsDontMatch":"Nämä kaksi salasanaa eivät täsmää.",
@@ -706,7 +707,7 @@
 "_historyTime":"Aika",
 "_identifiedByDKNemIDText":"Tanskalainen NemID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedByFITupasText":"Suomalainen TUPAS-tunnistautuminen henkilöksi \"$name$\"",
-"_identifiedByIDINText":"iDIN-tunnistautuminen sähköpostiosoitteeksi \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Norjalainen BankID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedBySwedishBankIDText":"Ruotsalainen BankID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedByVerimiText":"Verimi-tunnistautuminen sähköpostiosoitteeksi \"$email$\"",
