@@ -597,8 +597,10 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
 
     authToSignIsValid sl = case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign ->
-        T.null (getPersonalNumber sl)
-          || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
+        isJust (getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
+          && (  T.null (getPersonalNumber sl)
+             || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
+             )
       NOBankIDAuthenticationToSign ->
         T.null (getPersonalNumber sl)
           || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)

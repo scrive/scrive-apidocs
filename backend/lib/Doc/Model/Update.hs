@@ -1283,6 +1283,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog
         , maybesignatory               = Nothing
         , maybesigninfo                = Nothing
         , maybeseeninfo                = Nothing
+        , maybereadinvite              = Nothing
         , mailinvitationdeliverystatus = Unknown
         , smsinvitationdeliverystatus  = Unknown
         , signatoryfields = updatedFields fieldsWithVTexts (signatoryfields sl)
