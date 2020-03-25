@@ -14,8 +14,8 @@ import qualified Data.Set as Set
 import qualified Data.Text as T
 
 import Doc.DocStateData
-  ( Document, SignatoryLink, documentsignatorylinks, signatoryisauthor
-  , signatorylinkid, documentid
+  ( Document, SignatoryLink, documentid, documentsignatorylinks
+  , signatoryisauthor, signatorylinkid
   )
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Util.HasSomeUserInfo (getFullName)
