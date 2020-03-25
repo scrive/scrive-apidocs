@@ -8,7 +8,6 @@ module EvidenceLog.View (
   ) where
 
 import Control.Monad.Catch
-import Data.Function (on)
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
@@ -60,8 +59,7 @@ getSignatoryIdentifierMap includeviewers evs = do
   let sigs = Set.fromList $ catMaybes $ concat
         [ [evSigLink ev, evAffectedSigLink ev] | ev <- evs ]
   docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList sigs
-  return
-    $ signatoryIdentifierMap includeviewers (sortBy (compare `on` documentid) docs) sigs
+  return $ signatoryIdentifierMap includeviewers docs sigs
 
 -- TODO: Consider saving actor name in event instead, this is likely
 -- to become broken
