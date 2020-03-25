@@ -15,7 +15,7 @@ import qualified Data.Text as T
 
 import Doc.DocStateData
   ( Document, SignatoryLink, documentsignatorylinks, signatoryisauthor
-  , signatorylinkid
+  , signatorylinkid, documentid
   )
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Util.HasSomeUserInfo (getFullName)
@@ -61,10 +61,15 @@ signatoryIdentifierMap includenonsigning docs slids = Map.fromList $ zipWith3
   names
   initials
   where
+    -- docs passed to this usually come from the signatories, but
+    -- usually multiple signatories have the same doc (except for restarts)
+    -- so if there are copies of the same doc, everything will be screwed up
+    docs' = sortBy (compare `on` documentid) $ nubBy ((==) `on` documentid) docs
+
     esignatorylinkid = either signatorylinkid identity
 
     slmap =
-      Map.fromList [ (signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d ]
+      Map.fromList [ (signatorylinkid s, s) | d <- docs', s <- documentsignatorylinks d ]
     names = map (either getFullName (const "")) slsAndMissing
     -- Get initial of each name words, e.g. "John Smith" to "JS"
     initials =
@@ -73,7 +78,7 @@ signatoryIdentifierMap includenonsigning docs slids = Map.fromList $ zipWith3
       filter
           (\s -> includenonsigning || isSignatory s || isApprover s || signatoryisauthor s
           )
-        $ concatMap documentsignatorylinks docs
+        $ concatMap documentsignatorylinks docs'
     slsAndMissing =
       sortBy (compare `on` esignatorylinkid) $ (map Left sls) ++ (map Right missing)
     missing = Set.toList $ slids Set.\\ Set.fromList (map signatorylinkid sls)
