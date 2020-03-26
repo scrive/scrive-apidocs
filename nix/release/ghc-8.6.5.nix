@@ -34,11 +34,11 @@ let
           {}
         ;
 
-        happstack-server = super.callHackage
-            "happstack-server"
-            "7.5.4"
-            {}
-        ;
+        # happstack-server = super.callHackage
+        #     "happstack-server"
+        #     "7.5.4"
+        #     {}
+        # ;
       });
     });
 in
