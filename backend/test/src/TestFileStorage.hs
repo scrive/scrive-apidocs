@@ -9,11 +9,11 @@ module TestFileStorage
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Fail
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
+import qualified Control.Monad.Fail as MF
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as HM
 
@@ -23,7 +23,7 @@ import FileStorage.Class
 
 newtype TestFileStorageT m a = TestFileStorageT
   { unTestFileStorageT :: ReaderT (Either (TVar FakeFS) FileStorageConfig) m a }
-  deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadFail, MonadIO
+  deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MF.MonadFail, MonadIO
            , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
            , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask
            , MonadTransControl )

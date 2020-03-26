@@ -1,7 +1,6 @@
 module Doc.API.V2.APILogTest (apiV2CallLogTests) where
 
 import Data.Function (on)
-import Data.List (sortBy)
 import Happstack.Server
 import Test.Framework
 

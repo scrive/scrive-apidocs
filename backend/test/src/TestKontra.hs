@@ -34,7 +34,6 @@ import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Fail
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
@@ -47,6 +46,7 @@ import Log
 import Optics (assign, gview, to, use)
 import System.FilePath
 import Text.StringTemplates.Templates
+import qualified Control.Monad.Fail as MF
 import qualified Control.Exception.Lifted as E
 import qualified Control.Monad.State.Strict as S
 import qualified Data.ByteString as BS
@@ -102,12 +102,9 @@ type InnerTestEnv
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving
     ( Applicative, Functor, Monad, MonadBase IO
-    , MonadCatch, MonadIO, MonadFail, MonadLog, MonadMask
+    , MonadCatch, MonadIO, MF.MonadFail, MonadLog, MonadMask
     , MonadReader TestEnvSt, MonadState TestEnvStRW
     , MonadThrow )
-
-deriving instance MonadFail m => MonadFail (LogT m)
-deriving instance MonadFail m => MonadFail (DBT m)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
@@ -207,7 +204,7 @@ type InnerTestKontra
 newtype TestKontra a = TestKontra { unTestKontra :: InnerTestKontra a }
   deriving ( Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad
            , MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow
-           , ServerMonad, MonadFileStorage, MonadLog)
+           , ServerMonad, MonadFileStorage, MonadLog, MF.MonadFail)
 
 instance MonadBaseControl IO TestKontra where
   type StM TestKontra a = StM InnerTestKontra a

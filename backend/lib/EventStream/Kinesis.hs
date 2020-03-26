@@ -18,6 +18,7 @@ import Data.Word
 import GHC.Generics
 import Log
 import Optics
+import qualified Control.Monad.Fail as MF
 import qualified Control.Monad.Trans.AWS as AWS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Network.AWS.Data.Text as AWS
@@ -58,7 +59,7 @@ instance Unjson KinesisConf where
 newtype KinesisT m a = KinesisT { unKinesis :: ReaderT (Maybe AWS.Env) m a }
   deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
            , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
-           , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask, MonadFail
+           , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask, MF.MonadFail
            , MonadTransControl, MonadFileStorage )
 
 data Envelope a = Envelope

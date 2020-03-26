@@ -16,6 +16,7 @@ import Control.Monad.Trans.Control
   )
 import Data.Int
 import Log
+import qualified Control.Monad.Fail as MF
 
 import DB
 import DB.RowCache
@@ -30,7 +31,7 @@ import FileStorage.Class
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
-  deriving ( Applicative, Monad, MonadFail, MonadDB, Functor, MonadIO
+  deriving ( Applicative, Monad, MF.MonadFail, MonadDB, Functor, MonadIO
            , MonadTrans, MonadBase b, MonadThrow, MonadCatch
            , MonadMask, MonadFileStorage )
 

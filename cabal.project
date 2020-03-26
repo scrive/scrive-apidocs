@@ -58,7 +58,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/scrive/log
-    tag: 5a6ff1833cfa5eb6d41c0a972279c5d64f16e828
+    tag: aa82abbe4062f84ba76653a519d2594d91a93deb
     subdir: log-base
 
 source-repository-package

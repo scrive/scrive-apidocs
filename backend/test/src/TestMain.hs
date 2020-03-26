@@ -10,7 +10,7 @@ import Database.PostgreSQL.PQTypes.Internal.Connection
 import Log
 import System.Directory (createDirectoryIfMissing)
 import System.Environment
-import System.FilePath ((</>), FilePath)
+import System.FilePath ((</>))
 import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E

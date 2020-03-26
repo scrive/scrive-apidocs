@@ -3,7 +3,7 @@ module Doc.API.V1.JSONTest (apiV1JSONTests) where
 
 import Data.Aeson
 import Data.Int
-import Data.Text (Text, unpack)
+import Data.Text (unpack)
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString.Lazy.UTF8 as BS

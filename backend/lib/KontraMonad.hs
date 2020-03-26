@@ -12,6 +12,7 @@ import Crypto.RNG
 import Happstack.Server
 import Log
 import Text.StringTemplates.Templates
+import qualified Control.Monad.Fail as MF
 
 import Context
 import DB
@@ -31,7 +32,7 @@ type Kontrakcja m
     , HasRqData m
     , KontraMonad m
     , MailContextMonad m
-    , MonadFail m
+    , MF.MonadFail m
     , MonadLog m
     , MonadDB m
     , MonadMask m

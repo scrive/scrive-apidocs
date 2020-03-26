@@ -27,6 +27,7 @@ import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.IORef.Lifted
 import Log
+import qualified Control.Monad.Fail as MF
 import qualified Data.ByteString.Lazy as BSL
 import qualified Database.Redis as R
 
@@ -47,7 +48,7 @@ type FileStorageConfig = (AmazonS3Env, Maybe R.Connection, FileMemCache)
 
 newtype FileStorageT m a
   = FileStorageT { unFileStorageT :: ReaderT FileStorageConfig m a }
-  deriving ( Alternative, Applicative, Functor, Monad, MonadFail, MonadDB, MonadIO
+  deriving ( Alternative, Applicative, Functor, Monad, MF.MonadFail, MonadDB, MonadIO
            , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
            , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask
            , MonadTransControl)

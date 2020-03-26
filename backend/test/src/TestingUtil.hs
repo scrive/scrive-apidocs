@@ -83,7 +83,6 @@ module TestingUtil
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Fail
 import Control.Monad.Trans
 import Crypto.RNG
 import Data.Char
@@ -106,6 +105,7 @@ import Test.QuickCheck.Gen
 import Test.QuickCheck.Instances.Text ()
 import Test.QuickCheck.Unicode as QCU
 import Type.Reflection
+import qualified Control.Monad.Fail as MF
 import qualified Crypto.Scrypt as Scrypt
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Diff as A
@@ -957,7 +957,7 @@ data UserGroupTemplate m = UserGroupTemplate
 -- {parentGroupID = Just ugid}` makes the created user group a child of an
 -- existing user group with id `ugid`.
 randomUserGroupTemplate
-  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  :: (CryptoRNG m, MF.MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => UserGroupTemplate m
 randomUserGroupTemplate = UserGroupTemplate
   { parentGroupID     = Nothing
@@ -973,7 +973,7 @@ randomUserGroupTemplate = UserGroupTemplate
   }
 
 instantiateRandomUserGroup
-  :: (MonadFail m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  :: (MF.MonadFail m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => m UserGroup
 instantiateRandomUserGroup = instantiateUserGroup randomUserGroupTemplate
 
@@ -1031,7 +1031,7 @@ data UserTemplate m = UserTemplate
 -- test case; in particular, there are very few instances in which the name of
 -- the test user matters!
 randomUserTemplate
-  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  :: (CryptoRNG m, MF.MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => UserTemplate m
 randomUserTemplate = UserTemplate
   { password           = Nothing
@@ -1062,7 +1062,7 @@ randomUserTemplate = UserTemplate
   }
 
 instantiateRandomUser
-  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  :: (CryptoRNG m, MF.MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => m User
 instantiateRandomUser = instantiateUser randomUserTemplate
 
@@ -1070,7 +1070,7 @@ instantiateRandomUser = instantiateUser randomUserTemplate
 -- randomUserTemplate {..}`. Generates an instance of the given template; see
 -- the documentation of `randomUserTemplate`.
 instantiateUser
-  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  :: (CryptoRNG m, MF.MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => UserTemplate m
   -> m User
 instantiateUser = fmap (fromMaybe $ unexpectedError hint) . tryInstantiateUser
@@ -1080,7 +1080,7 @@ instantiateUser = fmap (fromMaybe $ unexpectedError hint) . tryInstantiateUser
         \ create two users with the same email address."
 
 tryInstantiateUser
-  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  :: (CryptoRNG m, MF.MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => UserTemplate m
   -> m (Maybe User)
 tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = generateLastName, email = generateEmail, groupID = generateGroupID, associatedDomainID = generateAssociatedDomainID, homeFolderID = generateHomeFolderID, password = generatePassword, internalTags = generateInternalTags, externalTags = generateExternalTags, ..}
@@ -1692,7 +1692,7 @@ assertSQLCount msg expectedCount sql = do
   assertEqual msg expectedCount count
 
 instantiateRandomPadesUser
-  :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  :: (CryptoRNG m, MF.MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => m User
 instantiateRandomPadesUser = do
   let padesSettings = defaultUserGroupSettings & #sealingMethod .~ SealingMethod.Pades

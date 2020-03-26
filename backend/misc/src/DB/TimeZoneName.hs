@@ -13,6 +13,7 @@ import Data.Functor.Invariant
 import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import qualified Control.Monad.Fail as MF
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text as T
 
@@ -30,7 +31,7 @@ defaultTimeZoneName = TimeZoneName "Europe/Stockholm"
 unsafeTimeZoneName :: Text -> TimeZoneName
 unsafeTimeZoneName = TimeZoneName
 
-mkTimeZoneName :: (MonadFail m, MonadDB m, MonadCatch m) => Text -> m TimeZoneName
+mkTimeZoneName :: (MF.MonadFail m, MonadDB m, MonadCatch m) => Text -> m TimeZoneName
 mkTimeZoneName s
   | not (sanityCheck s) = fail $ "mkTimeZoneName: illegal time zone string: " <> show s
   | otherwise = do

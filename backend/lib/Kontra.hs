@@ -30,6 +30,7 @@ import Happstack.Server
 import Log
 import Optics.State
 import Text.StringTemplates.Templates
+import qualified Control.Monad.Fail as MF
 import qualified Control.Monad.State.Strict as S
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
@@ -72,7 +73,7 @@ runKontra
   -> DBT (FileStorageT (KinesisT (CryptoRNGT (LogT (ReqHandlerT IO))))) a
 runKontra ctx f = S.evalStateT (unKontra f) ctx
 
-instance MonadFail Kontra where
+instance MF.MonadFail Kontra where
   fail = unexpectedError . T.pack
 
 instance MonadBaseControl IO Kontra where

@@ -18,7 +18,6 @@ import TestingUtil
 import TestKontra
 import Theme.Model
 import Theme.View
-import User.Lang (defaultLang)
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
