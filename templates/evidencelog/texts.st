@@ -630,10 +630,10 @@ $if(provider_idin)$
 $endif$
 $if(signature)$
 <br/>
-<p>Signature: <div>$personalNumber(value=signature)$</div></p>
+<p>Signature: <div style="word-break:break-word;">$personalNumber(value=signature)$</div></p>
 $if(provider_sebankid)$
 <p>Online Certificate Status Protocol (OCSP) Response:
-  <div>$ocsp_response$</div>
+  <div style="word-break:break-word;">$ocsp_response$</div>
 </p>
 $endif$
 $endif$
