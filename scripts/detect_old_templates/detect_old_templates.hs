@@ -155,7 +155,6 @@ expExps e = e `S.insert` case e of
   CorePragma _ _ _           -> S.empty
   SCCPragma  _ _ _           -> S.empty
   GenPragma _ _ _ _ _        -> S.empty
-  ArrOp _ _                  -> error "ArrOp"
   Proc            _ _  e'    -> expExps e'
   LeftArrApp      _ e1 e2    -> expExps e1 `S.union` expExps e2
   RightArrApp     _ e1 e2    -> expExps e1 `S.union` expExps e2
@@ -168,7 +167,6 @@ expExps e = e `S.insert` case e of
   ParArrayFromThenTo _ _ _ _ -> error "ParArrayFromThenTo"
   LCase _ alts               -> S.unions $ map altExps alts
   UnboxedSum _ _ _ e'        -> expExps e'
-
 
 bindsExps :: Maybe (Binds SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
 bindsExps Nothing                    = S.empty

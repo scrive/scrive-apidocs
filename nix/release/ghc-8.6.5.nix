@@ -28,6 +28,12 @@ let
     overrides = pkgs.lib.composeExtensions
       (old.overrides or (_: _: {}))
       (self: super: {
+        base-noprelude = super.callHackage
+          "base-noprelude"
+          "4.12.0.0"
+          {}
+        ;
+
         happstack-server = super.callHackage
             "happstack-server"
             "7.5.4"

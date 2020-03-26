@@ -1,3 +1,5 @@
+{-# LANGUAGE DerivingStrategies #-}
+
 module Kontra
     ( module KontraError
     , module KontraMonad
@@ -23,6 +25,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
+import Data.Text as T
 import Happstack.Server
 import Log
 import Optics.State
@@ -61,14 +64,16 @@ type InnerKontra
 -- through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: InnerKontra a }
   deriving ( Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad
-           , MonadBase IO, MonadCatch, MonadFail, MonadDB, MonadIO, MonadMask, MonadThrow
+           , MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow
            , ServerMonad, MonadFileStorage, MonadEventStream, MonadLog)
-
 runKontra
   :: Context
   -> Kontra a
   -> DBT (FileStorageT (KinesisT (CryptoRNGT (LogT (ReqHandlerT IO))))) a
 runKontra ctx f = S.evalStateT (unKontra f) ctx
+
+instance MonadFail Kontra where
+  fail = unexpectedError . T.pack
 
 instance MonadBaseControl IO Kontra where
   type StM Kontra a = StM InnerKontra a

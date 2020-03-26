@@ -23,7 +23,7 @@ let
 
   logSrc = builtins.fetchGit {
     url = "ssh://git@github.com/scrive/log.git";
-    rev = "ceaa93b27bb61428921192136f4b8b53a4898190";
+    rev = "23c905a0d4acbc5c2271d2f0065d8f72fa7052bf";
     ref = "relax-base-version";
   };
 

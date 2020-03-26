@@ -1,5 +1,5 @@
 diff --git a/src/Crypto/RNG.hs b/src/Crypto/RNG.hs
-index 705a85b..825dabc 100644
+index 705a85b..ca8cbd9 100644
 --- a/src/Crypto/RNG.hs
 +++ b/src/Crypto/RNG.hs
 @@ -81,8 +81,11 @@ randomBytesIO :: ByteLength -- ^ number of bytes to generate
@@ -14,5 +14,14 @@ index 705a85b..825dabc 100644
 +      Right res ->
 +        return res
      return (g', bs)
- 
+
  -- | Generate a cryptographically secure random number in given,
+@@ -141,7 +144,7 @@ type InnerCryptoRNGT = ReaderT CryptoRNGState
+ newtype CryptoRNGT m a = CryptoRNGT { unCryptoRNGT :: InnerCryptoRNGT m a }
+   deriving ( Alternative, Applicative, Functor, Monad
+            , MonadBase b, MonadCatch, MonadError e, MonadIO, MonadMask, MonadPlus
+-           , MonadThrow, MonadTrans )
++           , MonadThrow, MonadTrans, MonadFail )
+
+ mapCryptoRNGT :: (m a -> n b) -> CryptoRNGT m a -> CryptoRNGT n b
+ mapCryptoRNGT f m = withCryptoRNGState $ \s -> f (runCryptoRNGT s m)

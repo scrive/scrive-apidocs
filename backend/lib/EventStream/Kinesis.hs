@@ -6,7 +6,6 @@ module EventStream.Kinesis
   )
   where
 
-import Control.Monad (void)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -59,7 +58,7 @@ instance Unjson KinesisConf where
 newtype KinesisT m a = KinesisT { unKinesis :: ReaderT (Maybe AWS.Env) m a }
   deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
            , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
-           , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask
+           , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask, MonadFail
            , MonadTransControl, MonadFileStorage )
 
 data Envelope a = Envelope
