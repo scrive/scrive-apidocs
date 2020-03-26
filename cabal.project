@@ -43,7 +43,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/scrive/bloodhound.git
-    tag: 546f9252d739493acdf2ea08882d249941f0c8ff
+    tag: 5e4be04634bbd4225280f3e1330e8f07724e8c0c
 
 source-repository-package
     type: git
@@ -69,7 +69,7 @@ source-repository-package
 source-repository-package
     type: git
     location: git@github.com:scrive/kontrakcja-templates.git
-    tag: ee9d5b672c962ae68a363c2c5478961b1ad79929
+    tag: bf27757d0cc2e808992ed5c880571fe5225a497b
 
 source-repository-package
     type: git
