@@ -41,11 +41,13 @@ module Prelude (
   , whenNothing
   , error
   , unexpectedError
+  , fail
   ) where
 
 import Control.Applicative
-import Control.Monad
-import Control.Monad.Extra
+import Control.Monad hiding (fail)
+import Control.Monad.Extra hiding (fail)
+import Control.Monad.Fail (fail)
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
 import Data.List hiding
@@ -62,7 +64,7 @@ import Text.JSON.ToJSValue
 import TextShow
 import "base" Prelude hiding
   ( (!!), (&&), (||), all, and, any, error, head, id, last, maximum, minimum
-  , not, or, read, tail
+  , not, or, read, tail, fail
   )
 import qualified Data.Either.Optics as O
 import qualified Data.Maybe.Optics as O
@@ -78,7 +80,7 @@ import qualified Optics as O
   , ReversedPrism, ReversedPrism', Review, Setter, Setter', Traversal
   , Traversal', WithIx
   )
-import qualified "base" Prelude as P
+import qualified "base" Prelude as P hiding (fail)
 
 -- | Boolean algebra of functions.
 instance Boolean (a -> Bool) where

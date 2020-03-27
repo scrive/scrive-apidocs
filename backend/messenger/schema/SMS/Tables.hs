@@ -6,7 +6,6 @@ module SMS.Tables (
   , tableSMSEvents
   ) where
 
-
 import DB
 
 messengerTables :: [Table]

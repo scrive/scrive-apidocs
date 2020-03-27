@@ -1,12 +1,5 @@
--- If you need to build 'kontrakcja' against an unreleased version of
--- some package, just add the path to that package's source directory
--- to 'packages'. For example, if you're working on both 'log' and
--- 'kontrakcja' at the same time, use
---
--- packages: . ../path/to/log
-
-packages: . Shake
-write-ghc-environment-files: always
+packages: ../../ ../../Shake
+write-ghc-environment-files: never
 
 package kontrakcja
     ghc-options: -j4 +RTS -A32m -RTS

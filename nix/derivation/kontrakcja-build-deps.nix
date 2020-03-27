@@ -35,12 +35,14 @@ let
     overrides = pkgs.lib.composeExtensions
       (old.overrides or (_: _: {}))
       (self: super: {
-        hpqtypes = haskellLib.dontCheck
+
+        hpqtypes = pkgs.haskell.lib.appendPatch
           ( callGitPackage super
             "hpqtypes"
             "ssh://git@github.com/scrive/hpqtypes.git"
             "c32fbe1052706815fc1b598c408c525226f4a963"
           )
+          ../patches/hpqtypes.patch
         ;
 
         hpqtypes-extras = haskellLib.dontCheck
@@ -68,13 +70,13 @@ let
           "c6d850b24e7d58dd24d95e8676d12ce35155dd4d"
         ;
 
-        hsaml2 = pkgs.haskell.lib.appendPatch
+        hsaml2 = # pkgs.haskell.lib.appendPatch
           ( callGitPackage super
               "hsaml2"
-              "https://github.com/kubek2k/hsaml2.git"
-              "a09ab6fc87fe2311e7bfa56e0dd5141edc758fe7"
+              "ssh://git@github.com/scrive/hsaml2.git"
+              "32ce42f621d6ece1ce49bb69eb5d81ef96cac09c"
           )
-          ../patches/hsaml2.patch
+          # ../patches/hsaml2.patch
         ;
 
         cryptonite = callGitPackage super
@@ -101,6 +103,12 @@ let
               "53015c8fa91566054db7bf09cb6944e812240ca7"
             ) )
           ../patches/unjson.patch
+        ;
+
+        json = callGitPackage super
+          "json"
+          "ssh://git@github.com/scrive/json.git"
+          "b54aba6d91f98b821e6f62862b60a98239410044"
         ;
 
         crypto-rng = haskellLib.appendPatch

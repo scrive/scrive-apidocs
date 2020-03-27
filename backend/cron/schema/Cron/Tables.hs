@@ -15,7 +15,6 @@ module Cron.Tables (
   , tableCronJobs
   ) where
 
-
 import DB
 
 cronTables :: [Table]

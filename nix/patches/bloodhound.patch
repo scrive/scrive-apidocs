@@ -26,18 +26,21 @@ index 6889f23..c6fee14 100644
                         unordered-containers,
                         vector           >= 0.10.9  && <0.13
 diff --git a/src/Database/V1/Bloodhound/Internal/Client.hs b/src/Database/V1/Bloodhound/Internal/Client.hs
-index 4121de0..5e3e6ea 100644
+index 4121de0..6dd59a0 100644
 --- a/src/Database/V1/Bloodhound/Internal/Client.hs
 +++ b/src/Database/V1/Bloodhound/Internal/Client.hs
-@@ -9,6 +9,7 @@ module Database.V1.Bloodhound.Internal.Client where
+@@ -7,8 +7,10 @@
  
+ module Database.V1.Bloodhound.Internal.Client where
+ 
++import           Prelude                                       hiding (fail)
  import           Bloodhound.Import
  
-+import           Control.Monad.Fail (MonadFail)
++import           Control.Monad.Fail (MonadFail(..))
  import           Control.Applicative                           as A
  import qualified Data.HashMap.Strict                           as HM
  import           Data.Text                                     (Text)
-@@ -1552,7 +1553,7 @@ instance ToJSON Interval where
+@@ -1552,7 +1554,7 @@ instance ToJSON Interval where
    toJSON Second = "second"
    toJSON (FractionalInterval fraction interval) = toJSON $ show fraction ++ show interval
  
@@ -47,18 +50,21 @@ index 4121de0..5e3e6ea 100644
    ("", _) -> fail "Invalid interval"
    (nS, unitS) -> case (readMay nS, readMay unitS) of
 diff --git a/src/Database/V1/Bloodhound/Internal/Query.hs b/src/Database/V1/Bloodhound/Internal/Query.hs
-index 2e22695..cac80b6 100644
+index 2e22695..07f4d29 100644
 --- a/src/Database/V1/Bloodhound/Internal/Query.hs
 +++ b/src/Database/V1/Bloodhound/Internal/Query.hs
-@@ -7,6 +7,7 @@ module Database.V1.Bloodhound.Internal.Query where
+@@ -5,8 +5,10 @@
+ module Database.V1.Bloodhound.Internal.Query where
  
+ 
++import           Prelude                                  hiding (fail)
  import           Bloodhound.Import
  
-+import           Control.Monad.Fail (MonadFail)
++import           Control.Monad.Fail (MonadFail(..))
  import qualified Data.HashMap.Strict                      as HM
  import qualified Data.Text                                as T
  
-@@ -1468,7 +1469,7 @@ instance FromJSON ZeroTermsQuery where
+@@ -1468,7 +1470,7 @@ instance FromJSON ZeroTermsQuery where
            parse "all"  = pure ZeroTermsAll
            parse q      = fail ("Unexpected ZeroTermsQuery: " <> show q)
  
@@ -68,18 +74,21 @@ index 2e22695..cac80b6 100644
                      [(k, Object o')] -> f (FieldName k) o'
                      _ -> fail "Expected object with 1 field-named key"
 diff --git a/src/Database/V5/Bloodhound/Internal/Client.hs b/src/Database/V5/Bloodhound/Internal/Client.hs
-index 883e1ae..a389dac 100644
+index 883e1ae..11dcac6 100644
 --- a/src/Database/V5/Bloodhound/Internal/Client.hs
 +++ b/src/Database/V5/Bloodhound/Internal/Client.hs
-@@ -9,6 +9,7 @@ module Database.V5.Bloodhound.Internal.Client where
+@@ -7,8 +7,10 @@
  
+ module Database.V5.Bloodhound.Internal.Client where
+ 
++import           Prelude             hiding (fail)
  import           Bloodhound.Import
  
-+import           Control.Monad.Fail (MonadFail)
++import           Control.Monad.Fail (MonadFail(..))
  import qualified Data.Text           as T
  import qualified Data.Traversable    as DT
  import qualified Data.HashMap.Strict as HM
-@@ -2331,7 +2332,7 @@ instance ToJSON Interval where
+@@ -2331,7 +2333,7 @@ instance ToJSON Interval where
    toJSON Minute  = "minute"
    toJSON Second  = "second"
  
@@ -89,18 +98,21 @@ index 883e1ae..a389dac 100644
    ("", _) -> fail "Invalid interval"
    (nS, unitS) -> case (readMay nS, readMay unitS) of
 diff --git a/src/Database/V5/Bloodhound/Internal/Query.hs b/src/Database/V5/Bloodhound/Internal/Query.hs
-index 8ebaf2d..5fa56ee 100644
+index 8ebaf2d..ac29bfd 100644
 --- a/src/Database/V5/Bloodhound/Internal/Query.hs
 +++ b/src/Database/V5/Bloodhound/Internal/Query.hs
-@@ -9,6 +9,7 @@ module Database.V5.Bloodhound.Internal.Query
+@@ -7,8 +7,10 @@ module Database.V5.Bloodhound.Internal.Query
+   , module Database.V5.Bloodhound.Internal.Query
+   ) where
  
++import           Prelude             hiding (fail)
  import           Bloodhound.Import
  
-+import           Control.Monad.Fail (MonadFail)
++import           Control.Monad.Fail  (MonadFail(..))
  import           Data.Char           (isNumber)
  import qualified Data.HashMap.Strict as HM
  import           Data.List           (nub)
-@@ -1617,7 +1618,7 @@ functionScoreFunctionsPair (FunctionScoreSingle fn)
+@@ -1617,7 +1619,7 @@ functionScoreFunctionsPair (FunctionScoreSingle fn)
  functionScoreFunctionsPair (FunctionScoreMultiple componentFns) =
    ("functions", toJSON componentFns)
  

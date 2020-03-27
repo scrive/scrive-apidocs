@@ -1,16 +1,23 @@
 diff --git a/src/Text/StringTemplates/TemplatesLoader.hs b/src/Text/StringTemplates/TemplatesLoader.hs
-index e851c45..e028ed2 100644
+index e851c45..45e8b13 100644
 --- a/src/Text/StringTemplates/TemplatesLoader.hs
 +++ b/src/Text/StringTemplates/TemplatesLoader.hs
-@@ -13,6 +13,7 @@ import Data.Maybe (fromMaybe)
+@@ -8,11 +8,13 @@ module Text.StringTemplates.TemplatesLoader ( Templates
+                                             , getTemplatesModTime
+                                             ) where
+ 
++import Prelude hiding (fail)
+ import Data.List (isSuffixOf,find)
+ import Data.Maybe (fromMaybe)
  import Text.StringTemplate
  import Text.StringTemplate.Classes
- import Control.Monad
-+import Control.Monad.Fail (MonadFail)
+-import Control.Monad
++import Control.Monad hiding (fail)
++import Control.Monad.Fail (MonadFail(..))
  import Control.Monad.IO.Class
  import qualified Data.Map as Map
  import Text.Html (stringToHtmlString)
-@@ -33,7 +34,7 @@ localizedVersion col mtemplates = fromMaybe (error $ "localizedVersion: undefine
+@@ -33,7 +35,7 @@ localizedVersion col mtemplates = fromMaybe (error $ "localizedVersion: undefine
  
  -- Fixme: Make this do only one read of all files !!
  -- | Reads text templates and templates from files (see TextTemplates and Files modules docs respectively).
@@ -19,7 +26,7 @@ index e851c45..e028ed2 100644
                        FilePath   -- ^ dir path to recursively scan for .json files containing text templates
                      -> FilePath  -- ^ dir path to recursively scan for .st files containing string templates
                      -> String    -- ^ default language. We can guarantee that empty language texts will be replaced
-@@ -62,7 +63,7 @@ fixTT ((n,v):r) d = (n,v) :  fixTT r (filter (\x -> n /= fst x) d)
+@@ -62,7 +64,7 @@ fixTT ((n,v):r) d = (n,v) :  fixTT r (filter (\x -> n /= fst x) d)
  
  
  

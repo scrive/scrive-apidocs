@@ -1,5 +1,5 @@
 let
-  release = import ../../nix/release/ghc-8.8.2.nix {
+  release = import ../../nix/release/ghc-8.8.nix {
     workspaceRoot = builtins.toPath(./.);
   };
 in

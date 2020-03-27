@@ -161,13 +161,9 @@ expExps e = e `S.insert` case e of
   LeftArrHighApp  _ e1 e2    -> expExps e1 `S.union` expExps e2
   RightArrHighApp _ e1 e2    -> expExps e1 `S.union` expExps e2
   MultiIf  _ ifs             -> S.unions $ map guardedRhsExps ifs
-  ArrOp _ _                  -> error "ArrOp"
-  ParArray _ _               -> error "ParArray"
-  ParArrayFromTo _ _ _       -> error "ParArrayFromTo"
-  ParArrayComp   _ _ _       -> error "ParArrayComp"
-  ParArrayFromThenTo _ _ _ _ -> error "ParArrayFromThenTo"
   LCase _ alts               -> S.unions $ map altExps alts
   UnboxedSum _ _ _ e'        -> expExps e'
+  _ -> error "Unknown AST"
 
 bindsExps :: Maybe (Binds SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
 bindsExps Nothing                    = S.empty

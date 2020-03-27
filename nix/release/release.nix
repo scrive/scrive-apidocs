@@ -22,8 +22,7 @@ let
   };
 
   manual-shell = import ../derivation/kontrakcja-manual-shell.nix {
-    inherit nixpkgs workspaceRoot localeLang;
-    haskellPackages = inHaskellPackages;
+    inherit nixpkgs workspaceRoot localeLang haskellPackages;
   };
 
   cabal-shell = import ../derivation/kontrakcja-cabal-shell.nix {

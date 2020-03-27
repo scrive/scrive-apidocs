@@ -8,7 +8,7 @@ module EventStream.Kinesis
 
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Reader
+import Control.Monad.Reader hiding (fail)
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Aeson

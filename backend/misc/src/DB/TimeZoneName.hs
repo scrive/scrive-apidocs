@@ -13,8 +13,8 @@ import Data.Functor.Invariant
 import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
-import qualified Control.Monad.Fail as MF
 import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.Fail as MF
 import qualified Data.Text as T
 
 -- | Time zone names that the database backend accepts.  See also

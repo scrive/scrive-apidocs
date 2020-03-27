@@ -1,0 +1,22 @@
+diff --git a/src/Database/PostgreSQL/PQTypes/Internal/Monad.hs b/src/Database/PostgreSQL/PQTypes/Internal/Monad.hs
+index c22d33f..58d11ef 100644
+--- a/src/Database/PostgreSQL/PQTypes/Internal/Monad.hs
++++ b/src/Database/PostgreSQL/PQTypes/Internal/Monad.hs
+@@ -10,6 +10,7 @@ import Control.Applicative
+ import Control.Concurrent.MVar
+ import Control.Monad.Base
+ import Control.Monad.Catch
++import Control.Monad.Fail (MonadFail)
+ import Control.Monad.Error.Class
+ import Control.Monad.Reader.Class
+ import Control.Monad.State.Strict
+@@ -34,7 +35,9 @@ type InnerDBT m = StateT (DBState m)
+ -- | Monad transformer for adding database
+ -- interaction capabilities to the underlying monad.
+ newtype DBT_ m n a = DBT { unDBT :: InnerDBT m n a }
+-  deriving (Alternative, Applicative, Functor, Monad, MonadBase b, MonadCatch, MonadIO, MonadMask, MonadPlus, MonadThrow, MonadTrans)
++  deriving ( Alternative, Applicative, Functor, Monad, MonadBase b
++           , MonadCatch, MonadIO, MonadMask, MonadPlus, MonadThrow
++           , MonadTrans, MonadFail)
+
+ type DBT m = DBT_ m m

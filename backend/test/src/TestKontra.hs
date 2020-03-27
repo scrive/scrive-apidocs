@@ -46,8 +46,8 @@ import Log
 import Optics (assign, gview, to, use)
 import System.FilePath
 import Text.StringTemplates.Templates
-import qualified Control.Monad.Fail as MF
 import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.Fail as MF
 import qualified Control.Monad.State.Strict as S
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL

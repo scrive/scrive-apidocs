@@ -58,8 +58,8 @@ class ComponentNameHasType t where
   componentNameHasType :: ComponentName -> Bool
 
 instance ComponentNameHasType Library where
-  componentNameHasType (CLibName _)    = True
-  componentNameHasType _               = False
+  componentNameHasType (CLibName _) = True
+  componentNameHasType _            = False
 instance ComponentNameHasType Executable where
   componentNameHasType (CExeName _) = True
   componentNameHasType _            = False

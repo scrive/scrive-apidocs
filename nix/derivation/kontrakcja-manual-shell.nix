@@ -7,6 +7,8 @@
 let
   inherit (nixpkgs) pkgs;
 
+  run-deps = import ./kontrakcja-run-deps.nix { inherit nixpkgs; };
+
   sourceRoot = builtins.toPath(../..);
 
   ghc = haskellPackages.ghcWithPackages
@@ -29,6 +31,7 @@ pkgs.mkShell {
     haskellPackages.happy
     haskellPackages.brittany
     haskellPackages.cabal-install
+    pkgs.pkgconfig
     pkgs.nodejs
     pkgs.nodePackages.less
     pkgs.nodePackages.yarn
@@ -41,7 +44,8 @@ pkgs.mkShell {
     pkgs.curl
     pkgs.postgresql
     pkgs.glibcLocales
-  ];
+    pkgs.libxml2
+  ] ++ run-deps;
 
   shellHook = ''
     export LANG=${localeLang}
