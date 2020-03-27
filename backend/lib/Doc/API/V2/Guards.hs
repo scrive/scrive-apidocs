@@ -595,23 +595,27 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
       FITupasAuthenticationToView  -> True
       VerimiAuthenticationToView   -> True
 
-    authToSignIsValid sl = case signatorylinkauthenticationtosignmethod sl of
-      SEBankIDAuthenticationToSign ->
-        isJust (getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
-          && (  T.null (getPersonalNumber sl)
-             || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
-             )
-      NOBankIDAuthenticationToSign ->
-        T.null (getPersonalNumber sl)
-          || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
-      DKNemIDAuthenticationToSign ->
-        T.null (getPersonalNumber sl)
-          || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
-      SMSPinAuthenticationToSign ->
-        isJust (getFieldByIdentity MobileFI $ signatoryfields sl)
-          && (T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
-      StandardAuthenticationToSign -> True
-      IDINAuthenticationToSign     -> True
+    -- checking for viewership is a temporary fix to help Telia. should be reverted when they get their shit together
+    authToSignIsValid sl =
+      signatoryrole sl
+        == SignatoryRoleViewer
+        || case signatorylinkauthenticationtosignmethod sl of
+             SEBankIDAuthenticationToSign ->
+               isJust (getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
+                 && (  T.null (getPersonalNumber sl)
+                    || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
+                    )
+             NOBankIDAuthenticationToSign ->
+               T.null (getPersonalNumber sl)
+                 || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
+             DKNemIDAuthenticationToSign ->
+               T.null (getPersonalNumber sl)
+                 || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
+             SMSPinAuthenticationToSign ->
+               isJust (getFieldByIdentity MobileFI $ signatoryfields sl)
+                 && (T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
+             StandardAuthenticationToSign -> True
+             IDINAuthenticationToSign     -> True
 
     signatoryHasValidSSNOrEmailForIdentifyToView sl =
       case (signatorylinkauthenticationtoviewmethod sl) of
