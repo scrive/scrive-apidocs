@@ -27,7 +27,7 @@ type alias Model =
     , response : Maybe (Result Http.Error String)
     , user : User
     , newUserGroupID : String
-    , sNewUserGroupName : Status String
+    , sNewUserGroup : Status UserGroup
     }
 
 
@@ -47,7 +47,7 @@ init embed user =
             , response = Nothing
             , user = user
             , newUserGroupID = user.userGroup.id
-            , sNewUserGroupName = Success user.userGroup.name
+            , sNewUserGroup = Loading
             }
     in
     ( model, Cmd.map embed <| getUserGroupCmd model )
@@ -73,7 +73,7 @@ update embed globals msg model =
                     model1 =
                         { model
                             | newUserGroupID = userGroupID
-                            , sNewUserGroupName = Loading
+                            , sNewUserGroup = Loading
                         }
                 in
                 ( model1, Cmd.map embed <| getUserGroupCmd model1 )
@@ -102,10 +102,10 @@ update embed globals msg model =
         GotUserGroup response ->
             case response of
                 Err _ ->
-                    ( { model | sNewUserGroupName = Failure }, Cmd.none )
+                    ( { model | sNewUserGroup = Failure }, Cmd.none )
 
                 Ok userGroup ->
-                    ( { model | sNewUserGroupName = Success userGroup.name }, Cmd.none )
+                    ( { model | sNewUserGroup = Success userGroup }, Cmd.none )
 
         SubmitForm ->
             ( { model | response = Nothing }
@@ -125,21 +125,36 @@ show model =
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
     let
+        userGroupNameWithEntity ug =
+            ite (String.isEmpty ug.entityName)
+                ug.name
+                (ug.entityName ++ " - " ++ ug.name)
+
         ( newUserGroupIDIsValid, inputValidity, feedback ) =
             if isInteger model.newUserGroupID then
-                case model.sNewUserGroupName of
+                case model.sNewUserGroup of
                     Loading ->
                         ( False, [], Form.help [] [ text "Loading company ..." ] )
 
                     Failure ->
-                        ( False, [ Input.danger ], Form.invalidFeedback [] [ text "Company ID does not exist." ] )
+                        ( False
+                        , [ Input.danger ]
+                        , Form.invalidFeedback [] [ text "Company ID does not exist." ]
+                        )
 
-                    Success userGroupName ->
+                    Success newUserGroup ->
                         if model.user.userGroup.id == model.newUserGroupID then
-                            ( False, [ Input.danger ], Form.invalidFeedback [] [ text "Company ID is same as before." ] )
+                            ( False
+                            , [ Input.danger ]
+                            , Form.invalidFeedback [] [ text "Company ID is same as before." ]
+                            )
 
                         else
-                            ( True, [ Input.success ], Form.validFeedback [] [ text <| "New company name: " ++ userGroupName ] )
+                            ( True
+                            , [ Input.success ]
+                            , Form.validFeedback []
+                                [ text <| "New company name: " ++ userGroupNameWithEntity newUserGroup ]
+                            )
 
             else
                 ( False, [ Input.danger ], Form.invalidFeedback [] [ text "Company ID can only contain numbers." ] )
