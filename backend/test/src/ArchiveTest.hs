@@ -70,10 +70,8 @@ testListDocs = do
     Just (list :: [JSValue]) <- fromJSValueField "list"
     assertBool "Test apiCallV1List number of docs" $ length list == 2
 
-    Just (authors :: [String]) <-
-      fromJSValueFieldCustom "list" . fromJSValueCustomMany $ fromJSValueFieldCustom
-        "fields"
-        (fromJSValueField "author")
+    Just (authors :: [String]) <- fromJSValueFieldCustom "list" $ fromJSValueCustomMany
+      (fromJSValueFieldCustom "fields" $ fromJSValueField "author")
     let (doc1Index, doc2Index) = case head authors of
           "Bob Blue" -> (0, 1)
           _          -> (1, 0)

@@ -218,9 +218,8 @@ showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
 -- Zip utils
 docToEntry :: Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
-  let name = T.filter (/= ' ') $ T.filter
-        isAscii
-        (documenttitle doc <> "_" <> showt (documentid doc) <> ".pdf")
+  let name = T.filter (not isSpace || isAscii)
+                      (documenttitle doc <> "_" <> showt (documentid doc) <> ".pdf")
   case mainfileid <$> documentsealedfile doc `mplus` documentfile doc of
     Just fid -> do
       content <- getFileIDContents fid

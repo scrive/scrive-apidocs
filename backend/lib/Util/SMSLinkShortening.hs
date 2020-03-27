@@ -30,8 +30,9 @@ base = 32 -- 2 ^ 5
 textLength :: Int
 textLength = 13 -- ~64 / 5
 
+{-# ANN charMap ("HLint: ignore Use String" :: String) #-}
 -- We have little more char then we need, but it doesn't matter
-charMap :: String
+charMap :: [Char]
 charMap = take (fromIntegral base) $ ['0' .. '9'] ++ ['a' .. 'z'] ++ ['A' .. 'Z']
 
 

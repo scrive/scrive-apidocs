@@ -1428,15 +1428,20 @@ Test-suite kontrakcja-test
                , xml-conduit
 
 Executable config-checker
+  import: common-stanza
+
   Hs-source-dirs: backend/config-checker,
                   backend/cron/inc,
                   backend/mailer/src,
                   backend/messenger/src
+
   GHC-options: -Werror -Wall
+
   Main-is: ConfigChecker.hs
   Other-modules: CronConf
                  MailingServerConf
                  MessengerServerConf
+
   Build-Depends: base-noprelude
                , data-default
                , either
@@ -1447,11 +1452,6 @@ Executable config-checker
                , text
                , unjson
                , filepath
-  Default-Language: Haskell2010
-  Default-Extensions: OverloadedStrings
-                    , LambdaCase
-                    , RecordWildCards
-  Other-Extensions:   TemplateHaskell
 
 Executable localization
   import: common-stanza

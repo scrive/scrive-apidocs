@@ -27,18 +27,19 @@ unjsonAttachment =
     <* fieldReadonly "shared" attachmentshared "Is attachment shared"
     <* fieldReadonly "file"   attachmentfile   "Is attachment shared"
 
+{-# ANN unjsonAttachmentSorting ("HLint: ignore" :: String) #-}
 unjsonAttachmentSorting :: UnjsonDef [AscDesc AttachmentOrderBy]
 unjsonAttachmentSorting =
-  arrayOf . objectOf $ order <$> field "order" askDesc "Sorting value" <*> fieldBy
-    "sort_by"
-    sorting
-    "Asc/Desc"
-    (unjsonEnumBy
-      "Order"
-      [ (AttachmentOrderByTitle, "title" :: Text)
-      , (AttachmentOrderByMTime, "time" :: Text)
-      ]
-    )
+  arrayOf
+    .   objectOf
+    $   order
+    <$> (field "order" askDesc "Sorting value")
+    <*> (fieldBy "sort_by" sorting "Asc/Desc" $ unjsonEnumBy
+          "Order"
+          [ (AttachmentOrderByTitle, "title" :: Text)
+          , (AttachmentOrderByMTime, "time" :: Text)
+          ]
+        )
   where
     order :: Text -> (a -> AscDesc a)
     order "ascending"  = Asc

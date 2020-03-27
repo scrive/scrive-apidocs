@@ -95,7 +95,7 @@ scheduleEmailSendoutHelper authorname mail@Mail {..} = do
     toAttachment (name, cont) = M.Attachment { attName = name, attContent = cont }
 
     -- Mail is unsendable if there is no to adress provided
-    unsendable = any ((not . valid) . email)
+    unsendable = not . all (valid . email)
       where
         valid x = case asValidEmail x of
           Good _ -> True

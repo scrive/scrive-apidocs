@@ -228,15 +228,15 @@ testHandlerForDetailsChanged = do
     history
 
 compareEventTypeFromList :: UserHistoryEventType -> [UserHistory] -> Bool
-compareEventTypeFromList t = any (\h -> (uheventtype . uhevent $ h) == t)
+compareEventTypeFromList t = any $ \h -> uheventtype (uhevent h) == t
 
 compareEventDataFromList :: [(String, String, String)] -> [UserHistory] -> Bool
-compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == Just
-  (JSArray . for d $ \(field, oldv, newv) -> runJSONGen $ do
-    value "field"  field
-    value "oldval" oldv
-    value "newval" newv
-  )
+compareEventDataFromList d l = uheventdata (uhevent $ head l) == Just arr
+  where
+    arr = JSArray . for d $ \(field, oldv, newv) -> runJSONGen $ do
+      value "field"  field
+      value "oldval" oldv
+      value "newval" newv
 
 createTestUser :: TestEnv User
 createTestUser = do

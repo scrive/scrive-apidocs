@@ -960,7 +960,6 @@ sendNotifications sl alwaysEmailAuthor domail dosms = do
 
 type MailT m = MailContextT (TemplatesT m)
 
-{-# ANN runMailT ("HLint: ignore Too strict maybe" :: String) #-}
 -- | Set up mail and template context, with language and branding
 -- based on document data, and the rest from CronEnv
 runMailT
@@ -971,14 +970,10 @@ runMailT
   -> MailT m a
   -> m a
 runMailT templates mailNoreplyAddress doc m = do
-  now     <- currentTime
-  mauthor <-
-    maybe (return Nothing) (dbQuery . GetUserByID)
-    $   maybesignatory
-    =<< getAuthorSigLink doc
-  bd <- maybe (dbQuery GetMainBrandedDomain)
-              (dbQuery . GetBrandedDomainByUserID)
-              (view #id <$> mauthor)
+  now <- currentTime
+  bd  <- case maybesignatory =<< getAuthorSigLink doc of
+    Just uid -> dbQuery $ GetBrandedDomainByUserID uid
+    Nothing  -> dbQuery GetMainBrandedDomain
   let mctx = I.MailContext { lang               = documentlang doc
                            , brandedDomain      = bd
                            , time               = now

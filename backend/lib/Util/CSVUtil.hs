@@ -24,7 +24,7 @@ parseCSV csvcontents =
   in  case (exception parseresult, result parseresult) of
         (Just msg, _res) -> Left $ "Parse error : " ++ show msg
         (Nothing, res) ->
-          Right . fixSize $ map dropTrailingEmptyCells (filter (not . isEmptyRow) res)
+          Right . fixSize . map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
   where
     dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
     isEmptyRow             = all isEmptyCell

@@ -415,27 +415,30 @@ asValidDanishSSN input =
 -}
 asValidFinnishSSN :: Text -> Result Text
 asValidFinnishSSN input =
-  T.unpack
-    <$> (filterOutCharacters [' '] input >>= checkIfEmpty >>= checkLengthIs [11])
-    >>= \case
-          [d1, d2, m1, m2, y1, y2, sep, x1, x2, x3, checksum] -> fromMaybe Bad $ do
-            (day :: Int64)  <- maybeRead $ T.pack [d1, d2]
-            month           <- maybeRead $ T.pack [m1, m2]
-            combined_digits <- maybeRead $ T.pack [d1, d2, m1, m2, y1, y2, x1, x2, x3]
-            let -- some alphabetic chars are missing to prevent confusion with digits
-                checksum_chars = "0123456789ABCDEFHJKLMNPRSTUVWXY"
-                computed_checksum =
-                  checksum_chars !! (combined_digits `mod` length checksum_chars)
-            if (1 <= day)
-                 && (day <= 31)
-                 && (1 <= month)
-                 && (month <= 12)
-                 && (computed_checksum == toUpper checksum)
-                 && (toUpper sep `elem` ['-', '+', 'A'])
-              then return . return $ T.pack
-                [d1, d2, m1, m2, y1, y2, toUpper sep, x1, x2, x3, toUpper checksum]
-              else return Bad
-          _ -> Bad
+  (verify . T.unpack)
+    =<< checkLengthIs [11]
+    =<< checkIfEmpty
+    =<< filterOutCharacters [' '] input
+  where
+    verify = \case
+      [d1, d2, m1, m2, y1, y2, sep, x1, x2, x3, checksum] -> fromMaybe Bad $ do
+        (day :: Int64)  <- maybeRead $ T.pack [d1, d2]
+        month           <- maybeRead $ T.pack [m1, m2]
+        combined_digits <- maybeRead $ T.pack [d1, d2, m1, m2, y1, y2, x1, x2, x3]
+        let -- some alphabetic chars are missing to prevent confusion with digits
+            checksum_chars = "0123456789ABCDEFHJKLMNPRSTUVWXY"
+            computed_checksum =
+              checksum_chars !! (combined_digits `mod` length checksum_chars)
+        if (1 <= day)
+             && (day <= 31)
+             && (1 <= month)
+             && (month <= 12)
+             && (computed_checksum == toUpper checksum)
+             && (toUpper sep `elem` ['-', '+', 'A'])
+          then return . return $ T.pack
+            [d1, d2, m1, m2, y1, y2, toUpper sep, x1, x2, x3, toUpper checksum]
+          else return Bad
+      _ -> Bad
 
 {- |
     Creates a clean and validated personal number.
@@ -629,15 +632,17 @@ asValidNumber input = checkIfEmpty input >>= parseAsNum
 -}
 asValidFieldValue :: Text -> Result Text
 asValidFieldValue input =
-  stripWhitespace input >>= checkIfEmpty >>= checkLengthIsMax 200 >>= checkOnly
-    [isAlphaNum, isPunctuation, isSymbol, (== ' ')]
+  checkOnly [isAlphaNum, isPunctuation, isSymbol, (== ' ')]
+    =<< checkLengthIsMax 200
+    =<< checkIfEmpty
+    =<< stripWhitespace input
 
 -- | Cleans all HTML from message, and unescapes it. Api V1 accepting
 -- HTML, but internally DB holds only pure text. Size: up to 800
 -- chars.
 asValidInviteText :: Text -> Result Text
 asValidInviteText input =
-  T.strip . T.replace "\160" " " <$> (checkIfEmpty input >>= parseAndFixAsXml)
+  fmap (T.strip . T.replace "\160" " ") . parseAndFixAsXml =<< checkIfEmpty input
   where
     parseAndFixAsXml :: Text -> Result Text
     parseAndFixAsXml xs = case parseText def xs' of

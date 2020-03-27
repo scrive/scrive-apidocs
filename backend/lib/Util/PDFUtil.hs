@@ -402,14 +402,10 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
                         maskedImageContents <- liftBase
                           $ BS.readFile maskedHighlightOutputPath
                         if BS.length maskedImageContents > 0
-                          then
-                            (do
-                              logInfo_ "clipHighlightImageFromPage: done!"
-                              return $ Just maskedImageContents
-                            )
-                          else
-                            (do
-                              logAttention_
-                                "clipHighlightImageFromPage: final image had zero length"
-                              return Nothing
-                            )
+                          then do
+                            logInfo_ "clipHighlightImageFromPage: done!"
+                            return $ Just maskedImageContents
+                          else do
+                            logAttention_
+                              "clipHighlightImageFromPage: final image had zero length"
+                            return Nothing

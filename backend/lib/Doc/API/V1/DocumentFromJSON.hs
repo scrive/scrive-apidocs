@@ -546,10 +546,8 @@ instance FromJSValueWithUpdate Document where
     tags              <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany fromJSValue
     (apicallbackurl :: Maybe (Maybe Text)) <- fromJSValueField "apicallbackurl"
     saved             <- fromJSValueField "saved"
-    authorattachments <-
-      fromJSValueFieldCustom "authorattachments" . fromJSValueCustomMany $ fmap
-        (maybeRead =<<)
-        (fromJSValueField "id")
+    authorattachments <- fromJSValueFieldCustom "authorattachments"
+      $ fromJSValueCustomMany ((maybeRead =<<) <$> fromJSValueField "id")
     let daystosign' =
           min 365 . max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
     let daystoremind' =

@@ -232,14 +232,11 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     sqlSet "service_test" service_test
     sqlResult "id"
   mid <- fetchOne runIdentity
-  unless (null attachments) . runQuery_ $ sqlInsert
-    "mail_attachments"
-    (do
-      sqlSet "mail_id" mid
-      sqlSetList "name" names
-      sqlSetList "content" $ either Just (const Nothing) `map` contents
-      sqlSetList "file_id" $ either (const Nothing) Just `map` contents
-    )
+  unless (null attachments) . runQuery_ . sqlInsert "mail_attachments" $ do
+    sqlSet "mail_id" mid
+    sqlSetList "name" names
+    sqlSetList "content" $ either Just (const Nothing) `map` contents
+    sqlSetList "file_id" $ either (const Nothing) Just `map` contents
   notify mailNotificationChannel ""
   return mid
   where

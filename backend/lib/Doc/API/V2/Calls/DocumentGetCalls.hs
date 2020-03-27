@@ -251,20 +251,17 @@ docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
   download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   case documentstatus doc of
     Closed ->
-      Ok
-        .   respondWithPDF download
-        <$> (   fileFromMainFile (documentsealedfile doc)
-            >>= maybe errorNonexistingSealedMainFile return
-            >>= getFileContents
-            )
+      fmap (Ok . respondWithPDF download)
+        .   getFileContents
+        =<< maybe errorNonexistingSealedMainFile return
+        =<< fileFromMainFile (documentsealedfile doc)
     _ ->
-      Ok
-        .   respondWithPDF download
-        <$> (   fileFromMainFile (documentfile doc)
-            >>= maybe errorNonexistingMainFile return
-            >>= presealDocumentFile doc
-            >>= either errorPresealDocumentFile return
-            )
+      fmap (Ok . respondWithPDF download)
+        .   either errorPresealDocumentFile return
+        =<< presealDocumentFile doc
+        =<< maybe errorNonexistingMainFile return
+        =<< fileFromMainFile (documentfile doc)
+
   where
     errorNonexistingSealedMainFile = apiError $ documentStateErrorWithCode
       503
@@ -339,13 +336,11 @@ docApiV2FilesGet did fid mFilename =
 -- We return 503 if sealed file is still pending, else we return JSON with number of pages
 docApiV2FilesPagesCount :: Kontrakcja m => DocumentID -> FileID -> m Response
 docApiV2FilesPagesCount did fid = logDocument did . api . withDocFileAccess did fid $ do
-  Ok
-    .   pageCountJSON
-    <$> (   getFileIDContents fid
-        >>= liftIO
-        .   getNumberOfPDFPages
-        >>= either errorCountingPages return
-        )
+  fmap (Ok . pageCountJSON)
+    .   either errorCountingPages return
+    =<< (liftIO . getNumberOfPDFPages)
+    =<< getFileIDContents fid
+
   where
     pageCountJSON pagecount =
       JSObject . J.toJSObject $ [("pages", JSRational False (toRational pagecount))]

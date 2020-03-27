@@ -269,10 +269,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                           rq    <- askRq
                           mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
                           logAttention "InternalError"
-                            .  object
-                            $  "stacktrace"
-                            .= reverse stack
-                            :  logRequest rq mbody
+                            . object
+                            $ ("stacktrace" .= reverse stack)
+                            : logRequest rq mbody
                           internalServerErrorPage >>= internalServerError
                         Respond404 -> do
                           -- there is no way to get stacktrace here as Respond404

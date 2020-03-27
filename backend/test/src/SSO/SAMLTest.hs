@@ -2,12 +2,12 @@ module SSO.SAMLTest (samlSignatureTest) where
 
 import Control.Monad.Base
 import Crypto.Store.X509
-import Data.ByteString
-import Data.Text.Encoding
 import Data.X509
 import SAML2.XML.Signature
 import Test.Framework
 import Text.XML.HXT.Core as HXT
+import qualified Data.ByteString as BS
+import qualified Data.Text.Encoding as T
 
 import SSO.SAML
 import TestingUtil
@@ -23,7 +23,7 @@ samlSignatureTest env = testGroup
 
 readBase64XmlFromFile :: FilePath -> IO HXT.XmlTree
 readBase64XmlFromFile path = do
-  eXml <- decodeUtf8 <$> Data.ByteString.readFile path >>= parseSAMLXML
+  eXml <- parseSAMLXML . T.decodeUtf8 =<< BS.readFile path
   case eXml of
     Right xml -> return xml
     Left  msg -> fail $ path <> "can't be read: " <> msg

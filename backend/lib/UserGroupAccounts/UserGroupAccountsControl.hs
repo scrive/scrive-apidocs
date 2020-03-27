@@ -378,22 +378,17 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
     isdeletable <- isUserDeletable removeuser
     ctx         <- getContext
     if isdeletable
-      then
-        (do
+      then do
             -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
-          void . dbUpdate $ RemoveUserUserGroupInvites (removeuser ^. #id)
-          void . dbUpdate $ DeleteUserCallbackScheme (removeuser ^. #id)
-          void . dbUpdate $ DeleteUser (removeuser ^. #id)
-          void . dbUpdate $ LogHistoryAccountDeleted (removeuser ^. #id)
-                                                     (user ^. #id)
-                                                     (ctx ^. #ipAddr)
-                                                     (ctx ^. #time)
-          runJSONGenT $ value "removed" True
-        )
-      else
-        (do
-          runJSONGenT $ value "removed" False
-        )
+        void . dbUpdate $ RemoveUserUserGroupInvites (removeuser ^. #id)
+        void . dbUpdate $ DeleteUserCallbackScheme (removeuser ^. #id)
+        void . dbUpdate $ DeleteUser (removeuser ^. #id)
+        void . dbUpdate $ LogHistoryAccountDeleted (removeuser ^. #id)
+                                                   (user ^. #id)
+                                                   (ctx ^. #ipAddr)
+                                                   (ctx ^. #time)
+        runJSONGenT $ value "removed" True
+      else runJSONGenT $ value "removed" False
   where
     removeInvitesOnly :: Kontrakcja m => [AccessRole] -> User -> m JSValue
     removeInvitesOnly roles removeForUser = do
