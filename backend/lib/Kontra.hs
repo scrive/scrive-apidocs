@@ -25,6 +25,7 @@ import Control.Monad.Trans.Control
 import Crypto.RNG
 import Happstack.Server
 import Log
+import Optics.State
 import Text.StringTemplates.Templates
 import qualified Control.Monad.State.Strict as S
 import qualified Text.StringTemplates.TemplatesLoader as TL
@@ -40,7 +41,8 @@ import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
 import MailContext (MailContextMonad(..))
-import PdfToolsLambda.Conf
+import PdfToolsLambda.Class
+import PdfToolsLambda.Control
 import Session.Cookies
 import Session.Model
 import Session.Types
@@ -92,7 +94,16 @@ instance GuardTimeConfMonad Kontra where
   getGuardTimeConf = view #gtConf <$> getContext
 
 instance PdfToolsLambdaMonad Kontra where
-  getPdfToolsLambdaEnv = view #pdfToolsLambdaEnv <$> getContext
+  callPdfToolsSealing spec =
+    Kontra $ callPdfToolsSealingPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsPresealing spec =
+    Kontra $ callPdfToolsPresealingPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsAddImage spec =
+    Kontra $ callPdfToolsAddImagePrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsPadesSign spec =
+    Kontra $ callPdfToolsPadesSignPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsCleaning spec =
+    Kontra $ callPdfToolsCleaningPrim spec =<< use #pdfToolsLambdaEnv
 
 instance MailContextMonad Kontra where
   getMailContext = contextToMailContext <$> getContext

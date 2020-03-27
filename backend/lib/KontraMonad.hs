@@ -19,7 +19,7 @@ import EventStream.Class
 import FileStorage.Class
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
-import PdfToolsLambda.Conf (PdfToolsLambdaMonad)
+import PdfToolsLambda.Class
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature

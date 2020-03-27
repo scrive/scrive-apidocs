@@ -70,7 +70,8 @@ import Log.Configuration
 import MailContext (MailContextMonad(..))
 import MinutesTime
 import PasswordService.Conf
-import PdfToolsLambda.Conf
+import PdfToolsLambda.Class
+import PdfToolsLambda.Control
 import Session.SessionID as SessionID
 import Templates
 import TestEnvSt
@@ -230,7 +231,16 @@ instance GuardTimeConfMonad TestKontra where
   getGuardTimeConf = view #gtConf <$> getContext
 
 instance PdfToolsLambdaMonad TestKontra where
-  getPdfToolsLambdaEnv = view #pdfToolsLambdaEnv <$> getContext
+  callPdfToolsSealing spec =
+    TestKontra $ callPdfToolsSealingPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsPresealing spec =
+    TestKontra $ callPdfToolsPresealingPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsAddImage spec =
+    TestKontra $ callPdfToolsAddImagePrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsPadesSign spec =
+    TestKontra $ callPdfToolsPadesSignPrim spec =<< use #pdfToolsLambdaEnv
+  -- Don't run pdf cleaning in tests
+  callPdfToolsCleaning = pure . Just . BSL.toStrict
 
 instance MailContextMonad TestKontra where
   getMailContext = contextToMailContext <$> getContext

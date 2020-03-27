@@ -149,7 +149,7 @@ import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
 import PadApplication.Types
-import PdfToolsLambda.Conf
+import PdfToolsLambda.Monad
 import SealingMethod
 import Session.SessionID
 import SMS.Types (SMSProvider(..))

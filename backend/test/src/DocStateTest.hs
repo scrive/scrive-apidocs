@@ -37,7 +37,7 @@ import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import File.FileID
 import MinutesTime
-import PdfToolsLambda.Conf
+import PdfToolsLambda.Monad
 import TestingUtil
 import TestKontra
 import TestKontra (mkContext)

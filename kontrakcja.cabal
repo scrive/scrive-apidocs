@@ -422,9 +422,11 @@ Library
                  , Partner.Logging
                  , PasswordService.Conf
                  , PasswordService.Control
+                 , PdfToolsLambda.Class
                  , PdfToolsLambda.Conf
                  , PdfToolsLambda.Conf.Internal
                  , PdfToolsLambda.Control
+                 , PdfToolsLambda.Monad
                  , PdfToolsLambda.Spec
                  , Planhat
                  , Planhat.Communication

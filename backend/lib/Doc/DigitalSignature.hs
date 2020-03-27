@@ -29,8 +29,7 @@ import File.Storage
 import GuardTime (GuardTimeConfMonad, getGuardTimeConf)
 import Log.Identifier
 import Log.Utils
-import PdfToolsLambda.Conf (PdfToolsLambdaMonad(..))
-import PdfToolsLambda.Control (PadesSignSpec(..), callPdfToolsPadesSign)
+import PdfToolsLambda.Class
 import SealingMethod
 import Util.Actor (systemActor)
 import Utils.Directory (withSystemTempDirectory')
@@ -79,9 +78,8 @@ addPadesSignature
   -> BS.ByteString
   -> m Bool
 addPadesSignature fileName inputFileContent = do
-  lc                 <- getPdfToolsLambdaEnv
   documentNumberText <- showt <$> theDocumentID
-  answer             <- callPdfToolsPadesSign lc PadesSignSpec { .. }
+  answer             <- callPdfToolsPadesSign PadesSignSpec { .. }
   case answer of
     Just result -> do
       logInfo_ "Document successfully signed using PAdES"

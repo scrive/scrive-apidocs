@@ -16,7 +16,7 @@ import Doc.SealStatus as SealStatus
 import File.Storage
 import GuardTime
 import MinutesTime
-import PdfToolsLambda.Conf
+import PdfToolsLambda.Monad
 import Templates
 import TestingUtil
 import TestKontra

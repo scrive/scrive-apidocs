@@ -27,8 +27,7 @@ import File.File
 import File.Storage
 import Kontra
 import Log.Identifier
-import PdfToolsLambda.Conf
-import PdfToolsLambda.Control
+import PdfToolsLambda.Class
 import Utils.Directory
 
 -- | Generate file that has the image printed on it
@@ -107,8 +106,7 @@ runLambdaAddImage
   -> AddImageSpec
   -> m (Either String BS.ByteString)
 runLambdaAddImage _tmppath spec = do
-  lambdaconf        <- getPdfToolsLambdaEnv
-  mWithImageContent <- callPdfToolsAddImage lambdaconf spec
+  mWithImageContent <- callPdfToolsAddImage spec
   case mWithImageContent of
     Just withImageContent -> do
       return $ Right withImageContent

@@ -64,8 +64,7 @@ import File.Model
 import File.Storage
 import Kontra
 import Log.Identifier
-import PdfToolsLambda.Conf
-import PdfToolsLambda.Control
+import PdfToolsLambda.Class
 import SealingMethod
 import Templates
 import Util.Actor
@@ -936,10 +935,9 @@ runLambdaSealing
   -> Seal.SealSpec
   -> m ()
 runLambdaSealing _tmppath fn spec = do
-  now        <- currentTime
-  lambdaconf <- getPdfToolsLambdaEnv
+  now <- currentTime
   logInfo_ "Sealing document with lambda started"
-  (msealedcontent :: Maybe BS.ByteString) <- callPdfToolsSealing lambdaconf spec
+  (msealedcontent :: Maybe BS.ByteString) <- callPdfToolsSealing spec
   case msealedcontent of
     Just sealedcontent -> do
       logInfo_ "Sealing document with lambda finished"
@@ -967,8 +965,7 @@ runLambdaPresealing
   -> Seal.PreSealSpec
   -> m (Either Text BS.ByteString)
 runLambdaPresealing _tmppath spec = do
-  lambdaconf     <- getPdfToolsLambdaEnv
-  msealedcontent <- callPdfToolsPresealing lambdaconf spec
+  msealedcontent <- callPdfToolsPresealing spec
   case msealedcontent of
     Just sealedcontent -> do
       return $ Right sealedcontent
