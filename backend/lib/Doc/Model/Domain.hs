@@ -41,8 +41,9 @@ data DocumentDomain
   | DocumentsVisibleToUser UserID
   -- ^ Documents that a user has possible access to
   | DocumentsByFolderOnly FolderID
-  -- ^ List documents in folder for which user has read access and have not been
-  -- deleted by their author.
+  -- ^ List documents in folder which have not been deleted by their author.
+  -- Note: documents deleted by author are considered to not be a part of a folder,
+  -- but can still be visible to other signing parties
   | DocumentsUserHasAnyLinkTo UserID
   -- ^ Documents that the given user is linked to
   | DocumentsVisibleToSigningPartyOrByFolders UserID [FolderID] [FolderID] [FolderID]

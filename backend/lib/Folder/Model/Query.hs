@@ -4,6 +4,8 @@ module Folder.Model.Query
   , FolderGet(..)
   , FolderGetUserGroupHome(..)
   , FolderGetUserHome(..)
+  , FolderIsAHomeFolder(..)
+  , FolderHasDocuments(..)
   , FolderGetParents(..)
   , FolderGetAllChildrenRecursive(..)
   , FolderGetImmediateChildren(..)
@@ -13,6 +15,7 @@ import Control.Monad.Catch
 import Control.Monad.Time
 
 import DB
+import Doc.Conditions
 import Folder.Types
 import User.UserID
 import UserGroup.Types
@@ -55,6 +58,28 @@ instance (MonadDB m, MonadThrow m)
     case mfolderId of
       Nothing       -> return Nothing
       Just folderId -> query . FolderGet $ folderId
+
+data FolderIsAHomeFolder = FolderIsAHomeFolder FolderID
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m FolderIsAHomeFolder Bool where
+  query (FolderIsAHomeFolder fid) = do
+    userRows <- runQuery01 . sqlSelect "users" $ do
+      sqlWhereEq "home_folder_id" fid
+      sqlLimit 1
+    ugRows <- runQuery01 . sqlSelect "user_groups" $ do
+      sqlWhereEq "home_folder_id" fid
+      sqlLimit 1
+    return $ userRows || ugRows
+
+data FolderHasDocuments = FolderHasDocuments FolderID
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m FolderHasDocuments Bool where
+  query (FolderHasDocuments fid) = do
+    runQuery01 . sqlSelect "documents" $ do
+      sqlWhereEq "folder_id" fid
+      sqlWhereDocumentWasNotPurged
+      sqlWhereDocumentIsNotReallyDeletedByAuthor
+      sqlLimit 1
 
 -- Get all children recursively
 data FolderGetAllChildrenRecursive = FolderGetAllChildrenRecursive FolderID

@@ -980,9 +980,9 @@ data UserTemplate m = UserTemplate
   , associatedDomainID :: m BrandedDomainID
   , groupID :: m UserGroupID
   , homeFolderID :: Maybe FolderID -> m (Maybe FolderID)
+  -- ^ takes the group's home folder as parameter
   , internalTags :: m (Set Tag)
   , externalTags :: m (Set Tag)
-  -- ^ takes the group's home folder as parameter
   }
 
 -- | `randomUserTemplate` represents 'sane defaults' for use with
@@ -1132,6 +1132,7 @@ data RandomDocumentAllows = RandomDocumentAllows
   , rdaTimeoutTime :: Bool
   , rdaTemplateId  :: Maybe DocumentID
   , rdaSealingMethods :: OneOf SealingMethod
+  , rdaFolderId      :: FolderID
   }
 
 rdaDefault :: User -> RandomDocumentAllows
@@ -1145,6 +1146,7 @@ rdaDefault user = RandomDocumentAllows
   , rdaTimeoutTime    = True
   , rdaTemplateId     = Nothing
   , rdaSealingMethods = OneOf documentAllSealingMethods
+  , rdaFolderId       = fromJust $ user ^. #homeFolderID
   }
   where
     freeSignatory :: OneOf (AllOf RandomSignatoryCondition)
@@ -1308,7 +1310,7 @@ addRandomDocumentWithFile fileid rda = do
           , documenttitle             = title
           , documentfromshareablelink = rdaSharedLink rda
           , documenttemplateid        = rdaTemplateId rda
-          , documentfolderid          = fromJust $ user ^. #homeFolderID
+          , documentfolderid          = rdaFolderId rda
           , documenttimeouttime       = if rdaTimeoutTime rda
                                           then documenttimeouttime doc'
                                           else Nothing

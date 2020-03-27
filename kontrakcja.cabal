@@ -1282,6 +1282,7 @@ Test-suite kontrakcja-test
                  File.Tables
                  FileTest
                  FlashMessages
+                 Folder.APITest
                  UserGroup.APITest
                  UserGroup.UserGroupTest
                  UserGroup.Migrations

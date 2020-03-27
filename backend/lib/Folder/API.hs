@@ -9,7 +9,7 @@ module Folder.API (
 ) where
 
 import Control.Monad.Base
-import Control.Monad.Extra (unlessM)
+import Control.Monad.Extra (unlessM, whenM)
 import Data.Aeson
 import Data.Time
 import Data.Unjson
@@ -134,6 +134,15 @@ folderAPIDelete fid = api $ do
       -- cf. `userGroupApiV2Delete`
       . apiError
       $ requestFailed "Root folders cannot be deleted."
+    whenM (dbQuery $ FolderHasDocuments fid)
+      .  apiError
+      .  requestFailed
+      $  "A folder which contains documents cannot be deleted "
+      <> "(documents that are trashed but not deleted also count)."
+    unlessM (null <$> dbQuery (FolderGetImmediateChildren fid)) . apiError $ requestFailed
+      "You cannot delete a folder which has subfolders. Delete subfolders to proceed."
+    whenM (dbQuery $ FolderIsAHomeFolder fid) . apiError $ requestFailed
+      "You cannot delete a folder which is an active home folder."
     dbUpdate $ FolderDelete fid
     dbUpdate $ AccessControlDeleteRolesByFolder fid
     return

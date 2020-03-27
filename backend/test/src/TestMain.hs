@@ -61,6 +61,7 @@ import FileStorage
 import FileStorage.Amazon.S3Env
 import FileTest
 import FlashMessages
+import Folder.APITest
 import Folder.FolderTest
 import Generators.DocumentGeneratorsTest
 import Generators.OccurenceControlTest
@@ -169,6 +170,7 @@ allTests =
   , occurenceControlTests
   , samlConditionsGuardsTests
   , samlSignatureTest
+  , folderApiTests
   ]
 
 stagingTests :: [TestEnvSt -> Test]
