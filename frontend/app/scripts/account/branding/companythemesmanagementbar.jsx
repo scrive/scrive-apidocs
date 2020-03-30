@@ -27,7 +27,7 @@ module.exports = React.createClass({
 
       if (model.companybranding().brandingIsInherited()) {
         availableThemesOptions.push({
-          name: "Inherited",
+          name: localization.branding.isInheritedOption,
           selected: true,
           onSelect : function() {}
         });

@@ -127,7 +127,11 @@ module.exports = React.createClass({
         <div className="tab-container">
           <div className="tab-content">
             <div className="tab-viewer inner">
-              { /*if*/ brandingIsInherited && <h4> {localization.branding.isInheritedExplanation} </h4> }
+              { /*if*/ brandingIsInherited && (
+                <div className="companybranding-explanation">
+                  {localization.branding.isInheritedExplanation}
+                </div>)
+              }
               <div className="tab-viewer-header">
                 <ul className="tabs">
                   <li
