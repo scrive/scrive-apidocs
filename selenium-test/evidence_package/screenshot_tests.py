@@ -1,4 +1,7 @@
 # coding: utf-8
+import base64
+
+
 def check_screenshot(test, drv, api):
     doc = test.create_standard_doc(u'signview screenshot')
     doc = api.ready(api.update_document(doc))
@@ -27,20 +30,23 @@ def check_screenshot(test, drv, api):
         ff.wait_for_element('.js-logout')
         ff.open_url(config.scrive_www_url + '/d/' + str(doc.id))
 
+        def get_datalink64_image(css):
+            IMG_HEADER = u'data:image/png;base64,'
+            link = ff.wait_for_element(css).get_attribute('href')
+            assert link[:len(IMG_HEADER)] == IMG_HEADER
+            image64 = link[len(IMG_HEADER):]
+            return base64.b64decode(image64)
+
         # open evidence of intent
         ff.wait_for_element('.s-evidenceattachments tr')
         ff.get_element('.s-evidenceattachments .button', number=6).click()
 
         ff.switch_window()
 
-        ff.wait_for_element_and_click('.entry-screenshot')
-        ff.switch_window()
+        # get data links using hreft attrs, because in chrome you can't open
+        # anymore links that are this huge
         test.write_artifact(ff._screenshot_prefix + '_entry_screenshot.png',
-                            ff.get_native_screenshot())
-        ff.switch_window()
-
-        ff.wait_for_element_and_click('.signing-screenshot')
-        ff.switch_window()
+                            get_datalink64_image('.entry-screenshot'))
         test.write_artifact(ff._screenshot_prefix + '_signing_screenshot.png',
-                            ff.get_native_screenshot())
+                            get_datalink64_image('.signing-screenshot'))
         ff.close_window()
