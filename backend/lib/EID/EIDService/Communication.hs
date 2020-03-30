@@ -17,6 +17,7 @@ module EID.EIDService.Communication (
   , dateOfBirthFromDKPersonalNumber
   ) where
 
+import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Aeson ((.=), object)
 import Log
@@ -414,7 +415,57 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
           return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
         _ -> return (Nothing, Nothing)
 
--- FIXME those 3 functions below are supposed to be a basis for further refactoring of this file
+data CallType = Create | Start | Fetch deriving Show
+
+guardExitCode
+  :: (MonadLog m, MonadBase IO m)
+  => CallType
+  -> Text
+  -> (ExitCode, BSL.ByteString, BSL.ByteString)
+  -> m ()
+guardExitCode calltype provider (exitcode, stdout, stderr) = case exitcode of
+  ExitFailure msg -> do
+    let verb = T.toLower . T.pack $ show calltype
+    logAttention
+        ("Failed to " <> verb <> " new transaction (eidservice/" <> provider <> ")")
+      $ object
+          [ "stdout" `equalsExternalBSL` stdout
+          , "stderr" `equalsExternalBSL` stderr
+          , "errorMessage" .= msg
+          ]
+    internalError
+  ExitSuccess -> do
+    let verb = T.pack $ show calltype <> "ed"
+    logInfo (verb <> " new transaction (eidservice/" <> provider <> ")") $ object
+      ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
+
+cURLCall
+  :: (MonadBase IO m, A.ToJSON a, MonadLog m)
+  => EIDServiceConf
+  -> CallType
+  -> Text
+  -> Text
+  -> Maybe a
+  -> m BSL.ByteString
+cURLCall conf calltype provider endpoint mjsonData = do
+  let verb = case calltype of
+        Create -> "POST"
+        Start  -> "POST"
+        Fetch  -> "GET"
+  (exitcode, stdout, stderr) <-
+    readCurl
+        (  ["-X", verb]
+        ++ ["-H", "Authorization: Bearer " <> T.unpack (eidServiceToken conf)]
+        ++ ["-H", "Content-Type: application/json"]
+        ++ (if isJust mjsonData then ["--data", "@-"] else [])
+        ++ [T.unpack $ eidServiceUrl conf <> "/api/v1/transaction/" <> endpoint]
+        )
+      $ case mjsonData of
+          Nothing       -> BSL.empty
+          Just jsonData -> A.encode $ A.toJSON jsonData
+  guardExitCode calltype provider (exitcode, stdout, stderr)
+  return stdout
+
 createTransactionWithEIDService
   :: Kontrakcja m
   => EIDServiceConf
@@ -424,49 +475,38 @@ createTransactionWithEIDService
   -> m (EIDServiceTransactionID)
 createTransactionWithEIDService conf provider providerParams redirectUrl = do
   let paramsPair = fromMaybe [] $ (\p -> ["providerParameters" .= p]) <$> providerParams
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "POST"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , "--data"
-    , "@-"
-    , T.unpack (eidServiceUrl conf) <> "/api/v1/transaction/new"
-    ]
-    (  A.encode
-    .  A.toJSON
-    $  object
+  stdout <-
+    cURLCall conf Create provider "new"
+    .  Just
+    .  object
     $  [ "method" .= ("auth" :: String)
        , "provider" .= provider
        , "redirectUrl" .= redirectUrl
        ]
     ++ paramsPair
-    )
-  case exitcode of
-    ExitFailure msg -> do
-      logAttention ("Failed to create new transaction (eidservice/" <> provider <> ")")
-        $ object
-            [ "stdout" `equalsExternalBSL` stdout
-            , "stderr" `equalsExternalBSL` stderr
-            , "errorMessage" .= msg
-            ]
-      internalError
-    ExitSuccess -> do
-      logInfo ("Created new transaction (eidservice/" <> provider <> ")") $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> withJSValue jsvalue $ do
-          mtid <- fromJSValueField "id"
-          case (mtid) of
-            (Just tid) -> return (unsafeEIDServiceTransactionID $ T.pack tid)
-            _          -> do
-              logAttention_ "Failed to read 'id' from create transaction response"
-              internalError
-        _ -> do
-          logAttention_ "Failed to parse create transaction response"
+  case (decode $ BSL.toString stdout) of
+    Ok jsvalue -> withJSValue jsvalue $ do
+      mtid <- fromJSValueField "id"
+      case (mtid) of
+        (Just tid) -> return (unsafeEIDServiceTransactionID $ T.pack tid)
+        _          -> do
+          logAttention_ "Failed to read 'id' from create transaction response"
           internalError
+    _ -> do
+      logAttention_ "Failed to parse create transaction response"
+      internalError
+
+startTransactionWithEIDService
+  :: Kontrakcja m => EIDServiceConf -> Text -> EIDServiceTransactionID -> m JSValue
+startTransactionWithEIDService conf provider tid = localData [identifier tid] $ do
+  stdout <- do
+    let endpoint = fromEIDServiceTransactionID tid <> "/start"
+    cURLCall conf Start provider endpoint . Just $ object []
+  case (decode $ BSL.toString stdout) of
+    Ok jsvalue -> return jsvalue
+    _          -> do
+      logAttention_ "Failed to parse start transaction response"
+      internalError
 
 getTransactionFromEIDService
   :: (MonadLog m, MonadBaseControl IO m)
@@ -474,69 +514,10 @@ getTransactionFromEIDService
   -> Text
   -> EIDServiceTransactionID
   -> m (Maybe JSValue)
-getTransactionFromEIDService conf loggedName tid = localData [identifier tid] $ do
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "GET"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , T.unpack
-    $  (eidServiceUrl conf)
-    <> "/api/v1/transaction/"
-    <> (fromEIDServiceTransactionID tid)
-    ]
-    BSL.empty
-  case exitcode of
-    ExitFailure msg -> do
-      logAttention ("Failed to fetch transaction (eidservice/" <> loggedName <> ")")
-        $ object
-            [ "stdout" `equalsExternalBSL` stdout
-            , "stderr" `equalsExternalBSL` stderr
-            , "errorMessage" .= msg
-            ]
-      internalError
-    ExitSuccess -> do
-      logInfo ("Fetched new transaction (eidservice/" <> loggedName <> ")") $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case decode $ BSL.toString stdout of
-        Ok jsvalue -> return $ Just jsvalue
-        _          -> return Nothing
-
-startTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> Text -> EIDServiceTransactionID -> m JSValue
-startTransactionWithEIDService conf providerName tid = localData [identifier tid] $ do
-  (exitcode, stdout, stderr) <- readCurl
-    [ "-X"
-    , "POST"
-    , "-H"
-    , "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
-    , "-H"
-    , "Content-Type: application/json"
-    , "--data"
-    , "@-"
-    , T.unpack
-    $  (eidServiceUrl conf)
-    <> "/api/v1/transaction/"
-    <> (fromEIDServiceTransactionID tid)
-    <> "/start"
-    ]
-    (A.encode . A.toJSON $ object [])
-  case exitcode of
-    ExitFailure msg -> do
-      logInfo ("Failed to start transaction (eidservice/" <> providerName <> ")") $ object
-        [ "stdout" `equalsExternalBSL` stdout
-        , "stderr" `equalsExternalBSL` stderr
-        , "errorMessage" .= msg
-        ]
-      internalError
-    ExitSuccess -> do
-      logInfo ("Started transaction (eidservice/" <> providerName <> ")") $ object
-        ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
-      case (decode $ BSL.toString stdout) of
-        Ok jsvalue -> return jsvalue
-        _          -> do
-          logAttention_ "Failed to parse start transaction response"
-          internalError
-
+getTransactionFromEIDService conf provider tid = localData [identifier tid] $ do
+  stdout <- do
+    let endpoint = fromEIDServiceTransactionID tid
+    cURLCall conf Fetch provider endpoint (Nothing :: Maybe String)
+  case decode $ BSL.toString stdout of
+    Ok jsvalue -> return $ Just jsvalue
+    _          -> return Nothing
