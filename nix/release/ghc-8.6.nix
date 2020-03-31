@@ -4,7 +4,7 @@
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
-  release-path = /release/ghc-8.8.nix;
+  release-path = /release/ghc-8.6.nix;
 in
 import ./release.nix {
   inherit

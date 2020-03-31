@@ -1,0 +1,70 @@
+packages: ../../ ../../Shake
+write-ghc-environment-files: never
+
+package kontrakcja
+    ghc-options: -j4 +RTS -A32m -RTS
+
+    -- ^ Ideally we'd like to enable '+RTS -A32m' for all deps,
+    -- however that triggers a rebuild of all deps due to
+    -- https://github.com/haskell/cabal/issues/5575.
+
+package text-icu
+    extra-include-dirs: /usr/local/opt/icu4c/include
+    extra-lib-dirs: /usr/local/opt/icu4c/lib
+
+source-repository-package
+    type: git
+    location: https://github.com/kubek2k/test-framework.git
+    tag: 7e8b4451a91759debfda44963020d2c02f8f5790
+    subdir: core
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/pool.git
+    tag: 902e01e8a5b250b63971c0fbd0724c1288fb18d6
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/crypto-rng.git
+    tag: 7697bc26101a193877dbf0305c6ed0cef029258b
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/hsaml2.git
+    tag: 163922ed0ece4f96efe9052f5f4328eccb8ae335
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/bloodhound.git
+    tag: 5e4be04634bbd4225280f3e1330e8f07724e8c0c
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/unjson.git
+    tag: 897989f82adb127544565d65d46e13805220ceab
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/hpqtypes.git
+    tag: fbd8d7e61d294e4bdf5e3b97f7b2af97f1f87785
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/log
+    tag: aa82abbe4062f84ba76653a519d2594d91a93deb
+    subdir: log-base
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/missingh
+    tag: 3d37b6062a00877c018b2eff5ceefefa90bdb937
+
+source-repository-package
+    type: git
+    location: git@github.com:scrive/kontrakcja-templates.git
+    tag: bf27757d0cc2e808992ed5c880571fe5225a497b
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/mixpanel
+    tag: d6c378d738f936d7f7950ee278d955726c255535

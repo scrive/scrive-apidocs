@@ -1,15 +1,17 @@
 {
   nixpkgs
 , haskellPackages
+, kontrakcja-nix-src
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
   inherit (nixpkgs) pkgs;
 
-  run-deps = import ./kontrakcja-run-deps.nix { inherit nixpkgs; };
-
   sourceRoot = builtins.toPath(../..);
+
+  run-deps = import (kontrakcja-nix-src + /packages/run-deps.nix)
+    { inherit nixpkgs haskellPackages; };
 
   ghc = haskellPackages.ghcWithPackages
     (pkg: []);
@@ -26,25 +28,6 @@ pkgs.mkShell {
 
   buildInputs = [
     ghc
-    elm2nix
-    haskellPackages.alex
-    haskellPackages.happy
-    haskellPackages.brittany
-    haskellPackages.cabal-install
-    pkgs.pkgconfig
-    pkgs.nodejs
-    pkgs.nodePackages.less
-    pkgs.nodePackages.yarn
-    pkgs.nodePackages.grunt-cli
-    pkgs.nodePackages.node2nix
-    pkgs.elmPackages.elm
-    pkgs.elmPackages.elm-format
-    pkgs.jq
-    pkgs.icu
-    pkgs.curl
-    pkgs.postgresql
-    pkgs.glibcLocales
-    pkgs.libxml2
   ] ++ run-deps;
 
   shellHook = ''

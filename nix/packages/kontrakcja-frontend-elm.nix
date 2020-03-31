@@ -1,6 +1,5 @@
 { nixpkgs
 , nodeVersion ? "13_x"
-, kontrakcja
 , kontrakcja-src
 }:
 
@@ -11,12 +10,7 @@ let
   nodejs = pkgs."nodejs-${nodeVersion}";
 
   elmPkgs = import ../../frontend-elm/elm.nix {
-    nixpkgs = import ./nixpkgs-src.nix;
-  };
-
-  nodePackages = import ../../frontend/default.nix {
-    pkgs = nixpkgs;
-    inherit nodejs;
+    nixpkgs = import ../source/nixpkgs.nix;
   };
 
   elmNodePackages = import ../../frontend-elm/default.nix {
@@ -24,40 +18,28 @@ let
     inherit nodejs;
   };
 
-  inherit (nodePackages.shell) nodeDependencies;
-
   elmNodeDependencies = elmNodePackages.shell.nodeDependencies ;
 in
 stdenv.mkDerivation {
-  name = "kontrakcja-frontend";
+  name = "kontrakcja-frontend-elm";
   buildInputs = [
     nodejs
     pkgs.glibcLocales
-    pkgs.nodePackages.less
-    pkgs.nodePackages.grunt-cli
   ] ++ elmPkgs.buildInputs;
 
   src = kontrakcja-src;
 
-  inherit nodeDependencies;
-
   configurePhase = ''
-    export LOCALIZATION_BIN="${kontrakcja}/bin/localization"
     export LANG=en_US.UTF-8
 
-    ln -s ${nodeDependencies}/lib/node_modules frontend/node_modules
     ln -s ${elmNodeDependencies}/lib/node_modules frontend-elm/node_modules
 
-    export KONTRAKCJA_ROOT=$PWD
-    export KONTRAKCJA_WORKSPACE=$PWD
-
-    echo "building kontrakcja frontend"
+    echo "building kontrakcja frontend-elm"
     echo "$PWD"
     ls -la $PWD
-    ls -la $PWD/frontend
     ls -la $PWD/frontend-elm
 
-    cd frontend
+    cd frontend-elm
   '';
 
   buildPhase = elmPkgs.buildPhase;
@@ -66,7 +48,7 @@ stdenv.mkDerivation {
   '';
 
   installPhase = ''
-    npm run build:nix
+    npm run build
     echo "copying dist:"
     ls -la dist
     cp -r dist $out

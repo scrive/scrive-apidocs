@@ -1,4 +1,4 @@
 let
   release = import ./release.nix;
 in
-release.dev-shell
+release.dev-shell-optimized

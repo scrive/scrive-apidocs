@@ -1,6 +1,7 @@
 {
   nixpkgs
 , haskellPackages
+, kontrakcja-nix-src
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
@@ -9,7 +10,8 @@ let
 
   sourceRoot = builtins.toPath(../..);
 
-  run-deps = import ./kontrakcja-run-deps.nix { inherit nixpkgs; };
+  run-deps = import (kontrakcja-nix-src + /packages/run-deps.nix)
+    { inherit nixpkgs haskellPackages; };
 
   release = import ./kontrakcja-dev-release.nix {
     inherit nixpkgs haskellPackages;
@@ -17,7 +19,6 @@ let
 
   inherit (release) kontrakcja-shake kontrakcja-frontend;
 
-  # Enable checking to build test dependencies in Nix
   kontrakcja = pkgs.haskell.lib.doCheck release.kontrakcja;
 
   scrivepdftools = import ./scrive-pdf-tools.nix { inherit nixpkgs; };
@@ -36,24 +37,8 @@ haskellPackages.shellFor {
 
   buildInputs =
     run-deps ++
-    kontrakcja-frontend.buildInputs ++
-    [
-      elm2nix
-      scrivepdftools
-      haskellPackages.alex
-      haskellPackages.ghcid
-      haskellPackages.happy
-      haskellPackages.hlint
-      haskellPackages.brittany
-      haskellPackages.cabal-install
-      pkgs.nodePackages.less
-      pkgs.nodePackages.yarn
-      pkgs.nodePackages.grunt-cli
-      pkgs.nodePackages.node2nix
-      pkgs.elmPackages.elm
-      pkgs.elmPackages.elm-format
-      pkgs.libxml2
-    ];
+    kontrakcja-frontend.buildInputs
+  ;
 
   shellHook = ''
     export LANG=${localeLang}

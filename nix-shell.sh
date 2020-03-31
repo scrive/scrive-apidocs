@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd workspace/nix-ghc-8.6.5
+cd workspace/nix-ghc-8.8
 nix-shell

@@ -1,49 +1,50 @@
 {
-  nixpkgs ? import ./nixpkgs.nix
-, ghcVersion
-, inHaskellPackages ? nixpkgs.pkgs.haskell.packages.${ghcVersion}
-, workspaceRoot ? builtins.toPath(../..)
+  release-path
+, nixpkgs ? import ./nixpkgs.nix
 , localeLang ? "en_US.UTF-8"
+, workspaceRoot ? builtins.toPath(../..)
 }:
 let
-  haskellPackages = import ../derivation/kontrakcja-build-deps.nix {
-    inherit nixpkgs inHaskellPackages;
-  };
+  kontrakcja-nix-src = import ../source/kontrakcja-nix.nix;
 
-  prodHaskellPackages = import ../derivation/kontrakcja-build-deps.nix {
-    inherit nixpkgs inHaskellPackages;
-    quickBuild = false;
-  };
+  kontrakcja-nix = import (kontrakcja-nix-src + release-path)
+    { inherit nixpkgs; };
 
-  kontrakcja-src = import ../derivation/kontrakcja-src.nix;
+  inherit (kontrakcja-nix) haskellPackages prodHaskellPackages;
 
-  kontrakcja-base = import ../derivation/kontrakcja-base.nix {
+  kontrakcja-src = import ../packages/kontrakcja-src.nix;
+
+  kontrakcja-base = import ../packages/kontrakcja-base.nix {
     inherit nixpkgs haskellPackages;
   };
 
-  manual-shell = import ../derivation/kontrakcja-manual-shell.nix {
-    inherit nixpkgs workspaceRoot localeLang haskellPackages;
+  manual-shell = import ../packages/kontrakcja-manual-shell.nix {
+    inherit nixpkgs kontrakcja-nix-src
+      workspaceRoot localeLang haskellPackages;
   };
 
-  cabal-shell = import ../derivation/kontrakcja-cabal-shell.nix {
-    inherit nixpkgs haskellPackages workspaceRoot localeLang;
+  dev-shell = import ../packages/kontrakcja-dev-shell.nix {
+    inherit nixpkgs kontrakcja-nix-src workspaceRoot localeLang;
+    haskellPackages = haskellPackages;
   };
 
-  dev-shell = import ../derivation/kontrakcja-dev-shell.nix {
-    inherit nixpkgs haskellPackages workspaceRoot localeLang;
+  dev-shell-optimized = import ../packages/kontrakcja-dev-shell.nix {
+    inherit nixpkgs kontrakcja-nix-src workspaceRoot localeLang;
+    haskellPackages = prodHaskellPackages;
   };
 
-  dev-release = import ../derivation/kontrakcja-dev-release.nix {
+  dev-release = import ../packages/kontrakcja-dev-release.nix {
     inherit nixpkgs haskellPackages;
   };
 
-  production-shell = import ../derivation/kontrakcja-production-shell.nix {
-    inherit nixpkgs workspaceRoot localeLang;
+  production-shell = import ../packages/kontrakcja-production-shell.nix {
+    inherit nixpkgs kontrakcja-nix-src
+      workspaceRoot localeLang;
 
     haskellPackages = prodHaskellPackages;
   };
 
-  production-release = import ../derivation/kontrakcja-production-release.nix {
+  production-release = import ../packages/kontrakcja-production-release.nix {
     inherit nixpkgs;
     haskellPackages = prodHaskellPackages;
   };
@@ -56,9 +57,7 @@ let
 
     buildPhase = ''
       mkdir -p $out
-
       echo copying source: ${kontrakcja-src}
-
       cp -r "${kontrakcja-src}"/* $out/
     '';
     testPhase = "";
@@ -71,8 +70,8 @@ in
     kontrakcja-base
     kontrakcja-src
     manual-shell
-    cabal-shell
     dev-shell
+    dev-shell-optimized
     dev-release
     dev-deps
     production-shell

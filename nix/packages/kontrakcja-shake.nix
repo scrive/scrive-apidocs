@@ -3,7 +3,7 @@
 , haskellPackages
 }:
 let
-  src = import ./kontrakcja-src.nix;
+  src = import ../source/kontrakcja.nix;
 in
 haskellPackages.callCabal2nix
   "kontrakcja-shake"

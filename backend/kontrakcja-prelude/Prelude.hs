@@ -17,6 +17,7 @@ module Prelude (
   , module P
   , Text
   , TextShow (..)
+  , MonadFail (..)
   , (!!)
   -- optics
   , (&), (%), (?~)
@@ -41,13 +42,12 @@ module Prelude (
   , whenNothing
   , error
   , unexpectedError
-  , fail
   ) where
 
 import Control.Applicative
 import Control.Monad hiding (fail)
 import Control.Monad.Extra hiding (fail)
-import Control.Monad.Fail (fail)
+import Control.Monad.Fail (MonadFail(..))
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
 import Data.List hiding
@@ -63,8 +63,8 @@ import Text.JSON.FromJSValue
 import Text.JSON.ToJSValue
 import TextShow
 import "base" Prelude hiding
-  ( (!!), (&&), (||), all, and, any, error, head, id, last, maximum, minimum
-  , not, or, read, tail, fail
+  ( (!!), (&&), (||), all, and, any, error, fail, head, id, last, maximum
+  , minimum, not, or, read, tail
   )
 import qualified Data.Either.Optics as O
 import qualified Data.Maybe.Optics as O

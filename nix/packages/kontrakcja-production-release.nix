@@ -7,7 +7,7 @@ let
 
   sourceRoot = builtins.toPath(../..);
 
-  kontrakcja-src = import ./kontrakcja-src.nix;
+  kontrakcja-src = import ../source/kontrakcja.nix;
 
   kontrakcja-base = import ./kontrakcja-base.nix {
     inherit nixpkgs haskellPackages;
