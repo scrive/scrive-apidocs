@@ -352,12 +352,14 @@ viewUsers model users =
     Table.table
         { options = [ Table.striped, Table.hover, Table.small ]
         , thead =
-            Table.simpleThead
-                [ th "col-3" SCName [ text "Username", sortIndicator SCName sorting ]
-                , th "col-4" SCEmail [ text "Email", sortIndicator SCEmail sorting ]
-                , th "col-2" SCRole [ text "Role", sortIndicator SCRole sorting ]
-                , Table.th [ Table.cellAttr <| class "col-2" ] [ text "TOS date" ]
-                , th "col-1" SC2FA [ text "2FA", sortIndicator SC2FA sorting ]
+            Table.thead []
+                [ Table.tr [ Table.rowAttr <| class "row" ]
+                    [ th "col-3" SCName [ text "Username", sortIndicator SCName sorting ]
+                    , th "col-3" SCEmail [ text "Email", sortIndicator SCEmail sorting ]
+                    , th "col-3" SCRole [ text "Role", sortIndicator SCRole sorting ]
+                    , Table.th [ Table.cellAttr <| class "col-2" ] [ text "TOS date" ]
+                    , th "col-1" SC2FA [ text "2FA", sortIndicator SC2FA sorting ]
+                    ]
                 ]
         , tbody =
             Table.tbody [] <|
@@ -367,15 +369,20 @@ viewUsers model users =
 
 viewUser : User -> Table.Row Msg
 viewUser user =
+    let
+        colAttr colStr =
+            Table.cellAttr <| class colStr
+    in
     Table.tr
         [ Table.rowAttr <| onClick <| TableRowClicked user.id
         , Table.rowAttr <| class "clickable-row"
+        , Table.rowAttr <| class "row"
         ]
-        [ Table.td [] [ text user.fullname ]
-        , Table.td [] [ text user.email ]
-        , Table.td [] [ text <| Enum.toHumanString enumRole user.role ]
-        , Table.td [] [ text <| M.withDefault "" <| M.map viewDate user.tos ]
-        , Table.td [] [ text <| ite user.twoFAActive "x" "" ]
+        [ Table.td [ colAttr "col-3" ] [ text user.fullname ]
+        , Table.td [ colAttr "col-3" ] [ text user.email ]
+        , Table.td [ colAttr "col-3" ] [ text <| Enum.toHumanString enumRole user.role ]
+        , Table.td [ colAttr "col-2" ] [ text <| M.withDefault "" <| M.map viewDate user.tos ]
+        , Table.td [ colAttr "col-1" ] [ text <| ite user.twoFAActive "x" "" ]
         ]
 
 
