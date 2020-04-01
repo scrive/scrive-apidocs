@@ -199,8 +199,8 @@ startEIDServiceTransaction doc sl eidserviceAuthKind provider = do
       EIDServiceTransactionProviderNemID{}    -> "dkNemID"
       EIDServiceTransactionProviderNOBankID{} -> "noBankID"
     redirectFragment = case (provider, eidserviceAuthKind) of
-      (EIDServiceTransactionProviderIDIN{}, EIDServiceAuthToView _)   -> "idin-sign"
-      (EIDServiceTransactionProviderIDIN{}    , EIDServiceAuthToSign) -> "idin-view"
+      (EIDServiceTransactionProviderIDIN{}, EIDServiceAuthToView _)   -> "idin-view"
+      (EIDServiceTransactionProviderIDIN{}    , EIDServiceAuthToSign) -> "idin-sign"
       (EIDServiceTransactionProviderVerimi{}  , _                   ) -> "verimi"
       (EIDServiceTransactionProviderNemID{}   , _                   ) -> "nemid"
       (EIDServiceTransactionProviderNOBankID{}, _                   ) -> "nobankid"
