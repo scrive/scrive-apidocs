@@ -87,26 +87,123 @@ eidServiceConf doc = do
 startVerimiEIDServiceTransaction
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
 startVerimiEIDServiceTransaction did slid = do
-  logInfo_ "EID Service transaction start"
-  doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
-  rd   <- guardJustM $ getField "redirect"
-  conf <- eidServiceConf doc
+  logInfo_ "EID Service transaction start - for Verimi view"
+  (doc, sl) <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  startEIDServiceTransaction doc
+                             sl
+                             (EIDServiceAuthToView $ mkAuthKind doc)
+                             EIDServiceTransactionProviderVerimi
 
-  tid  <- createVerimiTransactionWithEIDService conf did slid rd
-  turl <- startVerimiTransactionWithEIDService conf tid
+startIDINViewEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
+startIDINViewEIDServiceTransaction did slid = do
+  logInfo_ "EID Service transaction start - for iDIN view"
+  (doc, sl) <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  startEIDServiceTransaction doc
+                             sl
+                             (EIDServiceAuthToView $ mkAuthKind doc)
+                             EIDServiceTransactionProviderIDIN
+
+startIDINSignEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
+startIDINSignEIDServiceTransaction did slid = do
+  logInfo_ "EID Service transaction start - for iDIN sign"
+  (doc, sl) <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  startEIDServiceTransaction doc sl EIDServiceAuthToSign EIDServiceTransactionProviderIDIN
+
+startNemIDViewEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
+startNemIDViewEIDServiceTransaction did slid = do
+  logInfo_ "EID Service transaction start - for NemID view"
+  (doc, sl) <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  startEIDServiceTransaction doc
+                             sl
+                             (EIDServiceAuthToView $ mkAuthKind doc)
+                             EIDServiceTransactionProviderNemID
+
+startNOBankIDViewEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
+startNOBankIDViewEIDServiceTransaction did slid = do
+  logInfo_ "EID Service transaction start - for NOBankID view"
+  (doc, sl) <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  startEIDServiceTransaction doc
+                             sl
+                             (EIDServiceAuthToView $ mkAuthKind doc)
+                             EIDServiceTransactionProviderNOBankID
+
+startEIDServiceTransaction
+  :: Kontrakcja m
+  => Document
+  -> SignatoryLink
+  -> EIDServiceAuthenticationKind
+  -> EIDServiceTransactionProvider
+  -> m Value
+startEIDServiceTransaction doc sl eidserviceAuthKind provider = do
+  -- TODO: This function should be broken up into logical tasks
+  conf <- eidServiceConf doc
+  ctx  <- getContext
+  -- TODO: construction of redirect URL should be handled by JSON module
+  let redirectUrl =
+        (ctx ^. #brandedDomain % #url)
+          <> "/eid-service/redirect-endpoint/"
+          <> redirectFragment
+          <> "/"
+          <> showt (documentid doc)
+          <> "/"
+          <> showt (signatorylinkid sl)
+  providerParams <- case provider of
+    EIDServiceTransactionProviderIDIN ->
+      return EIDServiceProviderParamsIDIN { esppRedirectURL = redirectUrl }
+    EIDServiceTransactionProviderVerimi ->
+      return EIDServiceProviderParamsVerimi { esppRedirectURL = redirectUrl }
+    EIDServiceTransactionProviderNemID -> do
+      let locale = case (documentlang doc) of
+            LANG_SV -> "sv-SE"
+            LANG_NO -> "nb-NO"
+            LANG_DA -> "da-DK"
+            _       -> "en-GB"
+      return EIDServiceProviderParamsNemID { esppRedirectURL = redirectUrl
+                                           , esppUILocale    = locale
+                                           }
+    EIDServiceTransactionProviderNOBankID -> do
+      personalNumberField <-
+        guardJust . getFieldByIdentity PersonalNumberFI . signatoryfields $ sl
+      ssn <- guardJust . fieldTextValue $ personalNumberField
+      let mNonEmptyNOPhone = case getMobile sl of
+            "" -> Nothing
+            p  -> resultToMaybe . asValidPhoneForNorwegianBankID $ p
+      return EIDServiceProviderParamsNOBankID { esppRedirectURL    = redirectUrl
+                                              , esppPhoneNumber    = mNonEmptyNOPhone
+                                              , esppPersonalNumber = ssn
+                                              }
+  tid  <- createTransactionWithEIDService conf providerParams
+  turl <- startTransactionWithEIDService conf providerName tid
   sid  <- getNonTempSessionID
   now  <- currentTime
   let newTransaction = EIDServiceTransaction
         { estID              = tid
         , estStatus          = EIDServiceTransactionStatusStarted
-        , estSignatoryLinkID = slid
-        , estAuthKind        = EIDServiceAuthToView $ mkAuthKind doc
-        , estProvider        = EIDServiceTransactionProviderVerimi
+        , estSignatoryLinkID = signatorylinkid sl
+        , estAuthKind        = eidserviceAuthKind
+        , estProvider        = provider
         , estSessionID       = sid
         , estDeadline        = 60 `minutesAfter` now
         }
   dbUpdate $ MergeEIDServiceTransaction newTransaction
   return $ object ["accessUrl" .= turl]
+  where
+    -- TODO: This should be refactored out
+    providerName = case provider of
+      EIDServiceTransactionProviderIDIN{}     -> "nlIDIN"
+      EIDServiceTransactionProviderVerimi{}   -> "verimi"
+      EIDServiceTransactionProviderNemID{}    -> "dkNemID"
+      EIDServiceTransactionProviderNOBankID{} -> "noBankID"
+    redirectFragment = case (provider, eidserviceAuthKind) of
+      (EIDServiceTransactionProviderIDIN{}, EIDServiceAuthToView _)   -> "idin-sign"
+      (EIDServiceTransactionProviderIDIN{}    , EIDServiceAuthToSign) -> "idin-view"
+      (EIDServiceTransactionProviderVerimi{}  , _                   ) -> "verimi"
+      (EIDServiceTransactionProviderNemID{}   , _                   ) -> "nemid"
+      (EIDServiceTransactionProviderNOBankID{}, _                   ) -> "nobankid"
 
 updateVerimiTransactionAfterCheck
   :: Kontrakcja m
@@ -210,66 +307,6 @@ redirectEndpointFromVerimiEIDServiceTransaction did slid = do
     F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)
     standardPageFields ctx Nothing ad
   simpleHtmlResponse redirectPage
-
-startIDINViewEIDServiceTransaction
-  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
-startIDINViewEIDServiceTransaction did slid = do
-  logInfo_ "EID Service transaction start - for view"
-  doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
-  conf <- eidServiceConf doc
-  rd   <- guardJustM $ getField "redirect"
-  ctx  <- getContext
-  let redirectUrl =
-        (ctx ^. #brandedDomain % #url)
-          <> "/eid-service/redirect-endpoint/idin-view/"
-          <> showt did
-          <> "/"
-          <> showt slid
-          <> "?redirect="
-          <> rd
-  startIDINEIDServiceTransaction conf
-                                 (EIDServiceAuthToView $ mkAuthKind doc)
-                                 slid
-                                 redirectUrl
-
-startIDINSignEIDServiceTransaction
-  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
-startIDINSignEIDServiceTransaction did slid = do
-  logInfo_ "EID Service transaction start - for sign"
-  doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- access guard
-  conf <- eidServiceConf doc
-  ctx  <- getContext
-  let redirectUrl =
-        (ctx ^. #brandedDomain % #url)
-          <> "/eid-service/redirect-endpoint/idin-sign/"
-          <> showt did
-          <> "/"
-          <> showt slid
-  startIDINEIDServiceTransaction conf EIDServiceAuthToSign slid redirectUrl
-
-startIDINEIDServiceTransaction
-  :: Kontrakcja m
-  => EIDServiceConf
-  -> EIDServiceAuthenticationKind
-  -> SignatoryLinkID
-  -> Text
-  -> m Value
-startIDINEIDServiceTransaction conf eidserviceAuthKind slid redirectUrl = do
-  tid  <- createIDINTransactionWithEIDService conf redirectUrl
-  turl <- startIDINTransactionWithEIDService conf tid
-  sid  <- getNonTempSessionID
-  now  <- currentTime
-  let newTransaction = EIDServiceTransaction
-        { estID              = tid
-        , estStatus          = EIDServiceTransactionStatusStarted
-        , estSignatoryLinkID = slid
-        , estAuthKind        = eidserviceAuthKind
-        , estProvider        = EIDServiceTransactionProviderIDIN
-        , estSessionID       = sid
-        , estDeadline        = 60 `minutesAfter` now
-        }
-  dbUpdate $ MergeEIDServiceTransaction newTransaction
-  return $ object ["accessUrl" .= turl]
 
 updateIDINTransactionAfterCheck
   :: Kontrakcja m
@@ -416,46 +453,6 @@ redirectEndpointFromIDINSignEIDServiceTransaction did slid = do
     standardPageFields ctx Nothing ad
   simpleHtmlResponse redirectPage
 
-startNemIDViewEIDServiceTransaction
-  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
-startNemIDViewEIDServiceTransaction did slid = do
-  logInfo_ "EID Service transaction start"
-  doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
-  conf <- eidServiceConf doc
-  rd   <- guardJustM $ getField "redirect"
-  ctx  <- getContext
-  let redirectUrl =
-        (ctx ^. #brandedDomain % #url)
-          <> "/eid-service/redirect-endpoint/nemid-view/"
-          <> showt did
-          <> "/"
-          <> showt slid
-          <> "?redirect="
-          <> rd
-  let locale = resolveLocale doc
-  tid  <- createNemIDTransactionWithEIDService conf locale redirectUrl
-  turl <- startNemIDTransactionWithEIDService conf tid
-  sid  <- getNonTempSessionID
-  now  <- currentTime
-  let newTransaction = EIDServiceTransaction
-        { estID              = tid
-        , estStatus          = EIDServiceTransactionStatusStarted
-        , estSignatoryLinkID = slid
-        , estAuthKind        = EIDServiceAuthToView $ mkAuthKind doc
-        , estProvider        = EIDServiceTransactionProviderNemID
-        , estSessionID       = sid
-        , estDeadline        = 60 `minutesAfter` now
-        }
-  dbUpdate $ MergeEIDServiceTransaction newTransaction
-  return $ object ["accessUrl" .= turl]
-  where
-    resolveLocale :: Document -> Text
-    resolveLocale doc = case (documentlang doc) of
-      LANG_SV -> "sv-SE"
-      LANG_NO -> "nb-NO"
-      LANG_DA -> "da-DK"
-      _       -> "en-GB"
-
 updateNemIDTransactionAfterCheck
   :: Kontrakcja m
   => SignatoryLinkID
@@ -597,44 +594,6 @@ redirectEndpointFromNemIDViewEIDServiceTransaction did slid = do
         Just est -> checkNemIDTransactionWithEIDService conf (estID est) >>= \case
           (Nothing, _   ) -> return Nothing
           (Just ts, mctd) -> return $ Just (est, ts, mctd)
-
-startNOBankIDViewEIDServiceTransaction
-  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
-startNOBankIDViewEIDServiceTransaction did slid = do
-  logInfo_ "EID Service transaction start"
-  (doc, sl)           <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
-  conf                <- eidServiceConf doc
-  rd                  <- guardJustM $ getField "redirect"
-  ctx                 <- getContext
-  personalNumberField <-
-    guardJust . getFieldByIdentity PersonalNumberFI . signatoryfields $ sl
-  ssn <- guardJust . fieldTextValue $ personalNumberField
-  let redirectUrl =
-        (ctx ^. #brandedDomain % #url)
-          <> "/eid-service/redirect-endpoint/nobankid-view/"
-          <> showt did
-          <> "/"
-          <> showt slid
-          <> "?redirect="
-          <> rd
-      mNonEmptyNOPhone = case getMobile sl of
-        "" -> Nothing
-        p  -> resultToMaybe . asValidPhoneForNorwegianBankID $ p
-  tid  <- createNOBankIDTransactionWithEIDService conf ssn mNonEmptyNOPhone redirectUrl
-  turl <- startNOBankIDTransactionWithEIDService conf tid
-  sid  <- getNonTempSessionID
-  now  <- currentTime
-  let newTransaction = EIDServiceTransaction
-        { estID              = tid
-        , estStatus          = EIDServiceTransactionStatusStarted
-        , estSignatoryLinkID = slid
-        , estAuthKind        = EIDServiceAuthToView $ mkAuthKind doc
-        , estProvider        = EIDServiceTransactionProviderNOBankID
-        , estSessionID       = sid
-        , estDeadline        = 60 `minutesAfter` now
-        }
-  dbUpdate $ MergeEIDServiceTransaction newTransaction
-  return $ object ["accessUrl" .= turl]
 
 redirectEndpointFromNOBankIDViewEIDServiceTransaction
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response

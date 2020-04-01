@@ -4,6 +4,7 @@ module EID.EIDService.Types (
     , fromEIDServiceTransactionID
 
     , EIDServiceTransactionProvider(..)
+    , EIDServiceProviderParams(..)
     , EIDServiceTransactionStatus(..)
     , EIDServiceAuthenticationKind(..)
     , EIDServiceTransaction(..)
@@ -65,6 +66,23 @@ data EIDServiceTransactionProvider =
   | EIDServiceTransactionProviderNemID
   | EIDServiceTransactionProviderNOBankID
   deriving (Eq, Ord, Show)
+
+data EIDServiceProviderParams =
+  EIDServiceProviderParamsVerimi {
+    esppRedirectURL :: Text
+  } |
+  EIDServiceProviderParamsIDIN {
+    esppRedirectURL :: Text
+  } |
+  EIDServiceProviderParamsNemID {
+    esppRedirectURL :: Text
+  , esppUILocale :: Text
+  } |
+  EIDServiceProviderParamsNOBankID {
+    esppRedirectURL :: Text
+  , esppPhoneNumber :: Maybe Text
+  , esppPersonalNumber :: Text
+  }
 
 instance PQFormat EIDServiceTransactionProvider where
   pqFormat = pqFormat @Int16

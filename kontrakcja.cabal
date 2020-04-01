@@ -329,6 +329,7 @@ Library
                  , EID.EIDService.Conf
                  , EID.EIDService.Communication
                  , EID.EIDService.Control
+                 , EID.EIDService.JSON
                  , EID.EIDService.Migrations
                  , EID.EIDService.Model
                  , EID.EIDService.Tables

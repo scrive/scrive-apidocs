@@ -39,13 +39,13 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
     where
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
-        sqlSet "transaction_id" $ estID
-        sqlSet "status" $ estStatus
-        sqlSet "signatory_link_id" $ estSignatoryLinkID
-        sqlSet "auth_kind" $ estAuthKind
-        sqlSet "session_id" $ estSessionID
-        sqlSet "provider" $ estProvider
-        sqlSet "deadline" $ estDeadline
+        sqlSet "transaction_id"    estID
+        sqlSet "status"            estStatus
+        sqlSet "signatory_link_id" estSignatoryLinkID
+        sqlSet "auth_kind"         estAuthKind
+        sqlSet "session_id"        estSessionID
+        sqlSet "provider"          estProvider
+        sqlSet "deadline"          estDeadline
 
 data GetEIDServiceTransactionNoSessionIDGuard = GetEIDServiceTransactionNoSessionIDGuard SignatoryLinkID EIDServiceAuthenticationKind
 instance (MonadDB m, MonadThrow m)

@@ -2,17 +2,11 @@ module EID.EIDService.Communication (
     CompleteNemIDEIDServiceTransactionData(..)
   , CompleteVerimiEIDServiceTransactionData(..)
   , CompleteIDINEIDServiceTransactionData(..)
-  , createVerimiTransactionWithEIDService
-  , startVerimiTransactionWithEIDService
+  , createTransactionWithEIDService
+  , startTransactionWithEIDService
   , checkVerimiTransactionWithEIDService
-  , createIDINTransactionWithEIDService
-  , startIDINTransactionWithEIDService
   , checkIDINTransactionWithEIDService
-  , createNemIDTransactionWithEIDService
-  , startNemIDTransactionWithEIDService
   , checkNemIDTransactionWithEIDService
-  , createNOBankIDTransactionWithEIDService
-  , startNOBankIDTransactionWithEIDService
   , checkNOBankIDTransactionWithEIDService
   , dateOfBirthFromDKPersonalNumber
   ) where
@@ -20,6 +14,7 @@ module EID.EIDService.Communication (
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Aeson ((.=), object)
+import Data.Aeson.Encoding (encodingToLazyByteString)
 import Log
 import System.Exit
 import Text.JSON
@@ -29,71 +24,13 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Text as T
 
-import Doc.DocumentID
-import Doc.SignatoryLinkID
 import EID.EIDService.Conf
+import EID.EIDService.JSON
 import EID.EIDService.Types
 import Kontra hiding (InternalError)
 import Log.Identifier
 import Log.Utils
 import Utils.IO
-
-createNemIDTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> Text -> Text -> m (EIDServiceTransactionID)
-createNemIDTransactionWithEIDService conf locale redirect = do
-  let
-    providerParams = Just
-      $ object ["dkNemID" .= object ["limitedClientMode" .= True, "uiLocale" .= locale]]
-  createTransactionWithEIDService conf "dkNemID" providerParams redirect
-
-createNOBankIDTransactionWithEIDService
-  :: Kontrakcja m
-  => EIDServiceConf
-  -> Text
-  -> Maybe Text
-  -> Text
-  -> m (EIDServiceTransactionID)
-createNOBankIDTransactionWithEIDService conf ssn mPhone redirect = do
-  let phonePair = maybe [] (\p -> ["phoneNumber" .= p]) mPhone
-      providerParams =
-        Just $ object ["noBankID" .= object (["personalNumber" .= ssn] <> phonePair)]
-  createTransactionWithEIDService conf "noBankID" providerParams redirect
-
-startNemIDTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
-startNemIDTransactionWithEIDService conf tid = do
-  response <- startTransactionWithEIDService conf "dkNemID" tid
-  extractUrl response
-  where
-    extractUrl :: Kontrakcja m => JSValue -> m Text
-    extractUrl jsValue = withJSValue jsValue $ do
-      murl <-
-        fromJSValueFieldCustom "providerInfo"
-        $ fromJSValueFieldCustom "dkNemIDAuth"
-        $ fromJSValueField "authUrl"
-      case (murl) of
-        (Just url) -> return (T.pack url)
-        _          -> do
-          logAttention_ "Failed to read 'url' from start transaction response"
-          internalError
-
-startNOBankIDTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
-startNOBankIDTransactionWithEIDService conf tid = do
-  response <- startTransactionWithEIDService conf "noBankID" tid
-  extractUrl response
-  where
-    extractUrl :: Kontrakcja m => JSValue -> m Text
-    extractUrl jsValue = withJSValue jsValue $ do
-      murl <-
-        fromJSValueFieldCustom "providerInfo"
-        $ fromJSValueFieldCustom "noBankIDAuth"
-        $ fromJSValueField "authUrl"
-      case (murl) of
-        (Just url) -> return (T.pack url)
-        _          -> do
-          logAttention_ "Failed to read 'url' from start transaction response"
-          internalError
 
 checkNemIDTransactionWithEIDService
   :: Kontrakcja m
@@ -257,43 +194,6 @@ data CompleteVerimiEIDServiceTransactionData = CompleteVerimiEIDServiceTransacti
   , eidvtdVerifiedEmail :: T.Text
   }
 
-createVerimiTransactionWithEIDService
-  :: Kontrakcja m
-  => EIDServiceConf
-  -> DocumentID
-  -> SignatoryLinkID
-  -> Text
-  -> m (EIDServiceTransactionID)
-createVerimiTransactionWithEIDService conf did slid redirect = do
-  ctx <- getContext
-  let redirectUrl =
-        (ctx ^. #brandedDomain % #url)
-          <> "/eid-service/redirect-endpoint/verimi/"
-          <> showt did
-          <> "/"
-          <> showt slid
-          <> "?redirect="
-          <> redirect
-  createTransactionWithEIDService conf "verimi" Nothing redirectUrl
-
-startVerimiTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
-startVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
-  response <- startTransactionWithEIDService conf "verimi" tid
-  extractUrl response
-  where
-    extractUrl :: Kontrakcja m => JSValue -> m Text
-    extractUrl jsValue = withJSValue jsValue $ do
-      murl <-
-        fromJSValueFieldCustom "providerInfo"
-        $ fromJSValueFieldCustom "verimiAuth"
-        $ fromJSValueField "authUrl"
-      case (murl) of
-        (Just url) -> return (T.pack url)
-        _          -> do
-          logAttention_ "Failed to read 'url' from start transaction response"
-          internalError
-
 checkVerimiTransactionWithEIDService
   :: Kontrakcja m
   => EIDServiceConf
@@ -302,7 +202,7 @@ checkVerimiTransactionWithEIDService
        ( Maybe EIDServiceTransactionStatus
        , Maybe CompleteVerimiEIDServiceTransactionData
        )
-checkVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
+checkVerimiTransactionWithEIDService conf tid = do
   mtd <- getTransactionFromEIDService conf "verimi" tid
   case mtd of
     Just td -> getTransactionDataAndStatus td
@@ -339,30 +239,6 @@ checkVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
                   _ -> return Nothing
           return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
         _ -> return (Nothing, Nothing)
-
-createIDINTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> Text -> m EIDServiceTransactionID
-createIDINTransactionWithEIDService conf redirectUrl = do
-  let providerParams = Just $ object ["nlIDIN" .= object ["requestBirthdate" .= True]]
-  createTransactionWithEIDService conf "nlIDIN" providerParams redirectUrl
-
-startIDINTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> EIDServiceTransactionID -> m (T.Text)
-startIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
-  response <- startTransactionWithEIDService conf "nlIDIN" tid
-  extractUrl response
-  where
-    extractUrl :: Kontrakcja m => JSValue -> m Text
-    extractUrl jsValue = withJSValue jsValue $ do
-      murl <-
-        fromJSValueFieldCustom "providerInfo"
-        $ fromJSValueFieldCustom "nlIDINAuth"
-        $ fromJSValueField "authUrl"
-      case (murl) of
-        (Just url) -> return (T.pack url)
-        _          -> do
-          logAttention_ "Failed to read 'url' from start transaction response"
-          internalError
 
 checkIDINTransactionWithEIDService
   :: (MonadLog m, MonadBaseControl IO m)
@@ -440,12 +316,12 @@ guardExitCode calltype provider (exitcode, stdout, stderr) = case exitcode of
       ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
 
 cURLCall
-  :: (MonadBase IO m, A.ToJSON a, MonadLog m)
+  :: (MonadBase IO m, MonadLog m)
   => EIDServiceConf
   -> CallType
   -> Text
   -> Text
-  -> Maybe a
+  -> Maybe BSL.ByteString
   -> m BSL.ByteString
 cURLCall conf calltype provider endpoint mjsonData = do
   let verb = case calltype of
@@ -460,30 +336,27 @@ cURLCall conf calltype provider endpoint mjsonData = do
         ++ (if isJust mjsonData then ["--data", "@-"] else [])
         ++ [T.unpack $ eidServiceUrl conf <> "/api/v1/transaction/" <> endpoint]
         )
-      $ case mjsonData of
-          Nothing       -> BSL.empty
-          Just jsonData -> A.encode $ A.toJSON jsonData
+      $ fromMaybe BSL.empty mjsonData
   guardExitCode calltype provider (exitcode, stdout, stderr)
   return stdout
 
 createTransactionWithEIDService
   :: Kontrakcja m
   => EIDServiceConf
-  -> Text
-  -> Maybe A.Value
-  -> Text
+  -> EIDServiceProviderParams
   -> m (EIDServiceTransactionID)
-createTransactionWithEIDService conf provider providerParams redirectUrl = do
-  let paramsPair = fromMaybe [] $ (\p -> ["providerParameters" .= p]) <$> providerParams
+createTransactionWithEIDService conf providerParams = do
+  -- TODO: This function has repetition in many places
+  let provider = case providerParams of
+        EIDServiceProviderParamsVerimi{}   -> "verimi"
+        EIDServiceProviderParamsIDIN{}     -> "nlIDIN"
+        EIDServiceProviderParamsNemID{}    -> "dkNemID"
+        EIDServiceProviderParamsNOBankID{} -> "noBankID"
   stdout <-
     cURLCall conf Create provider "new"
-    .  Just
-    .  object
-    $  [ "method" .= ("auth" :: String)
-       , "provider" .= provider
-       , "redirectUrl" .= redirectUrl
-       ]
-    ++ paramsPair
+    . Just
+    . encodingToLazyByteString
+    $ encodeNewTransactionRequest providerParams
   case (decode $ BSL.toString stdout) of
     Ok jsvalue -> withJSValue jsvalue $ do
       mtid <- fromJSValueField "id"
@@ -497,16 +370,29 @@ createTransactionWithEIDService conf provider providerParams redirectUrl = do
       internalError
 
 startTransactionWithEIDService
-  :: Kontrakcja m => EIDServiceConf -> Text -> EIDServiceTransactionID -> m JSValue
+  :: Kontrakcja m => EIDServiceConf -> Text -> EIDServiceTransactionID -> m Text
 startTransactionWithEIDService conf provider tid = localData [identifier tid] $ do
   stdout <- do
     let endpoint = fromEIDServiceTransactionID tid <> "/start"
-    cURLCall conf Start provider endpoint . Just $ object []
-  case (decode $ BSL.toString stdout) of
+    cURLCall conf Start provider endpoint . Just . A.encode . A.toJSON $ object []
+  extractUrl =<< case (decode $ BSL.toString stdout) of
     Ok jsvalue -> return jsvalue
     _          -> do
       logAttention_ "Failed to parse start transaction response"
       internalError
+  where
+    -- Move this parsing to the JSON module
+    extractUrl :: Kontrakcja m => JSValue -> m Text
+    extractUrl jsValue = withJSValue jsValue $ do
+      murl <-
+        fromJSValueFieldCustom "providerInfo"
+        $ fromJSValueFieldCustom (T.unpack provider <> "Auth")
+        $ fromJSValueField "authUrl"
+      case (murl) of
+        (Just url) -> return (T.pack url)
+        _          -> do
+          logAttention_ "Failed to read 'url' from start transaction response"
+          internalError
 
 getTransactionFromEIDService
   :: (MonadLog m, MonadBaseControl IO m)
@@ -517,7 +403,7 @@ getTransactionFromEIDService
 getTransactionFromEIDService conf provider tid = localData [identifier tid] $ do
   stdout <- do
     let endpoint = fromEIDServiceTransactionID tid
-    cURLCall conf Fetch provider endpoint (Nothing :: Maybe String)
+    cURLCall conf Fetch provider endpoint Nothing
   case decode $ BSL.toString stdout of
     Ok jsvalue -> return $ Just jsvalue
     _          -> return Nothing
