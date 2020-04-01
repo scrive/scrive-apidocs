@@ -370,7 +370,6 @@ guardAuthenticateToViewWithPin did slid = do
   guardThatObjectVersionMatchesIfProvided did
   signatoryAuthMethod <- theDocument >>= \doc -> case documentstatus doc of
     Pending -> do
-      guardSignatoryHasNotSigned slid doc
       return signatorylinkauthenticationtoviewmethod
     Closed -> return signatorylinkauthenticationtoviewarchivedmethod
     _ -> apiError $ documentStateError "The document status should be Pending or Closed"
