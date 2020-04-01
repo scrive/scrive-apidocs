@@ -260,6 +260,7 @@ view embed model =
 type alias UserGroup =
     { id : String
     , name : String
+    , entityName : String
     , number : String
     , address : String
     , zip : String
@@ -272,9 +273,10 @@ userGroupsDecoder : Decoder (List UserGroup)
 userGroupsDecoder =
     D.field "companies"
         (D.list
-            (D.map7 UserGroup
+            (D.map8 UserGroup
                 (D.field "id" D.string)
                 (D.field "companyname" D.string)
+                (D.field "companyentityname" D.string)
                 (D.field "companynumber" D.string)
                 (D.field "companyaddress" D.string)
                 (D.field "companyzip" D.string)
@@ -295,8 +297,9 @@ viewUserGroups model userGroups =
         , thead =
             Table.thead []
                 [ Table.tr [ Table.rowAttr <| class "row" ]
-                    [ Table.th [ colAttr "col-3" ] [ text "Name" ]
-                    , Table.th [ colAttr "col-2" ] [ text "Number" ]
+                    [ Table.th [ colAttr "col-2" ] [ text "Company" ]
+                    , Table.th [ colAttr "col-2" ] [ text "User group" ]
+                    , Table.th [ colAttr "col-1" ] [ text "Number" ]
                     , Table.th [ colAttr "col-2" ] [ text "Address" ]
                     , Table.th [ colAttr "col-1" ] [ text "Zip" ]
                     , Table.th [ colAttr "col-1" ] [ text "City" ]
@@ -321,8 +324,9 @@ viewUserGroup _ userGroup =
         , Table.rowAttr <| class "clickable-row"
         , Table.rowAttr <| class "row"
         ]
-        [ Table.td [ colAttr "col-3" ] [ text userGroup.name ]
-        , Table.td [ colAttr "col-2" ] [ text userGroup.number ]
+        [ Table.td [ colAttr "col-2" ] [ text userGroup.entityName ]
+        , Table.td [ colAttr "col-2" ] [ text userGroup.name ]
+        , Table.td [ colAttr "col-1" ] [ text userGroup.number ]
         , Table.td [ colAttr "col-2" ] [ text userGroup.address ]
         , Table.td [ colAttr "col-1" ] [ text userGroup.zip ]
         , Table.td [ colAttr "col-1" ] [ text userGroup.city ]
