@@ -32,12 +32,19 @@ example: {
     "inherited_from": null,
     "address": {
       "company_number": "5568166804",
-      "address": "Barnhusgatan 20",
-      "zip": "111 23",
+      "company_name": "Scrive",
+      "address": "Grev Turegatan 11A",
+      "zip": "114 46",
       "city": "Stockholm",
       "country": "Sweden"
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "alignment",
+      "value": "chaotic good"
+    }
+  ]
 }
 description: |
   JSON representation of a User Group.
@@ -62,3 +69,5 @@ properties:
     $ref: ./UserGroupSettings.yaml
   contact_details:
     $ref: ./UserGroupContactDetails.yaml
+  tags:
+    $ref: ./Tags.yaml

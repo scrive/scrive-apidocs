@@ -44,8 +44,9 @@ example: {
     "inherited_from": "1",
     "address": {
       "company_number": "5568166804",
-      "address": "Barnhusgatan 20",
-      "zip": "111 23",
+      "company_name": "Scrive",
+      "address": "Grev Turegatan 11A",
+      "zip": "114 46",
       "city": "Stockholm",
       "country": "Sweden"
     },
@@ -53,13 +54,20 @@ example: {
       "inherited_from": "1",
       "address": {
         "company_number": "5568166804",
-        "address": "Barnhusgatan 20",
-        "zip": "111 23",
+        "company_name": "Scrive",
+        "address": "Grev Turegatan 11A",
+        "zip": "114 46",
         "city": "Stockholm",
         "country": "Sweden"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "home-planet",
+      "value": "Earth"
+    }
+  ]
 }
 description: |
   JSON representation of a User Group (with Inheritable Previews).
@@ -84,3 +92,5 @@ properties:
     $ref: ./UserGroupSettingsWithInheritable.yaml
   contact_details:
     $ref: ./UserGroupContactDetailsWithInheritable.yaml
+  tags:
+    $ref: ./Tags.yaml

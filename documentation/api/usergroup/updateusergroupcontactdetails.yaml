@@ -15,19 +15,18 @@ post:
 
     ```json
     {
-      "data_retention_policy": {
-        "idle_doc_timeout_preparation": null,
-        "idle_doc_timeout_closed": null,
-        "idle_doc_timeout_canceled": null,
-        "idle_doc_timeout_timedout": null,
-        "idle_doc_timeout_rejected": null,
-        "idle_doc_timeout_error": null,
-        "immediate_trash": false
+      "address": {
+        "company_number": "0987654321",
+        "company_name": "Scrive",
+        "address": "123 Other Street",
+        "zip": "00-321",
+        "city": "Warsaw",
+        "country": "Poland"
       }
     }
     ```
 
-    > For examples of the JSON output, see 
+    > For examples of the JSON output, see
     > [View User Group Contact Details](#view-user-group-contact-details).
 
     This endpoint allows you to update the User Group's `contact_details` object.
