@@ -145,6 +145,40 @@ startFITupasSignEIDServiceTransaction did slid = do
                              EIDServiceAuthToSign
                              EIDServiceTransactionProviderFITupas
 
+-- TODO: construction of redirect URL should be handled by JSON module
+makeRedirectURL
+  :: Kontrakcja m
+  => Document
+  -> SignatoryLink
+  -> EIDServiceAuthenticationKind
+  -> EIDServiceTransactionProvider
+  -> m Text
+makeRedirectURL doc sl eidserviceAuthKind provider = do
+  ctx        <- getContext
+  rdFragment <- case eidserviceAuthKind of
+    EIDServiceAuthToView _ -> do
+      rd <- guardJustM $ getField "redirect"
+      return $ "?redirect=" <> rd
+    EIDServiceAuthToSign -> return ""
+  return
+    $  (ctx ^. #brandedDomain % #url)
+    <> "/eid-service/redirect-endpoint/"
+    <> redirectFragment
+    <> "/"
+    <> showt (documentid doc)
+    <> "/"
+    <> showt (signatorylinkid sl)
+    <> rdFragment
+  where
+    redirectFragment = case (provider, eidserviceAuthKind) of
+      (EIDServiceTransactionProviderIDIN{}, EIDServiceAuthToView _)   -> "idin-view"
+      (EIDServiceTransactionProviderIDIN{}    , EIDServiceAuthToSign) -> "idin-sign"
+      (EIDServiceTransactionProviderFITupas{}, EIDServiceAuthToView _) -> "fitupas-view"
+      (EIDServiceTransactionProviderFITupas{} , EIDServiceAuthToSign) -> "fitupas-sign"
+      (EIDServiceTransactionProviderVerimi{}  , _                   ) -> "verimi"
+      (EIDServiceTransactionProviderNemID{}   , _                   ) -> "nemid-view"
+      (EIDServiceTransactionProviderNOBankID{}, _                   ) -> "nobankid-view"
+
 startEIDServiceTransaction
   :: Kontrakcja m
   => Document
@@ -154,17 +188,8 @@ startEIDServiceTransaction
   -> m Value
 startEIDServiceTransaction doc sl eidserviceAuthKind provider = do
   -- TODO: This function should be broken up into logical tasks
-  conf <- eidServiceConf doc
-  ctx  <- getContext
-  -- TODO: construction of redirect URL should be handled by JSON module
-  let redirectUrl =
-        (ctx ^. #brandedDomain % #url)
-          <> "/eid-service/redirect-endpoint/"
-          <> redirectFragment
-          <> "/"
-          <> showt (documentid doc)
-          <> "/"
-          <> showt (signatorylinkid sl)
+  conf           <- eidServiceConf doc
+  redirectUrl    <- makeRedirectURL doc sl eidserviceAuthKind provider
   providerParams <- case provider of
     EIDServiceTransactionProviderIDIN ->
       return EIDServiceProviderParamsIDIN { esppRedirectURL = redirectUrl }
@@ -215,14 +240,6 @@ startEIDServiceTransaction doc sl eidserviceAuthKind provider = do
       EIDServiceTransactionProviderNemID{}    -> "dkNemID"
       EIDServiceTransactionProviderNOBankID{} -> "noBankID"
       EIDServiceTransactionProviderFITupas{}  -> "fiTupas"
-    redirectFragment = case (provider, eidserviceAuthKind) of
-      (EIDServiceTransactionProviderIDIN{}, EIDServiceAuthToView _)   -> "idin-view"
-      (EIDServiceTransactionProviderIDIN{}    , EIDServiceAuthToSign) -> "idin-sign"
-      (EIDServiceTransactionProviderFITupas{}, EIDServiceAuthToView _) -> "fitupas-view"
-      (EIDServiceTransactionProviderFITupas{} , EIDServiceAuthToSign) -> "fitupas-sign"
-      (EIDServiceTransactionProviderVerimi{}  , _                   ) -> "verimi"
-      (EIDServiceTransactionProviderNemID{}   , _                   ) -> "nemid"
-      (EIDServiceTransactionProviderNOBankID{}, _                   ) -> "nobankid"
 
 updateVerimiTransactionAfterCheck
   :: Kontrakcja m
