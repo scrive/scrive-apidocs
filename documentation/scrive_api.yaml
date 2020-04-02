@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2020-04-02  | Updated endpoint list to include missing ip-addresses. |
     | 2020-02-05  | Change `getbyshortid` limit from 24 hours from created/modified time, to 72 hours from created time. |
     | 2019-11-25  | Add folder API documentation. |
     | 2019-11-15  | Update production IP addresses. |
@@ -111,6 +112,8 @@ info:
     * 54.246.132.30
     * 54.72.249.47
     * 54.72.251.235
+    * 34.251.5.243
+    * 52.208.131.2
 
     ### API Testbed
 
