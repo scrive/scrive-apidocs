@@ -12,7 +12,6 @@ import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import System.Timeout.Lifted
-import qualified Control.Monad.Fail as MF
 
 import BrandedDomain.Model
 import DB
@@ -41,7 +40,7 @@ data DocumentSealing = DocumentSealing {
 documentSealing
   :: ( CryptoRNG m
      , MonadBaseControl IO m
-     , MF.MonadFail m
+     , MonadFail m
      , MonadFileStorage m
      , MonadIO m
      , MonadLog m

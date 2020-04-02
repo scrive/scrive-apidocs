@@ -8,7 +8,6 @@ import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Unjson
 import qualified Control.Exception.Lifted as E
-import qualified Control.Monad.Fail as MF
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Lazy as H
@@ -17,7 +16,7 @@ import qualified Data.Yaml as Yaml
 
 readConfig
   :: forall a m
-   . (MF.MonadFail m, Unjson a, Monad m, MonadBaseControl IO m)
+   . (MonadFail m, Unjson a, Monad m, MonadBaseControl IO m)
   => (String -> m ())
   -> FilePath
   -> m a
@@ -43,7 +42,7 @@ standardReadConfigOptions = ReadConfigOptions { optReadConfigUncommentKeys = Fal
 
 readConfigEx
   :: forall a m
-   . (MF.MonadFail m, Unjson a, Monad m, MonadBaseControl IO m)
+   . (MonadFail m, Unjson a, Monad m, MonadBaseControl IO m)
   => (String -> m ())
   -> FilePath
   -> ReadConfigOptions

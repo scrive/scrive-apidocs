@@ -47,7 +47,6 @@ import Optics (assign, gview, to, use)
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
-import qualified Control.Monad.Fail as MF
 import qualified Control.Monad.State.Strict as S
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -102,7 +101,7 @@ type InnerTestEnv
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving
     ( Applicative, Functor, Monad, MonadBase IO
-    , MonadCatch, MonadIO, MF.MonadFail, MonadLog, MonadMask
+    , MonadCatch, MonadIO, MonadFail, MonadLog, MonadMask
     , MonadReader TestEnvSt, MonadState TestEnvStRW
     , MonadThrow )
 
@@ -204,7 +203,7 @@ type InnerTestKontra
 newtype TestKontra a = TestKontra { unTestKontra :: InnerTestKontra a }
   deriving ( Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad
            , MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow
-           , ServerMonad, MonadFileStorage, MonadLog, MF.MonadFail)
+           , ServerMonad, MonadFileStorage, MonadLog, MonadFail)
 
 instance MonadBaseControl IO TestKontra where
   type StM TestKontra a = StM InnerTestKontra a

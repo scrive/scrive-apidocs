@@ -71,9 +71,6 @@ runKontra
   -> DBT (FileStorageT (KinesisT (CryptoRNGT (LogT (ReqHandlerT IO))))) a
 runKontra ctx f = S.evalStateT (unKontra f) ctx
 
--- instance MF.MonadFail Kontra where
---   fail = unexpectedError . T.pack
-
 instance MonadBaseControl IO Kontra where
   type StM Kontra a = StM InnerKontra a
   liftBaseWith f = Kontra $ liftBaseWith (\run -> f $ run . unKontra)

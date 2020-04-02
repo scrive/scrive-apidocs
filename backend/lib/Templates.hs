@@ -18,7 +18,6 @@ module Templates ( getAllTemplates
 import Control.Monad.Reader
 import Data.Time.Clock
 import Text.StringTemplates.Utils (directoryFilesRecursive)
-import qualified Control.Monad.Fail as MF
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Files as TF
@@ -51,12 +50,12 @@ getTextTemplates templatesFile = do
 type KontrakcjaGlobalTemplates = TL.GlobalTemplates
 type KontrakcjaTemplates = TL.Templates
 
-readGlobalTemplates :: (MF.MonadFail m, MonadIO m) => m KontrakcjaGlobalTemplates
+readGlobalTemplates :: (MonadFail m, MonadIO m) => m KontrakcjaGlobalTemplates
 readGlobalTemplates = do
   readGlobalTemplatesFrom textsDirectory templateFilesDir
 
 readGlobalTemplatesFrom
-  :: (MonadIO m, MF.MonadFail m) => FilePath -> FilePath -> m KontrakcjaGlobalTemplates
+  :: (MonadIO m, MonadFail m) => FilePath -> FilePath -> m KontrakcjaGlobalTemplates
 readGlobalTemplatesFrom textsDirectory' templateFilesDir' = TL.readGlobalTemplates
   textsDirectory'
   templateFilesDir'

@@ -11,7 +11,6 @@ import System.Exit
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.JSON.FromJSValue
 import Text.JSON.Gen hiding (object)
-import qualified Control.Monad.Fail as MF
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
@@ -32,7 +31,7 @@ import Log.Utils
 import Utils.Directory
 
 getAnchorPositions
-  :: (MF.MonadFail m, Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m)
+  :: (MonadFail m, Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m)
   => BS.ByteString
   -> [PlacementAnchor]
   -> m (Map.Map PlacementAnchor (Int32, Double, Double))

@@ -27,7 +27,6 @@ import Happstack.Server
 import Happstack.Server.Internal.MessageWrap
 import Happstack.Server.Internal.Monads
 import Network.Socket
-import qualified Control.Monad.Fail as MF
 import qualified Happstack.Server.Internal.Listen as L
 
 import Happstack.Server.Instances ()
@@ -70,7 +69,7 @@ type InnerReqHandlerT = StateT ReqHandlerSt
 -- | Replacement for 'ServerPerT' with 'MonadMask'
 -- instance and no 'MonadPlus' and 'MonadWeb' instances.
 newtype ReqHandlerT m a = ReqHandlerT { unReqHandlerT :: InnerReqHandlerT m a }
-  deriving (Applicative, Functor, Monad, MF.MonadFail, MonadBase b, MonadCatch, MonadIO, MonadMask, MonadThrow, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadFail, MonadBase b, MonadCatch, MonadIO, MonadMask, MonadThrow, MonadTrans)
 
 runReqHandlerT :: Socket -> Conf -> ReqHandlerT IO Response -> IO ()
 runReqHandlerT sock conf (ReqHandlerT action) = L.listen' sock conf $ \req -> do
