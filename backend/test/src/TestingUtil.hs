@@ -362,6 +362,7 @@ instance Arbitrary FeatureFlags where
     (a, b, c, d, e, f, g , h , i , j ) <- arbitrary
     (k, l, m, n, o, p, q , r , s , t ) <- arbitrary
     (u, v, w, x, z, y, aa, bb, cc, dd) <- arbitrary
+    ee <- arbitrary
     return $ FeatureFlags { ffCanUseTemplates                  = a
                           , ffCanUseBranding                   = b
                           , ffCanUseAuthorAttachments          = c
@@ -387,6 +388,7 @@ instance Arbitrary FeatureFlags where
                           , ffCanUseAPIInvitations             = s
                           , ffCanUsePadInvitations             = t
                           , ffCanUseFIAuthenticationToView     = u
+                          , ffCanUseFIAuthenticationToSign     = ee
                           , ffCanUseShareableLinks             = w
                           , ffCanUseForwarding                 = x
                           , ffCanUseDocumentPartyNotifications = y
@@ -809,6 +811,17 @@ instance Arbitrary EIDServiceIDINSignature where
       , eiditdBirthDate  = c
       , eiditdCustomerID = d
       }
+
+instance Arbitrary EIDServiceFITupasSignature where
+  arbitrary = do
+    a <- arbText 20 30
+    b <- arbText 10 20
+    c <- arbText 10 10
+    return $ EIDServiceFITupasSignature { eidServiceFITupasSigSignatoryName  = a
+                                        , eidServiceFITupasSigPersonalNumber = Just b
+                                        , eidServiceFITupasSigDateOfBirth    = c
+                                        }
+
 
 instance Arbitrary ESignature where
   arbitrary = oneof

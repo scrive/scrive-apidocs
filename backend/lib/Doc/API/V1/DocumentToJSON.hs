@@ -101,12 +101,8 @@ documentJSONV1 muser forapi forauthor msl doc = do
       $ case
           nub (map signatorylinkauthenticationtosignmethod (documentsignatorylinks doc))
         of
-          [StandardAuthenticationToSign] -> ("standard" :: String)
-          [SEBankIDAuthenticationToSign] -> "eleg"
-          [SMSPinAuthenticationToSign] -> "sms_pin"
-          [NOBankIDAuthenticationToSign] -> "no_bankid"
-          [DKNemIDAuthenticationToSign] -> "dk_nemid"
-          _ -> "mixed"
+          [method] -> authenticationToSignJSON method
+          _        -> "mixed"
     J.value "delivery"
       $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
           [EmailDelivery] -> ("email" :: String)
@@ -183,6 +179,7 @@ authenticationToSignJSON SMSPinAuthenticationToSign   = toJSValue ("sms_pin" :: 
 authenticationToSignJSON NOBankIDAuthenticationToSign = toJSValue ("no_bankid" :: String)
 authenticationToSignJSON DKNemIDAuthenticationToSign  = toJSValue ("dk_nemid" :: String)
 authenticationToSignJSON IDINAuthenticationToSign     = toJSValue ("nl_idin" :: String)
+authenticationToSignJSON FITupasAuthenticationToSign  = toJSValue ("fi_tupas" :: String)
 
 signatoryJSON
   :: ( MonadDB m
@@ -525,12 +522,8 @@ docFieldsListForJSON userid doc = do
     $ case
         nub (map signatorylinkauthenticationtosignmethod (documentsignatorylinks doc))
       of
-        [StandardAuthenticationToSign] -> ("standard" :: String)
-        [SEBankIDAuthenticationToSign] -> "eleg"
-        [SMSPinAuthenticationToSign] -> "sms_pin"
-        [NOBankIDAuthenticationToSign] -> "no_bankid"
-        [DKNemIDAuthenticationToSign] -> "dk_nemid"
-        _ -> "mixed"
+        [method] -> authenticationToSignJSON method
+        _        -> "mixed"
   J.value "delivery"
     $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
         [EmailDelivery ] -> ("email" :: String)
@@ -590,13 +583,9 @@ signatoryFieldsListForJSON doc sl = do
   J.value "inpadqueue" $ False
   J.value "isauthor" $ isAuthor sl
   J.value "cansignnow" $ canSignatorySignNow doc sl
-  J.value "authentication" $ case signatorylinkauthenticationtosignmethod sl of
-    StandardAuthenticationToSign -> ("standard" :: String)
-    SEBankIDAuthenticationToSign -> "eleg"
-    SMSPinAuthenticationToSign   -> "sms_pin"
-    NOBankIDAuthenticationToSign -> "no_bankid"
-    DKNemIDAuthenticationToSign  -> "dk_nemid"
-    IDINAuthenticationToSign     -> "nl_idin"
+  J.value "authentication"
+    . authenticationToSignJSON
+    $ signatorylinkauthenticationtosignmethod sl
 
   J.value "delivery" $ signatorylinkdeliverymethod sl
   where

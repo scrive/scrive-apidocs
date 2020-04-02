@@ -9,6 +9,7 @@ module EID.EIDService.Communication (
   , checkNemIDTransactionWithEIDService
   , checkNOBankIDTransactionWithEIDService
   , dateOfBirthFromDKPersonalNumber
+  , checkFITupasTransactionWithEIDService
   ) where
 
 import Control.Monad.Base
@@ -291,6 +292,61 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
           return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
         _ -> return (Nothing, Nothing)
 
+checkFITupasTransactionWithEIDService
+  :: (MonadLog m, MonadBaseControl IO m)
+  => EIDServiceConf
+  -> EIDServiceTransactionID
+  -> m
+       ( Maybe EIDServiceTransactionStatus
+       , Maybe CompleteFITupasEIDServiceTransactionData
+       )
+checkFITupasTransactionWithEIDService conf tid = localData [identifier tid] $ do
+  mtd <- getTransactionFromEIDService conf "fiTupas" tid
+  case mtd of
+    Just td -> getTransactionDataAndStatus td
+    _       -> return (Nothing, Nothing)
+  where
+    getTransactionDataAndStatus
+      :: (MonadLog m, MonadBaseControl IO m)
+      => JSValue
+      -> m
+           ( Maybe EIDServiceTransactionStatus
+           , Maybe CompleteFITupasEIDServiceTransactionData
+           )
+    getTransactionDataAndStatus jsValue = withJSValue jsValue $ do
+      (mstatus :: Maybe String) <- fromJSValueField "status"
+      case (mstatus) of
+        (Just "new"     ) -> return (Just EIDServiceTransactionStatusNew, Nothing)
+        (Just "started" ) -> return (Just EIDServiceTransactionStatusStarted, Nothing)
+        (Just "failed"  ) -> return (Just EIDServiceTransactionStatusFailed, Nothing)
+        (Just "complete") -> do
+          td <-
+            fromJSValueFieldCustom "providerInfo"
+            $ fromJSValueFieldCustom "fiTupasAuth"
+            $ fromJSValueFieldCustom "completionData"
+            $ do
+                mname <- fromJSValueFieldCustom "profileData" $ fromJSValueField "name"
+                mdob  <- fromJSValueFieldCustom "profileData"
+                  $ fromJSValueField "birthdate"
+                mdn <- fromJSValueFieldCustom "certificateData"
+                  $ fromJSValueField "distinguishedName"
+                mbank <- fromJSValueField "bank"
+                mpid  <- fromJSValueField "pid"
+                mssn  <- fromJSValueField "ssn"
+                case (mname, mdob, mdn, mpid) of
+                  (Just name, Just dob, Just dn, Just pid) -> return $ Just
+                    CompleteFITupasEIDServiceTransactionData
+                      { eidtupasName              = name
+                      , eidtupasBirthDate         = dob
+                      , eidtupasDistinguishedName = dn
+                      , eidtupasBank              = mbank
+                      , eidtupasPid               = pid
+                      , eidtupasSSN               = mssn
+                      }
+                  _ -> return Nothing
+          return $ (Just EIDServiceTransactionStatusCompleteAndSuccess, td)
+        _ -> return (Nothing, Nothing)
+
 data CallType = Create | Start | Fetch deriving Show
 
 guardExitCode
@@ -352,6 +408,7 @@ createTransactionWithEIDService conf providerParams = do
         EIDServiceProviderParamsIDIN{}     -> "nlIDIN"
         EIDServiceProviderParamsNemID{}    -> "dkNemID"
         EIDServiceProviderParamsNOBankID{} -> "noBankID"
+        EIDServiceProviderParamsFITupas{}  -> "fiTupas"
   stdout <-
     cURLCall conf Create provider "new"
     . Just

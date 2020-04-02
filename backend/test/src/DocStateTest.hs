@@ -1831,6 +1831,13 @@ testSealDocument = replicateM_ 1 $ do
                                 Nothing
                                 screenshots
                                 sa
+                            FITupasAuthenticationToSign -> do
+                              randomUpdate $ \esig -> SignDocument
+                                (signatorylinkid slk)
+                                (Just (EIDServiceFITupasSignature_ esig))
+                                Nothing
+                                screenshots
+                                sa
                         when (isApprover slk) $ do
                           dbUpdate $ ApproveDocument (signatorylinkid slk) sa
 

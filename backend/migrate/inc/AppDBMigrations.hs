@@ -249,4 +249,5 @@ kontraMigrations =
   , addFreeUserFeatureFlagsJob
   , addSMSInvitationAndConfirmationTextToDocuments
   , featureFlagsAddCustomSMSTexts
+  , featureFlagsAddFIAuthToSign
   ]

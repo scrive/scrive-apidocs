@@ -21,6 +21,8 @@ var SignEIDProcess = require("./signeidprocessview");
 var SignEIDNetsProcess = require("./signeidnetsprocessview");
 var IDINSignModel = require("../../eleg/idinsigning");
 var SignIDINAuth = require("./signidinauth");
+var FITupasSignModel = require("../../eleg/fitupassigning");
+var SignFITupasAuth = require("./signfitupasauth");
 var ErrorModal = require("../errormodal");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var $ = require("jquery");
@@ -92,6 +94,7 @@ var Task = require("../navigation/task");
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
       var hasEIDNets = signatory.noBankIDAuthenticationToSign() || signatory.dkNemIDAuthenticationToSign();
       var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
+      var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
 
       if (isApprover) {
         return "approve";
@@ -113,6 +116,10 @@ var Task = require("../navigation/task");
         return "eid-idin-auth";
       }
 
+      if (hasFITupasAuth) {
+        return "eid-fi-tupas-auth";
+      }
+
       if (signatory.hasPlacedObligatorySignatures()) {
         return "finish";
       }
@@ -124,7 +131,7 @@ var Task = require("../navigation/task");
       var steps = [
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
         "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
-        "approving", "forward", "eid-idin-auth"
+        "approving", "forward", "eid-idin-auth", "eid-fi-tupas-auth"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -190,7 +197,7 @@ var Task = require("../navigation/task");
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
       var noOverlayStep = [
-        "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth"
+        "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth", "eid-fi-tupas-sign"
       ];
       return !(noOverlayStep.indexOf(step) > -1);
     },
@@ -329,10 +336,6 @@ var Task = require("../navigation/task");
         document.checkingSigning(
           function () { self.handleAfterSignOrApproveRedirectOrReload(); },
           function (s) {
-            if (!self.isOnStep("eid-process")) {
-              // must have been cancelled, no reason to continue
-              return;
-            }
             bankIDSigning.setStatus(s);
             setTimeout(checkSigning, 1000);
           },
@@ -609,6 +612,20 @@ var Task = require("../navigation/task");
       }).sign();
     },
 
+    handleFITupasAuth: function () {
+      if (!this.canSignDocument()) {
+        return this.context.blinkArrow();
+      }
+
+      var document = this.props.model.document();
+      var signatory = document.currentSignatory();
+
+      new FITupasSignModel({
+        doc: document,
+        siglinkid: signatory.signatoryid()
+      }).sign();
+    },
+
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -789,6 +806,21 @@ var Task = require("../navigation/task");
               onSign={ function () {
                   doc.takeSigningScreenshot(function () {
                     self.handleIDINAuth();
+                  }, {});
+                }
+              }
+            />
+          }
+          {/* if */ this.isOnStep("eid-fi-tupas-auth") &&
+            <SignFITupasAuth
+              model={this.props.model}
+              canSign={this.canSignDocument()}
+              field={phoneField}
+              onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
+              onSign={ function () {
+                  doc.takeSigningScreenshot(function () {
+                    self.handleFITupasAuth();
                   }, {});
                 }
               }

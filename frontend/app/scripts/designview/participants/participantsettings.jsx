@@ -278,13 +278,16 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToSignSMSPin;
     } else if (t == "nl_idin") {
       return localization.designview.addParties.authenticationToSignIDIN;
+    } else if (t == "fi_tupas") {
+      return localization.designview.addParties.authenticationToSignFITupas;
     }
   },
   authenticationToSignOptions: function () {
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = !sig.signs() ? ["standard"] : [
-      "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "sms_pin"
+      "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas",
+      "sms_pin"
     ];
     var authTypes = allAuthTypes.slice(0);
 
@@ -308,6 +311,9 @@ module.exports = React.createClass({
       }
       if (!ff.canUseIDINAuthenticationToSign() && !sig.nlIDINAuthenticationToSign()) {
           authTypes = _.without(authTypes, "nl_idin");
+      }
+      if (!ff.canUseFIAuthenticationToSign() && !sig.fiTupasAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "fi_tupas");
       }
     }
 

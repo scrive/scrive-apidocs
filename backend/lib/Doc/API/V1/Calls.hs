@@ -578,6 +578,7 @@ apiCallV1Ready did = logDocument did . api $ do
         StandardAuthenticationToSign -> True
         SMSPinAuthenticationToSign   -> True
         IDINAuthenticationToSign     -> False -- Dutch iDIN eSigning is not supported in API v1
+        FITupasAuthenticationToSign  -> False -- Finnish TUPAS eSigning is not supported in API v1
 
     signatoryHasValidSSNForIdentifyToView sl =
       case (signatorylinkauthenticationtoviewmethod sl) of
@@ -712,6 +713,9 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       IDINAuthenticationToSign -> do
         logAttention_ "Dutch iDIN signing attempted in V1 API"
         (Left . Failed) <$> (J.runJSONGenT $ J.value "nlIDINNotSupported" True)
+      FITupasAuthenticationToSign -> do
+        logAttention_ "Finnish TUPAS signing attempted in V1 API"
+        (Left . Failed) <$> (J.runJSONGenT $ J.value "fiTupasNotSupported" True)
 
 apiCallV1Sign
   :: Kontrakcja m
@@ -837,6 +841,10 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
                                   logAttention_ "Dutch iDIN signing attempted in V1 API"
                                   (Left . Failed)
                                     <$> (J.runJSONGenT $ J.value "nlIDINNotSupported" True)
+                                FITupasAuthenticationToSign -> do
+                                  logAttention_ "Finnish TUPAS signing attempted in V1 API"
+                                  (Left . Failed)
+                                    <$> (J.runJSONGenT $ J.value "fiTupasNotSupported" True)
                             )
     `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) ->
                               throwM
@@ -892,6 +900,9 @@ checkAuthenticationToSignMethodAndValue slid = do
             (True, IDINAuthenticationToSign) ->
               throwM . SomeDBExtraException $ conflictError
                 "Dutch iDIN signing not supported in API V1"
+            (True, FITupasAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Finnish TUPAS signing not supported in API V1"
         Nothing ->
           throwM . SomeDBExtraException $ badInput "`authentication_type` was not a valid"
     (Nothing, Nothing) -> return ()
@@ -1260,6 +1271,11 @@ apiCallV1ChangeAuthenticationToSign did slid =
               . SomeDBExtraException
               $ badInput
                   "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
+          Just FITupasAuthenticationToSign ->
+            throwM
+              . SomeDBExtraException
+              $ badInput
+                  "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
 
       let authtoviewmethod = signatorylinkauthenticationtoviewmethod sl
       -- Check conditions for different authentication to sign methods
@@ -1320,6 +1336,8 @@ apiCallV1ChangeAuthenticationToSign did slid =
           "Danish NemID signing is not supported in API V1"
         IDINAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "Dutch iDIN signing is not supported in API V1"
+        FITupasAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "Finnish TUPAS signing is not supported in API V1"
 
       -- Change authentication to sign method and return Document JSON
       dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor

@@ -38,6 +38,7 @@ module Prelude (
   , tail
   , fromJust
   , whenJust
+  , whenNothing
   , error
   , unexpectedError
   ) where
@@ -175,6 +176,11 @@ read s =
 fromJust :: HasCallStack => Maybe a -> a
 fromJust Nothing  = unexpectedError "fromJust received Nothing"
 fromJust (Just x) = x
+
+-- | whenNothing mA fa = maybe fa return mA
+whenNothing :: Applicative f => Maybe a -> f a -> f a
+whenNothing (Just x) _ = pure x
+whenNothing Nothing  m = m
 
 {-# WARNING error "Use 'unexpectedError' instead." #-}
 error :: HasCallStack => Text -> a

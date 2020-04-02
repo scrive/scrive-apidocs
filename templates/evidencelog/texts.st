@@ -78,6 +78,8 @@ ChangeAuthenticationToSignFromDKNemIDLog=$ChangeAuthenticationToSignFrom(auth='�
 ###
 ChangeAuthenticationToSignFromIDINLog=$ChangeAuthenticationToSignFrom(auth='“Dutch iDIN”')$
 ###
+ChangeAuthenticationToSignFromFITupasLog=$ChangeAuthenticationToSignFrom(auth='“Finnish TUPAS”')$
+###
 ChangeAuthenticationToSignToStandardLog=$ChangeAuthenticationToSignTo(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToSignToSMSPinLog=$ChangeAuthenticationToSignTo(auth='“PIN by SMS”')$
@@ -89,6 +91,8 @@ ChangeAuthenticationToSignToNOBankIDLog=$ChangeAuthenticationToSignTo(auth='“N
 ChangeAuthenticationToSignToDKNemIDLog=$ChangeAuthenticationToSignTo(auth='“Danish NemID”')$
 ###
 ChangeAuthenticationToSignToIDINLog=$ChangeAuthenticationToSignTo(auth='“Dutch iDIN”')$
+###
+ChangeAuthenticationToSignToFITupasLog=$ChangeAuthenticationToSignTo(auth='“Finnish TUPAS”')$
 ###
 ChangeAuthenticationToViewFromStandardLog=$ChangeAuthenticationToViewFrom(auth='“no extra authentication”')$
 ###
@@ -626,6 +630,14 @@ $if(provider_idin)$
   <br/>Name: $signatory_name$
   $if(signatory_dob)$<br/>Date of birth: $signatory_dob$$endif$
   $if(signatory_customer_id)$<br/>Customer ID: $signatory_customer_id$$endif$
+</p>
+$endif$
+$if(provider_fitupas)$
+<p>Authentication at the point of signing with $provider()$.</p>
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  <br/>$if(signatory_dob)$<br/>Date of birth: $signatory_dob$$endif$
+  $if(signatory_personal_number)$<br/>Personal identification number: $personalNumber(value=signatory_personal_number)$$endif$
 </p>
 $endif$
 $if(signature)$

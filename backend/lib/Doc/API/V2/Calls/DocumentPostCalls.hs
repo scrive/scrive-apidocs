@@ -90,7 +90,7 @@ import UserGroup.Types.Subscription
 import Util.Actor (Actor)
 import Util.HasSomeUserInfo (getEmail, getMobile)
 import Util.PDFUtil
-import Util.SignatoryLinkUtils (getAuthorSigLink, getSigLinkFor, isAuthor)
+import Util.SignatoryLinkUtils
 
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
@@ -778,17 +778,15 @@ docApiV2SigSetAuthToView authKind did slid = logDocumentAndSignatory did slid . 
     -- Parameters
     authType <- apiV2ParameterObligatory
       (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToViewMethod)
-    mSSN_           <- apiV2ParameterOptional (ApiV2ParameterText "personal_number")
-    mMobile_        <- apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
-    (mSSN, mMobile) <- case authType of
-      StandardAuthenticationToView -> return (Nothing, Nothing)
-      SMSPinAuthenticationToView   -> return (Nothing, mMobile_)
-      SEBankIDAuthenticationToView -> return (mSSN_, Nothing)
-      NOBankIDAuthenticationToView -> return (mSSN_, mMobile_)
-      DKNemIDAuthenticationToView  -> return (mSSN_, Nothing)
-      FITupasAuthenticationToView  -> return (mSSN_, Nothing)
-      VerimiAuthenticationToView   -> return (Nothing, Nothing)
-      IDINAuthenticationToView     -> return (Nothing, Nothing)
+
+    mSSN <- if authToViewNeedsPersonalNumber authType
+      then apiV2ParameterOptional (ApiV2ParameterText "personal_number")
+      else return Nothing
+
+    mMobile <- if authToViewNeedsMobileNumber authType
+      then apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
+      else return Nothing
+
     -- Check conditions on parameters and signatory
     guardCanSetAuthenticationToViewForSignatoryWithValues slid
                                                           authKind
@@ -817,16 +815,16 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     -- Parameters
     authentication_type <- apiV2ParameterObligatory
       (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
-    mSSN_           <- apiV2ParameterOptional (ApiV2ParameterText "personal_number")
-    mMobile_        <- apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
-    (mSSN, mMobile) <- case authentication_type of
-      StandardAuthenticationToSign -> return (Nothing, Nothing)
-      SEBankIDAuthenticationToSign -> return (mSSN_, Nothing)
-      SMSPinAuthenticationToSign   -> return (Nothing, mMobile_)
-      NOBankIDAuthenticationToSign -> return (Nothing, Nothing)
-      DKNemIDAuthenticationToSign  -> return (mSSN_, Nothing)
-      IDINAuthenticationToSign     -> return (Nothing, Nothing)
-      -- Check conditions on parameters and signatory
+
+    mSSN <- if authToSignNeedsPersonalNumber authentication_type
+      then apiV2ParameterOptional (ApiV2ParameterText "personal_number")
+      else return Nothing
+
+    mMobile <- if authToSignNeedsMobileNumber authentication_type
+      then apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
+      else return Nothing
+
+    -- Check conditions on parameters and signatory
     guardCanSetAuthenticationToSignForSignatoryWithValue slid
                                                          authentication_type
                                                          mSSN

@@ -41,6 +41,7 @@ import Templates (renderTextTemplate, renderTextTemplate_)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 -- | Check if provided authorization values for sign call patch
 checkAuthenticationToSignMethodAndValue
@@ -55,13 +56,10 @@ checkAuthenticationToSignMethodAndValue slid = do
       let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
       unless authOK $ apiError $ requestParameterInvalid "authentication_type"
                                                          "does not match with document"
-      case authMethod of
-        StandardAuthenticationToSign -> return ()
-        SEBankIDAuthenticationToSign -> checkParamSSNMatchesSigLink siglink
-        NOBankIDAuthenticationToSign -> return ()
-        DKNemIDAuthenticationToSign  -> checkParamSSNMatchesSigLink siglink
-        SMSPinAuthenticationToSign   -> checkParamMobileMatchesSigLink siglink
-        IDINAuthenticationToSign     -> return ()
+      when (authToSignNeedsPersonalNumber authMethod)
+        $ checkParamSSNMatchesSigLink siglink
+      when (authToSignNeedsMobileNumber authMethod)
+        $ checkParamMobileMatchesSigLink siglink
   where
     checkParamMobileMatchesSigLink siglink = do
       authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")

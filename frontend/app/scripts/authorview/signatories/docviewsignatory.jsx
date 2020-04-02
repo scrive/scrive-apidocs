@@ -535,6 +535,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToSignDKNemID;
       } else if (signatory.nlIDINAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignIDIN;
+      } else if (signatory.fiTupasAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignFITupas;
       }
     },
 

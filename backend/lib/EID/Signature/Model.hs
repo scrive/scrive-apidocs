@@ -14,6 +14,8 @@ module EID.Signature.Model (
   -- from EID.EIDService.Types
   , EIDServiceIDINSignature(..)
   , MergeEIDServiceIDINSignature(..)
+  , EIDServiceFITupasSignature(..)
+  , MergeEIDServiceFITupasSignature(..)
   ) where
 
 import Control.Monad.Catch
@@ -46,6 +48,7 @@ data ESignature
   | NetsNOBankIDSignature_ !NetsNOBankIDSignature
   | NetsDKNemIDSignature_ !NetsDKNemIDSignature
   | EIDServiceIDINSignature_ !EIDServiceIDINSignature
+  | EIDServiceFITupasSignature_ !EIDServiceFITupasSignature
   deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -63,6 +66,7 @@ data SignatureProvider
   | NetsNOBankID
   | NetsDKNemID
   | EIDServiceIDIN
+  | EIDServiceTupas
     deriving (Eq, Ord, Show)
 
 instance PQFormat SignatureProvider where
@@ -81,7 +85,8 @@ instance FromSQL SignatureProvider where
       6 -> return NetsNOBankID
       7 -> return NetsDKNemID
       8 -> return EIDServiceIDIN
-      _ -> throwM RangeError { reRange = [(1, 8)], reValue = n }
+      9 -> return EIDServiceTupas
+      _ -> throwM RangeError { reRange = [(1, 9)], reValue = n }
 
 instance ToSQL SignatureProvider where
   type PQDest SignatureProvider = PQDest Int16
@@ -93,6 +98,7 @@ instance ToSQL SignatureProvider where
   toSQL NetsNOBankID       = toSQL (6 :: Int16)
   toSQL NetsDKNemID        = toSQL (7 :: Int16)
   toSQL EIDServiceIDIN     = toSQL (8 :: Int16)
+  toSQL EIDServiceTupas    = toSQL (9 :: Int16)
 
 
 ----------------------------------------
@@ -189,6 +195,33 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDSignature () whe
         sqlSet "signatory_personal_number" netsdkSignatorySSN
         sqlSet "signatory_ip"              netsdkSignatoryIP
 
+-- | Insert bank id signature for a given signatory or replace the existing one.
+data MergeEIDServiceFITupasSignature = MergeEIDServiceFITupasSignature SignatoryLinkID EIDServiceFITupasSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceFITupasSignature () where
+  update (MergeEIDServiceFITupasSignature slid (EIDServiceFITupasSignature {..})) = do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
+        setFields
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id"         slid
+        sqlSet "provider"                  EIDServiceTupas
+        sqlSet "signatory_name"            eidServiceFITupasSigSignatoryName
+        sqlSet "signatory_personal_number" eidServiceFITupasSigPersonalNumber
+        sqlSet "signatory_date_of_birth"   eidServiceFITupasSigDateOfBirth
 
 -- | Insert bank id signature for a given signatory or replace the existing one.
 data MergeEIDServiceIDINSignature = MergeEIDServiceIDINSignature SignatoryLinkID EIDServiceIDINSignature
@@ -298,3 +331,8 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
         , eiditdBirthDate  = fromJust msignatory_dob
         , eiditdCustomerID = fromJust msignatory_personal_number
         }
+    EIDServiceTupas -> EIDServiceFITupasSignature_ $ EIDServiceFITupasSignature
+      { eidServiceFITupasSigSignatoryName  = fromJust msignatory_name
+      , eidServiceFITupasSigPersonalNumber = msignatory_personal_number
+      , eidServiceFITupasSigDateOfBirth    = fromJust msignatory_dob
+      }

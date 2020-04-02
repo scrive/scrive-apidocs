@@ -13,6 +13,8 @@ module EID.EIDService.Types (
     , EIDServiceIDINAuthentication(..)
     , EIDServiceIDINSignature(..)
     , CompleteIDINEIDServiceTransactionData(..)
+    , EIDServiceFITupasSignature(..)
+    , CompleteFITupasEIDServiceTransactionData(..)
     , EIDServiceNemIDAuthentication(..)
     , EIDServiceNemIDInternalProvider(..)
     , unsafeEIDServiceNemIDInternalProviderFromInt16
@@ -65,6 +67,7 @@ data EIDServiceTransactionProvider =
   | EIDServiceTransactionProviderIDIN
   | EIDServiceTransactionProviderNemID
   | EIDServiceTransactionProviderNOBankID
+  | EIDServiceTransactionProviderFITupas
   deriving (Eq, Ord, Show)
 
 data EIDServiceProviderParams =
@@ -82,6 +85,9 @@ data EIDServiceProviderParams =
     esppRedirectURL :: Text
   , esppPhoneNumber :: Maybe Text
   , esppPersonalNumber :: Text
+  } |
+  EIDServiceProviderParamsFITupas {
+    esppRedirectURL :: Text
   }
 
 instance PQFormat EIDServiceTransactionProvider where
@@ -96,7 +102,8 @@ instance FromSQL EIDServiceTransactionProvider where
       2 -> return EIDServiceTransactionProviderIDIN
       3 -> return EIDServiceTransactionProviderNemID
       4 -> return EIDServiceTransactionProviderNOBankID
-      _ -> throwM RangeError { reRange = [(1, 4)], reValue = n }
+      5 -> return EIDServiceTransactionProviderFITupas
+      _ -> throwM RangeError { reRange = [(1, 5)], reValue = n }
 
 instance ToSQL EIDServiceTransactionProvider where
   type PQDest EIDServiceTransactionProvider = PQDest Int16
@@ -104,6 +111,7 @@ instance ToSQL EIDServiceTransactionProvider where
   toSQL EIDServiceTransactionProviderIDIN     = toSQL (2 :: Int16)
   toSQL EIDServiceTransactionProviderNemID    = toSQL (3 :: Int16)
   toSQL EIDServiceTransactionProviderNOBankID = toSQL (4 :: Int16)
+  toSQL EIDServiceTransactionProviderFITupas  = toSQL (5 :: Int16)
 
 -- In statuses we separate complete into two statuses, since
 -- we can't force email/phone number validation on eid service side
@@ -208,6 +216,24 @@ data EIDServiceIDINSignature = EIDServiceIDINSignature
   { unEIDServiceIDINSignature :: CompleteIDINEIDServiceTransactionData
   }
   deriving (Eq, Ord, Show)
+
+data EIDServiceFITupasSignature = EIDServiceFITupasSignature
+  { eidServiceFITupasSigSignatoryName :: Text
+  , eidServiceFITupasSigPersonalNumber :: Maybe Text
+  , eidServiceFITupasSigDateOfBirth :: Text
+  }
+  deriving (Eq, Ord, Show)
+
+data CompleteFITupasEIDServiceTransactionData = CompleteFITupasEIDServiceTransactionData
+  { eidtupasName :: !Text
+  , eidtupasBirthDate :: !Text
+  , eidtupasDistinguishedName :: !Text  -- may contain the personal number
+  , eidtupasBank :: !(Maybe Text)  -- absent when using Mobile ID
+  , eidtupasPid :: !Text
+  -- ^ 'A fixed identifier for the user set in the E-Ident / FTN service.' (from
+  -- the Nets documentation)
+  , eidtupasSSN :: !(Maybe Text)  -- seems to be absent for 'legal persons'
+  } deriving (Eq, Ord, Show)
 
 data CompleteIDINEIDServiceTransactionData = CompleteIDINEIDServiceTransactionData
   { eiditdName :: T.Text

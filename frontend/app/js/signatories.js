@@ -611,6 +611,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     nlIDINAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "nl_idin" && this.canHaveAuthenticationToSign();
     },
+    fiTupasAuthenticationToSign: function() {
+        return this.get("authentication_method_to_sign") == "fi_tupas";
+    },
     emailDelivery: function() {
           return this.get("delivery_method") == "email";
     },

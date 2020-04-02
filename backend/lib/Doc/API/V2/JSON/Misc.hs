@@ -101,6 +101,7 @@ unjsonAuthenticationToSignMethod = unjsonEnumBy
   , (DKNemIDAuthenticationToSign , "dk_nemid")
   , (SMSPinAuthenticationToSign  , "sms_pin")
   , (IDINAuthenticationToSign    , "nl_idin")
+  , (FITupasAuthenticationToSign , "fi_tupas")
   ]
 
 unjsonDeliveryMethod :: UnjsonDef DeliveryMethod

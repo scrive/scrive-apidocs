@@ -168,6 +168,7 @@ var Subscription = Backbone.Model.extend({
         can_use_dk_authentication_to_view: ff.canUseDKAuthenticationToView,
         can_use_dk_authentication_to_sign: ff.canUseDKAuthenticationToSign,
         can_use_fi_authentication_to_view: ff.canUseFIAuthenticationToView,
+        can_use_fi_authentication_to_sign: ff.canUseFIAuthenticationToSign,
         can_use_no_authentication_to_view: ff.canUseNOAuthenticationToView,
         can_use_no_authentication_to_sign: ff.canUseNOAuthenticationToSign,
         can_use_se_authentication_to_view: ff.canUseSEAuthenticationToView,
@@ -290,6 +291,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_dk_authentication_to_view": true,
     "can_use_dk_authentication_to_sign": true,
     "can_use_fi_authentication_to_view": true,
+    "can_use_fi_authentication_to_sign": true,
     "can_use_no_authentication_to_view": true,
     "can_use_no_authentication_to_sign": true,
     "can_use_se_authentication_to_view": true,
@@ -341,6 +343,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   },
   canUseFIAuthenticationToView: function () {
      return this.get("can_use_fi_authentication_to_view");
+  },
+  canUseFIAuthenticationToSign: function () {
+     return this.get("can_use_fi_authentication_to_sign");
   },
   canUseNOAuthenticationToView: function () {
      return this.get("can_use_no_authentication_to_view");
@@ -433,6 +438,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "sms_pin";
     else if (this.canUseIDINAuthenticationToSign())
       return "nl_idin";
+    else if (this.canUseFIAuthenticationToSign())
+      return "fi_tupas";
     else
       // Should not happen, just in case
       return "standard";
@@ -471,7 +478,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       this.canUseSMSPinAuthenticationToSign() ||
       this.canUseNOAuthenticationToSign() ||
       this.canUseDKAuthenticationToSign() ||
-      this.canUseIDINAuthenticationToSign();
+      this.canUseIDINAuthenticationToSign() ||
+      this.canUseFIAuthenticationToSign();
   },
   parse: function (args) {
     return {
@@ -486,6 +494,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_dk_authentication_to_view: args.can_use_dk_authentication_to_view,
       can_use_dk_authentication_to_sign: args.can_use_dk_authentication_to_sign,
       can_use_fi_authentication_to_view: args.can_use_fi_authentication_to_view,
+      can_use_fi_authentication_to_sign: args.can_use_fi_authentication_to_sign,
       can_use_no_authentication_to_view: args.can_use_no_authentication_to_view,
       can_use_no_authentication_to_sign: args.can_use_no_authentication_to_sign,
       can_use_se_authentication_to_view: args.can_use_se_authentication_to_view,

@@ -457,31 +457,22 @@ guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
     let withoutDashes    = T.filter (not . (`elem` ['-', '+']))
         slPersonalNumber = withoutDashes $ getPersonalNumber sl
         pn'              = withoutDashes pn
-    if (  slPersonalNumber
-       /= ""
-       && slPersonalNumber
-       /= pn'
-       && "19"
-       <> slPersonalNumber
-       /= pn'
-       && slPersonalNumber
-       /= "19"
-       <> pn'
-       && slPersonalNumber
-       /= "20"
-       <> pn'
-       && "20"
-       <> slPersonalNumber
-       /= pn'
-       )
-    then
-      do
+
+        pnInSignatoryLinkIsEmpty = slPersonalNumber == ""
+        pnsMatchPossiblyWithPrefix = or
+          [ prefix1 <> slPersonalNumber == prefix2 <> pn'
+          | prefix1 <- prefixes
+          , prefix2 <- prefixes
+          ]
+          where prefixes = ["", "19", "20"]
+
+    if pnInSignatoryLinkIsEmpty || pnsMatchPossiblyWithPrefix
+      then return ()
+      else do
         logInfo
             "Personal number for eleg operation does not match and signatory personal number can't be changed"
           $ object [identifier $ documentid doc, identifier slid]
         respond404
-    else
-      return ()
 
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc

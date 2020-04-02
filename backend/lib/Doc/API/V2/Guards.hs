@@ -351,80 +351,69 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
         authToView         = signatorylinkauthenticationtoviewmethod sl
         authToViewArchived = signatorylinkauthenticationtoviewarchivedmethod sl
     guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
-    case authToSign of
-      StandardAuthenticationToSign -> return ()
-      SEBankIDAuthenticationToSign -> do
-        case mSSN of
-          Nothing  -> return ()
-          -- If we are given a Swedish SSN
-          Just ssn -> do
-            when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl)
-              $ apiError
-              $ signatoryStateError
-                  "The party has authenticated to view, therefore you can't change the authentication value"
-            case asValidSwedishSSN ssn of
-              -- Empty is allowed only if we don't need it for AuthenticationToViewMethod
-              Empty ->
-                when
-                    (  signatorylinkauthenticationtoviewmethod sl
-                    == SEBankIDAuthenticationToView
-                    )
-                  $ apiError
-                  $ signatoryStateError
-                      "You provided an empty authentication value, needs a value for authentication to view"
-              Bad -> apiError $ signatoryStateError
-                "The authentication value provided is not a valid for Swedish BankID"
-              Good _ -> return ()
-      SMSPinAuthenticationToSign -> case mMobile of
-        Nothing     -> return ()
-        Just mobile -> do
-          -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the mobile number!
-          when
-              (  authToView
-              == NOBankIDAuthenticationToView
-              && signatorylinkidentifiedtoview sl
-              && getMobile sl
-              /= ""
-              && mobile
-              /= getMobile sl
-              )
-            $ apiError
+
+    -- Note that we have mSSN = Just ssn iff authToSignNeedsPersonalNumber
+    -- authToSign = True.
+    whenJust mSSN $ \ssn -> do
+      when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl)
+        . apiError
+        $ signatoryStateError
+            "The party has authenticated to view, therefore you can't change the authentication value"
+
+      let validate = case authToSign of
+            SEBankIDAuthenticationToSign -> asValidSEBankIdPersonalNumber
+            DKNemIDAuthenticationToSign -> asValidDanishSSN
+            _ -> Good
+
+      -- Empty is allowed only if we don't need it for
+      -- AuthenticationToViewMethod
+      case validate ssn of
+        Empty -> do
+          when (authToViewNeedsPersonalNumber authToView)
+            . apiError
             $ signatoryStateError
-                "The party has authenticated to view with Norwegian BankID, therefore you can't change the mobile number"
-          -- If given a mobile number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
-          when
-              (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
-            $ case asValidPhoneForNorwegianBankID mobile of
-                Bad ->
-                  apiError
-                    $ signatoryStateError
-                        "Mobile number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
-                Empty  -> return ()
-                Good _ -> return ()
-      NOBankIDAuthenticationToSign -> return ()
-      DKNemIDAuthenticationToSign  -> do
-        case mSSN of
-          Nothing  -> return ()
-          -- If we are given a Danish SSN
-          Just ssn -> do
-            when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl)
-              $ apiError
-              $ signatoryStateError
-                  "The party has authenticated to view, therefore you can't change the authentication value"
-            case asValidDanishSSN ssn of
-              -- Empty is allowed only if we don't need it for AuthenticationToViewMethod
-              Empty ->
-                when
-                    (  signatorylinkauthenticationtoviewmethod sl
-                    == DKNemIDAuthenticationToView
-                    )
-                  $ apiError
+                "You provided an empty authentication value, needs a value for authentication to view"
+        Bad -> do
+          let name = case authToSign of
+                SEBankIDAuthenticationToSign -> "Swedish BankID"
+                DKNemIDAuthenticationToSign -> "Danish NemID"
+                _ -> ""  -- never happens
+          apiError
+            .  signatoryStateError
+            $  "The authentication value provided is not a valid for "
+            <> name
+        Good _ -> return ()
+
+
+    -- Note that we have mMobile = Just mobile iff authToSignNeedsMobileNumer
+    -- authToSign = True.
+    whenJust mMobile $ \mobile -> case authToSign of
+      SMSPinAuthenticationToSign -> do
+        -- If the signatory has authenticated to view with
+        -- NOBankIDAuthenticationToView and a valid number, then we can't
+        -- change the mobile number!
+        when
+            (and
+              [ authToView == NOBankIDAuthenticationToView
+              , signatorylinkidentifiedtoview sl
+              , getMobile sl /= ""
+              , mobile /= getMobile sl
+              ]
+            )
+          $ apiError
+          $ signatoryStateError
+              "The party has authenticated to view with Norwegian BankID, therefore you can't change the mobile number"
+        -- If given a mobile number we need to make sure it doesn't invalidate
+        -- NOBankIDAuthenticationToView
+        when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
+          $ case asValidPhoneForNorwegianBankID mobile of
+              Bad ->
+                apiError
                   $ signatoryStateError
-                      "You provided an empty authentication value, needs a value for authentication to view"
-              Bad -> apiError $ signatoryStateError
-                "The authentication value provided is not a valid for Danish NemID"
+                      "Mobile number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
+              Empty  -> return ()
               Good _ -> return ()
-      IDINAuthenticationToSign -> return ()
+      _ -> return ()
 
 
 guardAuthenticationMethodsCanMix
@@ -604,6 +593,8 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
       NOBankIDAuthenticationToSign ->
         T.null (getPersonalNumber sl)
           || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
+      -- How does `T.null (getPersonalNumber sl)` square with
+      -- `authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign = True`?
       DKNemIDAuthenticationToSign ->
         T.null (getPersonalNumber sl)
           || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
@@ -612,6 +603,8 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
           && (T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
       IDINAuthenticationToSign     -> True
+      FITupasAuthenticationToSign ->
+        T.null (getPersonalNumber sl) || isGood (asValidFinnishSSN $ getPersonalNumber sl)
 
     signatoryHasValidSSNOrEmailForIdentifyToView sl =
       case (signatorylinkauthenticationtoviewmethod sl) of

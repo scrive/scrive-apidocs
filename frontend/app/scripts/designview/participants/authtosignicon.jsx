@@ -19,6 +19,8 @@ module.exports = React.createClass({
       return false;
     } else if (!ff.canUseIDINAuthenticationToSign() && am == "nl_idin") {
       return false;
+    } else if (!ff.canUseFIAuthenticationToSign() && am == "fi_tupas") {
+      return false;
     } else {
       return true;
     }
@@ -36,7 +38,7 @@ module.exports = React.createClass({
     } else {
       var superthis = this;
       var ams = [
-        "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "sms_pin"
+        "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas", "sms_pin"
       ]
       .filter(function (am) {
           return superthis.isAllowedAuthenticationMethod(am);
@@ -71,6 +73,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-sign-icon-sms-pin";
     } else if (sig.nlIDINAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-idin";
+    } else if (sig.fiTupasAuthenticationToSign()) {
+      return "design-view-action-participant-icon-auth-to-sign-icon-fi-tupas";
     }
   },
   title: function () {
@@ -95,6 +99,10 @@ module.exports = React.createClass({
     } else if (authMethod == "dk_nemid") {
       title.push(
         localization.designview.addParties.authenticationToSignDKNemID
+      );
+    } else if (authMethod == "fi_tupas") {
+      title.push(
+        localization.designview.addParties.authenticationToSignFITupas
       );
     } else if (authMethod == "sms_pin") {
       title.push(

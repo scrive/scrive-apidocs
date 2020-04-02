@@ -6,12 +6,14 @@ module Doc.Signing.Consumer (
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Except
 import Crypto.RNG
 import Data.Aeson ((.=), object)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import Text.StringTemplates.Templates (TemplatesMonad)
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
@@ -57,6 +59,7 @@ import User.Lang
 import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
+import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified MailContext.Internal as I
 
@@ -78,6 +81,12 @@ data DocumentSigning = DocumentSigning {
   , signingSignatureProvider    :: !SignatureProvider
   , signingConsentResponses     :: !SignatoryConsentResponsesForSigning
   }
+
+minutesTillPurgeOfFailedAction :: Int32
+minutesTillPurgeOfFailedAction = 3
+
+secondsToRetry :: Int32
+secondsToRetry = 5
 
 documentSigning
   :: ( CryptoRNG m
@@ -162,14 +171,25 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                         then return $ Ok $ RerunAfter $ iminutes
                           minutesTillPurgeOfFailedAction
                         else return $ Ok Remove
-                    else case signingSignatureProvider of
-                      CgiGrpBankID   -> handleCgiGrpBankID ds now
-                      NetsNOBankID   -> handleNets ds now
-                      NetsDKNemID    -> handleNets ds now
-                      EIDServiceIDIN -> handleEidService ds now
-                      LegacyBankID   -> legacyProviderFail signingSignatoryID LegacyBankID
-                      LegacyTelia    -> legacyProviderFail signingSignatoryID LegacyTelia
-                      LegacyNordea   -> legacyProviderFail signingSignatoryID LegacyNordea
+                    else runHandler $ case signingSignatureProvider of
+                      CgiGrpBankID   -> handleCgiGrpBankID cgiGrpConf ds now
+                      NetsNOBankID   -> handleNets netsSignConf ds now
+                      NetsDKNemID    -> handleNets netsSignConf ds now
+                      EIDServiceIDIN -> handleEidService
+                        checkIDINTransactionWithEIDService
+                        processCompleteIDINTransaction
+                        mEidServiceConf
+                        ds
+                        now
+                      EIDServiceTupas -> handleEidService
+                        checkFITupasTransactionWithEIDService
+                        processCompleteFITupasTransaction
+                        mEidServiceConf
+                        ds
+                        now
+                      LegacyBankID -> legacyProviderFail signingSignatoryID LegacyBankID
+                      LegacyTelia  -> legacyProviderFail signingSignatoryID LegacyTelia
+                      LegacyNordea -> legacyProviderFail signingSignatoryID LegacyNordea
                       LegacyMobileBankID ->
                         legacyProviderFail signingSignatoryID LegacyMobileBankID
     , ccOnException         =
@@ -180,120 +200,205 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
           else return Remove
     }
   where
-    minutesTillPurgeOfFailedAction :: Int32
-    minutesTillPurgeOfFailedAction = 3
-    secondsToRetry :: Int32
-    secondsToRetry = 5
+    -- By wrapping our handlers in ExceptT Result _ Result we are able to encode
+    -- 'early exits' much more ergonomically (using `throwE`).
+    runHandler :: Monad m => ExceptT Result m Result -> m Result
+    runHandler handler = either identity identity <$> runExceptT handler
 
     legacyProviderFail signingSignatoryID provider = do
       logAttention "Legacy provider used in signing consumer"
         $ object [identifier signingSignatoryID, "provider" .= showt provider]
-      return $ Failed Remove
+      throwE $ Failed Remove
 
-    handleCgiGrpBankID ds@DocumentSigning {..} now = do
-      logInfo_ "Collecting operation for CGI signing"
-      case cgiGrpConf of
-        Nothing -> do
-          noConfigurationWarning "CGI Group" -- log a warning rather than raising an error as documentSigning is called from cron
-          return $ Failed Remove
-        Just cc -> do
-          signingDocumentID <- documentid <$> theDocument
-          collectResult     <- checkCGISignStatus cc signingDocumentID signingSignatoryID
-          logInfo "CGI collect result" $ object ["result" .= show collectResult]
-          case collectResult of
-            CGISignStatusAlreadySigned   -> return $ Ok Remove
-            CGISignStatusFailed grpFault -> do
-              dbUpdate
-                $ UpdateDocumentSigning signingSignatoryID True (grpFaultText grpFault)
-              return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
-            CGISignStatusInProgress status -> do
-              dbUpdate $ UpdateDocumentSigning signingSignatoryID
-                                               False
-                                               (progressStatusText status)
-              return $ Ok $ RerunAfter $ iseconds secondsToRetry
-            CGISignStatusSuccess -> do
-              signFromESignature ds now
-              return $ Ok Remove
-    handleNets ds@DocumentSigning {..} now = do
-      logInfo_ "Collecting operation for Nets signing"
-      case netsSignConf of
-        Nothing -> do
-          noConfigurationWarning "Nets Esigning" -- log a warning rather than raising an error as documentSigning is called from cron
-          return $ Failed Remove
-        Just conf@NetsSignConfig {..} -> do
-          logInfo_ "NETS Signing Executed!"
-          signingDocumentID <- documentid <$> theDocument
-          signResult <- checkNetsSignStatus conf signingDocumentID signingSignatoryID
-          case signResult of
-            NetsSignStatusSuccess -> do
-              signFromESignature ds now
-              return $ Ok Remove
-            NetsSignStatusFailure fault -> do
-              dbUpdate
-                $ UpdateDocumentSigning signingSignatoryID True (netsFaultText fault)
-              return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
-            NetsSignStatusInProgress -> do
-              dbUpdate $ UpdateDocumentSigning signingSignatoryID False "nets_in_progress"
-              return $ Ok $ RerunAfter $ iseconds secondsToRetry
-            NetsSignStatusAlreadySigned -> return $ Ok Remove
-    handleEidService ds@DocumentSigning {..} now = do
-      case mEidServiceConf of
-        Nothing -> do
-          noConfigurationWarning "EIDService Esigning"
-          return $ Failed Remove
-        Just conf0 -> do
-          doc <- dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID
-          case maybesignatory =<< getAuthorSigLink doc of
-            Nothing -> do
-              logAttention "Impossible happened - no author for document"
-                $ object [identifier $ documentid doc]
-              return $ Failed Remove
-            Just authorID -> do
-              ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ authorID
-              let conf = case ugwpSettings ugwp ^. #eidServiceToken of
-                    Nothing    -> conf0
-                    Just token -> set #eidServiceToken token conf0
-              mest <- dbQuery $ GetEIDServiceTransactionNoSessionIDGuard
-                signingSignatoryID
-                EIDServiceAuthToSign
-              res <- case mest of
-                Nothing  -> return Nothing
-                Just est -> checkIDINTransactionWithEIDService conf (estID est) >>= \case
-                  (Nothing, _   ) -> return Nothing
-                  (Just ts, mctd) -> return $ Just (est, ts, mctd)
-              case res of
-                Just (est, ts, mctd) -> do
-                  let mergeWithStatus newStatus =
-                        dbUpdate $ MergeEIDServiceTransaction $ est
-                          { estStatus = newStatus
-                          }
-                  case (ts, mctd) of
-                    (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
-                      dbUpdate
-                        . MergeEIDServiceIDINSignature signingSignatoryID
-                        $ EIDServiceIDINSignature cd
-                      logInfo_
-                        . ("EidHub NL IDIN Sign succeeded: " <>)
-                        . showt
-                        $ (est, ts)
-                      signFromESignature ds now
-                      chargeForItemSingle CIIDINSignature $ documentid doc
-                      mergeWithStatus EIDServiceTransactionStatusCompleteAndSuccess
-                      return $ Ok Remove
-                    (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
-                      mergeWithStatus EIDServiceTransactionStatusCompleteAndFailed
-                      return $ Failed Remove
-                    (EIDServiceTransactionStatusNew, _) -> do
-                      mergeWithStatus ts
-                      return $ Ok $ RerunAfter $ iseconds secondsToRetry
-                    (EIDServiceTransactionStatusStarted, _) -> do
-                      mergeWithStatus ts
-                      return $ Ok $ RerunAfter $ iseconds secondsToRetry
-                    _ -> do
-                      mergeWithStatus ts
-                      return $ Failed Remove
-                _ -> do
-                  return $ Failed Remove
+    processCompleteIDINTransaction ds@DocumentSigning {..} est ctd now = do
+      dbUpdate . MergeEIDServiceIDINSignature signingSignatoryID $ EIDServiceIDINSignature
+        ctd
+      logInfo_ . ("EidHub NL IDIN Sign succeeded: " <>) . showt $ est
+      signFromESignature ds now
+      chargeForItemSingle CIIDINSignature . documentid =<< theDocument
+
+
+    processCompleteFITupasTransaction ds@DocumentSigning {..} est CompleteFITupasEIDServiceTransactionData {..} now
+      = do
+        let sig = EIDServiceFITupasSignature
+              { eidServiceFITupasSigSignatoryName  = eidtupasName
+              , eidServiceFITupasSigPersonalNumber = eidtupasSSN
+              , eidServiceFITupasSigDateOfBirth    = eidtupasBirthDate
+              }
+
+        msl <- getSigLinkFor signingSignatoryID <$> theDocument
+        let personalNumberMatchesSiglink
+              | Just sl <- msl = or
+                [ T.null (getPersonalNumber sl)
+                , isNothing eidtupasSSN  -- 'legal persons' don't always have an SSN
+                , getPersonalNumber sl == fromMaybe "" eidtupasSSN
+                ]
+              | otherwise = False
+        when (not personalNumberMatchesSiglink) $ throwE (Failed Remove)
+
+        dbUpdate $ MergeEIDServiceFITupasSignature signingSignatoryID sig
+        logInfo_ . ("EidHub FI TUPAS Sign succeeded: " <>) . showt $ est
+        signFromESignature ds now
+        chargeForItemSingle CIFITupasSignature . documentid =<< theDocument
+
+
+handleCgiGrpBankID
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     , MonadEventStream m
+     , DocumentMonad m
+     , TemplatesMonad m
+     , GuardTimeConfMonad m
+     , MailContextMonad m
+     )
+  => Maybe CgiGrpConfig
+  -> DocumentSigning
+  -> UTCTime
+  -> ExceptT Result m Result
+handleCgiGrpBankID mCgiGrpConf ds@DocumentSigning {..} now = do
+  logInfo_ "Collecting operation for CGI signing"
+
+  conf <- whenNothing mCgiGrpConf $ do
+    noConfigurationWarning "CGI Group"  -- log a warning rather than raising an error as documentSigning is called from cron
+    throwE $ Failed Remove
+
+  signingDocumentID <- documentid <$> theDocument
+  collectResult     <- checkCGISignStatus conf signingDocumentID signingSignatoryID
+  logInfo "CGI collect result" $ object ["result" .= show collectResult]
+  case collectResult of
+    CGISignStatusAlreadySigned   -> return $ Ok Remove
+    CGISignStatusFailed grpFault -> do
+      dbUpdate $ UpdateDocumentSigning signingSignatoryID True (grpFaultText grpFault)
+      return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
+    CGISignStatusInProgress status -> do
+      dbUpdate
+        $ UpdateDocumentSigning signingSignatoryID False (progressStatusText status)
+      return $ Ok $ RerunAfter $ iseconds secondsToRetry
+    CGISignStatusSuccess -> do
+      signFromESignature ds now
+      return $ Ok Remove
+
+
+handleNets
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     , MonadEventStream m
+     , DocumentMonad m
+     , TemplatesMonad m
+     , GuardTimeConfMonad m
+     , MailContextMonad m
+     )
+  => Maybe NetsSignConfig
+  -> DocumentSigning
+  -> UTCTime
+  -> ExceptT Result m Result
+handleNets mNetsSignConf ds@DocumentSigning {..} now = do
+  logInfo_ "Collecting operation for Nets signing"
+
+  conf@NetsSignConfig {..} <- whenNothing mNetsSignConf $ do
+    noConfigurationWarning "Nets Esigning" -- log a warning rather than raising an error as documentSigning is called from cron
+    throwE $ Failed Remove
+
+  logInfo_ "NETS Signing Executed!"
+  signingDocumentID <- documentid <$> theDocument
+  signResult        <- checkNetsSignStatus conf signingDocumentID signingSignatoryID
+  case signResult of
+    NetsSignStatusSuccess -> do
+      signFromESignature ds now
+      return $ Ok Remove
+    NetsSignStatusFailure fault -> do
+      dbUpdate $ UpdateDocumentSigning signingSignatoryID True (netsFaultText fault)
+      return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
+    NetsSignStatusInProgress -> do
+      dbUpdate $ UpdateDocumentSigning signingSignatoryID False "nets_in_progress"
+      return $ Ok $ RerunAfter $ iseconds secondsToRetry
+    NetsSignStatusAlreadySigned -> return $ Ok Remove
+
+
+handleEidService
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     , MonadEventStream m
+     , DocumentMonad m
+     , TemplatesMonad m
+     )
+  => (  EIDServiceConf
+     -> EIDServiceTransactionID
+     -> ExceptT Result m (Maybe EIDServiceTransactionStatus, Maybe ctd)
+     )
+  -> (  DocumentSigning
+     -> EIDServiceTransaction
+     -> ctd
+     -> UTCTime
+     -> ExceptT Result m ()
+     )
+  -> Maybe EIDServiceConf
+  -> DocumentSigning
+  -> UTCTime
+  -> ExceptT Result m Result
+handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
+  doc  <- theDocument
+
+  conf <- do
+    authorID <- whenNothing (maybesignatory =<< getAuthorSigLink doc) $ do
+      logAttention "Impossible happened - no author for document"
+        $ object [identifier $ documentid doc]
+      throwE $ Failed Remove
+    ugwp           <- dbQuery . UserGroupGetWithParentsByUserID $ authorID
+
+    eidServiceConf <- whenNothing mEidServiceConf $ do
+      noConfigurationWarning "EIDService Esigning"
+      throwE $ Failed Remove
+
+    let serviceToken =
+          fromMaybe (eidServiceConf ^. #eidServiceToken)
+            $ (ugwpSettings ugwp ^. #eidServiceToken)
+    return $ eidServiceConf & #eidServiceToken .~ serviceToken
+
+  est <- do
+    mest <- dbQuery
+      $ GetEIDServiceTransactionNoSessionIDGuard signingSignatoryID EIDServiceAuthToSign
+    whenNothing mest $ throwE (Failed Remove)
+
+  (mts, mctd) <- check conf (estID est)
+  ts          <- whenNothing mts $ throwE (Failed Remove)
+
+  let mergeWithStatus newStatus =
+        dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newStatus }
+
+  case ts of
+    EIDServiceTransactionStatusCompleteAndSuccess -> do
+      ctd <- whenNothing mctd $ throwE (Failed Remove)
+      process ds est ctd now
+      mergeWithStatus EIDServiceTransactionStatusCompleteAndSuccess
+      return $ Ok Remove
+
+    EIDServiceTransactionStatusNew -> do
+      mergeWithStatus ts
+      return . Ok . RerunAfter $ iseconds secondsToRetry
+
+    EIDServiceTransactionStatusStarted -> do
+      mergeWithStatus ts
+      return . Ok . RerunAfter $ iseconds secondsToRetry
+
+    -- EIDServiceTransactionStatusFailed
+    -- EIDServiceTransactionStatusCompleteAndFailed
+    _ -> do
+      mergeWithStatus ts
+      throwE $ Failed Remove
+
 
 signFromESignature
   :: ( GuardTimeConfMonad m

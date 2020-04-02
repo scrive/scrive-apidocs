@@ -14,6 +14,7 @@ module Doc.API.V2.Calls.SignatoryCalls (
 ) where
 
 import Control.Conditional (whenM)
+import Control.Monad.Extra (whenMaybe)
 import Data.Unjson
 import Happstack.Server.Types
 import Log
@@ -197,18 +198,12 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     guardThatAllConsentQuestionsHaveResponse slid consentResponses =<< theDocument
     -- API call actions + extra conditional parameter
     sl <- guardGetSignatoryFromIdForDocument slid
-    case signatorylinkauthenticationtosignmethod sl of
-      StandardAuthenticationToSign -> return ()
-      SMSPinAuthenticationToSign   -> do
-        pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
-        validPin <- checkSignatoryPinToSign slid fields pin
-        if not validPin
-          then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
-          else return ()
-      SEBankIDAuthenticationToSign -> return ()
-      NOBankIDAuthenticationToSign -> return ()
-      DKNemIDAuthenticationToSign  -> return ()
-      IDINAuthenticationToSign     -> return ()
+    when (signatorylinkauthenticationtosignmethod sl == SMSPinAuthenticationToSign) $ do
+      pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+      validPin <- checkSignatoryPinToSign slid fields pin
+      if not validPin
+        then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
+        else return ()
     -- Return
     return $ Ok ()
 
@@ -239,7 +234,10 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
 
-
+-- | In the case of SMS or 'standard' (i.e. none) authentication, sign the
+-- document for the given signatory right away; otherwise schedule a signing
+-- job. In the latter case, the frontend initiates the actual eid transaction,
+-- and cron takes care of the signing.
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
@@ -282,19 +280,22 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
       =<< theDocument
 
     -- API call actions + extra conditional parameter
-    sl                <- guardGetSignatoryFromIdForDocument slid
-    (mprovider, mpin) <- case signatorylinkauthenticationtosignmethod sl of
-      StandardAuthenticationToSign -> return (Nothing, Nothing)
-      SMSPinAuthenticationToSign   -> do
-        pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
-        validPin <- checkSignatoryPinToSign slid fields pin
-        if not validPin
-          then apiError documentActionForbidden
-          else return (Nothing, Just pin)
-      SEBankIDAuthenticationToSign -> return (Just CgiGrpBankID, Nothing)
-      NOBankIDAuthenticationToSign -> return (Just NetsNOBankID, Nothing)
-      DKNemIDAuthenticationToSign  -> return (Just NetsDKNemID, Nothing)
-      IDINAuthenticationToSign     -> return (Just EIDServiceIDIN, Nothing)
+    sl   <- guardGetSignatoryFromIdForDocument slid
+    mpin <-
+      whenMaybe (signatorylinkauthenticationtosignmethod sl == SMSPinAuthenticationToSign)
+        $ do
+            pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+            validPin <- checkSignatoryPinToSign slid fields pin
+            if not validPin then apiError documentActionForbidden else return pin
+
+    let mprovider = case signatorylinkauthenticationtosignmethod sl of
+          StandardAuthenticationToSign -> Nothing
+          SMSPinAuthenticationToSign   -> Nothing
+          SEBankIDAuthenticationToSign -> Just CgiGrpBankID
+          NOBankIDAuthenticationToSign -> Just NetsNOBankID
+          DKNemIDAuthenticationToSign  -> Just NetsDKNemID
+          IDINAuthenticationToSign     -> Just EIDServiceIDIN
+          FITupasAuthenticationToSign  -> Just EIDServiceTupas
 
     case mprovider of
       Nothing -> do

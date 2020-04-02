@@ -45,6 +45,7 @@ module.exports = React.createClass({
         canUseDKAuthenticationToView: features.canUseDKAuthenticationToView(),
         canUseDKAuthenticationToSign: features.canUseDKAuthenticationToSign(),
         canUseFIAuthenticationToView: features.canUseFIAuthenticationToView(),
+        canUseFIAuthenticationToSign: features.canUseFIAuthenticationToSign(),
         canUseNOAuthenticationToView: features.canUseNOAuthenticationToView(),
         canUseNOAuthenticationToSign: features.canUseNOAuthenticationToSign(),
         canUseSEAuthenticationToView: features.canUseSEAuthenticationToView(),
@@ -123,6 +124,7 @@ module.exports = React.createClass({
           adminUserFeatures.canUseDKAuthenticationToView = false;
           adminUserFeatures.canUseDKAuthenticationToSign = false;
           adminUserFeatures.canUseFIAuthenticationToView = false;
+          adminUserFeatures.canUseFIAuthenticationToSign = false;
           adminUserFeatures.canUseNOAuthenticationToView = false;
           adminUserFeatures.canUseNOAuthenticationToSign = false;
           adminUserFeatures.canUseSEAuthenticationToView = false;
@@ -133,6 +135,7 @@ module.exports = React.createClass({
           regularUserFeatures.canUseDKAuthenticationToView = false;
           regularUserFeatures.canUseDKAuthenticationToSign = false;
           regularUserFeatures.canUseFIAuthenticationToView = false;
+          regularUserFeatures.canUseFIAuthenticationToSign = false;
           regularUserFeatures.canUseNOAuthenticationToView = false;
           regularUserFeatures.canUseNOAuthenticationToSign = false;
           regularUserFeatures.canUseSEAuthenticationToView = false;
@@ -145,6 +148,7 @@ module.exports = React.createClass({
           adminUserFeatures.canUseDKAuthenticationToView = true;
           adminUserFeatures.canUseDKAuthenticationToSign = true;
           adminUserFeatures.canUseFIAuthenticationToView = true;
+          adminUserFeatures.canUseFIAuthenticationToSign = true;
           adminUserFeatures.canUseNOAuthenticationToView = true;
           adminUserFeatures.canUseNOAuthenticationToSign = true;
           adminUserFeatures.canUseSEAuthenticationToView = true;
@@ -155,6 +159,7 @@ module.exports = React.createClass({
           regularUserFeatures.canUseDKAuthenticationToView = true;
           regularUserFeatures.canUseDKAuthenticationToSign = true;
           regularUserFeatures.canUseFIAuthenticationToView = true;
+          regularUserFeatures.canUseFIAuthenticationToSign = true;
           regularUserFeatures.canUseNOAuthenticationToView = true;
           regularUserFeatures.canUseNOAuthenticationToSign = true;
           regularUserFeatures.canUseSEAuthenticationToView = true;
@@ -416,6 +421,7 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use DK authorization to view","canUseDKAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use DK authorization to sign","canUseDKAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use FI authorization to view","canUseFIAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use FI authorization to sign","canUseFIAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to view","canUseNOAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to sign","canUseNOAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to view","canUseSEAuthenticationToView")}

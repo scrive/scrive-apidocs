@@ -47,6 +47,7 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
               Right (NetsNOBankIDSignature_       _) -> Just NOBankIDAuthenticationToSign
               Right (NetsDKNemIDSignature_        _) -> Just DKNemIDAuthenticationToSign
               Right (EIDServiceIDINSignature_     _) -> Just IDINAuthenticationToSign
+              Right (EIDServiceFITupasSignature_  _) -> Just FITupasAuthenticationToSign
               Right (LegacyBankIDSignature_       _) -> Nothing
               Right (LegacyTeliaSignature_        _) -> Nothing
               Right (LegacyNordeaSignature_       _) -> Nothing
@@ -106,6 +107,19 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                        else ["signatory_date_of_birth" .= eiditdBirthDate]
                   )
            ]
+      Right (EIDServiceFITupasSignature_ EIDServiceFITupasSignature {..}) ->
+        [ "fi_tupas_data"
+            .= (  object
+               $  ["signatory_name" .= eidServiceFITupasSigSignatoryName]
+               <> if hidePN
+                    then []
+                    else
+                      [ "signatory_date_of_birth" .= eidServiceFITupasSigDateOfBirth
+                      , "signatory_personal_number"
+                        .= eidServiceFITupasSigPersonalNumber
+                      ]
+               )
+        ]
       Right (LegacyBankIDSignature_       _) -> []
       Right (LegacyTeliaSignature_        _) -> []
       Right (LegacyNordeaSignature_       _) -> []

@@ -293,6 +293,8 @@ simplifiedEventText mactor sim dee = do
                 EIDServiceIDINSignature_ (EIDServiceIDINSignature CompleteIDINEIDServiceTransactionData {..})
                   -> do
                     F.value "provider_idin" True
+                EIDServiceFITupasSignature_ _ -> do
+                  F.value "provider_fitupas" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession AuthenticationToView slinkid)
               >>= \case

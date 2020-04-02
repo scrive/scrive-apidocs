@@ -21,6 +21,7 @@ encodeNewTransactionRequest espp =
       EIDServiceProviderParamsIDIN{}     -> "nlIDIN"
       EIDServiceProviderParamsNemID{}    -> "dkNemID"
       EIDServiceProviderParamsNOBankID{} -> "noBankID"
+      EIDServiceProviderParamsFITupas{}  -> "fiTupas"
     makeProviderParams vals =
       pair "providerParameters" . pairs . pair provider $ pairs vals
     providerParameters = case espp of
@@ -31,3 +32,4 @@ encodeNewTransactionRequest espp =
       EIDServiceProviderParamsNOBankID {..} ->
         let phonePair = maybe mempty ("phoneNumber" .=) esppPhoneNumber
         in  makeProviderParams $ ("personalNumber" .= esppPersonalNumber) <> phonePair
+      EIDServiceProviderParamsFITupas{} -> mempty

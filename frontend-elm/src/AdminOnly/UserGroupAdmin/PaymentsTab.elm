@@ -393,6 +393,7 @@ featureFlagsStructure =
       , [ ( "Can use DK authorization to view", "can_use_dk_authentication_to_view" )
         , ( "Can use DK authorization to sign", "can_use_dk_authentication_to_sign" )
         , ( "Can use FI authorization to view", "can_use_fi_authentication_to_view" )
+        , ( "Can use FI authorization to sign", "can_use_fi_authentication_to_sign" )
         , ( "Can use NO authorization to view", "can_use_no_authentication_to_view" )
         , ( "Can use NO authorization to sign", "can_use_no_authentication_to_sign" )
         , ( "Can use SE authorization to view", "can_use_se_authentication_to_view" )

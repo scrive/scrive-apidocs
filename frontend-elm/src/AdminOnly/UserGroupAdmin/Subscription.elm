@@ -128,6 +128,7 @@ type alias FeatureFlags =
     , canUseDKAuthenticationToView : Bool
     , canUseSmsConfirmations : Bool
     , canUseFIAuthenticationToView : Bool
+    , canUseFIAuthenticationToSign : Bool
     , canUseDocumentPartyNotifications : Bool
     , canUseVerimiAuthenticationToView : Bool
     , canUseIdinAuthenticationToView : Bool
@@ -259,6 +260,7 @@ defaultFeatureFlags =
     , canUseDKAuthenticationToView = False
     , canUseSmsConfirmations = False
     , canUseFIAuthenticationToView = False
+    , canUseFIAuthenticationToSign = False
     , canUseDocumentPartyNotifications = False
     , canUseVerimiAuthenticationToView = False
     , canUseIdinAuthenticationToView = False
@@ -294,6 +296,7 @@ ffKeyAccessPairs =
     , ( "can_use_dk_authentication_to_view", ( .canUseDKAuthenticationToView, \ff v -> { ff | canUseDKAuthenticationToView = v } ) )
     , ( "can_use_sms_confirmations", ( .canUseSmsConfirmations, \ff v -> { ff | canUseSmsConfirmations = v } ) )
     , ( "can_use_fi_authentication_to_view", ( .canUseFIAuthenticationToView, \ff v -> { ff | canUseFIAuthenticationToView = v } ) )
+    , ( "can_use_fi_authentication_to_sign", ( .canUseFIAuthenticationToSign, \ff v -> { ff | canUseFIAuthenticationToSign = v } ) )
     , ( "can_use_document_party_notifications", ( .canUseDocumentPartyNotifications, \ff v -> { ff | canUseDocumentPartyNotifications = v } ) )
     , ( "can_use_verimi_authentication_to_view", ( .canUseVerimiAuthenticationToView, \ff v -> { ff | canUseVerimiAuthenticationToView = v } ) )
     , ( "can_use_idin_authentication_to_view", ( .canUseIdinAuthenticationToView, \ff v -> { ff | canUseIdinAuthenticationToView = v } ) )

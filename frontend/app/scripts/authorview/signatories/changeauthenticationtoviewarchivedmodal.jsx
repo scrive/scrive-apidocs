@@ -138,6 +138,17 @@ var Modal = require("../../common/modal");
               || new EmptyValidation().validateData(authvalue)
           );
         }
+      } else if (this.isNewAuthenticationFITupas()) {
+        // If FI Tupas to view is set, then SSN needs to be valid and not empty
+        if (this.signatory().authenticationToView() === "fi_tupas") {
+          return !new SSNForFITupasValidation().validateData(authvalue);
+          // Else valid or empty
+        } else {
+          return !(
+            new SSNForFITupasValidation().validateData(authvalue)
+              || new EmptyValidation().validateData(authvalue)
+          );
+        }
       }
       // There is no NOBankID here, because authentication value is empty in
       // that case.

@@ -1008,7 +1008,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
             sqlWhereEq "type"              MobileFT
           )
         -- IDINAuthenticationToSign has no obligatory fields
-        (False, IDINAuthenticationToSign) -> return ()
+        (False, IDINAuthenticationToSign   ) -> return ()
+        -- FITupasAuthenticationToSign has no obligatory fields
+        (False, FITupasAuthenticationToSign) -> return ()
       -- If newAuthToSign needs PersonalNumber we need to make sure the field
       -- exists and is obligatory, and maybe set to the value provided
       when (authToSignNeedsPersonalNumber newAuthToSign) $ do
@@ -1836,6 +1838,8 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           sqlWhereSignatoryAuthenticationToSignMethodIs DKNemIDAuthenticationToSign
         (Just (EIDServiceIDINSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs IDINAuthenticationToSign
+        (Just (EIDServiceFITupasSignature_ _), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIs FITupasAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
         (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
         (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
@@ -1905,6 +1909,13 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             F.value "signatory_name" eiditdName
             F.value "signatory_dob" eiditdBirthDate
             F.value "signatory_customer_id" eiditdCustomerID
+        (Just (EIDServiceFITupasSignature_ (EIDServiceFITupasSignature {..})), _) -> do
+          F.value "hide_pn" $ signatorylinkhidepn sl
+          F.value "eleg" True
+          F.value "provider_fitupas" True
+          F.value "signatory_name" eidServiceFITupasSigSignatoryName
+          F.value "signatory_dob" eidServiceFITupasSigDateOfBirth
+          F.value "signatory_personal_number" eidServiceFITupasSigPersonalNumber
         (Nothing, Just _) -> do
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl

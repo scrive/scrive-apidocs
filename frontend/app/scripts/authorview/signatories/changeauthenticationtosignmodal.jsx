@@ -8,6 +8,7 @@ var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
 var SSNForDKNemIDValidation = require("../../../js/validation.js").SSNForDKNemIDValidation;
+var SSNForFITupasValidation = require("../../../js/validation.js").SSNForFITupasValidation;
 var $ = require("jquery");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
@@ -46,7 +47,8 @@ var Modal = require("../../common/modal");
         if (this.isNewAuthenticationPINbySMS()) {
           this.setNewAuthenticationValue(signatory.mobile());
         }
-        if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()) {
+        if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()
+           || this.isNewAuthenticationFITupas()) {
           this.setNewAuthenticationValue(signatory.personalnumber());
         }
         if (this.isNewAuthenticationNOBankID()) {
@@ -81,6 +83,10 @@ var Modal = require("../../common/modal");
 
     isNewAuthenticationIDIN: function () {
       return this.newAuthenticationMethod() == "nl_idin";
+    },
+
+    isNewAuthenticationFITupas: function () {
+      return this.newAuthenticationMethod() == "fi_tupas";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -126,6 +132,17 @@ var Modal = require("../../common/modal");
               || new EmptyValidation().validateData(authvalue)
           );
         }
+      } else if (this.isNewAuthenticationFITupas()) {
+        // If FI Tupas to view is set, then SSN needs to be valid and not empty
+        if (this.signatory().authenticationToView() === "fi_tupas") {
+          return !new SSNForFITupasValidation().validateData(authvalue);
+          // Else valid or empty
+        } else {
+          return !(
+            new SSNForFITupasValidation().validateData(authvalue)
+              || new EmptyValidation().validateData(authvalue)
+          );
+        }
       }
       return false;
     },
@@ -135,7 +152,8 @@ var Modal = require("../../common/modal");
 
       if (this.isNewAuthenticationPINbySMS()) {
         text = localization.docview.changeAuthentication.errorPhone;
-      } else if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()) {
+      } else if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()
+                || this.isNewAuthenticationFITupas()) {
         text = localization.docview.changeAuthentication.errorEID;
       }
       // no NOBankID/IDIN here, because there is only empty "" authentication value
@@ -168,6 +186,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToSignDKNemID;
       } else if (model.isNewAuthenticationIDIN()) {
         return localization.docview.signatory.authenticationToSignIDIN;
+      } else if (model.isNewAuthenticationFITupas()) {
+        return localization.docview.signatory.authenticationToSignFITupas;
       }
     },
 
@@ -186,7 +206,7 @@ var Modal = require("../../common/modal");
       var text = "";
       if (model.isNewAuthenticationPINbySMS()) {
         text = localization.phone;
-      } else if (model.isNewAuthenticationSEBankID()) {
+      } else if (model.isNewAuthenticationSEBankID() || model.isNewAuthenticationFITupas()) {
         text = localization.docsignview.personalNumberLabel;
       } else if (model.isNewAuthenticationDKNemID()) {
         text = localization.eID.idName.nemId;
@@ -206,6 +226,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthentication.placeholderNOEID;
       } else if (model.isNewAuthenticationDKNemID()) {
         text = localization.docview.changeAuthentication.placeholderDKEID;
+      } else if (model.isNewAuthenticationFITupas()) {
+        text = localization.docview.changeAuthentication.placeholderFITupas;
       }
       return text;
     },
@@ -276,6 +298,14 @@ var Modal = require("../../common/modal");
         options.push(idin);
       }
 
+      var tupas = {
+        name: localization.docview.signatory.authenticationToSignFITupas,
+        selected: model.isNewAuthenticationFITupas(),
+        value: "fi_tupas"
+      };
+      if (ff.canUseFIAuthenticationToSign() && isAvailable(tupas.value)) {
+        options.push(tupas);
+      }
       return options;
     },
 

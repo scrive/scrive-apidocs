@@ -67,6 +67,10 @@ eidServiceRoutes = choice
     startNOBankIDViewEIDServiceTransaction
   , (dir "redirect-endpoint" . dir "nobankid-view" . hGet . toK2)
     redirectEndpointFromNOBankIDViewEIDServiceTransaction
+  , (dir "start" . dir "fitupas-sign" . hPost . toK2)
+    startFITupasSignEIDServiceTransaction
+  , (dir "redirect-endpoint" . dir "fitupas-sign" . hGet . toK2)
+    redirectEndpointFromFITupasSignEIDServiceTransaction
   ]
 
 eidServiceConf :: Kontrakcja m => Document -> m EIDServiceConf
@@ -131,6 +135,16 @@ startNOBankIDViewEIDServiceTransaction did slid = do
                              (EIDServiceAuthToView $ mkAuthKind doc)
                              EIDServiceTransactionProviderNOBankID
 
+startFITupasSignEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
+startFITupasSignEIDServiceTransaction did slid = do
+  logInfo_ "EID Service transaction start - for FITupas sign"
+  (doc, sl) <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
+  startEIDServiceTransaction doc
+                             sl
+                             EIDServiceAuthToSign
+                             EIDServiceTransactionProviderFITupas
+
 startEIDServiceTransaction
   :: Kontrakcja m
   => Document
@@ -176,6 +190,8 @@ startEIDServiceTransaction doc sl eidserviceAuthKind provider = do
                                               , esppPhoneNumber    = mNonEmptyNOPhone
                                               , esppPersonalNumber = ssn
                                               }
+    EIDServiceTransactionProviderFITupas ->
+      return EIDServiceProviderParamsFITupas { esppRedirectURL = redirectUrl }
   tid  <- createTransactionWithEIDService conf providerParams
   turl <- startTransactionWithEIDService conf providerName tid
   sid  <- getNonTempSessionID
@@ -198,9 +214,12 @@ startEIDServiceTransaction doc sl eidserviceAuthKind provider = do
       EIDServiceTransactionProviderVerimi{}   -> "verimi"
       EIDServiceTransactionProviderNemID{}    -> "dkNemID"
       EIDServiceTransactionProviderNOBankID{} -> "noBankID"
+      EIDServiceTransactionProviderFITupas{}  -> "fiTupas"
     redirectFragment = case (provider, eidserviceAuthKind) of
       (EIDServiceTransactionProviderIDIN{}, EIDServiceAuthToView _)   -> "idin-view"
       (EIDServiceTransactionProviderIDIN{}    , EIDServiceAuthToSign) -> "idin-sign"
+      (EIDServiceTransactionProviderFITupas{}, EIDServiceAuthToView _) -> "fitupas-view"
+      (EIDServiceTransactionProviderFITupas{} , EIDServiceAuthToSign) -> "fitupas-sign"
       (EIDServiceTransactionProviderVerimi{}  , _                   ) -> "verimi"
       (EIDServiceTransactionProviderNemID{}   , _                   ) -> "nemid"
       (EIDServiceTransactionProviderNOBankID{}, _                   ) -> "nobankid"
@@ -307,6 +326,60 @@ redirectEndpointFromVerimiEIDServiceTransaction did slid = do
     F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)
     standardPageFields ctx Nothing ad
   simpleHtmlResponse redirectPage
+
+redirectEndpointFromFITupasSignEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+redirectEndpointFromFITupasSignEIDServiceTransaction did slid = do
+  logInfo_ "EID Service signing transaction check"
+  doc       <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- access guard
+  ad        <- getAnalyticsData
+  ctx       <- getContext
+  conf      <- eidServiceConf doc
+  sessionID <- getNonTempSessionID
+  res       <- checkFITupasEIDServiceTransactionForSignatoryWithConf conf
+                                                                     slid
+                                                                     sessionID
+                                                                     EIDServiceAuthToSign
+  sl <- dbQuery $ GetSignatoryLinkByID did slid
+  let redirectUrl = "/s/" <> show did <> "/" <> show slid
+      correctData
+        | Just (_, EIDServiceTransactionStatusCompleteAndSuccess, Just cd) <- res = or
+          [ T.null (getPersonalNumber sl)
+          , isNothing $ eidtupasSSN cd  -- 'legal persons' don't always have an SSN
+          , getPersonalNumber sl == fromMaybe "" (eidtupasSSN cd)
+          ]
+        | otherwise = False  -- the transaction cannot be just New or Started now,
+                             -- we were redirected here at the end of EID Auth
+
+  redirectPage <- renderTextTemplate "postFITupasSignRedirect" $ do
+    F.value "redirect" . B64.encode . BSC8.pack . urlEncode $ redirectUrl
+    F.value "incorrect_data" $ not correctData
+    F.value "document_id" $ show did
+    F.value "signatory_link_id" $ show slid
+    standardPageFields ctx Nothing ad
+  simpleHtmlResponse redirectPage
+
+checkFITupasEIDServiceTransactionForSignatoryWithConf
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> SignatoryLinkID
+  -> SessionID
+  -> EIDServiceAuthenticationKind
+  -> m
+       ( Maybe
+           ( EIDServiceTransaction
+           , EIDServiceTransactionStatus
+           , Maybe CompleteFITupasEIDServiceTransactionData
+           )
+       )
+checkFITupasEIDServiceTransactionForSignatoryWithConf conf slid sessionID eidAuthKind =
+  do
+    mest <- dbQuery $ GetEIDServiceTransactionGuardSessionID sessionID slid eidAuthKind
+    case mest of
+      Nothing  -> return Nothing
+      Just est -> checkFITupasTransactionWithEIDService conf (estID est) >>= \case
+        (Nothing, _   ) -> return Nothing
+        (Just ts, mctd) -> return $ Just (est, ts, mctd)
 
 updateIDINTransactionAfterCheck
   :: Kontrakcja m
@@ -429,25 +502,25 @@ redirectEndpointFromIDINSignEIDServiceTransaction
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 redirectEndpointFromIDINSignEIDServiceTransaction did slid = do
   logInfo_ "EID Service signing transaction check"
-  doc                 <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- access guard
-  ad                  <- getAnalyticsData
-  ctx                 <- getContext
-  conf                <- eidServiceConf doc
-  sessionID           <- getNonTempSessionID
-  successOrInProgress <- do
-    res <- checkIDINEIDServiceTransactionForSignatoryWithConf conf
-                                                              slid
-                                                              sessionID
-                                                              EIDServiceAuthToSign
-    case res of
-      Just (_, EIDServiceTransactionStatusCompleteAndSuccess, Just _cd) -> return True
-      -- the transaction cannot be just New or Started now,
-      -- we were redirected here at the end of EID Auth
-      _ -> return False
+  doc       <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- access guard
+  ad        <- getAnalyticsData
+  ctx       <- getContext
+  conf      <- eidServiceConf doc
+  sessionID <- getNonTempSessionID
+  res       <- checkIDINEIDServiceTransactionForSignatoryWithConf conf
+                                                                  slid
+                                                                  sessionID
+                                                                  EIDServiceAuthToSign
+
   let redirectUrl = "/s/" <> show did <> "/" <> show slid
+      correctData = case res of
+        Just (_, EIDServiceTransactionStatusCompleteAndSuccess, Just _cd) -> True
+        -- the transaction cannot be just New or Started now,
+        -- we were redirected here at the end of EID Auth
+        _ -> False
   redirectPage <- renderTextTemplate "postIDINSignRedirect" $ do
     F.value "redirect" . B64.encode . BSC8.pack . urlEncode $ redirectUrl
-    F.value "incorrect_data" $ not successOrInProgress
+    F.value "incorrect_data" $ not correctData
     F.value "document_id" $ show did
     F.value "signatory_link_id" $ show slid
     standardPageFields ctx Nothing ad

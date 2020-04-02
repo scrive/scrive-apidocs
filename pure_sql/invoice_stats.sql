@@ -323,6 +323,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "Danish NemID signatures" BIGINT,
         "Danish NemID authorization" BIGINT,
         "Finnish TUPAS authorization" BIGINT,
+        "Finnish TUPAS signatures" BIGINT,
         "Verimi authentications" BIGINT,
         "iDIN authentications" BIGINT,
         "iDIN signatures" BIGINT,
@@ -461,6 +462,12 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 17
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Finnish TUPAS signatures"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 14 -- CIVerimiAuthentication
                  AND chi.time >= period.from
                  AND chi.time <= period.to) AS "Verimi authentications"
@@ -535,6 +542,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
              OR report."Danish NemID signatures" > 0
              OR report."Danish NemID authorization" > 0
              OR report."Finnish TUPAS authorization" > 0
+             OR report."Finnish TUPAS signatures" > 0
              OR report."Verimi authentications" > 0
              OR report."iDIN authentications" > 0
              OR report."iDIN signatures" > 0
@@ -582,6 +590,7 @@ CREATE TABLE report_master AS
   "Danish NemID signatures",
   "Danish NemID authorization",
   "Finnish TUPAS authorization",
+  "Finnish TUPAS signatures",
   "Verimi authentications",
   "iDIN authentications",
   "iDIN signatures",

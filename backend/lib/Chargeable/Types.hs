@@ -26,6 +26,7 @@ data ChargeableItem = CIStartingDocument
                     | CINOBankIDSignature
                     | CIDKNemIDSignature
                     | CIFITupasAuthentication
+                    | CIFITupasSignature
                     | CIShareableLink
                     | CIVerimiAuthentication
                     | CIIDINAuthentication
@@ -58,7 +59,8 @@ instance FromSQL ChargeableItem where
       14 -> return CIVerimiAuthentication
       15 -> return CIIDINAuthentication
       16 -> return CIIDINSignature
-      _  -> throwM RangeError { reRange = [(1, 16)], reValue = n }
+      17 -> return CIFITupasSignature
+      _  -> throwM RangeError { reRange = [(1, 17)], reValue = n }
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
@@ -78,6 +80,7 @@ instance ToSQL ChargeableItem where
   toSQL CIVerimiAuthentication   = toSQL (14 :: Int16)
   toSQL CIIDINAuthentication     = toSQL (15 :: Int16)
   toSQL CIIDINSignature          = toSQL (16 :: Int16)
+  toSQL CIFITupasSignature       = toSQL (17 :: Int16)
 
 -- | This type should be used only for serialization. Punishment will be imposed
 -- on anybody using it in any other way.
@@ -114,6 +117,7 @@ instance ToJSON ChargeableItemEvent where
       eventTypeToJSON CINOBankIDSignature      = "no_bank_id_signature"
       eventTypeToJSON CIDKNemIDSignature       = "dk_nem_id_signature"
       eventTypeToJSON CIFITupasAuthentication  = "fi_tupas_authentication"
+      eventTypeToJSON CIFITupasSignature       = "fi_tupas_signature"
       eventTypeToJSON CIShareableLink          = "shareable_link"
       eventTypeToJSON CIVerimiAuthentication   = "verimi_authentication"
       eventTypeToJSON CIIDINAuthentication     = "idin_authentication"

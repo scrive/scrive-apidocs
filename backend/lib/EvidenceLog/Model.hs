@@ -408,12 +408,14 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignFromNOBankID |
   ChangeAuthenticationToSignFromDKNemID  |
   ChangeAuthenticationToSignFromIDIN     |
+  ChangeAuthenticationToSignFromFITupas  |
   ChangeAuthenticationToSignToStandard   |
   ChangeAuthenticationToSignToSMSPin     |
   ChangeAuthenticationToSignToSEBankID   |
   ChangeAuthenticationToSignToNOBankID   |
   ChangeAuthenticationToSignToDKNemID    |
   ChangeAuthenticationToSignToIDIN       |
+  ChangeAuthenticationToSignToFITupas    |
   ChangeAuthenticationToViewFromStandard |
   ChangeAuthenticationToViewFromSMSPin   |
   ChangeAuthenticationToViewFromSEBankID |
@@ -995,6 +997,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToSignFromIDIN            ) = toSQL (264 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToIDIN              ) = toSQL (265 :: Int16)
   toSQL (Current UpdateSsnAfterAuthenticationToViewWithNets    ) = toSQL (266 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromFITupas         ) = toSQL (267 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToFITupas           ) = toSQL (268 :: Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -1310,7 +1314,9 @@ instance FromSQL EvidenceEventType where
       264 -> return (Current ChangeAuthenticationToSignFromIDIN)
       265 -> return (Current ChangeAuthenticationToSignToIDIN)
       266 -> return (Current UpdateSsnAfterAuthenticationToViewWithNets)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 266)], reValue = n }
+      267 -> return (Current ChangeAuthenticationToSignFromFITupas)
+      268 -> return (Current ChangeAuthenticationToSignToFITupas)
+      _   -> E.throwIO $ RangeError { reRange = [(1, 268)], reValue = n }
 
 
 authToViewChangeEvidence
@@ -1387,6 +1393,7 @@ authToSignChangeFrom a = case a of
   DKNemIDAuthenticationToSign  -> ChangeAuthenticationToSignFromDKNemID
   SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignFromSMSPin
   IDINAuthenticationToSign     -> ChangeAuthenticationToSignFromIDIN
+  FITupasAuthenticationToSign  -> ChangeAuthenticationToSignFromFITupas
 
 authToSignChangeTo :: AuthenticationToSignMethod -> CurrentEvidenceEventType
 authToSignChangeTo a = case a of
@@ -1396,3 +1403,4 @@ authToSignChangeTo a = case a of
   DKNemIDAuthenticationToSign  -> ChangeAuthenticationToSignToDKNemID
   SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignToSMSPin
   IDINAuthenticationToSign     -> ChangeAuthenticationToSignToIDIN
+  FITupasAuthenticationToSign  -> ChangeAuthenticationToSignToFITupas

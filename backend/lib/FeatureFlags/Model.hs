@@ -42,6 +42,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseDKAuthenticationToView :: Bool
   , ffCanUseDKAuthenticationToSign :: Bool
   , ffCanUseFIAuthenticationToView :: Bool
+  , ffCanUseFIAuthenticationToSign :: Bool
   , ffCanUseNOAuthenticationToView :: Bool
   , ffCanUseNOAuthenticationToSign :: Bool
   , ffCanUseSEAuthenticationToView :: Bool
@@ -88,6 +89,9 @@ instance Unjson FeatureFlags where
       <*> field "can_use_fi_authentication_to_view"
                 ffCanUseFIAuthenticationToView
                 "TODO desc"
+      <*> field "can_use_fi_authentication_to_sign"
+                ffCanUseFIAuthenticationToSign
+                "Can use Finnish Tupas to sign"
       <*> field "can_use_no_authentication_to_view"
                 ffCanUseNOAuthenticationToView
                 "TODO desc"
@@ -168,13 +172,14 @@ type instance CompositeRow FeatureFlags
     , Bool
     , Bool
     , Bool
+    , Bool
     )
 
 instance PQFormat FeatureFlags where
   pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
-  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts)
+  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts)
     = FeatureFlags { .. }
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
@@ -197,6 +202,7 @@ firstAllowedAuthenticationToSign ff
   | ffCanUseSEAuthenticationToSign ff = SEBankIDAuthenticationToSign
   | ffCanUseDKAuthenticationToSign ff = DKNemIDAuthenticationToSign
   | ffCanUseNOAuthenticationToSign ff = NOBankIDAuthenticationToSign
+  | ffCanUseFIAuthenticationToSign ff = FITupasAuthenticationToSign
   | ffCanUseSMSPinAuthenticationToSign ff = SMSPinAuthenticationToSign
   | ffCanUseIDINAuthenticationToSign ff = IDINAuthenticationToSign
   |
@@ -231,6 +237,7 @@ defaultFeatures paymentPlan = Features ff ff
                              , ffCanUseDKAuthenticationToView     = True
                              , ffCanUseDKAuthenticationToSign     = True
                              , ffCanUseFIAuthenticationToView     = True
+                             , ffCanUseFIAuthenticationToSign     = True
                              , ffCanUseNOAuthenticationToView     = True
                              , ffCanUseNOAuthenticationToSign     = True
                              , ffCanUseSEAuthenticationToView     = True
@@ -256,6 +263,7 @@ defaultFeatures paymentPlan = Features ff ff
       FreePlan -> defaultFF { ffCanUseDKAuthenticationToView     = False
                             , ffCanUseDKAuthenticationToSign     = False
                             , ffCanUseFIAuthenticationToView     = False
+                            , ffCanUseFIAuthenticationToSign     = False
                             , ffCanUseNOAuthenticationToView     = False
                             , ffCanUseNOAuthenticationToSign     = False
                             , ffCanUseSEAuthenticationToView     = False
@@ -278,6 +286,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_dk_authentication_to_view" $ ffCanUseDKAuthenticationToView ff
   sqlSet "can_use_dk_authentication_to_sign" $ ffCanUseDKAuthenticationToSign ff
   sqlSet "can_use_fi_authentication_to_view" $ ffCanUseFIAuthenticationToView ff
+  sqlSet "can_use_fi_authentication_to_sign" $ ffCanUseFIAuthenticationToSign ff
   sqlSet "can_use_no_authentication_to_view" $ ffCanUseNOAuthenticationToView ff
   sqlSet "can_use_no_authentication_to_sign" $ ffCanUseNOAuthenticationToSign ff
   sqlSet "can_use_se_authentication_to_view" $ ffCanUseSEAuthenticationToView ff
@@ -313,6 +322,7 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_dk_authentication_to_view"
   , "feature_flags.can_use_dk_authentication_to_sign"
   , "feature_flags.can_use_fi_authentication_to_view"
+  , "feature_flags.can_use_fi_authentication_to_sign"
   , "feature_flags.can_use_no_authentication_to_view"
   , "feature_flags.can_use_no_authentication_to_sign"
   , "feature_flags.can_use_se_authentication_to_view"
