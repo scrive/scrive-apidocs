@@ -1,6 +1,6 @@
 builtins.fetchGit {
   url = "git@github.com:scrive/kontrakcja-nix.git";
-  rev = "5a92a92169d012aa20b9bc14792644ffe2764101";
+  rev = "15f9ed57102bbc4cd30c35a6f1fdf81be506f977";
 }
 
 # Uncomment for development from local kontrakcja-nix src

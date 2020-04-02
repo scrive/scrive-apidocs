@@ -15,13 +15,12 @@ let
 
   ghc = haskellPackages.ghcWithPackages
     (pkg: []);
-
-  elm2nix = import ./elm2nix.nix { inherit nixpkgs; };
 in
 pkgs.mkShell {
   name = "kontrakcja-manual-shell";
 
-  LD_LIBRARY_PATH = "${pkgs.zlib}/lib:${pkgs.icu}/lib:${pkgs.curl.out}/lib";
+  LD_LIBRARY_PATH = "${pkgs.zlib}/lib:${pkgs.icu}/lib:${pkgs.curl.out}/lib:${pkgs.libxml2.out}/lib";
+  C_INCLUDE_PATH = "${pkgs.libxml2.dev}/include/libxml2";
 
   KONTRAKCJA_ROOT = sourceRoot;
   KONTRAKCJA_WORKSPACE = workspaceRoot;

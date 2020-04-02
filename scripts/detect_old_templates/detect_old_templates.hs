@@ -163,7 +163,7 @@ expExps e = e `S.insert` case e of
   MultiIf _ ifs       -> S.unions $ map guardedRhsExps ifs
   LCase   _ alts      -> S.unions $ map altExps alts
   UnboxedSum _ _ _ e' -> expExps e'
-  _                   -> error "Unknown AST"
+  _                   -> error $ "Unknown AST: " <> show e
 
 bindsExps :: Maybe (Binds SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
 bindsExps Nothing                    = S.empty

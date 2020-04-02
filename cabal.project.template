@@ -1,9 +1,3 @@
--- This file is generated from $KONTRAKCJA_ROOT/cabal.project.template
--- using the workspace script $KONTRAKCJA_ROOT/workspace/scripts/generate-cabal-project.sh.
--- If you want to make changes, edit cabal.project.template and
--- rerun generate-cabal-project.sh to apply the changes to all cabal.project files.
-
-packages: . Shake
 write-ghc-environment-files: never
 
 allow-newer: semigroups

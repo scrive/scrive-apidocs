@@ -587,7 +587,7 @@ Library
                , HStringTemplate
                , HTTP
                , QuickCheck
-               , aeson >= 1.4.4.0
+               , aeson
                , amazonka
                , amazonka-core
                , amazonka-kinesis
@@ -600,8 +600,8 @@ Library
                , case-insensitive
                , cond
                , conduit
-               , consumers >= 2.1.0.0
-               , containers >= 0.5 && < 0.7
+               , consumers
+               , containers
                , crypto-rng
                , cryptonite
                , cryptostore
@@ -692,7 +692,7 @@ Library
                , xml-conduit
                , xml-conduit-writer
                , xml-types
-               , yaml >= 0.11.2.0
+               , yaml
                , zip-archive
 
   Other-Extensions: TemplateHaskell
@@ -1404,7 +1404,7 @@ Test-suite kontrakcja-test
                , json
                , kontrakcja-templates
                , lifted-base
-               , log-base >= 0.7
+               , log-base
                , monad-control
                , monad-loops
                , mtl
@@ -1501,6 +1501,7 @@ Executable localization
                , template-haskell
                , text
                , time
+               , transformers
 
 Executable routinglist
   import: common-stanza
