@@ -35,7 +35,7 @@ items:
     hrel:
       type: number
       description: |
-        Height of placement, as proportion of total width, from 0 to 1.
+        Height of placement, as proportion of total height, from 0 to 1.
     fsrel:
       type: number
       description: |
