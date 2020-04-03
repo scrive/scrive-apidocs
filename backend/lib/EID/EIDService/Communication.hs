@@ -333,14 +333,14 @@ checkFITupasTransactionWithEIDService conf tid = localData [identifier tid] $ do
                 mbank <- fromJSValueField "bank"
                 mpid  <- fromJSValueField "pid"
                 mssn  <- fromJSValueField "ssn"
-                case (mname, mdob, mdn, mpid) of
-                  (Just name, Just dob, Just dn, Just pid) -> return $ Just
+                case (mname, mdob, mdn) of
+                  (Just name, Just dob, Just dn) -> return $ Just
                     CompleteFITupasEIDServiceTransactionData
                       { eidtupasName              = name
                       , eidtupasBirthDate         = dob
                       , eidtupasDistinguishedName = dn
                       , eidtupasBank              = mbank
-                      , eidtupasPid               = pid
+                      , eidtupasPid               = mpid
                       , eidtupasSSN               = mssn
                       }
                   _ -> return Nothing

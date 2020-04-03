@@ -229,7 +229,7 @@ data CompleteFITupasEIDServiceTransactionData = CompleteFITupasEIDServiceTransac
   , eidtupasBirthDate :: !Text
   , eidtupasDistinguishedName :: !Text  -- may contain the personal number
   , eidtupasBank :: !(Maybe Text)  -- absent when using Mobile ID
-  , eidtupasPid :: !Text
+  , eidtupasPid :: !(Maybe Text)
   -- ^ 'A fixed identifier for the user set in the E-Ident / FTN service.' (from
   -- the Nets documentation)
   , eidtupasSSN :: !(Maybe Text)  -- seems to be absent for 'legal persons'
