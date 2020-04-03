@@ -1,10 +1,12 @@
 module Session.Model (
     getNonTempSessionID
+  , getNonTempSessionIDWithTimeout
   , getCurrentSession
   , updateSession
   , getUserFromSession
   , getPadUserFromSession
   , getSession
+  , getDocumentSessionTimeoutSecs
   , startNewSessionWithUser
   , terminateAllUserSessionsExceptCurrent
   , TerminateAllButOneUserSessions(..)
@@ -26,6 +28,8 @@ import Happstack.Server hiding (Session)
 import Log
 
 import DB
+import Doc.Model.Query (GetDocumentAuthorIDsBySignatoryLinkIDs(..))
+import Doc.SignatoryLinkID (SignatoryLinkID)
 import KontraMonad
 import Log.Identifier
 import MagicHash
@@ -42,22 +46,56 @@ import Utils.HTTP
 -- Get session timeout from a user ID, checking for custom
 -- timeout set in the user's group
 getSessionTimeoutSecs :: forall  m . (MonadDB m, MonadThrow m) => UserID -> m Int32
-getSessionTimeoutSecs userId = do
-  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID userId
-  let mSessionTimeout = ugwpSettings ugwp ^. #sessionTimeoutSecs
-  return $ fromMaybe defaultSessionTimeoutSecs mSessionTimeout
+getSessionTimeoutSecs userId =
+  fmap (fromMaybe defaultSessionTimeoutSecs) (getMaybeSessionTimeoutSecs userId)
 
--- Get the session expiry delay from a user associated with a
--- session, either the max value or the user's group session
--- timeout if that is less than the max value.
+-- | Get the session timeout from the user's user group settings
+getMaybeSessionTimeoutSecs
+  :: forall  m . (MonadDB m, MonadThrow m) => UserID -> m (Maybe Int32)
+getMaybeSessionTimeoutSecs userId = do
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID userId
+  return $ ugwpSettings ugwp ^. #sessionTimeoutSecs
+
+-- | Get the document session timeout - default one or custom if present
+getDocumentSessionTimeoutSecs :: (MonadDB m, MonadThrow m) => UserID -> m Int32
+getDocumentSessionTimeoutSecs userId =
+  fmap (fromMaybe defaultSessionTimeoutSecs) (getMaybeDocumentSessionTimeoutSecs userId)
+
+-- | Get the document session timeout from the user group settings of the document author.
+getMaybeDocumentSessionTimeoutSecs
+  :: (MonadDB m, MonadThrow m) => UserID -> m (Maybe Int32)
+getMaybeDocumentSessionTimeoutSecs userId = do
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID userId
+  return $ ugwpSettings ugwp ^. #documentSessionTimeoutSecs
+
+-- | Get the session expiry delay used for extending the session's expiry date.
+-- It's the user's custom session timeout or the document session timeout (whichever is longer).
+-- Defaults to maxSessionExpirationDelaySecs if those custom values are not set.
 getSessionExpirationDelaySecs
-  :: forall  m . (MonadDB m, MonadThrow m) => Session -> m Int32
-getSessionExpirationDelaySecs session =
-  case (sesUserID session) `mplus` (sesPadUserID session) of
-    Just userId -> do
-      timeoutSecs <- getSessionTimeoutSecs userId
-      return $ min timeoutSecs maxSessionExpirationDelaySecs
-    Nothing -> return maxSessionExpirationDelaySecs
+  :: forall  m . (MonadDB m, MonadLog m, MonadThrow m) => Session -> m Int32
+getSessionExpirationDelaySecs session = do
+  mUserTimeout <- case (sesUserID session) `mplus` (sesPadUserID session) of
+    Nothing     -> return Nothing
+    Just userId -> getMaybeSessionTimeoutSecs userId
+
+  docTimeouts <- do
+    slids     <- dbQuery (GetSessionSignatoryLinkIDs $ sesID session)
+    authorIds <- dbQuery (GetDocumentAuthorIDsBySignatoryLinkIDs slids)
+    mTimeouts <- mapM getMaybeDocumentSessionTimeoutSecs authorIds
+    return $ catMaybes mTimeouts
+
+  let combinedTimeouts =
+        map (min maxSessionExpirationDelaySecs) $ maybeToList mUserTimeout ++ docTimeouts
+
+  -- Why multiple timeouts?
+  -- So we might have a case where a scrive user login session also includes a document token ...
+  -- or several document tokens. Or a situation where non-scrive user session includes multiple
+  -- document tokens. Now which session timeout should we choose?
+  -- We decided that we should choose the longest session timeout.
+  return $ case safeMax combinedTimeouts of
+    Nothing      -> maxSessionExpirationDelaySecs
+    Just timeout -> timeout
+  where safeMax = listToMaybe . reverse . sort
 
 -- Get the session expiry time for a user's new session relative
 -- to the current time
@@ -81,7 +119,15 @@ getDefaultSessionExpiry = do
 getNonTempSessionID
   :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m)
   => m SessionID
-getNonTempSessionID = do
+getNonTempSessionID = getNonTempSessionIDWithTimeout defaultSessionTimeoutSecs
+
+-- | A version of getNonTempSessionID that allows setting a session expiry timeout.
+--   Added to support the custom document session feature (CORE-1975).
+getNonTempSessionIDWithTimeout
+  :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m)
+  => Int32
+  -> m SessionID
+getNonTempSessionIDWithTimeout timeoutSecs = do
   sid <- view #sessionID <$> getContext
   if sid == SessionID.tempSessionID
     then do
@@ -95,7 +141,7 @@ getNonTempSessionID = do
       sesCSRFToken <- random
       now          <- currentTime
       sesDomain    <- currentDomain
-      let sesExpires = secondsAfter defaultSessionTimeoutSecs now
+      let sesExpires = secondsAfter timeoutSecs now
 
       update . CreateSession $ Session
         { sesID        = SessionID.tempSessionID
@@ -263,7 +309,7 @@ getPadUserFromSession Session { sesPadUserID } = case sesPadUserID of
   Nothing  -> return Nothing
 
 getSession
-  :: (MonadDB m, MonadThrow m, MonadTime m)
+  :: (MonadDB m, MonadLog m, MonadThrow m, MonadTime m)
   => SessionID
   -> MagicHash
   -> Text
@@ -405,6 +451,15 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryLoginToken MagicHash
       sqlSet "user_id"         uid
       sqlSet "expiration_time" expiryTime
     return hash
+
+data GetSessionSignatoryLinkIDs = GetSessionSignatoryLinkIDs SessionID
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m GetSessionSignatoryLinkIDs [SignatoryLinkID] where
+  query (GetSessionSignatoryLinkIDs sid) = do
+    runQuery_ . sqlSelect "document_session_tokens" $ do
+      sqlResult "document_session_tokens.signatory_link_id"
+      sqlWhereEq "document_session_tokens.session_id" sid
+    fetchMany runIdentity
 
 -- | We allow for at most 51 sessions with the same user_id, so if there
 -- are more, just delete the oldest ones. Note: only 50 sessions are left

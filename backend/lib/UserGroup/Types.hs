@@ -238,22 +238,23 @@ ugwcToList ugwcs =
 
 defaultUserGroupSettings :: UserGroupSettings
 defaultUserGroupSettings = UserGroupSettings
-  { ipAddressMaskList       = []
-  , dataRetentionPolicy     = defaultDataRetentionPolicy
-  , cgiDisplayName          = Nothing
-  , cgiServiceID            = Nothing
-  , smsProvider             = SMSDefault
-  , padAppMode              = ListView
-  , padEarchiveEnabled      = True
-  , legalText               = False
-  , requireBPIDForNewDoc    = False
-  , sendTimeoutNotification = False
-  , useFolderListCalls      = False
-  , totpIsMandatory         = False
-  , sessionTimeoutSecs      = Nothing
-  , portalUrl               = Nothing
-  , eidServiceToken         = Nothing
-  , sealingMethod           = Guardtime
+  { ipAddressMaskList          = []
+  , dataRetentionPolicy        = defaultDataRetentionPolicy
+  , cgiDisplayName             = Nothing
+  , cgiServiceID               = Nothing
+  , smsProvider                = SMSDefault
+  , padAppMode                 = ListView
+  , padEarchiveEnabled         = True
+  , legalText                  = False
+  , requireBPIDForNewDoc       = False
+  , sendTimeoutNotification    = False
+  , useFolderListCalls         = False
+  , totpIsMandatory            = False
+  , sessionTimeoutSecs         = Nothing
+  , portalUrl                  = Nothing
+  , eidServiceToken            = Nothing
+  , sealingMethod              = Guardtime
+  , documentSessionTimeoutSecs = Nothing
   }
 
 -- UI

@@ -35,6 +35,7 @@ var Company = exports.Company = Backbone.Model.extend({
       companyinheritedaddress: null,
       companyinheritedsettings: null,
       companysessiontimeout: null,
+      companydocumentsessiontimeout: null,
       companyinternaltags: [],
       companyexternaltags: []
   },
@@ -134,6 +135,9 @@ var Company = exports.Company = Backbone.Model.extend({
   sessiontimeout: function() {
      return this.get("sessiontimeout");
   },
+  documentsessiontimeout: function() {
+     return this.get("documentsessiontimeout");
+  },
   portalurl: function() {
      return this.get("portalurl");
   },
@@ -189,6 +193,7 @@ var Company = exports.Company = Backbone.Model.extend({
       sendtimeoutnotification: args.sendtimeoutnotification,
       totpismandatory: args.totpismandatory,
       sessiontimeout: args.sessiontimeout,
+      documentsessiontimeout: args.documentsessiontimeout,
       portalurl: args.portalurl,
       eidservicetoken: args.eidservicetoken,
       // do not set inherited, when the inherited values are not provided

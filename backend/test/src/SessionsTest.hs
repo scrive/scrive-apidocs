@@ -5,11 +5,15 @@ import Data.Time
 import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
+import qualified Control.Exception.Lifted as E
 
 import Context
 import DB hiding (query, update)
+import Doc.DocControl
 import Doc.DocStateData
+import Doc.Model.Update
 import Doc.Tokens.Model
+import Doc.Types.SignatoryAccessToken
 import EID.CGI.GRP.Transaction.Model
 import KontraMonad
 import MinutesTime
@@ -29,21 +33,22 @@ testCookieDomain = "some.domain.com"
 sessionsTests :: TestEnvSt -> Test
 sessionsTests env = testGroup
   "Sessions"
-  [ testThat "can create new session"       env testNewSessionInsertion
-  , testThat "can update existing session"  env testSessionUpdate
-  , testThat "can insert document ticket"   env testDocumentTicketInsertion
-  , testThat "can reinsert document ticket" env testDocumentTicketReinsertion
-  , testThat "can add eleg transaction"     env testElegTransactionInsertion
-  , testThat "can update eleg transaction"  env testElegTransactionUpdate
-  , testThat "test default session timeout" env testDefaultSessionTimeout
+  [ testThat "can create new session"             env testNewSessionInsertion
+  , testThat "can update existing session"        env testSessionUpdate
+  , testThat "can insert document ticket"         env testDocumentTicketInsertion
+  , testThat "can reinsert document ticket"       env testDocumentTicketReinsertion
+  , testThat "can add eleg transaction"           env testElegTransactionInsertion
+  , testThat "can update eleg transaction"        env testElegTransactionUpdate
+  , testThat "test default session timeout"       env testDefaultSessionTimeout
+  , testThat "test default session timeout delay" env testDefaultSessionTimeoutDelay
   , testThat "can set custom session timeout in group settings"
              env
              testCustomSessionTimeout
-  , testThat "test default session timeout delay" env testDefaultSessionTimeoutDelay
-  , testThat "test custom session timeout delay"  env testCustomSessionTimeoutDelay
+  , testThat "test custom session timeout delay" env testCustomSessionTimeoutDelay
   , testThat "test custom session timeout inheritance"
              env
              testCustomSessionTimeoutInheritance
+  , testThat "document session timeout is working" env testDocumentSessionTimeout
   ]
 
 testNewSessionInsertion :: TestEnv ()
@@ -276,6 +281,79 @@ testCustomSessionTimeoutInheritance = do
     modifyTestTime $ minutesAfter 1 . daysAfter 1
     mSession4 <- getSession (sesID session1) (sesToken session1) testCookieDomain
     assertBool "session should become invalid after ~7 days" $ isNothing mSession4
+
+testDocumentSessionTimeout :: TestEnv ()
+testDocumentSessionTimeout = do
+  (user, userGroup) <- createTestUser
+  initGroupSettings <- assertJustAndExtract $ userGroup ^. #settings
+
+  assertEqual "initial document session timeout should be nothing"
+              (initGroupSettings ^. #documentSessionTimeoutSecs)
+              Nothing
+
+  -- Test 1 (user specified a custom document session timeout)
+  let testTimeout1 = 10 * 60 -- 10 minutes
+      groupSettings1 =
+        set #documentSessionTimeoutSecs (Just testTimeout1) initGroupSettings
+  do
+    setTestTime =<< currentTime
+    dbUpdate $ UserGroupUpdateSettings (userGroup ^. #id) (Just groupSettings1)
+
+    testSessionInSignView user $ \session -> do
+      modifyTestTime (secondsAfter 10)
+
+      resSession <- getSession (sesID session) (sesToken session) testCookieDomain
+      assertBool "session should be valid after 10 seconds" $ isJust resSession
+
+      modifyTestTime (secondsAfter 10 . minutesAfter 10)
+      resSession2 <- getSession (sesID session) (sesToken session) testCookieDomain
+      assertBool "session should be invalid after 10 minutes and 10 seconds"
+        $ isNothing resSession2
+
+  -- Test 2 (user did not specify a custom session timeout)
+  do
+    setTestTime =<< currentTime
+    dbUpdate $ UserGroupUpdateSettings (userGroup ^. #id) (Just initGroupSettings)
+
+    testSessionInSignView user $ \session -> do
+      -- Don't test closer than 2 hours as it will extend the expiry
+      modifyTestTime (secondsAfter $ defaultSessionTimeoutSecs - 3 * 60 * 60)
+
+      resSession <- getSession (sesID session) (sesToken session) testCookieDomain
+      assertBool "session should be valid before the end of the default timeout"
+        $ isJust resSession
+
+      modifyTestTime (secondsAfter $ 3 * 60 * 60 + 1)
+      resSession2 <- getSession (sesID session) (sesToken session) testCookieDomain
+      assertBool "session should be invalid after the default timeout"
+        $ isNothing resSession2
+
+  where
+    testSessionInSignView :: User -> (Session -> TestEnv ()) -> TestEnv ()
+    testSessionInSignView author testAction = do
+      ctx <- mkContext defaultLang
+      doc <- addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
+                                                   , rdaStatuses = OneOf [Pending]
+                                                   }
+      let did       = documentid doc
+          signatory = head $ documentsignatorylinks doc
+          slid      = signatorylinkid signatory
+
+      do
+        req  <- mkRequestWithHeaders GET [] [("host", [testCookieDomain])]
+        mh   <- dbUpdate $ NewSignatoryAccessToken slid SignatoryAccessTokenForAPI Nothing
+
+        eRes <- E.try $ runTestKontra req ctx $ handleSignShowSaveMagicHash did slid mh
+
+        case eRes of
+          Right (_, ctx') -> do
+            mSession <- dbQuery $ GetSession (view #sessionID ctx')
+            case mSession of
+              Just session -> testAction session
+              Nothing      -> assertFailure "Session not found!"
+          Left err ->
+            assertFailure $ "Error when running handleSignShowSaveMagicHash: " <> show
+              (err :: E.SomeException)
 
 testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = replicateM_ 10 $ do

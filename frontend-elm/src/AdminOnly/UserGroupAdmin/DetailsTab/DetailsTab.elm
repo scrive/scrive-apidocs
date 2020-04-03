@@ -548,6 +548,11 @@ viewUserGroup model ug address settings =
                 (M.withDefault "" <| M.map String.fromInt settings.sessionTimeout)
                 (SetIntField "sessionTimeout" (Just <| Range 300 2592000)) -- 5 mins to 30 days
                 [ readonly ug.settingsIsInherited ]
+            , formIntRowM "Document session timeout"
+                "A session timeout (in seconds) specific to document views. Leave this field empty to use the default session timeout."
+                (M.withDefault "" <| M.map String.fromInt settings.documentSessionTimeout)
+                (SetIntField "documentSessionTimeout" (Just <| Range 300 2592000)) -- 5 mins to 30 days
+                [ readonly ug.settingsIsInherited ]
             , formTextRowM "Portal URL"
                 ""
                 (M.withDefault "" settings.portalUrl)

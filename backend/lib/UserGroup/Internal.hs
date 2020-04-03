@@ -204,22 +204,23 @@ instance CompositeFromSQL UserGroupInvoicing where
 ----------------------------------------
 
 data UserGroupSettings = UserGroupSettings
-  { ipAddressMaskList         :: ![IPAddressWithMask]
-  , dataRetentionPolicy       :: !DataRetentionPolicy
-  , cgiDisplayName            :: !(Maybe Text)
-  , cgiServiceID              :: !(Maybe Text)
-  , smsProvider               :: !SMSProvider
-  , padAppMode                :: !PadAppMode
-  , padEarchiveEnabled        :: !Bool
-  , legalText                 :: !Bool
-  , requireBPIDForNewDoc      :: !Bool
-  , sendTimeoutNotification   :: !Bool
-  , useFolderListCalls        :: !Bool
-  , totpIsMandatory           :: !Bool
-  , sessionTimeoutSecs        :: !(Maybe Int32)
-  , portalUrl                 :: !(Maybe Text)
-  , eidServiceToken           :: !(Maybe Text)
-  , sealingMethod             :: SealingMethod
+  { ipAddressMaskList          :: ![IPAddressWithMask]
+  , dataRetentionPolicy        :: !DataRetentionPolicy
+  , cgiDisplayName             :: !(Maybe Text)
+  , cgiServiceID               :: !(Maybe Text)
+  , smsProvider                :: !SMSProvider
+  , padAppMode                 :: !PadAppMode
+  , padEarchiveEnabled         :: !Bool
+  , legalText                  :: !Bool
+  , requireBPIDForNewDoc       :: !Bool
+  , sendTimeoutNotification    :: !Bool
+  , useFolderListCalls         :: !Bool
+  , totpIsMandatory            :: !Bool
+  , sessionTimeoutSecs         :: !(Maybe Int32)
+  , portalUrl                  :: !(Maybe Text)
+  , eidServiceToken            :: !(Maybe Text)
+  , sealingMethod              :: SealingMethod
+  , documentSessionTimeoutSecs :: !(Maybe Int32)
   } deriving (Show, Eq)
 
 type instance CompositeRow UserGroupSettings
@@ -245,13 +246,14 @@ type instance CompositeRow UserGroupSettings
     , Maybe Text
     , Maybe Text
     , SealingMethod
+    , Maybe Int32
     )
 
 instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = I.DataRetentionPolicy { .. }

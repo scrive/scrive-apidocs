@@ -250,4 +250,6 @@ kontraMigrations =
   , addSMSInvitationAndConfirmationTextToDocuments
   , featureFlagsAddCustomSMSTexts
   , featureFlagsAddFIAuthToSign
+  , userGroupSettingsAddDocumentSessionTimeout
+  , userGroupSettingsRemoveOldComposites
   ]

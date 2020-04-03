@@ -190,6 +190,9 @@ setIntField name value ug =
                 "sessionTimeout" ->
                     { s | sessionTimeout = value }
 
+                "documentSessionTimeout" ->
+                    { s | documentSessionTimeout = value }
+
                 _ ->
                     s
 
@@ -247,6 +250,7 @@ type alias Settings =
     , sendTimeoutNotification : Bool
     , twoFAMandatory : Bool
     , sessionTimeout : Maybe Int
+    , documentSessionTimeout : Maybe Int
     , portalUrl : Maybe String
     , eidServiceToken : Maybe String
     }
@@ -271,6 +275,7 @@ settingsDecoder =
         |> DP.required "sendtimeoutnotification" JD.bool
         |> DP.required "totpismandatory" JD.bool
         |> DP.required "sessiontimeout" (JD.int |> JD.nullable)
+        |> DP.required "documentsessiontimeout" (JD.int |> JD.nullable)
         |> DP.required "portalurl" (JD.string |> JD.nullable)
         |> DP.required "eidservicetoken" (JD.string |> JD.nullable)
 
@@ -449,6 +454,7 @@ formValuesSettings settings =
     , ( "companysendtimeoutnotification", boolToJson settings.sendTimeoutNotification )
     , ( "companytotpismandatory", boolToJson settings.twoFAMandatory )
     , ( "companysessiontimeout", fromIntWithEmpty settings.sessionTimeout )
+    , ( "companydocumentsessiontimeout", fromIntWithEmpty settings.documentSessionTimeout )
     , ( "companyportalurl", M.withDefault "" settings.portalUrl )
     , ( "companyeidservicetoken", M.withDefault "" settings.eidServiceToken )
     ]

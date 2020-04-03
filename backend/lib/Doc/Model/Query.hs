@@ -19,6 +19,7 @@ module Doc.Model.Query
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentIDBySignatoryLinkIDWithoutAnyChecks(..)
   , GetDocumentByDocumentIDAndShareableLinkHash(..)
+  , GetDocumentAuthorIDsBySignatoryLinkIDs(..)
   , CheckIfMagicHashIsValid(..)
   , GetDocumentsByAuthor(..)
   , GetSignatoryScreenshots(..)
@@ -362,6 +363,17 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDAndSharea
       sqlWhereEq "shareable_link_hash" mh
       sqlWhereDocumentWasNotPurged
       sqlWhereAnySignatoryLinkNotReallyDeleted
+
+data GetDocumentAuthorIDsBySignatoryLinkIDs = GetDocumentAuthorIDsBySignatoryLinkIDs [SignatoryLinkID]
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAuthorIDsBySignatoryLinkIDs [UserID] where
+  query (GetDocumentAuthorIDsBySignatoryLinkIDs slids) = do
+    runQuery_ . sqlSelect "documents" $ do
+      sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+      sqlResult "documents.author_user_id"
+      sqlWhereIn "signatory_links.id" slids
+      sqlWhereDocumentWasNotPurged
+      sqlWhereDocumentIsNotReallyDeleted
+    fetchMany runIdentity
 
 -- | GetDocuments is central switch for documents list queries.
 --

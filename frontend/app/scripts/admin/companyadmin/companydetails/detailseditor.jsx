@@ -65,6 +65,7 @@ var settingsPropTypes = React.PropTypes.shape({
   sendtimeoutnotification: React.PropTypes.bool.isRequired,
   totpismandatory: React.PropTypes.bool.isRequired,
   sessiontimeout: React.PropTypes.number,
+  documentsessiontimeout: React.PropTypes.number,
   portalurl: React.PropTypes.text,
   eidservicetoken: React.PropTypes.text
 });
@@ -102,6 +103,7 @@ var DetailsEditorView = React.createClass({
     sendtimeoutnotification: React.PropTypes.bool.isRequired,
     totpismandatory: React.PropTypes.bool.isRequired,
     sessiontimeout: React.PropTypes.number,
+    documentsessiontimeout: React.PropTypes.number,
     portalurl: React.PropTypes.text,
     eidservicetoken: React.PropTypes.text,
     addressIsInherited: React.PropTypes.bool.isRequired,
@@ -182,6 +184,9 @@ var DetailsEditorView = React.createClass({
 
   onSessiontimeout: function (event) {
     this.props.onFieldChange("sessiontimeout", event.target.value);
+  },
+  onDocumentSessionTimeout: function (event) {
+    this.props.onFieldChange("documentsessiontimeout", event.target.value);
   },
 
   onSmsproviderChange: function (newSmsprovider) {
@@ -599,7 +604,7 @@ var DetailsEditorView = React.createClass({
             <td>If enabled, 2FA is mandatory/enforced for all users. 2FA can also be enforced for a single user.</td>
           </tr>
           <tr>
-            <td><label>Session Timeout</label></td>
+            <td><label>Session timeout</label></td>
             <td>
               <input
                 name="sessiontimeout"
@@ -615,6 +620,24 @@ var DetailsEditorView = React.createClass({
               If set, users cookie session expiry is set based on the provided seconds.
               Valid values are between 5 minutes to 30 days.
               Leave field empty to use the default session timeout.
+            </td>
+          </tr>
+          <tr>
+            <td><label>Document session timeout</label></td>
+            <td>
+              <input
+                name="documentsessiontimeout"
+                type="text"
+                value={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.documentsessiontimeout
+                      : this.props.documentsessiontimeout}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onDocumentSessionTimeout}
+              />
+            </td>
+            <td>
+              A session timeout (in seconds) specific to document views.
+              Leave this field empty to use the default session timeout.
             </td>
           </tr>
           <tr>

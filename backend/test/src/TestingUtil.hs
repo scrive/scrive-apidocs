@@ -322,13 +322,14 @@ instance Arbitrary UserGroupSettings where
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
-      <*> pure False -- we must explicitly use folder list calls
+      <*> pure False   -- we must explicitly use folder list calls
       <*> arbitrary
-      <*> pure False -- do not enforce 2FA in tests
+      <*> pure False   -- do not enforce 2FA in tests
       <*> pure Nothing -- do not set custom session expiry
       <*> pure Nothing -- no portal url
       <*> pure Nothing -- no custom eidService token
       <*> arbitrary
+      <*> pure Nothing -- do not set a custom document session expiry
 
 instance Arbitrary UserGroupAddress where
   arbitrary =

@@ -214,6 +214,7 @@ companySettingsJson ugs = do
   value "portalurl" $ ugs ^. #portalUrl
   value "eidservicetoken" $ ugs ^. #eidServiceToken
   value "sealingmethod" . sealingMethodText $ ugs ^. #sealingMethod
+  value "documentsessiontimeout" $ ugs ^. #documentSessionTimeoutSecs
 
 userStatsToJSON
   :: (UTCTime -> Text)

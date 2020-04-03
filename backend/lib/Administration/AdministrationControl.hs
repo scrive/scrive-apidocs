@@ -572,6 +572,7 @@ getUserGroupSettingsChange = do
   mcompanyeidservicetoken <- fmap emptyToNothing <$> getField "companyeidservicetoken"
   mcompanysealingmethod <-
     fmap sealingMethodFromText <$> getField' $ "companysealingmethod"
+  mcompanydocumentsessiontimeout <- getSessionTimeoutField "companydocumentsessiontimeout"
 
   return
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
@@ -609,6 +610,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #portalUrl)                     mcompanyportalurl
     . maybe identity (set #eidServiceToken)               mcompanyeidservicetoken
     . maybe identity (set #sealingMethod)                 mcompanysealingmethod
+    . maybe identity (set #documentSessionTimeoutSecs)    mcompanydocumentsessiontimeout
 
 
   where

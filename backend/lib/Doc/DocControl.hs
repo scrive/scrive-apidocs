@@ -303,8 +303,15 @@ handleSignShowSaveMagicHash did slid mh =
                               respondLinkInvalid
                             else
                               do
-                                sid <- getNonTempSessionID
+                                let authorId doc =
+                                      fromJust $ getAuthorSigLink doc >>= maybesignatory
+                                sid <-
+                                  theDocument
+                                  >>= (return . authorId)
+                                  >>= getDocumentSessionTimeoutSecs
+                                  >>= getNonTempSessionIDWithTimeout
                                 dbUpdate $ AddDocumentSession sid slid
+
                                 -- Redirect to propper page
                                 sendRedirect $ LinkSignDocNoMagicHash did slid
       )
