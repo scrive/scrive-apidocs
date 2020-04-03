@@ -473,6 +473,12 @@
                     <a href="#set-data-retention-policies" class="toc-h2 toc-link" data-title="set-data-retention-policies">Set data retention policies</a>
                   </li>
                   <li>
+                    <a href="#get-tags" class="toc-h2 toc-link" data-title="get-tags">Get tags</a>
+                  </li>
+                  <li>
+                    <a href="#update-tags" class="toc-h2 toc-link" data-title="update-tags">Update tags</a>
+                  </li>
+                  <li>
                     <a href="#get-usage-stats-for-days" class="toc-h2 toc-link" data-title="get-usage-stats-for-days">Get usage stats for days</a>
                   </li>
                   <li>
@@ -559,7 +565,7 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-69" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#responses-71" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -666,7 +672,7 @@
                     <a href="#usergroupcontactdetailswithinheritable" class="toc-h2 toc-link" data-title="usergroupcontactdetailswithinheritable">UserGroupContactDetailsWithInheritable</a>
                   </li>
                   <li>
-                    <a href="#tag" class="toc-h2 toc-link" data-title="tag">Tag</a>
+                    <a href="#tags" class="toc-h2 toc-link" data-title="tags">Tags</a>
                   </li>
                   <li>
                     <a href="#accessrole" class="toc-h2 toc-link" data-title="accessrole">AccessRole</a>
@@ -740,6 +746,18 @@ This is the only officially supported encoding for our API.
 <tr>
 <td>2020-04-02</td>
 <td>Updated endpoint list to include missing ip-addresses.</td>
+</tr>
+<tr>
+<td>2020-03-04</td>
+<td>Add user tags API.</td>
+</tr>
+<tr>
+<td>2020-02-21</td>
+<td>Change the format of user group tags.</td>
+</tr>
+<tr>
+<td>2020-01-28</td>
+<td>Add support for tags in the user group API.</td>
 </tr>
 <tr>
 <td>2020-02-05</td>
@@ -2005,6 +2023,22 @@ Scrive eSign system returning errors.</p>
 <a href="#apiv2dataretentionpolicyset">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/dataretentionpolicy/set</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2usertags">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/usertags</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2usertagsupdate">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/usertags/update</code>
 </strong>
 </a>
 </p>
@@ -3839,6 +3873,48 @@ else triggers QR code generation</p>
 </td> </tr>
 </table>
 
+<div><a id="apiv2usertags"></a></div>
+<h2 id='get-tags'>Get tags</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/usertags</code>
+</strong>
+</p>
+
+<p>Returns tags attached to the user</p>
+<h3 id='responses-46'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p><strong>User defined set of name/value pairs.</strong></p>
+<p>Each tag must have <code>{&quot;name&quot;: &quot;some-name&quot;, &quot;value&quot;: &quot;some-value&quot;}</code> format.
+In the responses value is always a string.
+In the requests you can also provide <code>null</code> value to delete a tag.
+Other value types lead to 400 Bad Request response.</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2usertagsupdate"></a></div>
+<h2 id='update-tags'>Update tags</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/usertags/update</code>
+</strong>
+</p>
+
+<p>Updates tags attached to the user.</p>
+<h3 id='parameters-41'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>tags</code><br/><em>required</em></p><p><em>default:</em> <code></code></p></td><td><p>Must be of type <a href="#tags"><code>Tags</code></a></p>
+</td><td><p>array<br><em>application/json</em></p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-47'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>The tags have been updated. The body is empty.</p>
+</td> </tr>
+</table>
+
 <div><a id="apiv2usagestatsdays"></a></div>
 <h2 id='get-usage-stats-for-days'>Get usage stats for days</h2>
 <p>
@@ -3848,13 +3924,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>Retrieve usage statistics for the last 30 days</p>
-<h3 id='parameters-41'>Parameters</h3>
+<h3 id='parameters-42'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-46'>Responses</h3>
+<h3 id='responses-48'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
@@ -3871,13 +3947,13 @@ count of documents on different stages of the process</p>
 </p>
 
 <p>Retrieve usage statistics for the last 6 months</p>
-<h3 id='parameters-42'>Parameters</h3>
+<h3 id='parameters-43'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-47'>Responses</h3>
+<h3 id='responses-49'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
@@ -3905,7 +3981,7 @@ to them.</p>
 
 <p>If a user account that has accepted the <em>Terms of Service</em> already exists,
 no signup request will be created.</p>
-<h3 id='parameters-43'>Parameters</h3>
+<h3 id='parameters-44'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>Has to be a valid email address format.</p>
@@ -3923,7 +3999,7 @@ no signup request will be created.</p>
 <tr><td><p><code>lang</code><br/><em>optional</em></p></td><td><p>Has to be a valid lang code <a href="#language-code"><code>LanguageCode</code></a></p>
 </td><td><p>string</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-48'>Responses</h3>
+<h3 id='responses-50'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON response, will be one of:</p>
@@ -3979,7 +4055,7 @@ the requisite permissions upon the parent.</p>
 <p>A full User Group JSON response is returned which displays the state <em>after</em>
 the create operation has been performed. Performing <code>/update</code> and then
 using the <code>GET</code> endpoint should produce the same output both times.</p>
-<h3 id='parameters-44'>Parameters</h3>
+<h3 id='parameters-45'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code>, <code>parent_id</code>, and <code>tags</code> of the User
@@ -3989,7 +4065,7 @@ Group to be created.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-49'>Responses</h3>
+<h3 id='responses-51'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
@@ -4158,7 +4234,7 @@ append <code>?include-inheritable</code> to the URL when making the call. This w
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
-<h3 id='parameters-45'>Parameters</h3>
+<h3 id='parameters-46'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to view</p>
@@ -4167,7 +4243,7 @@ inherits.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-50'>Responses</h3>
+<h3 id='responses-52'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
@@ -4248,7 +4324,7 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 
 <p><strong>Important Note</strong>: <em>You cannot move usergroups by updating the <code>children</code>
 field, it must be done via <code>parent_id</code></em>.</p>
-<h3 id='parameters-46'>Parameters</h3>
+<h3 id='parameters-47'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
@@ -4260,7 +4336,7 @@ Group.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-51'>Responses</h3>
+<h3 id='responses-53'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
@@ -4293,13 +4369,13 @@ exists with this ID or that you do not have permission to update it)</p>
 Groups can only deleted by internal Scrive admins. We also do not support
 recursive deletion. If this is required, it can be implemented client-side
 by simply working up the tree, deleting the leaves.</p>
-<h3 id='parameters-47'>Parameters</h3>
+<h3 id='parameters-48'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
 </td><td><p>integer</p></td><td>path</td></tr>
 </table>
-<h3 id='responses-52'>Responses</h3>
+<h3 id='responses-54'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>Simple JSON showing that a User Group with a given ID has been deleted.</p>
@@ -4428,7 +4504,7 @@ append <code>?include-inheritable</code> to the URL when making the call. This w
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
-<h3 id='parameters-48'>Parameters</h3>
+<h3 id='parameters-49'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to view</p>
@@ -4437,7 +4513,7 @@ inherits.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-53'>Responses</h3>
+<h3 id='responses-55'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Contact Details.</p>
@@ -4492,7 +4568,7 @@ full) update applied to it.</p>
 
 <p>The User Group from which the contact_details were previously inherited will
 be unaffected by the operation.</p>
-<h3 id='parameters-49'>Parameters</h3>
+<h3 id='parameters-50'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to update</p>
@@ -4504,7 +4580,7 @@ subtrees (currently only <code>data_retention_policy</code> is exposed by the AP
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-54'>Responses</h3>
+<h3 id='responses-56'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Contact Details.</p>
@@ -4536,7 +4612,7 @@ in no operation being performed. Also, attempting to delete the
 contact_details object of a root User Group will result in an error.</p>
 
 <p>For more details on inheritance, see <a href="#view-user-group-contact-details">View User Group Contact Details</a>.</p>
-<h3 id='parameters-50'>Parameters</h3>
+<h3 id='parameters-51'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to
@@ -4546,7 +4622,7 @@ delete</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-55'>Responses</h3>
+<h3 id='responses-57'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Contact Details.</p>
@@ -4680,7 +4756,7 @@ append <code>?include-inheritable</code> to the URL when making the call. This w
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
-<h3 id='parameters-51'>Parameters</h3>
+<h3 id='parameters-52'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to view</p>
@@ -4689,7 +4765,7 @@ inherits.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-56'>Responses</h3>
+<h3 id='responses-58'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Settings.</p>
@@ -4739,7 +4815,7 @@ become the new non-inherited settings object for this User Group.</p>
 
 <p>The User Group from which the contact_details were previously inherited will
 be unaffected by the operation.</p>
-<h3 id='parameters-52'>Parameters</h3>
+<h3 id='parameters-53'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to update</p>
@@ -4751,7 +4827,7 @@ subtrees (currently only <code>data_retention_policy</code> is exposed by the AP
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-57'>Responses</h3>
+<h3 id='responses-59'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Settings.</p>
@@ -4783,7 +4859,7 @@ in no operation being performed. Also, attempting to delete the settings
 object of a root User Group will result in an error.</p>
 
 <p>For more details on inheritance, see <a href="#view-user-group-settings">View User Group Settings</a>.</p>
-<h3 id='parameters-53'>Parameters</h3>
+<h3 id='parameters-54'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to delete</p>
@@ -4792,7 +4868,7 @@ object of a root User Group will result in an error.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-58'>Responses</h3>
+<h3 id='responses-60'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Settings.</p>
@@ -4833,13 +4909,13 @@ exists with this ID or that you do not have permission to view it)</p>
 
 <p>Note that this will only display Users that are in that User Group and will
 not show the Users who are members of any descendent User Groups.</p>
-<h3 id='parameters-54'>Parameters</h3>
+<h3 id='parameters-55'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose users you wish to view</p>
 </td><td><p>integer</p></td><td>path</td></tr>
 </table>
-<h3 id='responses-59'>Responses</h3>
+<h3 id='responses-61'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>List of Users in the User Group</p>
@@ -4964,13 +5040,13 @@ exists with this ID or that you do not have permission to view it)</p>
 </span></code></pre>
 <p>This endpoint is used to view the roles which have been granted to a given
 user.</p>
-<h3 id='parameters-55'>Parameters</h3>
+<h3 id='parameters-56'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_id</code><br/><em>required</em></p></td><td><p>The ID of the User whose roles you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-60'>Responses</h3>
+<h3 id='responses-62'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON array of Access Role objects.</p>
@@ -5060,13 +5136,13 @@ set to <code>true</code> and <code>id</code> set to <code>null</code>.</p>
 <p>Explicit roles are those which have been, as the name suggests, explicitly
 granted. This was also almost done certainly via this API. Explicit roles
 have <code>is_generated</code> set to <code>false</code> and a non-<code>null</code> <code>id</code>.</p>
-<h3 id='parameters-56'>Parameters</h3>
+<h3 id='parameters-57'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-61'>Responses</h3>
+<h3 id='responses-63'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
@@ -5102,13 +5178,13 @@ role refers to.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <p>This endpoint allows you to grant a new Access Role.</p>
-<h3 id='parameters-57'>Parameters</h3>
+<h3 id='parameters-58'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role</code><br/><em>required</em></p></td><td><p>JSON object containing details of the role to be granted.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-62'>Responses</h3>
+<h3 id='responses-64'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
@@ -5134,13 +5210,13 @@ target that the proposed role refers to.</p>
 via the Access Control API&quot; as opposed to an implicit role acquired via, for
 example, User Group membership. If it has a non-<code>null</code> <code>id</code> field then it is
 an explicit role and can be deleted.</p>
-<h3 id='parameters-58'>Parameters</h3>
+<h3 id='parameters-59'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-63'>Responses</h3>
+<h3 id='responses-65'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object showing that an Access Role with the given ID has been
@@ -5181,13 +5257,13 @@ folder.</p>
 
 <p>This metadata currently consists of the folder&#39;s ID, it&#39;s parent ID (if any)
 and the name/id of its immediate children (if any).</p>
-<h3 id='parameters-59'>Parameters</h3>
+<h3 id='parameters-60'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to view</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-64'>Responses</h3>
+<h3 id='responses-66'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5231,13 +5307,13 @@ you do not include it.</p>
 <p>A full Folder JSON response is returned which displays the state after the
 create operation has been performed. Performing <code>/update</code> and then using the
 GET endpoint should produce the same output both times.</p>
-<h3 id='parameters-60'>Parameters</h3>
+<h3 id='parameters-61'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be created.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-65'>Responses</h3>
+<h3 id='responses-67'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5297,7 +5373,7 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 
 <p><strong>Important Note</strong>: <em>You cannot move Folders by updating the <code>children</code>
 field, it must be done via <code>parent_id</code></em>.</p>
-<h3 id='parameters-61'>Parameters</h3>
+<h3 id='parameters-62'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
@@ -5305,7 +5381,7 @@ field, it must be done via <code>parent_id</code></em>.</p>
 <tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be updated.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-66'>Responses</h3>
+<h3 id='responses-68'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5330,13 +5406,13 @@ Update permissions on the Folder.</p>
 can only deleted by internal Scrive admins. We also do not support recursive
 deletion. If this is required, it can be implemented client-side by simply
 working up the tree, deleting the leaves.</p>
-<h3 id='parameters-62'>Parameters</h3>
+<h3 id='parameters-63'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to delete</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-67'>Responses</h3>
+<h3 id='responses-69'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object showing that a Folder with the given ID has been
@@ -5374,13 +5450,13 @@ and show a little metadata, the document JSON for each item in <code>&quot;docum
 is structured the same as it would be for endpoints that display a given
 document. <em>(See the <a href="#document-3">Document Definition</a> documentation for
 details).</em></p>
-<h3 id='parameters-63'>Parameters</h3>
+<h3 id='parameters-64'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-68'>Responses</h3>
+<h3 id='responses-70'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object which states the number of documents in the folder and lists
@@ -5392,7 +5468,7 @@ permissions to create this Folder. In practice this means that you lack
 Read permissions on the Folder)</p>
 </td> </tr>
 </table>
-<h1 id='responses-69'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='responses-71'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -19741,11 +19817,11 @@ Preview).</p>
 <p></div></p>
 
 <p></div></p>
-<h2 id='tag'>Tag</h2>
+<h2 id='tags'>Tags</h2>
 <p><code>(array)</code></p>
 
 <blockquote>
-<h3 id='example-json-for-quot-tag-quot'>Example JSON: for &quot;Tag&quot;</h3></blockquote>
+<h3 id='example-json-for-quot-tags-quot'>Example JSON: for &quot;Tags&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">[</span><span class="w">
   </span><span class="p">{</span><span class="w">
     </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"founded"</span><span class="p">,</span><span class="w">
