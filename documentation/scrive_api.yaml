@@ -45,6 +45,9 @@ info:
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
     | 2020-04-02  | Updated endpoint list to include missing ip-addresses. |
+    | 2020-03-04  | Add user tags API. |
+    | 2020-02-21  | Change the format of user group tags. |
+    | 2020-01-28  | Add support for tags in the user group API. |
     | 2020-02-05  | Change `getbyshortid` limit from 24 hours from created/modified time, to 72 hours from created time. |
     | 2019-11-25  | Add folder API documentation. |
     | 2019-11-15  | Update production IP addresses. |
