@@ -23,6 +23,7 @@ module Cron.Migrations (
   , addPopulateDocumentAuthorDeletedJob
   , addUserGroupGarbageCollectionJob
   , addFreeUserFeatureFlagsJob
+  , removeFreeUserFeatureFlagsJob
   ) where
 
 import Cron.Tables
@@ -255,4 +256,12 @@ addFreeUserFeatureFlagsJob = Migration
     StandardMigration
       $ runSQL_
           "INSERT INTO cron_jobs (id, run_at) VALUES ('set_free_user_feature_flags', to_timestamp(0))"
+  }
+
+removeFreeUserFeatureFlagsJob :: MonadDB m => Migration m
+removeFreeUserFeatureFlagsJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom      = 28
+  , mgrAction    = StandardMigration
+                     $ runSQL_ "DELETE FROM cron_jobs WHERE id='set_free_user_feature_flags'"
   }

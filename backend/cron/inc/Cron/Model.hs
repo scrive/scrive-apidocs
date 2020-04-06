@@ -23,7 +23,6 @@ import Doc.DocumentID
 import Doc.Model
 import EID.EIDService.Model
 import EventStream.Class
-import FeatureFlags.Model
 import File.Storage
 import HostClock.Collector (collectClockError)
 import Log.Configuration
@@ -74,7 +73,6 @@ data JobType
   | TimeoutedEIDTransactionsPurge
   | PopulateDocumentAuthorDeleted
   | UserGroupGarbageCollection
-  | SetFreeUserFeatureFlags
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, Text)]
@@ -107,7 +105,6 @@ jobTypeMapper = map (identity &&& jobTypeToText) [minBound .. maxBound]
       TimeoutedEIDTransactionsPurge -> "timeouted_eid_transactions_purge"
       PopulateDocumentAuthorDeleted -> "populate_document_author_deleted"
       UserGroupGarbageCollection    -> "user_group_garbage_collection"
-      SetFreeUserFeatureFlags       -> "set_free_user_feature_flags"
 
 instance PQFormat JobType where
   pqFormat = pqFormat @Text
@@ -360,31 +357,6 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
                 $ object ["deleted" .= numMatches]
               if numMatches < batchLimit
                 then RerunAt . nextDayAtHour 5 <$> currentTime
-                else return . RerunAfter $ iminutes 5
-          SetFreeUserFeatureFlags -> do
-            runDB $ do
-              let batchLimit = 1000
-              freePlanUserGroups <- dbQuery $ FindFreeAndTrialUserGroups batchLimit
-              let numMatches = length freePlanUserGroups
-              forM_ freePlanUserGroups $ \ug -> do
-                let mfeatures = ug ^. #features
-                case mfeatures of
-                  Nothing       -> return ()
-                  Just features -> dbUpdate . UserGroupUpdate $ ug & #features .~ Just
-                    Features
-                      { fAdminUsers   =
-                        (fAdminUsers features) { ffCanUseVerimiAuthenticationToView = False
-                                               , ffCanUseShareableLinks = False
-                                               }
-                      , fRegularUsers =
-                        (fRegularUsers features) { ffCanUseVerimiAuthenticationToView = False
-                                                 , ffCanUseShareableLinks = False
-                                                 }
-                      }
-              logInfo "Disable free user feature flags for Verimi and Shareable Links"
-                $ object ["set" .= numMatches]
-              if numMatches < batchLimit
-                then return MarkProcessed
                 else return . RerunAfter $ iminutes 5
 
         endTime <- currentTime

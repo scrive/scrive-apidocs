@@ -252,4 +252,5 @@ kontraMigrations =
   , featureFlagsAddFIAuthToSign
   , userGroupSettingsAddDocumentSessionTimeout
   , userGroupSettingsRemoveOldComposites
+  , removeFreeUserFeatureFlagsJob
   ]
