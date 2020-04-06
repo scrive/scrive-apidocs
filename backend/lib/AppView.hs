@@ -23,7 +23,7 @@ module AppView (
               ) where
 
 import Control.Arrow (second)
-import Data.String.Utils hiding (join)
+import Data.List.Extra
 import Data.Unjson
 import Happstack.Server.SimpleHTTP
 import Log
@@ -218,9 +218,7 @@ standardPageFields ctx mugidandui ad = do
         Just True  -> "true"
         Just False -> "false"
   F.value "title"
-    $ case
-        emptyToNothing . strip . T.unpack =<< view #browserTitle . snd =<< mugidandui
-      of
+    $ case emptyToNothing . trim . T.unpack =<< view #browserTitle . snd =<< mugidandui of
         Just ctitle ->
           ctitle <> " - " <> (T.unpack $ ctx ^. #brandedDomain % #browserTitle)
         Nothing -> T.unpack (ctx ^. #brandedDomain % #browserTitle)

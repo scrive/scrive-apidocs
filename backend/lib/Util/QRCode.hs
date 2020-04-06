@@ -7,7 +7,7 @@ module Util.QRCode ( QRCode(..)
                    , decodeQR
                    , decodeQRBSL ) where
 
-import Data.String.Utils (rstrip)
+import Data.List.Extra
 import System.IO
 import System.IO.Temp
 import System.Process
@@ -44,7 +44,7 @@ decodeQR (QRCode bsdata) = withSystemTempFile "qr.png" $ \path handle -> do
   hClose handle
   zbarout <- readProcess "zbarimg" ["-q", path] ""
   case break (== ':') zbarout of
-    ("QR-Code", ':' : code) -> return $ rstrip code
+    ("QR-Code", ':' : code) -> return $ trimEnd code
     _ -> unexpectedError "QR code couldn't be decoded."
 
 decodeQRBSL :: BSL.ByteString -> IO String

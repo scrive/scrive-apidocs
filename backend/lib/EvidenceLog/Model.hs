@@ -22,7 +22,7 @@ module EvidenceLog.Model (
 import Control.Monad.Catch
 import Control.Monad.Identity
 import Data.Int
-import Data.List.Utils (replace)
+import Data.List.Extra (replace)
 import Data.Typeable
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E

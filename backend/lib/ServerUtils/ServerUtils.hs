@@ -5,12 +5,12 @@ module ServerUtils.ServerUtils (
   ) where
 
 import Control.Monad.Trans
+import Data.List (isPrefixOf)
 import Happstack.Server hiding (dir, simpleHTTP)
 import Log as Log
-import System.Directory (getCurrentDirectory)
+import System.Directory (getCurrentDirectory, makeAbsolute)
 import System.Exit
 import System.FilePath ((</>), takeBaseName)
-import System.Path (secureAbsNormPath)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.JSON
 import Text.JSON.Gen hiding (object)
@@ -95,7 +95,17 @@ brandImage :: Kontrakcja m => Text -> Text -> m BSL.ByteString
 brandImage file color = do
   cwd <- liftIO getCurrentDirectory
   let imgDir = cwd </> "frontend/app/img"
-  fpath                <- guardJust $ secureAbsNormPath imgDir $ T.unpack file
+  fpath <- liftIO . makeAbsolute $ imgDir </> T.unpack file
+  -- Make sure the normalized path is in the `imgDir` directory. This way nobody
+  -- can exploit this functionality to do something malicious.
+  when (not $ isPrefixOf imgDir fpath) $ do
+    logAttention "Image file have to stay in image directory after path normalization"
+      $ object
+          [ "image-directory" .= imgDir
+          , "image-relative-path" .= file
+          , "image-normalized-path" .= fpath
+          ]
+    internalError
   (procResult, out, _) <- liftIO $ readProcessWithExitCode
     "convert"
     [ fpath

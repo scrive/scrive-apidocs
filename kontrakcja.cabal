@@ -580,7 +580,6 @@ Library
                , Decimal
                , HStringTemplate
                , HTTP
-               , MissingH
                , QuickCheck
                , aeson >= 1.4.4.0
                , amazonka
@@ -873,7 +872,6 @@ Executable kontrakcja-migrate
                , kontrakcja-appdir
                , kontrakcja-prelude
                , DRBG
-               , MissingH
                , aeson
                , base16-bytestring
                , base64-bytestring
@@ -998,7 +996,6 @@ Executable mailing-server
                , AES
                , DRBG
                , HTTP
-               , MissingH
                , aeson
                , amazonka
                , amazonka-core
@@ -1117,7 +1114,6 @@ Executable messenger-server
                , kontrakcja-appdir
                , kontrakcja-prelude
                , DRBG
-               , MissingH
                , aeson
                , base16-bytestring
                , base64-bytestring
@@ -1365,7 +1361,6 @@ Test-suite kontrakcja-test
                , HStringTemplate
                , HUnit
                , HTTP
-               , MissingH
                , QuickCheck
                , aeson >= 1.4.4.0
                , aeson-diff

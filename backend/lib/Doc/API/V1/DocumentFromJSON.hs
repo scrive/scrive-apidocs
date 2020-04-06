@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V1.DocumentFromJSON (AuthorAttachmentDetails(..)) where
 
-import Data.String.Utils (strip)
+import Data.List.Extra (trim)
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
 import qualified Data.Text as T
@@ -120,9 +120,7 @@ instance FromJSValueWithUpdate SignatoryLink where
     (rredirecturl' :: Maybe (Maybe String)) <- fromJSValueField "rejectredirect"
     let
       emptyIfNaughty url =
-        if any (\s -> s `isPrefixOf` (strip url)) ["javascript:", "data:"]
-          then ""
-          else url
+        if any (\s -> s `isPrefixOf` (trim url)) ["javascript:", "data:"] then "" else url
       sredirecturl = fmap (fmap emptyIfNaughty) sredirecturl'
       rredirecturl = fmap (fmap emptyIfNaughty) rredirecturl'
     authenticationToView' <- fromJSValueField "authenticationToView"

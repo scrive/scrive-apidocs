@@ -7,8 +7,8 @@ module SMS.SMS (
 
 import Control.Monad.Catch
 import Data.Char
+import Data.List.Extra
 import Data.Set (Set, fromList, member)
-import Data.String.Utils
 import Log
 import qualified Data.Text as T
 
@@ -102,6 +102,6 @@ fixOriginator :: String -> String
 fixOriginator s = notEmpty $ map fixChars $ take 11 s
   where
     fixChars c = if (isAlphaNum c || isSpace c) then c else ' '
-    notEmpty s' = case (strip s') of
+    notEmpty s' = case (trim s') of
       "" -> "Scrive"
       v  -> v

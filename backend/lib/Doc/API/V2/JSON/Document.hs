@@ -5,7 +5,7 @@ module Doc.API.V2.JSON.Document (
 
 import Data.ByteString.Builder
 import Data.Functor.Invariant
-import Data.String.Utils (strip)
+import Data.List.Extra (trim)
 import Data.Unjson
 import qualified Control.Applicative.Free as AltF
 import qualified Data.ByteString.Lazy.Char8 as BSC
@@ -395,7 +395,7 @@ unjsonSignatory da =
         )
   where
     emptyIfNaughty url =
-      if any (\s -> s `isPrefixOf` (strip url)) ["javascript:", "data:"] then "" else url
+      if any (\s -> s `isPrefixOf` (trim url)) ["javascript:", "data:"] then "" else url
     apiDeliveryURLIfThereIsOne sl =
       if (  daStatus da
          /= Preparation

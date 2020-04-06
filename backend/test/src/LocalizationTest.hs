@@ -1,8 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module LocalizationTest (localizationTest) where
 
+import Data.List.Extra
 import Data.Map ((!), Map)
-import Data.String.Utils
 import Data.Text (Text)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
@@ -85,7 +85,7 @@ checkTexts src@((sn, sv) : ss) tar@((tn, tv) : tt)
   = checkTexts ss tar
   | (sn > tn)
   = checkTexts src tt
-  | (strip tv == "")
+  | (trim tv == "")
   = checkTexts ss tt
   | otherwise
   = ((\s -> "In " <> tn <> " " <> s <> "\n") <$> compareTranslations sv tv)
@@ -128,7 +128,7 @@ checkHtmlStructureTexts src@((sn, sv) : ss) tar@((tn, tv) : tt)
   = checkHtmlStructureTexts ss tar
   | (sn > tn)
   = checkHtmlStructureTexts src tt
-  | (strip tv == "")
+  | (trim tv == "")
   = checkHtmlStructureTexts ss tt
   | otherwise
   = ((\s -> "In " <> tn <> " " <> s <> "\n") <$> compareHTMLStructure sv tv)
@@ -216,7 +216,7 @@ checkEscapeSequencesTexts cmp src@((sn, sv) : ss) tar@((tn, tv) : tt)
   = checkEscapeSequencesTexts cmp ss tar
   | (sn > tn)
   = checkEscapeSequencesTexts cmp src tt
-  | (strip tv == "")
+  | (trim tv == "")
   = checkEscapeSequencesTexts cmp ss tt
   | otherwise
   = ((\s -> "In " <> tn <> " " <> s <> "\n") <$> cmp sv tv)
@@ -296,4 +296,4 @@ countLTs :: String -> Int
 countLTs = count "<"
 
 count :: String -> String -> Int
-count p s = (length $ split p s) - 1
+count p s = (length $ splitOn p s) - 1
