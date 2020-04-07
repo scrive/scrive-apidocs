@@ -76,22 +76,22 @@ import qualified InputValidation
 import qualified MailContext.Internal
 
 data DocumentSigning = DocumentSigning {
-    signingSignatoryID          :: !SignatoryLinkID
-  , signingBrandedDomainID      :: !BrandedDomainID
-  , signingTime                 :: !UTCTime
-  , signingClientIP4            :: !IPAddress
-  , signingClientTime           :: !(Maybe UTCTime)
-  , signingClientName           :: !(Maybe Text)
-  , signingLang                 :: !Lang
-  , signingFields               :: !SignatoryFieldsValuesForSigning
-  , signingAcceptedAttachments  :: ![FileID]
-  , signingScreenshots          :: !SignatoryScreenshots
-  , signingLastCheckStatus      :: !(Maybe Text)
-  , signingCancelled            :: !Bool
-  , signingAttempts             :: !Int32
-  , signingNotUploadedSigAttachments :: ![Text]
-  , signingSignatureProvider    :: !SignatureProvider
-  , signingConsentResponses     :: !SignatoryConsentResponsesForSigning
+    signingSignatoryID          :: SignatoryLinkID
+  , signingBrandedDomainID      :: BrandedDomainID
+  , signingTime                 :: UTCTime
+  , signingClientIP4            :: IPAddress
+  , signingClientTime           :: Maybe UTCTime
+  , signingClientName           :: Maybe Text
+  , signingLang                 :: Lang
+  , signingFields               :: SignatoryFieldsValuesForSigning
+  , signingAcceptedAttachments  :: [FileID]
+  , signingScreenshots          :: SignatoryScreenshots
+  , signingLastCheckStatus      :: Maybe Text
+  , signingCancelled            :: Bool
+  , signingAttempts             :: Int32
+  , signingNotUploadedSigAttachments :: [Text]
+  , signingSignatureProvider    :: SignatureProvider
+  , signingConsentResponses     :: SignatoryConsentResponsesForSigning
   }
 
 minutesTillPurgeOfFailedAction :: Int32

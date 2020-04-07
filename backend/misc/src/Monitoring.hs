@@ -7,12 +7,12 @@ import qualified System.Metrics as EKG
 import qualified System.Remote.Monitoring.Statsd as EKG
 
 data MonitoringConf = MonitoringConf
-  { monitoringHost          :: !Text  -- ^ @statsd@ server hostname or IP address.
-  , monitoringPort          :: !Int   -- ^ @statsd@ server port.
-  , monitoringFlushInterval :: !Int   -- ^ Data push interval, in ms.
-  , monitoringDebug         :: !Bool  -- ^ Print debug output to stderr.
-  , monitoringPrefix        :: !Text  -- ^ Prefix to add to all metric names.
-  , monitoringSuffix        :: !Text  -- ^ Suffix to add to all metric names.
+  { monitoringHost          :: Text  -- ^ @statsd@ server hostname or IP address.
+  , monitoringPort          :: Int   -- ^ @statsd@ server port.
+  , monitoringFlushInterval :: Int   -- ^ Data push interval, in ms.
+  , monitoringDebug         :: Bool  -- ^ Print debug output to stderr.
+  , monitoringPrefix        :: Text  -- ^ Prefix to add to all metric names.
+  , monitoringSuffix        :: Text  -- ^ Suffix to add to all metric names.
   } deriving (Eq, Show)
 
 instance Unjson MonitoringConf where

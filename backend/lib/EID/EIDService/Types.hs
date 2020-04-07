@@ -328,36 +328,36 @@ instance FromJSON a => FromJSON (EIDServiceTransactionResponse a) where
                                          }
 
 data EIDServiceTransactionFromDB = EIDServiceTransactionFromDB
-  { estID :: !EIDServiceTransactionID
-  , estStatus :: !EIDServiceTransactionStatus
-  , estSignatoryLinkID :: !SignatoryLinkID
-  , estAuthKind :: !EIDServiceAuthenticationKind
-  , estProvider :: !EIDServiceTransactionProvider
-  , estSessionID :: !SessionID
-  , estDeadline :: !UTCTime
+  { estID :: EIDServiceTransactionID
+  , estStatus :: EIDServiceTransactionStatus
+  , estSignatoryLinkID :: SignatoryLinkID
+  , estAuthKind :: EIDServiceAuthenticationKind
+  , estProvider :: EIDServiceTransactionProvider
+  , estSessionID :: SessionID
+  , estDeadline :: UTCTime
   } deriving (Show)
 
 -- TODO: XAUTHENTICATION TYPES ARE REDUNDANT AND ARE  1:1 EQUIVALENT TO COMPLETION DATA
 -- TODO: THE FUNCTIONS THAT RELY ON THESE SHOULD USE TRANSACTION/COMPLETEION DATA DIRECTLY
 
 data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication
-  { eidServiceVerimiName            :: !T.Text
-  , eidServiceVerimiVerifiedEmail   :: !(Maybe T.Text)
-  , eidServiceVerimiVerifiedPhone   :: !(Maybe T.Text)
+  { eidServiceVerimiName            :: T.Text
+  , eidServiceVerimiVerifiedEmail   :: Maybe T.Text
+  , eidServiceVerimiVerifiedPhone   :: Maybe T.Text
   } deriving (Eq, Ord, Show)
 
 data EIDServiceNLIDINAuthentication = EIDServiceNLIDINAuthentication
-  { eidServiceIDINName            :: !T.Text
-  , eidServiceIDINVerifiedPhone   :: !(Maybe T.Text)
-  , eidServiceIDINBirthDate       :: !(Maybe T.Text)
-  , eidServiceIDINCustomerID      :: !(Maybe T.Text)
+  { eidServiceIDINName            :: T.Text
+  , eidServiceIDINVerifiedPhone   :: Maybe T.Text
+  , eidServiceIDINBirthDate       :: Maybe T.Text
+  , eidServiceIDINCustomerID      :: Maybe T.Text
 } deriving (Eq, Ord, Show)
 
 data EIDServiceDKNemIDAuthentication = EIDServiceDKNemIDAuthentication
-  { eidServiceNemIDInternalProvider :: !EIDServiceDKNemIDInternalProvider
-  , eidServiceNemIDSignatoryName    :: !T.Text
-  , eidServiceNemIDDateOfBirth      :: !T.Text
-  , eidServiceNemIDCertificate      :: !ByteString
+  { eidServiceNemIDInternalProvider :: EIDServiceDKNemIDInternalProvider
+  , eidServiceNemIDSignatoryName    :: T.Text
+  , eidServiceNemIDDateOfBirth      :: T.Text
+  , eidServiceNemIDCertificate      :: ByteString
   } deriving (Eq, Ord, Show)
 
 data EIDServiceFITupasAuthentication = EIDServiceFITupasAuthentication
@@ -368,19 +368,19 @@ data EIDServiceFITupasAuthentication = EIDServiceFITupasAuthentication
   deriving (Eq, Ord, Show)
 
 data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
-  { eidServiceNOBankIDInternalProvider     :: !EIDServiceNOBankIDInternalProvider
-  , eidServiceNOBankIDSignatoryName        :: !Text
-  , eidServiceNOBankIDPhoneNumber          :: !(Maybe Text)
-  , eidServiceNOBankIDDateOfBirth          :: !Text
-  , eidServiceNOBankIDCertificate          :: !(Maybe ByteString)
+  { eidServiceNOBankIDInternalProvider     :: EIDServiceNOBankIDInternalProvider
+  , eidServiceNOBankIDSignatoryName        :: Text
+  , eidServiceNOBankIDPhoneNumber          :: Maybe Text
+  , eidServiceNOBankIDDateOfBirth          :: Text
+  , eidServiceNOBankIDCertificate          :: Maybe ByteString
   } deriving (Eq, Ord, Show)
 
 data EIDServiceSEBankIDAuthentication = EIDServiceSEBankIDAuthentication
-  { eidServiceSEBankIDSignatoryName           :: !Text
-  , eidServiceSEBankIDSignatoryPersonalNumber :: !Text
-  , eidServiceSEBankIDSignatoryIP             :: !Text
-  , eidServiceSEBankIDSignature               :: !ByteString
-  , eidServiceSEBankIDOcspResponse            :: !ByteString
+  { eidServiceSEBankIDSignatoryName           :: Text
+  , eidServiceSEBankIDSignatoryPersonalNumber :: Text
+  , eidServiceSEBankIDSignatoryIP             :: Text
+  , eidServiceSEBankIDSignature               :: ByteString
+  , eidServiceSEBankIDOcspResponse            :: ByteString
   } deriving (Eq, Ord, Show)
 
 data EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
@@ -398,13 +398,13 @@ data EIDServiceFITupasSignature = EIDServiceFITupasSignature
   deriving (Eq, Ord, Show)
 
 data EIDServiceNOBankIDSignature = EIDServiceNOBankIDSignature
-  { eidServiceNOBankIDSigInternalProvider :: !EIDServiceNOBankIDInternalProvider
-  , eidServiceNOBankIDSigSignatoryName :: !Text
-  , eidServiceNOBankIDSigPhoneNumber :: !(Maybe Text)
-  , eidServiceNOBankIDSigPersonalNumber :: !(Maybe Text)
-  , eidServiceNOBankIDSigDateOfBirth :: !(Maybe Text)
-  , eidServiceNOBankIDSigSignedText :: !(Maybe Text)
-  , eidServiceNOBankIDSigCertificate :: !(Maybe Text)
+  { eidServiceNOBankIDSigInternalProvider :: EIDServiceNOBankIDInternalProvider
+  , eidServiceNOBankIDSigSignatoryName :: Text
+  , eidServiceNOBankIDSigPhoneNumber :: Maybe Text
+  , eidServiceNOBankIDSigPersonalNumber :: Maybe Text
+  , eidServiceNOBankIDSigDateOfBirth :: Maybe Text
+  , eidServiceNOBankIDSigSignedText :: Maybe Text
+  , eidServiceNOBankIDSigCertificate :: Maybe Text
   }
   deriving (Eq, Ord, Show)
 

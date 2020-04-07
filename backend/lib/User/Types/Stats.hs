@@ -13,19 +13,19 @@ import qualified Data.Semigroup as SG
 data StatsPartition = PartitionByDay | PartitionByMonth
 
 data DocumentStats = DocumentStats
-  { dsDocumentsSent           :: !Int64
-  , dsDocumentsClosed         :: !Int64
-  , dsSignaturesClosed        :: !Int64
-  , dsSMSSent                 :: !Int64
-  , dsSMSSentViaTelia         :: !Int64
-  , dsSEBankIDSignatures      :: !Int64
-  , dsSEBankIDAuthentications :: !Int64
-  , dsNOBankIDAuthentications :: !Int64
-  , dsNemIDAuthentications    :: !Int64
-  , dsNOBankIDSignatures      :: !Int64
-  , dsNemIDSignatures         :: !Int64
-  , dsTupasAuthentications    :: !Int64
-  , dsShareableLinks          :: !Int64
+  { dsDocumentsSent           :: Int64
+  , dsDocumentsClosed         :: Int64
+  , dsSignaturesClosed        :: Int64
+  , dsSMSSent                 :: Int64
+  , dsSMSSentViaTelia         :: Int64
+  , dsSEBankIDSignatures      :: Int64
+  , dsSEBankIDAuthentications :: Int64
+  , dsNOBankIDAuthentications :: Int64
+  , dsNemIDAuthentications    :: Int64
+  , dsNOBankIDSignatures      :: Int64
+  , dsNemIDSignatures         :: Int64
+  , dsTupasAuthentications    :: Int64
+  , dsShareableLinks          :: Int64
   } deriving (Eq, Ord, Show)
 
 instance SG.Semigroup DocumentStats where
@@ -52,15 +52,15 @@ instance Monoid DocumentStats where
   mappend = (SG.<>)
 
 data UserUsageStats = UserUsageStats
-  { uusTimeWindowStart  :: !UTCTime
-  , uusUserEmail        :: !String
-  , uusUserName         :: !String
-  , uusDocumentStats    :: !DocumentStats
+  { uusTimeWindowStart  :: UTCTime
+  , uusUserEmail        :: String
+  , uusUserName         :: String
+  , uusDocumentStats    :: DocumentStats
   } deriving (Eq, Ord, Show)
 
 data ShareableLinkUsageStats = ShareableLinkUsageStats
-  { slusTimeWindowStart  :: !UTCTime
-  , slusTemplateId       :: !Int64
-  , slusTemplateTitle    :: !String
-  , slusDocumentStats    :: !DocumentStats
+  { slusTimeWindowStart  :: UTCTime
+  , slusTemplateId       :: Int64
+  , slusTemplateTitle    :: String
+  , slusDocumentStats    :: DocumentStats
   } deriving (Eq, Ord, Show)

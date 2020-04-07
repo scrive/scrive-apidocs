@@ -8,10 +8,10 @@ import BrandedDomain.BrandedDomain
 import User.Model
 
 data MailContext = MailContext
-  { lang                 :: !Lang
-  , brandedDomain :: !BrandedDomain
-  , time                 :: !UTCTime
-  , mailNoreplyAddress   :: !Text
+  { lang                 :: Lang
+  , brandedDomain :: BrandedDomain
+  , time                 :: UTCTime
+  , mailNoreplyAddress   :: Text
   } deriving Show
 
 makeFieldLabelsWith noPrefixFieldLabels ''MailContext

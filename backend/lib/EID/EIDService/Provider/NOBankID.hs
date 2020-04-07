@@ -191,16 +191,16 @@ beginEIDServiceTransaction conf authKind doc sl = do
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data NOBankIDEIDServiceCompletionData = NOBankIDEIDServiceCompletionData
-  { eidnobidInternalProvider :: !EIDServiceNOBankIDInternalProvider
-  , eidnobidBirthDate :: !(Maybe T.Text)
-  , eidnobidCertificate :: !(Maybe T.Text)
-  , eidnobidDistinguishedName :: !T.Text
-  , eidnobidIssuerDistinguishedName :: !T.Text
-  , eidnobidName :: !(Maybe Text)
-  , eidnobidPhoneNumber :: !(Maybe T.Text)
-  , eidnobidPersonalNumber :: !(Maybe T.Text)
-  , eidnobidSignText :: !(Maybe T.Text)
-  , eidnobidPid :: !T.Text
+  { eidnobidInternalProvider :: EIDServiceNOBankIDInternalProvider
+  , eidnobidBirthDate :: Maybe T.Text
+  , eidnobidCertificate :: Maybe T.Text
+  , eidnobidDistinguishedName :: T.Text
+  , eidnobidIssuerDistinguishedName :: T.Text
+  , eidnobidName :: Maybe Text
+  , eidnobidPhoneNumber :: Maybe T.Text
+  , eidnobidPersonalNumber :: Maybe T.Text
+  , eidnobidSignText :: Maybe T.Text
+  , eidnobidPid :: T.Text
   } deriving (Eq, Ord, Show)
 
 instance FromJSON NOBankIDEIDServiceCompletionData where

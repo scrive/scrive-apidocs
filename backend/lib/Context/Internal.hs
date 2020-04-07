@@ -54,8 +54,8 @@ data Context = Context
       -- ^ GuardTime configuration.
     , redisCache          :: Maybe R.Connection
     , fileCache           :: FileMemCache
-    , xToken              :: MagicHash
-      -- ^ The XToken for combating CSRF.
+    , xToken              :: ~MagicHash
+      -- ^ The XToken for combating CSRF (lazy as undefined in tests).
     , adminAccounts       :: [Email]
     , salesAccounts       :: [Email]
     , maybePadUser        :: Maybe User

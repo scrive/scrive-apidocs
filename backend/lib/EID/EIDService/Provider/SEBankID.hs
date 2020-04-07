@@ -179,11 +179,11 @@ beginAuthTransaction conf authKind doc sl = do
 
 -- same fields as in CGISEBankIDAuthentication
 data SEBankIDEIDServiceAuthCompletionData = SEBankIDEIDServiceAuthCompletionData
-  { eidsebidaSignatoryName           :: !Text
-  , eidsebidaSignatoryPersonalNumber :: !Text
-  , eidsebidaSignatoryIP             :: !Text
-  , eidsebidaSignature               :: !ByteString
-  , eidsebidaOcspResponse            :: !ByteString
+  { eidsebidaSignatoryName           :: Text
+  , eidsebidaSignatoryPersonalNumber :: Text
+  , eidsebidaSignatoryIP             :: Text
+  , eidsebidaSignature               :: ByteString
+  , eidsebidaOcspResponse            :: ByteString
   } deriving (Eq, Ord, Show)
 
 -- Note for the future: this shouldn't be a FromJSON instance, since the
@@ -453,18 +453,18 @@ instance FromJSON StartSEBankIDSignTransactionResponse where
           )
 
 data SEBankIDEIDServiceSignTransactionData = SEBankIDEIDServiceSignTransactionData
-  { eidsebidsProcessStatusInfo :: !(Maybe Text)
-  , eidsebidsCompletionData :: !(Maybe SEBankIDEIDServiceSignCompletionData)
+  { eidsebidsProcessStatusInfo :: Maybe Text
+  , eidsebidsCompletionData :: Maybe SEBankIDEIDServiceSignCompletionData
   } deriving (Eq, Ord, Show)
 
 -- same fields as in CGISEBankIDSignature
 data SEBankIDEIDServiceSignCompletionData = SEBankIDEIDServiceSignCompletionData
-  { eidsebidsSignatoryName           :: !Text
-  , eidsebidsSignatoryPersonalNumber :: !Text
-  , eidsebidsSignatoryIP             :: !Text
-  , eidsebidsSignedText              :: !Text
-  , eidsebidsSignature               :: !ByteString
-  , eidsebidsOcspResponse            :: !ByteString
+  { eidsebidsSignatoryName           :: Text
+  , eidsebidsSignatoryPersonalNumber :: Text
+  , eidsebidsSignatoryIP             :: Text
+  , eidsebidsSignedText              :: Text
+  , eidsebidsSignature               :: ByteString
+  , eidsebidsOcspResponse            :: ByteString
   } deriving (Eq, Ord, Show)
 
 instance FromJSON SEBankIDEIDServiceSignTransactionData where

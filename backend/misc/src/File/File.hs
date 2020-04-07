@@ -26,7 +26,7 @@ data File = File
   { fileid       :: FileID
   , filename     :: Text
   -- if there is conversion error from sql, detect it immediately
-  , filestorage  :: !FileStorage
+  , filestorage  :: FileStorage
   , filechecksum :: BS.ByteString
   , filesize     :: Int32
   } deriving (Typeable)

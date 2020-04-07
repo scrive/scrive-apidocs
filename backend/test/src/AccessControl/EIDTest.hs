@@ -35,8 +35,7 @@ testImpersonateAuthAndSignFailWithoutPermissions = do
 
   ctx  <- do
     defctx <- mkContext defaultLang
-    -- the API call fails before it accesses the CGI-GRP config
-    let cgiGrpConfig = CgiGrpConfig undefined undefined undefined undefined
+    let cgiGrpConfig = CgiGrpConfig "" "" "" ""
     return . set #maybeUser (Just user) . set #cgiGrpConfig (Just cgiGrpConfig) $ defctx
 
   (did, slid) <- do

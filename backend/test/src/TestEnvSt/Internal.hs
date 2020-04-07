@@ -21,34 +21,34 @@ import TestFileStorage
 newtype RunLogger = RunLogger { unRunLogger :: forall m r . LogT m r -> m r }
 
 data TestEnvSt = TestEnvSt
-  { connSource         :: !BasicConnectionSource
-  , staticConnSource   :: !BasicConnectionSource
-  , transSettings      :: !TransactionSettings
-  , rngState           :: !CryptoRNGState
-  , runLogger          :: !RunLogger
-  , activeTests        :: !(TVar (Bool, Int))
-  , globalTemplates    :: !KontrakcjaGlobalTemplates
-  , rejectedDocuments  :: !(MVar Int)
-  , outputDirectory    :: !(Maybe String)
+  { connSource         :: BasicConnectionSource
+  , staticConnSource   :: BasicConnectionSource
+  , transSettings      :: TransactionSettings
+  , rngState           :: CryptoRNGState
+  , runLogger          :: RunLogger
+  , activeTests        :: TVar (Bool, Int)
+  , globalTemplates    :: KontrakcjaGlobalTemplates
+  , rejectedDocuments  :: MVar Int
+  , outputDirectory    :: Maybe String
     -- ^ Put the test artifact output in this directory, if given.
-  , stagingTests       :: !Bool
+  , stagingTests       :: Bool
   , pdfToolsLambdaEnv  :: PdfToolsLambdaEnv
   , amazonS3Env        :: Maybe AmazonS3Env
   , fileMemCache       :: FileMemCache
   , redisConn          :: Maybe R.Connection
   , memoryStorage      :: TVar FakeFS
-  , cronDBConfig       :: !Text
+  , cronDBConfig       :: Text
   , cronMonthlyInvoice :: Maybe MonthlyInvoiceConf
   , testDurations      :: MVar [(NominalDiffTime, String)]
   , flowPort :: Int
   }
 
 data TestEnvStRW = TestEnvStRW
-  { timeDelay   :: !NominalDiffTime
+  { timeDelay   :: NominalDiffTime
     -- ^ Modifies currentTime, when taken from IO.
-  , currentTime :: !(Maybe UTCTime)
+  , currentTime :: Maybe UTCTime
     -- ^ When 'Nothing', currentTime is taken from IO.
-  , requestUri  :: !String
+  , requestUri  :: String
   }
 
 makeFieldLabelsWith noPrefixFieldLabels ''TestEnvSt

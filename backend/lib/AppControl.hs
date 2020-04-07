@@ -63,14 +63,14 @@ import qualified Context.Internal
 
 -- | Global application data
 data AppGlobals = AppGlobals {
-    templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
-  , mrediscache        :: !(Maybe R.Connection)
-  , filecache          :: !FileMemCache
-  , cryptorng          :: !CryptoRNGState
-  , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
-  , hostname           :: !Text
-  , amazons3env        :: !AmazonS3Env
-  , pdftoolslambdaenv  :: !PdfToolsLambdaEnv
+    templates          :: MVar (UTCTime, KontrakcjaGlobalTemplates)
+  , mrediscache        :: Maybe R.Connection
+  , filecache          :: FileMemCache
+  , cryptorng          :: CryptoRNGState
+  , connsource         :: ConnectionTracker -> TrackedConnectionSource
+  , hostname           :: Text
+  , amazons3env        :: AmazonS3Env
+  , pdftoolslambdaenv  :: PdfToolsLambdaEnv
   }
 
 -- | Determines the lang of the current user (whether they are logged

@@ -14,19 +14,19 @@ import qualified Data.Text as T
 import DB
 
 data JobsTableStats = JobsTableStats
-  { approximateJobsCount :: !Int64
-  , overdueJobsCount     :: !Int64
-  , failedJobsCount      :: !Int64
+  { approximateJobsCount :: Int64
+  , overdueJobsCount     :: Int64
+  , failedJobsCount      :: Int64
   }
 
 data CronStats = CronStats
-  { sealingStats     :: !JobsTableStats
-  , signingStats     :: !JobsTableStats
-  , apiCallbackStats :: !JobsTableStats
-  , extendingStats   :: !JobsTableStats
-  , filePurgeStats   :: !JobsTableStats
-  , mailsStats       :: !JobsTableStats
-  , smsesStats       :: !JobsTableStats
+  { sealingStats     :: JobsTableStats
+  , signingStats     :: JobsTableStats
+  , apiCallbackStats :: JobsTableStats
+  , extendingStats   :: JobsTableStats
+  , filePurgeStats   :: JobsTableStats
+  , mailsStats       :: JobsTableStats
+  , smsesStats       :: JobsTableStats
   }
 
 cronStatsToList :: CronStats -> [(T.Text, JobsTableStats)]

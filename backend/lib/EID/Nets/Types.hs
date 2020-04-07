@@ -139,33 +139,33 @@ instance ToSQL NetsDKNemIDInternalProvider where
 ----------------------------------------
 
 data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication
-  { netsNOBankIDInternalProvider     :: !NetsNOBankIDInternalProvider
-  , netsNOBankIDSignatoryName        :: !Text
-  , netsNOBankIDPhoneNumber          :: !(Maybe Text)
-  , netsNOBankIDDateOfBirth          :: !Text
-  , netsNOBankIDCertificate          :: !ByteString
+  { netsNOBankIDInternalProvider     :: NetsNOBankIDInternalProvider
+  , netsNOBankIDSignatoryName        :: Text
+  , netsNOBankIDPhoneNumber          :: Maybe Text
+  , netsNOBankIDDateOfBirth          :: Text
+  , netsNOBankIDCertificate          :: ByteString
   } deriving (Eq, Ord, Show)
 
 data NetsDKNemIDAuthentication = NetsDKNemIDAuthentication
-  { netsDKNemIDInternalProvider     :: !NetsDKNemIDInternalProvider
-  , netsDKNemIDSignatoryName        :: !Text
-  , netsDKNemIDDateOfBirth          :: !Text
-  , netsDKNemIDCertificate          :: !ByteString
+  { netsDKNemIDInternalProvider     :: NetsDKNemIDInternalProvider
+  , netsDKNemIDSignatoryName        :: Text
+  , netsDKNemIDDateOfBirth          :: Text
+  , netsDKNemIDCertificate          :: ByteString
   } deriving (Eq, Ord, Show)
 
 data NetsFITupasAuthentication = NetsFITupasAuthentication
-  { netsFITupasSignatoryName        :: !Text
-  , netsFITupasDateOfBirth          :: !Text
+  { netsFITupasSignatoryName        :: Text
+  , netsFITupasDateOfBirth          :: Text
   } deriving (Eq, Ord, Show)
 
 -- | Information for transaction. It is encoded in frontend as (,,,) + Base64 when starting nets iframe.
 --   Backend decodes that within resolve handler.
 data NetsTarget = NetsTarget
   { netsTransactionDomain    :: Text -- Domain where session cookie is set
-  , netsDocumentID           :: !DocumentID
-  , netsSignatoryID          :: !SignatoryLinkID
-  , netsReturnURL            :: !Text
-  , netsSsnFromFrontend      :: !(Maybe Text)
+  , netsDocumentID           :: DocumentID
+  , netsSignatoryID          :: SignatoryLinkID
+  , netsReturnURL            :: Text
+  , netsSsnFromFrontend      :: Maybe Text
   } deriving (Eq, Ord, Show)
 
 decodeNetsTarget :: Text -> Maybe NetsTarget
@@ -197,8 +197,8 @@ instance ToXML GetAssertionRequest where
 
 -- | Collect action response.
 data GetAssertionResponse = GetAssertionResponse
-  { assertionStatusCode :: !Text
-  , assertionAttributes :: ![(Text,Text)]
+  { assertionStatusCode :: Text
+  , assertionAttributes :: [(Text,Text)]
   } deriving (Eq, Ord, Show)
 
 -- | Retrieve 'GetAssertionResponse' from SOAP response.
@@ -227,18 +227,18 @@ xpGetAssertionResponse = XMLParser $ \c ->
 -- data NetsEidType = NetsEidNOBankID
 --
 data NetsNOBankIDSignature = NetsNOBankIDSignature
-  { netsnoSignedText    :: !Text
-  , netsnoB64SDO        :: !Text -- base64 SDO from Nets ESigning
-  , netsnoSignatoryName :: !Text
-  , netsnoSignatoryPID  :: !Text
+  { netsnoSignedText    :: Text
+  , netsnoB64SDO        :: Text -- base64 SDO from Nets ESigning
+  , netsnoSignatoryName :: Text
+  , netsnoSignatoryPID  :: Text
   } deriving (Eq, Ord, Show)
 
 data NetsDKNemIDSignature = NetsDKNemIDSignature
-  { netsdkSignedText    :: !Text
-  , netsdkB64SDO        :: !Text -- base64 SDO from Nets ESigning
-  , netsdkSignatoryName :: !Text
-  , netsdkSignatorySSN  :: !Text
-  , netsdkSignatoryIP   :: !Text
+  { netsdkSignedText    :: Text
+  , netsdkB64SDO        :: Text -- base64 SDO from Nets ESigning
+  , netsdkSignatoryName :: Text
+  , netsdkSignatorySSN  :: Text
+  , netsdkSignatoryIP   :: Text
   } deriving (Eq, Ord, Show)
 
 data NetsSignStatus
@@ -299,14 +299,14 @@ data NetsSignProviderMethod =
   deriving (Eq, Ord, Show)
 
 data NetsSignOrder = NetsSignOrder
-  { nsoSignOrderID :: !SignOrderUUID
-  , nsoSignatoryLinkID :: !SignatoryLinkID
-  , nsoProvider :: !NetsSignProvider
-  , nsoTextToBeSigned :: !Text
-  , nsoSessionID :: !SessionID
-  , nsoDeadline :: !UTCTime
-  , nsoIsCanceled :: !Bool
-  , nsoSSN :: !(Maybe Text)
+  { nsoSignOrderID :: SignOrderUUID
+  , nsoSignatoryLinkID :: SignatoryLinkID
+  , nsoProvider :: NetsSignProvider
+  , nsoTextToBeSigned :: Text
+  , nsoSessionID :: SessionID
+  , nsoDeadline :: UTCTime
+  , nsoIsCanceled :: Bool
+  , nsoSSN :: Maybe Text
   } deriving (Show)
 
 instance Loggable NetsSignOrder where
@@ -397,8 +397,8 @@ instance ToXML InsertOrderRequest where
 -- NETS SIGNING - Insert Order Response
 
 data InsertOrderResponse = InsertOrderResponse
-  { iorsSignOrderUUID :: !SignOrderUUID
-  , iorsTransactionRef :: !Text
+  { iorsSignOrderUUID :: SignOrderUUID
+  , iorsTransactionRef :: Text
   } deriving (Show)
 
 instance Loggable InsertOrderResponse where
@@ -426,9 +426,9 @@ instance ToXML GetSigningProcessesRequest where
 -- NETS Signing - Get Signing Processes Response
 
 data GetSigningProcessesResponse = GetSigningProcessesResponse
-  { gsprsTransactionRef :: !Text
-  , gsprsSignOrderUUID    :: !SignOrderUUID
-  , gsprsSignURL        :: !Text
+  { gsprsTransactionRef :: Text
+  , gsprsSignOrderUUID    :: SignOrderUUID
+  , gsprsSignURL        :: Text
   }
 
 xpGetSigningProcessesResponse :: XMLParser GetSigningProcessesResponse
@@ -470,9 +470,9 @@ data OrderStatus
   deriving (Eq, Ord, Show, Read)
 
 data GetOrderStatusResponse = GetOrderStatusResponse
-  { gosrsSignOrderUUID :: !SignOrderUUID
-  , gosrsTransactionRef :: !Text
-  , gosrsOrderStatus :: !OrderStatus
+  { gosrsSignOrderUUID :: SignOrderUUID
+  , gosrsTransactionRef :: Text
+  , gosrsOrderStatus :: OrderStatus
   }
 
 instance Loggable GetOrderStatusResponse where
@@ -507,9 +507,9 @@ instance ToXML GetSDORequest where
 --NETS Signing - Get SDO Response
 
 data GetSDOResponse = GetSDOResponse
-  { gsdorsSignOrderUUID    :: !SignOrderUUID
-  , gsdorsTransactionRef :: !Text
-  , gsdorsB64SDOBytes    :: !Text
+  { gsdorsSignOrderUUID    :: SignOrderUUID
+  , gsdorsTransactionRef :: Text
+  , gsdorsB64SDOBytes    :: Text
   }
 
 instance Loggable GetSDOResponse where
@@ -541,10 +541,10 @@ instance ToXML GetSDODetailsRequest where
 --NETS Signing - Get SDO Response - NO BankID
 
 data GetSDODetailsResponseNO = GetSDODetailsResponseNO
-  { gsdodrsnoTransactionRef :: !Text
-  , gsdodrsnoSignedText     :: !Text
-  , gsdodrsnoSignerCN       :: !Text
-  , gsdodrsnoSignerPID      :: !Text
+  { gsdodrsnoTransactionRef :: Text
+  , gsdodrsnoSignedText     :: Text
+  , gsdodrsnoSignerCN       :: Text
+  , gsdodrsnoSignerPID      :: Text
   }
 
 instance Loggable GetSDODetailsResponseNO where
@@ -585,9 +585,9 @@ xpGetSDODetailsResponseNO = XMLParser $ \cursor ->
 --NETS Signing - Get SDO Response - NemID
 
 data GetSDODetailsResponseDK = GetSDODetailsResponseDK
-  { gsdodrsdkTransactionRef :: !Text
-  , gsdodrsdkSignedText     :: !Text
-  , gsdodrsdkSignerCN       :: !Text
+  { gsdodrsdkTransactionRef :: Text
+  , gsdodrsdkSignedText     :: Text
+  , gsdodrsdkSignerCN       :: Text
   }
 
 instance Loggable GetSDODetailsResponseDK where

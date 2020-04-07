@@ -10,38 +10,38 @@ import Doc.Types.SignatoryLink (SignatoryRole(..))
 import Folder.Types
 
 data MockDoc = MockDoc
-  { mockDocId                 :: !String
-  , mockDocTitle              :: !String
-  , mockDocParties            :: ![MockSigLink]
-  , mockDocFile               :: !(Maybe MockMainFile)
-  , mockDocSealedFile         :: !(Maybe MockMainFile)
-  , mockDocAuthorAttachments  :: ![MockAuthorAttachment]
-  , mockDocCTime              :: !String
-  , mockDocMTime              :: !String
-  , mockDocTimeoutTime        :: !(Maybe String)
-  , mockDocAutoRemindTime     :: !(Maybe String)
-  , mockDocStatus             :: !String
-  , mockDocDaysToSign         :: !Int
-  , mockDocDaysToRemind       :: !(Maybe Int)
-  , mockDocDisplayOptions     :: !MockDocDisplayOptions
-  , mockDocInvitationMsg      :: !String
-  , mockDocConfirmationMsg    :: !String
-  , mockDocSMSInvitationMsg   :: !String
-  , mockDocSMSConfirmationMsg :: !String
-  , mockDocLang               :: !String
-  , mockDocAPICallbackURL     :: !(Maybe String)
-  , mockDocObjectVersion      :: !Int
-  , mockDocAccessToken        :: !(Maybe String)
-  , mockDocTimezone           :: !String
-  , mockDocTags               :: !(S.Set DocumentTag)
-  , mockDocFolderId           :: !FolderID
-  , mockDocIsTemplate         :: !Bool
-  , mockDocIsSaved            :: !Bool
-  , mockDocIsShared           :: !Bool
-  , mockDocIsTrashed          :: !Bool
-  , mockDocIsDeleted          :: !Bool
-  , mockDocViewer             :: !MockViewer
-  , mockDocUserGroupForEid    :: !(Maybe String)
+  { mockDocId                 :: String
+  , mockDocTitle              :: String
+  , mockDocParties            :: [MockSigLink]
+  , mockDocFile               :: Maybe MockMainFile
+  , mockDocSealedFile         :: Maybe MockMainFile
+  , mockDocAuthorAttachments  :: [MockAuthorAttachment]
+  , mockDocCTime              :: String
+  , mockDocMTime              :: String
+  , mockDocTimeoutTime        :: Maybe String
+  , mockDocAutoRemindTime     :: Maybe String
+  , mockDocStatus             :: String
+  , mockDocDaysToSign         :: Int
+  , mockDocDaysToRemind       :: Maybe Int
+  , mockDocDisplayOptions     :: MockDocDisplayOptions
+  , mockDocInvitationMsg      :: String
+  , mockDocConfirmationMsg    :: String
+  , mockDocSMSInvitationMsg   :: String
+  , mockDocSMSConfirmationMsg :: String
+  , mockDocLang               :: String
+  , mockDocAPICallbackURL     :: Maybe String
+  , mockDocObjectVersion      :: Int
+  , mockDocAccessToken        :: Maybe String
+  , mockDocTimezone           :: String
+  , mockDocTags               :: S.Set DocumentTag
+  , mockDocFolderId           :: FolderID
+  , mockDocIsTemplate         :: Bool
+  , mockDocIsSaved            :: Bool
+  , mockDocIsShared           :: Bool
+  , mockDocIsTrashed          :: Bool
+  , mockDocIsDeleted          :: Bool
+  , mockDocViewer             :: MockViewer
+  , mockDocUserGroupForEid    :: Maybe String
   } deriving (Show, Eq)
 
 mockDocUnjson :: UnjsonDef MockDoc
@@ -95,8 +95,8 @@ unjsonMockDocExperimentalFeatures = objectOf
   $ fieldOpt "user_group_to_impersonate_for_eid" identity "MockDoc UserGroupForEid"
 
 data MockMainFile = MockMainFile
-  { mockMainFileId   :: !String
-  , mockMainFileName :: !String
+  { mockMainFileId   :: String
+  , mockMainFileName :: String
   } deriving (Show, Eq)
 
 instance Unjson MockMainFile where
@@ -107,10 +107,10 @@ instance Unjson MockMainFile where
       "MockMainFile Name"
 
 data MockAuthorAttachment = MockAuthorAttachment
-  { mockAuthorAttachmentName              :: !String
-  , mockAuthorAttachmentRequired          :: !Bool
-  , mockAuthorAttachmentAddedToSealedFile :: !Bool
-  , mockAuthorAttachmentFileId            :: !String
+  { mockAuthorAttachmentName              :: String
+  , mockAuthorAttachmentRequired          :: Bool
+  , mockAuthorAttachmentAddedToSealedFile :: Bool
+  , mockAuthorAttachmentFileId            :: String
   } deriving (Show, Eq)
 
 instance Unjson MockAuthorAttachment where
@@ -125,11 +125,11 @@ instance Unjson MockAuthorAttachment where
       <*> field "file_id" mockAuthorAttachmentFileId "MockAuthorAttachment FileID"
 
 data MockDocDisplayOptions = MockDocDisplayOptions
-  { mockDocDisplayOptionsShowHeader        :: !Bool
-  , mockDocDisplayOptionsShowPDFDownload   :: !Bool
-  , mockDocDisplayOptionsShowRejectButton  :: !Bool
-  , mockDocDisplayOptionsAllowRejectReason :: !Bool
-  , mockDocDisplayOptionsShowFooter        :: !Bool
+  { mockDocDisplayOptionsShowHeader        :: Bool
+  , mockDocDisplayOptionsShowPDFDownload   :: Bool
+  , mockDocDisplayOptionsShowRejectButton  :: Bool
+  , mockDocDisplayOptionsAllowRejectReason :: Bool
+  , mockDocDisplayOptionsShowFooter        :: Bool
   } deriving (Show, Eq)
 
 instance Unjson MockDocDisplayOptions where
@@ -153,8 +153,8 @@ instance Unjson MockDocDisplayOptions where
                 "MockDocDisplayOptions ShowFooter"
 
 data MockViewer = MockViewer
-  { mockViewerRole   :: !String
-  , mockViewerSigId  :: !(Maybe String)
+  { mockViewerRole   :: String
+  , mockViewerSigId  :: Maybe String
   } deriving (Show, Eq)
 
 instance Unjson MockViewer where
@@ -165,30 +165,30 @@ instance Unjson MockViewer where
       "MockViewer SigId"
 
 data MockSigLink = MockSigLink
-  { mockSigLinkId                       :: !String
-  , mockSigLinkUserId                   :: !(Maybe String)
-  , mockSigLinkIsAuthor                 :: !Bool
-  , mockSigLinkSignatoryRole            :: !SignatoryRole
-  , mockSigLinkFields                   :: ![MockSigField]
-  , mockSigLinkSignOrder                :: !Int
-  , mockSigLinkSignTime                 :: !(Maybe String)
-  , mockSigLinkSeenTime                 :: !(Maybe String)
-  , mockSigLinkReadInvitationTime       :: !(Maybe String)
-  , mockSigLinkRejectedTime             :: !(Maybe String)
-  , mockSigLinkSignRedirectURL          :: !(Maybe String)
-  , mockSigLinkRejectRedirectURL        :: !(Maybe String)
-  , mockSigLinkEmailDeliveryStatus      :: !String
-  , mockSigLinkMobileDeliveryStatus     :: !String
-  , mockSigLinkCSV                      :: !(Maybe String)
-  , mockSigLinkDeliveryMethod           :: !String
-  , mockSigLinkAuthMethodToView         :: !String
-  , mockSigLinkAuthMethodToViewArchived :: !String
-  , mockSigLinkAuthMethodToSign         :: !String
-  , mockSigLinkConfirmationDelivery     :: !String
-  , mockSigLinkAllowsHighlighting       :: !Bool
-  , mockSigLinkHighlightedPages         :: ![MockSigHighlightedPage]
-  , mockSigLinkAttachments              :: ![MockSigAttachment]
-  , mockSigLinkAPIDeliveryURL           :: !(Maybe String)
+  { mockSigLinkId                       :: String
+  , mockSigLinkUserId                   :: Maybe String
+  , mockSigLinkIsAuthor                 :: Bool
+  , mockSigLinkSignatoryRole            :: SignatoryRole
+  , mockSigLinkFields                   :: [MockSigField]
+  , mockSigLinkSignOrder                :: Int
+  , mockSigLinkSignTime                 :: Maybe String
+  , mockSigLinkSeenTime                 :: Maybe String
+  , mockSigLinkReadInvitationTime       :: Maybe String
+  , mockSigLinkRejectedTime             :: Maybe String
+  , mockSigLinkSignRedirectURL          :: Maybe String
+  , mockSigLinkRejectRedirectURL        :: Maybe String
+  , mockSigLinkEmailDeliveryStatus      :: String
+  , mockSigLinkMobileDeliveryStatus     :: String
+  , mockSigLinkCSV                      :: Maybe String
+  , mockSigLinkDeliveryMethod           :: String
+  , mockSigLinkAuthMethodToView         :: String
+  , mockSigLinkAuthMethodToViewArchived :: String
+  , mockSigLinkAuthMethodToSign         :: String
+  , mockSigLinkConfirmationDelivery     :: String
+  , mockSigLinkAllowsHighlighting       :: Bool
+  , mockSigLinkHighlightedPages         :: [MockSigHighlightedPage]
+  , mockSigLinkAttachments              :: [MockSigAttachment]
+  , mockSigLinkAPIDeliveryURL           :: Maybe String
   } deriving (Show, Eq)
 
 instance Ord MockSigLink where
@@ -253,15 +253,15 @@ defaultMockSigLink = MockSigLink { mockSigLinkId                   = "does not g
                                  }
 
 data MockSigField = MockSigField
-  { mockSigFieldType                   :: !String
-  , mockSigFieldIsObligatory           :: !Bool
-  , mockSigFieldShouldBeFilledBySender :: !Bool
-  , mockSigFieldPlacements             :: ![MockFieldPlacement]
-  , mockSigFieldValue                  :: !(Maybe String)
-  , mockSigFieldIsChecked              :: !(Maybe Bool)
-  , mockSigFieldOrder                  :: !(Maybe Int)
-  , mockSigFieldName                   :: !(Maybe String)
-  , mockSigFieldSignature              :: !(Maybe String)
+  { mockSigFieldType                   :: String
+  , mockSigFieldIsObligatory           :: Bool
+  , mockSigFieldShouldBeFilledBySender :: Bool
+  , mockSigFieldPlacements             :: [MockFieldPlacement]
+  , mockSigFieldValue                  :: Maybe String
+  , mockSigFieldIsChecked              :: Maybe Bool
+  , mockSigFieldOrder                  :: Maybe Int
+  , mockSigFieldName                   :: Maybe String
+  , mockSigFieldSignature              :: Maybe String
   } deriving (Show, Eq)
 
 instance Unjson MockSigField where
@@ -291,14 +291,14 @@ defaultMockSigField = MockSigField { mockSigFieldType                   = "email
                                    }
 
 data MockFieldPlacement = MockFieldPlacement
-  { mockFieldPlacementXrel     :: !Double
-  , mockFieldPlacementYrel     :: !Double
-  , mockFieldPlacementWrel     :: !Double
-  , mockFieldPlacementHrel     :: !Double
-  , mockFieldPlacementFSrel    :: !Double
-  , mockFieldPlacementPage     :: !Int
-  , mockFieldPlacementTip      :: !(Maybe String)
-  , mockFieldPlacementAnchors  :: ![MockAnchor]
+  { mockFieldPlacementXrel     :: Double
+  , mockFieldPlacementYrel     :: Double
+  , mockFieldPlacementWrel     :: Double
+  , mockFieldPlacementHrel     :: Double
+  , mockFieldPlacementFSrel    :: Double
+  , mockFieldPlacementPage     :: Int
+  , mockFieldPlacementTip      :: Maybe String
+  , mockFieldPlacementAnchors  :: [MockAnchor]
   } deriving (Show, Eq)
 
 instance Unjson MockFieldPlacement where
@@ -315,8 +315,8 @@ instance Unjson MockFieldPlacement where
       <*> field "anchors" mockFieldPlacementAnchors "MockFieldPlacement Anchors"
 
 data MockAnchor = MockAnchor
-  { mockAnchorText    :: !String
-  , mockAnchorIndex   :: !Int
+  { mockAnchorText    :: String
+  , mockAnchorIndex   :: Int
   } deriving (Show, Eq)
 
 instance Unjson MockAnchor where
@@ -327,10 +327,10 @@ instance Unjson MockAnchor where
       "MockAnchor Index"
 
 data MockSigAttachment = MockSigAttachment
-  { mockSigAttachmentName         :: !String
-  , mockSigAttachmentDescription  :: !String
-  , mockSigAttachmentFileId       :: !(Maybe String)
-  , mockSigAttachmentFileName     :: !(Maybe String)
+  { mockSigAttachmentName         :: String
+  , mockSigAttachmentDescription  :: String
+  , mockSigAttachmentFileId       :: Maybe String
+  , mockSigAttachmentFileName     :: Maybe String
   } deriving (Show, Eq)
 
 instance Unjson MockSigAttachment where
@@ -343,8 +343,8 @@ instance Unjson MockSigAttachment where
       <*> fieldOpt "file_name" mockSigAttachmentFileName "MockSigAttachment File Name"
 
 data MockSigHighlightedPage = MockSigHighlightedPage
-  { mockSigHighlightedPagePage    :: !Int
-  , mockSigHighlightedPageFileID  :: !String
+  { mockSigHighlightedPagePage    :: Int
+  , mockSigHighlightedPageFileID  :: String
   } deriving (Show, Eq)
 
 instance Unjson MockSigHighlightedPage where

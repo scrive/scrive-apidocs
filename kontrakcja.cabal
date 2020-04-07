@@ -70,6 +70,7 @@ common common-stanza
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
+                    , StrictData
                     , TupleSections
                     , TypeApplications
                     , TypeFamilies

@@ -22,43 +22,43 @@ import StatsD.Config
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
 data CronConf = CronConf
-  { cronAmazonConfig               :: AmazonConfig -- ^ AWS configuration
-                                                   -- (bucket, access key,
-                                                   -- secret key) (lazy as the
-                                                   -- field is undefined in
-                                                   -- tests)
-  , cronDBConfig                   :: !Text               -- ^ Postgresql configuration.
-  , cronMaxDBConnections           :: !Int                  -- ^ Limit of db connections.
-  , cronRedisCacheConfig           :: !(Maybe RedisConfig)  -- ^ Redis configuration.
-  , cronLocalFileCacheSize         :: !Int                  -- ^ Size of local cache for files.
-  , cronLogConfig                  :: !LogConfig            -- ^ Logging configuration.
-  , cronGuardTimeConf              :: !GuardTimeConf        -- ^ GuardTime configuration.
-  , cronCgiGrpConfig               :: !(Maybe CgiGrpConfig) -- ^ CGI GRP (E-ID) configuration.
-  , cronMixpanelToken              :: !(Maybe Text)       -- ^ For Mixpanel integration.
-  , cronNtpServers                 :: ![Text]
+  { cronAmazonConfig               :: ~AmazonConfig -- ^ AWS configuration
+                                                    -- (bucket, access key,
+                                                    -- secret key) (lazy as the
+                                                    -- field is undefined in
+                                                    -- tests)
+  , cronDBConfig                   :: Text                 -- ^ Postgresql configuration.
+  , cronMaxDBConnections           :: Int                  -- ^ Limit of db connections.
+  , cronRedisCacheConfig           :: Maybe RedisConfig    -- ^ Redis configuration.
+  , cronLocalFileCacheSize         :: Int                  -- ^ Size of local cache for files.
+  , cronLogConfig                  :: LogConfig            -- ^ Logging configuration.
+  , cronGuardTimeConf              :: GuardTimeConf        -- ^ GuardTime configuration.
+  , cronCgiGrpConfig               :: Maybe CgiGrpConfig   -- ^ CGI GRP (E-ID) configuration.
+  , cronMixpanelToken              :: Maybe Text       -- ^ For Mixpanel integration.
+  , cronNtpServers                 :: [Text]
     -- ^ List of NTP servers to contact to get an estimate of host clock
     -- error.
-  , cronSalesforceConf             :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
-  , cronPlanhatConf                :: !(Maybe PlanhatConf)
+  , cronSalesforceConf             :: Maybe SalesforceConf -- ^ Salesforce configuration.
+  , cronPlanhatConf                :: Maybe PlanhatConf
     -- ^ To enable data push to Planhat
-  , cronMonitoringConf             :: !(Maybe MonitoringConf)
+  , cronMonitoringConf             :: Maybe MonitoringConf
   , cronMailNoreplyAddress         :: Text               -- ^ Noreply address used when sending email
     -- ^ Configure number of running jobs for individual Consumers
-  , cronConsumerCronMaxJobs        :: !Int
-  , cronConsumerSealingMaxJobs     :: !Int
-  , cronConsumerSigningMaxJobs     :: !Int
-  , cronConsumerExtendingMaxJobs   :: !Int
-  , cronConsumerAPICallbackMaxJobs :: !Int
-  , cronConsumerFilePurgingMaxJobs :: !Int
-  , cronNetsSignConfig             :: !(Maybe NetsSignConfig)
-  , cronPdfToolsLambdaConf         :: PdfToolsLambdaConf -- ^ AWS configuration
-                                                         -- for lambda (lazy as
-                                                         -- the field is
-                                                         -- undefined in tests)
-  , cronMonthlyInvoiceConf         :: !(Maybe MonthlyInvoiceConf)
-  , cronStatsDConf                 :: !(Maybe StatsDConf)
+  , cronConsumerCronMaxJobs        :: Int
+  , cronConsumerSealingMaxJobs     :: Int
+  , cronConsumerSigningMaxJobs     :: Int
+  , cronConsumerExtendingMaxJobs   :: Int
+  , cronConsumerAPICallbackMaxJobs :: Int
+  , cronConsumerFilePurgingMaxJobs :: Int
+  , cronNetsSignConfig             :: Maybe NetsSignConfig
+  , cronPdfToolsLambdaConf         :: ~PdfToolsLambdaConf -- ^ AWS configuration
+                                                          -- for lambda (lazy as
+                                                          -- the field is
+                                                          -- undefined in tests)
+  , cronMonthlyInvoiceConf         :: Maybe MonthlyInvoiceConf
+  , cronStatsDConf                 :: Maybe StatsDConf
   , cronEIDServiceConf             :: Maybe EIDServiceConf
-  , cronKinesisStream             :: Maybe KinesisConf
+  , cronKinesisStream              :: ~(Maybe KinesisConf)
   , cronUseFolderListCallsByDefault :: Bool
   } deriving (Eq, Show)
 

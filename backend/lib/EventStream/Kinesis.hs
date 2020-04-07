@@ -31,9 +31,9 @@ import FileStorage.Class
 import Log.Amazon
 
 data KinesisConf = KinesisConf
-    { kinesisConfRegion :: !AWS.Region
-    , kinesisConfAccessKey :: !ByteString
-    , kinesisConfSecretKey :: !ByteString
+    { kinesisConfRegion :: AWS.Region
+    , kinesisConfAccessKey :: ByteString
+    , kinesisConfSecretKey :: ByteString
     }
   deriving (Show, Eq)
 
