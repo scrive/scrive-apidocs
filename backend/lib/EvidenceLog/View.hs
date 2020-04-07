@@ -288,7 +288,7 @@ simplifiedEventText mactor sim dee = do
                   F.value "provider_nobankid" True
                 NetsDKNemIDSignature_ NetsDKNemIDSignature {..} -> do
                   F.value "provider_dknemid" True
-                EIDServiceIDINSignature_ (EIDServiceIDINSignature CompleteIDINEIDServiceTransactionData {..})
+                EIDServiceIDINSignature_ (EIDServiceNLIDINSignature CompleteNLIDINEIDServiceTransactionData {..})
                   -> do
                     F.value "provider_idin" True
                 EIDServiceFITupasSignature_ _ -> do

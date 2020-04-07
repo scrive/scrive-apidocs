@@ -12,7 +12,7 @@ module EID.Signature.Model (
   , NetsDKNemIDSignature(..)
   , MergeNetsDKNemIDSignature(..)
   -- from EID.EIDService.Types
-  , EIDServiceIDINSignature(..)
+  , EIDServiceNLIDINSignature(..)
   , MergeEIDServiceIDINSignature(..)
   , EIDServiceFITupasSignature(..)
   , MergeEIDServiceFITupasSignature(..)
@@ -47,7 +47,7 @@ data ESignature
   | CGISEBankIDSignature_ !CGISEBankIDSignature
   | NetsNOBankIDSignature_ !NetsNOBankIDSignature
   | NetsDKNemIDSignature_ !NetsDKNemIDSignature
-  | EIDServiceIDINSignature_ !EIDServiceIDINSignature
+  | EIDServiceIDINSignature_ !EIDServiceNLIDINSignature
   | EIDServiceFITupasSignature_ !EIDServiceFITupasSignature
   deriving (Eq, Ord, Show)
 
@@ -224,9 +224,9 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceFITupasSignature 
         sqlSet "signatory_date_of_birth"   eidServiceFITupasSigDateOfBirth
 
 -- | Insert bank id signature for a given signatory or replace the existing one.
-data MergeEIDServiceIDINSignature = MergeEIDServiceIDINSignature SignatoryLinkID EIDServiceIDINSignature
+data MergeEIDServiceIDINSignature = MergeEIDServiceIDINSignature SignatoryLinkID EIDServiceNLIDINSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINSignature () where
-  update (MergeEIDServiceIDINSignature slid (EIDServiceIDINSignature CompleteIDINEIDServiceTransactionData {..}))
+  update (MergeEIDServiceIDINSignature slid (EIDServiceNLIDINSignature CompleteNLIDINEIDServiceTransactionData {..}))
     = do
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
@@ -325,8 +325,8 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       , netsdkSignatorySSN  = fromJust msignatory_personal_number
       , netsdkSignatoryIP   = fromMaybe "" msignatory_ip
       }
-    EIDServiceIDIN -> EIDServiceIDINSignature_ $ EIDServiceIDINSignature
-      CompleteIDINEIDServiceTransactionData
+    EIDServiceIDIN -> EIDServiceIDINSignature_ $ EIDServiceNLIDINSignature
+      CompleteNLIDINEIDServiceTransactionData
         { eiditdName       = fromJust msignatory_name
         , eiditdBirthDate  = fromJust msignatory_dob
         , eiditdCustomerID = fromJust msignatory_personal_number

@@ -43,8 +43,8 @@ data EAuthentication
   | NetsFITupasAuthentication_ !NetsFITupasAuthentication
   | SMSPinAuthentication_ Text -- param is a phone number
   | EIDServiceVerimiAuthentication_ !EIDServiceVerimiAuthentication
-  | EIDServiceIDINAuthentication_ !EIDServiceIDINAuthentication
-  | EIDServiceNemIDAuthentication_ !EIDServiceNemIDAuthentication
+  | EIDServiceIDINAuthentication_ !EIDServiceNLIDINAuthentication
+  | EIDServiceNemIDAuthentication_ !EIDServiceDKNemIDAuthentication
   | EIDServiceNOBankIDAuthentication_ !EIDServiceNOBankIDAuthentication
     deriving (Show)
 
@@ -186,9 +186,9 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceVerimiAuthenticat
         sqlSet "signatory_phone_number" eidServiceVerimiVerifiedPhone
 
 -- | Insert Verimi authentication for a given signatory or replace the existing one.
-data MergeEIDServiceIDINAuthentication = MergeEIDServiceIDINAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceIDINAuthentication
+data MergeEIDServiceIDINAuthentication = MergeEIDServiceIDINAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceNLIDINAuthentication
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINAuthentication () where
-  update (MergeEIDServiceIDINAuthentication authKind sid slid EIDServiceIDINAuthentication {..})
+  update (MergeEIDServiceIDINAuthentication authKind sid slid EIDServiceNLIDINAuthentication {..})
     = do
       dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                IDINAuth
@@ -198,9 +198,9 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINAuthenticatio
         sqlSet "provider_customer_id"    eidServiceIDINCustomerID
 
 -- | Insert NemID authentication for a given signatory or replace the existing one.
-data MergeEIDServiceNemIDAuthentication = MergeEIDServiceNemIDAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceNemIDAuthentication
+data MergeEIDServiceNemIDAuthentication = MergeEIDServiceNemIDAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceDKNemIDAuthentication
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNemIDAuthentication () where
-  update (MergeEIDServiceNemIDAuthentication authKind sid slid EIDServiceNemIDAuthentication {..})
+  update (MergeEIDServiceNemIDAuthentication authKind sid slid EIDServiceDKNemIDAuthentication {..})
     = do
       dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider"                NemIDAuth
@@ -302,14 +302,14 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
       , eidServiceVerimiVerifiedEmail = signatory_email
       , eidServiceVerimiVerifiedPhone = signatory_phone_number
       }
-    IDINAuth -> EIDServiceIDINAuthentication_ EIDServiceIDINAuthentication
+    IDINAuth -> EIDServiceIDINAuthentication_ EIDServiceNLIDINAuthentication
       { eidServiceIDINName          = fromJust msignatory_name
       , eidServiceIDINVerifiedPhone = signatory_phone_number
       , eidServiceIDINBirthDate     = signatory_dob
       , eidServiceIDINCustomerID    = customer_id
       }
-    NemIDAuth -> EIDServiceNemIDAuthentication_ EIDServiceNemIDAuthentication
-      { eidServiceNemIDInternalProvider = unsafeEIDServiceNemIDInternalProviderFromInt16
+    NemIDAuth -> EIDServiceNemIDAuthentication_ EIDServiceDKNemIDAuthentication
+      { eidServiceNemIDInternalProvider = unsafeEIDServiceDKNemIDInternalProviderFromInt16
                                             $ fromJust internal_provider
       , eidServiceNemIDSignatoryName    = fromJust msignatory_name
       , eidServiceNemIDDateOfBirth      = fromJust signatory_dob

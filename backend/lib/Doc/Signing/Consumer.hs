@@ -176,13 +176,17 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                       NetsNOBankID   -> handleNets netsSignConf ds now
                       NetsDKNemID    -> handleNets netsSignConf ds now
                       EIDServiceIDIN -> handleEidService
-                        checkIDINTransactionWithEIDService
+                        (flip getTransactionFromEIDService
+                              EIDServiceTransactionProviderNLIDIN
+                        )
                         processCompleteIDINTransaction
                         mEidServiceConf
                         ds
                         now
                       EIDServiceTupas -> handleEidService
-                        checkFITupasTransactionWithEIDService
+                        (flip getTransactionFromEIDService
+                              EIDServiceTransactionProviderFITupas
+                        )
                         processCompleteFITupasTransaction
                         mEidServiceConf
                         ds
@@ -211,8 +215,9 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       throwE $ Failed Remove
 
     processCompleteIDINTransaction ds@DocumentSigning {..} est ctd now = do
-      dbUpdate . MergeEIDServiceIDINSignature signingSignatoryID $ EIDServiceIDINSignature
-        ctd
+      dbUpdate
+        . MergeEIDServiceIDINSignature signingSignatoryID
+        $ EIDServiceNLIDINSignature ctd
       logInfo_ . ("EidHub NL IDIN Sign succeeded: " <>) . showt $ est
       signFromESignature ds now
       chargeForItemSingle CIIDINSignature . documentid =<< theDocument

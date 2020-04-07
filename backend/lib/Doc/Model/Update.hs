@@ -1901,7 +1901,7 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             $ F.value "signatory_personal_number" netsdkSignatorySSN
           F.value "signatory_personal_number_from_signlink" $ getPersonalNumber sl
           unless (T.null netsdkSignatoryIP) $ F.value "signatory_ip" netsdkSignatoryIP
-        (Just (EIDServiceIDINSignature_ (EIDServiceIDINSignature CompleteIDINEIDServiceTransactionData {..})), _)
+        (Just (EIDServiceIDINSignature_ (EIDServiceNLIDINSignature CompleteNLIDINEIDServiceTransactionData {..})), _)
           -> do
             F.value "hide_pn" $ signatorylinkhidepn sl
             F.value "eleg" True
