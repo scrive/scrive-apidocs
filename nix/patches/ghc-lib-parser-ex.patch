@@ -1,0 +1,12 @@
+diff --git a/ghc-lib-parser-ex.cabal b/ghc-lib-parser-ex.cabal
+index c8cd922..375d586 100644
+--- a/ghc-lib-parser-ex.cabal
++++ b/ghc-lib-parser-ex.cabal
+@@ -1,6 +1,6 @@
+ cabal-version: >= 1.18
+ name:           ghc-lib-parser-ex
+-version:        0.1.0
++version:        8.8.5.0
+ description:    Please see the README on GitHub at <https://github.com/shayne-fletcher/ghc-lib-parser-ex#readme>
+ homepage:       https://github.com/shayne-fletcher/ghc-lib-parser-ex#readme
+ bug-reports:    https://github.com/shayne-fletcher/ghc-lib-parser-ex/issues

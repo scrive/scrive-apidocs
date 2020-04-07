@@ -130,6 +130,27 @@ let
             {}
         ;
 
+        ghc-lib-parser-ex = haskellLib.appendPatch
+          ( callGitPackage super
+            "ghc-lib-parser-ex"
+            "https://github.com/shayne-fletcher/ghc-lib-parser-ex.git"
+            "30c2f941b2b374d21a5ac5d6b0ffbeff1a5df881"
+          )
+          ../patches/ghc-lib-parser-ex.patch
+        ;
+
+        extra = callGitPackage super
+          "extra"
+          "https://github.com/ndmitchell/extra.git"
+          "27d3117d9b7e991f392a9ea829d5d3d7f41c4fe2"
+        ;
+
+        hlint = callGitPackage super
+          "hlint"
+          "https://github.com/ndmitchell/hlint.git"
+          "9b920edf75ff43c5e6001254b644c7242f1d9378"
+        ;
+
         happstack-server = super.callHackage
             "happstack-server"
             "7.5.4"
