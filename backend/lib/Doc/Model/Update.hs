@@ -479,7 +479,7 @@ newFromDocumentID
   -> DocumentID
   -> m (Maybe Document)
 newFromDocumentID f docid = do
-  doc <- query $ GetDocumentByDocumentID docid
+  doc <- dbQuery $ GetDocumentByDocumentID docid
   Just <$> insertNewDocument (f doc)
 
 newFromDocument
@@ -490,8 +490,8 @@ data AddCustomEvidenceEvent = AddCustomEvidenceEvent String Actor
 instance
   (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
   DBUpdate m AddCustomEvidenceEvent () where
-  update (AddCustomEvidenceEvent text actor) = do
-    void . update $ InsertEvidenceEvent
+  dbUpdate (AddCustomEvidenceEvent text actor) = do
+    void . dbUpdate $ InsertEvidenceEvent
       CustomEventEvidence
       (do
         F.value "text" text
@@ -500,7 +500,7 @@ instance
 
 data ArchiveDocument = ArchiveDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument Bool where
-  update (ArchiveDocument uid _actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (ArchiveDocument uid _actor) = updateDocumentWithID $ \did -> do
     now <- currentTime
     runQuery_ . sqlUpdate "signatory_links" $ do
       sqlSet "deleted" now
@@ -534,7 +534,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 
 data ReallyDeleteDocument = ReallyDeleteDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ReallyDeleteDocument Bool where
-  update (ReallyDeleteDocument uid _actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (ReallyDeleteDocument uid _actor) = updateDocumentWithID $ \did -> do
     now <- currentTime
     runQuery_ . sqlUpdate "signatory_links" $ do
       sqlSet "really_deleted" now
@@ -573,7 +573,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 -- Can only be done on documents in preparation.
 data AttachFile = AttachFile FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AttachFile () where
-  update (AttachFile fid a) = updateDocumentWithID $ \did -> do
+  dbUpdate (AttachFile fid a) = updateDocumentWithID $ \did -> do
     runQuery_ . sqlDelete "main_files" $ do
       sqlWhereEq "document_id"     did
       sqlWhereEq "document_status" Preparation
@@ -607,7 +607,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AttachF
 -- | Detach main files in Preparation status.  Document must be in Preparation.
 newtype DetachFile = DetachFile Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m DetachFile () where
-  update (DetachFile a) = updateDocumentWithID $ \did -> do
+  dbUpdate (DetachFile a) = updateDocumentWithID $ \did -> do
     runQuery_ . sqlDelete "main_files" $ do
       sqlWhereEq "document_id"     did
       sqlWhereEq "document_status" Preparation
@@ -622,23 +622,25 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m DetachFile () where
 -- If it has a digital signature, generate an event.
 data AppendSealedFile = AppendSealedFile FileID SealStatus Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendSealedFile () where
-  update (AppendSealedFile fid status actor) = do
+  dbUpdate (AppendSealedFile fid status actor) = do
     updateDocumentWithID $ \did -> do
       appendSealedFile did fid status
       updateMTimeAndObjectVersion (actorTime actor)
     when (isSealed status) $ do
-      void . update $ InsertEvidenceEvent AttachDigitalSignatureSealedFileEvidence
-                                          (return ())
-                                          actor
+      void . dbUpdate $ InsertEvidenceEvent AttachDigitalSignatureSealedFileEvidence
+                                            (return ())
+                                            actor
 
 -- | Append an extended sealed file to a document, as a result of
 -- improving an already sealed document.
 data AppendExtendedSealedFile = AppendExtendedSealedFile FileID SealStatus Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendExtendedSealedFile () where
-  update (AppendExtendedSealedFile fid status actor) = do
+  dbUpdate (AppendExtendedSealedFile fid status actor) = do
     updateDocumentWithID $ \did -> do
       appendSealedFile did fid status
-    void . update $ InsertEvidenceEvent AttachExtendedSealedFileEvidence (return ()) actor
+    void . dbUpdate $ InsertEvidenceEvent AttachExtendedSealedFileEvidence
+                                          (return ())
+                                          actor
 
 appendSealedFile
   :: (MonadDB m, MonadThrow m, TemplatesMonad m)
@@ -659,7 +661,7 @@ appendSealedFile did fid status = do
 
 newtype FixClosedErroredDocument = FixClosedErroredDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m FixClosedErroredDocument () where
-  update (FixClosedErroredDocument _actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (FixClosedErroredDocument _actor) = updateDocumentWithID $ \did -> do
     kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
       sqlSet "status" Closed
       sqlWhereEq "id"     did
@@ -667,7 +669,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m FixClos
 
 newtype CancelDocument = CancelDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CancelDocument () where
-  update (CancelDocument actor) = do
+  dbUpdate (CancelDocument actor) = do
     updateDocumentWithID $ \did -> do
       kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
         sqlSet "status" Canceled
@@ -675,11 +677,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CancelD
         sqlWhereDocumentTypeIs Signable
         sqlWhereDocumentStatusIs Pending
       updateMTimeAndObjectVersion (actorTime actor)
-    void . update $ InsertEvidenceEvent CancelDocumentEvidence (return ()) actor
+    void . dbUpdate $ InsertEvidenceEvent CancelDocumentEvidence (return ()) actor
 
 data ChangeSignatoryEmail = ChangeSignatoryEmail SignatoryLinkID (Maybe User) String Actor
 instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeSignatoryEmail () where
-  update (ChangeSignatoryEmail slid muser email actor) = do
+  dbUpdate (ChangeSignatoryEmail slid muser email actor) = do
     oldemail <- updateDocumentWithID . const $ do
       oldemail :: String <-
         kRunAndFetch1OrThrowWhyNot runIdentity . sqlUpdate "signatory_link_fields" $ do
@@ -699,9 +701,11 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpd
           sqlWhereDocumentWasNotPurged
       updateMTimeAndObjectVersion (actorTime actor)
       return oldemail
-    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForMailBeforeClosing
-    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForMailAfterClosing
-    void . update $ InsertEvidenceEvent
+    dbUpdate
+      $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForMailBeforeClosing
+    dbUpdate
+      $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForMailAfterClosing
+    void . dbUpdate $ InsertEvidenceEvent
       ChangeSignatoryEmailEvidence
       (F.value "oldemail" oldemail >> F.value "newemail" email)
       actor
@@ -709,7 +713,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpd
 data ChangeSignatoryPhone = ChangeSignatoryPhone SignatoryLinkID String Actor
 instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
   => DBUpdate m ChangeSignatoryPhone () where
-  update (ChangeSignatoryPhone slid phone actor) = do
+  dbUpdate (ChangeSignatoryPhone slid phone actor) = do
     oldphone <- updateDocumentWithID . const $ do
       oldphone :: String <-
         kRunAndFetch1OrThrowWhyNot runIdentity . sqlUpdate "signatory_link_fields" $ do
@@ -729,9 +733,10 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
           sqlWhereDocumentWasNotPurged
       updateMTimeAndObjectVersion (actorTime actor)
       return oldphone
-    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForSMSBeforeClosing
-    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForSMSAfterClosing
-    void . update $ InsertEvidenceEvent
+    dbUpdate
+      $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForSMSBeforeClosing
+    dbUpdate $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForSMSAfterClosing
+    void . dbUpdate $ InsertEvidenceEvent
       ChangeSignatoryPhoneEvidence
       (F.value "oldphone" oldphone >> F.value "newphone" phone)
       actor
@@ -748,7 +753,7 @@ data ChangeAuthenticationToViewMethod =
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
   DBUpdate m ChangeAuthenticationToViewMethod () where
 
-  update (ChangeAuthenticationToViewMethod slid authKind newAuthToView mSSN mPhone actor)
+  dbUpdate (ChangeAuthenticationToViewMethod slid authKind newAuthToView mSSN mPhone actor)
     = do
       updateDocumentWithID . const $ do
         -- Get the signatory link before the update
@@ -798,7 +803,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
                 newSSN = fromMaybe "" mSSN
             when (isJust mSSN && newSSN /= oldSSN) $ do
               sl' <- (\did -> dbQuery $ GetSignatoryLinkByID did slid) =<< theDocumentID
-              void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+              void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 UpdateFieldPersonalNumberEvidence
                 (do
                   F.value "value" newSSN
@@ -862,7 +867,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
             -- Add an EvidenceLog event if the value changed
             when (newPhone /= oldPhone) $ do
               sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
-              void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+              void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 UpdateFieldMobileEvidence
                 (do
                   F.value "value" newPhone
@@ -905,11 +910,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
         -> CurrentEvidenceEventType
         -> m ()
       insertEvidenceFor sl e =
-        void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg e
-                                                                       (return ())
-                                                                       (Just sl)
-                                                                       Nothing
-                                                                       actor
+        void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg e
+                                                                         (return ())
+                                                                         (Just sl)
+                                                                         Nothing
+                                                                         actor
 
       addChangeAuthenticationToViewEvidenceEvent
         :: (DocumentMonad m, TemplatesMonad m, MonadThrow m)
@@ -930,7 +935,7 @@ data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod
   Actor
 
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ChangeAuthenticationToSignMethod () where
-  update (ChangeAuthenticationToSignMethod slid newAuthToSign mSSN mPhone actor) = do
+  dbUpdate (ChangeAuthenticationToSignMethod slid newAuthToSign mSSN mPhone actor) = do
     updateDocumentWithID . const $ do
       -- Get the SignatoryLink before the updates
       sl <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
@@ -1026,7 +1031,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         -- Add an EvidenceLog event if the value changed
         when (isJust mSSN && newSSN /= oldSSN) $ do
           sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
-          void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+          void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
             UpdateFieldPersonalNumberEvidence
             (do
               F.value "value" newSSN
@@ -1058,7 +1063,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         -- Add an EvidenceLog event if the value changed
         when (newPhone /= oldPhone) $ do
           sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
-          void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+          void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
             UpdateFieldMobileEvidence
             (do
               F.value "value" newPhone
@@ -1073,17 +1078,17 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
       updateMTimeAndObjectVersion (actorTime actor)
       sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
       let insertEvidence e =
-            void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg e
-                                                                           (return ())
-                                                                           (Just sl')
-                                                                           Nothing
-                                                                           actor
+            void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg e
+                                                                             (return ())
+                                                                             (Just sl')
+                                                                             Nothing
+                                                                             actor
       -- Add event for changing AuthenticationToSignMethod
       mapM_ insertEvidence (authToSignChangeEvidence oldAuthToSign newAuthToSign)
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBUpdate m PreparationToPending () where
-  update (PreparationToPending actor tzn) = do
+  dbUpdate (PreparationToPending actor tzn) = do
     sealingMethod <- getSealingMethodForDocument =<< theDocument
     -- We determine the sealing method (currently Guardtime or PAdES) using
     -- the author's user group settings and store it with the document so that
@@ -1142,7 +1147,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBU
         tot <- fetchOne runIdentity
         updateMTimeAndObjectVersion (actorTime actor)
         return (lang, tot)
-    void . update $ InsertEvidenceEvent
+    void . dbUpdate $ InsertEvidenceEvent
       PreparationToPendingEvidence
       (  F.value "timezone" (TimeZoneName.toString tzn)
       >> F.value "lang" (showt lang)
@@ -1152,7 +1157,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBU
 
 newtype CloseDocument = CloseDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CloseDocument () where
-  update (CloseDocument actor) = do
+  dbUpdate (CloseDocument actor) = do
     updateDocumentWithID $ \docid -> do
       kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
         sqlSet "status" Closed
@@ -1161,11 +1166,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CloseDo
         sqlWhereDocumentStatusIs Pending
         sqlWhereAllSigningPartiesHaveSignedOrApproved
       updateMTimeAndObjectVersion (actorTime actor)
-    void . update $ InsertEvidenceEvent CloseDocumentEvidence (return ()) actor
+    void . dbUpdate $ InsertEvidenceEvent CloseDocumentEvidence (return ()) actor
 
 data DeleteSigAttachment = DeleteSigAttachment SignatoryLinkID SignatoryAttachment Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DeleteSigAttachment () where
-  update (DeleteSigAttachment slid sa actor) = do
+  dbUpdate (DeleteSigAttachment slid sa actor) = do
     (saname :: String) <- updateDocumentWithID . const $ do
       kRunAndFetch1OrThrowWhyNot runIdentity . sqlUpdate "signatory_attachments" $ do
         sqlFrom "signatory_links"
@@ -1176,23 +1181,23 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DeleteS
         sqlWhereSignatoryLinkIDIs slid
         sqlWhereSigningPartyHasNotSignedOrApproved
 
-    void . update $ InsertEvidenceEvent DeleteSigAttachmentEvidence
-                                        (F.value "name" saname)
-                                        actor
+    void . dbUpdate $ InsertEvidenceEvent DeleteSigAttachmentEvidence
+                                          (F.value "name" saname)
+                                          actor
 
 
 data ErrorDocument = ErrorDocument CurrentEvidenceEventType (F.Fields Identity ()) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ErrorDocument () where
-  update (ErrorDocument event textFields actor) = do
+  dbUpdate (ErrorDocument event textFields actor) = do
     updateDocumentWithID $ \docid -> do
       kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
         sqlSet "status" DocumentError
         sqlWhereDocumentIDIs docid
-    void . update $ InsertEvidenceEvent event textFields actor
+    void . dbUpdate $ InsertEvidenceEvent event textFields actor
 
 data MarkDocumentSeen = MarkDocumentSeen SignatoryLinkID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkDocumentSeen () where
-  update (MarkDocumentSeen slid actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (MarkDocumentSeen slid actor) = updateDocumentWithID $ \did -> do
     let time     = actorTime actor
         ipnumber = fromMaybe noIP $ actorIP actor
     kRun1OrThrowWhyNotAllowIgnore . sqlUpdate "signatory_links" $ do
@@ -1211,7 +1216,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkDoc
 
 data MarkInvitationRead = MarkInvitationRead SignatoryLinkID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m MarkInvitationRead Bool where
-  update (MarkInvitationRead slid actor) = do
+  dbUpdate (MarkInvitationRead slid actor) = do
     success <- updateDocumentWithID $ \did -> do
       let time = actorTime actor
       runQuery01 . sqlUpdate "signatory_links" $ do
@@ -1219,8 +1224,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlWhereEq "id"          slid
         sqlWhereEq "document_id" did
         sqlWhere "read_invitation IS NULL"
-    sig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid
-    void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    sig <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
+    void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
       MarkInvitationReadEvidence
       (return ())
       (Just sig)
@@ -1230,7 +1235,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 
 data NewDocument = NewDocument User Text DocumentType TimeZoneName Int Actor FolderID
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MonadBase IO m) => DBUpdate m NewDocument Document where
-  update (NewDocument user title documenttype timezone nrOfOtherSignatories actor desiredFolderId)
+  dbUpdate (NewDocument user title documenttype timezone nrOfOtherSignatories actor desiredFolderId)
     = do
       let ctime = actorTime actor
       authorFields <- signatoryFieldsFromUser user
@@ -1268,7 +1273,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
 data ForwardSigning = ForwardSigning SignatoryLink (Maybe Text) [(FieldIdentity, Text)] Actor
 instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog m) =>
   DBUpdate m ForwardSigning SignatoryLinkID where
-  update (ForwardSigning sl message fieldsWithVTexts actor) = do
+  dbUpdate (ForwardSigning sl message fieldsWithVTexts actor) = do
     updateDocumentWithID $ \docid -> do
       let originalsl = signatorylinkid sl
       newslid <- insertAsAdditionalSignatoryLink docid $ sl
@@ -1302,7 +1307,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog
         sqlWhereEq "signatory_link_id" originalsl
 
       nsl <- dbQuery $ GetSignatoryLinkByID docid newslid
-      void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         ForwardedSigningEvidence
         (return ())
         (Just nsl)
@@ -1326,7 +1331,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog
 data RejectDocument = RejectDocument SignatoryLinkID Bool (Maybe Text) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
   DBUpdate m RejectDocument () where
-  update (RejectDocument slid byApprover customtext actor) = do
+  dbUpdate (RejectDocument slid byApprover customtext actor) = do
     updateDocumentWithID $ \docid -> do
       let time = actorTime actor
       kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
@@ -1352,15 +1357,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
     let event = if byApprover
           then RejectDocumentByApproverEvidence
           else RejectDocumentEvidence
-    void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg event
-                                                                   (return ())
-                                                                   Nothing
-                                                                   customtext
-                                                                   actor
+    void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg event
+                                                                     (return ())
+                                                                     Nothing
+                                                                     customtext
+                                                                     actor
 
 data RestartDocument = RestartDocument Document Actor
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
-  update (RestartDocument doc actor) = do
+  dbUpdate (RestartDocument doc actor) = do
     mndoc <- tryToGetRestarted
     case mndoc of
       Right newdoc -> do
@@ -1370,7 +1375,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
           Nothing -> return Nothing
           Just d  -> do
             copyEvidenceLogToNewDocument (documentid doc) (documentid d)
-            void . withDocument d $ update
+            void . withDocument d $ dbUpdate
               (InsertEvidenceEvent RestartDocumentEvidence (return ()) actor)
 
             return $ Just d
@@ -1427,7 +1432,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
 
 data RestoreArchivedDocument = RestoreArchivedDocument User Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RestoreArchivedDocument () where
-  update (RestoreArchivedDocument user _actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (RestoreArchivedDocument user _actor) = updateDocumentWithID $ \did -> do
     kRunManyOrThrowWhyNot . sqlUpdate "signatory_links" $ do
       sqlSet "deleted" (Nothing :: Maybe UTCTime)
       sqlResult "id"
@@ -1461,7 +1466,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Restore
 -}
 data SaveDocumentForUser = SaveDocumentForUser User SignatoryLinkID
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveDocumentForUser () where
-  update (SaveDocumentForUser user slid) = updateDocumentWithID $ \did -> do
+  dbUpdate (SaveDocumentForUser user slid) = updateDocumentWithID $ \did -> do
     runQuery_ . sqlUpdate "signatory_links" $ do
       sqlSet "user_id" $ user ^. #id
       sqlWhereEq "document_id" did
@@ -1474,7 +1479,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveDoc
 -}
 data SaveSigAttachment = SaveSigAttachment SignatoryLinkID SignatoryAttachment FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveSigAttachment () where
-  update (SaveSigAttachment slid sigattach fid actor) = do
+  dbUpdate (SaveSigAttachment slid sigattach fid actor) = do
     let name = signatoryattachmentname sigattach
     updateDocumentWithID . const $ do
       kRun1OrThrowWhyNot . sqlUpdate "signatory_attachments" $ do
@@ -1485,7 +1490,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveSig
         sqlWhereEq "name" name
         sqlWhereSignatoryLinkIDIs slid
 
-    void . update $ InsertEvidenceEvent
+    void . dbUpdate $ InsertEvidenceEvent
       SaveSigAttachmentEvidence
       (do
         F.value "name" name
@@ -1495,7 +1500,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveSig
 
 data SetHighlightingForPageAndSignatory = SetHighlightingForPageAndSignatory SignatoryLink Int32 FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetHighlightingForPageAndSignatory () where
-  update (SetHighlightingForPageAndSignatory sl page fid actor) = do
+  dbUpdate (SetHighlightingForPageAndSignatory sl page fid actor) = do
     updateDocumentWithID . const $ do
       runQuery_ . sqlDelete "highlighted_pages" $ do
         sqlWhereEq "signatory_link_id" $ signatorylinkid sl
@@ -1504,7 +1509,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetHigh
         sqlSet "signatory_link_id" $ signatorylinkid sl
         sqlSet "page"    page
         sqlSet "file_id" fid
-      void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         PageHighlightingAdded
         (F.value "pageno" page)
         (Just sl)
@@ -1513,12 +1518,12 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetHigh
 
 data ClearHighlightingForPageAndSignatory = ClearHighlightingForPageAndSignatory SignatoryLink Int32 Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ClearHighlightingForPageAndSignatory () where
-  update (ClearHighlightingForPageAndSignatory sl page actor) = do
+  dbUpdate (ClearHighlightingForPageAndSignatory sl page actor) = do
     updateDocumentWithID . const $ do
       runQuery_ . sqlDelete "highlighted_pages" $ do
         sqlWhereEq "signatory_link_id" $ signatorylinkid sl
         sqlWhereEq "page" page
-      void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         PageHighlightingCleared
         (F.value "pageno" page)
         (Just sl)
@@ -1528,15 +1533,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ClearHi
 data SetFieldPlacements = SetFieldPlacements SignatoryFieldID [FieldPlacement]
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetFieldPlacements () where
   -- Delete existing fields and reinsert them
-  update (SetFieldPlacements fieldid placements) = updateDocumentWithID . const $ do
+  dbUpdate (SetFieldPlacements fieldid placements) = updateDocumentWithID . const $ do
     runQuery_ . sqlDelete "field_placements" $ do
       sqlWhereEq "signatory_field_id" fieldid
     insertFieldPlacements [ (fieldid, pl) | pl <- placements ]
 
 data SetDocumentTags = SetDocumentTags (S.Set DocumentTag) Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where
-  update (SetDocumentTags doctags _actor) = updateDocumentWithID $ \did -> do
-    oldtags <- query $ GetDocumentTags did
+  dbUpdate (SetDocumentTags doctags _actor) = updateDocumentWithID $ \did -> do
+    oldtags <- dbQuery $ GetDocumentTags did
     let changed = doctags /= oldtags
     if changed
       then do
@@ -1549,7 +1554,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool 
 
 data SetDocumentInviteTime = SetDocumentInviteTime UTCTime Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentInviteTime () where
-  update (SetDocumentInviteTime invitetime actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (SetDocumentInviteTime invitetime actor) = updateDocumentWithID $ \did -> do
     let ipaddress = fromMaybe noIP $ actorIP actor
     kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
       sqlSet "invite_time" invitetime
@@ -1558,78 +1563,78 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
 
 data SetInviteText = SetInviteText Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetInviteText Bool where
-  update (SetInviteText text _actor) = updateWithoutEvidence "invite_text" text
+  dbUpdate (SetInviteText text _actor) = updateWithoutEvidence "invite_text" text
 
 data SetConfirmText = SetConfirmText Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetConfirmText Bool where
-  update (SetConfirmText text _actor) = updateWithoutEvidence "confirm_text" text
+  dbUpdate (SetConfirmText text _actor) = updateWithoutEvidence "confirm_text" text
 
 data SetSMSInvitationText = SetSMSInvitationText (Maybe Text) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetSMSInvitationText Bool where
-  update (SetSMSInvitationText mtext _actor) =
+  dbUpdate (SetSMSInvitationText mtext _actor) =
     updateWithoutEvidence "sms_invite_text" mtext
 
 data SetSMSConfirmationText = SetSMSConfirmationText (Maybe Text) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetSMSConfirmationText Bool where
-  update (SetSMSConfirmationText mtext _actor) =
+  dbUpdate (SetSMSConfirmationText mtext _actor) =
     updateWithoutEvidence "sms_confirm_text" mtext
 
 data SetShowHeader = SetShowHeader Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowHeader Bool where
-  update (SetShowHeader bool _actor) = updateWithoutEvidence "show_header" bool
+  dbUpdate (SetShowHeader bool _actor) = updateWithoutEvidence "show_header" bool
 
 data SetShowPDFDownload = SetShowPDFDownload Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowPDFDownload Bool where
-  update (SetShowPDFDownload bool _actor) =
+  dbUpdate (SetShowPDFDownload bool _actor) =
     updateWithoutEvidence "show_pdf_download" bool
 
 data SetShowRejectOption = SetShowRejectOption Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowRejectOption Bool where
-  update (SetShowRejectOption bool _actor) =
+  dbUpdate (SetShowRejectOption bool _actor) =
     updateWithoutEvidence "show_reject_option" bool
 
 data SetAllowRejectReason = SetAllowRejectReason Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetAllowRejectReason Bool where
-  update (SetAllowRejectReason bool _actor) =
+  dbUpdate (SetAllowRejectReason bool _actor) =
     updateWithoutEvidence "allow_reject_reason" bool
 
 data SetIsReceipt = SetIsReceipt Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetIsReceipt Bool where
-  update (SetIsReceipt bool _actor) = updateWithoutEvidence "is_receipt" bool
+  dbUpdate (SetIsReceipt bool _actor) = updateWithoutEvidence "is_receipt" bool
 
 data SetShowFooter = SetShowFooter Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowFooter Bool where
-  update (SetShowFooter bool _actor) = updateWithoutEvidence "show_footer" bool
+  dbUpdate (SetShowFooter bool _actor) = updateWithoutEvidence "show_footer" bool
 
 data SetShowArrow = SetShowArrow Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowArrow Bool where
-  update (SetShowArrow bool _actor) = updateWithoutEvidence "show_arrow" bool
+  dbUpdate (SetShowArrow bool _actor) = updateWithoutEvidence "show_arrow" bool
 
 data SetDaysToSign = SetDaysToSign Int32 Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDaysToSign Bool where
-  update (SetDaysToSign days _actor) = updateWithoutEvidence "days_to_sign" days
+  dbUpdate (SetDaysToSign days _actor) = updateWithoutEvidence "days_to_sign" days
 
 data SetDaysToRemind = SetDaysToRemind (Maybe Int32) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDaysToRemind Bool where
-  update (SetDaysToRemind days _actor) = updateWithoutEvidence "days_to_remind" days
+  dbUpdate (SetDaysToRemind days _actor) = updateWithoutEvidence "days_to_remind" days
 
 data SetDocumentTitle = SetDocumentTitle Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentTitle Bool where
-  update (SetDocumentTitle doctitle _actor) = updateWithoutEvidence "title" doctitle
+  dbUpdate (SetDocumentTitle doctitle _actor) = updateWithoutEvidence "title" doctitle
 
 data SetDocumentLang = SetDocumentLang Lang Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentLang Bool where
-  update (SetDocumentLang lang _actor) = updateWithoutEvidence "lang" lang
+  dbUpdate (SetDocumentLang lang _actor) = updateWithoutEvidence "lang" lang
 
 data SetDocumentFolderID = SetDocumentFolderID FolderID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentFolderID Bool where
-  update (SetDocumentFolderID folderId _actor) =
+  dbUpdate (SetDocumentFolderID folderId _actor) =
     updateWithoutEvidence "folder_id" folderId
 
 data SetEmailInvitationDeliveryStatus = SetEmailInvitationDeliveryStatus SignatoryLinkID DeliveryStatus Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m SetEmailInvitationDeliveryStatus Bool where
-  update (SetEmailInvitationDeliveryStatus slid status actor) = do
-    sig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid
+  dbUpdate (SetEmailInvitationDeliveryStatus slid status actor) = do
+    sig <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
     updateDocumentWithID $ \did -> do
       kRun1OrThrowWhyNot . sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
@@ -1639,18 +1644,18 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlWhereSignatoryLinkIDIs slid
         sqlWhereDocumentIDIs did
         sqlWhereDocumentTypeIs Signable
-    nsig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid
+    nsig <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
     let changed = mailinvitationdeliverystatus sig /= mailinvitationdeliverystatus nsig
 
     when_ (changed && status == Delivered)
-      . update
+      . dbUpdate
       $ InsertEvidenceEventWithAffectedSignatoryAndMsg InvitationDeliveredByEmail
                                                        (return ())
                                                        (Just nsig)
                                                        Nothing
                                                        actor
     when_ (changed && status == Undelivered)
-      . update
+      . dbUpdate
       $ InsertEvidenceEventWithAffectedSignatoryAndMsg InvitationUndeliveredByEmail
                                                        (return ())
                                                        (Just nsig)
@@ -1660,8 +1665,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 
 data SetSMSInvitationDeliveryStatus = SetSMSInvitationDeliveryStatus SignatoryLinkID DeliveryStatus Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
-  update (SetSMSInvitationDeliveryStatus slid status actor) = do
-    sig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid
+  dbUpdate (SetSMSInvitationDeliveryStatus slid status actor) = do
+    sig <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
     updateDocumentWithID $ \did -> do
       runQuery_ . sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
@@ -1671,17 +1676,17 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlWhereSignatoryLinkIDIs slid
         sqlWhereDocumentIDIs did
         sqlWhereDocumentTypeIs Signable
-    nsig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid
+    nsig <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
     let changed = smsinvitationdeliverystatus sig /= smsinvitationdeliverystatus nsig
     when_ (changed && status == Delivered)
-      . update
+      . dbUpdate
       $ InsertEvidenceEventWithAffectedSignatoryAndMsg InvitationDeliveredBySMS
                                                        (return ())
                                                        (Just nsig)
                                                        Nothing
                                                        actor
     when_ (changed && status == Undelivered)
-      . update
+      . dbUpdate
       $ InsertEvidenceEventWithAffectedSignatoryAndMsg InvitationUndeliveredBySMS
                                                        (return ())
                                                        (Just nsig)
@@ -1691,8 +1696,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 
 data SetEmailConfirmationDeliveryStatus = SetEmailConfirmationDeliveryStatus SignatoryLinkID DeliveryStatus Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m SetEmailConfirmationDeliveryStatus Bool where
-  update (SetEmailConfirmationDeliveryStatus slid status actor) = do
-    sig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid
+  dbUpdate (SetEmailConfirmationDeliveryStatus slid status actor) = do
+    sig <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
     updateDocumentWithID $ \did -> do
       kRun1OrThrowWhyNot . sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
@@ -1702,19 +1707,19 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlWhereSignatoryLinkIDIs slid
         sqlWhereDocumentIDIs did
         sqlWhereDocumentTypeIs Signable
-    nsig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid
+    nsig <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid
     let changed = signatorylinkmailconfirmationdeliverystatus sig
           /= signatorylinkmailconfirmationdeliverystatus nsig
 
     when_ (changed && status == Delivered)
-      . update
+      . dbUpdate
       $ InsertEvidenceEventWithAffectedSignatoryAndMsg ConfirmationDeliveredByEmail
                                                        (return ())
                                                        (Just nsig)
                                                        Nothing
                                                        actor
     when_ (changed && status == Undelivered)
-      . update
+      . dbUpdate
       $ InsertEvidenceEventWithAffectedSignatoryAndMsg ConfirmationUndeliveredByEmail
                                                        (return ())
                                                        (Just nsig)
@@ -1724,7 +1729,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 
 data SetDocumentSharing = SetDocumentSharing [DocumentID] Bool
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool where
-  update (SetDocumentSharing dids flag) = do
+  dbUpdate (SetDocumentSharing dids flag) = do
     results <- runQuery . sqlUpdate "documents" $ do
       sqlSet "sharing" (if flag then Shared else Private)
       sqlWhereIn "id" dids
@@ -1732,14 +1737,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool whe
 
 newtype SetDocumentUnsavedDraft = SetDocumentUnsavedDraft Bool
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentUnsavedDraft () where
-  update (SetDocumentUnsavedDraft flag) = updateDocumentWithID $ \did -> do
+  dbUpdate (SetDocumentUnsavedDraft flag) = updateDocumentWithID $ \did -> do
     kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
       sqlSet "unsaved_draft" flag
       sqlWhereDocumentIDIs did
 
 data AddAcceptedAuthorAttachmentsEvents = AddAcceptedAuthorAttachmentsEvents SignatoryLink [FileID] [(Text,AuthorAttachment)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m AddAcceptedAuthorAttachmentsEvents () where
-  update (AddAcceptedAuthorAttachmentsEvents sl acceptedAttachments allAuthorAttachments actor)
+  dbUpdate (AddAcceptedAuthorAttachmentsEvents sl acceptedAttachments allAuthorAttachments actor)
     = generateEvents allAuthorAttachments
     where
       generateEvents [] = return ()
@@ -1750,7 +1755,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
             `elem` acceptedAttachments
             )
           $ do
-              void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsgs
+              void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsgs
                 AuthorAttachmentAccepted
                 (do
                   F.value "attachment_name" (authorattachmentname att)
@@ -1764,9 +1769,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
 
 data AddNotUploadedSignatoryAttachmentsEvents = AddNotUploadedSignatoryAttachmentsEvents SignatoryLink [(Text, Text)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m AddNotUploadedSignatoryAttachmentsEvents () where
-  update (AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText actor)
+  dbUpdate (AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText actor)
     = forM_ notUploadedSignatoryAttachmentsWithText $ \(saName, saNothingToUploadText) ->
-      update $ InsertEvidenceEventWithAffectedSignatoryAndMsgs
+      dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsgs
         SignatoryAttachmentNotUploaded
         (do
           F.value "attachment_name" saName
@@ -1781,7 +1786,7 @@ data ApproveDocument = ApproveDocument SignatoryLinkID Actor
 instance ( DocumentMonad m, TemplatesMonad m
          , MonadThrow m, CryptoRNG m, MonadTime m ) =>
          DBUpdate m ApproveDocument () where
-  update (ApproveDocument slid actor) = do
+  dbUpdate (ApproveDocument slid actor) = do
     updateDocumentWithID $ \docid -> do
       let ipnumber = fromMaybe noIP $ actorIP actor
           time     = actorTime actor
@@ -1797,9 +1802,9 @@ instance ( DocumentMonad m, TemplatesMonad m
         sqlWhereDocumentStatusIs Pending
         sqlWhereSignatoryRoleIsApprover
       updateMTimeAndObjectVersion (actorTime actor)
-    sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid
+    sl <- theDocumentID >>= \docid -> dbQuery $ GetSignatoryLinkByID docid slid
     let signatureFields = return ()
-    void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
       ApprovedByApproverPartyEvidence
       signatureFields
       (Just sl)
@@ -1811,7 +1816,7 @@ data SignDocument = SignDocument SignatoryLinkID (Maybe ESignature) (Maybe Text)
 instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
          , MonadFileStorage m, MonadLog m, MonadThrow m, MonadTime m
          , TemplatesMonad m ) => DBUpdate m SignDocument () where
-  update (SignDocument slid mesig mpin screenshots actor) = do
+  dbUpdate (SignDocument slid mesig mpin screenshots actor) = do
     let
       legacy_signature_error =
         unexpectedError "signing with legacy signatures is not possible"
@@ -1851,7 +1856,7 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
         sqlWhereSigningPartyHasNotSignedOrApproved
         sqlWhereAuthSign
       updateMTimeAndObjectVersion (actorTime actor)
-    sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid
+    sl <- theDocumentID >>= \docid -> dbQuery $ GetSignatoryLinkByID docid slid
     let
       signatureFields = case (mesig, mpin) of
         (Just LegacyBankIDSignature_{}, _) -> legacy_signature_error
@@ -1906,19 +1911,20 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl
         (Nothing, Nothing) -> return ()
-    void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg SignDocumentEvidence
-                                                                   signatureFields
-                                                                   (Just sl)
-                                                                   Nothing
-                                                                   actor
+    void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      SignDocumentEvidence
+      signatureFields
+      (Just sl)
+      Nothing
+      actor
     void $ insertSignatoryScreenshots [(slid, screenshots)]
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
 data ResetSignatoryDetails = ResetSignatoryDetails [SignatoryLink] Actor
 instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
-  update (ResetSignatoryDetails signatories _actor) =
+  dbUpdate (ResetSignatoryDetails signatories _actor) =
     updateDocumentWithID $ \documentid -> do
-      document <- query $ GetDocumentByDocumentID documentid
+      document <- dbQuery $ GetDocumentByDocumentID documentid
       case checkResetSignatoryData document signatories of
         [] -> do
           runQuery_ $ "DELETE FROM signatory_links WHERE document_id =" <?> documentid
@@ -1938,11 +1944,11 @@ data CloneDocumentWithUpdatedAuthor
   = CloneDocumentWithUpdatedAuthor (Maybe User) Document Actor (Document -> Document)
 instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
   => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
-  update (CloneDocumentWithUpdatedAuthor mUser document actor f) = do
+  dbUpdate (CloneDocumentWithUpdatedAuthor mUser document actor f) = do
     siglinks <- forM (documentsignatorylinks document) $ \sl -> do
       sl' <- case mUser of
         Just user | isAuthor sl -> do
-          ugwp <- query . UserGroupGetWithParentsByUserID $ user ^. #id
+          ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
           return $ replaceSignatoryUser sl user ugwp
         _ -> return sl
       return sl' { signatorylinkid = unsafeSignatoryLinkID 0 }
@@ -1950,7 +1956,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
     let mAuthorID = maybesignatory =<< find isAuthor siglinks
     mAuthorUser <- case mAuthorID of
       Nothing       -> return Nothing
-      Just authorID -> query . GetUserByID $ authorID
+      Just authorID -> dbQuery . GetUserByID $ authorID
     -- mAuthorUser and mUser may coincide at this point
 
     mDoc <- flip newFromDocumentID (documentid document) $ f . \doc -> doc
@@ -1969,7 +1975,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
 
 newtype StoreDocumentForTesting = StoreDocumentForTesting Document
 instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where
-  update (StoreDocumentForTesting document) = documentid <$> insertDocument document
+  dbUpdate (StoreDocumentForTesting document) = documentid <$> insertDocument document
 
 {-
    FIXME: this is so wrong on so many different levels
@@ -1978,7 +1984,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m S
 -}
 newtype TemplateFromDocument = TemplateFromDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m TemplateFromDocument () where
-  update (TemplateFromDocument _actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (TemplateFromDocument _actor) = updateDocumentWithID $ \did -> do
     kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
       sqlSet "status" Preparation
       sqlSet "type"   Template
@@ -1988,7 +1994,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Templat
 
 data DocumentFromTemplate = DocumentFromTemplate DocumentID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DocumentFromTemplate () where
-  update (DocumentFromTemplate tplID _actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (DocumentFromTemplate tplID _actor) = updateDocumentWithID $ \did -> do
     kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
       sqlSet "status" Preparation
       sqlSet "type"   Signable
@@ -1998,7 +2004,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Documen
 
 newtype TimeoutDocument = TimeoutDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m TimeoutDocument () where
-  update (TimeoutDocument actor) = do
+  dbUpdate (TimeoutDocument actor) = do
     updateDocumentWithID $ \did -> do
       kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
         sqlSet "status" Timedout
@@ -2006,11 +2012,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Timeout
         sqlWhereDocumentTypeIs Signable
         sqlWhereDocumentStatusIs Pending
       updateMTimeAndObjectVersion (actorTime actor)
-    void . update $ InsertEvidenceEvent TimeoutDocumentEvidence (return ()) actor
+    void . dbUpdate $ InsertEvidenceEvent TimeoutDocumentEvidence (return ()) actor
 
 data ProlongTimeoutedDocument = ProlongTimeoutedDocument Int32 TimeZoneName Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongTimeoutedDocument () where
-  update (ProlongTimeoutedDocument days tzn actor) = do
+  dbUpdate (ProlongTimeoutedDocument days tzn actor) = do
     updateDocumentWithID $ \did -> do
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
@@ -2035,11 +2041,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongT
         sqlSet "deleted"        (Nothing :: Maybe UTCTime)
         sqlSet "really_deleted" (Nothing :: Maybe UTCTime)
         sqlWhereEq "document_id" did
-    void . update $ InsertEvidenceEvent ProlongDocumentEvidence (return ()) actor
+    void . dbUpdate $ InsertEvidenceEvent ProlongDocumentEvidence (return ()) actor
 
 data ProlongPendingDocument = ProlongPendingDocument Int32 Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongPendingDocument () where
-  update (ProlongPendingDocument days actor) = do
+  dbUpdate (ProlongPendingDocument days actor) = do
     updateDocumentWithID $ \did -> do
       kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
         sqlSet "mtime" $ actorTime actor
@@ -2053,11 +2059,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongP
         sqlSet "deleted"        (Nothing :: Maybe UTCTime)
         sqlSet "really_deleted" (Nothing :: Maybe UTCTime)
         sqlWhereEq "document_id" did
-    void . update $ InsertEvidenceEvent ProlongDocumentEvidence (return ()) actor
+    void . dbUpdate $ InsertEvidenceEvent ProlongDocumentEvidence (return ()) actor
 
 data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL APIVersion (Maybe Text)
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentAPICallbackURL Bool where
-  update (SetDocumentAPICallbackURL apiVersion mac) = updateDocumentWithID $ \did -> do
+  dbUpdate (SetDocumentAPICallbackURL apiVersion mac) = updateDocumentWithID $ \did -> do
     let tableColumn = case apiVersion of
           V1 -> "api_v1_callback_url"
           V2 -> "api_v2_callback_url"
@@ -2067,21 +2073,21 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
 
 newtype SetDocumentTimeZoneName = SetDocumentTimeZoneName TimeZoneName
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentTimeZoneName Bool where
-  update (SetDocumentTimeZoneName timezone) = updateDocumentWithID $ \did -> do
+  dbUpdate (SetDocumentTimeZoneName timezone) = updateDocumentWithID $ \did -> do
     runQuery01 . sqlUpdate "documents" $ do
       sqlSet "time_zone_name" timezone
       sqlWhereEq "id" did
 
 newtype SetDocumentUserGroupForEID = SetDocumentUserGroupForEID (Maybe UserGroupID)
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentUserGroupForEID Bool where
-  update (SetDocumentUserGroupForEID mgid) = updateDocumentWithID $ \did -> do
+  dbUpdate (SetDocumentUserGroupForEID mgid) = updateDocumentWithID $ \did -> do
     runQuery01 . sqlUpdate "documents" $ do
       sqlSet "user_group_to_impersonate_for_eid" mgid
       sqlWhereEq "id" did
 
 data PostReminderSend = PostReminderSend SignatoryLink (Maybe Text) Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostReminderSend () where
-  update (PostReminderSend sl mmsg automatic actor) = do
+  dbUpdate (PostReminderSend sl mmsg automatic actor) = do
     updateDocument $ \doc -> do
       let docid = documentid doc
       kRun1OrThrowWhyNot . sqlUpdate "signatory_links" $ do
@@ -2097,7 +2103,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostRem
         sqlWhereDocumentStatusIs Pending
       updateMTimeAndObjectVersion (actorTime actor)
 
-    void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
       (if automatic then AutomaticReminderSent else ReminderSend)
       (return ())
       (Just sl)
@@ -2108,7 +2114,7 @@ data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldIdenti
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateFieldsForSigning () where
   -- Document has to be in Pending state
   -- signatory could not have signed already
-  update (UpdateFieldsForSigning sl fields signaturesContent actor) =
+  dbUpdate (UpdateFieldsForSigning sl fields signaturesContent actor) =
     updateDocumentWithID . const $ do
       let slid = signatorylinkid sl
       let
@@ -2179,7 +2185,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
 
           when (updated /= 0 && changed) $ do
             let eventEvidenceText = getEvidenceTextForUpdateField sl fieldIdent
-            void . update $ InsertEvidenceEvent
+            void . dbUpdate $ InsertEvidenceEvent
               eventEvidenceText
               (do
                 F.value "value" $ case newValue of
@@ -2231,7 +2237,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
 
 data UpdateConsentResponsesForSigning = UpdateConsentResponsesForSigning SignatoryLink SignatoryConsentResponsesForSigning Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateConsentResponsesForSigning () where
-  update (UpdateConsentResponsesForSigning sl (SignatoryConsentResponsesForSigning responses) actor)
+  dbUpdate (UpdateConsentResponsesForSigning sl (SignatoryConsentResponsesForSigning responses) actor)
     = updateDocumentWithID . const . forM_ responses $ \(i, r) -> do
       runQuery_ . sqlUpdate "signatory_link_consent_questions" $ do
         sqlSet "response" r
@@ -2249,7 +2255,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateC
                     F.value "description_title" title
                     F.value "description_text" text
                   )
-          update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+          dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
             eventType
             (do
               F.value "question" scqTitle
@@ -2262,7 +2268,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateC
 
 data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink Text Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdatePhoneAfterIdentificationToView () where
-  update (UpdatePhoneAfterIdentificationToView sl oldphone newphone actor) =
+  dbUpdate (UpdatePhoneAfterIdentificationToView sl oldphone newphone actor) =
     updateDocumentWithID . const $ do
       success <- runQuery01 . sqlUpdate "signatory_link_fields" $ do
         sqlSet "value_text" newphone
@@ -2277,7 +2283,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
           sqlWhereDocumentWasNotPurged
       unless success $ do
         unexpectedError "Failed to update phone number after identification to view"
-      void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         UpdateMobileAfterIdentificationToViewWithNets
         (F.value "oldphone" oldphone >> F.value "newphone" newphone)
         (Just sl)
@@ -2286,7 +2292,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
 
 data UpdateSsnAfterIdentificationToView = UpdateSsnAfterIdentificationToView SignatoryLink Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateSsnAfterIdentificationToView () where
-  update (UpdateSsnAfterIdentificationToView sl new_ssn actor) =
+  dbUpdate (UpdateSsnAfterIdentificationToView sl new_ssn actor) =
     updateDocumentWithID . const $ do
       success <- runQuery01 . sqlUpdate "signatory_link_fields" $ do
         sqlSet "value_text" new_ssn
@@ -2301,7 +2307,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateS
           sqlWhereDocumentWasNotPurged
       unless success $ do
         unexpectedError "Failed to update personal number after identification to view"
-      void . update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         UpdateSsnAfterAuthenticationToViewWithNets
         (F.value "new_ssn" new_ssn)
         (Just sl)
@@ -2311,7 +2317,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateS
 
 data AddDocumentAttachment = AddDocumentAttachment Text Bool Bool FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocumentAttachment Bool where
-  update (AddDocumentAttachment aname arequired aaddedtosealedfile afid _actor) =
+  dbUpdate (AddDocumentAttachment aname arequired aaddedtosealedfile afid _actor) =
     updateDocumentWithID $ \did -> do
       runQuery01 . sqlInsertSelect "author_attachments" "" $ do
         sqlSet "document_id"        did
@@ -2326,7 +2332,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocu
 
 data RemoveDocumentAttachments = RemoveDocumentAttachments FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveDocumentAttachments Bool where
-  update (RemoveDocumentAttachments fid _actor) = updateDocumentWithID $ \did -> do
+  dbUpdate (RemoveDocumentAttachments fid _actor) = updateDocumentWithID $ \did -> do
     count <-
       runQuery
       $   "DELETE FROM author_attachments WHERE document_id ="
@@ -2340,7 +2346,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveD
 
 newtype UpdateShareableLinkHash = UpdateShareableLinkHash (Maybe MagicHash)
 instance (DocumentMonad m, MonadThrow m) => DBUpdate m UpdateShareableLinkHash () where
-  update (UpdateShareableLinkHash mHash) = updateDocumentWithID $ \did ->
+  dbUpdate (UpdateShareableLinkHash mHash) = updateDocumentWithID $ \did ->
     runQuery01_ . sqlUpdate "documents" $ do
       sqlSet "shareable_link_hash" mHash
       sqlWhereEq "id" did
@@ -2349,7 +2355,7 @@ instance (DocumentMonad m, MonadThrow m) => DBUpdate m UpdateShareableLinkHash (
 -- Uses chunking to not overload db when there's a lot of old drafts
 newtype RemoveOldDrafts = RemoveOldDrafts Int32
 instance (MonadDB m, MonadTime m) => DBUpdate m RemoveOldDrafts Int where
-  update (RemoveOldDrafts limit) = do
+  dbUpdate (RemoveOldDrafts limit) = do
     weekAgo <- (7 `daysBefore`) <$> currentTime
     runQuery $ smconcat
       [ "DELETE FROM documents"
@@ -2365,7 +2371,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m RemoveOldDrafts Int where
 
 data SetSigAttachments = SetSigAttachments SignatoryLinkID [SignatoryAttachment] Actor
 instance (DocumentMonad m) => DBUpdate m SetSigAttachments () where
-  update (SetSigAttachments slid sigatts _actor) = updateDocumentWithID . const $ do
+  dbUpdate (SetSigAttachments slid sigatts _actor) = updateDocumentWithID . const $ do
     void doDeleteAll
     forM_ sigatts doInsertOne
     where
@@ -2382,11 +2388,11 @@ instance (DocumentMonad m) => DBUpdate m SetSigAttachments () where
 
 newtype ClearSignatoryEmail = ClearSignatoryEmail SignatoryLinkID
 instance (DocumentMonad m) => DBUpdate m ClearSignatoryEmail () where
-  update (ClearSignatoryEmail slid) = clearSignatoryFieldText slid EmailFT
+  dbUpdate (ClearSignatoryEmail slid) = clearSignatoryFieldText slid EmailFT
 
 newtype ClearSignatoryMobile = ClearSignatoryMobile SignatoryLinkID
 instance (DocumentMonad m) => DBUpdate m ClearSignatoryMobile () where
-  update (ClearSignatoryMobile slid) = clearSignatoryFieldText slid MobileFT
+  dbUpdate (ClearSignatoryMobile slid) = clearSignatoryFieldText slid MobileFT
 
 clearSignatoryFieldText :: (DocumentMonad m) => SignatoryLinkID -> FieldType -> m ()
 clearSignatoryFieldText slid ft = updateDocumentWithID . const $ do
@@ -2397,28 +2403,28 @@ clearSignatoryFieldText slid ft = updateDocumentWithID . const $ do
 
 data UpdateDraft = UpdateDraft Document Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateDraft Bool where
-  update (UpdateDraft document actor) = updateDocument . const $ and <$> sequence
-    [ update $ SetDocumentTitle (documenttitle document) actor
-    , update $ SetDocumentFolderID (documentfolderid document) actor
-    , update $ SetDaysToSign (documentdaystosign document) actor
-    , update $ SetDaysToRemind (documentdaystoremind document) actor
-    , update $ SetDocumentLang (getLang document) actor
-    , update $ SetInviteText (documentinvitetext document) actor
-    , update $ SetConfirmText (documentconfirmtext document) actor
-    , update $ SetSMSInvitationText (documentsmsinvitetext document) actor
-    , update $ SetSMSConfirmationText (documentsmsconfirmtext document) actor
-    , update $ SetShowHeader (documentshowheader document) actor
-    , update $ SetShowPDFDownload (documentshowpdfdownload document) actor
-    , update $ SetShowRejectOption (documentshowrejectoption document) actor
-    , update $ SetAllowRejectReason (documentallowrejectreason document) actor
-    , update $ SetShowFooter (documentshowfooter document) actor
-    , update $ SetIsReceipt (documentisreceipt document) actor
-    , update $ SetDocumentTags (documenttags document) actor
-    , update $ SetShowArrow (documentshowarrow document) actor
-    , update $ SetDocumentAPICallbackURL V1 (documentapiv1callbackurl document)
-    , update $ SetDocumentAPICallbackURL V2 (documentapiv2callbackurl document)
-    , update $ SetDocumentTimeZoneName (documenttimezonename document)
-    , update $ SetDocumentUserGroupForEID (documentusergroupforeid document)
+  dbUpdate (UpdateDraft document actor) = updateDocument . const $ and <$> sequence
+    [ dbUpdate $ SetDocumentTitle (documenttitle document) actor
+    , dbUpdate $ SetDocumentFolderID (documentfolderid document) actor
+    , dbUpdate $ SetDaysToSign (documentdaystosign document) actor
+    , dbUpdate $ SetDaysToRemind (documentdaystoremind document) actor
+    , dbUpdate $ SetDocumentLang (getLang document) actor
+    , dbUpdate $ SetInviteText (documentinvitetext document) actor
+    , dbUpdate $ SetConfirmText (documentconfirmtext document) actor
+    , dbUpdate $ SetSMSInvitationText (documentsmsinvitetext document) actor
+    , dbUpdate $ SetSMSConfirmationText (documentsmsconfirmtext document) actor
+    , dbUpdate $ SetShowHeader (documentshowheader document) actor
+    , dbUpdate $ SetShowPDFDownload (documentshowpdfdownload document) actor
+    , dbUpdate $ SetShowRejectOption (documentshowrejectoption document) actor
+    , dbUpdate $ SetAllowRejectReason (documentallowrejectreason document) actor
+    , dbUpdate $ SetShowFooter (documentshowfooter document) actor
+    , dbUpdate $ SetIsReceipt (documentisreceipt document) actor
+    , dbUpdate $ SetDocumentTags (documenttags document) actor
+    , dbUpdate $ SetShowArrow (documentshowarrow document) actor
+    , dbUpdate $ SetDocumentAPICallbackURL V1 (documentapiv1callbackurl document)
+    , dbUpdate $ SetDocumentAPICallbackURL V2 (documentapiv2callbackurl document)
+    , dbUpdate $ SetDocumentTimeZoneName (documenttimezonename document)
+    , dbUpdate $ SetDocumentUserGroupForEID (documentusergroupforeid document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
     ]
 
@@ -2429,7 +2435,7 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
   -- Connect only signatory links that belong to a document that is
   -- not a template nor draft and are not already connected to an
   -- existing user.
-  update (ConnectSignatoriesToUser email uid time) = runSQL_ $ smconcat
+  dbUpdate (ConnectSignatoriesToUser email uid time) = runSQL_ $ smconcat
     [ "WITH ids AS ("
     , "SELECT d.id AS doc_id, sl.id AS sl_id"
     , "  FROM documents d"
@@ -2459,7 +2465,7 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
 --    and confirmation email with links may still reference it)
 newtype PurgeDocuments = PurgeDocuments Int32
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
-  update (PurgeDocuments savedDocumentLingerDays) = do
+  dbUpdate (PurgeDocuments savedDocumentLingerDays) = do
     now <- currentTime
     -- Unlink documents that were in thrash long enough.
     runQuery_ . sqlUpdate "documents d" $ do
@@ -2702,7 +2708,7 @@ archiveIdleDocuments now = do
 
 data ArchiveIdleDocumentsForUserInUserGroup = ArchiveIdleDocumentsForUserInUserGroup UserID UserGroupID DocumentStatus Int16 UTCTime
 instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInUserGroup Int where
-  update (ArchiveIdleDocumentsForUserInUserGroup uid ugid status timeoutDays now) = do
+  dbUpdate (ArchiveIdleDocumentsForUserInUserGroup uid ugid status timeoutDays now) = do
     runSQL
       $   "WITH user_idle_docs AS ("
       <+> "SELECT d.id"
@@ -2735,7 +2741,7 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInUserGroup Int wher
 
 newtype UpdateAuthorUserID = UpdateAuthorUserID Int
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateAuthorUserID Int where
-  update (UpdateAuthorUserID limit) = do
+  dbUpdate (UpdateAuthorUserID limit) = do
     runQuery . sqlUpdate "documents" $ do
       sqlWith "document_authors" . sqlSelect "documents d" $ do
         sqlResult "d.id as document_id"
@@ -2918,15 +2924,15 @@ data NewSignatoryAccessToken = NewSignatoryAccessToken
   SignatoryLinkID SignatoryAccessTokenReason (Maybe UTCTime)
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
   => DBUpdate m NewSignatoryAccessToken MagicHash where
-  update (NewSignatoryAccessToken slid reason mexptime) = do
+  dbUpdate (NewSignatoryAccessToken slid reason mexptime) = do
     hash <- random
-    update $ NewSignatoryAccessTokenWithHash slid reason mexptime hash
+    dbUpdate $ NewSignatoryAccessTokenWithHash slid reason mexptime hash
 
 data NewSignatoryAccessTokenWithHash = NewSignatoryAccessTokenWithHash
   SignatoryLinkID SignatoryAccessTokenReason (Maybe UTCTime) MagicHash
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
   => DBUpdate m NewSignatoryAccessTokenWithHash MagicHash where
-  update (NewSignatoryAccessTokenWithHash slid reason mexptime hash) = do
+  dbUpdate (NewSignatoryAccessTokenWithHash slid reason mexptime hash) = do
     runQuery_ . sqlInsertSelect "signatory_access_tokens" "" $ do
       sqlSet "hash"              hash
       sqlSet "signatory_link_id" slid
@@ -2938,7 +2944,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
 data PurgeTimeoutedSignatoryAccessTokens= PurgeTimeoutedSignatoryAccessTokens
 instance (MonadDB m, MonadTime m)
   => DBUpdate m PurgeTimeoutedSignatoryAccessTokens Int where
-  update _ = do
+  dbUpdate _ = do
     now <- currentTime
     runQuery . sqlDelete "signatory_access_tokens" $ do
       sqlWith "ids_to_purge" . sqlSelect "signatory_access_tokens sat" $ do
@@ -2951,7 +2957,7 @@ data InvalidateSignatoryAccessTokens
   = InvalidateSignatoryAccessTokens SignatoryLinkID SignatoryAccessTokenReason
 instance (DocumentMonad m, MonadDB m)
   => DBUpdate m InvalidateSignatoryAccessTokens () where
-  update (InvalidateSignatoryAccessTokens slid reason) = do
+  dbUpdate (InvalidateSignatoryAccessTokens slid reason) = do
     runQuery_ . sqlDelete "signatory_access_tokens" $ do
       sqlWhereEq "reason"            reason
       sqlWhereEq "signatory_link_id" slid
@@ -2960,7 +2966,7 @@ newtype ExtendSignatoryAccessTokensForAccessBeforeClosing
   = ExtendSignatoryAccessTokensForAccessBeforeClosing DocumentID
 instance (MonadDB m, MonadTime m)
   => DBUpdate m ExtendSignatoryAccessTokensForAccessBeforeClosing () where
-  update (ExtendSignatoryAccessTokensForAccessBeforeClosing did) = do
+  dbUpdate (ExtendSignatoryAccessTokensForAccessBeforeClosing did) = do
     now <- currentTime
 
     runQuery_ . sqlUpdate "signatory_access_tokens" $ do
@@ -2980,7 +2986,7 @@ data SetDocumentApiCallbackResult = SetDocumentApiCallbackResult DocumentID (May
 instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where
   -- this should be written as proper upsert, but hpq does not support it yet
   -- not a problem, we don't care about any races for this
-  update (SetDocumentApiCallbackResult did mtext) = do
+  dbUpdate (SetDocumentApiCallbackResult did mtext) = do
     runQuery_ . sqlUpdate "api_callback_result" $ do
       sqlSet "callback_result" mtext
       sqlWhereEq "document_id" did
@@ -2994,7 +3000,7 @@ instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where
 data TransferDocument = TransferDocument DocumentID UserID
 instance MonadDB m
   => DBUpdate m TransferDocument () where
-  update (TransferDocument did uid) = do
+  dbUpdate (TransferDocument did uid) = do
     runQuery_ . sqlUpdate "signatory_links" $ do
       sqlFrom "documents"
       sqlWhereEq "documents.id" did

@@ -90,7 +90,7 @@ expireDocumentAutomaticReminders = do
 
 data GetExpiredAutomaticReminders = GetExpiredAutomaticReminders
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredAutomaticReminders [DocumentAutomaticReminder] where
-  query GetExpiredAutomaticReminders = do
+  dbQuery GetExpiredAutomaticReminders = do
     now <- currentTime
     runQuery_ . sqlSelect "document_automatic_reminders" $ do
       mapM_ sqlResult selectAutomaticReminderSelectorsList
@@ -99,7 +99,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredAutomatic
 
 data CreateAutomaticReminder = CreateAutomaticReminder DocumentID Int32 TimeZoneName
 instance (MonadDB m, MonadThrow m, MonadTime m, MonadMask m) => DBUpdate m CreateAutomaticReminder DocumentAutomaticReminder where
-  update (CreateAutomaticReminder did days tzn) = withTimeZone defaultTimeZoneName $ do
+  dbUpdate (CreateAutomaticReminder did days tzn) = withTimeZone defaultTimeZoneName $ do
     time <- currentTime
     let timestamp = formatTime' "%F" time <> " " <> T.unpack (TimeZoneName.toString tzn)
     runQuery_ . sqlInsert "document_automatic_reminders" $ do
@@ -117,7 +117,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m, MonadMask m) => DBUpdate m Creat
 
 newtype DeleteAutomaticReminder = DeleteAutomaticReminder DocumentID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAutomaticReminder Bool where
-  update (DeleteAutomaticReminder did) = do
+  dbUpdate (DeleteAutomaticReminder did) = do
     runQuery01 . sqlDelete "document_automatic_reminders" $ do
       sqlWhereEq "document_id" did
 

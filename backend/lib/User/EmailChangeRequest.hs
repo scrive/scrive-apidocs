@@ -77,13 +77,13 @@ selectEmailChangeRequestSelectorsList = ["user_id", "expires", "new_email", "tok
 
 data DeleteExpiredEmailChangeRequests = DeleteExpiredEmailChangeRequests
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredEmailChangeRequests () where
-  update DeleteExpiredEmailChangeRequests = do
+  dbUpdate DeleteExpiredEmailChangeRequests = do
     now <- currentTime
     (runQuery_ . sqlDelete "email_change_requests") . sqlWhere $ "expires <" <?> now
 
 data GetExpiredEmailChangeRequestsForTesting = GetExpiredEmailChangeRequestsForTesting
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredEmailChangeRequestsForTesting [EmailChangeRequest] where
-  query GetExpiredEmailChangeRequestsForTesting = do
+  dbQuery GetExpiredEmailChangeRequestsForTesting = do
     now <- currentTime
     runQuery_ . sqlSelect "email_change_requests" $ do
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
@@ -92,7 +92,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredEmailChan
 
 newtype GetEmailChangeRequest = GetEmailChangeRequest UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailChangeRequest (Maybe EmailChangeRequest) where
-  query (GetEmailChangeRequest user_id) = do
+  dbQuery (GetEmailChangeRequest user_id) = do
     now <- currentTime
     runQuery_ . sqlSelect "email_change_requests" $ do
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
@@ -102,7 +102,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailChangeReque
 
 newtype CreateEmailChangeRequest = CreateEmailChangeRequest EmailChangeRequest
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmailChangeRequest EmailChangeRequest where
-  update (CreateEmailChangeRequest EmailChangeRequest {..}) = do
+  dbUpdate (CreateEmailChangeRequest EmailChangeRequest {..}) = do
     runQuery_ . sqlInsert "email_change_requests" $ do
       sqlSet "user_id"   ecrUserID
       sqlSet "new_email" ecrNewEmail
@@ -113,7 +113,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmailChangeRequest EmailC
 
 newtype DeleteEmailChangeRequest = DeleteEmailChangeRequest UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteEmailChangeRequest Bool where
-  update (DeleteEmailChangeRequest user_id) = do
+  dbUpdate (DeleteEmailChangeRequest user_id) = do
     runQuery01 . sqlDelete "email_change_requests" $ do
       sqlWhereEq "user_id" user_id
 

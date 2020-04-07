@@ -64,7 +64,7 @@ instance Loggable KontraInfoForSMS where
 
 data AddKontraInfoForSMS = AddKontraInfoForSMS ShortMessageID KontraInfoForSMS
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForSMS Bool where
-  update (AddKontraInfoForSMS smsid kifs) = do
+  dbUpdate (AddKontraInfoForSMS smsid kifs) = do
     runQuery01 . sqlInsert "kontra_info_for_smses" $ do
       sqlSet "sms_id" smsid
       case kifs of

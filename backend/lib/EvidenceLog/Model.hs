@@ -163,7 +163,7 @@ parseEventTextTemplate name s =
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsgs Bool where
   -- FIXME: change to mmsg :: Maybe XMLContent
-  update (InsertEvidenceEventWithAffectedSignatoryAndMsgs event textFields masl mmsg mamsg actor)
+  dbUpdate (InsertEvidenceEventWithAffectedSignatoryAndMsgs event textFields masl mmsg mamsg actor)
     = do
       text      <- evidenceLogText event textFields masl mmsg mamsg
       did       <- theDocumentID
@@ -190,13 +190,13 @@ instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdat
         sqlSet "actor" $ actorWho actor
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
-  update (InsertEvidenceEvent event textFields actor) = update
+  dbUpdate (InsertEvidenceEvent event textFields actor) = dbUpdate
     (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor
     )
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
-  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor)
-    = update
+  dbUpdate (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor)
+    = dbUpdate
       (InsertEvidenceEventWithAffectedSignatoryAndMsgs event
                                                        textFields
                                                        masl
@@ -232,7 +232,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
 
 newtype GetEvidenceLog = GetEvidenceLog DocumentID
 instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
-  query (GetEvidenceLog docid) = do
+  dbQuery (GetEvidenceLog docid) = do
     runQuery_
       $   "SELECT "
       <>  "  document_id"

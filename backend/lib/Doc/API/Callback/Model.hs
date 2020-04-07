@@ -122,7 +122,7 @@ apiCallbackNotificationChannel = "api_callback"
 
 newtype CheckQueuedCallbacksFor = CheckQueuedCallbacksFor DocumentID
 instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool where
-  query (CheckQueuedCallbacksFor did) = do
+  dbQuery (CheckQueuedCallbacksFor did) = do
     runSQL01_
       $   "SELECT EXISTS (SELECT TRUE FROM document_api_callbacks WHERE document_id ="
       <?> did
@@ -152,7 +152,7 @@ instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback ()
   --    so the select returns no rows.
   --  * We end up inserting #3 as a separate callback, even though we could
   --    replace #2 instead.
-  update (MergeAPICallback did url apiVersion) = logDocument did $ do
+  dbUpdate (MergeAPICallback did url apiVersion) = logDocument did $ do
     updated <- runQuery . sqlUpdate "document_api_callbacks" $ do
       setFields
       sqlWhereEq "document_id" did

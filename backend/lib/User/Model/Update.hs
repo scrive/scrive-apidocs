@@ -50,7 +50,7 @@ import Util.HasSomeUserInfo
 
 data AcceptTermsOfService = AcceptTermsOfService UserID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
-  update (AcceptTermsOfService uid time) = do
+  dbUpdate (AcceptTermsOfService uid time) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "has_accepted_terms_of_service" time
       sqlWhereEq "id" uid
@@ -68,8 +68,8 @@ data AddUser = AddUser
   (S.Set Tag)
 
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm it et) = do
-    mu <- query . GetUserByEmail $ Email email
+  dbUpdate (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm it et) = do
+    mu <- dbQuery . GetUserByEmail $ Email email
     case mu of
       Just _  -> return Nothing -- user with the same email address exists
       Nothing -> do
@@ -108,9 +108,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
 newtype DeleteUser = DeleteUser UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBUpdate m DeleteUser Bool where
-  update (DeleteUser uid) = do
+  dbUpdate (DeleteUser uid) = do
     now   <- currentTime
-    muser <- query $ GetUserByID uid
+    muser <- dbQuery $ GetUserByID uid
     user  <- case muser of
       Nothing   -> unexpectedError $ "Couldn't find user " <> showt uid
       Just user -> return user
@@ -218,7 +218,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m RemoveInactiveUser 
   -- yet not active account the true fix is to not have inactive
   -- accounts, but we are not close to that point yet. Here is a
   -- kludge to get around our own bug.
-  update (RemoveInactiveUser uid) = do
+  dbUpdate (RemoveInactiveUser uid) = do
     runQuery_ $ "SELECT TRUE FROM companyinvites where user_id = " <?> uid
     ci :: Maybe Bool <- fetchMaybe runIdentity
     if isJust ci
@@ -237,7 +237,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m RemoveInactiveUser 
 
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
-  update (SetSignupMethod uid signupmethod) = do
+  dbUpdate (SetSignupMethod uid signupmethod) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "signup_method" signupmethod
       sqlWhereEq "id" uid
@@ -246,7 +246,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
 data SetUserUserGroup = SetUserUserGroup UserID UserGroupID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
   -- also set the new user_group company
-  update (SetUserUserGroup uid ugid) = dbQuery (UserGroupGet ugid) >>= \case
+  dbUpdate (SetUserUserGroup uid ugid) = dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return False
     Just ug -> runQuery01 . sqlUpdate "users" $ do
       sqlSet "user_group_id" $ ug ^. #id
@@ -255,14 +255,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
 
 data SetUserGroup = SetUserGroup UserID (Maybe UserGroupID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserGroup Bool where
-  update (SetUserGroup uid mugid) = runQuery01 . sqlUpdate "users" $ do
+  dbUpdate (SetUserGroup uid mugid) = runQuery01 . sqlUpdate "users" $ do
     sqlSet "user_group_id" mugid
     sqlWhereEq "id" uid
     sqlWhereIsNULL "deleted"
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompanyAdmin Bool where
-  update (SetUserCompanyAdmin uid iscompanyadmin) = do
+  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = do
     runQuery_
       $   "SELECT user_group_id FROM users WHERE id ="
       <?> uid
@@ -277,17 +277,17 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompanyAdmin Bool where
 
 data SetUserEmail = SetUserEmail UserID Email
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserEmail Bool where
-  update (SetUserEmail uid email) = do
+  dbUpdate (SetUserEmail uid email) = do
     res <- runQuery01 . sqlUpdate "users" $ do
       sqlSet "email" . T.toLower $ unEmail email
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
-    void . update $ UpdateDraftsAndTemplatesWithUserData uid
+    void . dbUpdate $ UpdateDraftsAndTemplatesWithUserData uid
     return res
 
 data SetUserInfo = SetUserInfo UserID UserInfo
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserInfo Bool where
-  update (SetUserInfo uid info) = do
+  dbUpdate (SetUserInfo uid info) = do
     res <- runQuery01 . sqlUpdate "users" $ do
       sqlSet "first_name" $ info ^. #firstName
       sqlSet "last_name" $ info ^. #lastName
@@ -297,12 +297,12 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserInfo Bool where
       sqlSet "email" . T.toLower $ unEmail (info ^. #email)
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
-    void . update $ UpdateDraftsAndTemplatesWithUserData uid
+    void . dbUpdate $ UpdateDraftsAndTemplatesWithUserData uid
     return res
 
 data SetUserPassword = SetUserPassword UserID Password
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserPassword Bool where
-  update (SetUserPassword uid pwd) = do
+  dbUpdate (SetUserPassword uid pwd) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "password" $ pwdHash pwd
       sqlSet "salt" $ pwdSalt pwd
@@ -311,7 +311,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserPassword Bool where
 
 data SetUserTOTPKey = SetUserTOTPKey UserID ByteString
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTOTPKey Bool where
-  update (SetUserTOTPKey uid key) = do
+  dbUpdate (SetUserTOTPKey uid key) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "totp_key" key
       sqlWhereEq "id" uid
@@ -319,7 +319,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTOTPKey Bool where
 
 newtype ConfirmUserTOTPSetup = ConfirmUserTOTPSetup UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m ConfirmUserTOTPSetup Bool where
-  update (ConfirmUserTOTPSetup uid) = do
+  dbUpdate (ConfirmUserTOTPSetup uid) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "totp_active" True
       sqlWhereEq "id" uid
@@ -327,7 +327,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ConfirmUserTOTPSetup Bool where
 
 newtype DisableUserTOTP = DisableUserTOTP UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DisableUserTOTP Bool where
-  update (DisableUserTOTP uid) = do
+  dbUpdate (DisableUserTOTP uid) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSetCmd "totp_key" "NULL"
       sqlSet "totp_active" False
@@ -336,7 +336,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DisableUserTOTP Bool where
 
 data SetUserTotpIsMandatory = SetUserTotpIsMandatory UserID Bool
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTotpIsMandatory Bool where
-  update (SetUserTotpIsMandatory uid totp_is_mandatory) = do
+  dbUpdate (SetUserTotpIsMandatory uid totp_is_mandatory) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "totp_is_mandatory" totp_is_mandatory
       sqlWhereEq "id" uid
@@ -344,7 +344,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTotpIsMandatory Bool whe
 
 data SetUserSettings = SetUserSettings UserID UserSettings
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
-  update (SetUserSettings uid us) = do
+  dbUpdate (SetUserSettings uid us) = do
     runQuery01 . sqlUpdate "users" $ do
       let drp = us ^. #dataRetentionPolicy
       sqlSet "lang" $ getLang us
@@ -360,8 +360,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
 
 newtype UpdateDraftsAndTemplatesWithUserData = UpdateDraftsAndTemplatesWithUserData UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUserData () where
-  update (UpdateDraftsAndTemplatesWithUserData userid) = do
-    muser <- query $ GetUserByID userid
+  dbUpdate (UpdateDraftsAndTemplatesWithUserData userid) = do
+    muser <- dbQuery $ GetUserByID userid
     case muser of
       Nothing   -> return ()
       Just user -> do
@@ -391,7 +391,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
 
 data SetUserHomeFolder = SetUserHomeFolder UserID FolderID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserHomeFolder Bool where
-  update (SetUserHomeFolder userid fdrid) = do
+  dbUpdate (SetUserHomeFolder userid fdrid) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "home_folder_id" fdrid
       sqlWhereEq "id" userid
@@ -399,7 +399,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserHomeFolder Bool where
 
 data SetLoginAuth = SetLoginAuth UserID LoginAuthMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetLoginAuth Bool where
-  update (SetLoginAuth userid sysauth) = do
+  dbUpdate (SetLoginAuth userid sysauth) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "sysauth" sysauth
       sqlWhereEq "id" userid
@@ -410,8 +410,9 @@ data SetUserTags = SetUserTags {
   , internalTags :: S.Set Tag
   , externalTags :: S.Set Tag
 }
+
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTags () where
-  update SetUserTags {..} = do
+  dbUpdate SetUserTags {..} = do
     runQuery_ . sqlDelete "user_tags" $ sqlWhereEq "user_id" userID
     insertUserTags userID Tag.Internal internalTags
     insertUserTags userID Tag.External externalTags

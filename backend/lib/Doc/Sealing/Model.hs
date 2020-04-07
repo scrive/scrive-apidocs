@@ -17,7 +17,7 @@ documentSealingNotificationChannel = "document_sealing"
 
 newtype ScheduleDocumentSealing = ScheduleDocumentSealing BrandedDomainID
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentSealing () where
-  update (ScheduleDocumentSealing bdid) = do
+  dbUpdate (ScheduleDocumentSealing bdid) = do
     did <- documentid <$> theDocument
     now <- currentTime
     logInfo_ "Attempting to schedule document sealing"

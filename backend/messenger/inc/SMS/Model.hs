@@ -51,7 +51,7 @@ smsFetcher (smsid, provider, originator, msisdn, body, attempts) = ShortMessage
 
 data CreateSMS = CreateSMS SMSProvider Text Text Text
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
-  update (CreateSMS provider originator msisdn body) = do
+  dbUpdate (CreateSMS provider originator msisdn body) = do
     runQuery_ . sqlInsert "smses" $ do
       sqlSet "provider"   provider
       sqlSet "originator" originator
@@ -65,28 +65,28 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
 
 newtype CleanSMSesOlderThanDays = CleanSMSesOlderThanDays Int
 instance (MonadDB m, MonadTime m) => DBUpdate m CleanSMSesOlderThanDays Int where
-  update (CleanSMSesOlderThanDays days) = do
+  dbUpdate (CleanSMSesOlderThanDays days) = do
     past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "smses" $ do
       sqlWhere $ "finished_at <=" <?> past
 
 data UpdateSMSWithTeliaID = UpdateSMSWithTeliaID ShortMessageID Text
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithTeliaID Bool where
-  update (UpdateSMSWithTeliaID mid tid) = do
+  dbUpdate (UpdateSMSWithTeliaID mid tid) = do
     runQuery01 . sqlUpdate "smses" $ do
       sqlSet "telia_id" tid
       sqlWhereEq "id" mid
 
 data UpdateSMSWithMbloxID = UpdateSMSWithMbloxID ShortMessageID Text
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithMbloxID Bool where
-  update (UpdateSMSWithMbloxID mid mlxid) = do
+  dbUpdate (UpdateSMSWithMbloxID mid mlxid) = do
     runQuery01 . sqlUpdate "smses" $ do
       sqlSet "mblox_id" mlxid
       sqlWhereEq "id" mid
 
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
-  update (UpdateWithSMSEvent mid ev) = do
+  dbUpdate (UpdateWithSMSEvent mid ev) = do
     runQuery01 . sqlInsert "sms_events" $ do
       sqlSet "sms_id" mid
       sqlSet "event"  ev
@@ -95,7 +95,7 @@ data UpdateWithSMSEventForTeliaID = UpdateWithSMSEventForTeliaID Text SMSEvent
 instance
   (MonadDB m, MonadThrow m) =>
   DBUpdate m UpdateWithSMSEventForTeliaID Bool where
-  update (UpdateWithSMSEventForTeliaID tid ev) = do
+  dbUpdate (UpdateWithSMSEventForTeliaID tid ev) = do
     runQuery_ . sqlSelect "smses" $ do
       sqlWhereEq "telia_id" tid
       sqlResult "id"
@@ -108,7 +108,7 @@ data UpdateWithSMSEventForMbloxID = UpdateWithSMSEventForMbloxID Text SMSEvent
 instance
   (MonadDB m, MonadThrow m) =>
   DBUpdate m UpdateWithSMSEventForMbloxID Bool where
-  update (UpdateWithSMSEventForMbloxID mlxid ev) = do
+  dbUpdate (UpdateWithSMSEventForMbloxID mlxid ev) = do
     runQuery_ . sqlSelect "smses" $ do
       sqlWhereEq "mblox_id" mlxid
       sqlResult "id"
@@ -122,7 +122,7 @@ instance
   MonadDB m =>
   DBQuery m GetUnreadSMSEvents
   [(SMSEventID, ShortMessageID, SMSEvent, Text)] where
-  query GetUnreadSMSEvents = do
+  dbQuery GetUnreadSMSEvents = do
     runQuery_ . sqlSelect "sms_events" $ do
       sqlJoinOn "smses" "smses.id = sms_events.sms_id"
 
@@ -139,7 +139,7 @@ newtype MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
 instance
   (MonadDB m, MonadThrow m, MonadTime m) =>
   DBUpdate m MarkSMSEventAsRead Bool where
-  update (MarkSMSEventAsRead eid) = do
+  dbUpdate (MarkSMSEventAsRead eid) = do
     now <- currentTime
     runQuery01 . sqlUpdate "sms_events" $ do
       sqlSet "event_read" now

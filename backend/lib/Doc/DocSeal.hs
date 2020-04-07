@@ -903,11 +903,11 @@ addSealedEvidenceEvents actor = do
   forM_ notAddedAttachments $ \a -> do
     contents <- getFileIDContents $ authorattachmentfileid a
     let hash = show $ H.hashWith H.SHA256 contents
-    void . update $ InsertEvidenceEvent
+    void . dbUpdate $ InsertEvidenceEvent
       AuthorAttachmentHashComputed
       (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash)
       actor
-  void . update $ InsertEvidenceEvent AttachSealedFileEvidence (return ()) actor
+  void . dbUpdate $ InsertEvidenceEvent AttachSealedFileEvidence (return ()) actor
 
 runLambdaSealing
   :: ( CryptoRNG m

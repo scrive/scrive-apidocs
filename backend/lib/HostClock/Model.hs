@@ -18,7 +18,7 @@ import DB
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
 instance (MonadDB m, MonadTime m) => DBUpdate m InsertClockOffsetFrequency Int where
-  update (InsertClockOffsetFrequency moffset frequency) = do
+  dbUpdate (InsertClockOffsetFrequency moffset frequency) = do
     now <- currentTime
     runQuery . sqlInsert "host_clock" $ do
       sqlSet "time"            now
@@ -34,7 +34,7 @@ data ClockErrorEstimate = ClockErrorEstimate
 
 data GetLatestClockErrorEstimate = GetLatestClockErrorEstimate
 instance (MonadDB m, MonadThrow m) => DBQuery m GetLatestClockErrorEstimate (Maybe ClockErrorEstimate) where
-  query GetLatestClockErrorEstimate = do
+  dbQuery GetLatestClockErrorEstimate = do
     runQuery_ . sqlSelect "host_clock" $ do
       sqlWhere "time = (SELECT MAX(time) FROM host_clock WHERE clock_offset IS NOT NULL)"
       sqlResult "time"
@@ -54,7 +54,7 @@ maxClockError t e =
 -- used in Evidence of Time
 newtype GetNClockErrorEstimates = GetNClockErrorEstimates Integer
 instance (MonadDB m, MonadThrow m) => DBQuery m GetNClockErrorEstimates [ClockErrorEstimate] where
-  query (GetNClockErrorEstimates limit) = do
+  dbQuery (GetNClockErrorEstimates limit) = do
     runQuery_ . sqlSelect "host_clock" $ do
       sqlResult "time"
       sqlResult "clock_offset"

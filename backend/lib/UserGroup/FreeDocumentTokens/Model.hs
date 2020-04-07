@@ -24,7 +24,7 @@ userGroupFreeDocumentTokensSelectors =
 
 newtype UserGroupFreeDocumentTokensUseOneIfIfPossible = UserGroupFreeDocumentTokensUseOneIfIfPossible UserGroupID
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupFreeDocumentTokensUseOneIfIfPossible Bool where
-  update (UserGroupFreeDocumentTokensUseOneIfIfPossible ugid) = do
+  dbUpdate (UserGroupFreeDocumentTokensUseOneIfIfPossible ugid) = do
     count <- runQuery . sqlUpdate "user_group_free_document_tokens" $ do
       sqlSetCmd "tokens_count" "tokens_count - 1"
       sqlWhere "tokens_count > 0"
@@ -33,7 +33,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupFreeDocumentTokensUseO
 
 data UserGroupFreeDocumentTokensUpdate = UserGroupFreeDocumentTokensUpdate UserGroupID FreeDocumentTokens
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupFreeDocumentTokensUpdate () where
-  update (UserGroupFreeDocumentTokensUpdate ugid fdts) = do
+  dbUpdate (UserGroupFreeDocumentTokensUpdate ugid fdts) = do
     runQuery_ . sqlDelete "user_group_free_document_tokens" $ do
       sqlWhereEq "user_group_id" ugid
     tc <- numberOfValidTokens fdts
@@ -45,15 +45,15 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupFreeDocum
 
 newtype UserGroupFreeDocumentTokensGet = UserGroupFreeDocumentTokensGet UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupFreeDocumentTokensGet FreeDocumentTokens where
-  query (UserGroupFreeDocumentTokensGet ugid) = do
-    mfdt <- query $ UserGroupFreeDocumentTokensGetInternal ugid
+  dbQuery (UserGroupFreeDocumentTokensGet ugid) = do
+    mfdt <- dbQuery $ UserGroupFreeDocumentTokensGetInternal ugid
     case mfdt of
       Just fdt -> return fdt
       Nothing  -> return noFreeDocumentTokens
 
 newtype UserGroupFreeDocumentTokensGetInternal = UserGroupFreeDocumentTokensGetInternal UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupFreeDocumentTokensGetInternal (Maybe FreeDocumentTokens) where
-  query (UserGroupFreeDocumentTokensGetInternal ugid) = do
+  dbQuery (UserGroupFreeDocumentTokensGetInternal ugid) = do
     runQuery_ . sqlSelect "user_group_free_document_tokens" $ do
       mapM_ sqlResult userGroupFreeDocumentTokensSelectors
       sqlWhereEq "user_group_id" ugid

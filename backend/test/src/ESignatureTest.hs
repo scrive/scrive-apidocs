@@ -3,7 +3,7 @@ module ESignatureTest (eSignatureTests) where
 import Test.Framework
 import Test.QuickCheck
 
-import DB hiding (query, update)
+import DB
 import Doc.DocStateData
 import EID.Signature.Model
 import TestingUtil

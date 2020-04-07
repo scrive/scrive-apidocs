@@ -19,7 +19,7 @@ import Log.Identifier
 
 newtype MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Interval
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesForPurgeAfter [FileID] where
-  update (MarkOrphanFilesForPurgeAfter interval) = do
+  dbUpdate (MarkOrphanFilesForPurgeAfter interval) = do
     now <- currentTime
     -- Check if the database still looks similar to what the code below
     -- was written for.

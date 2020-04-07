@@ -186,7 +186,7 @@ selectCallLogItemSelectorsList =
 
 newtype GetCallLogItem = GetCallLogItem CallLogID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCallLogItem CallLogItem where
-  query (GetCallLogItem clid) = do
+  dbQuery (GetCallLogItem clid) = do
     runQuery_ . sqlSelect "api_call_logs" $ do
       mapM_ sqlResult selectCallLogItemSelectorsList
       sqlWhereEq "id" clid
@@ -194,7 +194,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCallLogItem CallLogItem where
 
 newtype GetCallLogList = GetCallLogList UserID
 instance MonadDB m => DBQuery m GetCallLogList [CallLogItem] where
-  query (GetCallLogList userid) = do
+  dbQuery (GetCallLogList userid) = do
     runQuery_ . sqlSelect "api_call_logs" $ do
       mapM_ sqlResult selectCallLogItemSelectorsList
       sqlWhereEq "user_id" userid
@@ -205,7 +205,7 @@ instance MonadDB m => DBQuery m GetCallLogList [CallLogItem] where
 
 data CreateCallLogItem = CreateCallLogItem UserID CallLogData
 instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CreateCallLogItem CallLogItem where
-  update (CreateCallLogItem userid cld) = do
+  dbUpdate (CreateCallLogItem userid cld) = do
     now <- currentTime
     runQuery_ . sqlInsert "api_call_logs" $ do
       sqlSet "user_id" userid

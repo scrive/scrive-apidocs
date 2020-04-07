@@ -6,7 +6,7 @@ import Test.Framework
 import Test.QuickCheck
 import qualified Data.Text as T
 
-import DB hiding (query, update)
+import DB
 import InternalResponse
 import KontraLink
 import MagicHash (unsafeMagicHash)

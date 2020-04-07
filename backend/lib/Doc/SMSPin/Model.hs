@@ -48,7 +48,7 @@ instance ToSQL SMSPinType where
 data GetSignatoryPin = GetSignatoryPin SMSPinType SignatoryLinkID Text
 
 instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSignatoryPin Text where
-  query (GetSignatoryPin pintype slid phone) = do
+  dbQuery (GetSignatoryPin pintype slid phone) = do
     runQuery_ . sqlSelect "signatory_sms_pins" $ do
       sqlResult "pin"
       sqlResult "generated_at"

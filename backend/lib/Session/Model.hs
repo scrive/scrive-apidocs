@@ -144,7 +144,7 @@ getNonTempSessionIDWithTimeout timeoutSecs = do
       sesDomain    <- currentDomain
       let sesExpires = secondsAfter timeoutSecs now
 
-      update . CreateSession $ Session
+      dbUpdate . CreateSession $ Session
         { sesID        = SessionID.tempSessionID
         , sesUserID    = Nothing
         , sesPadUserID = Nothing
@@ -380,14 +380,14 @@ selectSessionSelectorsList =
 data DeleteExpiredSessions = DeleteExpiredSessions
 instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBUpdate m DeleteExpiredSessions () where
-  update DeleteExpiredSessions = do
+  dbUpdate DeleteExpiredSessions = do
     now <- currentTime
     (runQuery_ . sqlDelete "sessions") . sqlWhere $ "expires <" <?> now
 
 data TerminateAllButOneUserSessions = TerminateAllButOneUserSessions UserID SessionID
 instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBUpdate m TerminateAllButOneUserSessions () where
-  update (TerminateAllButOneUserSessions uid sid) = do
+  dbUpdate (TerminateAllButOneUserSessions uid sid) = do
     runQuery_ . sqlDelete "sessions" $ do
       sqlWhereAny [sqlWhere $ "user_id =" <?> uid, sqlWhere $ "pad_user_id =" <?> uid]
       sqlWhere $ "id <>" <?> sid
@@ -395,7 +395,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
 newtype GetSession = GetSession SessionID
 instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBQuery m GetSession (Maybe Session) where
-  query (GetSession sid) = do
+  dbQuery (GetSession sid) = do
     now <- currentTime
     runQuery_ . sqlSelect "sessions" $ do
       mapM_ sqlResult selectSessionSelectorsList
@@ -405,7 +405,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
 
 newtype CreateSession = CreateSession Session
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSession Session where
-  update (CreateSession Session {..}) = do
+  dbUpdate (CreateSession Session {..}) = do
     runQuery_ . sqlInsert "sessions" $ do
       sqlSet "user_id"     sesUserID
       sqlSet "pad_user_id" sesPadUserID
@@ -418,7 +418,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSession Session where
 
 newtype UpdateSession = UpdateSession Session
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSession Bool where
-  update (UpdateSession Session {..}) = do
+  dbUpdate (UpdateSession Session {..}) = do
     runQuery01 . sqlUpdate "sessions" $ do
       sqlSet "user_id"     sesUserID
       sqlSet "pad_user_id" sesPadUserID
@@ -437,13 +437,13 @@ fetchSession (sesID, sesUserID, sesPadUserID, sesExpires, sesToken, sesCSRFToken
 data PurgeExpiredTemporaryLoginTokens = PurgeExpiredTemporaryLoginTokens
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeExpiredTemporaryLoginTokens Int where
   -- Expired tokens should remain in the DB for 12h to provide better error messages
-  update _ = do
+  dbUpdate _ = do
     purgeTime <- ((12 * 60) `minutesBefore`) <$> currentTime
     runSQL $ "DELETE FROM temporary_login_tokens WHERE expiration_time <=" <?> purgeTime
 
 data NewTemporaryLoginToken = NewTemporaryLoginToken UserID UTCTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryLoginToken MagicHash where
-  update (NewTemporaryLoginToken uid expiryTime) = do
+  dbUpdate (NewTemporaryLoginToken uid expiryTime) = do
     hash <- random
     runQuery_ . sqlInsert "temporary_login_tokens" $ do
       sqlSet "hash"            hash
@@ -454,7 +454,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryLoginToken MagicHash
 newtype GetSessionSignatoryLinkIDs = GetSessionSignatoryLinkIDs SessionID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetSessionSignatoryLinkIDs [SignatoryLinkID] where
-  query (GetSessionSignatoryLinkIDs sid) = do
+  dbQuery (GetSessionSignatoryLinkIDs sid) = do
     runQuery_ . sqlSelect "document_session_tokens" $ do
       sqlResult "document_session_tokens.signatory_link_id"
       sqlWhereEq "document_session_tokens.session_id" sid

@@ -23,7 +23,7 @@ import File.FileID
 
 newtype GetFileByFileID = GetFileByFileID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where
-  query (GetFileByFileID fid) = do
+  dbQuery (GetFileByFileID fid) = do
     kRunAndFetch1OrThrowWhyNot fetchFile . sqlSelect "files" $ do
       mapM_ sqlResult filesSelectors
       sqlWhereFileIDIs fid
@@ -31,7 +31,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where
 
 newtype GetMaybeFileByFileID = GetMaybeFileByFileID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File) where
-  query (GetMaybeFileByFileID fid) = do
+  dbQuery (GetMaybeFileByFileID fid) = do
     runQuery_ . sqlSelect "files" $ do
       mapM_ sqlResult filesSelectors
       sqlWhereFileIDIs fid
@@ -44,7 +44,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File
 data NewEmptyFileForAWS = NewEmptyFileForAWS Text BS.ByteString
 instance (MonadDB m, MonadThrow m)
   => DBUpdate m NewEmptyFileForAWS (FileID, BS.ByteString) where
-  update (NewEmptyFileForAWS fname fcontent) = do
+  dbUpdate (NewEmptyFileForAWS fname fcontent) = do
     let fchecksum = BA.convert $ H.hashWith H.SHA1 fcontent
         fsize     = fromIntegral . BS.length $ fcontent :: Int32
     runQuery_ . sqlInsert "files" $ do
@@ -57,7 +57,7 @@ instance (MonadDB m, MonadThrow m)
 
 data FileMovedToAWS = FileMovedToAWS FileID Text AESConf
 instance (MonadDB m, MonadThrow m) => DBUpdate m FileMovedToAWS File where
-  update (FileMovedToAWS fid url aes) = do
+  dbUpdate (FileMovedToAWS fid url aes) = do
     runQuery_ . sqlUpdate "files" $ do
       sqlSet "amazon_url" url
       sqlSet "aes_key" $ aesKey aes
@@ -69,7 +69,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FileMovedToAWS File where
 
 newtype PurgeFile = PurgeFile FileID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
-  update (PurgeFile fid) = do
+  dbUpdate (PurgeFile fid) = do
     now <- currentTime
     kRun1OrThrowWhyNot . sqlUpdate "files" $ do
       sqlSet "purged_time" now

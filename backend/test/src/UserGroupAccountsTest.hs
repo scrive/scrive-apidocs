@@ -8,7 +8,7 @@ import qualified Control.Exception.Lifted as E
 
 import AccessControl.Model
 import AccessControl.Types
-import DB hiding (query, update)
+import DB
 import Doc.DocStateData
 import Doc.Model
 import InternalResponse

@@ -63,7 +63,7 @@ import Util.SignatoryLinkUtils
 
 newtype GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
 instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
-  query (GetSignatoryScreenshots l) = do
+  dbQuery (GetSignatoryScreenshots l) = do
     runQuery_ . sqlSelect "signatory_screenshots" $ do
       sqlWhereIn "signatory_link_id" l
       sqlOrderBy "signatory_link_id"
@@ -97,7 +97,7 @@ instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, 
 
 data FileInDocument = FileInDocument DocumentID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m FileInDocument Bool where
-  query (FileInDocument did fid) = do
+  dbQuery (FileInDocument did fid) = do
     let s1 = sqlSelect "main_files" $ do
           sqlWhereEq "file_id"     fid
           sqlWhereEq "document_id" did
@@ -144,7 +144,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FileInDocument Bool where
 
 newtype GetDocumentTags = GetDocumentTags DocumentID
 instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
-  query (GetDocumentTags did) = do
+  dbQuery (GetDocumentTags did) = do
     runQuery_ . sqlSelect "document_tags" $ do
       mapM_ sqlResult documentTagsSelectors
       sqlWhereEq "document_id" did
@@ -155,7 +155,7 @@ data GetSignatoryLinkByID =
 
 instance (MonadDB m, MonadThrow m) =>
   DBQuery m GetSignatoryLinkByID SignatoryLink where
-  query (GetSignatoryLinkByID did slid) = do
+  dbQuery (GetSignatoryLinkByID did slid) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "signatory_links" $ do
       sqlJoinOn "documents" "signatory_links.document_id = documents.id"
       mapM_ sqlResult signatoryLinksSelectors
@@ -210,7 +210,7 @@ selectDocuments docDomain docFilters orders limit extend = sqlSelect "documents"
 newtype GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentByDocumentID did) = do
+  dbQuery (GetDocumentByDocumentID did) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
@@ -220,7 +220,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document
 newtype GetDocumentByShortDocumentID = GetDocumentByShortDocumentID DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetDocumentByShortDocumentID Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentByShortDocumentID shortDid) = do
+  dbQuery (GetDocumentByShortDocumentID shortDid) = do
     now <- currentTime
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
@@ -232,7 +232,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetDocumentByShortD
 newtype GetDocumentForCache = GetDocumentForCache DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForCache Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentForCache did) = do
+  dbQuery (GetDocumentForCache did) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
@@ -243,7 +243,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForCache Document whe
 newtype GetDocumentForDave = GetDocumentForDave DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForDave Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentForDave did) = do
+  dbQuery (GetDocumentForDave did) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
@@ -252,7 +252,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForDave Document wher
 
 newtype GetDocumentAPICallbackResult = GetDocumentAPICallbackResult DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAPICallbackResult (Maybe String) where
-  query (GetDocumentAPICallbackResult did) = do
+  dbQuery (GetDocumentAPICallbackResult did) = do
     runQuery_ . sqlSelect "api_callback_result" $ do
       sqlResult "callback_result"
       sqlWhereEq "document_id" did
@@ -261,7 +261,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAPICallbackResult (Ma
 
 newtype GetDocumentIDBySignatoryLinkIDWithoutAnyChecks = GetDocumentIDBySignatoryLinkIDWithoutAnyChecks SignatoryLinkID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentIDBySignatoryLinkIDWithoutAnyChecks (Maybe DocumentID) where
-  query (GetDocumentIDBySignatoryLinkIDWithoutAnyChecks slid) = do
+  dbQuery (GetDocumentIDBySignatoryLinkIDWithoutAnyChecks slid) = do
     runQuery_ . sqlSelect "signatory_links" $ do
       sqlResult "signatory_links.document_id"
       sqlWhereEq "signatory_links.id" slid
@@ -270,7 +270,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentIDBySignatoryLinkIDWi
 newtype GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentBySignatoryLinkID slid) = do
+  dbQuery (GetDocumentBySignatoryLinkID slid) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
@@ -281,7 +281,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Doc
 newtype GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
   -- FIXME: Use domains/filters.
-  query (GetDocumentsBySignatoryLinkIDs slids) = do
+  dbQuery (GetDocumentsBySignatoryLinkIDs slids) = do
     runQuery_ . sqlSelect "documents" $ do
       sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
@@ -294,7 +294,7 @@ data GetDocumentByDocumentIDSignatoryLinkID = GetDocumentByDocumentIDSignatoryLi
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m GetDocumentByDocumentIDSignatoryLinkID Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentByDocumentIDSignatoryLinkID did slid) = do
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
@@ -308,7 +308,7 @@ data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSi
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
     now <- currentTime
     runQuery_ . sqlSelect "documents" $ do
       sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
@@ -336,7 +336,7 @@ data CheckIfMagicHashIsValid = CheckIfMagicHashIsValid DocumentID SignatoryLinkI
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m CheckIfMagicHashIsValid Bool where
   -- FIXME: Use domains/filters.
-  query (CheckIfMagicHashIsValid did slid mh) = do
+  dbQuery (CheckIfMagicHashIsValid did slid mh) = do
     runQuery_ . sqlSelect "documents" $ do
       sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       mapM_ sqlResult documentsSelectors
@@ -356,7 +356,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m)
 data GetDocumentByDocumentIDAndShareableLinkHash = GetDocumentByDocumentIDAndShareableLinkHash DocumentID MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDAndShareableLinkHash Document where
   -- FIXME: Use domains/filters.
-  query (GetDocumentByDocumentIDAndShareableLinkHash did mh) = do
+  dbQuery (GetDocumentByDocumentIDAndShareableLinkHash did mh) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
@@ -366,7 +366,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDAndSharea
 
 newtype GetDocumentAuthorIDsBySignatoryLinkIDs = GetDocumentAuthorIDsBySignatoryLinkIDs [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAuthorIDsBySignatoryLinkIDs [UserID] where
-  query (GetDocumentAuthorIDsBySignatoryLinkIDs slids) = do
+  dbQuery (GetDocumentAuthorIDsBySignatoryLinkIDs slids) = do
     runQuery_ . sqlSelect "documents" $ do
       sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
       sqlResult "documents.author_user_id"
@@ -389,21 +389,21 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAuthorIDsBySignatoryL
 
 data GetDocuments = GetDocuments DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy] Int
 instance MonadDB m => DBQuery m GetDocuments [Document] where
-  query (GetDocuments domain filters orders limit) = do
+  dbQuery (GetDocuments domain filters orders limit) = do
     runQuery_ . selectDocuments domain filters orders limit $ do
       mapM_ sqlResult documentsSelectors
     fetchMany toComposite
 
 data GetDocument = GetDocument DocumentDomain [DocumentFilter]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocument Document where
-  query (GetDocument domain filters) = do
+  dbQuery (GetDocument domain filters) = do
     runQuery_ . selectDocuments domain filters [] 1 $ do
       mapM_ sqlResult documentsSelectors
     fetchOne toComposite
 
 data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, [Document]) where
-  query (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) =
+  dbQuery (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) =
     do
       --analysis <- explainAnalyze $ toSQLCommand sql
       --trace ("ANALYSIS:" <+> analysis) $ return ()
@@ -436,7 +436,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
 
 data GetDocumentsIDs = GetDocumentsIDs DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy]
 instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
-  query (GetDocumentsIDs domain filters orders) = do
+  dbQuery (GetDocumentsIDs domain filters orders) = do
     let hardLimit = 10000
     runQuery_ . selectDocuments domain filters orders hardLimit $ do
       sqlResult "documents.id"
@@ -445,7 +445,7 @@ instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
 -- | All documents authored by the user that have never been deleted.
 newtype GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsByAuthor [Document] where
-  query (GetDocumentsByAuthor uid) = query $ GetDocuments
+  dbQuery (GetDocumentsByAuthor uid) = dbQuery $ GetDocuments
     (DocumentsVisibleToUser uid)
     [DocumentFilterByAuthor uid, DocumentFilterDeleted False]
     [Asc DocumentOrderByMTime]
@@ -453,7 +453,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsByAuthor [Document] 
 
 newtype GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetTemplatesByAuthor [Document] where
-  query (GetTemplatesByAuthor uid) = query $ GetDocuments
+  dbQuery (GetTemplatesByAuthor uid) = dbQuery $ GetDocuments
     (DocumentsVisibleToUser uid)
     [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate]
     [Asc DocumentOrderByMTime]
@@ -461,7 +461,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetTemplatesByAuthor [Document] 
 
 newtype GetAvailableTemplates = GetAvailableTemplates UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetAvailableTemplates [Document] where
-  query (GetAvailableTemplates uid) = query $ GetDocuments
+  dbQuery (GetAvailableTemplates uid) = dbQuery $ GetDocuments
     (DocumentsVisibleToUser uid)
     [DocumentFilterTemplate, DocumentFilterDeleted False]
     [Asc DocumentOrderByMTime]
@@ -470,7 +470,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetAvailableTemplates [Document]
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk UTCTime Int
 instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
   -- FIXME: Use domains/filters.
-  query (GetTimeoutedButPendingDocumentsChunk mtime size) = do
+  dbQuery (GetTimeoutedButPendingDocumentsChunk mtime size) = do
     runQuery_ . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereEq "documents.status" Pending
@@ -483,7 +483,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsC
 
 data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int64
 instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () where
-  query (CheckDocumentObjectVersionIs did ov) = do
+  dbQuery (CheckDocumentObjectVersionIs did ov) = do
     -- FIXME: Use domains/filters.
     _ :: Bool <- kRunAndFetch1OrThrowWhyNot runIdentity . sqlSelect "documents" $ do
       sqlResult "TRUE"
@@ -494,7 +494,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () 
 newtype DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor = DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor Bool where
   -- FIXME: Use domains/filters.
-  query (DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor did) = do
+  dbQuery (DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor did) = do
     runQuery_ . sqlSelect "documents" $ do
       sqlJoinOn
         "signatory_links"
@@ -512,7 +512,7 @@ instance (MonadDB m, MonadThrow m) => GetRow Document m where
 newtype GetRandomSignatoryLinkIDThatSignedRecently = GetRandomSignatoryLinkIDThatSignedRecently UTCTime
 instance (MonadDB m, MonadThrow m) => DBQuery m GetRandomSignatoryLinkIDThatSignedRecently (Maybe SignatoryLinkID) where
   -- FIXME: Use domains/filters.
-  query (GetRandomSignatoryLinkIDThatSignedRecently time) = do
+  dbQuery (GetRandomSignatoryLinkIDThatSignedRecently time) = do
     runQuery_ . sqlSelect "signatory_links" $ do
       sqlJoinOn "documents" "signatory_links.document_id = documents.id"
       sqlResult "signatory_links.id"

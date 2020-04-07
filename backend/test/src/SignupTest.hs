@@ -7,7 +7,7 @@ import Text.JSON (JSValue)
 import Text.JSON.FromJSValue (fromJSValueField, withJSValue)
 
 import Context
-import DB hiding (query, update)
+import DB
 import MagicHash (MagicHash)
 import Mails.Model
 import MinutesTime

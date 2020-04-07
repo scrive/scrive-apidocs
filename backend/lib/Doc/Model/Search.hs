@@ -33,7 +33,7 @@ updateHistoricalSearchData = do
 
 newtype GetDocumentIdsWithNullSearchField = GetDocumentIdsWithNullSearchField Int
 instance MonadDB m => DBQuery m GetDocumentIdsWithNullSearchField [DocumentID] where
-  query (GetDocumentIdsWithNullSearchField limit) = do
+  dbQuery (GetDocumentIdsWithNullSearchField limit) = do
     runQuery_ . sqlSelect "documents" $ do
       sqlResult "id"
       sqlWhereIsNULL "archive_search_terms"
@@ -45,7 +45,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetDocumentSearchField Bool whe
   -- We do a raw query here, since we rely on a stored procedure in the DB:
   -- `archive_search_terms_func(bigint)`, defined by means of
   -- `Doc.Trigger.archiveSearchTerms`.
-  update (SetDocumentSearchField docID) = do
+  dbUpdate (SetDocumentSearchField docID) = do
     runQuery01 $ rawSQL
       (   "WITH new_archive_search_terms(txt) AS"
       <+> "( SELECT coalesce(archive_search_terms_func($1), '') )"

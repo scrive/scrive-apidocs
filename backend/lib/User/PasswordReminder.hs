@@ -54,13 +54,13 @@ selectPasswordReminderSelectorsList = ["user_id", "expires", "remained_emails", 
 
 data DeleteExpiredPasswordReminders = DeleteExpiredPasswordReminders
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredPasswordReminders () where
-  update DeleteExpiredPasswordReminders = do
+  dbUpdate DeleteExpiredPasswordReminders = do
     now <- currentTime
     runQuery_ . sqlDelete "password_reminders" $ sqlWhere ("expires <" <?> now)
 
 newtype GetPasswordReminder = GetPasswordReminder UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetPasswordReminder (Maybe PasswordReminder) where
-  query (GetPasswordReminder user_id) = do
+  dbQuery (GetPasswordReminder user_id) = do
     now <- currentTime
     runQuery_ . sqlSelect "password_reminders" $ do
       mapM_ sqlResult selectPasswordReminderSelectorsList
@@ -70,7 +70,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetPasswordReminder
 
 newtype CreatePasswordReminder = CreatePasswordReminder PasswordReminder
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreatePasswordReminder PasswordReminder where
-  update (CreatePasswordReminder PasswordReminder {..}) = do
+  dbUpdate (CreatePasswordReminder PasswordReminder {..}) = do
     runQuery_ . sqlInsert "password_reminders" $ do
       sqlSet "user_id"         prUserID
       sqlSet "expires"         prExpires
@@ -81,7 +81,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreatePasswordReminder Password
 
 newtype UpdatePasswordReminder = UpdatePasswordReminder PasswordReminder
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdatePasswordReminder Bool where
-  update (UpdatePasswordReminder PasswordReminder {..}) = do
+  dbUpdate (UpdatePasswordReminder PasswordReminder {..}) = do
     runQuery01 . sqlUpdate "password_reminders" $ do
       sqlSet "expires"         prExpires
       sqlSet "remained_emails" prRemainedEmails
@@ -90,7 +90,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdatePasswordReminder Bool whe
 
 newtype DeletePasswordReminder = DeletePasswordReminder UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeletePasswordReminder Bool where
-  update (DeletePasswordReminder user_id) = do
+  dbUpdate (DeletePasswordReminder user_id) = do
     runQuery01 . sqlDelete "password_reminders" $ do
       sqlWhereEq "user_id" user_id
 

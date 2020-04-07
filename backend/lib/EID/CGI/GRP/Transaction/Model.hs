@@ -76,7 +76,7 @@ cgiSessionID (CgiGrpSignTransaction _ _ _ _ session_id) = session_id
 newtype MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeCgiGrpTransaction () where
-  update (MergeCgiGrpTransaction cgiTransaction) = do
+  dbUpdate (MergeCgiGrpTransaction cgiTransaction) = do
     runQuery_ . sqlInsert "cgi_grp_transactions" $ do
       setFields
       sqlOnConflictOnColumns ["signatory_link_id", "type"] . sqlUpdate "" $ do
@@ -93,7 +93,7 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
 
 data DeleteCgiGrpTransaction = DeleteCgiGrpTransaction CgiGrpTransactionType SignatoryLinkID
 instance (MonadDB m, MonadMask m) => DBUpdate m DeleteCgiGrpTransaction () where
-  update (DeleteCgiGrpTransaction cgitt slid) = do
+  dbUpdate (DeleteCgiGrpTransaction cgitt slid) = do
     runQuery_ . sqlDelete "cgi_grp_transactions" $ do
       sqlWhereEq "signatory_link_id" slid
       sqlWhereEq "type"              cgitt
@@ -102,7 +102,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m DeleteCgiGrpTransaction () where
 data GetCgiGrpTransaction = GetCgiGrpTransaction CgiGrpTransactionType SignatoryLinkID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetCgiGrpTransaction (Maybe CgiGrpTransaction) where
-  query (GetCgiGrpTransaction cgitt slid) = do
+  dbQuery (GetCgiGrpTransaction cgitt slid) = do
     runQuery_ . sqlSelect "cgi_grp_transactions" $ do
       sqlResult "type"
       sqlResult "signatory_link_id"

@@ -7,7 +7,7 @@ import Test.Framework
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
-import DB hiding (query, update)
+import DB
 import Doc.API.V1.Calls
 import Doc.API.V2.AesonTestUtils (testRequestHelperNoAssert_)
 import Doc.API.V2.Calls

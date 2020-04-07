@@ -72,7 +72,7 @@ fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) =
 
 data NewAttachment = NewAttachment UserID Text FileID Actor
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Attachment where
-  update (NewAttachment uid title fileid actor) = do
+  dbUpdate (NewAttachment uid title fileid actor) = do
     let ctime = actorTime actor
     runQuery_ . sqlInsert "attachments" $ do
       sqlSet "user_id" uid
@@ -87,7 +87,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Atta
 
 data DeleteAttachments = DeleteAttachments UserID [AttachmentID] Actor
 instance (CryptoRNG m, MonadDB m) => DBUpdate m DeleteAttachments () where
-  update (DeleteAttachments uid attids actor) = do
+  dbUpdate (DeleteAttachments uid attids actor) = do
     let atime = actorTime actor
     runQuery_ . sqlUpdate "attachments" $ do
       sqlSet "mtime"   atime
@@ -98,7 +98,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m DeleteAttachments () where
 
 data PurgeAttachments = PurgeAttachments
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeAttachments Int where
-  update PurgeAttachments = do
+  dbUpdate PurgeAttachments = do
     now <- currentTime
     runQuery . sqlUpdate "attachments a" $ do
       sqlSet "mtime"   now
@@ -148,7 +148,7 @@ data AttachmentOrderBy
 --
 data GetAttachments = GetAttachments [AttachmentDomain] [AttachmentFilter] [AscDesc AttachmentOrderBy]
 instance MonadDB m => DBQuery m GetAttachments [Attachment] where
-  query (GetAttachments domains filters orderbys) = do
+  dbQuery (GetAttachments domains filters orderbys) = do
     runQuery_ . sqlSelect "attachments" $ do
       sqlAttachmentResults
       sqlWhereAny (map (sqlWhere . domainToSQLCommand) domains)
@@ -172,7 +172,7 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
 
 data SetAttachmentsSharing = SetAttachmentsSharing UserID [AttachmentID] Bool
 instance (MonadDB m) => DBUpdate m SetAttachmentsSharing () where
-  update (SetAttachmentsSharing uid atts flag) = do
+  dbUpdate (SetAttachmentsSharing uid atts flag) = do
     runQuery_ . sqlUpdate "attachments" $ do
       sqlSet "shared" flag
       sqlWhereIn "id" atts

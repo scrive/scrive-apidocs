@@ -155,7 +155,7 @@ unjsonOAuthAuthorizationHideSecrets =
  -}
 newtype CreateAPIToken = CreateAPIToken UserID
 instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreateAPIToken Bool where
-  update (CreateAPIToken userid) = do
+  dbUpdate (CreateAPIToken userid) = do
     token :: MagicHash  <- random
     secret :: MagicHash <- random
     runQuery01 $ rawSQL
@@ -172,7 +172,7 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreateAPIToken Boo
  -}
 data DeleteAPIToken = DeleteAPIToken UserID APIToken
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAPIToken Bool where
-  update (DeleteAPIToken userid (APIToken i t)) = do
+  dbUpdate (DeleteAPIToken userid (APIToken i t)) = do
     runQuery01 $ rawSQL
       (  "DELETE FROM oauth_api_token "
       <> "WHERE user_id = $1 AND id = $2 AND api_token = $3 "
@@ -184,7 +184,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAPIToken Bool where
  -}
 newtype GetAPITokensForUser = GetAPITokensForUser UserID
 instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] where
-  query (GetAPITokensForUser uid) = do
+  dbQuery (GetAPITokensForUser uid) = do
     runQuery_ $ rawSQL
       (  "SELECT id, api_token, api_secret "
       <> "FROM oauth_api_token "
@@ -208,11 +208,11 @@ instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] wher
  -}
 data RequestTempCredentials = RequestTempCredentials OAuthTempCredRequest UTCTime
 instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestTempCredentials (Maybe (APIToken, MagicHash)) where
-  update (RequestTempCredentials OAuthTempCredRequest { tcPrivileges = [] } _) =
+  dbUpdate (RequestTempCredentials OAuthTempCredRequest { tcPrivileges = [] } _) =
     return Nothing
-  update (RequestTempCredentials OAuthTempCredRequest { tcPrivileges } _)
+  dbUpdate (RequestTempCredentials OAuthTempCredRequest { tcPrivileges } _)
     | APIPersonal `elem` tcPrivileges = return Nothing
-  update (RequestTempCredentials OAuthTempCredRequest {..} time) = do
+  dbUpdate (RequestTempCredentials OAuthTempCredRequest {..} time) = do
     temptoken :: MagicHash  <- random
     tempsecret :: MagicHash <- random
     verifier :: MagicHash   <- random
@@ -257,7 +257,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestTempCredent
  -}
 data VerifyCredentials = VerifyCredentials APIToken UserID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m VerifyCredentials (Maybe (URI, MagicHash)) where
-  update (VerifyCredentials token uid time) = do
+  dbUpdate (VerifyCredentials token uid time) = do
     runQuery_ $ rawSQL
       "UPDATE oauth_temp_credential SET user_id = $1 WHERE user_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = $2) AND id = $3 AND temp_token = $4 AND expires > $5 RETURNING callback, verifier"
       (uid, uid, atID token, atToken token, time)
@@ -268,7 +268,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m VerifyCredentials (Maybe (URI, 
  -}
 data DenyCredentials = DenyCredentials APIToken UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m DenyCredentials (Maybe URI) where
-  update (DenyCredentials token _time) = do
+  dbUpdate (DenyCredentials token _time) = do
     runQuery_ $ rawSQL
       "DELETE FROM oauth_temp_credential WHERE (id = $1 AND temp_token = $2) RETURNING callback"
       (atID token, atToken token)
@@ -279,7 +279,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DenyCredentials (Maybe URI) whe
  -}
 data GetRequestedPrivileges = GetRequestedPrivileges APIToken UTCTime
 instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
-  query (GetRequestedPrivileges token time) = do
+  dbQuery (GetRequestedPrivileges token time) = do
     runQuery_ $ rawSQL
       (  "SELECT ug.name, u.first_name, u.last_name, u.email, p.privilege "
       <> "FROM oauth_temp_privileges p "
@@ -310,7 +310,7 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
  -}
 data RequestAccessToken = RequestAccessToken OAuthTokenRequest UTCTime
 instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestAccessToken (Maybe (APIToken, MagicHash)) where
-  update (RequestAccessToken OAuthTokenRequest {..} time) = do
+  dbUpdate (RequestAccessToken OAuthTokenRequest {..} time) = do
     accesstoken :: MagicHash  <- random
     accesssecret :: MagicHash <- random
     runQuery_ $ rawSQL
@@ -385,7 +385,7 @@ data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
                                     MagicHash
                                     [APIPrivilege]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, String)) where
-  query (GetUserIDForAPIWithPrivilege token secret atoken asecret priv) = do
+  dbQuery (GetUserIDForAPIWithPrivilege token secret atoken asecret priv) = do
     runQuery_ $ rawSQL
       (  "SELECT a.user_id, u.email, u.first_name, u.last_name,ug.name "
       <> "FROM oauth_access_token a "
@@ -419,7 +419,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Ma
  -}
 newtype GetGrantedPrivileges = GetGrantedPrivileges UserID
 instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivilege])] where
-  query (GetGrantedPrivileges userid) = do
+  dbQuery (GetGrantedPrivileges userid) = do
     runQuery_ $ rawSQL
       (  "SELECT a.id, u.email, u.first_name, u.last_name, ug.name, p.privilege "
       <> "FROM oauth_access_token a "
@@ -448,7 +448,7 @@ instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivil
  -}
 data DeletePrivileges = DeletePrivileges UserID Int64
 instance MonadDB m => DBUpdate m DeletePrivileges Bool where
-  update (DeletePrivileges userid tokenid) = do
+  dbUpdate (DeletePrivileges userid tokenid) = do
     r <- runQuery $ rawSQL
       ("DELETE FROM oauth_access_token " <> "WHERE user_id = $1 AND id = $2 ")
       (userid, tokenid)
@@ -460,7 +460,7 @@ instance MonadDB m => DBUpdate m DeletePrivileges Bool where
  -}
 data DeletePrivilege = DeletePrivilege UserID Int64 APIPrivilege
 instance MonadDB m => DBUpdate m DeletePrivilege Bool where
-  update (DeletePrivilege userid tokenid privilege) = do
+  dbUpdate (DeletePrivilege userid tokenid privilege) = do
     r <- runQuery $ rawSQL
       (  "DELETE FROM oauth_privilege "
       <> "WHERE EXISTS (SELECT 1 FROM oauth_access_token "
@@ -484,7 +484,7 @@ instance MonadDB m => DBUpdate m DeletePrivilege Bool where
  -}
 newtype GetPersonalToken = GetPersonalToken UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe OAuthAuthorization) where
-  query (GetPersonalToken userid) = do
+  dbQuery (GetPersonalToken userid) = do
     runQuery_ $ rawSQL
       (  "SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
       <> "FROM oauth_access_token a "
@@ -504,7 +504,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe OAuthAut
  -}
 data GetRecentPersonalToken = GetRecentPersonalToken UserID Int
 instance (MonadDB m, MonadTime m, MonadThrow m) => DBQuery m GetRecentPersonalToken (Maybe OAuthAuthorization) where
-  query (GetRecentPersonalToken userid recencyMinutes) = do
+  dbQuery (GetRecentPersonalToken userid recencyMinutes) = do
     now <- currentTime
     runQuery_ $ rawSQL
       (  "SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
@@ -528,8 +528,8 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBQuery m GetRecentPersonalTo
  -}
 newtype CreatePersonalToken = CreatePersonalToken UserID
 instance (MonadDB m, MonadTime m, MonadThrow m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
-  update (CreatePersonalToken userid) = do
-    m <- DB.query $ GetPersonalToken userid
+  dbUpdate (CreatePersonalToken userid) = do
+    m <- dbQuery $ GetPersonalToken userid
     if isJust m
       then return False
       else do
@@ -570,7 +570,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m, CryptoRNG m) => DBUpdate m Creat
  -}
 newtype DeletePersonalToken = DeletePersonalToken UserID
 instance MonadDB m => DBUpdate m DeletePersonalToken Bool where
-  update (DeletePersonalToken userid) = do
+  dbUpdate (DeletePersonalToken userid) = do
     r <- runQuery $ rawSQL
       (  "DELETE FROM oauth_api_token "
       <> "WHERE user_id = $1 AND id IN "

@@ -13,7 +13,7 @@ import Doc.DocumentMonad
 
 data ScheduleDocumentExtending = ScheduleDocumentExtending DocumentID UTCTime
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentExtending () where
-  update (ScheduleDocumentExtending did _seal_time) = do
+  dbUpdate (ScheduleDocumentExtending did _seal_time) = do
     now <- currentTime
     runQuery_ . sqlDelete "document_extending_jobs" $ do
       sqlWhereEq "id" did

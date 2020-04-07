@@ -31,7 +31,7 @@ selectEIDServiceTransaction =
 newtype MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransaction
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeEIDServiceTransaction () where
-  update (MergeEIDServiceTransaction EIDServiceTransaction {..}) = do
+  dbUpdate (MergeEIDServiceTransaction EIDServiceTransaction {..}) = do
     runQuery_ . sqlInsert "eid_service_transactions" $ do
       setFields
       sqlOnConflictOnColumns ["signatory_link_id", "auth_kind"] . sqlUpdate "" $ do
@@ -50,13 +50,13 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
 data GetEIDServiceTransactionNoSessionIDGuard = GetEIDServiceTransactionNoSessionIDGuard SignatoryLinkID EIDServiceAuthenticationKind
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetEIDServiceTransactionNoSessionIDGuard (Maybe EIDServiceTransaction) where
-  query (GetEIDServiceTransactionNoSessionIDGuard slid eidAuthKind) =
+  dbQuery (GetEIDServiceTransactionNoSessionIDGuard slid eidAuthKind) =
     getEIDServiceTransactionInternal Nothing slid eidAuthKind
 
 data GetEIDServiceTransactionGuardSessionID = GetEIDServiceTransactionGuardSessionID SessionID SignatoryLinkID EIDServiceAuthenticationKind
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetEIDServiceTransactionGuardSessionID (Maybe EIDServiceTransaction) where
-  query (GetEIDServiceTransactionGuardSessionID sessionId slid eidAuthKind) = do
+  dbQuery (GetEIDServiceTransactionGuardSessionID sessionId slid eidAuthKind) = do
     getEIDServiceTransactionInternal (Just sessionId) slid eidAuthKind
 
 getEIDServiceTransactionInternal
@@ -79,7 +79,7 @@ getEIDServiceTransactionInternal mSessionId slid eidAuthKind = do
 data PurgeTimeoutedEIDTransactions = PurgeTimeoutedEIDTransactions
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBUpdate m PurgeTimeoutedEIDTransactions Int where
-  update PurgeTimeoutedEIDTransactions = do
+  dbUpdate PurgeTimeoutedEIDTransactions = do
     ct <- currentTime
     runSQL $ "DELETE FROM eid_service_transactions WHERE deadline <" <?> ct
 

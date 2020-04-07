@@ -47,7 +47,7 @@ import qualified UserGroup.Internal as I
 
 newtype UserGroupCreate = UserGroupCreate UserGroup
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
-  update (UserGroupCreate ug) = do
+  dbUpdate (UserGroupCreate ug) = do
     guardIfHasNoParentThenIsValidRoot ug
     new_parentpath <- case ug ^. #parentGroupID of
       Nothing       -> return $ Array1 ([] :: [UserGroupID])
@@ -94,7 +94,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
 
 newtype UserGroupDelete = UserGroupDelete UserGroupID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupDelete () where
-  update (UserGroupDelete ugid) = do
+  dbUpdate (UserGroupDelete ugid) = do
     now <- currentTime
     void . runQuery . sqlUpdate "user_groups" $ do
       sqlSet "deleted" now
@@ -199,7 +199,7 @@ insertFeatures ugid features = do
 
 newtype UserGroupGet = UserGroupGet UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) where
-  query (UserGroupGet ugid) = do
+  dbQuery (UserGroupGet ugid) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "id" ugid
@@ -208,7 +208,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) w
 
 newtype UserGroupGetByUserID = UserGroupGetByUserID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup where
-  query (UserGroupGetByUserID uid) = do
+  dbQuery (UserGroupGetByUserID uid) = do
     runQuery_ . sqlSelect "user_groups" $ do
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
@@ -218,7 +218,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup w
 
 newtype GetUserGroupFirstTOSDate = GetUserGroupFirstTOSDate UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupFirstTOSDate UTCTime where
-  query (GetUserGroupFirstTOSDate ugid) = do
+  dbQuery (GetUserGroupFirstTOSDate ugid) = do
     runQuery_ . sqlSelect "users" $ do
       sqlWhereEq "user_group_id" ugid
       sqlResult "min(has_accepted_terms_of_service)"
@@ -226,7 +226,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupFirstTOSDate UTCTime
 
 newtype UserGroupGetImmediateChildren = UserGroupGetImmediateChildren UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [UserGroup] where
-  query (UserGroupGetImmediateChildren ugid) = do
+  dbQuery (UserGroupGetImmediateChildren ugid) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "parent_group_id" ugid
@@ -235,7 +235,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [U
 
 newtype UserGroupGetWithParents = UserGroupGetWithParents UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe UserGroupWithParents) where
-  query (UserGroupGetWithParents ugid) = do
+  dbQuery (UserGroupGetWithParents ugid) = do
     mug <- dbQuery . UserGroupGet $ ugid
     case mug of
       Nothing -> return Nothing
@@ -243,7 +243,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe U
 
 newtype UserGroupGetWithParentsByUG = UserGroupGetWithParentsByUG UserGroup
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG UserGroupWithParents where
-  query (UserGroupGetWithParentsByUG ug) = do
+  dbQuery (UserGroupGetWithParentsByUG ug) = do
     let ugid = ug ^. #id
     parents <- do
       -- JOIN does not guarantee to preserve order of rows, so we add ORDINALITY and ORDER BY it.
@@ -270,7 +270,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG User
 newtype UserGroupGetWithParentsByUserID = UserGroupGetWithParentsByUserID UserID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m UserGroupGetWithParentsByUserID UserGroupWithParents where
-  query (UserGroupGetWithParentsByUserID uid) = do
+  dbQuery (UserGroupGetWithParentsByUserID uid) = do
     runQuery_ . sqlSelect "user_groups" $ do
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
@@ -281,7 +281,7 @@ instance (MonadDB m, MonadThrow m)
 
 newtype FindOldUserGroups = FindOldUserGroups Int
 instance (MonadDB m, MonadTime m) => DBQuery m FindOldUserGroups [UserGroup] where
-  query (FindOldUserGroups batchLimit) = do
+  dbQuery (FindOldUserGroups batchLimit) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereIsNULL "user_groups.deleted"
@@ -299,7 +299,7 @@ instance (MonadDB m, MonadTime m) => DBQuery m FindOldUserGroups [UserGroup] whe
 
 newtype FindFreeAndTrialUserGroups = FindFreeAndTrialUserGroups Int
 instance (MonadDB m, MonadTime m) => DBQuery m FindFreeAndTrialUserGroups [UserGroup] where
-  query (FindFreeAndTrialUserGroups batchLimit) = do
+  dbQuery (FindFreeAndTrialUserGroups batchLimit) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = user_groups.id"
@@ -309,7 +309,7 @@ instance (MonadDB m, MonadTime m) => DBQuery m FindFreeAndTrialUserGroups [UserG
 
 newtype UserGroupUpdate = UserGroupUpdate UserGroup
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () where
-  update (UserGroupUpdate new_ug) = do
+  dbUpdate (UserGroupUpdate new_ug) = do
     guardIfHasNoParentThenIsValidRoot new_ug
     let ugid = new_ug ^. #id
     -- update group settings
@@ -380,19 +380,19 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
 
 data UserGroupUpdateSettings = UserGroupUpdateSettings UserGroupID (Maybe UserGroupSettings)
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateSettings () where
-  update (UserGroupUpdateSettings ugid mugSettings) = do
+  dbUpdate (UserGroupUpdateSettings ugid mugSettings) = do
     runQuery_ . sqlDelete "user_group_settings" $ sqlWhereEq "user_group_id" ugid
     whenJust mugSettings $ insertUserGroupSettings ugid
 
 data UserGroupUpdateAddress = UserGroupUpdateAddress UserGroupID (Maybe UserGroupAddress)
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateAddress () where
-  update (UserGroupUpdateAddress ugid mugAddr) = do
+  dbUpdate (UserGroupUpdateAddress ugid mugAddr) = do
     runQuery_ . sqlDelete "user_group_addresses" $ sqlWhereEq "user_group_id" ugid
     whenJust mugAddr $ insertUserGroupAddress ugid
 
 data UserGroupUpdateUI = UserGroupUpdateUI UserGroupID (Maybe UserGroupUI)
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateUI () where
-  update (UserGroupUpdateUI ugid mugUI) = do
+  dbUpdate (UserGroupUpdateUI ugid mugUI) = do
     runQuery_ . sqlDelete "user_group_uis" $ sqlWhereEq "user_group_id" ugid
     whenJust mugUI $ insertUserGroupUI ugid
 
@@ -527,7 +527,7 @@ data UserGroupFilter
 
 data UserGroupsGetFiltered = UserGroupsGetFiltered [UserGroupFilter] (Maybe (Integer, Integer))
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup] where
-  query (UserGroupsGetFiltered filters moffsetlimit) = do
+  dbQuery (UserGroupsGetFiltered filters moffsetlimit) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       forM_ filters $ \case
@@ -591,7 +591,7 @@ ugGetChildrenInheritingProperty ugid ugProperty = do
 newtype UserGroupGetAllChildrenRecursive = UserGroupGetAllChildrenRecursive UserGroupID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m UserGroupGetAllChildrenRecursive [UserGroupWithChildren] where
-  query (UserGroupGetAllChildrenRecursive ugid) = do
+  dbQuery (UserGroupGetAllChildrenRecursive ugid) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhere $ "parent_group_path @> " <?> Array1 [ugid]

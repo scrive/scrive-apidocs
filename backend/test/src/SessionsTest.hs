@@ -8,7 +8,7 @@ import Test.QuickCheck
 import qualified Control.Exception.Lifted as E
 
 import Context
-import DB hiding (query, update)
+import DB
 import Doc.DocControl
 import Doc.DocStateData
 import Doc.Model.Update

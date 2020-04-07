@@ -32,7 +32,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-import DB hiding (query, update)
+import DB
 import Happstack.Fields
 import InputValidation
 import InternalResponse

@@ -58,7 +58,7 @@ instance ToSQL KontraInfoForMailType where
 
 data AddKontraInfoForMail = AddKontraInfoForMail MailID KontraInfoForMail
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
-  update (AddKontraInfoForMail mailid mfdi) = do
+  dbUpdate (AddKontraInfoForMail mailid mfdi) = do
     runQuery01 . sqlInsert "kontra_info_for_mails" $ do
       sqlSet "mail_id" mailid
       case mfdi of
@@ -126,8 +126,8 @@ getUnreadEvents service_test = do
 
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, Event, Maybe KontraInfoForMail)] where
-  query GetUnreadEvents = getUnreadEvents False
+  dbQuery GetUnreadEvents = getUnreadEvents False
 
 data GetServiceTestEvents = GetServiceTestEvents
 instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, Event, Maybe KontraInfoForMail)] where
-  query GetServiceTestEvents = getUnreadEvents True
+  dbQuery GetServiceTestEvents = getUnreadEvents True

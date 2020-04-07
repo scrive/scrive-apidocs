@@ -2520,7 +2520,7 @@ testUpdateConsentResponsesForSigningSuccess = do
            (zipWith (\(i, r) (i', r') -> i == i' && Just r == r') responses responses')
       )
 
-    events <- query . GetEvidenceLog $ documentid doc
+    events <- dbQuery . GetEvidenceLog $ documentid doc
     let check scq e = case scqDescription scq of
           Nothing -> evType e == Current ConsentQuestionAnswered
           Just _  -> evType e == Current ConsentQuestionAnsweredWithDescription

@@ -1026,7 +1026,7 @@ randomUserTemplate = UserTemplate
   , lastName           = rand 10 (arbText 3 30)
   , email              = let go = do
                                email <- rand 10 arbEmail
-                               mUser <- query . GetUserByEmail $ Email email
+                               mUser <- dbQuery . GetUserByEmail $ Email email
                                case mUser of  -- ensure uniqueness
                                  Nothing -> return email
                                  Just _  -> go

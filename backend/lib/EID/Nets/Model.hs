@@ -30,7 +30,7 @@ selectNetsSignOrderSelectorsList =
 newtype MergeNetsSignOrder = MergeNetsSignOrder NetsSignOrder
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeNetsSignOrder () where
-  update (MergeNetsSignOrder NetsSignOrder {..}) = do
+  dbUpdate (MergeNetsSignOrder NetsSignOrder {..}) = do
     runQuery_ . sqlInsert "nets_sign_orders" $ do
       setFields
       sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
@@ -50,7 +50,7 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
 newtype GetNetsSignOrder = GetNetsSignOrder SignatoryLinkID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetNetsSignOrder (Maybe NetsSignOrder) where
-  query (GetNetsSignOrder slid) = do
+  dbQuery (GetNetsSignOrder slid) = do
     runQuery_ . sqlSelect "nets_sign_orders" $ do
       mapM_ sqlResult selectNetsSignOrderSelectorsList
       sqlWhereEq "signatory_link_id" slid

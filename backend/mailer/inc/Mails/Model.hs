@@ -40,7 +40,7 @@ mailerJobFetcher (jtype, attempts) = MailerJob { mjType = jtype, mjAttempts = at
 
 data GetCurrentSenderType = GetCurrentSenderType
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCurrentSenderType SenderType where
-  query GetCurrentSenderType = do
+  dbQuery GetCurrentSenderType = do
     runQuery01_ . sqlSelect "mailer_jobs" $ do
       sqlResult "finished_at IS NOT NULL"
       sqlWhereEq "id" CollectServiceTestResult
@@ -54,7 +54,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately 
   -- transaction after the job was processed and all the emails
   -- were rescheduled, so we need to update it earlier ourselves
   -- for the correct sender to be used for rescheduled emails.
-  update SwitchToSlaveSenderImmediately = do
+  dbUpdate SwitchToSlaveSenderImmediately = do
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "finished_at" (Nothing :: Maybe UTCTime)
       sqlWhereEq "id" job
@@ -63,7 +63,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately 
 
 newtype CollectServiceTestResultIn = CollectServiceTestResultIn Interval
 instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CollectServiceTestResultIn () where
-  update (CollectServiceTestResultIn int) = do
+  dbUpdate (CollectServiceTestResultIn int) = do
     now     <- currentTime
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSetCmd "run_at" $ sqlParam now <+> "+" <?> int
@@ -73,7 +73,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CollectServiceTest
 
 data ScheduleServiceTest = ScheduleServiceTest
 instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
-  update ScheduleServiceTest = do
+  dbUpdate ScheduleServiceTest = do
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "run_at" unixEpoch
       sqlWhereEq "id" job
@@ -133,18 +133,18 @@ type EmailData = (MagicHash, Address, [Address], Maybe Address, Text, Text, [Att
 
 newtype CreateEmail = CreateEmail EmailData
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmail MailID where
-  update (CreateEmail mdata) = insertEmail False mdata
+  dbUpdate (CreateEmail mdata) = insertEmail False mdata
 
 newtype CreateServiceTest = CreateServiceTest EmailData
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateServiceTest MailID where
-  update (CreateServiceTest mdata) = do
+  dbUpdate (CreateServiceTest mdata) = do
     runQuery_ . sqlDelete "mails" $ do
       sqlWhereEq "service_test" True
     insertEmail True mdata
 
 data GetEmail = GetEmail MailID MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetEmail (Maybe Mail) where
-  query (GetEmail mid token) = do
+  dbQuery (GetEmail mid token) = do
     runQuery01_ . sqlSelect "mails" $ do
       mapM_ sqlResult mailSelectors
       sqlWhereEq "id"    mid
@@ -153,7 +153,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmail (Maybe Mail) where
 
 newtype GetEmailSendoutTime = GetEmailSendoutTime MailID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetEmailSendoutTime (Maybe UTCTime) where
-  query (GetEmailSendoutTime mid) = do
+  dbQuery (GetEmailSendoutTime mid) = do
     runQuery01_ . sqlSelect "mails" $ do
       sqlResult "finished_at"
       sqlWhereEq "id" mid
@@ -164,7 +164,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmailSendoutTime (Maybe UTCTi
 
 data GetEmailForRecipient = GetEmailForRecipient Text Text UTCTime
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailForRecipient (Maybe Mail) where
-  query (GetEmailForRecipient recipient title startDate) = do
+  dbQuery (GetEmailForRecipient recipient title startDate) = do
     runQuery01_ . sqlSelect "mails" $ do
       mapM_ sqlResult mailSelectors
       sqlWhereILike "title" ("%" <> title <> "%")
@@ -176,14 +176,14 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailForRecipien
 
 data GetEmailsForTest = GetEmailsForTest
 instance MonadDB m => DBQuery m GetEmailsForTest [Mail] where
-  query GetEmailsForTest = do
+  dbQuery GetEmailsForTest = do
     runQuery_ . sqlSelect "mails" $ do
       mapM_ sqlResult mailSelectors
     fetchMany mailFetcher
 
 data ResendEmailsSentAfterServiceTest = ResendEmailsSentAfterServiceTest
 instance MonadDB m => DBUpdate m ResendEmailsSentAfterServiceTest Int where
-  update ResendEmailsSentAfterServiceTest = do
+  dbUpdate ResendEmailsSentAfterServiceTest = do
     n <- runQuery . sqlUpdate "mails" $ do
       sqlSet "run_at" unixEpoch
       sqlWhereEq "service_test" False
@@ -197,7 +197,7 @@ instance MonadDB m => DBUpdate m ResendEmailsSentAfterServiceTest Int where
 
 newtype CleanEmailsOlderThanDays = CleanEmailsOlderThanDays Int
 instance (MonadDB m, MonadTime m) => DBUpdate m CleanEmailsOlderThanDays Int where
-  update (CleanEmailsOlderThanDays days) = do
+  dbUpdate (CleanEmailsOlderThanDays days) = do
     past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "mails" $ do
       sqlWhere $ "finished_at <=" <?> past
@@ -206,14 +206,14 @@ instance (MonadDB m, MonadTime m) => DBUpdate m CleanEmailsOlderThanDays Int whe
 
 data UpdateWithEvent = UpdateWithEvent MailID Event
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithEvent Bool where
-  update (UpdateWithEvent mid ev) = do
+  dbUpdate (UpdateWithEvent mid ev) = do
     runQuery01 . sqlInsert "mail_events" $ do
       sqlSet "mail_id" mid
       sqlSet "event"   ev
 
 data MarkEventAsRead = MarkEventAsRead EventID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m MarkEventAsRead Bool where
-  update (MarkEventAsRead eid time) = runQuery01 . sqlUpdate "mail_events" $ do
+  dbUpdate (MarkEventAsRead eid time) = runQuery01 . sqlUpdate "mail_events" $ do
     sqlSet "event_read" time
     sqlWhereEq "id" eid
 
