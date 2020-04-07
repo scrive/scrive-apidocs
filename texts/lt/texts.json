@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Sutikti",
 "_CompanyAccounts":"Naudotojai",
 "_CompanySettings":"Prekės ženklo integravimas",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Jei ištrinsite temą <strong class='put-theme-name-here'></strong>, vietoj jos bus pritaikyta<strong>numatytoji</strong> tema.",
 "_brandingEmailThemeTitle":"El. paštas",
 "_brandingEnterNameOfThemeBellow":"Naujos temos pavadinimas",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Prisijungimo vardas",
 "_brandingNewTheme":"Nauja tema",
 "_brandingNewThemeWithDots":"Nauja tema...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Norėdami pradėti, sutikite su „Scrive“ paslaugų taisyklėmis.",
 "_flashMessageNewActivationLinkSend":"Mes pakartotinai išsiuntėme Jūsų paskyros suaktyvinimo saitą. Atsiverskite savo el. paštą ir atlikite jame esančius paskyros suaktyvinimo nurodymus.",
 "_flashMessageNoBulkDocumentRemindsSent":"Neišsiųsti jokie priminimai, nes papildomos šalys negali pasirašyti nei vieno iš parinktų dokumentų.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Atsiprašome. Šis saitas nebegalioja.<br/>Susikurkite naują saitą paspausdami \\\\„$_forgotpassword()$\\\\“.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Atsiprašome. Šis saitas nebegalioja. Susikurkite naują saitą paspausdami „$_forgotpassword()$“.",
 "_flashMessagePasswordsDontMatch":"Abu slaptažodžiai nesutampa.",
@@ -706,7 +707,7 @@
 "_historyTime":"Laikas",
 "_identifiedByDKNemIDText":"Danijos „NemID“ identifikuota kaip „$name$“",
 "_identifiedByFITupasText":"Suomijos „TUPAS“ identifikuota kaip „$name$“ ",
-"_identifiedByIDINText":"iDIN identifikuota kaip  „$name$“ ",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Norvegijos „BankID“ identifikuota kaip „$name$“ ",
 "_identifiedBySwedishBankIDText":"Švedijos „BankID“ identifikuota kaip „$name$“ ",
 "_identifiedByVerimiText":"Verimi identifikuota kaip „$email$“ ",

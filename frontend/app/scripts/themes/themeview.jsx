@@ -39,6 +39,7 @@ module.exports = React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
+      console.log("preview");
       return (
         <div className="theme-edit">
           <div className="theme-edit-panel">
@@ -124,14 +125,17 @@ module.exports = React.createClass({
                   onColorPickerOpen={function() { self.hideAllColorPickers(); }}
                 />
               </div>
-              <div className="theme-edit-section">
-                <ThemeFontEditor
-                  title={localization.branding.themes.font}
-                  sampleText={localization.branding.themes.fontSample}
-                  getFont={function() {return model.font();}}
-                  setFont={function(f) {return model.setFont(f);}}
-                />
-              </div>
+              { /* temporarily disable font edition for signview */ }
+              { this.props.preview !== "SigningPreview" &&
+                <div className="theme-edit-section">
+                  <ThemeFontEditor
+                    title={localization.branding.themes.font}
+                    sampleText={localization.branding.themes.fontSample}
+                    getFont={function() {return model.font();}}
+                    setFont={function(f) {return model.setFont(f);}}
+                  />
+                </div>
+              }
               <div className="theme-delete-wrapper">
                 <div className="theme-delete">
                   <div className="theme-delete-title title"> {localization.branding.themes.deleteTitle} </div>

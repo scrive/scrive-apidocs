@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Kinnita",
 "_CompanyAccounts":"Kasutajad",
 "_CompanySettings":"Bränding",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Kui kustutad teema <strong class='put-theme-name-here'></strong> kasutatakse selle asemel <strong>Vaikimisi</strong> teemat.",
 "_brandingEmailThemeTitle":"E-mail",
 "_brandingEnterNameOfThemeBellow":"Uue teema nimi",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Kasutajatunnus",
 "_brandingNewTheme":"Uus teema",
 "_brandingNewThemeWithDots":"Uus teema...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Alustamiseks nõustuge Scrive teenusetingimustega. ",
 "_flashMessageNewActivationLinkSend":"Saatsime Teie konto aktiveerimislingi uuesti. Järgige enda konto aktiveerimiseks e-mailis toodud juhiseid.",
 "_flashMessageNoBulkDocumentRemindsSent":"Meeldetuletusi ei saadetud, kuna valitud dokumendid pole teiste poolte poolt allkirjastatavad. ",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Vabandame. See link pole enam kehtiv.<br/>Klõpsake nupul \\\\\"$_forgotpassword()$\\\\\" uue lingi loomiseks.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Vabandame. See link pole enam kehtiv. Klõpsake nupul \"$_forgotpassword()$\" uue lingi loomiseks.",
 "_flashMessagePasswordsDontMatch":"Kaks salasõna ei kattu.",
@@ -706,7 +707,7 @@
 "_historyTime":"Kellaaeg",
 "_identifiedByDKNemIDText":"Tuvastatud Taani NemID abil kasutajana \"$name$\"",
 "_identifiedByFITupasText":"Tuvastatud Soome TUPAS teenuse abil kasutajana \"$name$\"",
-"_identifiedByIDINText":"Tuvastatud iDIN teenuse abil kasutajana \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Tuvastatud Norra BankID abil kasutajana \"$name$\"",
 "_identifiedBySwedishBankIDText":"Tuvastatud Rootsi BankID abil kasutajana \"$name$\"",
 "_identifiedByVerimiText":"Tuvastatud Verimi platvormi abil kasutajana \"$email$\"",

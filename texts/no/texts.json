@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Godta",
 "_CompanyAccounts":"Brukere",
 "_CompanySettings":"Branding",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Dersom du sletter temaet <strong class='put-theme-name-here'></strong>, vil <strong>Standard</strong>-temaet brukes istedenfor.",
 "_brandingEmailThemeTitle":"E-post",
 "_brandingEnterNameOfThemeBellow":"Navn på nytt tema",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Innlogging",
 "_brandingNewTheme":"Nytt tema",
 "_brandingNewThemeWithDots":"Nytt tema...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Vennligst godta Scrives Tjenestevilkår for å komme i gang.",
 "_flashMessageNewActivationLinkSend":"Vi har sendt din aktiveringslenke på nytt. Vennligst gå til innboksen din og følg instruksjonene i e-posten for å aktivere kontoen din.",
 "_flashMessageNoBulkDocumentRemindsSent":"Ingen påminnelse ble sendt ut siden ingen av de valgte dokumentene kan bli signert av flere parter.",
-"_flashMessageNoDNProvidedByEIDService":"E-ID-profilen din mangler et eget navn",
-"_flashMessageNoDOBProvidedByEIDService":"E-id-profilen din mangler fødselsdato.",
+"_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Vi beklager. Denne lenken er ikke lengre gyldig.<br/>Klikk på \\\\\"$_forgotpassword()$\\\\\" for å skape en ny lenke.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Vi beklager, men denne lenken er ikke lenger gyldig. Klikk på \"$_forgotpassword()$\" for å opprette en ny lenke.",
 "_flashMessagePasswordsDontMatch":"De to passordene er ikke identiske.",
@@ -706,7 +707,7 @@
 "_historyTime":"Tid",
 "_identifiedByDKNemIDText":"Identifisert av dansk NemID som \"$name$\"",
 "_identifiedByFITupasText":"Identifisert av finsk TUPAS som \"$name$\"",
-"_identifiedByIDINText":"Identifisert av iDIN som \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Identifisert av norsk BankID som \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identifisert av svensk BankID som \"$name$\"",
 "_identifiedByVerimiText":"Identifisert av Verimi som \"$email$\"",

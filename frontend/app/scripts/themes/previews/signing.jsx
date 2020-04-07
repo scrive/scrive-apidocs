@@ -40,6 +40,10 @@ module.exports = React.createClass({
         $node.find(".downarrow .actioncolor").css("fill", model.actionColor());
       }
     },
+    font: function () {
+      // temporarily disable customizing fonts in signview
+      return "\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif;"
+    },
     render: function() {
       var self = this;
       var model = this.props.model;
@@ -55,7 +59,7 @@ module.exports = React.createClass({
                       <div style={{"clear": "both"}}></div>
                   </div>
                 }
-                <div style={{"fontFamily": model.font()}} className="content">
+                <div style={{"fontFamily": this.font()}} className="content">
                   <div className="innercontent">
                      <div className="sample-controls">
                        {/* if */ self.props.showPDFDownload &&

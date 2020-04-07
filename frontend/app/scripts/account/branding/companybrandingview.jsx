@@ -196,6 +196,7 @@ module.exports = React.createClass({
                         getDefaultName={function() {return model.newThemeDefaultName()}}
                         onDelete={function() {self.props.onThemeDelete(model.mailThemeForEditing())}}
                         onSave={function() {self.save();}}
+                        preview="EmailPreview"
                         previews={_.compact([
                             EmailPreview,
                             (model.mailThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined,
@@ -216,6 +217,7 @@ module.exports = React.createClass({
                         getDefaultName={function() {return model.newThemeDefaultName()}}
                         onDelete={function() {self.props.onThemeDelete(model.signviewThemeForEditing())}}
                         onSave={function() {self.save();}}
+                        preview="SigningPreview"
                         previews={_.compact([
                             SigningPreview,
                             (model.signviewThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
@@ -236,6 +238,7 @@ module.exports = React.createClass({
                         getDefaultName={function() {return model.newThemeDefaultName()}}
                         onDelete={function() {self.props.onThemeDelete(model.serviceThemeForEditing())}}
                         onSave={function() {self.save();}}
+                        preview="ServicePreview"
                         previews={_.compact([
                             ServicePreview,
                             (model.serviceThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,

@@ -192,7 +192,11 @@ instance Eq FieldPlacement where
     , placementtipside a == placementtipside b
     , placementanchors a == placementanchors b
     ]
-    where eqByEpsilon f = abs (f a - f b) < 0.00001
+    where
+      eqByEpsilon f = case (isNaN $ f a, isNaN $ f b) of
+        (False, False) -> abs (f a - f b) < 0.00001
+        (True , True ) -> True
+        _              -> False
 
 type instance CompositeRow FieldPlacement
   = ( PlacementID

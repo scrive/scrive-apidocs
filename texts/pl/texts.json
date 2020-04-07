@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Akceptuj",
 "_CompanyAccounts":"Użytkownicy",
 "_CompanySettings":"Branding",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Jeśli usuniesz ten wzór <strong class='put-theme-name-here'></strong>, używany będzie wzór <strong>Domyślny</strong>.",
 "_brandingEmailThemeTitle":"Adres e-mail",
 "_brandingEnterNameOfThemeBellow":"Nazwa nowego wzoru",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Login",
 "_brandingNewTheme":"Nowy wzór",
 "_brandingNewThemeWithDots":"Nowy wzór…",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Aby rozpocząć, zaakceptuj Regulamin świadczenia usług Scrive.",
 "_flashMessageNewActivationLinkSend":"Ponownie wysłaliśmy link do aktywacji Twojego konta. Otwórz swoją skrzynkę pocztową i postępuj zgodnie z instrukcjami przesłanymi w e-mailu, aby aktywować konto.",
 "_flashMessageNoBulkDocumentRemindsSent":"Nie wysłano przypomnień, ponieważ żaden z wybranych dokumentów nie może zostać podpisany przez inne strony.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Niestety link już wygasł.<br/>Kliknij na \\\\\"$_forgotpassword()$\\\\\" , aby wygenerować nowy link.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Niestety link już wygasł. Kliknij na \"$_forgotpassword()$\" , aby wygenerować nowy link.",
 "_flashMessagePasswordsDontMatch":"Podane dwa hasła są niezgodne.",
@@ -706,7 +707,7 @@
 "_historyTime":"Czas",
 "_identifiedByDKNemIDText":"Zidentyfikowano przy użyciu duńskiego identyfikatora NemID jako \"$name$\"",
 "_identifiedByFITupasText":"Zidentyfikowano przy użyciu fińskiego identyfikatora TUPAS jako \"$name$\"",
-"_identifiedByIDINText":"Zidentyfikowano za pomocą iDIN jako \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Zidentyfikowano przy użyciu norweskiego BankID jako \"$name$\"",
 "_identifiedBySwedishBankIDText":"Zidentyfikowano przy użyciu szwedzkiego BankID jako \"$name$\"",
 "_identifiedByVerimiText":"Zidentyfikowano za pomocą Verimi jako \"$email$\"",

@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Aceptar",
 "_CompanyAccounts":"Usuarios",
 "_CompanySettings":"Branding",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Si elimina el tema <strong class='put-theme-name-here'></strong> el <strong>Predeterminado</strong> tema será usado en su lugar.",
 "_brandingEmailThemeTitle":"Email",
 "_brandingEnterNameOfThemeBellow":"Nombre del tema nuevo",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Acceso",
 "_brandingNewTheme":"Tema nuevo",
 "_brandingNewThemeWithDots":"Tema nuevo...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Por acepte los Términos del Servicio de Scrive para empezar.",
 "_flashMessageNewActivationLinkSend":"Le hemos reenviado su link para activar su cuenta. Por favor visite su email y siga las instrucciones del email para activar su cuenta.",
 "_flashMessageNoBulkDocumentRemindsSent":"Ningún recordatorio fue enviado porque ninguno de los documentos seleccionados puede ser firmado por la partes adicionales.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Lo sentimos. Este link ya no es valido.<br/>Clicke \\\\\"$_forgotpassword()$\\\\\" para generar un nuevo link.",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Lo sentimos. Este link ya no está disponible. Haga clic en \"$_forgotpassword()$\" para generar un nuevo link.",
 "_flashMessagePasswordsDontMatch":"Las dos contraseñas no coinciden.",
@@ -706,7 +707,7 @@
 "_historyTime":"Hora",
 "_identifiedByDKNemIDText":"Identificado por Danish NemID como \"$name$\"",
 "_identifiedByFITupasText":"Identificado por Finnish TUPAS como \"$name$\"",
-"_identifiedByIDINText":"Identificado por iDIN como \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Identificado por Norwegian BankID como \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identificado por Swedish BankID como \"$name$\"",
 "_identifiedByVerimiText":"Identificado por Verimi como \"$email$\"",

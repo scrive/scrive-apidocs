@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Přijmout",
 "_CompanyAccounts":"Uživatelé",
 "_CompanySettings":"Vzhled",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Pokud vzhledový profil <strong class='put-theme-name-here'></strong> smažete, použije se místo něj profil <strong>Výchozí</strong>.",
 "_brandingEmailThemeTitle":"E-mail",
 "_brandingEnterNameOfThemeBellow":"Název nového profilu",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Přihlášení",
 "_brandingNewTheme":"Nový profil",
 "_brandingNewThemeWithDots":"Nový profil...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Nejprve je nutné přijmout Podmínky poskytování služby Scrive.",
 "_flashMessageNewActivationLinkSend":"Znovu jsme vám odeslali aktivační odkaz k účtu. Přejděte do své e-mailové schránky a účet dle pokynů v e-mailu aktivujte.",
 "_flashMessageNoBulkDocumentRemindsSent":"Jelikož ani jeden ze zvolených dokumentů není určen k podpisu dalšími stranami, nebyly odeslány žádné upomínky.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Je nám líto, odkaz už ale není platný.<br/>Nový odkaz vygenerujete kliknutím na \\\\\"$_forgotpassword()$\\\\\".",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Je nám líto, odkaz už ale není platný. Nový odkaz vygenerujete kliknutím na \"$_forgotpassword()$\".",
 "_flashMessagePasswordsDontMatch":"Zadaná dvě hesla se neshodují.",
@@ -706,7 +707,7 @@
 "_historyTime":"Čas",
 "_identifiedByDKNemIDText":"Identifikováno dánskou službou NemID jako \"$name$\"",
 "_identifiedByFITupasText":"Identifikováno finskou službou TUPAS jako \"$name$\"",
-"_identifiedByIDINText":"Identifikováno službou iDIN jako \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Identifikováno norskou službou BankID jako \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identifikováno švédskou službou BankID jako \"$name$\"",
 "_identifiedByVerimiText":"Identifikováno službou Verimi jako \"$email$\"",

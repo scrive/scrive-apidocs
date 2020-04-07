@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accepteren",
 "_CompanyAccounts":"Gebruikers",
 "_CompanySettings":"Branding",
@@ -234,6 +234,7 @@
 "_brandingDoYouWantToDeleteTheme":"Wanneer u het thema <strong class='put-theme-name-here'></strong>verwijdert wordt in plaats daarvan het <strong>Standaard</strong> thema gebruikt.",
 "_brandingEmailThemeTitle":"E-mail",
 "_brandingEnterNameOfThemeBellow":"Naam van het nieuwe thema",
+"_brandingIsInheritedExplanation":"",
 "_brandingLoginThemeTitle":"Inloggen",
 "_brandingNewTheme":"Nieuw thema",
 "_brandingNewThemeWithDots":"Nieuw thema...",
@@ -641,8 +642,8 @@
 "_flashMessageMustAcceptTOS":"Accepteer a.u.b. de Algemene Voorwaarden van Scrive om te beginnen.",
 "_flashMessageNewActivationLinkSend":"We hebben de activeringslink voor uw account opnieuw verstuurd. Ga naar uw inbox en volg de instructies in de e-mail om uw account te activeren. ",
 "_flashMessageNoBulkDocumentRemindsSent":"Er zijn geen herinneringen verstuurd omdat geen van de gekozen documenten ondertekend kunnen worden bij overige partijen.",
-"_flashMessageNoDNProvidedByEIDService":"",
 "_flashMessageNoDOBProvidedByEIDService":"",
+"_flashMessageNoNameProvidedByEIDService":"",
 "_flashMessagePasswordChangeLinkNotValid":"Sorry, deze link is niet langer geldig.<br/>Klik op \\\\\"$_forgotpassword()$\\\\\" om een nieuwe link te genereren. ",
 "_flashMessagePasswordChangeLinkNotValidForBackend":"Helaas, deze link is niet langer geldig. Klik op \"$_forgotpassword()$\" om een nieuwe link aan te maken.",
 "_flashMessagePasswordsDontMatch":"De twee wachtwoorden komen niet overeen.",
@@ -706,7 +707,7 @@
 "_historyTime":"Tijd",
 "_identifiedByDKNemIDText":"Geïdentificeerd door Danish NemID als \"$name$\"",
 "_identifiedByFITupasText":"Geïdentificeerd door Finnish TUPAS als \"$name$\"",
-"_identifiedByIDINText":"Geïdentificeerd door iDIN als \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Geïdentificeerd door Norwegian BankID als \"$name$\"",
 "_identifiedBySwedishBankIDText":"Geïdentificeerd door Swedish BankID als \"$name$\"",
 "_identifiedByVerimiText":"Geïdentificeerd door Verimi als \"$email$\"",
