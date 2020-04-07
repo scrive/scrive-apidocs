@@ -31,10 +31,10 @@ router rng (ConnectionSource pool) routes = withPostgreSQL pool $ runMailer rng 
 handlers :: MailingServerConf -> Route (Mailer Response)
 handlers conf = choice
   [ hGet showHelloMessage
-  , dir "mail" $ dir "sendgrid" $ hPost $ handleSendGridEvents
-  , dir "mail" $ dir "mailgun" $ hPost $ withDecodedBody_ handleMailGunEvents
-  , dir "mail" $ dir "socketlabs" $ hPost $ withDecodedBody_ $ handleSocketLabsEvents conf
-  , dir "mail" $ dir "mailjet" $ hPost $ handleMailJetEvents
+  , dir "mail" . dir "sendgrid" $ hPost handleSendGridEvents
+  , dir "mail" . dir "mailgun" $ hPost (withDecodedBody_ handleMailGunEvents)
+  , dir "mail" . dir "socketlabs" $ hPost (withDecodedBody_ $ handleSocketLabsEvents conf)
+  , dir "mail" . dir "mailjet" $ hPost handleMailJetEvents
   ]
   where
     hGet  = path GET identity

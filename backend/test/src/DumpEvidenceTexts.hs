@@ -4,7 +4,6 @@ import Control.Exception (evaluate)
 import Control.Monad.Catch
 import Control.Monad.Trans (liftIO)
 import Data.Decimal (realFracToDecimal)
-import Data.Function (on)
 import Log
 import Optics (gview)
 import System.FilePath ((</>))
@@ -41,15 +40,15 @@ dumpAllEvidenceTexts :: TestEnvSt -> Test
 dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
   author <- instantiateRandomUser
   did    <- addRandomDocumentWithAuthor author
-  withDocumentID did $ forM_ allLangs $ \lang -> do
+  withDocumentID did . forM_ allLangs $ \lang -> do
     gts <- gview #globalTemplates
     now <- currentTime
     t   <- runTemplatesT (lang, gts) $ theDocument >>= dumpEvidenceTexts now lang
     case env ^. #outputDirectory of
       Just d -> liftIO $ writeFile
-        (d </> "evidence-texts-" <> (T.unpack $ codeFromLang lang) <> ".html")
+        (d </> "evidence-texts-" <> T.unpack (codeFromLang lang) <> ".html")
         t
-      Nothing -> liftIO $ evaluate t >> return ()
+      Nothing -> liftIO $ void (evaluate t)
 
 dumpEvidenceTexts
   :: (MonadDB m, MonadLog m, MonadThrow m, TemplatesMonad m)
@@ -78,7 +77,7 @@ dumpEvidenceTexts now lang doc' = do
                     , actorAPIString  = Nothing
                     , actorWho = "the author (" <> fromJust (actorEmail actor) <> ")"
                     }
-  let evidencetypes = ([minBound .. maxBound] :: [CurrentEvidenceEventType])
+  let evidencetypes = [minBound .. maxBound] :: [CurrentEvidenceEventType]
   let asl = defaultSignatoryLink
         { signatoryfields             = [ fieldForTests (NameFI $ NameOrder 1) "Sven"
                                         , fieldForTests (NameFI $ NameOrder 2) "Signatory"
@@ -114,11 +113,11 @@ dumpEvidenceTexts now lang doc' = do
         F.value "value" ("field value" :: String)
         F.value "fieldname" ("field name" :: String)
         F.objects "placements"
-          $ for [(1 :: Int, 0.123 :: Double, 0.42 :: Double)]
+          . for [(1 :: Int, 0.123 :: Double, 0.42 :: Double)]
           $ \(page, x, y) -> do
-              F.value "page" $ page
-              F.value "x" $ show $ realFracToDecimal 3 $ x
-              F.value "y" $ show $ realFracToDecimal 3 $ y
+              F.value "page" page
+              F.value "x" . show $ realFracToDecimal 3 x
+              F.value "y" . show $ realFracToDecimal 3 y
   let mkev text msgtext amsgtext evt = DocumentEvidenceEvent
         { evDocumentID            = documentid doc
         , evTime                  = time
@@ -138,37 +137,32 @@ dumpEvidenceTexts now lang doc' = do
         , evMessageText           = msgtext
         , evAdditionalMessageText = amsgtext
         }
-  evs <-
-    (sortBy (compare `on` (\(evt, _, _) -> show evt)) <$>)
-    $ forM (evidencetypes)
-    $ \evt -> do
-        let (msgtext, amsgtext) =
-              if evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence]
-                then (Just "+481234567890", Nothing)
-                else if evt `elem` [AuthorAttachmentAccepted]
-                  then
-                    ( Just "Attachment name"
-                    , Just "Do you accept attachmnet Attachment name"
-                    )
-                  else (messageText, Nothing)
+  evs <- fmap (sortOn $ \(evt, _, _) -> show evt) . forM evidencetypes $ \evt -> do
+    let (msgtext, amsgtext)
+          | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence]
+          = (Just "+481234567890", Nothing)
+          | evt == AuthorAttachmentAccepted
+          = (Just "Attachment name", Just "Do you accept attachmnet Attachment name")
+          | otherwise
+          = (messageText, Nothing)
 
-        elog <- withDocument doc
-          $ evidenceLogText evt (fields evt) (Just asl) msgtext amsgtext
+    elog <- withDocument doc
+      $ evidenceLogText evt (fields evt) (Just asl) msgtext amsgtext
 
-        let ev = mkev elog msgtext amsgtext evt
-            sim = signatoryIdentifierMap True [doc] (Set.fromList [signatorylinkid asl])
-            simpletext = if historyEventType (Current evt)
-              then Just <$> simplifiedEventText Nothing sim ev
-              else return Nothing
-        av <- if (historyEventType $ Current evt) then simpletext else return Nothing
-        return (evt, av, finalizeEvidenceText sim ev "Not named party")
+    let ev = mkev elog msgtext amsgtext evt
+        sim = signatoryIdentifierMap True [doc] (Set.fromList [signatorylinkid asl])
+        simpletext = if historyEventType (Current evt)
+          then Just <$> simplifiedEventText Nothing sim ev
+          else return Nothing
+    av <- if historyEventType $ Current evt then simpletext else return Nothing
+    return (evt, av, finalizeEvidenceText sim ev "Not named party")
 
   renderTemplate "dumpAllEvidenceTexts" $ do
     F.value "lang" $ codeFromLang lang
     F.value "versionID" versionID
     F.value "timestamp" $ show now
-    F.objects "evidences" $ for evs $ \(evt, av, elog) -> do
-      F.value "unavailable" $ evt `elem` [AuthenticatedToViewEvidence]
+    F.objects "evidences" . for evs $ \(evt, av, elog) -> do
+      F.value "unavailable" $ evt == AuthenticatedToViewEvidence
       F.value "name" $ show evt
       F.value "evidencelog" $ renderXMLContent elog
-      F.value "authorview" $ av
+      F.value "authorview" av

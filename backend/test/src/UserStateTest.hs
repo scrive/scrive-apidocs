@@ -128,7 +128,7 @@ test_getUserByID_returnsTheRightUser = do
                                                , lastName  = return "Green"
                                                , email     = return "emiy@green.com"
                                                }
-  queriedUser <- dbQuery $ GetUserByID $ user ^. #id
+  queriedUser <- dbQuery . GetUserByID $ user ^. #id
   assert (isJust queriedUser)
   assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
@@ -138,8 +138,8 @@ test_setUserEmail_GetByEmail = do
                                                 , lastName  = return "Green"
                                                 , email     = return "emily@green.com"
                                                 }
-  void $ dbUpdate $ SetUserEmail (user' ^. #id) $ Email "Emily@green.coM"
-  Just user   <- dbQuery $ GetUserByID $ user' ^. #id
+  void . dbUpdate $ SetUserEmail (user' ^. #id) (Email "Emily@green.coM")
+  Just user   <- dbQuery . GetUserByID $ user' ^. #id
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
@@ -153,8 +153,8 @@ test_setUserEmail_works = do
                                                 , lastName  = return "Green"
                                                 , email     = return "emily@green.com"
                                                 }
-  void $ dbUpdate $ SetUserEmail (user' ^. #id) $ Email "other@email.com"
-  Just user   <- dbQuery $ GetUserByID $ user' ^. #id
+  void . dbUpdate $ SetUserEmail (user' ^. #id) (Email "other@email.com")
+  Just user   <- dbQuery . GetUserByID $ user' ^. #id
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isNothing queriedUser)
   queriedUser2 <- dbQuery $ GetUserByEmail (Email "Other@EmAil.com")
@@ -168,7 +168,7 @@ test_setUserPassword_changesPassword = do
                                                , email     = return "emily@green.com"
                                                }
   passwordhash <- createPassword "Secret Password!"
-  void $ dbUpdate $ SetUserPassword (user ^. #id) passwordhash
+  void . dbUpdate $ SetUserPassword (user ^. #id) passwordhash
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert $ maybeVerifyPassword (fromJust queriedUser ^. #password) "Secret Password!"
 
@@ -186,7 +186,7 @@ test_addUser_repeatedEmailReturnsNothing = do
 
 test_userGroupGetUsers :: TestEnv ()
 test_userGroupGetUsers = do
-  ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid <- view #id <$> dbUpdate (UserGroupCreate defaultUserGroup)
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
   users <- forM emails $ \email ->
     instantiateUser $ randomUserTemplate { email = return email, groupID = return ugid }
@@ -231,7 +231,7 @@ test_userUsageStatisticsByCompany :: TestEnv ()
 test_userUsageStatisticsByCompany = do
   let email1 = "emily@green.com"
       email2 = "bob@gblue.com"
-  ugid  <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid  <- view #id <$> dbUpdate (UserGroupCreate defaultUserGroup)
   user1 <- instantiateUser
     $ randomUserTemplate { email = return email1, groupID = return ugid }
 
@@ -309,7 +309,7 @@ test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
 
 test_userShareableLinkStatisticsByGroup :: TestEnv ()
 test_userShareableLinkStatisticsByGroup = do
-  ugid     <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid     <- view #id <$> dbUpdate (UserGroupCreate defaultUserGroup)
   user1    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   user2    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   template <- addRandomDocumentWithAuthor' user1
@@ -337,7 +337,7 @@ test_setUserCompany = do
     , lastName  = return "Rybczak"
     , email     = return "andrzej@skrivapa.se"
     }
-  ugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  ugid <- view #id <$> dbUpdate (UserGroupCreate defaultUserGroup)
   res  <- dbUpdate $ SetUserUserGroup uid ugid
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID uid
@@ -349,11 +349,11 @@ test_deleteUser = do
                                                , lastName  = return "Rybczak"
                                                , email     = return "andrzej@skrivapa.se"
                                                }
-  res <- dbUpdate $ DeleteUser $ user ^. #id
+  res <- dbUpdate . DeleteUser $ user ^. #id
   assertBool "User was correctly removed" res
-  nouser <- dbQuery $ GetUserByID $ user ^. #id
+  nouser <- dbQuery . GetUserByID $ user ^. #id
   assertBool "No user returned after removal" $ isNothing nouser
-  ugusers <- dbQuery $ UserGroupGetUsers $ user ^. #groupID
+  ugusers <- dbQuery . UserGroupGetUsers $ user ^. #groupID
   assertBool "No users in company after removal" $ null ugusers
 
 test_setUserInfo :: TestEnv ()

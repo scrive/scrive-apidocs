@@ -10,4 +10,4 @@ liftMask
   => (((forall a . m a -> m a) -> m (StT t b)) -> m (StT t b))
   -> (((forall a . t m a -> t m a) -> t m b) -> t m b)
 liftMask fmask m =
-  controlT $ \run -> fmask $ \release -> run $ m $ \f -> restoreT $ release (run f)
+  controlT $ \run -> fmask $ \release -> run $ m (restoreT . release . run)

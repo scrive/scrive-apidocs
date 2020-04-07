@@ -8,7 +8,7 @@ import Test.QuickCheck
 import qualified Control.Exception.Lifted as E
 
 import Context
-import DB hiding (query, update)
+import DB
 import Doc.DocControl
 import Doc.DocStateData
 import Doc.Model.Update
@@ -248,7 +248,7 @@ testCustomSessionTimeoutInheritance = do
   userGroup23 <- dbUpdate $ UserGroupCreate userGroup22
 
   userGroup24 :: Maybe UserGroupWithParents <-
-    dbQuery $ UserGroupGetWithParents $ userGroup23 ^. #id
+    dbQuery . UserGroupGetWithParents $ userGroup23 ^. #id
 
   let groupSettings2 = ugwpSettings <$> userGroup24
       timeoutVal     = view #sessionTimeoutSecs =<< groupSettings2
@@ -343,7 +343,7 @@ testDocumentSessionTimeout = do
         req  <- mkRequestWithHeaders GET [] [("host", [testCookieDomain])]
         mh   <- dbUpdate $ NewSignatoryAccessToken slid SignatoryAccessTokenForAPI Nothing
 
-        eRes <- E.try $ runTestKontra req ctx $ handleSignShowSaveMagicHash did slid mh
+        eRes <- E.try . runTestKontra req ctx $ handleSignShowSaveMagicHash did slid mh
 
         case eRes of
           Right (_, ctx') -> do
@@ -373,7 +373,6 @@ testDocumentTicketReinsertion = replicateM_ 10 $ do
     runTestKontra rq ctx $ do
       sid <- getNonTempSessionID
       dbUpdate $ AddDocumentSession sid (signatorylinkid asl)
-  return ()
 
 testElegTransactionInsertion :: TestEnv ()
 testElegTransactionInsertion = replicateM_ 10 $ do
@@ -385,9 +384,9 @@ testElegTransactionUpdate = replicateM_ 10 $ do
   (Just trans, ctx) <- addCgiGrpTransaction
   let newtrans = case trans of
         (CgiGrpAuthTransaction slid tid orf sid) ->
-          (CgiGrpAuthTransaction slid tid orf sid)
+          CgiGrpAuthTransaction slid tid orf sid
         (CgiGrpSignTransaction slid _ tid orf sid) ->
-          (CgiGrpSignTransaction slid "new order ref" tid orf sid)
+          CgiGrpSignTransaction slid "new order ref" tid orf sid
   (mtrans', _) <- do
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do
@@ -457,4 +456,4 @@ createTestUser = do
                                                , groupID  = return $ ug ^. #id
                                                , password = Just "password_8866"
                                                }
-  return $ (user, ug)
+  return (user, ug)

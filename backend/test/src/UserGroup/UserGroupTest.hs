@@ -50,7 +50,7 @@ testCreateGroups = do
   void $ foldlM createGroups [Nothing] [1 .. 5]
   runQuery_ ("SELECT COUNT(*) FROM user_groups" :: SQL)
   groupcount <- fetchOne runIdentity
-  assertEqual ("Created tree of groups") (31 :: Int64) groupcount
+  assertEqual "Created tree of groups" (31 :: Int64) groupcount
   where
     createGroups :: [Maybe UserGroupID] -> Int -> TestEnv [Maybe UserGroupID]
     createGroups mparent_ids level = (concat <$>) . forM mparent_ids $ \mparent_id -> do
@@ -66,7 +66,7 @@ testCreateGroupsWithUsers = do
   void $ foldlM createGroupsWithUsers [Nothing] [1 .. 5]
   runQuery_ ("SELECT COUNT(*) FROM users" :: SQL)
   usercount <- fetchOne runIdentity
-  assertEqual ("Created tree of groups and users") (31 :: Int64) usercount
+  assertEqual "Created tree of groups and users" (31 :: Int64) usercount
   where
     createGroupsWithUsers :: [Maybe UserGroupID] -> Int -> TestEnv [Maybe UserGroupID]
     createGroupsWithUsers mparent_ids level =
@@ -82,9 +82,9 @@ testCreateGroupsWithUsers = do
 testGetAllUsersOfTopGroup :: TestEnv ()
 testGetAllUsersOfTopGroup = do
   -- create a 5 level tree, each parent 2 subgroups
-  (_, (ugidtop : _)) <- foldlM createGroupsWithUsers ([Nothing], []) [1 .. 5]
-  dus                <- dbQuery . UserGroupGetAllUsersFromThisAndSubgroups $ ugidtop
-  assertEqual ("Fetched all users of top group") 31 (length dus)
+  (_, ugidtop : _) <- foldlM createGroupsWithUsers ([Nothing], []) [1 .. 5]
+  dus              <- dbQuery . UserGroupGetAllUsersFromThisAndSubgroups $ ugidtop
+  assertEqual "Fetched all users of top group" 31 (length dus)
   where
     createGroupsWithUsers
       :: ([Maybe UserGroupID], [UserGroupID])
@@ -112,10 +112,9 @@ testGetUserGroup = do
 testGetAllGroupsOfUser :: TestEnv ()
 testGetAllGroupsOfUser = do
   -- create a 5 level tree, each parent 2 subgroups
-  (lastuid : _) <- (reverse . snd)
-    <$> foldlM createGroupsWithUsers ([Nothing], []) [1 .. 5]
-  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ lastuid
-  assertEqual ("Fetched all groups of user") 5 (length $ ugwpToList ugwp)
+  (lastuid : _) <- reverse . snd <$> foldlM createGroupsWithUsers ([Nothing], []) [1 .. 5]
+  ugwp          <- dbQuery . UserGroupGetWithParentsByUserID $ lastuid
+  assertEqual "Fetched all groups of user" 5 (length $ ugwpToList ugwp)
   where
     createGroupsWithUsers
       :: ([Maybe UserGroupID], [UserID]) -> Int -> TestEnv ([Maybe UserGroupID], [UserID])
@@ -154,13 +153,13 @@ testMoveGroup = do
   (_, ugids) <- foldlM createGroupsWithUsers ([Nothing], []) [1 .. 4]
   -- take Root.Left group and move it to Root.Right....Right group
   Just ug1   <- dbQuery . UserGroupGet $ ugids !! 1
-  void $ dbUpdate . UserGroupUpdate . set #parentGroupID (Just $ ugids !! 14) $ ug1
+  void . dbUpdate . UserGroupUpdate . set #parentGroupID (Just $ ugids !! 14) $ ug1
   -- parentpath of new leaf in moved group should be 6 items long
   Just (_ug10, parentugs) <- dbQuery . UserGroupGetWithParents $ ugids !! 10
-  assertEqual ("Fetched all parents of leaf group") 6 (length parentugs)
+  assertEqual "Fetched all parents of leaf group" 6 (length parentugs)
   -- root still has 15 users
-  us <- dbQuery . UserGroupGetAllUsersFromThisAndSubgroups $ ugids !! 0
-  assertEqual ("Fetched all users of top group") 15 (length us)
+  us <- dbQuery . UserGroupGetAllUsersFromThisAndSubgroups $ head ugids
+  assertEqual "Fetched all users of top group" 15 (length us)
   where
     createGroupsWithUsers
       :: ([Maybe UserGroupID], [UserGroupID])
@@ -233,7 +232,7 @@ testChangeUserGroupParent = do
       usrEmail       = "testuseremail@scrive.com"
   user <- instantiateUser
     $ randomUserTemplate { email = return usrEmail, groupID = return usrGrpID }
-  ctx <- (set #maybeUser $ Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   let params1 = [("companyparentid", inText $ showt parentUsrGrpID)]
   req1 <- mkRequest POST params1
@@ -244,13 +243,11 @@ testChangeUserGroupParent = do
   assertLeft eErrRes
 
   -- -- user gets admin rights
-  let ctx' = (set #adminAccounts [Email usrEmail]) ctx
-  mUsrGrpParentBefore <-
-    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  let ctx' = set #adminAccounts [Email usrEmail] ctx
+  mUsrGrpParentBefore <- (view #parentGroupID =<<) <$> dbQuery (UserGroupGet usrGrpID)
   assertEqual "User group has no parent" mUsrGrpParentBefore Nothing
-  void $ runTestKontra req1 ctx' $ handleCompanyChange usrGrpID
-  mUsrGrpParentAfter <-
-    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  void . runTestKontra req1 ctx' $ handleCompanyChange usrGrpID
+  mUsrGrpParentAfter <- (view #parentGroupID =<<) <$> dbQuery (UserGroupGet usrGrpID)
   assertEqual "User group parent has been set correctly" mUsrGrpParentAfter
     $ Just parentUsrGrpID
 
@@ -258,9 +255,9 @@ testChangeUserGroupParent = do
   let grandParentUsrGrpID = grandParentUsrGrp ^. #id
       params2             = [("companyparentid", inText $ showt grandParentUsrGrpID)]
   req2 <- mkRequest POST params2
-  void $ runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID
-  mUsrGrpGrandParentAfter <-
-    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ parentUsrGrpID)
+  void . runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID
+  mUsrGrpGrandParentAfter <- (view #parentGroupID =<<)
+    <$> dbQuery (UserGroupGet parentUsrGrpID)
   assertEqual "User group grandparent has been set correctly" mUsrGrpGrandParentAfter
     $ Just grandParentUsrGrpID
 
@@ -270,9 +267,8 @@ testChangeUserGroupParent = do
   let usrGrpID' = usrGrp' ^. #id
       params3   = [("companyparentid", inText $ showt usrGrpID)]
   req3 <- mkRequest POST params3
-  void $ runTestKontra req3 ctx' $ handleCompanyChange usrGrpID'
-  mUsrGrpParentAfter' <-
-    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID')
+  void . runTestKontra req3 ctx' $ handleCompanyChange usrGrpID'
+  mUsrGrpParentAfter' <- (view #parentGroupID =<<) <$> dbQuery (UserGroupGet usrGrpID')
   assertEqual "User group parent that has parent has been set correctly"
               mUsrGrpParentAfter'
     $ Just usrGrpID
@@ -280,12 +276,10 @@ testChangeUserGroupParent = do
   -- removing parent should work
   let params4 = [("companyparentid", inText "")]
   req4                 <- mkRequest POST params4
-  mUsrGrpParentBefore' <-
-    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  mUsrGrpParentBefore' <- (view #parentGroupID =<<) <$> dbQuery (UserGroupGet usrGrpID)
   assertEqual "User group parent still set" mUsrGrpParentBefore' $ Just parentUsrGrpID
-  void $ runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
-  mUsrGrpParentAfter'' <-
-    join <$> (view #parentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  void . runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
+  mUsrGrpParentAfter'' <- (view #parentGroupID =<<) <$> dbQuery (UserGroupGet usrGrpID)
   assertEqual "User group parent has been removed" mUsrGrpParentAfter'' Nothing
 
 testUserGroupRootMustHaveInvoice :: TestEnv ()

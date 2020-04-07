@@ -221,7 +221,7 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary Folder where
-  arbitrary = (\name -> I.Folder emptyFolderID Nothing name) <$> arbitraryName
+  arbitrary = I.Folder emptyFolderID Nothing <$> arbitraryName
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
@@ -236,7 +236,7 @@ arbitrarySyllable = do
   return [consonant, vovel]
 
 arbitraryUnicodeText :: Gen Text
-arbitraryUnicodeText = pack <$> (listOf (arbitraryUnicodeChar `suchThat` (/= '\0')))
+arbitraryUnicodeText = pack <$> listOf (arbitraryUnicodeChar `suchThat` (/= '\0'))
 
 arbitraryText :: Gen Text
 arbitraryText = T.pack <$> arbitrary
@@ -272,7 +272,7 @@ genMaybeUnicodeString = oneof [pure Nothing, Just <$> genUnicodeString]
 
 instance Arbitrary UserGroup where
   arbitrary =
-    (I.UserGroup emptyUserGroupID Nothing)
+    I.UserGroup emptyUserGroupID Nothing
       <$> arbitraryName
       <*> pure Nothing
       <*> arbitrary
@@ -343,7 +343,7 @@ instance Arbitrary UserGroupAddress where
 
 instance Arbitrary UserGroupUI where
   arbitrary =
-    (I.UserGroupUI Nothing Nothing Nothing)
+    I.UserGroupUI Nothing Nothing Nothing
       <$> arbitraryMaybe arbitraryUnicodeText
       <*> arbitraryMaybe arbitraryUnicodeText
       <*> arbitrary
@@ -475,7 +475,7 @@ instance Arbitrary SignatoryConsentQuestion where
     po          <- arbString 1 100
     no          <- arbString 1 100
     description <- oneof
-      [(\ti te -> Just (ti, te)) <$> arbString 1 100 <*> arbString 1 100, return Nothing]
+      [curry Just <$> arbString 1 100 <*> arbString 1 100, return Nothing]
 
     return $ defaultSignatoryConsentQuestion { scqTitle          = title
                                              , scqPositiveOption = po
@@ -561,8 +561,9 @@ instance {-# OVERLAPPING #-} Arbitrary [SignatoryField] where
     (f1, f2, f3, f4, f5) <- arbitrary
     return
       $  filter
-           (\f -> notElem (fieldIdentity f)
-                          [(NameFI (NameOrder 1)), (NameFI (NameOrder 2)), EmailFI]
+           (\f ->
+             fieldIdentity f
+               `notElem` [NameFI (NameOrder 1), NameFI (NameOrder 2), EmailFI]
            )
            (filterSingleFieldIdentity [f1, f2, f3, f4, f5])
 
@@ -697,10 +698,11 @@ instance Arbitrary SignatoryTextField where
       , stfObligatory             = True
       , stfShouldBeFilledBySender = False
       , stfPlacements             = p
-      , stfCustomValidation       =
-        case usecustomvalidation of
-          False -> Nothing
-          True  -> Just $ TextCustomValidation valpattern valexample valtooltip
+      , stfCustomValidation       = if usecustomvalidation
+                                      then Just $ TextCustomValidation valpattern
+                                                                       valexample
+                                                                       valtooltip
+                                      else Nothing
       }
 
 instance Arbitrary AuthenticationToSignMethod where
@@ -773,7 +775,7 @@ instance Arbitrary CgiGrpTransaction where
       <*> (fromSNN <$> arbitrary)
       <*> (fromSNN <$> arbitrary)
       <*> (fromSNN <$> arbitrary)
-      <*> (pure tempSessionID)
+      <*> pure tempSessionID
 
 instance Arbitrary CGISEBankIDSignature where
   arbitrary =
@@ -788,26 +790,26 @@ instance Arbitrary CGISEBankIDSignature where
 instance Arbitrary NetsNOBankIDSignature where
   arbitrary =
     NetsNOBankIDSignature
-      <$> (arbText 20 30)
-      <*> (arbText 200 300)
-      <*> (arbText 10 20)
-      <*> (arbText 11 11)
+      <$> arbText 20  30
+      <*> arbText 200 300
+      <*> arbText 10  20
+      <*> arbText 11  11
 
 instance Arbitrary NetsDKNemIDSignature where
   arbitrary =
     NetsDKNemIDSignature
-      <$> (arbText 20 30)
-      <*> (arbText 200 300)
-      <*> (arbText 10 20)
-      <*> (arbText 10 10)
-      <*> (arbText 10 10)
+      <$> arbText 20  30
+      <*> arbText 200 300
+      <*> arbText 10  20
+      <*> arbText 10  10
+      <*> arbText 10  10
 
 instance Arbitrary EIDServiceNLIDINSignature where
   arbitrary = do
     a <- arbText 20 30
     c <- arbText 10 20
     d <- arbText 10 10
-    return $ EIDServiceNLIDINSignature $ CompleteNLIDINEIDServiceTransactionData
+    return . EIDServiceNLIDINSignature $ CompleteNLIDINEIDServiceTransactionData
       { eiditdName       = a
       , eiditdBirthDate  = c
       , eiditdCustomerID = d
@@ -1024,7 +1026,7 @@ randomUserTemplate = UserTemplate
   , lastName           = rand 10 (arbText 3 30)
   , email              = let go = do
                                email <- rand 10 arbEmail
-                               mUser <- query . GetUserByEmail $ Email email
+                               mUser <- dbQuery . GetUserByEmail $ Email email
                                case mUser of  -- ensure uniqueness
                                  Nothing -> return email
                                  Just _  -> go
@@ -1033,8 +1035,8 @@ randomUserTemplate = UserTemplate
   , companyPosition    = ""
   , phone              = ""
   , lang               = defaultLang
-  , associatedDomainID = fmap (view #id) $ dbQuery GetMainBrandedDomain
-  , groupID            = fmap (view #id) instantiateRandomUserGroup
+  , associatedDomainID = view #id <$> dbQuery GetMainBrandedDomain
+  , groupID            = view #id <$> instantiateRandomUserGroup
   , homeFolderID       = \groupHomeFolderID ->
                            fmap (Just . view #id) . dbUpdate . FolderCreate $ set
                              #parentID
@@ -1072,12 +1074,12 @@ tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = gene
     lastName           <- generateLastName
     email              <- generateEmail
     groupID            <- generateGroupID
-    groupHomeFolderID <- fmap (fmap (view #id)) . dbQuery $ FolderGetUserGroupHome groupID
+    groupHomeFolderID  <- fmap (view #id) <$> dbQuery (FolderGetUserGroupHome groupID)
     homeFolderID       <- generateHomeFolderID groupHomeFolderID
     associatedDomainID <- generateAssociatedDomainID
     password           <- case generatePassword of
       Nothing           -> return Nothing
-      Just passwordText -> fmap Just $ createPassword passwordText
+      Just passwordText -> Just <$> createPassword passwordText
     internalTags <- generateInternalTags
     externalTags <- generateExternalTags
     mUser        <- dbUpdate $ AddUser (firstName, lastName)
@@ -1121,6 +1123,7 @@ anyRandomSignatoryCondition a b cond =
         k <- [1 .. n]
         return $ replicate (k - 1) freeSig ++ [cond] ++ replicate (n - k) freeSig
 
+{-# ANN type RandomSignatoryCondition ("HLint: ignore Use camelCase" :: String) #-}
 data RandomSignatoryCondition
   = RSC_IsSignatory
   | RSC_IsSignatoryThatHasSigned
@@ -1176,10 +1179,10 @@ randomSigLinkByStatus Closed = do
     else return sl { maybesigninfo = Nothing }
 
 randomSigLinkByStatus Preparation = do
-  (sl) <- arbitrary
+  sl <- arbitrary
   return $ sl { maybesigninfo = Nothing, maybeseeninfo = Nothing }
 randomSigLinkByStatus Pending = do
-  (sl) <- arbitrary
+  sl <- arbitrary
   return $ sl { maybesigninfo = Nothing, maybeseeninfo = Nothing }
 randomSigLinkByStatus _ = arbitrary
 
@@ -1280,19 +1283,17 @@ addRandomDocumentWithFile fileid rda = do
                          }
             else return sig { signatoryrole = role, maybesigninfo = Nothing }
           applyCond = \case
-            RSC_IsSignatory ->
-              \sig -> updateSeenSignInfos Nothing SignatoryRoleSigningParty sig
+            RSC_IsSignatory -> updateSeenSignInfos Nothing SignatoryRoleSigningParty
             RSC_IsSignatoryThatHasSigned ->
-              \sig -> updateSeenSignInfos (Just True) SignatoryRoleSigningParty sig
+              updateSeenSignInfos (Just True) SignatoryRoleSigningParty
             RSC_IsSignatoryThatHasntSigned ->
-              \sig -> updateSeenSignInfos (Just False) SignatoryRoleSigningParty sig
-            RSC_IsApprover ->
-              \sig -> updateSeenSignInfos Nothing SignatoryRoleApprover sig
+              updateSeenSignInfos (Just False) SignatoryRoleSigningParty
+            RSC_IsApprover -> updateSeenSignInfos Nothing SignatoryRoleApprover
             RSC_IsApproverThatHasApproved ->
-              \sig -> updateSeenSignInfos (Just True) SignatoryRoleApprover sig
+              updateSeenSignInfos (Just True) SignatoryRoleApprover
             RSC_IsApproverThatHasntApproved ->
-              \sig -> updateSeenSignInfos (Just False) SignatoryRoleApprover sig
-            RSC_IsViewer -> \sig -> updateSeenSignInfos Nothing SignatoryRoleViewer sig
+              updateSeenSignInfos (Just False) SignatoryRoleApprover
+            RSC_IsViewer                -> updateSeenSignInfos Nothing SignatoryRoleViewer
             RSC_AuthToSignIs authToSign -> \sig -> do
               return $ sig { signatorylinkauthenticationtosignmethod = authToSign }
             RSC_AuthToViewIs authToView -> \sig -> do
@@ -1386,7 +1387,6 @@ sealTestDocument ctx did = do
                       \ document_extending_jobs"
             expectedJobCount
             actualJobCount
-        return ()
 
 rand :: CryptoRNG m => Int -> Gen a -> m a
 rand i a = do
@@ -1616,7 +1616,7 @@ instance Arbitrary Lang where
 -- big, we want to skip many details in many tests.
 fieldForTests :: FieldIdentity -> Text -> SignatoryField
 fieldForTests (NameFI no) v = SignatoryNameField $ NameField
-  { snfID                     = (unsafeSignatoryFieldID 0)
+  { snfID                     = unsafeSignatoryFieldID 0
   , snfNameOrder              = no
   , snfValue                  = v
   , snfObligatory             = True
@@ -1624,28 +1624,28 @@ fieldForTests (NameFI no) v = SignatoryNameField $ NameField
   , snfPlacements             = []
   }
 fieldForTests CompanyFI v = SignatoryCompanyField $ CompanyField
-  { scfID                     = (unsafeSignatoryFieldID 0)
+  { scfID                     = unsafeSignatoryFieldID 0
   , scfValue                  = v
   , scfObligatory             = True
   , scfShouldBeFilledBySender = False
   , scfPlacements             = []
   }
 fieldForTests PersonalNumberFI v = SignatoryPersonalNumberField $ PersonalNumberField
-  { spnfID                     = (unsafeSignatoryFieldID 0)
+  { spnfID                     = unsafeSignatoryFieldID 0
   , spnfValue                  = v
   , spnfObligatory             = True
   , spnfShouldBeFilledBySender = False
   , spnfPlacements             = []
   }
 fieldForTests CompanyNumberFI v = SignatoryCompanyNumberField $ CompanyNumberField
-  { scnfID                     = (unsafeSignatoryFieldID 0)
+  { scnfID                     = unsafeSignatoryFieldID 0
   , scnfValue                  = v
   , scnfObligatory             = True
   , scnfShouldBeFilledBySender = False
   , scnfPlacements             = []
   }
 fieldForTests EmailFI v = SignatoryEmailField $ EmailField
-  { sefID                     = (unsafeSignatoryFieldID 0)
+  { sefID                     = unsafeSignatoryFieldID 0
   , sefValue                  = v
   , sefObligatory             = True
   , sefShouldBeFilledBySender = False
@@ -1653,7 +1653,7 @@ fieldForTests EmailFI v = SignatoryEmailField $ EmailField
   , sefPlacements             = []
   }
 fieldForTests MobileFI v = SignatoryMobileField $ MobileField
-  { smfID                     = (unsafeSignatoryFieldID 0)
+  { smfID                     = unsafeSignatoryFieldID 0
   , smfValue                  = v
   , smfObligatory             = True
   , smfShouldBeFilledBySender = False
@@ -1661,7 +1661,7 @@ fieldForTests MobileFI v = SignatoryMobileField $ MobileField
   , smfPlacements             = []
   }
 fieldForTests (TextFI l) v = SignatoryTextField $ TextField
-  { stfID                     = (unsafeSignatoryFieldID 0)
+  { stfID                     = unsafeSignatoryFieldID 0
   , stfName                   = l
   , stfFilledByAuthor         = True
   , stfValue                  = v

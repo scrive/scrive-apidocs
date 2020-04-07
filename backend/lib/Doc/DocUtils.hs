@@ -32,6 +32,7 @@ module Doc.DocUtils (
 ) where
 
 import Control.Monad.Catch
+import Data.List.Extra (nubOrdOn)
 import Text.StringTemplates.Templates
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
@@ -71,7 +72,7 @@ mkAuthKind :: Document -> AuthenticationKind
 mkAuthKind doc = case documentstatus doc of
   Pending -> AuthenticationToView
   Closed  -> AuthenticationToViewArchived
-  status  -> unexpectedError $ "invalid status: " <> (showt status)
+  status  -> unexpectedError $ "invalid status: " <> showt status
 
 -- | The document's current sign order is either the sign order of the
 -- next partner(s) that should sign; or in case all partners have
@@ -82,9 +83,8 @@ documentcurrentsignorder doc = case filter notSignedOrApproved sigs of
   xs -> minimum $ map signatorysignorder xs
   where
     sigs = documentsignatorylinks doc
-    notSignedOrApproved siglnk =
-      -- we exclude viewers
-      (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) siglnk
+    notSignedOrApproved = -- we exclude viewers
+      isSignatoryAndHasNotSigned || isApproverAndHasNotApproved
 
 -- | The document's previous sign order is either the sign order of
 -- the last partner(s) that signed, or zero in case nobody has signed
@@ -114,38 +114,38 @@ signatoryFieldsFromUser :: (MonadDB m, MonadThrow m) => User -> m [SignatoryFiel
 signatoryFieldsFromUser user = do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   return
-    $  [ SignatoryNameField $ NameField { snfID = (unsafeSignatoryFieldID 0)
+    $  [ SignatoryNameField $ NameField { snfID = unsafeSignatoryFieldID 0
                                         , snfNameOrder              = NameOrder 1
                                         , snfValue                  = getFirstName user
                                         , snfObligatory             = True
                                         , snfShouldBeFilledBySender = True
                                         , snfPlacements             = []
                                         }
-       , SignatoryNameField $ NameField { snfID = (unsafeSignatoryFieldID 0)
+       , SignatoryNameField $ NameField { snfID = unsafeSignatoryFieldID 0
                                         , snfNameOrder              = NameOrder 2
                                         , snfValue                  = getLastName user
                                         , snfObligatory             = True
                                         , snfShouldBeFilledBySender = True
                                         , snfPlacements             = []
                                         }
-       , SignatoryEmailField $ EmailField { sefID = (unsafeSignatoryFieldID 0)
+       , SignatoryEmailField $ EmailField { sefID = unsafeSignatoryFieldID 0
                                           , sefValue                  = getEmail user
                                           , sefObligatory             = True
                                           , sefShouldBeFilledBySender = True
                                           , sefEditableBySignatory    = False
                                           , sefPlacements             = []
                                           }
-       , SignatoryCompanyField $ CompanyField { scfID = (unsafeSignatoryFieldID 0)
+       , SignatoryCompanyField $ CompanyField { scfID = unsafeSignatoryFieldID 0
                                               , scfValue = getUGEntityName ugwp
                                               , scfObligatory = False
                                               , scfShouldBeFilledBySender = False
                                               , scfPlacements = []
                                               }
        ]
-    ++ (if (not $ T.null $ getPersonalNumber user)
+    ++ (if not . T.null $ getPersonalNumber user
          then
            [ SignatoryPersonalNumberField $ PersonalNumberField
-               { spnfID                     = (unsafeSignatoryFieldID 0)
+               { spnfID                     = unsafeSignatoryFieldID 0
                , spnfValue                  = getPersonalNumber user
                , spnfObligatory             = False
                , spnfShouldBeFilledBySender = False
@@ -154,9 +154,9 @@ signatoryFieldsFromUser user = do
            ]
          else []
        )
-    ++ (if (not $ T.null $ getMobile user)
+    ++ (if not . T.null $ getMobile user
          then
-           [ SignatoryMobileField $ MobileField { smfID = (unsafeSignatoryFieldID 0)
+           [ SignatoryMobileField $ MobileField { smfID = unsafeSignatoryFieldID 0
                                                 , smfValue = getMobile user
                                                 , smfObligatory = False
                                                 , smfShouldBeFilledBySender = False
@@ -166,10 +166,10 @@ signatoryFieldsFromUser user = do
            ]
          else []
        )
-    ++ (if (not . T.null . getUGCompanyNumber $ ugwp)
+    ++ (if not . T.null . getUGCompanyNumber $ ugwp
          then
            [ SignatoryCompanyNumberField $ CompanyNumberField
-               { scnfID                     = (unsafeSignatoryFieldID 0)
+               { scnfID                     = unsafeSignatoryFieldID 0
                , scnfValue                  = getUGCompanyNumber ugwp
                , scnfObligatory             = False
                , scnfShouldBeFilledBySender = False
@@ -221,7 +221,7 @@ isEligibleForReminder document@Document { documentstatus } siglink =
           /= Deferred
           )
        )
-    && ((isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) siglink)
+    && (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) siglink
   where
     signatoryActivated  = isActivatedSignatory (documentcurrentsignorder document) siglink
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
@@ -259,34 +259,30 @@ isActivatedSignatory signorder siglink = signorder >= signatorysignorder siglink
 
 getSignatoryAttachment :: SignatoryLinkID -> Text -> Document -> Maybe SignatoryAttachment
 getSignatoryAttachment slid name doc =
-  join
-    $   find (\a -> name == signatoryattachmentname a)
-    <$> signatoryattachments
-    <$> getSigLinkFor slid doc
+  (find (\a -> name == signatoryattachmentname a) <$> signatoryattachments)
+    =<< getSigLinkFor slid doc
 
 -- Changes MainFile into file. Works on maybe since this is main case in our system
 fileFromMainFile :: (MonadDB m, MonadThrow m) => Maybe MainFile -> m (Maybe File)
 fileFromMainFile mmf = case mmf of
   Nothing -> return Nothing
-  Just mf -> Just <$> (dbQuery $ GetFileByFileID $ mainfileid mf)
+  Just mf -> Just <$> dbQuery (GetFileByFileID $ mainfileid mf)
 
 documentDeletedForUser :: Document -> UserID -> Bool
-documentDeletedForUser doc uid = fromMaybe
+documentDeletedForUser doc uid = maybe
   False
-  ( fmap (isJust . signatorylinkdeleted)
-  $ (getSigLinkFor uid doc `mplus` getAuthorSigLink doc)
-  )
+  (isJust . signatorylinkdeleted)
+  (getSigLinkFor uid doc `mplus` getAuthorSigLink doc)
 
 documentReallyDeletedForUser :: Document -> UserID -> Bool
-documentReallyDeletedForUser doc uid = fromMaybe
+documentReallyDeletedForUser doc uid = maybe
   False
-  ( fmap (isJust . signatorylinkreallydeleted)
-  $ (getSigLinkFor uid doc `mplus` getAuthorSigLink doc)
-  )
+  (isJust . signatorylinkreallydeleted)
+  (getSigLinkFor uid doc `mplus` getAuthorSigLink doc)
 
 userCanPerformSigningAction :: UserID -> Document -> Bool
 userCanPerformSigningAction uid doc =
-  (isJust msl && (canSignatorySignNow doc sl))
+  (isJust msl && canSignatorySignNow doc sl)
     || (isJust msl && isAuthor sl && any
          (canSignatorySignNow doc && ((== PadDelivery) . signatorylinkdeliverymethod))
          (documentsignatorylinks doc)
@@ -296,10 +292,9 @@ userCanPerformSigningAction uid doc =
     sl  = fromJust msl
 
 allRequiredAttachmentsAreOnList :: [FileID] -> Document -> Bool
-allRequiredAttachmentsAreOnList acceptedAttachments doc =
-  all (\i -> i `elem` acceptedAttachments)
-    $ map authorattachmentfileid
-    $ requiredAuthorAttachments doc
+allRequiredAttachmentsAreOnList acceptedAttachments doc = all
+  ((`elem` acceptedAttachments) . authorattachmentfileid)
+  (requiredAuthorAttachments doc)
 
 requiredAuthorAttachments :: Document -> [AuthorAttachment]
 requiredAuthorAttachments doc =
@@ -307,11 +302,10 @@ requiredAuthorAttachments doc =
 
 detailsOfGroupedPortalSignatoriesThatCanSignNow :: [Document] -> [(Email, Text)]
 detailsOfGroupedPortalSignatoriesThatCanSignNow docs =
-  nubBy (\(e1, _) (e2, _) -> e1 == e2)
-    $ (concatMap detailsOfPortalSignatoriesThatCanSignNow docs)
+  nubOrdOn fst $ concatMap detailsOfPortalSignatoriesThatCanSignNow docs
 
 detailsOfPortalSignatoriesThatCanSignNow :: Document -> [(Email, Text)]
-detailsOfPortalSignatoriesThatCanSignNow doc = map slToData $ portalSigs
+detailsOfPortalSignatoriesThatCanSignNow doc = map slToData portalSigs
   where
     portalSig sl =
       signatorylinkdeliverymethod sl == PortalDelivery && canSignatorySignNow doc sl

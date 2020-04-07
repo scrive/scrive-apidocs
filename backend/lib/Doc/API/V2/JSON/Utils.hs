@@ -32,11 +32,11 @@ unjsonEnum desc parseEnum printEnum = SimpleUnjsonDef desc
                                                       printEnumToAeson
   where
     printEnumToAeson a = Aeson.String $ printEnum a
-    parseFromEnumFromAeson (Aeson.String s) = case (parseEnum s) of
+    parseFromEnumFromAeson (Aeson.String s) = case parseEnum s of
       Just a -> Result a []
-      _      -> fail $ T.unpack $ "cannot parse enum" <+> desc <+> "from" <+> s
+      _      -> fail . T.unpack $ "cannot parse enum" <+> desc <+> "from" <+> s
     parseFromEnumFromAeson _ =
-      fail $ T.unpack $ "cannot parse enum" <+> desc <+> "from not string"
+      fail . T.unpack $ "cannot parse enum" <+> desc <+> "from not string"
 
 
 -- | It is impossible to write a reasonable definition of 'Unjson (Maybe a)'
@@ -62,21 +62,17 @@ fieldReadOnlyOpt name f desc = fieldReadOnlyOptBy
 -- Hack! Should pattern match on UnjsonDef constructor instead of creating a
 -- SimpleUnjsonDef!
 fieldReadOnlyOptBy
-  :: (Typeable a)
+  :: forall a s
+   . Typeable a
   => Options
   -> Text
   -> (s -> Maybe a)
   -> Text
   -> UnjsonDef a
   -> AltF.Ap (FieldDef s) ()
-fieldReadOnlyOptBy opts name f desc def = fieldReadonlyBy name
-                                                          f
-                                                          desc
-                                                          (unjsonDefWithNull def)
+fieldReadOnlyOptBy opts name f desc def = fieldReadonlyBy name f desc unjsonDefWithNull
   where
-    unjsonDefWithNull :: UnjsonDef a -> UnjsonDef (Maybe a)
-    unjsonDefWithNull def' =
-      SimpleUnjsonDef "ReadOnly" (\v -> Just <$> parse def' v) $ \mv -> case mv of
-        Nothing -> Aeson.Null
-        Just v  -> unjsonToJSON' opts def' v
-
+    unjsonDefWithNull :: UnjsonDef (Maybe a)
+    unjsonDefWithNull = SimpleUnjsonDef "ReadOnly" (fmap Just . parse def) $ \case
+      Nothing -> Aeson.Null
+      Just v  -> unjsonToJSON' opts def v

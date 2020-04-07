@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+
 module HtmlToTxt (
     htmlToTxt
   ) where
@@ -32,7 +32,7 @@ htmlToTxt =
     . lowerTags
     . parseTags
   where
-    toText = concat . foldr (\t ts -> f t : ts) []
+    toText = concatMap f
       where
         f (TagText s  ) = s
         f (TagOpen t _) = fromTag t
@@ -53,7 +53,7 @@ htmlToTxt =
       Just link ->
         TagText "[ " : linktext ++ [TagText (": " ++ link ++ " ]")] ++ replaceLinks
           (drop 1 rest)
-        where (linktext, rest) = break (== (TagClose "a")) ts
+        where (linktext, rest) = break (== TagClose "a") ts
       Nothing -> t : replaceLinks ts
     replaceLinks (t : ts) = t : replaceLinks ts
 

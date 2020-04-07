@@ -22,7 +22,7 @@ handleMailJetEvents :: Mailer Response
 handleMailJetEvents = localDomain "handleMailJetEvents" $ do
   rqVar <- rqBody <$> askRq
   rq    <- liftIO $ fmap unBody <$> tryTakeMVar rqVar
-  case (decode <$> BS.toString <$> rq) of
+  case decode . BS.toString <$> rq of
     Just (Ok (a :: JSValue)) -> do
       logInfo "JSON with event parsed" $ object ["event" .= jsonToAeson a]
       processMailJetEvent a
@@ -36,7 +36,7 @@ processMailJetEvent :: JSValue -> Mailer ()
 processMailJetEvent js = do
   withJSValue js $ do
     cid <- fromJSValueField "CustomID"
-    case (T.split (== '-') <$> cid) of
+    case T.split (== '-') <$> cid of
       Just [messageIdMID, messageIdToken] ->
         case (maybeRead messageIdMID, maybeRead messageIdToken) of
           (Just mid, Just token) -> localData [identifier mid] $ do

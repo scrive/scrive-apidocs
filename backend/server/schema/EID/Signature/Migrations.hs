@@ -15,10 +15,10 @@ eidSignaturesAddProviderNetsNOBankID = Migration
   , mgrFrom      = 1
   , mgrAction    =
     StandardMigration $ do
-      runQuery_ $ sqlAlterTable "eid_signatures" $ map
+      runQuery_ . sqlAlterTable "eid_signatures" $ map
         sqlDropCheck
         ["eid_signatures_ocsp_response_well_defined"]
-      runQuery_ $ sqlAlterTable "eid_signatures" $ map
+      runQuery_ . sqlAlterTable "eid_signatures" $ map
         sqlAddValidCheck
         [ tblCheck
             { chkName      = "eid_signatures_ocsp_response_well_defined"

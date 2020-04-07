@@ -62,23 +62,23 @@ readGlobalTemplatesFrom textsDirectory' templateFilesDir' = TL.readGlobalTemplat
   (T.unpack $ codeFromLang LANG_EN)
 
 localizedVersion :: Lang -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
-localizedVersion lang = TL.localizedVersion $ T.unpack $ codeFromLang lang
+localizedVersion lang = TL.localizedVersion . T.unpack $ codeFromLang lang
 
 getTemplatesModTime :: IO UTCTime
 getTemplatesModTime = do
   TL.getTemplatesModTime textsDirectory templateFilesDir
 
 renderTextTemplate :: (Monad m, ST.TemplatesMonad m) => Text -> ST.Fields m () -> m Text
-renderTextTemplate x m = fmap T.pack $ ST.renderTemplate (T.unpack x) m
+renderTextTemplate x m = T.pack <$> ST.renderTemplate (T.unpack x) m
 
 renderTextTemplate_ :: (Monad m, ST.TemplatesMonad m) => Text -> m Text
-renderTextTemplate_ x = fmap T.pack $ ST.renderTemplate_ (T.unpack x)
+renderTextTemplate_ x = T.pack <$> ST.renderTemplate_ (T.unpack x)
 
 renderLocalTemplate
   :: (HasLang a, ST.TemplatesMonad m) => a -> Text -> F.Fields m () -> m Text
 renderLocalTemplate haslang name fields = do
-  ts <- ST.getTextTemplatesByLanguage $ T.unpack $ codeFromLang $ getLang haslang
-  fmap T.pack $ ST.renderHelper ts (T.unpack name) fields
+  ts <- ST.getTextTemplatesByLanguage . T.unpack $ codeFromLang (getLang haslang)
+  T.pack <$> ST.renderHelper ts (T.unpack name) fields
 
 runTemplatesT
   :: (Functor m, Monad m) => (Lang, TL.GlobalTemplates) -> ST.TemplatesT m a -> m a

@@ -20,7 +20,7 @@ testMonitorStatusGet :: TestEnv ()
 testMonitorStatusGet = do
   ctx       <- mkContext defaultLang
   req1      <- mkRequest GET []
-  (res1, _) <- runTestKontra req1 ctx $ apiCallMonitorStatusGet
+  (res1, _) <- runTestKontra req1 ctx apiCallMonitorStatusGet
   let Just (Object resObject1) = decode (rsBody res1) :: Maybe Value
       Just (String status    ) = H.lookup "status" resObject1
   assertEqual "We should get a 200 response" 200  (rsCode res1)

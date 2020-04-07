@@ -39,86 +39,74 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
     <> providerSpecificData
   where
     encAuthMethod =
-      fromMaybe "legacy_provider"
-        $   unjsonToJSON unjsonAuthenticationToSignMethod
-        <$> case ssdData of
-              Left  authToSignMethod                 -> Just authToSignMethod
-              Right (CGISEBankIDSignature_        _) -> Just SEBankIDAuthenticationToSign
-              Right (NetsNOBankIDSignature_       _) -> Just NOBankIDAuthenticationToSign
-              Right (NetsDKNemIDSignature_        _) -> Just DKNemIDAuthenticationToSign
-              Right (EIDServiceIDINSignature_     _) -> Just IDINAuthenticationToSign
-              Right (EIDServiceFITupasSignature_  _) -> Just FITupasAuthenticationToSign
-              Right (LegacyBankIDSignature_       _) -> Nothing
-              Right (LegacyTeliaSignature_        _) -> Nothing
-              Right (LegacyNordeaSignature_       _) -> Nothing
-              Right (LegacyMobileBankIDSignature_ _) -> Nothing
+      maybe "legacy_provider" (unjsonToJSON unjsonAuthenticationToSignMethod)
+        $ case ssdData of
+            Left  authToSignMethod                 -> Just authToSignMethod
+            Right (CGISEBankIDSignature_        _) -> Just SEBankIDAuthenticationToSign
+            Right (NetsNOBankIDSignature_       _) -> Just NOBankIDAuthenticationToSign
+            Right (NetsDKNemIDSignature_        _) -> Just DKNemIDAuthenticationToSign
+            Right (EIDServiceIDINSignature_     _) -> Just IDINAuthenticationToSign
+            Right (EIDServiceFITupasSignature_  _) -> Just FITupasAuthenticationToSign
+            Right (LegacyBankIDSignature_       _) -> Nothing
+            Right (LegacyTeliaSignature_        _) -> Nothing
+            Right (LegacyNordeaSignature_       _) -> Nothing
+            Right (LegacyMobileBankIDSignature_ _) -> Nothing
 
     encB64               = T.decodeUtf8 . B64.encode
 
     providerSpecificData = case ssdData of
       Left _ -> []
-      Right (CGISEBankIDSignature_ (CGISEBankIDSignature {..})) ->
-        [ "se_bankid_data"
-            .= (  object
-               $  [ "signatory_name" .= cgisebidsSignatoryName
-                  , "signed_text" .= cgisebidsSignedText
-                  , "signature" .= encB64 cgisebidsSignature
-                  , "ocsp_response" .= encB64 cgisebidsOcspResponse
-                  , "signatory_ip" .= cgisebidsSignatoryIP
+      Right (CGISEBankIDSignature_ CGISEBankIDSignature {..}) ->
+        [ "se_bankid_data" .= object
+            (  [ "signatory_name" .= cgisebidsSignatoryName
+               , "signed_text" .= cgisebidsSignedText
+               , "signature" .= encB64 cgisebidsSignature
+               , "ocsp_response" .= encB64 cgisebidsOcspResponse
+               , "signatory_ip" .= cgisebidsSignatoryIP
+               ]
+            <> if hidePN
+                 then []
+                 else ["personal_number" .= cgisebidsSignatoryPersonalNumber]
+            )
+        ]
+      Right (NetsNOBankIDSignature_ NetsNOBankIDSignature {..}) ->
+        [ "no_bankid_data" .= object
+            [ "signatory_name" .= netsnoSignatoryName
+            , "signed_text" .= netsnoSignedText
+            , "sdo" .= netsnoB64SDO
+            , "signatory_pid" .= netsnoSignatoryPID
+            ]
+        ]
+      Right (NetsDKNemIDSignature_ NetsDKNemIDSignature {..}) ->
+        [ "dk_nemid_data" .= object
+            (  [ "signatory_name" .= netsdkSignatoryName
+               , "signed_text" .= netsdkSignedText
+               , "sdo" .= netsdkB64SDO
+               , "signatory_ip" .= netsdkSignatoryIP
+               ]
+            <> if hidePN
+                 then []
+                 else ["signatory_personal_number" .= netsdkSignatorySSN]
+            )
+        ]
+      Right (EIDServiceIDINSignature_ (EIDServiceNLIDINSignature details@CompleteNLIDINEIDServiceTransactionData {..}))
+        -> [ "nl_idin_data" .= object
+               (  [ "signatory_name" .= eiditdName
+                  , "signatory_customer_id" .= eiditdCustomerID
+                  , "signatory_name_match" .= showt (matchSignatoryName signatory details)
                   ]
-               <> if hidePN
-                    then []
-                    else ["personal_number" .= cgisebidsSignatoryPersonalNumber]
+               <> if hidePN then [] else ["signatory_date_of_birth" .= eiditdBirthDate]
                )
-        ]
-      Right (NetsNOBankIDSignature_ (NetsNOBankIDSignature {..})) ->
-        [ "no_bankid_data"
-            .= ( object
-               $ [ "signatory_name" .= netsnoSignatoryName
-                 , "signed_text" .= netsnoSignedText
-                 , "sdo" .= netsnoB64SDO
-                 , "signatory_pid" .= netsnoSignatoryPID
-                 ]
-               )
-        ]
-      Right (NetsDKNemIDSignature_ (NetsDKNemIDSignature {..})) ->
-        [ "dk_nemid_data"
-            .= (  object
-               $  [ "signatory_name" .= netsdkSignatoryName
-                  , "signed_text" .= netsdkSignedText
-                  , "sdo" .= netsdkB64SDO
-                  , "signatory_ip" .= netsdkSignatoryIP
-                  ]
-               <> if hidePN
-                    then []
-                    else ["signatory_personal_number" .= netsdkSignatorySSN]
-               )
-        ]
-      Right (EIDServiceIDINSignature_ (EIDServiceNLIDINSignature (details@CompleteNLIDINEIDServiceTransactionData {..})))
-        -> [ "nl_idin_data"
-               .= (  object
-                  $  [ "signatory_name" .= eiditdName
-                     , "signatory_customer_id" .= eiditdCustomerID
-                     , "signatory_name_match"
-                       .= (showt $ matchSignatoryName signatory details)
-                     ]
-                  <> if hidePN
-                       then []
-                       else ["signatory_date_of_birth" .= eiditdBirthDate]
-                  )
            ]
       Right (EIDServiceFITupasSignature_ EIDServiceFITupasSignature {..}) ->
-        [ "fi_tupas_data"
-            .= (  object
-               $  ["signatory_name" .= eidServiceFITupasSigSignatoryName]
-               <> if hidePN
-                    then []
-                    else
-                      [ "signatory_date_of_birth" .= eidServiceFITupasSigDateOfBirth
-                      , "signatory_personal_number"
-                        .= eidServiceFITupasSigPersonalNumber
-                      ]
-               )
+        [ "fi_tupas_data" .= object
+            (["signatory_name" .= eidServiceFITupasSigSignatoryName] <> if hidePN
+              then []
+              else
+                [ "signatory_date_of_birth" .= eidServiceFITupasSigDateOfBirth
+                , "signatory_personal_number" .= eidServiceFITupasSigPersonalNumber
+                ]
+            )
         ]
       Right (LegacyBankIDSignature_       _) -> []
       Right (LegacyTeliaSignature_        _) -> []
@@ -190,7 +178,7 @@ matchName s1 s2 | s1 == s2      = Match
                 | distance == 0 = Match
                 | distance <= 2 = Misspelled
                 | otherwise     = Mismatch
-  where distance = stringDistance (T.unpack $ s1) (T.unpack $ s2)
+  where distance = stringDistance (T.unpack s1) (T.unpack s2)
 
 -- Use diff algorithm to compare how many letters
 -- difference in two strings. Missing or additional

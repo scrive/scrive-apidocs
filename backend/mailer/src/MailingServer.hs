@@ -40,7 +40,7 @@ import Sender
 import Utils.IO
 import Utils.Network
 
-data CmdConf = CmdConf
+newtype CmdConf = CmdConf
   { config :: String
   } deriving (Data, Typeable)
 
@@ -113,15 +113,14 @@ main = do
           return
             $   r
             >>= maybe
-                  (  logInfo_ "Not found"
-                  >> (notFound $ toResponse ("Not found." :: String))
+                  (logInfo_ "Not found" >> notFound (toResponse ("Not found." :: String))
                   )
                   return
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
       fork . mapLogT (runReqHandlerT socket handlerConf) $ router rng cs routes
 
     hasFailoverTests conf = case mailerSlaveSender conf of
-      Just _  -> not $ null $ mailerTestReceivers conf
+      Just _  -> not . null $ mailerTestReceivers conf
       Nothing -> False
 
     mailsConsumer
@@ -216,10 +215,10 @@ main = do
                 , []
                 )
               logInfo "Service testing email created" $ object [identifier mid]
-              dbUpdate $ CollectServiceTestResultIn $ iminutes 10
+              dbUpdate . CollectServiceTestResultIn $ iminutes 10
               return $ Ok MarkProcessed
             else do
-              dbUpdate $ CollectServiceTestResultIn $ iseconds 50
+              dbUpdate . CollectServiceTestResultIn $ iseconds 50
               return $ Ok MarkProcessed
           CollectServiceTestResult -> withPostgreSQL pool $ if hasFailoverTests conf
             then runCryptoRNGT rng $ do

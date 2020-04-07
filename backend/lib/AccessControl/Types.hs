@@ -48,7 +48,7 @@ data AccessRole
   | AccessRoleUserGroup AccessRoleID UserGroupID AccessRoleTarget
   | AccessRoleImplicitUser UserID AccessRoleTarget
   | AccessRoleImplicitUserGroup UserGroupID AccessRoleTarget
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 accessRoleTarget :: AccessRole -> AccessRoleTarget
 accessRoleTarget (AccessRoleUser      _ _ target      ) = target
@@ -101,14 +101,14 @@ accessRoleGetTargetUserID role = case accessRoleTarget role of
 
 accessRoleGetSourceUserID :: AccessRole -> Maybe UserID
 accessRoleGetSourceUserID role = case role of
-  AccessRoleUser      _ uid _       -> Just uid
-  AccessRoleUserGroup _ _   _       -> Nothing
+  AccessRoleUser _ uid _            -> Just uid
+  AccessRoleUserGroup{}             -> Nothing
   AccessRoleImplicitUser      uid _ -> Just uid
   AccessRoleImplicitUserGroup _   _ -> Nothing
 
 accessRoleGetSourceUserGroupID :: AccessRole -> Maybe UserGroupID
 accessRoleGetSourceUserGroupID role = case role of
-  AccessRoleUser      _ _    _       -> Nothing
+  AccessRoleUser{}                   -> Nothing
   AccessRoleUserGroup _ ugid _       -> Just ugid
   AccessRoleImplicitUser      _    _ -> Nothing
   AccessRoleImplicitUserGroup ugid _ -> Just ugid
@@ -143,7 +143,7 @@ data AccessRoleTarget
   -- their EID display name rather than that of their own user group; in that
   -- case the impersonated group is charged for the EID transaction.
   -- Impersonation only applies to Swedish BankID at the moment!
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | We need to discern between permissions and actions that affect users, user
 -- groups, policies and more.
@@ -168,9 +168,9 @@ data AccessResource
   | DocumentAfterPreparationR FolderID
   -- Assignee of this role can use UserGroup (but not subgroups) for EID purposes (Display name and charging)
   | EidIdentityR UserGroupID
-  deriving (Eq)
+  deriving (Eq, Ord)
 
-data PermissionKind = PermCanDo | PermCanGrant deriving (Eq, Show)
+data PermissionKind = PermCanDo | PermCanGrant deriving (Eq, Ord, Show)
 
 instance Show AccessResource where
   show (UserR                     _) = "user"
@@ -190,7 +190,7 @@ data AccessAction
   | ReadA
   | UpdateA
   | DeleteA
-  deriving (Eq, Enum)
+  deriving (Eq, Ord, Enum)
 
 instance Show AccessAction where
   show CreateA = "create"
@@ -201,11 +201,11 @@ instance Show AccessAction where
 -- | Permission describes what action can be performed on what resource.
 data Permission =
   Permission
-    { permKind ::PermissionKind
+    { permKind :: PermissionKind
     , permAction :: AccessAction
     , permResource :: AccessResource
     }
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | An 'NeededPermissionsExpr' is evaluated by means of 'evalNeededPermExpr' and is a
 -- wrapper to do boolean logic on several levels.
@@ -215,7 +215,7 @@ data NeededPermissionsExpr
   | NeededPermissionsExprAnd [NeededPermissionsExpr]
   deriving Eq
 
-data UserGroupNonExistent = UserGroupNonExistent UserGroupID
+newtype UserGroupNonExistent = UserGroupNonExistent UserGroupID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue UserGroupNonExistent where
@@ -225,7 +225,7 @@ instance ToJSValue UserGroupNonExistent where
 
 instance DBExtraException UserGroupNonExistent
 
-data UserNonExistent = UserNonExistent UserID
+newtype UserNonExistent = UserNonExistent UserID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue UserNonExistent where
@@ -235,7 +235,7 @@ instance ToJSValue UserNonExistent where
 
 instance DBExtraException UserNonExistent
 
-data FolderNonExistent = FolderNonExistent FolderID
+newtype FolderNonExistent = FolderNonExistent FolderID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue FolderNonExistent where
@@ -313,7 +313,7 @@ instance Read AccessRoleType where
 
 instance Unjson AccessRoleType where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse AccessRoleType") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse AccessRoleType") return . maybeRead . T.pack)
     show
     unjsonDef
 
@@ -388,7 +388,7 @@ instance B.Binary AccessRoleID where
 
 instance Unjson AccessRoleID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse AccessRoleID") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse AccessRoleID") return . maybeRead . T.pack)
     show
     unjsonDef
 

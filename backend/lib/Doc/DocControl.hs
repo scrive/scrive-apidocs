@@ -116,7 +116,7 @@ import Util.MonadUtils
 import Util.PDFUtil
 import Util.SignatoryLinkUtils
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
-import qualified GuardTime as GuardTime
+import qualified GuardTime
 import qualified Util.SMSLinkShortening as SMSLinkShortening
 
 handleNewDocument :: Kontrakcja m => m InternalKontraResponse
@@ -143,7 +143,7 @@ handleNewDocument' user ugwp = do
   ctx           <- getContext
   title         <- renderTextTemplate_ "newDocumentTitle"
   actor         <- guardJustM $ mkAuthorActor <$> getContext
-  mtimezonename <- (lookCookieValue "timezone" . rqHeaders) <$> askRq
+  mtimezonename <- lookCookieValue "timezone" . rqHeaders <$> askRq
   case mtimezonename of
     Nothing  -> logInfo_ "'timezone' cookie not found"
     (Just _) -> return ()
@@ -174,40 +174,39 @@ handleNewDocument' user ugwp = do
       , firstAllowedConfirmationDelivery ff
       )
   withDocument doc $ do
-    authorsiglink <- guardJust
-      $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
-    othersiglink <- guardJust
-      $ find (\sl -> not $ signatoryisauthor sl) (documentsignatorylinks doc)
+    authorsiglink <- guardJust $ find signatoryisauthor (documentsignatorylinks doc)
+    othersiglink  <- guardJust
+      $ find (not . signatoryisauthor) (documentsignatorylinks doc)
     let fields =
-          [ SignatoryNameField $ NameField { snfID = (unsafeSignatoryFieldID 0)
+          [ SignatoryNameField $ NameField { snfID = unsafeSignatoryFieldID 0
                                            , snfNameOrder              = NameOrder 1
                                            , snfValue                  = ""
                                            , snfObligatory             = False
                                            , snfShouldBeFilledBySender = False
                                            , snfPlacements             = []
                                            }
-          , SignatoryNameField $ NameField { snfID = (unsafeSignatoryFieldID 0)
+          , SignatoryNameField $ NameField { snfID = unsafeSignatoryFieldID 0
                                            , snfNameOrder              = NameOrder 2
                                            , snfValue                  = ""
                                            , snfObligatory             = False
                                            , snfShouldBeFilledBySender = False
                                            , snfPlacements             = []
                                            }
-          , SignatoryEmailField $ EmailField { sefID = (unsafeSignatoryFieldID 0)
+          , SignatoryEmailField $ EmailField { sefID = unsafeSignatoryFieldID 0
                                              , sefValue                  = ""
                                              , sefObligatory             = True
                                              , sefShouldBeFilledBySender = False
                                              , sefEditableBySignatory    = False
                                              , sefPlacements             = []
                                              }
-          , SignatoryMobileField $ MobileField { smfID = (unsafeSignatoryFieldID 0)
+          , SignatoryMobileField $ MobileField { smfID = unsafeSignatoryFieldID 0
                                                , smfValue                  = ""
                                                , smfObligatory             = False
                                                , smfShouldBeFilledBySender = False
                                                , smfEditableBySignatory    = False
                                                , smfPlacements             = []
                                                }
-          , SignatoryCompanyField $ CompanyField { scfID = (unsafeSignatoryFieldID 0)
+          , SignatoryCompanyField $ CompanyField { scfID = unsafeSignatoryFieldID 0
                                                  , scfValue                  = ""
                                                  , scfObligatory             = False
                                                  , scfShouldBeFilledBySender = False
@@ -228,7 +227,7 @@ handleNewDocument' user ugwp = do
           , signatorylinkauthenticationtoviewmethod = authToView
           , signatorylinkauthenticationtosignmethod = authToSign
           }
-    void $ dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
+    void . dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
     dbUpdate $ SetDocumentUnsavedDraft True
     logInfo "New document created" $ logObject_ doc
   return $ documentid doc
@@ -261,9 +260,8 @@ handleAfterSigning slid = logSignatory slid $ do
   signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
   maybeuser     <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
   case maybeuser of
-    Just user | isJust $ user ^. #hasAcceptedTOS -> do
-      void $ dbUpdate $ SaveDocumentForUser user slid
-      return ()
+    Just user | isJust $ user ^. #hasAcceptedTOS ->
+      void . dbUpdate $ SaveDocumentForUser user slid
     _ -> return ()
 
 
@@ -287,42 +285,38 @@ handleAfterSigning slid = logSignatory slid $ do
 -- handle this as special case, but this is not secure and should just
 -- be removed. To iPhone users with disabled cookies: tell them to
 -- call Apple service and enable cookies (again) on their phone.
-{-# NOINLINE handleSignShowSaveMagicHash #-}
 handleSignShowSaveMagicHash
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleSignShowSaveMagicHash did slid mh =
   logDocumentAndSignatory did slid
-    $ (do
-        dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
-          `withDocumentM` do
-                            guardThatDocumentIsReadableBySignatories =<< theDocument
-                            sl <- guardGetSignatoryFromIdForDocument slid
-                            if isJust (signatorylinkdeleted sl)
-                               || isJust (signatorylinkreallydeleted sl)
-                            then
-                              respondLinkInvalid
-                            else
-                              do
-                                let authorId doc =
-                                      fromJust $ getAuthorSigLink doc >>= maybesignatory
-                                sid <-
-                                  theDocument
-                                  >>= (return . authorId)
-                                  >>= getDocumentSessionTimeoutSecs
-                                  >>= getNonTempSessionIDWithTimeout
-                                dbUpdate $ AddDocumentSession sid slid
-
-                                -- Redirect to propper page
-                                sendRedirect $ LinkSignDocNoMagicHash did slid
-      )
+    $ action
     `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
     `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
     `catchDBExtraException` (\SignatoryLinkIsForwarded -> respondLinkInvalid)
     `catchDBExtraException` (\(_ :: DocumentWasPurged) -> respondLinkInvalid)
+  where
+    action = do
+      let getDocM = dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+      withDocumentM getDocM $ do
+        guardThatDocumentIsReadableBySignatories =<< theDocument
+        sl <- guardGetSignatoryFromIdForDocument slid
+        if isJust (signatorylinkdeleted sl) || isJust (signatorylinkreallydeleted sl)
+          then respondLinkInvalid
+          else do
+            let authorId doc = fromJust $ getAuthorSigLink doc >>= maybesignatory
+            sid <-
+              theDocument
+              >>= (return . authorId)
+              >>= getDocumentSessionTimeoutSecs
+              >>= getNonTempSessionIDWithTimeout
+            dbUpdate $ AddDocumentSession sid slid
+
+            -- Redirect to propper page
+            sendRedirect $ LinkSignDocNoMagicHash did slid
 
 handleSignShowShortRedirect :: Kontrakcja m => T.Text -> m Response
 handleSignShowShortRedirect text = do
-  case (SMSLinkShortening.unshort text) of
+  case SMSLinkShortening.unshort text of
     Just (slid, mh) -> do
       mdid <- dbQuery $ GetDocumentIDBySignatoryLinkIDWithoutAnyChecks slid
       case mdid of
@@ -347,8 +341,8 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
   let actor = contextActor ctx
   mDocID <-
     withDocument tpl
-    $ dbUpdate
-    $ CloneDocumentWithUpdatedAuthor Nothing tpl actor
+    . dbUpdate
+    . CloneDocumentWithUpdatedAuthor Nothing tpl actor
     $ \doc -> doc { documenttype              = Signable
                   , documenttemplateid        = Just (documentid tpl)
                   , documentfromshareablelink = True
@@ -378,7 +372,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
                         $ object ["extra_exception" .= jsonToAeson (J.toJSValue e)]
                       respondLinkInvalid
                   ]
-      mSL <- (find (not . isAuthor) . documentsignatorylinks) <$> theDocument
+      mSL <- find (not . isAuthor) . documentsignatorylinks <$> theDocument
       case mSL of
         Nothing -> do
           logAttention
@@ -390,12 +384,10 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
           sid <- getNonTempSessionID
           chargeForItemSingle CIStartingDocument docID
           dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
-          sendRedirect $ LinkSignDocNoMagicHash docID $ signatorylinkid sl
+          sendRedirect . LinkSignDocNoMagicHash docID $ signatorylinkid sl
 
 -- |
 --   /s/[documentid]/[signatorylinkid] and /sp/[documentid]/[signatorylinkid]
-
-{-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow did slid = logDocumentAndSignatory did slid $ do
   sid          <- view #sessionID <$> getContext
@@ -432,14 +424,13 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
 
 -- |
 --   /ts/[documentid] (doc has to be a draft)
-{-# NOINLINE handleToStartShow #-}
 handleToStartShow :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleToStartShow documentid = withUser . withTosCheck $ \_ -> do
   ctx      <- getContext
   document <- getDocByDocIDForAuthor documentid
   ad       <- getAnalyticsData
   content  <- pageDocumentToStartView ctx document ad
-  internalResponse <$> (simpleHtmlResponse content)
+  internalResponse <$> simpleHtmlResponse content
 
 -- If is not magic hash in session. It may mean that the
 -- session expired and we deleted the credentials already or it
@@ -467,12 +458,12 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
 handleIssueGoToSignview :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueGoToSignview docid = withUser $ \user -> do
   doc <- getDocByDocID docid
-  case (getMaybeSignatoryLink (doc, user)) of
+  case getMaybeSignatoryLink (doc, user) of
     Just sl -> do
       sid <- getNonTempSessionID
       dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
-      return $ internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
-    _ -> return $ internalResponse $ LoopBack
+      return . internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
+    _ -> return $ internalResponse LoopBack
 
 {- |
    Redirect author of document to go to signview for any of the pad signatories
@@ -496,10 +487,10 @@ handleIssueGoToSignviewPad docid slid = do
 
 handleEvidenceAttachment :: Kontrakcja m => DocumentID -> Text -> m InternalKontraResponse
 handleEvidenceAttachment docid aname =
-  logDocument docid $ localData ["attachment_name" .= aname] $ withUser $ \_ -> do
+  logDocument docid . localData ["attachment_name" .= aname] . withUser $ \_ -> do
     doc <- getDocByDocID docid
     es  <- guardJustM $ EvidenceAttachments.extractAttachment doc aname
-    return $ internalResponse $ toResponseBS "text/html" $ es
+    return . internalResponse $ toResponseBS "text/html" es
 
 {- |
    Handles the request to show a document to a logged in user.
@@ -554,7 +545,7 @@ handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
         dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
        -- Simply loading pageDocumentSignView doesn't work when signatory needs
         -- to authenticate to view, redirect to proper sign view.
-        return $ internalResponse $ LinkSignDocNoMagicHash docid $ signatorylinkid sl
+        return . internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
       | isincompany ->  internalResponse
       <$> pageDocumentView ctx document msiglink isincompany
       | otherwise -> internalError -- can this happen at all?
@@ -599,7 +590,7 @@ showPage fid pageNo = logFile fid $ do
 
 -- | Preview when authorized user is logged in (without magic hash)
 showPreview :: Kontrakcja m => DocumentID -> FileID -> m InternalKontraResponse
-showPreview did fid = logDocumentAndFile did fid $ withUser $ \_ -> do
+showPreview did fid = logDocumentAndFile did fid . withUser $ \_ -> do
   pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
   let clampedPixelWidth = min 2000 (max 100 pixelwidth)
   void $ getDocByDocID did
@@ -635,7 +626,7 @@ showPreviewForSignatory did slid mmh fid = logDocumentAndFile did fid $ do
       previewResponse fid clampedPixelWidth
     showFallbackImage = do
       imgData <- liftIO . BS.readFile $ "files/images/no_preview.png"
-      return $ toResponseBS "image/png" $ BSL.fromStrict imgData
+      return . toResponseBS "image/png" $ BSL.fromStrict imgData
 
 previewResponse :: Kontrakcja m => FileID -> Int -> m Response
 previewResponse fid pixelwidth = do
@@ -643,7 +634,7 @@ previewResponse fid pixelwidth = do
   fileData <- getFileIDContents fid
   rp       <- renderPage fileData 1 clampedPixelWidth
   case rp of
-    Just pageData -> return $ toResponseBS "image/png" $ BSL.fromStrict pageData
+    Just pageData -> return . toResponseBS "image/png" $ BSL.fromStrict pageData
     Nothing       -> do
       logAttention_ "Rendering PDF preview failed"
       internalError
@@ -655,7 +646,7 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
   guardThatDocumentIsReadableBySignatories doc
   if isClosed doc
     then do
-      file    <- guardJustM $ fileFromMainFile $ documentsealedfile doc
+      file    <- guardJustM . fileFromMainFile $ documentsealedfile doc
       content <- getFileIDContents $ fileid file
       return $ respondWithPDF True content
     else respond404
@@ -671,7 +662,6 @@ handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
           Nothing -> Nothing
     actor <- guardJustM $ fmap mkAuthorActor getContext
     void $ sendReminderEmail mCustomMessage actor False signlink
-    return ()
 
 handlePadList :: Kontrakcja m => m Response
 handlePadList = do
@@ -758,14 +748,14 @@ checkFileAccessWith fid msid mmh mdid mattid = case (msid, mdid, mattid) of
       ]
       [AttachmentFilterByID attid, AttachmentFilterByFileID fid]
       []
-    when (length atts /= 1) $ internalError
+    when (length atts /= 1) internalError
   _ -> internalError
 
   where
     checkFileInDocument :: Kontrakcja m => DocumentID -> m ()
     checkFileInDocument did = do
       indoc <- dbQuery $ FileInDocument did fid
-      when (not indoc) $ internalError
+      unless indoc internalError
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
@@ -776,7 +766,7 @@ prepareEmailPreview docid slid = do
       sl  <- guardJust $ getSigLinkFor slid doc
       let forceLink = shouldForceEmailLink sl
       mailattachments <- makeMailAttachments doc True
-      let documentAttach = if forceLink then False else not (null mailattachments)
+      let documentAttach = not forceLink && not (null mailattachments)
       mailDocumentRemindContent Nothing doc sl documentAttach forceLink
     "invite" -> do
       doc <- getDocByDocID docid
@@ -785,7 +775,7 @@ prepareEmailPreview docid slid = do
       doc <- getDocByDocID docid
       mailClosedContent True doc
     _ -> fail "prepareEmailPreview"
-  J.runJSONGenT $ J.value "content" $ T.unpack content
+  J.runJSONGenT . J.value "content" $ T.unpack content
 
 handleShowAfterForward :: Kontrakcja m => DocumentID -> m Response
 handleShowAfterForward did =

@@ -68,7 +68,7 @@ pageDocumentView ctx document msiglink authorcompanyadmin =
   renderTextTemplate "pageDocumentView" $ do
     F.value "documentid" . show $ documentid document
     F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
-    F.value "authorcompanyadmin" $ authorcompanyadmin
+    F.value "authorcompanyadmin" authorcompanyadmin
     entryPointFields ctx
 
 pageDocumentSignView
@@ -82,24 +82,24 @@ pageDocumentSignView ctx document siglink ad = do
           Nothing -> unexpectedError
             "Impossible happened: this document was not saved to an account"
           Just authorid' -> authorid'
-  authoruser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  authoruser <- fmap fromJust . dbQuery $ GetUserByIDIncludeDeleted authorid
   authorugwp <- dbQuery . UserGroupGetWithParentsByUserID $ authoruser ^. #id
   let loggedAsSignatory =
-        (isJust $ maybesignatory siglink)
-          && (maybesignatory siglink)
+        isJust (maybesignatory siglink)
+          && maybesignatory siglink
           == (view #id <$> contextUser ctx)
-  let loggedAsAuthor = (Just authorid == (view #id <$> contextUser ctx))
+  let loggedAsAuthor = Just authorid == (view #id <$> contextUser ctx)
   let docjson = unjsonToByteStringLazy'
         (Options { pretty = False, indent = 0, nulls = True })
         (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document))
         document
-      mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
+      mainfile = maybe (unsafeFileID 0) mainfileid (documentfile document)
   renderTextTemplate "pageDocumentSignView" $ do
     F.value "documentid" . show $ documentid document
     F.value "siglinkid" . show $ signatorylinkid siglink
     F.value "documenttitle" $ documenttitle document
-    F.value "loggedinsignatory" $ loggedAsSignatory
-    F.value "loggedinauthor" $ loggedAsAuthor
+    F.value "loggedinsignatory" loggedAsSignatory
+    F.value "loggedinauthor" loggedAsAuthor
     F.value "authorFullname" $ getFullName authoruser
     F.value "authorPhone" $ getMobile authoruser
     F.value "previewLink" $ case signatorylinkauthenticationtoviewmethod siglink of
@@ -109,7 +109,7 @@ pageDocumentSignView ctx document siglink ad = do
         mainfile
         600
       _ -> show LinkPreviewLockedImage
-    F.value "b64documentdata" $ B64.encode $ docjson
+    F.value "b64documentdata" $ B64.encode docjson
     F.value "legaltext" $ ugwpSettings authorugwp ^. #legalText
     standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company
 
@@ -120,7 +120,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
       useEIDHubForNemID = fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForDK
       useEIDHubForNOBankIDView =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOView
-  auser      <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  auser      <- fromJust <$> dbQuery (GetUserByIDIncludeDeleted authorid)
   authorugwp <- dbQuery . UserGroupGetWithParentsByUserID $ auser ^. #id
 
   renderTextTemplate "pageDocumentIdentifyView" $ do
@@ -177,7 +177,7 @@ documentInfoFields document = do
   F.value "id" . show $ documentid document
   F.value "documentid" . show $ documentid document
   F.value "template" $ isTemplate document
-  F.value "hasanyattachments" $ not (null $ (documentauthorattachments document)) || not
+  F.value "hasanyattachments" $ not (null (documentauthorattachments document)) || not
     (null (concatMap signatoryattachments $ documentsignatorylinks document))
   documentStatusFields document
 

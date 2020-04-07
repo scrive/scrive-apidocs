@@ -57,7 +57,7 @@ fileParamAttachmentDetailsWithFileIDOrFileParam _ =
 
 toAttachmentDetails :: AttachmentDetailsWithFileIDOrFileParam -> AttachmentDetails
 toAttachmentDetails (AttachmentDetailsWithFileID n r a fid) =
-  AttachmentDetails n r a (Left $ fid)
+  AttachmentDetails n r a (Left fid)
 toAttachmentDetails (AttachmentDetailsWithFileParam n r a fp) =
   AttachmentDetails n r a (Right fp)
 
@@ -69,8 +69,8 @@ fromAttachmentDetails ad = case ad of
 unjsonAttachmentDetails :: UnjsonDef AttachmentDetails
 unjsonAttachmentDetails = invmap toAttachmentDetails fromAttachmentDetails $ unionOf
   [ ( $(isConstr 'AttachmentDetailsWithFileID)
-    , pure AttachmentDetailsWithFileID
-    <*> field "name"
+    , AttachmentDetailsWithFileID
+    <$> field "name"
               nameFromAttachmentDetailsWithFileIDOrFileParam
               "Name of author attachment"
     <*> field "required"
@@ -84,8 +84,8 @@ unjsonAttachmentDetails = invmap toAttachmentDetails fromAttachmentDetails $ uni
               "Id of attachment file"
     )
   , ( $(isConstr 'AttachmentDetailsWithFileParam)
-    , pure AttachmentDetailsWithFileParam
-    <*> field "name"
+    , AttachmentDetailsWithFileParam
+    <$> field "name"
               nameFromAttachmentDetailsWithFileIDOrFileParam
               "Name of author attachment"
     <*> field "required"

@@ -60,7 +60,7 @@ instance (
 withAnonymousContext :: KontraMonad m => m a -> m a
 withAnonymousContext action = do
   ctx <- getContext
-  modifyContext $ anonymiseContext
+  modifyContext anonymiseContext
   res <- action
   modifyContext $ const ctx
   return res

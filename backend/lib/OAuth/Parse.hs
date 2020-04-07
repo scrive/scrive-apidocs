@@ -11,7 +11,7 @@ import MagicHash
 import OAuth.Model
 
 splitAuthorization :: Text -> [(Text, Text)]
-splitAuthorization s = catMaybes $ map makeKV $ splitParts $ over_
+splitAuthorization s = mapMaybe makeKV (splitParts over_)
   where
         -- By default we split on commas, but if no comma is there, we
         -- split on spaces. This is a fix for some headers that cant

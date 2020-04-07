@@ -5,12 +5,12 @@ module PasswordService.Conf (
 
 import Data.Unjson
 
-data PasswordServiceConf = PasswordServiceConf
+newtype PasswordServiceConf = PasswordServiceConf
   { passwordServiceUrl :: String
   } deriving (Show, Eq, Ord)
 
 unjsonPasswordServiceConf :: UnjsonDef PasswordServiceConf
-unjsonPasswordServiceConf = objectOf $ pure PasswordServiceConf <*> field
+unjsonPasswordServiceConf = objectOf $ PasswordServiceConf <$> field
   "password_service_url"
   passwordServiceUrl
   "PasswordService url"

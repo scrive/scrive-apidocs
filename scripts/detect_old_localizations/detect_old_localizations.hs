@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module Main where
 
@@ -6,8 +7,9 @@ module Main where
 -- which results in a false-positive.
 
 import Control.Monad (forM_)
+import Data.Bifunctor
 import Data.Foldable (foldlM)
-import Data.List (intersperse, isPrefixOf, isSuffixOf, unfoldr)
+import Data.List (intercalate, isPrefixOf, isSuffixOf, unfoldr)
 import Data.Maybe
 import Language.JavaScript.Parser
 import Language.JavaScript.Parser.AST
@@ -38,7 +40,7 @@ uncurry3 f (x, y, z) = f x y z
 disjointUnion
   :: Ord k => (k -> a -> a -> x) -> Map.Map k a -> Map.Map k a -> Either x (Map.Map k a)
 disjointUnion f m1 m2 = case Map.minViewWithKey intersection of
-  Just ((k, v), _) -> Left $ f k v $ m2 Map.! k
+  Just ((k, v), _) -> Left . f k v $ m2 Map.! k
   Nothing          -> Right $ m1 `Map.union` m2
   where intersection = m1 `Map.intersection` m2
 
@@ -70,12 +72,12 @@ data Localization = Value Template
 -- | Recursively remove internal nodes that have no leaves.
 pruneLocalization :: Localization -> Localization
 pruneLocalization l@(Value  _) = l
-pruneLocalization (  Object m) = Object $ Map.fromList $ filter
+pruneLocalization (  Object m) = Object . Map.fromList $ filter
   (\(_, v) -> nonEmptyElem v)
   prunnedElems
   where
     elems        = Map.toList m
-    prunnedElems = map (\(k, v) -> (k, pruneLocalization v)) elems
+    prunnedElems = map (second pruneLocalization) elems
     nonEmptyElem (Value  _ ) = True
     nonEmptyElem (Object m') = not $ Map.null m'
 
@@ -85,7 +87,7 @@ instance Show Localization where
       aux _ (Value t) = "\"" ++ t ++ "\""
       aux n (Object m) =
         let foo (k, l) = concat (replicate n " ") ++ k ++ ": " ++ aux (n + 4) l
-        in  unlines $ "" : (map foo $ Map.assocs m)
+        in  unlines $ "" : map foo (Map.assocs m)
 
 nullLocalization :: Localization -> Bool
 nullLocalization (Value  _) = False
@@ -100,7 +102,7 @@ intersectLocalizations :: Localization -> Localization -> Localization
 intersectLocalizations (Object m1) (Object m2) = Object $ Map.fromList items'
   where
     items  = Map.toList m1
-    items' = catMaybes $ map aux items
+    items' = mapMaybe aux items
 
     aux x@(k, Value _     ) = if k `Map.member` m2 then Just x else Nothing
 
@@ -124,16 +126,16 @@ propsToLocalization path props = do
             JSCTLNone l       -> toList l
 
     aux (JSPropertyNameandValue (JSPropertyIdent _ann varName) _ann' [JSStringLiteral _ann'' template])
-      = return $ Map.singleton varName $ Value template
+      = return . Map.singleton varName $ Value template
     aux (JSPropertyNameandValue (JSPropertyIdent _ann varName) _ann' [JSObjectLiteral _ann'' props' _ann'''])
       = do
         children <- propsToLocalization (path ++ "." ++ varName) props'
         return $ Map.singleton varName children
-    aux (JSPropertyNameandValue (JSPropertyIdent _ann varName) _ann' [JSFunctionExpression _ _ _ _ _ _])
-      = return $ Map.singleton varName $ Value "<function>"
-    aux (JSPropertyNameandValue (JSPropertyIdent _ann varName) _ann' [JSArrayLiteral _ _ _])
-      = return $ Map.singleton varName $ Value "<array>"
-    aux _ = return $ Map.empty
+    aux (JSPropertyNameandValue (JSPropertyIdent _ann varName) _ann' [JSFunctionExpression{}])
+      = return . Map.singleton varName $ Value "<function>"
+    aux (JSPropertyNameandValue (JSPropertyIdent _ann varName) _ann' [JSArrayLiteral{}])
+      = return . Map.singleton varName $ Value "<array>"
+    aux _ = return Map.empty
 
     merger k x y = concat
       [ "Multiple values (in file 'javascript-langs.st') for key '"
@@ -155,7 +157,7 @@ localizationsFromFile path = do
       JSObjectLiteral _annot' props _annot'' = obj
   case propsToLocalization "localization" props of
     Left  e            -> hPutStrLn stderr e >> exitFailure
-    Right localization -> return $ Object $ Map.singleton "localization" localization
+    Right localization -> return . Object $ Map.singleton "localization" localization
   where
     readStFile fname =
       unlines . tail . filter (not . ("#" `isPrefixOf`)) . lines <$> readFile fname
@@ -211,8 +213,8 @@ localizationCallFromString s = LocalizationCall path finalElem
 --    'foo.bar' for localization '{foo: "quuz"}')
 removeLocalizationCallFromLocalization
   :: LocalizationCall -> Localization -> Either String Localization
-removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath' lineNumber) loc
-  = aux path loc
+removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath' lineNumber)
+  = aux path
   where
     myError s =
       Left
@@ -232,7 +234,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                FunCall    x -> x ++ "("
                Attribute  x -> x
            ]
-    format = concat . intersperse "."
+    format = intercalate "."
 
     auxFinalElemFunCall m functionName = case Map.lookup functionName m of
       Nothing ->
@@ -245,7 +247,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
           $  "Detected function/method like access to a sub-dict '"
           ++ functionName
           ++ "'"
-      Just (Value "<function>") -> Right $ Object $ Map.delete functionName m
+      Just (Value "<function>") -> Right . Object $ Map.delete functionName m
       Just (Value "<array>") ->
         myError
           $  "Detected function/method like access to an array '"
@@ -270,7 +272,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
           ++ "), probably using dynamic keys. "
       Just (Value "<function>") ->
         myError $ "Detected dict/array like access to a function '" ++ dictName ++ "'"
-      Just (Value "<array>") -> Right $ Object $ Map.delete dictName m
+      Just (Value "<array>") -> Right . Object $ Map.delete dictName m
       Just (Value _) ->
         myError $ "Detected dict/array like access to a string '" ++ dictName ++ "'"
 
@@ -281,7 +283,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
         myError $ "Detected attribute access to a function '" ++ attr ++ "'"
       Just (Value "<array>") ->
         myError $ "Detected attribute access to an array '" ++ attr ++ "'"
-      Just (Value _) -> Right $ Object $ Map.delete attr m
+      Just (Value _) -> Right . Object $ Map.delete attr m
 
     auxEmptyChildrenFunCall m v node = case v of
       "<function>" -> -- "foo.quux(" "{foo: function() {}}"
@@ -289,7 +291,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
       "<array>" -> -- "foo.quux(" "{foo: []}"
         myError $ "Detected function call on an array '" ++ format path ++ "'"
       _ -> -- "foo.quux(" "{foo: 'bar'}", string method call
-        return $ Object $ Map.delete node m
+        return . Object $ Map.delete node m
 
     auxEmptyChildrenDictAccess v = case v of
       "<function>" -> -- "foo.quux[" "{foo: function() {}}"
@@ -350,7 +352,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                 ++ "' is a simple value'"
       Just l@(Object _) -> do
         y <- aux children l
-        return $ Object $ Map.alter (const $ Just y) node m
+        return . Object $ Map.alter (const $ Just y) node m
 
 -- | Parse localization calls from a list of files.
 readLocalizations :: [FilePath] -> IO [LocalizationCall]
@@ -362,10 +364,7 @@ readLocalizations paths = concat <$> mapM aux paths
           localizationRegex = "localization(\\.[a-zA-Z0-9_]+)+[([]?" :: String
           results           = concatMap
             (\(lineNumber, line) ->
-              map (\x -> (x, path, lineNumber))
-                $  getAllTextMatches
-                $  line
-                =~ localizationRegex
+              map (, path, lineNumber) $ getAllTextMatches (line =~ localizationRegex)
             )
             numberedLines
       return $ map (uncurry3 localizationCallFromString) results
@@ -383,8 +382,8 @@ main = do
   let files = normal_js_files ++ jsx_compiled_files ++ templates_files
   localizationCalls <- readLocalizations files
   let
-    results = map (\lc -> removeLocalizationCallFromLocalization lc mainLocalization)
-                  localizationCalls
+    results =
+      map (`removeLocalizationCallFromLocalization` mainLocalization) localizationCalls
     (logs, cleanedLocalizations) = splitEithers results
     unusedLocalization =
       foldl intersectLocalizations mainLocalization cleanedLocalizations
@@ -415,7 +414,7 @@ directoryEntriesRecursive path
         let (dirs, files) = biConcat results
         return (path : dirs, files)
       else return ([], [path])
-  where biConcat = (\(x, y) -> (concat x, concat y)) . unzip
+  where biConcat = bimap concat concat . unzip
 
 directoryFilesRecursive
   :: FilePath -- ^ dir path to be searched for recursively

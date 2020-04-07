@@ -16,19 +16,19 @@ import User.APILog.Model
 import User.Lang (defaultLang)
 
 apiV2CallLogTests :: TestEnvSt -> Test
-apiV2CallLogTests env =
-  testGroup "APILog"
-    $ [ testThat "API Call gets logged"                  env testApiLogIsStored
-      , testThat "API log is rotated"                    env testApiLogIsRotated
-      , testThat "Getting a single log item works"       env testApiLogGetItemWorks
-      , testThat "Getting list of logs works"            env testApiLogGetListWorks
-      , testThat "Multiple users can work independently" env testApiLog2Users
-      ]
+apiV2CallLogTests env = testGroup
+  "APILog"
+  [ testThat "API Call gets logged"                  env testApiLogIsStored
+  , testThat "API log is rotated"                    env testApiLogIsRotated
+  , testThat "Getting a single log item works"       env testApiLogGetItemWorks
+  , testThat "Getting list of logs works"            env testApiLogGetListWorks
+  , testThat "Multiple users can work independently" env testApiLog2Users
+  ]
 
 testApiLogIsStored :: TestEnv ()
 testApiLogIsStored = do
   user       <- instantiateRandomUser
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -41,7 +41,7 @@ testApiLogIsStored = do
 testApiLogIsRotated :: TestEnv ()
 testApiLogIsRotated = do
   user       <- instantiateRandomUser
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -53,7 +53,7 @@ testApiLogIsRotated = do
 testApiLogGetItemWorks :: TestEnv ()
 testApiLogGetItemWorks = do
   user       <- instantiateRandomUser
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -66,7 +66,7 @@ testApiLogGetItemWorks = do
 testApiLogGetListWorks :: TestEnv ()
 testApiLogGetListWorks = do
   user       <- instantiateRandomUser
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -77,7 +77,7 @@ testApiLogGetListWorks = do
 testApiLog2Users :: TestEnv ()
 testApiLog2Users = do
   userA       <- instantiateRandomUser
-  ctxA        <- (set #maybeUser (Just userA)) <$> mkContext defaultLang
+  ctxA        <- mkContextWithUser defaultLang userA
   newMockDocA <- testDocApiV2New' ctxA
   let didA = getMockDocId newMockDocA
 
@@ -87,7 +87,7 @@ testApiLog2Users = do
   assertEqual "There should be 5 logged API Calls for user A" 5 (length logsUserA)
 
   userB       <- instantiateRandomUser
-  ctxB        <- (set #maybeUser (Just userB)) <$> mkContext defaultLang
+  ctxB        <- mkContextWithUser defaultLang userB
   newMockDocB <- testDocApiV2New' ctxB
   let didB = getMockDocId newMockDocB
 

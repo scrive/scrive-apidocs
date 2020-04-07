@@ -134,7 +134,7 @@ newtype AccessRoleAllowedActions = AccessRoleAllowedActions [(T.Text, [T.Text])]
 
 instance ToJSON AccessRoleAllowedActions where
   toEncoding (AccessRoleAllowedActions resources) =
-    pairs . foldr (<>) mempty $ map (uncurry (.=)) resources
+    pairs . mconcat $ map (uncurry (.=)) resources
 
 accessRoleTargetToAllowedActions :: AccessRoleTarget -> AccessRoleAllowedActions
 accessRoleTargetToAllowedActions target =

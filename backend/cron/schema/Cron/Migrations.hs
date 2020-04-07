@@ -34,7 +34,7 @@ addUserGroupMigrationJob = Migration
   { mgrTableName = tblName tableCronJobs
   , mgrFrom      = 12
   , mgrAction    = StandardMigration
-                   $   runSQL_
+                   .   runSQL_
                    $   "INSERT INTO cron_jobs (id, run_at) VALUES"
                    <+> "('user_group_migration', to_timestamp(0))"
   }
@@ -44,7 +44,7 @@ addDocumentAuthorUserIDUpdateJob = Migration
   { mgrTableName = tblName tableCronJobs
   , mgrFrom      = 10
   , mgrAction    = StandardMigration
-                   $   runSQL_
+                   .   runSQL_
                    $   "INSERT INTO cron_jobs (id, run_at) VALUES"
                    <+> "('document_author_id_job', to_timestamp(0))"
   }

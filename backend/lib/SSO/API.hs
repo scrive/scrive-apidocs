@@ -42,8 +42,8 @@ import Utils.HTTP (isSecure)
 
 sso :: Route (Kontra Response)
 sso = choice
-  [ dir "sso" . dir "saml" . dir "acs" . hPost . toK0 $ consumeAssertions
-  , dir "sso" . dir "saml" . dir "metadata" $ hGet $ renderMetadata
+  [ (dir "sso" . dir "saml" . dir "acs" . hPost . toK0) consumeAssertions
+  , (dir "sso" . dir "saml" . dir "metadata" . hGet) renderMetadata
   ]
 
 consumeAssertions :: Kontrakcja m => m InternalKontraResponse
@@ -55,20 +55,20 @@ consumeAssertions = guardHttps $ do
       idpID      <- maybe idpApiErr return (getIDPID xmlTree)
       publicKeys <- maybe (pubKeyApiErr idpID) return (getPublicKeys ssoConf idpID)
       getVerifiedAssertionsFromSAML publicKeys xmlTree >>= \case
-        (Left  msg               ) -> apiError $ invalidAuthorizationWithMsg $ T.pack msg
+        (Left  msg               ) -> apiError . invalidAuthorizationWithMsg $ T.pack msg
         (Right verifiedAssertions) -> do
           guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
                                           (const currentTime)
                                           verifiedAssertions
           (mNameID, memailRaw, mFirstName, mLastName) <- do
-            (maybe noAssertionsApiErr (\a -> do
+            maybe noAssertionsApiErr (\a -> do
                    let maybeGetSomeAttribute as =
                          T.pack <$> (asum . map (`getFirstNonEmptyAttribute` a) $ as)
-                   return (T.pack <$> (getNonEmptyNameID a),
+                   return (T.pack <$> getNonEmptyNameID a,
                            maybeGetSomeAttribute ["email", "emailaddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
                            maybeGetSomeAttribute ["firstname", "givenname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"],
                            maybeGetSomeAttribute ["lastname", "surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"]))
-                   (listToMaybe verifiedAssertions))
+                   (listToMaybe verifiedAssertions)
           case memailRaw of
                   Just emailRaw -> do
                     let email = Email emailRaw
@@ -117,7 +117,7 @@ consumeAssertions = guardHttps $ do
 
     getIDPConf :: String -> SSOConf -> Maybe IDPConf
     getIDPConf idpID ssoc =
-      listToMaybe $ Prelude.filter (\ic -> icID ic == T.pack idpID) $ scIdpConfs ssoc
+      Prelude.find (\ic -> icID ic == T.pack idpID) (scIdpConfs ssoc)
 
     getRSAPublicKey :: SSOConf -> String -> Maybe RSA.PublicKey
     getRSAPublicKey ssoc idpID = icPublicKey <$> getIDPConf idpID ssoc
@@ -137,31 +137,27 @@ consumeAssertions = guardHttps $ do
     getAccountInAcceptedStateOrFail email = do
       (dbQuery . GetUserWithStatusByEmail $ email) >>=
         mapM (\(user, isDeleted) -> do
-            when (isDeleted || (user ^. #accountSuspended)) $
-              apiError
-                $  invalidAuthorizationWithMsg
-                $  "can't log in " <> (showt email) <> ", account either deleted or suspended"
+            when (isDeleted || (user ^. #accountSuspended)) . apiError $ invalidAuthorizationWithMsg ("can't log in " <> showt email <> ", account either deleted or suspended")
             return user)
 
     createAccount :: Kontrakcja m => IDPConf -> SAMLPrincipal -> m User
     createAccount idpconf p = do
       cuctx <- getCreateUserContextFromContext
-      (createUser (spEmail p)
+      createUser (spEmail p)
                       (spFirstname p               , spLastname p)
                       (icUserInitialGroupID idpconf, False)
                       LANG_EN
                       BySSO
                       cuctx
-            )
             >>= \case
                   Nothing   -> unexpectedError "User creation failed."
                   Just user -> do
-                    void $ dbUpdate $ SetLoginAuth (user ^. #id) LoginAuthSSO
+                    void . dbUpdate $ SetLoginAuth (user ^. #id) LoginAuthSSO
                     return $ set #sysAuth LoginAuthSSO user
 
     updateUserWithNameIdInCompanyPosition :: Kontrakcja m => IDPConf -> User -> Text -> m User
     updateUserWithNameIdInCompanyPosition idpconf user nameID = do
-      if (icPutNameIDInCompanyPosition idpconf) then do
+      if icPutNameIDInCompanyPosition idpconf then do
         let positionWithNameID = "NameID:" <> nameID
             oldUI = view #info user
             newUI = set #companyPosition positionWithNameID oldUI
@@ -197,7 +193,7 @@ renderMetadata :: Kontrakcja m => m Response
 renderMetadata = do
   conf <- guardJustM getConf
   let baseURI = scSamlEntityBaseURI conf
-  validUntil <- formatTime defaultTimeLocale (iso8601DateFormat $ Just "%H:%M:%SZ") <$> calculateValidUntil <$> currentTime
+  validUntil <- formatTime defaultTimeLocale (iso8601DateFormat $ Just "%H:%M:%SZ") . calculateValidUntil <$> currentTime
   response <- renderTextTemplate "samlMetadata" $ do
     F.value "samlEntityBaseURI" . show $ baseURI
     F.value "samlLogoutURI" . show $ relativeURI baseURI "logout"
@@ -209,4 +205,4 @@ renderMetadata = do
     relativeURI base path =
       U.relativeTo (fromJust . U.parseRelativeReference $ path) base
     calculateValidUntil :: UTCTime -> UTCTime
-    calculateValidUntil current = addUTCTime ((fromInteger 7) * nominalDay) current
+    calculateValidUntil = addUTCTime (7 * nominalDay)

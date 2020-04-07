@@ -15,4 +15,4 @@ smsLinkShorteningTest _ = testGroup
   [testProperty "SMSLinkShorteningTest roundtrip" roundtripTest]
 
 roundtripTest :: (SignatoryLinkID, MagicHash) -> Bool
-roundtripTest a = Just a == (SMSLinkShortening.unshort $ SMSLinkShortening.short a)
+roundtripTest a = Just a == SMSLinkShortening.unshort (SMSLinkShortening.short a)

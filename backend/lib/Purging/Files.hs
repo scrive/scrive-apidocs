@@ -17,9 +17,9 @@ import File.Tables
 import FileStorage.Class
 import Log.Identifier
 
-data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Interval
+newtype MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Interval
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesForPurgeAfter [FileID] where
-  update (MarkOrphanFilesForPurgeAfter interval) = do
+  dbUpdate (MarkOrphanFilesForPurgeAfter interval) = do
     now <- currentTime
     -- Check if the database still looks similar to what the code below
     -- was written for.
@@ -124,7 +124,7 @@ purgeFile
 purgeFile fid = do
   File { filestorage = FileStorageAWS url _ } <- dbQuery $ GetFileByFileID fid
   deleteSavedContents url
-  void $ dbUpdate $ PurgeFile fid
+  void . dbUpdate $ PurgeFile fid
   return $ Ok Remove
 
 onFailure :: MonadLog m => SomeException -> (FileID, Int32) -> m Action

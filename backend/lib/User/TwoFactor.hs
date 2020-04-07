@@ -37,7 +37,7 @@ createTOTPKey = randomBytes 15
 -- ALso, the Google Authenticator app only supports 30 second windows and 6
 -- digit codes, so we use that.
 verifyTOTPCode :: BS.ByteString -> UTCTime -> Word32 -> Bool
-verifyTOTPCode totpkey time code = totpCheck SHA1 totpkey (2, 2) time 30 6 code
+verifyTOTPCode totpkey time = totpCheck SHA1 totpkey (2, 2) time 30 6
 
 makeQRFromURLEmailAndKey :: String -> Email -> BS.ByteString -> IO QRCode
 makeQRFromURLEmailAndKey url email key =
@@ -55,7 +55,7 @@ makeURIFromKey url email key =
     `BS.append` "):"
   -- Note: We add server to avoid conflicts, see
   -- https://github.com/google/google-authenticator/wiki/Conflicting-Accounts
-    `BS.append` (TE.encodeUtf8 $ unEmail email)
+    `BS.append` TE.encodeUtf8 (unEmail email)
     `BS.append` "?secret="
     `BS.append` base32Key
     `BS.append` "&issuer=Scrive&algorithm=SHA1&digits=6&period=30"

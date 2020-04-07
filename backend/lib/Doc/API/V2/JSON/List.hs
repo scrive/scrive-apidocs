@@ -50,8 +50,8 @@ instance Unjson DocumentAPISortOn where
 instance Unjson DocumentAPISort where
   unjsonDef =
     objectOf
-      $   pure DocumentAPISort
-      <*> field "sort_by" (\(DocumentAPISort v _) -> v) "How documents should be sorted"
+      $   DocumentAPISort
+      <$> field "sort_by" (\(DocumentAPISort v _) -> v) "How documents should be sorted"
       <*> fieldDef "order"
                    DocumentAPISortAsc
                    (\(DocumentAPISort _ o) -> o)
@@ -92,16 +92,16 @@ data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
 
 
 filterType :: DocumentAPIFilter -> Text
-filterType (DocumentAPIFilterStatuses _     ) = "status"
-filterType (DocumentAPIFilterTime _ _       ) = "mtime"
-filterType (DocumentAPIFilterTag  _ _       ) = "tag"
-filterType (DocumentAPIFilterIsAuthor       ) = "is_author"
-filterType (DocumentAPIFilterIsAuthoredBy _ ) = "author"
-filterType (DocumentAPIFilterIsSignableOnPad) = "is_signable_on_pad"
-filterType (DocumentAPIFilterIsTemplate     ) = "is_template"
-filterType (DocumentAPIFilterIsNotTemplate  ) = "is_not_template"
-filterType (DocumentAPIFilterIsInTrash      ) = "is_in_trash"
-filterType (DocumentAPIFilterIsNotInTrash   ) = "is_not_in_trash"
+filterType (DocumentAPIFilterStatuses _)      = "status"
+filterType (DocumentAPIFilterTime _ _  )      = "mtime"
+filterType (DocumentAPIFilterTag  _ _  )      = "tag"
+filterType DocumentAPIFilterIsAuthor          = "is_author"
+filterType (DocumentAPIFilterIsAuthoredBy _)  = "author"
+filterType DocumentAPIFilterIsSignableOnPad   = "is_signable_on_pad"
+filterType DocumentAPIFilterIsTemplate        = "is_template"
+filterType DocumentAPIFilterIsNotTemplate     = "is_not_template"
+filterType DocumentAPIFilterIsInTrash         = "is_in_trash"
+filterType DocumentAPIFilterIsNotInTrash      = "is_not_in_trash"
 filterType (DocumentAPIFilterByText        _) = "text"
 filterType (DocumentAPIFilterCanBeSignedBy _) = "user_can_sign"
 filterType (DocumentAPIFilterFolderTree    _) = "folder_id"
@@ -141,8 +141,8 @@ instance Unjson DocumentAPIFilter where
 
 unjsonDocumentAPIFilterStatuses :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterStatuses =
-  pure DocumentAPIFilterStatuses
-    <*  fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterStatuses
+    <$  fieldReadonly "filter_by" filterType "Type of filter"
     <*> fieldBy "statuses"
                 unsafeDocumentAPIFilterStatuses
                 "Statuses to filter on"
@@ -154,8 +154,8 @@ unjsonDocumentAPIFilterStatuses =
 
 unjsonDocumentAPIFilterTime :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterTime =
-  pure DocumentAPIFilterTime
-    <*  fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterTime
+    <$  fieldReadonly "filter_by" filterType "Type of filter"
     <*> fieldOpt "start_time"
                  unsafeDocumentAPIFilterStartTime
                  "Only documents after start time"
@@ -173,8 +173,8 @@ unjsonDocumentAPIFilterTime =
 
 unjsonDocumentAPIFilterTag :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterTag =
-  pure DocumentAPIFilterTag
-    <*  fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterTag
+    <$  fieldReadonly "filter_by" filterType "Type of filter"
     <*> field "name"  unsafeDocumentAPIFilterTagName  "Name of tag to filter on"
     <*> field "value" unsafeDocumentAPIFilterTagValue "Value of such tag"
   where
@@ -187,13 +187,13 @@ unjsonDocumentAPIFilterTag =
 
 unjsonDocumentAPIFilterIsAuthor :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsAuthor =
-  pure DocumentAPIFilterIsAuthor <* fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterIsAuthor <$ fieldReadonly "filter_by" filterType "Type of filter"
 
 unjsonDocumentAPIFilterIsAuthoredBy
   :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsAuthoredBy =
-  pure DocumentAPIFilterIsAuthoredBy
-    <*  fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterIsAuthoredBy
+    <$  fieldReadonly "filter_by" filterType "Type of filter"
     <*> field "user_id" unsafeDocumentAPIFilterUserID "Id of author"
   where
     unsafeDocumentAPIFilterUserID :: DocumentAPIFilter -> UserID
@@ -203,34 +203,33 @@ unjsonDocumentAPIFilterIsAuthoredBy =
 unjsonDocumentAPIFilterIsSignableOnPad
   :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsSignableOnPad =
-  pure DocumentAPIFilterIsSignableOnPad
-    <* fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterIsSignableOnPad
+    <$ fieldReadonly "filter_by" filterType "Type of filter"
 
 
 unjsonDocumentAPIFilterIsTemplate
   :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
-unjsonDocumentAPIFilterIsTemplate = pure DocumentAPIFilterIsTemplate
-  <* fieldReadonly "filter_by" filterType "Type of filter"
+unjsonDocumentAPIFilterIsTemplate =
+  DocumentAPIFilterIsTemplate <$ fieldReadonly "filter_by" filterType "Type of filter"
 
 unjsonDocumentAPIFilterIsNotTemplate
   :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsNotTemplate =
-  pure DocumentAPIFilterIsNotTemplate
-    <* fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterIsNotTemplate <$ fieldReadonly "filter_by" filterType "Type of filter"
 
 unjsonDocumentAPIFilterIsInTrash :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsInTrash =
-  pure DocumentAPIFilterIsInTrash <* fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterIsInTrash <$ fieldReadonly "filter_by" filterType "Type of filter"
 
 unjsonDocumentAPIFilterIsNotInTrash
   :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
-unjsonDocumentAPIFilterIsNotInTrash = pure DocumentAPIFilterIsNotInTrash
-  <* fieldReadonly "filter_by" filterType "Type of filter"
+unjsonDocumentAPIFilterIsNotInTrash =
+  DocumentAPIFilterIsNotInTrash <$ fieldReadonly "filter_by" filterType "Type of filter"
 
 unjsonDocumentAPIFilterByText :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterByText =
-  pure DocumentAPIFilterByText
-    <*  fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterByText
+    <$  fieldReadonly "filter_by" filterType "Type of filter"
     <*> field "text" unsafeDocumentAPIFilterText "Text to filter on"
   where
     unsafeDocumentAPIFilterText :: DocumentAPIFilter -> Text
@@ -240,8 +239,8 @@ unjsonDocumentAPIFilterByText =
 unjsonDocumentAPIFilterCanBeSignedBy
   :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterCanBeSignedBy =
-  pure DocumentAPIFilterCanBeSignedBy
-    <*  fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterCanBeSignedBy
+    <$  fieldReadonly "filter_by" filterType "Type of filter"
     <*> field "user_id" unsafeDocumentAPIFilterUserID "Id of user that can sign"
   where
     unsafeDocumentAPIFilterUserID :: DocumentAPIFilter -> UserID
@@ -251,8 +250,8 @@ unjsonDocumentAPIFilterCanBeSignedBy =
 unjsonDocumentAPIFilterByFolderTree
   :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterByFolderTree =
-  pure DocumentAPIFilterFolderTree
-    <*  fieldReadonly "filter_by" filterType "Type of filter"
+  DocumentAPIFilterFolderTree
+    <$  fieldReadonly "filter_by" filterType "Type of filter"
     <*> field "folder_id" unsafeDocmentAPIFilterFolderTree "Id of folder"
   where
     unsafeDocmentAPIFilterFolderTree :: DocumentAPIFilter -> FolderID
@@ -271,14 +270,14 @@ toDocumentFilter _ (DocumentAPIFilterTime (Just start) Nothing) =
 toDocumentFilter _ (DocumentAPIFilterTime Nothing Nothing) = []
 toDocumentFilter _ (DocumentAPIFilterTag name value) =
   [DF.DocumentFilterByTags [DocumentTag name value]]
-toDocumentFilter uid (DocumentAPIFilterIsAuthor        ) = [DF.DocumentFilterByAuthor uid]
+toDocumentFilter uid DocumentAPIFilterIsAuthor           = [DF.DocumentFilterByAuthor uid]
 toDocumentFilter _   (DocumentAPIFilterIsAuthoredBy uid) = [DF.DocumentFilterByAuthor uid]
-toDocumentFilter uid (DocumentAPIFilterIsSignableOnPad) =
+toDocumentFilter uid DocumentAPIFilterIsSignableOnPad =
   [DF.DocumentFilterByAuthor uid, DF.DocumentFilterSignNowOnPad]
-toDocumentFilter _ (DocumentAPIFilterIsTemplate   ) = [DF.DocumentFilterTemplate]
-toDocumentFilter _ (DocumentAPIFilterIsNotTemplate) = [DF.DocumentFilterSignable]
-toDocumentFilter _ (DocumentAPIFilterIsInTrash    ) = [DF.DocumentFilterDeleted True]
-toDocumentFilter _ (DocumentAPIFilterIsNotInTrash ) = [DF.DocumentFilterDeleted False]
+toDocumentFilter _ DocumentAPIFilterIsTemplate    = [DF.DocumentFilterTemplate]
+toDocumentFilter _ DocumentAPIFilterIsNotTemplate = [DF.DocumentFilterSignable]
+toDocumentFilter _ DocumentAPIFilterIsInTrash     = [DF.DocumentFilterDeleted True]
+toDocumentFilter _ DocumentAPIFilterIsNotInTrash  = [DF.DocumentFilterDeleted False]
 toDocumentFilter _ (DocumentAPIFilterByText text) = [DF.processSearchStringToFilter text]
 toDocumentFilter _ (DocumentAPIFilterCanBeSignedBy uid) =
   [DF.DocumentFilterByCanSign uid]

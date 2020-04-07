@@ -52,7 +52,7 @@ withRqData fn action = either (rqDataError . Errors) action =<< getDataFn fn
 
 ----------------------------------------
 
-data RqDataError = RqDataError (Errors String)
+newtype RqDataError = RqDataError (Errors String)
   deriving (Eq, Ord, Show, Typeable)
 instance Exception RqDataError
 

@@ -47,9 +47,9 @@ scheduleEmailSendoutWithAuthorSenderThroughService
   -> m ()
 scheduleEmailSendoutWithAuthorSenderThroughService did m = do
   doc  <- dbQuery $ GetDocumentByDocumentID did
-  name <- case (maybe "" getFullName $ getAuthorSigLink doc) of
-    ("") -> return $ (originator m)
-    (an) -> renderLocalTemplate doc "_mailInvitationFromPart" $ do
+  name <- case maybe "" getFullName $ getAuthorSigLink doc of
+    "" -> return (originator m)
+    an -> renderLocalTemplate doc "_mailInvitationFromPart" $ do
       F.value "authorname" an
       F.value "originator" (originator m)
   scheduleEmailSendoutHelper name m
@@ -65,8 +65,8 @@ scheduleEmailSendoutWithAuthorSender did m = do
   let names =
         [getFullName <$> getAuthorSigLink doc, getCompanyName <$> getAuthorSigLink doc]
   name <- case firstNonEmpty (fromMaybe "" <$> names) of
-    ("") -> return $ (originator m)
-    (an) -> return an
+    "" -> return (originator m)
+    an -> return an
   scheduleEmailSendoutHelper name m
 
 scheduleEmailSendoutHelper
@@ -76,9 +76,9 @@ scheduleEmailSendoutHelper authorname mail@Mail {..} = do
   if unsendable to
     then logAttention "Email is unsendable, discarding" $ logObject_ mail
     else do
-      fromAddr <- return Address { addrName = authorname, addrEmail = originatorEmail }
-      token    <- random
-      mailid   <- dbUpdate $ CreateEmail
+      let fromAddr = Address { addrName = authorname, addrEmail = originatorEmail }
+      token  <- random
+      mailid <- dbUpdate $ CreateEmail
         ( token
         , fromAddr
         , map toAddress to
@@ -88,14 +88,14 @@ scheduleEmailSendoutHelper authorname mail@Mail {..} = do
         , map toAttachment attachments
         )
       case kontraInfoForMail of
-        Just kifm -> void $ dbUpdate $ AddKontraInfoForMail mailid kifm
+        Just kifm -> void . dbUpdate $ AddKontraInfoForMail mailid kifm
         Nothing   -> return ()
   where
     toAddress MailAddress {..} = Address { addrName = fullname, addrEmail = email }
     toAttachment (name, cont) = M.Attachment { attName = name, attContent = cont }
 
     -- Mail is unsendable if there is no to adress provided
-    unsendable = any (not . valid) . map email
+    unsendable = not . all (valid . email)
       where
         valid x = case asValidEmail x of
           Good _ -> True
@@ -152,13 +152,13 @@ kontramailHelper noreplyAddress bd theme renderFunc tname fields = do
         case T.splitOn "\r\n" $ T.dropWhile (isControl || isSpace) wholemail of
           [] -> unexpectedError "Couldnt separate email content from title"
           (title' : contentChunks) ->
-            (unescapeHTML $ title', T.intercalate "\r\n" contentChunks)
+            (unescapeHTML title', T.intercalate "\r\n" contentChunks)
   return $ emptyMail
     { originator      = bd ^. #emailOriginator
     , originatorEmail = noreplyAddress
     , title           = title
     , content         = content
-    , attachments     = [ ( "logo-" <> (imageAdler32 $ themeLogo theme) <> ".png"
+    , attachments     = [ ( "logo-" <> imageAdler32 (themeLogo theme) <> ".png"
                           , Left $ themeLogo theme
                           )
                         ]

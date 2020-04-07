@@ -39,15 +39,15 @@ import Routing
 import qualified Folder.Internal as I
 
 folderAPIRoutes :: Route (Kontra Response)
-folderAPIRoutes = dir "api" $ choice [dir "frontend" $ folderAPI, dir "v2" $ folderAPI]
+folderAPIRoutes = dir "api" $ choice [dir "frontend" folderAPI, dir "v2" folderAPI]
 
 folderAPI :: Route (Kontra Response)
 folderAPI = dir "folders" $ choice
-  [ hGet $ toK1 $ folderAPIGet
-  , dir "create" . hPost . toK0 $ folderAPICreate
-  , param . dir "update" . hPost . toK1 $ folderAPIUpdate
-  , param . dir "delete" . hPost . toK1 $ folderAPIDelete
-  , param . dir "list" . hGet . toK1 $ folderAPIListDocs
+  [ (hGet . toK1) folderAPIGet
+  , (dir "create" . hPost . toK0) folderAPICreate
+  , (param . dir "update" . hPost . toK1) folderAPIUpdate
+  , (param . dir "delete" . hPost . toK1) folderAPIDelete
+  , (param . dir "list" . hGet . toK1) folderAPIListDocs
   ]
 
 folderAPICreate :: Kontrakcja m => m Response
@@ -74,7 +74,7 @@ folderAPIGet fid = api $ do
   user           <- getAPIUserWithAPIPersonal
   hasReadAccess  <- apiAccessControlCheck user acc
   isAdminOrSales <- checkAdminOrSales
-  fdrwc          <- if (hasReadAccess || isAdminOrSales)
+  fdrwc          <- if hasReadAccess || isAdminOrSales
     then fwcGetOrErrNotFound fid
     else do
       isSignatory <- isSignatoryOfOneOfDocuments
@@ -92,7 +92,7 @@ folderAPIGet fid = api $ do
 
 folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
 folderAPIUpdate fid = api $ do
-  (dbQuery (FolderGet fid)) >>= \case
+  dbQuery (FolderGet fid) >>= \case
     -- must do manual existence checking since we haven't done access control checks yet
     Nothing    -> apiError insufficientPrivileges
     Just fdrDB -> do
@@ -102,7 +102,7 @@ folderAPIUpdate fid = api $ do
         Just folderUpdated -> return folderUpdated
       let mtoParentID   = fdrNew ^. #parentID
           mfromParentID = fdrDB ^. #parentID
-      accParents <- if (mfromParentID == mtoParentID)
+      accParents <- if mfromParentID == mtoParentID
         -- child is remaining in same place. no special privileges needed
         then return []
         else case (mfromParentID, mtoParentID) of
@@ -161,7 +161,7 @@ folderAPIListDocs fid = api $ do
     maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt "max")
     sorting  <- apiV2ParameterDefault defaultDocumentAPISort
                                       (ApiV2ParameterJSON "sorting" unjsonDef)
-    let documentSorting = (toDocumentSorting <$> sorting)
+    let documentSorting = toDocumentSorting <$> sorting
     logInfo "Fetching list of documents in the folder" $ object
       [ identifier $ user ^. #id
       , "offset" .= offset

@@ -44,22 +44,22 @@ instance ToSQL UserCallbackScheme where
   type PQDest UserCallbackScheme = PQDest String
   toSQL = jsonToSQL
 
-data GetUserCallbackSchemeByUserID = GetUserCallbackSchemeByUserID UserID
+newtype GetUserCallbackSchemeByUserID = GetUserCallbackSchemeByUserID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserCallbackSchemeByUserID (Maybe UserCallbackScheme) where
-  query (GetUserCallbackSchemeByUserID uid) = do
+  dbQuery (GetUserCallbackSchemeByUserID uid) = do
     runQuery_ . sqlSelect "user_callback_scheme" $ do
       sqlResult "callback_scheme"
       sqlWhereEq "user_id" uid
     fetchMaybe runIdentity
 
-data DeleteUserCallbackScheme = DeleteUserCallbackScheme UserID
+newtype DeleteUserCallbackScheme = DeleteUserCallbackScheme UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteUserCallbackScheme () where
-  update (DeleteUserCallbackScheme uid) = do
+  dbUpdate (DeleteUserCallbackScheme uid) = do
     runQuery01_ $ "DELETE FROM user_callback_scheme WHERE user_id =" <?> uid
 
 data UpdateUserCallbackScheme = UpdateUserCallbackScheme UserID UserCallbackScheme
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateUserCallbackScheme () where
-  update (UpdateUserCallbackScheme uid callback) = do
+  dbUpdate (UpdateUserCallbackScheme uid callback) = do
     runSQL_ "LOCK TABLE user_callback_scheme IN ACCESS EXCLUSIVE MODE"
     runQuery01_ $ "DELETE FROM user_callback_scheme WHERE user_id =" <?> uid
     runQuery01_ . sqlInsert "user_callback_scheme" $ do

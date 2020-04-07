@@ -207,7 +207,7 @@ instance FromSQL EIDServiceAuthenticationKind where
     case n :: Int16 of
       1 -> return $ EIDServiceAuthToView AuthenticationToView
       2 -> return $ EIDServiceAuthToView AuthenticationToViewArchived
-      3 -> return $ EIDServiceAuthToSign
+      3 -> return EIDServiceAuthToSign
       _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL EIDServiceAuthenticationKind where
@@ -227,34 +227,34 @@ data EIDServiceTransaction = EIDServiceTransaction
   } deriving (Show)
 
 data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication
-  { eidServiceVerimiName            :: !(T.Text)
+  { eidServiceVerimiName            :: !T.Text
   , eidServiceVerimiVerifiedEmail   :: !(Maybe T.Text)
   , eidServiceVerimiVerifiedPhone   :: !(Maybe T.Text)
   } deriving (Eq, Ord, Show)
 
 data EIDServiceNLIDINAuthentication = EIDServiceNLIDINAuthentication
-  { eidServiceIDINName            :: !(T.Text)
+  { eidServiceIDINName            :: !T.Text
   , eidServiceIDINVerifiedPhone   :: !(Maybe T.Text)
   , eidServiceIDINBirthDate       :: !(Maybe T.Text)
   , eidServiceIDINCustomerID      :: !(Maybe T.Text)
 } deriving (Eq, Ord, Show)
 
 data EIDServiceDKNemIDAuthentication = EIDServiceDKNemIDAuthentication
-  { eidServiceNemIDInternalProvider :: !(EIDServiceDKNemIDInternalProvider)
-  , eidServiceNemIDSignatoryName    :: !(T.Text)
-  , eidServiceNemIDDateOfBirth      :: !(T.Text)
-  , eidServiceNemIDCertificate      :: !(ByteString)
+  { eidServiceNemIDInternalProvider :: !EIDServiceDKNemIDInternalProvider
+  , eidServiceNemIDSignatoryName    :: !T.Text
+  , eidServiceNemIDDateOfBirth      :: !T.Text
+  , eidServiceNemIDCertificate      :: !ByteString
   } deriving (Eq, Ord, Show)
 
 data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
-  { eidServiceNOBankIDInternalProvider     :: !(EIDServiceNOBankIDInternalProvider)
+  { eidServiceNOBankIDInternalProvider     :: !EIDServiceNOBankIDInternalProvider
   , eidServiceNOBankIDSignatoryName        :: !Text
   , eidServiceNOBankIDPhoneNumber          :: !(Maybe Text)
   , eidServiceNOBankIDDateOfBirth          :: !Text
   , eidServiceNOBankIDCertificate          :: !(Maybe ByteString)
   } deriving (Eq, Ord, Show)
 
-data EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
+newtype EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
   { unEIDServiceIDINSignature :: CompleteNLIDINEIDServiceTransactionData
   }
   deriving (Eq, Ord, Show)
@@ -289,23 +289,23 @@ data CompleteNLIDINEIDServiceTransactionData = CompleteNLIDINEIDServiceTransacti
   } deriving (Eq, Ord, Show)
 
 data CompleteDKNemIDEIDServiceTransactionData = CompleteDKNemIDEIDServiceTransactionData
-  { eidnidInternalProvider :: !(EIDServiceDKNemIDInternalProvider)
-  , eidnidSSN :: !(T.Text)
-  , eidnidBirthDate :: !(T.Text)
-  , eidnidCertificate :: !(T.Text)
-  , eidnidDistinguishedName :: !(T.Text)
-  , eidnidPid :: !(T.Text)
+  { eidnidInternalProvider :: !EIDServiceDKNemIDInternalProvider
+  , eidnidSSN :: !T.Text
+  , eidnidBirthDate :: !T.Text
+  , eidnidCertificate :: !T.Text
+  , eidnidDistinguishedName :: !T.Text
+  , eidnidPid :: !T.Text
   } deriving (Eq, Ord, Show)
 
 data CompleteNOBankIDEIDServiceTransactionData = CompleteNOBankIDEIDServiceTransactionData
-  { eidnobidInternalProvider :: !(EIDServiceNOBankIDInternalProvider)
+  { eidnobidInternalProvider :: !EIDServiceNOBankIDInternalProvider
   , eidnobidBirthDate :: !(Maybe T.Text)
   , eidnobidCertificate :: !(Maybe T.Text)
   , eidnobidDistinguishedName :: !T.Text
   , eidnobidIssuerDistinguishedName :: !T.Text
   , eidnobidName :: !(Maybe Text)
   , eidnobidPhoneNumber :: !(Maybe T.Text)
-  , eidnobidPid :: !(T.Text)
+  , eidnobidPid :: !T.Text
   } deriving (Eq, Ord, Show)
 
 data EIDServiceDKNemIDInternalProvider
@@ -371,7 +371,7 @@ instance ToSQL EIDServiceNOBankIDInternalProvider where
 -- TODO: Decide where to put this
 dateOfBirthFromDKPersonalNumber :: Text -> Text
 dateOfBirthFromDKPersonalNumber personalnumber =
-  case T.chunksOf 2 (T.take 6 $ personalnumber) of
+  case T.chunksOf 2 $ T.take 6 personalnumber of
     [day, month, year] ->
       let
         yearWithoutCentury = read year

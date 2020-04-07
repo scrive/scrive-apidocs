@@ -147,7 +147,7 @@ removeSearchTermsIndex = Migration
   , mgrAction    = StandardMigration $ do
                      let tname = tblName tableDocuments
                      runQuery_ . sqlDropIndex tname $ (indexOnColumn "archive_search_terms")
-                       { idxWhere = Just ("archive_search_terms IS NULL")
+                       { idxWhere = Just "archive_search_terms IS NULL"
                        }
   }
 
@@ -164,7 +164,7 @@ addAuthorUserIDToDocuments = Migration
                                    , colType     = BigIntT
                                    , colNullable = True
                                    }
-        , sqlAddValidFK tname $ (fkOnColumn "author_user_id" "users" "id")
+        , sqlAddValidFK tname (fkOnColumn "author_user_id" "users" "id")
         ]
       runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "author_user_id"
   }
@@ -189,11 +189,11 @@ addSearchColumnsToDocument = Migration
         ]
       runQuery_ . sqlCreateIndexSequentially tname $ (indexOnColumn "archive_search_terms"
                                                      )
-        { idxWhere = Just ("archive_search_terms IS NULL")
+        { idxWhere = Just "archive_search_terms IS NULL"
         }
-      runQuery_
-        . sqlCreateIndexSequentially tname
-        $ (indexOnColumnWithMethod "archive_search_fts" GIN)
+      runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumnWithMethod
+        "archive_search_fts"
+        GIN
   }
 
 addPKToDocumentTags :: MonadDB m => Migration m
@@ -327,14 +327,14 @@ signatoryLinkFieldsAddRadioGroupValues = Migration
                                  , colType = ArrayT TextT
                                  }
         ]
-      runQuery_ $ sqlAlterTable "signatory_link_fields" $ map
+      runQuery_ . sqlAlterTable "signatory_link_fields" $ map
         sqlDropCheck
         [ "check_signatory_link_fields_name_fields_are_well_defined"
         , "check_signatory_link_fields_signatures_are_well_defined"
         , "check_signatory_link_fields_checkboxes_are_well_defined"
         , "check_signatory_link_fields_other_text_fields_are_well_defined"
         ]
-      runQuery_ $ sqlAlterTable "signatory_link_fields" $ map
+      runQuery_ . sqlAlterTable "signatory_link_fields" $ map
         sqlAddValidCheck
         [ tblCheck
           { chkName      = "check_signatory_link_fields_name_fields_are_well_defined"
@@ -409,7 +409,7 @@ signatoryLinkFieldsAddCustomValidation = Migration
                                  , colNullable = True
                                  }
         ]
-      runQuery_ $ sqlAlterTable "signatory_link_fields" $ map
+      runQuery_ . sqlAlterTable "signatory_link_fields" $ map
         sqlAddValidCheck
         [ tblCheck
             { chkName = "check_signatory_link_fields_custom_validations_are_well_defined"
@@ -677,7 +677,7 @@ addFolderIDColumnToDocuments = Migration
       runQuery_ $ sqlAlterTable
         "documents"
         [ sqlAddColumn tblColumn { colName = "folder_id", colType = BigIntT }
-        , sqlAddValidFK (tblName tableDocuments) $ (fkOnColumn "folder_id" "folders" "id")
+        , sqlAddValidFK (tblName tableDocuments) (fkOnColumn "folder_id" "folders" "id")
         ]
       runQuery_ . sqlCreateIndexSequentially "documents" $ indexOnColumn "folder_id"
   }
@@ -746,10 +746,10 @@ updateCompositeTypesForSignatoryAccessTokens = Migration
   , mgrFrom      = 1
   , mgrAction    =
     StandardMigration $ do
-      runQuery_ $ sqlDropComposite $ "document_c1"
-      runQuery_ $ sqlDropComposite $ "signatory_link_c1"
-      runQuery_ $ sqlDropComposite $ "signatory_link_magic_hash_c1"
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ $ sqlDropComposite "document_c1"
+      runQuery_ $ sqlDropComposite "signatory_link_c1"
+      runQuery_ $ sqlDropComposite "signatory_link_magic_hash_c1"
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "signatory_access_tokens_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "hash", ccType = BigIntT }
@@ -757,7 +757,7 @@ updateCompositeTypesForSignatoryAccessTokens = Migration
           , CompositeColumn { ccName = "expiration_time", ccType = TimestampWithZoneT }
           ]
         }
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "signatory_link_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "id", ccType = BigIntT }
@@ -825,7 +825,7 @@ updateCompositeTypesForSignatoryAccessTokens = Migration
                             }
           ]
         }
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "document_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "id", ccType = BigIntT }
@@ -893,9 +893,9 @@ dropMagicHashFromSignatories = Migration
   , mgrAction    =
     StandardMigration $ do
       runQuery_ $ sqlAlterTable "signatory_links" [sqlDropColumn "token"]
-      runQuery_ $ sqlDropComposite $ "document_c1"
-      runQuery_ $ sqlDropComposite $ "signatory_link_c1"
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ $ sqlDropComposite "document_c1"
+      runQuery_ $ sqlDropComposite "signatory_link_c1"
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "signatory_link_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "id", ccType = BigIntT }
@@ -962,7 +962,7 @@ dropMagicHashFromSignatories = Migration
                             }
           ]
         }
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "document_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "id", ccType = BigIntT }
@@ -1027,13 +1027,14 @@ addUGIDForEIDToDocuments = Migration
         [ sqlAddColumn tblColumn { colName = "user_group_to_impersonate_for_eid"
                                  , colType = BigIntT
                                  }
-        , sqlAddValidFK (tblName tableDocuments)
-          $ (fkOnColumn "user_group_to_impersonate_for_eid" "user_groups" "id")
+        , sqlAddValidFK
+          (tblName tableDocuments)
+          (fkOnColumn "user_group_to_impersonate_for_eid" "user_groups" "id")
         ]
       runQuery_ . sqlCreateIndexSequentially "documents" $ indexOnColumn
         "user_group_to_impersonate_for_eid"
-      runQuery_ $ sqlDropComposite $ "document_c1"
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ $ sqlDropComposite "document_c1"
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "document_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "id", ccType = BigIntT }
@@ -1106,8 +1107,8 @@ addSealingMethodToDocuments = Migration
         ]
       runQuery_ $ sqlAlterTable (tblName tableDocuments)
                                 [sqlAlterColumn "sealing_method" "DROP DEFAULT"]
-      runQuery_ $ sqlDropComposite $ "document_c1"
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ $ sqlDropComposite "document_c1"
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "document_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "id", ccType = BigIntT }
@@ -1186,8 +1187,8 @@ addSMSInvitationAndConfirmationTextToDocuments = Migration
                                    , colNullable = True
                                    }
         ]
-      runQuery_ $ sqlDropComposite $ "document_c1"
-      runQuery_ $ sqlCreateComposite $ CompositeType
+      runQuery_ $ sqlDropComposite "document_c1"
+      runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "document_c1"
         , ctColumns =
           [ CompositeColumn { ccName = "id", ccType = BigIntT }

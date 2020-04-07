@@ -83,7 +83,7 @@ partnersAddUserGroupID = Migration
           { fkOnDelete = ForeignKeySetNull
           }
         ]
-      runQuery_ $ sqlCreateIndexSequentially tname $ indexOnColumn "user_group_id"
+      runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "user_group_id"
   }
 
 dropPartnerAdmins :: MonadDB m => Migration m

@@ -11,7 +11,7 @@ import MinutesTime
 
 -- This is the part where we define all possible wrongs about a file.
 
-data FileDoesNotExist = FileDoesNotExist FileID
+newtype FileDoesNotExist = FileDoesNotExist FileID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue FileDoesNotExist where
@@ -37,5 +37,5 @@ instance ToJSValue FileWasPurged where
 instance DBExtraException FileWasPurged
 
 sqlWhereFileWasNotPurged :: (MonadState v m, SqlWhere v) => m ()
-sqlWhereFileWasNotPurged = sqlWhereEVV (FileWasPurged, "files.id", "files.purged_time")
-                                       ("files.purged_time IS NULL")
+sqlWhereFileWasNotPurged =
+  sqlWhereEVV (FileWasPurged, "files.id", "files.purged_time") "files.purged_time IS NULL"

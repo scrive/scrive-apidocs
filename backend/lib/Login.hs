@@ -52,7 +52,7 @@ handleLoginGet = do
       ad      <- getAnalyticsData
       content <- renderTemplate "loginPageWithBranding" $ do
         F.value "referer" $ fromMaybe "/" referer
-        F.value "nolinks" $ not $ ctx ^. #brandedDomain % #mainDomain
+        F.value "nolinks" . not $ ctx ^. #brandedDomain % #mainDomain
         standardPageFields ctx Nothing ad
       response <- simpleHtmlResponse $ T.pack content
       return $ Right response
@@ -77,7 +77,7 @@ handleLoginPost = do
         Just u -> do
           ugwp <- dbQuery $ UserGroupGetWithParentsByUserID (u ^. #id)
           let masklist = ugwpSettings ugwp ^. #ipAddressMaskList
-          return $ null masklist || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
+          return $ null masklist || any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist
         Nothing -> return True
       case maybeuser of
         -- Is the user even allowed to login here? In order not to enable user discovery, we
@@ -87,7 +87,7 @@ handleLoginPost = do
           | maybeVerifyPassword (user ^. #password) passwd && ipIsOK && not
             (user ^. #accountSuspended)
           -> do
-            failedAttemptCount <- dbQuery $ GetUserRecentAuthFailureCount $ user ^. #id
+            failedAttemptCount <- dbQuery . GetUserRecentAuthFailureCount $ user ^. #id
             if failedAttemptCount <= 5
               then case (user ^. #totpKey, user ^. #totpActive, mtotpcode) of
                 (_        , False, _             ) -> logTheUserIn ctx user padlogin
@@ -96,7 +96,7 @@ handleLoginPost = do
                   let onBadTOTP = do
                         logInfo "User login failed (invalid TOTP code provided)"
                           $ logObject_ user
-                        void $ dbUpdate $ LogHistoryLoginTOTPFailure (user ^. #id)
+                        void . dbUpdate $ LogHistoryLoginTOTPFailure (user ^. #id)
                                                                      (ctx ^. #ipAddr)
                                                                      (ctx ^. #time)
                         J.runJSONGenT $ do
@@ -174,12 +174,12 @@ handleLoginPost = do
         _ -> return ()
       if padlogin
         then do
-          void $ dbUpdate $ LogHistoryPadLoginSuccess (user ^. #id)
+          void . dbUpdate $ LogHistoryPadLoginSuccess (user ^. #id)
                                                       (ctx ^. #ipAddr)
                                                       (ctx ^. #time)
           logPadUserToContext muuser
         else do
-          void $ dbUpdate $ LogHistoryLoginSuccess (user ^. #id)
+          void . dbUpdate $ LogHistoryLoginSuccess (user ^. #id)
                                                    (ctx ^. #ipAddr)
                                                    (ctx ^. #time)
           logUserToContext muuser
@@ -211,7 +211,7 @@ handleLoginWithRedirectGet :: Kontrakcja m => m InternalKontraResponse
 handleLoginWithRedirectGet = do
   sci :: SessionCookieInfo <- guardJustM $ readField "session_id"
   dirtyUrl                 <- guardJustM $ getField "url"
-  let naughtyUrl = any (\s -> s `T.isPrefixOf` dirtyUrl) ["javascript:", "data:"]
+  let naughtyUrl = any (`T.isPrefixOf` dirtyUrl) ["javascript:", "data:"]
       url        = if naughtyUrl then "" else dirtyUrl
   when naughtyUrl
     $ logAttention_ "handleLoginWithRedirectGet: someone tried to XSS url field"
@@ -222,4 +222,4 @@ handleLoginWithRedirectGet = do
   -- redirecting as intended. The user may need to login again using
   -- their email and password depending on the redirect destination.
   void $ unsafeSessionTakeover sci
-  return $ internalResponse $ LinkExternal url
+  return . internalResponse $ LinkExternal url

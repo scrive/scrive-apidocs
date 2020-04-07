@@ -70,10 +70,10 @@ listParamsFilters = filters
 instance Show ListParams where
   show params = intercalate "&" $ off <> lim <> srch <> srt
     where
-      off   = ["offset=" <> (toUrl $ show $ offset params)]
-      lim   = ["limit=" <> (toUrl $ show $ limit params)]
-      srch  = map ((<>) "search=") $ maybeToList $ (toUrl . T.unpack) <$> search params
-      srt   = map ((<>) "sorting=") $ (toUrl . T.unpack) <$> sorting params
+      off   = ["offset=" <> toUrl (show $ offset params)]
+      lim   = ["limit=" <> toUrl (show $ limit params)]
+      srch  = map (<> "search=") . maybeToList $ toUrl . T.unpack <$> search params
+      srt   = map (<> "sorting=") $ toUrl . T.unpack <$> sorting params
       toUrl = urlEncode . BS8.unpack . BS.fromString
 
 emptyListParams :: ListParams
@@ -87,17 +87,19 @@ getListParams = do
   limit'  <- readField "limit"
   search  <- getField "textfilter"
   filters <- do
-    eja <- liftM (runGetJSON readJSArray) $ T.unpack <$> getField' "selectfilter"
+    eja <- runGetJSON readJSArray . T.unpack <$> getField' "selectfilter"
     return $ case eja of
-      Left _ -> []
-      Right ja ->
-        fromMaybe [] $ runIdentity $ withJSValue ja $ fromJSValueCustomMany $ do
+      Left  _  -> []
+      Right ja -> fromMaybe [] . runIdentity $ withJSValue
+        ja
+        (fromJSValueCustomMany $ do
           n <- fromJSValueField "name"
           v <- fromJSValueField "value"
           return $ liftM2 (\x y -> (T.pack x, T.pack y)) n v
+        )
   sorting         <- getField "sort"
-  sortingReversed <- maybeToBool <$> fmap (== "true") <$> getField "sortReversed"
-  let sorting' = if (sortingReversed) then sorting else (<> "REV") <$> sorting
+  sortingReversed <- maybeToBool . fmap (== "true") <$> getField "sortReversed"
+  let sorting' = if sortingReversed then sorting else (<> "REV") <$> sorting
 
   return ListParams
          -- REVIEW: I am assuming constants below stem from emptyListParams.
@@ -109,9 +111,9 @@ getListParams = do
                     }
 
 pagingParamsJSON :: PagedList a -> JSValue
-pagingParamsJSON (PagedList { pageSize, params, listLength }) = runJSONGen $ do
+pagingParamsJSON PagedList { pageSize, params, listLength } = runJSONGen $ do
   value "pageCurrent" $ offset params `div` pageSize
   value "itemMin" $ offset params
   value "itemMax" $ listLength - 1
-  value "maxNextPages" $ (limit params) `div` pageSize
-  value "pageSize" $ pageSize
+  value "maxNextPages" $ limit params `div` pageSize
+  value "pageSize" pageSize

@@ -37,7 +37,7 @@ instance Identifier UserID where
 
 instance Unjson UserID where
   unjsonDef =
-    unjsonInvmapR ((maybe (fail "Can't parse UserID") return) . maybeRead) showt unjsonDef
+    unjsonInvmapR (maybe (fail "Can't parse UserID") return . maybeRead) showt unjsonDef
 
 instance ToJSON UserID where
   toJSON (UserID n) = toJSON $ show n

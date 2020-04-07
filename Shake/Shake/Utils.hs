@@ -1,9 +1,12 @@
-module Shake.Utils ((%>>>)
-                   ,getHsDeps
-                   ,langEnv
-                   ,findWithDefault
-                   ,needPatternsInDirectories
-                   ,ordNub) where
+module Shake.Utils
+  ( (%>>>)
+  , mapP_
+  , getHsDeps
+  , langEnv
+  , findWithDefault
+  , needPatternsInDirectories
+  , ordNub
+  ) where
 
 import Control.Monad
 import Data.Maybe
@@ -13,12 +16,16 @@ import qualified Data.Set as Set
 
 -- * Utilities
 
+-- | Parallel version of 'mapM_'.
+mapP_ :: (a -> Action r) -> [a] -> Action ()
+mapP_ f xs = void $ forP xs f
+
 -- List all Haskell source files within a directory,
 -- identified by the ".hs" extension.
 getHsDeps :: FilePath -> IO [FilePath]
 getHsDeps rootPath = do
   files <- getDirectoryFilesIO rootPath ["//*.hs"]
-  return $ fmap ((</>) rootPath) files
+  return $ map (rootPath </>) files
 
 -- | Perform a `need` on all files matching the given [FilePattern] in
 -- the given [FilePath] For each directory we get all the files using
@@ -52,7 +59,7 @@ langEnv :: [CmdOption]
 langEnv = [AddEnv "LANG" "en_US.UTF-8", AddEnv "LC_ALL" "en_US.UTF-8"]
 
 ordNub :: (Ord a) => [a] -> [a]
-ordNub l = go Set.empty l
+ordNub = go Set.empty
   where
     go _ []       = []
     go s (x : xs) = if x `Set.member` s then go s xs else x : go (Set.insert x s) xs

@@ -160,7 +160,7 @@ getSavedContents_ url = do
       ((AmazonOrigin, ) <$> getContentsFromAmazon amazonEnv url) `catch` \e -> do
         case fromException e of
           Just e' -> throwM (e' :: FileStorageException)
-          Nothing -> throwM $ FileStorageException $ showt e
+          Nothing -> throwM . FileStorageException $ showt e
 
 deleteSavedContents_
   :: (MonadBaseControl IO m, MonadLog m, MonadMask m, MonadThrow m)

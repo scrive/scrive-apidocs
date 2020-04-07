@@ -16,8 +16,8 @@ data GuardTimeConf = GuardTimeConf
 instance Unjson GuardTimeConf where
   unjsonDef =
     objectOf
-      $   pure GuardTimeConf
-      <*> field "signing_service_url"
+      $   GuardTimeConf
+      <$> field "signing_service_url"
                 guardTimeSigningServiceURL
                 "GuardTime Signing Service URL"
       <*> field "extending_service_url"

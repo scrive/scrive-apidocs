@@ -47,9 +47,9 @@ data DocumentAccessMode =
     --   - admin/folder user should have ReadA access to DocumentR and DocumentSecretsR
 
 canSeeSignlinks :: DocumentAccess -> Bool
-canSeeSignlinks (DocumentAccess { daAccessMode = AuthorDocumentAccess }) = True
-canSeeSignlinks (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess _ }) = True
-canSeeSignlinks (DocumentAccess { daAccessMode = FolderDocumentAccess _ }) = True
+canSeeSignlinks DocumentAccess { daAccessMode = AuthorDocumentAccess } = True
+canSeeSignlinks DocumentAccess { daAccessMode = CompanyAdminDocumentAccess _ } = True
+canSeeSignlinks DocumentAccess { daAccessMode = FolderDocumentAccess _ } = True
 canSeeSignlinks _ = False
 
 propertyForCurrentSignatory :: DocumentAccess -> (SignatoryLink -> a) -> Document -> a
@@ -58,21 +58,20 @@ propertyForCurrentSignatory da f doc = case slForAccess da doc of
   Nothing -> unexpectedError "Signatory that is looking at document is not in document"
   where
     slForAccess :: DocumentAccess -> Document -> Maybe SignatoryLink
-    slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid }) =
+    slForAccess DocumentAccess { daAccessMode = SignatoryDocumentAccess sid } =
       getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess }) =
+    slForAccess DocumentAccess { daAccessMode = AuthorDocumentAccess } = getAuthorSigLink
+    slForAccess DocumentAccess { daAccessMode = CompanySharedDocumentAccess } =
       getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = CompanySharedDocumentAccess }) =
+    slForAccess DocumentAccess { daAccessMode = SystemAdminDocumentAccess } =
       getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = SystemAdminDocumentAccess }) =
-      getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess (Just sid) })
-      = getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess Nothing }) =
-      getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = FolderDocumentAccess (Just sid) }) =
+    slForAccess DocumentAccess { daAccessMode = CompanyAdminDocumentAccess (Just sid) } =
       getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = FolderDocumentAccess Nothing }) =
+    slForAccess DocumentAccess { daAccessMode = CompanyAdminDocumentAccess Nothing } =
+      getAuthorSigLink
+    slForAccess DocumentAccess { daAccessMode = FolderDocumentAccess (Just sid) } =
+      getSigLinkFor sid
+    slForAccess DocumentAccess { daAccessMode = FolderDocumentAccess Nothing } =
       getAuthorSigLink
 
 documentAccessForUser :: User -> Document -> DocumentAccess
@@ -103,26 +102,22 @@ documentAccessForAdminonly document = DocumentAccess
   }
 
 documentAccessModeForUser :: User -> Document -> DocumentAccessMode
-documentAccessModeForUser user document = case (getSigLinkFor user document) of
-  Just sl -> if (isAuthor sl)
+documentAccessModeForUser user document = case getSigLinkFor user document of
+  Just sl -> if isAuthor sl
     then AuthorDocumentAccess
     else
-      if (  documentauthorugid document
-         == Just (user ^. #groupID)
-         && (user ^. #isCompanyAdmin)
-         )
-      then
-        CompanyAdminDocumentAccess $ Just $ signatorylinkid sl
-      else
-        SignatoryDocumentAccess $ signatorylinkid sl
+      if documentauthorugid document
+           == Just (user ^. #groupID)
+           && (user ^. #isCompanyAdmin)
+        then CompanyAdminDocumentAccess . Just $ signatorylinkid sl
+        else SignatoryDocumentAccess $ signatorylinkid sl
   Nothing ->
-    if (documentauthorugid document == Just (user ^. #groupID) && user ^. #isCompanyAdmin)
-      then CompanyAdminDocumentAccess $ Nothing
+    if documentauthorugid document == Just (user ^. #groupID) && user ^. #isCompanyAdmin
+      then CompanyAdminDocumentAccess Nothing
       else
-        if (  documentauthorugid document
+        if documentauthorugid document
            == Just (user ^. #groupID)
            && isDocumentShared document
-           )
         then
           CompanySharedDocumentAccess
         else
@@ -140,9 +135,8 @@ documentAccessModeByFolder user document roles =
     (Nothing, True ) -> FolderDocumentAccess Nothing
     (Just sl, False) -> SignatoryDocumentAccess $ signatorylinkid sl
     (Nothing, False) ->
-      if (  (documentauthorugid document == Just (user ^. #groupID))
+      if (documentauthorugid document == Just (user ^. #groupID))
          && isDocumentShared document
-         )
       then
         CompanySharedDocumentAccess
       else
@@ -155,8 +149,8 @@ documentAccessModeByFolder user document roles =
   where
     hasReadAccessForDocByFolder = hasReadAccessForFolder (documentfolderid document)
     hasReadAccessForFolder fid =
-      (accessControlPure roles [canDo ReadA $ DocumentInFolderR fid])
-        || (accessControlPure roles [canDo ReadA $ DocumentAfterPreparationR fid])
+      accessControlPure roles [canDo ReadA $ DocumentInFolderR fid]
+        || accessControlPure roles [canDo ReadA $ DocumentAfterPreparationR fid]
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
 documentAccessForSlid slid document = DocumentAccess
@@ -166,8 +160,8 @@ documentAccessForSlid slid document = DocumentAccess
   }
 
 documentAccessModeForSlid :: SignatoryLinkID -> Document -> DocumentAccessMode
-documentAccessModeForSlid slid document = case (getSigLinkFor slid document) of
-  Just sl -> if (isAuthor sl)
+documentAccessModeForSlid slid document = case getSigLinkFor slid document of
+  Just sl -> if isAuthor sl
     then AuthorDocumentAccess
     else SignatoryDocumentAccess $ signatorylinkid sl
   Nothing ->

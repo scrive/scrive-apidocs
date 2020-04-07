@@ -50,12 +50,8 @@ parseXMLContent s =
     cleanup n = [n]
 
 renderXMLContent :: XMLContent -> Text
-renderXMLContent ns =
-  T.concat
-    . map decodeUtf8
-    $ runST
-    $ runConduit
-    $ (sourceList (nodesToEvents ns) .| renderBytes def .| consume)
+renderXMLContent ns = T.concat . map decodeUtf8 $ runST
+  (runConduit $ sourceList (nodesToEvents ns) .| renderBytes def .| consume)
 
 nodesToEvents :: XMLContent -> [Event]
 nodesToEvents ct = goN (unXMLContent ct) []
@@ -86,13 +82,13 @@ removeTags :: XMLContent -> XMLContent
 removeTags = XMLContent . concatMap remove . unXMLContent
   where
     remove (NodeElement (Element _ _ ns)) = concatMap remove ns
-    remove n@(NodeContent{}) = [n]
-    remove _ = []
+    remove n@NodeContent{}                = [n]
+    remove _                              = []
 
 -- | Form XMLContent from string literals
 instance IsString XMLContent where
   fromString s =
-    either (unexpectedError $ "Cannot parse XML content " <> (showt s)) identity
+    either (unexpectedError $ "Cannot parse XML content " <> showt s) identity
       $ parseXMLContent (T.pack s)
 
 -- | Form XMLContent from plain text

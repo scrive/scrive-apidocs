@@ -28,9 +28,9 @@ main = do
   jsFileNameAndLocalizations <- forM allLangs $ \lang ->
     runTemplatesT (lang, templates) $ do
       jsLocalized <-
-        renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang lang
+        renderTemplate "javascriptLocalisation" . F.value "code" $ codeFromLang lang
       return (versionIDHex <> "." <> codeFromLang lang <> ".js", T.pack jsLocalized)
   createDirectoryIfMissing False (sourceRoot </> "frontend/app/localization")
   forM_ jsFileNameAndLocalizations $ \(fn, text) ->
-    T.writeFile (sourceRoot </> "frontend/app/localization" </> (T.unpack fn)) text
+    T.writeFile (sourceRoot </> "frontend/app/localization" </> T.unpack fn) text
   putStrLn "DONE"

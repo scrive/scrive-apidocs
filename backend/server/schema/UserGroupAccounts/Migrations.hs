@@ -19,14 +19,14 @@ changeCompanyToUserGroupInCompanyInvites = Migration
                                    , colNullable = True
                                    }
         ]
-      runQuery_ $ sqlUpdate "companyinvites" $ do
+      runQuery_ . sqlUpdate "companyinvites" $ do
         sqlSetCmd "user_group_id" "company_id"
       runQuery_ $ sqlAlterTable
         tname
         [ sqlAlterColumn "user_group_id" "SET NOT NULL"
         , sqlAddValidFK tname (fkOnColumn "user_group_id" "user_groups" "id")
         ]
-      runQuery_ $ sqlCreateIndexSequentially tname $ (indexOnColumn "user_group_id")
+      runQuery_ $ sqlCreateIndexSequentially tname (indexOnColumn "user_group_id")
       runQuery_ $ sqlAlterTable
         tname
         [ sqlDropPK tname
@@ -34,7 +34,7 @@ changeCompanyToUserGroupInCompanyInvites = Migration
         ]
 
       -- Drop everything related to company_id column
-      runQuery_ $ sqlDropIndex tname $ (indexOnColumn "company_id")
+      runQuery_ $ sqlDropIndex tname (indexOnColumn "company_id")
       runQuery_ $ sqlAlterTable
         tname
         [ sqlDropFK tname (fkOnColumn "company_id" "companies" "id")

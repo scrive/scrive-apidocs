@@ -17,9 +17,9 @@ import Utils.Prelude
 
 invariantProblems :: UTCTime -> Document -> Maybe String
 invariantProblems now document =
-  case catMaybes $ map (\f -> f now document) documentInvariants of
+  case mapMaybe (\f -> f now document) documentInvariants of
     [] -> Nothing
-    a  -> Just $ (show $ documentid document) ++ " : " ++ intercalate ";" a
+    a  -> Just $ show (documentid document) ++ " : " ++ intercalate ";" a
 
 {- |
    The invariants we want to test. Each returns Nothing if there is no problem,
@@ -71,7 +71,7 @@ documentHasOneAuthor _ document =
 authorCannotBeAnApprover :: UTCTime -> Document -> Maybe String
 authorCannotBeAnApprover _ document =
   let authors = (filter isAuthor $ documentsignatorylinks document)
-  in  assertInvariant "author cannot be an approver" $ all (not . isApprover) authors
+  in  assertInvariant "author cannot be an approver" $ not (any isApprover authors)
 
 {- |
    We don't expect to find any deleted documents in Pending state.
@@ -80,7 +80,7 @@ authorCannotBeAnApprover _ document =
 noDeletedSigLinksForSigning :: UTCTime -> Document -> Maybe String
 noDeletedSigLinksForSigning _ document =
   assertInvariant "document has a deleted siglink when it is due to be signed"
-    $   (isPending document)
+    $   isPending document
     --> none (isJust . signatorylinkdeleted) (documentsignatorylinks document)
 
 {- |
@@ -100,8 +100,11 @@ signatoryLinksHaveDifferentIDs :: UTCTime -> Document -> Maybe String
 signatoryLinksHaveDifferentIDs _ document =
   let slids = map signatorylinkid (documentsignatorylinks document)
   in  assertInvariant ("some of document signatory links have same id: " ++ show slids)
-        $ (all ((== 1) . length) . group . sort . filter ((/=) (unsafeSignatoryLinkID 0)))
-            slids
+        . all ((== 1) . length)
+        . group
+        . sort
+        . filter (/= unsafeSignatoryLinkID 0)
+        $ slids
 
 {- |
    Template or Preparation implies only Author has user or company connected
@@ -111,20 +114,15 @@ connectedSigLinkOnTemplateOrPreparation _ document =
   assertInvariant
       "document has siglinks (besides author) with User or Company when in Preparation or it's a Template"
     $   (isTemplate document || isPreparation document)
-    --> (none (isJust . maybesignatory)
-              (filter (not . isAuthor) (documentsignatorylinks document))
-        )
+    --> none (isJust . maybesignatory)
+             (filter (not . isAuthor) (documentsignatorylinks document))
 
 {- |
    Author must have a user
  -}
 authorHasUser :: UTCTime -> Document -> Maybe String
-authorHasUser _ document =
-  assertInvariant "author does not have a user connected."
-    $   isJust
-    $   join
-    $   maybesignatory
-    <$> (getAuthorSigLink document)
+authorHasUser _ document = assertInvariant "author does not have a user connected."
+  $ isJust (maybesignatory =<< getAuthorSigLink document)
 
 {- |
   Assert an upper bound on number of signatories.
@@ -191,7 +189,7 @@ maxLengthOnFields _ document =
       lengths =
           [ T.length (fromMaybe "" $ fieldTextValue f)
           | s <- documentsignatorylinks document
-          , f <- signatoryfields $ s
+          , f <- signatoryfields s
           , isJust $ fieldTextValue f
           , case fieldType f of
             SignatureFT -> False -- filter our signatures, they might be long
@@ -230,18 +228,18 @@ atLeastOneSignatory :: UTCTime -> Document -> Maybe String
 atLeastOneSignatory _ document =
   assertInvariant "there are no signatories, though doc is pending or closed"
     $   (isPending document || isClosed document)
-    --> (any isSignatory (documentsignatorylinks document))
+    --> any isSignatory (documentsignatorylinks document)
 
 
 {- |
    If you're not a signatory, you shouldn't be signed
  -}
 notSignatoryNotSigned :: UTCTime -> Document -> Maybe String
-notSignatoryNotSigned _ document =
-  assertInvariant "there are non-signatories/approvers who have signed/approved"
-    $ (all ((not . (isSignatory || isApprover)) --> (not . isJust . maybesigninfo))
-           (documentsignatorylinks document)
-      )
+notSignatoryNotSigned _ document = assertInvariant
+  "there are non-signatories/approvers who have signed/approved"
+  (all ((not . (isSignatory || isApprover)) --> (isNothing . maybesigninfo))
+       (documentsignatorylinks document)
+  )
 
 {- |
    Maximum number of custom fields
@@ -266,13 +264,13 @@ maxCustomFields _ document =
 -- | First Name not null
 _hasFirstName :: UTCTime -> Document -> Maybe String
 _hasFirstName _ document = assertInvariant "has a signatory with no first name" $ all
-  (\sl -> (isPending document || isClosed document) --> (not $ T.null $ getFirstName sl))
+  (\sl -> (isPending document || isClosed document) --> not (T.null $ getFirstName sl))
   (documentsignatorylinks document)
 
 -- | Last Name not null
 _hasLastName :: UTCTime -> Document -> Maybe String
 _hasLastName _ document = assertInvariant "has a signatory with no last name" $ all
-  (\sl -> (isPending document || isClosed document) --> (not $ T.null $ getLastName sl))
+  (\sl -> (isPending document || isClosed document) --> not (T.null $ getLastName sl))
   (documentsignatorylinks document)
 
 -- | Email looks like email
@@ -284,9 +282,8 @@ hasValidEmail _ document =
         (map getEmail (documentsignatorylinks document))
       )
     $ all
-        (\sl ->
-          (isPending document || isClosed document)
-            --> (isGood $ asValidEmail $ getEmail sl)
+        (\sl -> (isPending document || isClosed document)
+          --> isGood (asValidEmail $ getEmail sl)
         )
         (documentsignatorylinks document)
 
@@ -294,11 +291,11 @@ hasValidEmail _ document =
 hasAtMostOneOfEachTypeOfField :: UTCTime -> Document -> Maybe String
 hasAtMostOneOfEachTypeOfField _ document =
   emptyToNothing
-    $ intercalate ";"
-    $ catMaybes
-    $ for
-        [ (NameFI (NameOrder 1))
-        , (NameFI (NameOrder 2))
+    . intercalate ";"
+    . catMaybes
+    . for
+        [ NameFI (NameOrder 1)
+        , NameFI (NameOrder 2)
         , CompanyFI
         , PersonalNumberFI
         , CompanyNumberFI

@@ -72,7 +72,7 @@ runKontra ctx f = S.evalStateT (unKontra f) ctx
 
 instance MonadBaseControl IO Kontra where
   type StM Kontra a = StM InnerKontra a
-  liftBaseWith f = Kontra $ liftBaseWith $ \run -> f $ run . unKontra
+  liftBaseWith f = Kontra $ liftBaseWith (\run -> f $ run . unKontra)
   restoreM = Kontra . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}

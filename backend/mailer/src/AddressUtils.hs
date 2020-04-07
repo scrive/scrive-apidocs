@@ -11,7 +11,7 @@ punyEncode s = name <> "@" <> encodedDomain
     name = T.takeWhile (/= '@') s
 
     domainElems :: [Text]
-    domainElems = T.split (== '.') $ T.tail $ T.dropWhile (/= '@') s
+    domainElems = T.split (== '.') . T.tail $ T.dropWhile (/= '@') s
 
     encodeStr :: Text -> Text
     encodeStr = TE.decodeUtf8 . encode
@@ -20,7 +20,7 @@ punyEncode s = name <> "@" <> encodedDomain
     needsEncoding str = str <> "-" /= encodeStr str
 
     encodedDomain :: Text
-    encodedDomain = T.concat $ intersperse "." $ map encodeElem domainElems
+    encodedDomain = T.concat . intersperse "." $ map encodeElem domainElems
 
     encodeElem :: Text -> Text
     encodeElem str | needsEncoding str = "xn--" <> encodeStr str

@@ -112,7 +112,7 @@ addGuardtimeSignature fileName content = theDocumentID >>= \did ->
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
     let mainpath = tmppath </> "main.pdf"
     logInfo "Temp file write" $ object
-      [ "bytes_written" .= (BS.length content)
+      [ "bytes_written" .= BS.length content
       , "originator" .= ("addDigitalSignature" :: Text)
       ]
     liftIO $ BS.writeFile mainpath content
@@ -133,7 +133,7 @@ addGuardtimeSignature fileName content = theDocumentID >>= \did ->
               $ object [identifier sealedfileid]
             now <- currentTime
             dbUpdate
-              $ AppendSealedFile
+              . AppendSealedFile
                   sealedfileid
                   (SealStatus.Guardtime (GT.extended gsig) (GT.privateGateway gsig))
               $ systemActor now
@@ -175,7 +175,7 @@ extendDigitalSignature = do
     content <- getFileContents file
     let sealedpath = tmppath </> "sealed.pdf"
     logInfo "Temp file write" $ object
-      [ "bytes_written" .= (BS.length content)
+      [ "bytes_written" .= BS.length content
       , "originator" .= ("extendDigitalSignature" :: Text)
       ]
     liftIO $ BS.writeFile sealedpath content
@@ -244,5 +244,5 @@ digitallyExtendFile time pdfpath pdfname = do
       sealedfileid <- saveNewFile pdfname extendedfilepdf
       logInfo "Finished adding extended file to DB, adding to document"
         $ object [identifier sealedfileid]
-      dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor time
+      dbUpdate . AppendExtendedSealedFile sealedfileid status $ systemActor time
       return True

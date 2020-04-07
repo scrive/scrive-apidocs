@@ -43,7 +43,7 @@ testJSONWithDynamicKeys dynamicKeys fp jsonBS = do
 
     removeDynamicValues :: Value -> Value
     removeDynamicValues (Object m) = Object . H.map removeDynamicValues $ H.filterWithKey
-      (\k _ -> not $ k `elem` dynamicKeys)
+      (\k _ -> k `notElem` dynamicKeys)
       m
     removeDynamicValues (Array v) = Array (V.map removeDynamicValues v)
     removeDynamicValues v         = v

@@ -30,7 +30,7 @@ inputValidationTests _ = testGroup
   , testGroup
     "asDirtyEmail"
     [ testProperty "lower cases" $ propDirtyEmailLowercases . withArbitraryUnicode
-    , testProperty "strips surrounding whitespace" $ propDirtyEmailStripsWhitespace
+    , testProperty "strips surrounding whitespace" propDirtyEmailStripsWhitespace
     , testCase "null is counted as empty" testDirtyEmailNullIsEmpty
     , testProperty "whitespace only is counted as empty" propDirtyEmailWhitespaceIsEmpty
     ]
@@ -56,7 +56,7 @@ inputValidationTests _ = testGroup
     [ testProperty "strips surrounding whitespace" propValidCompanyNumberStripsWhitespace
     , testCase "null is counted as empty" testValidCompanyNumberNullIsEmpty
     , testProperty "whitespace only is counted as empty"
-      $ propValidCompanyNumberWhitespaceIsEmpty
+                   propValidCompanyNumberWhitespaceIsEmpty
     , testProperty "can only contain hyphen, digits [0-9] or letters"
     $ propValidCompanyNumberRestrictsChars
     . withArbitraryUnicode
@@ -165,7 +165,7 @@ testValidEmailLowercases = do
 testValidEmailStripsWhitespace :: Assertion
 testValidEmailStripsWhitespace = do
   let results = map (asValidEmail . surroundWithWhitespace) goodEmailExamples
-  assert $ all (not . isWhitespace . fromGood) results
+  assert $ not (any (isWhitespace . fromGood) results)
   where
     surroundWithWhitespace :: Text -> Text
     surroundWithWhitespace xs = "\t\n " <> xs <> "\n\t "
@@ -213,14 +213,8 @@ propValidNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidName
 propValidNameGoodExamples :: [NameChar] -> Property
 propValidNameGoodExamples ns =
   let xs = map nc ns
-  in  length xs
-        >   0
-        &&  length xs
-        <   50
-        &&  not (isWhitespace $ T.pack xs)
-        ==> isGood
-        $   asValidName
-        $   T.pack xs
+  in  (not (null xs) && length xs < 50 && not (isWhitespace $ T.pack xs))
+        ==> (isGood . asValidName $ T.pack xs)
 
 newtype NameChar = NameChar { nc :: Char } deriving Show
 
@@ -240,14 +234,8 @@ propValidCompanyNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyName
 propValidCompanyNameGoodExamples :: [CompanyNameChar] -> Property
 propValidCompanyNameGoodExamples ns =
   let xs = map cnc ns
-  in  length xs
-        >   0
-        &&  length xs
-        <   100
-        &&  not (isWhitespace $ T.pack xs)
-        ==> isGood
-        $   asValidCompanyName
-        $   T.pack xs
+  in  (not (null xs) && length xs < 100 && not (isWhitespace $ T.pack xs))
+        ==> (isGood . asValidCompanyName $ T.pack xs)
 
 newtype CompanyNameChar = CompanyNameChar { cnc :: Char } deriving Show
 
@@ -273,14 +261,8 @@ propValidCompanyNumberRestrictsChars = propJustAllowed
 propValidCompanyNumberGoodExamples :: [CompanyNumberChar] -> Property
 propValidCompanyNumberGoodExamples ns =
   let xs = map cn ns
-  in  length xs
-        >   4
-        &&  length xs
-        <   15
-        &&  not (isWhitespace $ T.pack xs)
-        ==> isGood
-        $   asValidCompanyNumber
-        $   T.pack xs
+  in  (length xs > 4 && length xs < 15 && not (isWhitespace $ T.pack xs))
+        ==> (isGood . asValidCompanyNumber $ T.pack xs)
 
 newtype CompanyNumberChar = CompanyNumberChar { cn :: Char } deriving Show
 
@@ -305,14 +287,8 @@ propValidAddressRestrictsChars = propJustAllowed
 propValidAddressGoodExamples :: [AddressChar] -> Property
 propValidAddressGoodExamples as =
   let xs = map ac as
-  in  length xs
-        >   0
-        &&  length xs
-        <   100
-        &&  not (isWhitespace $ T.pack xs)
-        ==> isGood
-        $   asValidAddress
-        $   T.pack xs
+  in  (not (null xs) && length xs < 100 && not (isWhitespace $ T.pack xs))
+        ==> (isGood . asValidAddress $ T.pack xs)
 
 newtype AddressChar = AddressChar { ac :: Char } deriving Show
 
@@ -336,14 +312,8 @@ propValidPositionRestrictsChars =
 propValidPositionGoodExamples :: [PositionChar] -> Property
 propValidPositionGoodExamples ps =
   let xs = map pnc ps
-  in  length xs
-        >   0
-        &&  length xs
-        <   200
-        &&  not (isWhitespace $ T.pack xs)
-        ==> isGood
-        $   asValidPosition
-        $   T.pack xs
+  in  (not (null xs) && length xs < 200 && not (isWhitespace $ T.pack xs))
+        ==> (isGood . asValidPosition $ T.pack xs)
 
 newtype PositionChar = PositionChar { pnc :: Char } deriving Show
 
@@ -400,14 +370,8 @@ propValidFieldValueRestrictsChars = propJustAllowed
 propValidFieldValueGoodExamples :: [FieldValueChar] -> Property
 propValidFieldValueGoodExamples fs =
   let xs = map fvc fs
-  in  length xs
-        >   0
-        &&  length xs
-        <   200
-        &&  not (isWhitespace $ T.pack xs)
-        ==> isGood
-        $   asValidFieldValue
-        $   T.pack xs
+  in  (not (null xs) && length xs < 200 && not (isWhitespace $ T.pack xs))
+        ==> (isGood . asValidFieldValue $ T.pack xs)
 
 newtype FieldValueChar = FieldValueChar { fvc :: Char } deriving Show
 
@@ -421,13 +385,11 @@ testValidInviteTextBadExamplesAreFixed = do
   let e1 = asValidInviteText "<p><a href='aaaa'>blah</a></p>"
   assert
     $  isGood e1
-    && (T.filter (\c -> not $ isSpace c || isControl c) $ fromGood $ e1)
-    == "blah"
+    && (T.filter (\c -> not $ isSpace c || isControl c) (fromGood e1) == "blah")
   let e2 = asValidInviteText "<p><BR></p>"
   assert
     $  isGood e2
-    && (T.filter (\c -> not $ isSpace c || isControl c) $ fromGood $ e2)
-    == ""
+    && (T.filter (\c -> not $ isSpace c || isControl c) (fromGood e2) == "")
   let e3 = asValidInviteText "<p --A >aaaa<>"
   assert $ isGood e3 && fromGood e3 == "aaaa"
 
@@ -462,7 +424,7 @@ propStripWhitespace f ws xs =
   in  isGood result ==> isTrimmed . fromGood $ result
 
 propWhitespaceIsEmpty :: (Text -> Result a) -> [WhitespaceChar] -> Property
-propWhitespaceIsEmpty f xs = length xs > 0 ==> isEmpty . f . T.pack . map wc $ xs
+propWhitespaceIsEmpty f xs = not (null xs) ==> isEmpty . f . T.pack . map wc $ xs
 
 newtype WhitespaceChar = WhitespaceChar { wc :: Char } deriving Show
 
@@ -470,7 +432,7 @@ instance Arbitrary WhitespaceChar where
   arbitrary = oneof . map (return . WhitespaceChar) $ " \n\t"
 
 testNullIsEmpty :: (Text -> Result a) -> Assertion
-testNullIsEmpty f = assert $ isEmpty . f $ ""
+testNullIsEmpty f = assert . isEmpty . f $ ""
 
 isTrimmed :: Text -> Bool
 isTrimmed xs = not (startsWithWhitespace xs) && not (endsWithWhitespace xs)

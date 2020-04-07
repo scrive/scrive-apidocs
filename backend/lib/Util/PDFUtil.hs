@@ -48,10 +48,10 @@ renderPage
   -> Int
   -> m (Maybe BS.ByteString)
 renderPage fileContent pageNo widthInPixels = do
-  restrictTime $ withSystemTempDirectory' "mudraw" $ \tmpPath -> do
+  restrictTime . withSystemTempDirectory' "mudraw" $ \tmpPath -> do
     let sourcePath = tmpPath <> "/source.pdf"
     logInfo "Temp file write" $ object
-      ["bytes_written" .= (BS.length fileContent), "originator" .= ("renderPage" :: Text)]
+      ["bytes_written" .= BS.length fileContent, "originator" .= ("renderPage" :: Text)]
     liftBase $ BS.writeFile sourcePath fileContent
     let pagePath      = tmpPath <> "/output-" <> show pageNo <> ".png"
         pageQuantPath = tmpPath <> "/output-quant-" <> show pageNo <> ".png"
@@ -67,7 +67,7 @@ renderPage fileContent pageNo widthInPixels = do
         , [show pageNo]
         ]
       )
-      (BSL.empty)
+      BSL.empty
     mbs <- case mudrawcode of
       ExitSuccess -> do
         let successHandler
@@ -80,11 +80,12 @@ renderPage fileContent pageNo widthInPixels = do
                 case pngqcode of
                   ExitSuccess -> liftBase $ Just <$> BS.readFile pageQuantPath
                   _           -> do
-                    logAttentionWithPage "Quanting of page failed"
-                      $ [ "exit_code" .= show pngqcode
-                        , "stdout" `equalsExternalBSL` pngqout
-                        , "stderr" `equalsExternalBSL` pngqerr
-                        ]
+                    logAttentionWithPage
+                      "Quanting of page failed"
+                      [ "exit_code" .= show pngqcode
+                      , "stdout" `equalsExternalBSL` pngqout
+                      , "stderr" `equalsExternalBSL` pngqerr
+                      ]
                     -- fallback to unquanted (?) file
                     liftBase $ Just <$> BS.readFile pagePath
             errorHandler (_ :: IOError) = do
@@ -97,16 +98,17 @@ renderPage fileContent pageNo widthInPixels = do
               return Nothing
         successHandler `E.catch` errorHandler
       _ -> do
-        logAttentionWithPage "Rendering of page failed"
-          $ [ "exit_code" .= show mudrawcode
-            , "stdout" `equalsExternalBSL` mudrawout
-            , "stderr" `equalsExternalBSL` mudrawerr
-            ]
+        logAttentionWithPage
+          "Rendering of page failed"
+          [ "exit_code" .= show mudrawcode
+          , "stdout" `equalsExternalBSL` mudrawout
+          , "stderr" `equalsExternalBSL` mudrawerr
+          ]
         return Nothing
     whenJust
       mbs
-      (\bs -> logInfo "Temp file read" $ object
-        ["bytes_read" .= (BS.length bs), "originator" .= ("renderPage" :: Text)]
+      (\bs -> logInfo "Temp file read"
+        $ object ["bytes_read" .= BS.length bs, "originator" .= ("renderPage" :: Text)]
       )
     return mbs
 
@@ -161,24 +163,23 @@ preCheckPDFsHelper contents tmppath = runExceptT $ do
         nc <- callPdfToolsCleaning $ BSL.fromStrict content
         case nc of
           Just c  -> liftBase $ BS.writeFile (jsremovedpath num) c
-          Nothing -> throwError $ FileRemoveJavaScriptError
+          Nothing -> throwError FileRemoveJavaScriptError
 
     checkFlatten = do
       forM_ (take (length contents) [1 ..]) $ \num -> do
         (code, stdout, stderr) <- liftBase $ readProcessWithExitCode
           "java"
-          ([ "-jar"
-           , "scrivepdftools/scrivepdftoolsflattener.jar"
-           , jsremovedpath num
-           , flattenedpath num
-           ]
-          )
-          (BSL.empty)
+          [ "-jar"
+          , "scrivepdftools/scrivepdftoolsflattener.jar"
+          , jsremovedpath num
+          , flattenedpath num
+          ]
+          BSL.empty
         case code of
           ExitSuccess   -> return ()
           ExitFailure _ -> do
-            throwError $ FileFlatteningError $ BSL.concat
-              [BSL.pack ("Exit failure \n"), stdout, BSL.pack "\n", stderr]
+            throwError . FileFlatteningError $ BSL.concat
+              [BSL.pack "Exit failure \n", stdout, BSL.pack "\n", stderr]
     checkNormalize (num, content) = do
       -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
       -- just check if the output file is there
@@ -186,21 +187,21 @@ preCheckPDFsHelper contents tmppath = runExceptT $ do
         "mutool"
         ["clean", "-gg", flattenedpath num, normalizedpath num]
         BSL.empty
-      flag <- liftBase $ doesFileExist $ normalizedpath num
+      flag <- liftBase . doesFileExist $ normalizedpath num
       unless flag $ do
         liftBase $ do
           systmp     <- getTemporaryDirectory
-          (_path, h) <- openTempFile systmp ("pre-normalize-failed-.pdf")
+          (_path, h) <- openTempFile systmp "pre-normalize-failed-.pdf"
           BS.hPutStr h content
           hClose h
 
-        throwError $ FileNormalizeError $ BSL.concat
-          [BSL.pack ("Exit failure \n"), stdout, BSL.pack "\n", stderr]
+        throwError . FileNormalizeError $ BSL.concat
+          [BSL.pack "Exit failure \n", stdout, BSL.pack "\n", stderr]
 
     readOutput num = do
       bs <- liftBase . BS.readFile $ normalizedpath num
       logInfo "Temp file read" $ object
-        ["bytes_read" .= (BS.length bs), "originator" .= ("preCheckPDFsHelper" :: Text)]
+        ["bytes_read" .= BS.length bs, "originator" .= ("preCheckPDFsHelper" :: Text)]
       return bs
 
 -- | The 'preCheckPDF' function should be invoked just after receiving
@@ -241,7 +242,7 @@ preCheckPDF content = do
   res <- preCheckPDFs [content]
   case res of
     Left  e   -> return $ Left e
-    Right [x] -> return $ Right $ x
+    Right [x] -> return $ Right x
     _         -> unexpectedError "preCheckPDFs returned wrong amount of contents"
 
 
@@ -257,16 +258,16 @@ getNumberOfPDFPages content = do
   removeFile path
   return $ case exitCode of
     ExitSuccess -> case find ("Pages: " `BSL.isPrefixOf`) $ BSL.lines stdout' of
-      Just line -> case readDec $ BSL.unpack $ BSL.drop (BSL.length "Pages: ") line of
+      Just line -> case readDec . BSL.unpack $ BSL.drop (BSL.length "Pages: ") line of
         [(x, "")] -> Right x
-        _         -> Left $ "Unparsable mutool info output about number of pages"
-      Nothing -> Left $ "Couldn't find number of pdf pages in mutool output"
+        _         -> Left "Unparsable mutool info output about number of pages"
+      Nothing -> Left "Couldn't find number of pdf pages in mutool output"
     ExitFailure code ->
       Left
         $  "mutool info failed with return code "
         <> showt code
         <> ", and stderr: "
-        <> (T.pack $ BSL.unpack stderr')
+        <> T.pack (BSL.unpack stderr')
 
 pickPages
   :: (MonadLog m, MonadBaseControl IO m)
@@ -278,14 +279,14 @@ pickPages pages content = do
     let inputpath  = tmppath <> "/input.pdf"
     let outputpath = tmppath <> "/output.pdf"
     logInfo "Temp file write" $ object
-      ["bytes_written" .= (BS.length content), "originator" .= ("pickPages" :: Text)]
+      ["bytes_written" .= BS.length content, "originator" .= ("pickPages" :: Text)]
     liftBase $ BS.writeFile inputpath content
     (exitCode, mutoolout, mutoolerr) <- liftBase $ readProcessWithExitCode
       "mutool"
-      (["clean", "-g", inputpath, outputpath] <> (map show pages))
-      (BSL.empty)
+      (["clean", "-g", inputpath, outputpath] <> map show pages)
+      BSL.empty
     case exitCode of
-      ExitSuccess    -> Just <$> (liftBase $ BS.readFile outputpath)
+      ExitSuccess    -> Just <$> liftBase (BS.readFile outputpath)
       ExitFailure ec -> do
         logAttention "pickPages failed" $ object
           [ "exit_code" .= show ec
@@ -310,7 +311,7 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
         maskedHighlightOutputPath = tmpPath <> "/masked_highlight.png"
     -- Write the highlight image and find its dimensions using 'identify'
     logInfo "Temp file write" $ object
-      [ "bytes_written" .= (BS.length highlightFileContent)
+      [ "bytes_written" .= BS.length highlightFileContent
       , "originator" .= ("clipHighlightImageFromPage" :: Text)
       ]
     liftBase $ BS.writeFile highlightImagePath highlightFileContent
@@ -343,7 +344,7 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
               Just renderedPageContents -> do
                       -- Write the rendered page that we have to file
                 logInfo "Temp file write" $ object
-                  [ "bytes_written" .= (BS.length renderedPageContents)
+                  [ "bytes_written" .= BS.length renderedPageContents
                   , "originator" .= ("clipHighlightImageFromPage" :: Text)
                   ]
                 liftBase $ BS.writeFile pdfRenderedPagePath renderedPageContents
@@ -400,11 +401,11 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
                       ExitSuccess -> do
                         maskedImageContents <- liftBase
                           $ BS.readFile maskedHighlightOutputPath
-                        case BS.length maskedImageContents > 0 of
-                          False -> do
+                        if BS.length maskedImageContents > 0
+                          then do
+                            logInfo_ "clipHighlightImageFromPage: done!"
+                            return $ Just maskedImageContents
+                          else do
                             logAttention_
                               "clipHighlightImageFromPage: final image had zero length"
                             return Nothing
-                          True -> do
-                            logInfo_ "clipHighlightImageFromPage: done!"
-                            return $ Just maskedImageContents

@@ -78,42 +78,42 @@ addOracles :: Rules ()
 addOracles = do
   -- * Oracles for using environment variables.
   -- See Shake documentation or newtype declarations for some background.
-  void $ addOracle $ \(GhcVersion _) ->
-    withVerbosity Silent $ (fromStdout <$> cmd "ghc --numeric-version" :: Action String)
-  void $ addOracle $ \(SourceRoot _) -> fromMaybe "." <$> getEnv "KONTRAKCJA_ROOT"
-  void $ addOracle $ \(TeamCity _) ->
+  void . addOracle $ \(GhcVersion _) ->
+    withVerbosity Silent (fromStdout <$> cmd "ghc --numeric-version" :: Action String)
+  void . addOracle $ \(SourceRoot _) -> fromMaybe "." <$> getEnv "KONTRAKCJA_ROOT"
+  void . addOracle $ \(TeamCity _) ->
     not . null . fromMaybe "" <$> getEnv "TEAMCITY_VERSION"
-  void $ addOracle $ \(TeamCityBuildDBConnString _) ->
+  void . addOracle $ \(TeamCityBuildDBConnString _) ->
     fromMaybe "" <$> getEnv "DB_BUILD_ADMIN_CONN_STRING"
-  void $ addOracle $ \(TeamCityBuildDBName _) -> fromMaybe "" <$> getEnv "BUILD_DB_NAME"
-  void $ addOracle $ \(TeamCityBuildLambdaConf _) ->
+  void . addOracle $ \(TeamCityBuildDBName _) -> fromMaybe "" <$> getEnv "BUILD_DB_NAME"
+  void . addOracle $ \(TeamCityBuildLambdaConf _) ->
     fromMaybe "" <$> getEnv "TEST_LAMBDA_CONF"
-  void $ addOracle $ \(TeamCityBuildS3Conf _) -> fromMaybe "" <$> getEnv "TEST_S3_CONF"
-  void $ addOracle $ \(TeamCityBuildCronMonthlyInvoice _) ->
+  void . addOracle $ \(TeamCityBuildS3Conf _) -> fromMaybe "" <$> getEnv "TEST_S3_CONF"
+  void . addOracle $ \(TeamCityBuildCronMonthlyInvoice _) ->
     fromMaybe "" <$> getEnv "TEST_CRON_MONTHLY_INVOICE"
 
   -- This is needed by our build.
   -- FIXME should be part of SHAKE_BUILD_ env vars?
-  void $ addOracle $ \(NginxConfRulesPath _) ->
+  void . addOracle $ \(NginxConfRulesPath _) ->
     fromMaybe "" <$> getEnv "NGINX_CONF_RULES_PATH"
-  void $ addOracle $ \(NginxConfDefaultRule _) ->
+  void . addOracle $ \(NginxConfDefaultRule _) ->
     fromMaybe "" <$> getEnv "NGINX_CONF_DEFAULT_RULE"
-  void $ addOracle $ \(NginxConfRulesPathAlternative _) ->
+  void . addOracle $ \(NginxConfRulesPathAlternative _) ->
     fromMaybe "" <$> getEnv "NGINX_CONF_RULES_PATH_ALTERNATIVE"
   -- These are our build options
-  void $ addOracle $ \(BuildTarget _) -> fromMaybe "" <$> getEnv "SHAKE_BUILD_TARGET"
-  void $ addOracle $ \(BuildSandbox _) -> fromMaybe "" <$> getEnv "SHAKE_BUILD_SANDBOX"
-  void $ addOracle $ \(BuildTestConfPath _) ->
+  void . addOracle $ \(BuildTarget _) -> fromMaybe "" <$> getEnv "SHAKE_BUILD_TARGET"
+  void . addOracle $ \(BuildSandbox _) -> fromMaybe "" <$> getEnv "SHAKE_BUILD_SANDBOX"
+  void . addOracle $ \(BuildTestConfPath _) ->
     fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_CONF_PATH"
-  void $ addOracle $ \(BuildDev _) ->
+  void . addOracle $ \(BuildDev _) ->
     not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_DEV"
-  void $ addOracle $ \(BuildTestCoverage _) ->
+  void . addOracle $ \(BuildTestCoverage _) ->
     not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_COVERAGE"
-  void $ addOracle $ \(BuildCabalConfigureOptions _) ->
+  void . addOracle $ \(BuildCabalConfigureOptions _) ->
     fromMaybe "" <$> getEnv "SHAKE_BUILD_CABAL_CONFIGURE_OPTS"
-  void $ addOracle $ \(CreateTestDBWithConfData _) -> do
+  void . addOracle $ \(CreateTestDBWithConfData _) -> do
     tc  <- askOracle (TeamCity ())
-    now <- liftIO $ getCurrentTime
+    now <- liftIO getCurrentTime
     let defDBName = formatTime defaultTimeLocale "kontrakcja_test_%Y_%m_%d_%H_%M_%S" now
         defConnString = "host='localhost' user='kontra' password='kontrapwd'"
     connString <- if tc
@@ -130,7 +130,7 @@ addOracles = do
       then askOracle (TeamCityBuildCronMonthlyInvoice ())
       else
         error "Cron monthly-invoice configuration for tests must be defined" :: m String
-    return $ (dbName, connString, lConf, s3Conf, cronInvoiceConf)
+    return (dbName, connString, lConf, s3Conf, cronInvoiceConf)
 
   return ()
 
@@ -226,4 +226,4 @@ explainVar var desc = putNormal $ indent0 ++ var ++ indent1 ++ ": " ++ desc
     indent1 = if l > 27 then "\n" ++ replicate 30 ' ' else replicate i ' '
 
 showVarVal :: String -> Action ()
-showVarVal val = putNormal $ (replicate 30 ' ') ++ "= " ++ val
+showVarVal val = putNormal $ replicate 30 ' ' ++ "= " ++ val

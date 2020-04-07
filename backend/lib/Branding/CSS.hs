@@ -8,7 +8,7 @@ module Branding.CSS (
   ) where
 
 import Control.Monad.Trans
-import Log as Log
+import Log
 import System.Exit
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Data.ByteString.Lazy as BSL
@@ -30,10 +30,10 @@ signviewBrandingCSS theme = do
       [ "--include-path=frontend/app/less"
       , "-" {-use stdin-}
       ]
-      (BSL.fromStrict $ TE.encodeUtf8 $ signviewBrandingLess theme)
+      (BSL.fromStrict . TE.encodeUtf8 $ signviewBrandingLess theme)
   case code of
     ExitSuccess -> do
-      return $ stdout
+      return stdout
     ExitFailure _ -> do
       logAttention "Creating sign view branding failed"
         $ object ["stderr" `equalsExternalBSL` stderr]
@@ -62,10 +62,10 @@ serviceBrandingCSS theme = do
       [ "--include-path=frontend/app/less"
       , "-" {-use stdin-}
       ]
-      (BSL.fromStrict $ TE.encodeUtf8 $ serviceBrandingLess theme)
+      (BSL.fromStrict . TE.encodeUtf8 $ serviceBrandingLess theme)
   case code of
     ExitSuccess -> do
-      return $ stdout
+      return stdout
     ExitFailure _ -> do
       logAttention "Creating service branding failed"
         $ object ["stderr" `equalsExternalBSL` stderr]
@@ -96,10 +96,10 @@ loginBrandingCSS theme = do
       [ "--include-path=frontend/app/less"
       , "-" {-use stdin-}
       ]
-      (BSL.fromStrict $ TE.encodeUtf8 $ loginBrandingLess theme)
+      (BSL.fromStrict . TE.encodeUtf8 $ loginBrandingLess theme)
   case code of
     ExitSuccess -> do
-      return $ stdout
+      return stdout
     ExitFailure _ -> do
       logAttention "Creating login branding failed"
         $ object ["stderr" `equalsExternalBSL` stderr]
@@ -132,22 +132,21 @@ scriveBrandingCSS = do
       (BSL.fromStrict $ TE.encodeUtf8 scriveBrandingLess)
   case code of
     ExitSuccess -> do
-      return $ stdout
+      return stdout
     ExitFailure _ -> do
       logAttention "Creating Scrive branding failed"
         $ object ["stderr" `equalsExternalBSL` stderr]
       return BSL.empty
 
 scriveBrandingLess :: Text
-scriveBrandingLess =
-  T.unlines
-    $ [ "@import 'branding/variables';"
-      , -- This is imported so we can use color variables from there
-        "@import 'branding/elements';"
-      , -- This is imported so we can use some transform functions
-        "@import 'runtime/scrivebranding/scrivebrandingdefaultvariables';"
-      , "@import 'runtime/scrivebranding/scrivebranding';"
-      ]
+scriveBrandingLess = T.unlines
+  [ "@import 'branding/variables';"
+  , -- This is imported so we can use color variables from there
+    "@import 'branding/elements';"
+  , -- This is imported so we can use some transform functions
+    "@import 'runtime/scrivebranding/scrivebrandingdefaultvariables';"
+  , "@import 'runtime/scrivebranding/scrivebranding';"
+  ]
 
 lessVariablesFromTheme :: Theme -> [Text]
 lessVariablesFromTheme theme =
@@ -172,10 +171,10 @@ domainBrandingCSS bd = do
       [ "--include-path=frontend/app/less"
       , "-" {-use stdin-}
       ]
-      (BSL.fromStrict $ TE.encodeUtf8 $ domainBrandingLess bd)
+      (BSL.fromStrict . TE.encodeUtf8 $ domainBrandingLess bd)
   case code of
     ExitSuccess -> do
-      return $ stdout
+      return stdout
     ExitFailure _ -> do
       logAttention "Creating domain branding failed"
         $ object ["stderr" `equalsExternalBSL` stderr]
@@ -215,7 +214,7 @@ lessVariablesFromDomain bd =
 
 -- Some sanity checks on data. Note that this are provided by users
 bcolor :: Text -> Text -> Text
-bcolor n c = if (isValidColor $ T.unpack c) then "@" <> n <> ": " <> c <> ";" else ""
+bcolor n c = if isValidColor $ T.unpack c then "@" <> n <> ": " <> c <> ";" else ""
 
 bfont :: Text -> Text -> Text
-bfont n c = if (isValidFont $ T.unpack c) then "@" <> n <> ": " <> c <> ";" else ""
+bfont n c = if isValidFont $ T.unpack c then "@" <> n <> ": " <> c <> ";" else ""

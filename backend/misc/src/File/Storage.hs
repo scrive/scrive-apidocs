@@ -61,7 +61,7 @@ saveNewFile fName fContent = do
       unexpectedError $ T.pack err
     Right aes -> localData [identifier fid] $ do
       let encryptedContent = aesEncrypt aes fContent
-      eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
+      eRes <- try . FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
       case eRes of
         Right () -> do
           file       <- dbUpdate $ FileMovedToAWS fid awsUrl aes
@@ -91,9 +91,8 @@ getFileContents file@File { fileid, filestorage = FileStorageAWS url aes } =
         checksum = BA.convert $ H.hashWith H.SHA1 contents
     unless (checksum == filechecksum file) $ do
       logAttention "SHA1 checksums of file don't match" $ object [logPair_ file]
-      throwM
-        $ FS.FileStorageException
-        $ "SHA1 checksum of file doesn't match the one in the database"
+      throwM $ FS.FileStorageException
+        "SHA1 checksum of file doesn't match the one in the database"
     return contents
 
 getFileIDContents

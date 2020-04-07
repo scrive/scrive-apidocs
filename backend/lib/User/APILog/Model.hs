@@ -57,15 +57,15 @@ data CallLogParam = CallLogParam
 unjsonCallLogData :: UnjsonDef CallLogData
 unjsonCallLogData =
   objectOf
-    $   pure CallLogData
-    <*> fieldBy "request"  cldRequest  "Call Log Request Data"  unjsonCallLogRequest
+    $   CallLogData
+    <$> fieldBy "request"  cldRequest  "Call Log Request Data"  unjsonCallLogRequest
     <*> fieldBy "response" cldResponse "Call Log Response Data" unjsonCallLogResponse
 
 unjsonCallLogRequest :: UnjsonDef CallLogRequest
 unjsonCallLogRequest =
   objectOf
-    $   pure CallLogRequest
-    <*> field "uri"    clrqURI    "Call Log Request URI"
+    $   CallLogRequest
+    <$> field "uri"    clrqURI    "Call Log Request URI"
     <*> field "method" clrqMethod "Call Log Request Method"
     <*> fieldBy "params_get"
                 clrqParamsGet
@@ -76,16 +76,17 @@ unjsonCallLogRequest =
                 "Call Log Request POST Params"
                 (arrayOf unjsonCallLogParam)
 
+{-# ANN unjsonCallLogResponse ("HLint: ignore Redundant bracket" :: String) #-}
 unjsonCallLogResponse :: UnjsonDef CallLogResponse
 unjsonCallLogResponse =
   objectOf
-    $   pure CallLogResponse
-    <*> field "code" clrsCode "Call Log Response Code"
-    <*> field "body" clrsBody "Call Log Response Body"
+    $   CallLogResponse
+    <$> (field "code" clrsCode "Call Log Response Code")
+    <*> (field "body" clrsBody "Call Log Response Body")
 
 unjsonCallLogParam :: UnjsonDef CallLogParam
 unjsonCallLogParam =
-  objectOf $ pure CallLogParam <*> field "name" clpName "Call Log Param Name" <*> field
+  objectOf $ CallLogParam <$> field "name" clpName "Call Log Param Name" <*> field
     "value"
     clpValue
     "Call Log Param Value"
@@ -107,7 +108,7 @@ instance FromReqURI CallLogID where
 
 instance Unjson CallLogID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse CallLogID") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse CallLogID") return . maybeRead . T.pack)
     show
     unjsonDef
 
@@ -135,11 +136,11 @@ instance FromSQL [CallLogParam] where
   fromSQL mbase = do
     JSON s <- fromSQL mbase
     case Aeson.eitherDecode s of
-      Left  _  -> hpqTypesError $ "fromSQL ([CallLogParam]): can't parse json"
-      Right ae -> case (parse (arrayOf unjsonCallLogParam) ae) of
-        (Result res []) -> return $ res
+      Left  _  -> hpqTypesError "fromSQL ([CallLogParam]): can't parse json"
+      Right ae -> case parse (arrayOf unjsonCallLogParam) ae of
+        (Result res []) -> return res
         (Result _ _) ->
-          hpqTypesError $ "fromSQL ([CallLogParam]): can't parse CallLogParam"
+          hpqTypesError "fromSQL ([CallLogParam]): can't parse CallLogParam"
 
 instance ToSQL [CallLogParam] where
   type PQDest [CallLogParam] = PQDest (JSON BS.ByteString)
@@ -160,8 +161,8 @@ data CallLogItem = CallLogItem
 unjsonCallLogItem :: UnjsonDef CallLogItem
 unjsonCallLogItem =
   objectOf
-    $   pure CallLogItem
-    <*> field "id"      cliID     "ID of this log item"
+    $   CallLogItem
+    <$> field "id"      cliID     "ID of this log item"
     <*> field "user_id" cliUserID "Time of this log item"
     <*> field "time"    cliTime   "Time of this log item"
     <*> fieldBy "data" cliData "All data, which were logged" unjsonCallLogData
@@ -183,18 +184,18 @@ selectCallLogItemSelectorsList =
   , "response_body"
   ]
 
-data GetCallLogItem = GetCallLogItem CallLogID
+newtype GetCallLogItem = GetCallLogItem CallLogID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCallLogItem CallLogItem where
-  query (GetCallLogItem clid) = do
-    runQuery_ $ sqlSelect "api_call_logs" $ do
+  dbQuery (GetCallLogItem clid) = do
+    runQuery_ . sqlSelect "api_call_logs" $ do
       mapM_ sqlResult selectCallLogItemSelectorsList
       sqlWhereEq "id" clid
     fetchOne fetchCallLogItem
 
-data GetCallLogList = GetCallLogList UserID
+newtype GetCallLogList = GetCallLogList UserID
 instance MonadDB m => DBQuery m GetCallLogList [CallLogItem] where
-  query (GetCallLogList userid) = do
-    runQuery_ $ sqlSelect "api_call_logs" $ do
+  dbQuery (GetCallLogList userid) = do
+    runQuery_ . sqlSelect "api_call_logs" $ do
       mapM_ sqlResult selectCallLogItemSelectorsList
       sqlWhereEq "user_id" userid
       sqlOrderBy "time DESC"
@@ -204,9 +205,9 @@ instance MonadDB m => DBQuery m GetCallLogList [CallLogItem] where
 
 data CreateCallLogItem = CreateCallLogItem UserID CallLogData
 instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CreateCallLogItem CallLogItem where
-  update (CreateCallLogItem userid cld) = do
+  dbUpdate (CreateCallLogItem userid cld) = do
     now <- currentTime
-    runQuery_ $ sqlInsert "api_call_logs" $ do
+    runQuery_ . sqlInsert "api_call_logs" $ do
       sqlSet "user_id" userid
       sqlSet "time"    now
       sqlSet "request_uri" . clrqURI . cldRequest $ cld
@@ -229,7 +230,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CreateCallLogItem 
         sqlResult "time"
         sqlLimit 100
         sqlOrderBy "time DESC"
-      sqlWhere $ "time < (SELECT MIN(time) from times_to_keep)"
+      sqlWhere "time < (SELECT MIN(time) from times_to_keep)"
       sqlWhereEq "user_id" userid
     return cli
 
@@ -261,7 +262,7 @@ fetchCallLogItem (clid, userid, time, rq_uri, rq_method, rq_params_get, rq_param
           CallLogResponse
             { clrsCode = rs_code
             , clrsBody =
-              either (const "<DECODING ERROR>") BS.unpack $ B64.decode $ BS.pack rs_body
+              either (const "<DECODING ERROR>") BS.unpack . B64.decode $ BS.pack rs_body
             }
         }
     }

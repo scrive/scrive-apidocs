@@ -30,9 +30,9 @@ brandedDomainChangeLightLogo = Migration
             sqlResult themeName
             sqlWhereEq "main_domain" True
             fromMaybe (return ()) mextra
-      runQuery_ $ sqlUpdate "themes" $ do
-        sqlSet "logo" $ B64.decodeLenient $ BS.fromString lightTextLogo
-        sqlWhereInSql "id" $ mainTheme "service_theme" $ Just $ sqlUnion
+      runQuery_ . sqlUpdate "themes" $ do
+        sqlSet "logo" . B64.decodeLenient $ BS.fromString lightTextLogo
+        sqlWhereInSql "id" . mainTheme "service_theme" . Just $ sqlUnion
           [mainTheme "login_theme" Nothing, mainTheme "signview_theme" Nothing]
   }
 

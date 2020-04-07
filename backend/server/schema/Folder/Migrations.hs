@@ -24,7 +24,7 @@ createTableFolders = Migration
         , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
         ]
       , tblPrimaryKey  = pkOnColumn "id"
-      , tblIndexes     = [(indexOnColumnWithMethod "parent_path" GIN)]
+      , tblIndexes     = [indexOnColumnWithMethod "parent_path" GIN]
       , tblForeignKeys =
         [
         -- must delete child groups explicitly

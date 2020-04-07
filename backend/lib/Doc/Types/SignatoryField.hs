@@ -60,8 +60,7 @@ instance ToSQL NameOrder where
   type PQDest NameOrder = PQDest Int16
   toSQL (NameOrder 1) = toSQL (1 :: Int16)
   toSQL (NameOrder 2) = toSQL (2 :: Int16)
-  toSQL (NameOrder v) =
-    unexpectedError $ "Name order " <> (showt v) <> " is not supported"
+  toSQL (NameOrder v) = unexpectedError $ "Name order " <> showt v <> " is not supported"
 
 instance PQFormat NameOrder where
   pqFormat = pqFormat @Int16
@@ -87,7 +86,7 @@ instance FromSQL FieldType where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1  -> return $ NameFT
+      1  -> return NameFT
       -- Don't reuse value '2' for FieldType. It was used for LastNameFT
       3  -> return CompanyFT
       4  -> return PersonalNumberFT
@@ -535,7 +534,7 @@ fieldIdentity (SignatorySignatureField      f) = SignatureFI (ssfName f)
 fieldIdentity (SignatoryRadioGroupField     f) = RadioGroupFI (srgfName f)
 
 getFieldByIdentity :: FieldIdentity -> [SignatoryField] -> Maybe SignatoryField
-getFieldByIdentity fi sfs = find (\sf -> fieldIdentity sf == fi) sfs
+getFieldByIdentity fi = find (\sf -> fieldIdentity sf == fi)
 
 fieldTextValue :: SignatoryField -> Maybe Text
 fieldTextValue (SignatoryNameField           f) = Just $ snfValue f
@@ -550,7 +549,7 @@ fieldTextValue (SignatorySignatureField      _) = Nothing
 fieldTextValue (SignatoryRadioGroupField     f) = srgfSelectedValue f
 
 getTextValueOfField :: FieldIdentity -> [SignatoryField] -> Text
-getTextValueOfField fi sfs = case (getFieldByIdentity fi sfs) of
+getTextValueOfField fi sfs = case getFieldByIdentity fi sfs of
   Just f  -> fromMaybe "" (fieldTextValue f)
   Nothing -> ""
 

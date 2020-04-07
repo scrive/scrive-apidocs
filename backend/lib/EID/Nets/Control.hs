@@ -68,15 +68,15 @@ import qualified EID.Signature.Model as ESign
 
 netsRoutes :: Route (Kontra Response)
 netsRoutes = choice
-  [ dir "resolve" . hGet . toK0 $ handleResolve
+  [ (dir "resolve" . hGet . toK0) handleResolve
     -- Bellow are error pages - names are based on nets parameters, not what they are
-  , dir "status" . hGet . toK0 $ handleNetsError
-  , dir "start" . hGet . toK0 $ handleNetsError
+  , (dir "status" . hGet . toK0) handleNetsError
+  , (dir "start" . hGet . toK0) handleNetsError
     -- Nets esigning pages
-  , dir "sign" . hPost . toK2 $ handleSignRequest
-  , dir "sign_error" . hGet . toK0 $ handleSignError
-  , dir "sign_exit" . hGet . toK0 $ handleSignExit
-  , dir "sign_abort" . hGet . toK0 $ handleSignAbort
+  , (dir "sign" . hPost . toK2) handleSignRequest
+  , (dir "sign_error" . hGet . toK0) handleSignError
+  , (dir "sign_exit" . hGet . toK0) handleSignExit
+  , (dir "sign_abort" . hGet . toK0) handleSignAbort
   ]
 
 ----------------------------------------
@@ -87,11 +87,11 @@ data NetsResolveResult =
 
 formatDOB :: Text -> Text
 formatDOB s = case T.splitOn "." s of
-  [day, month, year] -> day <> month <> (T.drop 2 year)
+  [day, month, year] -> day <> month <> T.drop 2 year
   _                  -> unexpectedError "Nets returned date of birth in invalid format"
 
 dobFromDKPersonalNumber :: Text -> Text
-dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 $ personalnumber) of
+dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 personalnumber) of
   [day, month, year] -> day <> "." <> month <> "." <> year
   _ ->
     unexpectedError
@@ -100,11 +100,11 @@ dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 $ personaln
 
 -- In FI we can extract century from the "separator" character of SSN
 dobFromFIPersonalNumber :: Text -> Text
-dobFromFIPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 $ personalnumber) of
+dobFromFIPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 personalnumber) of
   [day, month, year] -> day <> "." <> month <> "." <> century <> year
   _                  -> formatError
   where
-    century = case (T.head . T.drop 6 $ personalnumber) of
+    century = case T.head . T.drop 6 $ personalnumber of
       '-' -> "19"
       '+' -> "18"
       'A' -> "20"
@@ -118,11 +118,10 @@ dobFromFIPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 $ personaln
 cnFromDN :: Text -> Text
 cnFromDN dn =
   fromMaybe parseError
-    $ lookup "CN"
-    $ fmap parsePair
-    $ concatMap (T.splitOn " + ")
-    $ T.splitOn ", "
-    $ dn
+    . lookup "CN"
+    . fmap parsePair
+    . concatMap (T.splitOn " + ")
+    $ T.splitOn ", " dn
   where
     parsePair s = case T.splitOn "=" s of
       (name : values) -> (name, T.intercalate "=" values)
@@ -131,7 +130,7 @@ cnFromDN dn =
 
 decodeCertificate :: Text -> B.ByteString
 decodeCertificate =
-  either (unexpectedError $ "invalid base64 of nets certificate") identity
+  either (unexpectedError "invalid base64 of nets certificate") identity
     . B64.decode
     . T.encodeUtf8
 
@@ -164,14 +163,13 @@ handleResolve = do
     Just netsconf -> do
       mnt  <- getField "TARGET"
       mart <- getField "SAMLart"
-      case (join $ fmap decodeNetsTarget mnt, mart) of
+      case (decodeNetsTarget =<< mnt, mart) of
         (Just nt, _) | domainUrl /= netsTransactionDomain nt -> do
           -- Nets can redirect us from branded domain to main domain. We need to jump back to branded domain for cookies
-          link <- currentLink
-          return $ internalResponse $ LinkExternal $ T.replace
-            domainUrl
-            (netsTransactionDomain nt)
-            link
+          internalResponse
+            .   LinkExternal
+            .   T.replace domainUrl (netsTransactionDomain nt)
+            <$> currentLink
         (Just nt, Just art) -> do
           let mUserId = view #id <$> contextUser ctx
           logInfo
@@ -197,12 +195,12 @@ handleResolve = do
                           ()
                           (GetAssertionRequest { assertionArtifact = art })
                           xpGetAssertionResponse
-          if ("Success" `T.isInfixOf` assertionStatusCode res)
+          if "Success" `T.isInfixOf` assertionStatusCode res
             then do
               let
                 provider =
                   decodeProvider
-                    $ attributeFromAssertion "IDPROVIDER"
+                    . attributeFromAssertion "IDPROVIDER"
                     $ assertionAttributes res
               logInfo
                   "Information about requested nets authorization after assertion request"
@@ -222,16 +220,14 @@ handleResolve = do
               resolve res doc nt sl ctx >>= \case
                 Success -> do
                   logInfo_
-                    $ "Successful assertion check with Nets. Signatory redirected back and should see view for signing"
-                  return $ internalResponse $ LinkExternal $ netsReturnURL nt
+                    "Successful assertion check with Nets. Signatory redirected back and should see view for signing"
+                  return . internalResponse $ LinkExternal (netsReturnURL nt)
                 ErrorDobDoesNotMatch -> do
                   -- we have to switch lang here to get proper template for flash message
                   switchLang $ getLang doc
                   flashmessage <- flashMessageUserHasIdentifiedWithDifferentSSN
-                  return
-                    $ internalResponseWithFlash flashmessage
-                    $ LinkExternal
-                    $ netsReturnURL nt
+                  return . internalResponseWithFlash flashmessage $ LinkExternal
+                    (netsReturnURL nt)
             else do
               logInfo
                   "Checking assertion with Nets failed. Signatory redirected back and should see identify view."
@@ -241,7 +237,7 @@ handleResolve = do
                     , identifier (netsSignatoryID nt)
                     , identifier mUserId
                     ]
-              return $ internalResponse $ LinkExternal $ netsReturnURL nt
+              return . internalResponse $ LinkExternal (netsReturnURL nt)
         _ -> do
           logAttention "SAML or Target missing for Nets resolve request"
             $ object ["target" .= show mnt, "saml_art" .= show mart]
@@ -262,18 +258,18 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
         "no_bidmob" -> NetsNOBankIDMobile
         _           -> unexpectedError $ "internal provider not supported" <+> s
   let internal_provider =
-        decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes
+        decodeInternalProvider . attributeFromAssertion "IDPROVIDER" $ assertionAttributes
           res
   let signatoryName = attributeFromAssertion "CN" $ assertionAttributes res
   let dob = attributeFromAssertion "DOB" $ assertionAttributes res
   let dobSSN        = T.take 6 $ getPersonalNumber sl
   let dobNETS       = formatDOB dob
   let certificate =
-        decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
+        decodeCertificate . attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
   let mphone = lookup "NO_CEL8" $ assertionAttributes res
   let mpid   = lookup "NO_BID_PID" $ assertionAttributes res
 
-  if (dobNETS /= dobSSN)
+  if dobNETS /= dobSSN
     then do
       -- FIXME
       logAttention
@@ -287,7 +283,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
     else do
       -- Put NO BankID transaction in DB
       dbUpdate
-        $ EID.MergeNetsNOBankIDAuthentication (mkAuthKind doc)
+        . EID.MergeNetsNOBankIDAuthentication (mkAuthKind doc)
                                               sessionID
                                               (netsSignatoryID nt)
         $ NetsNOBankIDAuthentication { netsNOBankIDInternalProvider = internal_provider
@@ -310,7 +306,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
         void
           $   dbUpdate
           .   InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence
-                                                             (eventFields)
+                                                             eventFields
                                                              (Just sl)
                                                              Nothing
           =<< signatoryActor ctx sl
@@ -321,7 +317,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
           let formattedPhoneFromNets    = "+47" <> phone
           let signatoryHasFilledInPhone = getMobile sl == ""
           let formattedPhoneFromSignatory =
-                T.filter (\c -> not (c `elem` (" -" :: String))) $ getMobile sl
+                T.filter (\c -> c `notElem` (" -" :: String)) $ getMobile sl
           when
               (  not signatoryHasFilledInPhone
               && formattedPhoneFromSignatory
@@ -357,28 +353,28 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
         "dk_nemid-opensign" -> NetsDKNemIDKeyFile
         _                   -> unexpectedError $ "internal provider not supported" <+> s
       internal_provider =
-        decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes
+        decodeInternalProvider . attributeFromAssertion "IDPROVIDER" $ assertionAttributes
           res
-      signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
+      signatoryName = cnFromDN . attributeFromAssertion "DN" $ assertionAttributes res
       ssn_sl        = getPersonalNumber sl
       ssn_nets      = attributeFromAssertion "DK_SSN" $ assertionAttributes res
       dob           = dobFromDKPersonalNumber $ getPersonalNumber sl
       mpid          = lookup "DK_DAN_PID" $ assertionAttributes res
 
   let normalizeSSN = T.filter (/= '-')
-  if (normalizeSSN ssn_sl /= normalizeSSN ssn_nets)
+  if normalizeSSN ssn_sl /= normalizeSSN ssn_nets
     then do
       logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object
         ["ssn_sl" .= ssn_sl, "ssn_nets" .= ssn_nets, "provider" .= ("dk_nemid" :: Text)]
       return ErrorDobDoesNotMatch
     else do
       let certificate =
-            decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes
+            decodeCertificate . attributeFromAssertion "CERTIFICATE" $ assertionAttributes
               res
 
       -- Put DK Nem ID transaction in DB
       dbUpdate
-        $ EID.MergeNetsDKNemIDAuthentication (mkAuthKind doc)
+        . EID.MergeNetsDKNemIDAuthentication (mkAuthKind doc)
                                              sessionID
                                              (netsSignatoryID nt)
         $ NetsDKNemIDAuthentication { netsDKNemIDInternalProvider = internal_provider
@@ -400,7 +396,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
         void
           $   dbUpdate
           .   InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence
-                                                             (eventFields)
+                                                             eventFields
                                                              (Just sl)
                                                              Nothing
           =<< signatoryActor ctx sl
@@ -418,7 +414,7 @@ handleResolveNetsFITupas
   -> m NetsResolveResult
 handleResolveNetsFITupas res doc nt sl ctx = do
   sessionID <- view #sessionID <$> getContext
-  let signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
+  let signatoryName = cnFromDN . attributeFromAssertion "DN" $ assertionAttributes res
       dob_nets      = attributeFromAssertion "DOB" $ assertionAttributes res
       mpid          = attributeFromAssertion "FI_TUPAS_PID" $ assertionAttributes res
       allowed_banks =
@@ -434,7 +430,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
         , "omasp"
         ]
       bankStr  = attributeFromAssertion "FI_TUPAS_BANK" $ assertionAttributes res
-      bankName = if (bankStr `elem` allowed_banks)
+      bankName = if bankStr `elem` allowed_banks
         then bankStr
         else unexpectedError $ "invalid field in FI_TUPAS_BANK:" <+> bankStr
   let slHadSsnAlready = not . T.null $ getPersonalNumber sl
@@ -465,7 +461,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
     else do
       -- Put FI TUPAS Nem ID transaction in DB
       dbUpdate
-        $ EID.MergeNetsFITupasAuthentication (mkAuthKind doc)
+        . EID.MergeNetsFITupasAuthentication (mkAuthKind doc)
                                              sessionID
                                              (netsSignatoryID nt)
         $ NetsFITupasAuthentication { netsFITupasSignatoryName = signatoryName
@@ -478,11 +474,9 @@ handleResolveNetsFITupas res doc nt sl ctx = do
         -- When SSN is empty in SL but is provided by signatory and matches Nets DOB,
         -- then set this SSN in DB. This will make future authToView attempts (as well as
         -- authToSign and authToViewArchived) use this SSN.
-        when (not slHadSsnAlready)
-          . whenJust mValidSsnFromFrontend
-          $ \ssn_from_frontend -> do
-              actor <- signatoryActor ctx sl
-              dbUpdate $ UpdateSsnAfterIdentificationToView sl ssn_from_frontend actor
+        unless slHadSsnAlready . whenJust mValidSsnFromFrontend $ \ssn_from_frontend -> do
+          actor <- signatoryActor ctx sl
+          dbUpdate $ UpdateSsnAfterIdentificationToView sl ssn_from_frontend actor
 
         --Add evidence
         let eventFields = do
@@ -494,7 +488,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
         void
           $   dbUpdate
           .   InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence
-                                                             (eventFields)
+                                                             eventFields
                                                              (Just sl)
                                                              Nothing
           =<< signatoryActor ctx sl
@@ -539,7 +533,7 @@ handleSignRequest did slid = do
       _ -> return ()
     auth_to_sign <-
       signatorylinkauthenticationtosignmethod
-      <$> fromJust
+      .   fromJust
       .   getSigLinkFor slid
       <$> theDocument
     (provider, eidmethod, mSSN, sign_url_params) <- case auth_to_sign of
@@ -642,12 +636,12 @@ textToBeSigned :: TemplatesMonad m => Document -> m Text
 textToBeSigned doc@Document {..} = do
   let noBankIDMobileCharLimit = 116
   text1 <- render documenttitle
-  case T.length text1 > noBankIDMobileCharLimit of
-    False -> return text1
-    True  -> render $ shortenText (T.length text1 - noBankIDMobileCharLimit) documenttitle
+  if T.length text1 > noBankIDMobileCharLimit
+    then render $ shortenText (T.length text1 - noBankIDMobileCharLimit) documenttitle
+    else return text1
   where
     render title = renderLocalTemplate doc "tbs" $ do
-      F.value "document_title" $ title
+      F.value "document_title" title
       F.value "document_id" $ show documentid
     -- we will be cutting from the middle and putting a " ... " string in the middle
     shortenText charsToCut text = beginning <> "..." <> ending
@@ -670,12 +664,12 @@ checkNetsSignStatus
   -> m NetsSignStatus
 checkNetsSignStatus nets_conf did slid = do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
-  if (not (isPending doc) || isSignatoryAndHasSigned (fromJust $ getSigLinkFor slid doc))
+  if not (isPending doc) || isSignatoryAndHasSigned (fromJust $ getSigLinkFor slid doc)
     then return NetsSignStatusAlreadySigned
     else do
       logInfo_ "Fetching signature"
       esignature <- dbQuery $ ESign.GetESignature slid
-      if (isJust esignature)
+      if isJust esignature
         then return NetsSignStatusSuccess
         else do
           mnso <- dbQuery (GetNetsSignOrder slid)
@@ -697,7 +691,7 @@ checkNetsSignStatus nets_conf did slid = do
                 RejectedBySigner    -> netsStatusFailure NetsFaultRejectedBySigner
                 Active              -> do
                   logInfo "Nets Sign Order not completed yet" $ logObject_ getOrdStRs
-                  return $ NetsSignStatusInProgress
+                  return NetsSignStatusInProgress
                 Complete -> do
                   getSdoRs <- netsCall nets_conf
                                        (GetSDORequest nso)
@@ -720,7 +714,7 @@ checkNetsSignStatus nets_conf did slid = do
                           , netsnoB64SDO        = gsdorsB64SDOBytes getSdoRs
                           }
                       chargeForItemSingle CINOBankIDSignature $ documentid doc
-                      return $ NetsSignStatusSuccess
+                      return NetsSignStatusSuccess
                     NetsSignDK -> do
                       getSignerSSNAndIPAddress (gsdorsB64SDOBytes getSdoRs)
                         >>= \(m_signer_ssn, m_ipaddress) -> do
@@ -744,7 +738,7 @@ checkNetsSignStatus nets_conf did slid = do
                                   , netsdkSignatoryIP   = fromMaybe "" m_ipaddress
                                   }
                               chargeForItemSingle CIDKNemIDSignature $ documentid doc
-                              return $ NetsSignStatusSuccess
+                              return NetsSignStatusSuccess
 
   where
     netsStatusFailure nets_fault = do

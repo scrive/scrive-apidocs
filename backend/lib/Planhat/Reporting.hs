@@ -31,19 +31,19 @@ doDailyPlanhatStats phConf reqManager = do
 
   -- metrics; the Planhat metrics API endpoint accepts a list so we concatenate
   -- the updates to be efficient
-  logPlanhatErrors
-    =<< (liftIO $ do
-          httpLbs
-            (mkPlanhatRequest
-              phConf
-              phMetricsURL
-              (  JSON.toJSON
-              $  (planhatMetricJSONs "users_total" usersTotal now)
-              <> (planhatMetricJSONs "users_active" usersActive now)
-              )
-            )
-            reqManager
+  logPlanhatErrors =<< liftIO
+    (do
+      httpLbs
+        (mkPlanhatRequest
+          phConf
+          phMetricsURL
+          (  JSON.toJSON
+          $  planhatMetricJSONs "users_total"  usersTotal  now
+          <> planhatMetricJSONs "users_active" usersActive now
+          )
         )
+        reqManager
+    )
   where
 
     planhatMetricJSONs
@@ -54,6 +54,4 @@ doDailyPlanhatStats phConf reqManager = do
 
     logPlanhatErrors :: (MonadLog m) => Response BSL.ByteString -> m ()
     logPlanhatErrors res = do
-      case maybeErrors . getResponseBody $ res of
-        Nothing        -> return ()
-        Just errObject -> logInfo "Planhat call error" $ errObject
+      forM_ (maybeErrors . getResponseBody $ res) (logInfo "Planhat call error")

@@ -1,0 +1,23 @@
+# HLint configuration file
+# https://github.com/ndmitchell/hlint
+##########################
+
+- arguments: [ -XTypeApplications
+             ]
+
+# Warnings we don't care about
+- ignore: {name: "Reduce duplication"}
+- ignore: {name: "Redundant do"}
+- ignore: {name: "Use list comprehension"}
+
+# Condemn nub and friends
+- warn: {lhs: nub (sort x), rhs: Data.List.Extra.nubSort x}
+- warn: {lhs: nub, rhs: Data.List.Extra.nubOrd}
+- warn: {lhs: nubBy, rhs: Data.List.Extra.nubOrdBy}
+- warn: {lhs: nubOn, rhs: Data.List.Extra.nubOrdOn}
+
+# Prefer shorter form without fmap
+- warn: {lhs: fmap f $ g, rhs: f <$> g}
+
+# Replace a $ b $ c with a . b $ c
+- group: {name: dollar, enabled: true}

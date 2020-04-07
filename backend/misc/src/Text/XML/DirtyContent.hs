@@ -44,10 +44,9 @@ removeTags :: XMLContent -> XMLContent
 removeTags (CleanXMLContent c) = CleanXMLContent (C.removeTags c)
 removeTags (DirtyXMLContent t) = DirtyXMLContent (T.pack (filterTags (T.unpack t)))
   where
-    filterTags ('<' : rest) =
-      ' ' : (filterTags (drop 1 $ dropWhile (\c -> c /= '>') rest))
-    filterTags (a : rest) = a : filterTags rest
-    filterTags []         = []
+    filterTags ('<' : rest) = ' ' : filterTags (drop 1 $ dropWhile (/= '>') rest)
+    filterTags (a   : rest) = a : filterTags rest
+    filterTags []           = []
 
 -- | Form XMLContent from string literals
 instance IsString XMLContent where

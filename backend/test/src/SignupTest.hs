@@ -7,7 +7,7 @@ import Text.JSON (JSValue)
 import Text.JSON.FromJSValue (fromJSValueField, withJSValue)
 
 import Context
-import DB hiding (query, update)
+import DB
 import MagicHash (MagicHash)
 import Mails.Model
 import MinutesTime
@@ -79,19 +79,19 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
 signupForAccount :: Context -> Text -> TestEnv Context
 signupForAccount ctx email = do
   req <- mkRequest POST [("email", inText email)]
-  snd <$> (runTestKontra req ctx $ apiCallSignup)
+  snd <$> runTestKontra req ctx apiCallSignup
 
 assertSignupSuccessful :: Context -> TestEnv UserAccountRequest
 assertSignupSuccessful ctx = do
   assertEqual "User is not logged in" Nothing (ctx ^. #maybeUser)
   actions <- getAccountCreatedActions
-  assertEqual "An AccountCreated action was made" 1 (length $ actions)
+  assertEqual "An AccountCreated action was made" 1 (length actions)
   return $ head actions
 
 followActivationLink :: Context -> UserID -> MagicHash -> TestEnv Context
 followActivationLink ctx uid token = do
   req <- mkRequest GET []
-  fmap snd $ runTestKontra req ctx $ handleAccountSetupGet uid token AccountRequest
+  fmap snd . runTestKontra req ctx $ handleAccountSetupGet uid token AccountRequest
 
 assertActivationPageOK :: Context -> TestEnv ()
 assertActivationPageOK ctx = do

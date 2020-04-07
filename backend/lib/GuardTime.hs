@@ -73,7 +73,7 @@ invokeGuardtimeTool
   -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 invokeGuardtimeTool conf credentials tool args = do
   withGuardtimeConf conf credentials $ \confPath -> do
-    let a = (["-jar", "GuardTime/" ++ tool ++ ".jar", "-c", confPath] ++ args)
+    let a = ["-jar", "GuardTime/" ++ tool ++ ".jar", "-c", confPath] ++ args
     liftIO $ readProcessWithExitCode "java" a BSL.empty
 
 withGuardtimeConf
@@ -192,9 +192,9 @@ instance FromJSValue VerifyResult where
           Valid <$> (GuardtimeSignature <$> time <*> extended <*> extensible)
         _ -> Just $ Invalid "not last revision"
     minvalid <- fromJSValueFieldCustom "invalid" $ do
-      liftM (fmap (Invalid . (show :: JSValue -> String))) $ fromJSValueField "reason"
+      fmap (Invalid . (show :: JSValue -> String)) <$> fromJSValueField "reason"
     mproblem <- fromJSValueFieldCustom "error" $ do
-      liftM (fmap $ Problem BSL.empty BSL.empty) $ fromJSValueField "reason"
+      fmap (Problem BSL.empty BSL.empty) <$> fromJSValueField "reason"
     return $ mvalid `mplus` minvalid `mplus` mproblem
 
 
@@ -236,7 +236,7 @@ verify conf inputFileName = do
   let output = if BSL.null stdout then stderr else stdout
   case code of
     ExitSuccess -> do
-      case (runGetJSON readJSObject $ BSL.toString output) of
+      case runGetJSON readJSObject $ BSL.toString output of
         Left s ->
           return
             .  Problem stdout stderr

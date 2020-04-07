@@ -55,7 +55,7 @@ deriving newtype instance
 
 instance (MonadBaseControl IO m, MonadBase IO (CronEnvT m sd)) => MonadBaseControl IO (CronEnvT m sd) where
   type StM (CronEnvT m sd) a = StM (ReaderT sd m) a
-  liftBaseWith f = CronEnvT $ liftBaseWith $ \run -> f $ run . unCronEnvT
+  liftBaseWith f = CronEnvT $ liftBaseWith (\run -> f $ run . unCronEnvT)
   restoreM = CronEnvT . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}

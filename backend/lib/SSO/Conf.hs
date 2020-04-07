@@ -23,8 +23,8 @@ data SSOConf = SSOConf {
 unjsonSSOConf :: UnjsonDef SSOConf
 unjsonSSOConf =
   objectOf
-    $   pure SSOConf
-    <*> fieldBy "idps" scIdpConfs "The configured IdPs" (arrayOf unjsonIDPConf)
+    $   SSOConf
+    <$> fieldBy "idps" scIdpConfs "The configured IdPs" (arrayOf unjsonIDPConf)
     <*> field
           "saml_entity_base_uri"
           scSamlEntityBaseURI
@@ -43,8 +43,8 @@ data IDPConf = IDPConf {
 unjsonIDPConf :: UnjsonDef IDPConf
 unjsonIDPConf =
   objectOf
-    $   pure IDPConf
-    <*> field "idp_id"         icID                 "Entity name of IdP"
+    $   IDPConf
+    <$> field "idp_id"         icID                 "Entity name of IdP"
     <*> field "idp_public_key" icPublicKey          "IdP public RSA key"
     <*> field "idp_init_ug"    icUserInitialGroupID "Group used for user provisioning"
     <*> fieldDef "idp_put_name_id_in_company_position"

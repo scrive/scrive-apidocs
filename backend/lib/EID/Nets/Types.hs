@@ -169,18 +169,18 @@ data NetsTarget = NetsTarget
   } deriving (Eq, Ord, Show)
 
 decodeNetsTarget :: Text -> Maybe NetsTarget
-decodeNetsTarget t = case (B64.decode $ TE.encodeUtf8 t) of
-  Right t' -> case (maybeRead $ T.pack $ BS.unpack t') of
+decodeNetsTarget t = case B64.decode $ TE.encodeUtf8 t of
+  Right t' -> case maybeRead . T.pack $ BS.unpack t' of
     Just (dmn, did, sid, rurl) -> Just $ NetsTarget dmn did sid rurl Nothing
-    _ -> case (maybeRead $ T.pack $ BS.unpack t') of
+    _ -> case maybeRead . T.pack $ BS.unpack t' of
       Just (dmn, did, sid, rurl, ssnfromfrontend) ->
         Just $ NetsTarget dmn did sid rurl (Just ssnfromfrontend)
       _ -> Nothing
   _ -> Nothing
 
 -- | GetAssertionRequest request
-data GetAssertionRequest = GetAssertionRequest
-  { assertionArtifact :: !Text
+newtype GetAssertionRequest = GetAssertionRequest
+  { assertionArtifact :: Text
   } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'GetAssertionRequest'.
@@ -479,7 +479,7 @@ instance Loggable GetOrderStatusResponse where
   logValue GetOrderStatusResponse {..} = object
     [ identifier gosrsSignOrderUUID
     , "transaction_ref" .= gosrsTransactionRef
-    , "order_status" .= (showt $ gosrsOrderStatus)
+    , "order_status" .= showt gosrsOrderStatus
     ]
   logDefaultLabel _ = "nets_get_order_status_response"
 
@@ -494,7 +494,7 @@ xpGetOrderStatusResponse = XMLParser $ \cursor ->
 parseOrderStatus :: Text -> OrderStatus
 parseOrderStatus t = fromMaybe
   (unexpectedError $ "Cannot parse OrderStatus in GetOrderStatusResponse:" <+> t)
-  (maybeRead $ t)
+  (maybeRead t)
 
 -- NETS Signing - Get SDO Request
 
@@ -531,7 +531,7 @@ xpGetSDOResponse = XMLParser $ \cursor ->
 
 -- NETS Signing - Get SDO Details Request
 
-data GetSDODetailsRequest = GetSDODetailsRequest !Text
+newtype GetSDODetailsRequest = GetSDODetailsRequest Text
 
 instance ToXML GetSDODetailsRequest where
   toXML (GetSDODetailsRequest b64SDO) = element "GetSDODetails" $ do
@@ -632,7 +632,7 @@ xpGetSDOAttributes = XMLParser $ \cursor ->
 
 -- NETS Signing - Cancel Order Request
 
-data CancelOrderRequest = CancelOrderRequest !SignOrderUUID
+newtype CancelOrderRequest = CancelOrderRequest SignOrderUUID
 
 instance ToXML CancelOrderRequest where
   toXML (CancelOrderRequest soid) = element "CancelOrder" $ do
@@ -640,8 +640,8 @@ instance ToXML CancelOrderRequest where
 
 --NETS Signing - Cancel Order Response
 
-data CancelOrderResponse = CancelOrderResponse
-  { corsTransactionRef :: !Text
+newtype CancelOrderResponse = CancelOrderResponse
+  { corsTransactionRef :: Text
   }
 
 instance Loggable CancelOrderResponse where
@@ -655,4 +655,4 @@ xpCancelOrderResponse = XMLParser $ \cursor ->
 
 readTs :: [Text] -> XML.Cursor -> Text
 readTs names cursor = T.concat $ cursor $/ laxElements names content
-  where laxElements = foldr (.) identity . fmap (&/) . fmap laxElement
+  where laxElements = foldr (.) identity . fmap ((&/) . laxElement)

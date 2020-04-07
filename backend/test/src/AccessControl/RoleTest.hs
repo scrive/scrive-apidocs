@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module AccessControl.RoleTest (accessControlRoleTests) where
 
+import Data.List.Extra (nubOrd)
 import Test.Framework
 import Test.QuickCheck
 
@@ -35,18 +36,18 @@ testRolesNotInheritedInUserGroupTree = do
   (root_ug :: UserGroupRoot) <- rand 10 arbitrary
   root_ugid <- view #id <$> (dbUpdate . UserGroupCreate $ ugFromUGRoot root_ug)
   [_ug0, ug1] <- createChildGroups root_ugid
-  void $ dbUpdate $ SetUserGroup uid (Just $ ug1 ^. #id)
+  void . dbUpdate $ SetUserGroup uid (Just $ ug1 ^. #id)
   -- user's group changed, need to re-retrieve the user
   (Just user') <- dbQuery $ GetUserByID uid
   let role_trg = UserGroupAdminAR root_ugid
-  void $ dbUpdate $ AccessControlCreateForUserGroup root_ugid role_trg
+  void . dbUpdate $ AccessControlCreateForUserGroup root_ugid role_trg
   userRoles1 <- dbQuery $ GetRoles user'
-  [grp_role] <-
-    (filter byUserGroup) <$> (dbQuery $ AccessControlGetExplicitRoles uid root_ugid)
+  [grp_role] <- filter byUserGroup
+    <$> dbQuery (AccessControlGetExplicitRoles uid root_ugid)
   assertBool "The role set on a parent group is not included in user's roles"
-             (not $ grp_role `elem` userRoles1)
+             (grp_role `notElem` userRoles1)
 
-  void $ dbUpdate $ SetUserGroup (user ^. #id) (Just $ root_ugid)
+  void . dbUpdate $ SetUserGroup (user ^. #id) (Just root_ugid)
   -- user's group changed, need to re-retrieve the user
   (Just user'') <- dbQuery $ GetUserByID uid
   userRoles2    <- dbQuery $ GetRoles user''
@@ -56,8 +57,8 @@ testRolesNotInheritedInUserGroupTree = do
     byUserGroup :: AccessRole -> Bool
     byUserGroup r = case r of
        -- we care only about explicit (persisted) roles
-      AccessRoleUserGroup _ _ _ -> True
-      _ -> False
+      AccessRoleUserGroup{} -> True
+      _                     -> False
 
     createChildGroups :: UserGroupID -> TestEnv [UserGroup]
     createChildGroups root_ugid' = do
@@ -65,7 +66,7 @@ testRolesNotInheritedInUserGroupTree = do
       ugrand1 <- rand 10 arbitrary
       ug0     <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just root_ugid') ugrand0
       ug1 <- dbUpdate . UserGroupCreate $ set #parentGroupID (Just (ug0 ^. #id)) ugrand1
-      return $ [ug0, ug1]
+      return [ug0, ug1]
 
 testImplicitRoles :: TestEnv ()
 testImplicitRoles = do
@@ -77,7 +78,7 @@ testImplicitRoles = do
                                                  }
   let admusrid = admusr ^. #id
       admugid  = admusr ^. #groupID
-  admug        <- fromJust <$> (dbQuery $ UserGroupGet admugid)
+  admug        <- fromJust <$> dbQuery (UserGroupGet admugid)
   -- ordinary user
   --              admug              . . . admugfdr
   --               /                          /
@@ -91,14 +92,14 @@ testImplicitRoles = do
   usrughomefdr <- dbUpdate $ FolderCreate defaultFolder
   usrug        <-
     dbUpdate
-    $ UserGroupCreate
-    $ (set #parentGroupID $ Just admugid)
-    . (set #homeFolderID $ Just (usrughomefdr ^. #id))
+    . UserGroupCreate
+    . set #parentGroupID (Just admugid)
+    . set #homeFolderID  (Just (usrughomefdr ^. #id))
     $ defaultUserGroup
   usr <- instantiateUser $ randomUserTemplate { groupID = return $ usrug ^. #id }
 
-  let admugfdrid     = (fromJust $ admug ^. #homeFolderID)
-      admfdrid       = (fromJust $ admusr ^. #homeFolderID)
+  let admugfdrid     = fromJust $ admug ^. #homeFolderID
+      admfdrid       = fromJust $ admusr ^. #homeFolderID
       usrid          = usr ^. #id
       usrughomefdrid = fromJust $ usrug ^. #homeFolderID
       usrugid        = usrug ^. #id
@@ -122,30 +123,30 @@ testImplicitRoles = do
   --
   let childfdr = set #parentID (Just usrfdrid) defaultFolder
       childug  = set #parentGroupID (Just usrugid) defaultUserGroup
-  childfdrid <- view #id <$> (dbUpdate $ FolderCreate childfdr)
-  childugid  <- view #id <$> (dbUpdate $ UserGroupCreate childug)
+  childfdrid <- view #id <$> dbUpdate (FolderCreate childfdr)
+  childugid  <- view #id <$> dbUpdate (UserGroupCreate childug)
 
   -- let's check inheritance for the admin
   let inheritForUserGroupRoleAdm r = map r [admugid, usrugid, childugid]
       inheritForFolderRoleAdm r = map r [admugfdrid, admfdrid]
       shouldBeInherited =
-        (AccessRoleImplicitUser admusrid)
+        AccessRoleImplicitUser admusrid
           <$> concatMap inheritForUserGroupRoleAdm [UserAdminAR]
           <>  concatMap inheritForFolderRoleAdm [FolderAdminAR, SharedTemplateUserAR]
           <>  [FolderUserAR admfdrid, UserAR admusrid]
 
-  admroles <- nub <$> (dbQuery $ GetRolesIncludingInherited admusr admug)
+  admroles <- nubOrd <$> dbQuery (GetRolesIncludingInherited admusr admug)
   assertBool
     "The implicit roles for company admins are inherited as intended"
-    ([] == admroles \\ shouldBeInherited && [] == shouldBeInherited \\ admroles)
+    (null (admroles \\ shouldBeInherited) && null (shouldBeInherited \\ admroles))
 
   -- now, let's check inheritance for the user
-  usrRoles <- nub <$> (dbQuery $ GetRolesIncludingInherited usr usrug)
+  usrRoles <- nubOrd <$> dbQuery (GetRolesIncludingInherited usr usrug)
 
   let inheritForUserGroupRoleUsr r = map r [usrugid, childugid]
       inheritForFolderRoleUsr r = map r [usrfdrid, childfdrid]
       shouldBeInheritedUsr =
-        (AccessRoleImplicitUser usrid)
+        AccessRoleImplicitUser usrid
           <$> concatMap inheritForUserGroupRoleUsr [UserGroupMemberAR]
           <>  concatMap inheritForFolderRoleUsr    [SharedTemplateUserAR, FolderUserAR]
           <>  [ SharedTemplateUserAR usrughomefdrid
@@ -154,7 +155,7 @@ testImplicitRoles = do
               ]
   assertBool
     "The implicit roles for company users are inherited as intended"
-    ([] == usrRoles \\ shouldBeInheritedUsr && [] == shouldBeInheritedUsr \\ usrRoles)
+    (null (usrRoles \\ shouldBeInheritedUsr) && null (shouldBeInheritedUsr \\ usrRoles))
 
 testExplicitRoles :: TestEnv ()
 testExplicitRoles = do
@@ -165,7 +166,7 @@ testExplicitRoles = do
     }
   let admusrid = admusr ^. #id
       admugid  = admusr ^. #groupID
-  admug    <- fromJust <$> (dbQuery $ UserGroupGet admugid)
+  admug    <- fromJust <$> dbQuery (UserGroupGet admugid)
 
   -- the test groups and folders - we test on unrelated structures as per the
   -- illustration:
@@ -179,30 +180,30 @@ testExplicitRoles = do
   --                          . . . testchildug
   --
 
-  testugid <- view #id <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  testugid <- view #id <$> dbUpdate (UserGroupCreate defaultUserGroup)
   let testchildug = set #parentGroupID (Just testugid) defaultUserGroup
-  testchildugid <- view #id <$> (dbUpdate $ UserGroupCreate testchildug)
+  testchildugid <- view #id <$> dbUpdate (UserGroupCreate testchildug)
 
-  testfdrid     <- view #id <$> (dbUpdate $ FolderCreate defaultFolder)
+  testfdrid     <- view #id <$> dbUpdate (FolderCreate defaultFolder)
   let testchildfdr = set #parentID (Just testfdrid) defaultFolder
-  testchildfdrid <- view #id <$> (dbUpdate $ FolderCreate testchildfdr)
+  testchildfdrid <- view #id <$> dbUpdate (FolderCreate testchildfdr)
 
   -- let's set some roles
   let explicitroles = [FolderAdminAR testfdrid, UserGroupAdminAR testugid]
-  mapM_ (dbUpdate . (AccessControlCreateForUser admusrid)) explicitroles
+  mapM_ (dbUpdate . AccessControlCreateForUser admusrid) explicitroles
 
   -- let's check inheritance for the admin
   let inheritForUserGroupRole r = map r [testugid, testchildugid]
       inheritForFolderRole r = map r [testfdrid, testchildfdrid]
       explicitShouldBeInherited =
-        (AccessRoleUser (unsafeAccessRoleID 0) admusrid)
+        AccessRoleUser (unsafeAccessRoleID 0) admusrid
           <$> concatMap inheritForUserGroupRole [UserGroupAdminAR]
           <>  concatMap inheritForFolderRole    [FolderAdminAR]
 
   admroles <- dbQuery $ GetRolesIncludingInherited admusr admug
   -- because we get an id in the access roles from the db we set them all to zero so we
   -- can compare easier later.
-  let explicitOnlyNormalised = catMaybes $ map normalise admroles
+  let explicitOnlyNormalised = mapMaybe normalise admroles
       zeroid                 = unsafeAccessRoleID 0
       normalise r = case r of
         AccessRoleUser _ x y -> Just (AccessRoleUser zeroid x y)
@@ -211,10 +212,6 @@ testExplicitRoles = do
 
   assertBool
     "The explicit roles are inherited as intended"
-    (  []
-    == explicitShouldBeInherited
-    \\ explicitOnlyNormalised
-    && []
-    == explicitOnlyNormalised
-    \\ explicitShouldBeInherited
+    (  null (explicitShouldBeInherited \\ explicitOnlyNormalised)
+    && null (explicitOnlyNormalised \\ explicitShouldBeInherited)
     )

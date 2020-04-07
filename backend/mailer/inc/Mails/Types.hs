@@ -101,7 +101,7 @@ data Address = Address
 
 instance Unjson Address where
   unjsonDef =
-    objectOf $ pure Address <*> field "name" addrName "Name in email address" <*> field
+    objectOf $ Address <$> field "name" addrName "Name in email address" <*> field
       "email"
       addrEmail
       "Email address"
@@ -148,8 +148,8 @@ instance CompositeFromSQL Attachment where
     }
 
 instance Loggable Attachment where
-  logValue Attachment {..} = object $ ["name" .= attName] ++ case attContent of
-    Left  bs  -> ["type" .= ("string" :: String), "bytesize" .= (B.length bs)]
+  logValue Attachment {..} = object $ "name" .= attName : case attContent of
+    Left  bs  -> ["type" .= ("string" :: String), "bytesize" .= B.length bs]
     Right fid -> ["type" .= ("file_id" :: String), identifier fid]
   logDefaultLabel _ = "attachment"
 
@@ -172,9 +172,9 @@ instance Loggable Mail where
     , "attachments" .= map logValue mailAttachments
     , "attachment_count" .= length mailAttachments
     , "attempt_count" .= mailAttempts
-    , "content" .= (htmlToTxt $ T.unpack mailContent)
+    , "content" .= htmlToTxt (T.unpack mailContent)
     , "from" .= mailFrom
-    , "reply_to" .= fromMaybe Null (toJSON <$> mailReplyTo)
+    , "reply_to" .= maybe Null toJSON mailReplyTo
     , "service_test" .= mailServiceTest
     , "subject" .= mailTitle
     , "to" .= mailTo
@@ -202,6 +202,7 @@ instance ToSQL EventID where
   type PQDest EventID = PQDest Int64
   toSQL (EventID n) = toSQL n
 
+{-# ANN type SendGridEvent ("HLint: ignore Use camelCase" :: String) #-}
 data SendGridEvent
   = SG_Processed
   | SG_Opened
@@ -213,6 +214,7 @@ data SendGridEvent
   | SG_Unsubscribe
     deriving (Eq, Ord, Show, Data, Typeable)
 
+{-# ANN type MailGunEvent ("HLint: ignore Use camelCase" :: String) #-}
 data MailGunEvent
   = MG_Opened
   | MG_Delivered
@@ -223,6 +225,7 @@ data MailGunEvent
   | MG_Dropped !Text                  -- ^ drop reason
     deriving (Eq, Ord, Show, Data, Typeable)
 
+{-# ANN type SocketLabsEvent ("HLint: ignore Use camelCase" :: String) #-}
 data SocketLabsEvent
   = SL_Opened
   | SL_Delivered
@@ -232,6 +235,7 @@ data SocketLabsEvent
   | SL_Complained
     deriving (Eq, Ord, Show, Data, Typeable)
 
+{-# ANN type MailJetEvent ("HLint: ignore Use camelCase" :: String) #-}
 data MailJetEvent
   = MJ_Sent
   | MJ_Open

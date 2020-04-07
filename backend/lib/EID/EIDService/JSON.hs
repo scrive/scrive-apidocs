@@ -25,8 +25,7 @@ encodeNewTransactionRequest espp =
       pair "providerParameters" . pairs . pair provider $ pairs vals
     providerParameters = case espp of
       EIDServiceProviderParamsVerimi{} -> mempty
-      EIDServiceProviderParamsNLIDIN{} ->
-        makeProviderParams $ ("requestBirthdate" .= True)
+      EIDServiceProviderParamsNLIDIN{} -> makeProviderParams ("requestBirthdate" .= True)
       EIDServiceProviderParamsDKNemID {..} ->
         makeProviderParams $ ("limitedClientMode" .= True) <> ("uiLocale" .= esppUILocale)
       EIDServiceProviderParamsNOBankID {..} ->
@@ -153,10 +152,10 @@ instance FromJSON DKNemIDCompletionData where
         -- TODO: decide if we want to distinguish between personal keycard and employee
         -- keycard - this would break backward data compability, but maybe doesn't hurt us
         -- that much? - KJ
-        Nothing                -> return $ EIDServiceNemIDKeyCard
-        Just "PersonalKeycard" -> return $ EIDServiceNemIDKeyCard
-        Just "EmployeeKeycard" -> return $ EIDServiceNemIDKeyCard
-        Just "EmployeeKeyFile" -> return $ EIDServiceNemIDKeyFile
+        Nothing                -> return EIDServiceNemIDKeyCard
+        Just "PersonalKeycard" -> return EIDServiceNemIDKeyCard
+        Just "EmployeeKeycard" -> return EIDServiceNemIDKeyCard
+        Just "EmployeeKeyFile" -> return EIDServiceNemIDKeyFile
         Just t -> fail $ "Unknown internal provider returned from EID service: " <> t
 
 instance FromCompletionDataJSON CompleteDKNemIDEIDServiceTransactionData where

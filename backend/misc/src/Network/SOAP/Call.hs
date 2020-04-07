@@ -41,11 +41,8 @@ soapCall transport soap_action header body parser = do
   case runParser (Right <$> parser <|> Left <$> xpSOAPFault) c of
     Just (Right response) -> return response
     Just (Left  fault   ) -> throwM fault
-    Nothing ->
-      throwM
-        $   SOAPParsingError
-        $   "Unsuccessful parse of SOAP response body:"
-        <+> ppCursor c
+    Nothing               -> throwM
+      $ SOAPParsingError ("Unsuccessful parse of SOAP response body:" <+> ppCursor c)
   where req = soap header body
 
 ----------------------------------------

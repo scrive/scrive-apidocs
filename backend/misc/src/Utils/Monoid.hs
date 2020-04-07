@@ -11,5 +11,5 @@ justEmptyToNothing :: (Eq a, Monoid a) => Maybe a -> Maybe a
 justEmptyToNothing = maybe Nothing emptyToNothing
 
 optional :: MonadPlus m => m a -> m (Maybe a)
-optional c = (liftM Just c) `mplus` (return Nothing)
+optional c = fmap Just c `mplus` return Nothing
 

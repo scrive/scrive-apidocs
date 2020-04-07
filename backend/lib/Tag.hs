@@ -62,7 +62,7 @@ instance ToJSON TagOp where
 
 instance FromJSON TagOp where
   parseJSON = \case
-    Null     -> pure $ Delete
+    Null     -> pure Delete
     String s -> pure $ SetTo s
     invalid  -> typeMismatch "Expected a string or `null`" invalid
 
@@ -82,7 +82,7 @@ instance Unjson TagUpdate where
 
 updateTag :: [Tag] -> TagUpdate -> [Tag]
 updateTag ugts (TagUpdate k op) = case op of
-  SetTo v -> (Tag.Tag k v) : deleted
+  SetTo v -> Tag.Tag k v : deleted
   Delete  -> deleted
   where deleted = filter (\ugt -> ugt ^. #name /= k) ugts
 

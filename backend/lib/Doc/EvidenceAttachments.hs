@@ -66,18 +66,18 @@ extractAttachment doc aname = do
 extractAttachmentsListFromFileContent
   :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString -> m [Text]
 extractAttachmentsListFromFileContent content =
-  withSystemTempDirectory' ("extract-attachments-") $ \tmppath -> do
+  withSystemTempDirectory' "extract-attachments-" $ \tmppath -> do
     let tmpin = tmppath ++ "/input.pdf"
     logInfo "Temp file write" $ object
-      [ "bytes_written" .= (BS.length content)
+      [ "bytes_written" .= BS.length content
       , "originator" .= ("extractAttachmentsListFromFileContent" :: Text)
       ]
     liftBase $ BS.writeFile tmpin content
     (code, stdout, stderr) <- liftBase $ do
-      readProcessWithExitCode "pdfdetach" ["-list", tmpin] (BSL.empty)
+      readProcessWithExitCode "pdfdetach" ["-list", tmpin] BSL.empty
     case code of
       ExitSuccess -> do
-        let list = decodePdfDetachList $ T.pack $ BSL.toString stdout
+        let list = decodePdfDetachList . T.pack $ BSL.toString stdout
         logInfo "Extracted attachments list"
           $ object ["list_length" .= show (length list)]
         return list
@@ -92,9 +92,9 @@ extractAttachmentFromFileContent
   -> BS.ByteString
   -> m (Maybe BSL.ByteString)
 extractAttachmentFromFileContent name content =
-  withSystemTempDirectory' ("extract-attachment-") $ \tmppath -> do
+  withSystemTempDirectory' "extract-attachment-" $ \tmppath -> do
     mIndex <- extractAttachmentIndex name content
-    case (mIndex) of
+    case mIndex of
       Nothing -> do
         logAttention "Attachment is no in PDF" $ object ["attachment_name" .= name]
         return Nothing
@@ -102,7 +102,7 @@ extractAttachmentFromFileContent name content =
         let tmpin   = tmppath ++ "/input.pdf"
         let outfile = tmppath ++ "/out"
         logInfo "Temp file write" $ object
-          [ "bytes_written" .= (BS.length content)
+          [ "bytes_written" .= BS.length content
           , "originator" .= ("extractAttachmentFromFileContent" :: Text)
           ]
         liftBase $ BS.writeFile tmpin content
@@ -110,9 +110,9 @@ extractAttachmentFromFileContent name content =
           readProcessWithExitCode
             "pdfdetach"
             ["-save", show (attachmentIndex + 1), "-o", outfile, tmpin]
-            (BSL.empty)
+            BSL.empty
         case code of
-          ExitSuccess     -> Just <$> (liftBase $ BSL.readFile outfile)
+          ExitSuccess     -> Just <$> liftBase (BSL.readFile outfile)
           ExitFailure err -> do
             logAttention "Failed to extract attachment" $ object
               [ "exit_code" .= err
@@ -133,10 +133,10 @@ decodePdfDetachList s = decodeLines 1 $ T.lines s
   where
     decodeLines :: Integer -> [Text] -> [Text]
     decodeLines n (l : r) =
-      let prefix = (showt n) `T.append` ": "
-      in  if (prefix `T.isPrefixOf` l)
-            then (T.drop (T.length prefix) l) : (decodeLines (n + 1) r)
-            else (decodeLines n r)
+      let prefix = showt n `T.append` ": "
+      in  if prefix `T.isPrefixOf` l
+            then T.drop (T.length prefix) l : decodeLines (n + 1) r
+            else decodeLines n r
     decodeLines _ [] = []
 
 extractAttachmentIndex

@@ -18,7 +18,7 @@ import DB
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
 instance (MonadDB m, MonadTime m) => DBUpdate m InsertClockOffsetFrequency Int where
-  update (InsertClockOffsetFrequency moffset frequency) = do
+  dbUpdate (InsertClockOffsetFrequency moffset frequency) = do
     now <- currentTime
     runQuery . sqlInsert "host_clock" $ do
       sqlSet "time"            now
@@ -34,7 +34,7 @@ data ClockErrorEstimate = ClockErrorEstimate
 
 data GetLatestClockErrorEstimate = GetLatestClockErrorEstimate
 instance (MonadDB m, MonadThrow m) => DBQuery m GetLatestClockErrorEstimate (Maybe ClockErrorEstimate) where
-  query (GetLatestClockErrorEstimate) = do
+  dbQuery GetLatestClockErrorEstimate = do
     runQuery_ . sqlSelect "host_clock" $ do
       sqlWhere "time = (SELECT MAX(time) FROM host_clock WHERE clock_offset IS NOT NULL)"
       sqlResult "time"
@@ -52,20 +52,18 @@ maxClockError t e =
 
 -- | Get the last 'limit' clock error estimates wher clock_offset is not NULL,
 -- used in Evidence of Time
-data GetNClockErrorEstimates = GetNClockErrorEstimates Integer
+newtype GetNClockErrorEstimates = GetNClockErrorEstimates Integer
 instance (MonadDB m, MonadThrow m) => DBQuery m GetNClockErrorEstimates [ClockErrorEstimate] where
-  query (GetNClockErrorEstimates limit) = do
-    runQuery_ $ sqlSelect "host_clock" $ do
+  dbQuery (GetNClockErrorEstimates limit) = do
+    runQuery_ . sqlSelect "host_clock" $ do
       sqlResult "time"
       sqlResult "clock_offset"
       sqlResult "clock_frequency"
       sqlWhere "clock_offset IS NOT NULL"
       sqlOrderBy "time DESC"
       sqlLimit limit
-    reverse
-      <$> (fetchMany $ \(time', offset', frequency') ->
-            ClockErrorEstimate time' offset' frequency'
-          )
+    reverse <$> fetchMany
+      (\(time', offset', frequency') -> ClockErrorEstimate time' offset' frequency')
 
 -- | Simple way to see that there are more than 2 different offset values
 enoughClockErrorOffsetSamples :: [ClockErrorEstimate] -> Bool

@@ -59,7 +59,7 @@ instance Loggable Mail where
          , "content" .= content
          , "from" .= originatorEmail
          , "originator" .= originator
-         , "reply_to" .= fromMaybe Null (toJSON <$> replyTo)
+         , "reply_to" .= maybe Null toJSON replyTo
          , "subject" .= title
          , "to" .= to
          ]

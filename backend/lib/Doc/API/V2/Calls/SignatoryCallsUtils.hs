@@ -54,7 +54,7 @@ checkAuthenticationToSignMethodAndValue slid = do
     Just authMethod -> do
       siglink <- guardGetSignatoryFromIdForDocument slid
       let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
-      unless authOK $ apiError $ requestParameterInvalid "authentication_type"
+      unless authOK . apiError $ requestParameterInvalid "authentication_type"
                                                          "does not match with document"
       when (authToSignNeedsPersonalNumber authMethod)
         $ checkParamSSNMatchesSigLink siglink
@@ -63,24 +63,21 @@ checkAuthenticationToSignMethodAndValue slid = do
   where
     checkParamMobileMatchesSigLink siglink = do
       authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-      let
-        mobileEditableBySignatory =
-          Just True
-            == join
-                 (   fieldEditableBySignatory
-                 <$> getFieldByIdentity MobileFI (signatoryfields siglink)
+      let mobileEditableBySignatory =
+            Just True
+              == (   fieldEditableBySignatory
+                 =<< getFieldByIdentity MobileFI (signatoryfields siglink)
                  )
-      if (  authValue
-         == getMobile siglink
-         || T.null (getMobile siglink)
-         || mobileEditableBySignatory
-         )
+      if authValue
+           == getMobile siglink
+           || T.null (getMobile siglink)
+           || mobileEditableBySignatory
         then return ()
         else apiError $ requestParameterInvalid "authentication_value"
                                                 "value for mobile number does not match"
     checkParamSSNMatchesSigLink siglink = do
       authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-      if (authValue == getPersonalNumber siglink || T.null (getPersonalNumber siglink))
+      if authValue == getPersonalNumber siglink || T.null (getPersonalNumber siglink)
         then return ()
         else apiError $ requestParameterInvalid
           "authentication_value"
@@ -122,7 +119,7 @@ signDocument slid fields acceptedAuthorAttachments notUploadedSignatoryAttachmen
     -- call, or the actor identities may get wrong in the evidence log.
     guardGetSignatoryFromIdForDocument slid >>= \sl ->
       dbUpdate
-        .   UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles)
+        .   uncurry (UpdateFieldsForSigning sl) fieldsWithFiles
         =<< signatoryActor ctx sl
 
     guardGetSignatoryFromIdForDocument slid >>= \sl ->
@@ -154,8 +151,10 @@ signDocument slid fields acceptedAuthorAttachments notUploadedSignatoryAttachmen
               notUploadedSignatoryAttachmentsWithText
         =<< signatoryActor ctx sl
 
-    guardGetSignatoryFromIdForDocument slid >>= \sl ->
-      dbUpdate . SignDocument slid mesig mpin screenshots =<< signatoryActor ctx sl
+    guardGetSignatoryFromIdForDocument slid
+      >>= signatoryActor ctx
+      >>= dbUpdate
+      .   SignDocument slid mesig mpin screenshots
 
 
 fieldsToFieldsWithFiles
@@ -176,11 +175,11 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f : fs)) = do
   case f of
     (fi, StringFTV s) -> return ((fi, StringFV s) : changeFields, files')
     (fi, BoolFTV b  ) -> return ((fi, BoolFV b) : changeFields, files')
-    (fi, FileFTV bs ) -> if (BS.null bs)
-      then return $ ((fi, FileFV Nothing) : changeFields, files')
+    (fi, FileFTV bs ) -> if BS.null bs
+      then return ((fi, FileFV Nothing) : changeFields, files')
       else do
         fileid <- saveNewFile "signature.png" bs
-        return $ ((fi, FileFV (Just fileid)) : changeFields, (fileid, bs) : files')
+        return ((fi, FileFV (Just fileid)) : changeFields, (fileid, bs) : files')
 
 
 checkSignatoryPinToSign
@@ -191,8 +190,11 @@ checkSignatoryPinToSign
   -> m Bool
 checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
-  let mobileEditableBySignatory = Just True == join
-        (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
+  let mobileEditableBySignatory =
+        Just True
+          == (   fieldEditableBySignatory
+             =<< getFieldByIdentity MobileFI (signatoryfields sl)
+             )
   let slidMobile = getMobile sl
   mobile <-
     case
@@ -210,7 +212,7 @@ checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
         "fields"
         "Does not contain a mobile number field, author has not set one for the signatory"
   pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
-  when (pin /= pin') $ logInfo "Invalid pin for signing" $ object
+  when (pin /= pin') . logInfo "Invalid pin for signing" $ object
     ["supplied pin" .= pin, "expected pin" .= pin', "slid" .= show slid]
   return $ pin == pin'
 
@@ -223,6 +225,6 @@ checkSignatoryPinToView pinType slid pin = do
     Good x -> return x
     _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
   pin' <- dbQuery $ GetSignatoryPin pinType slid mobile
-  when (pin /= pin') $ logInfo "Invalid pin for identify" $ object
+  when (pin /= pin') . logInfo "Invalid pin for identify" $ object
     ["supplied pin" .= pin, "expected pin" .= pin', "slid" .= show slid]
   return $ pin == pin'

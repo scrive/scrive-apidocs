@@ -47,7 +47,7 @@ fromThemeID (ThemeID tid) = tid
 
 unjsonThemeID :: UnjsonDef ThemeID
 unjsonThemeID = unjsonInvmapR
-  ((maybe (fail "Can't parse ThemeID") return) . maybeRead . T.pack)
+  (maybe (fail "Can't parse ThemeID") return . maybeRead . T.pack)
   (show . fromThemeID :: ThemeID -> String)
   unjsonDef
 

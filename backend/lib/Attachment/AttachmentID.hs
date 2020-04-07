@@ -22,7 +22,7 @@ instance FromReqURI AttachmentID where
 
 instance Unjson AttachmentID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse AttachmentID") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse AttachmentID") return . maybeRead . T.pack)
     show
     unjsonDef
 

@@ -248,7 +248,7 @@ jsonRootUG = "{\"name\":\"Test UserGroup blah blah\"}"
 
 jsonWithParentUG :: UserGroupID -> String
 jsonWithParentUG ugid =
-  "{\"name\":\"Test UserGroup blah blah\",\"parent_id\":" <> "\"" <> (show ugid) <> "\"}"
+  "{\"name\":\"Test UserGroup blah blah\",\"parent_id\":" <> "\"" <> show ugid <> "\"}"
 
 testNonGodModeUserCannotCreateRootUserGroup :: TestEnv ()
 testNonGodModeUserCannotCreateRootUserGroup = do
@@ -256,7 +256,7 @@ testNonGodModeUserCannotCreateRootUserGroup = do
                                                , lastName = return "Dent"
                                                , email = return "arthur.dent@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest POST [("usergroup", inText $ T.pack jsonRootUG)]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "non-admin/sales user can't create root UserGroup" 403 $ rsCode res
@@ -295,7 +295,7 @@ testNonGodModeUserCannotCreateChildUserGroupForNonExistentUserGroup = do
                                                , lastName = return "Halfrunt"
                                                , email = return "gag.halfrunt@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest POST [("usergroup", inText $ T.pack jsonNonExistentParentUG)]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "user can't create child UserGroup for non-existent UserGroup" 403
@@ -325,10 +325,10 @@ testNonGodModeUserCannotCreateChildUserGroupWithoutUGAdminPermissions = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest
     POST
-    [("usergroup", inText $ T.pack $ jsonWithParentUG $ user ^. #groupID)]
+    [("usergroup", inText . T.pack $ jsonWithParentUG (user ^. #groupID))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 403 $ rsCode res
   where emailAddress = "prostetnic.vogon.jeltz@scrive.com"
@@ -344,8 +344,8 @@ testUserCanCreateChildUserGroupWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ugid)]
+  ctx <- mkContextWithUser defaultLang user
+  req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG ugid)]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 200 $ rsCode res
   where emailAddress = "great.green.arkleseizure@scrive.com"
@@ -358,7 +358,7 @@ testGodModeUserCanCreateChildUserGroupWithoutPermissions = do
                                                }
   ctx <- setUser user <$> mkContext defaultLang
   ug  <- instantiateRandomUserGroup
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG (ug ^. #id))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
   where
@@ -373,7 +373,7 @@ testSalesUserCanCreateChildUserGroupWithoutPermissions = do
                                                }
   ctx <- setUser user <$> mkContext defaultLang
   ug  <- instantiateRandomUserGroup
-  req <- mkRequest POST [("usergroup", inText $ T.pack $ jsonWithParentUG $ ug ^. #id)]
+  req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG (ug ^. #id))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
   where
@@ -391,7 +391,7 @@ testUserCanEditRootUserGroupWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest POST [("usergroup", inText $ T.pack jsonExistingRootUG)]
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Update ugid)
   assertEqual "users can edit root UserGroup as UG Admin" 200 $ rsCode res
@@ -414,8 +414,8 @@ testUserCanEditChildUserGroupWithPermissions = do
   ugidChild <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugidParent
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
-  let field = ("usergroup", inText $ T.pack $ jsonExistingChildUG ugidParent)
+  ctx <- mkContextWithUser defaultLang user
+  let field = ("usergroup", inText . T.pack $ jsonExistingChildUG ugidParent)
   req <- mkRequest POST [field]
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Update ugidChild)
   assertEqual "users can edit child UserGroup as UG Admin" 200 $ rsCode res
@@ -425,7 +425,7 @@ testUserCanEditChildUserGroupWithPermissions = do
     jsonExistingChildUG ugidParent =
       "{\"name\":\"Test UserGroup blah blah\""
         <> ",\"parent_id\":\""
-        <> (show ugidParent)
+        <> show ugidParent
         <> "\"}"
 
 -- UserGroup GET endpoint tests
@@ -437,7 +437,7 @@ testNonGodModeUserCannotViewNonExistentUserGroup = do
     , lastName  = return "Starthinker"
     , email     = return "googleplex.starthinker@scrive.com"
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "non-admin user can't view non-existent UserGroup" 403 $ rsCode res
@@ -484,7 +484,7 @@ testNonGodModeUserCanViewUserGroupWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Get ugid)
   assertEqual "non-admin user can view UserGroup with permissions" 200 $ rsCode res
@@ -568,7 +568,7 @@ testUserCannotDeleteNonExistentUserGroup = do
                                                , lastName = return "Bob"
                                                , email = return "almighty.bob@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup" 403 $ rsCode res
@@ -618,7 +618,7 @@ testUserCanDeleteChildUserGroupWithPermissions = do
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid2)
   assertEqual "UserGroup admin can delete child UserGroup" 200 $ rsCode res
@@ -675,7 +675,7 @@ testUserCannotDeleteRootUserGroupWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiV2Delete ugid)
   assertEqual "UserGroup admin can delete root UserGroup" 400 $ rsCode res
@@ -726,7 +726,7 @@ testNonGodModeUserCannotViewNonExistentUserGroupAddress = do
     , lastName  = return "Starthinker"
     , email     = return "googleplex.starthinker@scrive.com"
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "non-admin user can't view non-existent UserGroup Address" 403 $ rsCode res
@@ -773,7 +773,7 @@ testNonGodModeUserCanViewUserGroupAddressWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "non-admin user can view UserGroup Address with permissions" 200
@@ -864,7 +864,7 @@ testSalesUserCanEditUserGroupAddressWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest POST [("contact_details", inText addressJson)]
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Update ugid)
   assertEqual "non-admin and non-sales edit UserGroup Contact Details with permissions"
@@ -884,7 +884,7 @@ testUserCannotDeleteNonExistentUserGroupAddress = do
                                                , lastName = return "Bob"
                                                , email = return "almighty.bob@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Contact Details" 403 $ rsCode res
@@ -934,7 +934,7 @@ testUserCanDeleteChildUserGroupAddressWithPermissions = do
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
   assertEqual "UserGroup admin can delete child UserGroup Address" 200 $ rsCode res
@@ -993,7 +993,7 @@ testUserCannotDeleteRootUserGroupAddressWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "UserGroup admin can delete root UserGroup Address" 400 $ rsCode res
@@ -1042,7 +1042,7 @@ testNonGodModeUserCannotViewNonExistentUserGroupSettings = do
     , lastName  = return "Starthinker"
     , email     = return "googleplex.starthinker@scrive.com"
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "non-admin user can't view non-existent UserGroup Settings" 403 $ rsCode res
@@ -1089,7 +1089,7 @@ testNonGodModeUserCanViewUserGroupSettingsWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Get ugid)
   assertEqual "non-admin user can view UserGroup Settings with permissions" 200
@@ -1180,7 +1180,7 @@ testSalesUserCanEditUserGroupSettingsWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest POST [("settings", inText settingsJson)]
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Update ugid)
   assertEqual "non-admin and non-sales edit UserGroupSettings with permissions" 200
@@ -1204,7 +1204,7 @@ testUserCannotDeleteNonExistentUserGroupSettings = do
                                                , lastName = return "Bob"
                                                , email = return "almighty.bob@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Settings" 403 $ rsCode res
@@ -1254,7 +1254,7 @@ testUserCanDeleteChildUserGroupSettingsWithPermissions = do
   ugid2 <- fmap (view #id) . instantiateUserGroup $ randomUserGroupTemplate
     { parentGroupID = Just ugid1
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid2)
   assertEqual "UserGroup admin can delete child UserGroup Settings" 200 $ rsCode res
@@ -1313,7 +1313,7 @@ testUserCannotDeleteRootUserGroupSettingsWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest DELETE []
   res <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Delete ugid)
   assertEqual "UserGroup admin can delete root UserGroup Settings" 400 $ rsCode res
@@ -1366,7 +1366,7 @@ testNonGodModeUserCanViewUsersInUserGroupWithPermissions = do
   let uid  = user ^. #id
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (userGroupApiUsersV2Get ugid)
   assertEqual "non-admin user can view Users in UserGroup with permissions" 200
@@ -1392,12 +1392,11 @@ testUserCanCreateTagsOnChildUserGroup :: TestEnv ()
 testUserCanCreateTagsOnChildUserGroup = do
   ug   <- instantiateRandomUserGroup
   user <- instantiateUser $ randomUserTemplate { email = return emailAddress }
-  let inputUg =
-        object
-          $ [ "tags" .= toJSON inputTags
-            , "name" .= toJSON ("testing user group" :: Text)
-            , "parent_id" .= toJSON (ug ^. #id)
-            ]
+  let inputUg = object
+        [ "tags" .= toJSON inputTags
+        , "name" .= toJSON ("testing user group" :: Text)
+        , "parent_id" .= toJSON (ug ^. #id)
+        ]
   let params = [("usergroup", valueToInput inputUg)]
   ctx        <- setUser user <$> mkContext defaultLang
   val        <- jsonTestRequestHelper ctx POST params userGroupApiV2Create 200
@@ -1419,7 +1418,7 @@ testUserCanUpdateTags = do
   let ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ UserGroupAdminAR ugid
   void . dbUpdate . UserGroupUpdate $ ug & #externalTags .~ initialTags
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   val <- jsonTestRequestHelper ctx
                                POST
                                [("usergroup", inText tagUpdateJson)]
@@ -1445,7 +1444,7 @@ testUserCanViewTags = do
   user <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   let ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ UserGroupAdminAR ugid
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   val  <- jsonTestRequestHelper ctx GET [] (userGroupApiV2Get ugid) 200
   tags <- lookupObjectArray "tags" val
   assertEqual "user can view tags" (length $ ug ^. #externalTags) (length tags)

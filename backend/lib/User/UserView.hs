@@ -25,7 +25,6 @@ module User.UserView (
 
 import Control.Monad.Catch
 import Text.StringTemplate.GenericStandard ()
-import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -70,9 +69,9 @@ newUserMail
   -> KontraLink
   -> m Mail
 newUserMail ctx emailaddress activatelink = do
-  theme <- dbQuery $ GetTheme $ ctx ^. #brandedDomain % #mailTheme
+  theme <- dbQuery . GetTheme $ ctx ^. #brandedDomain % #mailTheme
   kontramail (ctx ^. #mailNoreplyAddress) (ctx ^. #brandedDomain) theme "newUserMail" $ do
-    F.value "email" $ emailaddress
+    F.value "email" emailaddress
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart" $ ctx ^. #brandedDomain % #url
     brandingMailFields theme
@@ -86,14 +85,14 @@ mailNewAccountCreatedByAdmin
   -> KontraLink
   -> m Mail
 mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
-  theme <- dbQuery $ GetTheme $ ctx ^. #brandedDomain % #mailTheme
+  theme <- dbQuery . GetTheme $ ctx ^. #brandedDomain % #mailTheme
   kontramaillocal (ctx ^. #mailNoreplyAddress)
                   (ctx ^. #brandedDomain)
                   theme
                   lang
                   "mailNewAccountCreatedByAdmin"
     $ do
-        F.value "email" $ email
+        F.value "email" email
         F.value "passwordlink" $ show setpasslink
         F.value "creatorname" $ maybe "" getSmartName (ctx ^. #maybeUser)
         F.value "ctxhostpart" $ ctx ^. #brandedDomain % #url
@@ -109,7 +108,7 @@ mailEmailChangeRequest
   -> KontraLink
   -> m Mail
 mailEmailChangeRequest ctx requestingUser changedUser newemail link = do
-  theme <- dbQuery $ GetTheme $ ctx ^. #brandedDomain % #mailTheme
+  theme <- dbQuery . GetTheme $ ctx ^. #brandedDomain % #mailTheme
   kontramail (ctx ^. #mailNoreplyAddress)
              (ctx ^. #brandedDomain)
              theme
@@ -130,7 +129,7 @@ mailEmailChangeRequestedNotification
   -> Email
   -> m Mail
 mailEmailChangeRequestedNotification ctx requestedByAdmin changedUser newemail = do
-  theme <- dbQuery $ GetTheme $ ctx ^. #brandedDomain % #mailTheme
+  theme <- dbQuery . GetTheme $ ctx ^. #brandedDomain % #mailTheme
   kontramail (ctx ^. #mailNoreplyAddress)
              (ctx ^. #brandedDomain)
              theme
@@ -138,7 +137,7 @@ mailEmailChangeRequestedNotification ctx requestedByAdmin changedUser newemail =
     $ do
         F.value "fullname" $ getFullName changedUser
         F.value "newemail" $ unEmail newemail
-        F.value "requestedbyadmin" $ requestedByAdmin
+        F.value "requestedbyadmin" requestedByAdmin
         brandingMailFields theme
 
 -------------------------------------------------------------------------------

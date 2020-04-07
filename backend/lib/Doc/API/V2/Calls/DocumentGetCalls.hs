@@ -17,6 +17,7 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 
 import Codec.Archive.Zip
 import Control.Monad.IO.Class (liftIO)
+import Data.List.Extra (nubOrd, nubOrdOn)
 import Data.Time
 import Data.Unjson
 import Happstack.Server.Types
@@ -87,9 +88,8 @@ docApiV2List = api $ do
   -- API call actions
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   let documentFilters =
-        (DocumentFilterUnsavedDraft False)
-          : (join $ toDocumentFilter (user ^. #id) <$> filters)
-      documentSorting    = (toDocumentSorting <$> sorting)
+        DocumentFilterUnsavedDraft False : (toDocumentFilter (user ^. #id) =<< filters)
+      documentSorting    = toDocumentSorting <$> sorting
       useFolderListCalls = ugwpSettings ugwp ^. #useFolderListCalls
   logInfo "Fetching list of documents from the database" $ object
     [ identifier $ user ^. #id
@@ -103,17 +103,17 @@ docApiV2List = api $ do
     then do {- new style -}
       -- we don't care if the role is explicit (set) or implicit (derived from
       -- some user or user group property), hence `nubBy`
-      userRoles <- nubBy (\x y -> accessRoleTarget x == accessRoleTarget y)
+      userRoles <- nubOrdOn accessRoleTarget
         <$> dbQuery (GetRolesIncludingInherited user $ ugwpUG ugwp)
-      let allPerms     = nub . concatMap hasPermissions $ map accessRoleTarget userRoles
-          fullReadFids = (\f -> mapMaybe f allPerms) $ \case
+      let allPerms = nubOrd . concatMap hasPermissions $ map accessRoleTarget userRoles
+          fullReadFids = (`mapMaybe` allPerms) $ \case
             Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
             _ -> Nothing
-          sharedFids = (\f -> mapMaybe f allPerms) $ \case
+          sharedFids = (`mapMaybe` allPerms) $ \case
             Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
             Permission PermCanDo ReadA (SharedTemplateR fid) -> Just fid
             _ -> Nothing
-          startedFids = (\f -> mapMaybe f allPerms) $ \case
+          startedFids = (`mapMaybe` allPerms) $ \case
             Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
             Permission PermCanDo ReadA (DocumentAfterPreparationR fid) -> Just fid
             _ -> Nothing
@@ -133,7 +133,7 @@ docApiV2List = api $ do
         , "folder_ids_full_read" .= map show fullReadFids
         ]
       let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-      return $ Ok $ Response
+      return . Ok $ Response
         200
         headers
         nullRsFlags
@@ -150,7 +150,7 @@ docApiV2List = api $ do
       logInfo "Fetching for docApiV2List done" $ object ["query_time" .= time]
       -- Result
       let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-      return $ Ok $ Response
+      return . Ok $ Response
         200
         headers
         nullRsFlags
@@ -168,8 +168,8 @@ docApiV2Get did = logDocument did . api $ do
 
 docApiV2GetByShortID :: Kontrakcja m => DocumentID -> m Response
 docApiV2GetByShortID shortDid = api $ do
-  logInfo "docApiV2GetByShortID" $ object $ [identifierMapLabel ("short_" <>) shortDid]
-  when (length (show shortDid) > 6) $ apiError $ requestParameterInvalid
+  logInfo "docApiV2GetByShortID" $ object [identifierMapLabel ("short_" <>) shortDid]
+  when (length (show shortDid) > 6) . apiError $ requestParameterInvalid
     "short_document_id"
     "was greater than 6 digits"
   doc <- dbQuery $ GetDocumentByShortDocumentID shortDid
@@ -196,10 +196,8 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
     in  case msat of
           Just sat -> return $ signatoryAccessTokenHash sat
           Nothing  -> do
-            mh <- dbUpdate
-              $ NewSignatoryAccessToken slid SignatoryAccessTokenForQRCode Nothing
-            return mh
-  qrCode <- liftIO $ encodeQR $ T.unpack (mkSignLink domainURL magicHash)
+            dbUpdate $ NewSignatoryAccessToken slid SignatoryAccessTokenForQRCode Nothing
+  qrCode <- liftIO . encodeQR $ T.unpack (mkSignLink domainURL magicHash)
   return $ Ok qrCode
 
   where
@@ -233,16 +231,16 @@ docApiV2History did = logDocument did . api $ do
   evidenceLog <- dbQuery $ GetEvidenceLog did
   events      <- reverse <$> eventsJSListFromEvidenceLog doc evidenceLog
   -- Result
-  return $ Ok $ JSObject (J.toJSObject $ [("events", JSArray events)])
+  return . Ok $ JSObject (J.toJSObject [("events", JSArray events)])
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
+docApiV2EvidenceAttachments did = (logDocument did . api) . withDocumentID did $ do
   (user, _) <- getAPIUser APIDocCheck
   doc       <- theDocument
   guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
   eas <- EvidenceAttachments.extractAttachmentsList doc
   let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-  return $ Ok $ Response 200
+  return . Ok $ Response 200
                          headers
                          nullRsFlags
                          (evidenceAttachmentsToJSONBS (documentid doc) eas)
@@ -253,20 +251,17 @@ docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
   download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   case documentstatus doc of
     Closed ->
-      fileFromMainFile (documentsealedfile doc)
-        >>= maybe errorNonexistingSealedMainFile return
-        >>= getFileContents
-        >>= return
-        .   Ok
-        .   respondWithPDF download
+      fmap (Ok . respondWithPDF download)
+        .   getFileContents
+        =<< maybe errorNonexistingSealedMainFile return
+        =<< fileFromMainFile (documentsealedfile doc)
     _ ->
-      fileFromMainFile (documentfile doc)
-        >>= maybe errorNonexistingMainFile return
-        >>= presealDocumentFile doc
-        >>= either errorPresealDocumentFile return
-        >>= return
-        .   Ok
-        .   respondWithPDF download
+      fmap (Ok . respondWithPDF download)
+        .   either errorPresealDocumentFile return
+        =<< presealDocumentFile doc
+        =<< maybe errorNonexistingMainFile return
+        =<< fileFromMainFile (documentfile doc)
+
   where
     errorNonexistingSealedMainFile = apiError $ documentStateErrorWithCode
       503
@@ -285,7 +280,7 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  let acc = [canDo ReadA $ DocumentInFolderR $ documentfolderid doc]
+  let acc = [canDo ReadA . DocumentInFolderR $ documentfolderid doc]
   apiAccessControl user acc $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl
@@ -317,7 +312,7 @@ withDocAccess did dochandler = do
 
 withDocFileAccess :: Kontrakcja m => DocumentID -> FileID -> m a -> m a
 withDocFileAccess did fid action = withDocAccess did $ \_doc -> do
-  filenotindocument <- not <$> (dbQuery $ FileInDocument did fid)
+  filenotindocument <- not <$> dbQuery (FileInDocument did fid)
   if filenotindocument
     then apiError $ resourceNotFound "No file with given fileid associated with document"
     else action
@@ -334,20 +329,18 @@ docApiV2FilesGet did fid mFilename =
                     | T.isSuffixOf ".jpg" filename' = "image/jpeg"
                     | otherwise                     = "application/octet-stream"
         additionalDownloadHeader =
-          if (download) then [("Content-Disposition", "attachment")] else []
+          if download then [("Content-Disposition", "attachment")] else []
         headers = mkHeaders $ [("Content-Type", contentType)] <> additionalDownloadHeader
-    return $ Ok $ Response 200 headers nullRsFlags (BSL.fromStrict fileContents) Nothing
+    return . Ok $ Response 200 headers nullRsFlags (BSL.fromStrict fileContents) Nothing
 
 -- We return 503 if sealed file is still pending, else we return JSON with number of pages
 docApiV2FilesPagesCount :: Kontrakcja m => DocumentID -> FileID -> m Response
 docApiV2FilesPagesCount did fid = logDocument did . api . withDocFileAccess did fid $ do
-  getFileIDContents fid
-    >>= liftIO
-    .   getNumberOfPDFPages
-    >>= either errorCountingPages return
-    >>= return
-    .   Ok
-    .   pageCountJSON
+  fmap (Ok . pageCountJSON)
+    .   either errorCountingPages return
+    =<< (liftIO . getNumberOfPDFPages)
+    =<< getFileIDContents fid
+
   where
     pageCountJSON pagecount =
       JSObject . J.toJSObject $ [("pages", JSRational False (toRational pagecount))]
@@ -385,12 +378,12 @@ docApiV2FilesFull did = logDocument did . api . withDocAccess did $ \doc -> do
   now      <- currentTime
   let epochBase = UTCTime { utctDay = fromGregorian 1970 1 1, utctDayTime = 0 }
       epoch     = round $ diffUTCTime now epochBase
-      contents  = BSL.toStrict $ fromArchive $ foldr
+      contents  = BSL.toStrict . fromArchive $ foldr
         (\(n, c) -> addEntryToArchive (toEntry n epoch (BSL.fromStrict c)))
         emptyArchive
         files
 
-  return $ Ok $ respondWithZipFile download contents
+  return . Ok $ respondWithZipFile download contents
 
 docApiV2FilesFullInternal :: Kontrakcja m => Document -> m [(FilePath, BS.ByteString)]
 docApiV2FilesFullInternal doc = do
@@ -424,7 +417,7 @@ docApiV2FilesFullInternal doc = do
         | otherwise    = concatMap signatoryattachments (documentsignatorylinks doc)
 
   authorAttachmentFiles <- forM separateAuthorAttachments $ \att -> do
-    file     <- dbQuery $ GetFileByFileID $ authorattachmentfileid att
+    file     <- dbQuery . GetFileByFileID $ authorattachmentfileid att
     contents <- getFileContents file
     return (mkFileName (T.unpack $ authorattachmentname att), contents)
 

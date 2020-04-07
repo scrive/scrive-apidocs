@@ -5,7 +5,7 @@ import Control.Monad.Reader
 import Data.Typeable
 import qualified Data.ByteString.Lazy as BSL
 
-data FileStorageException
+newtype FileStorageException
   = FileStorageException Text
   deriving (Eq, Ord, Show, Typeable)
 

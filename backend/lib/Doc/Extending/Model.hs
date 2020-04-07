@@ -13,7 +13,7 @@ import Doc.DocumentMonad
 
 data ScheduleDocumentExtending = ScheduleDocumentExtending DocumentID UTCTime
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentExtending () where
-  update (ScheduleDocumentExtending did _seal_time) = do
+  dbUpdate (ScheduleDocumentExtending did _seal_time) = do
     now <- currentTime
     runQuery_ . sqlDelete "document_extending_jobs" $ do
       sqlWhereEq "id" did
@@ -27,5 +27,5 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
       -- day. However, as GuardTime Java tools induce a relatively high CPU
       -- load, we want to spread this out more evenly; we thus agreed to
       -- schedule it 40 days after we close it.
-      sqlSetCmd "run_at" $ (sqlParam now) <+> "+ interval '40 days'"
+      sqlSetCmd "run_at" $ sqlParam now <+> "+ interval '40 days'"
       sqlSet "attempts" (0 :: Int32)

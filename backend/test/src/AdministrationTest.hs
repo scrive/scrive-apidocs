@@ -37,11 +37,12 @@ test_jsonCompanies = do
                                                      , signupMethod = CompanyInvitation
                                                      }
   _standarduser2 <- instantiateUser $ randomUserTemplate { groupID = return $ ug2 ^. #id }
-  void $ dbUpdate . UserGroupUpdate . set #invoicing (Invoice OnePlan) $ ug2
+  void . dbUpdate . UserGroupUpdate . set #invoicing (Invoice OnePlan) $ ug2
 
   ctx <-
-    (set #maybeUser (Just adminuser2) . set #adminAccounts [Email "jet.li@example.com"])
-      <$> mkContext defaultLang
+    set #maybeUser (Just adminuser2)
+    .   set #adminAccounts [Email "jet.li@example.com"]
+    <$> mkContext defaultLang
 
   req2 <- mkRequest
     GET

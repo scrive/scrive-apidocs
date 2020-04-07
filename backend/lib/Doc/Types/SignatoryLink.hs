@@ -100,8 +100,8 @@ instance ToSQL DeliveryStatus where
 
 ---------------------------------
 
-data CSVUpload = CSVUpload
-  { csvcontents  :: ![[String]]
+newtype CSVUpload = CSVUpload
+  { csvcontents  :: [[String]]
   } deriving (Eq, Ord, Show)
 
 instance PQFormat [[String]] where

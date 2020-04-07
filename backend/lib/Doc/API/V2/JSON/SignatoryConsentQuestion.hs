@@ -25,8 +25,8 @@ unjsonSignatoryConsentModule =
     unjsonQuestion :: UnjsonDef SignatoryConsentQuestion
     unjsonQuestion =
       objectOf
-        $    pure defaultSignatoryConsentQuestion
-        <*   (fieldReadonly "id" scqID "Question ID")
+        $    defaultSignatoryConsentQuestion
+        <$   fieldReadonly "id" scqID "Question ID"
         <**> (field "title" scqTitle "Title" <**> pure (\t q -> q { scqTitle = t }))
         <**> (    field "positive_option" scqPositiveOption "Text of the positive answer"
              <**> pure (\po q -> q { scqPositiveOption = po })
@@ -34,7 +34,7 @@ unjsonSignatoryConsentModule =
         <**> (    field "negative_option" scqNegativeOption "Text of the negative answer"
              <**> pure (\no q -> q { scqNegativeOption = no })
              )
-        <*   (fieldReadOnlyOpt "response" scqResponse "Response")
+        <*   fieldReadOnlyOpt "response" scqResponse "Response"
         <**> (    fieldOptBy "detailed_description"
                              scqDescription
                              "Additional detailed description"
@@ -62,7 +62,7 @@ instance FromSQL SignatoryConsentResponsesForSigning where
     JSON s <- fromSQL mbase
     case Aeson.eitherDecode s of
       Left _ ->
-        hpqTypesError $ "fromSQL (SignatoryConsentResponsesForSigning): can't parse json"
+        hpqTypesError "fromSQL (SignatoryConsentResponsesForSigning): can't parse json"
       Right ae -> case parse unjsonSignatoryConsentResponsesForSigning ae of
         (Result res []) -> return res
         (Result _ _) ->

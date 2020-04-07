@@ -107,11 +107,11 @@ brandedDomainSelector =
   ]
 
 
-data GetBrandedDomains = GetBrandedDomains (Maybe Text)
+newtype GetBrandedDomains = GetBrandedDomains (Maybe Text)
 instance (MonadDB m, MonadLog m) => DBQuery m GetBrandedDomains [BrandedDomain] where
-  query (GetBrandedDomains murlpart) = do
+  dbQuery (GetBrandedDomains murlpart) = do
     runQuery_ . sqlSelect "branded_domains" $ do
-      mapM_ sqlResult $ brandedDomainSelector
+      mapM_ sqlResult brandedDomainSelector
       when (isJust murlpart) $ do
         sqlWhereILike "url" ("%" <> fromMaybe "" murlpart <> "%")
       sqlOrderBy "id"
@@ -119,19 +119,19 @@ instance (MonadDB m, MonadLog m) => DBQuery m GetBrandedDomains [BrandedDomain] 
 
 data GetMainBrandedDomain =  GetMainBrandedDomain
 instance (MonadDB m,  MonadThrow m, MonadLog m) => DBQuery m GetMainBrandedDomain BrandedDomain where
-  query (GetMainBrandedDomain) = do
+  dbQuery GetMainBrandedDomain = do
     runQuery_ . sqlSelect "branded_domains" $ do
-      mapM_ sqlResult $ brandedDomainSelector
+      mapM_ sqlResult brandedDomainSelector
       sqlWhere "branded_domains.main_domain"
       sqlLimit 1
     fetchOne fetchBrandedDomain
 
 
-data GetBrandedDomainByURL = GetBrandedDomainByURL Text
+newtype GetBrandedDomainByURL = GetBrandedDomainByURL Text
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetBrandedDomainByURL BrandedDomain where
-  query (GetBrandedDomainByURL url) = do
+  dbQuery (GetBrandedDomainByURL url) = do
     runQuery_ . sqlSelect "branded_domains" $ do
-      mapM_ sqlResult $ brandedDomainSelector
+      mapM_ sqlResult brandedDomainSelector
       sqlWhere ("" <?> url <> "ILIKE (branded_domains.url || '%')")
       sqlWhere "branded_domains.url <> ''"
       sqlOrderBy "branded_domains.id"
@@ -139,30 +139,30 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetBrandedDomainByUR
     mdomain <- fetchMaybe fetchBrandedDomain
     case mdomain of
       Just d  -> return d
-      Nothing -> query $ GetMainBrandedDomain
+      Nothing -> dbQuery GetMainBrandedDomain
 
-data GetBrandedDomainByUserID = GetBrandedDomainByUserID UserID
+newtype GetBrandedDomainByUserID = GetBrandedDomainByUserID UserID
 instance (MonadDB m,  MonadThrow m, MonadLog m) => DBQuery m GetBrandedDomainByUserID BrandedDomain where
-  query (GetBrandedDomainByUserID uid) = do
+  dbQuery (GetBrandedDomainByUserID uid) = do
     runQuery_ . sqlSelect "branded_domains" $ do
-      mapM_ sqlResult $ brandedDomainSelector
-      sqlWhereExists $ sqlSelect "users" $ do
+      mapM_ sqlResult brandedDomainSelector
+      sqlWhereExists . sqlSelect "users" $ do
         sqlWhereEq "users.id" uid
         sqlWhere "users.associated_domain_id = branded_domains.id"
     fetchOne fetchBrandedDomain
 
 
-data GetBrandedDomainByID = GetBrandedDomainByID BrandedDomainID
+newtype GetBrandedDomainByID = GetBrandedDomainByID BrandedDomainID
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetBrandedDomainByID BrandedDomain where
-  query (GetBrandedDomainByID uid) = do
+  dbQuery (GetBrandedDomainByID uid) = do
     runQuery_ . sqlSelect "branded_domains" $ do
-      mapM_ sqlResult $ brandedDomainSelector
+      mapM_ sqlResult brandedDomainSelector
       sqlWhereEq "id" uid
     fetchOne fetchBrandedDomain
 
-data UpdateBrandedDomain = UpdateBrandedDomain BrandedDomain
+newtype UpdateBrandedDomain = UpdateBrandedDomain BrandedDomain
 instance (MonadDB m) => DBUpdate m UpdateBrandedDomain () where
-  update (UpdateBrandedDomain bd) = do
+  dbUpdate (UpdateBrandedDomain bd) = do
     runQuery_ . sqlUpdate "branded_domains" $ do
       sqlSet "url" $ bd ^. #url
       sqlSet "sms_originator" $ bd ^. #smsOriginator
@@ -192,20 +192,16 @@ instance (MonadDB m) => DBUpdate m UpdateBrandedDomain () where
 
 data NewBrandedDomain = NewBrandedDomain
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where
-  update (NewBrandedDomain) = do
-    mbd          <- dbQuery $ GetMainBrandedDomain
-    newmailtheme <-
-      (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
-        =<< (dbQuery $ GetTheme $ mbd ^. #mailTheme)
-    newsignviewtheme <-
-      (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
-        =<< (dbQuery $ GetTheme $ mbd ^. #signviewTheme)
-    newservicetheme <-
-      (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
-        =<< (dbQuery $ GetTheme $ mbd ^. #serviceTheme)
-    newlogintheme <-
-      (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
-        =<< (dbQuery $ GetTheme $ mbd ^. #loginTheme)
+  dbUpdate NewBrandedDomain = do
+    mbd          <- dbQuery GetMainBrandedDomain
+    newmailtheme <- (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
+      =<< dbQuery (GetTheme $ mbd ^. #mailTheme)
+    newsignviewtheme <- (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
+      =<< dbQuery (GetTheme $ mbd ^. #signviewTheme)
+    newservicetheme <- (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
+      =<< dbQuery (GetTheme $ mbd ^. #serviceTheme)
+    newlogintheme <- (dbUpdate . UnsafeInsertNewThemeWithoutOwner)
+      =<< dbQuery (GetTheme $ mbd ^. #loginTheme)
     runQuery_ . sqlInsert "branded_domains" $ do
       sqlSet "url"         ("" :: String)
       sqlSet "main_domain" False -- One can not create new main domain
@@ -239,9 +235,9 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m NewBrandedDomain Br
     dbUpdate $ MakeThemeOwnedByDomain newdomainID (themeID newlogintheme)
     return newdomainID
 
-data SetMainDomainURL = SetMainDomainURL String
+newtype SetMainDomainURL = SetMainDomainURL String
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetMainDomainURL () where
-  update (SetMainDomainURL url) = do
+  dbUpdate (SetMainDomainURL url) = do
     n <- runQuery . sqlUpdate "branded_domains" $ do
       sqlSet "url" url
       sqlWhere "main_domain"

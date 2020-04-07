@@ -18,24 +18,24 @@ import Doc.SealSpec
 
 sealSpecToLambdaSpec :: (MonadLog m, MonadBase IO m) => SealSpec -> m BSL.ByteString
 sealSpecToLambdaSpec spec = do
-  mfc          <- liftBase $ BS.readFile $ T.unpack $ input spec
+  mfc          <- liftBase . BS.readFile $ T.unpack (input spec)
   persons_     <- mapM sealSpecForPerson (persons spec)
   secretaries_ <- mapM sealSpecForPerson (secretaries spec)
   initiator_   <- mapM sealSpecForPerson (maybeToList $ initiator spec)
   attachments_ <- mapM sealSpecForSealAttachment (attachments spec)
   files_       <- mapM sealSpecForFile (filesList spec)
   return
-    $  Aeson.encode
-    $  Aeson.object
+    .  Aeson.encode
+    .  Aeson.object
     $  [ "preseal" .= False
        , "persons" .= persons_
        , "secretaries" .= secretaries_
        , "attachments" .= attachments_
        , "filesList" .= files_
        ]
-    ++ ((\i -> "initiator" .= i) <$> (initiator_))
+    ++ (("initiator" .=) <$> initiator_)
     ++ [ "mainFileInput"
-         .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode mfc)]
+         .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode mfc)]
        , "documentNumberText" .= documentNumberText spec
        , "initialsText" .= initialsText spec
        , "dontAddFooterToEveryPage" .= disableFooter spec
@@ -44,16 +44,13 @@ sealSpecToLambdaSpec spec = do
 
 presealSpecToLambdaSpec :: (MonadLog m, MonadBase IO m) => PreSealSpec -> m BSL.ByteString
 presealSpecToLambdaSpec spec = do
-  mfc     <- liftBase $ BS.readFile $ T.unpack $ pssInput spec
+  mfc     <- liftBase . BS.readFile $ T.unpack (pssInput spec)
   fields_ <- mapM sealSpecForField (pssFields spec)
-  return
-    $ Aeson.encode
-    $ Aeson.object
-    $ [ "preseal" .= True
-      , "fields" .= fields_
-      , "mainFileInput"
-        .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode mfc)]
-      ]
+  return . Aeson.encode $ Aeson.object
+    [ "preseal" .= True
+    , "fields" .= fields_
+    , "mainFileInput" .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode mfc)]
+    ]
 
 sealSpecForPerson :: (MonadLog m, MonadBase IO m) => Person -> m Aeson.Value
 sealSpecForPerson person = do
@@ -88,13 +85,13 @@ sealSpecForHighlightedImage hi = do
   return $ Aeson.object
     [ "page" .= hiPage hi
     , "fileInput"
-      .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode $ hiImage hi)]
+      .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode $ hiImage hi)]
     ]
 
 sealSpecForField :: (MonadLog m, MonadBase IO m) => Field -> m Aeson.Value
 sealSpecForField field = do
   return
-    $  Aeson.object
+    .  Aeson.object
     $  [ "x" .= x field
        , "y" .= y field
        , "page" .= page field
@@ -111,7 +108,7 @@ sealSpecForField field = do
            , "image_h" .= image_h field
            , "onlyForSummary" .= image_h field
            , "fileInput" .= Aeson.object
-             ["base64Content" .= (T.decodeUtf8 $ B64.encode $ valueBinary field)]
+             ["base64Content" .= T.decodeUtf8 (B64.encode $ valueBinary field)]
            ]
 
 sealSpecForSealAttachment
@@ -121,16 +118,16 @@ sealSpecForSealAttachment a = do
     [ "fileName" .= fileName a
     , "mimeType" .= mimeType a
     , "fileInput"
-      .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode $ fileContent a)]
+      .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode $ fileContent a)]
     ]
 
 sealSpecForFile :: (MonadLog m, MonadBase IO m) => FileDesc -> m Aeson.Value
 sealSpecForFile fd = do
-  mfc <- case (fileInput fd) of
+  mfc <- case fileInput fd of
     Just fn -> Just <$> liftBase (BS.readFile $ T.unpack fn)
     Nothing -> return Nothing
   return
-    $  Aeson.object
+    .  Aeson.object
     $  [ "title" .= fileTitle fd
        , "role" .= fileRole fd
        , "pagesText" .= filePagesText fd
@@ -138,31 +135,26 @@ sealSpecForFile fd = do
        , "sealedOn" .= fileSealedOn fd
        , "attachedToSealedFileText" .= fileAttachedToSealedFileText fd
        ]
-    ++ case (mfc) of
+    ++ case mfc of
          Just fc ->
-           [ "fileInput"
-               .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode $ fc)]
-           ]
+           ["fileInput" .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode fc)]]
          _ -> []
 
 
 addImageSpecToLambdaSpec :: MonadBase IO m => AddImageSpec -> m BSL.ByteString
 addImageSpecToLambdaSpec spec = do
-  mfc <- liftBase $ BS.readFile $ addImageInput spec
-  return
-    $ Aeson.encode
-    $ Aeson.object
-    $ [ "documentNumberText" .= addImageDocumentNumberText spec
-      , "image" .= Aeson.object
-        [ "x" .= addImageX spec
-        , "y" .= addImageY spec
-        , "page" .= addImagePage spec
-        , "fileInput" .= Aeson.object
-          ["base64Content" .= (T.decodeUtf8 $ B64.encode $ addImageImageBinary spec)]
-        ]
-      , "mainFileInput"
-        .= Aeson.object ["base64Content" .= (T.decodeUtf8 $ B64.encode mfc)]
+  mfc <- liftBase . BS.readFile $ addImageInput spec
+  return . Aeson.encode $ Aeson.object
+    [ "documentNumberText" .= addImageDocumentNumberText spec
+    , "image" .= Aeson.object
+      [ "x" .= addImageX spec
+      , "y" .= addImageY spec
+      , "page" .= addImagePage spec
+      , "fileInput" .= Aeson.object
+        ["base64Content" .= T.decodeUtf8 (B64.encode $ addImageImageBinary spec)]
       ]
+    , "mainFileInput" .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode mfc)]
+    ]
 
 staticTextsJSON :: SealingTexts -> Aeson.Value
 staticTextsJSON st = Aeson.object

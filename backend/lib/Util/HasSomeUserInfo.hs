@@ -33,12 +33,12 @@ class HasSomeUserInfo a where
 
 -- | Get the full name (first last)
 getFullName :: (HasSomeUserInfo a) => a -> Text
-getFullName a = T.strip $ (T.strip $ getFirstName a) <> " " <> (T.strip $ getLastName a)
+getFullName a = T.strip $ T.strip (getFirstName a) <> " " <> T.strip (getLastName a)
 
 -- | Return the first non-empty of full name, email or mobile number,
 -- for use in frontend.  Not guaranteed to be unique.
 getSmartName :: (HasSomeUserInfo a) => a -> Text
-getSmartName a = firstNonEmpty $ [getFullName a, getEmail a, getMobile a]
+getSmartName a = firstNonEmpty [getFullName a, getEmail a, getMobile a]
 
 -- | Uses '_notNamedParty' localized source text with `getSmartNameFromMaybe`.
 getSmartNameOrPlaceholder :: (HasSomeUserInfo a, TemplatesMonad m) => a -> m Text

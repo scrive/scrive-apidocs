@@ -35,7 +35,7 @@ addHttpOnlyCookie issecure life cookie = do
   some domain adds a broken cookie, it will not break all other cookies.
 -}
 parseCookieHeader :: Text -> [(Text, Text)]
-parseCookieHeader = catMaybes . map cookieFromPair . cookiePairs
+parseCookieHeader = mapMaybe cookieFromPair . cookiePairs
   where -- split cookie-string on semicolons to get a list of cookie-pairs
         -- e.g. "key1=val1; key2=val2" -> ["key1=val1", "key2=val2"]
     cookiePairs :: Text -> [Text]
@@ -50,13 +50,13 @@ parseCookieHeader = catMaybes . map cookieFromPair . cookiePairs
         -- cookie value can contain '=' so rejoin it
         let cookieValueString = T.intercalate "=" cookieValueElems
         cookieValue <- parseCookieValue cookieValueString
-        return (T.toLower $ cookieName, cookieValue)
+        return (T.toLower cookieName, cookieValue)
 
     -- parse `cookie-value` (from RFC 6265)
     -- not as strict - there's no need to
     parseCookieValue :: Text -> Maybe Text
     parseCookieValue (T.unpack -> '"': rest)
-      | "\"" `isSuffixOf` rest = Just $ T.pack $ unquote $ rStripFrom "\"" rest
+      | "\"" `isSuffixOf` rest = Just . T.pack $ unquote (rStripFrom "\"" rest)
       | otherwise              = Nothing
     parseCookieValue s = Just s
 
@@ -74,8 +74,7 @@ lookCookieValues name headers =
     mCookieHeader      = M.lookup "cookie" headers
     cookieHeaderValues = map TE.decodeUtf8 $ maybe [] hValue mCookieHeader
     cookiesWithNames   = concatMap parseCookieHeader cookieHeaderValues
-    cookies =
-      take 10 $ map snd $ filter (\c -> (fst c) == (T.toLower name)) cookiesWithNames
+    cookies = take 10 . map snd $ filter (\c -> fst c == T.toLower name) cookiesWithNames
   in
     cookies
 

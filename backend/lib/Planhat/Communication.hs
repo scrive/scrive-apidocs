@@ -25,13 +25,15 @@ phMetricsURL PlanhatConf {..} = planhatBaseURL </> planhatTenantID </> "dimensio
 
 mkPlanhatRequest :: PlanhatConf -> (PlanhatConf -> String) -> JSON.Value -> Request
 mkPlanhatRequest phConf@PlanhatConf {..} phURL reqJSON =
-  let timeout =
-          responseTimeoutMicro
-            $ 10 {- secs -}*  1000000
-      req = (setRequestBodyJSON reqJSON) . (setRequestMethod "POST") $ parseRequest_
-        (phURL phConf)
-      req' = req { responseTimeout = timeout }
-  in  req'
+  let
+    timeout =
+      responseTimeoutMicro
+        $ 10 {- secs -}* 1000000
+    req =
+      setRequestBodyJSON reqJSON . setRequestMethod "POST" $ parseRequest_ (phURL phConf)
+    req' = req { responseTimeout = timeout }
+  in
+    req'
 
 -- | Planhat says '200' about most things, but often (but not always) supplies a
 -- JSON object that we can check for a key "errors". If this has non-zero length
@@ -43,13 +45,12 @@ mkPlanhatRequest phConf@PlanhatConf {..} phURL reqJSON =
 maybeErrors :: BSL.ByteString -> Maybe JSON.Value
 maybeErrors resBody = do
   resJSON <- JSON.decode' resBody
-  (flip JSON.parseMaybe) resJSON $ \val -> do
-    (JSON.withObject
-        "Planhat query result"
-        (\obj -> do
-          k <- length <$> (obj .: "errors" :: JSON.Parser JSON.Array)
-          if k > 0 then return resJSON else fail ""
-        )
+  flip JSON.parseMaybe resJSON $ \val -> do
+    JSON.withObject
+      "Planhat query result"
+      (\obj -> do
+        k <- length <$> (obj .: "errors" :: JSON.Parser JSON.Array)
+        if k > 0 then return resJSON else fail ""
       )
       val
 
@@ -73,9 +74,9 @@ planhatMetricJSON
   -> UTCTime     -- ^ Timestamp.
   -> JSON.Value
 planhatMetricJSON dimensionId value invoiceUgid sugid time = JSON.object
-  [ "companyExternalId" .= (Text.pack $ show invoiceUgid)
+  [ "companyExternalId" .= Text.pack (show invoiceUgid)
   , "dimensionId" .= dimensionId
   , "value" .= value
   , "date" .= time
-  , "assetExtId" .= (Text.pack $ show sugid)
+  , "assetExtId" .= Text.pack (show sugid)
   ]

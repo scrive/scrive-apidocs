@@ -44,7 +44,7 @@ buildDBDocs tgt = do
       case code of
         ExitSuccess -> return stdout
         _           -> do
-          userHomeDir <- liftIO $ getHomeDirectory
+          userHomeDir <- liftIO getHomeDirectory
           return
             $   userHomeDir
             </> "bin"
@@ -90,11 +90,11 @@ buildDBDocs tgt = do
               . either (const []) id
               . parseOnly (parserPostgresConnectionStr <* endOfInput)
               $ dbconfstr
-      return $ DBConfig { dbcHost     = findWithDefault "localhost" "host" $ dbconf
-                        , dbcPort     = findWithDefault "5432" "port" $ dbconf
-                        , dbcDatabase = findWithDefault "kontra" "dbname" $ dbconf
-                        , dbcUser     = findWithDefault "kontra" "user" $ dbconf
-                        , dbcPassword = findWithDefault "kontra" "password" $ dbconf
+      return $ DBConfig { dbcHost     = findWithDefault "localhost" "host" dbconf
+                        , dbcPort     = findWithDefault "5432" "port" dbconf
+                        , dbcDatabase = findWithDefault "kontra" "dbname" dbconf
+                        , dbcUser     = findWithDefault "kontra" "user" dbconf
+                        , dbcPassword = findWithDefault "kontra" "password" dbconf
                         }
 
     parserPostgresConnectionStr :: Parser [(String, String)]

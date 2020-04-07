@@ -17,7 +17,7 @@ import MonthlyInvoice.Config (MonthlyInvoiceConf(..))
 import PdfToolsLambda.Conf
 import Templates
 
-newtype RunLogger = RunLogger { unRunLogger :: (forall m r . LogT m r -> m r) }
+newtype RunLogger = RunLogger { unRunLogger :: forall m r . LogT m r -> m r }
 
 data TestEnvSt = TestEnvSt
   { connSource         :: !BasicConnectionSource
