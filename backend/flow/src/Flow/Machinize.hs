@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE StrictData #-}
 module Flow.Machinize
     ( EventInfo(..)
     , LowAction(..)

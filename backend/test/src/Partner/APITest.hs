@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Partner.APITest (partnerAPITests) where
 
 import Data.Aeson

@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 module Flow.Model.InstanceSession
     ( insertInstanceAccessToken
     , selectInstanceAccessTokens

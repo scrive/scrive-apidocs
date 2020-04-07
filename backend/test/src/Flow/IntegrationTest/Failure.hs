@@ -1,7 +1,4 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StrictData #-}
-
 module Flow.IntegrationTest.Failure where
 
 import Control.Monad.Reader.Class

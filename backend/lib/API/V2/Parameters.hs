@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs #-}
 module API.V2.Parameters (
     ApiV2Parameter(..)
   , apiV2ParameterOptional

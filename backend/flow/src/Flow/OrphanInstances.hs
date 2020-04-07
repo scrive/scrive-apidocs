@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
-{-# LANGUAGE StrictData #-}
 module Flow.OrphanInstances () where
 
 import Control.Monad.IO.Class (liftIO)

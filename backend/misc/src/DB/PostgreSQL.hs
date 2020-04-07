@@ -1,4 +1,3 @@
-{-# LANGUAGE DataKinds #-}
 module DB.PostgreSQL where
 
 import Control.Concurrent.MVar

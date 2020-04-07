@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Doc.Flow
     ( processEventThrow
     , EngineEvent(..)

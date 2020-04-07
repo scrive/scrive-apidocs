@@ -1,5 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 module User.APILog.Model (
     CallLogData(..)
   , CallLogID(..)

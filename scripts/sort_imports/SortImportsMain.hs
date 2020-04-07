@@ -1,7 +1,3 @@
-{-# LANGUAGE BangPatterns      #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# OPTIONS_GHC -Wall          #-}
 module Main (main) where
 
 import Control.Applicative

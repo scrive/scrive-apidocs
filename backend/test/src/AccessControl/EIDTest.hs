@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module AccessControl.EIDTest (accessControlEIDTests) where
 
 import Control.Monad.Catch (try)

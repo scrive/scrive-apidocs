@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V1.JSONTest (apiV1JSONTests) where
 
 import Data.Aeson

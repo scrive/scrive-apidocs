@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V1.ForwardsCompatibilityTest (apiV1ForwardsCompatibilityTests) where
 
 import Happstack.Server

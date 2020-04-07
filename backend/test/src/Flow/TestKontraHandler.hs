@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Flow.TestKontraHandler
   ( FlowTestKontra

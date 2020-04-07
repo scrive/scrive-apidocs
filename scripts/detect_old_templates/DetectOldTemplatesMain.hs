@@ -1,6 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Main (main) where
 
+import Control.Monad (when)
 import Data.Bifunctor
 import Data.List (isSuffixOf)
 import Data.Maybe
@@ -15,7 +15,6 @@ import qualified Data.Map as Map
 import qualified Data.Set as S
 
 import AppDir (setupAppPaths)
-import ScriptsPrelude
 import Transifex.Synch
 import Transifex.Utils
 
@@ -51,6 +50,7 @@ kontraExtensions = map
   , FlexibleContexts
   , FlexibleInstances
   , FunctionalDependencies
+  , GADTs
   , GeneralizedNewtypeDeriving
   , LambdaCase
   , MultiParamTypeClasses

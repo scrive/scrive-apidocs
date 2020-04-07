@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module Doc.Model.Update
   ( AddDocumentAttachment(..)
   , ArchiveDocument(..)

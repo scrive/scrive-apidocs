@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module AccessControl.RoleTest (accessControlRoleTests) where
 
 import Data.List.Extra (nubOrd)

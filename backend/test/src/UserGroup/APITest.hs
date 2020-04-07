@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module UserGroup.APITest (userGroupApiTests) where
 
 import Data.Aeson (encode)

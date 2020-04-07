@@ -4,9 +4,6 @@
 --
 -- Additional information: https://scriveab.atlassian.net/wiki/spaces/EN/pages/1573355521/Flow+DSL
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE StrictData #-}
 module Flow.Aggregator
     ( AggregatorState(..)
     , AggregatorError(..)

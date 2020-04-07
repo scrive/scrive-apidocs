@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 module Flow.Message.Internal
   ( Message(..)
   ) where

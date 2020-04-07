@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module UserGroup.UserGroupTest (userGroupTests) where
 
 import Control.Monad.Catch (try)

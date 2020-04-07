@@ -1,6 +1,4 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
-{-# LANGUAGE StrictData #-}
-
 module Flow.OrphanTestInstances () where
 
 import Data.String

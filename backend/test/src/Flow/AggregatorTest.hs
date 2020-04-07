@@ -1,7 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StrictData #-}
-
 module Flow.AggregatorTest (tests) where
 
 import Data.Either.Combinators

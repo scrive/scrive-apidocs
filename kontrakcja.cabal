@@ -55,9 +55,11 @@ common common-stanza
                     , DeriveFunctor
                     , DeriveGeneric
                     , DerivingStrategies
+                    , DuplicateRecordFields
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
+                    , GADTs
                     , GeneralizedNewtypeDeriving
                     , LambdaCase
                     , MultiParamTypeClasses
@@ -79,6 +81,7 @@ common common-stanza
                     , UndecidableInstances
 
 Library kontrakcja-prelude
+  import: common-stanza
 
   Hs-Source-Dirs: backend/kontrakcja-prelude
 
@@ -90,11 +93,9 @@ Library kontrakcja-prelude
                     , optics, hpqtypes
                     , text, text-show
                     , fields-json
-  Default-Language:   Haskell2010
-  Default-Extensions: FlexibleInstances, RecordWildCards, TypeOperators
-                    , OverloadedStrings
 
 Library kontrakcja-appdir
+  import: common-stanza
 
   Hs-Source-Dirs: backend/appdir
 
@@ -105,7 +106,6 @@ Library kontrakcja-appdir
   Build-Depends:      base
                     , directory
                     , filepath
-  Default-Language:   Haskell2010
 
 Library
   import: common-stanza
@@ -1391,6 +1391,8 @@ Executable routinglist
                , unordered-containers
 
 Executable transifex
+  import: common-stanza
+
   Hs-source-dirs:   transifex/src
   Main-is:          TransifexMain.hs
   Other-Modules:    Transifex.Synch,
@@ -1404,13 +1406,12 @@ Executable transifex
                     old-locale,
                     old-time,
                     process
-  Default-Language: Haskell2010
 
 Executable detect_old_localizations
-  Hs-source-dirs:   scripts/detect_old_localizations,
-                    scripts/scripts-prelude
+  import: common-stanza
+
+  Hs-source-dirs:   scripts/detect_old_localizations
   Main-is:          DetectOldLocalizationsMain.hs
-  Other-Modules:    ScriptsPrelude
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
                     kontrakcja-appdir,
@@ -1419,15 +1420,13 @@ Executable detect_old_localizations
                     language-javascript >= 0.6,
                     regex-tdfa
 
-  Default-Language: Haskell2010
-
 Executable detect_old_templates
+  import: common-stanza
+
   Hs-source-dirs:   scripts/detect_old_templates,
-                    scripts/scripts-prelude
-                    transifex/src/
+                    transifex/src
   Main-is:          DetectOldTemplatesMain.hs
-  Other-Modules:    ScriptsPrelude
-                    Transifex.Synch
+  Other-Modules:    Transifex.Synch
                     Transifex.Utils
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
@@ -1443,9 +1442,10 @@ Executable detect_old_templates
                     process,
                     old-time,
                     old-locale
-  Default-Language: Haskell2010
 
 Executable sort_imports
+  import: common-stanza
+
   Hs-source-dirs:   scripts/sort_imports
   Main-is:          SortImportsMain.hs
   GHC-Options:      -Wall -Werror

@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module Flow.Signview where
 
 import Control.Monad.Catch (MonadThrow)

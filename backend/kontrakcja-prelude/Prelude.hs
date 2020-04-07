@@ -1,9 +1,6 @@
 -- | Slightly customized replacement of Prelude.
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PackageImports #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 module Prelude (
     module Control.Applicative
   , module Control.Monad

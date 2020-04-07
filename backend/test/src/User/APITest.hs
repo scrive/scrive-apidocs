@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module User.APITest (userAPITests) where
 
 import Control.Monad.IO.Class
