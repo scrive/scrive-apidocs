@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Adgangskort for ansatte",
 "_elegSignDKSignMethodEmployeeKeyfile":"Adgangsfil for ansatte",
 "_elegSignDKSignMethodPersonalKeycard":"Personlig adgangskort",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Logg inn med iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, du vil signere med norsk BankID. Når du har signert, vil signaturen din bli registrert av e-signeringstjenesten Scrive.",
 "_elegSignNOConfirmationTextNoName":"Du vil signere med norsk BankID. Når du har signert, vil signaturen din bli registrert av e-signeringstjenesten Scrive.",

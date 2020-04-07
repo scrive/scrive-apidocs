@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Darbuotojo raktinė kortelė",
 "_elegSignDKSignMethodEmployeeKeyfile":"Darbuotojo raktinė byla",
 "_elegSignDKSignMethodPersonalKeycard":"Asmeninė raktinė kortelė",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Pasirašykite per iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong> pasirašysite per Norvegijos „BankID“. Pasirašius, jūsų parašas bus užregistruotas e-parašų paslaugoje „Scrive“.",
 "_elegSignNOConfirmationTextNoName":"Pasirašysite per Norvegijos „BankID“. Pasirašius, jūsų parašas bus užregistruotas e-parašų paslaugoje „Scrive“.",

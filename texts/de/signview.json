@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Mitarbeiterschlüsselkarte",
 "_elegSignDKSignMethodEmployeeKeyfile":"Mitarbeiterschlüsseldatei",
 "_elegSignDKSignMethodPersonalKeycard":"Persönliche Schlüsselkarte",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Mit iDIN anmelden",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, Sie signieren mit norwegischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignNOConfirmationTextNoName":"Sie signieren mit norwegischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",

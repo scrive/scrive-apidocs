@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Darbinieka atslēgas karte",
 "_elegSignDKSignMethodEmployeeKeyfile":"Darbinieka atslēgas datne",
 "_elegSignDKSignMethodPersonalKeycard":"Personīgā atslēgas karte",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, lai parakstītos, izmantojiet Norvēģijas BankID. Pēc parakstīšanās e-parakstu pakalpojums Scrive saglabās Jūsu parakstu.",
 "_elegSignNOConfirmationTextNoName":"Lai parakstītos, izmantojiet Norvēģijas BankID. Pēc parakstīšanās e-parakstu pakalpojums Scrive saglabās Jūsu parakstu.",

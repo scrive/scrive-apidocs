@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Karta pracownika",
 "_elegSignDKSignMethodEmployeeKeyfile":"Plik klucza pracownika",
 "_elegSignDKSignMethodPersonalKeycard":"Karta osobista",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Podpisz przy użyciu iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, do złożenia podpisu użyjesz norweskiego BankID. Po podpisaniu dokumentu Twój podpis zostanie zarejestrowany przez serwis podpisów elektronicznych Scrive.",
 "_elegSignNOConfirmationTextNoName":"Do złożenia podpisu użyjesz norweskiego BankID. Po podpisaniu dokumentu Twój podpis zostanie zarejestrowany przez serwis podpisów elektronicznych Scrive.",

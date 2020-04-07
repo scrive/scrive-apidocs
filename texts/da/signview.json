@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Medarbejder nøglekort",
 "_elegSignDKSignMethodEmployeeKeyfile":"Medarbejder nøglefil",
 "_elegSignDKSignMethodPersonalKeycard":"Personligt nøglekort",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Signer med iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, du signerer med det norske BankID. Efterfølgende bliver din underskrift registreret af e-signing servicen Scrive.",
 "_elegSignNOConfirmationTextNoName":"Du signerer med det norske BankID. Efterfølgende bliver din underskrift registreret af e-signing servicen Scrive.",

@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Lyklakort starfsmanns",
 "_elegSignDKSignMethodEmployeeKeyfile":"Lyklaskrá starfsmanns",
 "_elegSignDKSignMethodPersonalKeycard":"Persónulegt lyklakort",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Skrifa undir með iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, þú skrifar undir með því að nota norskt BankID. Þegar þú hefur skrifað undir verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_elegSignNOConfirmationTextNoName":"Þú skrifar undir með því að nota norskt BankID. Þegar þú hefur skrifað undir verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",

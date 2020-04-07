@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Personeelpas",
 "_elegSignDKSignMethodEmployeeKeyfile":"Sleutelbestand voor personeel",
 "_elegSignDKSignMethodPersonalKeycard":"Persoonlijk pasje",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Ondertekenen met iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, u ondertekent met Norwegian BankID. Wanneer u ondertekent wordt uw handtekening geregistreerd door de e-signing service Scrive. ",
 "_elegSignNOConfirmationTextNoName":"U gaat ondertekenen met behulp van Norwegian BankID. Wanneer u ondertekent wordt uw handtekening geregistreerd door de e-signing service Scrive.",
