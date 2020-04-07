@@ -80,7 +80,7 @@ testJSONCtx = do
                                                , lastName  = return "JonesTest"
                                                , email     = return "test@scrive.com"
                                                }
-  set #maybeUser (Just user) <$> mkContext defaultLang
+  mkContextWithUser defaultLang user
 
 runApiJSONTest
   :: Context             -- ^ Context to run the test in

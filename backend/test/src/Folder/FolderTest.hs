@@ -133,7 +133,7 @@ testPartnerUsersWithoutFolders = do
 
 partnerCompanyCreate :: User -> UserGroup -> TestEnv (Context, UserGroupID)
 partnerCompanyCreate partnerAdminUser partnerAdminUserGroup = do
-  ctx <- set #maybeUser (Just partnerAdminUser) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang partnerAdminUser
   let partnerUgID = partnerAdminUserGroup ^. #id
   newCompanyJSON <- readTestFile "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [("json", inTextBS newCompanyJSON)]
@@ -176,7 +176,7 @@ testNewCompanyAccount = do
                                                }
   assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   bobReq <- mkRequest
     POST

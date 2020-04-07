@@ -28,7 +28,7 @@ apiV2CallLogTests env = testGroup
 testApiLogIsStored :: TestEnv ()
 testApiLogIsStored = do
   user       <- instantiateRandomUser
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -41,7 +41,7 @@ testApiLogIsStored = do
 testApiLogIsRotated :: TestEnv ()
 testApiLogIsRotated = do
   user       <- instantiateRandomUser
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -53,7 +53,7 @@ testApiLogIsRotated = do
 testApiLogGetItemWorks :: TestEnv ()
 testApiLogGetItemWorks = do
   user       <- instantiateRandomUser
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -66,7 +66,7 @@ testApiLogGetItemWorks = do
 testApiLogGetListWorks :: TestEnv ()
 testApiLogGetListWorks = do
   user       <- instantiateRandomUser
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -77,7 +77,7 @@ testApiLogGetListWorks = do
 testApiLog2Users :: TestEnv ()
 testApiLog2Users = do
   userA       <- instantiateRandomUser
-  ctxA        <- set #maybeUser (Just userA) <$> mkContext defaultLang
+  ctxA        <- mkContextWithUser defaultLang userA
   newMockDocA <- testDocApiV2New' ctxA
   let didA = getMockDocId newMockDocA
 
@@ -87,7 +87,7 @@ testApiLog2Users = do
   assertEqual "There should be 5 logged API Calls for user A" 5 (length logsUserA)
 
   userB       <- instantiateRandomUser
-  ctxB        <- set #maybeUser (Just userB) <$> mkContext defaultLang
+  ctxB        <- mkContextWithUser defaultLang userB
   newMockDocB <- testDocApiV2New' ctxB
   let didB = getMockDocId newMockDocB
 

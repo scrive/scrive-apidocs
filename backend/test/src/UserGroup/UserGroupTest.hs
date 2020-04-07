@@ -232,7 +232,7 @@ testChangeUserGroupParent = do
       usrEmail       = "testuseremail@scrive.com"
   user <- instantiateUser
     $ randomUserTemplate { email = return usrEmail, groupID = return usrGrpID }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   let params1 = [("companyparentid", inText $ showt parentUsrGrpID)]
   req1 <- mkRequest POST params1

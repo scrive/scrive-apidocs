@@ -29,7 +29,7 @@ testPadApplicationPadInfoGet = do
                                                , signupMethod   = CompanyInvitation
                                                }
 
-  ctx1          <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx1          <- mkContextWithUser defaultLang user
   req1          <- mkRequest GET []
   (res1, _ctx2) <- runTestKontra req1 ctx1 apiCallGetPadInfo
   let Just (Object resObject1            ) = decode (rsBody res1) :: Maybe Value

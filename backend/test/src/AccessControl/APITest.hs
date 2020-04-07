@@ -103,7 +103,7 @@ testNonGodModeUserCannotViewRolesForNonExistentUser = do
                                                , lastName = return "Lister"
                                                , email = return "dave.lister@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid)
   assertEqual "non-admin user can't view non-existent user's roles" 403 $ rsCode res
@@ -120,7 +120,7 @@ testNonGodModeUserCannotViewUserRolesWithoutPermissions = do
     , lastName  = return "Rimmer"
     , email     = return "arnold.rimmer@scrive.com"
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid2)
   assertEqual "non-admin user can't view user's roles without permission" 403 $ rsCode res
@@ -131,7 +131,7 @@ testNonGodModeUserCanViewOwnRoles = do
                                                , lastName  = return "Cat"
                                                , email     = return "the.cat@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   let uid = user ^. #id
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid)
@@ -150,7 +150,7 @@ testUserGroupAdminCanViewRolesOfOtherUserGroupMember = do
   void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   user2 <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   let uid2 = user2 ^. #id
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid2)
   assertEqual "" 200 $ rsCode res
@@ -168,7 +168,7 @@ testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers = do
       ugid = user ^. #groupID
   void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   user2 <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  ctx   <- set #maybeUser (Just user2) <$> mkContext defaultLang
+  ctx   <- mkContextWithUser defaultLang user2
   req   <- mkRequest GET []
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid1)
   assertEqual "usergroup member cannot view roles of other usergroup member" 403
@@ -185,7 +185,7 @@ testAllInheritedRolesAreReturned = do
     , signupMethod   = CompanyInvitation
     }
   ugB0 <- instantiateRandomUserGroup
-  ctx  <- set #maybeUser (Just userA) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang userA
   void . dbUpdate . UserGroupUpdate . set #parentGroupID (Just $ userA ^. #groupID) $ ugB0
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles $ userA ^. #id)
@@ -207,7 +207,7 @@ testNonGodModeUserCannotViewNonExistentRoles = do
                                                , lastName = return "Lister"
                                                , email = return "dave.lister@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest GET []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Get roleId)
   assertEqual "non-admin user can't view non-existent role" 403 $ rsCode res
@@ -224,7 +224,7 @@ testNonGodModeUserCannotViewRoleWithoutPermissions = do
     , lastName  = return "Rimmer"
     , email     = return "arnold.rimmer@scrive.com"
     }
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid2 $ UserAR uid2
   req  <- mkRequest GET []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Get $ getRoleId role)
@@ -239,7 +239,7 @@ testNonGodModeUserCanViewOwnRole = do
                                                , lastName = return "Lister"
                                                , email = return "dave.lister@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   let uid = user ^. #id
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid $ UserAR uid
   req  <- mkRequest GET []
@@ -279,7 +279,7 @@ testNonGodModeUserCannotDeleteNonExistentRoles = do
                                                , lastName = return "Lister"
                                                , email = return "dave.lister@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest POST []
   res <- fst <$> runTestKontra req ctx (accessControlAPIV2Delete roleId)
   assertEqual "non-admin user can't view non-existent role" 403 $ rsCode res
@@ -296,7 +296,7 @@ testNonGodModeUserCannotDeleteRoleWithoutPermissions = do
     , lastName  = return "Rimmer"
     , email     = return "arnold.rimmer@scrive.com"
     }
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid2 $ UserAR uid2
   req  <- mkRequest POST []
   res  <- fst <$> runTestKontra req ctx (accessControlAPIV2Delete $ getRoleId role)
@@ -312,7 +312,7 @@ testNonGodModeUserCanDeleteOwnRole = do
                                                , email = return "dave.lister@scrive.com"
                                                , isCompanyAdmin = True
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   let uid = user ^. #id
   role <- fmap fromJust . dbUpdate . AccessControlCreateForUser uid $ UserAR uid
   req  <- mkRequest POST []
@@ -374,7 +374,7 @@ testNonGodModeUserCannotAddRoleFromNonExistentUser = do
                                                , lastName = return "Lister"
                                                , email = return "dave.lister@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   let jsonString = roleJSON (user ^. #id) (unsafeUserID 321)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
@@ -386,7 +386,7 @@ testNonGodModeUserCannotAddRoleForNonExistentUser = do
                                                , lastName = return "Lister"
                                                , email = return "dave.lister@scrive.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   let jsonString = roleJSON (unsafeUserID 321) (user ^. #id)
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
@@ -433,7 +433,7 @@ testNonGodModeUserCannotAddRoleWithoutPermissions = do
     , lastName  = return "Rimmer"
     , email     = return "arnold.rimmer@scrive.com"
     }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   let jsonString = roleJSON (user ^. #id) uid2
   req <- mkRequest POST [("role", inText $ T.pack jsonString)]
   res <- fst <$> runTestKontra req ctx accessControlAPIV2Add
@@ -443,7 +443,7 @@ testNonGodModeUserCanAddRoleWithPermissions :: TestEnv ()
 testNonGodModeUserCanAddRoleWithPermissions = do
   user1 <- instantiateRandomUser
   user2 <- instantiateRandomUser
-  ctx   <- set #maybeUser (Just user1) <$> mkContext defaultLang
+  ctx   <- mkContextWithUser defaultLang user1
   void . dbUpdate . AccessControlCreateForUser (user1 ^. #id) $ UserAdminAR
     (user2 ^. #groupID)
   let jsonText = roleUserAdminJSON (user2 ^. #id) (user2 ^. #groupID)

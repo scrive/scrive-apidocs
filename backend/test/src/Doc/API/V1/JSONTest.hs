@@ -70,7 +70,7 @@ testFromFileAndReadySimple = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
@@ -93,7 +93,7 @@ testFromFileAndUpdate = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
@@ -117,7 +117,7 @@ testFromTemplateAndReadySimple = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
@@ -157,7 +157,7 @@ testUpdateFields = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
@@ -199,7 +199,7 @@ testUpdateWithReplacementFields = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
@@ -240,7 +240,7 @@ testUpdateWithSubset = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx         <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx         <- mkContextWithUser defaultLang user
 
   reqDoc      <- mkRequestWithHeaders POST [] []
   (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
@@ -262,7 +262,7 @@ testUpdateWithAllFeatures = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
@@ -304,7 +304,7 @@ testList = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
@@ -391,7 +391,7 @@ testSignWithSignature = do
                                                , lastName  = return "Jounty"
                                                , email     = return "jonathan@scrive.com"
                                                }
-  ctx    <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST

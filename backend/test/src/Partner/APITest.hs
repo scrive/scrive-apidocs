@@ -71,7 +71,7 @@ testPartnerCompanyCreate = do
 
   -- Random  user shouldn't be able to create company
   randomUser      <- instantiateRandomUser
-  randomCtx       <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
+  randomCtx       <- mkContextWithUser defaultLang randomUser
   randomReq       <- mkRequestWithHeaders POST [] []
   (randomRes1, _) <- runTestKontra randomReq
                                    randomCtx
@@ -138,7 +138,7 @@ testPartnerCompanyUpdate = do
 
   -- Random user shouldn't be able to update
   randomUser     <- instantiateRandomUser
-  randomCtx      <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
+  randomCtx      <- mkContextWithUser defaultLang randomUser
   randomReq      <- mkRequestWithHeaders POST [("json", inTextBS companyUpdateJSON)] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
     $ partnerApiCallV1CompanyUpdate partnerUgID cid
@@ -239,7 +239,7 @@ testPartnerCompanyGet = do
 
   -- Random user shouldn't be able to update
   randomUser     <- instantiateRandomUser
-  randomCtx      <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
+  randomCtx      <- mkContextWithUser defaultLang randomUser
   randomReq      <- mkRequestWithHeaders POST [] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
     $ partnerApiCallV1CompanyGet partnerUgID cid
@@ -319,7 +319,7 @@ testPartnerCompaniesGet = do
   randomUser     <- instantiateRandomUser
 
   -- random user is denied listing companies of partnerA
-  randomCtx      <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
+  randomCtx      <- mkContextWithUser defaultLang randomUser
   randomReq      <- mkRequestWithHeaders POST [] []
   (randomRes, _) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompaniesGet pidA
   assertEqual "We should get a 403 response" 403 (rsCode randomRes)
@@ -804,7 +804,7 @@ testJSONCtxWithPartnerGroupID = do
     .  UserGroupAdminAR
     $  partnerAdminUserGroup
     ^. #id
-  ctx <- set #maybeUser (Just partnerAdminUser) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang partnerAdminUser
   return (ctx, partnerAdminUserGroup ^. #id)
 
 runApiJSONTest

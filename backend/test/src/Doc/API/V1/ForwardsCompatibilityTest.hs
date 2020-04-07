@@ -62,7 +62,7 @@ testDocApiV1FromTemplateImpersonateEID :: TestEnv ()
 testDocApiV1FromTemplateImpersonateEID = do
   user <- instantiateRandomUser
   let uid = user ^. #id
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
@@ -111,7 +111,7 @@ testDocApiV1ReadyImpersonateEID :: TestEnv ()
 testDocApiV1ReadyImpersonateEID = do
   user <- instantiateRandomUser
   let uid = user ^. #id
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate

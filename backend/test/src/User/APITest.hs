@@ -157,7 +157,7 @@ testUser2FAWorkflow = do
   password          <- rand 10 $ arbText 3 30
   randomUser        <- instantiateUser $ randomUserTemplate { password = Just password }
 
-  ctx'              <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
+  ctx'              <- mkContextWithUser defaultLang randomUser
 
   -- Start setting up 2FA
   req_setup2fa      <- mkRequest POST []
@@ -178,7 +178,7 @@ testUser2FAWorkflow = do
   -- For some reason we need to get updated User and add to Context
   -- otherwise tests fail because TOTP changes are not "seen"
   Just user <- dbQuery . GetUserByID $ randomUser ^. #id
-  ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx       <- mkContextWithUser defaultLang user
 
   -- apiCallGetUserPersonalToken should still work: 2FA not yet confirmed
   do
@@ -235,7 +235,7 @@ testUserNoDeletionIfWrongEmail = do
                                                , signupMethod   = CompanyInvitation
                                                }
 
-  ctx <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang anna
 
   do
     req      <- mkRequest POST [("email", inText "wrong@email.com")]
@@ -262,7 +262,7 @@ testUserNoDeletionIfPendingDocuments = do
                                               , groupID = return $ anna ^. #groupID
                                               }
 
-  ctx <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang bob
 
   doc <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Signable]
                                             , rdaStatuses = OneOf [Pending]
@@ -288,7 +288,7 @@ testUserDeletion = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx      <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang anna
 
   req      <- mkRequest POST [("email", inText "anna@android.com")]
   (res, _) <- runTestKontra req ctx apiCallDeleteUser
@@ -318,7 +318,7 @@ testUserDeletionOwnershipTransfer = do
                                                           , rdaSharings = OneOf [Private]
                                                           }
 
-  ctx <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang anna
   let actor = userActor ctx anna
 
   fid                <- addNewRandomFile
@@ -366,7 +366,7 @@ testUserSetDataRetentionPolicy = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   replicateM_ 10 $ do
     drp <- rand 10 arbitrary
@@ -390,7 +390,7 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   replicateM_ 10 $ do
     userDRP    <- rand 10 arbitrary
@@ -430,14 +430,14 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
 testUserGetTags :: TestEnv ()
 testUserGetTags = do
   user         <- instantiateRandomUser
-  ctx          <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx          <- mkContextWithUser defaultLang user
   (Array tags) <- jsonTestRequestHelper ctx GET [] apiCallGetTags 200
   assertEqual "user can view tags" (length $ user ^. #externalTags) (length tags)
 
 testUserUpdateTags :: TestEnv ()
 testUserUpdateTags = do
   user     <- instantiateUser $ randomUserTemplate & #externalTags .~ return initialTags
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest POST [("tags", inText tagUpdateJson)]
   (res, _) <- runTestKontra req ctx apiCallUpdateTags
   assertEqual "should return" 200 (rsCode res)

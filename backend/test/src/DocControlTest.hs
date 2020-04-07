@@ -156,7 +156,7 @@ uploadDocAsNewUser = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx          <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx          <- mkContextWithUser defaultLang user
 
   req          <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (rsp, _ctx') <- runTestKontra req ctx apiCallV1CreateFromFile
@@ -180,7 +180,7 @@ testLastPersonSigningADocumentClosesIt = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
@@ -278,7 +278,7 @@ testSigningWithPin = do
                                                 }
   True <- dbUpdate $ SetUserUserGroup (user1 ^. #id) ugid1
   True <- dbUpdate $ SetUserUserGroup (user2 ^. #id) ugid2
-  ctx  <- set #maybeUser (Just user1) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user1
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
@@ -395,7 +395,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   doc <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
@@ -426,9 +426,9 @@ testSendReminderEmailByCompanyAdmin = do
   adminuser <- instantiateUser
     $ randomUserTemplate { groupID = return ugid, isCompanyAdmin = True }
 
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
-  ctxadmin <- set #maybeUser (Just adminuser) <$> mkContext defaultLang
-  ctxother <- set #maybeUser (Just otheruser) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
+  ctxadmin <- mkContextWithUser defaultLang adminuser
+  ctxother <- mkContextWithUser defaultLang otheruser
 
   doc      <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
@@ -480,10 +480,10 @@ testDownloadFile = do
 
   ctxnotloggedin <- mkContext defaultLang
 
-  ctxuser        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctxuser        <- mkContextWithUser defaultLang user
   ctxuseronpad   <- set #maybePadUser (Just user) <$> mkContext defaultLang
-  ctxadmin       <- set #maybeUser (Just adminuser) <$> mkContext defaultLang
-  ctxother       <- set #maybeUser (Just otheruser) <$> mkContext defaultLang
+  ctxadmin       <- mkContextWithUser defaultLang adminuser
+  ctxother       <- mkContextWithUser defaultLang otheruser
 
   reqfile        <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (_rsp, _ctx')  <- runTestKontra reqfile ctxuser apiCallV1CreateFromFile
@@ -587,7 +587,7 @@ testSendingReminderClearsDeliveryInformation = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   let genDoc = addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Pending]
                                                    }
@@ -619,7 +619,7 @@ testDocumentFromTemplate = do
                                                }
   doc   <- addRandomDocument (rdaDefault user) { rdaTypes = OneOf [Template] }
   docs1 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
-  ctx   <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx   <- mkContextWithUser defaultLang user
   req   <- mkRequest POST []
   void . runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
   docs2 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
@@ -632,7 +632,7 @@ testDocumentFromTemplateShared = do
   void . randomUpdate $ SetDocumentSharing [documentid doc] True
   user  <- instantiateUser $ randomUserTemplate { groupID = return $ author ^. #groupID }
   docs1 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
-  ctx   <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx   <- mkContextWithUser defaultLang user
   req   <- mkRequest POST []
   void . runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
   docs2 <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
@@ -647,7 +647,7 @@ testDocumentDeleteInBulk = do
     100
     (addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Signable] })
 
-  ctx <- set #maybeUser (Just author) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang author
   req <- mkRequest POST [("documentids", inText (showt $ documentid <$> docs))]
 
   void $ runTestKontra req ctx handleDelete
@@ -661,7 +661,7 @@ testGetLoggedIn = do
                                                , email     = return "bob@blue.com"
                                                }
   doc      <- addRandomDocumentWithAuthor user
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest GET []
   (res, _) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 200" 200 (rsCode res)
@@ -687,7 +687,7 @@ testGetBadHeader = do
                                                , email     = return "bob@blue.com"
                                                }
   doc      <- addRandomDocumentWithAuthor user
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res, _) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
@@ -701,7 +701,7 @@ testGetEvidenceAttachmentsLoggedIn = do
                                                , email     = return "bob@blue.com"
                                                }
   doc      <- addRandomDocumentWithAuthor user
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest GET []
   (res, _) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
   assertEqual "Response code is 200" 200 (rsCode res)

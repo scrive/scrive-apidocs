@@ -117,7 +117,7 @@ test_addingANewCompanyAccount = do
                                                , signupMethod   = CompanyInvitation
                                                }
 
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   req <- mkRequest
     POST
@@ -160,7 +160,7 @@ test_addingExistingCompanyUserAsCompanyAccount = do
                                                        , isCompanyAdmin = True
                                                        , signupMethod = CompanyInvitation
                                                        }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest
     POST
     [ ("add"    , inText "True")
@@ -194,7 +194,7 @@ test_addingANewCompanyAccountWithDifferentTarget = do
   trgug <- instantiateRandomUserGroup
   let trgugid = trgug ^. #id
 
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   req <- mkRequest
     POST
@@ -241,7 +241,7 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
   trgug <- instantiateRandomUserGroup
   let trgugid = trgug ^. #id
 
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest
     POST
     [ ("add"          , inText "True")
@@ -282,7 +282,7 @@ test_resendingInviteToNewCompanyAccount = do
   newuser <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   void . dbUpdate $ AddUserGroupInvite (mkInvite ug newuser)
 
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   req <- mkRequest
     POST
@@ -311,7 +311,7 @@ test_switchingStandardToAdminUser = do
                                                }
   standarduser <- instantiateUser
     $ randomUserTemplate { groupID = return $ user ^. #groupID }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest
     POST
     [ ("changerole", inText "True")
@@ -341,7 +341,7 @@ test_switchingAdminToStandardUser = do
   void . dbUpdate $ SetUserCompanyAdmin (standarduser ^. #id) True
   Just adminuser <- dbQuery $ GetUserByID (user ^. #id)
 
-  ctx            <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx            <- mkContextWithUser defaultLang user
 
   req            <- mkRequest
     POST
@@ -378,7 +378,7 @@ test_removingCompanyAccountInvite = do
 
   void . dbUpdate $ AddUserGroupInvite (mkInvite ug standarduser)
 
-  ctx          <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx          <- mkContextWithUser defaultLang user
 
   req          <- mkRequest POST [("removeid", inText . showt $ (standarduser ^. #id))]
   (res, _ctx') <- runTestKontra req ctx handleRemoveUserGroupAccount
@@ -405,7 +405,7 @@ test_removingCompanyAccountWorks = do
 
   void . dbUpdate $ AddUserGroupInvite (mkInvite ug standarduser)
 
-  ctx          <- set #maybeUser (Just adminuser) <$> mkContext defaultLang
+  ctx          <- mkContextWithUser defaultLang adminuser
 
   companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ adminuser ^. #id)
                                          [DocumentFilterUnsavedDraft False]
@@ -479,7 +479,7 @@ test_privateUserTakoverWorks = do
     }
   void . dbUpdate $ AddUserGroupInvite (mkInvite ug user)
 
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
 
   req      <- mkRequest POST []
   (res, _) <- runTestKontra req ctx $ handlePostBecomeUserGroupAccount (ug ^. #id)
@@ -513,7 +513,7 @@ test_mustBeInvitedForTakeoverToWork = do
                                                , email     = return "bob@blue.com"
                                                }
 
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
 
   req        <- mkRequest POST []
   (l, _ctx') <-

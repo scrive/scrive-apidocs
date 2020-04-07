@@ -65,7 +65,7 @@ apiV2DocumentGetCallsTests env = testGroup
 testDocApiV2List :: Bool -> TestEnv ()
 testDocApiV2List useFolderListCalls = do
   user      <- instantiateRandomUser
-  ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx       <- mkContextWithUser defaultLang user
 
   -- test with new list feature as well as old
   (Just ug) <- dbQuery . UserGroupGet $ user ^. #groupID
@@ -119,7 +119,7 @@ testDocApiV2List useFolderListCalls = do
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do
   user       <- instantiateRandomUser
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -162,7 +162,7 @@ mockDocToShortID md = read . T.pack $ reverse (take 6 . reverse $ show (getMockD
 testDocApiV2GetShortCode :: TestEnv ()
 testDocApiV2GetShortCode = do
   user       <- instantiateRandomUser
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2StartNew ctx
   let shortDid = mockDocToShortID newMockDoc
 
@@ -204,7 +204,7 @@ testDocApiV2GetShortCode = do
 testMallory :: Request -> TestKontra Response -> TestEnv ()
 testMallory getRequest req = do
   mallory         <- instantiateRandomUser
-  ctxMallory      <- set #maybeUser (Just mallory) <$> mkContext defaultLang
+  ctxMallory      <- mkContextWithUser defaultLang mallory
   (resMallory, _) <- runTestKontra getRequest ctxMallory req
   assertEqual "We should get a 403 response for someone else's document"
               403
@@ -213,7 +213,7 @@ testMallory getRequest req = do
 testDocApiV2GetQRCode :: TestEnv ()
 testDocApiV2GetQRCode = do
   user       <- instantiateRandomUser
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId newMockDoc
       slid = getMockDocSigLinkId 1 newMockDoc
@@ -275,12 +275,12 @@ testDocApiV2GetByAdmin = do
   ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  ctxauthor <- set #maybeUser (Just author) <$> mkContext defaultLang
+  ctxauthor <- mkContextWithUser defaultLang author
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   admin     <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return ugid }
-  ctx        <- set #maybeUser (Just admin) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang admin
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
               "company_admin"
@@ -291,7 +291,7 @@ testDocApiV2GetShared = do
   ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  ctxauthor <- set #maybeUser (Just author) <$> mkContext defaultLang
+  ctxauthor <- mkContextWithUser defaultLang author
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   void $ mockDocTestRequestHelper ctxauthor
@@ -304,7 +304,7 @@ testDocApiV2GetShared = do
   assert setshare
 
   user       <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
               "company_shared"
@@ -315,7 +315,7 @@ testDocApiV2GetShared = do
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do
   user <- instantiateRandomUser
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
   let checkHistoryHasNItems :: Int -> TestEnv ()
@@ -336,8 +336,8 @@ testDocApiV2HistoryPermissionCheck :: TestEnv ()
 testDocApiV2HistoryPermissionCheck = do
   userAuthor       <- instantiateRandomUser
   userOther        <- instantiateRandomUser
-  ctxWithAuthor    <- set #maybeUser (Just userAuthor) <$> mkContext defaultLang
-  ctxWithOtherUser <- set #maybeUser (Just userOther) <$> mkContext defaultLang
+  ctxWithAuthor    <- mkContextWithUser defaultLang userAuthor
+  ctxWithOtherUser <- mkContextWithUser defaultLang userOther
 
   did              <- getMockDocId <$> testDocApiV2New' ctxWithAuthor
 
@@ -347,7 +347,7 @@ testDocApiV2HistoryPermissionCheck = do
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -381,7 +381,7 @@ testDocApiV2EvidenceAttachments = do
 testDocApiV2FilesMain :: TestEnv ()
 testDocApiV2FilesMain = do
   user <- instantiateRandomUser
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -406,7 +406,7 @@ testDocApiV2FilesMain = do
 testDocApiV2FilesPages :: TestEnv ()
 testDocApiV2FilesPages = do
   user <- instantiateRandomUser
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
       fid = getMockDocFileId doc
@@ -423,7 +423,7 @@ testDocApiV2FilesPages = do
 testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do
   user <- instantiateRandomUser
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -463,7 +463,7 @@ testDocApiV2FilesFull :: TestEnv ()
 testDocApiV2FilesFull = do
   now     <- currentTime
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   req     <- mkRequest GET []
 
   initDoc <- addRandomDocument (rdaDefault user)
@@ -592,9 +592,9 @@ testDocApiV2FolderList = do
   --  UG-B ------         |  F-B --------
   --   |         \        |   |          \
   --  userB       adminB  |  F-userB     F-adminB
-  ctxAdminA <- set #maybeUser (Just adminA) <$> mkContext defaultLang
-  ctxAdminB <- set #maybeUser (Just adminB) <$> mkContext defaultLang
-  ctxUserB  <- set #maybeUser (Just userB) <$> mkContext defaultLang
+  ctxAdminA <- mkContextWithUser defaultLang adminA
+  ctxAdminB <- mkContextWithUser defaultLang adminB
+  ctxUserB  <- mkContextWithUser defaultLang userB
 
   void $ testDocApiV2New' ctxUserB     -- creates draft
   void $ testDocApiV2New' ctxUserB     -- creates draft

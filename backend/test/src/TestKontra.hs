@@ -21,6 +21,7 @@ module TestKontra (
     , mkRequest
     , mkRequestWithHeaders
     , mkContext
+    , mkContextWithUser
     , modifyTestTime
     , setTestTime
     , setRequestURI
@@ -77,6 +78,7 @@ import Templates
 import TestEnvSt
 import TestFileStorage
 import User.Lang
+import User.Types.User
 import qualified Context.Internal as I
 import qualified TestEnvSt.Internal as I
 
@@ -455,6 +457,9 @@ mkContext lang = do
                      , eidServiceConf      = Nothing
                      , ssoConf             = Nothing
                      }
+
+mkContextWithUser :: Lang -> User -> TestEnv Context
+mkContextWithUser lang user = set #maybeUser (Just user) <$> mkContext lang
 
 testGTConf :: GuardTimeConf
 testGTConf = GuardTimeConf

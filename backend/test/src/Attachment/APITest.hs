@@ -44,7 +44,7 @@ testAttachmentList = do
   _    <- dbUpdate . NewAttachment (bob ^. #id) "c" fid $ systemActor now
   _    <- dbUpdate $ SetAttachmentsSharing (bob ^. #id) [attachmentid attB] True
 
-  ctx  <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang anna
 
   do
     req              <- mkRequest GET []
@@ -68,7 +68,7 @@ testAttachmentCreate = do
                                               , lastName  = return "Blue"
                                               , email     = return "bob@blue.com"
                                               }
-  ctx <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang bob
 
   req <- mkRequest
     POST
@@ -90,7 +90,7 @@ testAttachmentSetSharing = do
                                               , lastName  = return "Blue"
                                               , email     = return "bob@blue.com"
                                               }
-  ctx  <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang bob
   now  <- currentTime
 
   fid  <- addNewRandomFile
@@ -130,7 +130,7 @@ testAttachmentDelete = do
                                               , lastName  = return "Blue"
                                               , email     = return "bob@blue.com"
                                               }
-  ctx  <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang bob
   now  <- currentTime
 
   fid  <- addNewRandomFile
@@ -155,7 +155,7 @@ testAttachmentDownload = do
                                               , lastName  = return "Blue"
                                               , email     = return "bob@blue.com"
                                               }
-  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang bob
   now      <- currentTime
 
   fid      <- addNewRandomFile

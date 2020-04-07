@@ -29,7 +29,7 @@ apiV2SignatoryCallsTests env = testGroup
 testDocApiV2SigReject :: TestEnv ()
 testDocApiV2SigReject = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -44,7 +44,7 @@ testDocApiV2SigReject = do
 testDocApiV2SigCheck :: TestEnv ()
 testDocApiV2SigCheck = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -62,7 +62,7 @@ testDocApiV2SigCheck = do
 testDocApiV2SigSign :: TestEnv ()
 testDocApiV2SigSign = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -84,7 +84,7 @@ testDocApiV2SigSign = do
 testDocApiV2SigSendSmsPin :: TestEnv ()
 testDocApiV2SigSendSmsPin = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2New' ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -111,7 +111,7 @@ testDocApiV2SigSendSmsPin = do
 testDocApiV2SigSetAttachment :: TestEnv ()
 testDocApiV2SigSetAttachment = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2New' ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc

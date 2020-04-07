@@ -51,7 +51,7 @@ apiV2SetAuthenticationTests env = testGroup
 testDocApiV2SetSignatoryAuthenticationToView :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToView = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
 
   let did  = getMockDocId mockDoc
@@ -169,7 +169,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
 testDocApiV2SetSignatoryAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToViewArchived = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 1 mockDoc
@@ -286,7 +286,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
 testDocApiV2SetSignatoryAuthenticationToSign :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToSign = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 1 mockDoc
@@ -405,7 +405,7 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
 testDocApiV2SetViewerAuthenticationToView :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToView = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
 
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
@@ -532,7 +532,7 @@ testDocApiV2SetViewerAuthenticationToView = do
 testDocApiV2SetViewerAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToViewArchived = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -658,7 +658,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
 testDocApiV2SetViewerAuthenticationToSign :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToSign = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -695,7 +695,7 @@ testDocApiV2SetViewerAuthenticationToSign = do
 testDocApiV2SetApproverAuthenticationToView :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToView = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -822,7 +822,7 @@ testDocApiV2SetApproverAuthenticationToView = do
 testDocApiV2SetApproverAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToViewArchived = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -948,7 +948,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
 testDocApiV2SetApproverAuthenticationToSign :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToSign = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc

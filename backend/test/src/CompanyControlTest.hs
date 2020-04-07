@@ -49,7 +49,7 @@ test_handleGetCompanyJSON = do
   ugwp <- dbQuery . UserGroupGetWithParentsByUG $ ug
   let ugui = ugwpUI ugwp
 
-  ctx              <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx              <- mkContextWithUser defaultLang user
 
   req              <- mkRequest GET []
   (avalue, _ctx')  <- runTestKontra req ctx $ handleGetCompanyBranding Nothing
@@ -101,7 +101,7 @@ test_settingUIWithHandleChangeCompanyBranding = do
                                                , signupMethod   = CompanyInvitation
                                                }
 
-  ctx                     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx                     <- mkContextWithUser defaultLang user
 
   -- Try setting new themes
   mailThemeFromDomain     <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
@@ -209,7 +209,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
 
   --Test we can't set mailTheme to domain theme
   req1 <- mkRequest

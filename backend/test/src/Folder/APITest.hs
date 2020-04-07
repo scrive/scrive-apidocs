@@ -67,7 +67,7 @@ folderApiTests env = testGroup
 testFolderAPICreate :: TestEnv ()
 testFolderAPICreate = do
   user      <- instantiateRandomUser
-  ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx       <- mkContextWithUser defaultLang user
   -- make root of folder struct
   fdrRootID <- view #id <$> do
     dbUpdate . FolderCreate $ defaultFolder
@@ -105,8 +105,8 @@ testFolderAPIUpdate :: TestEnv ()
 testFolderAPIUpdate = do
   grpAdmin <- instantiateRandomUser
   user     <- instantiateRandomUser
-  ctxAdmin <- set #maybeUser (Just grpAdmin) <$> mkContext defaultLang
-  ctxUser  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctxAdmin <- mkContextWithUser defaultLang grpAdmin
+  ctxUser  <- mkContextWithUser defaultLang user
   fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
   let folderAdminRoot = FolderAdminAR (fdrRoot ^. #id)
       admid           = grpAdmin ^. #id
@@ -190,7 +190,7 @@ testFolderAPIUpdate = do
 testFolderAPIGet :: TestEnv ()
 testFolderAPIGet = do
   grpAdmin <- instantiateRandomUser
-  ctxAdmin <- set #maybeUser (Just grpAdmin) <$> mkContext defaultLang
+  ctxAdmin <- mkContextWithUser defaultLang grpAdmin
   fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
   let fdrRootID    = fdrRoot ^. #id
       folderAdminR = FolderAdminAR fdrRootID
@@ -216,7 +216,7 @@ testFolderAPIGet = do
     , lastName  = return "Janczak"
     , email     = return $ T.pack signatoryEmail
     }
-  signatoryUserCtx <- set #maybeUser (Just signatoryUser) <$> mkContext defaultLang
+  signatoryUserCtx <- mkContextWithUser defaultLang signatoryUser
   let signatorySigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
           . setMockSigLinkStandardField "email" signatoryEmail
@@ -227,7 +227,7 @@ testFolderAPIGet = do
     , lastName  = return "Janczak"
     , email     = return $ T.pack approverEmail
     }
-  approverUserCtx <- set #maybeUser (Just approverUser) <$> mkContext defaultLang
+  approverUserCtx <- mkContextWithUser defaultLang approverUser
   let approverSigLink =
         setMockSigLinkStandardField "mobile" "+48666666666"
           . setMockSigLinkStandardField "email" approverEmail
@@ -258,7 +258,7 @@ testFolderAPIGet = do
 testFolderAPIDelete :: TestEnv ()
 testFolderAPIDelete = do
   user       <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }  -- TODO: Fix properly!
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust $ user ^. #homeFolderID)
   -- I don't want to test deletion of the user home folder, so let's create a subfolder.
   let fdrTestDeleteChild = set #parentID (Just $ userFolder ^. #id) defaultFolder
@@ -278,7 +278,7 @@ testFolderAPIDelete = do
 testFolderAPIListDocs :: TestEnv ()
 testFolderAPIListDocs = do
   user       <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }  -- TODO: Fix properly!
-  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust $ user ^. #homeFolderID)
   let numDocsToStart = 5
       fdrid          = userFolder ^. #id
@@ -321,7 +321,7 @@ testDeleteFolder = do
                                                , email = return "arthur.dent@scrive.com"
                                                , isCompanyAdmin = True
                                                }
-  ctx          <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx          <- mkContextWithUser defaultLang user
   req          <- mkRequest POST []
   fidChild     <- createFolder $ user ^. #homeFolderID
   res          <- fst <$> runTestKontra req ctx (folderAPIDelete fidChild)
@@ -336,7 +336,7 @@ testCannotDeleteFolderWithChild = do
                                                , email = return "arthur.dent@scrive.com"
                                                , isCompanyAdmin = True
                                                }
-  ctx         <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx         <- mkContextWithUser defaultLang user
   req         <- mkRequest POST []
   fidNonRoot  <- createFolder $ user ^. #homeFolderID
   fidChild    <- createFolder $ Just fidNonRoot
@@ -353,7 +353,7 @@ testCannotDeleteFolderWithDocument = do
                                                , email = return "arthur.dent@scrive.com"
                                                , isCompanyAdmin = True
                                                }
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest POST []
   fidChild <- createFolder $ user ^. #homeFolderID
   void $ addRandomDocument (rdaDefault user) { rdaFolderId = fidChild }
@@ -369,7 +369,7 @@ testCannotDeleteFolderWithOnlyTrashedDocument = do
                                                , email = return "arthur.dent@scrive.com"
                                                , isCompanyAdmin = True
                                                }
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest POST []
   fidChild <- createFolder $ user ^. #homeFolderID
   doc      <- addRandomDocument (rdaDefault user) { rdaFolderId = fidChild }
@@ -388,7 +388,7 @@ testCanDeleteFolderWithOnlyPurgedDocument = do
                                                , email = return "arthur.dent@scrive.com"
                                                , isCompanyAdmin = True
                                                }
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest POST []
   fidChild <- createFolder $ user ^. #homeFolderID
   doc      <- addRandomDocument (rdaDefault user) { rdaFolderId = fidChild }
@@ -413,7 +413,7 @@ testCannotDeleteHomeFolder = do
                                                , isCompanyAdmin = True
                                                }
   let fidHome = fromJust $ user ^. #homeFolderID
-  ctx         <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx         <- mkContextWithUser defaultLang user
   req         <- mkRequest POST []
   res         <- fst <$> runTestKontra req ctx (folderAPIDelete fidHome)
   existsAfter <- isJust <$> dbQuery (FolderGet fidHome)

@@ -261,7 +261,7 @@ assertResettingPasswordRecordsALoginEvent = do
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist = do
   user <- createTestUser
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   req  <- mkRequest GET []
   let uid = unsafeUserID . (+ 1) . unUserID $ user ^. #id
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
@@ -272,7 +272,7 @@ testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission
   :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission = do
   user <- createTestUser
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   uid2 <- view #id <$> createTestUser' "thomas.busby@scrive.com"
   req  <- mkRequest GET []
   res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
@@ -282,7 +282,7 @@ testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission = 
 testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser = do
   user <- createTestUser
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   req  <- mkRequest GET []
   let uid = user ^. #id
   res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
@@ -297,7 +297,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   req <- mkRequest GET []
@@ -309,7 +309,7 @@ testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup :: TestEn
 testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
   ug   <- instantiateRandomUserGroup
   user <- createTestUser' "thomas.busby@scrive.com"
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   let uid1 = user ^. #id
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid1 $ ug ^. #id
@@ -349,7 +349,7 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   -- Generate an expired login_token for uid2
@@ -368,7 +368,7 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx  <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   uid2 <- view #id <$> createTestUser' "zaphod.beeblebrox@scrive.com"
   void . dbUpdate . SetUserUserGroup uid2 $ user ^. #groupID
   -- Generate a valid login_token for uid2
@@ -427,7 +427,7 @@ testUser2FAEnforced :: TestEnv ()
 testUser2FAEnforced = do
   password   <- rand 10 $ arbText 3 30
   randomUser <- instantiateUser $ randomUserTemplate { password = Just password }
-  ctx        <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang randomUser
   let uid = randomUser ^. #id
   ug  <- guardJustM . dbQuery . UserGroupGet $ randomUser ^. #groupID
   now <- currentTime
@@ -435,7 +435,7 @@ testUser2FAEnforced = do
   void . dbUpdate $ SetUserTotpIsMandatory uid True
   -- update changed user in Context
   randomUser' <- guardJustM . dbQuery $ GetUserByID uid
-  ctx'        <- set #maybeUser (Just randomUser') <$> mkContext defaultLang
+  ctx'        <- mkContextWithUser defaultLang randomUser'
 
   -- going to archive with 2FA enforced for user returns a redirect
   req1        <- mkRequest GET []
@@ -456,7 +456,7 @@ testUser2FAEnforced = do
   setup2FAHelper ctx uid
   -- update changed user in Context
   randomUser'' <- guardJustM . dbQuery $ GetUserByID uid
-  ctx''        <- set #maybeUser (Just randomUser'') <$> mkContext defaultLang
+  ctx''        <- mkContextWithUser defaultLang randomUser''
   res3         <- fst <$> runTestKontra req1 ctx'' showArchive
   assertBool "We should not get a redirect to account anymore"
     . not
@@ -482,7 +482,7 @@ testUser2FAEnforced = do
 
       -- update changed user in Context
       Just user <- dbQuery $ GetUserByID uid
-      ctx'      <- set #maybeUser (Just user) <$> mkContext defaultLang
+      ctx'      <- mkContextWithUser defaultLang user
 
       -- confirm 2FA
       req       <- mkRequest POST [("totp", inText totpcode)]

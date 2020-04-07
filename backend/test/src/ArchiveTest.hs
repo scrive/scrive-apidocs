@@ -30,7 +30,7 @@ testListDocs = do
                                                }
 
   -- send a doc as author
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
   req <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
@@ -46,7 +46,7 @@ testListDocs = do
                                                 , lastName  = return "Chan"
                                                 , email     = return "jackie@chan.com"
                                                 }
-  ctx2 <- set #maybeUser (Just user2) <$> mkContext defaultLang
+  ctx2 <- mkContextWithUser defaultLang user2
   req2 <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
