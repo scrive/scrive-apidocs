@@ -14,11 +14,19 @@ generated_message='-- This file is generated from $KONTRAKCJA_ROOT/cabal.project
 -- rerun generate-cabal-project.sh to apply the changes to all cabal.project files.
 '
 
-workspaces=("manual-ghc-8.6" "manual-ghc-8.8" "manual-ghc-8.10")
+root_86="$KONTRAKCJA_ROOT/cabal-ghc86.project"
+echo "$generated_message" > "$root_86"
+echo "packages: . Shake" >> "$root_86"
+echo "with-compiler: ghc-8.6.5" >> "$root_86"
+cat "$KONTRAKCJA_ROOT/cabal.project.template" >> "$root_86"
 
-echo "$generated_message" > "$KONTRAKCJA_ROOT/cabal.project"
-echo "packages: . Shake" >> "$KONTRAKCJA_ROOT/cabal.project"
-cat "$KONTRAKCJA_ROOT/cabal.project.template" >> "$KONTRAKCJA_ROOT/cabal.project"
+root_88="$KONTRAKCJA_ROOT/cabal-ghc88.project"
+echo "$generated_message" > "$root_88"
+echo "packages: . Shake" >> "$root_88"
+echo "with-compiler: ghc-8.8.3" >> "$root_88"
+cat "$KONTRAKCJA_ROOT/cabal.project.template" >> "$root_88"
+
+workspaces=("manual-ghc-8.6" "manual-ghc-8.8" "manual-ghc-8.10")
 
 for workspace in ${workspaces[@]}; do
   workspace_dir="$KONTRAKCJA_ROOT/workspace/$workspace"

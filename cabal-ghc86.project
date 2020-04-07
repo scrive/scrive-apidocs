@@ -1,1 +1,93 @@
-cabal.project
+-- This file is generated from $KONTRAKCJA_ROOT/cabal.project.template
+-- using the workspace script $KONTRAKCJA_ROOT/workspace/scripts/generate-cabal-project.sh.
+-- If you want to make changes, edit cabal.project.template and
+-- rerun generate-cabal-project.sh to apply the changes to all cabal.project files.
+
+packages: . Shake
+with-compiler: ghc-8.6.5
+write-ghc-environment-files: never
+
+allow-newer: semigroups
+             http-client
+             containers
+             template-haskell
+             list-tries:base
+             MissingH:base
+
+package all
+    ghc-options: -j4 +RTS -A32m -RTS
+
+package bloodhound
+    tests: false
+
+package text-icu
+    extra-include-dirs: /usr/local/opt/icu4c/include
+    extra-lib-dirs: /usr/local/opt/icu4c/lib
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/hpqtypes-extras.git
+    tag: 29fe9f0e760cdb83fc0745ea35c6472b58cb7f02
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/log.git
+    tag: b5238deabae64216aaf17fd31cfce868d6fd4d87
+    subdir: log-base
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/log.git
+    tag: b5238deabae64216aaf17fd31cfce868d6fd4d87
+    subdir: log-postgres
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/log.git
+    tag: b5238deabae64216aaf17fd31cfce868d6fd4d87
+    subdir: log-elasticsearch
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/consumers.git
+    tag: 3f719bf81d7443a1386e72ecc9bba6d5bdd2f266
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/crypto-rng.git
+    tag: ed992ee1434ae57687a719e820613877deb6941f
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/unjson.git
+    tag: 4cfcce86ea457714afc9939a46afe07ec6866a2f
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/kontrakcja-templates.git
+    tag: 02260dcd2accc466772cd79dec48b9cfe2da2eb6
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/mixpanel.git
+    tag: d6c378d738f936d7f7950ee278d955726c255535
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/bloodhound.git
+    tag: 78f4913096637cf4df96774ac9a5b59fac67f89d
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/hsaml2.git
+    tag: fb247044dfa62f45944f161c71dabea9fd06dca3
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/json.git
+    tag: ed18b29ffa2ca6c065833d3045e245a32d75f0f3
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/pool.git
+    tag: 902e01e8a5b250b63971c0fbd0724c1288fb18d6
