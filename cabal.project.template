@@ -58,7 +58,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/scrive/kontrakcja-templates.git
-    tag: 2efb48d58dc13c28ad16468feec764e8ab7a0810
+    tag: 02260dcd2accc466772cd79dec48b9cfe2da2eb6
 
 source-repository-package
     type: git
