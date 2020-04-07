@@ -5,7 +5,6 @@ module ServerUtils.ServerUtils (
   ) where
 
 import Control.Monad.Trans
-import Data.List (isPrefixOf)
 import Happstack.Server hiding (dir, simpleHTTP)
 import Log
 import System.Directory (getCurrentDirectory, makeAbsolute)

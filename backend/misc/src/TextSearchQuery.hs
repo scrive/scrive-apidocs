@@ -9,6 +9,7 @@ module TextSearchQuery
   , mkTerm
   ) where
 
+import Data.List.Extra (nubOrd)
 import Database.PostgreSQL.PQTypes.SQL (SQL, mkSQL)
 import Prelude
 import qualified Data.Text as T

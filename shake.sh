@@ -11,5 +11,5 @@ export LC_ALL=en_US.UTF-8
 echo "PATH: <$PATH>"
 
 cabal v2-update
-cabal v2-build kontrakcja-shake --minimize-conflict-set
+cabal v2-build kontrakcja-shake
 cabal v2-run kontrakcja-shake -- --color "$@"
