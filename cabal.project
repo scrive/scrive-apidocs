@@ -9,7 +9,7 @@ packages: . Shake
 write-ghc-environment-files: always
 
 repository hackage.scrive.com
-    url: https://hackage.scrive.com
+    url: https://hackage.scrive.com/
 
 package kontrakcja
     ghc-options: -j4 +RTS -A32m -RTS
