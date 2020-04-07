@@ -40,7 +40,9 @@ import ThirdPartyStats.Planhat
 import Utils.IO
 import qualified CronEnv
 
-newtype CmdConf = CmdConf
+{-# ANN type CmdConf ("HLint: ignore Use newtype instead of data" :: String) #-}
+-- newtype doesn't work, see https://github.com/ndmitchell/cmdargs/issues/44
+data CmdConf = CmdConf
   { config :: String
   } deriving Data
 
