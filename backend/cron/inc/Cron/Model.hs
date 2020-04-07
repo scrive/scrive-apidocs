@@ -292,7 +292,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
             runDB . dbUpdate $ DeleteExpiredSessions
             return . RerunAfter $ ihours 1
           SMSEventsProcessing -> do
-            runCronEnv $ SMS.Events.processEvents
+            runCronEnv SMS.Events.processEvents
             return . RerunAfter $ iseconds 5
           UserAccountRequestEvaluation -> do
             runDB expireUserAccountRequests
@@ -328,7 +328,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
                 { tsAutoTransaction  = False
                 , tsIsolationLevel   = Serializable
                 , tsRestartPredicate = Just
-                                       $ RestartPredicate
+                                       . RestartPredicate
                                        $ \DetailedQueryError { qeErrorCode } _n ->
                                            qeErrorCode == SerializationFailure
                 }

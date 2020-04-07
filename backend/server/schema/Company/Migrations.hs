@@ -41,7 +41,7 @@ companiesAddPadAppModeAndEArchiveEnabled :: MonadDB m => Migration m
 companiesAddPadAppModeAndEArchiveEnabled = Migration
   { mgrTableName = tableCompaniesName
   , mgrFrom      = 21
-  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
                      tableCompaniesName
                      [ sqlAddColumn $ tblColumn { colName     = "pad_app_mode"
                                                 , colType     = SmallIntT

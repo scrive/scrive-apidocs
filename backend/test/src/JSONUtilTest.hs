@@ -37,7 +37,7 @@ testBasicDiggers = do
     c <- fromJSValueField "c"
     assertBool "Test fromJSValueField List" (c == Just ([] :: [String]))
     d <- fromJSValueField "d"
-    assertBool "Test fromJSValueField Object" (d == (Just $ JSObject $ toJSObject []))
+    assertBool "Test fromJSValueField Object" (d == Just (JSObject $ toJSObject []))
 
 testAdvancedDiggers :: Assertion
 testAdvancedDiggers = do

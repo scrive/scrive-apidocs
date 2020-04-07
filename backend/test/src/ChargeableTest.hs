@@ -7,7 +7,7 @@ import Test.Framework
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
-import DB hiding (query, update)
+import DB
 import Doc.API.V1.Calls
 import Doc.API.V2.AesonTestUtils (testRequestHelperNoAssert_)
 import Doc.API.V2.Calls
@@ -110,11 +110,11 @@ test_startDocumentCharging = do
                                                , email     = return "bob@blue.com"
                                                }
   True        <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
-  ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctxWithUser <- mkContextWithUser defaultLang user
 
   did1        <- newDocumentReadyToStart user
   req1        <- mkRequest POST []
-  (_, _)      <- runTestKontra req1 ctxWithUser $ apiCallV1Ready $ did1
+  (_, _)      <- runTestKontra req1 ctxWithUser $ apiCallV1Ready did1
   runSQL_
     $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND user_group_id = "
     <?> ugid
@@ -123,7 +123,7 @@ test_startDocumentCharging = do
 
   did2   <- newDocumentReadyToStart user
   req2   <- mkRequest POST []
-  (_, _) <- runTestKontra req2 ctxWithUser $ docApiV2Start $ did2
+  (_, _) <- runTestKontra req2 ctxWithUser $ docApiV2Start did2
   runSQL_
     $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND user_group_id = "
     <?> ugid
@@ -148,32 +148,31 @@ test_startDocumentCharging = do
 
       True <- withDocument doc $ do
         randomUpdate $ ResetSignatoryDetails
-          ([ (defaultSignatoryLink
-               { signatoryfields   = (signatoryfields $ fromJust $ getAuthorSigLink doc)
-               , signatoryisauthor = True
-               , signatoryrole     = SignatoryRoleViewer
-               , maybesignatory    = Just $ user ^. #id
-               }
-             )
-           , (defaultSignatoryLink
-               { signatorysignorder = SignOrder 1
-               , signatoryisauthor  = False
-               , signatoryrole      = SignatoryRoleSigningParty
-               , signatoryfields    = [ fieldForTests (NameFI (NameOrder 1)) "Fred"
-                                      , fieldForTests (NameFI (NameOrder 2)) "Frog"
-                                      , fieldForTests EmailFI "fred@frog.com"
-                                      ]
-               }
-             )
-           ]
-          )
+          [ (defaultSignatoryLink
+              { signatoryfields   = signatoryfields . fromJust $ getAuthorSigLink doc
+              , signatoryisauthor = True
+              , signatoryrole     = SignatoryRoleViewer
+              , maybesignatory    = Just $ user ^. #id
+              }
+            )
+          , (defaultSignatoryLink
+              { signatorysignorder = SignOrder 1
+              , signatoryisauthor  = False
+              , signatoryrole      = SignatoryRoleSigningParty
+              , signatoryfields    = [ fieldForTests (NameFI (NameOrder 1)) "Fred"
+                                     , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                                     , fieldForTests EmailFI "fred@frog.com"
+                                     ]
+              }
+            )
+          ]
           (systemActor $ documentctime doc)
       return $ documentid doc
 
 test_closeDocAndSigCharging :: TestEnv ()
 test_closeDocAndSigCharging = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   let queryChargeableSigClose =
         "SELECT count(*) FROM chargeable_items WHERE type = 9 "
           <>  "AND quantity = 1 AND user_group_id ="

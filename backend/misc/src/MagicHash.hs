@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving #-}
+
 
 -- | Support for cryptographically secure hashes
 module MagicHash
@@ -36,7 +36,7 @@ instance PQFormat MagicHash where
   pqFormat = pqFormat @Int64
 
 instance Random MagicHash where
-  random = MagicHash `liftM` random
+  random = MagicHash <$> random
 
 instance Show MagicHash where
   show (MagicHash x) = pad0 16 $ showHex (fromIntegral x :: Word64) ""
@@ -49,7 +49,7 @@ instance FromReqURI MagicHash where
 
 instance Unjson MagicHash where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse access token") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse access token") return . maybeRead . T.pack)
     show
     unjsonDef
 
@@ -76,4 +76,4 @@ showOnlyLastFourCharacters :: MagicHash -> String
 showOnlyLastFourCharacters mh =
   let asString = show mh
       len      = length asString
-  in  map (\(i, c) -> if i <= 4 then c else '*') $ zip [len, (len - 1) .. 1] asString
+  in  zipWith (\i c -> if i <= 4 then c else '*') [len, (len - 1) .. 1] asString

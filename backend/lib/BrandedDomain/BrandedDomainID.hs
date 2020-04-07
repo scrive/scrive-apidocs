@@ -43,7 +43,7 @@ unBrandedDomainID (BrandedDomainID i) = i
 
 unjsonBrandedDomainID :: UnjsonDef BrandedDomainID
 unjsonBrandedDomainID = unjsonInvmapR
-  ((maybe (fail "Can't parse DomainID") return) . maybeRead . T.pack)
+  (maybe (fail "Can't parse DomainID") return . maybeRead . T.pack)
   (show . unBrandedDomainID :: BrandedDomainID -> String)
   unjsonDef
 

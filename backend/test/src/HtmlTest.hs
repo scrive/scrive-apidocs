@@ -37,7 +37,7 @@ excludedTemplates =
   ]
 
 isIncluded :: (Text, Text) -> Bool
-isIncluded (name, _) = not $ name `elem` excludedTemplates
+isIncluded (name, _) = name `notElem` excludedTemplates
 
 testValidXml :: Assertion
 testValidXml = do
@@ -67,27 +67,26 @@ testNoNestedP = do
 
 assertNoNestedP :: [Text] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
-  forM_ (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
+  forM_ (filter (not . flip elem excludedTemplates) tnames) $ \n -> do
     let t = renderTemplateMain templates (T.unpack n) ([] :: [(String, String)]) identity
-    case parseStringAsXML (n, removeScripts $ removeDocTypeDeclaration $ T.pack t) of
+    case parseStringAsXML (n, removeScripts . removeDocTypeDeclaration $ T.pack t) of
       Left  msg -> assertFailure $ T.unpack msg
       Right doc -> checkXMLForNestedP n (NodeElement $ documentRoot doc)
   assertSuccess
 
 checkXMLForNestedP :: Text -> Node -> Assertion
 checkXMLForNestedP templatename elt = if isPAndHasP elt
-  then
-    assertFailure
-    $  T.unpack
-    $  "nested <p> tags in template "
+  then assertFailure $ T.unpack
+    (  "nested <p> tags in template "
     <> templatename
     <> ":\n"
     <> (T.pack . renderMarkup . toMarkup $ elt)
+    )
   else assertSuccess
 
 isPOrHasP :: Node -> Bool
 isPOrHasP (NodeElement (Element tag _attrs children)) =
-  if (T.toLower . nameLocalName $ tag) == "p" then True else any isPOrHasP children
+  ((T.toLower . nameLocalName $ tag) == "p") || any isPOrHasP children
 isPOrHasP _ = False
 
 isPAndHasP :: Node -> Bool
@@ -109,13 +108,10 @@ checkXMLForUnnecessaryDoubleDivs templatename e@(NodeElement (Element _ _ childr
       isSingleChildDiv = isSingleChild && isDivElem (head children)
       isUnnecessaryDiv = isDiv && isSingleChildDiv
   in  if isUnnecessaryDiv
-        then
-          assertFailure
-          $  T.unpack
-          $  "unnecessary double divs in template "
-          <> templatename
-          <> ":\n"
-          <> (T.pack $ renderMarkup . toMarkup $ e)
+        then assertFailure $ T.unpack
+          ("unnecessary double divs in template " <> templatename <> ":\n" <> T.pack
+            (renderMarkup . toMarkup $ e)
+          )
         else do
           mapM_ (checkXMLForUnnecessaryDoubleDivs templatename) children
           assertSuccess
@@ -132,12 +128,12 @@ parseStringAsXML (name, rawtxt) =
           T.unlines . zipWith mklinewithno ([1 ..] :: [Int]) $ T.lines preparedtxt
       mklinewithno no line | -- okay, i did indenting in a horrible way,
                            -- it's just a test!
-                             no < 10   = (showt no) <> ".    |" <> line
-                           | no < 100  = (showt no) <> ".   |" <> line
-                           | no < 1000 = (showt no) <> ".  |" <> line
-                           | otherwise = (showt no) <> ". |" <> line
+                             no < 10   = showt no <> ".    |" <> line
+                           | no < 100  = showt no <> ".   |" <> line
+                           | no < 1000 = showt no <> ".  |" <> line
+                           | otherwise = showt no <> ". |" <> line
   in  case parseText def (TL.fromStrict preparedtxt) of
-        Left  exc -> Left $ name <> ":" <> (showt exc) <> "\n" <> prettyprinttxt
+        Left  exc -> Left $ name <> ":" <> showt exc <> "\n" <> prettyprinttxt
         Right doc -> Right doc
 
 parseTemplateAsXML :: (Text, Text) -> Either Text Document
@@ -183,7 +179,7 @@ clearTemplating' ts tcs ('\\' : '$' : xs) = '$' : clearTemplating' ts tcs xs
 clearTemplating' NotTag NotTemplateCode ('<' : xs) =
   '<' : clearTemplating' Tag NotTemplateCode xs
 clearTemplating' NotTag NotTemplateCode ('$' : 'i' : 'f' : xs) =
-  "<template-if>" <> (clearTemplating' NotTag TemplateCode xs)
+  "<template-if>" <> clearTemplating' NotTag TemplateCode xs
 clearTemplating' NotTag NotTemplateCode ('$' : 'e' : 'l' : 's' : 'e' : xs) =
   "</template-if><template-if>" <> clearTemplating' NotTag TemplateCode xs
 clearTemplating' NotTag NotTemplateCode ('$' : 'e' : 'n' : 'd' : 'i' : 'f' : '$' : xs) =

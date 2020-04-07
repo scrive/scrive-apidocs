@@ -3,29 +3,35 @@ module EID.EIDService.Types (
     , unsafeEIDServiceTransactionID
     , fromEIDServiceTransactionID
 
+    , HasEIDServiceName(..)
     , EIDServiceTransactionProvider(..)
     , EIDServiceProviderParams(..)
+    , eidServiceProviderParamsToProvider
     , EIDServiceTransactionStatus(..)
     , EIDServiceAuthenticationKind(..)
     , EIDServiceTransaction(..)
 
     , EIDServiceVerimiAuthentication(..)
-    , EIDServiceIDINAuthentication(..)
-    , EIDServiceIDINSignature(..)
-    , CompleteIDINEIDServiceTransactionData(..)
+    , CompleteVerimiEIDServiceTransactionData(..)
+    , EIDServiceNLIDINAuthentication(..)
+    , EIDServiceNLIDINSignature(..)
+    , CompleteNLIDINEIDServiceTransactionData(..)
     , EIDServiceFITupasSignature(..)
     , CompleteFITupasEIDServiceTransactionData(..)
-    , EIDServiceNemIDAuthentication(..)
-    , EIDServiceNemIDInternalProvider(..)
-    , unsafeEIDServiceNemIDInternalProviderFromInt16
-    , CompleteNemIDEIDServiceTransactionData(..)
+    , EIDServiceDKNemIDAuthentication(..)
+    , EIDServiceDKNemIDInternalProvider(..)
+    , unsafeEIDServiceDKNemIDInternalProviderFromInt16
+    , CompleteDKNemIDEIDServiceTransactionData(..)
     , EIDServiceNOBankIDAuthentication(..)
     , EIDServiceNOBankIDInternalProvider(..)
     , unsafeEIDServiceNOBankIDInternalProviderFromInt16
     , CompleteNOBankIDEIDServiceTransactionData(..)
+
+    , dateOfBirthFromDKPersonalNumber
   ) where
 
 import Control.Monad.Catch
+import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.Time
@@ -62,22 +68,58 @@ unsafeEIDServiceTransactionID = EIDServiceTransactionID
 fromEIDServiceTransactionID :: EIDServiceTransactionID -> T.Text
 fromEIDServiceTransactionID (EIDServiceTransactionID tid) = tid
 
+instance FromJSON EIDServiceTransactionID where
+  parseJSON = fmap EIDServiceTransactionID . withObject "object" (.: "id")
+
+class HasEIDServiceName a where
+  toEIDServiceName :: a -> Text
+
 data EIDServiceTransactionProvider =
     EIDServiceTransactionProviderVerimi
-  | EIDServiceTransactionProviderIDIN
-  | EIDServiceTransactionProviderNemID
+  | EIDServiceTransactionProviderNLIDIN
+  | EIDServiceTransactionProviderDKNemID
   | EIDServiceTransactionProviderNOBankID
   | EIDServiceTransactionProviderFITupas
   deriving (Eq, Ord, Show)
+
+instance HasEIDServiceName EIDServiceTransactionProvider where
+  toEIDServiceName EIDServiceTransactionProviderVerimi   = "verimi"
+  toEIDServiceName EIDServiceTransactionProviderNLIDIN   = "nlIDIN"
+  toEIDServiceName EIDServiceTransactionProviderDKNemID  = "dkNemID"
+  toEIDServiceName EIDServiceTransactionProviderNOBankID = "noBankID"
+  toEIDServiceName EIDServiceTransactionProviderFITupas  = "fiTupas"
+
+instance PQFormat EIDServiceTransactionProvider where
+  pqFormat = pqFormat @Int16
+
+instance FromSQL EIDServiceTransactionProvider where
+  type PQBase EIDServiceTransactionProvider = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return EIDServiceTransactionProviderVerimi
+      2 -> return EIDServiceTransactionProviderNLIDIN
+      3 -> return EIDServiceTransactionProviderDKNemID
+      4 -> return EIDServiceTransactionProviderNOBankID
+      5 -> return EIDServiceTransactionProviderFITupas
+      _ -> throwM RangeError { reRange = [(1, 5)], reValue = n }
+
+instance ToSQL EIDServiceTransactionProvider where
+  type PQDest EIDServiceTransactionProvider = PQDest Int16
+  toSQL EIDServiceTransactionProviderVerimi   = toSQL (1 :: Int16)
+  toSQL EIDServiceTransactionProviderNLIDIN   = toSQL (2 :: Int16)
+  toSQL EIDServiceTransactionProviderDKNemID  = toSQL (3 :: Int16)
+  toSQL EIDServiceTransactionProviderNOBankID = toSQL (4 :: Int16)
+  toSQL EIDServiceTransactionProviderFITupas  = toSQL (5 :: Int16)
 
 data EIDServiceProviderParams =
   EIDServiceProviderParamsVerimi {
     esppRedirectURL :: Text
   } |
-  EIDServiceProviderParamsIDIN {
+  EIDServiceProviderParamsNLIDIN {
     esppRedirectURL :: Text
   } |
-  EIDServiceProviderParamsNemID {
+  EIDServiceProviderParamsDKNemID {
     esppRedirectURL :: Text
   , esppUILocale :: Text
   } |
@@ -90,28 +132,21 @@ data EIDServiceProviderParams =
     esppRedirectURL :: Text
   }
 
-instance PQFormat EIDServiceTransactionProvider where
-  pqFormat = pqFormat @Int16
+eidServiceProviderParamsToProvider
+  :: EIDServiceProviderParams -> EIDServiceTransactionProvider
+eidServiceProviderParamsToProvider EIDServiceProviderParamsVerimi{} =
+  EIDServiceTransactionProviderVerimi
+eidServiceProviderParamsToProvider EIDServiceProviderParamsNLIDIN{} =
+  EIDServiceTransactionProviderNLIDIN
+eidServiceProviderParamsToProvider EIDServiceProviderParamsDKNemID{} =
+  EIDServiceTransactionProviderDKNemID
+eidServiceProviderParamsToProvider EIDServiceProviderParamsNOBankID{} =
+  EIDServiceTransactionProviderNOBankID
+eidServiceProviderParamsToProvider EIDServiceProviderParamsFITupas{} =
+  EIDServiceTransactionProviderFITupas
 
-instance FromSQL EIDServiceTransactionProvider where
-  type PQBase EIDServiceTransactionProvider = PQBase Int16
-  fromSQL mbase = do
-    n <- fromSQL mbase
-    case n :: Int16 of
-      1 -> return EIDServiceTransactionProviderVerimi
-      2 -> return EIDServiceTransactionProviderIDIN
-      3 -> return EIDServiceTransactionProviderNemID
-      4 -> return EIDServiceTransactionProviderNOBankID
-      5 -> return EIDServiceTransactionProviderFITupas
-      _ -> throwM RangeError { reRange = [(1, 5)], reValue = n }
-
-instance ToSQL EIDServiceTransactionProvider where
-  type PQDest EIDServiceTransactionProvider = PQDest Int16
-  toSQL EIDServiceTransactionProviderVerimi   = toSQL (1 :: Int16)
-  toSQL EIDServiceTransactionProviderIDIN     = toSQL (2 :: Int16)
-  toSQL EIDServiceTransactionProviderNemID    = toSQL (3 :: Int16)
-  toSQL EIDServiceTransactionProviderNOBankID = toSQL (4 :: Int16)
-  toSQL EIDServiceTransactionProviderFITupas  = toSQL (5 :: Int16)
+instance HasEIDServiceName EIDServiceProviderParams where
+  toEIDServiceName = toEIDServiceName . eidServiceProviderParamsToProvider
 
 -- In statuses we separate complete into two statuses, since
 -- we can't force email/phone number validation on eid service side
@@ -149,11 +184,18 @@ instance ToSQL EIDServiceTransactionStatus where
   toSQL EIDServiceTransactionStatusCompleteAndSuccess = toSQL (4 :: Int16)
   toSQL EIDServiceTransactionStatusCompleteAndFailed  = toSQL (5 :: Int16)
 
+instance FromJSON EIDServiceTransactionStatus where
+  parseJSON outer = withObject "object" (.: "status") outer >>= \s -> case (s :: Text) of
+    "new"      -> return EIDServiceTransactionStatusNew
+    "started"  -> return EIDServiceTransactionStatusStarted
+    "failed"   -> return EIDServiceTransactionStatusFailed
+    "complete" -> return EIDServiceTransactionStatusCompleteAndSuccess
+    _          -> fail "JSON is invalid: unrecognised value for \"status\""
+
 data EIDServiceAuthenticationKind =
   EIDServiceAuthToView AuthenticationKind
   | EIDServiceAuthToSign
   deriving (Eq, Ord, Show)
-
 
 instance PQFormat EIDServiceAuthenticationKind where
   pqFormat = pqFormat @Int16
@@ -165,7 +207,7 @@ instance FromSQL EIDServiceAuthenticationKind where
     case n :: Int16 of
       1 -> return $ EIDServiceAuthToView AuthenticationToView
       2 -> return $ EIDServiceAuthToView AuthenticationToViewArchived
-      3 -> return $ EIDServiceAuthToSign
+      3 -> return EIDServiceAuthToSign
       _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL EIDServiceAuthenticationKind where
@@ -185,35 +227,35 @@ data EIDServiceTransaction = EIDServiceTransaction
   } deriving (Show)
 
 data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication
-  { eidServiceVerimiName            :: !(T.Text)
+  { eidServiceVerimiName            :: !T.Text
   , eidServiceVerimiVerifiedEmail   :: !(Maybe T.Text)
   , eidServiceVerimiVerifiedPhone   :: !(Maybe T.Text)
   } deriving (Eq, Ord, Show)
 
-data EIDServiceIDINAuthentication = EIDServiceIDINAuthentication
-  { eidServiceIDINName            :: !(T.Text)
+data EIDServiceNLIDINAuthentication = EIDServiceNLIDINAuthentication
+  { eidServiceIDINName            :: !T.Text
   , eidServiceIDINVerifiedPhone   :: !(Maybe T.Text)
   , eidServiceIDINBirthDate       :: !(Maybe T.Text)
   , eidServiceIDINCustomerID      :: !(Maybe T.Text)
 } deriving (Eq, Ord, Show)
 
-data EIDServiceNemIDAuthentication = EIDServiceNemIDAuthentication
-  { eidServiceNemIDInternalProvider :: !(EIDServiceNemIDInternalProvider)
-  , eidServiceNemIDSignatoryName    :: !(T.Text)
-  , eidServiceNemIDDateOfBirth      :: !(T.Text)
-  , eidServiceNemIDCertificate      :: !(ByteString)
+data EIDServiceDKNemIDAuthentication = EIDServiceDKNemIDAuthentication
+  { eidServiceNemIDInternalProvider :: !EIDServiceDKNemIDInternalProvider
+  , eidServiceNemIDSignatoryName    :: !T.Text
+  , eidServiceNemIDDateOfBirth      :: !T.Text
+  , eidServiceNemIDCertificate      :: !ByteString
   } deriving (Eq, Ord, Show)
 
 data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
-  { eidServiceNOBankIDInternalProvider     :: !(EIDServiceNOBankIDInternalProvider)
+  { eidServiceNOBankIDInternalProvider     :: !EIDServiceNOBankIDInternalProvider
   , eidServiceNOBankIDSignatoryName        :: !Text
   , eidServiceNOBankIDPhoneNumber          :: !(Maybe Text)
   , eidServiceNOBankIDDateOfBirth          :: !Text
   , eidServiceNOBankIDCertificate          :: !(Maybe ByteString)
   } deriving (Eq, Ord, Show)
 
-data EIDServiceIDINSignature = EIDServiceIDINSignature
-  { unEIDServiceIDINSignature :: CompleteIDINEIDServiceTransactionData
+newtype EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
+  { unEIDServiceIDINSignature :: CompleteNLIDINEIDServiceTransactionData
   }
   deriving (Eq, Ord, Show)
 
@@ -223,6 +265,11 @@ data EIDServiceFITupasSignature = EIDServiceFITupasSignature
   , eidServiceFITupasSigDateOfBirth :: Text
   }
   deriving (Eq, Ord, Show)
+
+data CompleteVerimiEIDServiceTransactionData = CompleteVerimiEIDServiceTransactionData {
+    eidvtdName :: T.Text
+  , eidvtdVerifiedEmail :: T.Text
+  }
 
 data CompleteFITupasEIDServiceTransactionData = CompleteFITupasEIDServiceTransactionData
   { eidtupasName :: !Text
@@ -235,49 +282,50 @@ data CompleteFITupasEIDServiceTransactionData = CompleteFITupasEIDServiceTransac
   , eidtupasSSN :: !(Maybe Text)  -- seems to be absent for 'legal persons'
   } deriving (Eq, Ord, Show)
 
-data CompleteIDINEIDServiceTransactionData = CompleteIDINEIDServiceTransactionData
+data CompleteNLIDINEIDServiceTransactionData = CompleteNLIDINEIDServiceTransactionData
   { eiditdName :: T.Text
   , eiditdBirthDate :: T.Text
   , eiditdCustomerID :: T.Text
   } deriving (Eq, Ord, Show)
 
-data CompleteNemIDEIDServiceTransactionData = CompleteNemIDEIDServiceTransactionData
-  { eidnidInternalProvider :: !(EIDServiceNemIDInternalProvider)
-  , eidnidSSN :: !(T.Text)
-  , eidnidBirthDate :: !(T.Text)
-  , eidnidCertificate :: !(T.Text)
-  , eidnidDistinguishedName :: !(T.Text)
-  , eidnidPid :: !(T.Text)
+data CompleteDKNemIDEIDServiceTransactionData = CompleteDKNemIDEIDServiceTransactionData
+  { eidnidInternalProvider :: !EIDServiceDKNemIDInternalProvider
+  , eidnidSSN :: !T.Text
+  , eidnidBirthDate :: !T.Text
+  , eidnidCertificate :: !T.Text
+  , eidnidDistinguishedName :: !T.Text
+  , eidnidPid :: !T.Text
   } deriving (Eq, Ord, Show)
 
 data CompleteNOBankIDEIDServiceTransactionData = CompleteNOBankIDEIDServiceTransactionData
-  { eidnobidInternalProvider :: !(EIDServiceNOBankIDInternalProvider)
+  { eidnobidInternalProvider :: !EIDServiceNOBankIDInternalProvider
   , eidnobidBirthDate :: !(Maybe T.Text)
   , eidnobidCertificate :: !(Maybe T.Text)
   , eidnobidDistinguishedName :: !T.Text
   , eidnobidIssuerDistinguishedName :: !T.Text
   , eidnobidName :: !(Maybe Text)
   , eidnobidPhoneNumber :: !(Maybe T.Text)
-  , eidnobidPid :: !(T.Text)
+  , eidnobidPid :: !T.Text
   } deriving (Eq, Ord, Show)
 
-data EIDServiceNemIDInternalProvider
+data EIDServiceDKNemIDInternalProvider
   = EIDServiceNemIDKeyCard
   | EIDServiceNemIDKeyFile
   deriving (Eq, Ord, Show)
 
-unsafeEIDServiceNemIDInternalProviderFromInt16 :: Int16 -> EIDServiceNemIDInternalProvider
-unsafeEIDServiceNemIDInternalProviderFromInt16 v = case v of
+unsafeEIDServiceDKNemIDInternalProviderFromInt16
+  :: Int16 -> EIDServiceDKNemIDInternalProvider
+unsafeEIDServiceDKNemIDInternalProviderFromInt16 v = case v of
   1 -> EIDServiceNemIDKeyCard
   2 -> EIDServiceNemIDKeyFile
   _ ->
     unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
 
-instance PQFormat EIDServiceNemIDInternalProvider where
+instance PQFormat EIDServiceDKNemIDInternalProvider where
   pqFormat = pqFormat @Int16
 
-instance FromSQL EIDServiceNemIDInternalProvider where
-  type PQBase EIDServiceNemIDInternalProvider = PQBase Int16
+instance FromSQL EIDServiceDKNemIDInternalProvider where
+  type PQBase EIDServiceDKNemIDInternalProvider = PQBase Int16
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
@@ -285,8 +333,8 @@ instance FromSQL EIDServiceNemIDInternalProvider where
       2 -> return EIDServiceNemIDKeyFile
       _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
-instance ToSQL EIDServiceNemIDInternalProvider where
-  type PQDest EIDServiceNemIDInternalProvider = PQDest Int16
+instance ToSQL EIDServiceDKNemIDInternalProvider where
+  type PQDest EIDServiceDKNemIDInternalProvider = PQDest Int16
   toSQL EIDServiceNemIDKeyCard = toSQL (1 :: Int16)
   toSQL EIDServiceNemIDKeyFile = toSQL (2 :: Int16)
 
@@ -320,3 +368,29 @@ instance ToSQL EIDServiceNOBankIDInternalProvider where
   toSQL EIDServiceNOBankIDStandard = toSQL (1 :: Int16)
   toSQL EIDServiceNOBankIDMobile   = toSQL (2 :: Int16)
 
+-- TODO: Decide where to put this
+dateOfBirthFromDKPersonalNumber :: Text -> Text
+dateOfBirthFromDKPersonalNumber personalnumber =
+  case T.chunksOf 2 $ T.take 6 personalnumber of
+    [day, month, year] ->
+      let
+        yearWithoutCentury = read year
+        firstDigitOfSequenceNumber = T.index personalnumber 7
+        century = showt $ resolveCentury yearWithoutCentury firstDigitOfSequenceNumber
+      in
+        day <> "." <> month <> "." <> century <> year
+    _ ->
+      unexpectedError
+        $  "This personal number cannot be formatted to date: "
+        <> personalnumber
+  where
+    resolveCentury :: Int -> Char -> Int
+    resolveCentury yearWithoutCentury firstDigitOfSequenceNumber
+      | firstDigitOfSequenceNumber < '4'
+      = 19
+      | firstDigitOfSequenceNumber == '4'
+      = if yearWithoutCentury < 37 then 20 else 19
+      | firstDigitOfSequenceNumber > '4' && firstDigitOfSequenceNumber < '9'
+      = if yearWithoutCentury < 58 then 20 else 18
+      | otherwise
+      = if yearWithoutCentury < 37 then 20 else 19

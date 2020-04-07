@@ -76,7 +76,7 @@ jobTableStatsToList (job, JobsTableStats {..}) =
 --
 data GetCronStats = GetCronStats
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCronStats CronStats where
-  query GetCronStats = do
+  dbQuery GetCronStats = do
     sealingStats     <- fetchJobTableStats "document_sealing_jobs"
     signingStats     <- fetchJobTableStats "document_signing_jobs"
     apiCallbackStats <- fetchJobTableStats "document_api_callbacks"

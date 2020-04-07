@@ -111,8 +111,8 @@ tableDocuments = tblTable
                                     ["document_id", "id"]
                        ) { fkDeferred = True
                          }
-                     , (fkOnColumn "author_user_id" "users" "id")
-                     , (fkOnColumn "folder_id" "folders" "id")
+                     , fkOnColumn "author_user_id" "users"       "id"
+                     , fkOnColumn "folder_id"      "folders"     "id"
                      , fkOnColumn "user_group_to_impersonate_for_eid" "user_groups" "id"
                      ]
   , tblIndexes     = [
@@ -122,7 +122,7 @@ tableDocuments = tblTable
                      , indexOnColumn "status"
       -- for joining with signatory links
                      , uniqueIndexOnColumn "author_id"
-                     , (indexOnColumnWithMethod "archive_search_fts" GIN)
+                     , indexOnColumnWithMethod "archive_search_fts" GIN
                      , indexOnColumn "author_user_id"
                      , indexOnColumn "template_id"
                      , indexOnColumn "folder_id"
@@ -706,7 +706,7 @@ tableSignatoryLinkFields = tblTable
   , tblForeignKeys =
     [ (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade
                                                               }
-    , (fkOnColumn "value_file_id" "files" "id")
+    , fkOnColumn "value_file_id" "files" "id"
     ]
   , tblIndexes     = [ uniqueIndexOnColumns
                        ["signatory_link_id", "type", "name_order", "custom_name"]

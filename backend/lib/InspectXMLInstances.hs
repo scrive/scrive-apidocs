@@ -45,7 +45,7 @@ import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
   inspectXML l =
-    "<ul>" <> (T.concat $ fmap (\s -> "<li>" <> (inspectXML s) <> "</li>") l) <> "</ul>"
+    "<ul>" <> T.concat (fmap (\s -> "<li>" <> inspectXML s <> "</li>") l) <> "</ul>"
 
 instance (InspectXML a, Show a) => InspectXML (Maybe a) where
   inspectXML Nothing  = "Nothing"
@@ -92,21 +92,19 @@ instance InspectXML SignatoryField where
       <> ", "
       <> (if fieldIsObligatory field then "obligatory, " else "optional, ")
       <> (if fieldShouldBeFilledBySender field then "filled by sender, " else "")
-      <> (if (fieldEditableBySignatory field == Just True)
+      <> (if fieldEditableBySignatory field == Just True
            then "editable by signatory, "
            else ""
          )
       <> "<br/>placements: "
       <> inspectXML (fieldPlacements field)
     where
-      value = case (fieldType field) of
+      value = case fieldType field of
         SignatureFT -> inspectXML (fieldFileValue field)
         CheckboxFT ->
-          if (fromJust (fieldBoolValue field)) then "checked" else "not checked"
-        RadioGroupFT -> inspectXML $ case fieldTextValue field of
-          Nothing -> "<not picked>"
-          Just s  -> s
-        _ -> inspectXML (fromJust (fieldTextValue field))
+          if fromJust (fieldBoolValue field) then "checked" else "not checked"
+        RadioGroupFT -> inspectXML $ fromMaybe "<not picked>" (fieldTextValue field)
+        _            -> inspectXML (fromJust (fieldTextValue field))
 
 instance InspectXML SignatoryConsentQuestionID where
   inspectXML = showt
@@ -127,7 +125,7 @@ instance InspectXML UserID where
 instance InspectXML File where
   inspectXML file =
     "<a href='"
-      <> (inspectXML $ LinkDaveFile (fileid file) (filename file))
+      <> inspectXML (LinkDaveFile (fileid file) (filename file))
       <> "'>"
       <> showt (fileid file)
       <> "/"
@@ -137,7 +135,7 @@ instance InspectXML File where
 instance InspectXML FileID where
   inspectXML fileid =
     "<a href='"
-      <> (inspectXML $ LinkDaveFile fileid (showt fileid))
+      <> inspectXML (LinkDaveFile fileid (showt fileid))
       <> "'>"
       <> showt fileid
       <> "</a> "

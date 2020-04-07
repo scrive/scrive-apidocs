@@ -47,8 +47,8 @@ data MockDoc = MockDoc
 mockDocUnjson :: UnjsonDef MockDoc
 mockDocUnjson =
   objectOf
-    $   pure MockDoc
-    <*> field "id"      mockDocId      "MockDoc ID"
+    $   MockDoc
+    <$> field "id"      mockDocId      "MockDoc ID"
     <*> field "title"   mockDocTitle   "MockDoc Title"
     <*> field "parties" mockDocParties "MockDoc Signatory Links"
     <*> fieldOpt "file"        mockDocFile       "MockDoc File"
@@ -91,10 +91,8 @@ mockDocUnjson =
 
 -- For the time being only user_group_to_impersonate_for_eid.
 unjsonMockDocExperimentalFeatures :: UnjsonDef (Maybe String)
-unjsonMockDocExperimentalFeatures = objectOf $ fieldOpt
-  "user_group_to_impersonate_for_eid"
-  (\ugid -> ugid)
-  "MockDoc UserGroupForEid"
+unjsonMockDocExperimentalFeatures = objectOf
+  $ fieldOpt "user_group_to_impersonate_for_eid" identity "MockDoc UserGroupForEid"
 
 data MockMainFile = MockMainFile
   { mockMainFileId   :: !String
@@ -103,7 +101,7 @@ data MockMainFile = MockMainFile
 
 instance Unjson MockMainFile where
   unjsonDef =
-    objectOf $ pure MockMainFile <*> field "id" mockMainFileId "MockMainFile ID" <*> field
+    objectOf $ MockMainFile <$> field "id" mockMainFileId "MockMainFile ID" <*> field
       "name"
       mockMainFileName
       "MockMainFile Name"
@@ -118,8 +116,8 @@ data MockAuthorAttachment = MockAuthorAttachment
 instance Unjson MockAuthorAttachment where
   unjsonDef =
     objectOf
-      $   pure MockAuthorAttachment
-      <*> field "name"     mockAuthorAttachmentName     "MockAuthorAttachment Name"
+      $   MockAuthorAttachment
+      <$> field "name"     mockAuthorAttachmentName     "MockAuthorAttachment Name"
       <*> field "required" mockAuthorAttachmentRequired "MockAuthorAttachment Required"
       <*> field "add_to_sealed_file"
                 mockAuthorAttachmentAddedToSealedFile
@@ -137,8 +135,8 @@ data MockDocDisplayOptions = MockDocDisplayOptions
 instance Unjson MockDocDisplayOptions where
   unjsonDef =
     objectOf
-      $   pure MockDocDisplayOptions
-      <*> field "show_header"
+      $   MockDocDisplayOptions
+      <$> field "show_header"
                 mockDocDisplayOptionsShowHeader
                 "MockDocDisplayOptions ShowHeader"
       <*> field "show_pdf_download"
@@ -161,10 +159,10 @@ data MockViewer = MockViewer
 
 instance Unjson MockViewer where
   unjsonDef =
-    objectOf
-      $   pure MockViewer
-      <*> field "role" mockViewerRole "MockViewer Role"
-      <*> fieldOpt "signatory_id" mockViewerSigId "MockViewer SigId"
+    objectOf $ MockViewer <$> field "role" mockViewerRole "MockViewer Role" <*> fieldOpt
+      "signatory_id"
+      mockViewerSigId
+      "MockViewer SigId"
 
 data MockSigLink = MockSigLink
   { mockSigLinkId                       :: !String
@@ -199,8 +197,8 @@ instance Ord MockSigLink where
 instance Unjson MockSigLink where
   unjsonDef =
     objectOf
-      $   pure MockSigLink
-      <*> field "id" mockSigLinkId ""
+      $   MockSigLink
+      <$> field "id" mockSigLinkId ""
       <*> fieldOpt "user_id" mockSigLinkUserId ""
       <*> field "is_author" mockSigLinkIsAuthor ""
       <*> fieldBy "signatory_role" mockSigLinkSignatoryRole "" unjsonSignatoryRole
@@ -269,8 +267,8 @@ data MockSigField = MockSigField
 instance Unjson MockSigField where
   unjsonDef =
     objectOf
-      $   pure MockSigField
-      <*> field "type"          mockSigFieldType                   ""
+      $   MockSigField
+      <$> field "type"          mockSigFieldType                   ""
       <*> field "is_obligatory" mockSigFieldIsObligatory           ""
       <*> field "should_be_filled_by_sender" mockSigFieldShouldBeFilledBySender ""
       <*> field "placements"    mockSigFieldPlacements             ""
@@ -306,8 +304,8 @@ data MockFieldPlacement = MockFieldPlacement
 instance Unjson MockFieldPlacement where
   unjsonDef =
     objectOf
-      $   pure MockFieldPlacement
-      <*> field "xrel"  mockFieldPlacementXrel  "MockFieldPlacement Xrel"
+      $   MockFieldPlacement
+      <$> field "xrel"  mockFieldPlacementXrel  "MockFieldPlacement Xrel"
       <*> field "yrel"  mockFieldPlacementYrel  "MockFieldPlacement Yrel"
       <*> field "wrel"  mockFieldPlacementWrel  "MockFieldPlacement Wrel"
       <*> field "hrel"  mockFieldPlacementHrel  "MockFieldPlacement Hrel"
@@ -323,7 +321,7 @@ data MockAnchor = MockAnchor
 
 instance Unjson MockAnchor where
   unjsonDef =
-    objectOf $ pure MockAnchor <*> field "text" mockAnchorText "MockAnchor Text" <*> field
+    objectOf $ MockAnchor <$> field "text" mockAnchorText "MockAnchor Text" <*> field
       "index"
       mockAnchorIndex
       "MockAnchor Index"
@@ -338,8 +336,8 @@ data MockSigAttachment = MockSigAttachment
 instance Unjson MockSigAttachment where
   unjsonDef =
     objectOf
-      $   pure MockSigAttachment
-      <*> field "name"        mockSigAttachmentName        "MockSigAttachment Name"
+      $   MockSigAttachment
+      <$> field "name"        mockSigAttachmentName        "MockSigAttachment Name"
       <*> field "description" mockSigAttachmentDescription "MockSigAttachment Description"
       <*> fieldOpt "file_id"   mockSigAttachmentFileId   "MockSigAttachment File ID"
       <*> fieldOpt "file_name" mockSigAttachmentFileName "MockSigAttachment File Name"
@@ -352,6 +350,6 @@ data MockSigHighlightedPage = MockSigHighlightedPage
 instance Unjson MockSigHighlightedPage where
   unjsonDef =
     objectOf
-      $   pure MockSigHighlightedPage
-      <*> field "page"    mockSigHighlightedPagePage   "MockSigAttachment Page"
+      $   MockSigHighlightedPage
+      <$> field "page"    mockSigHighlightedPagePage   "MockSigAttachment Page"
       <*> field "file_id" mockSigHighlightedPageFileID "MockSigAttachment FileID"

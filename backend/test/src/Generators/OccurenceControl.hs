@@ -150,7 +150,7 @@ testGeneratorHelper deltaPercentage generator checkOcc = do
       totalCases     = 2 ^ n
       prob           = occurenceCases / totalCases
 
-  sample <- rand 10 $ replicateM n $ runOccurenceControl 0.5 generator
+  sample <- rand 10 . replicateM n $ runOccurenceControl 0.5 generator
   let noOccurenceCount = length $ filter (not . checkOcc) sample
       lowerCount       = min noOccurenceCount (n - noOccurenceCount)
       delta            = h - lowerCount

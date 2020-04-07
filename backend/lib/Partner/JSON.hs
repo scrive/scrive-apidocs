@@ -40,8 +40,8 @@ userInfoFromUserForUpdate I.UserForUpdate {..} = I.UserInfo { .. }
 unjsonUserForUpdate :: UnjsonDef I.UserForUpdate
 unjsonUserForUpdate =
   objectOf
-    $    pure defaultUserForUpdate
-    <*   fieldReadonly "id" (^. #id) "The user's ID"
+    $    defaultUserForUpdate
+    <$   fieldReadonly "id" (^. #id) "The user's ID"
     <**> (fieldBy "email" (^. #email) "A user's email" unjsonEmail <**> pure (#email .~))
     <**> (    fieldBy "first_name"
                       (^. #firstName)
@@ -73,7 +73,7 @@ unjsonUserForUpdate =
                       (unjsonWithValidationOrEmpty asValidPosition)
          <**> pure (#companyPosition .~)
          )
-    <**> (fieldBy "lang" (^. #lang) "A user's language" (unjsonLang) <**> pure (#lang .~))
+    <**> (fieldBy "lang" (^. #lang) "A user's language" unjsonLang <**> pure (#lang .~))
     <**> (field "has_accepted_tos" (^. #hasAcceptedTOS) "Has the user accepted the TOS?"
          <**> pure (#hasAcceptedTOS .~)
          )
@@ -88,7 +88,7 @@ userToUserForUpdate user = I.UserForUpdate
   , phone           = user ^. #info % #phone
   , companyPosition = user ^. #info % #companyPosition
   , lang            = user ^. #settings % #lang
-  , hasAcceptedTOS  = maybe False (const True) (user ^. #hasAcceptedTOS)
+  , hasAcceptedTOS  = isJust (user ^. #hasAcceptedTOS)
   }
 
 unjsonUsersForUpdate :: UnjsonDef [I.UserForUpdate]
@@ -110,8 +110,8 @@ defaultUserGroupForUpdate = I.UserGroupForUpdate { id            = ""
 unjsonUserGroupForUpdate :: UnjsonDef I.UserGroupForUpdate
 unjsonUserGroupForUpdate =
   objectOf
-    $    pure defaultUserGroupForUpdate
-    <*   fieldReadonly "id" (^. #id) "The company ID"
+    $    defaultUserGroupForUpdate
+    <$   fieldReadonly "id" (^. #id) "The company ID"
     <**> (    fieldBy "name"
                       (^. #entityName)
                       "Company name"
@@ -178,9 +178,8 @@ updateUserGroupWithUserGroupForUpdate ugwp I.UserGroupForUpdate {..} =
                                        , country       = country
                                        }
       -- don't stop inheriting address, unless it has been changed
-      updateAddress = case new_address == old_address of
-        True  -> identity
-        False -> set #address $ Just new_address
+      updateAddress =
+          if new_address == old_address then identity else set #address $ Just new_address
   in  set #name entityName . updateAddress $ ug
 
 -------------------------------------------------------------------------------
@@ -189,15 +188,12 @@ updateUserGroupWithUserGroupForUpdate ugwp I.UserGroupForUpdate {..} =
 
 unjsonLang :: UnjsonDef Lang
 unjsonLang = unjsonInvmapR
-  ((maybe (fail "value is not valid language code") return) . langFromCode)
+  (maybe (fail "value is not valid language code") return . langFromCode)
   codeFromLang
   unjsonDef
 
 unjsonEmail :: UnjsonDef Email
 unjsonEmail = unjsonInvmapR
-  ( (maybe (fail "not valid email address") (return . Email))
-  . resultToMaybe
-  . asValidEmail
-  )
+  (maybe (fail "not valid email address") (return . Email) . resultToMaybe . asValidEmail)
   unEmail
   unjsonDef

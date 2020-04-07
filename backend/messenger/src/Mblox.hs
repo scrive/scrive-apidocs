@@ -31,7 +31,7 @@ handleMbloxEvents =
         logInfo_ "Processing Mblox events"
         rqVar <- rqBody <$> askRq
         rq    <- liftIO $ fmap unBody <$> tryTakeMVar rqVar
-        case (decode <$> BS.toString <$> rq) of
+        case decode . BS.toString <$> rq of
           Just (Ok v@(JSObject callbackJSON)) -> do
             logInfo "Mblox JSON with events parsed" $ object ["json" .= show callbackJSON]
             callbackData <- withJSValue v $ do
@@ -62,12 +62,12 @@ mbloxEventFromJSValue = do
     (Just _     , Just "Dispatched") -> return (True, Nothing)
     (Just msisdn, Just "Delivered" ) -> return (True, Just $ SMSEvent msisdn SMSDelivered)
     (Just msisdn, Just "Aborted") ->
-      return (True, Just $ SMSEvent msisdn $ SMSUndelivered "Aborted")
+      return (True, Just . SMSEvent msisdn $ SMSUndelivered "Aborted")
     (Just msisdn, Just "Rejected") ->
-      return (True, Just $ SMSEvent msisdn $ SMSUndelivered "Rejected")
+      return (True, Just . SMSEvent msisdn $ SMSUndelivered "Rejected")
     (Just msisdn, Just "Failed") ->
-      return (True, Just $ SMSEvent msisdn $ SMSUndelivered "Failed")
+      return (True, Just . SMSEvent msisdn $ SMSUndelivered "Failed")
     (Just msisdn, Just "Expired") ->
-      return (True, Just $ SMSEvent msisdn $ SMSUndelivered "Expired")
+      return (True, Just . SMSEvent msisdn $ SMSUndelivered "Expired")
     (Just _, Just "Unknown") -> return (True, Nothing)
     _ -> return (False, Nothing)

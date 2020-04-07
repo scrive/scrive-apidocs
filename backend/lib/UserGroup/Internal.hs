@@ -92,10 +92,9 @@ instance B.Binary UserGroupID where
   get = fmap UserGroupID B.get
 
 instance Unjson UserGroupID where
-  unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse UserGroupID") return) . maybeRead)
-    showt
-    unjsonDef
+  unjsonDef = unjsonInvmapR (maybe (fail "Can't parse UserGroupID") return . maybeRead)
+                            showt
+                            unjsonDef
 
 ----------------------------------------
 
@@ -185,7 +184,7 @@ instance ToSQL InvoicingType where
 
 instance Unjson InvoicingType where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse InvoicingType") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse InvoicingType") return . maybeRead . T.pack)
     show
     unjsonDef
 
@@ -293,7 +292,7 @@ instance CompositeFromSQL UserGroupUI where
                   , favicon       = faviconFromBinary favicon
                   }
     where
-      faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
+      faviconFromBinary (Just f) = if BS.null f then Nothing else Just f
       -- We should interpret empty logos as no logos.
       faviconFromBinary Nothing  = Nothing
 

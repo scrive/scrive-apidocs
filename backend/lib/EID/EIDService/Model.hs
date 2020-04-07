@@ -28,10 +28,10 @@ selectEIDServiceTransaction =
   ]
 
 -- | Insert new transaction or replace the existing one.
-data MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransaction
+newtype MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransaction
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeEIDServiceTransaction () where
-  update (MergeEIDServiceTransaction EIDServiceTransaction {..}) = do
+  dbUpdate (MergeEIDServiceTransaction EIDServiceTransaction {..}) = do
     runQuery_ . sqlInsert "eid_service_transactions" $ do
       setFields
       sqlOnConflictOnColumns ["signatory_link_id", "auth_kind"] . sqlUpdate "" $ do
@@ -50,18 +50,18 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
 data GetEIDServiceTransactionNoSessionIDGuard = GetEIDServiceTransactionNoSessionIDGuard SignatoryLinkID EIDServiceAuthenticationKind
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetEIDServiceTransactionNoSessionIDGuard (Maybe EIDServiceTransaction) where
-  query (GetEIDServiceTransactionNoSessionIDGuard slid eidAuthKind) =
+  dbQuery (GetEIDServiceTransactionNoSessionIDGuard slid eidAuthKind) =
     getEIDServiceTransactionInternal Nothing slid eidAuthKind
 
 data GetEIDServiceTransactionGuardSessionID = GetEIDServiceTransactionGuardSessionID SessionID SignatoryLinkID EIDServiceAuthenticationKind
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetEIDServiceTransactionGuardSessionID (Maybe EIDServiceTransaction) where
-  query (GetEIDServiceTransactionGuardSessionID sessionId slid eidAuthKind) = do
+  dbQuery (GetEIDServiceTransactionGuardSessionID sessionId slid eidAuthKind) = do
     getEIDServiceTransactionInternal (Just sessionId) slid eidAuthKind
 
 getEIDServiceTransactionInternal
   :: (MonadDB m, MonadThrow m)
-  => (Maybe SessionID)
+  => Maybe SessionID
   -> SignatoryLinkID
   -> EIDServiceAuthenticationKind
   -> m (Maybe EIDServiceTransaction)
@@ -69,7 +69,7 @@ getEIDServiceTransactionInternal mSessionId slid eidAuthKind = do
   runQuery_ . sqlSelect "eid_service_transactions" $ do
     mapM_ sqlResult selectEIDServiceTransaction
     sqlWhereEq "signatory_link_id" slid
-    sqlWhereEq "auth_kind" $ eidAuthKind
+    sqlWhereEq "auth_kind"         eidAuthKind
     -- When the sessionId is included, we check that it matches. This is used in
     -- authToView for example. Cron signing consumer does not have the sessionId, but
     -- it still needs the EID transaction status.
@@ -79,7 +79,7 @@ getEIDServiceTransactionInternal mSessionId slid eidAuthKind = do
 data PurgeTimeoutedEIDTransactions = PurgeTimeoutedEIDTransactions
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBUpdate m PurgeTimeoutedEIDTransactions Int where
-  update (PurgeTimeoutedEIDTransactions) = do
+  dbUpdate PurgeTimeoutedEIDTransactions = do
     ct <- currentTime
     runSQL $ "DELETE FROM eid_service_transactions WHERE deadline <" <?> ct
 

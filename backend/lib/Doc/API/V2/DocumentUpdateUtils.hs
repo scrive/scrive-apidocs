@@ -6,6 +6,7 @@ module Doc.API.V2.DocumentUpdateUtils (
 
 import Control.Conditional (unlessM, whenM)
 import Control.Monad.Base
+import Data.Ord (Down(..))
 import Log
 import qualified Control.Exception.Lifted as E
 
@@ -30,7 +31,7 @@ import Util.PDFUtil
 checkDraftTimeZoneName :: (Kontrakcja m) => Document -> m ()
 checkDraftTimeZoneName draft = do
   void
-    $         (mkTimeZoneName $ toString (documenttimezonename draft))
+    $         mkTimeZoneName (toString (documenttimezonename draft))
     `E.catch` (\(_ :: E.SomeException) ->
                 apiError $ requestParameterInvalid "document" "timezone name is invalid"
               )
@@ -70,25 +71,24 @@ applyDraftDataToDocument draft actor = do
     actor
   -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'
   whenM
-      (   (\doc -> (documentunsaveddraft doc) && not (documentunsaveddraft draft))
+      (   (\doc -> documentunsaveddraft doc && not (documentunsaveddraft draft))
       <$> theDocument
       )
     $ do
         dbUpdate $ SetDocumentUnsavedDraft False
-  whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
+  whenM ((\doc -> isTemplate draft && not (isTemplate doc)) <$> theDocument) $ do
     dbUpdate $ TemplateFromDocument actor
   documentsignatorylinks <$> theDocument >>= \siglinks ->
     case
-        ( mergeAuthorDetails siglinks
-        $ mergeSignatoriesIDs siglinks
+        mergeAuthorDetails siglinks
+        . mergeSignatoriesIDs siglinks
         $ documentsignatorylinks draft
-        )
       of
         Nothing   -> apiError $ requestParameterInvalid "document" "parties list is empty"
         Just sigs -> do
           let fixedSigs = map fixSignatorySettings sigs
           res <- dbUpdate $ ResetSignatoryDetails fixedSigs actor
-          unless res $ apiError $ serverError "applyDraftDataToDocument failed"
+          unless res . apiError $ serverError "applyDraftDataToDocument failed"
 
 fixSignatorySettings :: SignatoryLink -> SignatoryLink
 fixSignatorySettings = fixSignatoryDKNemidPersonalField
@@ -99,7 +99,7 @@ fixSignatoryDKNemidPersonalField sl = case sl of
     -> sl { signatoryfields = map adjustField $ signatoryfields sl }
   _ -> sl
   where
-    adjustField (SignatoryPersonalNumberField (pnf@PersonalNumberField { spnfObligatory = False }))
+    adjustField (SignatoryPersonalNumberField pnf@PersonalNumberField { spnfObligatory = False })
       = SignatoryPersonalNumberField $ pnf { spnfObligatory = True }
     adjustField f = f
 
@@ -123,9 +123,9 @@ mergeAuthorDetails sigs nsigs =
                                        , snfShouldBeFilledBySender = False
                                        }
       ]
-    replaceName1 a ((SignatoryNameField nf@(NameField { snfNameOrder = NameOrder 1 })) : fs)
+    replaceName1 a ((SignatoryNameField nf@NameField { snfNameOrder = NameOrder 1 }) : fs)
       = ((SignatoryNameField $ nf { snfValue = a }) : fs)
-    replaceName1 a (f : fs) = f : (replaceName1 a fs)
+    replaceName1 a (f : fs) = f : replaceName1 a fs
 
     replaceName2 a [] =
       [ SignatoryNameField $ NameField { snfID = unsafeSignatoryFieldID 0
@@ -136,9 +136,9 @@ mergeAuthorDetails sigs nsigs =
                                        , snfShouldBeFilledBySender = False
                                        }
       ]
-    replaceName2 a ((SignatoryNameField nf@(NameField { snfNameOrder = NameOrder 2 })) : fs)
+    replaceName2 a ((SignatoryNameField nf@NameField { snfNameOrder = NameOrder 2 }) : fs)
       = ((SignatoryNameField $ nf { snfValue = a }) : fs)
-    replaceName2 a (f : fs) = f : (replaceName2 a fs)
+    replaceName2 a (f : fs) = f : replaceName2 a fs
 
     replaceEmail a [] =
       [ SignatoryEmailField $ EmailField { sefID = unsafeSignatoryFieldID 0
@@ -151,15 +151,15 @@ mergeAuthorDetails sigs nsigs =
       ]
     replaceEmail a ((SignatoryEmailField ef) : fs) =
       ((SignatoryEmailField $ ef { sefValue = a }) : fs)
-    replaceEmail a (f : fs) = f : (replaceEmail a fs)
+    replaceEmail a (f : fs) = f : replaceEmail a fs
   in
     case (sigs, nsigs) of
-      (asig : _, nasig : nsigs') -> Just $ (setConstantDetails asig nasig) : nsigs'
+      (asig : _, nasig : nsigs') -> Just $ setConstantDetails asig nasig : nsigs'
       _ -> Nothing
 
 mergeSignatoriesIDs :: [SignatoryLink] -> [SignatoryLink] -> [SignatoryLink]
 mergeSignatoriesIDs (s : ss) (ns : nss) =
-  (ns { signatorylinkid = signatorylinkid s }) : (mergeSignatoriesIDs ss nss)
+  (ns { signatorylinkid = signatorylinkid s }) : mergeSignatoriesIDs ss nss
 mergeSignatoriesIDs _ ns = ns
 
 -- This function removes:
@@ -180,7 +180,7 @@ clearDocFields actor = do
 
           let
             clearSigFields sig = sig
-              { signatoryfields = filter validField $ map clearField $ signatoryfields sig
+              { signatoryfields = filter validField . map clearField $ signatoryfields sig
               }
 
             validField (SignatoryNameField           _   ) = True
@@ -190,9 +190,9 @@ clearDocFields actor = do
             validField (SignatoryEmailField          _   ) = True
             validField (SignatoryMobileField         _   ) = True
             validField (SignatoryTextField           _   ) = True
-            validField (SignatoryCheckboxField schf) = not $ null $ schfPlacements schf
-            validField (SignatorySignatureField ssf) = not $ null $ ssfPlacements ssf
-            validField (SignatoryRadioGroupField srgf) = not $ null $ srgfPlacements srgf
+            validField (SignatoryCheckboxField schf) = not . null $ schfPlacements schf
+            validField (SignatorySignatureField ssf) = not . null $ ssfPlacements ssf
+            validField (SignatoryRadioGroupField srgf) = not . null $ srgfPlacements srgf
 
             clearField (SignatoryNameField snf) = SignatoryNameField
               $ snf { snfPlacements = filter validPlacement $ snfPlacements snf }
@@ -222,7 +222,7 @@ clearDocFields actor = do
             sigs' = map clearSigFields sigs
 
           res <- dbUpdate $ ResetSignatoryDetails sigs' actor
-          unless res $ apiError $ serverError "clearing document fields failed"
+          unless res . apiError $ serverError "clearing document fields failed"
 
 
 -- Utils for removing pages
@@ -230,69 +230,69 @@ adjustFieldAndPlacementsAfterRemovingPages
   :: (Kontrakcja m, DocumentMonad m) => [Int] -> Actor -> m ()
 adjustFieldAndPlacementsAfterRemovingPages pages actor = do
   sigs <- documentsignatorylinks <$> theDocument
-  let revSortedPages = reverse $ sort $ pages
+  let revSortedPages = sortOn Down pages
   res <- dbUpdate $ ResetSignatoryDetails
     (map (adjustFieldAndPlacementsAfterRemovingPagesForSignatory revSortedPages) sigs)
     actor
-  unless res $ apiError $ serverError "adjustFieldAndPlacementsAfterRemovingPages failed"
+  unless res . apiError $ serverError "adjustFieldAndPlacementsAfterRemovingPages failed"
 
 adjustFieldAndPlacementsAfterRemovingPagesForSignatory
   :: [Int] -> SignatoryLink -> SignatoryLink
-adjustFieldAndPlacementsAfterRemovingPagesForSignatory [] sl = sl
-adjustFieldAndPlacementsAfterRemovingPagesForSignatory (highestpageno : otherpages) sl =
-  adjustFieldAndPlacementsAfterRemovingPagesForSignatory otherpages $ sl
+adjustFieldAndPlacementsAfterRemovingPagesForSignatory otherpages sl = foldl'
+  (\asl highestpageno -> asl
     { signatoryfields = mapMaybe (adjustFieldAndPlacementsAfterRemovingPage highestpageno)
-                          $ signatoryfields sl
+                          $ signatoryfields asl
     }
+  )
+  sl
+  otherpages
 
 adjustFieldAndPlacementsAfterRemovingPage :: Int -> SignatoryField -> Maybe SignatoryField
 adjustFieldAndPlacementsAfterRemovingPage page slf = case slf of
-  SignatoryNameField f -> Just $ SignatoryNameField $ f
+  SignatoryNameField f -> Just . SignatoryNameField $ f
     { snfPlacements = adjustPlacementsAfterRemovingPage page $ snfPlacements f
     }
-  SignatoryEmailField f -> Just $ SignatoryEmailField $ f
+  SignatoryEmailField f -> Just . SignatoryEmailField $ f
     { sefPlacements = adjustPlacementsAfterRemovingPage page $ sefPlacements f
     }
-  SignatoryMobileField f -> Just $ SignatoryMobileField $ f
+  SignatoryMobileField f -> Just . SignatoryMobileField $ f
     { smfPlacements = adjustPlacementsAfterRemovingPage page $ smfPlacements f
     }
-  SignatoryCompanyField f -> Just $ SignatoryCompanyField $ f
+  SignatoryCompanyField f -> Just . SignatoryCompanyField $ f
     { scfPlacements = adjustPlacementsAfterRemovingPage page $ scfPlacements f
     }
-  SignatoryPersonalNumberField f -> Just $ SignatoryPersonalNumberField $ f
+  SignatoryPersonalNumberField f -> Just . SignatoryPersonalNumberField $ f
     { spnfPlacements = adjustPlacementsAfterRemovingPage page $ spnfPlacements f
     }
-  SignatoryCompanyNumberField f -> Just $ SignatoryCompanyNumberField $ f
+  SignatoryCompanyNumberField f -> Just . SignatoryCompanyNumberField $ f
     { scnfPlacements = adjustPlacementsAfterRemovingPage page $ scnfPlacements f
     }
-  SignatoryTextField f -> Just $ SignatoryTextField $ f
+  SignatoryTextField f -> Just . SignatoryTextField $ f
     { stfPlacements = adjustPlacementsAfterRemovingPage page $ stfPlacements f
     }
   SignatoryCheckboxField f ->
-    case (adjustPlacementsAfterRemovingPage page $ schfPlacements f) of
+    case adjustPlacementsAfterRemovingPage page $ schfPlacements f of
       [] -> Nothing
       notEmptyPlacementsList ->
-        Just $ SignatoryCheckboxField $ f { schfPlacements = notEmptyPlacementsList }
+        Just . SignatoryCheckboxField $ f { schfPlacements = notEmptyPlacementsList }
   SignatorySignatureField f ->
-    case (adjustPlacementsAfterRemovingPage page $ ssfPlacements f) of
+    case adjustPlacementsAfterRemovingPage page $ ssfPlacements f of
       [] -> Nothing
       notEmptyPlacementsList ->
-        Just $ SignatorySignatureField $ f { ssfPlacements = notEmptyPlacementsList }
+        Just . SignatorySignatureField $ f { ssfPlacements = notEmptyPlacementsList }
   SignatoryRadioGroupField f ->
-    case (adjustPlacementsAfterRemovingPage page $ srgfPlacements f) of
+    case adjustPlacementsAfterRemovingPage page $ srgfPlacements f of
       [] -> Nothing
       notEmptyPlacementsList ->
-        Just $ SignatoryRadioGroupField $ f { srgfPlacements = notEmptyPlacementsList }
+        Just . SignatoryRadioGroupField $ f { srgfPlacements = notEmptyPlacementsList }
 
 
 adjustPlacementsAfterRemovingPage :: Int -> [FieldPlacement] -> [FieldPlacement]
-adjustPlacementsAfterRemovingPage page ps =
-  mapMaybe (adjustPlacementAfterRemovingPage page) ps
+adjustPlacementsAfterRemovingPage = mapMaybe . adjustPlacementAfterRemovingPage
 
 adjustPlacementAfterRemovingPage :: Int -> FieldPlacement -> Maybe FieldPlacement
-adjustPlacementAfterRemovingPage page placement =
-  if (placementpage placement < fromIntegral page)
-    then Just $ placement
-    else if (placementpage placement > fromIntegral page)
-      then Just $ placement { placementpage = placementpage placement - 1 }
-      else Nothing
+adjustPlacementAfterRemovingPage page placement
+  | placementpage placement < fromIntegral page = Just placement
+  | placementpage placement > fromIntegral page = Just
+  $ placement { placementpage = placementpage placement - 1 }
+  | otherwise = Nothing

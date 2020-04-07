@@ -33,5 +33,5 @@ instance FromJSValue Screenshot where
 
 instance ToJSValue Screenshot where
   toJSValue (Screenshot time' image') = runJSONGen $ do
-    value "time" $ toJSValue $ formatTimeISO time'
-    value "image" $ toJSValue $ BS.toString $ RFC2397.encode "image/jpeg" image'
+    value "time" . toJSValue $ formatTimeISO time'
+    value "image" . toJSValue $ BS.toString (RFC2397.encode "image/jpeg" image')

@@ -39,8 +39,8 @@ processPlanhatEvent reqManager phConf SetUserProps props
   where
     hasMailProp :: [EventProperty] -> Bool
     hasMailProp [] = False
-    hasMailProp ((MailProp email) : _) | (unEmail email == "") = False
-                                       | otherwise             = True
+    hasMailProp ((MailProp email) : _) | unEmail email == "" = False
+                                       | otherwise           = True
     hasMailProp (_ : props') = hasMailProp props'
 
 processPlanhatEvent reqManager phConf SetCompanyProps props = do
@@ -70,7 +70,7 @@ toPlanhatProperty (SomeProp "value"  (PVNumber k)) = Just $ "value" .= k
 toPlanhatProperty (SomeProp "companyExternalId" (PVString compId)) =
   Just $ "companyExternalId" .= compId
 toPlanhatProperty (SomeProp "dimensionId" (PVString dimId)) =
-  Just $ "dimensionId" .= ((T.intercalate "_") . T.words $ T.toLower dimId)
+  Just $ "dimensionId" .= (T.intercalate "_" . T.words $ T.toLower dimId)
 toPlanhatProperty (UserIDProp userId) = Just $ "externalId" .= (show . unUserID $ userId)
 toPlanhatProperty _                   = Nothing
 

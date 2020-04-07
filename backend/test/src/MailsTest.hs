@@ -34,9 +34,9 @@ import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 mailsTests :: TestEnvSt -> Test
 mailsTests env = testGroup
   "Mails"
-  [ testThat "Document emails" env $ testDocumentMails
-  , testThat "Branded document emails" env $ testBrandedDocumentMails
-  , testThat "User emails" env $ testUserMails
+  [ testThat "Document emails"         env testDocumentMails
+  , testThat "Branded document emails" env testBrandedDocumentMails
+  , testThat "User emails"             env testUserMails
   ]
 
 testBrandedDocumentMails :: TestEnv ()
@@ -56,140 +56,119 @@ sendDocumentMails author = do
   forM_ allLangs $ \l -> do
       -- make  the context, user and document all use the same lang
     ctx <- mkContext l
-    void $ dbUpdate $ SetUserSettings (author ^. #id) (author ^. #settings & #lang .~ l)
+    void . dbUpdate $ SetUserSettings (author ^. #id) (author ^. #settings & #lang .~ l)
     let aa           = authorActor ctx author
         homeFolderId = fromJust $ author ^. #homeFolderID
     req <- mkRequest POST []
-    runTestKontra req ctx
-      $               (randomUpdate
-                        (NewDocument author
-                                     "Document title"
-                                     Signable
-                                     defaultTimeZoneName
-                                     0
-                                     aa
-                                     homeFolderId
-                        )
-                      )
-      `withDocumentM` do
-                        res <- dbUpdate $ SetDocumentLang l (systemActor $ ctx ^. #time)
-                        unless res $ unexpectedError "Expected True"
+    runTestKontra req ctx $ do
+      let genDoc = randomUpdate $ NewDocument author
+                                              "Document title"
+                                              Signable
+                                              defaultTimeZoneName
+                                              0
+                                              aa
+                                              homeFolderId
+      withDocumentM genDoc $ do
+        res <- dbUpdate $ SetDocumentLang l (systemActor $ ctx ^. #time)
+        unless res $ unexpectedError "Expected True"
 
-                        asl  <- head . documentsignatorylinks <$> theDocument
-                        file <- addNewRandomFile
-                        randomUpdate $ AttachFile file (systemActor $ ctx ^. #time)
+        asl  <- head . documentsignatorylinks <$> theDocument
+        file <- addNewRandomFile
+        randomUpdate $ AttachFile file (systemActor $ ctx ^. #time)
 
-                        islf <- rand 10 arbitrary
+        islf <- rand 10 arbitrary
 
-                        now  <- currentTime
-                        let sigs =
-                              [ defaultSignatoryLink
-                                { signatoryfields   = signatoryfields asl
-                                , signatoryisauthor = True
-                                , signatoryrole     = SignatoryRoleSigningParty
-                                , maybesignatory    = maybesignatory asl
-                                }
-                              , defaultSignatoryLink
-                                { signatoryfields = islf
-                                , signatoryrole   = SignatoryRoleSigningParty
-                                }
-                              ]
-                        success <- randomUpdate
-                          $ ResetSignatoryDetails sigs (systemActor now)
-                        unless success $ unexpectedError "Expected True"
-                        tz <- mkTimeZoneName "Europe/Stockholm"
-                        randomUpdate $ PreparationToPending (systemActor now) tz
-                        asl2 <- head . documentsignatorylinks <$> theDocument
-                        randomUpdate
-                          .   MarkDocumentSeen (signatorylinkid asl2)
-                          =<< signatoryActor ctx asl2
-                        randomUpdate $ SignDocument
-                          (signatorylinkid asl2)
-                          Nothing
-                          Nothing
-                          SignatoryScreenshots.emptySignatoryScreenshots
-                          (systemActor now)
-                        sls <-
-                          filter (not . isAuthor) . documentsignatorylinks <$> theDocument
-                        sl <- case sls of
-                          [sl] -> return sl
-                          _    -> unexpectedError "Expected only a single sig link!"
-                        --Invitation Mails
-                        let checkMail s mg = do
-                              logInfo_ $ "Checking mail" <+> T.pack s
-                              m <- mg
-                              validMail (T.pack s) m
-                        checkMail "Invitation"
-                          $   mailInvitation True Sign (Just sl)
-                          =<< theDocument
-                        -- DELIVERY MAILS
-                        checkMail "Deferred invitation"
-                          $   mailDeferredInvitation (ctx ^. #mailNoreplyAddress)
-                                                     (ctx ^. #brandedDomain)
-                                                     sl
-                          =<< theDocument
-                        checkMail "Undelivered invitation"
-                          $   mailUndeliveredInvitation (ctx ^. #mailNoreplyAddress)
-                                                        (ctx ^. #brandedDomain)
-                                                        sl
-                          =<< theDocument
-                        checkMail "Delivered invitation"
-                          $   mailDeliveredInvitation (ctx ^. #mailNoreplyAddress)
-                                                      (ctx ^. #brandedDomain)
-                                                      sl
-                          =<< theDocument
-                        checkMail "Undelivered confirmation" $ do
-                          doc <- theDocument
-                          mailUndeliveredConfirmation (ctx ^. #mailNoreplyAddress)
-                                                      (ctx ^. #brandedDomain)
-                                                      sl
-                                                      doc
-                        --remind mails
-                        checkMail "Reminder notsigned" $ do
-                          doc <- theDocument
-                          mailDocumentRemind False Nothing doc sl True False
-                        checkMail "Reminder notsigned" $ do
-                          doc <- theDocument
-                          mailDocumentRemind True Nothing doc sl True False
-                        --reject mail
-                        checkMail "Reject"
-                          $   mailDocumentRejected True Nothing True sl
-                          =<< theDocument
-                        checkMail "Reject"
-                          $   mailDocumentRejected True Nothing False sl
-                          =<< theDocument
-                        -- awaiting author email
-                        checkMail "Awaiting author"
-                          $   mailDocumentAwaitingForAuthor (defaultLang :: Lang)
-                          =<< theDocument
-                        -- Virtual signing
-                        randomUpdate
-                          .   SignDocument (signatorylinkid sl)
-                                           Nothing
-                                           Nothing
-                                           SignatoryScreenshots.emptySignatoryScreenshots
-                          =<< (signatoryActor (set #time (10 `minutesAfter` now) ctx) sl)
+        now  <- currentTime
+        let sigs =
+              [ defaultSignatoryLink { signatoryfields   = signatoryfields asl
+                                     , signatoryisauthor = True
+                                     , signatoryrole     = SignatoryRoleSigningParty
+                                     , maybesignatory    = maybesignatory asl
+                                     }
+              , defaultSignatoryLink { signatoryfields = islf
+                                     , signatoryrole   = SignatoryRoleSigningParty
+                                     }
+              ]
+        success <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
+        unless success $ unexpectedError "Expected True"
+        tz <- mkTimeZoneName "Europe/Stockholm"
+        randomUpdate $ PreparationToPending (systemActor now) tz
+        asl2 <- head . documentsignatorylinks <$> theDocument
+        randomUpdate . MarkDocumentSeen (signatorylinkid asl2) =<< signatoryActor ctx asl2
+        randomUpdate $ SignDocument (signatorylinkid asl2)
+                                    Nothing
+                                    Nothing
+                                    SignatoryScreenshots.emptySignatoryScreenshots
+                                    (systemActor now)
+        sls <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
+        sl  <- case sls of
+          [sl] -> return sl
+          _    -> unexpectedError "Expected only a single sig link!"
+        --Invitation Mails
+        let checkMail s mg = do
+              logInfo_ $ "Checking mail" <+> T.pack s
+              m <- mg
+              validMail (T.pack s) m
+        checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
+        -- DELIVERY MAILS
+        checkMail "Deferred invitation"
+          $ mailDeferredInvitation (ctx ^. #mailNoreplyAddress) (ctx ^. #brandedDomain) sl
+          =<< theDocument
+        checkMail "Undelivered invitation"
+          $   mailUndeliveredInvitation (ctx ^. #mailNoreplyAddress)
+                                        (ctx ^. #brandedDomain)
+                                        sl
+          =<< theDocument
+        checkMail "Delivered invitation"
+          $   mailDeliveredInvitation (ctx ^. #mailNoreplyAddress)
+                                      (ctx ^. #brandedDomain)
+                                      sl
+          =<< theDocument
+        checkMail "Undelivered confirmation" $ do
+          doc <- theDocument
+          mailUndeliveredConfirmation (ctx ^. #mailNoreplyAddress)
+                                      (ctx ^. #brandedDomain)
+                                      sl
+                                      doc
+        --remind mails
+        checkMail "Reminder notsigned" $ do
+          doc <- theDocument
+          mailDocumentRemind False Nothing doc sl True False
+        checkMail "Reminder notsigned" $ do
+          doc <- theDocument
+          mailDocumentRemind True Nothing doc sl True False
+        --reject mail
+        checkMail "Reject" $ mailDocumentRejected True Nothing True sl =<< theDocument
+        checkMail "Reject" $ mailDocumentRejected True Nothing False sl =<< theDocument
+        -- awaiting author email
+        checkMail "Awaiting author"
+          $   mailDocumentAwaitingForAuthor (defaultLang :: Lang)
+          =<< theDocument
+        -- Virtual signing
+        randomUpdate
+          .   SignDocument (signatorylinkid sl)
+                           Nothing
+                           Nothing
+                           SignatoryScreenshots.emptySignatoryScreenshots
+          =<< signatoryActor (set #time (10 `minutesAfter` now) ctx) sl
 
-                        -- Sending closed email
-                        checkMail "Closed"
-                          $   mailDocumentClosed False sl False False False
-                          =<< theDocument
-                        -- Reminder after send
-                        checkMail "Reminder signed" $ do
-                          doc <- theDocument
-                          mailDocumentRemind True
-                                             Nothing
-                                             doc
-                                             (head $ documentsignatorylinks doc)
-                                             True
-                                             False
+        -- Sending closed email
+        checkMail "Closed" $ mailDocumentClosed False sl False False False =<< theDocument
+        -- Reminder after send
+        checkMail "Reminder signed" $ do
+          doc <- theDocument
+          mailDocumentRemind True
+                             Nothing
+                             doc
+                             (head $ documentsignatorylinks doc)
+                             True
+                             False
 
-                        checkMail "Party process finalized" $ do
-                          doc <- theDocument
-                          mailPartyProcessFinalizedNotification
-                            doc
-                            (head $ documentsignatorylinks doc)
-                            DocumentSigned
+        checkMail "Party process finalized" $ do
+          doc <- theDocument
+          mailPartyProcessFinalizedNotification doc
+                                                (head $ documentsignatorylinks doc)
+                                                DocumentSigned
   commit
 
 
@@ -203,7 +182,7 @@ testUserMails = do
     req  <- mkRequest POST []
     let checkMail s mg = do
           logInfo_ $ "Checking mail" <+> T.pack s
-          m <- fst <$> (runTestKontra req ctx $ mg)
+          m <- fst <$> runTestKontra req ctx mg
           validMail (T.pack s) m
     checkMail "New account" $ do
       al <- newUserAccountRequestLink (ctx ^. #lang) (user ^. #id) AccountRequest
@@ -225,21 +204,11 @@ validMail name m = do
       c'   = "<html>" <> TL.fromStrict c <> "</html>"
            -- ^ XML parser freaks out if there's content after root element.
       exml = XML.parseText XML.def c'
-  unless (T.any isAlphaNum $ title m)
-    $  assertFailure
-    $  T.unpack
-    $  "Empty title of mail "
-    <> name
+  unless (T.any isAlphaNum $ title m) . assertFailure $ T.unpack
+    ("Empty title of mail " <> name)
   case exml of
-    Left exc ->
-      assertFailure
-        $  T.unpack
-        $  "Invalid HTML mail "
-        <> name
-        <> " : "
-        <> c
-        <> " "
-        <> (showt exc)
+    Left exc -> assertFailure
+      $ T.unpack ("Invalid HTML mail " <> name <> " : " <> c <> " " <> showt exc)
     Right _ -> assertSuccess
 
 addNewRandomUserWithLang :: Lang -> TestEnv User

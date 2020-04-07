@@ -48,7 +48,7 @@ import Utils.Network
 import qualified HostClock.Model as HC
 import qualified VersionTH
 
-data CmdConf = CmdConf
+newtype CmdConf = CmdConf
   { config :: String
   } deriving (Data, Typeable)
 
@@ -93,7 +93,7 @@ main = withCurlDo $ do
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
       checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
       unless (readOnlyDatabase appConf) $ do
-        dbUpdate $ SetMainDomainURL $ T.unpack $ mainDomainUrl appConf
+        dbUpdate . SetMainDomainURL $ T.unpack (mainDomainUrl appConf)
 
     appGlobals <- do
       templates <-
@@ -140,7 +140,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       withPostgreSQL trackedConnSource
         . runCryptoRNGT (cryptorng appGlobals)
         $ initDatabaseEntries appConf
-      liftBase $ waitForTermination
+      liftBase waitForTermination
       logInfo_ "Termination request received"
 
 initDatabaseEntries
@@ -150,16 +150,15 @@ initDatabaseEntries appConf = do
     -- Add some host_clock entries in "dev" mode if there are no valid samples
     clockErrors <- dbQuery $ HC.GetNClockErrorEstimates 10
     unless (HC.enoughClockErrorOffsetSamples clockErrors) $ do
-      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
-      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
-      return ()
-  flip mapM_ (initialUsers appConf) $ \(email, passwordstring) -> do
+      void . dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
+      void . dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
+  forM_ (initialUsers appConf) $ \(email, passwordstring) -> do
     -- create initial database entries
     passwd    <- createPassword passwordstring
     maybeuser <- dbQuery $ GetUserByEmail email
     case maybeuser of
       Nothing -> do
-        bd       <- dbQuery $ GetMainBrandedDomain
+        bd       <- dbQuery GetMainBrandedDomain
         ugFolder <- dbUpdate . FolderCreate $ defaultFolder
         ug       <-
           dbUpdate
@@ -168,7 +167,7 @@ initDatabaseEntries appConf = do
           $ defaultUserGroup
         userFolder <-
           dbUpdate . FolderCreate . set #parentID (Just $ ugFolder ^. #id) $ defaultFolder
-        void $ dbUpdate $ AddUser ("", "")
+        void . dbUpdate $ AddUser ("", "")
                                   (unEmail email)
                                   (Just passwd)
                                   (ug ^. #id, Just $ userFolder ^. #id, True)

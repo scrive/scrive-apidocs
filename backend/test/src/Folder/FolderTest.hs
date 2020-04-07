@@ -64,7 +64,7 @@ testSignuUsersHaveHomeFolders = do
   -- signup new user
   ctx <- mkContext defaultLang
   req <- mkRequest POST [("email", inText "jabberwocky@scrive.com")]
-  void $ runTestKontra req ctx $ apiCallSignup
+  void $ runTestKontra req ctx apiCallSignup
 
   -- 1 UserGroup Home Folder, 1 User Home folder
   assertCountAllFolders "Created tree of groups with folders" 2
@@ -133,7 +133,7 @@ testPartnerUsersWithoutFolders = do
 
 partnerCompanyCreate :: User -> UserGroup -> TestEnv (Context, UserGroupID)
 partnerCompanyCreate partnerAdminUser partnerAdminUserGroup = do
-  ctx <- (set #maybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang partnerAdminUser
   let partnerUgID = partnerAdminUserGroup ^. #id
   newCompanyJSON <- readTestFile "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [("json", inTextBS newCompanyJSON)]
@@ -176,7 +176,7 @@ testNewCompanyAccount = do
                                                }
   assertBool "UserGroup has home Folder" . isJust $ ug ^. #homeFolderID
 
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   bobReq <- mkRequest
     POST
@@ -207,7 +207,7 @@ testNewCompanyAccount = do
     ]
   void . runTestKontra cliffReq ctx $ handleAddUserGroupAccount
   Just userCliff <- dbQuery $ GetUserByEmail (Email "cliff@cranberry.com")
-  assertBool "User has no home Folder" . not . isJust $ userCliff ^. #homeFolderID
+  assertBool "User has no home Folder" . isNothing $ userCliff ^. #homeFolderID
 
 assertCountAllFolders :: String -> Int64 -> TestEnv ()
 assertCountAllFolders msg expectedCount =
@@ -251,14 +251,14 @@ testMoveFolder = do
   (_, fids)    <- createFolderTree 3
   -- take Root.Left folder and move it to Root.Right....Right folder
   Just folder1 <- dbQuery . FolderGet $ fids !! 1
-  void $ dbUpdate . FolderUpdate . set #parentID (Just $ fids !! 14) $ folder1
+  void . dbUpdate . FolderUpdate . set #parentID (Just $ fids !! 14) $ folder1
   -- parentpath of new leaf in moved group should be 6 items long
   parentFolders <- dbQuery . FolderGetParents $ fids !! 10
-  assertEqual ("Fetched all parents of leaf folder") 6 (length parentFolders)
+  assertEqual "Fetched all parents of leaf folder" 6 (length parentFolders)
   -- root still has 14 children
-  children <-
-    fmap (concatMap fwcToList) . dbQuery . FolderGetAllChildrenRecursive $ fids !! 0
-  assertEqual ("Fetched all children of top folder") 14 (length children)
+  children <- fmap (concatMap fwcToList) . dbQuery . FolderGetAllChildrenRecursive $ head
+    fids
+  assertEqual "Fetched all children of top folder" 14 (length children)
 
 testMoveFolderCycleError :: TestEnv ()
 testMoveFolderCycleError = do

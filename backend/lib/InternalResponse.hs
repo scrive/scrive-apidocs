@@ -46,13 +46,13 @@ internalResponseWithFlash f a =
   InternalKontraResponseWithFlash f (internalResponseContent a)
 
 instance CanBeInternalResponse Response where
-  internalResponseContent a = JustResponse a
+  internalResponseContent = JustResponse
 
 instance CanBeInternalResponse KontraLink where
-  internalResponseContent a = JustKontraLink a
+  internalResponseContent = JustKontraLink
 
 instance CanBeInternalResponse String where
-  internalResponseContent a = JustString a
+  internalResponseContent = JustString
 
 instance CanBeInternalResponse Text where
   internalResponseContent a = JustString $ T.unpack a

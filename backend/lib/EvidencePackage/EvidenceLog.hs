@@ -30,7 +30,7 @@ htmlDocFromEvidenceLog title sim elog = do
   renderTemplate "htmlevidencelog" $ do
     F.value "documenttitle" title
     F.objects "entries"
-      $ for (filter (not . htmlSkipedEvidenceType . evType) elog)
+      . for (filter (not . htmlSkipedEvidenceType . evType) elog)
       $ \entry -> do
           F.value "time" $ formatTimeUTC (evTime entry) ++ " UTC" ++ maybe
             ""
@@ -41,10 +41,8 @@ htmlDocFromEvidenceLog title sim elog = do
                                      (evClockErrorEstimate entry)
           F.value "ip" $ show <$> evIP4 entry
           F.value "ua" $ evClientName entry
-          F.value "text" $ T.unpack $ renderXMLContent $ finalizeEvidenceText
-            sim
-            entry
-            (T.pack emptyNamePlaceholder)
+          F.value "text" . T.unpack $ renderXMLContent
+            (finalizeEvidenceText sim entry (T.pack emptyNamePlaceholder))
 
 htmlSkipedEvidenceType :: EvidenceEventType -> Bool
 htmlSkipedEvidenceType (Obsolete OldDocumentHistory) = True
@@ -74,5 +72,5 @@ finalizeEvidenceText sim event emptyNamePlaceholder = substitute
   )
   (evText event)
   where
-    authorSigLinkID = signatorylinkid
-      <$> find (signatoryisauthor) (catMaybes (map siLink (Map.elems sim)))
+    authorSigLinkID =
+      signatorylinkid <$> find signatoryisauthor (mapMaybe siLink (Map.elems sim))

@@ -10,34 +10,34 @@ import qualified Text.JSON as J
 -- newer versions of happstack here is.  This should be droped when
 -- new version is globaly established.
 getDataFn' :: (HasRqData m, ServerMonad m) => RqData a -> m (Maybe a)
-getDataFn' fun = either (const Nothing) Just `liftM` getDataFn fun
+getDataFn' fun = either (const Nothing) Just <$> getDataFn fun
 
 isFieldSet :: (HasRqData m, ServerMonad m) => Text -> m Bool
-isFieldSet name = isJust `liftM` getField name
+isFieldSet name = isJust <$> getField name
 
 getFields :: (HasRqData m, ServerMonad m) => Text -> m [Text]
-getFields name = map (T.pack . BSLU.toString) `liftM` fromMaybe [] `liftM` getDataFn'
-  (lookInputList name)
+getFields name =
+  map (T.pack . BSLU.toString) . fromMaybe [] <$> getDataFn' (lookInputList name)
 
 getField :: (HasRqData m, ServerMonad m) => Text -> m (Maybe Text)
-getField name = (listToMaybe . reverse) `liftM` getFields name
+getField name = listToMaybe . reverse <$> getFields name
 
 getFieldJSON :: (HasRqData m, ServerMonad m) => Text -> m (Maybe J.JSValue)
 getFieldJSON name = do
   res <- getField name
   case fmap (J.decode . T.unpack) res of
     Just (J.Ok js) -> return $ Just js
-    _              -> return $ Nothing
+    _              -> return Nothing
 
 getField' :: (HasRqData m, ServerMonad m) => Text -> m Text
-getField' name = fromMaybe "" `liftM` getField name
+getField' name = fromMaybe "" <$> getField name
 
 readField :: (HasRqData m, Read a, ServerMonad m) => Text -> m (Maybe a)
-readField name = (join . liftM maybeRead) `liftM` getField name
+readField name = (maybeRead =<<) <$> getField name
 
 getFieldBS :: (HasRqData m, ServerMonad m) => Text -> m (Maybe BSLU.ByteString)
 getFieldBS name =
-  (listToMaybe . reverse) `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
+  listToMaybe . reverse . fromMaybe [] <$> getDataFn' (lookInputList name)
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)

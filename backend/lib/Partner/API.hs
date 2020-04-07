@@ -42,21 +42,21 @@ import UserGroup.Types
 import qualified User.Types.User.Internal as I
 
 partnerAPI :: Route (Kontra Response)
-partnerAPI = dir "api" $ choice [dir "v1" $ partnerAPIV1]
+partnerAPI = dir "api" $ choice [dir "v1" partnerAPIV1]
 
 partnerAPIV1 :: Route (Kontra Response)
 partnerAPIV1 = dir "partner" $ choice
-  [ param $ dir "companies" $ hGet $ toK1 $ partnerApiCallV1CompaniesGet
-  , param $ dir "company" $ dir "new" $ hPost $ toK1 $ partnerApiCallV1CompanyCreate
+  [ (param . dir "companies" . hGet . toK1) partnerApiCallV1CompaniesGet
+  , (param . dir "company" . dir "new" . hPost . toK1) partnerApiCallV1CompanyCreate
   , (param . dir "company" . param . dir "update" . hPost . toK2)
     partnerApiCallV1CompanyUpdate
-  , param $ dir "company" $ param $ hGet $ toK2 $ partnerApiCallV1CompanyGet
+  , (param . dir "company" . param . hGet . toK2) partnerApiCallV1CompanyGet
   , (param . dir "company" . param . dir "user" . dir "new" . hPost . toK2)
     partnerApiCallV1UserCreate
   , (param . dir "company" . param . dir "users" . hGet . toK2)
     partnerApiCallV1CompanyUsersGet
-  , param $ dir "user" $ param $ hGet $ toK2 $ partnerApiCallV1UserGet
-  , param $ dir "user" $ param $ dir "update" $ hPost $ toK2 $ partnerApiCallV1UserUpdate
+  , (param . dir "user" . param . hGet . toK2) partnerApiCallV1UserGet
+  , (param . dir "user" . param . dir "update" . hPost . toK2) partnerApiCallV1UserUpdate
   , (param . dir "user" . param . dir "getpersonalcredentials" . hGet . toK2)
     partnerApiCallV1UserGetPersonalToken
   ]
@@ -109,10 +109,9 @@ partnerApiCallV1CompanyUpdate partnerUsrGrpID ugid = do
           uguJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
           ugu     <-
             case
-              (Unjson.update (userGroupToUserGroupForUpdate ugwp)
-                             unjsonUserGroupForUpdate
-                             uguJSON
-              )
+              Unjson.update (userGroupToUserGroupForUpdate ugwp)
+                            unjsonUserGroupForUpdate
+                            uguJSON
             of
               (Unjson.Result value []) -> return value
               (Unjson.Result _ errs) ->
@@ -125,8 +124,7 @@ partnerApiCallV1CompanyUpdate partnerUsrGrpID ugid = do
             (serverError "Was not able to retrieve updated company")
             (dbQuery . UserGroupGetWithParents $ ugid)
           return
-            . Ok
-            $ (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp_updated)
+            $ Ok (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp_updated)
 
 partnerApiCallV1CompanyGet :: Kontrakcja m => UserGroupID -> UserGroupID -> m Response
 partnerApiCallV1CompanyGet partnerUsrGrpID ugid = do
@@ -134,10 +132,10 @@ partnerApiCallV1CompanyGet partnerUsrGrpID ugid = do
     let acc = [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user acc $ do
-      (dbQuery $ UserGroupGetWithParents ugid) >>= \case
-        Nothing   -> noUsrGrpErr
-        Just ugwp -> do
-          Ok <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
+      dbQuery (UserGroupGetWithParents ugid) >>= \case
+        Nothing -> noUsrGrpErr
+        Just ugwp ->
+          return $ Ok (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 
 partnerApiCallV1CompaniesGet :: Kontrakcja m => UserGroupID -> m Response
 partnerApiCallV1CompaniesGet partnerUsrGrpID = do
@@ -181,7 +179,7 @@ partnerApiCallV1UserCreate partnerUsrGrpID ugid = do
           , userForUpdate ^. #lang
           )
       guardValidEmailAndNoExistingUser (userInfo ^. #email) Nothing
-      unless hasAcceptedTOS $ tosNotAcceptedErr
+      unless hasAcceptedTOS tosNotAcceptedErr
 
       -- API call actions
       cuctx   <- getCreateUserContextFromContext
@@ -234,16 +232,15 @@ partnerApiCallV1UserUpdate partnerUsrGrpID uid = do
     let acc = [canDo UpdateA $ UserR uid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser acc $ do
-      user    <- guardThatUserExists uid
+      user <- guardThatUserExists uid
       ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
-      ufu     <-
-        case (Unjson.update (userToUserForUpdate user) unjsonUserForUpdate ufuJSON) of
-          (Result value []) -> return value
-          (Result _ errs) -> rqPrmErr ("Errors while parsing user data:" <+> showt errs)
+      ufu <- case Unjson.update (userToUserForUpdate user) unjsonUserForUpdate ufuJSON of
+        (Result value []  ) -> return value
+        (Result _     errs) -> rqPrmErr ("Errors while parsing user data:" <+> showt errs)
       let userInfo = userInfoFromUserForUpdate ufu
 
       guardValidEmailAndNoExistingUser (userInfo ^. #email) (Just uid)
-      unless (ufu ^. #hasAcceptedTOS) $ tosNotAcceptedErr
+      unless (ufu ^. #hasAcceptedTOS) tosNotAcceptedErr
       didUpdateInfo     <- dbUpdate $ SetUserInfo uid userInfo
       didUpdateSettings <- dbUpdate
         $ SetUserSettings uid (I.UserSettings (ufu ^. #lang) defaultDataRetentionPolicy)
@@ -267,7 +264,7 @@ partnerApiCallV1UserGetPersonalToken partnerUsrGrpID uid = do
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser acc $ do
       user <- guardThatUserExists uid -- @todo for now...
-      void $ dbUpdate $ CreatePersonalToken (user ^. #id) -- @todo in the future: avoid this DB hit?
+      void . dbUpdate $ CreatePersonalToken (user ^. #id) -- @todo in the future: avoid this DB hit?
       token <- apiGuardJustM (serverError "Could not get user personal token")
                              (dbQuery $ GetPersonalToken (user ^. #id))
       return $ Ok (unjsonOAuthAuthorization, token)

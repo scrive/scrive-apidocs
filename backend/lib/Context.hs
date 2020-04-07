@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Context
   ( I.Context
   , contextUser

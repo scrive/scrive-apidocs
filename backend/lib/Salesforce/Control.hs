@@ -35,10 +35,11 @@ handleSalesforceIntegration = withUser $ \user -> do
         Nothing -> do
           logAttention_
             "Setting sf callback scheme (in control) failed when fetching code"
-          (internalResponse . LinkExternal)
-            <$> (flip runReaderT sc (initAuthorizationWorkflowUrl mstate))
+          internalResponse
+            .   LinkExternal
+            <$> runReaderT (initAuthorizationWorkflowUrl mstate) sc
         Just code -> do
-          mtoken <- flip runReaderT sc (getRefreshTokenFromCode code)
+          mtoken <- runReaderT (getRefreshTokenFromCode code) sc
           case mtoken of
             Left _ -> do
               logAttention_
@@ -47,8 +48,7 @@ handleSalesforceIntegration = withUser $ \user -> do
             Right token -> do
               logInfo "Setting sf callback scheme (in control) worked" $ logObject_ user
               dbUpdate $ UpdateUserCallbackScheme (user ^. #id) (SalesforceScheme token)
-              return $ internalResponse $ fromMaybe LinkDesignView
-                                                    (LinkExternal <$> mstate)
+              return . internalResponse $ maybe LinkDesignView LinkExternal mstate
 
 {- Returns access keys for salesforce user. User by the salesforce plugin to start oauth wokflow. Keys are hardcoded in config file. -}
 getSalesforceKeys :: Kontrakcja m => m JSValue

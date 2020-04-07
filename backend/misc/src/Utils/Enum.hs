@@ -20,7 +20,7 @@ instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
     let block = length (allValues :: [a])
     in  (toEnum $ l `div` block, toEnum $ l `mod` block)
   fromEnum (a, b) =
-    let block = length (allValues :: [a]) in (fromEnum a * block) + (fromEnum b)
+    let block = length (allValues :: [a]) in (fromEnum a * block) + fromEnum b
 
 -- | Enumerate all values of a bounded type.
 allValues :: (Bounded a, Enum a) => [a]

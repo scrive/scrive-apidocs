@@ -115,7 +115,7 @@ handleAuthRequest did slid = do
     Right sr@AuthResponse {..} -> do
       logInfo "SOAP response returned" $ logObject_ sr
       sess <- getCurrentSession
-      dbUpdate $ MergeCgiGrpTransaction $ CgiGrpAuthTransaction slid
+      dbUpdate . MergeCgiGrpTransaction $ CgiGrpAuthTransaction slid
                                                                 arsTransactionID
                                                                 arsOrderRef
                                                                 (sesID sess)
@@ -170,7 +170,7 @@ handleSignRequest _did slid = do
     Right sr@SignResponse {..} -> do
       logInfo "SOAP response returned" $ logObject_ sr
       sess <- getCurrentSession
-      dbUpdate $ MergeCgiGrpTransaction $ CgiGrpSignTransaction slid
+      dbUpdate . MergeCgiGrpTransaction $ CgiGrpSignTransaction slid
                                                                 tbs
                                                                 srsTransactionID
                                                                 srsOrderRef
@@ -191,9 +191,7 @@ handleCheckCGIAuthStatusWithRedirect did slid = do
   (msci :: Maybe SessionCookieInfo) <- readField "session_id"
   case msci of
     Nothing  -> internalError -- This should never happend
-    Just sci -> do
-      void $ guardJustM $ unsafeSessionTakeover sci
-      return ()
+    Just sci -> void . guardJustM $ unsafeSessionTakeover sci
   void $ checkCGIAuthStatus did slid -- There is no reason to process results of collect. We will redirect to link from param anyway
   murl <- getField "url"
   case murl of
@@ -216,14 +214,14 @@ checkCGISignStatus
   -> DocumentID
   -> SignatoryLinkID
   -> m CGISignStatus
-checkCGISignStatus cgiGrpConfig@(CgiGrpConfig {..}) did slid = do
+checkCGISignStatus cgiGrpConfig@CgiGrpConfig {..} did slid = do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
-  if (not (isPending doc) || isSignatoryAndHasSigned (getSigLinkFor slid doc))
+  if not (isPending doc) || isSignatoryAndHasSigned (getSigLinkFor slid doc)
     then return CGISignStatusAlreadySigned
     else do
       logInfo_ "Fetching signature"
       esignature <- dbQuery $ GetESignature slid
-      if (isJust esignature)
+      if isJust esignature
         then return CGISignStatusSuccess
         else do
           (_           , ugidforeid) <- getAuthorAndUserGroupForEID doc
@@ -287,7 +285,7 @@ checkCGISignStatus cgiGrpConfig@(CgiGrpConfig {..}) did slid = do
                                                          ugidforeid
                                                          1
                           return CGISignStatusSuccess
-                        (CgiGrpAuthTransaction _ _ _ _) ->
+                        CgiGrpAuthTransaction{} ->
                           unexpectedError
                             "Fetched CgiGrpAuthTransaction while expecting CgiGrpSignTransaction"
                     _ -> return $ CGISignStatusInProgress crsProgressStatus
@@ -309,8 +307,8 @@ checkCGIAuthStatus did slid = do
   case mcgiTransaction of
     Nothing -> do
       sesid   <- view #sessionID <$> getContext
-      success <- isJust <$> (dbQuery $ GetEAuthentication (mkAuthKind doc) sesid slid)
-      if (success) then return $ Right Complete else return $ Left ExpiredTransaction
+      success <- isJust <$> dbQuery (GetEAuthentication (mkAuthKind doc) sesid slid)
+      if success then return $ Right Complete else return $ Left ExpiredTransaction
     Just cgiTransaction -> do
       certErrorHandler <- mkCertErrorHandler
       debugFunction    <- mkDebugFunction
@@ -333,7 +331,7 @@ checkCGIAuthStatus did slid = do
           return $ Left fault
         Right cr@CollectResponse {..} -> do
           logInfo "SOAP response returned" $ object ["response" .= show cr]
-          if (crsProgressStatus == Complete)
+          if crsProgressStatus == Complete
             then do
               dbUpdate $ DeleteCgiGrpTransaction CgiGrpAuth slid
               case cgiTransaction of
@@ -379,13 +377,13 @@ checkCGIAuthStatus did slid = do
                       $   dbUpdate
                       .   InsertEvidenceEventWithAffectedSignatoryAndMsg
                             AuthenticatedToViewEvidence
-                            (eventFields)
+                            eventFields
                             (Just sl)
                             Nothing
                       =<< signatoryActor ctx sl
                   chargeForItemSpecificUserGroup CISEBankIDAuthentication did ugidforeid 1
                   return $ Right Complete
-                (CgiGrpSignTransaction _ _ _ _ _) ->
+                CgiGrpSignTransaction{} ->
                   unexpectedError
                     "Fetched CgiGrpSignTransaction while expecting CgiGrpAuthTransaction"
             else return $ Right crsProgressStatus
@@ -405,7 +403,7 @@ checkCGIAuthStatus did slid = do
 getAuthorAndUserGroupForEID
   :: (MonadDB m, MonadThrow m) => Document -> m (UserID, UserGroupID)
 getAuthorAndUserGroupForEID doc = do
-  let mauthorid = join . fmap maybesignatory $ getAuthorSigLink doc
+  let mauthorid = (maybesignatory =<<) $ getAuthorSigLink doc
       authorid  = fromMaybe
         (unexpectedError "Impossible happened: document doesn't have an author.")
         mauthorid
@@ -443,7 +441,7 @@ getCompanyDisplayNameAndServiceID CgiGrpConfig {..} ugid = do
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m Text
 textToBeSigned doc@Document {..} = renderLocalTemplate doc "tbs" $ do
-  F.value "document_title" $ documenttitle
+  F.value "document_title" documenttitle
   F.value "document_id" $ show documentid
 
 guardThatPersonalNumberMatches

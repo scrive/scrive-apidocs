@@ -21,8 +21,8 @@ data SalesforceConf = SalesforceConf
 unjsonSalesforceConf :: UnjsonDef SalesforceConf
 unjsonSalesforceConf =
   objectOf
-    $   pure SalesforceConf
-    <*> field "authentication_url"
+    $   SalesforceConf
+    <$> field "authentication_url"
               salesforceAuthenticationUrl
               "SalesForce OAuth authentication url"
     <*> field "token_url"    salesforceTokenUrl    "SalesForce OAuth token url"

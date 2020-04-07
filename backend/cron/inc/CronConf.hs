@@ -64,8 +64,8 @@ data CronConf = CronConf
 unjsonCronConf :: UnjsonDef CronConf
 unjsonCronConf =
   objectOf
-    $   pure CronConf
-    <*> field "amazon"             cronAmazonConfig     "Amazon configuration"
+    $   CronConf
+    <$> field "amazon"             cronAmazonConfig     "Amazon configuration"
     <*> field "database"           cronDBConfig         "Database connection string"
     <*> field "max_db_connections" cronMaxDBConnections "Database connections limit"
     <*> fieldOpt "redis_cache" cronRedisCacheConfig "Redis cache configuration"

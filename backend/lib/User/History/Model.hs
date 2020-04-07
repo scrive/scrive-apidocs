@@ -117,17 +117,17 @@ instance ToSQL UserHistoryEventType where
   toSQL UserTOTPDisable                = toSQL (14 :: Int32)
   toSQL UserAccountDeleted             = toSQL (15 :: Int32)
 
-data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
+newtype GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
-  query (GetUserHistoryByUserID uid) = do
+  dbQuery (GetUserHistoryByUserID uid) = do
     runQuery_ $ selectUserHistorySQL <+> "WHERE user_id =" <?> uid <+> "ORDER BY time"
     fetchMany fetchUserHistory
 
-data GetUserRecentAuthFailureCount = GetUserRecentAuthFailureCount UserID
+newtype GetUserRecentAuthFailureCount = GetUserRecentAuthFailureCount UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserRecentAuthFailureCount Int64 where
-  query (GetUserRecentAuthFailureCount uid) = do
+  dbQuery (GetUserRecentAuthFailureCount uid) = do
     now <- currentTime
-    runQuery_ $ sqlSelect "users_history" $ do
+    runQuery_ . sqlSelect "users_history" $ do
       sqlWhereEq "user_id" uid
       sqlWhereIn
         "event_type"
@@ -148,7 +148,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserRecentAuthFa
 
 data LogHistoryLoginFailure = LogHistoryLoginFailure UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginFailure Bool where
-  update (LogHistoryLoginFailure userid ip time) = addUserHistory
+  dbUpdate (LogHistoryLoginFailure userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserLoginFailure, uheventdata = Nothing }
     ip
@@ -157,7 +157,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginFailure Bool whe
 
 data LogHistoryLoginTOTPFailure = LogHistoryLoginTOTPFailure UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginTOTPFailure Bool where
-  update (LogHistoryLoginTOTPFailure userid ip time) = addUserHistory
+  dbUpdate (LogHistoryLoginTOTPFailure userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserLoginTOTPFailure, uheventdata = Nothing }
     ip
@@ -166,7 +166,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginTOTPFailure Bool
 
 data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginSuccess Bool where
-  update (LogHistoryLoginSuccess userid ip time) = addUserHistory
+  dbUpdate (LogHistoryLoginSuccess userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserLoginSuccess, uheventdata = Nothing }
     ip
@@ -175,7 +175,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginSuccess Bool whe
 
 data LogHistoryPadLoginFailure = LogHistoryPadLoginFailure UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginFailure Bool where
-  update (LogHistoryPadLoginFailure userid ip time) = addUserHistory
+  dbUpdate (LogHistoryPadLoginFailure userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserPadLoginFailure, uheventdata = Nothing }
     ip
@@ -184,7 +184,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginFailure Bool 
 
 data LogHistoryPadLoginSuccess = LogHistoryPadLoginSuccess UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginSuccess Bool where
-  update (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
+  dbUpdate (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserPadLoginSuccess, uheventdata = Nothing }
     ip
@@ -193,7 +193,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginSuccess Bool 
 
 data LogHistoryAPIGetPersonalTokenFailure = LogHistoryAPIGetPersonalTokenFailure UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAPIGetPersonalTokenFailure Bool where
-  update (LogHistoryAPIGetPersonalTokenFailure userid ip time) = addUserHistory
+  dbUpdate (LogHistoryAPIGetPersonalTokenFailure userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserAPIGetPersonalTokenFailure
                      , uheventdata = Nothing
@@ -204,7 +204,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAPIGetPersonalTokenFa
 
 data LogHistoryAPIGetPersonalTokenSuccess = LogHistoryAPIGetPersonalTokenSuccess UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAPIGetPersonalTokenSuccess Bool where
-  update (LogHistoryAPIGetPersonalTokenSuccess userid ip time) = addUserHistory
+  dbUpdate (LogHistoryAPIGetPersonalTokenSuccess userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserAPIGetPersonalTokenSuccess
                      , uheventdata = Nothing
@@ -216,7 +216,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAPIGetPersonalTokenSu
 
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress UTCTime (Maybe UserID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPasswordSetup Bool where
-  update (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
+  dbUpdate (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserPasswordSetup, uheventdata = Nothing }
     ip
@@ -225,7 +225,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPasswordSetup Bool wh
 
 data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress UTCTime (Maybe UserID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPasswordSetupReq Bool where
-  update (LogHistoryPasswordSetupReq userid ip time mpuser) = addUserHistory
+  dbUpdate (LogHistoryPasswordSetupReq userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserPasswordSetupReq, uheventdata = Nothing }
     ip
@@ -234,7 +234,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPasswordSetupReq Bool
 
 data LogHistoryTOTPEnable = LogHistoryTOTPEnable UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOTPEnable Bool where
-  update (LogHistoryTOTPEnable userid ip time) = addUserHistory
+  dbUpdate (LogHistoryTOTPEnable userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserTOTPEnable, uheventdata = Nothing }
     ip
@@ -243,7 +243,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOTPEnable Bool where
 
 data LogHistoryTOTPDisable = LogHistoryTOTPDisable UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOTPDisable Bool where
-  update (LogHistoryTOTPDisable userid ip time) = addUserHistory
+  dbUpdate (LogHistoryTOTPDisable userid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserTOTPDisable, uheventdata = Nothing }
     ip
@@ -252,13 +252,12 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOTPDisable Bool wher
 
 data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress UTCTime Email (Maybe UserID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountCreated Bool where
-  update (LogHistoryAccountCreated userid ip time email mpuser) = addUserHistory
+  dbUpdate (LogHistoryAccountCreated userid ip time email mpuser) = addUserHistory
     userid
     UserHistoryEvent
       { uheventtype = UserAccountCreated
-      , uheventdata = Just
-                      $ JSArray
-                      $ [ runJSONGen $ do
+      , uheventdata = Just $ JSArray
+                        [ runJSONGen $ do
                             value "field"  ("email" :: String)
                             value "oldval" ("" :: String)
                             value "newval" $ unEmail email
@@ -270,7 +269,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountCreated Bool w
 
 data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress UTCTime (Maybe UserID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOSAccept Bool where
-  update (LogHistoryTOSAccept userid ip time mpuser) = addUserHistory
+  dbUpdate (LogHistoryTOSAccept userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserTOSAccept, uheventdata = Nothing }
     ip
@@ -285,15 +284,17 @@ data LogHistoryDetailsChanged = LogHistoryDetailsChanged
   (Maybe UserID)
 
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryDetailsChanged Bool where
-  update (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
+  dbUpdate (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
     userid
     UserHistoryEvent
       { uheventtype = UserDetailsChange
-      , uheventdata = Just $ JSArray $ for details $ \(field, oldv, newv) ->
-                        runJSONGen $ do
+      , uheventdata = Just . JSArray $ for
+                        details
+                        (\(field, oldv, newv) -> runJSONGen $ do
                           value "field"  field
                           value "oldval" oldv
                           value "newval" newv
+                        )
       }
     ip
     time
@@ -301,15 +302,15 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryDetailsChanged Bool w
 
 data LogHistoryUserInfoChanged = LogHistoryUserInfoChanged UserID IPAddress UTCTime UserInfo UserInfo (Maybe UserID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryUserInfoChanged Bool where
-  update (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
+  dbUpdate (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
     let diff = diffUserInfos oldinfo newinfo
     case diff of
       [] -> return False
-      _  -> update $ LogHistoryDetailsChanged userid ip time diff mpuser
+      _  -> dbUpdate $ LogHistoryDetailsChanged userid ip time diff mpuser
 
 data LogHistoryAccountDeleted = LogHistoryAccountDeleted UserID UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountDeleted Bool where
-  update (LogHistoryAccountDeleted userid deletinguserid ip time) = addUserHistory
+  dbUpdate (LogHistoryAccountDeleted userid deletinguserid ip time) = addUserHistory
     userid
     UserHistoryEvent { uheventtype = UserAccountDeleted, uheventdata = Nothing }
     ip
@@ -352,13 +353,13 @@ addUserHistory
   -> UTCTime
   -> Maybe UserID
   -> m Bool
-addUserHistory user event ip time mpuser = runQuery01 $ sqlInsert "users_history" $ do
+addUserHistory user event ip time mpuser = runQuery01 . sqlInsert "users_history" $ do
   sqlSet "user_id" user
   sqlSet "event_type" $ uheventtype event
-  sqlSet "event_data" $ maybe "" encode $ uheventdata event
-  sqlSet "ip"   ip
-  sqlSet "time" time
-  sqlSet "system_version" $ VersionTH.versionID
+  sqlSet "event_data" . maybe "" encode $ uheventdata event
+  sqlSet "ip"                 ip
+  sqlSet "time"               time
+  sqlSet "system_version"     VersionTH.versionID
   sqlSet "performing_user_id" mpuser
 
 selectUserHistorySQL :: SQL
@@ -380,13 +381,11 @@ fetchUserHistory (userid, eventtype, meventdata, ip, time, sysver, mpuser) = Use
   { uhuserid           = userid
   , uhevent            = UserHistoryEvent
                            { uheventtype = eventtype
-                           , uheventdata = maybe
-                                             Nothing
-                                             (\d -> case decode $ T.unpack d of
-                                               Ok a -> Just a
-                                               _    -> Nothing
-                                             )
-                                             meventdata
+                           , uheventdata = (\d -> case decode $ T.unpack d of
+                                             Ok a -> Just a
+                                             _    -> Nothing
+                                           )
+                                             =<< meventdata
                            }
   , uhip               = ip
   , uhtime             = time

@@ -38,7 +38,7 @@ import Data.Typeable
 import Data.Unjson
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
-import Log as Log
+import Log
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
 import qualified Data.Aeson as A
@@ -59,16 +59,16 @@ import Util.PDFUtil
 import Util.ZipUtil
 
 -- | Respond with a 200 Created status
-data Ok a = Ok a
+newtype Ok a = Ok a
 
 -- | Respond with a 201 Created status
-data Created a = Created a
+newtype Created a = Created a
 
 -- | Respond with a 202 Accepted status
-data Accepted a = Accepted a
+newtype Accepted a = Accepted a
 
 -- | Respond with a 400 Bad Input status. Use it when you need to mark that request failed, but you don't want to rollback
-data Failed a = Failed a
+newtype Failed a = Failed a
 
 data APIError = BadInput           String
               | NotLoggedIn        String
@@ -94,13 +94,13 @@ instance ToJSValue APIError where
 
 
 httpCodeFromAPIError :: APIError -> Int
-httpCodeFromAPIError (BadInput{}          ) = 400
-httpCodeFromAPIError (Forbidden{}         ) = 403
-httpCodeFromAPIError (NotLoggedIn{}       ) = 403
-httpCodeFromAPIError (ServerError{}       ) = 500
-httpCodeFromAPIError (ActionNotAvailable{}) = 500
-httpCodeFromAPIError (NoAvailableYet{}    ) = 420
-httpCodeFromAPIError (ConflictError{}     ) = 409
+httpCodeFromAPIError BadInput{}           = 400
+httpCodeFromAPIError Forbidden{}          = 403
+httpCodeFromAPIError NotLoggedIn{}        = 403
+httpCodeFromAPIError ServerError{}        = 500
+httpCodeFromAPIError ActionNotAvailable{} = 500
+httpCodeFromAPIError NoAvailableYet{}     = 420
+httpCodeFromAPIError ConflictError{}      = 409
 
 httpCodeFromSomeDBExtraException :: SomeDBExtraException -> Int
 httpCodeFromSomeDBExtraException (SomeDBExtraException ex) = case cast ex of
@@ -166,31 +166,30 @@ instance ToAPIResponse JSValue where
   -- It used to have to be text/plain because an ancient version of IE that
   -- we don't support any more complained about it, now we leave it as text/plain because V1 is ossified
   toAPIResponse jv =
-    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv
+    setHeader "Content-Type" "text/plain; charset=UTF-8" . Web.toResponse $ encode jv
 
 instance ToAPIResponse A.Value where
   toAPIResponse jv =
-    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ A.encode jv
+    setHeader "Content-Type" "text/plain; charset=UTF-8" . Web.toResponse $ A.encode jv
 
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson, a) =
     setHeader "Content-Type" "text/plain; charset=UTF-8"
-      $ Web.toResponse
+      . Web.toResponse
       $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True })
                                 unjson
                                 a
 
 instance ToAPIResponse CSV where
   toAPIResponse v =
-    let r1 = Web.toResponse $ v in setHeader "Content-Type" "text/csv; charset=UTF-16" r1
+    let r1 = Web.toResponse v in setHeader "Content-Type" "text/csv; charset=UTF-16" r1
 
 instance ToAPIResponse ZipArchive where
-  toAPIResponse v =
-    let r1 = Web.toResponse $ v in setHeader "Content-Type" "text/zip" r1
+  toAPIResponse v = let r1 = Web.toResponse v in setHeader "Content-Type" "text/zip" r1
 
 instance ToAPIResponse APIError where
   toAPIResponse e =
-    let resp = Web.toResponse $ encode $ toJSValue e
+    let resp = Web.toResponse . encode $ toJSValue e
     in  setHeader "Content-Type" "text/plain; charset=UTF-8"
           $ resp { rsCode = httpCodeFromAPIError e }
 
@@ -257,25 +256,25 @@ class MonadThrow m => APIGuard m a b | a -> b where
 instance MonadThrow m => APIGuard m (Maybe b) b where
   guardEither Nothing =
     return
-      $ Left
+      . Left
       $ forbidden
           "The resource you are trying to access does not exist or you do not have permission to access it."
   guardEither (Just v) = return $ Right v
 
 instance MonadThrow m => APIGuard m (Either String b) b where
-  guardEither (Left  s) = return $ Left $ serverError s
+  guardEither (Left  s) = return . Left $ serverError s
   guardEither (Right v) = return $ Right v
 
 instance MonadThrow m => APIGuard m (Either Text b) b where
-  guardEither (Left  s) = return $ Left $ serverError $ T.unpack s
+  guardEither (Left  s) = return . Left $ serverError (T.unpack s)
   guardEither (Right v) = return $ Right v
 
 instance (MonadThrow m) => APIGuard m (Either FileError b) b where
-  guardEither (Left  _) = return $ Left $ serverError'
+  guardEither (Left  _) = return $ Left serverError'
   guardEither (Right v) = return $ Right v
 
 instance MonadThrow m => APIGuard m Bool () where
-  guardEither False = return $ Left $ serverError'
+  guardEither False = return $ Left serverError'
   guardEither True  = return $ Right ()
 
 {-
@@ -304,7 +303,7 @@ getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor, Bo
 getAPIUserWithPrivileges privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn $ unpack err
+    Just (Left err) -> (throwM . SomeDBExtraException) . notLoggedIn $ unpack err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUser
@@ -316,7 +315,7 @@ getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
   moauthuser <- getOAuthUser [priv]
   case moauthuser of
-    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn $ unpack err
+    Just (Left err) -> (throwM . SomeDBExtraException) . notLoggedIn $ unpack err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUserWithPad

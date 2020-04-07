@@ -30,9 +30,9 @@ cmdConf workspaceRoot progName =
         configFile &= help ("Configuration file (default: " ++ configFile ++ ")") &= typ
           "FILE"
       , force  =
-        False &= help
-          ("Force commit after each migration - DB will be permanently changed even if migrations will fail"
-          )
+        False
+          &= help
+               "Force commit after each migration - DB will be permanently changed even if migrations will fail"
       }
     &= program progName
   where configFile = workspaceRoot </> "kontrakcja.conf"

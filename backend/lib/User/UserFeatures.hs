@@ -25,7 +25,7 @@ getUserFeaturesJSON user = do
   freeTokens      <- dbQuery (UserGroupFreeDocumentTokensGet $ user ^. #groupID)
   freeTokensCount <- numberOfValidTokens freeTokens
   let featureFlags =
-        if (user ^. #isCompanyAdmin) then fAdminUsers features else fRegularUsers features
+        if user ^. #isCompanyAdmin then fAdminUsers features else fRegularUsers features
   return
     .  object
     $  [ "payment_plan" .= unjsonToJSON unjsonDef pp
@@ -34,6 +34,6 @@ getUserFeaturesJSON user = do
     ++ case pp of
          FreePlan ->
            [ "payment_plan_free_data"
-               .= (object ["free_document_tokens" .= freeTokensCount])
+               .= object ["free_document_tokens" .= freeTokensCount]
            ]
          _ -> []

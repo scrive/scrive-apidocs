@@ -8,4 +8,4 @@ import Version
 
 {-# NOINLINE versionID #-}
 versionID :: String
-versionID = $( litE =<< (fmap stringL $ runIO $ genVersionID) )
+versionID = $( litE =<< fmap stringL (runIO genVersionID) )

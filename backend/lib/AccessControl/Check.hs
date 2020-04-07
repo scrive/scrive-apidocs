@@ -8,6 +8,7 @@ module AccessControl.Check
 where
 
 import Control.Monad.Catch
+import Data.List.Extra (nubOrd)
 import Log
 
 import AccessControl.Types
@@ -28,7 +29,7 @@ canDo = Permission PermCanDo
 --   many times (once for each permission). This is acceptable for now because roles are not being
 --   granted very often.
 canGrant :: AccessRoleTarget -> [Permission]
-canGrant = nub . map (\p -> p { permKind = PermCanGrant }) . hasPermissions
+canGrant = nubOrd . map (\p -> p { permKind = PermCanGrant }) . hasPermissions
 
 crudActions :: [AccessAction]
 crudActions = [CreateA, ReadA, UpdateA, DeleteA]
@@ -46,15 +47,12 @@ accessControl roles permissions err ma = do
 
 accessControlCheck :: [AccessRole] -> NeededPermissionsExpr -> Bool
 accessControlCheck roles accNeeded =
-  let accHad = nub . join $ map (hasPermissions . accessRoleTarget) roles
+  let accHad = nubOrd $ concatMap (hasPermissions . accessRoleTarget) roles
   in  evalNeededPermExpr (`elem` accHad) accNeeded
 
 accessControlPure :: [AccessRole] -> [Permission] -> Bool
-accessControlPure roles permissions =
-  accessControlCheck roles
-    . NeededPermissionsExprAnd
-    . map NeededPermissionsExprBase
-    $ permissions
+accessControlPure roles =
+  accessControlCheck roles . NeededPermissionsExprAnd . map NeededPermissionsExprBase
 
 evalNeededPermExpr :: (Permission -> Bool) -> NeededPermissionsExpr -> Bool
 evalNeededPermExpr f (NeededPermissionsExprBase p) = f p
@@ -86,7 +84,7 @@ addAlternativePermissions perm = case permResource perm of
         folderParents <- dbQuery . FolderGetParents $ fid
         let mkExprBase f =
               NeededPermissionsExprBase $ perm { permResource = mkRes $ f ^. #id }
-        return . NeededPermissionsExprOr . map mkExprBase $ (folder : folderParents)
+        return . NeededPermissionsExprOr . map mkExprBase $ folder : folderParents
     addForAllParentsUgid mkRes ugid = dbQuery (UserGroupGetWithParents ugid) >>= \case
       Nothing   -> throwM . SomeDBExtraException . UserGroupNonExistent $ ugid
       Just ugwp -> do

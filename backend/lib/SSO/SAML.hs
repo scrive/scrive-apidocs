@@ -20,18 +20,14 @@ import qualified Text.XML.HXT.HTTP as HXT (withHTTP)
 parseSAMLXML :: (MonadBase IO) m => Text -> m (Either String HXT.XmlTree)
 parseSAMLXML txt = liftBase $ do
   let decoded = BSU.toString . B64.decodeLenient . BSU.fromString . T.unpack $ txt
-  eXmlTree <-
-    try
-      $ (   Prelude.head
-        <$> (HXT.runX $ HXT.readString
-              [ HXT.withCheckNamespaces HXT.yes
-              , HXT.withHTTP []
-              , HXT.withRemoveWS HXT.no
-              ]
-              decoded
-            )
-        )
-  return $ first (\e -> show $ (e :: IOException)) eXmlTree
+  eXmlTree <- try
+    (Prelude.head <$> HXT.runX
+      (HXT.readString
+        [HXT.withCheckNamespaces HXT.yes, HXT.withHTTP [], HXT.withRemoveWS HXT.no]
+        decoded
+      )
+    )
+  return $ first (\e -> show (e :: IOException)) eXmlTree
 
 getVerifiedAssertionsFromSAML
   :: (MonadBase IO) m => SIG.PublicKeys -> HXT.XmlTree -> m (Either String [A.Assertion])
@@ -41,7 +37,7 @@ getVerifiedAssertionsFromSAML publicKeys xmlTree = liftBase $ do
   results <- E.partitionEithers <$> mapM verifySAMLAssertion assertions
   case results of
     ([]    , verifiedAssertions) -> return . Right $ verifiedAssertions
-    (errors, _                 ) -> return . Left . intercalate " " $ errors
+    (errors, _                 ) -> return . Left . unwords $ errors
   where
     verifySAMLAssertion
       :: A.PossiblyEncrypted A.Assertion -> IO (Either String A.Assertion)
@@ -71,30 +67,27 @@ getFirstNonEmptyAttribute attributeName assertion =
   where
     findAttributeInStatement :: A.Statement -> Maybe String
     findAttributeInStatement (A.StatementAttribute attribute) =
-      listToMaybe
-        .   catMaybes
-        $   findAttributeInPossiblyEncrypted
-        <$> (toList $ A.attributeStatement attribute)
+      listToMaybe . catMaybes $ findAttributeInPossiblyEncrypted <$> toList
+        (A.attributeStatement attribute)
     findAttributeInStatement _ = Nothing
 
     findAttributeInPossiblyEncrypted :: A.PossiblyEncrypted A.Attribute -> Maybe String
     findAttributeInPossiblyEncrypted (A.NotEncrypted a) =
-      if ((A.attributeName a) == attributeName)
+      if A.attributeName a == attributeName
         then listToMaybe . catMaybes $ findFirstAttributeInNodes <$> A.attributeValues a
         else Nothing
     findAttributeInPossiblyEncrypted _ = Nothing
 
     findFirstAttributeInNodes :: XML.Nodes -> Maybe String
-    findFirstAttributeInNodes =
-      listToMaybe . catMaybes . fmap findFirstNonEmptyAttributeValue
+    findFirstAttributeInNodes = listToMaybe . mapMaybe findFirstNonEmptyAttributeValue
 
     findFirstNonEmptyAttributeValue :: HXT.XmlTree -> Maybe String
     findFirstNonEmptyAttributeValue xmlTree =
       listToMaybe $ HXT.runLA (HXT.neg HXT.isWhiteSpace >>> HXT.getText) xmlTree
 
 getNonEmptyNameID :: A.Assertion -> Maybe String
-getNonEmptyNameID assertion =
-  getDecryptedSubjectIdentifier =<< (A.subjectIdentifier $ A.assertionSubject assertion)
+getNonEmptyNameID assertion = getDecryptedSubjectIdentifier
+  =<< A.subjectIdentifier (A.assertionSubject assertion)
   where
     getDecryptedSubjectIdentifier :: A.PossiblyEncrypted A.Identifier -> Maybe XML.XString
     getDecryptedSubjectIdentifier (A.NotEncrypted (A.IdentifierName nameID)) =
@@ -102,4 +95,4 @@ getNonEmptyNameID assertion =
     getDecryptedSubjectIdentifier _ = Nothing
 
     getSimpleBaseIDName :: A.NameID -> XML.XString
-    getSimpleBaseIDName nameID = A.baseID . A.nameBaseID $ nameID
+    getSimpleBaseIDName = A.baseID . A.nameBaseID

@@ -11,7 +11,7 @@ import TestKontra
 mailModelTests :: TestEnvSt -> Test
 mailModelTests env = testGroup
   "Mail Model"
-  [testThat "Mail stores attachments properly" env $ testMailAttachments]
+  [testThat "Mail stores attachments properly" env testMailAttachments]
 
 testMailAttachments :: TestEnv ()
 testMailAttachments = do
@@ -33,9 +33,9 @@ testMailAttachments = do
   case mmail of
     Nothing   -> return ()
     Just mail -> do
-      assertEqual "Titles must match"      (title)       (mailTitle mail)
-      assertEqual "Sender must match"      (sender)      (mailFrom mail)
-      assertEqual "Reply-To must match"    (reply_to)    (mailReplyTo mail)
-      assertEqual "To must match"          (to)          (mailTo mail)
-      assertEqual "Attachments must match" (attachments) (mailAttachments mail)
-      assertEqual "Content must match"     (content)     (mailContent mail)
+      assertEqual "Titles must match"      title       (mailTitle mail)
+      assertEqual "Sender must match"      sender      (mailFrom mail)
+      assertEqual "Reply-To must match"    reply_to    (mailReplyTo mail)
+      assertEqual "To must match"          to          (mailTo mail)
+      assertEqual "Attachments must match" attachments (mailAttachments mail)
+      assertEqual "Content must match"     content     (mailContent mail)

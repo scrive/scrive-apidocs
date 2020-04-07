@@ -34,15 +34,17 @@ sendMailWithMonthlyInvoice dbConfig invoiceConf = do
     reportsDir   = "monthly-report"
     args = [T.unpack dbConfig, "-f", T.unpack script, "-v", "report_dir=" <> reportsDir]
   (code, stdout, stderr) <- liftIO $ readProcessWithExitCode "psql" args BSL.empty
-  void $ case (code == ExitSuccess) of
-    False -> logAttention "Running monthly-invoice psql script has failed" $ object
+  void $ if code == ExitSuccess
+    then
+      (do
+        runActuallSendout reportsDir name emailAddress
+        liftIO $ removeDirectoryRecursive reportsDir
+      )
+    else logAttention "Running monthly-invoice psql script has failed" $ object
       [ "exit_code" .= show code
       , "stdout" `equalsExternalBSL` stdout
       , "stderr" `equalsExternalBSL` stderr
       ]
-    True -> do
-      runActuallSendout reportsDir name emailAddress
-      liftIO $ removeDirectoryRecursive reportsDir
 
 runActuallSendout
   :: (MonadDB m, MonadThrow m, MonadIO m, CryptoRNG m, MonadLog m)
@@ -52,7 +54,7 @@ runActuallSendout
   -> m ()
 runActuallSendout dir name emailAddress = do
   files       <- liftIO $ listDirectory dir
-  attachments <- liftIO $ sequence $ map
+  attachments <- liftIO $ mapM
     (\f -> do
       fileContent <- BS.readFile $ dir </> f
       return (T.pack f, Left fileContent)

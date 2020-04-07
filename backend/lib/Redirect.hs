@@ -19,14 +19,13 @@ import Utils.String
 
 seeOtherXML :: Text -> Response
 seeOtherXML url =
-  toResponseBS (BS.fromString "text/html;charset=utf-8")
-    $  BSL.fromStrict
-    $  TE.encodeUtf8
-    $  "<a href='"
-    <> (escapeString url)
+  toResponseBS (BS.fromString "text/html;charset=utf-8") . BSL.fromStrict $ TE.encodeUtf8
+    (  "<a href='"
+    <> escapeString url
     <> "' alt='303 see other'>"
-    <> (escapeString url)
+    <> escapeString url
     <> "</a>"
+    )
 
 urlEncodeText :: Text -> Text
 urlEncodeText = T.pack . urlEncode . T.unpack
@@ -42,14 +41,11 @@ sendRedirect LoopBack = do
   seeOther link =<< setRsCode 303 (seeOtherXML $ T.pack link)
 
 sendRedirect (LinkLogin lang) = do
-  curr    <- T.pack <$> rqUri <$> askRq
-  qr      <- T.pack <$> rqQuery <$> askRq
+  curr    <- T.pack . rqUri <$> askRq
+  qr      <- T.pack . rqQuery <$> askRq
   referer <- getField "referer"
-  let link' =
-        "/"
-          <> (codeFromLang lang)
-          <> "/enter?referer="
-          <> (urlEncodeText $ fromMaybe (curr <> qr) referer)
+  let link' = "/" <> codeFromLang lang <> "/enter?referer=" <> urlEncodeText
+        (fromMaybe (curr <> qr) referer)
   -- NOTE We could add  "#log-in" at the end. But it would overwrite hash that can be there, and hash is not send to server.
   -- So we let frontend take care of that on it's own. And frontend will fetch hash for referer
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
@@ -58,8 +54,8 @@ sendRedirect (LinkLogin lang) = do
 sendRedirect (LinkLoginDirect lang) = do
   referer <- getField "referer"
   let link' = case referer of
-        Just r  -> "/" <> (codeFromLang lang) <> "/enter?referer=" <> (urlEncodeText r)
-        Nothing -> "/" <> (codeFromLang lang) <> "/enter"
+        Just r  -> "/" <> codeFromLang lang <> "/enter?referer=" <> urlEncodeText r
+        Nothing -> "/" <> codeFromLang lang <> "/enter"
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
 sendRedirect link@(LinkPermanentRedirect _) = do

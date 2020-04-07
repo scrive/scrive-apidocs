@@ -51,7 +51,7 @@ apiV2SetAuthenticationTests env = testGroup
 testDocApiV2SetSignatoryAuthenticationToView :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToView = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
 
   let did  = getMockDocId mockDoc
@@ -67,22 +67,18 @@ testDocApiV2SetSignatoryAuthenticationToView = do
       no_ssn    = "12345678901"
       param_mobile x = ("mobile_number", inText x)
       no_mobile = "+4712345678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToView did slid)
-          expectedCode
-        )
-      setAuth =
-        (\params -> mockDocTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToView did slid)
-          200
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToView did slid)
+        expectedCode
+      setAuth params = mockDocTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToView did slid)
+        200
 
   -- Some invalid requests
   setInvalidAuth [param_ssn se_ssn_10]                     400
@@ -173,7 +169,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
 testDocApiV2SetSignatoryAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToViewArchived = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 1 mockDoc
@@ -188,22 +184,18 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
       no_ssn    = "12345678901"
       param_mobile x = ("mobile_number", inText x)
       no_mobile = "+4712345678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToViewArchived did slid)
-          expectedCode
-        )
-      setAuth =
-        (\params -> mockDocTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToViewArchived did slid)
-          200
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToViewArchived did slid)
+        expectedCode
+      setAuth params = mockDocTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToViewArchived did slid)
+        200
 
   -- Some invalid requests
   setInvalidAuth [param_ssn se_ssn_10]                     400
@@ -294,7 +286,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
 testDocApiV2SetSignatoryAuthenticationToSign :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToSign = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 1 mockDoc
@@ -310,22 +302,18 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
       param_mobile x = ("mobile_number", inText x)
       valid_mobile    = "+4612345678"
       _invalid_mobile = "45678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToSign did slid)
-          expectedCode
-        )
-      setAuth =
-        (\params -> mockDocTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToSign did slid)
-          200
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToSign did slid)
+        expectedCode
+      setAuth params = mockDocTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToSign did slid)
+        200
 
   -- Some invalid requests
   setInvalidAuth [param_auth "god_is_witness"]                    400
@@ -417,7 +405,7 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
 testDocApiV2SetViewerAuthenticationToView :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToView = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
 
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
@@ -427,8 +415,7 @@ testDocApiV2SetViewerAuthenticationToView = do
             $ setMockDocSigLinkDeliveryMethod "pad" defaultMockSigLink
 
     void $ testDocApiV2AddParties ctx [newParty] did
-    finalMockDoc <- testDocApiV2Start' ctx did
-    return finalMockDoc
+    testDocApiV2Start' ctx did
 
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 2 mockDoc
@@ -443,22 +430,18 @@ testDocApiV2SetViewerAuthenticationToView = do
       no_ssn    = "12345678901"
       param_mobile x = ("mobile_number", inText x)
       no_mobile = "+4712345678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToView did slid)
-          expectedCode
-        )
-      setAuth =
-        (\params -> mockDocTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToView did slid)
-          200
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToView did slid)
+        expectedCode
+      setAuth params = mockDocTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToView did slid)
+        200
 
   -- Some invalid requests
   setInvalidAuth [param_ssn se_ssn_10]                     400
@@ -549,7 +532,7 @@ testDocApiV2SetViewerAuthenticationToView = do
 testDocApiV2SetViewerAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToViewArchived = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -558,8 +541,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
             $ setMockDocSigLinkDeliveryMethod "pad" defaultMockSigLink
 
     void $ testDocApiV2AddParties ctx [newParty] did
-    finalMockDoc <- testDocApiV2Start' ctx did
-    return finalMockDoc
+    testDocApiV2Start' ctx did
 
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 2 mockDoc
@@ -574,22 +556,18 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
       no_ssn    = "12345678901"
       param_mobile x = ("mobile_number", inText x)
       no_mobile = "+4712345678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToViewArchived did slid)
-          expectedCode
-        )
-      setAuth =
-        (\params -> mockDocTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToViewArchived did slid)
-          200
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToViewArchived did slid)
+        expectedCode
+      setAuth params = mockDocTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToViewArchived did slid)
+        200
 
   -- Some invalid requests
   setInvalidAuth [param_ssn se_ssn_10]                     400
@@ -680,7 +658,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
 testDocApiV2SetViewerAuthenticationToSign :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToSign = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -689,8 +667,7 @@ testDocApiV2SetViewerAuthenticationToSign = do
             $ setMockDocSigLinkDeliveryMethod "pad" defaultMockSigLink
 
     void $ testDocApiV2AddParties ctx [newParty] did
-    finalMockDoc <- testDocApiV2Start' ctx did
-    return finalMockDoc
+    testDocApiV2Start' ctx did
 
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 2 mockDoc
@@ -701,14 +678,12 @@ testDocApiV2SetViewerAuthenticationToSign = do
       se_ssn_10       = "1234567890"
       se_ssn_invalid  = "1234"
       _invalid_mobile = "45678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToSign did slid)
-          expectedCode
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToSign did slid)
+        expectedCode
 
   -- Some invalid requests
   setInvalidAuth [param_auth "god_is_witness"]                    400
@@ -720,7 +695,7 @@ testDocApiV2SetViewerAuthenticationToSign = do
 testDocApiV2SetApproverAuthenticationToView :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToView = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -729,8 +704,7 @@ testDocApiV2SetApproverAuthenticationToView = do
             $ setMockDocSigLinkDeliveryMethod "pad" defaultMockSigLink
 
     void $ testDocApiV2AddParties ctx [newParty] did
-    finalMockDoc <- testDocApiV2Start' ctx did
-    return finalMockDoc
+    testDocApiV2Start' ctx did
 
 
   let did  = getMockDocId mockDoc
@@ -746,22 +720,18 @@ testDocApiV2SetApproverAuthenticationToView = do
       no_ssn    = "12345678901"
       param_mobile x = ("mobile_number", inText x)
       no_mobile = "+4712345678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToView did slid)
-          expectedCode
-        )
-      setAuth =
-        (\params -> mockDocTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToView did slid)
-          200
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToView did slid)
+        expectedCode
+      setAuth params = mockDocTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToView did slid)
+        200
 
   -- Some invalid requests
   setInvalidAuth [param_ssn se_ssn_10]                     400
@@ -817,7 +787,7 @@ testDocApiV2SetApproverAuthenticationToView = do
                 (T.pack $ getPersonalNumber mockDocNO)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack $ no_mobile)]
+    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack no_mobile)]
     assertEqual "Authentication to view should be set"
                 NOBankIDAuthenticationToView
                 (getAuthToView mockDocNOMobile)
@@ -852,7 +822,7 @@ testDocApiV2SetApproverAuthenticationToView = do
 testDocApiV2SetApproverAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToViewArchived = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -861,8 +831,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
             $ setMockDocSigLinkDeliveryMethod "pad" defaultMockSigLink
 
     void $ testDocApiV2AddParties ctx [newParty] did
-    finalMockDoc <- testDocApiV2Start' ctx did
-    return finalMockDoc
+    testDocApiV2Start' ctx did
 
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 2 mockDoc
@@ -877,22 +846,18 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
       no_ssn    = "12345678901"
       param_mobile x = ("mobile_number", inText x)
       no_mobile = "+4712345678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToViewArchived did slid)
-          expectedCode
-        )
-      setAuth =
-        (\params -> mockDocTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToViewArchived did slid)
-          200
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToViewArchived did slid)
+        expectedCode
+      setAuth params = mockDocTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToViewArchived did slid)
+        200
 
   -- Some invalid requests
   setInvalidAuth [param_ssn se_ssn_10]                     400
@@ -983,7 +948,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
 testDocApiV2SetApproverAuthenticationToSign :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToSign = do
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- do
     newMockDoc <- testDocApiV2New' ctx
     let did = getMockDocId newMockDoc
@@ -992,8 +957,7 @@ testDocApiV2SetApproverAuthenticationToSign = do
             $ setMockDocSigLinkDeliveryMethod "pad" defaultMockSigLink
 
     void $ testDocApiV2AddParties ctx [newParty] did
-    finalMockDoc <- testDocApiV2Start' ctx did
-    return finalMockDoc
+    testDocApiV2Start' ctx did
 
   let did  = getMockDocId mockDoc
       slid = getMockDocSigLinkId 2 mockDoc
@@ -1004,14 +968,12 @@ testDocApiV2SetApproverAuthenticationToSign = do
       se_ssn_10       = "1234567890"
       se_ssn_invalid  = "1234"
       _invalid_mobile = "45678"
-      setInvalidAuth =
-        (\params expectedCode -> void $ jsonTestRequestHelper
-          ctx
-          POST
-          params
-          (docApiV2SigSetAuthenticationToSign did slid)
-          expectedCode
-        )
+      setInvalidAuth params expectedCode = void $ jsonTestRequestHelper
+        ctx
+        POST
+        params
+        (docApiV2SigSetAuthenticationToSign did slid)
+        expectedCode
 
   -- Some invalid requests
   setInvalidAuth [param_auth "god_is_witness"]                    400

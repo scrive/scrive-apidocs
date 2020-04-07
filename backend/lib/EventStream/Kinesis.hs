@@ -82,7 +82,7 @@ instance (MonadThrow m, MonadIO m, MonadCatch m, MonadLog m)
     maybe
         (pure ())
         (\env ->
-          void $ liftIO . AWS.runResourceT . AWS.runAWST env . AWS.send $ AWS.putRecord
+          void . liftIO . AWS.runResourceT . AWS.runAWST env . AWS.send $ AWS.putRecord
             streamId
             payload
             parititionKey
@@ -102,14 +102,15 @@ instance (MonadThrow m, MonadIO m, MonadCatch m, MonadLog m)
 
 runKinesisT
   :: (MonadCatch m, MonadIO m, MonadLog m) => Maybe KinesisConf -> KinesisT m a -> m a
-runKinesisT (Nothing) m = do
+runKinesisT Nothing m = do
   logAttention_ "Kinesis stream is disabled."
   runReaderT (unKinesis m) Nothing
 runKinesisT (Just KinesisConf {..}) m = do
   logger <- awsLogger
   env    <-
-    ((lensVL AWS.envRegion .~ kinesisConfRegion) . (lensVL AWS.envLogger .~ logger))
-      <$> getAWSEnv
+    (lensVL AWS.envRegion .~ kinesisConfRegion)
+    .   (lensVL AWS.envLogger .~ logger)
+    <$> getAWSEnv
   runReaderT (unKinesis m) $ Just env
   where
     getAWSEnv = AWS.newEnv $ AWS.FromKeys (AWS.AccessKey kinesisConfAccessKey)

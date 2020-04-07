@@ -75,7 +75,7 @@ processEvents limit = do
       let timeDiff = case mmailSendTimeStamp of
             Nothing -> Nothing
             Just mailSendTimeStamp ->
-              Just $ floor $ toRational $ mailSendTimeStamp `diffUTCTime` now
+              Just . floor $ toRational (mailSendTimeStamp `diffUTCTime` now)
       templates <- asks ceTemplates
       markEventAsRead eid
       case kontraInfoForMail of
@@ -124,7 +124,7 @@ handleEventInvitation slid timeDiff templates eventType mailNoreplyAddress =
       Just sl -> (maybesignatory sl, getEmail sl)
     let (email, nev) = normaliseEvent signemail eventType
     bd <- theDocument >>= \doc -> case getAuthorSigLink doc >>= maybesignatory of
-      Nothing  -> dbQuery $ GetMainBrandedDomain
+      Nothing  -> dbQuery GetMainBrandedDomain
       Just uid -> dbQuery $ GetBrandedDomainByUserID uid
 
     logEmails signemail email
@@ -148,10 +148,10 @@ handleEventConfirmation slid timeDiff templates eventType mailNoreplyAddress =
   logSignatory slid $ do
     logInfo_ "Processing confirmation event"
 
-    signemail <- (maybe "" getEmail . getSigLinkFor slid) <$> theDocument
+    signemail <- maybe "" getEmail . getSigLinkFor slid <$> theDocument
     let (email, nev) = normaliseEvent signemail eventType
     bd <- theDocument >>= \doc -> case getAuthorSigLink doc >>= maybesignatory of
-      Nothing  -> dbQuery $ GetMainBrandedDomain
+      Nothing  -> dbQuery GetMainBrandedDomain
       Just uid -> dbQuery $ GetBrandedDomainByUserID uid
 
     logEmails signemail email
@@ -195,11 +195,10 @@ handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff = do
       when (mailinvitationdeliverystatus signlink == Deferred) $ do
         mail <- mailDeliveredInvitation mailNoreplyAddress bd signlink =<< theDocument
         theDocument >>= \d -> scheduleEmailSendout
-          $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink d] }
+          $ mail { to = [getMailAddress . fromJust $ getAuthorSigLink d] }
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
-      void $ dbUpdate $ SetEmailInvitationDeliveryStatus slid Delivered actor
-      return ()
+      void . dbUpdate $ SetEmailInvitationDeliveryStatus slid Delivered actor
     Nothing -> return ()
 
 handleOpenedInvitation
@@ -210,8 +209,7 @@ handleOpenedInvitation
   -> m ()
 handleOpenedInvitation slid email muid = do
   now <- currentTime
-  void $ dbUpdate $ MarkInvitationRead slid (mailSystemActor now muid email slid)
-  return ()
+  void . dbUpdate $ MarkInvitationRead slid (mailSystemActor now muid email slid)
 
 handleDeferredInvitation
   :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m)
@@ -229,7 +227,7 @@ handleDeferredInvitation mailNoreplyAddress bd slid email = do
       when success $ do
         mail <- mailDeferredInvitation mailNoreplyAddress bd sl =<< theDocument
         theDocument >>= \d -> scheduleEmailSendout
-          $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink d] }
+          $ mail { to = [getMailAddress . fromJust $ getAuthorSigLink d] }
     Nothing -> return ()
 
 handleUndeliveredInvitation
@@ -252,10 +250,10 @@ handleUndeliveredInvitation mailNoreplyAddress bd slid = do
         time <- currentTime
         let actor =
               mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
-        void $ dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
+        void . dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
         mail <- mailUndeliveredInvitation mailNoreplyAddress bd signlink =<< theDocument
         theDocument >>= \d -> scheduleEmailSendout
-          $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink d] }
+          $ mail { to = [getMailAddress . fromJust $ getAuthorSigLink d] }
         triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
   where
@@ -279,7 +277,7 @@ handleDeliveredConfirmation slid timeDiff = do
     Just sl -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
-      void $ dbUpdate $ SetEmailConfirmationDeliveryStatus slid Delivered actor
+      void . dbUpdate $ SetEmailConfirmationDeliveryStatus slid Delivered actor
       triggerAPICallbackIfThereIsOne =<< theDocument
 
 handleUndeliveredConfirmation
@@ -301,7 +299,7 @@ handleUndeliveredConfirmation mailNoreplyAddress bd slid = do
     Just sl -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
-      void $ dbUpdate $ SetEmailConfirmationDeliveryStatus slid Undelivered actor
+      void . dbUpdate $ SetEmailConfirmationDeliveryStatus slid Undelivered actor
       triggerAPICallbackIfThereIsOne =<< theDocument
 
       mAuthorSL <- getAuthorSigLink <$> theDocument
@@ -322,7 +320,7 @@ handleDeferredConfirmation slid = do
     Just sl -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
-      void $ dbUpdate $ SetEmailConfirmationDeliveryStatus slid Deferred actor
+      void . dbUpdate $ SetEmailConfirmationDeliveryStatus slid Deferred actor
       triggerAPICallbackIfThereIsOne =<< theDocument
 
 mailDeliveredInvitation
@@ -333,9 +331,9 @@ mailDeliveredInvitation
   -> Document
   -> m Mail
 mailDeliveredInvitation mailNoreplyAddress bd signlink doc = do
-  theme <- dbQuery $ GetTheme $ bd ^. #mailTheme
+  theme <- dbQuery . GetTheme $ bd ^. #mailTheme
   kontramail mailNoreplyAddress bd theme "invitationMailDeliveredAfterDeferred" $ do
-    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "authorname" . getFullName $ fromJust (getAuthorSigLink doc)
     F.value "email" $ getEmail signlink
     F.value "documenttitle" $ documenttitle doc
     F.value "ctxhostpart" $ bd ^. #url
@@ -349,12 +347,12 @@ mailDeferredInvitation
   -> Document
   -> m Mail
 mailDeferredInvitation mailNoreplyAddress bd sl doc = do
-  theme <- dbQuery $ GetTheme $ bd ^. #mailTheme
+  theme <- dbQuery . GetTheme $ bd ^. #mailTheme
   kontramail mailNoreplyAddress bd theme "invitationMailDeferred" $ do
-    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "authorname" . getFullName $ fromJust (getAuthorSigLink doc)
     F.value "counterpartname" $ getFullName sl
     F.value "counterpartemail" $ getEmail sl
-    F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
+    F.value "unsigneddoclink" . show $ LinkIssueDoc (documentid doc)
     F.value "ctxhostpart" $ bd ^. #url
     brandingMailFields theme
 
@@ -366,16 +364,16 @@ mailUndeliveredInvitation
   -> Document
   -> m Mail
 mailUndeliveredInvitation mailNoreplyAddress bd signlink doc = do
-  theme <- dbQuery $ GetTheme $ bd ^. #mailTheme
+  theme <- dbQuery . GetTheme $ bd ^. #mailTheme
   kontramail mailNoreplyAddress bd theme "invitationMailUndelivered" $ do
-    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "authorname" . getFullName $ fromJust (getAuthorSigLink doc)
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink
     F.value "signing" $ signatoryrole signlink == SignatoryRoleSigningParty
     F.value "viewing" $ signatoryrole signlink == SignatoryRoleViewer
     F.value "approving" $ signatoryrole signlink == SignatoryRoleApprover
-    F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
+    F.value "unsigneddoclink" . show $ LinkIssueDoc (documentid doc)
     F.value "ctxhostpart" $ bd ^. #url
     brandingMailFields theme
 
@@ -387,13 +385,13 @@ mailUndeliveredConfirmation
   -> Document
   -> m Mail
 mailUndeliveredConfirmation mailNoreplyAddress bd sl doc = do
-  theme <- dbQuery $ GetTheme $ bd ^. #mailTheme
+  theme <- dbQuery . GetTheme $ bd ^. #mailTheme
   kontramail mailNoreplyAddress bd theme "confirmationMailUndelivered" $ do
-    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "authorname" . getFullName $ fromJust (getAuthorSigLink doc)
     F.value "email" $ getEmail sl
     F.value "name" $ getFullName sl
     F.value "documenttitle" $ documenttitle doc
-    F.value "documentlink" $ show $ LinkIssueDoc $ documentid doc
+    F.value "documentlink" . show $ LinkIssueDoc (documentid doc)
     F.value "ctxhostpart" $ bd ^. #url
     brandingMailFields theme
 
@@ -423,7 +421,7 @@ normaliseEvent currentEmail = \case
       SG_Opened       -> EmailOpenedEvent
       SG_Dropped _ | currentEmail == email -> DeliveryEvent Undelivered
       SG_Deferred _ 5 -> DeliveryEvent Deferred
-      SG_Bounce _ _ _ | currentEmail == email -> DeliveryEvent Undelivered
+      SG_Bounce{} | currentEmail == email -> DeliveryEvent Undelivered
       SG_Delivered _  -> DeliveryEvent Delivered
       _               -> OtherEvent
 
@@ -431,7 +429,7 @@ normaliseEvent currentEmail = \case
     normaliseMailGunEvent email = \case
       MG_Opened    -> EmailOpenedEvent
       MG_Delivered -> DeliveryEvent Delivered
-      MG_Bounced _ _ _ | currentEmail == email -> DeliveryEvent Undelivered
+      MG_Bounced{} | currentEmail == email -> DeliveryEvent Undelivered
       MG_Dropped _ | currentEmail == email -> DeliveryEvent Undelivered
       _            -> OtherEvent
 

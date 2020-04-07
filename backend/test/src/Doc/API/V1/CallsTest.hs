@@ -84,13 +84,13 @@ testUpdateDoc updateJsonPath = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   do
     req <- mkRequest
       POST
       [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
-    (_, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
+    (_, _ctx') <- runTestKontra req ctx apiCallV1CreateFromFile
     return ()
 
   docs <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
@@ -99,7 +99,7 @@ testUpdateDoc updateJsonPath = do
 
   do
     req      <- mkRequest POST [("json_is_missing", inText $ T.pack cont)]
-    (rsp, _) <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
+    (rsp, _) <- runTestKontra req ctx . apiCallV1Update $ documentid doc
     assertEqual "Status code when json field is missing" 400 (rsCode rsp)
     return ()
 
@@ -107,18 +107,17 @@ testUpdateDoc updateJsonPath = do
     req <- mkRequest
       POST
       [("json", inText $ T.pack cont), ("objectversion", inText "3412342341")]
-    (rsp, _) <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
+    (rsp, _) <- runTestKontra req ctx . apiCallV1Update $ documentid doc
     assertEqual "Status code for invalid objectversion is 409" 409 (rsCode rsp)
     return ()
 
   do
     req <- mkRequest POST [("json", inText $ T.pack cont)]
-    void $ runTestKontra req ctx $ apiCallV1Update $ documentid doc
-    return ()
+    void . runTestKontra req ctx $ apiCallV1Update (documentid doc)
 
   do
     req      <- mkRequest POST []
-    (rsp, _) <- runTestKontra req ctx $ apiCallV1Ready $ documentid doc
+    (rsp, _) <- runTestKontra req ctx . apiCallV1Ready $ documentid doc
     let rspString                = BS.toString $ rsBody rsp
         Ok   (JSObject response) = decode rspString
         Just (JSString sts     ) = lookup "status" $ fromJSObject response
@@ -130,10 +129,10 @@ testUpdateDoc updateJsonPath = do
 testOAuthCreateDoc :: TestEnv ()
 testOAuthCreateDoc = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   -- Create OAuth API tokens
   let uid = user ^. #id
-  void $ dbUpdate $ CreateAPIToken uid
+  void . dbUpdate $ CreateAPIToken uid
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
   time            <- rand 10 arbitrary
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials
@@ -171,7 +170,7 @@ testOAuthCreateDoc = do
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     [("authorization", [T.pack authStr])]
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   let rds = BS.toString $ rsBody resDoc
       Ok   (JSObject rdsr    ) = decode rds
@@ -190,13 +189,13 @@ testOAuthCreateDoc = do
 testPersonalAccessCredentialsCreateDoc :: TestEnv ()
 testPersonalAccessCredentialsCreateDoc = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
 
   -- Get the personal access token
   let uid = user ^. #id
-  void $ dbUpdate $ DeletePersonalToken uid
-  void $ dbUpdate $ CreatePersonalToken uid
-  Just (OAuthAuthorization {..}) <- dbQuery $ GetPersonalToken uid
+  void . dbUpdate $ DeletePersonalToken uid
+  void . dbUpdate $ CreatePersonalToken uid
+  Just OAuthAuthorization {..} <- dbQuery $ GetPersonalToken uid
 
   let authStr =
         "oauth_signature_method=\"PLAINTEXT\""
@@ -215,7 +214,7 @@ testPersonalAccessCredentialsCreateDoc = do
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     [("authorization", [T.pack authStr])]
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   let rds = BS.toString $ rsBody resDoc
       Ok   (JSObject rdsr    ) = decode rds
@@ -242,17 +241,16 @@ testSetAutoReminder = do
 testUpdateDocToSaved :: Bool -> TestEnv ()
 testUpdateDocToSaved useOAuth = do
   user    <- instantiateRandomUser
-  ctx     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
 
   authStr <- if useOAuth
     then do
-      void $ dbUpdate $ DeletePersonalToken (user ^. #id)
-      void $ dbUpdate $ CreatePersonalToken (user ^. #id)
-      Just (OAuthAuthorization {..}) <- dbQuery $ GetPersonalToken (user ^. #id)
+      void . dbUpdate $ DeletePersonalToken (user ^. #id)
+      void . dbUpdate $ CreatePersonalToken (user ^. #id)
+      Just OAuthAuthorization {..} <- dbQuery $ GetPersonalToken (user ^. #id)
 
-      return
-        $  Just
-        $  "oauth_signature_method=\"PLAINTEXT\""
+      return $ Just
+        (  "oauth_signature_method=\"PLAINTEXT\""
         <> ",oauth_consumer_key=\""
         <> show oaAPIToken
         <> "\""
@@ -264,6 +262,7 @@ testUpdateDocToSaved useOAuth = do
         <> "&"
         <> show oaAccessSecret
         <> "\""
+        )
     else return Nothing
 
   reqDocJSON <- mkRequest GET []
@@ -278,7 +277,7 @@ testUpdateDocToSaved useOAuth = do
     else mkRequest
       POST
       [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   let rds = BS.toString $ rsBody resDoc
       Ok   (JSObject rdsr    ) = decode rds
@@ -299,7 +298,7 @@ testUpdateDocToSaved useOAuth = do
 
   -- Make document saved using update API call and check if it works
   (resDocSavedJSON, _) <- mkDocJSON doc { documentunsaveddraft = False }
-  reqDocSaved <- mkRequest POST [("json", inText $ T.pack $ encode resDocSavedJSON)]
+  reqDocSaved <- mkRequest POST [("json", inText . T.pack $ encode resDocSavedJSON)]
   (resDocSaved, _) <- runTestKontra reqDocSaved ctx $ apiCallV1Update did
   assertEqual "Updating document did not return HTTP 200" 200 (rsCode resDocSaved)
   let rdss                  = BS.toString $ rsBody resDocSaved
@@ -312,7 +311,7 @@ testUpdateDocToSaved useOAuth = do
   -- Try to make document not saved using update API call and make sure it
   -- cannot happen
   (resUnsaveJSON, _) <- mkDocJSON docSaved { documentunsaveddraft = True }
-  reqUnsave          <- mkRequest POST [("json", inText $ T.pack $ encode resUnsaveJSON)]
+  reqUnsave          <- mkRequest POST [("json", inText . T.pack $ encode resUnsaveJSON)]
   (resUnsave, _)     <- runTestKontra reqUnsave ctx $ apiCallV1Update did
   assertEqual "Updating document did not return HTTP 200" 200 (rsCode resUnsave)
   let rus                     = BS.toString $ rsBody resUnsave
@@ -330,7 +329,7 @@ testChangeAuthenticationToViewMethod = do
   let Just user = ctx ^. #maybeUser
   [doc] <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   let siglinks       = documentsignatorylinks doc
-      validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
+      validsiglinkid = signatorylinkid . head $ filter isSignatory siglinks
 
   reqNoAuthMethod      <- mkRequest POST [("personal_number", inText "12345678901")]
   (resNoAuthMethod, _) <-
@@ -457,9 +456,9 @@ testChangeAuthenticationToViewMethod = do
       $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
   assertEqual "Response code should be 202" 202 (rsCode resSEBankIDAgain)
 
-  (sessionid, ctx') <- runTestKontra reqSEBankIDAgain ctx $ getNonTempSessionID
+  (sessionid, ctx') <- runTestKontra reqSEBankIDAgain ctx getNonTempSessionID
   dbUpdate
-    $ MergeCGISEBankIDAuthentication (mkAuthKind doc) sessionid validsiglinkid
+    . MergeCGISEBankIDAuthentication (mkAuthKind doc) sessionid validsiglinkid
     $ CGISEBankIDAuthentication { cgisebidaSignatoryName           = "AName"
                                 , cgisebidaSignatoryPersonalNumber = "BName"
                                 , cgisebidaSignatoryIP             = "1.2.3.4"
@@ -474,7 +473,7 @@ testChangeAuthenticationToViewMethod = do
 
   -- Check that we can't change authentication to view if we are logged as user not connected to document
   user2           <- instantiateRandomUser
-  ctx2            <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
+  ctx2            <- mkContextWithUser defaultLang user2
   (resBadUser, _) <-
     runTestKontra reqSEBankIDValid10digits ctx2
       $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
@@ -486,7 +485,7 @@ testChangeAuthenticationToSignMethod = do
   let Just user = ctx ^. #maybeUser
   [doc] <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   let siglinks       = documentsignatorylinks doc
-      validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
+      validsiglinkid = signatorylinkid . head $ filter isSignatory siglinks
 
   reqNoAuthMethod      <- mkRequest POST [("authentication_value", inText "+46701234567")]
   (resNoAuthMethod, _) <-
@@ -510,7 +509,7 @@ testChangeAuthenticationToSignMethod = do
   assertEqual "Response code should be 202" 202 (rsCode res)
 
   user2           <- instantiateRandomUser
-  ctx2            <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
+  ctx2            <- mkContextWithUser defaultLang user2
   (resBadUser, _) <- runTestKontra req ctx2
     $ apiCallV1ChangeAuthenticationToSign (documentid doc) validsiglinkid
   assertEqual "Response code should be 403" 403 (rsCode resBadUser)
@@ -521,7 +520,7 @@ testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue = do
   let Just user = ctx ^. #maybeUser
   [doc] <- randomQuery $ GetDocumentsByAuthor (user ^. #id)
   let siglinks       = documentsignatorylinks doc
-      validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
+      validsiglinkid = signatorylinkid . head $ filter isSignatory siglinks
 
   req <- mkRequest
     POST
@@ -562,12 +561,12 @@ testChangeMainFile = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   req <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
+  (rsp1, _ctx') <- runTestKontra req ctx apiCallV1CreateFromFile
 
   let rspString                = BS.toString $ rsBody rsp1
       Ok   (JSObject response) = decode rspString
@@ -576,7 +575,7 @@ testChangeMainFile = do
   docid    <- liftIO $ readIO (fromJSString sts)
   req'     <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
 
-  (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+  (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile docid
 
   assertEqual "suceeded" 202 (rsCode rsp)
 
@@ -587,9 +586,8 @@ mapObjectEntry :: String -> (Maybe JSValue -> Maybe JSValue) -> JSValue -> JSVal
 mapObjectEntry key func old@(JSObject obj) =
   case lookup (toJSKey key) (fromJSObject obj) of
     Nothing -> case func Nothing of
-      Nothing -> old
-      Just newValue ->
-        JSObject (toJSObject ((toJSKey key, newValue) : (fromJSObject obj)))
+      Nothing       -> old
+      Just newValue -> JSObject (toJSObject ((toJSKey key, newValue) : fromJSObject obj))
     Just oldValue -> case func (Just oldValue) of
       Nothing ->
         JSObject (toJSObject (filter ((/= toJSKey key) . fst) (fromJSObject obj)))
@@ -613,10 +611,10 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   req <- mkRequest POST [("expectedType", inText "text"), ("file", inFile anchorpdf1)]
-  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
+  (rsp1, _ctx') <- runTestKontra req ctx apiCallV1CreateFromFile
 
   let rspString = BS.toString $ rsBody rsp1
       Ok   jsvalue@(JSObject response) = decode rspString
@@ -632,7 +630,7 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
   -}
   let updatejs = mapObjectEntry
         "signatories"
-        (fmap (mapFirstInArray (mapObjectEntry "fields" (fmap (addAnchoredField)))))
+        (fmap (mapFirstInArray (mapObjectEntry "fields" (fmap addAnchoredField))))
         jsvalue
       mapFirstInArray :: (JSValue -> JSValue) -> JSValue -> JSValue
       mapFirstInArray func  (JSArray (x : xs)) = JSArray (func x : xs)
@@ -684,14 +682,14 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
   do
     liftIO $ putStrLn "POST update"
     req'     <- mkRequest POST [("json", inText (T.pack $ encode updatejs))]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1Update $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1Update docid
     assertEqual "update call suceeded" 200 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqualDouble "positions in initial anchors-Signature" [(1, 0.5, 0.5)] poss
 
   do
     req'     <- mkRequest POST [("file", inFile anchorpdf2)]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqualDouble "positions after change to anchors-Unterschrift"
@@ -709,10 +707,10 @@ testChangeMainFileMovePlacements = do
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
                                                }
-  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   req <- mkRequest POST [("expectedType", inText "text"), ("file", inFile anchorpdf1)]
-  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
+  (rsp1, _ctx') <- runTestKontra req ctx apiCallV1CreateFromFile
 
   let rspString = BS.toString $ rsBody rsp1
       Ok   jsvalue@(JSObject response) = decode rspString
@@ -729,7 +727,7 @@ testChangeMainFileMovePlacements = do
   -}
   let updatejs = mapObjectEntry
         "signatories"
-        (fmap (mapFirstInArray (mapObjectEntry "fields" (fmap (addAnchoredField)))))
+        (fmap (mapFirstInArray (mapObjectEntry "fields" (fmap addAnchoredField))))
         jsvalue
       mapFirstInArray :: (JSValue -> JSValue) -> JSValue -> JSValue
       mapFirstInArray func  (JSArray (x : xs)) = JSArray (func x : xs)
@@ -785,14 +783,14 @@ testChangeMainFileMovePlacements = do
   do
     liftIO $ putStrLn "POST update"
     req'     <- mkRequest POST [("json", inText (T.pack $ encode updatejs))]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1Update $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1Update docid
     assertEqual "update call suceeded" 200 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqualDouble "positions in initial anchors-Signature" [(1, 0.5, 0.5)] poss
 
   do
     req'     <- mkRequest POST [("file", inFile anchorpdf2)]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqualDouble "positions after change to anchors-Namnteckning"
@@ -801,7 +799,7 @@ testChangeMainFileMovePlacements = do
 
   do
     req'     <- mkRequest POST [("file", inFile noanchorpdf)]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqualDouble "positions after change to no anchors document"
@@ -810,7 +808,7 @@ testChangeMainFileMovePlacements = do
 
   do
     req'     <- mkRequest POST [("file", inFile anchorpdf2)]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqualDouble "positions after change back to anchors-Namnteckning"
@@ -819,7 +817,7 @@ testChangeMainFileMovePlacements = do
 
   do
     req'     <- mkRequest POST [("file", inFile anchorpdf3)]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqualDouble "positions after change to anchors-Unterschrift-2"
@@ -829,7 +827,7 @@ testChangeMainFileMovePlacements = do
   do
     -- it should return to the original position at this point
     req'     <- mkRequest POST [("file", inFile anchorpdf1)]
-    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+    (rsp, _) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     -- we are almost exactly in the place we started
@@ -853,7 +851,7 @@ assertEqualDouble msg x y = do
 testCloseEvidenceAttachments :: TestEnv ()
 testCloseEvidenceAttachments = do
   author <- instantiateRandomUser
-  ctx    <- (set #maybeUser (Just author)) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang author
   doc    <- addRandomDocument (rdaDefault author)
     { rdaTypes       = OneOf [Signable]
     , rdaStatuses    = OneOf [Pending]
@@ -869,18 +867,16 @@ testCloseEvidenceAttachments = do
     }
 
   req <- mkRequest GET []
-  withDocument doc $ forM_
-    (documentsignatorylinks doc)
-    (\sl -> when (isSignatory sl) $ do
+  withDocument doc . forM_ (documentsignatorylinks doc) $ \sl ->
+    when (isSignatory sl) $ do
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid sl) (systemActor t)
       randomUpdate $ \t -> SignDocument (signatorylinkid sl)
                                         Nothing
                                         Nothing
                                         emptySignatoryScreenshots
                                         (systemActor t)
-    )
 
-  void $ runTestKontra req ctx $ withDocument doc $ do
+  void . runTestKontra req ctx . withDocument doc $ do
     randomUpdate $ \t -> CloseDocument (systemActor t)
     postDocumentClosedActions True False `E.catch` (\(_ :: KontraError) -> return False)
 
@@ -909,13 +905,13 @@ testCloseEvidenceAttachments = do
 testCannotStartPadesDocument :: TestEnv ()
 testCannotStartPadesDocument = do
   user   <- instantiateRandomPadesUser
-  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- mkContextWithUser defaultLang user
 
   reqDoc <- mkRequestWithHeaders
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
     []
-  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  (resDoc, _) <- runTestKontra reqDoc ctx apiCallV1CreateFromFile
   let rds = BS.toString $ rsBody resDoc
       Ok   (JSObject rdsr    ) = decode rds
       Just (JSString docidStr) = lookup "id" $ fromJSObject rdsr
@@ -928,7 +924,7 @@ testCannotStartPadesDocument = do
 testCannotSignPadesDocument :: TestEnv ()
 testCannotSignPadesDocument = do
   user      <- instantiateRandomPadesUser
-  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- mkContextWithUser defaultLang user
 
   mockDocV1 <- testDocApiV2StartNew ctx
   let didV1  = getMockDocId mockDocV1

@@ -31,21 +31,19 @@ brandingAdler32 ctx mugidandui = do
       Just user -> do
         ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
         userGroupUIAdler32 $ ugwpUIWithID ugwp
-  return $ adler32Text $ T.concat $ [ad1, ad2, ad3, showt versionID]
+  return . adler32Text $ T.concat [ad1, ad2, ad3, showt versionID]
 
 
 imageAdler32 :: BSC8.ByteString -> Text
-imageAdler32 image = T.pack $ BSC8.unpack $ adler32BS $ image
+imageAdler32 image = T.pack . BSC8.unpack $ adler32BS image
 
 domainAdler32 :: (MonadDB m, MonadThrow m) => BrandedDomain -> m Text
 domainAdler32 bd = do
-  themesMD5 <-
-    dbQuery
-    $ GetThemesMD5
-    $ [bd ^. #mailTheme, bd ^. #signviewTheme, bd ^. #serviceTheme, bd ^. #loginTheme]
+  themesMD5 <- dbQuery $ GetThemesMD5
+    [bd ^. #mailTheme, bd ^. #signviewTheme, bd ^. #serviceTheme, bd ^. #loginTheme]
   return
-    $  adler32Text
-    $  T.concat
+    .  adler32Text
+    .  T.concat
     $  [ showt (bd ^. #id)
        , imageAdler32 (bd ^. #favicon)
        , bd ^. #participantColor1
@@ -74,17 +72,16 @@ userGroupUIAdler32 (ugid, ugui) = do
   themesMD5 <-
     dbQuery
     . GetThemesMD5
-    . catMaybes
-    . fmap (ugui ^.)
+    . mapMaybe (ugui ^.)
     $ [#mailTheme, #signviewTheme, #serviceTheme]
   return
-    $  adler32Text
-    $  T.concat
+    .  adler32Text
+    .  T.concat
     $  [ showt ugid
        , maybe "" imageAdler32 (ugui ^. #favicon)
        , showt (ugui ^. #mailTheme)
        , showt (ugui ^. #signviewTheme)
-       , showt (ugui)
+       , showt ugui
        ]
     <> themesMD5
 

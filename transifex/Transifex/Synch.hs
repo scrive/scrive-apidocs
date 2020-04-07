@@ -37,7 +37,7 @@ fetch user password lang resource = do
     ["--compressed", "--user", user ++ ":" ++ password, "-s", "-X", "GET", stringsURL]
     ""
   case decode mjson of
-    Ok js -> return $ sort $ textsFromStringJSON (lang == "en") js
+    Ok js -> return . sort $ textsFromStringJSON (lang == "en") js
              -- English strings don't have to be reviewed, since this is our
              -- source language
     _     -> error $ "Can't parse response from Transifex: " ++ mjson
@@ -47,35 +47,34 @@ fetchLocal :: String -> TranslationResource -> IO [(String, String)]
 fetchLocal lang resource = do
   mjson <- readFile $ translationFile lang resource
   case decode mjson of
-    Ok js -> return $ sort $ textsFromJSON $ js
+    Ok js -> return . sort $ textsFromJSON js
     _     -> error $ "Can't parse response from Transifex: " ++ mjson
 
 makeBackup :: String -> String -> String -> TranslationResource -> IO ()
 makeBackup user password lang resource = do
   s        <- fetch user password lang resource
-  timePart <- getClockTime >>= toCalendarTime >>= return . formatCalendarTime
-    defaultTimeLocale
-    "%Y-%m-%dT%H:%M:%S"
+  timePart <-
+    formatCalendarTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S"
+      <$> (getClockTime >>= toCalendarTime)
   let backupFile =
-        ("backup_" ++ lang ++ "_" ++ show resource ++ "_" ++ timePart ++ ".json")
+        "backup_" ++ lang ++ "_" ++ show resource ++ "_" ++ timePart ++ ".json"
   withFile backupFile WriteMode $ \h -> do
     hSetEncoding h utf8
-    hPutStr h (encodeTranslationJSON $ textsToJSON $ sort s)
+    hPutStr h (encodeTranslationJSON . textsToJSON $ sort s)
     hClose h
 
 push :: String -> String -> String -> TranslationResource -> IO ()
 push user password lang resource = do
-  let url = if (sourceLang == lang)
+  let url = if sourceLang == lang
         then
-          (  apiURL
+          apiURL
           ++ "project/"
           ++ project
           ++ "/resource/"
           ++ resourceslug resource
           ++ "/content/"
-          )
         else
-          (  apiURL
+          apiURL
           ++ "project/"
           ++ project
           ++ "/resource/"
@@ -83,7 +82,6 @@ push user password lang resource = do
           ++ "/translation/"
           ++ lang
           ++ "/"
-          )
   makeBackup user password lang resource
   resp <- readProcess
     "curl"
@@ -97,7 +95,7 @@ push user password lang resource = do
     , url
     ]
     ""
-  case (parsePushResponse resp) of
+  case parsePushResponse resp of
     Nothing ->
       putStrLn
         $  "Push of lang "
@@ -125,7 +123,7 @@ merge user password lang resource = do
   external <- fetch user password lang resource
   local    <- fetchLocal lang resource
   let changes = compareTranslations external local
-  if (length changes == 0)
+  if null changes
     then putStrLn "Up to date."
     else do
       putStrLn
@@ -134,15 +132,15 @@ merge user password lang resource = do
         ++ " changes on the Transifex server. Overwriting local file."
       withFile (translationFile lang resource) WriteMode $ \h -> do
         hSetEncoding h utf8
-        hPutStr h (encodeTranslationJSON $ textsToJSON $ sort external)
+        hPutStr h (encodeTranslationJSON . textsToJSON $ sort external)
         hClose h
-        putStrLn $ "Done."
+        putStrLn "Done."
 
 diff :: String -> String -> String -> TranslationResource -> IO ()
 diff user password lang resource = do
   external <- fetch user password lang resource
   local    <- fetchLocal lang resource
-  mapM_ (putStrLn . show) $ compareTranslations external local
+  mapM_ print $ compareTranslations external local
 
 
 fix :: IO ()
@@ -154,7 +152,7 @@ fix = do
     fix' lang resource = do
       mjson <- readFile $ translationFile lang resource
       local <- case decode mjson of
-        Ok js -> return $ textsFromJSON $ js
+        Ok js -> return . textsFromJSON $ js
         _ ->
           error
             $  "Can't read translation for lang "
@@ -162,7 +160,7 @@ fix = do
             ++ " resource "
             ++ show resource
             ++ "."
-      if (local == sort local)
+      if local == sort local
         then
           putStrLn
           $  "No fix is needed for language "
@@ -172,7 +170,7 @@ fix = do
           ++ "."
         else withFile (translationFile lang resource) WriteMode $ \h -> do
           hSetEncoding h utf8
-          hPutStr h (encodeTranslationJSON $ textsToJSON $ sort local)
+          hPutStr h (encodeTranslationJSON . textsToJSON $ sort local)
           hClose h
           putStrLn $ "Language " ++ lang ++ " resource " ++ show resource ++ " fixed."
 
@@ -191,13 +189,13 @@ move s sres tres = do
           hSetEncoding h utf8
           hPutStr
             h
-            (encodeTranslationJSON $ textsToJSON $ filter (\(s', _) -> s /= s') stexts)
+            (encodeTranslationJSON . textsToJSON $ filter (\(s', _) -> s /= s') stexts)
           hClose h
           putStrLn $ "Text " ++ s ++ " removed from " ++ show sres
 
         withFile (translationFile lang tres) WriteMode $ \h -> do
           hSetEncoding h utf8
-          hPutStr h (encodeTranslationJSON $ textsToJSON $ sort $ mtch : ttexts)
+          hPutStr h (encodeTranslationJSON . textsToJSON $ sort (mtch : ttexts))
           hClose h
           putStrLn $ "Text " ++ s ++ " added to " ++ show tres
 
@@ -205,7 +203,7 @@ move s sres tres = do
 main' :: [String] -> IO ()
 main' ("fix"  : _) = fix
 
-main' ("diff" : (user : (password : (lang : (res : _))))) = case (readResource res) of
+main' ("diff" : (user : (password : (lang : (res : _))))) = case readResource res of
   Just res' -> diff user password lang res'
   _         -> error "Invalid parameters. Resource name is invalid"
 
@@ -225,14 +223,14 @@ main' ("diff-all" : (user : (password : _))) = forM_ allLangs $ \lang -> do
 main' ("diff-all" : _) =
   error "Invalid parameters. Usage: transifex diff-all user password"
 
-main' ("merge" : (user : (password : (lang : (res : _))))) = case (readResource res) of
+main' ("merge" : (user : (password : (lang : (res : _))))) = case readResource res of
   Just res' -> merge user password lang res'
   _         -> error "Invalid parameters. Resource name is invalid"
 
 main' ("merge" : _) =
   error $ "Invalid parameters. " ++ "Usage: transifex merge user password lang resource"
 
-main' ("push" : (user : (password : (lang : (res : _))))) = case (readResource res) of
+main' ("push" : (user : (password : (lang : (res : _))))) = case readResource res of
   Just res' -> push user password lang res'
   _         -> error "Invalid parameters. Resource name is invalid"
 
@@ -312,7 +310,7 @@ usageMsg = unlines
   , pad "transifex merge user password lang resource"
     ++ "-- Merge the external version with your local one."
   , ""
-  , "Available languages : " ++ intercalate " " allLangs
+  , "Available languages : " ++ unwords allLangs
   , "Available resources : texts | events | signview"
   ]
   where

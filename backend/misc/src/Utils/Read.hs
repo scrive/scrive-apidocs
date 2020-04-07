@@ -11,7 +11,7 @@ pad0
   :: Int         -- ^ how long should be the number
   -> String      -- ^ the number as string
   -> String      -- ^ zero padded number
-pad0 len str = take missing (repeat '0') <> str
+pad0 len str = replicate missing '0' <> str
   where
     diff    = len - length str
     missing = max 0 diff

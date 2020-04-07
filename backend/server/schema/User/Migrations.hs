@@ -24,7 +24,7 @@ addUserTOTPKeyColumn :: MonadDB m => Migration m
 addUserTOTPKeyColumn = Migration
   { mgrTableName = tblName tableUsers
   , mgrFrom      = 21
-  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
                      (tblName tableUsers)
                      [ sqlAddColumn $ tblColumn { colName     = "totp_key"
                                                 , colType     = BinaryT
@@ -81,10 +81,10 @@ usersDropCompanyID = Migration
   , mgrFrom      = 24
   , mgrAction    = StandardMigration $ do
                      let tname = tblName tableUsers
-                     runQuery_ $ sqlDropIndex tname $ (indexOnColumn "company_id")
+                     runQuery_ $ sqlDropIndex tname (indexOnColumn "company_id")
                      runQuery_
                        . sqlAlterTable tname
-                       $ [ sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
+                       $ [ sqlDropFK tname (fkOnColumn "company_id" "companies" "id")
                          , sqlDropColumn "company_id"
                          ]
   }
@@ -95,7 +95,7 @@ actuallyDeletePreviouslyDeletedUser = Migration
   , mgrFrom      = 25
   , mgrAction    =
     StandardMigration $ do
-      runQuery_ $ sqlUpdate "users" $ do
+      runQuery_ . sqlUpdate "users" $ do
         sqlWith "deleted_users" . sqlSelect "users" $ do
           sqlResult "id"
           sqlWhereIsNotNULL "deleted"
@@ -219,7 +219,7 @@ addUserTotpIsMandatoryColumn :: MonadDB m => Migration m
 addUserTotpIsMandatoryColumn = Migration
   { mgrTableName = tblName tableUsers
   , mgrFrom      = 28
-  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
                      (tblName tableUsers)
                      [ sqlAddColumn $ tblColumn { colName     = "totp_is_mandatory"
                                                 , colType     = BoolT
@@ -233,7 +233,7 @@ addUserSysAuthColumn :: MonadDB m => Migration m
 addUserSysAuthColumn = Migration
   { mgrTableName = tblName tableUsers
   , mgrFrom      = 29
-  , mgrAction    = StandardMigration $ runQuery_ $ sqlAlterTable
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
                      (tblName tableUsers)
                      [ sqlAddColumn $ tblColumn { colName     = "sysauth"
                                                 , colType     = SmallIntT

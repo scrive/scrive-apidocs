@@ -36,10 +36,10 @@ instance FromJSValue SignatoryScreenshots where
     first     <- fromJSValueField "first"
     signing   <- fromJSValueField "signing"
     reference <- fromJSValueField "reference" >>= \case
-      Just (JSString s) -> return $ Just $ Left $ fromJSString s
+      Just (JSString s) -> return . Just $ Left (fromJSString s)
       Just (JSObject s) -> return $ Right <$> fromJSValue (JSObject s)
       _                 -> return Nothing
-    return $ Just $ SignatoryScreenshots first signing reference
+    return . Just $ SignatoryScreenshots first signing reference
 
 instance ToJSValue SignatoryScreenshots where
   toJSValue ss = runJSONGen $ do
@@ -64,11 +64,12 @@ resolveReferenceScreenshotNames s = case reference s of
   Just (Right _) -> return $ Just s
   Just (Left name)
     | validReferenceName name
-    -> (runMaybeT $ do
-         Ok json <- decode <$> (liftIO . readFile . referencePath $ name)
-         r       <- MaybeT . return $ fromJSValue json
-         return $ s { reference = Just (Right r) }
-       )
+    -> runMaybeT
+        (do
+          Ok json <- decode <$> (liftIO . readFile . referencePath $ name)
+          r       <- MaybeT . return $ fromJSValue json
+          return $ s { reference = Just (Right r) }
+        )
       `E.catch` \E.SomeException{} -> return Nothing
     | otherwise
     -> return Nothing

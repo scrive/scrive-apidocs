@@ -29,11 +29,9 @@ data MessengerServerConf = MessengerServerConf
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
 
 sendersConfigFromMessengerConf :: MessengerServerConf -> SendersConfig
-sendersConfigFromMessengerConf MessengerServerConf {..} = SendersConfig
-  (\p -> case p of
-    SMSDefault        -> messengerSenderDefault
-    SMSTeliaCallGuide -> messengerSenderTelia
-  )
+sendersConfigFromMessengerConf MessengerServerConf {..} = SendersConfig $ \case
+  SMSDefault        -> messengerSenderDefault
+  SMSTeliaCallGuide -> messengerSenderTelia
 
 unjsonMessengerServerConf :: UnjsonDef MessengerServerConf
 unjsonMessengerServerConf =

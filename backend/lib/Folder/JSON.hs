@@ -26,7 +26,7 @@ encodeFolderWithChildren fdrwc =
 
 unjsonFolderForUpdate :: UnjsonDef (Maybe FolderID, Text)
 unjsonFolderForUpdate =
-  objectOf $ pure (,) <*> fieldOpt "parent_id" fst "Parent folder ID" <*> fieldBy
+  objectOf $ (,) <$> fieldOpt "parent_id" fst "Parent folder ID" <*> fieldBy
     "name"
     snd
     "Folder name"

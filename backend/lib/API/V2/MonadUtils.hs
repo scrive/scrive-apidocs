@@ -17,4 +17,4 @@ apiGuardJust :: MonadThrow m => APIError -> Maybe a -> m a
 apiGuardJust e = maybe (apiError e) return
 
 apiError :: (MonadThrow m) => APIError -> m a
-apiError e = throwM . SomeDBExtraException $ e
+apiError = throwM . SomeDBExtraException

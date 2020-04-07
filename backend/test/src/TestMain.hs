@@ -185,7 +185,7 @@ modifyTestEnv ("--output-dir" : d : r) =
 modifyTestEnv (d : r) = first (d :) $ modifyTestEnv r
 
 
-testMany :: FilePath -> ([String], [(TestEnvSt -> Test)]) -> IO ()
+testMany :: FilePath -> ([String], [TestEnvSt -> Test]) -> IO ()
 testMany workspaceRoot (allargs, ts) = do
   rng        <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   (errs, lr) <- mkLogRunner "test" testLogConfig rng
@@ -195,7 +195,7 @@ testMany workspaceRoot (allargs, ts) = do
 
 testMany'
   :: FilePath
-  -> ([String], [(TestEnvSt -> Test)])
+  -> ([String], [TestEnvSt -> Test])
   -> (forall m r . LogT m r -> m r)
   -> CryptoRNGState
   -> IO ()
@@ -222,9 +222,8 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
         defineTriggers kontraTriggers
         offsets <- dbQuery $ HC.GetNClockErrorEstimates 10
         unless (HC.enoughClockErrorOffsetSamples offsets) $ do
-          void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
-          void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
-          return ()
+          void . dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
+          void . dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
         commit
 
   staticSource <-
@@ -235,7 +234,7 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
   active_tests       <- atomically $ newTVar (True, 0)
   rejected_documents <- newMVar 0
   test_durations     <- newMVar []
-  memcache <- newFileMemCache $ fromMaybe 200000000 $ testLocalFileCacheSize tconf
+  memcache <- newFileMemCache . fromMaybe 200000000 $ testLocalFileCacheSize tconf
   mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
   mAmazonEnv         <- sequence (s3envFromConfig <$> testAmazonConfig tconf)
   lambdaEnv          <- pdfToolsLambdaEnvFromConf $ testPdfToolsLambdaConf tconf
@@ -258,9 +257,7 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
                                , testDurations      = test_durations
                                }
       ts' = if env ^. #stagingTests then stagingTests ++ ts else ts
-  case env ^. #outputDirectory of
-    Nothing -> return ()
-    Just d  -> createDirectoryIfMissing True d
+  forM_ (env ^. #outputDirectory) $ createDirectoryIfMissing True
   E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do
     -- Upon interruption (eg. Ctrl+C), prevent next tests in line
     -- from running and wait until all that are running are finished.

@@ -15,7 +15,7 @@ module Company.CompanyControl (
 import Data.Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir)
-import Log as Log
+import Log
 import qualified Data.Aeson as Aeson
 import qualified Data.Unjson as Unjson
 
@@ -34,23 +34,23 @@ import Util.MonadUtils
 
 routes :: Route (Kontra Response)
 routes = choice
-  [ dir "companybranding" $ hGet $ toK0 $ handleGetCompanyBranding Nothing
-  , dir "companybranding" $ dir "themes" $ hGet $ toK0 $ handleGetThemes Nothing
-  , dir "companybranding" $ dir "domainthemes" $ hGet $ toK0 $ handleGetDomainThemes
+  [ (dir "companybranding" . hGet . toK0) $ handleGetCompanyBranding Nothing
+  , (dir "companybranding" . dir "themes" . hGet . toK0) $ handleGetThemes Nothing
+  , (dir "companybranding" . dir "domainthemes" . hGet . toK0) handleGetDomainThemes
   , (dir "companybranding" . dir "change" . hPost . toK0)
     $ handleChangeCompanyBranding Nothing
   , (dir "companybranding" . dir "newtheme" . hPost . toK1)
     $ \themeType -> handleNewTheme themeType Nothing
-  , dir "companybranding" $ dir "updatetheme" $ hPost $ toK1 $ handleUpdateTheme Nothing
-  , dir "companybranding" $ dir "deletetheme" $ hPost $ toK1 $ handleDeleteTheme Nothing
-  , dir "companybranding" $ dir "signviewtheme" $ hGet $ toK0 $ handleGetSignviewTheme
+  , (dir "companybranding" . dir "updatetheme" . hPost . toK1) $ handleUpdateTheme Nothing
+  , (dir "companybranding" . dir "deletetheme" . hPost . toK1) $ handleDeleteTheme Nothing
+  , (dir "companybranding" . dir "signviewtheme" . hGet . toK0) handleGetSignviewTheme
   ]
 
 adminRoutes :: Route (Kontra Response)
 adminRoutes = choice
-  [ dir "companybranding" $ hGet $ toK1 $ handleGetCompanyBranding . Just
-  , dir "companybranding" $ dir "themes" $ hGet $ toK1 $ handleGetThemes . Just
-  , dir "companybranding" $ dir "domainthemes" $ hGet $ toK0 $ handleGetDomainThemes
+  [ (dir "companybranding" . hGet . toK1) $ handleGetCompanyBranding . Just
+  , (dir "companybranding" . dir "themes" . hGet . toK1) $ handleGetThemes . Just
+  , (dir "companybranding" . dir "domainthemes" . hGet . toK0) handleGetDomainThemes
   , (dir "companybranding" . dir "change" . hPost . toK1)
     (handleChangeCompanyBranding . Just)
   , dir "companybranding" . dir "inherit" . hPost . toK1 $ handleInheritCompanyBranding
@@ -94,11 +94,11 @@ handleGetCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
 handleChangeCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m ()
 handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
   companyUIJSON <- guardJustM $ getFieldBS "companyui"
-  case Aeson.eitherDecode $ companyUIJSON of
+  case Aeson.eitherDecode companyUIJSON of
     Left err -> do
       logInfo "Error while parsing company branding" $ object ["error" .= err]
       internalError
-    Right js -> case (Unjson.parse unjsonUserGroupUI js) of
+    Right js -> case Unjson.parse unjsonUserGroupUI js of
       (Result ugui []) -> dbUpdate . UserGroupUpdate . set #ui (Just ugui) $ ug
       _                -> internalError
 

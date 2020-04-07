@@ -54,7 +54,7 @@ testFetchCompanyBranding = do
   ugid <- view #id <$> instantiateRandomUserGroup
   user <- instantiateUser
     $ randomUserTemplate { groupID = return ugid, isCompanyAdmin = True }
-  ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx          <- mkContextWithUser defaultLang user
   req1         <- mkRequest GET []
   (avalue1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
   case decode (BSL.toString $ A.encode avalue1) of
@@ -71,7 +71,7 @@ testFetchDomainThemes :: TestEnv ()
 testFetchDomainThemes = do
   ctx         <- mkContext defaultLang
   req1        <- mkRequest GET []
-  (avalue, _) <- runTestKontra req1 ctx $ handleGetDomainThemes
+  (avalue, _) <- runTestKontra req1 ctx handleGetDomainThemes
   case decode (BSL.toString $ A.encode avalue) of
     Ok (_ :: JSValue) -> return ()
     _ -> assertFailure "Response from handleGetDomainThemes is not a valid JSON"
@@ -81,9 +81,9 @@ testUpdateCompanyTheme = do
   ug   <- instantiateRandomUserGroup
   user <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
-  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- mkContextWithUser defaultLang user
 
-  mainbd    <- dbQuery $ GetMainBrandedDomain
+  mainbd    <- dbQuery GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
   newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   let newChangedTheme1 = newTheme { themeBrandColor = "#12399a" }
@@ -91,7 +91,7 @@ testUpdateCompanyTheme = do
         (Options { pretty = True, indent = 2, nulls = True })
         unjsonTheme
         newChangedTheme1
-  req1 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr1)]
+  req1 <- mkRequest POST [("theme", inTextBS newChangedThemeStr1)]
   ((), _) <- runTestKontra req1 ctx $ handleUpdateTheme Nothing (themeID newChangedTheme1)
   newThemeChangedFromDB <- dbQuery $ GetTheme (themeID newTheme)
   assertEqual "Theme color has been changed"
@@ -105,7 +105,7 @@ testUpdateCompanyTheme = do
         (Options { pretty = True, indent = 2, nulls = True })
         unjsonTheme
         newChangedTheme2
-  req2 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr2)]
+  req2 <- mkRequest POST [("theme", inTextBS newChangedThemeStr2)]
   assertRaisesDBException $ do
     ((), _) <- runTestKontra req2 ctx
       $ handleUpdateTheme Nothing (themeID newChangedTheme2)
@@ -117,7 +117,7 @@ testUpdateCompanyTheme = do
         (Options { pretty = True, indent = 2, nulls = True })
         unjsonTheme
         newChangedTheme3
-  req3 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr3)]
+  req3 <- mkRequest POST [("theme", inTextBS newChangedThemeStr3)]
   assertRaisesDBException $ do
     ((), _) <- runTestKontra req3 ctx
       $ handleUpdateTheme Nothing (themeID newChangedTheme3)
@@ -134,7 +134,7 @@ testUpdateCompanyTheme = do
             (Options { pretty = True, indent = 2, nulls = True })
             unjsonTheme
             newChangedTheme1
-      req1    <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr1)]
+      req1    <- mkRequest POST [("theme", inTextBS newChangedThemeStr1)]
       ((), _) <- runTestKontra req1 ctx
         $ handleUpdateTheme Nothing (themeID newChangedTheme1)
       newThemeChangedFromDB <- dbQuery $ GetTheme (themeID newTheme)
@@ -160,15 +160,13 @@ testDeleteCompanyTheme = do
   ug   <- instantiateRandomUserGroup
   user <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
-  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
-  mainbd    <- dbQuery $ GetMainBrandedDomain
+  ctx       <- mkContextWithUser defaultLang user
+  mainbd    <- dbQuery GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
   newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   req1      <- mkRequest POST []
   ((), _)   <- runTestKontra req1 ctx $ handleDeleteTheme Nothing (themeID newTheme)
-  assertRaisesDBException $ do
-    void $ dbQuery $ GetTheme (themeID newTheme)
-    return ()
+  assertRaisesDBException . void $ dbQuery (GetTheme (themeID newTheme))
   return ()
 
 
@@ -179,9 +177,9 @@ testNormalUserCantChangeOrDeleteTheme = do
   True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
   Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
 
-  ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user2
 
-  mainbd     <- dbQuery $ GetMainBrandedDomain
+  mainbd     <- dbQuery GetMainBrandedDomain
   mailTheme  <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
   newTheme   <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   let newChangedTheme1 = newTheme { themeBrandColor = "#12399a" }
@@ -189,7 +187,7 @@ testNormalUserCantChangeOrDeleteTheme = do
         (Options { pretty = True, indent = 2, nulls = True })
         unjsonTheme
         newChangedTheme1
-  req1 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr1)]
+  req1 <- mkRequest POST [("theme", inTextBS newChangedThemeStr1)]
   -- We should get exception when updating company theme, when not admin
 
   assertRaisesInternalError $ do
@@ -215,9 +213,9 @@ testChangeCompanyUI = do
   ugwp <- dbQuery . UserGroupGetWithParentsByUG $ ug
   user <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
-  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- mkContextWithUser defaultLang user
 
-  mainbd    <- dbQuery $ GetMainBrandedDomain
+  mainbd    <- dbQuery GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
   newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   newTheme2 <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
@@ -245,9 +243,9 @@ testNormalUseCantChangeCompanyUI = do
   user1      <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
   Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
-  ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user2
 
-  mainbd     <- dbQuery $ GetMainBrandedDomain
+  mainbd     <- dbQuery GetMainBrandedDomain
   mailTheme  <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
   newTheme1  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
   newTheme2  <- dbUpdate $ InsertNewThemeForUserGroup (ug ^. #id) mailTheme
@@ -265,7 +263,7 @@ testNormalUseCantChangeCompanyUI = do
         (Options { pretty = True, indent = 2, nulls = True })
         unjsonUserGroupUI
         newUGUI
-  req1 <- mkRequest POST [("companyui", inTextBS $ newUGUIStr1)]
+  req1 <- mkRequest POST [("companyui", inTextBS newUGUIStr1)]
   assertRaisesInternalError $ do
     ((), _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
     return ()
@@ -278,7 +276,7 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   ugwp          <- dbQuery . UserGroupGetWithParentsByUG $ ug
   ctx           <- mkContext defaultLang
 
-  mainbd        <- dbQuery $ GetMainBrandedDomain
+  mainbd        <- dbQuery GetMainBrandedDomain
   signviewTheme <- dbQuery $ GetTheme (mainbd ^. #signviewTheme)
   newTheme      <- dbUpdate
     $ InsertNewThemeForUserGroup (ug ^. #id) signviewTheme { themeBrandColor = "#669713" }
@@ -292,7 +290,7 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   (Just ugui1) <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
   adlerSum1    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui1)
 
-  void $ dbUpdate $ UserGroupUpdate $ set #ui (Just $ set #serviceTheme Nothing ugui1) ug
+  void . dbUpdate . UserGroupUpdate $ set #ui (Just $ set #serviceTheme Nothing ugui1) ug
   (Just ugui2) <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
   adlerSum2    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui2)
 

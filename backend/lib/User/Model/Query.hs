@@ -40,43 +40,43 @@ import User.UserID
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 
-data GetUserByID = GetUserByID UserID
+newtype GetUserByID = GetUserByID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByID (Maybe User) where
-  query (GetUserByID uid) = do
+  dbQuery (GetUserByID uid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE id =" <?> uid <+> "AND deleted IS NULL"
     fetchMaybe fetchUser
 
-data GetUserByIDIncludeDeleted = GetUserByIDIncludeDeleted UserID
+newtype GetUserByIDIncludeDeleted = GetUserByIDIncludeDeleted UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByIDIncludeDeleted (Maybe User) where
-  query (GetUserByIDIncludeDeleted uid) = do
+  dbQuery (GetUserByIDIncludeDeleted uid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE id =" <?> uid
     fetchMaybe fetchUser
 
-data GetUserByEmail = GetUserByEmail Email
+newtype GetUserByEmail = GetUserByEmail Email
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByEmail (Maybe User) where
-  query (GetUserByEmail email) = do
+  dbQuery (GetUserByEmail email) = do
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> T.toLower
       (unEmail email)
     fetchMaybe fetchUser
 
-data GetUserWithStatusByEmail = GetUserWithStatusByEmail Email
+newtype GetUserWithStatusByEmail = GetUserWithStatusByEmail Email
 instance (MonadDB m, MonadThrow m) =>
   DBQuery m GetUserWithStatusByEmail (Maybe (User, Bool)) where
-  query (GetUserWithStatusByEmail email) = do
+  dbQuery (GetUserWithStatusByEmail email) = do
     runQuery_ $ selectUsersSQL <+> "WHERE email =" <?> T.toLower (unEmail email)
-    (fetchMaybe fetchUser) >>= \case
+    fetchMaybe fetchUser >>= \case
       Nothing   -> return Nothing
       Just user -> do
         runQuery_
           $   "select deleted is not null from users where id = "
           <?> ((user ^. #id) :: UserID)
         isDeleted <- fetchOne runIdentity
-        return . Just $ (user, isDeleted)
+        return $ Just (user, isDeleted)
 
 data GetUserByTempLoginToken = GetUserByTempLoginToken UTCTime MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByTempLoginToken (Maybe (User, Bool)) where
-  query (GetUserByTempLoginToken now logintoken) = do
-    runQuery_ $ sqlSelect "temporary_login_tokens" $ do
+  dbQuery (GetUserByTempLoginToken now logintoken) = do
+    runQuery_ . sqlSelect "temporary_login_tokens" $ do
       sqlResult "user_id"
       sqlResult $ "expiration_time <=" <?> now
       sqlWhere $ "hash =" <?> logintoken
@@ -89,9 +89,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByTempLoginToken (Maybe (
           Nothing   -> return Nothing -- In theory, this state shouldn't occur
           Just user -> return $ Just (user, expired)
 
-data UserGroupGetUsers = UserGroupGetUsers UserGroupID
+newtype UserGroupGetUsers = UserGroupGetUsers UserGroupID
 instance MonadDB m => DBQuery m UserGroupGetUsers [User] where
-  query (UserGroupGetUsers ugid) = do
+  dbQuery (UserGroupGetUsers ugid) = do
     runQuery_
       $   selectUsersSQL
       <+> "WHERE user_group_id ="
@@ -99,17 +99,17 @@ instance MonadDB m => DBQuery m UserGroupGetUsers [User] where
       <+> "AND deleted IS NULL ORDER BY email"
     fetchMany fetchUser
 
-data UserGroupGetUsersIncludeDeleted = UserGroupGetUsersIncludeDeleted UserGroupID
+newtype UserGroupGetUsersIncludeDeleted = UserGroupGetUsersIncludeDeleted UserGroupID
 instance MonadDB m => DBQuery m UserGroupGetUsersIncludeDeleted [User] where
-  query (UserGroupGetUsersIncludeDeleted ugid) = do
+  dbQuery (UserGroupGetUsersIncludeDeleted ugid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE User_group_id =" <?> ugid <+> "ORDER BY email"
     fetchMany fetchUser
 
 data GetUserGroupAccountsCountTotal = GetUserGroupAccountsCountTotal
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetUserGroupAccountsCountTotal [(UserGroupID, UserGroupID, Int64)] where
-  query GetUserGroupAccountsCountTotal = do
-    runQuery_ $ sqlSelect "users u" $ do
+  dbQuery GetUserGroupAccountsCountTotal = do
+    runQuery_ . sqlSelect "users u" $ do
       sqlWithClosestInvoicingID "closest_invoicing_parent"
 
       sqlJoinOn "user_groups ug"               "ug.id = u.user_group_id"
@@ -134,7 +134,7 @@ instance (MonadDB m, MonadThrow m)
 
 data GetUserGroupAccountsCountActive = GetUserGroupAccountsCountActive
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccountsCountActive [(UserGroupID, UserGroupID, Int64)] where
-  query GetUserGroupAccountsCountActive = do
+  dbQuery GetUserGroupAccountsCountActive = do
     now <- currentTime
     runQuery_ $ activeUsersQuery now
     fetchMany identity
@@ -152,7 +152,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccount
       -- sorting on disc with a mere 4MB; 8MB was not enough, but 20
       -- _was_ at the time of checking.
       loggedInRecently :: UTCTime -> SQL
-      loggedInRecently now = toSQLCommand $ sqlSelect "users u" $ do
+      loggedInRecently now = toSQLCommand . sqlSelect "users u" $ do
           -- set up CTEs to get closest invoicing parent
         sqlWithClosestInvoicingID "closest_invoicing_parent"
 
@@ -178,7 +178,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccount
         sqlHaving $ "max(h.time) > (" <?> now <+> " - interval '4 weeks')"
 
       docSentRecently :: UTCTime -> SQL
-      docSentRecently now = toSQLCommand $ sqlSelect "users as u" $ do
+      docSentRecently now = toSQLCommand . sqlSelect "users as u" $ do
           -- set up CTEs to get closest invoicing parent
         sqlWithClosestInvoicingID "closest_invoicing_parent"
 
@@ -208,9 +208,9 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccount
       isNotFree :: SQL
       isNotFree = "ugi.payment_plan <>" <?> FreePlan
 
-data GetUserGroupAdmins = GetUserGroupAdmins UserGroupID
+newtype GetUserGroupAdmins = GetUserGroupAdmins UserGroupID
 instance MonadDB m => DBQuery m GetUserGroupAdmins [User] where
-  query (GetUserGroupAdmins ugid) = do
+  dbQuery (GetUserGroupAdmins ugid) = do
     runQuery_
       $   selectUsersSQL
       <+> "WHERE is_company_admin AND user_group_id ="
@@ -223,11 +223,11 @@ data UserNotDeletableReason
   deriving Show
 
 -- | Check if a user can be deleted giving the reason if it can't.
-data IsUserDeletable = IsUserDeletable User
+newtype IsUserDeletable = IsUserDeletable User
 instance (MonadDB m, MonadThrow m)
     => DBQuery m IsUserDeletable (Maybe UserNotDeletableReason) where
-  query (IsUserDeletable user) = do
-    n <- runQuery $ sqlSelect "users" $ do
+  dbQuery (IsUserDeletable user) = do
+    n <- runQuery . sqlSelect "users" $ do
       sqlWhere "users.deleted IS NULL"
       sqlWhereEq "users.id" $ user ^. #id
       sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
@@ -245,7 +245,7 @@ data GetUsageStats =
   GetUsageStats UsageStatsFor StatsPartition Interval
 
 instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] where
-  query (GetUsageStats forWhom statsPartition interval) = do
+  dbQuery (GetUsageStats forWhom statsPartition interval) = do
     now <- currentTime
     -- Fetches relevant documents and then groups them by the
     -- timestamps (trimmed to the precision we want) and users to
@@ -352,7 +352,7 @@ data GetUsageStatsOnShareableLinks =
   GetUsageStatsOnShareableLinks UsageStatsFor StatsPartition Interval
 
 instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStatsOnShareableLinks [ShareableLinkUsageStats] where
-  query (GetUsageStatsOnShareableLinks forWhom statsPartition interval) = do
+  dbQuery (GetUsageStatsOnShareableLinks forWhom statsPartition interval) = do
     now <- currentTime
     -- Fetches relevant documents and then groups them by the
     -- timestamps (trimmed to the precision we want) and by template ids to
@@ -440,8 +440,7 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStatsOnShareableLinks [Sh
           }
 
 startingDate :: UTCTime -> Interval -> StatsPartition -> SQL
-startingDate now interval statsPartition =
-  dateTrunc (sqlParam now <+> "-" <?> interval) statsPartition
+startingDate now interval = dateTrunc (sqlParam now <+> "-" <?> interval)
 
 dateTrunc :: SQL -> StatsPartition -> SQL
 dateTrunc time statsPartition = "date_trunc('" <> granularity <> "', " <> time <> ")"
@@ -453,7 +452,7 @@ dateTrunc time statsPartition = "date_trunc('" <> granularity <> "', " <> time <
 
 data GetUsersWithUserGroupNames = GetUsersWithUserGroupNames [UserFilter] [AscDesc UserOrderBy] (Int, Int)
 instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, Text)] where
-  query (GetUsersWithUserGroupNames filters sorting (offset, limit)) = do
+  dbQuery (GetUsersWithUserGroupNames filters sorting (offset, limit)) = do
     runQuery_ $ smconcat
       [ selectUsersWithUserGroupNamesSQL
       , if null filters
@@ -469,24 +468,24 @@ instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, Text)] where
       ]
     fetchMany fetchUserWithUserGroupName
 
-data GetUsers = GetUsers [UserFilter]
+newtype GetUsers = GetUsers [UserFilter]
 instance MonadDB m => DBQuery m GetUsers [User] where
-  query (GetUsers filters) = do
+  dbQuery (GetUsers filters) = do
     runQuery_ . sqlSelect "users" $ do
       mapM_ sqlResult selectUsersSelectorsList
       sqlWhereIsNULL "deleted"
       sqlWhere $ sqlConcatAND (map userFilterToSQL filters)
     fetchMany fetchUser
 
-data UserGroupGetAllUsersFromThisAndSubgroups = UserGroupGetAllUsersFromThisAndSubgroups UserGroupID
+newtype UserGroupGetAllUsersFromThisAndSubgroups = UserGroupGetAllUsersFromThisAndSubgroups UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetAllUsersFromThisAndSubgroups [User] where
-  query (UserGroupGetAllUsersFromThisAndSubgroups ugid) = do
+  dbQuery (UserGroupGetAllUsersFromThisAndSubgroups ugid) = do
     runQuery_ . sqlSelect "users" $ do
       mapM_ sqlResult selectUsersSelectorsList
       sqlWhereAny
-        [ sqlWhereInSql "user_group_id" $ sqlSelect "user_groups" $ do
+        [ sqlWhereInSql "user_group_id" . sqlSelect "user_groups" $ do
           sqlResult "id"
-          sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
+          sqlWhere $ "parent_group_path @> " <?> Array1 [ugid]
         , sqlWhereEq "user_group_id" ugid
         ]
       sqlWhereIsNULL "deleted"

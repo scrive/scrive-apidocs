@@ -57,7 +57,7 @@ handleUserGroupAccounts = withUserAndGroup $ \(user, _) -> do
   let userAdminUgId = \case
         UserAdminAR ugid -> Just ugid
         _                -> Nothing
-  handleUserGroupAccountsInternal . mapMaybe userAdminUgId . fmap accessRoleTarget $ roles
+  handleUserGroupAccountsInternal . mapMaybe (userAdminUgId . accessRoleTarget) $ roles
 
 -- | Get the ajax data for the company accounts list.
 handleUserGroupAccountsForAdminOnly :: Kontrakcja m => UserGroupID -> m JSValue
@@ -81,7 +81,7 @@ handleUserGroupAccountsInternal ugids = do
     invites <- dbQuery . UserGroupGetInvitesWithUsersData $ ug ^. #id
     return . zip invites $ repeat ug
   let isUser ((invite, _, _, _), _) =
-        (inviteduserid invite) `elem` map (^. _1 % #id) usersWithUgs
+        inviteduserid invite `elem` map (^. _1 % #id) usersWithUgs
   let companyaccounts = map mkAccountFromUser usersWithUgs
         <> map mkAccountFromInvite (filter (not . isUser) invitesWithUgs)
       mkAccountFromUser (u, ug) = CompanyAccount
@@ -134,9 +134,9 @@ handleUserGroupAccountsInternal ugids = do
 
   runJSONGenT $ do
     objects "accounts"
-      $ for (sortBy sortingWithOrder $ filter textFilter companyaccounts)
+      . for (sortBy sortingWithOrder $ filter textFilter companyaccounts)
       $ \f -> do
-          value "id" $ show $ camaybeuserid f
+          value "id" . show $ camaybeuserid f
           value "fullname" $ cafullname f
           value "fstname" $ cafstname f
           value "sndname" $ casndname f
@@ -144,11 +144,11 @@ handleUserGroupAccountsInternal ugids = do
           value "personalnumber" $ cassn f
           value "phone" $ caphone f
           value "companyposition" $ caposition f
-          value "role" $ show $ carole f
+          value "role" . show $ carole f
           value "deletable" $ cadeletable f
           value "activated" $ caactivated f
           value "isctxuser" $ user ^. #id == camaybeuserid f
-          value "tos" $ formatTimeISO <$> (catos f)
+          value "tos" $ formatTimeISO <$> catos f
           value "twofactor_active" $ catotpactive f
           value "lang" $ codeFromLang <$> calang f
           value "company_name" $ caugname f
@@ -199,7 +199,7 @@ companyAccountsSorting _                  = const $ const EQ
 companyAccountsSortingBy
   :: Show a => (CompanyAccount -> a) -> CompanyAccount -> CompanyAccount -> Ordering
 companyAccountsSortingBy f ca1 ca2 =
-  compare (map toUpper $ show $ f ca1) (map toUpper $ show $ f ca2)
+  compare (map toUpper . show $ f ca1) (map toUpper . show $ f ca2)
 
 {- |
     Handles adding a company user either by creating them or
@@ -233,17 +233,17 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
                        (ctx ^. #lang)
                        CompanyInvitation
         =<< getCreateUserContextFromContext
-      void $ dbUpdate $ LogHistoryUserInfoChanged
+      void . dbUpdate $ LogHistoryUserInfoChanged
         (newuser' ^. #id)
         (ctx ^. #ipAddr)
         (ctx ^. #time)
         (newuser' ^. #info)
         (newuser' ^. #info & (#firstName .~ fstname) & (#lastName .~ sndname))
         (ctx ^? #maybeUser % _Just % #id)
-      newuser <- guardJustM $ dbQuery $ GetUserByID (newuser' ^. #id)
+      newuser <- guardJustM . dbQuery $ GetUserByID (newuser' ^. #id)
       void $ sendNewUserGroupUserMail user targetGroup newuser
       runJSONGenT $ value "added" True
-    Just existinguser -> if (existinguser ^. #groupID == targetGroupID)
+    Just existinguser -> if existinguser ^. #groupID == targetGroupID
       then runJSONGenT $ do
         value "added"       False
         value "samecompany" True
@@ -256,11 +256,11 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
           ugwpRoot
           .   fromJust
           <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
-        if (existingUserUGRoot == targetUGRoot || length users == 1)
+        if existingUserUGRoot == targetUGRoot || length users == 1
           then do
             void $ sendTakeoverSingleUserMail user targetGroup existinguser
-            void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (existinguser ^. #id)
-                                                                   targetGroupID
+            void . dbUpdate $ AddUserGroupInvite
+              (UserGroupInvite (existinguser ^. #id) targetGroupID)
             runJSONGenT $ value "added" True
           else do
             runJSONGenT $ value "added" False
@@ -272,12 +272,12 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
 handleResendToUserGroupAccount :: Kontrakcja m => m JSValue
 handleResendToUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   resendid <- getCriticalField asValidUserID "resendid"
-  newuser  <- guardJustM $ dbQuery $ GetUserByID resendid
+  newuser  <- guardJustM . dbQuery $ GetUserByID resendid
   let ugid = ug ^. #id
-  if (newuser ^. #groupID /= ugid)
+  if newuser ^. #groupID /= ugid
     then do
        -- We need to check if there is a company invitation, and if it is, we send takeover email again
-      void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid resendid
+      void . guardJustM $ dbQuery (GetUserGroupInvite ugid resendid)
       sendTakeoverSingleUserMail user ug newuser
     else do
        -- Else we just send an email
@@ -320,9 +320,9 @@ handleChangeRoleOfUserGroupAccount = do
   let wasAdmin = view #isCompanyAdmin changeUser
   let acc =
         -- permission to change the recipient (source)
-        [canDo UpdateA $ UserR changeid]
+        canDo UpdateA (UserR changeid)
           -- permission to grant roles generated by is_company_admin flag
-                                         ++ canGrant (UserAdminAR $ ug ^. #id)
+                                       : canGrant (UserAdminAR $ ug ^. #id)
           -- ++ canGrant (FolderAdminAR ugHomeFid)
           -- ^^^ keep this canGrant line commented, this is a HACK
           -- Here is why have done it like this:
@@ -344,13 +344,13 @@ handleChangeRoleOfUserGroupAccount = do
   when (wasAdmin /= becomeAdmin) $ do
     accessControlLoggedIn acc $ do
       ctx <- getContext
-      void $ dbUpdate $ SetUserCompanyAdmin changeid becomeAdmin
+      void . dbUpdate $ SetUserCompanyAdmin changeid becomeAdmin
       logInfo "Changing user group role" $ object
         [ "to_admin" .= becomeAdmin
         , "target_user" .= changeid
         , "performing_user" .= (ctx ^? #maybeUser % _Just % #id)
         ]
-      void $ dbUpdate $ LogHistoryDetailsChanged
+      void . dbUpdate $ LogHistoryDetailsChanged
         changeid
         (ctx ^. #ipAddr)
         (ctx ^. #time)
@@ -370,26 +370,25 @@ handleChangeRoleOfUserGroupAccount = do
 handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
 handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
   removeuid  <- getCriticalField asValidUserID "removeid"
-  removeuser <- guardJustM $ dbQuery $ GetUserByID $ removeuid
+  removeuser <- guardJustM . dbQuery $ GetUserByID removeuid
   let acc = [canDo DeleteA . UserInGroupR $ removeuser ^. #groupID]
   -- Even if we don't execute the main action for whatever reason we remove all invites
   -- that we possibly can, restricted by the caller's permissions.
   accessControl roles acc (removeInvitesOnly roles removeuser) $ do
     isdeletable <- isUserDeletable removeuser
     ctx         <- getContext
-    case isdeletable of
-      True -> do
-              -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
-        void $ dbUpdate $ RemoveUserUserGroupInvites (removeuser ^. #id)
-        void $ dbUpdate $ DeleteUserCallbackScheme $ removeuser ^. #id
-        void $ dbUpdate $ DeleteUser (removeuser ^. #id)
-        void $ dbUpdate $ LogHistoryAccountDeleted (removeuser ^. #id)
+    if isdeletable
+      then do
+            -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
+        void . dbUpdate $ RemoveUserUserGroupInvites (removeuser ^. #id)
+        void . dbUpdate $ DeleteUserCallbackScheme (removeuser ^. #id)
+        void . dbUpdate $ DeleteUser (removeuser ^. #id)
+        void . dbUpdate $ LogHistoryAccountDeleted (removeuser ^. #id)
                                                    (user ^. #id)
                                                    (ctx ^. #ipAddr)
                                                    (ctx ^. #time)
         runJSONGenT $ value "removed" True
-      _ -> do
-        runJSONGenT $ value "removed" False
+      else runJSONGenT $ value "removed" False
   where
     removeInvitesOnly :: Kontrakcja m => [AccessRole] -> User -> m JSValue
     removeInvitesOnly roles removeForUser = do
@@ -399,7 +398,7 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
           ugids    = mapMaybe extractDeleteUserUGID allPerms
         -- We remove only the invites, possibly making user account in other some user
         -- group still be valid.
-      void $ dbUpdate $ RemoveUserGroupInvite ugids (removeForUser ^. #id)
+      void . dbUpdate $ RemoveUserGroupInvite ugids (removeForUser ^. #id)
       runJSONGenT $ value "removed" True
 
 {- |
@@ -415,24 +414,24 @@ handleGetBecomeUserGroupAccount ugid = withUser $ \user -> do
       flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
       return $ internalResponseWithFlash flashmessage LinkAccount
     _ -> do
-      ug  <- guardJustM $ dbQuery $ UserGroupGet ugid
+      ug  <- guardJustM . dbQuery $ UserGroupGet ugid
       ctx <- getContext
-      internalResponse <$> T.unpack <$> (pageDoYouWantToBeCompanyAccount ctx ug)
+      internalResponse . T.unpack <$> pageDoYouWantToBeCompanyAccount ctx ug
 
 handlePostBecomeUserGroupAccount
   :: Kontrakcja m => UserGroupID -> m InternalKontraResponse
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
-  void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (user ^. #id)
-  newug <- guardJustM $ dbQuery $ UserGroupGet ugid
-  (view #id <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
+  void . guardJustM $ dbQuery (GetUserGroupInvite ugid (user ^. #id))
+  newug <- guardJustM . dbQuery $ UserGroupGet ugid
+  (view #id <$>) <$> dbQuery (FolderGetUserGroupHome ugid) >>= \case
     Nothing         -> internalError
     Just newugfdrid -> do
-      void $ dbUpdate $ SetUserCompanyAdmin (user ^. #id) False
-      void $ dbUpdate $ SetUserUserGroup (user ^. #id) (newug ^. #id)
+      void . dbUpdate $ SetUserCompanyAdmin (user ^. #id) False
+      void . dbUpdate $ SetUserUserGroup (user ^. #id) (newug ^. #id)
       let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- view #id <$> (dbUpdate $ FolderCreate newhomefdr)
-      void $ dbUpdate $ SetUserHomeFolder (user ^. #id) newhomefdrid
-      void $ dbUpdate $ RemoveUserGroupInvite [ugid] (user ^. #id)
+      newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
+      void . dbUpdate $ SetUserHomeFolder (user ^. #id) newhomefdrid
+      void . dbUpdate $ RemoveUserGroupInvite [ugid] (user ^. #id)
       -- if we are inviting a user with a plan to join the company, we
       -- should delete their personal plan
       flashmessage <- flashMessageUserHasBecomeCompanyAccount newug

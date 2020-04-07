@@ -70,8 +70,7 @@ renderFromBodyWithFields :: Kontrakcja m => Text -> Fields m () -> m Response
 renderFromBodyWithFields content fields = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  res <- simpleHtmlResponse =<< pageFromBody ctx ad content fields
-  return res
+  simpleHtmlResponse =<< pageFromBody ctx ad content fields
 
 
 {- |
@@ -83,7 +82,7 @@ pageFromBody ctx ad bodytext fields = do
   renderTextTemplate "wholePage" $ do
     F.value "content" bodytext
     standardPageFields ctx mugidandui ad
-    F.valueM "httplink" $ getHttpHostpart
+    F.valueM "httplink" getHttpHostpart
     fields
 
 userGroupWithParentsForPage :: Kontrakcja m => m (Maybe UserGroupWithParents)
@@ -91,7 +90,7 @@ userGroupWithParentsForPage = do
   ctx <- getContext
   case ctx ^. #maybeUser of
     Nothing   -> return Nothing
-    Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (user ^. #id)
+    Just user -> fmap Just . dbQuery $ UserGroupGetWithParentsByUserID (user ^. #id)
 
 userGroupUIForPage :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
@@ -135,7 +134,7 @@ pageWhereLanguageCanBeInUrl handler = do
   request :: Request <- askRq
   let requestPaths :: [Text]    = T.pack <$> rqPaths request
       languages :: [Maybe Lang] = langFromCode <$> requestPaths
-  case (languages) of
+  case languages of
     (Just lang : _) -> switchLang lang >> handler
     _               -> handler
 
@@ -149,7 +148,7 @@ enableCookiesPage = do
   rq <- askRq
   let cookies  = rqCookies rq
       headers  = rqHeaders rq
-      hostname = T.pack $ fst $ rqPeer rq
+      hostname = T.pack . fst $ rqPeer rq
       ua       = case Map.lookup "user-agent" headers of
         Just (HeaderPair _ (x : _)) -> TE.decodeUtf8 x
         _ -> "<unknown>"
@@ -197,14 +196,14 @@ standardPageFields
   -> AnalyticsData
   -> Fields m ()
 standardPageFields ctx mugidandui ad = do
-  F.value "langcode" $ codeFromLang $ ctx ^. #lang
+  F.value "langcode" . codeFromLang $ ctx ^. #lang
   F.value "logged" $ isJust (ctx ^. #maybeUser)
   F.value "padlogged" $ isJust (ctx ^. #maybePadUser)
   F.value "hostpart" $ ctx ^. #brandedDomain % #url
   F.value "production" (ctx ^. #production)
   F.value "brandingdomainid" (show $ ctx ^. #brandedDomain % #id)
   F.value "brandinguserid" (show <$> contextUser ctx ^? _Just % #id)
-  F.value "ctxlang" $ codeFromLang $ ctx ^. #lang
+  F.value "ctxlang" . codeFromLang $ ctx ^. #lang
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (ctx ^. #trackJsToken)
   F.value "zendeskkey" (ctx ^. #zendeskKey)
@@ -220,7 +219,7 @@ standardPageFields ctx mugidandui ad = do
   F.value "title"
     $ case emptyToNothing . trim . T.unpack =<< view #browserTitle . snd =<< mugidandui of
         Just ctitle ->
-          ctitle <> " - " <> (T.unpack $ ctx ^. #brandedDomain % #browserTitle)
+          ctitle <> " - " <> T.unpack (ctx ^. #brandedDomain % #browserTitle)
         Nothing -> T.unpack (ctx ^. #brandedDomain % #browserTitle)
   entryPointFields ctx
 
@@ -235,7 +234,7 @@ simpleAesonResponse = ok . toResponseBS jsonContentType . A.encode . A.toJSON
 
 simpleUnjsonResponse :: (FilterMonad Response m) => UnjsonDef a -> a -> m Response
 simpleUnjsonResponse unjson a =
-  ok $ toResponseBS jsonContentType $ unjsonToByteStringLazy'
+  ok . toResponseBS jsonContentType $ unjsonToByteStringLazy'
     (Options { pretty = True, indent = 2, nulls = True })
     unjson
     a
@@ -245,17 +244,13 @@ simpleUnjsonResponse unjson a =
 -}
 simpleHtmlResponse :: FilterMonad Response m => Text -> m Response
 simpleHtmlResponse s =
-  ok
-    $ toResponseBS (BS.fromString "text/html;charset=utf-8")
-    $ BSL.fromStrict
-    $ TE.encodeUtf8 s
+  ok . toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromStrict
+    (TE.encodeUtf8 s)
 
 simpleXMLResponse :: FilterMonad Response m => Text -> m Response
 simpleXMLResponse s =
-  ok
-    $ toResponseBS (BS.fromString "application/xml;charset=utf-8")
-    $ BSL.fromStrict
-    $ TE.encodeUtf8 s
+  ok . toResponseBS (BS.fromString "application/xml;charset=utf-8") $ BSL.fromStrict
+    (TE.encodeUtf8 s)
 
 respondWithPDF :: Bool -> BS.ByteString -> Response
 respondWithPDF = respondWithDownloadContents "application/pdf"
@@ -266,7 +261,7 @@ respondWithZipFile = respondWithDownloadContents "application/zip"
 respondWithDownloadContents :: BS.ByteString -> Bool -> BS.ByteString -> Response
 respondWithDownloadContents mimeType forceDownload contents =
   setHeaderBS "Content-Type" mimeType
-    $ (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else identity)
+    . (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else identity)
     $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 {- |
@@ -276,4 +271,4 @@ respondWithDownloadContents mimeType forceDownload contents =
 entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx = do
   F.value "cdnbaseurl" (ctx ^. #cdnBaseUrl)
-  F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
+  F.value "versioncode" . BS.toString $ B16.encode (BS.fromString versionID)

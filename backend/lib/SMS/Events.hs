@@ -63,7 +63,7 @@ processEvents = do
         Nothing -> do
           logInfo "Proccessing event without document info"
             $ object [identifier eid, identifier smsid, "event_type" .= show eventType]
-          void $ dbUpdate $ MarkSMSEventAsRead eid
+          void . dbUpdate $ MarkSMSEventAsRead eid
         Just kifsms -> do
           logInfo "Messages.procesEvent: logging info"
             $ object [identifier eid, identifier smsid, "event_type" .= show eventType]
@@ -76,7 +76,7 @@ processEvents = do
       case docs of
         [] -> do
           logInfo "SMS event for purged/non-existing document" $ object [identifier slid]
-          void $ dbUpdate $ MarkSMSEventAsRead eid
+          void . dbUpdate $ MarkSMSEventAsRead eid
         (doc' : _) -> do
           exists <- dbQuery
             $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor (documentid doc')
@@ -84,14 +84,14 @@ processEvents = do
             then do
               logInfo "SMS event for purged/non-existing document"
                 $ object [identifier slid, logPair_ doc']
-              void $ dbUpdate $ MarkSMSEventAsRead eid
+              void . dbUpdate $ MarkSMSEventAsRead eid
             else withDocument doc' $ do
-              void $ dbUpdate $ MarkSMSEventAsRead eid
+              void . dbUpdate $ MarkSMSEventAsRead eid
               msl <- getSigLinkFor slid <$> theDocument
               let signphone = maybe "" getMobile msl
               templates <- asks ceTemplates
               bd        <- (maybesignatory <=< getAuthorSigLink) <$> theDocument >>= \case
-                Nothing  -> dbQuery $ GetMainBrandedDomain
+                Nothing  -> dbQuery GetMainBrandedDomain
                 Just uid -> dbQuery $ GetBrandedDomainByUserID uid
               let host = bd ^. #url
                   -- since when email is reported deferred author has a possibility to
@@ -114,7 +114,7 @@ processEvents = do
 
     processEvent (eid, _, eventType, DocumentPinSendoutSMS _did slid, smsOrigMsisdn) =
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
-        void $ dbUpdate $ MarkSMSEventAsRead eid
+        void . dbUpdate $ MarkSMSEventAsRead eid
         templates <- asks ceTemplates
         msl       <- getSigLinkFor slid <$> theDocument
         case (eventType, msl) of
@@ -124,16 +124,16 @@ processEvents = do
                 $ object ["recipient" .= phone, "sms_original_phone" .= smsOrigMsisdn]
               time <- currentTime
               let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
-              void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+              void . dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 SMSPinDeliveredEvidence
                 (return ())
                 (Just sl)
                 (Just smsOrigMsisdn)
-                (actor)
+                actor
           _ -> return ()
     processEvent (eid, _, eventType, OtherDocumentSMS did, smsOrigMsisdn) =
       withDocumentID did $ do
-        void $ dbUpdate $ MarkSMSEventAsRead eid
+        void . dbUpdate $ MarkSMSEventAsRead eid
         case eventType of
           SMSEvent phone SMSDelivered ->
             logInfo "SMS delivered"
@@ -143,9 +143,7 @@ processEvents = do
                   , "sms_original_phone" .= smsOrigMsisdn
                   ]
           _ -> return ()
-    processEvent (eid, _, _, _, _) = do
-      void $ dbUpdate $ MarkSMSEventAsRead eid
-      return ()
+    processEvent (eid, _, _, _, _) = void . dbUpdate $ MarkSMSEventAsRead eid
 
 handleDeliveredInvitation
   :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m)
@@ -158,8 +156,7 @@ handleDeliveredInvitation signlinkid = logSignatory signlinkid $ do
       time <- currentTime
       let actor =
             mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
-      void $ dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Delivered actor
-      return ()
+      void . dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Delivered actor
     Nothing -> return ()
 
 handleUndeliveredSMSInvitation
@@ -188,11 +185,11 @@ handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid =
                                     (maybesignatory signlink)
                                     (getEmail signlink)
                                     signlinkid
-          void $ dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
+          void . dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
           mail <- theDocument
             >>= \d -> smsUndeliveredInvitation mailNoreplyAddress bd hostpart d signlink
           theDocument >>= \d -> scheduleEmailSendout
-            $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink d] }
+            $ mail { to = [getMailAddress . fromJust $ getAuthorSigLink d] }
           triggerAPICallbackIfThereIsOne =<< theDocument
       Nothing -> return ()
   where
@@ -212,13 +209,13 @@ smsUndeliveredInvitation
   -> SignatoryLink
   -> m Mail
 smsUndeliveredInvitation mailNoreplyAddress bd hostpart doc signlink = do
-  theme <- dbQuery $ GetTheme $ bd ^. #mailTheme
+  theme <- dbQuery . GetTheme $ bd ^. #mailTheme
   kontramail mailNoreplyAddress bd theme "invitationSMSUndelivered" $ do
-    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "authorname" . getFullName $ fromJust (getAuthorSigLink doc)
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink
     F.value "mobile" $ getMobile signlink
-    F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
+    F.value "unsigneddoclink" . show $ LinkIssueDoc (documentid doc)
     F.value "ctxhostpart" hostpart
     brandingMailFields theme

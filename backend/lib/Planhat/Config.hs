@@ -12,8 +12,8 @@ data PlanhatConf = PlanhatConf
 unjsonPlanhatConf :: UnjsonDef PlanhatConf
 unjsonPlanhatConf =
   objectOf
-    $   pure PlanhatConf
-    <*> field "base_url"  planhatBaseURL  "Planhat API endpoint"
+    $   PlanhatConf
+    <$> field "base_url"  planhatBaseURL  "Planhat API endpoint"
     <*> field "tenant_id" planhatTenantID "Planhat tenant ID"
 
 instance Unjson PlanhatConf where

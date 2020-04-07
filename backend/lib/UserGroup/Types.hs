@@ -168,8 +168,8 @@ ugFromUGRoot ugr = UserGroup { id            = ugr ^. #id
 -- USER GROUP WITH PARENTS
 
 ugwpOnlyParents :: UserGroupWithParents -> Maybe UserGroupWithParents
-ugwpOnlyParents (_   , []                ) = Nothing -- root is leaf, nothing would be left
-ugwpOnlyParents (root, (_ : parents_tail)) = Just (root, parents_tail)
+ugwpOnlyParents (_   , []              ) = Nothing -- root is leaf, nothing would be left
+ugwpOnlyParents (root, _ : parents_tail) = Just (root, parents_tail)
 
 ugwpInherit
   :: (UserGroupRoot -> a)
@@ -179,8 +179,7 @@ ugwpInherit
 ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
   fromMaybe (ug_root ^. #id, ugrProperty ug_root)
     . listToMaybe
-    . catMaybes
-    . map (makeIDPropertyTuple)
+    . mapMaybe makeIDPropertyTuple
     $ ug_children_path
   where
     makeIDPropertyTuple ug = case ugProperty ug of
@@ -221,8 +220,8 @@ ugwpToList :: UserGroupWithParents -> [UserGroup]
 ugwpToList (ug_root, ug_children_path) = ug_children_path ++ [ugFromUGRoot ug_root]
 
 ugwpUG :: UserGroupWithParents -> UserGroup
-ugwpUG (root, []      ) = ugFromUGRoot root
-ugwpUG (_   , (ug : _)) = ug
+ugwpUG (root, []    ) = ugFromUGRoot root
+ugwpUG (_   , ug : _) = ug
 
 ugwpRoot :: UserGroupWithParents -> UserGroup
 ugwpRoot (root, _) = ugFromUGRoot root

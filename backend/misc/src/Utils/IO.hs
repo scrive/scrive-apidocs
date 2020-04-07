@@ -27,11 +27,10 @@ waitForTermination = do
   void $ installHandler softwareTermination (CatchOnce (putMVar mv ())) Nothing
   when istty $ do
     void $ installHandler keyboardSignal (CatchOnce (putMVar mv ())) Nothing
-    return ()
   takeMVar mv
 
-curl_exe :: String
-curl_exe = "curl"
+curlExe :: String
+curlExe = "curl"
 
 -- | This function executes curl as external program. Args are args.
 readCurl
@@ -40,7 +39,7 @@ readCurl
   -> BSL.ByteString           -- ^ standard input
   -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
 readCurl args input = liftBase
-  $ readProcessWithExitCode curl_exe (["--max-time", "60", "-s", "-S"] ++ args) input
+  $ readProcessWithExitCode curlExe (["--max-time", "60", "-s", "-S"] ++ args) input
 
 checkExecutables :: forall  m . (MonadLog m, MonadBase IO m, Functor m) => m ()
 checkExecutables =
@@ -69,13 +68,13 @@ checkExecutables =
     logFullPathAndVersion :: (Text, [String], FilePath) -> m Aeson.Pair
     logFullPathAndVersion (name, options, fullpath) | null options =
       return $ name .= fullpath
-    logFullPathAndVersion (name, options, fullpath) | otherwise = do
+    logFullPathAndVersion (name, options, fullpath) = do
       ver <- liftBase $ readExecutableVersion fullpath options
       return $ name .= (fullpath : lines ver)
 
     readExecutableVersion :: FilePath -> [String] -> IO String
     readExecutableVersion path options = do
-      (_code', stdout', stderr') <- readProcessWithExitCode path options (BSL.empty)
+      (_code', stdout', stderr') <- readProcessWithExitCode path options BSL.empty
       return $ BSL.toString stdout' ++ BSL.toString stderr'
 
     importantExecutables :: [(Text, [String])]

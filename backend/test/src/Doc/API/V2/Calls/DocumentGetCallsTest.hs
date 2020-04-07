@@ -42,36 +42,36 @@ import Util.Actor
 import Util.QRCode
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
-apiV2DocumentGetCallsTests env =
-  testGroup "APIv2DocumentGetCalls"
-    $ [ testThat "API v2 List: old style"       env (testDocApiV2List False)
-      , testThat "API v2 List: new style"       env (testDocApiV2List True)
-      , testThat "API v2 Get"                   env testDocApiV2Get
-      , testThat "API v2 Get by shortcode"      env testDocApiV2GetShortCode
-      , testThat "API v2 Get QR code"           env testDocApiV2GetQRCode
-      , testThat "API v2 Get by Company Admin"  env testDocApiV2GetByAdmin
-      , testThat "API v2 Get for Shared doc"    env testDocApiV2GetShared
-      , testThat "API v2 History"               env testDocApiV2History
-      , testThat "API v2 History (permissions)" env testDocApiV2HistoryPermissionCheck
-      , testThat "API v2 Evidence attachments"  env testDocApiV2EvidenceAttachments
-      , testThat "API v2 Files - Main"          env testDocApiV2FilesMain
-      , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
-      , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
-      , testThat "API v2 Files - Full"          env testDocApiV2FilesFull
-      , testThat "API v2 Folder listing works with subfolders" env testDocApiV2FolderList
+apiV2DocumentGetCallsTests env = testGroup
+  "APIv2DocumentGetCalls"
+  [ testThat "API v2 List: old style"       env (testDocApiV2List False)
+  , testThat "API v2 List: new style"       env (testDocApiV2List True)
+  , testThat "API v2 Get"                   env testDocApiV2Get
+  , testThat "API v2 Get by shortcode"      env testDocApiV2GetShortCode
+  , testThat "API v2 Get QR code"           env testDocApiV2GetQRCode
+  , testThat "API v2 Get by Company Admin"  env testDocApiV2GetByAdmin
+  , testThat "API v2 Get for Shared doc"    env testDocApiV2GetShared
+  , testThat "API v2 History"               env testDocApiV2History
+  , testThat "API v2 History (permissions)" env testDocApiV2HistoryPermissionCheck
+  , testThat "API v2 Evidence attachments"  env testDocApiV2EvidenceAttachments
+  , testThat "API v2 Files - Main"          env testDocApiV2FilesMain
+  , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
+  , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
+  , testThat "API v2 Files - Full"          env testDocApiV2FilesFull
+  , testThat "API v2 Folder listing works with subfolders" env testDocApiV2FolderList
 --  , testThat "API v2 Get - Not after 30 days for signatories" env testDocApiV2GetFailsAfter30Days
-      ]
+  ]
 
 testDocApiV2List :: Bool -> TestEnv ()
 testDocApiV2List useFolderListCalls = do
   user      <- instantiateRandomUser
-  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- mkContextWithUser defaultLang user
 
   -- test with new list feature as well as old
   (Just ug) <- dbQuery . UserGroupGet $ user ^. #groupID
   let new_ugsettings =
         set #useFolderListCalls useFolderListCalls (fromJust $ ug ^. #settings)
-  void $ dbUpdate . UserGroupUpdate $ set #settings (Just new_ugsettings) ug
+  void . dbUpdate . UserGroupUpdate $ set #settings (Just new_ugsettings) ug
 
   doc1 <- testDocApiV2New' ctx
   void $ testDocApiV2New' ctx
@@ -89,7 +89,7 @@ testDocApiV2List useFolderListCalls = do
   void $ testDocApiV2Update' ctx movedDoc1
   listJSON2 <- jsonTestRequestHelper ctx
                                      GET
-                                     [filterByFolderID $ homeFolderID]
+                                     [filterByFolderID homeFolderID]
                                      docApiV2List
                                      200
   assertListResponseLengthAndStatus listJSON2 3 Preparation
@@ -113,13 +113,13 @@ testDocApiV2List useFolderListCalls = do
       assertEqual "`docApiV2List` should return same number of docs"
                   len
                   (length listArray)
-      let docs = map mockDocFromValue $ listArray
+      let docs = map mockDocFromValue listArray
       forM_ docs $ \d -> assertEqual "Status should be" status (getMockDocStatus d)
 
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do
   user       <- instantiateRandomUser
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -156,15 +156,13 @@ _testDocApiV2GetFailsAfter30Days = do
   void $ testRequestHelper ctxWithin30Days GET vars (docApiV2Get (documentid doc)) 200
   void $ testRequestHelper ctxAfter30Days GET vars (docApiV2Get (documentid doc)) 410
 
-  return ()
-
 mockDocToShortID :: MockDoc -> DocumentID
-mockDocToShortID md = read $ T.pack $ reverse $ take 6 $ reverse $ show (getMockDocId md)
+mockDocToShortID md = read . T.pack $ reverse (take 6 . reverse $ show (getMockDocId md))
 
 testDocApiV2GetShortCode :: TestEnv ()
 testDocApiV2GetShortCode = do
   user       <- instantiateRandomUser
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2StartNew ctx
   let shortDid = mockDocToShortID newMockDoc
 
@@ -206,8 +204,8 @@ testDocApiV2GetShortCode = do
 testMallory :: Request -> TestKontra Response -> TestEnv ()
 testMallory getRequest req = do
   mallory         <- instantiateRandomUser
-  ctxMallory      <- (set #maybeUser (Just mallory)) <$> mkContext defaultLang
-  (resMallory, _) <- runTestKontra getRequest ctxMallory $ req
+  ctxMallory      <- mkContextWithUser defaultLang mallory
+  (resMallory, _) <- runTestKontra getRequest ctxMallory req
   assertEqual "We should get a 403 response for someone else's document"
               403
               (rsCode resMallory)
@@ -215,7 +213,7 @@ testMallory getRequest req = do
 testDocApiV2GetQRCode :: TestEnv ()
 testDocApiV2GetQRCode = do
   user       <- instantiateRandomUser
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   newMockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId newMockDoc
       slid = getMockDocSigLinkId 1 newMockDoc
@@ -230,10 +228,10 @@ testDocApiV2GetQRCode = do
       , "localhost:8000"
       ]
     $ \domain -> do
-        let ctx' = set (#brandedDomain % #url) domain $ ctx
+        let ctx' = set (#brandedDomain % #url) domain ctx
         getQRCode <- testRequestHelper ctx' GET [] (docApiV2GetQRCode did slid) 200
         getURL    <- liftIO $ decodeQRBSL getQRCode
-        logInfo_ $ "Decoded QR code: " <> (T.pack getURL)
+        logInfo_ $ "Decoded QR code: " <> T.pack getURL
         let (urlScheme, rest   ) = splitAt 9 getURL
             (server   , rest'  ) = span (/= '/') rest
             (docID    , rest'' ) = span (/= '/') $ drop 3 rest'
@@ -277,12 +275,12 @@ testDocApiV2GetByAdmin = do
   ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  ctxauthor <- (set #maybeUser (Just author)) <$> mkContext defaultLang
+  ctxauthor <- mkContextWithUser defaultLang author
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   admin     <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return ugid }
-  ctx        <- (set #maybeUser (Just admin)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang admin
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
               "company_admin"
@@ -293,7 +291,7 @@ testDocApiV2GetShared = do
   ug <- instantiateRandomUserGroup
   let ugid = ug ^. #id
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  ctxauthor <- (set #maybeUser (Just author)) <$> mkContext defaultLang
+  ctxauthor <- mkContextWithUser defaultLang author
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   void $ mockDocTestRequestHelper ctxauthor
@@ -306,7 +304,7 @@ testDocApiV2GetShared = do
   assert setshare
 
   user       <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- mkContextWithUser defaultLang user
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
               "company_shared"
@@ -317,7 +315,7 @@ testDocApiV2GetShared = do
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
   let checkHistoryHasNItems :: Int -> TestEnv ()
@@ -338,20 +336,18 @@ testDocApiV2HistoryPermissionCheck :: TestEnv ()
 testDocApiV2HistoryPermissionCheck = do
   userAuthor       <- instantiateRandomUser
   userOther        <- instantiateRandomUser
-  ctxWithAuthor    <- (set #maybeUser (Just userAuthor)) <$> mkContext defaultLang
-  ctxWithOtherUser <- (set #maybeUser (Just userOther)) <$> mkContext defaultLang
+  ctxWithAuthor    <- mkContextWithUser defaultLang userAuthor
+  ctxWithOtherUser <- mkContextWithUser defaultLang userOther
 
   did              <- getMockDocId <$> testDocApiV2New' ctxWithAuthor
 
   void $ jsonTestRequestHelper ctxWithAuthor GET [] (docApiV2History did) 200
   void $ jsonTestRequestHelper ctxWithOtherUser GET [] (docApiV2History did) 403
-  return ()
-
 
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
   user    <- instantiateRandomUser
-  ctx     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -385,7 +381,7 @@ testDocApiV2EvidenceAttachments = do
 testDocApiV2FilesMain :: TestEnv ()
 testDocApiV2FilesMain = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -410,7 +406,7 @@ testDocApiV2FilesMain = do
 testDocApiV2FilesPages :: TestEnv ()
 testDocApiV2FilesPages = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
       fid = getMockDocFileId doc
@@ -422,12 +418,12 @@ testDocApiV2FilesPages = do
     -- GET the last page image
   req2      <- mkRequest GET [("pixelwidth", inText "200")]
   (rsp2, _) <- runTestKontra req2 ctx $ docApiV2FilesPage did fid pagecount
-  assertEqual ("Successful `docApiV2FilesPage` response code") 200 (rsCode rsp2)
+  assertEqual "Successful `docApiV2FilesPage` response code" 200 (rsCode rsp2)
 
 testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do
   user <- instantiateRandomUser
-  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- mkContextWithUser defaultLang user
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -436,7 +432,7 @@ testDocApiV2FilesGet = do
     POST
     [ ( "attachments"
       , inText
-        $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"afile\"}]"
+        "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"afile\"}]"
       )
     , ("afile", inFile $ inTestDir "pdfs/simple-rotate-90.pdf")
     ]
@@ -467,7 +463,7 @@ testDocApiV2FilesFull :: TestEnv ()
 testDocApiV2FilesFull = do
   now     <- currentTime
   user    <- instantiateRandomUser
-  ctx     <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   req     <- mkRequest GET []
 
   initDoc <- addRandomDocument (rdaDefault user)
@@ -519,7 +515,7 @@ testDocApiV2FilesFull = do
     let [sl1, sl2] = documentsignatorylinks initDoc
         sl2'       = sl2 { signatoryattachments = [att] }
         sls        = [sl1, sl2']
-    withDocumentID did $ randomUpdate $ ResetSignatoryDetails sls $ systemActor now
+    withDocumentID did . randomUpdate $ ResetSignatoryDetails sls (systemActor now)
 
   doc <- randomQuery $ GetDocumentByDocumentID did
 
@@ -551,7 +547,7 @@ testDocApiV2FilesFull = do
     assertBool "Has sig_att.pdf" $ "sig_att.pdf" `elem` map fst files
 
   -- Close the document.
-  withDocumentID did $ randomUpdate $ CloseDocument (systemActor now)
+  withDocumentID did . randomUpdate $ CloseDocument (systemActor now)
   void $ testRequestHelper ctx POST [] (docApiV2FilesFull did) 503
 
   -- Seal the document.
@@ -570,11 +566,12 @@ testDocApiV2FolderList = do
   adminB <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }
   let setUseFolderListCall = #settings % _Just % #useFolderListCalls .~ True
   ugA <- setUseFolderListCall <$> (dbQuery . UserGroupGetByUserID $ adminA ^. #id)
-  void $ dbUpdate $ UserGroupUpdate ugA
+  void . dbUpdate $ UserGroupUpdate ugA
 
   ugB <-
-    (setUseFolderListCall . (#parentGroupID .~ (Just $ ugA ^. #id)))
-      <$> (dbQuery . UserGroupGetByUserID $ adminB ^. #id)
+    setUseFolderListCall
+    .   (#parentGroupID ?~ (ugA ^. #id))
+    <$> (dbQuery . UserGroupGetByUserID $ adminB ^. #id)
   void . dbUpdate $ UserGroupUpdate ugB
   userB          <- instantiateUser $ randomUserTemplate { groupID = return $ ugB ^. #id }
   --  UG-A                |  F-A
@@ -595,9 +592,9 @@ testDocApiV2FolderList = do
   --  UG-B ------         |  F-B --------
   --   |         \        |   |          \
   --  userB       adminB  |  F-userB     F-adminB
-  ctxAdminA <- (set #maybeUser $ Just adminA) <$> mkContext defaultLang
-  ctxAdminB <- (set #maybeUser $ Just adminB) <$> mkContext defaultLang
-  ctxUserB  <- (set #maybeUser $ Just userB) <$> mkContext defaultLang
+  ctxAdminA <- mkContextWithUser defaultLang adminA
+  ctxAdminB <- mkContextWithUser defaultLang adminB
+  ctxUserB  <- mkContextWithUser defaultLang userB
 
   void $ testDocApiV2New' ctxUserB     -- creates draft
   void $ testDocApiV2New' ctxUserB     -- creates draft
@@ -613,7 +610,7 @@ testDocApiV2FolderList = do
   listJSONUserB  <- jsonTestRequestHelper ctxUserB GET [] docApiV2List 200
   listArrayUserB <- lookupObjectArray "documents" listJSONUserB
 
-  logInfo_ . showt $ (length listArrayA, length listArrayB, length listArrayUserB)
+  logInfo_ $ showt (length listArrayA, length listArrayB, length listArrayUserB)
 
   assertEqual
     "`docApiV2List` should return same number of docs using folder list calls (1)"

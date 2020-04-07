@@ -38,15 +38,13 @@ localizationTest _env = testGroup
 testTranslationFilesAreJSONSAndSorted :: Assertion
 testTranslationFilesAreJSONSAndSorted = do
   forM_ (allValues :: [Lang]) $ \l -> do
-    mjson1 <- readFile $ "texts/" <> (T.unpack $ codeFromLang l) <> "/texts.json"
-    mjson2 <- readFile $ "texts/" <> (T.unpack $ codeFromLang l) <> "/events.json"
-    mjson3 <- readFile $ "texts/" <> (T.unpack $ codeFromLang l) <> "/signview.json"
+    mjson1 <- readFile $ "texts/" <> T.unpack (codeFromLang l) <> "/texts.json"
+    mjson2 <- readFile $ "texts/" <> T.unpack (codeFromLang l) <> "/events.json"
+    mjson3 <- readFile $ "texts/" <> T.unpack (codeFromLang l) <> "/signview.json"
     case (decode mjson1, decode mjson2, decode mjson3) of
       (Ok js1, Ok js2, Ok js3) -> isSorted js1 >> isSorted js2 >> isSorted js3
-      _ ->
-        assertFailure
-          $  "Translation file is not a valid JSON for lang "
-          <> (T.unpack $ codeFromLang l)
+      _ -> assertFailure $ "Translation file is not a valid JSON for lang " <> T.unpack
+        (codeFromLang l)
 
 
 isSorted :: JSValue -> Assertion
@@ -55,8 +53,8 @@ isSorted (JSObject jso) =
       (  "Translation JSONs are not sorted. "
       <> "Use './shake.sh transifex-fix' to fix this."
       )
-    $  (map fst $ fromJSObject jso)
-    == (sort (map fst $ fromJSObject jso))
+    $  map fst (fromJSObject jso)
+    == sort (map fst $ fromJSObject jso)
 isSorted _ = assertFailure "Illegal structures in translation file for lang"
 
 
@@ -65,11 +63,11 @@ testTranslationsHaveSameStructure = do
   templates <- getTextTemplates "texts"
   let sourceTemplates = sort $ templates ! "en"
   lErrors <- forM (allValues :: [Lang]) $ \l -> do
-    let translationTemplates = sort $ templates ! (T.unpack $ codeFromLang l)
+    let translationTemplates = sort $ templates ! T.unpack (codeFromLang l)
     let errors               = catMaybes $ checkTexts sourceTemplates translationTemplates
     case errors of
       []   -> return Nothing
-      errs -> return $ Just $ "For lang " <> show (codeFromLang l) <> "\n" <> concat errs
+      errs -> return . Just $ "For lang " <> show (codeFromLang l) <> "\n" <> concat errs
   case catMaybes lErrors of
     [] -> return ()
     lErrs ->
@@ -81,24 +79,24 @@ checkTexts :: [(String, String)] -> [(String, String)] -> [Maybe String]
 checkTexts _  [] = []
 checkTexts [] _  = []
 checkTexts src@((sn, sv) : ss) tar@((tn, tv) : tt)
-  | (sn < tn)
+  | sn < tn
   = checkTexts ss tar
-  | (sn > tn)
+  | sn > tn
   = checkTexts src tt
-  | (trim tv == "")
+  | trim tv == ""
   = checkTexts ss tt
   | otherwise
   = ((\s -> "In " <> tn <> " " <> s <> "\n") <$> compareTranslations sv tv)
-    : (checkTexts ss tt)
+    : checkTexts ss tt
 
 
 compareTranslations :: String -> String -> Maybe String
 compareTranslations s t =
-  let (Nothing, msv, mst) = checkTemplate $ (newSTMP s :: StringTemplate String)
-      (Nothing, mtv, mtt) = checkTemplate $ (newSTMP t :: StringTemplate String)
-  in  if ((sort <$> msv) /= (sort <$> mtv))
+  let (Nothing, msv, mst) = checkTemplate (newSTMP s :: StringTemplate String)
+      (Nothing, mtv, mtt) = checkTemplate (newSTMP t :: StringTemplate String)
+  in  if (sort <$> msv) /= (sort <$> mtv)
         then Just $ "Variables dont match : " <> show msv <> " vs." <> show mtv
-        else if ((sort <$> mst) /= (sort <$> mtt))
+        else if (sort <$> mst) /= (sort <$> mtt)
           then Just $ "Subtemplates dont match : " <> show mst <> " vs." <> show mtt
           else Nothing
 
@@ -108,7 +106,7 @@ testTranslationsHaveSameHtmlStructure = do
   templates <- getTextTemplates "texts"
   let sourceTemplates = sort $ templates ! "en"
   lErrors <- forM (allValues :: [Lang]) $ \l -> do
-    let translationTemplates = sort $ templates ! (T.unpack $ codeFromLang l)
+    let translationTemplates = sort $ templates ! T.unpack (codeFromLang l)
     let errors = catMaybes $ checkHtmlStructureTexts sourceTemplates translationTemplates
     case errors of
       []   -> return Nothing
@@ -124,15 +122,15 @@ checkHtmlStructureTexts :: [(String, String)] -> [(String, String)] -> [Maybe St
 checkHtmlStructureTexts _  [] = []
 checkHtmlStructureTexts [] _  = []
 checkHtmlStructureTexts src@((sn, sv) : ss) tar@((tn, tv) : tt)
-  | (sn < tn)
+  | sn < tn
   = checkHtmlStructureTexts ss tar
-  | (sn > tn)
+  | sn > tn
   = checkHtmlStructureTexts src tt
-  | (trim tv == "")
+  | trim tv == ""
   = checkHtmlStructureTexts ss tt
   | otherwise
   = ((\s -> "In " <> tn <> " " <> s <> "\n") <$> compareHTMLStructure sv tv)
-    : (checkHtmlStructureTexts ss tt)
+    : checkHtmlStructureTexts ss tt
 
 
 compareHTMLStructure :: String -> String -> Maybe String
@@ -156,25 +154,24 @@ parseStringAsXML rawtxt =
         fixup = replace "& " "&amp; "
 
 matchElement :: XML.Element -> XML.Element -> Maybe String
-matchElement (Element n1 a1 c1) (Element n2 a2 c2) = if (n1 /= n2)
-  then Just $ "Can't match " <> show n1 <> " with " <> show n2
-  else if (not $ matchAttributes a1 a2)
-    then Just $ "Can't match attributes for " <> show (n1, a1) <> " with " <> show
-      (n2, a2)
-    else matchContent (sort c1) (sort c2)
+matchElement (Element n1 a1 c1) (Element n2 a2 c2)
+  | n1 /= n2
+  = Just $ "Can't match " <> show n1 <> " with " <> show n2
+  | not $ matchAttributes a1 a2
+  = Just $ "Can't match attributes for " <> show (n1, a1) <> " with " <> show (n2, a2)
+  | otherwise
+  = matchContent (sort c1) (sort c2)
 
 matchAttributes :: Map XML.Name Text -> Map XML.Name Text -> Bool
 matchAttributes attrs1 attrs2 = attrs1 == attrs2
 
 matchContent :: [XML.Node] -> [XML.Node] -> Maybe String
 matchContent ((NodeElement e1) : e1s) ((NodeElement e2) : e2s) =
-  (matchElement e1 e2) `mplus` (matchContent e1s e2s)
-matchContent ((NodeElement e1) : e1s) (_ : e2s) =
-  matchContent ((NodeElement e1) : e1s) e2s
+  matchElement e1 e2 `mplus` matchContent e1s e2s
+matchContent ((NodeElement e1) : e1s) (_ : e2s) = matchContent (NodeElement e1 : e1s) e2s
 matchContent ((NodeElement (Element n1 _ _)) : _) [] =
   Just $ "Can match " <> show (XML.nameLocalName n1) <> " from source"
-matchContent (_ : e1s) ((NodeElement e2) : e2s) =
-  matchContent e1s ((NodeElement e2) : e2s)
+matchContent (_ : e1s) ((NodeElement e2) : e2s) = matchContent e1s (NodeElement e2 : e2s)
 matchContent [] ((NodeElement (Element n2 _ _)) : _) =
   Just $ "Can match " <> show (XML.nameLocalName n2) <> " from translation"
 matchContent (_ : e1s) e2s       = matchContent e1s e2s
@@ -186,7 +183,7 @@ testTranslationsHaveSameEscapeSequences = do
   templates <- getTextTemplates "texts"
   let sourceTemplates = sort $ templates ! "en"
   lErrors <- forM (allValues :: [Lang]) $ \l -> do
-    let translationTemplates = sort $ templates ! (T.unpack $ codeFromLang l)
+    let translationTemplates = sort $ templates ! T.unpack (codeFromLang l)
     let cmpFunc :: String -> String -> Maybe String
         cmpFunc = case l of
           LANG_LT -> compareEscapeSequecesForLithuanian
@@ -194,9 +191,8 @@ testTranslationsHaveSameEscapeSequences = do
     let errors = catMaybes
           $ checkEscapeSequencesTexts cmpFunc sourceTemplates translationTemplates
     case errors of
-      [] -> return Nothing
-      errs ->
-        return $ Just $ "For lang " <> (show (codeFromLang l)) <> "\n" <> concat errs
+      []   -> return Nothing
+      errs -> return . Just $ "For lang " <> show (codeFromLang l) <> "\n" <> concat errs
   case catMaybes lErrors of
     [] -> return ()
     lErrs ->
@@ -212,34 +208,26 @@ checkEscapeSequencesTexts
 checkEscapeSequencesTexts _ _  [] = []
 checkEscapeSequencesTexts _ [] _  = []
 checkEscapeSequencesTexts cmp src@((sn, sv) : ss) tar@((tn, tv) : tt)
-  | (sn < tn)
+  | sn < tn
   = checkEscapeSequencesTexts cmp ss tar
-  | (sn > tn)
+  | sn > tn
   = checkEscapeSequencesTexts cmp src tt
-  | (trim tv == "")
+  | trim tv == ""
   = checkEscapeSequencesTexts cmp ss tt
   | otherwise
   = ((\s -> "In " <> tn <> " " <> s <> "\n") <$> cmp sv tv)
-    : (checkEscapeSequencesTexts cmp ss tt)
+    : checkEscapeSequencesTexts cmp ss tt
 
 -- We need to extend this one day with " and '
 compareEscapeSequeces :: String -> String -> Maybe String
 compareEscapeSequeces s t =
-  if (  countEscapes0 s
-     /= countEscapes0 t
-     || countEscapes1 s
-     /= countEscapes1 t
-     || countEscapes2 s
-     /= countEscapes2 t
-     || countEscapes3 s
-     /= countEscapes3 t
-     || countEOLs s
-     /= countEOLs t
-     || countGTs s
-     /= countGTs t
-     || countLTs s
-     /= countLTs t
-     )
+  if (countEscapes0 s /= countEscapes0 t)
+       || (countEscapes1 s /= countEscapes1 t)
+       || (countEscapes2 s /= countEscapes2 t)
+       || (countEscapes3 s /= countEscapes3 t)
+       || (countEOLs s /= countEOLs t)
+       || (countGTs s /= countGTs t)
+       || (countLTs s /= countLTs t)
     then Just "Escaped sequences don't match"
     else Nothing
 
@@ -249,26 +237,14 @@ compareEscapeSequeces s t =
 
 compareEscapeSequecesForLithuanian :: String -> String -> Maybe String
 compareEscapeSequecesForLithuanian s t =
-  if (  countEscapes0 s
-     >  countEscapes0 t
-     +  countLatvianExtraQuotes t
-     || countEscapes1 s
-     >  countEscapes1 t
-     +  countLatvianExtraQuotes t
-     || countEscapes2 s
-     >  countEscapes2 t
-     +  countLatvianExtraQuotes t
-     || countEscapes3 s
-     >  countEscapes3 t
-     +  countLatvianExtraQuotes t
-     || countEOLs s
-     /= countEOLs t
-     || countGTs s
-     /= countGTs t
-     || countLTs s
-     /= countLTs t
-     )
-    then Just $ "Escaped sequences don't match for Lithuania"
+  if (countEscapes0 s > countEscapes0 t + countLatvianExtraQuotes t)
+       || (countEscapes1 s > countEscapes1 t + countLatvianExtraQuotes t)
+       || (countEscapes2 s > countEscapes2 t + countLatvianExtraQuotes t)
+       || (countEscapes3 s > countEscapes3 t + countLatvianExtraQuotes t)
+       || (countEOLs s /= countEOLs t)
+       || (countGTs s /= countGTs t)
+       || (countLTs s /= countLTs t)
+    then Just "Escaped sequences don't match for Lithuania"
     else Nothing
 
 countEscapes0 :: String -> Int
@@ -296,4 +272,4 @@ countLTs :: String -> Int
 countLTs = count "<"
 
 count :: String -> String -> Int
-count p s = (length $ splitOn p s) - 1
+count p s = length (splitOn p s) - 1

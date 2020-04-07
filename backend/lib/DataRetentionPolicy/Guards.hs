@@ -25,11 +25,11 @@ guardThatDataRetentionPolicyIsValid drp mParentDRP = do
     let limit = fromMaybe 365 $ mParentDRP >>= view (drpIdleDocTimeout status)
     case drp ^. drpIdleDocTimeout status of
       Just value | value <= 0 || value > limit ->
-        apiError $ requestParameterInvalid param $ "must be between 1 and" <+> showt limit
+        apiError . requestParameterInvalid param $ "must be between 1 and" <+> showt limit
       _ -> return ()
 
   when
       ((view #immediateTrash <$> mParentDRP) == Just True && not (drp ^. #immediateTrash))
-    $ apiError
+    . apiError
     $ requestParameterInvalid "immediate_trash"
-    $ "must be selected as company has selected it"
+                              "must be selected as company has selected it"

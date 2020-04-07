@@ -23,6 +23,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Crypto.RNG
 import Data.Int
+import Data.Ord (Down(..))
 import Data.Time.Clock (addUTCTime, diffUTCTime)
 import Happstack.Server hiding (Session)
 import Log
@@ -47,7 +48,7 @@ import Utils.HTTP
 -- timeout set in the user's group
 getSessionTimeoutSecs :: forall  m . (MonadDB m, MonadThrow m) => UserID -> m Int32
 getSessionTimeoutSecs userId =
-  fmap (fromMaybe defaultSessionTimeoutSecs) (getMaybeSessionTimeoutSecs userId)
+  fromMaybe defaultSessionTimeoutSecs <$> getMaybeSessionTimeoutSecs userId
 
 -- | Get the session timeout from the user's user group settings
 getMaybeSessionTimeoutSecs
@@ -69,12 +70,14 @@ getMaybeDocumentSessionTimeoutSecs userId = do
   return $ ugwpSettings ugwp ^. #documentSessionTimeoutSecs
 
 -- | Get the session expiry delay used for extending the session's expiry date.
--- It's the user's custom session timeout or the document session timeout (whichever is longer).
+-- It's the user's custom session timeout or the document session timeout
+-- (whichever is longer).
+--
 -- Defaults to maxSessionExpirationDelaySecs if those custom values are not set.
 getSessionExpirationDelaySecs
   :: forall  m . (MonadDB m, MonadLog m, MonadThrow m) => Session -> m Int32
 getSessionExpirationDelaySecs session = do
-  mUserTimeout <- case (sesUserID session) `mplus` (sesPadUserID session) of
+  mUserTimeout <- case sesUserID session `mplus` sesPadUserID session of
     Nothing     -> return Nothing
     Just userId -> getMaybeSessionTimeoutSecs userId
 
@@ -87,15 +90,13 @@ getSessionExpirationDelaySecs session = do
   let combinedTimeouts =
         map (min maxSessionExpirationDelaySecs) $ maybeToList mUserTimeout ++ docTimeouts
 
-  -- Why multiple timeouts?
-  -- So we might have a case where a scrive user login session also includes a document token ...
-  -- or several document tokens. Or a situation where non-scrive user session includes multiple
-  -- document tokens. Now which session timeout should we choose?
-  -- We decided that we should choose the longest session timeout.
-  return $ case safeMax combinedTimeouts of
-    Nothing      -> maxSessionExpirationDelaySecs
-    Just timeout -> timeout
-  where safeMax = listToMaybe . reverse . sort
+  -- Why multiple timeouts? We might have a case where a scrive user login
+  -- session also includes a document token ...  or several document tokens. Or
+  -- a situation where non-scrive user session includes multiple document
+  -- tokens. Now which session timeout should we choose?  We decided that we
+  -- should choose the longest session timeout.
+  return . fromMaybe maxSessionExpirationDelaySecs $ safeMax combinedTimeouts
+  where safeMax = listToMaybe . sortOn Down
 
 -- Get the session expiry time for a user's new session relative
 -- to the current time
@@ -143,7 +144,7 @@ getNonTempSessionIDWithTimeout timeoutSecs = do
       sesDomain    <- currentDomain
       let sesExpires = secondsAfter timeoutSecs now
 
-      update . CreateSession $ Session
+      dbUpdate . CreateSession $ Session
         { sesID        = SessionID.tempSessionID
         , sesUserID    = Nothing
         , sesPadUserID = Nothing
@@ -204,8 +205,7 @@ startNewSessionWithUser userId = do
   deleteSuperfluousUserSessions userId
   expires <- getSessionExpiry userId
   let session1 = session { sesUserID = Just userId, sesExpires = expires }
-  session2 <- dbUpdate $ CreateSession session1
-  return session2
+  dbUpdate $ CreateSession session1
 
 updateSession
   :: forall m
@@ -219,8 +219,8 @@ updateSession
      )
   => Session
   -> SessionID
-  -> (Maybe UserID)
-  -> (Maybe UserID)
+  -> Maybe UserID
+  -> Maybe UserID
   -> m (Maybe Session)
 updateSession session new_ses_id' new_muser' new_mpad_user' = do
   if new_ses_id' == SessionID.tempSessionID
@@ -229,9 +229,9 @@ updateSession session new_ses_id' new_muser' new_mpad_user' = do
       then handleExistingSession session new_muser' new_mpad_user'
       else handleOverrideSession new_ses_id' new_muser' new_mpad_user'
   where
-    handleNewSession :: Session -> (Maybe UserID) -> (Maybe UserID) -> m (Maybe Session)
+    handleNewSession :: Session -> Maybe UserID -> Maybe UserID -> m (Maybe Session)
     handleNewSession session1 new_muser new_mpad_user = do
-      case (mplus new_muser new_mpad_user) of
+      case mplus new_muser new_mpad_user of
         (Just userId) -> do
           deleteSuperfluousUserSessions userId
           expires <- getSessionExpiry userId
@@ -239,20 +239,19 @@ updateSession session new_ses_id' new_muser' new_mpad_user' = do
                                   , sesUserID    = new_muser
                                   , sesPadUserID = new_mpad_user
                                   }
-          session3 <- dbUpdate $ CreateSession $ session2
+          session3 <- dbUpdate $ CreateSession session2
           startSessionCookie session3
           return $ Just session3
         Nothing -> do
           fixSessionCookiesIfBrokenOrSessionExpired
           return Nothing
 
-    handleExistingSession
-      :: Session -> (Maybe UserID) -> (Maybe UserID) -> m (Maybe Session)
+    handleExistingSession :: Session -> Maybe UserID -> Maybe UserID -> m (Maybe Session)
     handleExistingSession session1 new_muser new_mpad_user = do
-      if (sesUserID session1 /= new_muser || sesPadUserID session1 /= new_mpad_user)
+      if sesUserID session1 /= new_muser || sesPadUserID session1 /= new_mpad_user
         then do
 
-          expires <- case (mplus new_muser' new_mpad_user') of
+          expires <- case mplus new_muser' new_mpad_user' of
             (Just userId) -> do
               deleteSuperfluousUserSessions userId
               getSessionExpiry userId
@@ -269,17 +268,17 @@ updateSession session new_ses_id' new_muser' new_mpad_user' = do
             then return $ Just session2
             else do
               logInfo_
-                $ "UpdateSession didn't update session\
+                "UpdateSession didn't update session\
               \ when it should have (existing session)"
               return Nothing
 
-          when (new_muser == Nothing && new_mpad_user == Nothing) $ stopSessionCookie
+          when (isNothing new_muser && isNothing new_mpad_user) stopSessionCookie
 
           return res
         else return Nothing
 
     handleOverrideSession
-      :: SessionID -> (Maybe UserID) -> (Maybe UserID) -> m (Maybe Session)
+      :: SessionID -> Maybe UserID -> Maybe UserID -> m (Maybe Session)
     handleOverrideSession new_ses_id new_muser new_mpad_user = do
       mses <- dbQuery $ GetSession new_ses_id
       case mses of
@@ -324,7 +323,7 @@ getSession sid token domain = runMaybeT $ do
   -- least for user sessions.
   -- So we decided to update 'expires' only when at least 10% of the
   -- maxSessionExpirationDelaySecs is consumed
-  if (diffUTCTime sesExpires now) < (0.9 * maxSessionExpirationDelaySecs)
+  if diffUTCTime sesExpires now < (0.9 * maxSessionExpirationDelaySecs)
     then do
     -- Get the actual session expiry delay from user group settings,
     -- which maybe shorter than maxSessionExpirationDelaySecs
@@ -350,7 +349,7 @@ fixSessionCookiesIfBrokenOrSessionExpired = do
   cookieSessions     <- currentSessionInfoCookies
   let someSessionCookieExists = not $ null cookieSessions
   allSessionsExpiredOrDropped <- and
-    <$> forM cookieSessions (\cs -> isExpiredOrDroppedSession (cookieSessionID cs))
+    <$> forM cookieSessions (isExpiredOrDroppedSession . cookieSessionID)
   when (brokenXTokenCookie || (someSessionCookieExists && allSessionsExpiredOrDropped))
     $ do
         stopSessionCookie
@@ -381,33 +380,33 @@ selectSessionSelectorsList =
 data DeleteExpiredSessions = DeleteExpiredSessions
 instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBUpdate m DeleteExpiredSessions () where
-  update DeleteExpiredSessions = do
+  dbUpdate DeleteExpiredSessions = do
     now <- currentTime
-    runQuery_ . sqlDelete "sessions" $ sqlWhere $ "expires <" <?> now
+    (runQuery_ . sqlDelete "sessions") . sqlWhere $ "expires <" <?> now
 
 data TerminateAllButOneUserSessions = TerminateAllButOneUserSessions UserID SessionID
 instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBUpdate m TerminateAllButOneUserSessions () where
-  update (TerminateAllButOneUserSessions uid sid) = do
+  dbUpdate (TerminateAllButOneUserSessions uid sid) = do
     runQuery_ . sqlDelete "sessions" $ do
       sqlWhereAny [sqlWhere $ "user_id =" <?> uid, sqlWhere $ "pad_user_id =" <?> uid]
       sqlWhere $ "id <>" <?> sid
 
-data GetSession = GetSession SessionID
+newtype GetSession = GetSession SessionID
 instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBQuery m GetSession (Maybe Session) where
-  query (GetSession sid) = do
+  dbQuery (GetSession sid) = do
     now <- currentTime
-    runQuery_ $ sqlSelect "sessions" $ do
+    runQuery_ . sqlSelect "sessions" $ do
       mapM_ sqlResult selectSessionSelectorsList
       sqlWhereEq "id" sid
       sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchSession
 
-data CreateSession = CreateSession Session
+newtype CreateSession = CreateSession Session
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSession Session where
-  update (CreateSession Session {..}) = do
-    runQuery_ $ sqlInsert "sessions" $ do
+  dbUpdate (CreateSession Session {..}) = do
+    runQuery_ . sqlInsert "sessions" $ do
       sqlSet "user_id"     sesUserID
       sqlSet "pad_user_id" sesPadUserID
       sqlSet "token"       sesToken
@@ -417,10 +416,10 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSession Session where
       mapM_ sqlResult selectSessionSelectorsList
     fetchOne fetchSession
 
-data UpdateSession = UpdateSession Session
+newtype UpdateSession = UpdateSession Session
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSession Bool where
-  update (UpdateSession Session {..}) = do
-    runQuery01 $ sqlUpdate "sessions" $ do
+  dbUpdate (UpdateSession Session {..}) = do
+    runQuery01 . sqlUpdate "sessions" $ do
       sqlSet "user_id"     sesUserID
       sqlSet "pad_user_id" sesPadUserID
       sqlSet "token"       sesToken
@@ -438,13 +437,13 @@ fetchSession (sesID, sesUserID, sesPadUserID, sesExpires, sesToken, sesCSRFToken
 data PurgeExpiredTemporaryLoginTokens = PurgeExpiredTemporaryLoginTokens
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeExpiredTemporaryLoginTokens Int where
   -- Expired tokens should remain in the DB for 12h to provide better error messages
-  update _ = do
+  dbUpdate _ = do
     purgeTime <- ((12 * 60) `minutesBefore`) <$> currentTime
     runSQL $ "DELETE FROM temporary_login_tokens WHERE expiration_time <=" <?> purgeTime
 
 data NewTemporaryLoginToken = NewTemporaryLoginToken UserID UTCTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryLoginToken MagicHash where
-  update (NewTemporaryLoginToken uid expiryTime) = do
+  dbUpdate (NewTemporaryLoginToken uid expiryTime) = do
     hash <- random
     runQuery_ . sqlInsert "temporary_login_tokens" $ do
       sqlSet "hash"            hash
@@ -452,10 +451,10 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryLoginToken MagicHash
       sqlSet "expiration_time" expiryTime
     return hash
 
-data GetSessionSignatoryLinkIDs = GetSessionSignatoryLinkIDs SessionID
+newtype GetSessionSignatoryLinkIDs = GetSessionSignatoryLinkIDs SessionID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m GetSessionSignatoryLinkIDs [SignatoryLinkID] where
-  query (GetSessionSignatoryLinkIDs sid) = do
+  dbQuery (GetSessionSignatoryLinkIDs sid) = do
     runQuery_ . sqlSelect "document_session_tokens" $ do
       sqlResult "document_session_tokens.signatory_link_id"
       sqlWhereEq "document_session_tokens.session_id" sid

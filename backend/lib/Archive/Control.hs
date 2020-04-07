@@ -77,7 +77,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
       logInfo "Archive operation"
         $ object ["action" .= actionStr, identifier $ user ^. #id, identifier ids]
       let actor = userActor ctx user
-      forM docs $ flip withDocument $ m (user, actor)
+      forM docs . flip withDocument $ m (user, actor)
     else do
       failWithMsg user ids "User didn't have permission to do an action"
   where
@@ -108,13 +108,13 @@ handleDelete = do
             postDocumentCanceledChange =<< theDocument
           else do
                                  -- user must be a regular signatory
-            let Just (sl@SignatoryLink { signatorylinkid }) = getSigLinkFor user doc
+            let Just sl@SignatoryLink { signatorylinkid } = getSigLinkFor user doc
             ctx      <- getContext
             sl_actor <- signatoryActor ctx sl
             dbUpdate $ RejectDocument signatorylinkid (isApprover sl) Nothing sl_actor
             theDocument >>= postDocumentRejectedChange signatorylinkid Nothing
         success <- dbUpdate $ ArchiveDocument (user ^. #id) actor
-        unless (success) internalError
+        unless success internalError
 
 
 handleProlong :: Kontrakcja m => m JSValue
@@ -133,7 +133,7 @@ handleReallyDelete = do
   handleArchiveDocumentsAction' "really delete documents" isDocumentVisibleToUser
     $ \(user, actor) -> do
         success <- dbUpdate $ ReallyDeleteDocument (user ^. #id) actor
-        unless (success) internalError
+        unless success internalError
 
 handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders =
@@ -159,14 +159,12 @@ handleZip = do
   logInfo_ "Downloading zip list"
   mentries <-
     handleArchiveDocumentsAction "download zipped documents" isDocumentVisibleToUser
-    $ const
+    . const
     $ do
         docToEntry =<< theDocument
-  return
-    $ ZipArchive "selectedfiles.zip"
-    $ foldr addEntryToArchive emptyArchive
-    $ catMaybes
-    $ mentries
+  return . ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive
+                                                  emptyArchive
+                                                  (catMaybes mentries)
 
 
 -- Fetch a csv file for documents from archive. It's not API call for V2 - just internal functionality used in archive.
@@ -180,9 +178,8 @@ handleListCSV = do
   filters <- apiV2ParameterDefault [] (ApiV2ParameterJSON "filter" unjsonDef)
   sorting <- apiV2ParameterDefault [] (ApiV2ParameterJSON "sorting" unjsonDef)
   let documentFilters =
-        (DocumentFilterUnsavedDraft False)
-          : (join $ toDocumentFilter (user ^. #id) <$> filters)
-      documentSorting = (toDocumentSorting <$> sorting)
+        DocumentFilterUnsavedDraft False : (toDocumentFilter (user ^. #id) =<< filters)
+      documentSorting = toDocumentSorting <$> sorting
   allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ user ^. #id)
                                     documentFilters
                                     documentSorting
@@ -213,7 +210,7 @@ showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
         $ object [identifier $ user ^. #id]
       internalError
   startDate <- if user ^. #isCompanyAdmin
-    then dbQuery $ GetUserGroupFirstTOSDate $ user ^. #groupID
+    then dbQuery . GetUserGroupFirstTOSDate $ user ^. #groupID
     else return tostime
   pb <- pageArchive ctx user ugwp startDate
   internalResponse <$> renderFromBodyWithFields (T.pack pb) (F.value "archive" True)
@@ -221,15 +218,10 @@ showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
 -- Zip utils
 docToEntry :: Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
-  let name =
-        T.filter ((/= ' '))
-          $  T.filter (isAscii)
-          $  (documenttitle doc)
-          <> "_"
-          <> (showt $ documentid doc)
-          <> ".pdf"
+  let name = T.filter (not isSpace || isAscii)
+                      (documenttitle doc <> "_" <> showt (documentid doc) <> ".pdf")
   case mainfileid <$> documentsealedfile doc `mplus` documentfile doc of
     Just fid -> do
       content <- getFileIDContents fid
-      return $ Just $ toEntry (T.unpack name) 0 $ BSL.pack $ BSS.unpack content
+      return . Just $ toEntry (T.unpack name) 0 (BSL.pack $ BSS.unpack content)
     Nothing -> return Nothing

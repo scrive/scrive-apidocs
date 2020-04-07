@@ -48,7 +48,7 @@ instance ToSQL SMSPinType where
 data GetSignatoryPin = GetSignatoryPin SMSPinType SignatoryLinkID Text
 
 instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSignatoryPin Text where
-  query (GetSignatoryPin pintype slid phone) = do
+  dbQuery (GetSignatoryPin pintype slid phone) = do
     runQuery_ . sqlSelect "signatory_sms_pins" $ do
       sqlResult "pin"
       sqlResult "generated_at"
@@ -64,7 +64,7 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
           newPin <- show <$> randomR (1000, 9999)
           logInfo "Generating new pin" $ object
             ["new pin" .= newPin, "reason" .= ("previous one was too old" :: String)]
-          runQuery_ $ sqlUpdate "signatory_sms_pins" $ do
+          runQuery_ . sqlUpdate "signatory_sms_pins" $ do
             sqlSet "pin"          newPin
             sqlSet "generated_at" now
             sqlWhereEq "signatory_link_id" slid
@@ -75,7 +75,7 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
         newPin <- show <$> randomR (1000, 9999)
         logInfo "Generating new pin"
           $ object ["new pin" .= newPin, "reason" .= ("no previous pin" :: String)]
-        runQuery_ $ sqlInsert "signatory_sms_pins" $ do
+        runQuery_ . sqlInsert "signatory_sms_pins" $ do
           sqlSet "pin"               newPin
           sqlSet "generated_at"      now
           sqlSet "signatory_link_id" slid

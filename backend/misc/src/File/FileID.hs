@@ -32,7 +32,7 @@ instance FromReqURI FileID where
 
 instance Unjson FileID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse FileID") return) . maybeRead . T.pack)
+    (maybe (fail "Can't parse FileID") return . maybeRead . T.pack)
     show
     unjsonDef
 

@@ -31,5 +31,5 @@ import Kontra (Kontrakcja)
 noAPIV2CallFoundHandler :: Kontrakcja m => m Response
 noAPIV2CallFoundHandler = api $ do
   uri <- rqUri <$> askRq
-  void $ apiError $ endpointNotFound (T.pack uri)
+  void . apiError $ endpointNotFound (T.pack uri)
   return $ Ok () -- This part will never be reached, since exception is thrown above

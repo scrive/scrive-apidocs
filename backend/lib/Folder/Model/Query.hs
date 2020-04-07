@@ -21,20 +21,20 @@ import User.UserID
 import UserGroup.Types
 import qualified Folder.Internal as I
 
-data FolderGet = FolderGet FolderID
+newtype FolderGet = FolderGet FolderID
 instance (MonadDB m, MonadThrow m) => DBQuery m FolderGet (Maybe Folder) where
-  query (FolderGet dgid) = do
+  dbQuery (FolderGet dgid) = do
     runQuery_ . sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
       sqlWhereEq "id" dgid
       sqlWhereIsNULL "deleted"
     fetchMaybe fetchFolder
 
-data FolderGetUserGroupHome =
+newtype FolderGetUserGroupHome =
     FolderGetUserGroupHome UserGroupID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderGetUserGroupHome (Maybe Folder) where
-  query (FolderGetUserGroupHome ugid) = do
+  dbQuery (FolderGetUserGroupHome ugid) = do
     mfolderId <- do
       runQuery_ . sqlSelect "user_groups" $ do
         sqlResult "home_folder_id"
@@ -43,12 +43,12 @@ instance (MonadDB m, MonadThrow m)
       fetchMaybe runIdentity
     case mfolderId of
       Nothing       -> return Nothing
-      Just folderId -> query . FolderGet $ folderId
+      Just folderId -> dbQuery . FolderGet $ folderId
 
-data FolderGetUserHome = FolderGetUserHome UserID
+newtype FolderGetUserHome = FolderGetUserHome UserID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderGetUserHome (Maybe Folder) where
-  query (FolderGetUserHome uid) = do
+  dbQuery (FolderGetUserHome uid) = do
     mfolderId <- do
       runQuery_ . sqlSelect "users" $ do
         sqlResult "home_folder_id"
@@ -57,12 +57,12 @@ instance (MonadDB m, MonadThrow m)
       fetchMaybe runIdentity
     case mfolderId of
       Nothing       -> return Nothing
-      Just folderId -> query . FolderGet $ folderId
+      Just folderId -> dbQuery . FolderGet $ folderId
 
-data FolderIsAHomeFolder = FolderIsAHomeFolder FolderID
+newtype FolderIsAHomeFolder = FolderIsAHomeFolder FolderID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderIsAHomeFolder Bool where
-  query (FolderIsAHomeFolder fid) = do
+  dbQuery (FolderIsAHomeFolder fid) = do
     userRows <- runQuery01 . sqlSelect "users" $ do
       sqlWhereEq "home_folder_id" fid
       sqlLimit 1
@@ -71,10 +71,10 @@ instance (MonadDB m, MonadThrow m)
       sqlLimit 1
     return $ userRows || ugRows
 
-data FolderHasDocuments = FolderHasDocuments FolderID
+newtype FolderHasDocuments = FolderHasDocuments FolderID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderHasDocuments Bool where
-  query (FolderHasDocuments fid) = do
+  dbQuery (FolderHasDocuments fid) = do
     runQuery01 . sqlSelect "documents" $ do
       sqlWhereEq "folder_id" fid
       sqlWhereDocumentWasNotPurged
@@ -82,13 +82,13 @@ instance (MonadDB m, MonadThrow m)
       sqlLimit 1
 
 -- Get all children recursively
-data FolderGetAllChildrenRecursive = FolderGetAllChildrenRecursive FolderID
+newtype FolderGetAllChildrenRecursive = FolderGetAllChildrenRecursive FolderID
 instance (MonadDB m, MonadThrow m)
   => DBQuery m FolderGetAllChildrenRecursive [FolderWithChildren] where
-  query (FolderGetAllChildrenRecursive fid) = do
-    runQuery_ $ sqlSelect "folders" $ do
+  dbQuery (FolderGetAllChildrenRecursive fid) = do
+    runQuery_ . sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
-      sqlWhere $ "parent_path @> " <?> (Array1 [fid])
+      sqlWhere $ "parent_path @> " <?> Array1 [fid]
     allChildren <- fetchMany fetchFolder
     let directChildren parentID =
           filter ((== Just parentID) . view #parentID) allChildren
@@ -96,11 +96,11 @@ instance (MonadDB m, MonadThrow m)
         mkChild folder = I.FolderWithChildren folder . mkChildren $ folder ^. #id
     return $ mkChildren fid
 
-data FolderGetParents = FolderGetParents FolderID
+newtype FolderGetParents = FolderGetParents FolderID
 instance (MonadDB m, MonadThrow m)
     => DBQuery m FolderGetParents [Folder] where
-  query (FolderGetParents fid) = do
-    (query . FolderGet $ fid) >>= \case
+  dbQuery (FolderGetParents fid) = do
+    (dbQuery . FolderGet $ fid) >>= \case
       Nothing -> return []
       Just _  -> do
         -- JOIN does not necessarily preserve order of rows, so we add
@@ -124,18 +124,18 @@ instance (MonadDB m, MonadThrow m)
           sqlOrderBy "ordinality"
         fetchMany fetchFolder
 
-data FolderGetImmediateChildren = FolderGetImmediateChildren FolderID
+newtype FolderGetImmediateChildren = FolderGetImmediateChildren FolderID
 instance (MonadDB m, MonadThrow m) => DBQuery m FolderGetImmediateChildren [Folder] where
-  query (FolderGetImmediateChildren ugid) = do
+  dbQuery (FolderGetImmediateChildren ugid) = do
     runQuery_ . sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
       sqlWhereEq "parent_id" ugid
       sqlWhereIsNULL "deleted"
     fetchMany fetchFolder
 
-data FolderDelete = FolderDelete FolderID
+newtype FolderDelete = FolderDelete FolderID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m FolderDelete () where
-  update (FolderDelete fdrid) = do
+  dbUpdate (FolderDelete fdrid) = do
     now <- currentTime
     void . runQuery . sqlUpdate "folders" $ do
       sqlSet "deleted" now

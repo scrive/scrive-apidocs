@@ -77,12 +77,8 @@ instance FromSQL TimeZoneName where
     s <- fromSQL mbase
     if sanityCheck s
       then return $ TimeZoneName s
-      else
-        hpqTypesError
-        $  T.unpack
-        $  "fromSQL (TimeZoneName): sanity check on value '"
-        <> s
-        <> "' failed"
+      else hpqTypesError $ T.unpack
+        ("fromSQL (TimeZoneName): sanity check on value '" <> s <> "' failed")
 
 instance ToSQL TimeZoneName where
   type PQDest TimeZoneName = PQDest String

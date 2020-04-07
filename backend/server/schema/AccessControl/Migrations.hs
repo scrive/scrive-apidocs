@@ -82,7 +82,7 @@ migratePartnerAdmins = Migration
   , mgrAction    =
     StandardMigration $ do
       runSQL_
-        $ "INSERT INTO access_control \
+        "INSERT INTO access_control \
                   \(role, src_user_id, trg_user_group_id) \
                 \SELECT 3, pa.user_id, p.user_group_id \
                   \FROM partner_admins as pa \
@@ -110,9 +110,8 @@ addFolderTargetColumn = Migration
         , sqlAddValidFK (tblName tableAccessControl)
           $ (fkOnColumn "trg_folder_id" "folders" "id") { fkOnDelete = ForeignKeyCascade }
         ]
-      runQuery_
-        . sqlCreateIndexSequentially (tblName tableAccessControl)
-        $ (indexOnColumn "trg_folder_id")
+      runQuery_ . sqlCreateIndexSequentially (tblName tableAccessControl) $ indexOnColumn
+        "trg_folder_id"
   }
 
 addTargetChecks :: MonadDB m => Migration m

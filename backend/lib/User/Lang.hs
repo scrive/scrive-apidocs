@@ -121,7 +121,7 @@ langFromCode :: Text -> Maybe Lang
 langFromCode s = find ((== s) . codeFromLang) allValues
 
 langFromHTTPHeader :: Text -> Lang
-langFromHTTPHeader s = fromMaybe LANG_EN $ msum $ map findLang (T.splitOn "," s)
+langFromHTTPHeader s = fromMaybe LANG_EN . msum $ map findLang (T.splitOn "," s)
   where findLang str = find ((`T.isInfixOf` str) . codeFromLang) allValues
 
 allLangs :: [Lang]

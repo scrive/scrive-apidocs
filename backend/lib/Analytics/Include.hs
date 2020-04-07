@@ -56,8 +56,8 @@ analyticsTemplates ad = do
   forM_ (aUser ad) $ F.value "userid" . show . view #id
   F.value "token" $ aToken ad
   F.value "gacode" $ aGACode ad
-  F.value "hubspotConf" $ encode $ toJSValue $ aHubSpotConf ad
-  F.value "properties" $ encode $ toJSValue ad
+  F.value "hubspotConf" . encode $ toJSValue (aHubSpotConf ad)
+  F.value "properties" . encode $ toJSValue ad
 
 instance ToJSValue AnalyticsData where
   toJSValue AnalyticsData {..} = runJSONGen $ do

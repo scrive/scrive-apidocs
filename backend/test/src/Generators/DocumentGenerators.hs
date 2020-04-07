@@ -208,17 +208,17 @@ emailFieldOC = do
     <*> listOf1 (elements "abcdefghijklmnopqrstuvwxyz0123456789")
     <*> elements ["com", "sv", "newgtld"]
     )
-  pure $ SignatoryEmailField $ f { sefValue = email }
+  pure $ SignatoryEmailField f { sefValue = email }
 
 mobileFieldOC :: OccurenceControl SignatoryField
 mobileFieldOC = do
   f      <- liftGen arbitrary
   mobile <- decide arbitraryUnicodeText
-                   (T.pack <$> ('+' :) <$> listOf (elements "0123456789"))
-  pure $ SignatoryMobileField $ f { smfValue = mobile }
+                   (T.pack . ('+' :) <$> listOf (elements "0123456789"))
+  pure $ SignatoryMobileField f { smfValue = mobile }
 
 personalNumberFieldOC :: OccurenceControl SignatoryField
 personalNumberFieldOC = do
   f  <- liftGen arbitrary
-  pn <- liftGen $ vectorOf 11 $ elements "0123456789"
-  pure $ SignatoryPersonalNumberField $ f { spnfValue = T.pack pn }
+  pn <- liftGen . vectorOf 11 $ elements "0123456789"
+  pure $ SignatoryPersonalNumberField f { spnfValue = T.pack pn }

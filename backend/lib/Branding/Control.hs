@@ -51,7 +51,7 @@ getServiceTheme :: Kontrakcja m => BrandedDomainID -> Maybe User -> m Theme
 getServiceTheme bdID muser = do
   bd <- dbQuery $ GetBrandedDomainByID bdID
   case muser of
-    Nothing   -> dbQuery $ GetTheme $ bd ^. #serviceTheme
+    Nothing   -> dbQuery . GetTheme $ bd ^. #serviceTheme
     Just user -> do
       ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
       dbQuery . GetTheme $ fromMaybe (bd ^. #serviceTheme) (ugwpUI ugwp ^. #serviceTheme)
@@ -66,8 +66,7 @@ handleLoginBranding bdID _ = do
 -- used to deliver CSS for those pages that mimic the look of the company web ('Expression Engine').
 handleScriveBranding :: Kontrakcja m => Text -> m Response
 handleScriveBranding _ = do
-  brandingCSS <- scriveBrandingCSS
-  return (cssResponse brandingCSS)
+  cssResponse <$> scriveBrandingCSS
 
 -- Generates domain branding - enything that is onlu branded at domain level - i.e colors of status icons
 handleDomainBranding :: Kontrakcja m => BrandedDomainID -> Text -> m Response
@@ -169,13 +168,13 @@ faviconIcon bdID uidstr _ = do
 cssResponse :: BSL.ByteString -> Response
 cssResponse css =
   setHeaderBS "Cache-Control" "max-age=31536000"
-    $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css")
+    . setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css")
     $ Response 200 Map.empty nullRsFlags css Nothing
 
 imageResponse :: BS.ByteString -> Response
 imageResponse image =
   setHeaderBS "Cache-Control" "max-age=31536000"
-    $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString contentType)
+    . setHeaderBS (BS.fromString "Content-Type") (BS.fromString contentType)
     $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [image]) Nothing
   where
     content = image

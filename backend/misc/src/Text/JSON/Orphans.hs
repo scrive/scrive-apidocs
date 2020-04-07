@@ -16,7 +16,7 @@ instance Binary a => Binary (J.JSObject a) where
   put = put . J.fromJSObject
 
 instance Binary J.JSValue where
-  put (J.JSNull        ) = putWord8 0
+  put J.JSNull           = putWord8 0
   put (J.JSBool b      ) = putWord8 1 >> put b
   put (J.JSRational b r) = putWord8 2 >> put b >> put r
   put (J.JSString s    ) = putWord8 3 >> put s
@@ -39,12 +39,12 @@ jsobj :: Int -> Gen (J.JSObject J.JSValue)
 jsobj sz = do
   vals  <- jslist sz
   names <- map unStr <$> arbitrary
-  return $ J.toJSObject $ zip (zipWith (:) ['a' ..] names) vals
+  return . J.toJSObject $ zip (zipWith (:) ['a' ..] names) vals
 
 jslist :: Int -> Gen [J.JSValue]
 jslist sz = do
   n <- oneof $ map return [0 .. 10]
-  sequence $ replicate n (jsval sz)
+  replicateM n (jsval sz)
 
 jsval :: Int -> Gen J.JSValue
 jsval sz = frequency
@@ -68,4 +68,4 @@ newtype JSStr = JSStr {unStr :: String}
 instance Arbitrary JSStr where
   arbitrary = do
     n <- oneof $ map return [1 .. 100]
-    JSStr <$> sequence (replicate n (oneof (map return ['a' .. 'z'])))
+    JSStr <$> replicateM n (oneof (map return ['a' .. 'z']))

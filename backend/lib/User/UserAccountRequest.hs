@@ -49,10 +49,10 @@ newUserAccountRequest uid = do
   case ma of
     Just a -> do
       let a' = a { uarExpires = expires }
-      void $ dbUpdate $ UpdateUserAccountRequest a'
+      void . dbUpdate $ UpdateUserAccountRequest a'
       return a'
     Nothing -> do
-      void $ dbUpdate $ DeleteUserAccountRequest uid
+      void . dbUpdate $ DeleteUserAccountRequest uid
       dbUpdate . CreateUserAccountRequest $ UserAccountRequest uid expires token
 
 newUserAccountRequestLink
@@ -74,8 +74,8 @@ expireUserAccountRequests = do
   prs <- dbQuery GetExpiredUserAccountRequests
   forM_ prs $ \UserAccountRequest { uarUserID } -> do
     res <- try . localData [identifier uarUserID] $ do
-      void $ dbUpdate $ DeleteUserAccountRequest uarUserID
-      musertos <- (fmap $ view #hasAcceptedTOS)
+      void . dbUpdate $ DeleteUserAccountRequest uarUserID
+      musertos <- fmap (view #hasAcceptedTOS)
         <$> dbQuery (GetUserByIDIncludeDeleted uarUserID)
       case musertos of
         Just Nothing -> do
@@ -92,52 +92,52 @@ expireUserAccountRequests = do
 
 data GetExpiredUserAccountRequests = GetExpiredUserAccountRequests
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredUserAccountRequests [UserAccountRequest] where
-  query GetExpiredUserAccountRequests = do
+  dbQuery GetExpiredUserAccountRequests = do
     now <- currentTime
-    runQuery_ $ sqlSelect "user_account_requests" $ do
+    runQuery_ . sqlSelect "user_account_requests" $ do
       mapM_ sqlResult selectUserAccountRequestSelectorsList
       sqlWhere $ "expires <" <?> now
     fetchMany fetchUserAccountRequest
 
-data GetExpiredUserAccountRequestsForTesting = GetExpiredUserAccountRequestsForTesting UTCTime
+newtype GetExpiredUserAccountRequestsForTesting = GetExpiredUserAccountRequestsForTesting UTCTime
 instance (MonadDB m, MonadThrow m) => DBQuery m GetExpiredUserAccountRequestsForTesting [UserAccountRequest] where
-  query (GetExpiredUserAccountRequestsForTesting now) = do
-    runQuery_ $ sqlSelect "user_account_requests" $ do
+  dbQuery (GetExpiredUserAccountRequestsForTesting now) = do
+    runQuery_ . sqlSelect "user_account_requests" $ do
       mapM_ sqlResult selectUserAccountRequestSelectorsList
       sqlWhere $ "expires <" <?> now
     fetchMany fetchUserAccountRequest
 
-data GetUserAccountRequest = GetUserAccountRequest UserID
+newtype GetUserAccountRequest = GetUserAccountRequest UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserAccountRequest (Maybe UserAccountRequest) where
-  query (GetUserAccountRequest user_id) = do
+  dbQuery (GetUserAccountRequest user_id) = do
     now <- currentTime
-    runQuery_ $ sqlSelect "user_account_requests" $ do
+    runQuery_ . sqlSelect "user_account_requests" $ do
       mapM_ sqlResult selectUserAccountRequestSelectorsList
       sqlWhereEq "user_id" user_id
       sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchUserAccountRequest
 
-data CreateUserAccountRequest = CreateUserAccountRequest UserAccountRequest
+newtype CreateUserAccountRequest = CreateUserAccountRequest UserAccountRequest
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateUserAccountRequest UserAccountRequest where
-  update (CreateUserAccountRequest UserAccountRequest {..}) = do
-    runQuery_ $ sqlInsert "user_account_requests" $ do
+  dbUpdate (CreateUserAccountRequest UserAccountRequest {..}) = do
+    runQuery_ . sqlInsert "user_account_requests" $ do
       sqlSet "user_id" uarUserID
       sqlSet "expires" uarExpires
       sqlSet "token"   uarToken
       mapM_ sqlResult selectUserAccountRequestSelectorsList
     fetchOne fetchUserAccountRequest
 
-data UpdateUserAccountRequest = UpdateUserAccountRequest UserAccountRequest
+newtype UpdateUserAccountRequest = UpdateUserAccountRequest UserAccountRequest
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateUserAccountRequest Bool where
-  update (UpdateUserAccountRequest UserAccountRequest {..}) = do
-    runQuery01 $ sqlUpdate "user_account_requests" $ do
+  dbUpdate (UpdateUserAccountRequest UserAccountRequest {..}) = do
+    runQuery01 . sqlUpdate "user_account_requests" $ do
       sqlSet "expires" uarExpires
       sqlSet "token"   uarToken
       sqlWhereEq "user_id" uarUserID
 
-data DeleteUserAccountRequest = DeleteUserAccountRequest UserID
+newtype DeleteUserAccountRequest = DeleteUserAccountRequest UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteUserAccountRequest Bool where
-  update (DeleteUserAccountRequest user_id) = do
+  dbUpdate (DeleteUserAccountRequest user_id) = do
     runQuery01 . sqlDelete "user_account_requests" $ do
       sqlWhereEq "user_id" user_id
 

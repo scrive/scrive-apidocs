@@ -15,7 +15,7 @@ Executable kontrakcja-shake
   Hs-source-dirs:   .
 
   Main-is:          Shake.hs
-  GHC-Options:      -Wall -Werror -rtsopts -with-rtsopts=-I0
+  GHC-Options:      -Wall -Werror -threaded -rtsopts
 
   Build-Depends:    base
                   , Cabal >= 2.4 && < 3.0

@@ -51,8 +51,8 @@ instance MonadTransControl DocumentT where
 instance (GetRow Document m, MonadDB m) => DocumentMonad (DocumentT m) where
   theDocument   = DocumentT rowCache
   theDocumentID = DocumentT rowCacheID
-  updateDocument m = DocumentT $ updateRow $ unDocumentT . m
-  updateDocumentWithID m = DocumentT $ updateRowWithID $ unDocumentT . m
+  updateDocument m = DocumentT . updateRow $ unDocumentT . m
+  updateDocumentWithID m = DocumentT . updateRowWithID $ unDocumentT . m
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given the document

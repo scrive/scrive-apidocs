@@ -71,20 +71,22 @@ testPartnerCompanyCreate = do
 
   -- Random  user shouldn't be able to create company
   randomUser      <- instantiateRandomUser
-  randomCtx       <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx       <- mkContextWithUser defaultLang randomUser
   randomReq       <- mkRequestWithHeaders POST [] []
-  (randomRes1, _) <-
-    runTestKontra randomReq randomCtx $ (partnerApiCallV1CompanyCreate pid1)
-  (randomRes2, _) <-
-    runTestKontra randomReq randomCtx $ (partnerApiCallV1CompanyCreate pid2)
-  assertEqual ("We should get a 403 response") 403 (rsCode randomRes1)
-  assertEqual ("We should get a 403 response") 403 (rsCode randomRes2)
+  (randomRes1, _) <- runTestKontra randomReq
+                                   randomCtx
+                                   (partnerApiCallV1CompanyCreate pid1)
+  (randomRes2, _) <- runTestKontra randomReq
+                                   randomCtx
+                                   (partnerApiCallV1CompanyCreate pid2)
+  assertEqual "We should get a 403 response" 403 (rsCode randomRes1)
+  assertEqual "We should get a 403 response" 403 (rsCode randomRes2)
 
   -- User should only be able to create company for administrated partner ids
-  (crossRes1, _) <- runTestKontra randomReq ctx1 $ (partnerApiCallV1CompanyCreate pid2)
-  (crossRes2, _) <- runTestKontra randomReq ctx2 $ (partnerApiCallV1CompanyCreate pid1)
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes1)
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
+  (crossRes1, _) <- runTestKontra randomReq ctx1 (partnerApiCallV1CompanyCreate pid2)
+  (crossRes2, _) <- runTestKontra randomReq ctx2 (partnerApiCallV1CompanyCreate pid1)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes1)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes2)
 
   -- Test role combinations; use the first user and partner structure generated.
   let (Just uid) = ctx1 ^? #maybeUser % _Just % #id
@@ -117,8 +119,6 @@ testPartnerCompanyCreate = do
                                 rq_newCompany_params
                                 403
 
-  return ()
-
 testPartnerCompanyUpdate :: TestEnv ()
 testPartnerCompanyUpdate = do
   companyUpdateJSON <- readTestFile "json/partner_api_v1/param-partnerCompanyUpdate.json"
@@ -138,11 +138,11 @@ testPartnerCompanyUpdate = do
 
   -- Random user shouldn't be able to update
   randomUser     <- instantiateRandomUser
-  randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx      <- mkContextWithUser defaultLang randomUser
   randomReq      <- mkRequestWithHeaders POST [("json", inTextBS companyUpdateJSON)] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
     $ partnerApiCallV1CompanyUpdate partnerUgID cid
-  assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
+  assertEqual "We should get a 403 response" 403 (rsCode randomRes)
 
   -- User should only be able to update company for administrated partner ids
   (ctx', partnerUgID', cid') <- testHelperPartnerCompanyCreate
@@ -152,9 +152,9 @@ testPartnerCompanyUpdate = do
     $ partnerApiCallV1CompanyUpdate partnerUgID cid'
   (crossRes3, _) <- runTestKontra randomReq ctx'
     $ partnerApiCallV1CompanyUpdate partnerUgID' cid
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes1)
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes3)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes1)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes2)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes3)
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
@@ -187,8 +187,6 @@ testPartnerCompanyUpdate = do
                                 (partnerApiCallV1CompanyUpdate partnerUgID cid)
                                 []
                                 403
-
-  return ()
 
 testPartnerCompanyPartialUpdate :: TestEnv ()
 testPartnerCompanyPartialUpdate = do
@@ -207,8 +205,6 @@ testPartnerCompanyPartialUpdate = do
                         200
                         rq_companyUpdate_resp_fp
 
-  return ()
-
 testPartnerCompanyIdUpdate :: TestEnv ()
 testPartnerCompanyIdUpdate = do
   companyUpdateJSON <- readTestFile
@@ -226,7 +222,6 @@ testPartnerCompanyIdUpdate = do
                         200
                         rq_companyUpdate_resp_fp
 
-  return ()
 
 testPartnerCompanyGet :: TestEnv ()
 testPartnerCompanyGet = do
@@ -244,11 +239,11 @@ testPartnerCompanyGet = do
 
   -- Random user shouldn't be able to update
   randomUser     <- instantiateRandomUser
-  randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx      <- mkContextWithUser defaultLang randomUser
   randomReq      <- mkRequestWithHeaders POST [] []
   (randomRes, _) <- runTestKontra randomReq randomCtx
     $ partnerApiCallV1CompanyGet partnerUgID cid
-  assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
+  assertEqual "We should get a 403 response" 403 (rsCode randomRes)
 
   -- User should only be able to get company for administrated partner ids
   (ctx', partnerUgID', cid') <- testHelperPartnerCompanyCreate
@@ -258,9 +253,9 @@ testPartnerCompanyGet = do
     $ partnerApiCallV1CompanyGet partnerUgID cid'
   (crossRes3, _) <- runTestKontra randomReq ctx'
     $ partnerApiCallV1CompanyGet partnerUgID' cid
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes1)
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
-  assertEqual ("We should get a 403 response") 403 (rsCode crossRes3)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes1)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes2)
+  assertEqual "We should get a 403 response" 403 (rsCode crossRes3)
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
@@ -293,8 +288,6 @@ testPartnerCompanyGet = do
                                 (partnerApiCallV1CompanyGet partnerUgID cid)
                                 []
                                 403
-
-  return ()
 
 testPartnerCompaniesGet :: TestEnv ()
 testPartnerCompaniesGet = do
@@ -326,10 +319,10 @@ testPartnerCompaniesGet = do
   randomUser     <- instantiateRandomUser
 
   -- random user is denied listing companies of partnerA
-  randomCtx      <- (set #maybeUser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx      <- mkContextWithUser defaultLang randomUser
   randomReq      <- mkRequestWithHeaders POST [] []
   (randomRes, _) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompaniesGet pidA
-  assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
+  assertEqual "We should get a 403 response" 403 (rsCode randomRes)
 
   -- Test role combinations; use the first user and partner structure generated.
   let (Just uid) = ctxA ^? #maybeUser % _Just % #id
@@ -362,11 +355,8 @@ testPartnerCompaniesGet = do
                                 []
                                 403
 
-  return ()
-
 testPartnerCompanyUserNew :: TestEnv ()
 testPartnerCompanyUserNew = do
-
   (ctx, partnerUgID, cid) <- testHelperPartnerCompanyCreate
 
   -- Normal user creation should work
@@ -391,7 +381,7 @@ testPartnerCompanyUserNew = do
                                                   []
   (badToSRes, _) <- runTestKontra rq_newUserBadToS_params ctx
     $ partnerApiCallV1UserCreate partnerUgID cid
-  assertEqual ("We should get a 400 response") 400 (rsCode badToSRes)
+  assertEqual "We should get a 400 response" 400 (rsCode badToSRes)
 
   -- When user with email already exists, we should not create a user
   rq_newUserAlreadyExists_params <- mkRequestWithHeaders
@@ -401,7 +391,7 @@ testPartnerCompanyUserNew = do
   (alreadyExistsRes, _) <-
     runTestKontra rq_newUserAlreadyExists_params ctx
       $ partnerApiCallV1UserCreate partnerUgID cid
-  assertEqual ("We should get a 400 response") 400 (rsCode alreadyExistsRes)
+  assertEqual "We should get a 400 response" 400 (rsCode alreadyExistsRes)
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
@@ -447,11 +437,8 @@ testPartnerCompanyUserNew = do
                                 rq_newUserGood_params'''
                                 403
 
-  return ()
-
 testPartnerUserUpdate :: TestEnv ()
 testPartnerUserUpdate = do
-
   (ctx, partnerUgID, uid) <- testHelperPartnerUserCreate
 
   -- Normal user update should work
@@ -471,7 +458,7 @@ testPartnerUserUpdate = do
     "json/partner_api_v1/param-partnerUserUpdate-no-tos.json"
   rq_tos         <- mkRequestWithHeaders POST [("json", inTextBS updateUserNoToSJSON)] []
   (tosResult, _) <- runTestKontra rq_tos ctx $ partnerApiCallV1UserUpdate partnerUgID uid
-  assertEqual ("We should get a 400 response") 400 (rsCode tosResult)
+  assertEqual "We should get a 400 response" 400 (rsCode tosResult)
 
   -- Test role combinations; use the first user and partner structure
   -- generated.
@@ -505,11 +492,8 @@ testPartnerUserUpdate = do
                                 rq_updateUser_params
                                 403
 
-  return ()
-
 testPartnerUserUpdateEmailToExisting :: TestEnv ()
 testPartnerUserUpdateEmailToExisting = do
-
   (ctx, partnerUgID, cid) <- testHelperPartnerCompanyCreate
 
   -- Normal user creation should work.
@@ -551,13 +535,10 @@ testPartnerUserUpdateEmailToExisting = do
   (alreadyExistsRes, _) <-
     runTestKontra rq_updateToExistingEmail_params ctx
       $ partnerApiCallV1UserUpdate partnerUgID uid
-  assertEqual ("We should get a 400 response") 400 (rsCode alreadyExistsRes)
-
-  return ()
+  assertEqual "We should get a 400 response" 400 (rsCode alreadyExistsRes)
 
 testPartnerUserPartialUpdate :: TestEnv ()
 testPartnerUserPartialUpdate = do
-
   (ctx, partnerUgID, uid) <- testHelperPartnerUserCreate
 
   -- Normal user update should work
@@ -573,11 +554,8 @@ testPartnerUserPartialUpdate = do
                         200
                         rq_UpdateUser_resp_fp
 
-  return ()
-
 testPartnerUserIdUpdate :: TestEnv ()
 testPartnerUserIdUpdate = do
-
   (ctx, partnerUgID, uid) <- testHelperPartnerUserCreate
 
   -- Normal user update should work
@@ -592,11 +570,8 @@ testPartnerUserIdUpdate = do
                         200
                         rq_UpdateUser_resp_fp
 
-  return ()
-
 testPartnerUserGet :: TestEnv ()
 testPartnerUserGet = do
-
   (ctx, partnerUgID, uid) <- testHelperPartnerUserCreate
 
   -- Normal get user should work.
@@ -641,11 +616,8 @@ testPartnerUserGet = do
                                 []
                                 403
 
-  return ()
-
 testPartnerCompanyUsersGet :: TestEnv ()
 testPartnerCompanyUsersGet = do
-
   -- create company supervised by partner
   (ctx, partnerUgID, cid) <- testHelperPartnerCompanyCreate
 
@@ -694,11 +666,8 @@ testPartnerCompanyUsersGet = do
                                 []
                                 403
 
-  return ()
-
 testPartnersUserGetTokens :: TestEnv ()
 testPartnersUserGetTokens = do
-
   (ctx, partnerUgID, uid) <- testHelperPartnerUserCreate
 
   -- Should be able to get User personal access tokens
@@ -733,7 +702,7 @@ testPartnersUserGetTokens = do
           ++ T.unpack accesssecret
           ++ "\""
   docNewReq       <- mkRequestWithHeaders POST [] [("authorization", [T.pack authStr])]
-  (newDocResp, _) <- runTestKontra docNewReq ctx' $ docApiV2New
+  (newDocResp, _) <- runTestKontra docNewReq ctx' docApiV2New
   assertEqual "We should get a 201 response" 201 (rsCode newDocResp)
 
   -- Test role combinations; use the first user and partner structure
@@ -767,8 +736,6 @@ testPartnersUserGetTokens = do
                                 (partnerApiCallV1UserGetPersonalToken partnerUgID uid)
                                 []
                                 403
-
-  return ()
 
 --------
 -- Utils
@@ -820,7 +787,7 @@ testHelperPartnerCompanyUserCreate ctx partnerUgID company_ugid = do
                               rq_newUserGood_resp_fp
   let Object respObject   = respValue
       Just   (String uid) = H.lookup "id" respObject
-  return $ unsafeUserID $ read uid
+  return . unsafeUserID $ read uid
 
 -- we produce the UserGroupID as an Int64 since that is now what the partners
 -- API expect for its handlers.
@@ -837,7 +804,7 @@ testJSONCtxWithPartnerGroupID = do
     .  UserGroupAdminAR
     $  partnerAdminUserGroup
     ^. #id
-  ctx <- (set #maybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang partnerAdminUser
   return (ctx, partnerAdminUserGroup ^. #id)
 
 runApiJSONTest
@@ -850,7 +817,7 @@ runApiJSONTest
   -> TestEnv Value
 runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
   req      <- mkRequestWithHeaders httpMethod httpHeaders []
-  (res, _) <- runTestKontra req ctx $ apiCall
+  (res, _) <- runTestKontra req ctx apiCall
   assertEqual ("We should get a " ++ show expectedRsCode ++ " response")
               expectedRsCode
               (rsCode res)
@@ -867,7 +834,7 @@ runApiJSONTestNoResChk
   -> TestEnv ()
 runApiJSONTestNoResChk ctx httpMethod apiCall httpHeaders expectedRsCode = do
   req      <- mkRequestWithHeaders httpMethod httpHeaders []
-  (res, _) <- runTestKontra req ctx $ apiCall
+  (res, _) <- runTestKontra req ctx apiCall
   assertEqual ("We should get a " ++ show expectedRsCode ++ " response")
               expectedRsCode
               (rsCode res)

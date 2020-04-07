@@ -33,7 +33,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 
 import Control.Monad.Base
 import Crypto.RNG
-import Data.Unjson
+import Data.List.Extra (nubOrd)
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Log
@@ -62,9 +62,6 @@ import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocAddImage (addImageToDocumentFile)
 import Doc.DocInfo (isClosed, isPending, isTimedout)
 import Doc.DocMails
-import Doc.DocMails
-  ( sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1
-  )
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
@@ -101,7 +98,7 @@ docApiV2New = api $ do
   mFile         <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
   mFolderId     <- apiV2ParameterOptional (ApiV2ParameterRead "folder_id")
   -- API call actions
-  title         <- case (fmap (T.unpack . filename) mFile) of
+  title         <- case fmap (T.unpack . filename) mFile of
     Just fn@(_ : _) -> return $ dropExtension fn
     _               -> do
       ctx   <- getContext
@@ -111,20 +108,16 @@ docApiV2New = api $ do
     Just folderId -> return folderId
     Nothing       -> apiError $ requestParameterMissing "folder_id"
   guardDocumentCreateInFolderIsAllowed user folderId
-  withDocumentM
-      ( dbUpdate
-      $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor folderId
-      )
-    $ do
-        dbUpdate $ SetDocumentUnsavedDraft (not saved)
-        case mFile of
-          Nothing -> return ()
-          Just f  -> do
-            dbUpdate $ AttachFile (fileid f) actor
-        theDocument >>= \doc -> logInfo "New document created" $ logObject_ doc
-        Created
-          <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d))
-          <$> theDocument
+  let newDocM = dbUpdate
+        $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor folderId
+  withDocumentM newDocM $ do
+    dbUpdate $ SetDocumentUnsavedDraft (not saved)
+    case mFile of
+      Nothing -> return ()
+      Just f  -> do
+        dbUpdate $ AttachFile (fileid f) actor
+    theDocument >>= \doc -> logInfo "New document created" $ logObject_ doc
+    Created . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2NewFromTemplate :: Kontrakcja m => DocumentID -> m Response
 docApiV2NewFromTemplate did = logDocument did . api $ do
@@ -137,22 +130,22 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   withDocumentID did $ do
     guardThatUserIsAuthorOrDocumentIsShared user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (isTemplate) "The document is not a template." =<< theDocument
-    guardThatDocumentIs (not $ flip documentDeletedForUser $ user ^. #id)
+    guardThatDocumentIs isTemplate "The document is not a template." =<< theDocument
+    guardThatDocumentIs (not . flip documentDeletedForUser $ user ^. #id)
                         "The template is in Trash"
       =<< theDocument
     guardUserMayImpersonateUserGroupForEid user =<< theDocument
   whenJust mFolderId $ guardDocumentCreateInFolderIsAllowed user
   -- API call actions
-  template <- dbQuery $ GetDocumentByDocumentID $ did
+  template <- dbQuery $ GetDocumentByDocumentID did
   newdid   <-
     apiGuardJustM (serverError "Can't clone given document")
-    $ dbUpdate
+    . dbUpdate
     $ CloneDocumentWithUpdatedAuthor (Just user) template actor identity
   withDocumentID newdid $ do
     dbUpdate $ DocumentFromTemplate (documentid template) actor
     dbUpdate $ SetDocumentUnsavedDraft False
-    whenJust mFolderId $ \fid -> void $ dbUpdate $ SetDocumentFolderID fid actor
+    whenJust mFolderId $ \fid -> void . dbUpdate $ SetDocumentFolderID fid actor
     -- This is a special hack for RBS (CORE-1712).
     whenJust mBPID $ \bpid -> do
       let tag = DocumentTag { tagname = "bpid", tagvalue = bpid }
@@ -180,22 +173,20 @@ docApiV2Update did = logDocument did . api $ do
     documentJSON <- apiV2ParameterObligatory (ApiV2ParameterAeson "document")
     doc          <- theDocument
     let da = documentAccessForUser user doc
-    draftData <- case (Unjson.update doc (unjsonDocument da) documentJSON) of
+    draftData <- case Unjson.update doc (unjsonDocument da) documentJSON of
       (Result draftData []) -> do
         guardThatConsentModulesAreOnSigningParties draftData
         return draftData
-      (Result _ errs) ->
-        apiError
-          $   requestParameterParseError "document"
-          $   "Errors while parsing document data:"
-          <+> showt errs
+      (Result _ errs) -> apiError $ requestParameterParseError
+        "document"
+        ("Errors while parsing document data:" <+> showt errs)
     guardDocumentMoveIsAllowed user (documentfolderid doc) (documentfolderid draftData)
     guardUserMayImpersonateUserGroupForEid user draftData
     -- API call actions
     applyDraftDataToDocument draftData actor
     guardThatAuthorIsNotApprover =<< theDocument
     -- Result
-    Ok <$> (unjsonDocument da, ) <$> theDocument
+    Ok . (unjsonDocument da, ) <$> theDocument
 
 docApiV2AddEvidenceEvent :: Kontrakcja m => DocumentID -> m Response
 docApiV2AddEvidenceEvent did = logDocument did . api $ do
@@ -232,26 +223,26 @@ docApiV2Start did = logDocument did . api $ do
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime t actor
     postDocumentPreparationChange authorSignsNow timezone
-    ugwp         <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+    ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
     subscription <- getSubscription ugwp
     case ugSubPaymentPlan subscription of
       Just FreePlan -> do
         updated <- dbUpdate
           $ UserGroupFreeDocumentTokensUseOneIfIfPossible (user ^. #groupID)
-        case updated of
-          True  -> return ()
-          False -> apiError $ documentActionForbiddenBecauseNotEnoughTokens
+        if updated
+          then return ()
+          else apiError documentActionForbiddenBecauseNotEnoughTokens
       _ -> return ()
     chargeForItemSingle CIStartingDocument did
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2StartWithPortal :: Kontrakcja m => m Response
 docApiV2StartWithPortal = api $ do
   -- Permissions
   time <- view #time <$> getContext
   (user, actor) <- getAPIUser APIDocSend
-  dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
+  dids <- apiV2ParameterObligatory . ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
   when (length dids > 20) . apiError $ requestParameterInvalid
     "document_ids"
     "document_ids parameter can't have more the 20 ids"
@@ -270,19 +261,19 @@ docApiV2StartWithPortal = api $ do
     dbUpdate $ SetDocumentInviteTime time actor
     postDocumentPreparationChange False timezone
     chargeForItemSingle CIStartingDocument did
-    return =<< theDocument -- return changed
-  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+    theDocument -- return changed
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
       sendPortalInvites user portalUrl docs1
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
   docs2 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
     saveDocumentForPortalSignatories
-    return =<< theDocument -- return changed
+    theDocument -- return changed
   -- Result
-  let docAccess = \d -> (documentAccessForUser user d, d)
-      headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-      jsonBS    = listToJSONBS (length docs2, docAccess <$> docs2)
+  let docAccess d = (documentAccessForUser user d, d)
+      headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+      jsonBS  = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
   where
     sendPortalInvites authorUser portalUrl docs = do
@@ -299,12 +290,12 @@ docApiV2Prolong did = logDocument did . api $ do
     guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs
-        (\d -> (isPending d) || (isTimedout d))
+        (\d -> isPending d || isTimedout d)
         "The document is not pending or has not timed out. Only timed out or pending documents can be prolonged."
       =<< theDocument
     -- Parameters
     days <- fromIntegral <$> apiV2ParameterObligatory (ApiV2ParameterInt "days")
-    when (days < 1 || days > 365) $ apiError $ requestParameterInvalid
+    when (days < 1 || days > 365) . apiError $ requestParameterInvalid
       "days"
       "Days must be a number between 1 and 365"
     -- API call actions
@@ -316,7 +307,7 @@ docApiV2Prolong did = logDocument did . api $ do
         now <- currentTime
         dtt <- fromMaybe now . documenttimeouttime <$> theDocument
         when (days `daysAfter` dtt > 365 `daysAfter` now)
-          $ apiError
+          . apiError
           $ requestParameterInvalid
               "days"
               "New timeout time can't be later then 365 days from now"
@@ -324,7 +315,7 @@ docApiV2Prolong did = logDocument did . api $ do
       _ -> unexpectedError "Invalid document state - this should be checked earlier"
     triggerAPICallbackIfThereIsOne =<< theDocument
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2Cancel :: Kontrakcja m => DocumentID -> m Response
 docApiV2Cancel did = logDocument did . api $ do
@@ -339,7 +330,7 @@ docApiV2Cancel did = logDocument did . api $ do
     dbUpdate $ CancelDocument actor
     postDocumentCanceledChange =<< theDocument
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2Trash :: Kontrakcja m => DocumentID -> m Response
 docApiV2Trash = docApiV2TrashDeleteCommon guardThatDocumentCanBeTrashedByUser
@@ -366,9 +357,9 @@ docApiV2TrashDeleteCommon guardAction dbAction errorMsg did = logDocument did . 
   withDocumentID did $ do
     -- API call actions
     success <- dbUpdate $ dbAction (user ^. #id) actor
-    unless success $ apiError . documentStateError $ errorMsg
+    unless success . apiError . documentStateError $ errorMsg
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2TrashMultiple :: Kontrakcja m => m Response
 docApiV2TrashMultiple = do
@@ -407,16 +398,16 @@ docApiV2TrashDeleteMultipleCommon guardAction dbAction setSignatoryLink errorMsg
   -- Permissions
     (user, actor) <- getAPIUser APIDocSend
     -- Parameters
-    dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $ arrayOf
+    dids <- apiV2ParameterObligatory . ApiV2ParameterJSON "document_ids" $ arrayOf
       unjsonDef
     -- Guards
     when (length dids > 100) . apiError $ requestParameterInvalid
       "document_ids"
       "document_ids parameter can't have more than 100 positions"
-    when (length dids == 0) . apiError $ requestParameterInvalid
+    when (null dids) . apiError $ requestParameterInvalid
       "document_ids"
       "document_ids parameter can't be an empty list"
-    when (length (nub dids) /= length dids) . apiError $ requestParameterInvalid
+    when (length (nubOrd dids) /= length dids) . apiError $ requestParameterInvalid
       "document_ids"
       "document_ids parameter can't contain duplicates"
     forM_ dids $ guardAction user
@@ -425,9 +416,9 @@ docApiV2TrashDeleteMultipleCommon guardAction dbAction setSignatoryLink errorMsg
         docFilter = [DocumentFilterByDocumentIDs dids]
         limits    = (0, 100, 100)
         docQuery  = GetDocumentsWithSoftLimit docDomain docFilter [] limits
-        docAccess = \d -> (documentAccessForUser user d, d)
-        headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-    (docCount, allDocs) <- dbQuery $ docQuery
+        docAccess d = (documentAccessForUser user d, d)
+        headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+    (docCount, allDocs) <- dbQuery docQuery
     -- API call actions
     forM_ dids $ \did -> withDocumentID did $ do
       success <- dbUpdate $ dbAction (user ^. #id) actor
@@ -457,7 +448,7 @@ docApiV2RemindWithPortal :: Kontrakcja m => m Response
 docApiV2RemindWithPortal = api $ do
   -- Permissions
   (user, _) <- getAPIUser APIDocSend
-  dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
+  dids <- apiV2ParameterObligatory . ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
   when (length dids > 20) . apiError $ requestParameterInvalid
     "document_ids"
     "document_ids parameter can't have more the 20 ids"
@@ -468,20 +459,20 @@ docApiV2RemindWithPortal = api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- Parameters
-    return =<< theDocument -- return changed
-  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ user ^. #id
+    theDocument -- return changed
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
       forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs1)
-        $ \(email, name) -> sendPortalReminder user portalUrl email name
+        $ uncurry (sendPortalReminder user portalUrl)
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
   docs2 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
     saveDocumentForPortalSignatories
-    return =<< theDocument -- return changed
+    theDocument -- return changed
   -- Result
-  let docAccess = \d -> (documentAccessForUser user d, d)
-      headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-      jsonBS    = listToJSONBS (length docs2, docAccess <$> docs2)
+  let docAccess d = (documentAccessForUser user d, d)
+      headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+      jsonBS  = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
 
 docApiV2Forward :: Kontrakcja m => DocumentID -> m Response
@@ -501,7 +492,7 @@ docApiV2Forward did = logDocument did . api $ do
     noContent     <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
     noAttachments <- apiV2ParameterDefault False (ApiV2ParameterBool "no_attachments")
     -- API call actions
-    asiglink      <- fromJust <$> getAuthorSigLink <$> theDocument
+    asiglink      <- fromJust . getAuthorSigLink <$> theDocument
     void $ sendForwardEmail validEmail noContent noAttachments asiglink
     -- Return
     return $ Accepted ()
@@ -521,13 +512,13 @@ docApiV2SetFile did = logDocument did . api $ do
     case mFile of
       Nothing   -> dbUpdate $ DetachFile actor
       Just file -> do
-        moldfileid <- fmap mainfileid <$> documentfile <$> theDocument
+        moldfileid <- fmap mainfileid . documentfile <$> theDocument
         dbUpdate $ AttachFile (fileid file) actor
         case moldfileid of
           Just oldfileid -> recalculateAnchoredFieldPlacements oldfileid (fileid file)
           Nothing        -> return ()
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2RemovePages :: Kontrakcja m => DocumentID -> m Response
 docApiV2RemovePages did = logDocument did . api $ do
@@ -544,10 +535,10 @@ docApiV2RemovePages did = logDocument did . api $ do
       apiError $ requestParameterInvalid
         "pages"
         "Pages parameter can't have more than 100 positions"
-    when (length pages == 0) $ apiError $ requestParameterInvalid
+    when (null pages) . apiError $ requestParameterInvalid
       "pages"
       "Pages parameter can't be an empty list"
-    when (length (nub pages) /= length pages) $ apiError $ requestParameterInvalid
+    when (length (nubOrd pages) /= length pages) . apiError $ requestParameterInvalid
       "pages"
       "Pages parameter can't contain duplicates"
     -- Generating and replacing PDF
@@ -579,7 +570,7 @@ docApiV2RemovePages did = logDocument did . api $ do
     -- Changing signatory fiels
     adjustFieldAndPlacementsAfterRemovingPages pages actor
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2SetAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2SetAttachments did = logDocument did . api $ do
@@ -603,23 +594,22 @@ docApiV2SetAttachments did = logDocument did . api $ do
                 fid `elem` (authorattachmentfileid <$> documentauthorattachments d)
             )
     let names = map aadName attachmentDetails
-    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att ->
-      unless (incremental && (authorattachmentname att) `notElem` names)
-        $ void
-        $ dbUpdate
-        $ RemoveDocumentAttachments (authorattachmentfileid att) actor
+    (documentauthorattachments <$> theDocument >>=) . mapM_ $ \att ->
+      unless (incremental && authorattachmentname att `notElem` names) . void $ dbUpdate
+        (RemoveDocumentAttachments (authorattachmentfileid att) actor)
     newFileContentsWithDetails' <- forM attachmentDetails $ \ad ->
-      case (aadFileOrFileParam ad) of
+      case aadFileOrFileParam ad of
         Left fid -> do
-          attachmentFromAttachmentArchive <- (not null)
+          attachmentFromAttachmentArchive <- not null
             <$> dbQuery (attachmentsQueryFor user fid)
           unless (fileWasAlreadyAnAttachment fid || attachmentFromAttachmentArchive)
-            $   apiError
-            $   resourceNotFound
-            $   "File id"
-            <+> showt fid
-            <+> "can't be used. It may not exist or you don't have permission to use it."
-          void $ dbUpdate $ AddDocumentAttachment (aadName ad)
+            . apiError
+            $ resourceNotFound
+                ("File id"
+                <+> showt fid
+                <+> "can't be used. It may not exist or you don't have permission to use it."
+                )
+          void . dbUpdate $ AddDocumentAttachment (aadName ad)
                                                   (aadRequired ad)
                                                   (aadAddToSealedFile ad)
                                                   fid
@@ -636,7 +626,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
       (aadAddToSealedFile ad)
       (fileid newFile)
       actor
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
   where
     attachmentsQueryFor user fid = GetAttachments
       [ AttachmentsSharedInUsersUserGroup (user ^. #id)
@@ -671,7 +661,7 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
     timezone <- documenttimezonename <$> theDocument
     setAutomaticReminder did (fmap fromIntegral days) timezone
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2Clone :: Kontrakcja m => DocumentID -> m Response
 docApiV2Clone did = logDocument did . api $ do
@@ -684,13 +674,13 @@ docApiV2Clone did = logDocument did . api $ do
     -- API call actions
     doc     <- theDocument
     mNewDid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor identity
-    when (isNothing mNewDid) $ apiError $ serverError
+    when (isNothing mNewDid) . apiError $ serverError
       "Could not clone document, did not get back valid ID"
-    newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mNewDid
+    newdoc <- dbQuery . GetDocumentByDocumentID $ fromJust mNewDid
     -- Result
     logInfo "New document created by cloning"
       $ object [logPair_ newdoc, "parent doc id" .= show did]
-    return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d, d)) newdoc
+    return . Created $ (\d -> (unjsonDocument $ documentAccessForUser user d, d)) newdoc
 
 docApiV2Restart :: Kontrakcja m => DocumentID -> m Response
 docApiV2Restart did = logDocument did . api $ do
@@ -701,16 +691,16 @@ docApiV2Restart did = logDocument did . api $ do
     guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs
-        (\d -> not $ documentstatus d `elem` [Preparation, Pending, Closed])
+        (\d -> documentstatus d `notElem` [Preparation, Pending, Closed])
         "Documents that are in Preparation, Pending, or Closed can not be restarted."
       =<< theDocument
     -- API call actions
     doc     <- theDocument
     mNewDoc <- dbUpdate $ RestartDocument doc actor
-    when (isNothing mNewDoc) $ apiError $ serverError "Could not restart document"
-    -- Result
-    return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d, d))
-      (fromJust mNewDoc)
+    case mNewDoc of
+      Nothing -> apiError $ serverError "Could not restart document"
+      Just newDoc ->
+        return $ Created (unjsonDocument $ documentAccessForUser user newDoc, newDoc)
 
 docApiV2Callback :: Kontrakcja m => DocumentID -> m Response
 docApiV2Callback did = logDocument did . api $ do
@@ -720,7 +710,7 @@ docApiV2Callback did = logDocument did . api $ do
     -- Guards
     guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (\d -> not $ documentstatus d == Preparation)
+    guardThatDocumentIs (\d -> documentstatus d /= Preparation)
                         "Can not send callbacks for documents in Preparation."
       =<< theDocument
     -- API call actions
@@ -733,16 +723,16 @@ docApiV2SetSharing = api $ do
   -- Permissions
   (user, _) <- getAPIUser APIDocCreate
   -- Parameters
-  dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
+  dids <- apiV2ParameterObligatory . ApiV2ParameterJSON "document_ids" $ arrayOf unjsonDef
   sharing <- apiV2ParameterObligatory $ ApiV2ParameterBool "shared"
   -- Guards
   when (length dids > 100) . apiError $ requestParameterInvalid
     "document_ids"
     "document_ids parameter can't have more than 100 positions"
-  when (length dids == 0) . apiError $ requestParameterInvalid
+  when (null dids) . apiError $ requestParameterInvalid
     "document_ids"
     "document_ids parameter can't be an empty list"
-  when (length (nub dids) /= length dids) . apiError $ requestParameterInvalid
+  when (length (nubOrd dids) /= length dids) . apiError $ requestParameterInvalid
     "document_ids"
     "document_ids parameter can't contain duplicates"
   forM_ dids $ \did ->
@@ -797,7 +787,7 @@ docApiV2SigSetAuthToView authKind did slid = logDocumentAndSignatory did slid . 
     -- API call actions
     dbUpdate $ ChangeAuthenticationToViewMethod slid authKind authType mSSN mMobile actor
     -- Return
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 ----------------------------------------
 
@@ -834,7 +824,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     dbUpdate
       $ ChangeAuthenticationToSignMethod slid authentication_type mSSN mMobile actor
     -- Return
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2SigChangeEmailAndMobile
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -895,7 +885,7 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     -- unless that party has not reached sign order yet
     (\d ->
         when (documentcurrentsignorder d >= signatorysignorder sl')
-          $ void
+          . void
           $ sendInvitationEmail1 sl'
       )
       =<< theDocument
@@ -911,7 +901,7 @@ docApiV2GenerateShareableLink did = logDocument did . api $ do
     doc' <- (\d -> d { documenttype = Signable }) <$> theDocument
     guardThatDocumentCanBeStarted doc'
     hash <- random
-    dbUpdate $ UpdateShareableLinkHash $ Just hash
+    dbUpdate . UpdateShareableLinkHash $ Just hash
     (\d -> Ok (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
 
 docApiV2DiscardShareableLink :: Kontrakcja m => DocumentID -> m Response
@@ -964,4 +954,4 @@ docApiV2AddImage did = logDocument did . api $ do
                 dbUpdate $ DetachFile actor
                 dbUpdate $ AttachFile nfileid actor
     -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument

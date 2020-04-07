@@ -80,7 +80,7 @@ testJSONCtx = do
                                                , lastName  = return "JonesTest"
                                                , email     = return "test@scrive.com"
                                                }
-  (set #maybeUser (Just user)) <$> mkContext defaultLang
+  mkContextWithUser defaultLang user
 
 runApiJSONTest
   :: Context             -- ^ Context to run the test in
@@ -92,7 +92,7 @@ runApiJSONTest
   -> TestEnv (DocumentID, Value)
 runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
   req      <- mkRequestWithHeaders httpMethod httpHeaders []
-  (res, _) <- runTestKontra req ctx $ apiCall
+  (res, _) <- runTestKontra req ctx apiCall
   assertEqual ("We should get a " ++ show expectedRsCode ++ " response")
               expectedRsCode
               (rsCode res)
@@ -112,18 +112,18 @@ runApiTest
   -> TestEnv ()
 runApiTest ctx httpMethod apiCall httpHeaders expectedRsCode = do
   req      <- mkRequestWithHeaders httpMethod httpHeaders []
-  (res, _) <- runTestKontra req ctx $ apiCall
+  (res, _) <- runTestKontra req ctx apiCall
   assertEqual ("We should get a " ++ show expectedRsCode ++ " response")
               expectedRsCode
               (rsCode res)
 
 -- FilePath for  common JSONs re-used over and over in these tests
-jsonFP_new_file :: FilePath
-jsonFP_new_file = inTestDir "json/api_v2/result-new-file-saved-false.json"
-jsonFP_new_file_saved :: FilePath
-jsonFP_new_file_saved = inTestDir "json/api_v2/result-new-file-saved-true.json"
-jsonFP_new_no_params :: FilePath
-jsonFP_new_no_params = inTestDir "json/api_v2/result-new-no-params.json"
+jsonFpNewFile :: FilePath
+jsonFpNewFile = inTestDir "json/api_v2/result-new-file-saved-false.json"
+jsonFpNewFileSaved :: FilePath
+jsonFpNewFileSaved = inTestDir "json/api_v2/result-new-file-saved-true.json"
+jsonFpNewNoParams :: FilePath
+jsonFpNewNoParams = inTestDir "json/api_v2/result-new-no-params.json"
 
 testDocNewGet :: TestEnv ()
 testDocNewGet = do
@@ -132,19 +132,14 @@ testDocNewGet = do
   -- File and saved = false
   let rq_new_1_params =
         [("file", inFile $ inTestDir "pdfs/simple.pdf"), ("saved", inText "false")]
-  (did_1, _) <- runApiJSONTest ctx POST docApiV2New rq_new_1_params 201 jsonFP_new_file
-  void $ runApiJSONTest ctx POST (docApiV2Get did_1) [] 200 jsonFP_new_file
+  (did_1, _) <- runApiJSONTest ctx POST docApiV2New rq_new_1_params 201 jsonFpNewFile
+  void $ runApiJSONTest ctx POST (docApiV2Get did_1) [] 200 jsonFpNewFile
 
   -- File and saved = true
   let rq_new_2_params =
         [("file", inFile $ inTestDir "pdfs/simple.pdf"), ("saved", inText "true")]
-  (did_2, _) <- runApiJSONTest ctx
-                               POST
-                               docApiV2New
-                               rq_new_2_params
-                               201
-                               jsonFP_new_file_saved
-  void $ runApiJSONTest ctx POST (docApiV2Get did_2) [] 200 jsonFP_new_file_saved
+  (did_2, _) <- runApiJSONTest ctx POST docApiV2New rq_new_2_params 201 jsonFpNewFileSaved
+  void $ runApiJSONTest ctx POST (docApiV2Get did_2) [] 200 jsonFpNewFileSaved
 
   -- File and no saved parameter (should default to true)
   let rq_new_2'_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
@@ -153,14 +148,12 @@ testDocNewGet = do
                                 docApiV2New
                                 rq_new_2'_params
                                 201
-                                jsonFP_new_file_saved
-  void $ runApiJSONTest ctx POST (docApiV2Get did_2') [] 200 jsonFP_new_file_saved
+                                jsonFpNewFileSaved
+  void $ runApiJSONTest ctx POST (docApiV2Get did_2') [] 200 jsonFpNewFileSaved
 
   -- No file and no saved parameters
-  (did_3, _) <- runApiJSONTest ctx POST docApiV2New [] 201 jsonFP_new_no_params
-  void $ runApiJSONTest ctx POST (docApiV2Get did_3) [] 200 jsonFP_new_no_params
-
-  return ()
+  (did_3, _) <- runApiJSONTest ctx POST docApiV2New [] 201 jsonFpNewNoParams
+  void $ runApiJSONTest ctx POST (docApiV2Get did_3) [] 200 jsonFpNewNoParams
 
 testDocNewFromTemplate :: TestEnv ()
 testDocNewFromTemplate = do
@@ -174,7 +167,7 @@ testDocNewFromTemplate = do
                                    docApiV2New
                                    rq_new_1_params
                                    rq_new_1_code
-                                   jsonFP_new_file
+                                   jsonFpNewFile
 
   let value       = setDocKey "is_template" (Bool True) docJSON
       docTemplate = encode value
@@ -199,75 +192,64 @@ testDocNewFromTemplate = do
                         rq_newfromtemplate_code
                         rq_newfromtemplate_json
 
-  return ()
-
 testDocNewAndStart :: TestEnv ()
 testDocNewAndStart = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
-  void $ runApiJSONTest ctx POST (docApiV2Start did) [] 200 $ inTestDir
+  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
+  void . runApiJSONTest ctx POST (docApiV2Start did) [] 200 $ inTestDir
     "json/api_v2/test-DocNewAndStart.json"
-  return ()
 
 testDocNewAndStartWithMetadataInFields :: TestEnv ()
 testDocNewAndStartWithMetadataInFields = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
   documentWithMetaInFields <- readTestFile
     "json/api_v2/param-update-with-metatata-in-fields.json"
   req    <- mkRequestWithHeaders POST [("document", inTextBS documentWithMetaInFields)] []
   (_, _) <- runTestKontra req ctx $ docApiV2Update did
-  void $ runApiJSONTest ctx POST (docApiV2Start did) [] 200 $ inTestDir
+  void . runApiJSONTest ctx POST (docApiV2Start did) [] 200 $ inTestDir
     "json/api_v2/test-DocStartedWithMetadataInFields.json"
-  return ()
-
 
 testDocUpdateEmptySignatory :: TestEnv ()
 testDocUpdateEmptySignatory = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  (did, _)     <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
 
   update1SigBS <- readTestFile "json/api_v2/param-update-1emptysig.json"
   let rq_update_params = [("document", inTextBS update1SigBS)]
       rq_update_json   = inTestDir "json/api_v2/test-DocUpdateEmptySignatory.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
 
-  return ()
-
 testDocUpdateNewSignatory :: TestEnv ()
 testDocUpdateNewSignatory = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  (did, _)     <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
 
   update2SigBS <- readTestFile "json/api_v2/param-update-2emptysig.json"
   let rq_update_params = [("document", inTextBS update2SigBS)]
       rq_update_json   = inTestDir "json/api_v2/test-DocUpdateNewSignatory.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
 
-  return ()
-
 testDocUpdateAll :: TestEnv ()
 testDocUpdateAll = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  (did, _)    <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
 
   updateAllBS <- readTestFile "json/api_v2/param-update-all.json"
   let rq_update_params = [("document", inTextBS updateAllBS)]
       rq_update_json   = inTestDir "json/api_v2/test-DocUpdateAll.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
 
-  return ()
-
 testDocUpdateInvalidRadioGroup :: TestEnv ()
 testDocUpdateInvalidRadioGroup = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  (did, _)     <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
 
   updateAllBS1 <- readTestFile "json/api_v2/param-update-invalid-radiogroup-1.json"
   let rq_update_params1 = [("document", inTextBS updateAllBS1)]
@@ -284,19 +266,17 @@ testDocUpdateNewFields :: TestEnv ()
 testDocUpdateNewFields = do
   ctx <- testJSONCtx
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  (did, _) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
 
   updateNewFieldsBS <- readTestFile "json/api_v2/param-update-fields.json"
   let rq_update_params = [("document", inTextBS updateNewFieldsBS)]
       rq_update_json   = inTestDir "json/api_v2/test-DocUpdateNewFields.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
 
-  return ()
-
 testDocSetFile :: TestEnv ()
 testDocSetFile = do
   ctx      <- testJSONCtx
-  (did, _) <- runApiJSONTest ctx POST docApiV2New [] 201 jsonFP_new_no_params
+  (did, _) <- runApiJSONTest ctx POST docApiV2New [] 201 jsonFpNewNoParams
 
   let rq_setfile1_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
   void $ runApiJSONTest ctx
@@ -304,7 +284,7 @@ testDocSetFile = do
                         (docApiV2SetFile did)
                         rq_setfile1_params
                         200
-                        jsonFP_new_file_saved
+                        jsonFpNewFileSaved
 
   let rq_setfile2_params = [("file", inFile $ inTestDir "pdfs/simple-rotate-90.pdf")]
       rq_setfile2_json   = inTestDir "json/api_v2/test-DocSetFile2.json"
@@ -315,13 +295,11 @@ testDocSetFile = do
                         200
                         rq_setfile2_json
 
-  return ()
-
 testDocSetFileB64 :: TestEnv ()
 testDocSetFileB64 = do
   ctx      <- testJSONCtx
-  (did, _) <- runApiJSONTest ctx POST docApiV2New [] 201 jsonFP_new_no_params
-  cont     <- liftIO $ BS.readFile $ inTestDir "pdfs/simple.pdf"
+  (did, _) <- runApiJSONTest ctx POST docApiV2New [] 201 jsonFpNewNoParams
+  cont     <- liftIO . BS.readFile $ inTestDir "pdfs/simple.pdf"
 
   let params = [("file", inTextBS $ BSL.fromChunks [B64.encode cont])]
   mockDoc <- mockDocTestRequestHelper ctx POST params (docApiV2SetFile did) 200
@@ -340,18 +318,18 @@ testDocList useFolderListCalls = do
   let new_ugsettings =
         set #useFolderListCalls useFolderListCalls (fromJust $ ug ^. #settings)
 
-  void $ dbUpdate . UserGroupUpdate $ set #settings (Just new_ugsettings) ug
+  void . dbUpdate . UserGroupUpdate $ set #settings (Just new_ugsettings) ug
 
   reqEmpty      <- mkRequestWithHeaders GET [("offset", inText "0")] []
-  (resEmpty, _) <- runTestKontra reqEmpty ctx $ docApiV2List
+  (resEmpty, _) <- runTestKontra reqEmpty ctx docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resEmpty)
   testJSONWith (inTestDir "json/api_v2/test-DocListEmpty.json") (rsBody resEmpty)
 
   let rq_new_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  void $ runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  void $ runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFpNewFileSaved
 
   reqOne      <- mkRequestWithHeaders GET [("offset", inText "0")] []
-  (resOne, _) <- runTestKontra reqOne ctx $ docApiV2List
+  (resOne, _) <- runTestKontra reqOne ctx docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resOne)
   let expectedJson = if useFolderListCalls
         then "test-DocListOne-By-Folder.json"
@@ -364,7 +342,7 @@ testDocList useFolderListCalls = do
     , ("filter", inText "[{\"filter_by\":\"status\",\"statuses\": [\"preparation\"]}]")
     ]
     []
-  (resFilterPrep, _) <- runTestKontra reqFilterPrep ctx $ docApiV2List
+  (resFilterPrep, _) <- runTestKontra reqFilterPrep ctx docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resFilterPrep)
   testJSONWith (inTestDir ("json/api_v2/" <> expectedJson)) (rsBody resFilterPrep)
 
@@ -374,7 +352,7 @@ testDocList useFolderListCalls = do
     , ("filter", inText "[{\"filter_by\":\"status\",\"statuses\": [\"pending\"]}]")
     ]
     []
-  (resFilterPending, _) <- runTestKontra reqFilterPending ctx $ docApiV2List
+  (resFilterPending, _) <- runTestKontra reqFilterPending ctx docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response")
               200
               (rsCode resFilterPending)
@@ -383,7 +361,7 @@ testDocList useFolderListCalls = do
   allFiltersJSONBS <- readTestFile "json/api_v2/param-list-all.json"
   let rq_all_filters_param = [("filter", inTextBS allFiltersJSONBS)]
   reqAllFilters      <- mkRequestWithHeaders GET rq_all_filters_param []
-  (resAllFilters, _) <- runTestKontra reqAllFilters ctx $ docApiV2List
+  (resAllFilters, _) <- runTestKontra reqAllFilters ctx docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resAllFilters)
 
 testDocRemovePages :: TestEnv ()
@@ -416,7 +394,6 @@ testDocRemovePages = do
                         rq_remove_pages_params
                         200
                         rq_remove_pages_res_json
-  return ()
 
 testJSONWith :: FilePath -> BSL.ByteString -> TestEnv ()
 testJSONWith = testJSONWithDynamicKeys

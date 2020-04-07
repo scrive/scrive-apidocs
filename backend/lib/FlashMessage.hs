@@ -55,9 +55,9 @@ toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg = FlashMessage
 
 toCookieValue :: FlashMessage -> String
-toCookieValue fm = encode $ J.runJSONGen $ do
-  J.value "type" $ flashTypeToStr $ flashType fm
-  J.value "content" $ urlEncode $ flashMessage fm
+toCookieValue fm = encode . J.runJSONGen $ do
+  J.value "type" . flashTypeToStr $ flashType fm
+  J.value "content" . urlEncode $ flashMessage fm
 
 flashTypeToStr :: FlashType -> String
 flashTypeToStr OperationDone   = "success"
@@ -68,6 +68,6 @@ addFlashCookie
 addFlashCookie flashesdata = do
   ishttps <- isHTTPS
   Cookies.addCookie ishttps (MaxAge $ 60 * 60 * 24)
-    $ mkCookie "flashmessage"
+    . mkCookie "flashmessage"
     $ stringB64Encode flashesdata
   where stringB64Encode = BS.toString . B64.encode . BS.fromString

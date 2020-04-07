@@ -8,7 +8,6 @@ module API.V2.Parameters (
 
 import Control.Monad.Catch
 import Control.Monad.IO.Class
-import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server
 import System.FilePath (takeExtension)
@@ -109,7 +108,7 @@ apiV2ParameterOptional (ApiV2ParameterJSON name jsonDef) = do
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
       Left  _          -> apiError $ requestParameterParseError name "Invalid JSON"
-      Right paramAeson -> case (Unjson.parse jsonDef paramAeson) of
+      Right paramAeson -> case Unjson.parse jsonDef paramAeson of
         (Result res []  ) -> return $ Just res
         (Result _   errs) -> apiError $ requestParameterParseError name (showt errs)
     Nothing -> return Nothing
@@ -117,7 +116,7 @@ apiV2ParameterOptional (ApiV2ParameterJSON name jsonDef) = do
 apiV2ParameterOptional (ApiV2ParameterTextUnjson name jsonDef) = do
   mValue <- getField name
   case mValue of
-    Just paramValue -> case (Unjson.parse jsonDef (Aeson.String paramValue)) of
+    Just paramValue -> case Unjson.parse jsonDef (Aeson.String paramValue) of
       (Result res []  ) -> return $ Just res
       (Result _   errs) -> apiError $ requestParameterParseError name (showt errs)
     Nothing -> return Nothing
@@ -127,7 +126,7 @@ apiV2ParameterOptional (ApiV2ParameterAeson name) = do
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
       Left msg ->
-        apiError $ requestParameterParseError name $ "Invalid JSON" <> T.pack msg
+        apiError . requestParameterParseError name $ "Invalid JSON" <> T.pack msg
       Right js -> return $ Just js
     Nothing -> return Nothing
 
@@ -145,13 +144,13 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
       Just (Input contentspec mfilename _contentType) -> do
         content <- case contentspec of
           Left  filepath -> liftIO $ BS.readFile filepath
-          Right content  -> return $ BS.concat $ BSL.toChunks content
+          Right content  -> return . BS.concat $ BSL.toChunks content
         case mfilename of
           Just filename' -> do
             -- Drop filepath for windows
             return $ Just (Windows.takeFileName filename', content)
           Nothing -> do
-            case (B64.decode content) of
+            case B64.decode content of
               Right c -> return $ Just ("", c)
               Left  _ -> apiError $ requestParameterInvalid
                 name
@@ -162,14 +161,11 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
     case res of
       Right r -> return $ zip (map fst contentsWithNames') r
       Left _ ->
-        apiError
-          $ requestParameterParseError (T.intercalate ", " names)
-          $ "not a valid PDF"
+        apiError $ requestParameterParseError (T.intercalate ", " names) "not a valid PDF"
 
   files <- forM pdfcontents $ \(filename, pdfcontent) -> do
     fileid <- saveNewFile (T.pack filename) pdfcontent
-    file   <- dbQuery $ GetFileByFileID fileid
-    return file
+    dbQuery $ GetFileByFileID fileid
   return $ Just files
 
 apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
@@ -195,7 +191,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
               name
               "filename suggests PDF, but not a valid PDF"
         (_, True) -> do
-          when (BS.null content') $ apiError $ requestParameterParseError
+          when (BS.null content') . apiError $ requestParameterParseError
             name
             "image is empty"
           res <- preCheckImage content'
@@ -211,7 +207,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
 
 apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
   mValue <- getFieldBS name
-  case (Base64Image.decode . BS.concat . BSL.toChunks) <$> mValue of
+  case Base64Image.decode . BS.concat . BSL.toChunks <$> mValue of
     Nothing -> return Nothing
     (Just Nothing) ->
       apiError $ requestParameterParseError name "expected RFC2397 encoded png"

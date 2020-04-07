@@ -20,17 +20,17 @@ import qualified Data.Text.Encoding as Text
 -}
 parseCSV :: BSL8.ByteString -> Either String [[String]]
 parseCSV csvcontents =
-  let parseresult = splitCSVContents $ BS.toString $ toStrict csvcontents
+  let parseresult = splitCSVContents . BS.toString $ toStrict csvcontents
   in  case (exception parseresult, result parseresult) of
-        (Just msg, _res) -> Left $ "Parse error : " ++ (show msg)
+        (Just msg, _res) -> Left $ "Parse error : " ++ show msg
         (Nothing, res) ->
-          Right $ fixSize $ map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
+          Right . fixSize . map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
   where
     dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
     isEmptyRow             = all isEmptyCell
     isEmptyCell            = null . dropWhile isSpace . reverse . dropWhile isSpace
     fixSize s = fixSize' (maximum $ map length s) s
-    fixSize' l (s : ss) = (s ++ (replicate (l - length s) "")) : fixSize' l ss
+    fixSize' l (s : ss) = (s ++ replicate (l - length s) "") : fixSize' l ss
     fixSize' _ _        = []
 {- |
     This splits up the csv contents, it makes an effort to guess separators
@@ -46,12 +46,8 @@ splitCSVContents x = SS.fromString guessedQuoteMark guessedSeparator (x ++ "\n")
 -- | Render a BSL8.ByteString representation of CSV. Uses \',\' as
 -- spearator and \'\"\' as quote.
 renderCSV :: [[String]] -> BSL.ByteString
-renderCSV content =
-  bom
-    `BSL.append` (BSL.fromStrict $ Text.encodeUtf16LE $ Text.pack $ SS.toString '"'
-                                                                                ','
-                                                                                content
-                 )
+renderCSV content = bom `BSL.append` BSL.fromStrict
+  (Text.encodeUtf16LE . Text.pack $ SS.toString '"' ',' content)
   where bom = BSL.pack [255, 254]
 
 
@@ -69,5 +65,5 @@ instance ToMessage CSV where
         then setHeader "Content-Disposition" ("attachment;filename=" ++ csvFilename csv)
         else identity
       )
-      $ setHeaderBS (BS.fromString "Content-Type") (toContentType csv)
+      . setHeaderBS (BS.fromString "Content-Type") (toContentType csv)
       $ toResponse (toMessage csv)

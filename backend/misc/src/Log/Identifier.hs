@@ -68,7 +68,7 @@ jsonIdentifier = IdentifierJSON . toJSON
 
 instance Identifier t => Identifier [t] where
   idDefaultLabel = idDefaultLabel @t <> "s"
-  idValue ns = IdentifierJSON $ Array $ fromList $ fmap (toJSON . idValue) ns
+  idValue ns = IdentifierJSON . Array $ fromList (fmap (toJSON . idValue) ns)
 
 instance Identifier t => Identifier (Maybe t)  where
   idDefaultLabel = idDefaultLabel @t
@@ -82,7 +82,7 @@ identifier n = (idDefaultLabel @t) .= (toJSON . idValue $ n)
 
 identifierMapLabel
   :: forall  t kv . (Identifier t, Aeson.KeyValue kv) => (Text -> Text) -> t -> kv
-identifierMapLabel f n = (f $ idDefaultLabel @t) .= (toJSON . idValue $ n)
+identifierMapLabel f n = f (idDefaultLabel @t) .= (toJSON . idValue $ n)
 
 class Loggable a where
   -- | Type can be converted for logging purposes by encoding (parts of)

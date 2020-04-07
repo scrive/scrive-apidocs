@@ -83,11 +83,11 @@ testUserLoginAndGetSession = do
   ctx        <- mkContext defaultLang
   req1       <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+    [ ("email", inText . unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
   -- get access tokens using an email and password
-  (res1, _) <- runTestKontra req1 ctx $ apiCallGetUserPersonalToken
+  (res1, _) <- runTestKontra req1 ctx apiCallGetUserPersonalToken
   let Just (Object respObject1 ) = decode (rsBody res1) :: Maybe Value
       Just (String apitoken    ) = H.lookup "apitoken" respObject1
       Just (String apisecret   ) = H.lookup "apisecret" respObject1
@@ -96,10 +96,10 @@ testUserLoginAndGetSession = do
 
   -- use access tokens to log in and get cookie-like session id
   req2      <- mkRequest GET [("personal_token", inTextBS $ rsBody res1)]
-  (res2, _) <- runTestKontra req2 ctx $ apiCallLoginUserAndGetSession
+  (res2, _) <- runTestKontra req2 ctx apiCallLoginUserAndGetSession
   let Just (Object respObject2) = decode (rsBody res2) :: Maybe Value
       Just (String session_id ) = H.lookup "session_id" respObject2
-  assertBool ("We should get an ok status in JSON") (session_id /= "")
+  assertBool "We should get an ok status in JSON" (session_id /= "")
 
   -- switch API and Access secrets to get bad input in correct format
   let badtokens =
@@ -112,10 +112,10 @@ testUserLoginAndGetSession = do
             , ("accesssecret", String apisecret)
             ]
   req3      <- mkRequest GET [("personal_token", inTextBS badtokens)]
-  (res3, _) <- runTestKontra req3 ctx $ apiCallLoginUserAndGetSession
+  (res3, _) <- runTestKontra req3 ctx apiCallLoginUserAndGetSession
   let Just (Object respObject3) = decode (rsBody res3) :: Maybe Value
       Just (String errorType  ) = H.lookup "error_type" respObject3
-  assertEqual ("We should get an error status in JSON") "invalid_authorisation" errorType
+  assertEqual "We should get an error status in JSON" "invalid_authorisation" errorType
 
 testUserTooManyGetTokens :: TestEnv ()
 testUserTooManyGetTokens = do
@@ -127,29 +127,29 @@ testUserTooManyGetTokens = do
   -- getting personap token works with correct password
   req1       <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+    [ ("email", inText . unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
-  (res1, _) <- runTestKontra req1 ctx $ apiCallGetUserPersonalToken
+  (res1, _) <- runTestKontra req1 ctx apiCallGetUserPersonalToken
   assertEqual "We should get a 200 response" 200 (rsCode res1)
 
   -- now we fail to get access tokens 6 times
   req2 <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+    [ ("email", inText . unEmail $ randomUser ^. #info % #email)
     , ("password", inText wrongpassword)
     ]
   forM_ [1 .. 6] $ \_ -> do
-    (res2, _) <- runTestKontra req2 ctx $ apiCallGetUserPersonalToken
+    (res2, _) <- runTestKontra req2 ctx apiCallGetUserPersonalToken
     assertEqual "We should get a 403 error response" 403 (rsCode res2)
 
   -- after 6 failed requests, trying valid password also fails
   req3 <- mkRequest
     GET
-    [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+    [ ("email", inText . unEmail $ randomUser ^. #info % #email)
     , ("password", inText password)
     ]
-  (res3, _) <- runTestKontra req3 ctx $ apiCallGetUserPersonalToken
+  (res3, _) <- runTestKontra req3 ctx apiCallGetUserPersonalToken
   assertEqual "We should get a 403 error response" 403 (rsCode res3)
 
 testUser2FAWorkflow :: TestEnv ()
@@ -157,7 +157,7 @@ testUser2FAWorkflow = do
   password          <- rand 10 $ arbText 3 30
   randomUser        <- instantiateUser $ randomUserTemplate { password = Just password }
 
-  ctx'              <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
+  ctx'              <- mkContextWithUser defaultLang randomUser
 
   -- Start setting up 2FA
   req_setup2fa      <- mkRequest POST []
@@ -171,23 +171,23 @@ testUser2FAWorkflow = do
   -- Get the secret from the QR code
   now    <- currentTime
   qrText <- liftIO $ decodeQR (QRCode . Base64.decodeLenient $ TE.encodeUtf8 setupQRCode)
-  let encsecret    = head . drop 1 . dropWhile (/= "secret") . splitOneOf "?&=" $ qrText
+  let encsecret    = (!! 1) . dropWhile (/= "secret") . splitOneOf "?&=" $ qrText
       Right secret = B32.decode $ BSC.pack encsecret
-      totpcode     = T.pack $ filter (/= '"') . show $ totp SHA1 secret now 30 6
+      totpcode     = T.pack . filter (/= '"') . show $ totp SHA1 secret now 30 6
 
   -- For some reason we need to get updated User and add to Context
   -- otherwise tests fail because TOTP changes are not "seen"
-  Just user <- dbQuery $ GetUserByID $ randomUser ^. #id
-  ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
+  Just user <- dbQuery . GetUserByID $ randomUser ^. #id
+  ctx       <- mkContextWithUser defaultLang user
 
   -- apiCallGetUserPersonalToken should still work: 2FA not yet confirmed
   do
     req <- mkRequest
       GET
-      [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+      [ ("email", inText . unEmail $ randomUser ^. #info % #email)
       , ("password", inText password)
       ]
-    (res, _) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
+    (res, _) <- runTestKontra req ctx apiCallGetUserPersonalToken
     assertEqual "We should get a 200 response" 200 (rsCode res)
 
   -- "random" confirmation code should not work
@@ -209,21 +209,21 @@ testUser2FAWorkflow = do
   do
     req <- mkRequest
       GET
-      [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+      [ ("email", inText . unEmail $ randomUser ^. #info % #email)
       , ("password", inText password)
       ]
-    (res, _) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
+    (res, _) <- runTestKontra req ctx apiCallGetUserPersonalToken
     assertEqual "We should get a 403 response" 403 (rsCode res)
 
   -- and apiCallGetUserPersonalToken with totp should work
   do
     req <- mkRequest
       GET
-      [ ("email", inText $ unEmail $ randomUser ^. #info % #email)
+      [ ("email", inText . unEmail $ randomUser ^. #info % #email)
       , ("password", inText password)
       , ("totp"    , inText totpcode)
       ]
-    (res, _) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
+    (res, _) <- runTestKontra req ctx apiCallGetUserPersonalToken
     assertEqual "We should get a 200 response" 200 (rsCode res)
 
 testUserNoDeletionIfWrongEmail :: TestEnv ()
@@ -235,7 +235,7 @@ testUserNoDeletionIfWrongEmail = do
                                                , signupMethod   = CompanyInvitation
                                                }
 
-  ctx <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang anna
 
   do
     req      <- mkRequest POST [("email", inText "wrong@email.com")]
@@ -256,13 +256,13 @@ testUserNoDeletionIfPendingDocuments = do
                                                , signupMethod   = CompanyInvitation
                                                }
   now <- currentTime
-  void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
+  void . dbUpdate $ AcceptTermsOfService (anna ^. #id) now
 
   bob <- instantiateUser $ randomUserTemplate { email   = return "bob@blue.com"
                                               , groupID = return $ anna ^. #groupID
                                               }
 
-  ctx <- set #maybeUser (Just bob) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang bob
 
   doc <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Signable]
                                             , rdaStatuses = OneOf [Pending]
@@ -273,7 +273,7 @@ testUserNoDeletionIfPendingDocuments = do
     (res, _) <- runTestKontra req ctx apiCallDeleteUser
     assertEqual "can't delete last user if she has pending documents" 409 (rsCode res)
 
-  withDocument doc $ randomUpdate $ \t -> CancelDocument $ systemActor t
+  withDocument doc . randomUpdate $ CancelDocument . systemActor
 
   do
     req      <- mkRequest POST [("email", inText "bob@blue.com")]
@@ -288,7 +288,7 @@ testUserDeletion = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx      <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang anna
 
   req      <- mkRequest POST [("email", inText "anna@android.com")]
   (res, _) <- runTestKontra req ctx apiCallDeleteUser
@@ -307,9 +307,9 @@ testUserDeletionOwnershipTransfer = do
                                               }
 
   now <- currentTime
-  void $ dbUpdate $ AcceptTermsOfService (anna ^. #id) now
-  void $ dbUpdate $ AcceptTermsOfService (bob ^. #id) now
-  void $ dbUpdate $ SetUserCompanyAdmin (bob ^. #id) True
+  void . dbUpdate $ AcceptTermsOfService (anna ^. #id) now
+  void . dbUpdate $ AcceptTermsOfService (bob ^. #id) now
+  void . dbUpdate $ SetUserCompanyAdmin (bob ^. #id) True
 
   sharedTemplate <- addRandomDocument (rdaDefault anna) { rdaTypes    = OneOf [Template]
                                                         , rdaSharings = OneOf [Shared]
@@ -318,7 +318,7 @@ testUserDeletionOwnershipTransfer = do
                                                           , rdaSharings = OneOf [Private]
                                                           }
 
-  ctx <- set #maybeUser (Just anna) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang anna
   let actor = userActor ctx anna
 
   fid                <- addNewRandomFile
@@ -331,8 +331,8 @@ testUserDeletionOwnershipTransfer = do
   (res, _) <- runTestKontra req ctx apiCallDeleteUser
   assertEqual "user got deleted" 200 (rsCode res)
 
-  sharedTemplate'   <- dbQuery $ GetDocumentByDocumentID $ documentid sharedTemplate
-  unsharedTemplate' <- dbQuery $ GetDocumentByDocumentID $ documentid unsharedTemplate
+  sharedTemplate'   <- dbQuery . GetDocumentByDocumentID $ documentid sharedTemplate
+  unsharedTemplate' <- dbQuery . GetDocumentByDocumentID $ documentid unsharedTemplate
 
   let domains =
         [ AttachmentsOfAuthorDeleteValue (bob ^. #id)  False
@@ -345,10 +345,10 @@ testUserDeletionOwnershipTransfer = do
     $ GetAttachments domains [AttachmentFilterByID (attachmentid unsharedAttachment)] []
 
   assertEqual "other admin has been given shared template"
-              (maybesignatory $ head $ documentsignatorylinks sharedTemplate')
+              (maybesignatory . head $ documentsignatorylinks sharedTemplate')
               (Just $ bob ^. #id)
   assertEqual "other admin has not been given unshared template"
-              (maybesignatory $ head $ documentsignatorylinks unsharedTemplate')
+              (maybesignatory . head $ documentsignatorylinks unsharedTemplate')
               (Just $ anna ^. #id)
 
   assertEqual "other admin has been given shared attachment"
@@ -366,7 +366,7 @@ testUserSetDataRetentionPolicy = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   replicateM_ 10 $ do
     drp <- rand 10 arbitrary
@@ -375,7 +375,7 @@ testUserSetDataRetentionPolicy = do
     (res, _) <- runTestKontra req ctx apiCallSetDataRetentionPolicy
     assertEqual "should return 200" 200 (rsCode res)
 
-    Just user' <- dbQuery $ GetUserByID $ user ^. #id
+    Just user' <- dbQuery . GetUserByID $ user ^. #id
     assertEqual "policy should have been saved"
                 (user' ^. #settings % #dataRetentionPolicy)
                 drp
@@ -390,14 +390,14 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  ctx <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang user
 
   replicateM_ 10 $ do
     userDRP    <- rand 10 arbitrary
     companyDRP <- rand 10 arbitrary
 
     let ug' = set (#settings % _Just % #dataRetentionPolicy) companyDRP ug
-    void $ dbUpdate $ UserGroupUpdate ug'
+    void . dbUpdate $ UserGroupUpdate ug'
 
     let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy userDRP
     req      <- mkRequest POST [("data_retention_policy", inTextBS drpBS)]
@@ -430,19 +430,19 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
 testUserGetTags :: TestEnv ()
 testUserGetTags = do
   user         <- instantiateRandomUser
-  ctx          <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx          <- mkContextWithUser defaultLang user
   (Array tags) <- jsonTestRequestHelper ctx GET [] apiCallGetTags 200
   assertEqual "user can view tags" (length $ user ^. #externalTags) (length tags)
 
 testUserUpdateTags :: TestEnv ()
 testUserUpdateTags = do
   user     <- instantiateUser $ randomUserTemplate & #externalTags .~ return initialTags
-  ctx      <- set #maybeUser (Just user) <$> mkContext defaultLang
+  ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest POST [("tags", inText tagUpdateJson)]
   (res, _) <- runTestKontra req ctx apiCallUpdateTags
   assertEqual "should return" 200 (rsCode res)
 
-  Just user' <- dbQuery $ GetUserByID $ user ^. #id
+  Just user' <- dbQuery . GetUserByID $ user ^. #id
   assertEqual "user can update tags" expectUpdatedTags (user' ^. #externalTags)
   where
     tagUpdates =

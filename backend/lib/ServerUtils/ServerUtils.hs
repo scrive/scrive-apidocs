@@ -7,7 +7,7 @@ module ServerUtils.ServerUtils (
 import Control.Monad.Trans
 import Data.List (isPrefixOf)
 import Happstack.Server hiding (dir, simpleHTTP)
-import Log as Log
+import Log
 import System.Directory (getCurrentDirectory, makeAbsolute)
 import System.Exit
 import System.FilePath ((</>), takeBaseName)
@@ -31,7 +31,7 @@ import Util.MonadUtils
 handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do
   input <- getDataFn' (lookInput "csv")
-  res   <- case input of
+  case input of
     Just (Input contentspec (Just filename) _) -> do
       content <- case contentspec of
         Left  filepath -> liftIO $ BSL.readFile filepath
@@ -39,11 +39,10 @@ handleParseCSV = do
       let _title = BS.fromString (takeBaseName filename)
       case parseCSV content of
         Right (h : r) -> J.runJSONGenT $ do
-          J.value "header" $ h
-          J.value "rows" $ r
+          J.value "header" h
+          J.value "rows" r
         _ -> runJSONGenT $ J.value "parseError" True
     _ -> runJSONGenT $ J.value "parseError" True
-  return res
 
 -- Read an image file from POST, and returns a its content encoded with Base64
 -- extensions is comma-separated list of accepted extensions (returns 400 for other filetypes)
@@ -61,20 +60,19 @@ handleSerializeImage = do
         then do
           content <- case contentspec of
             Left  filepath -> liftIO $ BS.readFile filepath
-            Right content' -> return $ BS.concat $ BSL.toChunks content'
-          goodRequest $ runJSONGen $ value "logo_base64" $ showJSON $ B64.encode content
+            Right content' -> return . BS.concat $ BSL.toChunks content'
+          goodRequest . runJSONGen $ value "logo_base64" (showJSON $ B64.encode content)
         else badRequest' "Not image"
   where
     badRequest' s =
       return
         $ ( setHeader "Content-Type" "text/plain; charset=UTF-8"
-          $ Web.toResponse
-          $ (s :: String)
+          $ Web.toResponse (s :: String)
           ) { rsCode = 400
             }
     goodRequest js =
       return
-        $ (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode
+        $ (setHeader "Content-Type" "text/plain; charset=UTF-8" . Web.toResponse $ encode
             js
           )
             { rsCode = 200
@@ -86,8 +84,8 @@ handleSerializeImage = do
 -- Filename is the basename of the file, brandedImage will find it in frontend/app/img/
 brandedImage :: Kontrakcja m => m Response
 brandedImage = do
-  color <- fmap (T.take 12) $ guardJustM $ getField "color"
-  file  <- fmap (T.take 50) $ guardJustM $ getField "file"
+  color <- fmap (T.take 12) . guardJustM $ getField "color"
+  file  <- fmap (T.take 50) . guardJustM $ getField "file"
   img   <- brandImage file color
   ok . setHeaderBS "Cache-Control" "max-age=604800" $ toResponseBS "image/png" img
 
@@ -98,7 +96,7 @@ brandImage file color = do
   fpath <- liftIO . makeAbsolute $ imgDir </> T.unpack file
   -- Make sure the normalized path is in the `imgDir` directory. This way nobody
   -- can exploit this functionality to do something malicious.
-  when (not $ isPrefixOf imgDir fpath) $ do
+  unless (imgDir `isPrefixOf` fpath) $ do
     logAttention "Image file have to stay in image directory after path normalization"
       $ object
           [ "image-directory" .= imgDir
@@ -114,7 +112,7 @@ brandImage file color = do
     , "-channel"
     , "RGB"
     , "+level-colors"
-    , (T.unpack color) <> ",white"
+    , T.unpack color <> ",white"
     , "-"
     ]
     ""

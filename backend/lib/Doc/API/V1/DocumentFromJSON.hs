@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V1.DocumentFromJSON (AuthorAttachmentDetails(..)) where
 
-import Data.List.Extra (trim)
+import Data.List.Extra (nubOrdOn, trim)
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
 import qualified Data.Text as T
@@ -69,7 +69,7 @@ instance FromJSValue TipSide where
     case s of
       Just "left"  -> return $ Just LeftTip
       Just "right" -> return $ Just RightTip
-      _            -> return $ Nothing
+      _            -> return Nothing
 
 instance FromJSValue PlacementAnchor where
   fromJSValue = do
@@ -112,25 +112,24 @@ instance FromJSValueWithUpdate SignatoryLink where
     role    <- fmap signatoryRoleFromBool <$> fromJSValueField "signs"
     mfields <- fromJSValueFieldCustom
       "fields"
-      (fromJSValueManyWithUpdate $ fromMaybe [] (signatoryfields <$> ms))
+      (fromJSValueManyWithUpdate $ maybe [] signatoryfields ms)
     signorder   <- fromJSValueField "signorder"
     attachments <- fromJSValueField "attachments"
     (csv :: Maybe (Maybe CSVUpload)       ) <- fromJSValueField "csv"
     (sredirecturl' :: Maybe (Maybe String)) <- fromJSValueField "signsuccessredirect"
     (rredirecturl' :: Maybe (Maybe String)) <- fromJSValueField "rejectredirect"
-    let
-      emptyIfNaughty url =
-        if any (\s -> s `isPrefixOf` (trim url)) ["javascript:", "data:"] then "" else url
-      sredirecturl = fmap (fmap emptyIfNaughty) sredirecturl'
-      rredirecturl = fmap (fmap emptyIfNaughty) rredirecturl'
+    let emptyIfNaughty url =
+          if any (`isPrefixOf` trim url) ["javascript:", "data:"] then "" else url
+        sredirecturl = fmap (fmap emptyIfNaughty) sredirecturl'
+        rredirecturl = fmap (fmap emptyIfNaughty) rredirecturl'
     authenticationToView' <- fromJSValueField "authenticationToView"
     authenticationToSign' <- fromJSValueField "authentication"
     delivery'             <- fromJSValueField "delivery"
     confirmationdelivery' <- fromJSValueField "confirmationdelivery"
     allowshighlighting'   <- fromJSValueField "allowshighlighting"
-    case (mfields) of
-      (Just fields) -> return $ Just $ defaultSignatoryLink
-        { signatorylinkid = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
+    case mfields of
+      (Just fields) -> return . Just $ defaultSignatoryLink
+        { signatorylinkid = maybe (unsafeSignatoryLinkID 0) signatorylinkid ms
         , signatorysignorder = updateWithDefaultAndField (SignOrder 1)
                                                          signatorysignorder
                                                          (SignOrder <$> signorder)
@@ -139,7 +138,7 @@ instance FromJSValueWithUpdate SignatoryLink where
            -- To keep the current workflow for some clients, we
            -- have to manually clean fields, else the DB will
            -- reject update with constraints error.
-        , signatoryfields = nubBy (\f1 f2 -> fieldIdentity f1 == fieldIdentity f2) fields
+        , signatoryfields = nubOrdOn fieldIdentity fields
         , signatoryisauthor = updateWithDefaultAndField False signatoryisauthor author
         , signatoryrole = updateWithDefaultAndField SignatoryRoleViewer signatoryrole role
         , signatorylinkcsvupload = updateWithDefaultAndField Nothing
@@ -180,7 +179,7 @@ instance FromJSValueWithUpdate SignatoryLink where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryLink -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf ms))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf ms)
       updateSignatoryAttachmentList
         :: Maybe [SignatoryAttachment]
         -> Maybe [SignatoryAttachment]
@@ -255,7 +254,7 @@ instance FromJSValueWithUpdate SignatoryNameField where
       <$> fromJSValueField "placements"
     case (fidentity, value) of
       (Just (NameFI no), Just v) -> do
-        return $ Just $ NameField { snfID = (maybe (unsafeSignatoryFieldID 0) snfID msf)
+        return . Just $ NameField { snfID = maybe (unsafeSignatoryFieldID 0) snfID msf
                                   , snfNameOrder              = no
                                   , snfValue                  = v
                                   , snfObligatory             = obligatory
@@ -265,7 +264,7 @@ instance FromJSValueWithUpdate SignatoryNameField where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryNameField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 
 instance FromJSValueWithUpdate SignatoryCompanyField where
@@ -277,19 +276,18 @@ instance FromJSValueWithUpdate SignatoryCompanyField where
       <$> fromJSValueField "shouldbefilledbysender"
     placements <- updateWithDefaultAndField [] scfPlacements
       <$> fromJSValueField "placements"
-    case (value) of
+    case value of
       (Just v) -> do
-        return $ Just $ CompanyField
-          { scfID                     = (maybe (unsafeSignatoryFieldID 0) scfID msf)
-          , scfValue                  = v
-          , scfObligatory             = obligatory
-          , scfShouldBeFilledBySender = filledbysender
-          , scfPlacements             = placements
-          }
+        return . Just $ CompanyField { scfID = maybe (unsafeSignatoryFieldID 0) scfID msf
+                                     , scfValue                  = v
+                                     , scfObligatory             = obligatory
+                                     , scfShouldBeFilledBySender = filledbysender
+                                     , scfPlacements             = placements
+                                     }
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryCompanyField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance FromJSValueWithUpdate SignatoryPersonalNumberField where
   fromJSValueWithUpdate msf = do
@@ -300,10 +298,10 @@ instance FromJSValueWithUpdate SignatoryPersonalNumberField where
       <$> fromJSValueField "shouldbefilledbysender"
     placements <- updateWithDefaultAndField [] spnfPlacements
       <$> fromJSValueField "placements"
-    case (value) of
+    case value of
       (Just v) -> do
-        return $ Just $ PersonalNumberField
-          { spnfID                     = (maybe (unsafeSignatoryFieldID 0) spnfID msf)
+        return . Just $ PersonalNumberField
+          { spnfID                     = maybe (unsafeSignatoryFieldID 0) spnfID msf
           , spnfValue                  = T.strip v
           , spnfObligatory             = obligatory
           , spnfShouldBeFilledBySender = filledbysender
@@ -313,7 +311,7 @@ instance FromJSValueWithUpdate SignatoryPersonalNumberField where
     where
       updateWithDefaultAndField
         :: a -> (SignatoryPersonalNumberField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance FromJSValueWithUpdate SignatoryCompanyNumberField where
   fromJSValueWithUpdate msf = do
@@ -324,10 +322,10 @@ instance FromJSValueWithUpdate SignatoryCompanyNumberField where
       <$> fromJSValueField "shouldbefilledbysender"
     placements <- updateWithDefaultAndField [] scnfPlacements
       <$> fromJSValueField "placements"
-    case (value) of
+    case value of
       (Just v) -> do
-        return $ Just $ CompanyNumberField
-          { scnfID                     = (maybe (unsafeSignatoryFieldID 0) scnfID msf)
+        return . Just $ CompanyNumberField
+          { scnfID                     = maybe (unsafeSignatoryFieldID 0) scnfID msf
           , scnfValue                  = v
           , scnfObligatory             = obligatory
           , scnfShouldBeFilledBySender = filledbysender
@@ -336,7 +334,7 @@ instance FromJSValueWithUpdate SignatoryCompanyNumberField where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryCompanyNumberField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance FromJSValueWithUpdate SignatoryEmailField where
   fromJSValueWithUpdate msf = do
@@ -347,9 +345,9 @@ instance FromJSValueWithUpdate SignatoryEmailField where
       <$> fromJSValueField "shouldbefilledbysender"
     placements <- updateWithDefaultAndField [] sefPlacements
       <$> fromJSValueField "placements"
-    case (value) of
+    case value of
       (Just v) -> do
-        return $ Just $ EmailField { sefID = (maybe (unsafeSignatoryFieldID 0) sefID msf)
+        return . Just $ EmailField { sefID = maybe (unsafeSignatoryFieldID 0) sefID msf
                                    , sefValue                  = T.strip v
                                    , sefObligatory             = obligatory
                                    , sefShouldBeFilledBySender = filledbysender
@@ -359,7 +357,7 @@ instance FromJSValueWithUpdate SignatoryEmailField where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryEmailField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance FromJSValueWithUpdate SignatoryMobileField where
   fromJSValueWithUpdate msf = do
@@ -370,9 +368,9 @@ instance FromJSValueWithUpdate SignatoryMobileField where
       <$> fromJSValueField "shouldbefilledbysender"
     placements <- updateWithDefaultAndField [] smfPlacements
       <$> fromJSValueField "placements"
-    case (value) of
+    case value of
       (Just v) -> do
-        return $ Just $ MobileField { smfID = (maybe (unsafeSignatoryFieldID 0) smfID msf)
+        return . Just $ MobileField { smfID = maybe (unsafeSignatoryFieldID 0) smfID msf
                                     , smfValue                  = v
                                     , smfObligatory             = obligatory
                                     , smfShouldBeFilledBySender = filledbysender
@@ -382,7 +380,7 @@ instance FromJSValueWithUpdate SignatoryMobileField where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryMobileField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance FromJSValueWithUpdate SignatoryTextField where
   fromJSValueWithUpdate msf = do
@@ -396,9 +394,9 @@ instance FromJSValueWithUpdate SignatoryTextField where
       <$> fromJSValueField "placements"
     case (fidentity, value) of
       (Just (TextFI n), Just v) -> do
-        return $ Just $ TextField { stfID = (maybe (unsafeSignatoryFieldID 0) stfID msf)
+        return . Just $ TextField { stfID = maybe (unsafeSignatoryFieldID 0) stfID msf
                                   , stfName                   = n
-                                  , stfFilledByAuthor         = not $ null $ v
+                                  , stfFilledByAuthor         = not $ null v
                                   , stfValue                  = T.pack v
                                   , stfObligatory             = obligatory
                                   , stfShouldBeFilledBySender = filledbysender
@@ -408,7 +406,7 @@ instance FromJSValueWithUpdate SignatoryTextField where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryTextField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance FromJSValueWithUpdate SignatoryCheckboxField where
   fromJSValueWithUpdate msf = do
@@ -422,10 +420,10 @@ instance FromJSValueWithUpdate SignatoryCheckboxField where
       <$> fromJSValueField "placements"
     case (fidentity, value) of
       (Just (CheckboxFI n), Just v) -> do
-        return $ Just $ CheckboxField
-          { schfID                     = (maybe (unsafeSignatoryFieldID 0) schfID msf)
+        return . Just $ CheckboxField
+          { schfID                     = maybe (unsafeSignatoryFieldID 0) schfID msf
           , schfName                   = n
-          , schfValue                  = not $ null $ v
+          , schfValue                  = not $ null v
           , schfObligatory             = obligatory
           , schfShouldBeFilledBySender = filledbysender
           , schfPlacements             = map fixCheckboxPlacementRatioIfInvalid placements
@@ -433,7 +431,7 @@ instance FromJSValueWithUpdate SignatoryCheckboxField where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatoryCheckboxField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance FromJSValueWithUpdate SignatorySignatureField where
   fromJSValueWithUpdate msf = do
@@ -447,8 +445,8 @@ instance FromJSValueWithUpdate SignatorySignatureField where
       <$> fromJSValueField "placements"
     case (fidentity, value) of
       (Just (SignatureFI n), Just _) -> do
-        return $ Just $ SignatureField
-          { ssfID                     = (maybe (unsafeSignatoryFieldID 0) ssfID msf)
+        return . Just $ SignatureField
+          { ssfID                     = maybe (unsafeSignatoryFieldID 0) ssfID msf
           , ssfName                   = n
           , ssfValue                  = Nothing -- We ignore value. Signature can't be provided in design view
           , ssfObligatory             = obligatory
@@ -458,7 +456,7 @@ instance FromJSValueWithUpdate SignatorySignatureField where
       _ -> return Nothing
     where
       updateWithDefaultAndField :: a -> (SignatorySignatureField -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf msf)
 
 instance MatchWithJSValue SignatoryField where
   matchesWithJSValue sf = do
@@ -470,7 +468,7 @@ instance FromJSValue SignatoryAttachment where
     name        <- fromJSValueField "name"
     description <- fromJSValueField "description"
     case (name, description) of
-      (Just n, Just d) -> return $ Just $ SignatoryAttachment
+      (Just n, Just d) -> return . Just $ SignatoryAttachment
         { signatoryattachmentname        = n
         , signatoryattachmentdescription = d
         , signatoryattachmentfile        = Nothing
@@ -486,11 +484,11 @@ instance FromJSValue FieldIdentity where
     return $ case (fromMaybe "standard" t, s) of
       ("standard", Just "fstname") -> Just $ NameFI (NameOrder 1)
       ("standard", Just "sndname") -> Just $ NameFI (NameOrder 2)
-      ("standard", Just "email") -> Just $ EmailFI
-      ("standard", Just "mobile") -> Just $ MobileFI
-      ("standard", Just "sigpersnr") -> Just $ PersonalNumberFI
-      ("standard", Just "sigco") -> Just $ CompanyFI
-      ("standard", Just "sigcompnr") -> Just $ CompanyNumberFI
+      ("standard", Just "email") -> Just EmailFI
+      ("standard", Just "mobile") -> Just MobileFI
+      ("standard", Just "sigpersnr") -> Just PersonalNumberFI
+      ("standard", Just "sigco") -> Just CompanyFI
+      ("standard", Just "sigcompnr") -> Just CompanyNumberFI
       ("signature", Just name) -> Just $ SignatureFI name
       ("custom", Just name) -> Just $ TextFI name
       ("checkbox", Just name) -> Just $ CheckboxFI name
@@ -501,7 +499,7 @@ instance FromJSValue CSVUpload  where
   fromJSValue = do
     rows <- fromJSValue
     case rows of
-      Just rs -> return $ Just $ CSVUpload rs
+      Just rs -> return . Just $ CSVUpload rs
       _       -> return Nothing
 
 instance FromJSValue DocumentTag where
@@ -509,7 +507,7 @@ instance FromJSValue DocumentTag where
     name  <- fromJSValueField "name"
     value <- fromJSValueField "value"
     case (name, value) of
-      (Just n, Just v) -> return $ Just $ DocumentTag n v
+      (Just n, Just v) -> return . Just $ DocumentTag n v
       _                -> return Nothing
 
 instance FromJSValue Lang where
@@ -540,7 +538,7 @@ instance FromJSValueWithUpdate Document where
     delivery          <- fromJSValueField "delivery"
     signatories       <- fromJSValueFieldCustom
       "signatories"
-      (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
+      (fromJSValueManyWithUpdate (maybe [] documentsignatorylinks mdoc))
     lang      <- fromJSValueField "lang"
     mtimezone <- fromJSValueField "timezone"
     doctype   <- fmap (\t -> if t then Template else Signable)
@@ -548,29 +546,26 @@ instance FromJSValueWithUpdate Document where
     tags              <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany fromJSValue
     (apicallbackurl :: Maybe (Maybe Text)) <- fromJSValueField "apicallbackurl"
     saved             <- fromJSValueField "saved"
-    authorattachments <-
-      fromJSValueFieldCustom "authorattachments"
-      $ fromJSValueCustomMany
-      $ fmap (join . (fmap maybeRead))
-      $ (fromJSValueField "id")
+    authorattachments <- fromJSValueFieldCustom "authorattachments"
+      $ fromJSValueCustomMany ((maybeRead =<<) <$> fromJSValueField "id")
     let daystosign' =
-          min 365 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
+          min 365 . max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
     let daystoremind' =
           min daystosign'
-            <$> max 1
+            .   max 1
             <$> updateWithDefaultAndField Nothing documentdaystoremind daystoremind
 
     return $ Just defaultDocument
       { documenttitle             = updateWithDefaultAndField "" documenttitle title
       , documentlang              = updateWithDefaultAndField LANG_SV documentlang lang
       , documentinvitetext        =
-        case (invitationmessage) of
-          Nothing       -> fromMaybe "" $ documentinvitetext <$> mdoc
+        case invitationmessage of
+          Nothing       -> maybe "" documentinvitetext mdoc
           Just Nothing  -> ""
           Just (Just s) -> fromMaybe "" (resultToMaybe $ asValidInviteText s)
       , documentconfirmtext       =
-        case (confirmationmessage) of
-          Nothing       -> fromMaybe "" $ documentconfirmtext <$> mdoc
+        case confirmationmessage of
+          Nothing       -> maybe "" documentconfirmtext mdoc
           Just Nothing  -> ""
           Just (Just s) -> fromMaybe "" (resultToMaybe $ asValidInviteText s)
       , documentdaystosign        = daystosign'
@@ -588,7 +583,7 @@ instance FromJSValueWithUpdate Document where
       , documentshowfooter = updateWithDefaultAndField True documentshowfooter showfooter
       , documentisreceipt = updateWithDefaultAndField False documentisreceipt isreceipt
       , documentsignatorylinks    = mapAuth authentication
-                                    $ mapDL delivery
+                                    . mapDL delivery
                                     $ updateWithDefaultAndField []
                                                                 documentsignatorylinks
                                                                 signatories
@@ -596,7 +591,7 @@ instance FromJSValueWithUpdate Document where
       , documentauthorattachments = updateWithDefaultAndField
                                       []
                                       documentauthorattachments
-                                      (fmap (\fid -> AuthorAttachment "-" False True fid)
+                                      (   fmap (AuthorAttachment "-" False True)
                                       <$> authorattachments
                                       )
       , documenttags              = updateWithDefaultAndField Set.empty
@@ -605,7 +600,7 @@ instance FromJSValueWithUpdate Document where
       , documenttype = updateWithDefaultAndField Signable documenttype doctype
       , documentapiv1callbackurl  = updateWithDefaultAndField Nothing
                                                               documentapiv1callbackurl
-                                                              (apicallbackurl)
+                                                              apicallbackurl
       , documentunsaveddraft      = updateWithDefaultAndField False
                                                               documentunsaveddraft
                                                               (fmap not saved)
@@ -616,7 +611,7 @@ instance FromJSValueWithUpdate Document where
       }
     where
       updateWithDefaultAndField :: a -> (Document -> a) -> Maybe a -> a
-      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf mdoc))
+      updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` fmap uf mdoc)
       mapDL :: Maybe DeliveryMethod -> [SignatoryLink] -> [SignatoryLink]
       mapDL Nothing   sls = sls
       mapDL (Just dl) sls = map (\sl -> sl { signatorylinkdeliverymethod = dl }) sls
@@ -640,5 +635,5 @@ instance FromJSValue AuthorAttachmentDetails where
     added    <- fromJSValueField "add_to_sealed_file"
     case (name, required) of
       (Just n, Just r) ->
-        return $ Just $ AuthorAttachmentDetails (T.pack n) r (fromMaybe True added)
+        return . Just $ AuthorAttachmentDetails (T.pack n) r (fromMaybe True added)
       _ -> return Nothing

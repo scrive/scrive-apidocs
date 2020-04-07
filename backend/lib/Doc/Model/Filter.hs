@@ -102,7 +102,7 @@ documentFilterToSQL (DocumentFilterByStatusClass statuses) = do
 
 documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
   sqlWhere
-    (   "(SELECT max(greatest(signatory_links.sign_time"
+    $   "(SELECT max(greatest(signatory_links.sign_time"
     <>  ", signatory_links.seen_time"
     <>  ", signatory_links.read_invitation"
     <>  ", documents.invite_time"
@@ -112,26 +112,20 @@ documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
     <>  ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
     <+> ">="
     <?> mtime
-    )
 
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month, year)) = do
-  sqlWhere
-    $  raw
-    $  unsafeSQL
-    $  "(documents.mtime > '"
-    ++ show year
-    ++ "-"
-    ++ show month
-    ++ "-1')"
+  sqlWhere . raw $ unsafeSQL
+    ("(documents.mtime > '" ++ show year ++ "-" ++ show month ++ "-1')")
 documentFilterToSQL (DocumentFilterByMonthYearTo (month, year)) = do
   sqlWhere
-    $  raw
-    $  unsafeSQL
+    .  raw
+    .  unsafeSQL
     $  "(documents.mtime < '"
     ++ show (year + 1 <| month == 12 |> year)
     ++ "-"
     ++ show ((month `mod` 12) + 1)
     ++ "-1')"
+
 documentFilterToSQL (DocumentFilterByTimeAfter time) = do
   sqlWhere $ "documents.mtime >=" <?> time
 documentFilterToSQL (DocumentFilterByTimeBefore time) = do
@@ -140,7 +134,7 @@ documentFilterToSQL (DocumentFilterByTags []) = do
   sqlWhere "TRUE"
 documentFilterToSQL (DocumentFilterByTags tags) = do
   forM_ tags $ \tag -> do
-    sqlWhereExists $ sqlSelect "document_tags" $ do
+    sqlWhereExists . sqlSelect "document_tags" $ do
       sqlWhere "documents.id = document_tags.document_id"
       sqlWhereEq "document_tags.name"  (tagname tag)
       sqlWhereEq "document_tags.value" (tagvalue tag)
@@ -176,9 +170,9 @@ documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhereIsNULL "signatory_links.sign_time"
   sqlWhereEqSql "signatory_links.sign_order" documentSignOrderExpression
 
-documentFilterToSQL (DocumentFilterSignNowOnPad) = do
+documentFilterToSQL DocumentFilterSignNowOnPad = do
   sqlWhereEq "documents.status" Pending
-  sqlWhereExists $ sqlSelect "signatory_links AS sl5" $ do
+  sqlWhereExists . sqlSelect "signatory_links AS sl5" $ do
     sqlWhere "sl5.document_id = signatory_links.document_id"
     sqlWhere $ "sl5.signatory_role =" <?> SignatoryRoleSigningParty
     sqlWhereIsNULL "sl5.sign_time"
@@ -191,10 +185,10 @@ documentFilterToSQL (DocumentFilterByDocumentID did) = do
 documentFilterToSQL (DocumentFilterByDocumentIDs dids) = do
   sqlWhereIn "documents.id" dids
 
-documentFilterToSQL (DocumentFilterSignable) = do
+documentFilterToSQL DocumentFilterSignable = do
   sqlWhereEq "documents.type" Signable
 
-documentFilterToSQL (DocumentFilterTemplate) = do
+documentFilterToSQL DocumentFilterTemplate = do
   sqlWhereEq "documents.type" Template
 
 documentFilterToSQL (DocumentFilterDeleted flag1) = do
@@ -213,7 +207,7 @@ documentFilterToSQL (DocumentFilterByFolderID fid) = do
   sqlWhereEq "documents.folder_id" fid
 
 documentFilterToSQL (DocumentFilterByFolderTree fid) = do
-  sqlWhereExists $ sqlSelect "folders" $ do
+  sqlWhereExists . sqlSelect "folders" $ do
     sqlWhere "folders.id = documents.folder_id"
     sqlWhere $ "folders.id =" <?> fid <+> "OR folders.parent_path @>" <?> Array1 [fid]
 
@@ -234,18 +228,17 @@ data FilterString = Quoted Text | Unquoted Text
 -- DocumentFilterByTSQuery [Unquoted "my", Unquoted "search", Quoted "for life"]
 --
 processSearchStringToFilter :: Text -> DocumentFilter
-processSearchStringToFilter str = DocumentFilterByTSQuery . take 5 . convert $ str
+processSearchStringToFilter = DocumentFilterByTSQuery . take 5 . convert
   where
     convert s = mergeAroundQuotes [] Nothing (T.words $ spaceAroundQuotes s)
-    spaceAroundQuotes s =
-      T.concatMap (\c -> if c == '"' then " \" " else T.singleton c) s
+    spaceAroundQuotes = T.concatMap (\c -> if c == '"' then " \" " else T.singleton c)
     -- Usage: mergeAroundQuotes [] Nothing yourWords
     -- Expects a list of words, where quotation marks (") are their own word
     -- Collapses words within quotation marks into a single space-delimited word
     -- Ignores unmatched quotes
     mergeAroundQuotes :: [FilterString] -> Maybe [Text] -> [Text] -> [FilterString]
     mergeAroundQuotes acc Nothing  []          = acc
-    mergeAroundQuotes acc (Just q) []          = acc ++ (map Unquoted q)
+    mergeAroundQuotes acc (Just q) []          = acc ++ map Unquoted q
     mergeAroundQuotes acc Nothing  ("\"" : ws) = mergeAroundQuotes acc (Just []) ws
     mergeAroundQuotes acc Nothing (w : ws) =
       mergeAroundQuotes (acc ++ [Unquoted w]) Nothing ws

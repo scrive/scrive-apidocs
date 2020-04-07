@@ -70,14 +70,14 @@ testExtendDigitalSignatures = do
 
   withDocumentID did $ do
     documentsealstatus <$> theDocument >>= \case
-      Just (Guardtime { extended = True }) -> assertSuccess
+      Just Guardtime { extended = True } -> assertSuccess
       s -> assertFailure $ "Unexpected extension status: " ++ show s
 
 testExtendingIsNotRescheduledForPurgedDocs :: TestEnv ()
 testExtendingIsNotRescheduledForPurgedDocs = do
   setTestTime unixEpoch
   user    <- instantiateRandomUser
-  ctx     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctx     <- mkContextWithUser defaultLang user
   -- Create a document
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc
@@ -113,8 +113,7 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   fetchOne runIdentity >>= assertEqual "Document is scheduled for extending" True
 
   -- Purge document
-  withDocumentID did $ void $ randomUpdate $ \t ->
-    ArchiveDocument (user ^. #id) (systemActor t)
+  withDocumentID did . void $ randomUpdate (ArchiveDocument (user ^. #id) . systemActor)
   modifyTestTime (31 `daysAfter`)
   purgedcount <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 purgedcount

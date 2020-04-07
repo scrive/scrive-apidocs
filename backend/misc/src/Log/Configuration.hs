@@ -86,44 +86,44 @@ instance Unjson LoggerDef where
                                esServer
                                "Server (host:port)"
                                unjsonDef
-               <**> (pure $ \s esCfg -> esCfg { esServer = s })
+               <**> pure (\s esCfg -> esCfg { esServer = s })
                )
           <**> (    fieldDefBy "index" (esIndex esDefCfg) esIndex "Index" unjsonDef
-               <**> (pure $ \i esCfg -> esCfg { esIndex = i })
+               <**> pure (\i esCfg -> esCfg { esIndex = i })
                )
           <**> (    fieldDefBy "shards"
                                (esShardCount esDefCfg)
                                esShardCount
                                "Shard count"
                                unjsonDef
-               <**> (pure $ \s esCfg -> esCfg { esShardCount = s })
+               <**> pure (\s esCfg -> esCfg { esShardCount = s })
                )
           <**> (    fieldDefBy "replicas"
                                (esReplicaCount esDefCfg)
                                esReplicaCount
                                "Replica count"
                                unjsonDef
-               <**> (pure $ \r esCfg -> esCfg { esReplicaCount = r })
+               <**> pure (\r esCfg -> esCfg { esReplicaCount = r })
                )
           <**> (fieldDefBy "mapping" (esMapping esDefCfg) esMapping "Mapping" unjsonDef
-               <**> (pure $ \m esCfg -> esCfg { esMapping = m })
+               <**> pure (\m esCfg -> esCfg { esMapping = m })
                )
           <**> (    fieldOptBy "login"
                                esLogin
                                "Login info, optional, default: empty"
                                unjsonESLogin
-               <**> (pure $ \ml esCfg -> esCfg { esLogin = ml })
+               <**> pure (\ml esCfg -> esCfg { esLogin = ml })
                )
           <**> (    fieldDefBy "loginInsecure"
                                (esLoginInsecure esDefCfg)
                                esLoginInsecure
                                "Allow basic authentication over non-TLS connections."
                                unjsonDef
-               <**> (pure $ \l esCfg -> esCfg { esLoginInsecure = l })
+               <**> pure (\l esCfg -> esCfg { esLoginInsecure = l })
                )
 
       unjsonESLogin :: UnjsonDef (EsUsername, EsPassword)
-      unjsonESLogin = objectOf $ pure (,) <*> field "username" fst "User name" <*> field
+      unjsonESLogin = objectOf $ (,) <$> field "username" fst "User name" <*> field
         "password"
         snd
         "Password"
@@ -164,15 +164,15 @@ instance Semigroup WithLoggerFun where
   (WithLoggerFun with0) <> (WithLoggerFun with1) =
     WithLoggerFun $ \f -> with0 (\logger0 -> with1 (\logger1 -> f $ logger0 <> logger1))
 
+{-# ANN mkLogRunner ("HLint: ignore Avoid lambda" :: String) #-}
 mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO ([Text], LogRunner)
 mkLogRunner component LogConfig {..} rng = do
   let run :: Logger -> LogT m a -> m a
       run = runLogT (component <> "-" <> lcSuffix)
 
   let toWithLoggerFun :: LoggerDef -> IO (Either Text WithLoggerFun)
-      toWithLoggerFun StandardOutput = return . Right $ WithLoggerFun
-        { withLoggerFun = \act -> withSimpleStdOutLogger act
-        }
+      toWithLoggerFun StandardOutput =
+        return . Right $ WithLoggerFun { withLoggerFun = withSimpleStdOutLogger }
       toWithLoggerFun (ElasticSearch ec) = checkElasticSearchConnection ec >>= \case
         Left _ ->
           return
@@ -192,23 +192,22 @@ mkLogRunner component LogConfig {..} rng = do
           1
           10
           1
-        withSimpleStdOutLogger $ \logger -> withPostgreSQL pool $ run logger $ do
+        withSimpleStdOutLogger $ \logger -> withPostgreSQL pool . run logger $ do
           let extrasOptions = defaultExtrasOptions
           migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
-        return . Right $ WithLoggerFun { withLoggerFun = \act -> withPgLogger pool act }
+        return . Right $ WithLoggerFun { withLoggerFun = withPgLogger pool }
 
   eWithLoggerFuns <- mapM toWithLoggerFun lcLoggers
 
   let withLoggerFuns = rights eWithLoggerFuns
       errorReports   = lefts eWithLoggerFuns
-  if null withLoggerFuns
-    then unexpectedError "List of loggers is empty; aborting."
-    else return ()
+  when (null withLoggerFuns) $ do
+    unexpectedError "List of loggers is empty; aborting."
 
   let loggerFun = sconcat . fromList $ withLoggerFuns
 
   let withLogger :: ((forall m r . LogT m r -> m r) -> IO a) -> IO a
-      withLogger = \act -> withLoggerFun loggerFun $ (\logger -> act (run logger))
+      withLogger act = withLoggerFun loggerFun (\logger -> act $ run logger)
   return (errorReports, LogRunner { withLogger = withLogger })
 
 -- @review-note here's what the `show`'n exception looks like

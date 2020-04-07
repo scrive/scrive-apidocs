@@ -48,18 +48,18 @@ type FakeFS = HM.HashMap Text BSL.ByteString
 instance ( MonadBaseControl IO m, MonadCatch m, MonadLog m, MonadMask m
          , MonadThrow m )
     => MonadFileStorage (TestFileStorageT m) where
-  saveNewContents url contents = TestFileStorageT $ ReaderT $ \case
-    Left  tvar -> liftBase $ atomically $ modifyTVar' tvar $ HM.insert url contents
+  saveNewContents url contents = TestFileStorageT . ReaderT $ \case
+    Left  tvar -> liftBase . atomically $ modifyTVar' tvar (HM.insert url contents)
     Right conf -> runFileStorageT conf $ saveNewContents url contents
 
-  getSavedContents url = TestFileStorageT $ ReaderT $ \case
+  getSavedContents url = TestFileStorageT . ReaderT $ \case
     Left tvar -> do
       fs <- liftBase $ readTVarIO tvar
       case HM.lookup url fs of
         Just contents -> return contents
-        Nothing       -> throwM $ FileStorageException $ "object " <> url <> " not found"
+        Nothing       -> throwM . FileStorageException $ "object " <> url <> " not found"
     Right conf -> runFileStorageT conf $ getSavedContents url
 
-  deleteSavedContents url = TestFileStorageT $ ReaderT $ \case
-    Left  tvar -> liftBase $ atomically $ modifyTVar' tvar $ HM.delete url
+  deleteSavedContents url = TestFileStorageT . ReaderT $ \case
+    Left  tvar -> liftBase . atomically $ modifyTVar' tvar (HM.delete url)
     Right conf -> runFileStorageT conf $ deleteSavedContents url

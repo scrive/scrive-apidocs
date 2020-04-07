@@ -100,6 +100,7 @@ instance ToJSValue Text where
 ----------------------------------------
 -- Additional optics utilities.
 
+{-# ANN copy ("HLint: ignore Eta reduce" :: String) #-}
 -- | Copy the field value from an object of the same type.
 copy :: (Is k A_Setter, Is k A_Getter) => Optic k is s s a a -> s -> s -> s
 copy x fromThis toThat = set x (view x fromThis) toThat
@@ -164,7 +165,7 @@ read s =
           $  "reading failed (input was '"
           <> s
           <> "', reads returned '"
-          <> (showt parsedS)
+          <> showt parsedS
           <> "')"
           )
         $ do
@@ -184,11 +185,11 @@ whenNothing Nothing  m = m
 
 {-# WARNING error "Use 'unexpectedError' instead." #-}
 error :: HasCallStack => Text -> a
-error errMsg = withFrozenCallStack $ P.error $ T.unpack errMsg
+error errMsg = withFrozenCallStack . P.error $ T.unpack errMsg
 
 -- | Like 'error', but with a more conspicous name.
 unexpectedError :: HasCallStack => Text -> a
-unexpectedError errMsg = withFrozenCallStack $ P.error $ T.unpack errMsg
+unexpectedError errMsg = withFrozenCallStack . P.error $ T.unpack errMsg
 
 ---- internal stuff below ----
 

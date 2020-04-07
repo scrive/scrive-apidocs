@@ -25,10 +25,10 @@ freeDocumentTokensFromValues tc v = FreeDocumentTokens { fdtCount = tc, fdtValid
 
 numberOfValidTokensAtTime :: FreeDocumentTokens -> UTCTime -> Int32
 numberOfValidTokensAtTime fdts time =
-  if (fdtValidity fdts > time) then fromIntegral (fdtCount fdts) else 0
+  if fdtValidity fdts > time then fromIntegral (fdtCount fdts) else 0
 
 numberOfValidTokens :: (MonadTime m) => FreeDocumentTokens -> m Int32
-numberOfValidTokens fdts = (numberOfValidTokensAtTime fdts) <$> currentTime
+numberOfValidTokens fdts = numberOfValidTokensAtTime fdts <$> currentTime
 
 validityOfTokens :: (MonadTime m) => FreeDocumentTokens -> m UTCTime
 validityOfTokens fdts = max (fdtValidity fdts) <$> currentTime

@@ -38,7 +38,7 @@ getAnchorPositions
   -> m (Map.Map PlacementAnchor (Int32, Double, Double))
 getAnchorPositions _pdfcontent []      = return Map.empty
 getAnchorPositions pdfcontent  anchors = do
-  withSystemTempDirectory' ("find-text-") $ \tmppath -> do
+  withSystemTempDirectory' "find-text-" $ \tmppath -> do
     let inputpath = tmppath ++ "/input.pdf"
         config    = runJSONGen $ do
           value "input" inputpath
@@ -47,14 +47,14 @@ getAnchorPositions pdfcontent  anchors = do
           value "text"  (placementanchortext anc)
           value "index" (placementanchorindex anc)
         configpath    = tmppath ++ "/find-texts.json"
-        configContent = BSL.fromString $ show $ J.pp_value (toJSValue config)
+        configContent = BSL.fromString . show $ J.pp_value (toJSValue config)
     logInfo "Temp file write" $ object
-      [ "bytes_written" .= (BS.length pdfcontent)
+      [ "bytes_written" .= BS.length pdfcontent
       , "originator" .= ("getAnchorPositions" :: Text)
       ]
     liftIO $ BS.writeFile inputpath pdfcontent
     logInfo "Temp file write" $ object
-      [ "bytes_written" .= (BSL.length configContent)
+      [ "bytes_written" .= BSL.length configContent
       , "originator" .= ("getAnchorPositions" :: Text)
       ]
     liftIO $ BSL.writeFile configpath configContent
@@ -63,7 +63,7 @@ getAnchorPositions pdfcontent  anchors = do
       readProcessWithExitCode
         "java"
         ["-jar", "scrivepdftools/scrivepdftools.jar", "find-texts", configpath]
-        (BSL.empty)
+        BSL.empty
 
     case code of
       ExitSuccess -> do
@@ -82,24 +82,23 @@ getAnchorPositions pdfcontent  anchors = do
         let matches :: Maybe (Maybe [Maybe (PlacementAnchor, (Int32, Double, Double))])
             matches =
               withJSValue stdoutjs
-                $ fromJSValueFieldCustom "matches"
+                . fromJSValueFieldCustom "matches"
                 $ fromJSValueCustomMany
-                $ ((do
-                     text   <- fromJSValueField "text"
-                     index  <- fromMaybe (Just 1) <$> fromJSValueField "index"
-                     page   <- fromJSValueField "page"
-                     coords <- fromJSValueField "coords"
-                     let coordx = fst <$> coords
-                     let coordy = snd <$> coords
-                     return
-                       (Just
-                         (   (,)
-                         <$> (PlacementAnchor <$> text <*> index)
-                         <*> ((,,) <$> page <*> coordx <*> coordy)
-                         )
-                       )
-                   )
-                  )
+                    (do
+                      text   <- fromJSValueField "text"
+                      index  <- fromMaybe (Just 1) <$> fromJSValueField "index"
+                      page   <- fromJSValueField "page"
+                      coords <- fromJSValueField "coords"
+                      let coordx = fst <$> coords
+                      let coordy = snd <$> coords
+                      return
+                        (Just
+                          (   (,)
+                          <$> (PlacementAnchor <$> text <*> index)
+                          <*> ((,,) <$> page <*> coordx <*> coordy)
+                          )
+                        )
+                    )
         case matches of
           Just (Just realMatches) -> do
             return (Map.fromList (catMaybes realMatches))
@@ -155,30 +154,27 @@ recalculateAnchoredFieldPlacements oldfileid newfileid = do
     -- move a field and that should be good enough as debugging
     -- information.
 
-    let
-      maybeMoveFieldPlacement :: FieldPlacement -> Maybe FieldPlacement
-      maybeMoveFieldPlacement plc = do
-        -- find first anchor that was found
-        (_oldAnchorPosPage, oldAnchorPosX, oldAnchorPosY) <- msum
-          (map (\anchor -> Map.lookup anchor oldAnchorPositions) (placementanchors plc))
-        (newAnchorPosPage, newAnchorPosX, newAnchorPosY) <- maximumBy
-          anchorSorter
-          (map (\anchor -> Map.lookup anchor newAnchorPositions) (placementanchors plc))
+    let maybeMoveFieldPlacement :: FieldPlacement -> Maybe FieldPlacement
+        maybeMoveFieldPlacement plc = do
+          -- find first anchor that was found
+          (_oldAnchorPosPage, oldAnchorPosX, oldAnchorPosY) <- msum
+            (map (`Map.lookup` oldAnchorPositions) (placementanchors plc))
+          (newAnchorPosPage, newAnchorPosX, newAnchorPosY) <- maximumBy
+            anchorSorter
+            (map (`Map.lookup` newAnchorPositions) (placementanchors plc))
 
-        return
-          (plc { placementxrel = placementxrel plc - oldAnchorPosX + newAnchorPosX
-               , placementyrel = placementyrel plc - oldAnchorPosY + newAnchorPosY
-               , placementpage = newAnchorPosPage
-               }
-          )
+          return
+            (plc { placementxrel = placementxrel plc - oldAnchorPosX + newAnchorPosX
+                 , placementyrel = placementyrel plc - oldAnchorPosY + newAnchorPosY
+                 , placementpage = newAnchorPosPage
+                 }
+            )
     forM_ [ fld | sig <- documentsignatorylinks doc, fld <- signatoryfields sig ]
       $ \fld -> do
           let plcpairs :: [(FieldPlacement, Maybe FieldPlacement)]
               plcpairs = map (\p -> (p, maybeMoveFieldPlacement p)) (fieldPlacements fld)
 
           when (any (isJust . snd) plcpairs) $ do
-            let newplc = map (\(k, v) -> fromMaybe k v) plcpairs
+            let newplc = map (uncurry fromMaybe) plcpairs
             dbUpdate $ SetFieldPlacements (fieldID fld) newplc
             return ()
-
-  return ()

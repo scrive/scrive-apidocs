@@ -37,7 +37,7 @@ noopErrorHandler _ = curlError
 
 -- | Throw an exception informing about curl error.
 curlError :: MonadThrow m => CurlCode -> m a
-curlError code = unexpectedError $ "Curl response code was" <+> (showt code)
+curlError code = unexpectedError $ "Curl response code was" <+> showt code
 
 -- | In case of certificate error, reconnect with
 -- disabled peer verification and log the issue.
@@ -59,7 +59,7 @@ mkDebugFunction = liftBaseWith $ \run -> do
     InfoText -> do
       -- Show text message.
       strMsg <- peekCStringLen (msg, fromIntegral msgSize)
-      void . run . curlDomain $ forM_ (lines strMsg) $ logInfo_ . T.pack
+      (void . run . curlDomain) . forM_ (lines strMsg) $ logInfo_ . T.pack
     _ -> F.forM_ (maybeShowInfo debugInfo) $ \strMsg -> do
       data_ <- BS.packCStringLen (msg, fromIntegral msgSize)
       void . run . curlDomain . logInfo strMsg $ object ["data" `equalsExternalBS` data_]
@@ -105,7 +105,7 @@ curlTransport ssl curlAuth url on_failure debug_fun xml_request_bin additionalHe
     let authHeaders = case curlAuth of
           CurlAuthBasic un pwd ->
             [ "Authorization: Basic"
-                <+> (BSC8.unpack $ B64.encode $ T.encodeUtf8 $ un <> ":" <> pwd)
+                <+> BSC8.unpack (B64.encode . T.encodeUtf8 $ un <> ":" <> pwd)
             ]
           _ -> []
     setopts

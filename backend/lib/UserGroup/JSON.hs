@@ -48,7 +48,7 @@ updateUserGroupFromRequest ug ugChanges =
         & (#parentGroupID .~ reqParentID ugUpdated)
         & (#name .~ reqName ugUpdated)
         & (#externalTags .~ newTags)
-    (Result _ problems) -> Left $ T.pack $ show problems
+    (Result _ problems) -> Left . T.pack $ show problems
   where
     ugReq = UserGroupRequestJSON { reqParentID = ug ^. #parentGroupID
                                  , reqName     = ug ^. #name
@@ -59,8 +59,8 @@ updateUserGroupFromRequest ug ugChanges =
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
 unjsonUserGroupRequestJSON =
   objectOf
-    $   pure UserGroupRequestJSON
-    <*> fieldOpt "parent_id" reqParentID "User Group ID"
+    $   UserGroupRequestJSON
+    <$> fieldOpt "parent_id" reqParentID "User Group ID"
     <*> field "name" reqName "User Group Name"
     <*> field "tags" reqTags "User Group Tags"
 
@@ -115,8 +115,8 @@ updateUserGroupContactDetailsFromRequest ugAddr contactDetailsChanges =
 unjsonUserGroupAddress :: UnjsonDef UserGroupAddress
 unjsonUserGroupAddress =
   objectOf
-    $   pure I.UserGroupAddress
-    <*> fieldBy "company_number"
+    $   I.UserGroupAddress
+    <$> fieldBy "company_number"
                 (^. #companyNumber)
                 "User Group Address Company Number"
                 (unjsonWithValidationOrEmptyText asValidCompanyNumber)

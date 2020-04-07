@@ -29,9 +29,9 @@ import Utils.Monad
 checkDraftTimeZoneName :: (Kontrakcja m) => Document -> m ()
 checkDraftTimeZoneName draft = do
   void
-    $         (mkTimeZoneName $ toString (documenttimezonename draft))
+    $         mkTimeZoneName (toString (documenttimezonename draft))
     `E.catch` (\(_ :: E.SomeException) ->
-                throwM $ SomeDBExtraException $ badInput "Timezone name is invalid."
+                throwM . SomeDBExtraException $ badInput "Timezone name is invalid."
               )
 
 applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) => Document -> Actor -> m ()
@@ -39,7 +39,7 @@ applyDraftDataToDocument draft actor = do
   checkDraftTimeZoneName draft
   unlessM (isPreparation <$> theDocument) $ do
     theDocument >>= \doc -> logInfo "Document is not in preparation" $ logObject_ doc
-    throwM $ SomeDBExtraException $ serverError "applyDraftDataToDocument failed"
+    throwM . SomeDBExtraException $ serverError "applyDraftDataToDocument failed"
   void $ theDocument >>= \doc -> dbUpdate $ UpdateDraft
     doc { documenttitle             = documenttitle draft
         , documentinvitetext        = documentinvitetext draft
@@ -60,48 +60,45 @@ applyDraftDataToDocument draft actor = do
     actor
   -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'
   whenM
-      (   (\doc -> (documentunsaveddraft doc) && not (documentunsaveddraft draft))
+      (   (\doc -> documentunsaveddraft doc && not (documentunsaveddraft draft))
       <$> theDocument
       )
     $ do
         dbUpdate $ SetDocumentUnsavedDraft False
-  whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
+  whenM ((\doc -> isTemplate draft && not (isTemplate doc)) <$> theDocument) $ do
     dbUpdate $ TemplateFromDocument actor
   documentauthorattachments <$> theDocument >>= \atts -> forM_ atts $ \att -> do
     when_
-        (      not
-        $      (authorattachmentfileid att)
-        `elem` (authorattachmentfileid <$> documentauthorattachments draft)
+        (         authorattachmentfileid att
+        `notElem` (authorattachmentfileid <$> documentauthorattachments draft)
         )
       $ do -- We need to compare fileid - since name is not parsed in V1
           dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
   documentsignatorylinks <$> theDocument >>= \siglinks ->
-    case
-        (mergeAuthorDetails siglinks (sortBy compareSL $ documentsignatorylinks draft))
-      of
-        Nothing -> throwM $ SomeDBExtraException $ serverError
-          "Problem with author details while sending draft"
-        Just sigs -> do
-          -- Checking if some integrations depend on fact that we don't change fstname and lastname for author. To be removed till 20. II.
-          let (Just oldAuthor) = find isAuthor $ documentsignatorylinks $ draft
-          let (Just newAuthor) = find isAuthor sigs
-          when
-              (  getFirstName oldAuthor
-              /= getFirstName newAuthor
-              || getLastName oldAuthor
-              /= getLastName newAuthor
-              )
-            $ do
-                logInfo "Checkup: Update could change author details"
-                  $ object
-                      [ "details" .= getFullName oldAuthor
-                      , "new_details" .= getFullName newAuthor
-                      ]
-          -- End testing
+    case mergeAuthorDetails siglinks (sortBy compareSL $ documentsignatorylinks draft) of
+      Nothing -> throwM . SomeDBExtraException $ serverError
+        "Problem with author details while sending draft"
+      Just sigs -> do
+        -- Checking if some integrations depend on fact that we don't change fstname and lastname for author. To be removed till 20. II.
+        let (Just oldAuthor) = find isAuthor $ documentsignatorylinks draft
+        let (Just newAuthor) = find isAuthor sigs
+        when
+            (  getFirstName oldAuthor
+            /= getFirstName newAuthor
+            || getLastName oldAuthor
+            /= getLastName newAuthor
+            )
+          $ do
+              logInfo "Checkup: Update could change author details"
+                $ object
+                    [ "details" .= getFullName oldAuthor
+                    , "new_details" .= getFullName newAuthor
+                    ]
+        -- End testing
 
-          res <- dbUpdate $ ResetSignatoryDetails (sortBy compareSL $ sigs) actor
-          unless res $ throwM $ SomeDBExtraException $ serverError
-            "applyDraftDataToDocument failed"
+        res <- dbUpdate $ ResetSignatoryDetails (sortBy compareSL sigs) actor
+        unless res . throwM $ SomeDBExtraException
+          (serverError "applyDraftDataToDocument failed")
 
 
 compareSL :: SignatoryLink -> SignatoryLink -> Ordering
@@ -136,9 +133,9 @@ mergeAuthorDetails sigs nsigs =
                                        , snfShouldBeFilledBySender = False
                                        }
       ]
-    replaceName1 a ((SignatoryNameField nf@(NameField { snfNameOrder = NameOrder 1 })) : fs)
+    replaceName1 a ((SignatoryNameField nf@NameField { snfNameOrder = NameOrder 1 }) : fs)
       = ((SignatoryNameField $ nf { snfValue = a }) : fs)
-    replaceName1 a (f : fs) = f : (replaceName1 a fs)
+    replaceName1 a (f : fs) = f : replaceName1 a fs
 
     replaceName2 a [] =
       [ SignatoryNameField $ NameField { snfID = unsafeSignatoryFieldID 0
@@ -149,9 +146,9 @@ mergeAuthorDetails sigs nsigs =
                                        , snfShouldBeFilledBySender = False
                                        }
       ]
-    replaceName2 a ((SignatoryNameField nf@(NameField { snfNameOrder = NameOrder 2 })) : fs)
+    replaceName2 a ((SignatoryNameField nf@NameField { snfNameOrder = NameOrder 2 }) : fs)
       = ((SignatoryNameField $ nf { snfValue = a }) : fs)
-    replaceName2 a (f : fs) = f : (replaceName2 a fs)
+    replaceName2 a (f : fs) = f : replaceName2 a fs
 
     replaceEmail a [] =
       [ SignatoryEmailField $ EmailField { sefID = unsafeSignatoryFieldID 0
@@ -164,10 +161,10 @@ mergeAuthorDetails sigs nsigs =
       ]
     replaceEmail a ((SignatoryEmailField ef) : fs) =
       ((SignatoryEmailField $ ef { sefValue = a }) : fs)
-    replaceEmail a (f : fs) = f : (replaceEmail a fs)
+    replaceEmail a (f : fs) = f : replaceEmail a fs
   in
     case (asig, nasig') of
-      ([asig'], [nasig'']) -> Just $ (setConstantDetails asig' nasig'') : nsigs'
+      ([asig'], [nasig'']) -> Just $ setConstantDetails asig' nasig'' : nsigs'
       _                    -> Nothing
 
 
@@ -188,15 +185,14 @@ draftIsChangingDocument draft doc =
     || (documentallowrejectreason draft /= documentallowrejectreason doc)
     || (documentshowfooter draft /= documentshowfooter doc)
     || (documenttimezonename draft /= documenttimezonename doc)
-    || (draftIsChangingDocumentSignatories (documentsignatorylinks draft)
-                                           (documentsignatorylinks doc)
-       )
+    || draftIsChangingDocumentSignatories (documentsignatorylinks draft)
+                                          (documentsignatorylinks doc)
     || (documentunsaveddraft draft /= documentunsaveddraft doc)
 
 draftIsChangingDocumentSignatories :: [SignatoryLink] -> [SignatoryLink] -> Bool
 draftIsChangingDocumentSignatories (sl' : sls') (sl : sls) =
-  (newSignatorySignatoryLinkIsChangingSignatoryLink sl' sl)
-    || (draftIsChangingDocumentSignatories sls' sls)
+  newSignatorySignatoryLinkIsChangingSignatoryLink sl' sl
+    || draftIsChangingDocumentSignatories sls' sls
 draftIsChangingDocumentSignatories [] [] = False
 draftIsChangingDocumentSignatories _  _  = True
 
@@ -204,7 +200,7 @@ draftIsChangingDocumentSignatories _  _  = True
 newSignatorySignatoryLinkIsChangingSignatoryLink :: SignatoryLink -> SignatoryLink -> Bool
 newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
   (signatorylinkid newsl /= signatorylinkid sl)
-    || (not $ fieldsListsAreAlmostEqual (signatoryfields newsl) (signatoryfields sl))
+    || not (fieldsListsAreAlmostEqual (signatoryfields newsl) (signatoryfields sl))
     || (signatoryisauthor newsl /= signatoryisauthor sl)
     || (signatoryrole newsl /= signatoryrole sl)
     || (signatorysignorder newsl /= signatorysignorder sl)

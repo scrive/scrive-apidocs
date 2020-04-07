@@ -10,6 +10,7 @@ module Doc.API.V2.AesonTestUtils (
 
 import Control.Monad.Trans (liftIO)
 import Data.Aeson
+import Data.Bifunctor
 import Data.Scientific (floatingOrInteger)
 import Happstack.Server
 import qualified Data.ByteString.Lazy as BSL
@@ -34,13 +35,13 @@ testRequestHelper ctx httpMethod params func expectedRsCode = do
   (rsp, _) <- runTestKontra req ctx func
   let showTestDetails :: Text =
         "Method: "
-          <> (showt httpMethod)
+          <> showt httpMethod
           <> "\n"
           <> "Params: "
-          <> (T.concat $ fmap (\(s, i) -> "\n\t" <> s <> ": " <> (showt i)) params)
+          <> T.concat (fmap (\(s, i) -> "\n\t" <> s <> ": " <> showt i) params)
           <> "\n"
           <> "Response:\n"
-          <> (showt (rsBody rsp))
+          <> showt (rsBody rsp)
   assertEqual ("Response code should match for:\n" <> T.unpack showTestDetails)
               expectedRsCode
               (rsCode rsp)
@@ -50,7 +51,7 @@ testRequestHelper ctx httpMethod params func expectedRsCode = do
 testRequestHelperNoAssert_
   :: Context -> Method -> [(String, Input)] -> TestKontra Response -> TestEnv ()
 testRequestHelperNoAssert_ ctx httpMethod params func = do
-  req      <- mkRequest httpMethod $ fmap (\(t1, t2) -> (T.pack t1, t2)) params
+  req      <- mkRequest httpMethod $ first T.pack <$> params
   (rsp, _) <- runTestKontra req ctx func
   let showRequestDetails =
         "Request details:\n"
@@ -84,15 +85,13 @@ jsonTestRequestHelper ctx httpMethod params func expectedRsCode = do
           <> showt httpMethod
           <> "\n"
           <> "Params: "
-          <> (T.concat $ fmap (\(s, i) -> "\n\t" <> s <> ": " <> showt i) params)
+          <> T.concat (fmap (\(s, i) -> "\n\t" <> s <> ": " <> showt i) params)
           <> "\n"
           <> "Response:\n"
           <> showt rsp
   let mRspJS = decode rsp
-  when (isNothing mRspJS)
-    $  assertFailure
-    $  "Could not parse JSON from ByteString response:\n"
-    <> T.unpack showTestDetails
+  when (isNothing mRspJS) $ assertFailure
+    ("Could not parse JSON from ByteString response:\n" <> T.unpack showTestDetails)
   return $ fromJust mRspJS
 
 -- | Given a `Value` that should be an `Object`, lookup a key which should be
@@ -130,7 +129,7 @@ lookupObjectInt k v = do
 
 -- | Internal Utility Function
 lookupObject :: String -> Value -> TestEnv Value
-lookupObject k (Object o) = case (H.lookup (T.pack k) o) of
+lookupObject k (Object o) = case H.lookup (T.pack k) o of
   Just v  -> return v
-  Nothing -> unexpectedError $ T.pack $ "Could not look up key: '" <> k <> "'"
+  Nothing -> unexpectedError . T.pack $ "Could not look up key: '" <> k <> "'"
 lookupObject _ _ = unexpectedError "Value was not an Object"

@@ -58,7 +58,7 @@ addImageToDocumentFile documentid file@File { fileid } image pageno x y =
         content <- getFileContents file
         liftIO $ BS.writeFile tmpin content
         logInfo "Temp file write" $ object
-          [ "bytes_written" .= (BS.length content)
+          [ "bytes_written" .= BS.length content
           , "originator" .= ("stampDocumentFileWithImage" :: Text)
           ]
         spec <- addImageSpecForDocument tmpin documentid image pageno x y
@@ -84,7 +84,7 @@ addImageSpecForDocument
 addImageSpecForDocument inputpath did imageFile pageno x y = do
   imageContent <- getFileContents imageFile
   return $ AddImageSpec { addImageInput              = inputpath
-                        , addImageDocumentNumberText = (show did)
+                        , addImageDocumentNumberText = show did
                         , addImageImageBinary        = imageContent
                         , addImageX                  = x
                         , addImageY                  = y

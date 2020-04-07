@@ -17,7 +17,7 @@ logPartner
            -- user group structure
   -> m r
   -> m r
-logPartner pugid = localData $ [identifierMapLabel ("partner_" <>) pugid]
+logPartner pugid = localData [identifierMapLabel ("partner_" <>) pugid]
 
 logPartnerAndUserGroup
   :: MonadLog m
@@ -30,7 +30,7 @@ logPartnerAndUserGroup
   -> m r
   -> m r
 logPartnerAndUserGroup pugid ugid =
-  localData $ [identifierMapLabel ("partner_" <>) pugid, identifier ugid]
+  localData [identifierMapLabel ("partner_" <>) pugid, identifier ugid]
 
 logPartnerAndUser
   :: MonadLog m
@@ -41,4 +41,4 @@ logPartnerAndUser
   -> m r
   -> m r
 logPartnerAndUser pugid uid =
-  localData $ [identifierMapLabel ("partner_" <>) pugid, identifier uid]
+  localData [identifierMapLabel ("partner_" <>) pugid, identifier uid]

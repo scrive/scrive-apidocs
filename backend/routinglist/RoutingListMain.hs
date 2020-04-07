@@ -23,6 +23,7 @@ but not in kontrakcja
 -------------------------------------------------------------------------------}
 
 import Data.Aeson (decode)
+import Data.List.Extra (nubOrd)
 import Happstack.Server (Method, Response)
 import Happstack.StaticRouting (Route)
 import System.Environment (getArgs)
@@ -56,7 +57,7 @@ instance Show (MyRoute a) where
 data MySegment = MyStringS String
                | MyParams
 
-instance Show (MySegment) where
+instance Show MySegment where
   show (MyStringS s) = s
   show MyParams      = "Params"
 
@@ -103,9 +104,8 @@ worker (MyParam route) = do
     =<< worker route
 
 getUrls :: Route (Kontra Response) -> [String]
-getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map
-  makeAbsoluteUrl
-  result
+getUrls route = nubOrd . concatMap exceptions $ filter (not . isRoot)
+                                                       (map makeAbsoluteUrl result)
   where
     route' = coerce route
     makeAbsoluteUrl url = "/" ++ url
@@ -127,9 +127,9 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map
 -- /verify gets its own special rule at the end
 exceptions :: String -> [String]
 exceptions "/no" = []
-exceptions ('/' : c1 : c2 : [])
-  | [c1, c2] `elem` (map (T.unpack . codeFromLang) allLangs) = [['/', c1, c2, '$']]
-exceptions ('/' : c : []) | c `elem` ("asd" :: String) = [['/', c, '/'], ['/', c, '$']]
+exceptions ['/', c1, c2] | [c1, c2] `elem` map (T.unpack . codeFromLang) allLangs =
+  [['/', c1, c2, '$']]
+exceptions ['/', c] | c `elem` ("asd" :: String) = [['/', c, '/'], ['/', c, '$']]
 exceptions "/pricing" = []
 exceptions "/verify"  = []
 exceptions ('/' : c1 : c2 : "/pricing")
@@ -142,12 +142,12 @@ main = do
   [fileName, include] <- getArgs
   input               <- BSL.getContents
   let stringifyPair (x, y) = (T.unpack x, T.unpack y)
-      Just rules = map stringifyPair <$> HM.toList <$> decode input
+      Just rules = map stringifyPair . HM.toList <$> decode input
       overrides  = map fst rules
   withFile fileName WriteMode $ \h -> do
     let urls       = getUrls $ staticRoutes True
         -- sort DESC to have "/a/b" coming before "/a"
-        sortedUrls = sortBy (\u1 u2 -> compare u2 u1) urls
+        sortedUrls = sortBy (flip compare) urls
         printInstructions is = forM_ is $ \i -> hPutStrLn h $ "    " ++ i
     forM_ sortedUrls $ \url -> do
       let urlRules = lines $ fromMaybe include (lookup url rules)
@@ -156,5 +156,5 @@ main = do
       hPutStrLn h "}"
     forM_ (overrides \\ sortedUrls) $ \url -> do
       hPutStrLn h $ "location ~ ^" ++ url ++ " {"
-      printInstructions $ lines $ fromJust $ lookup url rules
+      printInstructions . lines $ fromJust (lookup url rules)
       hPutStrLn h "}"

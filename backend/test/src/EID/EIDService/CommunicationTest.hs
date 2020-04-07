@@ -2,7 +2,7 @@ module EID.EIDService.CommunicationTest (nemidTests) where
 
 import Test.Framework
 
-import EID.EIDService.Communication
+import EID.EIDService.Types
 import TestingUtil
 import TestKontra
 
