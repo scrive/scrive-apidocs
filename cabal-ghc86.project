@@ -12,7 +12,6 @@ allow-newer: semigroups
              containers
              template-haskell
              list-tries:base
-             MissingH:base
 
 package all
     ghc-options: -j4 +RTS -A32m -RTS
