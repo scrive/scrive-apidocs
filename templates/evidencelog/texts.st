@@ -78,7 +78,7 @@ ChangeAuthenticationToSignFromDKNemIDLog=$ChangeAuthenticationToSignFrom(auth='�
 ###
 ChangeAuthenticationToSignFromIDINLog=$ChangeAuthenticationToSignFrom(auth='“Dutch iDIN”')$
 ###
-ChangeAuthenticationToSignFromFITupasLog=$ChangeAuthenticationToSignFrom(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToSignFromFITupasLog=$ChangeAuthenticationToSignFrom(auth='“Finnish FTN')$
 ###
 ChangeAuthenticationToSignToStandardLog=$ChangeAuthenticationToSignTo(auth='“no extra authentication”')$
 ###
@@ -92,7 +92,7 @@ ChangeAuthenticationToSignToDKNemIDLog=$ChangeAuthenticationToSignTo(auth='“Da
 ###
 ChangeAuthenticationToSignToIDINLog=$ChangeAuthenticationToSignTo(auth='“Dutch iDIN”')$
 ###
-ChangeAuthenticationToSignToFITupasLog=$ChangeAuthenticationToSignTo(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToSignToFITupasLog=$ChangeAuthenticationToSignTo(auth='“Finnish FTN')$
 ###
 ChangeAuthenticationToViewFromStandardLog=$ChangeAuthenticationToViewFrom(auth='“no extra authentication”')$
 ###

@@ -76,7 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Employee keycard",
 "_elegSignDKSignMethodEmployeeKeyfile":"Employee keyfile",
 "_elegSignDKSignMethodPersonalKeycard":"Personal keycard",
-"_elegSignFIConfirmationTitle":"Sign with Tupas",
+"_elegSignFIConfirmationTitle":"Sign with Finnish FTN",
 "_elegSignNLConfirmationTitle":"Sign with iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, you will sign using Norwegian BankID. When you have signed your signature will be registered by the e-signing service Scrive.",
 "_elegSignNOConfirmationTextNoName":"You will sign using Norwegian BankID. When you have signed your signature will be registered by the e-signing service Scrive.",
