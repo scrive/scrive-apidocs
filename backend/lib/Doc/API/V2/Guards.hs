@@ -335,6 +335,18 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
     isValidMobileForAuthenticationToView VerimiAuthenticationToView  _ = True
     isValidMobileForAuthenticationToView IDINAuthenticationToView    _ = True
 
+-- | `guardCanSetAuthenticationToSignForSignatoryWithValue _ authToSign mSSN
+-- mMobile _` makes sure we can set the sign method to the given method. If the
+-- sign method requires a personal number, then we may also set an SSN as part
+-- of changing the signing method; if we aren't given an SSN and the signatory
+-- hasn't already set one then it is going to be supplied as part of the signing
+-- process and we needn't worry about it here. The same holds for the mobile
+-- number.
+--
+-- Bugs: plenty! We allow changing between two different sign methods without
+-- changing the personal number, in which case we don't validate that the set
+-- personal number is still valid! This is not a big issue, since then the ssn
+-- is invalid anyway, and we can't get the provider to sign for it.
 guardCanSetAuthenticationToSignForSignatoryWithValue
   :: Kontrakcja m
   => SignatoryLinkID
@@ -350,7 +362,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
         authToViewArchived = signatorylinkauthenticationtoviewarchivedmethod sl
     guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
 
-    -- Note that we have mSSN = Just ssn iff authToSignNeedsPersonalNumber
+    -- Note that we have mSSN = Just ssn only if authToSignNeedsPersonalNumber
     -- authToSign = True.
     whenJust mSSN $ \ssn -> do
       when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl)
@@ -358,10 +370,15 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
         $ signatoryStateError
             "The party has authenticated to view, therefore you can't change the authentication value"
 
+      -- validate is non-trivial iff authToSignNeedsPersonalNumber authToSign = True
       let validate = case authToSign of
             SEBankIDAuthenticationToSign -> asValidSEBankIdPersonalNumber
-            DKNemIDAuthenticationToSign -> asValidDanishSSN
-            _ -> Good
+            DKNemIDAuthenticationToSign  -> asValidDanishSSN
+            StandardAuthenticationToSign -> Good
+            SMSPinAuthenticationToSign   -> Good
+            NOBankIDAuthenticationToSign -> Good
+            FITupasAuthenticationToSign  -> Good
+            IDINAuthenticationToSign     -> Good
 
       -- Empty is allowed only if we don't need it for
       -- AuthenticationToViewMethod
@@ -384,9 +401,9 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             <> name
         Good _ -> return ()
 
-
-    -- Note that we have mMobile = Just mobile iff authToSignNeedsMobileNumer
-    -- authToSign = True.
+    -- Note that we have mMobile = Just mobile only if
+    -- authToSignNeedsMobileNumer authToSign = True, which is only the case for
+    -- SMSPinAuthenticationToSign.
     whenJust mMobile $ \mobile -> case authToSign of
       SMSPinAuthenticationToSign -> do
         -- If the signatory has authenticated to view with
@@ -403,17 +420,34 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
           . apiError
           $ signatoryStateError
               "The party has authenticated to view with Norwegian BankID, therefore you can't change the mobile number"
-        -- If given a mobile number we need to make sure it doesn't invalidate
-        -- NOBankIDAuthenticationToView
-        when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
-          $ case asValidPhoneForNorwegianBankID mobile of
-              Bad ->
-                apiError
-                  $ signatoryStateError
-                      "Mobile number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
-              Empty  -> return ()
-              Good _ -> return ()
-      _ -> return ()
+
+        let
+          -- If we are given a mobile number we need to make sure it doesn't
+          -- invalidate NOBankIDAuthenticationToView
+          validate
+            | signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView
+            = asValidPhoneForNorwegianBankID
+            | otherwise
+            = asValidPhoneForSMS
+
+          validateError
+            | signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView
+            = "Mobile number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
+            | otherwise
+            = "Mobile number needs to be a valid phone number."
+
+        case validate mobile of
+          Bad    -> apiError $ signatoryStateError validateError
+          Empty  -> return ()
+          Good _ -> return ()
+
+      StandardAuthenticationToSign -> return ()
+      SEBankIDAuthenticationToSign -> return ()
+      NOBankIDAuthenticationToSign -> return ()
+      DKNemIDAuthenticationToSign  -> return ()
+      IDINAuthenticationToSign     -> return ()
+      FITupasAuthenticationToSign  -> return ()
+
 
 
 guardAuthenticationMethodsCanMix

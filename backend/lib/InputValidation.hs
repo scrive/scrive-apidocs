@@ -540,6 +540,8 @@ asValidPhone :: Text -> Result Text
 asValidPhone input =
   stripAllWhitespace input >>= filterOutCharacters "-()" >>= checkFormat "^\\+[0-9]{9,}$"
 
+-- | This is a bit stricter than `asValidPhone` to ensure that we can actually
+-- send an SMS to the number.
 asValidPhoneForSMS :: Text -> Result Text
 asValidPhoneForSMS input =
   stripWhitespace input
