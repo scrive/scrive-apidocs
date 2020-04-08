@@ -43,6 +43,7 @@ haskellPackages.shellFor {
       haskellPackages.alex
       haskellPackages.ghcid
       haskellPackages.happy
+      haskellPackages.hlint
       haskellPackages.brittany
       haskellPackages.cabal-install
       pkgs.nodePackages.less
