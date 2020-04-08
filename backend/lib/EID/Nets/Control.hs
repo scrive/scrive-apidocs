@@ -32,7 +32,6 @@ import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryLinkID
-import EID.CGI.GRP.Control (guardThatPersonalNumberMatches)
 import EID.Nets.Call
 import EID.Nets.Config
 import EID.Nets.Model
@@ -569,7 +568,7 @@ handleSignRequest did slid = do
           _ -> do
             logAttention_ "Missing or invalid eid_method for DK"
             respond404
-        guardThatPersonalNumberMatches slid pn =<< theDocument
+        guardThatDanishPersonalNumberMatches slid pn =<< theDocument
         return (NetsSignDK, eidmethod', Just . T.filter ('-' /=) $ pn, [])
       _ -> do
         logAttention "NetsSign: unsupported auth to sign method"
@@ -767,3 +766,26 @@ handleSignAbort :: Kontrakcja m => m Response
 handleSignAbort = do
   out <- renderTextTemplate_ "netsSignAbort"
   simpleHtmlResponse out
+
+guardThatDanishPersonalNumberMatches
+  :: Kontrakcja m => SignatoryLinkID -> Text -> Document -> m ()
+guardThatDanishPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
+  Nothing -> do
+    logInfo "Can't find signatory for Danish NemID operation"
+      $ object [identifier $ documentid doc, identifier slid]
+    respond404
+  Just sl -> do
+    let withoutDashes    = T.filter (not . (`elem` ['-', '+']))
+        slPersonalNumber = withoutDashes $ getPersonalNumber sl
+        pn'              = withoutDashes pn
+
+        pnInSignatoryLinkIsEmpty = slPersonalNumber == ""
+        pnsMatch         = pn' == slPersonalNumber
+
+    if pnInSignatoryLinkIsEmpty || pnsMatch
+      then return ()
+      else do
+        logInfo
+            "Danish Personal number for NemID operation does not match and signatory personal number can't be changed"
+          $ object [identifier $ documentid doc, identifier slid]
+        respond404

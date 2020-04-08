@@ -2,7 +2,6 @@ module EID.CGI.GRP.Control (
     grpRoutes
   , checkCGISignStatus
   , CGISignStatus(..)
-  , guardThatPersonalNumberMatches
   , handleAuthRequest  -- for testing purposes
   , handleSignRequest  -- for testing purposes
   ) where
@@ -90,7 +89,7 @@ handleAuthRequest did slid = do
     _         -> do
       logInfo_ "No personal number"
       respond404
-  guardThatPersonalNumberMatches slid pn doc
+  guardThatSwedishPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction    <- mkDebugFunction
   let transport = curlTransport SecureSSL
@@ -139,7 +138,7 @@ handleSignRequest _did slid = do
     _         -> do
       logInfo_ "No personal number"
       respond404
-  guardThatPersonalNumberMatches slid pn doc
+  guardThatSwedishPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction    <- mkDebugFunction
   let transport = curlTransport SecureSSL
@@ -444,11 +443,11 @@ textToBeSigned doc@Document {..} = renderLocalTemplate doc "tbs" $ do
   F.value "document_title" documenttitle
   F.value "document_id" $ show documentid
 
-guardThatPersonalNumberMatches
+guardThatSwedishPersonalNumberMatches
   :: Kontrakcja m => SignatoryLinkID -> Text -> Document -> m ()
-guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
+guardThatSwedishPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
   Nothing -> do
-    logInfo "Can't find signatory for eleg operation"
+    logInfo "Can't find signatory for Swedish BankID operation"
       $ object [identifier $ documentid doc, identifier slid]
     respond404
   Just sl -> do
@@ -468,7 +467,7 @@ guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
       then return ()
       else do
         logInfo
-            "Personal number for eleg operation does not match and signatory personal number can't be changed"
+            "Personal number for Swedish BankID operation does not match and signatory personal number can't be changed"
           $ object [identifier $ documentid doc, identifier slid]
         respond404
 
