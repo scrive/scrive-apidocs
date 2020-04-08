@@ -1,5 +1,3 @@
-{-# LANGUAGE DerivingStrategies #-}
-
 module Kontra
     ( module KontraError
     , module KontraMonad

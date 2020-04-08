@@ -146,8 +146,8 @@ hpcPaths cabalFile newBuild opt =
           </> unComponentName c
           </> hdm
           </> (case c of
-                (CLibName _) -> packageId cabalFile
-                _            -> unComponentName c
+                CLibName _ -> packageId cabalFile
+                _          -> unComponentName c
               )
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,

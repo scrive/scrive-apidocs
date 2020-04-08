@@ -31,7 +31,7 @@ import Log.Utils
 import Utils.Directory
 
 getAnchorPositions
-  :: (MonadFail m, Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m)
+  :: (MonadFail m, MonadBaseControl IO m, MonadLog m, MonadIO m)
   => BS.ByteString
   -> [PlacementAnchor]
   -> m (Map.Map PlacementAnchor (Int32, Double, Double))
