@@ -914,7 +914,7 @@ runMailT
   -> m a
 runMailT templates mailNoreplyAddress doc m = do
   now <- currentTime
-  bd  <- case maybesignatory =<< getAuthorSigLink doc of
+  bd  <- case getAuthorUserId doc of
     Just uid -> dbQuery $ GetBrandedDomainByUserID uid
     Nothing  -> dbQuery GetMainBrandedDomain
   let mctx = MailContext { lang               = documentlang doc

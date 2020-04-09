@@ -308,7 +308,7 @@ handleSignShowSaveMagicHash did slid mh =
         if isJust (signatorylinkdeleted sl) || isJust (signatorylinkreallydeleted sl)
           then respondLinkInvalid
           else do
-            let authorId doc = fromJust $ getAuthorSigLink doc >>= maybesignatory
+            let authorId doc = fromJust $ getAuthorUserId doc
             sid <-
               theDocument
               >>= (return . authorId)

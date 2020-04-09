@@ -122,7 +122,7 @@ connectedSigLinkOnTemplateOrPreparation _ document =
  -}
 authorHasUser :: UTCTime -> Document -> Maybe String
 authorHasUser _ document = assertInvariant "author does not have a user connected."
-  $ isJust (maybesignatory =<< getAuthorSigLink document)
+  $ isJust (getAuthorUserId document)
 
 {- |
   Assert an upper bound on number of signatories.

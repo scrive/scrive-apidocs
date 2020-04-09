@@ -96,7 +96,7 @@ triggerAPICallbackIfThereIsOne doc@Document {..} =
     _           -> case (documentapiv2callbackurl, documentapiv1callbackurl) of
       (Just url, _       ) -> addAPICallback url V2
       (_       , Just url) -> addAPICallback url V1
-      _                    -> case maybesignatory =<< getAuthorSigLink doc of
+      _                    -> case getAuthorUserId doc of
         -- FIXME: this should be modified so it's not Maybe
         Just userid -> do
           mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid

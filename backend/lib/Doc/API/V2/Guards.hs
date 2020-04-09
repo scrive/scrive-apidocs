@@ -132,8 +132,7 @@ getAuthor :: Kontrakcja m => Document -> m User
 getAuthor doc = do
   let msgNoAuthor =
         "Document doesn't have author signatory link connected with user account"
-  authorUserId <- apiGuardJust (serverError msgNoAuthor)
-                               (getAuthorSigLink doc >>= maybesignatory)
+  authorUserId <- apiGuardJust (serverError msgNoAuthor) $ getAuthorUserId doc
   let msgNoUser =
         "Document doesn't have author user account for the author signatory link"
   apiGuardJustM (serverError msgNoUser) . dbQuery $ GetUserByIDIncludeDeleted authorUserId

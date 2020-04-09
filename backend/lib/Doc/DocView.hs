@@ -118,7 +118,7 @@ pageDocumentSignView ctx document siglink ad = do
 pageDocumentIdentifyView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text
 pageDocumentIdentifyView ctx document siglink ad = do
-  let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
+  let authorid          = fromJust $ getAuthorUserId document
       useEIDHubForFITupasView =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForFIView
   auser      <- fromJust <$> dbQuery (GetUserByIDIncludeDeleted authorid)
