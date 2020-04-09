@@ -246,9 +246,7 @@ apiCallV1Update did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   getAuthorUserId
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unlessM (isPreparation <$> theDocument) $ checkObjectVersionIfProvidedAndThrowError
       did
       (serverError "Document is not a draft or template")
@@ -290,9 +288,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   getAuthorUserId
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       checkObjectVersionIfProvidedAndThrowError
         did
@@ -405,9 +401,7 @@ apiCallV1Ready did = logDocument did . api $ do
     guardNoPades =<< getSealingMethodForDocument =<< theDocument
 
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   getAuthorUserId
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     guardUserMayImpersonateUserGroupForEid user =<< theDocument
@@ -882,9 +876,8 @@ apiCallV1Restart :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Restart did = logDocument did . api $ do
   checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocSend
-  doc              <- dbQuery $ GetDocumentByDocumentID did
-  auid             <- apiGuardJustM (serverError "No author found")
-    $ return (getAuthorUserId doc)
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  auid <- apiGuardJustM (serverError "No author found") $ return (getAuthorUserId doc)
   unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
     "Permission problem. Not an author."
   when (documentstatus doc `elem` [Pending, Preparation, Closed]) $ do
@@ -926,9 +919,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
   (user, _actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   getAuthorUserId
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     unlessM (isPending <$> theDocument) . throwM . SomeDBExtraException $ conflictError
@@ -1673,9 +1664,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
   checkObjectVersionIfProvided docid
   withDocumentID docid $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $ getAuthorUserId
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ serverError "Document is not a draft or template"
     unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
@@ -1841,9 +1830,7 @@ checkObjectVersionIfProvidedAndThrowError did err = do
 guardAuthorOrAuthorsAdmin :: (Kontrakcja m, DocumentMonad m) => User -> Text -> m ()
 guardAuthorOrAuthorsAdmin user forbidenMessage = do
   docUserID <-
-    apiGuardJustM (serverError "No author found")
-    $   getAuthorUserId
-    <$> theDocument
+    apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
   docUser <-
     apiGuardJustM (serverError "No user found for author")
     . dbQuery
@@ -1874,7 +1861,7 @@ guardSignatoryAccessFromSessionOrCredentials did slid = do
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-    roles <- dbQuery . GetRoles $ user
+    roles        <- dbQuery . GetRoles $ user
     requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
     let exception = throwM . SomeDBExtraException $ forbidden'
     accessControl roles requiredPerm exception $ return ()

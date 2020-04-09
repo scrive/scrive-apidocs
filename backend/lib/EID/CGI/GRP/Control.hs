@@ -473,7 +473,7 @@ guardThatSwedishPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc 
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-    roles <- dbQuery . GetRoles $ user
+    roles        <- dbQuery . GetRoles $ user
     requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
     let
       action = do

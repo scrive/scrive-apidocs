@@ -44,7 +44,7 @@ accessControlRolesAPIV2 = dir "accesscontrol" . dir "roles" $ choice
 accessControlAPIV2GetUserRoles :: Kontrakcja m => UserID -> m Response
 accessControlAPIV2GetUserRoles uid = api $ do
   -- Check user has permissions to view User
-  apiuser <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithAPIPersonal
   requiredPerm <- alternativePermissionCondition $ canDo ReadA $ UserR uid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     -- Get roles for user
@@ -60,7 +60,7 @@ accessControlAPIV2Get roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
     Nothing   -> apiError insufficientPrivileges
     Just role -> do
-      apiuser <- getAPIUserWithAPIPersonal
+      apiuser      <- getAPIUserWithAPIPersonal
       -- to read a role it is enough to ReadA its source
       requiredPerm <- alternativePermissionCondition $ canDoActionOnSource ReadA role
       apiAccessControlOrIsAdmin apiuser requiredPerm . return . Ok $ encodeAccessRole role
@@ -70,10 +70,11 @@ accessControlAPIV2Delete roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
     Nothing   -> apiError insufficientPrivileges
     Just role -> do
-      apiuser <- getAPIUserWithAPIPersonal
+      apiuser      <- getAPIUserWithAPIPersonal
       -- to delete a role one must UpdateA source and be able to grant the role
-      requiredPerm <- allAlternativePermissionConditions $
-        canDoActionOnSource UpdateA role : canGrant (accessRoleTarget role)
+      requiredPerm <-
+        allAlternativePermissionConditions $ canDoActionOnSource UpdateA role : canGrant
+          (accessRoleTarget role)
       apiAccessControlOrIsAdmin apiuser requiredPerm $ do
         void . dbUpdate $ AccessControlRemoveRole roleId
         return . Ok . J.runJSONGen $ do
@@ -82,11 +83,12 @@ accessControlAPIV2Delete roleId = api $ do
 
 accessControlAPIV2Add :: Kontrakcja m => m Response
 accessControlAPIV2Add = api $ do
-  role    <- getApiRoleParameter
-  apiuser <- getAPIUserWithAPIPersonal
+  role         <- getApiRoleParameter
+  apiuser      <- getAPIUserWithAPIPersonal
   -- to add a role one must UpdateA source and be able to grant the role
-  requiredPerm <- allAlternativePermissionConditions $
-    canDoActionOnSource UpdateA role : canGrant (accessRoleTarget role)
+  requiredPerm <-
+    allAlternativePermissionConditions $ canDoActionOnSource UpdateA role : canGrant
+      (accessRoleTarget role)
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     mrole <- case role of
       AccessRoleUser _ uid target -> dbUpdate $ AccessControlCreateForUser uid target

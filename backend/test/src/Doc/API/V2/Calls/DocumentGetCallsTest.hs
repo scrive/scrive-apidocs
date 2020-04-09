@@ -44,20 +44,20 @@ import Util.QRCode
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup
   "APIv2DocumentGetCalls"
-  [ testThat "API v2 List: old style"       env (testDocApiV2List False)
-  , testThat "API v2 List: new style"       env (testDocApiV2List True)
-  , testThat "API v2 Get"                   env testDocApiV2Get
-  , testThat "API v2 Get by shortcode"      env testDocApiV2GetShortCode
-  , testThat "API v2 Get QR code"           env testDocApiV2GetQRCode
-  , testThat "API v2 Get by Company Admin"  env testDocApiV2GetByAdmin
-  , testThat "API v2 Get for Shared doc"    env testDocApiV2GetShared
-  , testThat "API v2 History"               env testDocApiV2History
-  , testThat "API v2 History (permissions)" env testDocApiV2HistoryPermissionCheck
-  , testThat "API v2 Evidence attachments"  env testDocApiV2EvidenceAttachments
-  , testThat "API v2 Files - Main"          env testDocApiV2FilesMain
-  , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
-  , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
-  , testThat "API v2 Files - Full"          env testDocApiV2FilesFull
+  [ testThat "API v2 List: old style"          env (testDocApiV2List False)
+  , testThat "API v2 List: new style"          env (testDocApiV2List True)
+  , testThat "API v2 Get Doc"                  env testDocApiV2Get
+  , testThat "API v2 Get Doc by shortcode"     env testDocApiV2GetShortCode
+  , testThat "API v2 Get Doc QR code"          env testDocApiV2GetQRCode
+  , testThat "API v2 Get Doc by Company Admin" env testDocApiV2GetByAdmin
+  , testThat "API v2 Get Doc for Shared doc"   env testDocApiV2GetShared
+  , testThat "API v2 History"                  env testDocApiV2History
+  , testThat "API v2 History (permissions)"    env testDocApiV2HistoryPermissionCheck
+  , testThat "API v2 Evidence attachments"     env testDocApiV2EvidenceAttachments
+  , testThat "API v2 Files - Main"             env testDocApiV2FilesMain
+  , testThat "API v2 Files - Pages"            env testDocApiV2FilesPages
+  , testThat "API v2 Files - Get"              env testDocApiV2FilesGet
+  , testThat "API v2 Files - Full"             env testDocApiV2FilesFull
   , testThat "API v2 Folder listing works with subfolders" env testDocApiV2FolderList
 --  , testThat "API v2 Get - Not after 30 days for signatories" env testDocApiV2GetFailsAfter30Days
   ]
@@ -312,9 +312,11 @@ testDocApiV2GetShared = do
 
   ctx        <- mkContextWithUser defaultLang user
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
-  assertEqual "Document viewer should be"   "folder" (getMockDocViewerRole getMockDoc)
-  assertEqual "Document should be template" True     (getMockDocIsTemplate getMockDoc)
-  assertEqual "Document should be shared"   True     (getMockDocIsShared getMockDoc)
+  assertEqual "Document viewer should be"
+              "company_admin"
+              (getMockDocViewerRole getMockDoc)
+  assertEqual "Document should be template" True (getMockDocIsTemplate getMockDoc)
+  assertEqual "Document should be shared"   True (getMockDocIsShared getMockDoc)
 
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do

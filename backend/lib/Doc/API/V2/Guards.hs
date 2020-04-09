@@ -36,16 +36,13 @@ module Doc.API.V2.Guards (
 , guardThatAllConsentQuestionsHaveResponse
 , guardThatAuthorIsNotApprover
 -- * Joined guard for read-only functions
-, guardDocumentReadAccess
 , guardThatDocumentIsReadableBySignatories
 , guardAccessToDocumentWithSignatory
-, getMaybeSignatory
 , getAuthor
 ) where
 
 import Control.Conditional (whenM)
 import Data.Either (rights)
-import Log
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
@@ -56,7 +53,6 @@ import API.V2.Errors
 import API.V2.Parameters
 import API.V2.Utils
 import DB
-import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.SignatoryConsentQuestion
@@ -74,7 +70,6 @@ import File.FileID
 import Folder.Types
 import InputValidation
 import Kontra
-import OAuth.Model (APIPrivilege(..))
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -231,8 +226,8 @@ guardDocumentMoveIsAllowed user oldLocation newLocation =
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-      requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
-      apiAccessControl user requiredPerm $ return ()
+    requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
+    apiAccessControl user requiredPerm $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()
 
 guardGetSignatoryFromIdForDocument
@@ -798,64 +793,6 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
     unless (all (`elem` questionIDs) responseIDs) . apiError $ requestParameterInvalid
       "consent_responses"
       "Consent responses are corrupted"
-
--- | For the given DocumentID:
---
--- 1. Try to get a valid session for the given `Maybe SignatoryLinkID`
---
--- if that fails or no SignatoryLinkID is given, then:
---
--- Get permissions using `getAPIUser` with given privileges.
--- If the user account is not linked to the document then also guard extra
--- permissions using guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
---
--- SYSTEM ADMINS WILL ALWAYS SUCCEED
---
--- This is useful in all situations where a signatory or other users could use
--- the API call (e.g. document GET call), but not that this function is focused only
--- on ability to read document
-
-getMaybeSignatory
-  :: Kontrakcja m => Document -> SignatoryLinkID -> m (Maybe SignatoryLink)
-getMaybeSignatory doc slid = do
-  sid          <- view #sessionID <$> getContext
-  validSession <- dbQuery $ CheckDocumentSession sid slid
-  if validSession
-    then do
-      fmap Just . apiGuardJust (documentNotFound (documentid doc)) $ getSigLinkFor slid
-                                                                                   doc
-    else return Nothing
-
-guardDocumentReadAccess
-  :: Kontrakcja m => Maybe SignatoryLinkID -> Document -> m DocumentAccess
-guardDocumentReadAccess mslid doc = do
-  mSessionSignatory <- case mslid of
-    Nothing   -> return Nothing
-    Just slid -> getMaybeSignatory doc slid
-
-  case mSessionSignatory of
-    Just sl -> do
-      unless (signatoryisauthor sl) $ guardThatDocumentIsReadableBySignatories doc
-      return $ documentAccessForSlid (signatorylinkid sl) doc
-    Nothing -> do
-      (user, _) <- getAPIUser APIDocCheck
-      case getSigLinkFor user doc of
-        Just sl -> do
-          unless (signatoryisauthor sl) $ guardThatDocumentIsReadableBySignatories doc
-          return $ documentAccessForUser user doc
-        Nothing -> do
-          admin  <- isUserAdmin user <$> getContext
-          author <- getAuthor doc
-          case () of
-            _
-              | userIsAuthorOrCompanyAdminOrDocumentIsShared user doc author
-              -> return $ documentAccessForUser user doc
-              | admin && False -- disable temporarily
-              -> do
-                logInfo "GOD DOCUMENT ACCESS" $ object ["god" .= show (user ^. #id)]
-                return $ documentAccessForAdminonly doc
-              | otherwise
-              -> apiError documentActionForbidden
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do

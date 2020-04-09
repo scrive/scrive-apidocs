@@ -62,16 +62,15 @@ folderAPICreate = api $ do
       dbUpdate $ FolderCreate fdrIn
     Just parent_id -> do
       -- Check user has permissions to create child folder
-      requiredPerm <- alternativePermissionCondition $
-        canDo CreateA $ FolderR parent_id
-      apiuser <- getAPIUserWithAPIPersonal
+      requiredPerm <- alternativePermissionCondition $ canDo CreateA $ FolderR parent_id
+      apiuser      <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser requiredPerm . dbUpdate $ FolderCreate fdrIn
   Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
   user           <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo ReadA $ FolderR fid
+  requiredPerm   <- alternativePermissionCondition $ canDo ReadA $ FolderR fid
   hasReadAccess  <- apiAccessControlCheck user requiredPerm
   isAdminOrSales <- checkAdminOrSales
   fdrwc          <- if hasReadAccess || isAdminOrSales
@@ -118,16 +117,16 @@ folderAPIUpdate fid = api $ do
           (Nothing, Just toParentID) -> return [canDo UpdateA $ FolderR toParentID]
           -- root is remaining root. no special privileges needed
           _ -> return []
-      apiuser <- getAPIUserWithAPIPersonal
-      requiredPerm <- allAlternativePermissionConditions $
-        (canDo UpdateA $ FolderR fid) : accParents
+      apiuser      <- getAPIUserWithAPIPersonal
+      requiredPerm <-
+        allAlternativePermissionConditions $ (canDo UpdateA $ FolderR fid) : accParents
       apiAccessControlOrIsAdmin apiuser requiredPerm $ do
         void . dbUpdate . FolderUpdate $ fdrNew
         Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
-  apiuser <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithAPIPersonal
   requiredPerm <- alternativePermissionCondition $ canDo DeleteA $ FolderR fid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     fdr <- fGetOrErrNotFound fid
@@ -156,7 +155,7 @@ folderAPIDelete fid = api $ do
 
 folderAPIListDocs :: Kontrakcja m => FolderID -> m Response
 folderAPIListDocs fid = api $ do
-  (user, _) <- getAPIUserWithPad APIDocCheck
+  (user, _)    <- getAPIUserWithPad APIDocCheck
   requiredPerm <- alternativePermissionCondition $ canDo ReadA $ FolderR fid
   apiAccessControlOrIsAdmin user requiredPerm $ do
     offset   <- apiV2ParameterDefault 0 (ApiV2ParameterInt "offset")

@@ -219,7 +219,8 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
       Just trgug -> return $ Just trgug
   let targetGroup   = fromMaybe currentUserGroup mTargetGroup
       targetGroupID = targetGroup ^. #id
-  requiredPerm <- alternativePermissionCondition $ canDo CreateA $ UserInGroupR targetGroupID
+  requiredPerm <- alternativePermissionCondition $ canDo CreateA $ UserInGroupR
+    targetGroupID
   roles <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
   accessControl roles requiredPerm internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
@@ -381,10 +382,10 @@ handleChangeRoleOfUserGroupAccount = do
 -}
 handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
 handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
-  removeuid  <- getCriticalField asValidUserID "removeid"
-  removeuser <- guardJustM . dbQuery $ GetUserByID removeuid
-  requiredPerm <- alternativePermissionCondition $
-    canDo DeleteA . UserInGroupR $ removeuser ^. #groupID
+  removeuid    <- getCriticalField asValidUserID "removeid"
+  removeuser   <- guardJustM . dbQuery $ GetUserByID removeuid
+  requiredPerm <-
+    alternativePermissionCondition $ canDo DeleteA . UserInGroupR $ removeuser ^. #groupID
   -- Even if we don't execute the main action for whatever reason we remove all invites
   -- that we possibly can, restricted by the caller's permissions.
   accessControl roles requiredPerm (removeInvitesOnly roles removeuser) $ do

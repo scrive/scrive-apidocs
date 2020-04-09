@@ -64,8 +64,9 @@ partnerAPIV1 = dir "partner" $ choice
 partnerApiCallV1CompanyCreate :: Kontrakcja m => UserGroupID -> m Response
 partnerApiCallV1CompanyCreate partnerUsrGrpID = do
   logPartner partnerUsrGrpID . api $ do
-    user <- getAPIUserWithAPIPersonal
-    requiredPerm <- alternativePermissionCondition $ canDo CreateA $ UserGroupR partnerUsrGrpID
+    user         <- getAPIUserWithAPIPersonal
+    requiredPerm <- alternativePermissionCondition $ canDo CreateA $ UserGroupR
+      partnerUsrGrpID
     apiAccessControl user requiredPerm $ do
       ugwp_partner <-
         apiGuardJustM (serverError "Was not able to retrieve partner")
@@ -100,7 +101,7 @@ partnerApiCallV1CompanyUpdate
 partnerApiCallV1CompanyUpdate partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     requiredPerm <- allAlternativePermissionConditions
-          [canDo UpdateA $ UserGroupR ugid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
+      [canDo UpdateA $ UserGroupR ugid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user requiredPerm $ do
       dbQuery (UserGroupGetWithParents ugid) >>= \case
@@ -142,9 +143,9 @@ partnerApiCallV1CompaniesGet :: Kontrakcja m => UserGroupID -> m Response
 partnerApiCallV1CompaniesGet partnerUsrGrpID = do
   logPartner partnerUsrGrpID . api $ do
     requiredPerm <- allAlternativePermissionConditions
-          [ canDo ReadA $ UserGroupR partnerUsrGrpID
-          , canDo CreateA $ UserGroupR partnerUsrGrpID
-          ]
+      [ canDo ReadA $ UserGroupR partnerUsrGrpID
+      , canDo CreateA $ UserGroupR partnerUsrGrpID
+      ]
     -- @note The last entry is just a trick to keep company admins from
     -- reading the companies - as of now we only want partner admins to be
     -- able to read, even though in the future this will change. The trick
@@ -165,7 +166,7 @@ partnerApiCallV1UserCreate :: Kontrakcja m => UserGroupID -> UserGroupID -> m Re
 partnerApiCallV1UserCreate partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     requiredPerm <- allAlternativePermissionConditions
-          [canDo CreateA $ UserInGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
+      [canDo CreateA $ UserInGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
               {- This last one is blocking for all but partner admins.             -}
               {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
               {- Maybe we don't need to have the _exact_ same behaviour as before? -}
@@ -261,10 +262,10 @@ partnerApiCallV1UserGetPersonalToken
 partnerApiCallV1UserGetPersonalToken partnerUsrGrpID uid = do
   logPartnerAndUser partnerUsrGrpID uid . api $ do
     requiredPerm <- allAlternativePermissionConditions
-          [ canDo CreateA $ UserPersonalTokenR uid
-          , canDo ReadA $ UserPersonalTokenR uid
-          , canDo CreateA $ UserGroupR partnerUsrGrpID
-          ]
+      [ canDo CreateA $ UserPersonalTokenR uid
+      , canDo ReadA $ UserPersonalTokenR uid
+      , canDo CreateA $ UserGroupR partnerUsrGrpID
+      ]
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser requiredPerm $ do
       user <- guardThatUserExists uid -- @todo for now...

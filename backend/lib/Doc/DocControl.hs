@@ -68,7 +68,6 @@ import Doc.AccessControl
 import Doc.Action
 import Doc.API.Callback.Model
 import Doc.API.V2.DocumentUpdateUtils
-import Doc.API.V2.Guards (getMaybeSignatory)
 import Doc.API.V2.Guards
   ( guardDocumentStatus, guardGetSignatoryFromIdForDocument
   , guardThatDocumentCanBeStarted
@@ -712,8 +711,9 @@ checkFileAccess fileId = do
 
   case (mSignatoryId, mDocId, mAttachId) of
     (Nothing, Nothing, Just attachId) -> checkFileAccessWithAttachmentId fileId attachId
-    (_, Just docId, _) ->
-      docAccessControl docId mSignatoryId $ checkFileInDocument fileId docId
+    (_, Just docId, _) -> do
+      doc <- dbQuery $ GetDocumentByDocumentID docId
+      docAccessControl doc mSignatoryId $ checkFileInDocument fileId docId
     _ -> internalError
 
 checkFileInDocument :: Kontrakcja m => FileID -> DocumentID -> m ()
@@ -723,16 +723,15 @@ checkFileInDocument fileId docId = do
 
 checkFileAccessWithLoggedInUser :: Kontrakcja m => FileID -> DocumentID -> m ()
 checkFileAccessWithLoggedInUser fileId docId = do
-  doc       <- dbQuery $ GetDocumentByDocumentID docId
+  doc   <- dbQuery $ GetDocumentByDocumentID docId
   mUser <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
-  docAccessControlWithUserSignatory doc mUser Nothing
-    $ checkFileInDocument fileId docId
+  docAccessControlWithUserSignatory doc mUser Nothing $ checkFileInDocument fileId docId
 
 checkFileAccessWithSignatory
   :: Kontrakcja m => FileID -> DocumentID -> SignatoryLinkID -> m ()
 checkFileAccessWithSignatory fileId docId signatoryId = do
   doc        <- dbQuery $ GetDocumentByDocumentID docId
-  mSignatory <- getMaybeSignatory doc signatoryId
+  mSignatory <- maybeAuthenticateSignatory doc signatoryId
   docAccessControlWithUserSignatory doc Nothing mSignatory
     $ checkFileInDocument fileId docId
 

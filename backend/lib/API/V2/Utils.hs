@@ -29,18 +29,15 @@ apiAccessControlWithError apiuser perms failAction successAction = do
     `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
 
-apiAccessControl
-  :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a
+apiAccessControl :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a
 apiAccessControl user perms successAction = do
   apiAccessControlWithError user perms (apiError insufficientPrivileges) successAction
 
-apiAccessControlCheck
-  :: (Kontrakcja m) => User -> PermissionCondition -> m Bool
+apiAccessControlCheck :: (Kontrakcja m) => User -> PermissionCondition -> m Bool
 apiAccessControlCheck apiUser perms = do
   apiAccessControlWithError apiUser perms (return False) (return True)
 
-apiAccessControlOrIsAdmin
-  :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a
+apiAccessControlOrIsAdmin :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a
 apiAccessControlOrIsAdmin apiuser perms successAction = do
   isAdminOrSales <- checkAdminOrSales
   -- If scrive admin or sales, should perform action anyway (unless non-existance error)
@@ -48,8 +45,7 @@ apiAccessControlOrIsAdmin apiuser perms successAction = do
         if isAdminOrSales then successAction else apiError insufficientPrivileges
   apiAccessControlWithError apiuser perms failAction successAction
 
-accessControlLoggedIn
-  :: (Kontrakcja m) => PermissionCondition -> m a -> m a
+accessControlLoggedIn :: (Kontrakcja m) => PermissionCondition -> m a -> m a
 accessControlLoggedIn perms successAction = do
   user  <- guardJustM (view #maybeUser <$> getContext)
   roles <- dbQuery . GetRoles $ user

@@ -39,13 +39,11 @@ canGrant = nubOrd . map (\p -> p { permKind = PermCanGrant }) . hasPermissions
 crudActions :: [AccessAction]
 crudActions = [CreateA, ReadA, UpdateA, DeleteA]
 
-accessControlWith
-  :: (Monad m) => [Permission] -> PermissionCondition -> m a -> m a -> m a
+accessControlWith :: (Monad m) => [Permission] -> PermissionCondition -> m a -> m a -> m a
 accessControlWith availablePerms requiredPerms onError onSuccess = do
   if accessControlCheck availablePerms requiredPerms then onSuccess else onError
 
-accessControl
-  :: (Monad m) => [AccessRole] -> PermissionCondition -> m a -> m a -> m a
+accessControl :: (Monad m) => [AccessRole] -> PermissionCondition -> m a -> m a -> m a
 accessControl roles =
   accessControlWith $ join $ fmap (hasPermissions . accessRoleTarget) roles
 

@@ -62,8 +62,8 @@ getDocumentValidRoles
 getDocumentValidRoles doc mUser mSignatory = do
   ctx             <- mkContext defaultLang
   getRequest      <- mkRequestWithHeaders GET [] []
-  (validRoles, _) <- runTestKontra getRequest ctx $ docAccessValidRoles
-    doc mUser mSignatory
+  (validRoles, _) <- runTestKontra getRequest ctx
+    $ docAccessValidRoles doc mUser mSignatory
   return validRoles
 
 assertHasDocumentPermission
