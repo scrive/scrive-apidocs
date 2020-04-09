@@ -51,7 +51,7 @@ dvRole :: DocumentViewer -> Text
 dvRole (SignatoryDocumentViewer    _) = "signatory"
 dvRole (CompanyAdminDocumentViewer _) = "company_admin"
 dvRole (CompanySharedDocumentViewer ) = "company_shared"
-dvRole (FolderDocumentViewer _      ) = "folder"
+dvRole (FolderDocumentViewer _      ) = "company_admin"
 
 -- We should not introduce instance for DocumentViewer since this can't be really parsed. And instance for Maybe DocumentViewer would be missleading
 unjsonDocumentViewer :: UnjsonDef (Maybe DocumentViewer)

@@ -1,10 +1,10 @@
 module Doc.AccessControl
   ( DocAccessRole(..)
-  , docAccessValidRoles
   , docAccessControl
-  , docAccessMode
-  , docAccessControlWithUserSignatory
+  , docAccessControlAndMode
   , docPermissionCondition
+  , docAccessValidRoles
+  , docAccessControlWithUserSignatory
   )
 where
 
@@ -95,6 +95,21 @@ docAccessControl :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> m a -
 docAccessControl docId mSignatoryId onSuccess = do
   mUser <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
   docAccessControlWithUser docId mUser mSignatoryId onSuccess
+
+docAccessControlAndMode
+  :: Kontrakcja m => Document -> Maybe User -> Maybe SignatoryLinkID -> m DocumentAccessMode
+docAccessControlAndMode doc mUser mSignatoryId = do
+  author <- getAuthor doc
+  let userIsAuthor = ((^. #id) <$> mUser) == Just (author ^. #id)
+
+  mSignatory <- case mSignatoryId of
+    Just signatoryId -> getMaybeSignatory doc signatoryId
+    Nothing          -> return Nothing
+
+  validRoles <- docAccessValidRoles doc mUser mSignatory
+  case docAccessMode userIsAuthor validRoles of
+    Just accessMode -> return accessMode
+    Nothing -> apiError documentActionForbidden
 
 -- Given a document and an access role, derive the permissions the access
 -- role have to access the document resource. Currently we only derive

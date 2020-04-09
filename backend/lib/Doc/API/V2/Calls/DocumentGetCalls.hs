@@ -163,26 +163,14 @@ docApiV2List = api $ do
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get docId = logDocument docId . api $ do
   mSignatoryId <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  logInfo_ $ "got signatory id: " <> showt mSignatoryId
 
   doc        <- dbQuery $ GetDocumentByDocumentID docId
-  mSignatory <- case mSignatoryId of
-    Just signatoryId -> getMaybeSignatory doc signatoryId
-    Nothing          -> return Nothing
-  logInfo_ $ "got signatory: " <> showt mSignatory
-
   mUser <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
-  logInfo_ $ "got user: " <> showt mUser
 
-  author <- getAuthor doc
-  let userIsAuthor = ((^. #id) <$> mUser) == Just (author ^. #id)
+  accessMode <- docAccessControlAndMode doc mUser mSignatoryId
 
-  validRoles <- docAccessValidRoles doc mUser mSignatory
-  case docAccessMode userIsAuthor validRoles of
-    Just accessMode -> do
-      let docAccess = DocumentAccess docId accessMode $ documentstatus doc
-      return $ Ok (unjsonDocument docAccess, doc)
-    Nothing -> apiError documentActionForbidden
+  let docAccess = DocumentAccess docId accessMode $ documentstatus doc
+  return $ Ok (unjsonDocument docAccess, doc)
 
 docApiV2GetByShortID :: Kontrakcja m => DocumentID -> m Response
 docApiV2GetByShortID shortDid = api $ do
