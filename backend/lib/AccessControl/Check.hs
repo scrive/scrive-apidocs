@@ -1,12 +1,12 @@
 module AccessControl.Check
-  ( ToPermissionCondition(..)
-  , accessControl
+  ( accessControl
   , accessControlCheck
   , accessControlPure
   , hasPermissions
   , canDo
   , canGrant
-  , addAlternativePermissions
+  , alternativePermissionCondition
+  , allAlternativePermissionConditions
   )
 where
 
@@ -22,20 +22,6 @@ import Folder.Model
 import User.Model.Query
 import UserGroup.Model
 import UserGroup.Types
-
-class ToPermissionCondition m a where
-  toPermissionCondition :: a -> m PermissionCondition
-
-instance (Monad m) => ToPermissionCondition m PermissionCondition where
-  toPermissionCondition = return
-
-instance (MonadThrow m, MonadDB m)
-  => ToPermissionCondition m Permission where
-  toPermissionCondition = return . Cond
-
-instance (MonadThrow m, MonadDB m)
-  => ToPermissionCondition m [Permission] where
-  toPermissionCondition = fmap AndCond . mapM addAlternativePermissions
 
 -- When granting a role we check that we can grant all permissions.
 -- When granting a permission, following is a rule:
@@ -54,13 +40,12 @@ crudActions :: [AccessAction]
 crudActions = [CreateA, ReadA, UpdateA, DeleteA]
 
 accessControlWith
-  :: (Monad m, ToPermissionCondition m perm) => [Permission] -> perm -> m a -> m a -> m a
+  :: (Monad m) => [Permission] -> PermissionCondition -> m a -> m a -> m a
 accessControlWith availablePerms requiredPerms onError onSuccess = do
-  requiredPerms2 <- toPermissionCondition requiredPerms
-  if accessControlCheck availablePerms requiredPerms2 then onSuccess else onError
+  if accessControlCheck availablePerms requiredPerms then onSuccess else onError
 
 accessControl
-  :: (Monad m, ToPermissionCondition m perm) => [AccessRole] -> perm -> m a -> m a -> m a
+  :: (Monad m) => [AccessRole] -> PermissionCondition -> m a -> m a -> m a
 accessControl roles =
   accessControlWith $ join $ fmap (hasPermissions . accessRoleTarget) roles
 
@@ -81,11 +66,15 @@ evalPermissionCondition f (Cond    p   ) = f p
 evalPermissionCondition f (OrCond  aces) = or $ fmap (evalPermissionCondition f) aces
 evalPermissionCondition f (AndCond aces) = and $ fmap (evalPermissionCondition f) aces
 
+allAlternativePermissionConditions
+  :: forall  m . (MonadThrow m, MonadDB m) => [Permission] -> m PermissionCondition
+allAlternativePermissionConditions = fmap AndCond . mapM alternativePermissionCondition
+
 -- By specification, it should be enough to have permission for the
 -- wanted action on _any_ parent.
-addAlternativePermissions
+alternativePermissionCondition
   :: forall  m . (MonadThrow m, MonadDB m) => Permission -> m PermissionCondition
-addAlternativePermissions perm = case permResource perm of
+alternativePermissionCondition perm = case permResource perm of
   UserR              uid  -> addForAllParentsUid UserInGroupR uid
   UserInGroupR       ugid -> addForAllParentsUgid UserInGroupR ugid
   UserGroupR         ugid -> addForAllParentsUgid UserGroupR ugid

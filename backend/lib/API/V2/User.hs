@@ -5,7 +5,6 @@ module API.V2.User (
   , getAPIUserWithPrivileges
   , getAPIUserWithPad
   , getAPIUserWithAPIPersonal
-  , getMaybeAuthenticatedAPIUser
 ) where
 
 import Happstack.Server
@@ -25,12 +24,6 @@ import Util.Actor
 -- | Same as `getAPIUserWithPrivileges` but for only one `APIPrivilege`
 getAPIUser :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUser priv = getAPIUserWithPrivileges [priv]
-
-getMaybeAuthenticatedAPIUser
-  :: Kontrakcja m => APIPrivilege -> m (Maybe (AuthenticatedUser, Actor))
-getMaybeAuthenticatedAPIUser priv = do
-  res <- getMaybeAPIUser priv
-  return $ fmap (\(user, actor) -> (unsafeCreateAuthenticatedUser user, actor)) res
 
 getMaybeAPIUser :: Kontrakcja m => APIPrivilege -> m (Maybe (User, Actor))
 getMaybeAPIUser priv = getMaybeAPIUserWith (view #maybeUser) [priv]

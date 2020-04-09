@@ -40,7 +40,6 @@ module Doc.API.V2.Guards (
 , guardThatDocumentIsReadableBySignatories
 , guardAccessToDocumentWithSignatory
 , getMaybeSignatory
-, getMaybeAuthenticatedSignatory
 , getAuthor
 ) where
 
@@ -215,8 +214,9 @@ guardThatAttachmentDetailsAreConsistent ads = do
 
 guardFolderActionIsAllowed :: Kontrakcja m => User -> [(AccessAction, FolderID)] -> m ()
 guardFolderActionIsAllowed user acts_fids = do
-  apiAccessControl user [ canDo act $ DocumentInFolderR fid | (act, fid) <- acts_fids ]
-    $ return ()
+  requiredPerm <- allAlternativePermissionConditions
+    [ canDo act $ DocumentInFolderR fid | (act, fid) <- acts_fids ]
+  apiAccessControl user requiredPerm $ return ()
 
 guardDocumentCreateInFolderIsAllowed :: Kontrakcja m => User -> FolderID -> m ()
 guardDocumentCreateInFolderIsAllowed user location =
@@ -232,8 +232,8 @@ guardDocumentMoveIsAllowed user oldLocation newLocation =
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-    let policy = [canDo ReadA $ EidIdentityR ugid]
-    apiAccessControl user policy $ return ()
+      requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
+      apiAccessControl user requiredPerm $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()
 
 guardGetSignatoryFromIdForDocument
@@ -815,12 +815,6 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
 -- This is useful in all situations where a signatory or other users could use
 -- the API call (e.g. document GET call), but not that this function is focused only
 -- on ability to read document
-
-getMaybeAuthenticatedSignatory
-  :: Kontrakcja m => Document -> SignatoryLinkID -> m (Maybe AuthenticatedSignatoryLink)
-getMaybeAuthenticatedSignatory doc signatoryId = do
-  mSignatory <- getMaybeSignatory doc signatoryId
-  return $ unsafeCreateAuthenticatedSignatoryLink <$> mSignatory
 
 getMaybeSignatory
   :: Kontrakcja m => Document -> SignatoryLinkID -> m (Maybe SignatoryLink)

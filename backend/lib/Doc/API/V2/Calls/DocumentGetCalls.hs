@@ -167,18 +167,17 @@ docApiV2Get docId = logDocument docId . api $ do
 
   doc        <- dbQuery $ GetDocumentByDocumentID docId
   mSignatory <- case mSignatoryId of
-    Just signatoryId -> getMaybeAuthenticatedSignatory doc signatoryId
+    Just signatoryId -> getMaybeSignatory doc signatoryId
     Nothing          -> return Nothing
   logInfo_ $ "got signatory: " <> showt mSignatory
 
-  mAuthUser <- (fmap fst) <$> getMaybeAuthenticatedAPIUser APIDocCheck
-  let mUser = getAuthenticatedUser <$> mAuthUser
+  mUser <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
   logInfo_ $ "got user: " <> showt mUser
 
   author <- getAuthor doc
   let userIsAuthor = ((^. #id) <$> mUser) == Just (author ^. #id)
 
-  validRoles <- docAccessValidRoles doc mAuthUser mSignatory
+  validRoles <- docAccessValidRoles doc mUser mSignatory
   case docAccessMode userIsAuthor validRoles of
     Just accessMode -> do
       let docAccess = DocumentAccess docId accessMode $ documentstatus doc
@@ -301,8 +300,9 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  let acc = [canDo ReadA . DocumentInFolderR $ documentfolderid doc]
-  apiAccessControl user acc $ do
+  requiredPerm <- alternativePermissionCondition $
+    canDo ReadA . DocumentInFolderR $ documentfolderid doc
+  apiAccessControl user requiredPerm $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl
       Just esig -> return $ Right esig

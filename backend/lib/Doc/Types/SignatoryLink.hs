@@ -14,11 +14,9 @@ module Doc.Types.SignatoryLink (
   , SignatoryRole(..)
   , signatoryRoleFromBool
   , SignatoryLink(..)
-  , AuthenticatedSignatoryLink (getAuthenticatedSignatoryLink)
   , signatoryLinksSelectors
   , defaultSignatoryLink
   , isValidSignatoryMagicHash
-  , unsafeCreateAuthenticatedSignatoryLink
   ) where
 
 import Control.Monad.Catch
@@ -416,21 +414,6 @@ data SignatoryLink = SignatoryLink
   -- | Status of confirmation email delivery
   , signatorylinkmailconfirmationdeliverystatus :: !DeliveryStatus
   } deriving (Show)
-
--- Witness for a particular signatory link that has been authenticated
--- through a valid magic hash and session. Functions can require this over regular
--- SignatoryLink as argument to make sure that the caller calls the appropriate
--- authentication method to validate the signatory link session.
-data AuthenticatedSignatoryLink = MkAuthenticatedSignatoryLink
-  { getAuthenticatedSignatoryLink :: SignatoryLink
-  }
-  deriving (Show)
-
--- Unsafe creation of a witness for authenticated signatory link.
--- This should only be used in authentication functions that actually
--- validate the signatory session
-unsafeCreateAuthenticatedSignatoryLink :: SignatoryLink -> AuthenticatedSignatoryLink
-unsafeCreateAuthenticatedSignatoryLink = MkAuthenticatedSignatoryLink
 
 defaultSignatoryLink :: SignatoryLink
 defaultSignatoryLink = SignatoryLink

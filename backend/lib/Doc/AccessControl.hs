@@ -36,8 +36,6 @@ import Util.SignatoryLinkUtils (getSigLinkFor)
 data DocAccessRole
   -- role created for visiting through signatory link
   = SignatoryAR SignatoryLinkID
-  -- signatory that is also author for a given document
-  | SignatoryAuthorAR DocumentID
   -- the original access roles
   | OtherAR AccessRoleTarget
   deriving (Show, Eq)
@@ -45,15 +43,12 @@ data DocAccessRole
 docAccessValidRoles
   :: Kontrakcja m
   => Document
-  -> Maybe AuthenticatedUser
-  -> Maybe AuthenticatedSignatoryLink
+  -> Maybe User
+  -> Maybe SignatoryLink
   -> m [DocAccessRole]
-docAccessValidRoles doc mAuthUser mAuthSignatory = do
-  let mUser      = getAuthenticatedUser <$> mAuthUser
-      mSignatory = getAuthenticatedSignatoryLink <$> mAuthSignatory
-
+docAccessValidRoles doc mUser mSignatory = do
   -- Get signatory or signatory author roles if there is a signatory link
-  let signatoryRoles = join $ maybeToList $ signatoryAccessRoles doc <$> mSignatory
+  let mSignatoryRole = (SignatoryAR . signatorylinkid) <$> mSignatory
 
   permissionCondition <- docPermissionCondition (canDo ReadA) doc $ documentfolderid doc
   userRoles           <- case mUser of
@@ -61,7 +56,7 @@ docAccessValidRoles doc mAuthUser mAuthSignatory = do
       roles <- dbQuery $ GetRoles user
       return $ fmap (OtherAR . accessRoleTarget) roles
     Nothing -> return []
-  let availableRoles = userRoles <> signatoryRoles
+  let availableRoles = userRoles <> maybeToList mSignatoryRole
 
   -- Filter out all the invalid roles that do not have access to the document.
   return $ filter
@@ -71,12 +66,12 @@ docAccessValidRoles doc mAuthUser mAuthSignatory = do
 docAccessControlWithUserSignatory
   :: Kontrakcja m
   => Document
-  -> Maybe AuthenticatedUser
-  -> Maybe AuthenticatedSignatoryLink
+  -> Maybe User
+  -> Maybe SignatoryLink
   -> m a
   -> m a
-docAccessControlWithUserSignatory doc mAuthUser mSignatory onSuccess = do
-  validRoles <- docAccessValidRoles doc mAuthUser mSignatory
+docAccessControlWithUserSignatory doc mUser mSignatory onSuccess = do
+  validRoles <- docAccessValidRoles doc mUser mSignatory
   case validRoles of
     []      -> apiError insufficientPrivileges
     (_ : _) -> onSuccess
@@ -84,31 +79,28 @@ docAccessControlWithUserSignatory doc mAuthUser mSignatory onSuccess = do
 docAccessControlWithUser
   :: Kontrakcja m
   => DocumentID
-  -> Maybe AuthenticatedUser
+  -> Maybe User
   -> Maybe SignatoryLinkID
   -> m a
   -> m a
-docAccessControlWithUser docId mAuthUser mSignatoryId onSuccess = do
+docAccessControlWithUser docId mUser mSignatoryId onSuccess = do
   doc        <- dbQuery $ GetDocumentByDocumentID docId
   mSignatory <- case mSignatoryId of
-    Just signatoryId -> getMaybeAuthenticatedSignatory doc signatoryId
+    Just signatoryId -> getMaybeSignatory doc signatoryId
     Nothing          -> return Nothing
 
-  docAccessControlWithUserSignatory doc mAuthUser mSignatory onSuccess
+  docAccessControlWithUserSignatory doc mUser mSignatory onSuccess
 
 docAccessControl :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> m a -> m a
 docAccessControl docId mSignatoryId onSuccess = do
-  mAuthUser <- (fmap fst) <$> getMaybeAuthenticatedAPIUser APIDocCheck
-  docAccessControlWithUser docId mAuthUser mSignatoryId onSuccess
+  mUser <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
+  docAccessControlWithUser docId mUser mSignatoryId onSuccess
 
 -- Given a document and an access role, derive the permissions the access
 -- role have to access the document resource. Currently we only derive
 -- read permissions for proof of concept.
 hasDocPermissions :: Document -> DocAccessRole -> [Permission]
 hasDocPermissions doc role = case role of
-  -- Signatory who is author of a document can read the document of any state
-  SignatoryAuthorAR docId | docId == documentid doc -> [readPerm]
-
   -- Signatory of a document can read the document if it is in
   -- pending or closed state.
   SignatoryAR slid -> case getSigLinkFor slid doc of
@@ -117,9 +109,6 @@ hasDocPermissions doc role = case role of
 
   -- Other roles just use access control's has permissions
   OtherAR otherRole -> hasPermissions otherRole
-
-  -- otherwise no permission
-  _                 -> []
   where
     -- Signatories have direct permission on the document resource.
     -- Other roles have indirect permission on the document's folder.
@@ -149,29 +138,16 @@ docPermissionCondition mkPerm doc folderId = do
 
     folderConditionM = if
       | isDocumentShared doc -> do
-        folderPerm <- addAlternativePermissions $ mkPerm $ DocumentInFolderR folderId
-        sharedPerm <- addAlternativePermissions $ mkPerm $ SharedTemplateR folderId
+        folderPerm <- alternativePermissionCondition $ mkPerm $ DocumentInFolderR folderId
+        sharedPerm <- alternativePermissionCondition $ mkPerm $ SharedTemplateR folderId
         return $ OrCond [folderPerm, sharedPerm]
-      | isPreparation doc -> addAlternativePermissions $ mkPerm $ DocumentInFolderR
+      | isPreparation doc -> alternativePermissionCondition $ mkPerm $ DocumentInFolderR
         folderId
       | otherwise -> do
-        folderPerm <- addAlternativePermissions $ mkPerm $ DocumentInFolderR folderId
-        prepPerm   <- addAlternativePermissions $ mkPerm $ DocumentAfterPreparationR
+        folderPerm <- alternativePermissionCondition $ mkPerm $ DocumentInFolderR folderId
+        prepPerm   <- alternativePermissionCondition $ mkPerm $ DocumentAfterPreparationR
           folderId
         return $ OrCond [folderPerm, prepPerm]
-
--- Derive the access roles for a document from the signatory link
--- All signatories have the SignatoryAR role with their signatory
--- link ID. If the signatory is also the author of a document,
--- then they also have the SignatoryAuthorAR role.
-signatoryAccessRoles :: Document -> SignatoryLink -> [DocAccessRole]
-signatoryAccessRoles doc signatory = if signatoryisauthor signatory
-  then [authorRole, signatoryRole]
-  else [signatoryRole]
-  where
-    docId         = documentid doc
-    signatoryRole = SignatoryAR $ signatorylinkid signatory
-    authorRole    = SignatoryAuthorAR docId
 
 -- Access a document based on what valid access roles the user has.
 -- The provided acess roles must be filtered out with invalid access roles already
@@ -179,7 +155,7 @@ signatoryAccessRoles doc signatory = if signatoryisauthor signatory
 docAccessMode :: Bool -> [DocAccessRole] -> Maybe DocumentAccessMode
 docAccessMode isAuthor validRoles = case mSignatoryId of
   -- if there is any author role granted, use AuthorDocumentAccess
-  _ | any isAuthorRole validRoles -> Just AuthorDocumentAccess
+  _ | any isFolderUserRole validRoles -> Just AuthorDocumentAccess
   -- else if there is any signatory role granted, use SignatoryDocumentAccess
   Just signatoryId                -> Just $ SignatoryDocumentAccess signatoryId
   -- If any non-admin role is granted, the document is folder access mode.
@@ -194,9 +170,9 @@ docAccessMode isAuthor validRoles = case mSignatoryId of
   -- If no valid role is found, return nothing indicating no permission granted.
   _ -> Nothing
   where
-    isAuthorRole :: DocAccessRole -> Bool
-    isAuthorRole (SignatoryAuthorAR _) = True
-    isAuthorRole _                     = False
+    isFolderUserRole :: DocAccessRole -> Bool
+    isFolderUserRole (OtherAR (FolderUserAR _)) = True
+    isFolderUserRole _                          = False
 
     getSignatoryAR :: DocAccessRole -> Maybe SignatoryLinkID
     getSignatoryAR (SignatoryAR slid) = Just slid

@@ -63,16 +63,13 @@ getDocumentValidRoles doc mUser mSignatory = do
   ctx             <- mkContext defaultLang
   getRequest      <- mkRequestWithHeaders GET [] []
   (validRoles, _) <- runTestKontra getRequest ctx $ docAccessValidRoles
-    doc
-    (unsafeCreateAuthenticatedUser <$> mUser)
-    (unsafeCreateAuthenticatedSignatoryLink <$> mSignatory)
+    doc mUser mSignatory
   return validRoles
 
 assertHasDocumentPermission
   :: String -> Document -> Maybe User -> Maybe SignatoryLink -> TestEnv ()
 assertHasDocumentPermission message doc mUser mSignatory = do
   validRoles <- getDocumentValidRoles doc mUser mSignatory
-  logInfo_ $ "valid roles: " <> showt validRoles
   case validRoles of
     [] ->
       assertFailure
@@ -173,8 +170,8 @@ testBasicValidRoles = do
     -- Draft documents don't allow generation of magic hashes for signatory links,
     -- but since this is internal function call we can still test signatory
     -- access for draft documents if they can ever be authenticated.
-    assertHasDocumentPermission
-      "author signatory should have permission to draft document"
+    assertNoDocumentPermission
+      "author signatory should not have permission to draft document"
       doc
       Nothing
       (Just authorSigLink)
@@ -320,8 +317,8 @@ testBasicValidRoles = do
                                 (Just author)
                                 Nothing
 
-    assertHasDocumentPermission
-      "Author signatory should have permission to cancelled document"
+    assertNoDocumentPermission
+      "Author signatory should not have permission to cancelled document"
       doc
       Nothing
       (Just authorSigLink)
@@ -612,8 +609,8 @@ testBasicAccessControl = do
       authorCtx
       []
 
-    assertGetDocumentSucceed
-      "Author signatory should still be able to get cancelled document"
+    assertGetDocumentFails
+      "Author signatory should not be able to get cancelled document"
       docId
       authorSignCtx
       [("signatory_id", inText $ showt $ signatorylinkid authorSigLink)]
@@ -730,8 +727,8 @@ testAuthorAccessControl = do
                            authorCtx
                            []
 
-    assertGetDocumentSucceed
-      "Author signatory should still able to get cancelled document"
+    assertGetDocumentFails
+      "Author signatory should not able to get cancelled document"
       docId
       authorSignCtx
       [("signatory_id", inText $ showt $ signatorylinkid authorSigLink)]

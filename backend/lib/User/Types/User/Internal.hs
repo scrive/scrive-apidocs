@@ -3,8 +3,6 @@ module User.Types.User.Internal
   ( User(..)
   , UserInfo(..)
   , UserSettings(..)
-  , AuthenticatedUser (getAuthenticatedUser)
-  , unsafeCreateAuthenticatedUser
   ) where
 
 import Data.Aeson
@@ -47,19 +45,6 @@ data User = User
   , internalTags       :: !(S.Set Tag)
   , externalTags       :: !(S.Set Tag)
   } deriving (Eq, Ord, Show)
-
--- Witness for a particular user that has been authenticated through a valid cookie session or
--- API token. Functions can require this over regular User as argument to make sure that the caller
--- calls the appropriate authentication method to validate the user session.
-data AuthenticatedUser = MkAuthenticatedUser
-  { getAuthenticatedUser :: User
-  }
-  deriving (Show)
-
--- Unsafe creation of a witness for authenticated user. This should only be used in authentication
--- functions that actually validate the user session.
-unsafeCreateAuthenticatedUser :: User -> AuthenticatedUser
-unsafeCreateAuthenticatedUser = MkAuthenticatedUser
 
 instance HasSomeUserInfo User where
   getEmail          = T.strip . unEmail . email . info

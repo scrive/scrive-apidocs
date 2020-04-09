@@ -219,10 +219,10 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
       Just trgug -> return $ Just trgug
   let targetGroup   = fromMaybe currentUserGroup mTargetGroup
       targetGroupID = targetGroup ^. #id
-      acc           = [canDo CreateA $ UserInGroupR targetGroupID]
+  requiredPerm <- alternativePermissionCondition $ canDo CreateA $ UserInGroupR targetGroupID
   roles <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
-  accessControl roles acc internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
+  accessControl roles requiredPerm internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
     Nothing -> do
       --create a new company user
       newuser' <-
@@ -352,8 +352,9 @@ handleChangeRoleOfUserGroupAccount = do
           -- hack and to grant is_company_admin in subGroup only check, if the actor is able
           -- to grant managing users in subGroup.
           -- CORE-1990
+  requiredPerm <- allAlternativePermissionConditions acc
   when (wasAdmin /= becomeAdmin) $ do
-    accessControlLoggedIn acc $ do
+    accessControlLoggedIn requiredPerm $ do
       ctx <- getContext
       void . dbUpdate $ SetUserCompanyAdmin changeid becomeAdmin
       logInfo "Changing user group role" $ object
@@ -382,10 +383,11 @@ handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
 handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
   removeuid  <- getCriticalField asValidUserID "removeid"
   removeuser <- guardJustM . dbQuery $ GetUserByID removeuid
-  let acc = [canDo DeleteA . UserInGroupR $ removeuser ^. #groupID]
+  requiredPerm <- alternativePermissionCondition $
+    canDo DeleteA . UserInGroupR $ removeuser ^. #groupID
   -- Even if we don't execute the main action for whatever reason we remove all invites
   -- that we possibly can, restricted by the caller's permissions.
-  accessControl roles acc (removeInvitesOnly roles removeuser) $ do
+  accessControl roles requiredPerm (removeInvitesOnly roles removeuser) $ do
     isdeletable <- isUserDeletable removeuser
     ctx         <- getContext
     if isdeletable

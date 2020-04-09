@@ -1875,9 +1875,9 @@ guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m 
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
     roles <- dbQuery . GetRoles $ user
-    let policy    = [canDo ReadA $ EidIdentityR ugid]
+    requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
     let exception = throwM . SomeDBExtraException $ forbidden'
-    accessControl roles policy exception $ return ()
+    accessControl roles requiredPerm exception $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()
 
 -- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.
