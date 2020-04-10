@@ -303,7 +303,7 @@ authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber DKNemIDAuthenticationToView  = True
 authToViewNeedsPersonalNumber SMSPinAuthenticationToView   = False
-authToViewNeedsPersonalNumber FITupasAuthenticationToView  = True
+authToViewNeedsPersonalNumber FITupasAuthenticationToView  = False
 authToViewNeedsPersonalNumber VerimiAuthenticationToView   = False
 authToViewNeedsPersonalNumber IDINAuthenticationToView     = False
 

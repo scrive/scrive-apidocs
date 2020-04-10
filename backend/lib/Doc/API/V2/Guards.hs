@@ -320,7 +320,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
     isValidSSNForAuthenticationToView DKNemIDAuthenticationToView ssn =
       isGood . asValidDanishSSN $ ssn
     isValidSSNForAuthenticationToView FITupasAuthenticationToView ssn =
-      isGood . asValidFinnishSSN $ ssn
+      (isEmpty || isGood) $ asValidFinnishSSN ssn
     isValidSSNForAuthenticationToView VerimiAuthenticationToView _ = True
     isValidSSNForAuthenticationToView IDINAuthenticationToView   _ = True
     isValidMobileForAuthenticationToView :: AuthenticationToViewMethod -> Text -> Bool

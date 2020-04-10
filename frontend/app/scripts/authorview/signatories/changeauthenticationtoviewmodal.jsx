@@ -140,7 +140,7 @@ var Modal = require("../../common/modal");
       } else if (this.isAuthenticationDKNemID()) {
         return new SSNForDKNemIDValidation().validateData(pn);
       } else if (this.isAuthenticationFITupas()) {
-        return new SSNForFITupasValidation().validateData(pn);
+        return new EmptyValidation().or(new SSNForFITupasValidation()).validateData(pn);
       }
       return true;
     },
