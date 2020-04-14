@@ -14,12 +14,13 @@ getThemeColor theme ident = Maybe.withDefault (rgb255 85 107 47) <| Enum.get ide
 viewEmailThemePreview : Theme -> Html msg
 viewEmailThemePreview theme =
   let color label = style label << color2Hex << getThemeColor theme
+      themeFont = style "font-family" (Enum.toString enumFont theme.font)
   in div
         [ class "email-preview"
         , color "backgroundColor" { kind = BrandColors, component = BackgroundColor }
         ]
         [ div [ class "logo-wrapper" ] [ img [ src theme.logo ] [] ]
-        , div [ class "content-container", style "fontFamily" theme.font ]
+        , div [ class "content-container", themeFont ]
             [ div [ class "content" ]
                 [ div [ class "document-preview" ] [ img [ src "/img/document.png" ] [] ]
                 , div [ class "invitation" ]
@@ -40,6 +41,7 @@ viewEmailThemePreview theme =
                         [ class "button action"
                         , color "backgroundColor" { kind = ActionColors, component = BackgroundColor }
                         , color "color" { kind = ActionColors, component = TextColor }
+                        , themeFont
                         ]
                         [ div [ class "label" ]
                             [ -- localization.companyBranding.brandingPreview.emailButtonLabel
@@ -76,7 +78,7 @@ viewSignViewThemePreview theme =
                 ]
             , div [ style "clear" "both" ] []
             ]
-        , div [ style "font-family" theme.font, class "content" ]
+        , div [ class "content" ]
             [ div [ class "inner-content" ]
                 [ div [ class "sample-controls" ]
                     [ div [ class "download-container" ]
@@ -261,15 +263,25 @@ viewLoginThemePreview theme =
                 ]
                 [ text "E-signing powered by Scrive" ]
             ]
-        , div [ class "content-container", style "font-family" theme.font ]
+        , div [ class "content-container" ]
             [ div [ class "content" ]
                 [ div [ style "width" "200px", class "info-text-input readonly" ]
-                    [ input [ type_ "text", readonly True, placeholder "Email address", value "" ] []
+                    [ input
+                        [ type_ "text"
+                        , readonly True
+                        , placeholder "Email address"
+                        , value "" ]
+                        []
                     , div [ class "after" ] []
                     ]
                 , div [ style "width" "200px", class "info-text-input readonly" ]
-                    [ input [ type_ "text", readonly True, placeholder "Password", value "" ] []
-                    , div [ class "internal-button-wrapper" ]
+                    [ input
+                        [ type_ "text"
+                        , readonly True
+                        , placeholder "Password"
+                        , value "" ]
+                        []
+                    , div [ class "internal-button-wrapper", style "width" "auto" ]
                         [ div [ class "internal-button" ]
                             [ text "Forgot?" ]
                         ]
@@ -283,7 +295,7 @@ viewLoginThemePreview theme =
                     ]
                     [ div [ class "label" ] [ span [] [ text "Log in" ] ] ]
                 , p [ color "color" { kind = BrandColors, component = TextColor } ]
-                    [ span [] [ text "Don't have an account?" ]
+                    [ span [] [ text "Don't have an account? " ]
                     , a [ color "color" { kind = BrandColors, component = TextColor } ] [ text "Sign up for free" ]
                     ]
                 , div [ class "select-container" ]

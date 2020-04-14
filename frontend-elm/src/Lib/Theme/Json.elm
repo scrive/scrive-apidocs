@@ -19,7 +19,7 @@ themeDecoder =
         |> JDP.required "id" (decodeJust <| JD.map String.toInt JD.string)
         |> JDP.required "name" JD.string
         |> JDP.required "logo" JD.string
-        |> JDP.required "font" JD.string
+        |> JDP.required "font" (decodeJust <| JD.map (Enum.fromString enumFont) JD.string)
         |> JDP.custom (decodeFullDict enumColorIdentifier decodeColor)
 
 
@@ -31,6 +31,6 @@ encodeTheme theme =
         [ ( "id", JE.string <| String.fromInt theme.id )
         , ( "name", JE.string theme.name )
         , ( "logo", JE.string theme.logo )
-        , ( "font", JE.string theme.font )
+        , ( "font", JE.string <| Enum.toString enumFont theme.font )
         ] ++ colorFields
 

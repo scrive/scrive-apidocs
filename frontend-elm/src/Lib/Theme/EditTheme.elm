@@ -18,6 +18,7 @@ import Html.Attributes exposing (selected, value, class, disabled, style, src, t
 import Html.Events exposing (onInput, onClick)
 import Vendor.ColorPickerExtra as ColorPicker
 import Task
+import Tuple exposing (second)
 import EnumExtra as Enum
 import Color exposing (Color)
 
@@ -49,6 +50,7 @@ type Msg = SetActiveThemeMsg ThemeID
          | OpenLogoFileSelectMsg
          | LoadLogoFileMsg File
          | SetLogoMsg String
+         | SetFontMsg Font
 
 update : (Msg -> msg) -> Msg -> EditThemeReadonly -> EditThemeState -> (EditThemeState, Cmd msg)
 update embed msg read = case msg of
@@ -59,6 +61,7 @@ update embed msg read = case msg of
   OpenLogoFileSelectMsg -> openLogoFileSelect embed
   LoadLogoFileMsg file -> loadLogoFile embed file
   SetLogoMsg content -> setLogo content
+  SetFontMsg font -> setFont font
 
 
 {- Theme selector -}
@@ -87,6 +90,41 @@ viewThemeSelector embed read selectedTheme =
         [ Select.select
           [ Select.onChange (embed << onSelect) ]
           (List.map themeItem read.availableThemes)
+        ]
+
+-- implements SetFontMsg
+setFont : Font -> EditThemeState -> (EditThemeState, Cmd msg)
+setFont font state =
+  let theme = state.themeBeingEdited
+  in ( { state | themeBeingEdited = { theme | font = font } }, Cmd.none )
+
+-- A drop-down list of font names to select and a font sample
+viewFontSelector : (Msg -> msg) -> Theme -> Form.Col msg
+viewFontSelector embed selectedTheme =
+  let onSelect fontString =
+        SetFontMsg <| withDefault defaultFont (Enum.fromString enumFont fontString)
+
+      fontItem : (Font, String) -> Select.Item msg
+      fontItem (font, label) = Select.item
+        [ value <| Enum.toString enumFont font
+        , selected <| font == selectedTheme.font ]
+        [ text label ]
+
+      fontsWithLabels =
+          List.map (\f -> (f, Enum.toHumanString enumFont f)) enumFont.allValues
+            |> List.sortBy second
+
+  in  Form.col
+        [ Col.sm8, Col.md8, Col.lg8 ]
+        [ Select.select
+          [ Select.onChange (embed << onSelect)
+          , Select.disabled (selectedTheme.id < 0) ]
+          (List.map fontItem fontsWithLabels)
+        , div
+          [ style "background-color" <| "#ffffff"
+          , style "font-family" <| Enum.toString enumFont selectedTheme.font
+          , class "p-sm-2", class "mt-sm-2" ]
+          [ text "Font sample. This font will be used in emails." ]
         ]
 
 
@@ -277,6 +315,10 @@ viewEditTheme params read state =
           , description = "This colour will appear on notifications such as "
             ++ "\"Error\". We recommend an intuitively negative colour such as "
             ++ "red." }
+      , Form.row []
+        [ Form.colLabel [ Col.sm4, Col.md4, Col.lg4 ] [ text "Font" ]
+        , viewFontSelector params.embed state.themeBeingEdited
+        ]
       , Form.row []
         [ Form.col [ Col.sm12 ]
             [ Button.button [ Button.success, Button.attrs
