@@ -2,6 +2,7 @@
 , nodeVersion ? "13_x"
 , kontrakcja
 , kontrakcja-src
+, nixpkgs-src
 }:
 
 let
@@ -11,7 +12,7 @@ let
   nodejs = pkgs."nodejs-${nodeVersion}";
 
   elmPkgs = import ../../frontend-elm/elm.nix {
-    nixpkgs = import ../source/nixpkgs.nix;
+    nixpkgs = nixpkgs-src;
   };
 
   nodePackages = import ../../frontend/default.nix {

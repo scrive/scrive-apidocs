@@ -2,6 +2,7 @@
   nixpkgs
 , haskellPackages
 , kontrakcja-nix-src
+, nixpkgs-src
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
@@ -14,7 +15,7 @@ let
     { inherit nixpkgs haskellPackages; };
 
   release = import ./kontrakcja-dev-release.nix {
-    inherit nixpkgs haskellPackages;
+    inherit nixpkgs haskellPackages nixpkgs-src;
   };
 
   inherit (release) kontrakcja-shake kontrakcja-frontend;

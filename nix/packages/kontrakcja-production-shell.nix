@@ -1,6 +1,7 @@
 {
   nixpkgs
 , haskellPackages
+, nixpkgs-src
 , kontrakcja-nix-src
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
@@ -11,7 +12,7 @@ let
   sourceRoot = builtins.toPath(../..);
 
   release = import ./kontrakcja-production-release.nix {
-    inherit nixpkgs haskellPackages;
+    inherit nixpkgs haskellPackages nixpkgs-src;
   };
 
   run-deps = import (kontrakcja-nix-src + /packages/run-deps.nix)

@@ -1,18 +1,22 @@
-{
-  release-path
-, nixpkgs ? import ./nixpkgs.nix
+release-path:
+{ useLocal ? false
+, nixpkgs ? import ./nixpkgs.nix useLocal { }
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
-  kontrakcja-nix-src = import ../source/kontrakcja-nix.nix;
+  kontrakcja-nix-src = import ../source/kontrakcja-nix.nix
+    { inherit useLocal; };
+
+  nixpkgs-src = import ../source/nixpkgs.nix
+    { inherit useLocal; };
 
   kontrakcja-nix = import (kontrakcja-nix-src + release-path)
     { inherit nixpkgs; };
 
   inherit (kontrakcja-nix) haskellPackages prodHaskellPackages;
 
-  kontrakcja-src = import ../packages/kontrakcja-src.nix;
+  kontrakcja-src = import ../source/kontrakcja.nix;
 
   kontrakcja-base = import ../packages/kontrakcja-base.nix {
     inherit nixpkgs haskellPackages;
@@ -24,28 +28,28 @@ let
   };
 
   dev-shell = import ../packages/kontrakcja-dev-shell.nix {
-    inherit nixpkgs kontrakcja-nix-src workspaceRoot localeLang;
+    inherit nixpkgs kontrakcja-nix-src nixpkgs-src workspaceRoot localeLang;
     haskellPackages = haskellPackages;
   };
 
   dev-shell-optimized = import ../packages/kontrakcja-dev-shell.nix {
-    inherit nixpkgs kontrakcja-nix-src workspaceRoot localeLang;
+    inherit nixpkgs kontrakcja-nix-src nixpkgs-src workspaceRoot localeLang;
     haskellPackages = prodHaskellPackages;
   };
 
   dev-release = import ../packages/kontrakcja-dev-release.nix {
-    inherit nixpkgs haskellPackages;
+    inherit nixpkgs haskellPackages nixpkgs-src;
   };
 
   production-shell = import ../packages/kontrakcja-production-shell.nix {
-    inherit nixpkgs kontrakcja-nix-src
+    inherit nixpkgs kontrakcja-nix-src nixpkgs-src
       workspaceRoot localeLang;
 
     haskellPackages = prodHaskellPackages;
   };
 
   production-release = import ../packages/kontrakcja-production-release.nix {
-    inherit nixpkgs;
+    inherit nixpkgs nixpkgs-src;
     haskellPackages = prodHaskellPackages;
   };
 

@@ -1,6 +1,7 @@
-nixOptions :
+useLocal: nixOptions :
 let
-  nixpkgsSource = import ../source/nixpkgs.nix;
+  nixpkgsSource = import ../source/nixpkgs.nix
+    { inherit useLocal; };
 
   override = {
     config = {
