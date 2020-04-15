@@ -21,7 +21,6 @@ import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.DocInfo
-import Doc.DocInfo (isAccessibleBySignatories, isDocumentShared)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.Tokens.Model
 import Doc.Types.Document (Document(..))
@@ -44,7 +43,7 @@ docAccessValidRoles
   :: Kontrakcja m => Document -> Maybe User -> Maybe SignatoryLink -> m [DocAccessRole]
 docAccessValidRoles doc mUser mSignatory = do
   -- Get signatory or signatory author roles if there is a signatory link
-  let mSignatoryRole = (SignatoryAR . signatorylinkid) <$> mSignatory
+  let mSignatoryRole = SignatoryAR . signatorylinkid <$> mSignatory
 
   permissionCondition <- docPermissionCondition (canDo ReadA) doc $ documentfolderid doc
   userRoles           <- case mUser of
@@ -78,7 +77,7 @@ docAccessControlWithUser doc mUser mSignatoryId onSuccess = do
 
 docAccessControl :: Kontrakcja m => Document -> Maybe SignatoryLinkID -> m a -> m a
 docAccessControl doc mSignatoryId onSuccess = do
-  mUser <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
+  mUser <- fmap fst <$> getMaybeAPIUser APIDocCheck
   docAccessControlWithUser doc mUser mSignatoryId onSuccess
 
 docAccessControlAndMode
@@ -136,20 +135,20 @@ docPermissionCondition
   -> m PermissionCondition
 docPermissionCondition mkPerm doc folderId = do
   folderCondition <- folderConditionM
-  return $ OrCond [folderCondition, Cond $ mkPerm $ DocumentR docId]
+  return $ OrCond [folderCondition, Cond . mkPerm $ DocumentR docId]
   where
     docId            = documentid doc
 
     folderConditionM = if
       | isDocumentShared doc -> do
-        folderPerm <- alternativePermissionCondition $ mkPerm $ DocumentInFolderR folderId
-        sharedPerm <- alternativePermissionCondition $ mkPerm $ SharedTemplateR folderId
+        folderPerm <- alternativePermissionCondition . mkPerm $ DocumentInFolderR folderId
+        sharedPerm <- alternativePermissionCondition . mkPerm $ SharedTemplateR folderId
         return $ OrCond [folderPerm, sharedPerm]
-      | isPreparation doc -> alternativePermissionCondition $ mkPerm $ DocumentInFolderR
+      | isPreparation doc -> alternativePermissionCondition . mkPerm $ DocumentInFolderR
         folderId
       | otherwise -> do
-        folderPerm <- alternativePermissionCondition $ mkPerm $ DocumentInFolderR folderId
-        prepPerm   <- alternativePermissionCondition $ mkPerm $ DocumentAfterPreparationR
+        folderPerm <- alternativePermissionCondition . mkPerm $ DocumentInFolderR folderId
+        prepPerm   <- alternativePermissionCondition . mkPerm $ DocumentAfterPreparationR
           folderId
         return $ OrCond [folderPerm, prepPerm]
 
@@ -179,7 +178,7 @@ docAccessMode isAuthor validRoles = case mSignatoryId of
     getSignatoryAR _                  = Nothing
 
     mSignatoryId :: Maybe SignatoryLinkID
-    mSignatoryId = join $ fmap listToMaybe $ traverse getSignatoryAR validRoles
+    mSignatoryId = listToMaybe =<< traverse getSignatoryAR validRoles
 
     isAdminRole :: DocAccessRole -> Bool
     isAdminRole (OtherAR (UserAdminAR _)) = True

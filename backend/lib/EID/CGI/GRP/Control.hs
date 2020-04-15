@@ -475,7 +475,7 @@ guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m 
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
     roles        <- dbQuery . GetRoles $ user
-    requiredPerm <- apiHasPermission $ canDo ReadA $ EidIdentityR ugid
+    requiredPerm <- apiRequirePermission . canDo ReadA $ EidIdentityR ugid
     let
       action = do
         logInfo

@@ -65,7 +65,7 @@ partnerApiCallV1CompanyCreate :: Kontrakcja m => UserGroupID -> m Response
 partnerApiCallV1CompanyCreate partnerUsrGrpID = do
   logPartner partnerUsrGrpID . api $ do
     user         <- getAPIUserWithAPIPersonal
-    requiredPerm <- apiHasPermission $ canDo CreateA $ UserGroupR partnerUsrGrpID
+    requiredPerm <- apiRequirePermission . canDo CreateA $ UserGroupR partnerUsrGrpID
     apiAccessControl user requiredPerm $ do
       ugwp_partner <-
         apiGuardJustM (serverError "Was not able to retrieve partner")
@@ -99,7 +99,7 @@ partnerApiCallV1CompanyUpdate
   :: (MonadCatch m, Kontrakcja m) => UserGroupID -> UserGroupID -> m Response
 partnerApiCallV1CompanyUpdate partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [canDo UpdateA $ UserGroupR ugid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user requiredPerm $ do
@@ -129,7 +129,7 @@ partnerApiCallV1CompanyUpdate partnerUsrGrpID ugid = do
 partnerApiCallV1CompanyGet :: Kontrakcja m => UserGroupID -> UserGroupID -> m Response
 partnerApiCallV1CompanyGet partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user requiredPerm $ do
@@ -141,7 +141,7 @@ partnerApiCallV1CompanyGet partnerUsrGrpID ugid = do
 partnerApiCallV1CompaniesGet :: Kontrakcja m => UserGroupID -> m Response
 partnerApiCallV1CompaniesGet partnerUsrGrpID = do
   logPartner partnerUsrGrpID . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [ canDo ReadA $ UserGroupR partnerUsrGrpID
       , canDo CreateA $ UserGroupR partnerUsrGrpID
       ]
@@ -164,7 +164,7 @@ partnerApiCallV1CompaniesGet partnerUsrGrpID = do
 partnerApiCallV1UserCreate :: Kontrakcja m => UserGroupID -> UserGroupID -> m Response
 partnerApiCallV1UserCreate partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [canDo CreateA $ UserInGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
               {- This last one is blocking for all but partner admins.             -}
               {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
@@ -208,7 +208,7 @@ partnerApiCallV1UserCreate partnerUsrGrpID ugid = do
 partnerApiCallV1UserGet :: Kontrakcja m => UserGroupID -> UserID -> m Response
 partnerApiCallV1UserGet partnerUsrGrpID uid = do
   logPartnerAndUser partnerUsrGrpID uid . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [canDo ReadA $ UserR uid, canDo CreateA $ UserGroupR partnerUsrGrpID]
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser requiredPerm $ do
@@ -222,7 +222,7 @@ partnerApiCallV1CompanyUsersGet
   :: Kontrakcja m => UserGroupID -> UserGroupID -> m Response
 partnerApiCallV1CompanyUsersGet partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
     user <- getAPIUserWithAPIPersonal
     apiAccessControl user requiredPerm $ do
@@ -232,7 +232,7 @@ partnerApiCallV1CompanyUsersGet partnerUsrGrpID ugid = do
 partnerApiCallV1UserUpdate :: Kontrakcja m => UserGroupID -> UserID -> m Response
 partnerApiCallV1UserUpdate partnerUsrGrpID uid = do
   logPartnerAndUser partnerUsrGrpID uid . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [canDo UpdateA $ UserR uid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
     apiUser <- getAPIUserWithAPIPersonal
     apiAccessControl apiUser requiredPerm $ do
@@ -260,7 +260,7 @@ partnerApiCallV1UserGetPersonalToken
   :: Kontrakcja m => UserGroupID -> UserID -> m Response
 partnerApiCallV1UserGetPersonalToken partnerUsrGrpID uid = do
   logPartnerAndUser partnerUsrGrpID uid . api $ do
-    requiredPerm <- apiHasAllPermissions
+    requiredPerm <- apiRequireAllPermissions
       [ canDo CreateA $ UserPersonalTokenR uid
       , canDo ReadA $ UserPersonalTokenR uid
       , canDo CreateA $ UserGroupR partnerUsrGrpID

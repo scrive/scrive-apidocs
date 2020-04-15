@@ -44,19 +44,19 @@ accessControlWith availablePerms requiredPerms onError onSuccess = do
 
 accessControl :: (Monad m) => [AccessRole] -> PermissionCondition -> m a -> m a -> m a
 accessControl roles =
-  accessControlWith $ join $ fmap (hasPermissions . accessRoleTarget) roles
+  accessControlWith . join $ fmap (hasPermissions . accessRoleTarget) roles
 
 accessControlCheck :: [Permission] -> PermissionCondition -> Bool
-accessControlCheck availablePerms requiredPerms =
-  evalPermissionCondition (\perm -> elem perm $ nub availablePerms) requiredPerms
+accessControlCheck availablePerms =
+  evalPermissionCondition (\perm -> elem perm $ Data.List.Extra.nubOrd availablePerms)
 
 accessControlCheckAll :: [Permission] -> [Permission] -> Bool
 accessControlCheckAll availablePerms requiredPerms =
-  accessControlCheck availablePerms $ AndCond $ Cond <$> requiredPerms
+  accessControlCheck availablePerms . AndCond $ (Cond <$> requiredPerms)
 
 accessControlPure :: [AccessRole] -> [Permission] -> Bool
 accessControlPure roles =
-  accessControlCheckAll $ join $ fmap (hasPermissions . accessRoleTarget) roles
+  accessControlCheckAll . join $ fmap (hasPermissions . accessRoleTarget) roles
 
 evalPermissionCondition :: (Permission -> Bool) -> PermissionCondition -> Bool
 evalPermissionCondition f (Cond    p   ) = f p

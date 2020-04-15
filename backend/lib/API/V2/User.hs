@@ -66,17 +66,17 @@ getAPIUserWith ctxUser privs = do
   case msessionuser of
     Just (user, actor) -> return (user, actor)
     Nothing            -> do
-      sesids  <- (lookCookieValues cookieNameSessionID . rqHeaders) <$> askRq
-      auth    <- (lookCookieValues "authorization" . rqHeaders) <$> askRq
-      xtoken  <- (lookCookieValues cookieNameXToken . rqHeaders) <$> askRq
-      cookies <- (lookCookieNames . rqHeaders) <$> askRq
+      sesids  <- lookCookieValues cookieNameSessionID . rqHeaders <$> askRq
+      auth    <- lookCookieValues "authorization" . rqHeaders <$> askRq
+      xtoken  <- lookCookieValues cookieNameXToken . rqHeaders <$> askRq
+      cookies <- lookCookieNames . rqHeaders <$> askRq
       logInfo "Could not find user session" $ object
         [ "session_id_cookies" .= sesids
         , "authorization" .= auth
         , "cookie names" .= show cookies
         , "xtoken" .= xtoken
         ]
-      apiError $ invalidAuthorization
+      apiError invalidAuthorization
 
 getAPIUserWithAPIPersonal :: Kontrakcja m => m User
 getAPIUserWithAPIPersonal = do

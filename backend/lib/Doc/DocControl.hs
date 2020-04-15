@@ -491,7 +491,7 @@ handleIssueGoToSignviewPad docid slid = do
 
 handleEvidenceAttachment :: Kontrakcja m => DocumentID -> Text -> m InternalKontraResponse
 handleEvidenceAttachment docid aname =
-  logDocument docid $ localData ["attachment_name" .= aname] $ withUser $ \_ -> do
+  logDocument docid . localData ["attachment_name" .= aname] . withUser . const $ do
     doc <- getDocumentByCurrentUser docid
     es  <- guardJustM $ EvidenceAttachments.extractAttachment doc aname
     return . internalResponse $ toResponseBS "text/html" es
@@ -719,12 +719,12 @@ checkFileAccess fileId = do
 checkFileInDocument :: Kontrakcja m => FileID -> DocumentID -> m ()
 checkFileInDocument fileId docId = do
   doc <- dbQuery $ FileInDocument docId fileId
-  when (not doc) $ internalError
+  unless doc internalError
 
 checkFileAccessWithLoggedInUser :: Kontrakcja m => FileID -> DocumentID -> m ()
 checkFileAccessWithLoggedInUser fileId docId = do
   doc   <- dbQuery $ GetDocumentByDocumentID docId
-  mUser <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
+  mUser <- fmap fst <$> getMaybeAPIUser APIDocCheck
   docAccessControlWithUserSignatory doc mUser Nothing $ checkFileInDocument fileId docId
 
 checkFileAccessWithSignatory
@@ -758,7 +758,7 @@ checkFileAccessWithAttachmentId fileId attachId = guardLoggedInOrThrowInternalEr
     ]
     [AttachmentFilterByID attachId, AttachmentFilterByFileID fileId]
     []
-  when (length atts /= 1) $ internalError
+  when (length atts /= 1) internalError
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do

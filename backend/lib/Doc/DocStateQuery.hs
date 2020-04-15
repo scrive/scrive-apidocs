@@ -73,7 +73,7 @@ getDocByDocIDAndAccessTokenV1 docId mToken = do
     Nothing  -> getDocumentByCurrentUser docId
 
 getDocByDocIDAndAccessTokenV2 :: Kontrakcja m => DocumentID -> MagicHash -> m Document
-getDocByDocIDAndAccessTokenV2 did hash = getDocumentByAccessToken did hash
+getDocByDocIDAndAccessTokenV2 = getDocumentByAccessToken
 
 getMaybeDocumentByAccessToken
   :: Kontrakcja m => DocumentID -> MagicHash -> m (Maybe Document)

@@ -45,7 +45,7 @@ accessControlAPIV2GetUserRoles :: Kontrakcja m => UserID -> m Response
 accessControlAPIV2GetUserRoles uid = api $ do
   -- Check user has permissions to view User
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- apiHasPermission $ canDo ReadA $ UserR uid
+  requiredPerm <- apiRequirePermission . canDo ReadA $ UserR uid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     -- Get roles for user
     dbQuery (GetUserByID uid) >>= \case
@@ -62,7 +62,7 @@ accessControlAPIV2Get roleId = api $ do
     Just role -> do
       apiuser      <- getAPIUserWithAPIPersonal
       -- to read a role it is enough to ReadA its source
-      requiredPerm <- apiHasPermission $ canDoActionOnSource ReadA role
+      requiredPerm <- apiRequirePermission $ canDoActionOnSource ReadA role
       apiAccessControlOrIsAdmin apiuser requiredPerm . return . Ok $ encodeAccessRole role
 
 accessControlAPIV2Delete :: Kontrakcja m => AccessRoleID -> m Response
@@ -72,8 +72,9 @@ accessControlAPIV2Delete roleId = api $ do
     Just role -> do
       apiuser      <- getAPIUserWithAPIPersonal
       -- to delete a role one must UpdateA source and be able to grant the role
-      requiredPerm <- apiHasAllPermissions $ canDoActionOnSource UpdateA role : canGrant
-        (accessRoleTarget role)
+      requiredPerm <-
+        apiRequireAllPermissions $ canDoActionOnSource UpdateA role : canGrant
+          (accessRoleTarget role)
       apiAccessControlOrIsAdmin apiuser requiredPerm $ do
         void . dbUpdate $ AccessControlRemoveRole roleId
         return . Ok . J.runJSONGen $ do
@@ -85,7 +86,7 @@ accessControlAPIV2Add = api $ do
   role         <- getApiRoleParameter
   apiuser      <- getAPIUserWithAPIPersonal
   -- to add a role one must UpdateA source and be able to grant the role
-  requiredPerm <- apiHasAllPermissions $ canDoActionOnSource UpdateA role : canGrant
+  requiredPerm <- apiRequireAllPermissions $ canDoActionOnSource UpdateA role : canGrant
     (accessRoleTarget role)
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     mrole <- case role of

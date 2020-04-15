@@ -1540,7 +1540,7 @@ apiCallV1History did = logDocument did . api $ do
   switchLang $ fromMaybe (user ^. #settings % #lang) mlang
 
   doc         <- getDocumentByCurrentUser did
-  evidenceLog <- dbQuery $ GetEvidenceLog $ did
+  evidenceLog <- dbQuery . GetEvidenceLog $ did
   events      <- eventsJSListFromEvidenceLog doc evidenceLog
   res         <- J.runJSONGenT $ do
     J.value "list" . for (reverse events) $ J.runJSONGen . J.value "fields"
@@ -1863,7 +1863,7 @@ guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m 
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
     roles        <- dbQuery . GetRoles $ user
-    requiredPerm <- apiHasPermission $ canDo ReadA $ EidIdentityR ugid
+    requiredPerm <- apiRequirePermission . canDo ReadA $ EidIdentityR ugid
     let exception = throwM . SomeDBExtraException $ forbidden'
     accessControl roles requiredPerm exception $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()

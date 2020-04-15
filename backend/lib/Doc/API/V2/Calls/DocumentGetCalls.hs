@@ -165,7 +165,7 @@ docApiV2Get docId = logDocument docId . api $ do
   mSignatoryId <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
 
   doc          <- dbQuery $ GetDocumentByDocumentID docId
-  mUser        <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
+  mUser        <- fmap fst <$> getMaybeAPIUser APIDocCheck
 
   accessMode   <- docAccessControlAndMode doc mUser mSignatoryId
 
@@ -178,7 +178,7 @@ docApiV2GetByShortID shortDid = api $ do
   when (length (show shortDid) > 6) . apiError $ requestParameterInvalid
     "short_document_id"
     "was greater than 6 digits"
-  mUser      <- (fmap fst) <$> getMaybeAPIUser APIDocCheck
+  mUser      <- fmap fst <$> getMaybeAPIUser APIDocCheck
   doc        <- dbQuery $ GetDocumentByShortDocumentID shortDid
   accessMode <- docAccessControlAndMode doc mUser Nothing
   let docAccess = DocumentAccess (documentid doc) accessMode $ documentstatus doc
@@ -241,17 +241,17 @@ docApiV2History did = logDocument did . api $ do
     evidenceLog <- dbQuery $ GetEvidenceLog did
     events      <- reverse <$> eventsJSListFromEvidenceLog doc evidenceLog
     -- Result
-    return $ Ok $ JSObject (J.toJSObject $ [("events", JSArray events)])
+    return . Ok $ JSObject (J.toJSObject [("events", JSArray events)])
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
+docApiV2EvidenceAttachments did = logDocument did . api . withDocumentID did $ do
   (user, _)           <- getAPIUser APIDocCheck
   doc                 <- theDocument
   permissionCondition <- docPermissionCondition (canDo ReadA) doc $ documentfolderid doc
   apiAccessControl user permissionCondition $ do
     eas <- EvidenceAttachments.extractAttachmentsList doc
     let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-    return $ Ok $ Response 200
+    return . Ok $ Response 200
                            headers
                            nullRsFlags
                            (evidenceAttachmentsToJSONBS (documentid doc) eas)
@@ -291,8 +291,8 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  requiredPerm <- apiHasPermission $ canDo ReadA . DocumentInFolderR $ documentfolderid
-    doc
+  requiredPerm <-
+    apiRequirePermission . canDo ReadA . DocumentInFolderR $ documentfolderid doc
   apiAccessControl user requiredPerm $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl

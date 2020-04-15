@@ -208,7 +208,7 @@ guardThatAttachmentDetailsAreConsistent ads = do
 
 guardFolderActionIsAllowed :: Kontrakcja m => User -> [(AccessAction, FolderID)] -> m ()
 guardFolderActionIsAllowed user acts_fids = do
-  requiredPerm <- apiHasAllPermissions
+  requiredPerm <- apiRequireAllPermissions
     [ canDo act $ DocumentInFolderR fid | (act, fid) <- acts_fids ]
   apiAccessControl user requiredPerm $ return ()
 
@@ -226,7 +226,7 @@ guardDocumentMoveIsAllowed user oldLocation newLocation =
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-    requiredPerm <- apiHasPermission $ canDo ReadA $ EidIdentityR ugid
+    requiredPerm <- apiRequirePermission . canDo ReadA $ EidIdentityR ugid
     apiAccessControl user requiredPerm $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()
 
