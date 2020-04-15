@@ -1,6 +1,8 @@
 module API.V2.Utils
     ( apiAccessControl
     , apiAccessControlWithError
+    , apiHasPermission
+    , apiHasAllPermissions
     , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
     , apiAccessControlCheck
@@ -19,6 +21,17 @@ import DB
 import Kontra
 import User.Model
 import Util.MonadUtils
+
+apiHasPermission :: forall  m . (Kontrakcja m) => Permission -> m PermissionCondition
+apiHasPermission permission =
+  alternativePermissionCondition permission
+    `catchDBExtraException` (\(UserNonExistent _) -> apiError insufficientPrivileges)
+    `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
+    `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
+
+apiHasAllPermissions
+  :: forall  m . (Kontrakcja m) => [Permission] -> m PermissionCondition
+apiHasAllPermissions = fmap AndCond . mapM apiHasPermission
 
 apiAccessControlWithError
   :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a -> m a

@@ -291,9 +291,8 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  requiredPerm <-
-    alternativePermissionCondition $ canDo ReadA . DocumentInFolderR $ documentfolderid
-      doc
+  requiredPerm <- apiHasPermission $ canDo ReadA . DocumentInFolderR $ documentfolderid
+    doc
   apiAccessControl user requiredPerm $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl

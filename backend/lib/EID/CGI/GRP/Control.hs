@@ -23,6 +23,7 @@ import qualified Text.StringTemplates.Fields as F
 import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
+import API.V2.Utils
 import Chargeable
 import DB hiding (InternalError)
 import Doc.DocInfo
@@ -474,7 +475,7 @@ guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m 
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
     roles        <- dbQuery . GetRoles $ user
-    requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
+    requiredPerm <- apiHasPermission $ canDo ReadA $ EidIdentityR ugid
     let
       action = do
         logInfo

@@ -158,8 +158,8 @@ docPermissionCondition mkPerm doc folderId = do
 -- DocumentAccessMode depends on which role is granted access
 docAccessMode :: Bool -> [DocAccessRole] -> Maybe DocumentAccessMode
 docAccessMode isAuthor validRoles = case mSignatoryId of
-  -- if there is any author role granted, use AuthorDocumentAccess
-  _ | isAuthor     -> Just AuthorDocumentAccess
+  -- if there is valid role and user is author, use AuthorDocumentAccess
+  _ | isAuthor && not (null validRoles) -> Just AuthorDocumentAccess
   -- If there is any signatory role granted, use SignatoryDocumentAccess
   Just signatoryId -> Just $ SignatoryDocumentAccess signatoryId
   -- If any non-admin role is granted, the document is folder access mode.

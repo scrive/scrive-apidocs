@@ -67,7 +67,7 @@ userGroupApiV2Get ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo ReadA $ UserGroupR ugid
+  requiredPerm <- apiHasPermission $ canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm
     -- Return response
     $   Ok
@@ -93,9 +93,8 @@ userGroupApiV2Create = api $ do
           -- _externalIDs = ....      -- TODO: Implement external_ids
     Just parent_ugid -> do
       -- Check user has permissions to create child UserGroup
-      requiredPerm <- alternativePermissionCondition $ canDo CreateA $ UserGroupR
-        parent_ugid
-      apiuser <- getAPIUserWithAPIPersonal
+      requiredPerm <- apiHasPermission $ canDo CreateA $ UserGroupR parent_ugid
+      apiuser      <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser requiredPerm . dbUpdate $ UserGroupCreate ugIn
   -- Return response
   Ok <$> constructUserGroupResponse inheritable (ugOut ^. #id)
@@ -143,44 +142,41 @@ userGroupApiV2Update ugid = api $ do
     (Nothing, Nothing) ->
       -- Root usergroup is remaining root, no special privileges needed
       return []
-  requiredPerm <-
-    allAlternativePermissionConditions $ (canDo UpdateA $ UserGroupR ugid) : movementAccs
-  apiuser <- getAPIUserWithAPIPersonal
+  requiredPerm <- apiHasAllPermissions $ (canDo UpdateA $ UserGroupR ugid) : movementAccs
+  apiuser      <- getAPIUserWithAPIPersonal
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     dbUpdate $ UserGroupUpdate ugNew
     Ok <$> constructUserGroupResponse inheritable ugid
 
 userGroupApiV2Delete :: Kontrakcja m => UserGroupID -> m Response
-userGroupApiV2Delete ugid = do
+userGroupApiV2Delete ugid = api $ do
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo DeleteA $ UserGroupR ugid
-  api
-    -- Check user has permissions to delete UserGroup
-    . apiAccessControlOrIsAdmin apiuser requiredPerm
-    $ do
-        ug <- ugGetOrErrNotFound ugid
-        let isRootUserGroup = isNothing . view #parentGroupID
-        when (isRootUserGroup ug)
-          -- Maybe Sales/Admin users should be allowed
-          -- Note: Current DB implementation causes DB error when deleting a root.
-          -- Will need to be fixed if we want to allow deletion of roots.
-          . apiError
-          $ requestFailed "Root usergroups cannot be deleted."
-        dbUpdate $ UserGroupDelete ugid
-        dbUpdate $ AccessControlDeleteRolesByUserGroup ugid
-        -- Return response
-        return
-          .  Ok
-          .  pairs
-          $  ("id" .= show ugid)
-          <> ("resource" .= ("usergroup" :: Text))
-          <> ("action" .= ("deleted" :: Text))
+  requiredPerm <- apiHasPermission $ canDo DeleteA $ UserGroupR ugid
+  -- Check user has permissions to delete UserGroup
+  apiAccessControlOrIsAdmin apiuser requiredPerm $ do
+    ug <- ugGetOrErrNotFound ugid
+    let isRootUserGroup = isNothing . view #parentGroupID
+    when (isRootUserGroup ug)
+      -- Maybe Sales/Admin users should be allowed
+      -- Note: Current DB implementation causes DB error when deleting a root.
+      -- Will need to be fixed if we want to allow deletion of roots.
+      . apiError
+      $ requestFailed "Root usergroups cannot be deleted."
+    dbUpdate $ UserGroupDelete ugid
+    dbUpdate $ AccessControlDeleteRolesByUserGroup ugid
+    -- Return response
+    return
+      .  Ok
+      .  pairs
+      $  ("id" .= show ugid)
+      <> ("resource" .= ("usergroup" :: Text))
+      <> ("action" .= ("deleted" :: Text))
 
 userGroupApiContactDetailsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Get ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo ReadA $ UserGroupR ugid
+  requiredPerm <- apiHasPermission $ canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm
     -- Return response
     $   Ok
@@ -193,7 +189,7 @@ userGroupApiContactDetailsV2Update ugid = api $ do
   contactDetailsChanges <- apiV2ParameterObligatory
     $ ApiV2ParameterAeson "contact_details"
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo UpdateA $ UserGroupR ugid
+  requiredPerm <- apiHasPermission $ canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug <- ugGetOrErrNotFound ugid
     -- New address creation DOES NOT inherit, since people will want to start
@@ -212,7 +208,7 @@ userGroupApiContactDetailsV2Delete ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to update UserGroup
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo UpdateA $ UserGroupR ugid
+  requiredPerm <- apiHasPermission $ canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug <- ugGetOrErrNotFound ugid
     when (isNothing $ ug ^. #parentGroupID) . apiError $ requestFailed
@@ -226,7 +222,7 @@ userGroupApiSettingsV2Get ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo ReadA $ UserGroupR ugid
+  requiredPerm <- apiHasPermission $ canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm
     $   Ok
     .   encodeUserGroupSettings inheritable
@@ -237,7 +233,7 @@ userGroupApiSettingsV2Update ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   settingsChanges <- apiV2ParameterObligatory $ ApiV2ParameterAeson "settings"
   apiuser         <- getAPIUserWithAPIPersonal
-  requiredPerm    <- alternativePermissionCondition $ canDo UpdateA $ UserGroupR ugid
+  requiredPerm    <- apiHasPermission $ canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug     <- ugGetOrErrNotFound ugid
     -- New settings creation DOES inherit, since there are things that are
@@ -264,7 +260,7 @@ userGroupApiSettingsV2Delete ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to update UserGroup
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo UpdateA $ UserGroupR ugid
+  requiredPerm <- apiHasPermission $ canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug <- ugGetOrErrNotFound ugid
     when (isNothing $ ug ^. #parentGroupID) . apiError $ requestFailed
@@ -277,7 +273,7 @@ userGroupApiUsersV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiUsersV2Get ugid = api $ do
   -- Check user has permissions to view UserGroup
   apiuser      <- getAPIUserWithAPIPersonal
-  requiredPerm <- alternativePermissionCondition $ canDo ReadA $ UserGroupR ugid
+  requiredPerm <- apiHasPermission $ canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     users <- dbQuery (UserGroupGetUsers ugid)
     -- Return response

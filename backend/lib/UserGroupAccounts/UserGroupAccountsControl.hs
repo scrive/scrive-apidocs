@@ -22,7 +22,7 @@ import qualified Data.Text as T
 import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
-import API.V2.Utils (accessControlLoggedIn)
+import API.V2.Utils
 import DB
 import Folder.Model
 import Happstack.Fields
@@ -219,9 +219,8 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
       Just trgug -> return $ Just trgug
   let targetGroup   = fromMaybe currentUserGroup mTargetGroup
       targetGroupID = targetGroup ^. #id
-  requiredPerm <- alternativePermissionCondition $ canDo CreateA $ UserInGroupR
-    targetGroupID
-  roles <- dbQuery . GetRoles $ user
+  requiredPerm <- apiHasPermission $ canDo CreateA $ UserInGroupR targetGroupID
+  roles        <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
   accessControl roles requiredPerm internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
     Nothing -> do
@@ -353,7 +352,7 @@ handleChangeRoleOfUserGroupAccount = do
           -- hack and to grant is_company_admin in subGroup only check, if the actor is able
           -- to grant managing users in subGroup.
           -- CORE-1990
-  requiredPerm <- allAlternativePermissionConditions acc
+  requiredPerm <- apiHasAllPermissions acc
   when (wasAdmin /= becomeAdmin) $ do
     accessControlLoggedIn requiredPerm $ do
       ctx <- getContext
@@ -384,8 +383,7 @@ handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
 handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
   removeuid    <- getCriticalField asValidUserID "removeid"
   removeuser   <- guardJustM . dbQuery $ GetUserByID removeuid
-  requiredPerm <-
-    alternativePermissionCondition $ canDo DeleteA . UserInGroupR $ removeuser ^. #groupID
+  requiredPerm <- apiHasPermission $ canDo DeleteA . UserInGroupR $ removeuser ^. #groupID
   -- Even if we don't execute the main action for whatever reason we remove all invites
   -- that we possibly can, restricted by the caller's permissions.
   accessControl roles requiredPerm (removeInvitesOnly roles removeuser) $ do

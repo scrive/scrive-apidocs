@@ -112,7 +112,7 @@
   "shareable_link": null,
   "is_deleted": false,
   "viewer": {
-    "role": "folder",
+    "role": "company_admin",
     "signatory_id": ""
   },
   "template_id": null,

@@ -55,6 +55,7 @@ import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.Monad.V1
+import API.V2.Utils
 import AppView (respondWithPDF)
 import Attachment.Model
 import Chargeable
@@ -1862,7 +1863,7 @@ guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m 
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
     roles        <- dbQuery . GetRoles $ user
-    requiredPerm <- alternativePermissionCondition $ canDo ReadA $ EidIdentityR ugid
+    requiredPerm <- apiHasPermission $ canDo ReadA $ EidIdentityR ugid
     let exception = throwM . SomeDBExtraException $ forbidden'
     accessControl roles requiredPerm exception $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()

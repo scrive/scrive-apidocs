@@ -356,9 +356,9 @@ testCannotDeleteFolderWithDocument = do
   req      <- mkRequest POST []
   fidChild <- createFolder $ user ^. #homeFolderID
   void $ addRandomDocument (rdaDefault user) { rdaFolderId = fidChild }
-  res         <- fst <$> runTestKontra req ctx (folderAPIDelete fidChild)
-  existsAfter <- isJust <$> dbQuery (FolderGet fidChild)
+  res <- fst <$> runTestKontra req ctx (folderAPIDelete fidChild)
   assertEqual "Cannot delete folder with documents" 400 $ rsCode res
+  existsAfter <- isJust <$> dbQuery (FolderGet fidChild)
   assertBool "New child Folder remains after attempted deletion" existsAfter
 
 testCannotDeleteFolderWithOnlyTrashedDocument :: TestEnv ()

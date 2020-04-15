@@ -1162,10 +1162,9 @@ data RandomDocumentAllows = RandomDocumentAllows
   , rdaAuthor      :: User
   , rdaSharedLink  :: Bool
   , rdaTimeoutTime :: Bool
-  , rdaFolderID :: Maybe FolderID
+  , rdaFolderId    :: FolderID
   , rdaTemplateId  :: Maybe DocumentID
   , rdaSealingMethods :: OneOf SealingMethod
-  , rdaFolderId      :: FolderID
   }
 
 rdaDefault :: User -> RandomDocumentAllows
@@ -1177,10 +1176,9 @@ rdaDefault user = RandomDocumentAllows
   , rdaAuthor         = user
   , rdaSharedLink     = False
   , rdaTimeoutTime    = True
-  , rdaFolderID       = Nothing
+  , rdaFolderId       = fromJust $ user ^. #homeFolderID
   , rdaTemplateId     = Nothing
   , rdaSealingMethods = OneOf documentAllSealingMethods
-  , rdaFolderId       = fromJust $ user ^. #homeFolderID
   }
 
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
@@ -1339,7 +1337,7 @@ addRandomDocumentWithFile fileid rda = do
           , documenttitle             = title
           , documentfromshareablelink = rdaSharedLink rda
           , documenttemplateid        = rdaTemplateId rda
-          , documentfolderid = fromJust $ rdaFolderID rda <|> user ^. #homeFolderID
+          , documentfolderid          = rdaFolderId rda
           , documenttimeouttime       = if rdaTimeoutTime rda
                                           then documenttimeouttime doc'
                                           else Nothing

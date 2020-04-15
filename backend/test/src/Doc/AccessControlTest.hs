@@ -155,7 +155,7 @@ testBasicValidRoles = do
     doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Preparation]
                                                    , rdaSharings = OneOf [Private]
-                                                   , rdaFolderID = Just folderId
+                                                   , rdaFolderId = folderId
                                                    }
 
     let authorSigLink = fromJust $ getSigLinkFor (author ^. #id) doc
@@ -230,7 +230,7 @@ testBasicValidRoles = do
     doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Pending]
                                                    , rdaSharings = OneOf [Private]
-                                                   , rdaFolderID = Just folderId
+                                                   , rdaFolderId = folderId
                                                    }
 
     let authorSigLink = fromJust $ getSigLinkFor (author ^. #id) doc
@@ -305,7 +305,7 @@ testBasicValidRoles = do
     doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Canceled]
                                                    , rdaSharings = OneOf [Private]
-                                                   , rdaFolderID = Just folderId
+                                                   , rdaFolderId = folderId
                                                    }
 
     let authorSigLink = fromJust $ getSigLinkFor (author ^. #id) doc
@@ -430,7 +430,7 @@ testBasicAccessControl = do
       { rdaTypes    = OneOf [Signable]
       , rdaStatuses = OneOf [Preparation]
       , rdaSharings = OneOf [Private]
-      , rdaFolderID = Just folderId
+      , rdaFolderId = folderId
       }
 
     assertGetDocumentSucceed
@@ -493,7 +493,7 @@ testBasicAccessControl = do
     doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Pending]
                                                    , rdaSharings = OneOf [Private]
-                                                   , rdaFolderID = Just folderId
+                                                   , rdaFolderId = folderId
                                                    }
 
     let docId              = documentid doc
@@ -589,7 +589,7 @@ testBasicAccessControl = do
     doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                    , rdaStatuses = OneOf [Pending]
                                                    , rdaSharings = OneOf [Private]
-                                                   , rdaFolderID = Just folderId
+                                                   , rdaFolderId = folderId
                                                    }
 
     let docId              = documentid doc
@@ -683,7 +683,7 @@ testAuthorAccessControl = do
   doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                  , rdaStatuses = OneOf [Pending]
                                                  , rdaSharings = OneOf [Private]
-                                                 , rdaFolderID = Just folderId
+                                                 , rdaFolderId = folderId
                                                  }
 
   let docId         = documentid doc
@@ -800,7 +800,7 @@ testSharedAccessControl = do
     { rdaTypes    = OneOf [Template]
     , rdaStatuses = OneOf [Preparation]
     , rdaSharings = OneOf [Shared]
-    , rdaFolderID = Just folderId
+    , rdaFolderId = folderId
     }
 
   assertGetDocumentSucceed
@@ -901,7 +901,7 @@ testGroupAccessControl = do
         { rdaTypes       = OneOf [Signable]
         , rdaStatuses    = OneOf [Preparation]
         , rdaSharings    = OneOf [Private]
-        , rdaFolderID    = Just folderId
+        , rdaFolderId    = folderId
         , rdaSignatories = let signatory =
                                  OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
                            in  OneOf $ map (`replicate` signatory) [2 .. 10]
@@ -930,7 +930,7 @@ testGroupAccessControl = do
         { rdaTypes    = OneOf [Signable]
         , rdaStatuses = OneOf [Pending]
         , rdaSharings = OneOf [Private]
-        , rdaFolderID = Just folderId
+        , rdaFolderId = folderId
         }
 
       assertGetDocumentSucceed
@@ -956,7 +956,7 @@ testGroupAccessControl = do
       { rdaTypes    = OneOf [Template]
       , rdaStatuses = OneOf [Preparation]
       , rdaSharings = OneOf [Shared]
-      , rdaFolderID = Just folderId
+      , rdaFolderId = folderId
       }
 
     assertGetDocumentSucceed
@@ -1058,7 +1058,7 @@ testFolderAccessControl = do
         { rdaTypes    = OneOf [Signable]
         , rdaStatuses = OneOf [Preparation]
         , rdaSharings = OneOf [Private]
-        , rdaFolderID = Just baseFolderId
+        , rdaFolderId = baseFolderId
         }
 
       assertGetDocumentSucceed "Base folder user should be able to get draft document"
@@ -1104,7 +1104,7 @@ testFolderAccessControl = do
         { rdaTypes    = OneOf [Signable]
         , rdaStatuses = OneOf [Pending]
         , rdaSharings = OneOf [Private]
-        , rdaFolderID = Just baseFolderId
+        , rdaFolderId = baseFolderId
         }
 
       assertGetDocumentSucceed "Base folder user should be able to get started document"
@@ -1164,7 +1164,7 @@ testFolderAccessControl = do
         { rdaTypes    = OneOf [Signable]
         , rdaStatuses = OneOf [Preparation]
         , rdaSharings = OneOf [Private]
-        , rdaFolderID = Just parentFolderId
+        , rdaFolderId = parentFolderId
         }
 
 
@@ -1211,7 +1211,7 @@ testFolderAccessControl = do
         { rdaTypes    = OneOf [Signable]
         , rdaStatuses = OneOf [Pending]
         , rdaSharings = OneOf [Private]
-        , rdaFolderID = Just parentFolderId
+        , rdaFolderId = parentFolderId
         }
 
       assertGetDocumentSucceed "Base folder user should be able to get started document"
@@ -1339,7 +1339,7 @@ testSharedFolderAccessControl = do
       { rdaTypes    = OneOf [Template]
       , rdaStatuses = OneOf [Preparation]
       , rdaSharings = OneOf [Shared]
-      , rdaFolderID = Just baseFolderId
+      , rdaFolderId = baseFolderId
       }
 
     assertGetDocumentSucceed "Base folder user should be able to get shared document"
@@ -1393,7 +1393,7 @@ testSharedFolderAccessControl = do
       { rdaTypes    = OneOf [Template]
       , rdaStatuses = OneOf [Preparation]
       , rdaSharings = OneOf [Shared]
-      , rdaFolderID = Just parentFolderId
+      , rdaFolderId = parentFolderId
       }
 
     assertGetDocumentSucceed "Base folder user should be able to get shared document"
@@ -1447,7 +1447,7 @@ testSharedFolderAccessControl = do
       { rdaTypes    = OneOf [Template]
       , rdaStatuses = OneOf [Preparation]
       , rdaSharings = OneOf [Shared]
-      , rdaFolderID = Just grandParentFolderId
+      , rdaFolderId = grandParentFolderId
       }
 
     assertGetDocumentSucceed "Base folder user should be able to get shared document"
@@ -1538,8 +1538,7 @@ testDocumentFileAccessControl = do
                                                                   [Pending]
                                                                 , rdaSharings = OneOf
                                                                   [Private]
-                                                                , rdaFolderID = Just
-                                                                  folderId
+                                                                , rdaFolderId = folderId
                                                                 }
 
   anonCtx       <- mkContext defaultLang
@@ -1607,7 +1606,7 @@ testDocumentFileAccessControl = do
       { rdaTypes    = OneOf [Signable]
       , rdaStatuses = OneOf [Preparation]
       , rdaSharings = OneOf [Private]
-      , rdaFolderID = Just folderId
+      , rdaFolderId = folderId
       }
 
     assertNoFileAccess "Should not have access if file is not in document"

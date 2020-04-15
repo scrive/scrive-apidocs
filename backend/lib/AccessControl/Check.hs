@@ -6,7 +6,6 @@ module AccessControl.Check
   , canDo
   , canGrant
   , alternativePermissionCondition
-  , allAlternativePermissionConditions
   )
 where
 
@@ -63,10 +62,6 @@ evalPermissionCondition :: (Permission -> Bool) -> PermissionCondition -> Bool
 evalPermissionCondition f (Cond    p   ) = f p
 evalPermissionCondition f (OrCond  aces) = or $ fmap (evalPermissionCondition f) aces
 evalPermissionCondition f (AndCond aces) = and $ fmap (evalPermissionCondition f) aces
-
-allAlternativePermissionConditions
-  :: forall  m . (MonadThrow m, MonadDB m) => [Permission] -> m PermissionCondition
-allAlternativePermissionConditions = fmap AndCond . mapM alternativePermissionCondition
 
 -- By specification, it should be enough to have permission for the
 -- wanted action on _any_ parent.
