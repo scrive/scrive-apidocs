@@ -56,7 +56,6 @@ import qualified Text.JSON.Gen as J
 import Analytics.Include
 import API.V2.Errors
 import API.V2.MonadUtils
-import API.V2.User
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
@@ -64,7 +63,6 @@ import Chargeable
 import Cookies
 import DB
 import DB.TimeZoneName
-import Doc.AccessControl
 import Doc.Action
 import Doc.API.Callback.Model
 import Doc.API.V2.DocumentUpdateUtils
@@ -104,7 +102,6 @@ import Kontra
 import KontraLink
 import Log.Identifier
 import MagicHash
-import OAuth.Model (APIPrivilege(..))
 import Redirect
 import Session.Model
 import Templates (renderTextTemplate, renderTextTemplate_)
@@ -618,16 +615,16 @@ showPreviewForSignatory did slid mmh fid = logDocumentAndFile did fid $ do
   case mmh of
     Nothing -> do
       checkFileAccessWithSignatory fid did slid
-      showActualPreviewForSignatoryWithFileAccessCheck
+      showActualPreviewForSignatory
     Just mh -> do
       hasAccess <- dbQuery $ CheckIfMagicHashIsValid did slid mh
       if hasAccess
         then do
           checkFileAccessWithMagicHash fid did slid mh
-          showActualPreviewForSignatoryWithFileAccessCheck
+          showActualPreviewForSignatory
         else showFallbackImage
   where
-    showActualPreviewForSignatoryWithFileAccessCheck = do
+    showActualPreviewForSignatory = do
       pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
       let clampedPixelWidth = min 2000 (max 100 pixelwidth)
       previewResponse fid clampedPixelWidth
@@ -711,9 +708,8 @@ checkFileAccess fileId = do
 
   case (mSignatoryId, mDocId, mAttachId) of
     (Nothing, Nothing, Just attachId) -> checkFileAccessWithAttachmentId fileId attachId
-    (_, Just docId, _) -> do
-      doc <- dbQuery $ GetDocumentByDocumentID docId
-      docAccessControl doc mSignatoryId $ checkFileInDocument fileId docId
+    (Just slid, Just did, _) -> checkFileAccessWithSignatory fileId did slid
+    (Nothing, Just did, _) -> checkFileAccessWithLoggedInUser fileId did
     _ -> internalError
 
 checkFileInDocument :: Kontrakcja m => FileID -> DocumentID -> m ()
@@ -723,29 +719,40 @@ checkFileInDocument fileId docId = do
 
 checkFileAccessWithLoggedInUser :: Kontrakcja m => FileID -> DocumentID -> m ()
 checkFileAccessWithLoggedInUser fileId docId = do
-  doc   <- dbQuery $ GetDocumentByDocumentID docId
-  mUser <- fmap fst <$> getMaybeAPIUser APIDocCheck
-  docAccessControlWithUserSignatory doc mUser Nothing $ checkFileInDocument fileId docId
+  void $ getDocumentByCurrentUser docId
+  checkFileInDocument fileId docId
 
 checkFileAccessWithSignatory
   :: Kontrakcja m => FileID -> DocumentID -> SignatoryLinkID -> m ()
-checkFileAccessWithSignatory fileId docId signatoryId = do
-  doc        <- dbQuery $ GetDocumentByDocumentID docId
-  mSignatory <- maybeAuthenticateSignatory doc signatoryId
-  docAccessControlWithUserSignatory doc Nothing mSignatory
-    $ checkFileInDocument fileId docId
+checkFileAccessWithSignatory fid did slid = do
+  sid             <- view #sessionID <$> getContext
+  doc             <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
+  validDocSession <- dbQuery $ CheckDocumentSession sid slid
+  if validDocSession
+    then do -- Valid magic hash or session
+      guardThatDocumentIsReadableBySignatories doc
+      checkSignatoryNeedsToIdentifyToView slid doc
+      checkFileInDocument fid did
+    else guardLoggedInOrThrowInternalError $ do
+      void $ getDocumentByCurrentUser did
+      checkFileInDocument fid did
 
-checkFileAccessWithMagicHash
-  :: Kontrakcja m => FileID -> DocumentID -> SignatoryLinkID -> MagicHash -> m ()
-checkFileAccessWithMagicHash fileId docId signatoryId hash = do
-  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docId signatoryId hash
-  guardThatDocumentIsReadableBySignatories doc
-  sl <- guardJust $ getSigLinkFor signatoryId doc
+checkSignatoryNeedsToIdentifyToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
+checkSignatoryNeedsToIdentifyToView slid doc = do
+  sl <- guardJust $ getSigLinkFor slid doc
   whenM (signatoryNeedsToIdentifyToView sl doc) $ do
     -- If document is not closed, author never needs to identify to
     -- view. However if it's closed, then he might need to.
     when (isClosed doc || not (isAuthor sl)) $ do
       internalError
+
+checkFileAccessWithMagicHash
+  :: Kontrakcja m => FileID -> DocumentID -> SignatoryLinkID -> MagicHash -> m ()
+checkFileAccessWithMagicHash fileId docId slid hash = do
+
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docId slid hash
+  guardThatDocumentIsReadableBySignatories doc
+  checkSignatoryNeedsToIdentifyToView slid doc
   checkFileInDocument fileId $ documentid doc
 
 checkFileAccessWithAttachmentId :: Kontrakcja m => FileID -> AttachmentID -> m ()

@@ -37,7 +37,6 @@ import API.V2.Parameters
 import API.V2.Utils
 import AppView (respondWithPDF, respondWithZipFile)
 import DB
-import Doc.AccessControl
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
@@ -161,16 +160,11 @@ docApiV2List = api $ do
         Nothing
 
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
-docApiV2Get docId = logDocument docId . api $ do
-  mSignatoryId <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-
-  doc          <- dbQuery $ GetDocumentByDocumentID docId
-  mUser        <- fmap fst <$> getMaybeAPIUser APIDocCheck
-
-  accessMode   <- docAccessControlAndMode doc mUser mSignatoryId
-
-  let docAccess = DocumentAccess docId accessMode $ documentstatus doc
-  return $ Ok (unjsonDocument docAccess, doc)
+docApiV2Get did = logDocument did . api $ do
+  mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  doc   <- dbQuery $ GetDocumentByDocumentID did
+  da    <- guardDocumentReadAccess mslid doc
+  return $ Ok (unjsonDocument da, doc)
 
 docApiV2GetByShortID :: Kontrakcja m => DocumentID -> m Response
 docApiV2GetByShortID shortDid = api $ do
@@ -178,13 +172,11 @@ docApiV2GetByShortID shortDid = api $ do
   when (length (show shortDid) > 6) . apiError $ requestParameterInvalid
     "short_document_id"
     "was greater than 6 digits"
-  mUser      <- fmap fst <$> getMaybeAPIUser APIDocCheck
-  doc        <- dbQuery $ GetDocumentByShortDocumentID shortDid
-  accessMode <- docAccessControlAndMode doc mUser Nothing
-  let docAccess = DocumentAccess (documentid doc) accessMode $ documentstatus doc
+  doc <- dbQuery $ GetDocumentByShortDocumentID shortDid
+  da  <- guardDocumentReadAccess Nothing doc
   logInfo "docApiV2GetByShortID: got a document" $ logObject_ doc
   guardDocumentStatus Pending doc
-  return $ Ok (unjsonDocument docAccess, doc)
+  return $ Ok (unjsonDocument da, doc)
 
 -- | Produces a QR-encoded .png image that contains a URL of form
 -- 'scrive://$domain/s/$did/$signatorylinkid/$signatorymagichash'.
@@ -192,22 +184,21 @@ docApiV2GetQRCode :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
 
-  docAccessControl doc Nothing $ do
-    guardDocumentStatus Pending doc
+  void $ guardDocumentReadAccess Nothing doc
+  guardDocumentStatus Pending doc
 
-    domainURL <- view (#brandedDomain % #url) <$> getContext
-    sigLink   <- apiGuardJust (signatoryLinkForDocumentNotFound did slid)
-      $ getSigLinkFor slid doc
-    magicHash <-
-      let msat = find ((== SignatoryAccessTokenForQRCode) . signatoryAccessTokenReason)
-                      (signatoryaccesstokens sigLink)
-      in  case msat of
-            Just sat -> return $ signatoryAccessTokenHash sat
-            Nothing  -> do
-              dbUpdate
-                $ NewSignatoryAccessToken slid SignatoryAccessTokenForQRCode Nothing
-    qrCode <- liftIO . encodeQR $ T.unpack (mkSignLink domainURL magicHash)
-    return $ Ok qrCode
+  domainURL <- view (#brandedDomain % #url) <$> getContext
+  sigLink   <- apiGuardJust (signatoryLinkForDocumentNotFound did slid)
+    $ getSigLinkFor slid doc
+  magicHash <-
+    let msat = find ((== SignatoryAccessTokenForQRCode) . signatoryAccessTokenReason)
+                    (signatoryaccesstokens sigLink)
+    in  case msat of
+          Just sat -> return $ signatoryAccessTokenHash sat
+          Nothing  -> do
+            dbUpdate $ NewSignatoryAccessToken slid SignatoryAccessTokenForQRCode Nothing
+  qrCode <- liftIO . encodeQR $ T.unpack (mkSignLink domainURL magicHash)
+  return $ Ok qrCode
 
   where
     -- | Create a URL to be QR-encoded.
@@ -225,10 +216,10 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = logDocument did . api $ do
   -- Permissions
-  (user, _)           <- getAPIUser APIDocCheck
-  doc                 <- dbQuery $ GetDocumentByDocumentID did
-  permissionCondition <- docPermissionCondition (canDo ReadA) doc $ documentfolderid doc
-  apiAccessControl user permissionCondition $ do
+  (user, _) <- getAPIUser APIDocCheck
+  doc       <- dbQuery $ GetDocumentByDocumentID did
+  permCond  <- apiRequireAnyPermission [ canDo ReadA res | res <- docResources doc ]
+  apiAccessControlWithError user permCond (apiError documentActionForbidden) $ do
     -- Parameters
     mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
     mLang     <- case fmap langFromCode mLangCode of
@@ -244,11 +235,11 @@ docApiV2History did = logDocument did . api $ do
     return . Ok $ JSObject (J.toJSObject [("events", JSArray events)])
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2EvidenceAttachments did = logDocument did . api . withDocumentID did $ do
-  (user, _)           <- getAPIUser APIDocCheck
-  doc                 <- theDocument
-  permissionCondition <- docPermissionCondition (canDo ReadA) doc $ documentfolderid doc
-  apiAccessControl user permissionCondition $ do
+docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
+  (user, _) <- getAPIUser APIDocCheck
+  doc       <- theDocument
+  permCond  <- apiRequireAnyPermission [ canDo ReadA res | res <- docResources doc ]
+  apiAccessControlWithError user permCond (apiError documentActionForbidden) $ do
     eas <- EvidenceAttachments.extractAttachmentsList doc
     let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
     return . Ok $ Response 200
@@ -291,8 +282,7 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  requiredPerm <-
-    apiRequirePermission . canDo ReadA . DocumentInFolderR $ documentfolderid doc
+  requiredPerm  <- apiRequireAnyPermission [ canDo ReadA res | res <- docResources doc ]
   apiAccessControl user requiredPerm $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl
@@ -306,8 +296,8 @@ getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken =
   withDocumentID did $ case maccesstoken of
     Just token -> getDocByDocIDAndAccessTokenV2 did token
     Nothing    -> do
-      doc <- theDocument
-      docAccessControl doc mslid theDocument
+      void $ guardDocumentReadAccess mslid =<< theDocument
+      theDocument
 
 withDocAccess :: Kontrakcja m => DocumentID -> (Document -> m a) -> m a
 withDocAccess did dochandler = do

@@ -39,11 +39,16 @@ module Doc.DocStateQuery
 import Control.Monad.Catch (throwM)
 import Log
 
+import AccessControl.Check
+import AccessControl.Model
+import AccessControl.Types
 import API.V2.Errors
+import API.V2.Utils
 import DB
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
+import Doc.DocumentMonad
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
@@ -58,9 +63,17 @@ import Util.SignatoryLinkUtils
 
 getDocumentByCurrentUser :: Kontrakcja m => DocumentID -> m Document
 getDocumentByCurrentUser docId = do
-  user <- guardJust . contextUser =<< getContext
-  dbQuery $ GetDocument (DocumentsVisibleToUser $ user ^. #id)
-                        [DocumentFilterByDocumentID docId]
+  user  <- guardJust . contextUser =<< getContext
+  roles <- dbQuery $ GetRoles user
+  let availablePerm = concatMap (hasPermissions . accessRoleTarget) roles
+  withDocumentID docId $ do
+    mSL          <- getSigLinkFor user <$> theDocument
+    resources    <- docResources <$> theDocument
+    requiredPerm <- apiRequireAnyPermission [ canDo ReadA res | res <- resources ]
+    let hasReadPermission = accessControlCheck availablePerm requiredPerm
+    if isJust mSL || hasReadPermission
+      then theDocument
+      else throwM . SomeDBExtraException $ insufficientPrivileges
 
 getDocByDocIDAndAccessTokenV1
   :: Kontrakcja m => DocumentID -> Maybe MagicHash -> m Document

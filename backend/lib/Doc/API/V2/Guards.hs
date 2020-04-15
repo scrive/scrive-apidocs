@@ -36,6 +36,7 @@ module Doc.API.V2.Guards (
 , guardThatAllConsentQuestionsHaveResponse
 , guardThatAuthorIsNotApprover
 -- * Joined guard for read-only functions
+, guardDocumentReadAccess
 , guardThatDocumentIsReadableBySignatories
 , guardAccessToDocumentWithSignatory
 ) where
@@ -52,6 +53,7 @@ import API.V2.Errors
 import API.V2.Parameters
 import API.V2.Utils
 import DB
+import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.SignatoryConsentQuestion
@@ -69,6 +71,7 @@ import File.FileID
 import Folder.Types
 import InputValidation
 import Kontra
+import OAuth.Model
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -781,6 +784,99 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
     unless (all (`elem` questionIDs) responseIDs) . apiError $ requestParameterInvalid
       "consent_responses"
       "Consent responses are corrupted"
+
+-- | For the given DocumentID:
+--
+-- 1. Try to get a valid session for the given `Maybe SignatoryLinkID`
+--
+-- if that fails or no SignatoryLinkID is given, then:
+--
+-- Get permissions using `getAPIUser` with given privileges.
+-- If the user account is not linked to the document then also guard extra
+-- permissions using guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+--
+-- SYSTEM ADMINS WILL ALWAYS SUCCEED
+--
+-- This is useful in all situations where a signatory or other users could use
+-- the API call (e.g. document GET call), but not that this function is focused only
+-- on ability to read document
+
+guardDocumentReadAccess
+  :: Kontrakcja m => Maybe SignatoryLinkID -> Document -> m DocumentAccess
+guardDocumentReadAccess mSlidFromRequest doc = do
+  mDocSessionSl <- case mSlidFromRequest of
+    Nothing   -> return Nothing
+    Just slidFromRequest -> do
+      sid          <- view #sessionID <$> getContext
+      validSession <- dbQuery $ CheckDocumentSession sid slidFromRequest
+      if validSession
+        then do
+          fmap Just . apiGuardJust (documentNotFound (documentid doc)) $ getSigLinkFor
+            slidFromRequest
+            doc
+        else return Nothing
+
+  (mSlid, mUserPermissions) <- do
+    (mUser, mSlid) <-
+      -- try to link signatory to Scrive user - we will need it to find
+      -- out if the signatory has some permissions to the document.
+      -- Originally in similar situations we were just checking if the
+      -- signatory is author
+      case mDocSessionSl >>= maybesignatory of
+        Just uid -> do
+          mUser <- dbQuery $ GetUserByID uid
+          return (mUser, mSlidFromRequest)
+        Nothing ->
+          getMaybeAPIUser APIDocCheck >>= \case
+            Nothing -> return (Nothing, mSlidFromRequest)
+            Just (user,_) ->
+              return (Just user, signatorylinkid <$> getSigLinkFor user doc)
+    case mUser of
+      Nothing -> return (mSlid, Nothing)
+      Just user -> do
+        requiredReadPerm <- apiRequireAnyPermission
+          [ canDo ReadA res | res <- docResources doc ]
+        requiredUpdatePerm <- apiRequireAnyPermission
+          [ canDo UpdateA res | res <- docResources doc ]
+        hasReadPermission <- apiAccessControlCheck user requiredReadPerm
+        hasUpdatePermission <- apiAccessControlCheck user requiredUpdatePerm
+        return (mSlid, Just (hasReadPermission, hasUpdatePermission))
+
+  case mUserPermissions of
+    Just (hasReadPermission, hasUpdatePermission) ->
+      case mSlid of
+        Just slid ->
+          if
+            | hasUpdatePermission ->
+                -- logged-in user with Update permission (or just link to that user)
+                return . documentAccess doc $ FolderDocumentAccess mSlid
+            | hasReadPermission ->
+                -- document session, logged-in user with only Read permission (or just link to that user)
+                return . documentAccess doc $ SignatoryDocumentAccess slid
+            | otherwise -> do
+                -- signatory linked to a Scrive user without any permissions
+                guardThatDocumentIsReadableBySignatories doc
+                return . documentAccess doc $ SignatoryDocumentAccess slid
+        Nothing ->
+            if
+              | hasUpdatePermission ->
+                  -- logged-in user with Update permission (or just link to that user)
+                  return . documentAccess doc $ FolderDocumentAccess mSlid
+              | hasReadPermission ->
+                  -- no signatory link, logged-in user with only Read permission
+                  return $ documentAccess doc CompanySharedDocumentAccess
+              | otherwise ->
+                  -- no signatory link, logged-in user without even a Read permission
+                  apiError documentActionForbidden
+    Nothing ->
+      case mSlid of
+        Just slid -> do
+          -- signatory without any link to Scrive user
+          guardThatDocumentIsReadableBySignatories doc
+          return . documentAccess doc $ SignatoryDocumentAccess slid
+        Nothing ->
+          -- no document session, no user
+          apiError invalidAuthorization
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do

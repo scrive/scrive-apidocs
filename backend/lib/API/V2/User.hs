@@ -62,8 +62,8 @@ getMaybeAPIUserWith ctxUser privs = do
 getAPIUserWith
   :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (User, Actor)
 getAPIUserWith ctxUser privs = do
-  msessionuser <- getMaybeAPIUserWith ctxUser privs
-  case msessionuser of
+  mApiOrSessionUser <- getMaybeAPIUserWith ctxUser privs
+  case mApiOrSessionUser of
     Just (user, actor) -> return (user, actor)
     Nothing            -> do
       sesids  <- lookCookieValues cookieNameSessionID . rqHeaders <$> askRq

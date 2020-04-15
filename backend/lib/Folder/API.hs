@@ -106,15 +106,19 @@ folderAPIUpdate fid = api $ do
         then return []
         else case (mfromParentID, mtoParentID) of
           -- change parent
-          (Just fromParentID, Just toParentID) -> return
-            [canDo UpdateA $ FolderR toParentID, canDo UpdateA $ FolderR fromParentID]
+          (Just fromParentID, Just toParentID) ->
+            return
+              [ canDo UpdateA $ FolderR toParentID
+              , canDo UpdateA $ FolderR fromParentID
+              ]
           -- change from being child to root
           (Just _, Nothing) -> do
             -- Only admin or sales can promote Folder to root
             unlessM checkAdminOrSales $ apiError insufficientPrivileges
             return []
           -- change from being root to child
-          (Nothing, Just toParentID) -> return [canDo UpdateA $ FolderR toParentID]
+          (Nothing, Just toParentID) ->
+            return [canDo UpdateA $ FolderR toParentID]
           -- root is remaining root. no special privileges needed
           _ -> return []
       apiuser      <- getAPIUserWithAPIPersonal

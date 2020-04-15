@@ -2,6 +2,7 @@ module Doc.AccessControlTest (docAccessControlTests) where
 
 import Control.Exception (SomeException)
 import Control.Monad.Catch (catch)
+import Doc.AccessControl
 import Happstack.Server
 import Log
 import Test.Framework
@@ -10,7 +11,6 @@ import AccessControl.Model
 import AccessControl.Types
 import Attachment.Model
 import DB.Query (dbUpdate)
-import Doc.AccessControl
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.DocControl
 import Doc.DocumentID (DocumentID)
