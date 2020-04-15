@@ -5,27 +5,29 @@ module EID.EIDService.Types (
 
     , HasEIDServiceName(..)
     , EIDServiceTransactionProvider(..)
+    , EIDServiceEndpointType(..)
     , EIDServiceProviderParams(..)
     , eidServiceProviderParamsToProvider
     , EIDServiceTransactionStatus(..)
     , EIDServiceAuthenticationKind(..)
-    , EIDServiceTransaction(..)
+    , EIDServiceTransactionFromDB(..)
 
     , EIDServiceVerimiAuthentication(..)
-    , CompleteVerimiEIDServiceTransactionData(..)
+    , CompleteEIDServiceTransaction(..)
+    , VerimiEIDServiceCompletionData(..)
     , EIDServiceNLIDINAuthentication(..)
     , EIDServiceNLIDINSignature(..)
-    , CompleteNLIDINEIDServiceTransactionData(..)
+    , NLIDINEIDServiceCompletionData(..)
     , EIDServiceFITupasSignature(..)
-    , CompleteFITupasEIDServiceTransactionData(..)
+    , FITupasEIDServiceCompletionData(..)
     , EIDServiceDKNemIDAuthentication(..)
     , EIDServiceDKNemIDInternalProvider(..)
     , unsafeEIDServiceDKNemIDInternalProviderFromInt16
-    , CompleteDKNemIDEIDServiceTransactionData(..)
+    , DKNemIDEIDServiceCompletionData(..)
     , EIDServiceNOBankIDAuthentication(..)
     , EIDServiceNOBankIDInternalProvider(..)
     , unsafeEIDServiceNOBankIDInternalProviderFromInt16
-    , CompleteNOBankIDEIDServiceTransactionData(..)
+    , NOBankIDEIDServiceCompletionData(..)
 
     , dateOfBirthFromDKPersonalNumber
   ) where
@@ -36,6 +38,7 @@ import Data.ByteString (ByteString)
 import Data.Int
 import Data.Time
 import Database.PostgreSQL.PQTypes
+import Happstack.Server
 import Prelude hiding (empty)
 import qualified Data.Text as T
 
@@ -112,6 +115,24 @@ instance ToSQL EIDServiceTransactionProvider where
   toSQL EIDServiceTransactionProviderNOBankID = toSQL (4 :: Int16)
   toSQL EIDServiceTransactionProviderFITupas  = toSQL (5 :: Int16)
 
+data EIDServiceEndpointType = EIDServiceAuthEndpoint | EIDServiceSignEndpoint
+
+instance FromReqURI (EIDServiceTransactionProvider, EIDServiceEndpointType) where
+  fromReqURI x = (,) <$> name <*> epType
+    where
+      (nameString, epTypeString) = break (== '-') x
+      name = case nameString of
+        "verimi"   -> Just EIDServiceTransactionProviderVerimi
+        "idin"     -> Just EIDServiceTransactionProviderNLIDIN
+        "nemid"    -> Just EIDServiceTransactionProviderDKNemID
+        "nobankid" -> Just EIDServiceTransactionProviderNOBankID
+        "fitupas"  -> Just EIDServiceTransactionProviderFITupas
+        _          -> Nothing
+      epType = case drop 1 epTypeString of
+        "view" -> Just EIDServiceAuthEndpoint
+        "sign" -> Just EIDServiceSignEndpoint
+        _      -> Nothing
+
 data EIDServiceProviderParams =
   EIDServiceProviderParamsVerimi {
     esppRedirectURL :: Text
@@ -185,12 +206,12 @@ instance ToSQL EIDServiceTransactionStatus where
   toSQL EIDServiceTransactionStatusCompleteAndFailed  = toSQL (5 :: Int16)
 
 instance FromJSON EIDServiceTransactionStatus where
-  parseJSON outer = withObject "object" (.: "status") outer >>= \s -> case (s :: Text) of
-    "new"      -> return EIDServiceTransactionStatusNew
-    "started"  -> return EIDServiceTransactionStatusStarted
-    "failed"   -> return EIDServiceTransactionStatusFailed
-    "complete" -> return EIDServiceTransactionStatusCompleteAndSuccess
-    _          -> fail "JSON is invalid: unrecognised value for \"status\""
+  parseJSON outer = withObject "object" (.: "status") outer >>= \case
+    "new"       -> return EIDServiceTransactionStatusNew
+    "started"   -> return EIDServiceTransactionStatusStarted
+    "failed"    -> return EIDServiceTransactionStatusFailed
+    "complete"  -> return EIDServiceTransactionStatusCompleteAndSuccess
+    (_ :: Text) -> fail "JSON is invalid: unrecognised value for \"status\""
 
 data EIDServiceAuthenticationKind =
   EIDServiceAuthToView AuthenticationKind
@@ -216,7 +237,7 @@ instance ToSQL EIDServiceAuthenticationKind where
   toSQL (EIDServiceAuthToView AuthenticationToViewArchived) = toSQL (2 :: Int16)
   toSQL EIDServiceAuthToSign = toSQL (3 :: Int16)
 
-data EIDServiceTransaction = EIDServiceTransaction
+data EIDServiceTransactionFromDB = EIDServiceTransactionFromDB
   { estID :: !EIDServiceTransactionID
   , estStatus :: !EIDServiceTransactionStatus
   , estSignatoryLinkID :: !SignatoryLinkID
@@ -255,7 +276,7 @@ data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
   } deriving (Eq, Ord, Show)
 
 newtype EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
-  { unEIDServiceIDINSignature :: CompleteNLIDINEIDServiceTransactionData
+  { unEIDServiceIDINSignature :: NLIDINEIDServiceCompletionData
   }
   deriving (Eq, Ord, Show)
 
@@ -266,12 +287,39 @@ data EIDServiceFITupasSignature = EIDServiceFITupasSignature
   }
   deriving (Eq, Ord, Show)
 
-data CompleteVerimiEIDServiceTransactionData = CompleteVerimiEIDServiceTransactionData {
-    eidvtdName :: T.Text
-  , eidvtdVerifiedEmail :: T.Text
-  }
+data CompleteEIDServiceTransaction =
+  CompleteVerimiEIDServiceTransaction
+    {
+      transactionStatus :: EIDServiceTransactionStatus
+    , completionDataVerimi :: Maybe VerimiEIDServiceCompletionData
+    } |
+  CompleteNLIDINEIDServiceTransaction
+    {
+      transactionStatus :: EIDServiceTransactionStatus
+    , completionDataNLIDIN :: Maybe NLIDINEIDServiceCompletionData
+    } |
+  CompleteDKNemIDEIDServiceTransaction
+    {
+      transactionStatus :: EIDServiceTransactionStatus
+    , completionDataDKNemID :: Maybe DKNemIDEIDServiceCompletionData
+    } |
+  CompleteNOBankIDEIDServiceTransaction
+    {
+      transactionStatus :: EIDServiceTransactionStatus
+    , completionDataNOBankID :: Maybe NOBankIDEIDServiceCompletionData
+    } |
+  CompleteFITupasEIDServiceTransaction
+    {
+      transactionStatus :: EIDServiceTransactionStatus
+    , completionDataFITupas :: Maybe FITupasEIDServiceCompletionData
+    } deriving Show
 
-data CompleteFITupasEIDServiceTransactionData = CompleteFITupasEIDServiceTransactionData
+data VerimiEIDServiceCompletionData = VerimiEIDServiceCompletionData
+  { eidvtdName :: T.Text
+  , eidvtdVerifiedEmail :: T.Text
+  } deriving (Eq, Ord, Show)
+
+data FITupasEIDServiceCompletionData = FITupasEIDServiceCompletionData
   { eidtupasName :: !Text
   , eidtupasBirthDate :: !Text
   , eidtupasDistinguishedName :: !Text  -- may contain the personal number
@@ -282,13 +330,13 @@ data CompleteFITupasEIDServiceTransactionData = CompleteFITupasEIDServiceTransac
   , eidtupasSSN :: !(Maybe Text)  -- seems to be absent for 'legal persons'
   } deriving (Eq, Ord, Show)
 
-data CompleteNLIDINEIDServiceTransactionData = CompleteNLIDINEIDServiceTransactionData
+data NLIDINEIDServiceCompletionData = NLIDINEIDServiceCompletionData
   { eiditdName :: T.Text
   , eiditdBirthDate :: T.Text
   , eiditdCustomerID :: T.Text
   } deriving (Eq, Ord, Show)
 
-data CompleteDKNemIDEIDServiceTransactionData = CompleteDKNemIDEIDServiceTransactionData
+data DKNemIDEIDServiceCompletionData = DKNemIDEIDServiceCompletionData
   { eidnidInternalProvider :: !EIDServiceDKNemIDInternalProvider
   , eidnidSSN :: !T.Text
   , eidnidBirthDate :: !T.Text
@@ -297,7 +345,7 @@ data CompleteDKNemIDEIDServiceTransactionData = CompleteDKNemIDEIDServiceTransac
   , eidnidPid :: !T.Text
   } deriving (Eq, Ord, Show)
 
-data CompleteNOBankIDEIDServiceTransactionData = CompleteNOBankIDEIDServiceTransactionData
+data NOBankIDEIDServiceCompletionData = NOBankIDEIDServiceCompletionData
   { eidnobidInternalProvider :: !EIDServiceNOBankIDInternalProvider
   , eidnobidBirthDate :: !(Maybe T.Text)
   , eidnobidCertificate :: !(Maybe T.Text)

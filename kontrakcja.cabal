@@ -332,6 +332,12 @@ Library
                  , EID.EIDService.JSON
                  , EID.EIDService.Migrations
                  , EID.EIDService.Model
+                 , EID.EIDService.Provider
+                 , EID.EIDService.Provider.DKNemID
+                 , EID.EIDService.Provider.FITupas
+                 , EID.EIDService.Provider.NLIDIN
+                 , EID.EIDService.Provider.NOBankID
+                 , EID.EIDService.Provider.Verimi
                  , EID.EIDService.Tables
                  , EID.EIDService.Types
                  , EventStream

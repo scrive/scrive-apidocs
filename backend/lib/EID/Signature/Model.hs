@@ -226,7 +226,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceFITupasSignature 
 -- | Insert bank id signature for a given signatory or replace the existing one.
 data MergeEIDServiceIDINSignature = MergeEIDServiceIDINSignature SignatoryLinkID EIDServiceNLIDINSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINSignature () where
-  dbUpdate (MergeEIDServiceIDINSignature slid (EIDServiceNLIDINSignature CompleteNLIDINEIDServiceTransactionData {..}))
+  dbUpdate (MergeEIDServiceIDINSignature slid (EIDServiceNLIDINSignature NLIDINEIDServiceCompletionData {..}))
     = do
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
@@ -326,7 +326,7 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       , netsdkSignatoryIP   = fromMaybe "" msignatory_ip
       }
     EIDServiceIDIN -> EIDServiceIDINSignature_ $ EIDServiceNLIDINSignature
-      CompleteNLIDINEIDServiceTransactionData
+      NLIDINEIDServiceCompletionData
         { eiditdName       = fromJust msignatory_name
         , eiditdBirthDate  = fromJust msignatory_dob
         , eiditdCustomerID = fromJust msignatory_personal_number

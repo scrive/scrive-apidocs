@@ -207,7 +207,11 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
         $ object [identifier signingSignatoryID, "provider" .= showt provider]
       throwE $ Failed Remove
 
-    processCompleteIDINTransaction ds@DocumentSigning {..} est ctd now = do
+    processCompleteIDINTransaction ds@DocumentSigning {..} est ct now = do
+      let mctd = case ct of
+            CompleteNLIDINEIDServiceTransaction _ mctd' -> mctd'
+            _ -> Nothing
+      ctd <- whenNothing mctd $ throwE (Failed Remove)
       dbUpdate
         . MergeEIDServiceIDINSignature signingSignatoryID
         $ EIDServiceNLIDINSignature ctd
@@ -215,29 +219,31 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       signFromESignature ds now
       chargeForItemSingle CIIDINSignature . documentid =<< theDocument
 
+    processCompleteFITupasTransaction ds@DocumentSigning {..} est ct now = do
+      let mctd = case ct of
+            CompleteFITupasEIDServiceTransaction _ mctd' -> mctd'
+            _ -> Nothing
+      FITupasEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
+      let sig = EIDServiceFITupasSignature
+            { eidServiceFITupasSigSignatoryName  = eidtupasName
+            , eidServiceFITupasSigPersonalNumber = eidtupasSSN
+            , eidServiceFITupasSigDateOfBirth    = eidtupasBirthDate
+            }
 
-    processCompleteFITupasTransaction ds@DocumentSigning {..} est CompleteFITupasEIDServiceTransactionData {..} now
-      = do
-        let sig = EIDServiceFITupasSignature
-              { eidServiceFITupasSigSignatoryName  = eidtupasName
-              , eidServiceFITupasSigPersonalNumber = eidtupasSSN
-              , eidServiceFITupasSigDateOfBirth    = eidtupasBirthDate
-              }
+      msl <- getSigLinkFor signingSignatoryID <$> theDocument
+      let personalNumberMatchesSiglink
+            | Just sl <- msl
+            = T.null (getPersonalNumber sl)
+              || isNothing eidtupasSSN -- 'legal persons' don't always have an SSN
+              || (getPersonalNumber sl == fromMaybe "" eidtupasSSN)
+            | otherwise
+            = False
+      unless personalNumberMatchesSiglink $ throwE (Failed Remove)
 
-        msl <- getSigLinkFor signingSignatoryID <$> theDocument
-        let personalNumberMatchesSiglink
-              | Just sl <- msl
-              = T.null (getPersonalNumber sl)
-                || isNothing eidtupasSSN -- 'legal persons' don't always have an SSN
-                || (getPersonalNumber sl == fromMaybe "" eidtupasSSN)
-              | otherwise
-              = False
-        unless personalNumberMatchesSiglink $ throwE (Failed Remove)
-
-        dbUpdate $ MergeEIDServiceFITupasSignature signingSignatoryID sig
-        logInfo_ . ("EidHub FI TUPAS Sign succeeded: " <>) . showt $ est
-        signFromESignature ds now
-        chargeForItemSingle CIFITupasSignature . documentid =<< theDocument
+      dbUpdate $ MergeEIDServiceFITupasSignature signingSignatoryID sig
+      logInfo_ . ("EidHub FI TUPAS Sign succeeded: " <>) . showt $ est
+      signFromESignature ds now
+      chargeForItemSingle CIFITupasSignature . documentid =<< theDocument
 
 
 handleCgiGrpBankID
@@ -334,11 +340,11 @@ handleEidService
      )
   => (  EIDServiceConf
      -> EIDServiceTransactionID
-     -> ExceptT Result m (Maybe EIDServiceTransactionStatus, Maybe ctd)
+     -> ExceptT Result m (Maybe CompleteEIDServiceTransaction)
      )
   -> (  DocumentSigning
-     -> EIDServiceTransaction
-     -> ctd
+     -> EIDServiceTransactionFromDB
+     -> CompleteEIDServiceTransaction
      -> UTCTime
      -> ExceptT Result m ()
      )
@@ -369,16 +375,16 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
       $ GetEIDServiceTransactionNoSessionIDGuard signingSignatoryID EIDServiceAuthToSign
     whenNothing mest $ throwE (Failed Remove)
 
-  (mts, mctd) <- check conf (estID est)
-  ts          <- whenNothing mts $ throwE (Failed Remove)
+  mct <- check conf (estID est)
+  ct  <- whenNothing mct $ throwE (Failed Remove)
 
   let mergeWithStatus newStatus =
         dbUpdate . MergeEIDServiceTransaction $ est { estStatus = newStatus }
 
+  let ts = transactionStatus ct
   case ts of
     EIDServiceTransactionStatusCompleteAndSuccess -> do
-      ctd <- whenNothing mctd $ throwE (Failed Remove)
-      process ds est ctd now
+      process ds est ct now
       mergeWithStatus EIDServiceTransactionStatusCompleteAndSuccess
       return $ Ok Remove
 

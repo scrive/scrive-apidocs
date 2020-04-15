@@ -28,10 +28,10 @@ selectEIDServiceTransaction =
   ]
 
 -- | Insert new transaction or replace the existing one.
-newtype MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransaction
+newtype MergeEIDServiceTransaction = MergeEIDServiceTransaction EIDServiceTransactionFromDB
 instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeEIDServiceTransaction () where
-  dbUpdate (MergeEIDServiceTransaction EIDServiceTransaction {..}) = do
+  dbUpdate (MergeEIDServiceTransaction EIDServiceTransactionFromDB {..}) = do
     runQuery_ . sqlInsert "eid_service_transactions" $ do
       setFields
       sqlOnConflictOnColumns ["signatory_link_id", "auth_kind"] . sqlUpdate "" $ do
@@ -49,13 +49,13 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
 
 data GetEIDServiceTransactionNoSessionIDGuard = GetEIDServiceTransactionNoSessionIDGuard SignatoryLinkID EIDServiceAuthenticationKind
 instance (MonadDB m, MonadThrow m)
-  => DBQuery m GetEIDServiceTransactionNoSessionIDGuard (Maybe EIDServiceTransaction) where
+  => DBQuery m GetEIDServiceTransactionNoSessionIDGuard (Maybe EIDServiceTransactionFromDB) where
   dbQuery (GetEIDServiceTransactionNoSessionIDGuard slid eidAuthKind) =
     getEIDServiceTransactionInternal Nothing slid eidAuthKind
 
 data GetEIDServiceTransactionGuardSessionID = GetEIDServiceTransactionGuardSessionID SessionID SignatoryLinkID EIDServiceAuthenticationKind
 instance (MonadDB m, MonadThrow m)
-  => DBQuery m GetEIDServiceTransactionGuardSessionID (Maybe EIDServiceTransaction) where
+  => DBQuery m GetEIDServiceTransactionGuardSessionID (Maybe EIDServiceTransactionFromDB) where
   dbQuery (GetEIDServiceTransactionGuardSessionID sessionId slid eidAuthKind) = do
     getEIDServiceTransactionInternal (Just sessionId) slid eidAuthKind
 
@@ -64,7 +64,7 @@ getEIDServiceTransactionInternal
   => Maybe SessionID
   -> SignatoryLinkID
   -> EIDServiceAuthenticationKind
-  -> m (Maybe EIDServiceTransaction)
+  -> m (Maybe EIDServiceTransactionFromDB)
 getEIDServiceTransactionInternal mSessionId slid eidAuthKind = do
   runQuery_ . sqlSelect "eid_service_transactions" $ do
     mapM_ sqlResult selectEIDServiceTransaction
@@ -92,13 +92,13 @@ fetchEIDServiceTransaction
      , EIDServiceTransactionProvider
      , UTCTime
      )
-  -> EIDServiceTransaction
+  -> EIDServiceTransactionFromDB
 fetchEIDServiceTransaction (estid, status, slid, auth_kind, session_id, provider, deadline)
-  = EIDServiceTransaction { estID              = estid
-                          , estStatus          = status
-                          , estSignatoryLinkID = slid
-                          , estAuthKind        = auth_kind
-                          , estProvider        = provider
-                          , estSessionID       = session_id
-                          , estDeadline        = deadline
-                          }
+  = EIDServiceTransactionFromDB { estID              = estid
+                                , estStatus          = status
+                                , estSignatoryLinkID = slid
+                                , estAuthKind        = auth_kind
+                                , estProvider        = provider
+                                , estSessionID       = session_id
+                                , estDeadline        = deadline
+                                }

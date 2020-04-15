@@ -809,7 +809,7 @@ instance Arbitrary EIDServiceNLIDINSignature where
     a <- arbText 20 30
     c <- arbText 10 20
     d <- arbText 10 10
-    return . EIDServiceNLIDINSignature $ CompleteNLIDINEIDServiceTransactionData
+    return . EIDServiceNLIDINSignature $ NLIDINEIDServiceCompletionData
       { eiditdName       = a
       , eiditdBirthDate  = c
       , eiditdCustomerID = d

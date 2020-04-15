@@ -6,11 +6,10 @@ module EID.EIDService.Communication (
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
-import Data.Aeson as A ((.=), object)
+import Data.Aeson
 import Data.Aeson.Encoding (encodingToLazyByteString)
 import Log
 import System.Exit
-import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 
@@ -78,7 +77,7 @@ createTransactionWithEIDService
   -> m EIDServiceTransactionID
 createTransactionWithEIDService conf providerParams = do
   mtid <-
-    fmap A.decode
+    fmap decode
     . cURLCall conf Create providerParams "new"
     . Just
     . encodingToLazyByteString
@@ -98,7 +97,7 @@ startTransactionWithEIDService
 startTransactionWithEIDService conf provider tid = localData [identifier tid] $ do
   murl <- extractEIDServiceURL <$> do
     let endpoint = fromEIDServiceTransactionID tid <> "/start"
-    cURLCall conf Start provider endpoint . Just . A.encode . A.toJSON $ object []
+    cURLCall conf Start provider endpoint . Just . encode . toJSON $ object []
   case murl of
     Nothing -> do
       logAttention_ "Failed to parse start transaction response"
@@ -107,17 +106,11 @@ startTransactionWithEIDService conf provider tid = localData [identifier tid] $ 
     Just url -> return url
 
 getTransactionFromEIDService
-  :: (MonadLog m, MonadBaseControl IO m, HasEIDServiceName a, FromCompletionDataJSON b)
+  :: (MonadLog m, MonadBaseControl IO m, HasEIDServiceName a)
   => EIDServiceConf
   -> a
   -> EIDServiceTransactionID
-  -> m (Maybe EIDServiceTransactionStatus, Maybe b)
+  -> m (Maybe CompleteEIDServiceTransaction)
 getTransactionFromEIDService conf provider tid = localData [identifier tid] $ do
   let endpoint = fromEIDServiceTransactionID tid
-  jsonBS <- cURLCall conf Fetch provider endpoint Nothing
-  let mstatus = A.decode jsonBS
-  case mstatus of
-    Just EIDServiceTransactionStatusCompleteAndSuccess ->
-      return (mstatus, decodeCompleteTransactionData jsonBS)
-    Just _ -> return (mstatus, Nothing)
-    _      -> return (Nothing, Nothing)
+  decodeCompleteTransaction <$> cURLCall conf Fetch provider endpoint Nothing

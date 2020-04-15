@@ -32,7 +32,7 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryFieldID
 import Doc.TestInvariants
-import EID.EIDService.Types (CompleteNLIDINEIDServiceTransactionData(..))
+import EID.EIDService.Types (NLIDINEIDServiceCompletionData(..))
 import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import File.FileID
@@ -3444,8 +3444,7 @@ testSinatoryNameMatch = do
                           ]
       }
 
-    mkTransactionData name = CompleteNLIDINEIDServiceTransactionData
-      { eiditdName       = name
-      , eiditdBirthDate  = ""
-      , eiditdCustomerID = ""
-      }
+    mkTransactionData name = NLIDINEIDServiceCompletionData { eiditdName       = name
+                                                            , eiditdBirthDate  = ""
+                                                            , eiditdCustomerID = ""
+                                                            }

@@ -1,11 +1,12 @@
 module EID.EIDService.JSON (
     encodeNewTransactionRequest
   , extractEIDServiceURL
-  , FromCompletionDataJSON(..)
+  , decodeCompleteTransaction
   ) where
 
 import Data.Aeson
 import Data.Aeson.Encoding
+import Data.Aeson.Types
 import Data.HashMap.Lazy
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
@@ -54,10 +55,26 @@ instance FromJSON EIDServiceURL where
 extractEIDServiceURL :: BSL.ByteString -> Maybe Text
 extractEIDServiceURL = fmap (\(EIDServiceURL t) -> t) . decode
 
-class FromCompletionDataJSON a where
-  decodeCompleteTransactionData :: BSL.ByteString -> Maybe a
+newtype CompleteTransaction = CompleteTransaction CompleteEIDServiceTransaction
 
-newtype VerimiCompletionData = VerimiCompletionData CompleteVerimiEIDServiceTransactionData
+instance FromJSON CompleteTransaction where
+  parseJSON outer = CompleteTransaction <$> do
+    status <- parseJSON outer
+    withObject "object" (.: "provider") outer >>= \case
+      "verimi"    -> CompleteVerimiEIDServiceTransaction status <$> parseCDJSON outer
+      "nlIDIN"    -> CompleteNLIDINEIDServiceTransaction status <$> parseCDJSON outer
+      "dkNemID"   -> CompleteDKNemIDEIDServiceTransaction status <$> parseCDJSON outer
+      "noBankID"  -> CompleteNOBankIDEIDServiceTransaction status <$> parseCDJSON outer
+      "fiTupas"   -> CompleteFITupasEIDServiceTransaction status <$> parseCDJSON outer
+      (_ :: Text) -> fail "Unrecognised provider"
+
+decodeCompleteTransaction :: BSL.ByteString -> Maybe CompleteEIDServiceTransaction
+decodeCompleteTransaction = fmap (\(CompleteTransaction t) -> t) . decode
+
+class FromCompletionDataJSON a where
+  parseCDJSON :: Value -> Parser (Maybe a)
+
+newtype VerimiCompletionData = VerimiCompletionData VerimiEIDServiceCompletionData
 
 instance FromJSON VerimiCompletionData where
   parseJSON outer = do
@@ -71,16 +88,16 @@ instance FromJSON VerimiCompletionData where
                 (\o -> do
                   emailVerified <- o .: "emailVerified"
                   unless emailVerified $ fail "Email is not verified"
-                  CompleteVerimiEIDServiceTransactionData
-                    <$> (o .: "name")
-                    <*> (o .: "email")
+                  VerimiEIDServiceCompletionData <$> (o .: "name") <*> (o .: "email")
                 )
           )
 
-instance FromCompletionDataJSON CompleteVerimiEIDServiceTransactionData where
-  decodeCompleteTransactionData = fmap (\(VerimiCompletionData t) -> t) . decode
+instance FromCompletionDataJSON VerimiEIDServiceCompletionData where
+  parseCDJSON val = do
+    mcd <- parseJSON val <|> return Nothing
+    return $ (\(VerimiCompletionData t) -> t) <$> mcd
 
-newtype NLIDINCompletionData = NLIDINCompletionData CompleteNLIDINEIDServiceTransactionData
+newtype NLIDINCompletionData = NLIDINCompletionData NLIDINEIDServiceCompletionData
 
 instance FromJSON NLIDINCompletionData where
   parseJSON outer = do
@@ -101,18 +118,19 @@ instance FromJSON NLIDINCompletionData where
                         Just tussenvoegsel ->
                           initials <> " " <> tussenvoegsel <> " " <> surname
                         Nothing -> initials <> " " <> surname
-                  return CompleteNLIDINEIDServiceTransactionData
-                    { eiditdName       = name
-                    , eiditdBirthDate  = dob
-                    , eiditdCustomerID = customerID
-                    }
+                  return NLIDINEIDServiceCompletionData { eiditdName       = name
+                                                        , eiditdBirthDate  = dob
+                                                        , eiditdCustomerID = customerID
+                                                        }
                 )
           )
 
-instance FromCompletionDataJSON CompleteNLIDINEIDServiceTransactionData where
-  decodeCompleteTransactionData = fmap (\(NLIDINCompletionData t) -> t) . decode
+instance FromCompletionDataJSON NLIDINEIDServiceCompletionData where
+  parseCDJSON val = do
+    mcd <- parseJSON val <|> return Nothing
+    return $ (\(NLIDINCompletionData t) -> t) <$> mcd
 
-newtype DKNemIDCompletionData = DKNemIDCompletionData CompleteDKNemIDEIDServiceTransactionData
+newtype DKNemIDCompletionData = DKNemIDCompletionData DKNemIDEIDServiceCompletionData
 
 instance FromJSON DKNemIDCompletionData where
   parseJSON outer = do
@@ -137,14 +155,13 @@ instance FromJSON DKNemIDCompletionData where
                   (cer, dn) <- o .: "certificateData" >>= withObject
                     "object"
                     (\cd -> (,) <$> cd .: "certificate" <*> cd .: "distinguishedName")
-                  return CompleteDKNemIDEIDServiceTransactionData
-                    { eidnidInternalProvider  = ip
-                    , eidnidSSN               = ssn
-                    , eidnidBirthDate         = dob
-                    , eidnidCertificate       = cer
-                    , eidnidDistinguishedName = dn
-                    , eidnidPid               = pid
-                    }
+                  return DKNemIDEIDServiceCompletionData { eidnidInternalProvider  = ip
+                                                         , eidnidSSN               = ssn
+                                                         , eidnidBirthDate         = dob
+                                                         , eidnidCertificate       = cer
+                                                         , eidnidDistinguishedName = dn
+                                                         , eidnidPid               = pid
+                                                         }
                 )
           )
     where
@@ -158,10 +175,12 @@ instance FromJSON DKNemIDCompletionData where
         Just "EmployeeKeyFile" -> return EIDServiceNemIDKeyFile
         Just t -> fail $ "Unknown internal provider returned from EID service: " <> t
 
-instance FromCompletionDataJSON CompleteDKNemIDEIDServiceTransactionData where
-  decodeCompleteTransactionData = fmap (\(DKNemIDCompletionData t) -> t) . decode
+instance FromCompletionDataJSON DKNemIDEIDServiceCompletionData where
+  parseCDJSON val = do
+    mcd <- parseJSON val <|> return Nothing
+    return $ (\(DKNemIDCompletionData t) -> t) <$> mcd
 
-newtype NOBankIDCompletionData = NOBankIDCompletionData CompleteNOBankIDEIDServiceTransactionData
+newtype NOBankIDCompletionData = NOBankIDCompletionData NOBankIDEIDServiceCompletionData
 
 instance FromJSON NOBankIDCompletionData where
   parseJSON outer = do
@@ -184,7 +203,7 @@ instance FromJSON NOBankIDCompletionData where
                   (mcer, dn) <- o .: "certificateData" >>= withObject
                     "object"
                     (\cd -> (,) <$> cd .:? "certificate" <*> cd .: "distinguishedName")
-                  return CompleteNOBankIDEIDServiceTransactionData
+                  return NOBankIDEIDServiceCompletionData
                     { eidnobidInternalProvider        = if usedMobileBankID
                                                           then EIDServiceNOBankIDMobile
                                                           else EIDServiceNOBankIDStandard
@@ -199,10 +218,12 @@ instance FromJSON NOBankIDCompletionData where
                 )
           )
 
-instance FromCompletionDataJSON CompleteNOBankIDEIDServiceTransactionData where
-  decodeCompleteTransactionData = fmap (\(NOBankIDCompletionData t) -> t) . decode
+instance FromCompletionDataJSON NOBankIDEIDServiceCompletionData where
+  parseCDJSON val = do
+    mcd <- parseJSON val <|> return Nothing
+    return $ (\(NOBankIDCompletionData t) -> t) <$> mcd
 
-newtype FITupasCompletionData = FITupasCompletionData CompleteFITupasEIDServiceTransactionData
+newtype FITupasCompletionData = FITupasCompletionData FITupasEIDServiceCompletionData
 
 instance FromJSON FITupasCompletionData where
   parseJSON outer = do
@@ -222,7 +243,7 @@ instance FromJSON FITupasCompletionData where
                     (\cd -> (,) <$> cd .: "birthdate" <*> cd .: "name")
                   dn <- o .: "certificateData" >>= withObject "object"
                                                               (.: "distinguishedName")
-                  return CompleteFITupasEIDServiceTransactionData
+                  return FITupasEIDServiceCompletionData
                     { eidtupasName              = name
                     , eidtupasBirthDate         = dob
                     , eidtupasDistinguishedName = dn
@@ -233,5 +254,7 @@ instance FromJSON FITupasCompletionData where
                 )
           )
 
-instance FromCompletionDataJSON CompleteFITupasEIDServiceTransactionData where
-  decodeCompleteTransactionData = fmap (\(FITupasCompletionData t) -> t) . decode
+instance FromCompletionDataJSON FITupasEIDServiceCompletionData where
+  parseCDJSON val = do
+    mcd <- parseJSON val <|> return Nothing
+    return $ (\(FITupasCompletionData t) -> t) <$> mcd

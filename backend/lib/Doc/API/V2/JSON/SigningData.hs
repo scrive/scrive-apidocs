@@ -89,7 +89,7 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                  else ["signatory_personal_number" .= netsdkSignatorySSN]
             )
         ]
-      Right (EIDServiceIDINSignature_ (EIDServiceNLIDINSignature details@CompleteNLIDINEIDServiceTransactionData {..}))
+      Right (EIDServiceIDINSignature_ (EIDServiceNLIDINSignature details@NLIDINEIDServiceCompletionData {..}))
         -> [ "nl_idin_data" .= object
                (  [ "signatory_name" .= eiditdName
                   , "signatory_customer_id" .= eiditdCustomerID
@@ -134,8 +134,7 @@ joinText a  b  = a <> " " <> b
 --   Match - if name matches exactly
 --   Misspelled - if there is 1~2 letters difference in the last name
 --   Mismatch - if the initials don't match or if more misspellings in the last name.
-matchSignatoryName
-  :: SignatoryLink -> CompleteNLIDINEIDServiceTransactionData -> NameMatchResult
+matchSignatoryName :: SignatoryLink -> NLIDINEIDServiceCompletionData -> NameMatchResult
 matchSignatoryName signatory details = matchSignatoryName' slFullName
                                                            eidInitials
                                                            eidLastName
