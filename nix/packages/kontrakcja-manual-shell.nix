@@ -1,6 +1,7 @@
 {
   nixpkgs
 , haskellPackages
+, extra-run-deps
 , kontrakcja-nix-src
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
@@ -11,7 +12,9 @@ let
   sourceRoot = builtins.toPath(../..);
 
   run-deps = import (kontrakcja-nix-src + /packages/run-deps.nix)
-    { inherit nixpkgs haskellPackages; };
+    { inherit nixpkgs haskellPackages extra-run-deps;
+      wrapCabal = false;
+    };
 
   ghc = haskellPackages.ghcWithPackages
     (pkg: []);

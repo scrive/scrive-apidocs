@@ -37,6 +37,10 @@ cabal.project.local~
 *.bak
 *.*\~
 
+result
+result-*
+pdftools-lambda.local.json
+
 frontend/app/localization/*.js
 
 \#*\#

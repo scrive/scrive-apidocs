@@ -2,6 +2,7 @@
   nixpkgs
 , haskellPackages
 , nixpkgs-src
+, extra-run-deps
 , kontrakcja-nix-src
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
@@ -16,7 +17,9 @@ let
   };
 
   run-deps = import (kontrakcja-nix-src + /packages/run-deps.nix)
-    { inherit nixpkgs haskellPackages; };
+    { inherit nixpkgs haskellPackages extra-run-deps;
+      wrapCabal = true;
+    };
 
   inherit (release) kontrakcja kontrakcja-frontend;
 

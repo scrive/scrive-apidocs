@@ -8,7 +8,7 @@ let
     else "en_US.UTF-8"
     ;
 in
-import ../../nix/release/ghc-8.8.nix {
+import ./nix/release/ghc-8.8.nix {
   inherit useLocal localeLang extra-run-deps;
   workspaceRoot = builtins.toPath(./.);
 }

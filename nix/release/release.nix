@@ -1,5 +1,6 @@
 release-path:
 { useLocal ? false
+, extra-run-deps ? pkgs: hsPkgs: []
 , nixpkgs ? import ./nixpkgs.nix useLocal { }
 , localeLang ? "en_US.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
@@ -23,17 +24,22 @@ let
   };
 
   manual-shell = import ../packages/kontrakcja-manual-shell.nix {
-    inherit nixpkgs kontrakcja-nix-src
+    inherit nixpkgs kontrakcja-nix-src extra-run-deps
       workspaceRoot localeLang haskellPackages;
   };
 
   dev-shell = import ../packages/kontrakcja-dev-shell.nix {
-    inherit nixpkgs kontrakcja-nix-src nixpkgs-src workspaceRoot localeLang;
+    inherit nixpkgs extra-run-deps
+      kontrakcja-nix-src nixpkgs-src
+      workspaceRoot localeLang;
+
     haskellPackages = haskellPackages;
   };
 
   dev-shell-optimized = import ../packages/kontrakcja-dev-shell.nix {
-    inherit nixpkgs kontrakcja-nix-src nixpkgs-src workspaceRoot localeLang;
+    inherit nixpkgs kontrakcja-nix-src extra-run-deps
+      nixpkgs-src workspaceRoot localeLang;
+
     haskellPackages = prodHaskellPackages;
   };
 
@@ -43,7 +49,7 @@ let
 
   production-shell = import ../packages/kontrakcja-production-shell.nix {
     inherit nixpkgs kontrakcja-nix-src nixpkgs-src
-      workspaceRoot localeLang;
+      workspaceRoot localeLang extra-run-deps;
 
     haskellPackages = prodHaskellPackages;
   };
