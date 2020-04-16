@@ -1,12 +1,14 @@
 module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     ( Address
     , PadAppMode(..)
+    , SealingMethod(..)
     , Settings
     , SmsProvider(..)
     , UserGroup
     , afterSaved
     , decoder
     , enumPadAppMode
+    , enumSealingMethod
     , enumSmsProvider
     , formValues
     , getInternalTag
@@ -19,7 +21,7 @@ module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     )
 
 import Dict as D
-import EnumExtra exposing (Enum, findEnumValue, makeEnum)
+import EnumExtra as Enum exposing (Enum, findEnumValue, makeEnum)
 import Json.Decode as JD exposing (Decoder)
 import Json.Decode.Pipeline as DP
 import Json.Encode as JE
@@ -119,6 +121,21 @@ setStringField name value ug =
 
         "parentID" ->
             { ug | parentID = stringNonEmpty value }
+
+        "padAppMode" ->
+            modifySettings (\s ->
+              let mNewPadAppMode = Enum.fromString enumPadAppMode value
+              in { s | padAppMode = M.withDefault s.padAppMode mNewPadAppMode }) ug
+
+        "smsProvider" ->
+            modifySettings (\s ->
+              let mNewSmsProvider = Enum.fromString enumSmsProvider value
+              in { s | smsProvider = M.withDefault s.smsProvider mNewSmsProvider }) ug
+
+        "sealingMethod" ->
+            modifySettings (\s ->
+              let mNewSealingMethod = Enum.fromString enumSealingMethod value
+              in { s | sealingMethod = M.withDefault s.sealingMethod mNewSealingMethod }) ug
 
         _ ->
             ug
@@ -253,6 +270,7 @@ type alias Settings =
     , documentSessionTimeout : Maybe Int
     , portalUrl : Maybe String
     , eidServiceToken : Maybe String
+    , sealingMethod : SealingMethod
     }
 
 
@@ -278,6 +296,7 @@ settingsDecoder =
         |> DP.required "documentsessiontimeout" (JD.int |> JD.nullable)
         |> DP.required "portalurl" (JD.string |> JD.nullable)
         |> DP.required "eidservicetoken" (JD.string |> JD.nullable)
+        |> DP.required "sealingmethod" (JD.string |> JD.andThen sealingMethodDecoder)
 
 
 type alias ParentUserGroup =
@@ -299,6 +318,26 @@ tagDecoder =
         (JD.field "name" JD.string)
         (JD.field "value" JD.string)
 
+
+-- Sealing method
+type SealingMethod = GuardTime | Pades
+
+enumSealingMethod : Enum SealingMethod
+enumSealingMethod =
+  let toString sm = case sm of
+        GuardTime -> "guardtime"
+        Pades -> "pades"
+      toHumanString sm = case sm of
+        GuardTime -> "GuardTime"
+        Pades -> "PAdES"
+      allValues = [GuardTime, Pades]
+  in makeEnum allValues toString toHumanString
+
+sealingMethodDecoder : String -> Decoder SealingMethod
+sealingMethodDecoder sealingMethodString =
+    case findEnumValue enumSealingMethod sealingMethodString of
+        Err _ -> JD.fail <| "Cannot parse sealing method: " ++ sealingMethodString
+        Ok sealingMethod -> JD.succeed sealingMethod
 
 
 -- PAD APP MODE
@@ -457,6 +496,7 @@ formValuesSettings settings =
     , ( "companydocumentsessiontimeout", fromIntWithEmpty settings.documentSessionTimeout )
     , ( "companyportalurl", M.withDefault "" settings.portalUrl )
     , ( "companyeidservicetoken", M.withDefault "" settings.eidServiceToken )
+    , ( "companysealingmethod", Enum.toString enumSealingMethod settings.sealingMethod )
     ]
         ++ L.filterMap identity
             [ mField identity ( "companycgiserviceid", settings.cgiServiceID )

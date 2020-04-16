@@ -563,6 +563,13 @@ viewUserGroup model ug address settings =
                 (M.withDefault "" settings.eidServiceToken)
                 (SetStringField "eidServiceToken")
                 [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "PAdES sealing"
+                "If enabled, use PAdES instead of GuardTime sealing."
+                (settings.sealingMethod == UserGroup.Pades)
+                (\b -> SetStringField "sealingMethod"
+                       <| Enum.toString UserGroup.enumSealingMethod
+                       <| if b then UserGroup.Pades else UserGroup.GuardTime)
+                [ readonly ug.settingsIsInherited ]
             ]
         , Grid.row [ Row.leftSm ]
             [ Grid.col [ Col.sm12 ]
