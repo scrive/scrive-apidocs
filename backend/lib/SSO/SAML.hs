@@ -1,8 +1,7 @@
-module SSO.SAML (getVerifiedAssertionsFromSAML, getIDPID, parseSAMLXML, getFirstNonEmptyAttribute, getNonEmptyNameID) where
+module SSO.SAML (getVerifiedAssertionsFromSAML, getIDPID, parseSAMLXML, getFirstNonEmptyAttribute, getNonEmptyNameID, SAMLException(..)) where
 
 import Control.Exception
 import Control.Monad.Base
-import Data.Bifunctor
 import Data.List.NonEmpty (toList)
 import Text.XML.HXT.Core ((/>), (>>>))
 import qualified Data.ByteString.Base64 as B64
@@ -17,31 +16,37 @@ import qualified SAML2.XML.Signature as SIG
 import qualified Text.XML.HXT.Core as HXT
 import qualified Text.XML.HXT.HTTP as HXT (withHTTP)
 
-parseSAMLXML :: (MonadBase IO) m => Text -> m (Either String HXT.XmlTree)
+data SAMLException = XMLParseException String | SignatureVerificationException String
+  deriving Show
+instance Exception SAMLException
+
+parseSAMLXML :: MonadBase IO m => Text -> m HXT.XmlTree
 parseSAMLXML txt = liftBase $ do
   let decoded = BSU.toString . B64.decodeLenient . BSU.fromString . T.unpack $ txt
-  eXmlTree <- try
+  catch
     (Prelude.head <$> HXT.runX
       (HXT.readString
         [HXT.withCheckNamespaces HXT.yes, HXT.withHTTP [], HXT.withRemoveWS HXT.no]
         decoded
       )
     )
-  return $ first (\e -> show (e :: IOException)) eXmlTree
+    (\e -> throw $ XMLParseException (show (e :: IOException)))
 
 getVerifiedAssertionsFromSAML
-  :: (MonadBase IO) m => SIG.PublicKeys -> HXT.XmlTree -> m (Either String [A.Assertion])
-getVerifiedAssertionsFromSAML publicKeys xmlTree = liftBase $ do
-  saml <- SIG.verifySAMLProtocol' publicKeys xmlTree
+  :: MonadBase IO m => SIG.PublicKeys -> HXT.XmlTree -> m [A.Assertion]
+getVerifiedAssertionsFromSAML publicKeys xmlTree = do
+  saml <- optionallyVerifyResponseSignature publicKeys xmlTree
   let assertions = SAMLP.responseAssertions saml
   results <- E.partitionEithers <$> mapM verifySAMLAssertion assertions
   case results of
-    ([]    , verifiedAssertions) -> return . Right $ verifiedAssertions
-    (errors, _                 ) -> return . Left . unwords $ errors
+    ([], verifiedAssertions) -> return verifiedAssertions
+    (errors, _) -> throw . SignatureVerificationException . unwords $ errors
   where
     verifySAMLAssertion
-      :: A.PossiblyEncrypted A.Assertion -> IO (Either String A.Assertion)
-    verifySAMLAssertion (A.NotEncrypted assertion) = do
+      :: (MonadBase IO) m
+      => A.PossiblyEncrypted A.Assertion
+      -> m (Either String A.Assertion)
+    verifySAMLAssertion (A.NotEncrypted assertion) = liftBase $ do
       let id = A.assertionID assertion
       verification <- SIG.verifySignature publicKeys id xmlTree
       case verification of
@@ -51,6 +56,29 @@ getVerifiedAssertionsFromSAML publicKeys xmlTree = liftBase $ do
         _ -> return . Right $ assertion
     verifySAMLAssertion _ =
       return . Left $ "Encryption of assertions is not supported (for now at least)"
+
+optionallyVerifyResponseSignature
+  :: MonadBase IO m => SIG.PublicKeys -> HXT.XmlTree -> m SAMLP.Response
+optionallyVerifyResponseSignature publicKeys xmlTree = do
+  if hasSignature
+    then do
+      liftBase . handle handleErr $ SIG.verifySAMLProtocol' publicKeys xmlTree
+    else either (throw . SignatureVerificationException) return $ XML.docToSAML xmlTree
+  where
+    handleErr :: ErrorCall -> IO SAMLP.Response
+    handleErr = throw . SignatureVerificationException . show
+
+    hasSignature :: Bool
+    hasSignature =
+      case
+          HXT.runLA
+            (HXT.getChildren HXT.>>> HXT.isElem HXT.>>> HXT.hasQName
+              (XML.mkNName SIG.ns "Signature")
+            )
+            xmlTree
+        of
+          [_] -> True
+          _   -> False
 
 getIDPID :: HXT.XmlTree -> Maybe String
 getIDPID = listToMaybe . HXT.runLA
