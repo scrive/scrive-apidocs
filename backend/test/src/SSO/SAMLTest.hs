@@ -23,7 +23,7 @@ samlSignatureTest env = testGroup
 
 readBase64XmlFromFile :: FilePath -> IO HXT.XmlTree
 readBase64XmlFromFile path = do
-  parseSAMLXML . T.decodeUtf8 =<< BS.readFile path
+  parseSAMLXML . decodeUtf8 =<< Data.ByteString.readFile path
 
 readPubKeyRSA :: FilePath -> IO PublicKeys
 readPubKeyRSA path = do
