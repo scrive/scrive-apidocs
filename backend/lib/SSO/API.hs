@@ -4,6 +4,7 @@
 module SSO.API(sso)
   where
 
+import Control.Monad.Catch
 import Data.Foldable (asum)
 import Data.Text as T hiding (map)
 import Data.Time.Clock (addUTCTime, nominalDay)
@@ -47,44 +48,44 @@ sso = choice
   ]
 
 consumeAssertions :: Kontrakcja m => m InternalKontraResponse
-consumeAssertions = guardHttps $ do
-  ssoConf      <- guardJustM getConf
-  samlResponse <- apiV2ParameterObligatory $ ApiV2ParameterText "SAMLResponse"
-  parseSAMLXML samlResponse >>= \case
-    Right xmlTree -> do
-      idpID      <- maybe idpApiErr return (getIDPID xmlTree)
-      publicKeys <- maybe (pubKeyApiErr idpID) return (getPublicKeys ssoConf idpID)
-      getVerifiedAssertionsFromSAML publicKeys xmlTree >>= \case
-        (Left  msg               ) -> apiError $ invalidAuthorizationWithMsg $ T.pack msg
-        (Right verifiedAssertions) -> do
-          guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
-                                          (const currentTime)
-                                          verifiedAssertions
-          (mNameID, memailRaw, mFirstName, mLastName) <- do
-            (maybe noAssertionsApiErr (\a -> do
-                   let maybeGetSomeAttribute as =
-                         T.pack <$> (asum . map (`getFirstNonEmptyAttribute` a) $ as)
-                   return (T.pack <$> (getNonEmptyNameID a),
-                           maybeGetSomeAttribute ["email", "emailaddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
-                           maybeGetSomeAttribute ["firstname", "givenname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"],
-                           maybeGetSomeAttribute ["lastname", "surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"]))
-                   (listToMaybe verifiedAssertions))
-          case memailRaw of
-                  Just emailRaw -> do
-                    let email = Email emailRaw
-                    loginOrCreateNewAccount (SAMLPrincipal
-                                              (fromMaybe "" mFirstName)
-                                              (fromMaybe "" mLastName)
-                                              email
-                                              (fromMaybe "" mNameID))
-                                            idpID
-                  Nothing ->
-                    apiError
-                      . requestFailed
-                      $ "No valid 'email' attribute provided in passed SAML assertions."
-    Left message ->
-      apiError . requestParameterParseError "SAMLResponse" . T.pack $ message
+consumeAssertions = guardHttps . handle handleSAMLException $ do
+  ssoConf            <- guardJustM getConf
+  samlResponse       <- apiV2ParameterObligatory $ ApiV2ParameterText "SAMLResponse"
+  xmlTree            <- parseSAMLXML samlResponse
+  idpID              <- maybe idpApiErr return (getIDPID xmlTree)
+  publicKeys         <- maybe (pubKeyApiErr idpID) return (getPublicKeys ssoConf idpID)
+  verifiedAssertions <- getVerifiedAssertionsFromSAML publicKeys xmlTree
+  guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
+                                  (const currentTime)
+                                  verifiedAssertions
+  (mNameID, memailRaw, mFirstName, mLastName) <- do
+    maybe noAssertionsApiErr (\a -> do
+           let maybeGetSomeAttribute as =
+                 T.pack <$> (asum . map (`getFirstNonEmptyAttribute` a) $ as)
+           return (T.pack <$> getNonEmptyNameID a,
+                   maybeGetSomeAttribute ["email", "emailaddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+                   maybeGetSomeAttribute ["firstname", "givenname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"],
+                   maybeGetSomeAttribute ["lastname", "surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"]))
+           (listToMaybe verifiedAssertions)
+  case memailRaw of
+          Just emailRaw -> do
+            let email = Email emailRaw
+            loginOrCreateNewAccount (SAMLPrincipal
+                                      (fromMaybe "" mFirstName)
+                                      (fromMaybe "" mLastName)
+                                      email
+                                      (fromMaybe "" mNameID))
+                                    idpID
+          Nothing ->
+            apiError
+              . requestFailed
+              $ "No valid 'email' attribute provided in passed SAML assertions."
   where
+    handleSAMLException :: Kontrakcja m => SAMLException -> m InternalKontraResponse
+    handleSAMLException = \case
+                    XMLParseException msg -> apiError . requestParameterParseError "SAMLResponse" . T.pack $ msg
+                    SignatureVerificationException msg -> apiError . invalidAuthorizationWithMsg . T.pack $ msg
+
     guardHttps :: Kontrakcja m => m InternalKontraResponse -> m InternalKontraResponse
     guardHttps action = do
       secure   <- isSecure
@@ -96,6 +97,7 @@ consumeAssertions = guardHttps $ do
 
     noAssertionsApiErr :: (Kontrakcja m) => m a
     noAssertionsApiErr = apiError . requestFailed $ "No verified SAML assertions found."
+
     idpApiErr :: (Kontrakcja m) => m a
     idpApiErr =
       apiError
