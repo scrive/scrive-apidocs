@@ -19,8 +19,8 @@ import API.V2.MonadUtils
 import API.V2.User
 import DB
 import Doc.API.V2.DocumentAccess
-import Doc.API.V2.Guards
 import Doc.DocInfo
+import Doc.DocUtils
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.Tokens.Model
 import Doc.Types.Document (Document(..))
@@ -87,7 +87,7 @@ docAccessControlAndMode
   -> Maybe SignatoryLinkID
   -> m DocumentAccessMode
 docAccessControlAndMode doc mUser mSignatoryId = do
-  author <- getAuthor doc
+  author <- getDocumentAuthor doc
   let userIsAuthor = ((^. #id) <$> mUser) == Just (author ^. #id)
 
   mSignatory <- case mSignatoryId of

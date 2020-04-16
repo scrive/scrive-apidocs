@@ -38,7 +38,6 @@ module Doc.API.V2.Guards (
 -- * Joined guard for read-only functions
 , guardThatDocumentIsReadableBySignatories
 , guardAccessToDocumentWithSignatory
-, getAuthor
 ) where
 
 import Control.Conditional (whenM)
@@ -121,22 +120,11 @@ guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did =
                         "Pending documents can not be trashed or deleted"
       =<< theDocument
 
--- | Internal function used in guardDocumentAuthorIs
--- Helps code reuse and keep error messages consistent
-getAuthor :: Kontrakcja m => Document -> m User
-getAuthor doc = do
-  let msgNoAuthor =
-        "Document doesn't have author signatory link connected with user account"
-  authorUserId <- apiGuardJust (serverError msgNoAuthor) $ getAuthorUserId doc
-  let msgNoUser =
-        "Document doesn't have author user account for the author signatory link"
-  apiGuardJustM (serverError msgNoUser) . dbQuery $ GetUserByIDIncludeDeleted authorUserId
-
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent
 guardDocumentAuthorIs :: Kontrakcja m => (User -> Bool) -> Document -> m ()
 guardDocumentAuthorIs condition doc = do
-  author <- getAuthor doc
+  author <- getDocumentAuthor doc
   unless (condition author) $ do
     apiError documentActionForbidden
 
