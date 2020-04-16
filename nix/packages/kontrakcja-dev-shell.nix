@@ -52,15 +52,7 @@ haskellPackages.shellFor {
     You are now in Nix shell for kontrakcja. Your Nix workspace directory is:
     $KONTRAKCJA_WORKSPACE
 
-    To build kontrakcja, run:
-    cd "\$KONTRAKCJA_WORKSPACE" && ./shake.sh all
-
-    To start dev server, run:
-    cd "\$KONTRAKCJA_WORKSPACE" && ./run-dev.sh
-
-    For more info please refer to README.md
     ***************************************************************************
-
     EOF
   '';
 }

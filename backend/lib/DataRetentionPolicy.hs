@@ -8,7 +8,7 @@ module DataRetentionPolicy
 
 import Data.Int
 import Data.Unjson
-import Optics (Lens', lens)
+import Optics (lens)
 
 import DataRetentionPolicy.Internal
 import Doc.Types.DocumentStatus

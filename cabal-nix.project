@@ -1,1 +1,6 @@
-cabal.project
+packages: . ./Shake
+
+write-ghc-environment-files: never
+
+package all
+    ghc-options: -j4 +RTS -A32m -RTS
