@@ -9,7 +9,7 @@ packages: . Shake
 write-ghc-environment-files: always
 
 repository hackage.scrive.com
-    url: http://hackage.scrive.com
+    url: https://hackage.scrive.com
     secure: False
 
 package kontrakcja
