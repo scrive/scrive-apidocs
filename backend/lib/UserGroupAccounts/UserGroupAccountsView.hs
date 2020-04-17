@@ -59,7 +59,7 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
                   invited
                   "mailNewCompanyUserInvite"
     $ do
-        basicUserGroupInviteFields invited inviter ug
+        basicUserGroupInviteFields invited inviter ugwp
         basicLinkFields (ctx ^. #brandedDomain % #url) link
         brandingMailFields theme
         F.value "creatorname" $ getSmartName inviter
@@ -91,7 +91,7 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
                   invited
                   "mailTakeoverSingleUserInvite"
     $ do
-        basicUserGroupInviteFields invited inviter ug
+        basicUserGroupInviteFields invited inviter ugwp
         basicLinkFields (ctx ^. #brandedDomain % #url) link
         brandingMailFields theme
 
@@ -99,13 +99,13 @@ basicUserGroupInviteFields
   :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b)
   => a
   -> b
-  -> UserGroup
+  -> UserGroupWithParents
   -> Fields m ()
-basicUserGroupInviteFields invited inviter ug = do
+basicUserGroupInviteFields invited inviter ugwp = do
   F.value "invitedname" $ getFullName invited
   F.value "invitedemail" $ getEmail invited
   F.value "invitername" $ getSmartName inviter
-  F.value "companyname" $ ug ^. #name
+  F.value "companyname" $ ugwpAddress ugwp ^. #entityName
 
 basicLinkFields :: TemplatesMonad m => Text -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do

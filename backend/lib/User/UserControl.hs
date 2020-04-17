@@ -310,7 +310,7 @@ handleAccountSetupGet uid token sm = do
         F.value "sndname" $ getLastName user
         F.value "email" $ getEmail user
         F.value "userid" $ show uid
-        F.value "company" $ ugwpUG ugwp ^. #name
+        F.value "company" $ ugwpAddress ugwp ^. #entityName
         F.value "companyAdmin" $ user ^. #isCompanyAdmin
         F.value "companyPosition" $ user ^. #info % #companyPosition
         F.value "mobile" $ getMobile user
