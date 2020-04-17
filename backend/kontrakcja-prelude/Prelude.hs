@@ -68,6 +68,16 @@ import qualified Data.Either.Optics as O
 import qualified Data.Maybe.Optics as O
 import qualified Data.Text as T
 import qualified Data.Tuple.Optics as O
+import qualified Optics as O
+  ( A_Fold, A_Getter, A_Lens, A_Prism, A_ReversedLens, A_ReversedPrism, A_Review
+  , A_Setter, A_Traversal, AffineFold, AffineTraversal, AffineTraversal'
+  , An_AffineFold, An_AffineTraversal, An_Iso, Fold, Getter, Iso, Iso'
+  , IxAffineFold, IxAffineTraversal, IxAffineTraversal', IxFold, IxGetter
+  , IxLens, IxLens', IxSetter, IxSetter', IxTraversal, IxTraversal', Lens, Lens'
+  , NoIx, Optic, Optic', Prism, Prism', ReversedLens, ReversedLens'
+  , ReversedPrism, ReversedPrism', Review, Setter, Setter', Traversal
+  , Traversal', WithIx
+  )
 import qualified "base" Prelude as P
 
 -- | Boolean algebra of functions.
