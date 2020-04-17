@@ -49,10 +49,10 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
     internalError
 
   switchLang (getLang actvuser)
-  ctx      <- getContext
-  phone    <- fromMaybe (getMobile actvuser) <$> getField "phone"
-  ugname   <- fromMaybe (ug ^. #name) <$> getField "company"
-  position <- fromMaybe "" <$> getField "position"
+  ctx        <- getContext
+  phone      <- fromMaybe (getMobile actvuser) <$> getField "phone"
+  entityname <- fromMaybe (ug ^. #name) <$> getField "company"
+  position   <- fromMaybe "" <$> getField "position"
 
   void . dbUpdate $ SetUserInfo
     (actvuser ^. #id)
@@ -63,12 +63,12 @@ handleActivate mfstname msndname (actvuser, ug) signupmethod = do
     & (#companyPosition .~ position)
     )
 
-  void
-    . dbUpdate
-    . UserGroupUpdate
-    $ ug
-    & (#name .~ ugname)
-    & (#address %~ fmap (#entityName .~ ugname))
+  when (actvuser ^. #isCompanyAdmin) $ do
+    void
+      . dbUpdate
+      . UserGroupUpdate
+      $ ug
+      & (#address %~ fmap (#entityName .~ entityname))
 
   void . dbUpdate $ LogHistoryUserInfoChanged
     (actvuser ^. #id)
