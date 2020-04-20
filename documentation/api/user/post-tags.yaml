@@ -12,11 +12,11 @@ post:
   parameters:
     - name: tags
       in: formData
+      type: string
       format: application/json
       required: true
       description: |
         Must be of type [`Tags`](#tags)
-      $ref: ../../scrive_api.yaml#/definitions/Tags
 
   responses:
     200:

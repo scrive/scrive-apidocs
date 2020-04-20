@@ -11,4 +11,6 @@ get:
 
   responses:
     200:
-      $ref: ../../scrive_api.yaml#/definitions/Tags
+      description: 'Returns tags for the given user'
+      schema:
+        $ref: ../../scrive_api.yaml#/definitions/Tags
