@@ -300,7 +300,7 @@ serverNewBuildRules opt exeDynamic cabalFile buildDir = do
 
     cmd (EchoStdout True) "cabal v2-update"
 
-  "cabal.project.local" %>>> do
+  "_build/cabal-configure-with-flags" %>>> do
     sourceRoot <- askOracle (SourceRoot ())
     need ["_build/cabal-update", sourceRoot </> "kontrakcja.cabal"]
 
@@ -310,6 +310,9 @@ serverNewBuildRules opt exeDynamic cabalFile buildDir = do
   "_build/cabal-build" %>>> do
     sourceRoot <- askOracle (SourceRoot ())
     tc         <- askOracle (TeamCity ())
+
+    need ["_build/cabal-configure-with-flags"]
+
     when tc $ do
       -- Need to rebuild on TeamCity because version code for
       -- resources that is generated in src/Version.hs is used for stuff

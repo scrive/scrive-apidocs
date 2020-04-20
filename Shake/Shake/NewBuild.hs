@@ -166,7 +166,7 @@ componentBuildRules sourceRoot newBuild optlevel cabalFile =
           depsSourceDirs = concatMap (componentHsSourceDirs cabalFile)
                                      (componentDependencies cname cabalFile)
       if useNewBuild newBuild
-        then need ["cabal.project.local"]
+        then need ["_build/cabal-configure-with-flags"]
         else need ["dist/setup-config"]
       needPatternsInDirectories sourceRoot
                                 ["//*.hs"]
