@@ -169,6 +169,16 @@ docApiV2Update did = logDocument did . api $ do
     guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation =<< theDocument
+    -- TMP
+    let signatoryHasNaNPlacements sl =
+          any isNaNPlacement . concatMap fieldPlacements $ signatoryfields sl
+        isNaNPlacement FieldPlacement {..} = any
+          isNaN
+          [placementxrel, placementyrel, placementwrel, placementhrel, placementfsrel]
+    (\doc -> when (any signatoryHasNaNPlacements $ documentsignatorylinks doc) $ do
+        logInfo_ "NaN placements detected"
+      )
+      =<< theDocument
     -- Parameters
     documentJSON <- apiV2ParameterObligatory (ApiV2ParameterAeson "document")
     doc          <- theDocument
