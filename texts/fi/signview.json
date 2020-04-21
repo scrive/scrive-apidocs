@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Työntekijän avainkortti",
 "_elegSignDKSignMethodEmployeeKeyfile":"Työntekijän avaintiedosto",
 "_elegSignDKSignMethodPersonalKeycard":"Henkilökohtainen avainkortti",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Kirjaudu iDIN:n avulla",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, allekirjoitat käyttämällä norjalaista BankID:tä. Kun olet allekirjoittanut, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_elegSignNOConfirmationTextNoName":"Allekirjoitat käyttämällä norjalaista BankID:tä. Kun olet allekirjoittanut, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",

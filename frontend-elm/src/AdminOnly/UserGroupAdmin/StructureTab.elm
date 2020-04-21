@@ -112,7 +112,7 @@ viewStructure model (Structure node children) =
     in
     li [] <|
         [ text <| ite (L.isEmpty children) "• " "▼ " -- \u{2022} \u{25BC}
-        , displayItem <| node.name ++ "(" ++ node.ugid ++ ")"
+        , displayItem <| node.name ++ " (" ++ node.ugid ++ ")"
         ]
             ++ (if L.isEmpty children then
                     []

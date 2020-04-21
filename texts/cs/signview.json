@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Zaměstnanecká karta s kódem",
 "_elegSignDKSignMethodEmployeeKeyfile":"Soubor s kódem pro zaměstnance",
 "_elegSignDKSignMethodPersonalKeycard":"Osobní karta s kódem",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Podpis pomocí služby iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, dokument podepíšete pomocí norské služby BankID. Po podepsání dokumentu služba Scrive elektronický podpis zaregistruje.",
 "_elegSignNOConfirmationTextNoName":"Dokument podepíšete pomocí norské služby BankID. Po podepsání dokumentu služba Scrive elektronický podpis zaregistruje.",

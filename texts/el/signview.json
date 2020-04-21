@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Κάρτα-κλειδί εργαζομένου",
 "_elegSignDKSignMethodEmployeeKeyfile":"Αρχείο-κλειδί εργαζομένου",
 "_elegSignDKSignMethodPersonalKeycard":"Προσωπική κάρτα-κλειδί ",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Υπογράψτε μέσω της εφαρμογής iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, θα υπογράψετε χρησιμοποιώντας την εφαρμογή Norwegian BankID. Όταν θα έχετε υπογράψει, η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",
 "_elegSignNOConfirmationTextNoName":"Θα υπογράψετε χρησιμοποιώντας την εφαρμογή Norwegian BankID. Όταν θα έχετε υπογράψει, η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",

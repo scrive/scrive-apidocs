@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Tarjeta del empleado",
 "_elegSignDKSignMethodEmployeeKeyfile":"Archivo de claves del empleado",
 "_elegSignDKSignMethodPersonalKeycard":"Tarjeta personal",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Firmar con iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, va a firmar con el BankID noruego. Cuando haya firmado, su firma será registrada por el servicio de firma electrónica de Scrive.",
 "_elegSignNOConfirmationTextNoName":"Va a firmar usando el BankID noruego. Cuando haya firmado, su firma será registrada por el servicio de firma electrónica de Scrive.",

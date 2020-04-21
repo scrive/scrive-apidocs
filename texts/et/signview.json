@@ -76,6 +76,7 @@
 "_elegSignDKSignMethodEmployeeKeycard":"Töötaja pääsukaart",
 "_elegSignDKSignMethodEmployeeKeyfile":"Töötaja pääsufail",
 "_elegSignDKSignMethodPersonalKeycard":"Isiklik pääsukaart",
+"_elegSignFIConfirmationTitle":"",
 "_elegSignNLConfirmationTitle":"Allkirjasta iDIN teenusega",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, allkirjastate Norra BankID abil. Allkirjastamise järel registreeritakse Teie allkiri Scrive e-allkirjastamisteenusega.",
 "_elegSignNOConfirmationTextNoName":"Allkirjastate Norra BankID kaudu. Allkirjastamise järel registreeritakse Teie allkiri Scrive e-allkirjastamisteenusega.",

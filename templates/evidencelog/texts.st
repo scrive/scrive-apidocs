@@ -743,10 +743,12 @@ elegVerificationAuth=
 </p>
 <br/>
 $if(signature)$
-<p>Signature: <div>$personalNumber(value=signature)$</div></p>
+<p>Signature: <div style="word-break:break-word;">$personalNumber(value=signature)$</div></p>
 $endif$
 $if(ocsp_response)$
-<p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
+<p>Online Certificate Status Protocol (OCSP) Response:
+  <div style="word-break:break-word;">$ocsp_response$</div>
+</p>
 $endif$
 ###
 provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$elseif(provider_onfido)$Onfido$endif$
