@@ -7,14 +7,12 @@ module EID.EIDService.Communication (
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Aeson
-import Data.Aeson.Encoding (encodingToLazyByteString)
 import Log
 import System.Exit
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 
 import EID.EIDService.Conf
-import EID.EIDService.JSON
 import EID.EIDService.Types
 import Kontra hiding (InternalError)
 import Log.Identifier
@@ -41,12 +39,12 @@ guardExitCode calltype provider (exitcode, stdout, stderr) = case exitcode of
           ]
     internalError
   ExitSuccess -> do
-    let verb = T.pack $ show calltype <> "ed"
-    logInfo (verb <> " new transaction (eidservice/" <> provider <> ")") $ object
-      ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
+    let verb = T.pack $ show calltype
+    logInfo ("Success: " <> verb <> " new transaction (eidservice/" <> provider <> ")")
+      $ object ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
 
 cURLCall
-  :: (MonadBase IO m, MonadLog m, HasEIDServiceName a)
+  :: (MonadBase IO m, MonadLog m, ToEIDServiceTransactionProvider a)
   => EIDServiceConf
   -> CallType
   -> a
@@ -67,50 +65,45 @@ cURLCall conf calltype provider endpoint mjsonData = do
         ++ [T.unpack $ eidServiceUrl conf <> "/api/v1/transaction/" <> endpoint]
         )
       $ fromMaybe BSL.empty mjsonData
-  guardExitCode calltype (toEIDServiceName provider) (exitcode, stdout, stderr)
+  guardExitCode calltype (toEIDServiceProviderName provider) (exitcode, stdout, stderr)
   return stdout
 
 createTransactionWithEIDService
-  :: (Kontrakcja m)
+  :: (Kontrakcja m, ToJSON a, ToEIDServiceTransactionProvider a, FromJSON b)
   => EIDServiceConf
-  -> EIDServiceProviderParams
-  -> m EIDServiceTransactionID
-createTransactionWithEIDService conf providerParams = do
-  mtid <-
-    fmap decode
-    . cURLCall conf Create providerParams "new"
-    . Just
-    . encodingToLazyByteString
-    $ encodeNewTransactionRequest providerParams
-  case mtid of
+  -> a
+  -> m b
+createTransactionWithEIDService conf req = do
+  mresp <- fmap decode . cURLCall conf Create req "new" . Just $ encode req
+  case mresp of
     Nothing -> do
-      logAttention_ "Failed to read 'id' from create transaction response"
+      logAttention_ "Failed to read create transaction response"
       internalError
-    Just tid -> return tid
+    Just resp -> return resp
 
 startTransactionWithEIDService
-  :: (Kontrakcja m, HasEIDServiceName a)
+  :: (Kontrakcja m, ToEIDServiceTransactionProvider a, FromJSON b)
   => EIDServiceConf
   -> a
   -> EIDServiceTransactionID
-  -> m Text
+  -> m b
 startTransactionWithEIDService conf provider tid = localData [identifier tid] $ do
-  murl <- extractEIDServiceURL <$> do
+  mresp <- decode <$> do
     let endpoint = fromEIDServiceTransactionID tid <> "/start"
     cURLCall conf Start provider endpoint . Just . encode . toJSON $ object []
-  case murl of
+  case mresp of
     Nothing -> do
       logAttention_ "Failed to parse start transaction response"
       -- TODO: Get rid of all the blank, useless internalError calls in EID.EIDService
       internalError
-    Just url -> return url
+    Just resp -> return resp
 
 getTransactionFromEIDService
-  :: (MonadLog m, MonadBaseControl IO m, HasEIDServiceName a)
+  :: (MonadLog m, MonadBaseControl IO m, ToEIDServiceTransactionProvider a, FromJSON b)
   => EIDServiceConf
   -> a
   -> EIDServiceTransactionID
-  -> m (Maybe CompleteEIDServiceTransaction)
+  -> m (Maybe b)
 getTransactionFromEIDService conf provider tid = localData [identifier tid] $ do
   let endpoint = fromEIDServiceTransactionID tid
-  decodeCompleteTransaction <$> cURLCall conf Fetch provider endpoint Nothing
+  decode <$> cURLCall conf Fetch provider endpoint Nothing

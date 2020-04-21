@@ -363,7 +363,7 @@ instance Arbitrary FeatureFlags where
     (a, b, c, d, e, f, g , h , i , j ) <- arbitrary
     (k, l, m, n, o, p, q , r , s , t ) <- arbitrary
     (u, v, w, x, z, y, aa, bb, cc, dd) <- arbitrary
-    ee <- arbitrary
+    (ee, ff) <- arbitrary
     return $ FeatureFlags { ffCanUseTemplates                  = a
                           , ffCanUseBranding                   = b
                           , ffCanUseAuthorAttachments          = c
@@ -384,6 +384,7 @@ instance Arbitrary FeatureFlags where
                           , ffCanUseVerimiAuthenticationToView = z
                           , ffCanUseIDINAuthenticationToView   = aa
                           , ffCanUseIDINAuthenticationToSign   = cc
+                          , ffCanUseOnfidoAuthenticationToSign = ff
                           , ffCanUseEmailInvitations           = r
                           , ffCanUseEmailConfirmations         = v
                           , ffCanUseAPIInvitations             = s
@@ -809,11 +810,10 @@ instance Arbitrary EIDServiceNLIDINSignature where
     a <- arbText 20 30
     c <- arbText 10 20
     d <- arbText 10 10
-    return . EIDServiceNLIDINSignature $ NLIDINEIDServiceCompletionData
-      { eiditdName       = a
-      , eiditdBirthDate  = c
-      , eiditdCustomerID = d
-      }
+    return $ EIDServiceNLIDINSignature { unEIDServiceIDINSigSignatoryName = a
+                                       , unEIDServiceIDINSigDateOfBirth   = c
+                                       , unEIDServiceIDINSigCustomerID    = d
+                                       }
 
 instance Arbitrary EIDServiceFITupasSignature where
   arbitrary = do
@@ -824,6 +824,15 @@ instance Arbitrary EIDServiceFITupasSignature where
                                         , eidServiceFITupasSigPersonalNumber = Just b
                                         , eidServiceFITupasSigDateOfBirth    = c
                                         }
+
+instance Arbitrary EIDServiceOnfidoSignature where
+  arbitrary = do
+    a <- arbText 20 30
+    b <- arbText 10 10
+    return $ EIDServiceOnfidoSignature { eidServiceOnfidoSigSignatoryName = a
+                                       , eidServiceOnfidoSigDateOfBirth   = b
+                                       }
+
 
 
 instance Arbitrary ESignature where

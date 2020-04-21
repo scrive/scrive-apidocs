@@ -2,7 +2,7 @@ module EID.EIDService.CommunicationTest (nemidTests) where
 
 import Test.Framework
 
-import EID.EIDService.Types
+import EID.EIDService.Provider.DKNemID (dateOfBirthFromDKPersonalNumber)
 import TestingUtil
 import TestKontra
 
@@ -25,6 +25,6 @@ testDateOfBirthIsProperlyResolved = do
   where
     dateOfBirthEqual :: Text -> Text -> TestEnv ()
     dateOfBirthEqual expectedDateOfBirth dkPersonalNumber =
-      assertEqual "Date of birth is not equal to desired one" expectedDateOfBirth
+      assertEqual "Date of birth is equal to desired one" expectedDateOfBirth
         $ dateOfBirthFromDKPersonalNumber dkPersonalNumber
 

@@ -379,6 +379,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             NOBankIDAuthenticationToSign -> Good
             FITupasAuthenticationToSign  -> Good
             IDINAuthenticationToSign     -> Good
+            OnfidoAuthenticationToSign   -> Good
 
       -- Empty is allowed only if we don't need it for
       -- AuthenticationToViewMethod
@@ -447,6 +448,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
       DKNemIDAuthenticationToSign  -> return ()
       IDINAuthenticationToSign     -> return ()
       FITupasAuthenticationToSign  -> return ()
+      OnfidoAuthenticationToSign   -> return ()
 
 
 
@@ -641,6 +643,7 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
              IDINAuthenticationToSign     -> True
              FITupasAuthenticationToSign  -> T.null (getPersonalNumber sl)
                || isGood (asValidFinnishSSN $ getPersonalNumber sl)
+             OnfidoAuthenticationToSign -> True
 
     signatoryHasValidSSNOrEmailForIdentifyToView sl =
       case signatorylinkauthenticationtoviewmethod sl of

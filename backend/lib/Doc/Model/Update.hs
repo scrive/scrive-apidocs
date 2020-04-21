@@ -1012,6 +1012,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         (False, IDINAuthenticationToSign   ) -> return ()
         -- FITupasAuthenticationToSign has no obligatory fields
         (False, FITupasAuthenticationToSign) -> return ()
+        -- OnfidoAuthenticationToSign has no obligatory fields
+        (False, OnfidoAuthenticationToSign ) -> return ()
       -- If newAuthToSign needs PersonalNumber we need to make sure the field
       -- exists and is obligatory, and maybe set to the value provided
       when (authToSignNeedsPersonalNumber newAuthToSign) $ do
@@ -1831,6 +1833,8 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           sqlWhereSignatoryAuthenticationToSignMethodIs IDINAuthenticationToSign
         (Just (EIDServiceFITupasSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs FITupasAuthenticationToSign
+        (Just (EIDServiceOnfidoSignature_ _), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIs OnfidoAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
         (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
         (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
@@ -1892,14 +1896,13 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             $ F.value "signatory_personal_number" netsdkSignatorySSN
           F.value "signatory_personal_number_from_signlink" $ getPersonalNumber sl
           unless (T.null netsdkSignatoryIP) $ F.value "signatory_ip" netsdkSignatoryIP
-        (Just (EIDServiceIDINSignature_ (EIDServiceNLIDINSignature NLIDINEIDServiceCompletionData {..})), _)
-          -> do
-            F.value "hide_pn" $ signatorylinkhidepn sl
-            F.value "eleg" True
-            F.value "provider_idin" True
-            F.value "signatory_name" eiditdName
-            F.value "signatory_dob" eiditdBirthDate
-            F.value "signatory_customer_id" eiditdCustomerID
+        (Just (EIDServiceIDINSignature_ EIDServiceNLIDINSignature {..}), _) -> do
+          F.value "hide_pn" $ signatorylinkhidepn sl
+          F.value "eleg" True
+          F.value "provider_idin" True
+          F.value "signatory_name" unEIDServiceIDINSigSignatoryName
+          F.value "signatory_dob" unEIDServiceIDINSigDateOfBirth
+          F.value "signatory_customer_id" unEIDServiceIDINSigCustomerID
         (Just (EIDServiceFITupasSignature_ EIDServiceFITupasSignature {..}), _) -> do
           F.value "hide_pn" $ signatorylinkhidepn sl
           F.value "eleg" True
@@ -1907,6 +1910,12 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           F.value "signatory_name" eidServiceFITupasSigSignatoryName
           F.value "signatory_dob" eidServiceFITupasSigDateOfBirth
           F.value "signatory_personal_number" eidServiceFITupasSigPersonalNumber
+        (Just (EIDServiceOnfidoSignature_ EIDServiceOnfidoSignature {..}), _) -> do
+          F.value "hide_pn" $ signatorylinkhidepn sl
+          F.value "eleg" True
+          F.value "provider_onfido" True
+          F.value "signatory_name" eidServiceOnfidoSigSignatoryName
+          F.value "signatory_dob" eidServiceOnfidoSigDateOfBirth
         (Nothing, Just _) -> do
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl

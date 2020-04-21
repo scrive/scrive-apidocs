@@ -32,7 +32,7 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryFieldID
 import Doc.TestInvariants
-import EID.EIDService.Types (NLIDINEIDServiceCompletionData(..))
+import EID.EIDService.Types
 import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import File.FileID
@@ -1692,6 +1692,13 @@ testSealDocument = replicateM_ 1 $ do
             randomUpdate $ \esig -> SignDocument
               (signatorylinkid slk)
               (Just (EIDServiceFITupasSignature_ esig))
+              Nothing
+              screenshots
+              sa
+          OnfidoAuthenticationToSign -> do
+            randomUpdate $ \esig -> SignDocument
+              (signatorylinkid slk)
+              (Just (EIDServiceOnfidoSignature_ esig))
               Nothing
               screenshots
               sa
@@ -3444,7 +3451,8 @@ testSinatoryNameMatch = do
                           ]
       }
 
-    mkTransactionData name = NLIDINEIDServiceCompletionData { eiditdName       = name
-                                                            , eiditdBirthDate  = ""
-                                                            , eiditdCustomerID = ""
-                                                            }
+    mkTransactionData name = EIDServiceNLIDINSignature
+      { unEIDServiceIDINSigSignatoryName = name
+      , unEIDServiceIDINSigDateOfBirth   = ""
+      , unEIDServiceIDINSigCustomerID    = ""
+      }

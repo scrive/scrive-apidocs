@@ -31,6 +31,7 @@ data ChargeableItem = CIStartingDocument
                     | CIVerimiAuthentication
                     | CIIDINAuthentication
                     | CIIDINSignature
+                    | CIOnfidoSignature
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -60,7 +61,8 @@ instance FromSQL ChargeableItem where
       15 -> return CIIDINAuthentication
       16 -> return CIIDINSignature
       17 -> return CIFITupasSignature
-      _  -> throwM RangeError { reRange = [(1, 17)], reValue = n }
+      18 -> return CIOnfidoSignature
+      _  -> throwM RangeError { reRange = [(1, 18)], reValue = n }
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
@@ -81,6 +83,7 @@ instance ToSQL ChargeableItem where
   toSQL CIIDINAuthentication     = toSQL (15 :: Int16)
   toSQL CIIDINSignature          = toSQL (16 :: Int16)
   toSQL CIFITupasSignature       = toSQL (17 :: Int16)
+  toSQL CIOnfidoSignature        = toSQL (18 :: Int16)
 
 -- | This type should be used only for serialization. Punishment will be imposed
 -- on anybody using it in any other way.
@@ -122,3 +125,4 @@ instance ToJSON ChargeableItemEvent where
       eventTypeToJSON CIVerimiAuthentication   = "verimi_authentication"
       eventTypeToJSON CIIDINAuthentication     = "idin_authentication"
       eventTypeToJSON CIIDINSignature          = "idin_signature"
+      eventTypeToJSON CIOnfidoSignature        = "onfido_signature"

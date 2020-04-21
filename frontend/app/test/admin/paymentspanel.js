@@ -54,7 +54,7 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox", component.getDOMNode());
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 62);
+    assert.equal(checkboxes.size(), 64);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 2);
@@ -71,7 +71,7 @@ describe("admin/paymentspanel", function () {
     component.forceUpdate();
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 62);
+    assert.equal(checkboxes.size(), 64);
   });
 
   it("should call subscriptions updateSubscriptionAsAdmin on button clicked", function () {

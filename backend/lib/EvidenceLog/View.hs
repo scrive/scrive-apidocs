@@ -286,11 +286,12 @@ simplifiedEventText mactor sim dee = do
                   F.value "provider_nobankid" True
                 NetsDKNemIDSignature_ NetsDKNemIDSignature {..} -> do
                   F.value "provider_dknemid" True
-                EIDServiceIDINSignature_ (EIDServiceNLIDINSignature NLIDINEIDServiceCompletionData {..})
-                  -> do
-                    F.value "provider_idin" True
+                EIDServiceIDINSignature_ EIDServiceNLIDINSignature {..} -> do
+                  F.value "provider_idin" True
                 EIDServiceFITupasSignature_ _ -> do
                   F.value "provider_fitupas" True
+                EIDServiceOnfidoSignature_ _ -> do
+                  F.value "provider_onfido" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession AuthenticationToView slinkid)
               >>= \case

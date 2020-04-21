@@ -33,6 +33,7 @@ module.exports = Backbone.Model.extend({
       });
     };
 
+    // todo: call returned url and _then_ poll (or do redirect in backend?)
     var successCallback = function (resp) {
       self.doc().checksign(function () {
         new FlashMessagesCleaner();
@@ -47,7 +48,7 @@ module.exports = Backbone.Model.extend({
     };
 
     new Submit({
-      url: "/eid-service/start/idin/sign/" + this.doc().documentid() + "/" + this.siglinkid(),
+      url: "/eid-service/start/onfido/sign/" + this.doc().documentid() + "/" + this.siglinkid(),
       method: "POST",
       ajax: true,
       ajaxsuccess: successCallback,

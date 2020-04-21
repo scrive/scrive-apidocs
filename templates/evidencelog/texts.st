@@ -80,6 +80,8 @@ ChangeAuthenticationToSignFromIDINLog=$ChangeAuthenticationToSignFrom(auth='“D
 ###
 ChangeAuthenticationToSignFromFITupasLog=$ChangeAuthenticationToSignFrom(auth='“Finnish FTN')$
 ###
+ChangeAuthenticationToSignFromOnfidoLog=$ChangeAuthenticationToSignFrom(auth='“Onfido”')$
+###
 ChangeAuthenticationToSignToStandardLog=$ChangeAuthenticationToSignTo(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToSignToSMSPinLog=$ChangeAuthenticationToSignTo(auth='“PIN by SMS”')$
@@ -93,6 +95,8 @@ ChangeAuthenticationToSignToDKNemIDLog=$ChangeAuthenticationToSignTo(auth='“Da
 ChangeAuthenticationToSignToIDINLog=$ChangeAuthenticationToSignTo(auth='“Dutch iDIN”')$
 ###
 ChangeAuthenticationToSignToFITupasLog=$ChangeAuthenticationToSignTo(auth='“Finnish FTN')$
+###
+ChangeAuthenticationToSignToOnfidoLog=$ChangeAuthenticationToSignTo(auth='“Onfido”')$
 ###
 ChangeAuthenticationToViewFromStandardLog=$ChangeAuthenticationToViewFrom(auth='“no extra authentication”')$
 ###
@@ -636,8 +640,15 @@ $if(provider_fitupas)$
 <p>Authentication at the point of signing with $provider()$.</p>
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
-  <br/>$if(signatory_dob)$<br/>Date of birth: $signatory_dob$$endif$
+  $if(signatory_dob)$<br/>Date of birth: $signatory_dob$$endif$
   $if(signatory_personal_number)$<br/>Personal identification number: $personalNumber(value=signatory_personal_number)$$endif$
+</p>
+$endif$
+$if(provider_onfido)$
+<p>Authentication at the point of signing with $provider()$.</p>
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  <br/>Date of birth: $signatory_dob$
 </p>
 $endif$
 $if(signature)$
@@ -738,9 +749,9 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
-provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$endif$
+provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$elseif(provider_onfido)$Onfido$endif$
 ###
-providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$endif$
+providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$elseif(provider_onfido)$Onfido$endif$
 ###
 AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$

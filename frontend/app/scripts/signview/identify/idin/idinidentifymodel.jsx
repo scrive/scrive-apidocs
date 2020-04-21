@@ -71,7 +71,7 @@ module.exports = Backbone.Model.extend({
   startTransaction: function () {
     var self = this;
     new Submit({
-      url: "/eid-service/start/idin-view/" + this.doc().documentid() + "/" + this.siglinkid(),
+      url: "/eid-service/start/idin/view/" + this.doc().documentid() + "/" + this.siglinkid(),
       method: "POST",
       redirect: window.btoa(encodeURIComponent(window.location)),
       ajax: true,

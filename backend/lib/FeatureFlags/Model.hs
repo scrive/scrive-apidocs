@@ -54,6 +54,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseVerimiAuthenticationToView :: Bool
   , ffCanUseIDINAuthenticationToView :: Bool
   , ffCanUseIDINAuthenticationToSign :: Bool
+  , ffCanUseOnfidoAuthenticationToSign :: Bool
   , ffCanUseEmailInvitations :: Bool
   , ffCanUseEmailConfirmations :: Bool
   , ffCanUseAPIInvitations :: Bool
@@ -125,6 +126,9 @@ instance Unjson FeatureFlags where
       <*> field "can_use_idin_authentication_to_sign"
                 ffCanUseIDINAuthenticationToSign
                 "TODO desc"
+      <*> field "can_use_onfido_authentication_to_sign"
+                ffCanUseOnfidoAuthenticationToSign
+                "TODO desc"
       <*> field "can_use_email_invitations"   ffCanUseEmailInvitations   "TODO desc"
       <*> field "can_use_email_confirmations" ffCanUseEmailConfirmations "TODO desc"
       <*> fieldDef "can_use_api_invitations" True ffCanUseAPIInvitations "TODO desc"
@@ -173,13 +177,14 @@ type instance CompositeRow FeatureFlags
     , Bool
     , Bool
     , Bool
+    , Bool
     )
 
 instance PQFormat FeatureFlags where
   pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
-  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts)
+  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts)
     = FeatureFlags { .. }
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
@@ -249,6 +254,7 @@ defaultFeatures paymentPlan = Features ff ff
                              , ffCanUseVerimiAuthenticationToView = True
                              , ffCanUseIDINAuthenticationToView   = True
                              , ffCanUseIDINAuthenticationToSign   = True
+                             , ffCanUseOnfidoAuthenticationToSign = True
                              , ffCanUseEmailInvitations           = True
                              , ffCanUseEmailConfirmations         = True
                              , ffCanUseAPIInvitations             = True
@@ -271,6 +277,7 @@ defaultFeatures paymentPlan = Features ff ff
                             , ffCanUseVerimiAuthenticationToView = False
                             , ffCanUseIDINAuthenticationToView   = False
                             , ffCanUseIDINAuthenticationToSign   = False
+                            , ffCanUseOnfidoAuthenticationToSign = False
                             }
       _ -> defaultFF
 
@@ -300,6 +307,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_verimi_authentication_to_view" $ ffCanUseVerimiAuthenticationToView ff
   sqlSet "can_use_idin_authentication_to_view" $ ffCanUseIDINAuthenticationToView ff
   sqlSet "can_use_idin_authentication_to_sign" $ ffCanUseIDINAuthenticationToSign ff
+  sqlSet "can_use_onfido_authentication_to_sign" $ ffCanUseOnfidoAuthenticationToSign ff
   sqlSet "can_use_email_invitations" $ ffCanUseEmailInvitations ff
   sqlSet "can_use_email_confirmations" $ ffCanUseEmailConfirmations ff
   sqlSet "can_use_api_invitations" $ ffCanUseAPIInvitations ff
@@ -334,6 +342,7 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_verimi_authentication_to_view"
   , "feature_flags.can_use_idin_authentication_to_view"
   , "feature_flags.can_use_idin_authentication_to_sign"
+  , "feature_flags.can_use_onfido_authentication_to_sign"
   , "feature_flags.can_use_email_invitations"
   , "feature_flags.can_use_email_confirmations"
   , "feature_flags.can_use_api_invitations"

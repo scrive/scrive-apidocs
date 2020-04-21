@@ -180,6 +180,7 @@ authenticationToSignJSON NOBankIDAuthenticationToSign = toJSValue ("no_bankid" :
 authenticationToSignJSON DKNemIDAuthenticationToSign  = toJSValue ("dk_nemid" :: String)
 authenticationToSignJSON IDINAuthenticationToSign     = toJSValue ("nl_idin" :: String)
 authenticationToSignJSON FITupasAuthenticationToSign  = toJSValue ("fi_tupas" :: String)
+authenticationToSignJSON OnfidoAuthenticationToSign   = toJSValue ("onfido" :: String)
 
 signatoryJSON
   :: ( MonadDB m

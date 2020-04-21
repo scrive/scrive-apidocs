@@ -16,6 +16,8 @@ module EID.Signature.Model (
   , MergeEIDServiceIDINSignature(..)
   , EIDServiceFITupasSignature(..)
   , MergeEIDServiceFITupasSignature(..)
+  , EIDServiceOnfidoSignature(..)
+  , MergeEIDServiceOnfidoSignature(..)
   ) where
 
 import Control.Monad.Catch
@@ -49,6 +51,7 @@ data ESignature
   | NetsDKNemIDSignature_ !NetsDKNemIDSignature
   | EIDServiceIDINSignature_ !EIDServiceNLIDINSignature
   | EIDServiceFITupasSignature_ !EIDServiceFITupasSignature
+  | EIDServiceOnfidoSignature_ !EIDServiceOnfidoSignature
   deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -67,6 +70,7 @@ data SignatureProvider
   | NetsDKNemID
   | EIDServiceIDIN
   | EIDServiceTupas
+  | EIDServiceOnfido
     deriving (Eq, Ord, Show)
 
 instance PQFormat SignatureProvider where
@@ -77,16 +81,17 @@ instance FromSQL SignatureProvider where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1 -> return LegacyBankID
-      2 -> return LegacyTelia
-      3 -> return LegacyNordea
-      4 -> return LegacyMobileBankID
-      5 -> return CgiGrpBankID
-      6 -> return NetsNOBankID
-      7 -> return NetsDKNemID
-      8 -> return EIDServiceIDIN
-      9 -> return EIDServiceTupas
-      _ -> throwM RangeError { reRange = [(1, 9)], reValue = n }
+      1  -> return LegacyBankID
+      2  -> return LegacyTelia
+      3  -> return LegacyNordea
+      4  -> return LegacyMobileBankID
+      5  -> return CgiGrpBankID
+      6  -> return NetsNOBankID
+      7  -> return NetsDKNemID
+      8  -> return EIDServiceIDIN
+      9  -> return EIDServiceTupas
+      10 -> return EIDServiceOnfido
+      _  -> throwM RangeError { reRange = [(1, 10)], reValue = n }
 
 instance ToSQL SignatureProvider where
   type PQDest SignatureProvider = PQDest Int16
@@ -99,6 +104,7 @@ instance ToSQL SignatureProvider where
   toSQL NetsDKNemID        = toSQL (7 :: Int16)
   toSQL EIDServiceIDIN     = toSQL (8 :: Int16)
   toSQL EIDServiceTupas    = toSQL (9 :: Int16)
+  toSQL EIDServiceOnfido   = toSQL (10 :: Int16)
 
 
 ----------------------------------------
@@ -223,21 +229,48 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceFITupasSignature 
         sqlSet "signatory_personal_number" eidServiceFITupasSigPersonalNumber
         sqlSet "signatory_date_of_birth"   eidServiceFITupasSigDateOfBirth
 
+-- Note to Tom: please refactor these!
+data MergeEIDServiceOnfidoSignature = MergeEIDServiceOnfidoSignature SignatoryLinkID EIDServiceOnfidoSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceOnfidoSignature () where
+  dbUpdate (MergeEIDServiceOnfidoSignature slid EIDServiceOnfidoSignature {..}) = do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
+        setFields
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id"         slid
+        sqlSet "provider"                  EIDServiceOnfido
+        sqlSet "signatory_name"            eidServiceOnfidoSigSignatoryName
+        sqlSet "signatory_date_of_birth"   eidServiceOnfidoSigDateOfBirth
+        sqlSet "signatory_personal_number" ("" :: Text)  -- can't be null, but we don't actually set one. ugly?!
+
 -- | Insert bank id signature for a given signatory or replace the existing one.
 data MergeEIDServiceIDINSignature = MergeEIDServiceIDINSignature SignatoryLinkID EIDServiceNLIDINSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINSignature () where
-  dbUpdate (MergeEIDServiceIDINSignature slid (EIDServiceNLIDINSignature NLIDINEIDServiceCompletionData {..}))
-    = do
-      runQuery01_ selectSignatorySignTime
-      msign_time :: Maybe UTCTime <- fetchOne runIdentity
-      when (isJust msign_time) $ do
-        unexpectedError "signatory already signed, can't merge signature"
-      runQuery_ . sqlInsert "eid_signatures" $ do
+  dbUpdate (MergeEIDServiceIDINSignature slid EIDServiceNLIDINSignature {..}) = do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
         setFields
-        sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
-          setFields
-          -- replace the signature only if signatory hasn't signed yet
-          sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
     where
       selectSignatorySignTime = do
         sqlSelect "signatory_links" $ do
@@ -248,9 +281,9 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceIDINSignature () 
       setFields = do
         sqlSet "signatory_link_id"         slid
         sqlSet "provider"                  EIDServiceIDIN
-        sqlSet "signatory_date_of_birth"   eiditdBirthDate
-        sqlSet "signatory_personal_number" eiditdCustomerID
-        sqlSet "signatory_name"            eiditdName
+        sqlSet "signatory_date_of_birth"   unEIDServiceIDINSigDateOfBirth
+        sqlSet "signatory_personal_number" unEIDServiceIDINSigCustomerID
+        sqlSet "signatory_name"            unEIDServiceIDINSigSignatoryName
 
 -- | Get signature for a given signatory.
 newtype GetESignature = GetESignature SignatoryLinkID
@@ -326,13 +359,16 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       , netsdkSignatoryIP   = fromMaybe "" msignatory_ip
       }
     EIDServiceIDIN -> EIDServiceIDINSignature_ $ EIDServiceNLIDINSignature
-      NLIDINEIDServiceCompletionData
-        { eiditdName       = fromJust msignatory_name
-        , eiditdBirthDate  = fromJust msignatory_dob
-        , eiditdCustomerID = fromJust msignatory_personal_number
-        }
+      { unEIDServiceIDINSigSignatoryName = fromJust msignatory_name
+      , unEIDServiceIDINSigDateOfBirth   = fromJust msignatory_dob
+      , unEIDServiceIDINSigCustomerID    = fromJust msignatory_personal_number
+      }
     EIDServiceTupas -> EIDServiceFITupasSignature_ $ EIDServiceFITupasSignature
       { eidServiceFITupasSigSignatoryName  = fromJust msignatory_name
       , eidServiceFITupasSigPersonalNumber = msignatory_personal_number
       , eidServiceFITupasSigDateOfBirth    = fromJust msignatory_dob
+      }
+    EIDServiceOnfido -> EIDServiceOnfidoSignature_ $ EIDServiceOnfidoSignature
+      { eidServiceOnfidoSigSignatoryName = fromJust msignatory_name
+      , eidServiceOnfidoSigDateOfBirth   = fromJust msignatory_dob
       }

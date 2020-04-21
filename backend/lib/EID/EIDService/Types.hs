@@ -1,39 +1,36 @@
 module EID.EIDService.Types (
-      EIDServiceTransactionID
-    , unsafeEIDServiceTransactionID
-    , fromEIDServiceTransactionID
+    EIDServiceTransactionID(..)
+  , unsafeEIDServiceTransactionID
+  , fromEIDServiceTransactionID
+  , EIDServiceTransactionProvider(..)
+  , ToEIDServiceTransactionProvider(..)
+  , EIDServiceEndpointType(..)
+  , EIDServiceTransactionStatus (..)
+  , EIDServiceAuthenticationKind(..)
+  , CreateEIDServiceTransactionRequest(..)
+  , CreateEIDServiceTransactionResponse(..)
+  , EIDServiceTransactionResponse(..)
+  , EIDServiceTransactionFromDB(..)
 
-    , HasEIDServiceName(..)
-    , EIDServiceTransactionProvider(..)
-    , EIDServiceEndpointType(..)
-    , EIDServiceProviderParams(..)
-    , eidServiceProviderParamsToProvider
-    , EIDServiceTransactionStatus(..)
-    , EIDServiceAuthenticationKind(..)
-    , EIDServiceTransactionFromDB(..)
+  -- Redundant types, will be removed later
+  , EIDServiceVerimiAuthentication(..)
+  , EIDServiceNLIDINAuthentication(..)
+  , EIDServiceDKNemIDAuthentication(..)
+  , EIDServiceNOBankIDAuthentication(..)
+  , EIDServiceNLIDINSignature(..)
+  , EIDServiceFITupasSignature(..)
+  , EIDServiceOnfidoSignature(..)
 
-    , EIDServiceVerimiAuthentication(..)
-    , CompleteEIDServiceTransaction(..)
-    , VerimiEIDServiceCompletionData(..)
-    , EIDServiceNLIDINAuthentication(..)
-    , EIDServiceNLIDINSignature(..)
-    , NLIDINEIDServiceCompletionData(..)
-    , EIDServiceFITupasSignature(..)
-    , FITupasEIDServiceCompletionData(..)
-    , EIDServiceDKNemIDAuthentication(..)
-    , EIDServiceDKNemIDInternalProvider(..)
-    , unsafeEIDServiceDKNemIDInternalProviderFromInt16
-    , DKNemIDEIDServiceCompletionData(..)
-    , EIDServiceNOBankIDAuthentication(..)
-    , EIDServiceNOBankIDInternalProvider(..)
-    , unsafeEIDServiceNOBankIDInternalProviderFromInt16
-    , NOBankIDEIDServiceCompletionData(..)
-
-    , dateOfBirthFromDKPersonalNumber
+  -- Provider specific, can be refactored once redundant types above are removed
+  , EIDServiceDKNemIDInternalProvider(..)
+  , unsafeEIDServiceDKNemIDInternalProviderFromInt16
+  , EIDServiceNOBankIDInternalProvider(..)
+  , unsafeEIDServiceNOBankIDInternalProviderFromInt16
   ) where
 
 import Control.Monad.Catch
 import Data.Aeson
+import Data.Aeson.Encoding hiding (day)
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.Time
@@ -42,6 +39,7 @@ import Happstack.Server
 import Prelude hiding (empty)
 import qualified Data.Text as T
 
+import Doc.DocumentID
 import Doc.SignatoryLinkID
 import Doc.Types.SignatoryLink
 import Log.Identifier
@@ -72,10 +70,7 @@ fromEIDServiceTransactionID :: EIDServiceTransactionID -> T.Text
 fromEIDServiceTransactionID (EIDServiceTransactionID tid) = tid
 
 instance FromJSON EIDServiceTransactionID where
-  parseJSON = fmap EIDServiceTransactionID . withObject "object" (.: "id")
-
-class HasEIDServiceName a where
-  toEIDServiceName :: a -> Text
+  parseJSON = fmap EIDServiceTransactionID . parseJSON
 
 data EIDServiceTransactionProvider =
     EIDServiceTransactionProviderVerimi
@@ -83,14 +78,44 @@ data EIDServiceTransactionProvider =
   | EIDServiceTransactionProviderDKNemID
   | EIDServiceTransactionProviderNOBankID
   | EIDServiceTransactionProviderFITupas
+  | EIDServiceTransactionProviderOnfido
   deriving (Eq, Ord, Show)
 
-instance HasEIDServiceName EIDServiceTransactionProvider where
-  toEIDServiceName EIDServiceTransactionProviderVerimi   = "verimi"
-  toEIDServiceName EIDServiceTransactionProviderNLIDIN   = "nlIDIN"
-  toEIDServiceName EIDServiceTransactionProviderDKNemID  = "dkNemID"
-  toEIDServiceName EIDServiceTransactionProviderNOBankID = "noBankID"
-  toEIDServiceName EIDServiceTransactionProviderFITupas  = "fiTupas"
+class ToEIDServiceTransactionProvider a where
+  toProvider :: a -> EIDServiceTransactionProvider
+
+  toEIDServiceProviderName :: a -> Text
+  toEIDServiceProviderName = toEIDServiceProviderName . toProvider
+
+  toRedirectURLName :: a -> Text
+  toRedirectURLName = toRedirectURLName . toProvider
+
+instance ToEIDServiceTransactionProvider EIDServiceTransactionProvider where
+  toProvider = identity
+
+  toEIDServiceProviderName EIDServiceTransactionProviderVerimi   = "verimi"
+  toEIDServiceProviderName EIDServiceTransactionProviderNLIDIN   = "nlIDIN"
+  toEIDServiceProviderName EIDServiceTransactionProviderDKNemID  = "dkNemID"
+  toEIDServiceProviderName EIDServiceTransactionProviderNOBankID = "noBankID"
+  toEIDServiceProviderName EIDServiceTransactionProviderFITupas  = "fiTupas"
+  toEIDServiceProviderName EIDServiceTransactionProviderOnfido   = "onfido"
+
+  toRedirectURLName EIDServiceTransactionProviderVerimi   = "verimi"
+  toRedirectURLName EIDServiceTransactionProviderNLIDIN   = "idin"
+  toRedirectURLName EIDServiceTransactionProviderDKNemID  = "nemid"
+  toRedirectURLName EIDServiceTransactionProviderNOBankID = "nobankid"
+  toRedirectURLName EIDServiceTransactionProviderFITupas  = "fitupas"
+  toRedirectURLName EIDServiceTransactionProviderOnfido   = "onfido"
+
+instance FromReqURI EIDServiceTransactionProvider where
+  fromReqURI = \case
+    "verimi"   -> Just EIDServiceTransactionProviderVerimi
+    "idin"     -> Just EIDServiceTransactionProviderNLIDIN
+    "nemid"    -> Just EIDServiceTransactionProviderDKNemID
+    "nobankid" -> Just EIDServiceTransactionProviderNOBankID
+    "fitupas"  -> Just EIDServiceTransactionProviderFITupas
+    "onfido"   -> Just EIDServiceTransactionProviderOnfido
+    _          -> Nothing
 
 instance PQFormat EIDServiceTransactionProvider where
   pqFormat = pqFormat @Int16
@@ -105,7 +130,8 @@ instance FromSQL EIDServiceTransactionProvider where
       3 -> return EIDServiceTransactionProviderDKNemID
       4 -> return EIDServiceTransactionProviderNOBankID
       5 -> return EIDServiceTransactionProviderFITupas
-      _ -> throwM RangeError { reRange = [(1, 5)], reValue = n }
+      6 -> return EIDServiceTransactionProviderOnfido
+      _ -> throwM RangeError { reRange = [(1, 6)], reValue = n }
 
 instance ToSQL EIDServiceTransactionProvider where
   type PQDest EIDServiceTransactionProvider = PQDest Int16
@@ -114,60 +140,15 @@ instance ToSQL EIDServiceTransactionProvider where
   toSQL EIDServiceTransactionProviderDKNemID  = toSQL (3 :: Int16)
   toSQL EIDServiceTransactionProviderNOBankID = toSQL (4 :: Int16)
   toSQL EIDServiceTransactionProviderFITupas  = toSQL (5 :: Int16)
+  toSQL EIDServiceTransactionProviderOnfido   = toSQL (6 :: Int16)
 
 data EIDServiceEndpointType = EIDServiceAuthEndpoint | EIDServiceSignEndpoint
 
-instance FromReqURI (EIDServiceTransactionProvider, EIDServiceEndpointType) where
-  fromReqURI x = (,) <$> name <*> epType
-    where
-      (nameString, epTypeString) = break (== '-') x
-      name = case nameString of
-        "verimi"   -> Just EIDServiceTransactionProviderVerimi
-        "idin"     -> Just EIDServiceTransactionProviderNLIDIN
-        "nemid"    -> Just EIDServiceTransactionProviderDKNemID
-        "nobankid" -> Just EIDServiceTransactionProviderNOBankID
-        "fitupas"  -> Just EIDServiceTransactionProviderFITupas
-        _          -> Nothing
-      epType = case drop 1 epTypeString of
-        "view" -> Just EIDServiceAuthEndpoint
-        "sign" -> Just EIDServiceSignEndpoint
-        _      -> Nothing
-
-data EIDServiceProviderParams =
-  EIDServiceProviderParamsVerimi {
-    esppRedirectURL :: Text
-  } |
-  EIDServiceProviderParamsNLIDIN {
-    esppRedirectURL :: Text
-  } |
-  EIDServiceProviderParamsDKNemID {
-    esppRedirectURL :: Text
-  , esppUILocale :: Text
-  } |
-  EIDServiceProviderParamsNOBankID {
-    esppRedirectURL :: Text
-  , esppPhoneNumber :: Maybe Text
-  , esppPersonalNumber :: Text
-  } |
-  EIDServiceProviderParamsFITupas {
-    esppRedirectURL :: Text
-  }
-
-eidServiceProviderParamsToProvider
-  :: EIDServiceProviderParams -> EIDServiceTransactionProvider
-eidServiceProviderParamsToProvider EIDServiceProviderParamsVerimi{} =
-  EIDServiceTransactionProviderVerimi
-eidServiceProviderParamsToProvider EIDServiceProviderParamsNLIDIN{} =
-  EIDServiceTransactionProviderNLIDIN
-eidServiceProviderParamsToProvider EIDServiceProviderParamsDKNemID{} =
-  EIDServiceTransactionProviderDKNemID
-eidServiceProviderParamsToProvider EIDServiceProviderParamsNOBankID{} =
-  EIDServiceTransactionProviderNOBankID
-eidServiceProviderParamsToProvider EIDServiceProviderParamsFITupas{} =
-  EIDServiceTransactionProviderFITupas
-
-instance HasEIDServiceName EIDServiceProviderParams where
-  toEIDServiceName = toEIDServiceName . eidServiceProviderParamsToProvider
+instance FromReqURI EIDServiceEndpointType where
+  fromReqURI = \case
+    "view" -> Just EIDServiceAuthEndpoint
+    "sign" -> Just EIDServiceSignEndpoint
+    _      -> Nothing
 
 -- In statuses we separate complete into two statuses, since
 -- we can't force email/phone number validation on eid service side
@@ -206,12 +187,12 @@ instance ToSQL EIDServiceTransactionStatus where
   toSQL EIDServiceTransactionStatusCompleteAndFailed  = toSQL (5 :: Int16)
 
 instance FromJSON EIDServiceTransactionStatus where
-  parseJSON outer = withObject "object" (.: "status") outer >>= \case
-    "new"       -> return EIDServiceTransactionStatusNew
-    "started"   -> return EIDServiceTransactionStatusStarted
-    "failed"    -> return EIDServiceTransactionStatusFailed
-    "complete"  -> return EIDServiceTransactionStatusCompleteAndSuccess
-    (_ :: Text) -> fail "JSON is invalid: unrecognised value for \"status\""
+  parseJSON = withText "status text" $ \case
+    "new"      -> return EIDServiceTransactionStatusNew
+    "started"  -> return EIDServiceTransactionStatusStarted
+    "failed"   -> return EIDServiceTransactionStatusFailed
+    "complete" -> return EIDServiceTransactionStatusCompleteAndSuccess
+    _          -> fail "JSON is invalid: unrecognised value for \"status\""
 
 data EIDServiceAuthenticationKind =
   EIDServiceAuthToView AuthenticationKind
@@ -237,6 +218,99 @@ instance ToSQL EIDServiceAuthenticationKind where
   toSQL (EIDServiceAuthToView AuthenticationToViewArchived) = toSQL (2 :: Int16)
   toSQL EIDServiceAuthToSign = toSQL (3 :: Int16)
 
+instance FromJSON EIDServiceTransactionProvider where
+  parseJSON = withText "provider text" $ \case
+    "verimi"   -> return EIDServiceTransactionProviderVerimi
+    "nlIDIN"   -> return EIDServiceTransactionProviderNLIDIN
+    "dkNemID"  -> return EIDServiceTransactionProviderDKNemID
+    "noBankID" -> return EIDServiceTransactionProviderNOBankID
+    "fiTupas"  -> return EIDServiceTransactionProviderFITupas
+    "onfido"   -> return EIDServiceTransactionProviderOnfido
+    _          -> fail "JSON is invalid: unrecognised value for \"provider\""
+
+-- Corresponds to POST /transaction/new request to EID service
+data CreateEIDServiceTransactionRequest a = CreateEIDServiceTransactionRequest {
+    cestDomain :: Text
+  , cestEIDServiceProvider :: EIDServiceTransactionProvider
+  , cestDocumentID :: DocumentID
+  , cestSignatoryLinkID :: SignatoryLinkID
+  , cestAuthKind :: EIDServiceAuthenticationKind
+  , cestKontraRedirectUrl :: Maybe Text
+  , cestmProviderParams :: Maybe a
+  }
+
+instance ToEIDServiceTransactionProvider (CreateEIDServiceTransactionRequest a) where
+  toProvider = cestEIDServiceProvider
+
+instance ToJSON a => ToJSON (CreateEIDServiceTransactionRequest a) where
+  toJSON _ = Null
+  toEncoding req@CreateEIDServiceTransactionRequest {..} =
+    pairs
+      $  ("method" .= ("auth" :: Text))
+      <> ("provider" .= eidServiceProviderName)
+      <> ("redirectUrl" .= redirectUrl)
+      <> providerParams
+    where
+      eidServiceProviderName = toEIDServiceProviderName req
+      makeProviderParams =
+        pair "providerParameters" . pairs . pair eidServiceProviderName
+      providerParams = maybe mempty (makeProviderParams . toEncoding) cestmProviderParams
+      redirectUrl =
+        let providerName = toRedirectURLName req
+            endpointType = case cestAuthKind of
+              (EIDServiceAuthToView _) -> "view"
+              EIDServiceAuthToSign     -> "sign"
+            rdFragment = case cestKontraRedirectUrl of
+              Just kontraRedirect -> "?redirect=" <> kontraRedirect
+              Nothing             -> ""
+        in  cestDomain
+              <> "/eid-service/redirect-endpoint/"
+              <> providerName
+              <> "/"
+              <> endpointType
+              <> "/"
+              <> showt cestDocumentID
+              <> "/"
+              <> showt cestSignatoryLinkID
+              <> rdFragment
+
+-- Corresponds to POST /transaction/new response from EID service
+data CreateEIDServiceTransactionResponse = CreateEIDServiceTransactionResponse {
+    cestRespTransactionID :: EIDServiceTransactionID
+  , cestRespAccessUrl :: Text
+  }
+
+instance FromJSON CreateEIDServiceTransactionResponse where
+  parseJSON = withObject "object" $ \o -> do
+    tid       <- o .: "id"
+    accessUrl <- o .: "accessUrl"
+    return CreateEIDServiceTransactionResponse { cestRespTransactionID = tid
+                                               , cestRespAccessUrl     = accessUrl
+                                               }
+
+-- Corresponds to GET /transaction/{transaction_id} response from EID service
+data EIDServiceTransactionResponse a = EIDServiceTransactionResponse {
+    estRespID :: EIDServiceTransactionID
+  , estRespProvider :: EIDServiceTransactionProvider
+  , estRespStatus :: EIDServiceTransactionStatus
+  , estRespCompletionData :: Maybe a
+  } deriving Show
+
+instance ToEIDServiceTransactionProvider (EIDServiceTransactionResponse a) where
+  toProvider = estRespProvider
+
+instance FromJSON a => FromJSON (EIDServiceTransactionResponse a) where
+  parseJSON outer = withObject "object" return outer >>= \o -> do
+    tid      <- o .: "id"
+    provider <- o .: "provider"
+    status   <- o .: "status"
+    mcd      <- parseJSON outer <|> return Nothing
+    return EIDServiceTransactionResponse { estRespID             = tid
+                                         , estRespProvider       = provider
+                                         , estRespStatus         = status
+                                         , estRespCompletionData = mcd
+                                         }
+
 data EIDServiceTransactionFromDB = EIDServiceTransactionFromDB
   { estID :: !EIDServiceTransactionID
   , estStatus :: !EIDServiceTransactionStatus
@@ -246,6 +320,9 @@ data EIDServiceTransactionFromDB = EIDServiceTransactionFromDB
   , estSessionID :: !SessionID
   , estDeadline :: !UTCTime
   } deriving (Show)
+
+-- TODO: XAUTHENTICATION TYPES ARE REDUNDANT AND ARE  1:1 EQUIVALENT TO COMPLETION DATA
+-- TODO: THE FUNCTIONS THAT RELY ON THESE SHOULD USE TRANSACTION/COMPLETEION DATA DIRECTLY
 
 data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication
   { eidServiceVerimiName            :: !T.Text
@@ -275,8 +352,10 @@ data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
   , eidServiceNOBankIDCertificate          :: !(Maybe ByteString)
   } deriving (Eq, Ord, Show)
 
-newtype EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
-  { unEIDServiceIDINSignature :: NLIDINEIDServiceCompletionData
+data EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
+  { unEIDServiceIDINSigSignatoryName :: Text
+  , unEIDServiceIDINSigDateOfBirth :: Text
+  , unEIDServiceIDINSigCustomerID :: Text
   }
   deriving (Eq, Ord, Show)
 
@@ -287,74 +366,14 @@ data EIDServiceFITupasSignature = EIDServiceFITupasSignature
   }
   deriving (Eq, Ord, Show)
 
-data CompleteEIDServiceTransaction =
-  CompleteVerimiEIDServiceTransaction
-    {
-      transactionStatus :: EIDServiceTransactionStatus
-    , completionDataVerimi :: Maybe VerimiEIDServiceCompletionData
-    } |
-  CompleteNLIDINEIDServiceTransaction
-    {
-      transactionStatus :: EIDServiceTransactionStatus
-    , completionDataNLIDIN :: Maybe NLIDINEIDServiceCompletionData
-    } |
-  CompleteDKNemIDEIDServiceTransaction
-    {
-      transactionStatus :: EIDServiceTransactionStatus
-    , completionDataDKNemID :: Maybe DKNemIDEIDServiceCompletionData
-    } |
-  CompleteNOBankIDEIDServiceTransaction
-    {
-      transactionStatus :: EIDServiceTransactionStatus
-    , completionDataNOBankID :: Maybe NOBankIDEIDServiceCompletionData
-    } |
-  CompleteFITupasEIDServiceTransaction
-    {
-      transactionStatus :: EIDServiceTransactionStatus
-    , completionDataFITupas :: Maybe FITupasEIDServiceCompletionData
-    } deriving Show
+data EIDServiceOnfidoSignature = EIDServiceOnfidoSignature
+  { eidServiceOnfidoSigSignatoryName :: Text
+  , eidServiceOnfidoSigDateOfBirth :: Text
+  }
+  deriving (Eq, Ord, Show)
 
-data VerimiEIDServiceCompletionData = VerimiEIDServiceCompletionData
-  { eidvtdName :: T.Text
-  , eidvtdVerifiedEmail :: T.Text
-  } deriving (Eq, Ord, Show)
-
-data FITupasEIDServiceCompletionData = FITupasEIDServiceCompletionData
-  { eidtupasName :: !Text
-  , eidtupasBirthDate :: !Text
-  , eidtupasDistinguishedName :: !Text  -- may contain the personal number
-  , eidtupasBank :: !(Maybe Text)  -- absent when using Mobile ID
-  , eidtupasPid :: !(Maybe Text)
-  -- ^ 'A fixed identifier for the user set in the E-Ident / FTN service.' (from
-  -- the Nets documentation)
-  , eidtupasSSN :: !(Maybe Text)  -- seems to be absent for 'legal persons'
-  } deriving (Eq, Ord, Show)
-
-data NLIDINEIDServiceCompletionData = NLIDINEIDServiceCompletionData
-  { eiditdName :: T.Text
-  , eiditdBirthDate :: T.Text
-  , eiditdCustomerID :: T.Text
-  } deriving (Eq, Ord, Show)
-
-data DKNemIDEIDServiceCompletionData = DKNemIDEIDServiceCompletionData
-  { eidnidInternalProvider :: !EIDServiceDKNemIDInternalProvider
-  , eidnidSSN :: !T.Text
-  , eidnidBirthDate :: !T.Text
-  , eidnidCertificate :: !T.Text
-  , eidnidDistinguishedName :: !T.Text
-  , eidnidPid :: !T.Text
-  } deriving (Eq, Ord, Show)
-
-data NOBankIDEIDServiceCompletionData = NOBankIDEIDServiceCompletionData
-  { eidnobidInternalProvider :: !EIDServiceNOBankIDInternalProvider
-  , eidnobidBirthDate :: !(Maybe T.Text)
-  , eidnobidCertificate :: !(Maybe T.Text)
-  , eidnobidDistinguishedName :: !T.Text
-  , eidnobidIssuerDistinguishedName :: !T.Text
-  , eidnobidName :: !(Maybe Text)
-  , eidnobidPhoneNumber :: !(Maybe T.Text)
-  , eidnobidPid :: !T.Text
-  } deriving (Eq, Ord, Show)
+--TODO: THESE BELOW CAN'T BE REFACTORED AWAY OR INTO THE PROVIDER MODULES UNTIL THE
+--TODO: AUTH/SIG TYPES ABOVE ARE REMOVED AND THE TRANSACTION/COMPLETION DATA USED DIRECTLY
 
 data EIDServiceDKNemIDInternalProvider
   = EIDServiceNemIDKeyCard
@@ -415,30 +434,3 @@ instance ToSQL EIDServiceNOBankIDInternalProvider where
   type PQDest EIDServiceNOBankIDInternalProvider = PQDest Int16
   toSQL EIDServiceNOBankIDStandard = toSQL (1 :: Int16)
   toSQL EIDServiceNOBankIDMobile   = toSQL (2 :: Int16)
-
--- TODO: Decide where to put this
-dateOfBirthFromDKPersonalNumber :: Text -> Text
-dateOfBirthFromDKPersonalNumber personalnumber =
-  case T.chunksOf 2 $ T.take 6 personalnumber of
-    [day, month, year] ->
-      let
-        yearWithoutCentury = read year
-        firstDigitOfSequenceNumber = T.index personalnumber 7
-        century = showt $ resolveCentury yearWithoutCentury firstDigitOfSequenceNumber
-      in
-        day <> "." <> month <> "." <> century <> year
-    _ ->
-      unexpectedError
-        $  "This personal number cannot be formatted to date: "
-        <> personalnumber
-  where
-    resolveCentury :: Int -> Char -> Int
-    resolveCentury yearWithoutCentury firstDigitOfSequenceNumber
-      | firstDigitOfSequenceNumber < '4'
-      = 19
-      | firstDigitOfSequenceNumber == '4'
-      = if yearWithoutCentury < 37 then 20 else 19
-      | firstDigitOfSequenceNumber > '4' && firstDigitOfSequenceNumber < '9'
-      = if yearWithoutCentury < 58 then 20 else 18
-      | otherwise
-      = if yearWithoutCentury < 37 then 20 else 19

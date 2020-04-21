@@ -544,6 +544,7 @@ apiCallV1Ready did = logDocument did . api $ do
         SMSPinAuthenticationToSign   -> True
         IDINAuthenticationToSign     -> False -- Dutch iDIN eSigning is not supported in API v1
         FITupasAuthenticationToSign  -> False -- Finnish TUPAS eSigning is not supported in API v1
+        OnfidoAuthenticationToSign   -> False -- Onfido eSigning is not supported in API v1
 
     signatoryHasValidSSNForIdentifyToView sl =
       case signatorylinkauthenticationtoviewmethod sl of
@@ -674,6 +675,9 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       FITupasAuthenticationToSign -> do
         logAttention_ "Finnish TUPAS signing attempted in V1 API"
         Left . Failed <$> J.runJSONGenT (J.value "fiTupasNotSupported" True)
+      OnfidoAuthenticationToSign -> do
+        logAttention_ "Onfido signing attempted in V1 API"
+        Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
 
 apiCallV1Sign
   :: Kontrakcja m
@@ -763,6 +767,9 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
           FITupasAuthenticationToSign -> do
             logAttention_ "Finnish TUPAS signing attempted in V1 API"
             Left . Failed <$> J.runJSONGenT (J.value "fiTupasNotSupported" True)
+          OnfidoAuthenticationToSign -> do
+            logAttention_ "Onfido signing attempted in V1 API"
+            Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
     `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) ->
                               (throwM . SomeDBExtraException)
                                 $ conflictError ("Document not pending but " <> show i)
@@ -814,6 +821,9 @@ checkAuthenticationToSignMethodAndValue slid = do
             (True, FITupasAuthenticationToSign) ->
               throwM . SomeDBExtraException $ conflictError
                 "Finnish TUPAS signing not supported in API V1"
+            (True, OnfidoAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Onfido signing not supported in API V1"
         Nothing ->
           throwM . SomeDBExtraException $ badInput "`authentication_type` was not a valid"
     (Nothing, Nothing) -> return ()
@@ -1129,22 +1139,7 @@ apiCallV1ChangeAuthenticationToSign did slid =
             return (SEBankIDAuthenticationToSign, authentication_value, Nothing)
           Just SMSPinAuthenticationToSign ->
             return (SMSPinAuthenticationToSign, Nothing, authentication_value)
-          Just NOBankIDAuthenticationToSign ->
-            throwM
-              . SomeDBExtraException
-              $ badInput
-                  "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
-          Just DKNemIDAuthenticationToSign ->
-            throwM
-              . SomeDBExtraException
-              $ badInput
-                  "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
-          Just IDINAuthenticationToSign ->
-            throwM
-              . SomeDBExtraException
-              $ badInput
-                  "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
-          Just FITupasAuthenticationToSign ->
+          Just _ ->
             throwM
               . SomeDBExtraException
               $ badInput
@@ -1211,6 +1206,8 @@ apiCallV1ChangeAuthenticationToSign did slid =
           "Dutch iDIN signing is not supported in API V1"
         FITupasAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "Finnish TUPAS signing is not supported in API V1"
+        OnfidoAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "Onfido signing is not supported in API V1"
 
       -- Change authentication to sign method and return Document JSON
       dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor

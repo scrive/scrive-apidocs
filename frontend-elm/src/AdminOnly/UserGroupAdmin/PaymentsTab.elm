@@ -111,10 +111,15 @@ setFreeFeatures features =
                 | canUseDKAuthenticationToSign = False
                 , canUseDKAuthenticationToView = False
                 , canUseFIAuthenticationToView = False
+                , canUseFIAuthenticationToSign = False
                 , canUseNOAuthenticationToView = False
                 , canUseNOAuthenticationToSign = False
                 , canUseSEAuthenticationToView = False
                 , canUseSEAuthenticationToSign = False
+                , canUseVerimiAuthenticationToView = False
+                , canUseIdinAuthenticationToView = False
+                , canUseIdinAuthenticationToSign = False
+                , canUseOnfidoAuthenticationToSign = False
             }
 
         userFeatures1 =
@@ -125,6 +130,7 @@ setFreeFeatures features =
                 | canUseDKAuthenticationToView = False
                 , canUseDKAuthenticationToSign = False
                 , canUseFIAuthenticationToView = False
+                , canUseFIAuthenticationToSign = False
                 , canUseNOAuthenticationToView = False
                 , canUseNOAuthenticationToSign = False
                 , canUseSEAuthenticationToView = False
@@ -132,6 +138,7 @@ setFreeFeatures features =
                 , canUseVerimiAuthenticationToView = False
                 , canUseIdinAuthenticationToView = False
                 , canUseIdinAuthenticationToSign = False
+                , canUseOnfidoAuthenticationToSign = False
                 , canUsePortal = False
             }
     in
@@ -151,10 +158,15 @@ setPaidFeatures features =
                 | canUseDKAuthenticationToSign = True
                 , canUseDKAuthenticationToView = True
                 , canUseFIAuthenticationToView = True
+                , canUseFIAuthenticationToSign = True
                 , canUseNOAuthenticationToView = True
                 , canUseNOAuthenticationToSign = True
                 , canUseSEAuthenticationToView = True
                 , canUseSEAuthenticationToSign = True
+                , canUseVerimiAuthenticationToView = True
+                , canUseIdinAuthenticationToView = True
+                , canUseIdinAuthenticationToSign = True
+                , canUseOnfidoAuthenticationToSign = True
             }
 
         userFeatures1 =
@@ -165,6 +177,7 @@ setPaidFeatures features =
                 | canUseDKAuthenticationToView = True
                 , canUseDKAuthenticationToSign = True
                 , canUseFIAuthenticationToView = True
+                , canUseFIAuthenticationToSign = True
                 , canUseNOAuthenticationToView = True
                 , canUseNOAuthenticationToSign = True
                 , canUseSEAuthenticationToView = True
@@ -172,6 +185,7 @@ setPaidFeatures features =
                 , canUseVerimiAuthenticationToView = True
                 , canUseIdinAuthenticationToView = True
                 , canUseIdinAuthenticationToSign = True
+                , canUseOnfidoAuthenticationToSign = True
             }
     in
     { adminUsers = adminFeatures2
@@ -264,15 +278,15 @@ update embed globals msg model =
                     (\subscription ->
                         ( model
                         , Http.post
-                                { url = "/adminonly/companyadmin/updatesubscription/" ++ model.ugid
-                                , body =
-                                    formBody globals
-                                        [ ( "subscription"
-                                          , JE.encode 0 <| Subscription.toPostJson subscription
-                                          )
-                                        ]
-                                , expect = Http.expectString (embed << GotSaveResponse)
-                                }
+                            { url = "/adminonly/companyadmin/updatesubscription/" ++ model.ugid
+                            , body =
+                                formBody globals
+                                    [ ( "subscription"
+                                      , JE.encode 0 <| Subscription.toPostJson subscription
+                                      )
+                                    ]
+                            , expect = Http.expectString (embed << GotSaveResponse)
+                            }
                         )
                     )
                 |> M.withDefault ( model, Cmd.none )
@@ -285,9 +299,9 @@ update embed globals msg model =
                 Ok _ ->
                     ( model
                     , Cmd.batch
-                            [ globals.flashMessage <| FlashMessage.success "Saved"
-                            , globals.setPageUrlFromModel -- reloads UserGroup Details
-                            ]
+                        [ globals.flashMessage <| FlashMessage.success "Saved"
+                        , globals.setPageUrlFromModel -- reloads UserGroup Details
+                        ]
                     )
 
 
@@ -401,6 +415,7 @@ featureFlagsStructure =
         , ( "Can use Verimi authorization to view", "can_use_verimi_authentication_to_view" )
         , ( "Can use IDIN Authentication to view", "can_use_idin_authentication_to_view" )
         , ( "Can use IDIN Authentication to sign", "can_use_idin_authentication_to_sign" )
+        , ( "Can use Onfido Authentication to sign", "can_use_onfido_authentication_to_sign" )
         ]
       )
     , ( "Standard auth to view and sign (disable to force use of eID/SMS)"

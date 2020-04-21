@@ -187,7 +187,8 @@ var Subscription = Backbone.Model.extend({
         can_use_forwarding: ff.canUseForwarding,
         can_use_document_party_notifications: ff.canUseDocumentPartyNotifications,
         can_use_portal: ff.canUsePortal,
-        can_use_custom_sms_texts: ff.canUseCustomSMSTexts
+        can_use_custom_sms_texts: ff.canUseCustomSMSTexts,
+        can_use_onfido_authentication_to_sign: ff.canUseOnfidoAuthenticationToSign
       });
     };
     var newSubscription = {
@@ -309,7 +310,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_pad_invitations": true,
     "can_use_document_party_notifications": false,
     "can_use_portal": false,
-    "canUseCustomSMSTexts": false
+    "canUseCustomSMSTexts": false,
+    "can_use_onfido_authentication_to_sign": true
   },
   canUseTemplates: function () {
      return this.get("can_use_templates");
@@ -404,6 +406,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   canUsePortal: function () {
      return this.get("can_use_portal");
   },
+  canUseOnfidoAuthenticationToSign: function () {
+     return this.get("can_use_onfido_authentication_to_sign");
+  },
   firstAllowedAuthenticationToView: function () {
     if (this.canUseStandardAuthenticationToView())
       return "standard";
@@ -440,6 +445,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "nl_idin";
     else if (this.canUseFIAuthenticationToSign())
       return "fi_tupas";
+    else if (this.canUseOnfidoAuthenticationToSign())
+      return "onfido";
     else
       // Should not happen, just in case
       return "standard";
@@ -479,7 +486,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       this.canUseNOAuthenticationToSign() ||
       this.canUseDKAuthenticationToSign() ||
       this.canUseIDINAuthenticationToSign() ||
-      this.canUseFIAuthenticationToSign();
+      this.canUseFIAuthenticationToSign() ||
+      this.canUseOnfidoAuthenticationToSign();
   },
   parse: function (args) {
     return {
@@ -511,7 +519,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_api_invitations: args.can_use_api_invitations,
       can_use_pad_invitations: args.can_use_pad_invitations,
       can_use_portal: args.can_use_portal,
-      can_use_custom_sms_texts: args.can_use_custom_sms_texts
+      can_use_custom_sms_texts: args.can_use_custom_sms_texts,
+      can_use_onfido_authentication_to_sign: args.can_use_onfido_authentication_to_sign
     };
   }
 });

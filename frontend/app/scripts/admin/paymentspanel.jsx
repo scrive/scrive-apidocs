@@ -65,6 +65,7 @@ module.exports = React.createClass({
         canUseForwarding: features.canUseForwarding(),
         canUseDocumentPartyNotifications: features.canUseDocumentPartyNotifications(),
         canUsePortal: features.canUsePortal(),
+        canUseOnfidoAuthenticationToSign: features.canUseOnfidoAuthenticationToSign(),
       };
     },
     initStateFromSubscription : function() {
@@ -132,6 +133,7 @@ module.exports = React.createClass({
           adminUserFeatures.canUseVerimiAuthenticationToView = false;
           adminUserFeatures.canUseIDINAuthenticationToView = false;
           adminUserFeatures.canUseIDINAuthenticationToSign = false;
+          adminUserFeatures.canUseOnfidoAuthenticationToSign = false
           regularUserFeatures.canUseDKAuthenticationToView = false;
           regularUserFeatures.canUseDKAuthenticationToSign = false;
           regularUserFeatures.canUseFIAuthenticationToView = false;
@@ -144,6 +146,7 @@ module.exports = React.createClass({
           regularUserFeatures.canUseIDINAuthenticationToView = false;
           regularUserFeatures.canUseIDINAuthenticationToSign = false;
           regularUserFeatures.canUsePortal = false;
+          regularUserFeatures.canUseOnfidoAuthenticationToSign = false;
       } else {
           adminUserFeatures.canUseDKAuthenticationToView = true;
           adminUserFeatures.canUseDKAuthenticationToSign = true;
@@ -156,6 +159,7 @@ module.exports = React.createClass({
           adminUserFeatures.canUseVerimiAuthenticationToView = true;
           adminUserFeatures.canUseIDINAuthenticationToView = true;
           adminUserFeatures.canUseIDINAuthenticationToSign = true;
+          adminUserFeatures.canUseOnfidoAuthenticationToSign = true;
           regularUserFeatures.canUseDKAuthenticationToView = true;
           regularUserFeatures.canUseDKAuthenticationToSign = true;
           regularUserFeatures.canUseFIAuthenticationToView = true;
@@ -167,6 +171,7 @@ module.exports = React.createClass({
           regularUserFeatures.canUseVerimiAuthenticationToView = true;
           regularUserFeatures.canUseIDINAuthenticationToView = true;
           regularUserFeatures.canUseIDINAuthenticationToSign = true;
+          regularUserFeatures.canUseOnfidoAuthenticationToSign = true;
       }
       this.setState({
           selectedPlan: v,
@@ -429,6 +434,7 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use Verimi authorization to view","canUseVerimiAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use iDIN authorization to view","canUseIDINAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use iDIN authorization at sign time","canUseIDINAuthenticationToSign")}
+              {this.renderTRForOptionWithCheckbox("Can use Onfido authorization to sign","canUseOnfidoAuthenticationToSign")}
               {this.renderTROptionSeparator("Standard auth to view and sign")}
               {this.renderTROptionSeparator("(disable to force use of eID/SMS)")}
               {this.renderTRForOptionWithCheckbox("Can use Standard authorization to view","canUseStandardAuthenticationToView")}

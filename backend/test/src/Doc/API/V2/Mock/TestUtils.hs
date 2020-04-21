@@ -337,6 +337,7 @@ setMockDocSigLinkAuthToSignMethod i auth = setForSigNumberFromMockDoc
     toStrAuth IDINAuthenticationToSign     = "nl_idin"
     toStrAuth FITupasAuthenticationToSign  = "fi_tupas"
     toStrAuth SMSPinAuthenticationToSign   = "sms_pin"
+    toStrAuth OnfidoAuthenticationToSign   = "onfido"
 
 getMockDocSigLinkPersonalNumber :: Int -> MockDoc -> String
 getMockDocSigLinkPersonalNumber i =

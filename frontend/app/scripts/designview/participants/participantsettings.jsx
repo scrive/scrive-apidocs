@@ -280,6 +280,8 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToSignIDIN;
     } else if (t == "fi_tupas") {
       return localization.designview.addParties.authenticationToSignFITupas;
+    } else if (t == "onfido") {
+      return localization.designview.addParties.authenticationToSignOnfido;
     }
   },
   authenticationToSignOptions: function () {
@@ -287,7 +289,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var allAuthTypes = !sig.signs() ? ["standard"] : [
       "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas",
-      "sms_pin"
+      "onfido", "sms_pin"
     ];
     var authTypes = allAuthTypes.slice(0);
 
@@ -314,6 +316,9 @@ module.exports = React.createClass({
       }
       if (!ff.canUseFIAuthenticationToSign() && !sig.fiTupasAuthenticationToSign()) {
         authTypes = _.without(authTypes, "fi_tupas");
+      }
+      if (!ff.canUseOnfidoAuthenticationToSign() && !sig.onfidoAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "onfido");
       }
     }
 

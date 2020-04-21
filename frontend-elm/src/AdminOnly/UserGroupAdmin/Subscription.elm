@@ -133,6 +133,7 @@ type alias FeatureFlags =
     , canUseVerimiAuthenticationToView : Bool
     , canUseIdinAuthenticationToView : Bool
     , canUseIdinAuthenticationToSign : Bool
+    , canUseOnfidoAuthenticationToSign : Bool
     , canUsePortal : Bool
     , canUseCustomSMSTexts : Bool
     }
@@ -265,6 +266,7 @@ defaultFeatureFlags =
     , canUseVerimiAuthenticationToView = False
     , canUseIdinAuthenticationToView = False
     , canUseIdinAuthenticationToSign = False
+    , canUseOnfidoAuthenticationToSign = False
     , canUsePortal = False
     , canUseCustomSMSTexts = False
     }
@@ -301,9 +303,10 @@ ffKeyAccessPairs =
     , ( "can_use_verimi_authentication_to_view", ( .canUseVerimiAuthenticationToView, \ff v -> { ff | canUseVerimiAuthenticationToView = v } ) )
     , ( "can_use_idin_authentication_to_view", ( .canUseIdinAuthenticationToView, \ff v -> { ff | canUseIdinAuthenticationToView = v } ) )
     , ( "can_use_idin_authentication_to_sign", ( .canUseIdinAuthenticationToSign, \ff v -> { ff | canUseIdinAuthenticationToSign = v } ) )
+    , ( "can_use_onfido_authentication_to_sign", ( .canUseOnfidoAuthenticationToSign, \ff v -> { ff | canUseOnfidoAuthenticationToSign = v } ) )
     , ( "can_use_portal", ( .canUsePortal, \ff v -> { ff | canUsePortal = v } ) )
     , ( "can_use_custom_sms_texts", ( .canUseCustomSMSTexts, \ff v -> { ff | canUseCustomSMSTexts = v } ) )
-        ]
+    ]
 
 
 featureFlagsDecoder : Decoder FeatureFlags

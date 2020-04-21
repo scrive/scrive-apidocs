@@ -23,6 +23,8 @@ var IDINSignModel = require("../../eleg/idinsigning");
 var SignIDINAuth = require("./signidinauth");
 var FITupasSignModel = require("../../eleg/fitupassigning");
 var SignFITupasAuth = require("./signfitupasauth");
+var OnfidoSignModel = require("../../eleg/onfidosigning");
+var SignOnfidoAuth = require("./signonfidoauth");
 var ErrorModal = require("../errormodal");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var $ = require("jquery");
@@ -95,6 +97,7 @@ var Task = require("../navigation/task");
       var hasEIDNets = signatory.noBankIDAuthenticationToSign() || signatory.dkNemIDAuthenticationToSign();
       var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
       var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
+      var hasOnfidoAuth = signatory.onfidoAuthenticationToSign();
 
       if (isApprover) {
         return "approve";
@@ -120,6 +123,10 @@ var Task = require("../navigation/task");
         return "eid-fi-tupas-auth";
       }
 
+      if (hasOnfidoAuth) {
+        return "eid-onfido-auth";
+      }
+
       if (signatory.hasPlacedObligatorySignatures()) {
         return "finish";
       }
@@ -131,7 +138,8 @@ var Task = require("../navigation/task");
       var steps = [
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
         "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
-        "approving", "forward", "eid-idin-auth", "eid-fi-tupas-auth"
+        "approving", "forward", "eid-idin-auth", "eid-fi-tupas-auth",
+        "eid-onfido-auth"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -197,7 +205,8 @@ var Task = require("../navigation/task");
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
       var noOverlayStep = [
-        "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth", "eid-fi-tupas-sign"
+        "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth",
+        "eid-fi-tupas-sign", "eid-onfido-auth"
       ];
       return !(noOverlayStep.indexOf(step) > -1);
     },
@@ -626,6 +635,20 @@ var Task = require("../navigation/task");
       }).sign();
     },
 
+    handleOnfidoAuth: function () {
+      if (!this.canSignDocument()) {
+        return this.context.blinkArrow();
+      }
+
+      var document = this.props.model.document();
+      var signatory = document.currentSignatory();
+
+      new OnfidoSignModel({
+        doc: document,
+        siglinkid: signatory.signatoryid()
+      }).sign();
+    },
+
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -821,6 +844,21 @@ var Task = require("../navigation/task");
               onSign={ function () {
                   doc.takeSigningScreenshot(function () {
                     self.handleFITupasAuth();
+                  }, {});
+                }
+              }
+            />
+          }
+          {/* if */ this.isOnStep("eid-onfido-auth") &&
+            <SignOnfidoAuth
+              model={this.props.model}
+              canSign={this.canSignDocument()}
+              field={phoneField}
+              onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
+              onSign={ function () {
+                  doc.takeSigningScreenshot(function () {
+                    self.handleOnfidoAuth();
                   }, {});
                 }
               }

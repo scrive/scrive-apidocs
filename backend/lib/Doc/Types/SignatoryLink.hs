@@ -188,8 +188,9 @@ data AuthenticationToSignMethod
   | SMSPinAuthenticationToSign
   | NOBankIDAuthenticationToSign
   | DKNemIDAuthenticationToSign
-  | IDINAuthenticationToSign
-  | FITupasAuthenticationToSign
+  | IDINAuthenticationToSign  -- authentication at the point of signing
+  | FITupasAuthenticationToSign  -- authentication at the point of signing
+  | OnfidoAuthenticationToSign  -- authentication at the point of signing
     deriving (Enum, Eq, Ord, Show)
 
 instance PQFormat AuthenticationToSignMethod where
@@ -207,7 +208,8 @@ instance FromSQL AuthenticationToSignMethod where
       5 -> return DKNemIDAuthenticationToSign
       6 -> return IDINAuthenticationToSign
       7 -> return FITupasAuthenticationToSign
-      _ -> throwM RangeError { reRange = [(1, 7)], reValue = n }
+      8 -> return OnfidoAuthenticationToSign
+      _ -> throwM RangeError { reRange = [(1, 8)], reValue = n }
 
 instance ToSQL AuthenticationToSignMethod where
   type PQDest AuthenticationToSignMethod = PQDest Int16
@@ -218,6 +220,7 @@ instance ToSQL AuthenticationToSignMethod where
   toSQL DKNemIDAuthenticationToSign  = toSQL (5 :: Int16)
   toSQL IDINAuthenticationToSign     = toSQL (6 :: Int16)
   toSQL FITupasAuthenticationToSign  = toSQL (7 :: Int16)
+  toSQL OnfidoAuthenticationToSign   = toSQL (8 :: Int16)
 
 ---------------------------------
 

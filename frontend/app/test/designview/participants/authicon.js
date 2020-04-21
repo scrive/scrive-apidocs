@@ -51,7 +51,11 @@ var AuthToSignIcon = require("../../../scripts/designview/participants/authtosig
       authIcon.forceUpdate();
       TestUtils.Simulate.click(authIcon.getDOMNode());
       var authMethod8 = signatory.get("authentication_method_to_sign");
-      assert.equal(authMethod1, authMethod8);
+      assert.notEqual(authMethod7, authMethod8);
+      authIcon.forceUpdate();
+      TestUtils.Simulate.click(authIcon.getDOMNode());
+      var authMethod9 = signatory.get("authentication_method_to_sign");
+      assert.equal(authMethod1, authMethod9);
     });
 
     it("should not change auth if signatory is last viewer", function () {

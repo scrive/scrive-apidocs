@@ -89,6 +89,10 @@ var Modal = require("../../common/modal");
       return this.newAuthenticationMethod() == "fi_tupas";
     },
 
+    isNewAuthenticationOnfido: function () {
+      return this.newAuthenticationMethod() == "onfido";
+    },
+
     isAuthenticationValueInvalid: function () {
       var authvalue = this.newAuthenticationValue();
 
@@ -156,7 +160,7 @@ var Modal = require("../../common/modal");
                 || this.isNewAuthenticationFITupas()) {
         text = localization.docview.changeAuthentication.errorEID;
       }
-      // no NOBankID/IDIN here, because there is only empty "" authentication value
+      // no NOBankID/IDIN/Onfido here, because there is only empty "" authentication value
 
       return text;
     }
@@ -188,6 +192,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToSignIDIN;
       } else if (model.isNewAuthenticationFITupas()) {
         return localization.docview.signatory.authenticationToSignFITupas;
+      } else if (model.isNewAuthenticationOnfido()) {
+        return localization.docview.signatory.authenticationToSignOnfido;
       }
     },
 
@@ -211,7 +217,7 @@ var Modal = require("../../common/modal");
       } else if (model.isNewAuthenticationDKNemID()) {
         text = localization.eID.idName.nemId;
       }
-      // there is no NOBankID here, because authentication value is empty in that case.
+      // there is no NOBankID/IDIN/Onfido here, because authentication value is empty in that case.
       return text;
     },
 
@@ -306,6 +312,16 @@ var Modal = require("../../common/modal");
       if (ff.canUseFIAuthenticationToSign() && isAvailable(tupas.value)) {
         options.push(tupas);
       }
+
+      var onfido = {
+        name: localization.docview.signatory.authenticationToSignOnfido,
+        selected: model.isNewAuthenticationOnfido(),
+        value: "onfido"
+      };
+      if (ff.canUseOnfidoAuthenticationToSign() && isAvailable(onfido.value)) {
+        options.push(onfido);
+      }
+
       return options;
     },
 

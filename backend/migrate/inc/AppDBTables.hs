@@ -70,6 +70,7 @@ kontraComposites =
     , ctSignatoryLink
     , ctDocument
     , ctFeatureFlags
+    , ctFeatureFlags7
     , ctFeatureFlags6
     , ctFeatureFlags5
     , ctFeatureFlags4

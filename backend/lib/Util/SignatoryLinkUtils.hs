@@ -245,6 +245,7 @@ data MixAuthMethod
   | MAM_FITupas
   | MAM_Verimi
   | MAM_NLIDIN
+  | MAM_Onfido
   deriving (Eq, Ord, Show)
 
 atvToMix :: AuthenticationToViewMethod -> MixAuthMethod
@@ -265,6 +266,7 @@ atsToMix NOBankIDAuthenticationToSign = MAM_NOBankID
 atsToMix DKNemIDAuthenticationToSign  = MAM_DKNemID
 atsToMix IDINAuthenticationToSign     = MAM_NLIDIN
 atsToMix FITupasAuthenticationToSign  = MAM_FITupas
+atsToMix OnfidoAuthenticationToSign   = MAM_Onfido
 
 authenticationMethodsCanMix
   :: AuthenticationToViewMethod
@@ -325,6 +327,7 @@ authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign = False
 authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign  = True
 authToSignNeedsPersonalNumber IDINAuthenticationToSign     = False
 authToSignNeedsPersonalNumber FITupasAuthenticationToSign  = False
+authToSignNeedsPersonalNumber OnfidoAuthenticationToSign   = False
 
 authToSignNeedsMobileNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsMobileNumber StandardAuthenticationToSign = False
@@ -334,3 +337,4 @@ authToSignNeedsMobileNumber NOBankIDAuthenticationToSign = False
 authToSignNeedsMobileNumber DKNemIDAuthenticationToSign  = False
 authToSignNeedsMobileNumber IDINAuthenticationToSign     = False
 authToSignNeedsMobileNumber FITupasAuthenticationToSign  = False
+authToSignNeedsMobileNumber OnfidoAuthenticationToSign   = False

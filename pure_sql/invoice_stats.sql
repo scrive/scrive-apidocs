@@ -327,6 +327,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "Verimi authentications" BIGINT,
         "iDIN authentications" BIGINT,
         "iDIN signatures" BIGINT,
+        "Onfido signatures" BIGINT,
         "Shareable links used" BIGINT,
         "Telia SMSes sent (physical)" BIGINT,
         "Users at start of period" BIGINT,
@@ -486,6 +487,12 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 18
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Onfido signatures"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 13
                  AND chi.time >= period.from
                  AND chi.time <= period.to) AS "Shareable links used"
@@ -546,6 +553,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
              OR report."Verimi authentications" > 0
              OR report."iDIN authentications" > 0
              OR report."iDIN signatures" > 0
+             OR report."Onfido signatures" > 0
              OR report."Shareable links used" > 0
              OR report."Users at start of period" > 0
              OR report."Users at end of period" > 0
@@ -594,6 +602,7 @@ CREATE TABLE report_master AS
   "Verimi authentications",
   "iDIN authentications",
   "iDIN signatures",
+  "Onfido signatures",
   "Shareable links used",
   "Telia SMSes sent (physical)",
   "Users at start of period",

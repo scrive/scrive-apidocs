@@ -47,7 +47,7 @@ module.exports = Backbone.Model.extend({
     };
 
     new Submit({
-      url: "/eid-service/start/fitupas-sign/" + this.doc().documentid() + "/" + this.siglinkid(),
+      url: "/eid-service/start/fitupas/sign/" + this.doc().documentid() + "/" + this.siglinkid(),
       method: "POST",
       ajax: true,
       ajaxsuccess: successCallback,

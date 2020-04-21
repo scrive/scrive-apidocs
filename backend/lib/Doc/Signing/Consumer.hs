@@ -40,6 +40,9 @@ import EID.CGI.GRP.Types
 import EID.EIDService.Communication
 import EID.EIDService.Conf
 import EID.EIDService.Model
+import EID.EIDService.Provider.FITupas (FITupasEIDServiceCompletionData(..))
+import EID.EIDService.Provider.NLIDIN (NLIDINEIDServiceCompletionData(..))
+import EID.EIDService.Provider.Onfido (OnfidoEIDServiceCompletionData(..))
 import EID.EIDService.Types
 import EID.Nets.Config
 import EID.Nets.Control (checkNetsSignStatus)
@@ -184,6 +187,12 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                     mEidServiceConf
                     ds
                     now
+                  EIDServiceOnfido -> handleEidService
+                    (`getTransactionFromEIDService` EIDServiceTransactionProviderOnfido)
+                    processCompleteOnfidoTransaction
+                    mEidServiceConf
+                    ds
+                    now
                   LegacyBankID -> legacyProviderFail signingSignatoryID LegacyBankID
                   LegacyTelia  -> legacyProviderFail signingSignatoryID LegacyTelia
                   LegacyNordea -> legacyProviderFail signingSignatoryID LegacyNordea
@@ -208,21 +217,20 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       throwE $ Failed Remove
 
     processCompleteIDINTransaction ds@DocumentSigning {..} est ct now = do
-      let mctd = case ct of
-            CompleteNLIDINEIDServiceTransaction _ mctd' -> mctd'
-            _ -> Nothing
-      ctd <- whenNothing mctd $ throwE (Failed Remove)
+      let mctd = estRespCompletionData ct
+      NLIDINEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
       dbUpdate
         . MergeEIDServiceIDINSignature signingSignatoryID
-        $ EIDServiceNLIDINSignature ctd
+        $ EIDServiceNLIDINSignature { unEIDServiceIDINSigSignatoryName = eiditdName
+                                    , unEIDServiceIDINSigDateOfBirth   = eiditdBirthDate
+                                    , unEIDServiceIDINSigCustomerID    = eiditdCustomerID
+                                    }
       logInfo_ . ("EidHub NL IDIN Sign succeeded: " <>) . showt $ est
       signFromESignature ds now
       chargeForItemSingle CIIDINSignature . documentid =<< theDocument
 
     processCompleteFITupasTransaction ds@DocumentSigning {..} est ct now = do
-      let mctd = case ct of
-            CompleteFITupasEIDServiceTransaction _ mctd' -> mctd'
-            _ -> Nothing
+      let mctd = estRespCompletionData ct
       FITupasEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
       let sig = EIDServiceFITupasSignature
             { eidServiceFITupasSigSignatoryName  = eidtupasName
@@ -245,6 +253,22 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       signFromESignature ds now
       chargeForItemSingle CIFITupasSignature . documentid =<< theDocument
 
+    processCompleteOnfidoTransaction ds@DocumentSigning {..} est ct now = do
+      let mctd = estRespCompletionData ct
+      OnfidoEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
+      unless eidonfidoChecksClear $ throwE (Failed Remove)
+
+      let sig = EIDServiceOnfidoSignature
+            { eidServiceOnfidoSigSignatoryName = eidonfidoFirstName
+                                                 <> " "
+                                                 <> eidonfidoLastName
+            , eidServiceOnfidoSigDateOfBirth   = eidonfidoDateOfBirth
+            }
+
+      dbUpdate $ MergeEIDServiceOnfidoSignature signingSignatoryID sig
+      logInfo_ . ("EidHub Onfido Sign succeeded: " <>) . showt $ est
+      signFromESignature ds now
+      chargeForItemSingle CIOnfidoSignature . documentid =<< theDocument
 
 handleCgiGrpBankID
   :: ( CryptoRNG m
@@ -340,11 +364,11 @@ handleEidService
      )
   => (  EIDServiceConf
      -> EIDServiceTransactionID
-     -> ExceptT Result m (Maybe CompleteEIDServiceTransaction)
+     -> ExceptT Result m (Maybe (EIDServiceTransactionResponse a))
      )
   -> (  DocumentSigning
      -> EIDServiceTransactionFromDB
-     -> CompleteEIDServiceTransaction
+     -> EIDServiceTransactionResponse a
      -> UTCTime
      -> ExceptT Result m ()
      )
@@ -381,7 +405,7 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
   let mergeWithStatus newStatus =
         dbUpdate . MergeEIDServiceTransaction $ est { estStatus = newStatus }
 
-  let ts = transactionStatus ct
+  let ts = estRespStatus ct
   case ts of
     EIDServiceTransactionStatusCompleteAndSuccess -> do
       process ds est ct now

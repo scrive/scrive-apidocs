@@ -329,7 +329,6 @@ Library
                  , EID.EIDService.Conf
                  , EID.EIDService.Communication
                  , EID.EIDService.Control
-                 , EID.EIDService.JSON
                  , EID.EIDService.Migrations
                  , EID.EIDService.Model
                  , EID.EIDService.Provider
@@ -337,6 +336,7 @@ Library
                  , EID.EIDService.Provider.FITupas
                  , EID.EIDService.Provider.NLIDIN
                  , EID.EIDService.Provider.NOBankID
+                 , EID.EIDService.Provider.Onfido
                  , EID.EIDService.Provider.Verimi
                  , EID.EIDService.Tables
                  , EID.EIDService.Types

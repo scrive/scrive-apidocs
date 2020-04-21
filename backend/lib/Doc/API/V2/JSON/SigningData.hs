@@ -47,6 +47,7 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
             Right (NetsDKNemIDSignature_        _) -> Just DKNemIDAuthenticationToSign
             Right (EIDServiceIDINSignature_     _) -> Just IDINAuthenticationToSign
             Right (EIDServiceFITupasSignature_  _) -> Just FITupasAuthenticationToSign
+            Right (EIDServiceOnfidoSignature_   _) -> Just OnfidoAuthenticationToSign
             Right (LegacyBankIDSignature_       _) -> Nothing
             Right (LegacyTeliaSignature_        _) -> Nothing
             Right (LegacyNordeaSignature_       _) -> Nothing
@@ -89,15 +90,17 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                  else ["signatory_personal_number" .= netsdkSignatorySSN]
             )
         ]
-      Right (EIDServiceIDINSignature_ (EIDServiceNLIDINSignature details@NLIDINEIDServiceCompletionData {..}))
-        -> [ "nl_idin_data" .= object
-               (  [ "signatory_name" .= eiditdName
-                  , "signatory_customer_id" .= eiditdCustomerID
-                  , "signatory_name_match" .= showt (matchSignatoryName signatory details)
-                  ]
-               <> if hidePN then [] else ["signatory_date_of_birth" .= eiditdBirthDate]
-               )
-           ]
+      Right (EIDServiceIDINSignature_ details@EIDServiceNLIDINSignature {..}) ->
+        [ "nl_idin_data" .= object
+            (  [ "signatory_name" .= unEIDServiceIDINSigSignatoryName
+               , "signatory_customer_id" .= unEIDServiceIDINSigCustomerID
+               , "signatory_name_match" .= showt (matchSignatoryName signatory details)
+               ]
+            <> if hidePN
+                 then []
+                 else ["signatory_date_of_birth" .= unEIDServiceIDINSigDateOfBirth]
+            )
+        ]
       Right (EIDServiceFITupasSignature_ EIDServiceFITupasSignature {..}) ->
         [ "fi_tupas_data" .= object
             (["signatory_name" .= eidServiceFITupasSigSignatoryName] <> if hidePN
@@ -106,6 +109,13 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                 [ "signatory_date_of_birth" .= eidServiceFITupasSigDateOfBirth
                 , "signatory_personal_number" .= eidServiceFITupasSigPersonalNumber
                 ]
+            )
+        ]
+      Right (EIDServiceOnfidoSignature_ EIDServiceOnfidoSignature {..}) ->
+        [ "onfido_data" .= object
+            (["signatory_name" .= eidServiceOnfidoSigSignatoryName] <> if hidePN
+              then []
+              else ["signatory_date_of_birth" .= eidServiceOnfidoSigDateOfBirth]
             )
         ]
       Right (LegacyBankIDSignature_       _) -> []
@@ -134,7 +144,7 @@ joinText a  b  = a <> " " <> b
 --   Match - if name matches exactly
 --   Misspelled - if there is 1~2 letters difference in the last name
 --   Mismatch - if the initials don't match or if more misspellings in the last name.
-matchSignatoryName :: SignatoryLink -> NLIDINEIDServiceCompletionData -> NameMatchResult
+matchSignatoryName :: SignatoryLink -> EIDServiceNLIDINSignature -> NameMatchResult
 matchSignatoryName signatory details = matchSignatoryName' slFullName
                                                            eidInitials
                                                            eidLastName
@@ -142,7 +152,7 @@ matchSignatoryName signatory details = matchSignatoryName' slFullName
     slFirstName                = normalizeName $ getFirstName signatory
     slLastName                 = normalizeName $ getLastName signatory
     slFullName                 = joinText slFirstName slLastName
-    eidFullName                = normalizeName $ eiditdName details
+    eidFullName                = normalizeName $ unEIDServiceIDINSigSignatoryName details
     (eidInitials, eidLastName) = splitFirstSpace eidFullName
 
 matchSignatoryName' :: Text -> Text -> Text -> NameMatchResult

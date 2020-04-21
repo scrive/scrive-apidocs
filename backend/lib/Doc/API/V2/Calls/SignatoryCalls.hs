@@ -293,6 +293,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
           DKNemIDAuthenticationToSign  -> Just NetsDKNemID
           IDINAuthenticationToSign     -> Just EIDServiceIDIN
           FITupasAuthenticationToSign  -> Just EIDServiceTupas
+          OnfidoAuthenticationToSign   -> Just EIDServiceOnfido
 
     case mprovider of
       Nothing -> do
