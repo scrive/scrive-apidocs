@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2020-04-20  | Added `nl_idin` and `fi_tupas` to various `authentication_method_to_*`. |
     | 2020-04-02  | Updated endpoint list to include missing ip-addresses. |
     | 2020-03-04  | Add user tags API. |
     | 2020-02-21  | Change the format of user group tags. |
