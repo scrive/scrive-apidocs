@@ -70,7 +70,7 @@ accessControlAPIV2Delete roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
     Nothing   -> apiError insufficientPrivileges
     Just role -> do
-      apiuser          <- getAPIUserWithAPIPersonal
+      apiuser      <- getAPIUserWithAPIPersonal
       -- to delete a role one must UpdateA source and be able to grant the role
       requiredPerm <-
         apiRequireAllPermissions $ canDoActionOnSource UpdateA role : canGrant
@@ -83,8 +83,8 @@ accessControlAPIV2Delete roleId = api $ do
 
 accessControlAPIV2Add :: Kontrakcja m => m Response
 accessControlAPIV2Add = api $ do
-  role             <- getApiRoleParameter
-  apiuser          <- getAPIUserWithAPIPersonal
+  role         <- getApiRoleParameter
+  apiuser      <- getAPIUserWithAPIPersonal
   -- to add a role one must UpdateA source and be able to grant the role
   requiredPerm <- apiRequireAllPermissions $ canDoActionOnSource UpdateA role : canGrant
     (accessRoleTarget role)

@@ -2,7 +2,6 @@ module Doc.AccessControlTest (docAccessControlTests) where
 
 import Control.Exception (SomeException)
 import Control.Monad.Catch (catch)
-import Doc.AccessControl
 import Happstack.Server
 import Log
 import Test.Framework
@@ -10,12 +9,12 @@ import Test.Framework
 import AccessControl.Model
 import AccessControl.Types
 import Attachment.Model
-import DB.Query (dbUpdate)
+import DB.Query
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.DocControl
 import Doc.DocumentID (DocumentID)
 import Doc.DocumentMonad (withDocumentID)
-import Doc.Model.Update
+import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Types.Document
 import Doc.Types.DocumentStatus
@@ -27,17 +26,15 @@ import Kontra
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
-import User.Types.User
 import Util.Actor
 import Util.SignatoryLinkUtils
+
+-- TODO: Test that signatory cannot access other documents
 
 docAccessControlTests :: TestEnvSt -> Test
 docAccessControlTests env = testGroup
   "Doc.AccessControl"
-  [ testThat "Basic document access control with docAccessValidRoles"
-             env
-             testBasicValidRoles
-  , testThat "Basic GET document access control"        env testBasicAccessControl
+  [ testThat "Basic GET document access control"        env testBasicAccessControl
   , testThat "Basic GET document author access control" env testAuthorAccessControl
   , testThat "Basic GET shared document access control" env testSharedAccessControl
   , testThat "Group home folder access control"         env testGroupAccessControl
@@ -57,41 +54,6 @@ createSignatoryContext docId signatoryId = do
     $ handleSignShowSaveMagicHash docId signatoryId token
   return ctx2
 
-getDocumentValidRoles
-  :: Document -> Maybe User -> Maybe SignatoryLink -> TestEnv [DocAccessRole]
-getDocumentValidRoles doc mUser mSignatory = do
-  ctx             <- mkContext defaultLang
-  getRequest      <- mkRequestWithHeaders GET [] []
-  (validRoles, _) <- runTestKontra getRequest ctx
-    $ docAccessValidRoles doc mUser mSignatory
-  return validRoles
-
-assertHasDocumentPermission
-  :: String -> Document -> Maybe User -> Maybe SignatoryLink -> TestEnv ()
-assertHasDocumentPermission message doc mUser mSignatory = do
-  validRoles <- getDocumentValidRoles doc mUser mSignatory
-  case validRoles of
-    [] ->
-      assertFailure
-        $  "Failure: expected user or signatory to have valid roles for document "
-        <> show (documentid doc)
-        <> ": "
-        <> message
-    _ -> return ()
-
-assertNoDocumentPermission
-  :: String -> Document -> Maybe User -> Maybe SignatoryLink -> TestEnv ()
-assertNoDocumentPermission message doc mUser mSignatory = do
-  validRoles <- getDocumentValidRoles doc mUser mSignatory
-  case validRoles of
-    (_ : _) ->
-      assertFailure
-        $  "Failure: expected user or signatory to NOT have valid roles for document "
-        <> show (documentid doc)
-        <> ": "
-        <> message
-    _ -> return ()
-
 assertGetDocumentSucceed
   :: String -> DocumentID -> Context -> [(Text, Input)] -> TestEnv ()
 assertGetDocumentSucceed message docId ctx params = do
@@ -103,267 +65,8 @@ assertGetDocumentFails :: String -> DocumentID -> Context -> [(Text, Input)] -> 
 assertGetDocumentFails message docId ctx params = do
   request       <- mkRequest GET params
   (response, _) <- runTestKontra request ctx $ docApiV2Get docId
-  assertEqual message 403 (rsCode response)
-
-testBasicValidRoles :: TestEnv ()
-testBasicValidRoles = do
-  userGroup <- instantiateUserGroup randomUserGroupTemplate
-  let userGroupId = userGroup ^. #id
-
-  folderUser      <- instantiateRandomUser
-  folderGuest     <- instantiateRandomUser
-  folderAdmin     <- instantiateRandomUser
-  otherUser       <- instantiateRandomUser
-  otherFolderUser <- instantiateRandomUser
-
-  groupUser       <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
-  groupAdmin      <- instantiateUser
-    $ randomUserTemplate { groupID = return userGroupId, isCompanyAdmin = True }
-
-  folder <- dbUpdate . FolderCreate $ defaultFolder
-  let folderId = folder ^. #id
-
-  otherFolder <- dbUpdate . FolderCreate $ defaultFolder
-  let otherFolderId = otherFolder ^. #id
-
-  void . dbUpdate $ AccessControlCreateForUser (folderUser ^. #id) (FolderUserAR folderId)
-  void . dbUpdate $ AccessControlCreateForUser (folderGuest ^. #id)
-                                               (SharedTemplateUserAR folderId)
-  void . dbUpdate $ AccessControlCreateForUser (folderAdmin ^. #id)
-                                               (FolderAdminAR folderId)
-
-  void . dbUpdate $ AccessControlCreateForUser (otherFolderUser ^. #id)
-                                               (FolderUserAR otherFolderId)
-  void . dbUpdate $ AccessControlCreateForUser (otherFolderUser ^. #id)
-                                               (FolderAdminAR otherFolderId)
-
-  -- Assign group user all other possible roles that should not have permission to document
-  void . dbUpdate $ AccessControlCreateForUser (groupUser ^. #id)
-                                               (UserAdminAR userGroupId)
-  void . dbUpdate $ AccessControlCreateForUser (groupUser ^. #id)
-                                               (UserGroupAdminAR userGroupId)
-  void . dbUpdate $ AccessControlCreateForUser (groupUser ^. #id)
-                                               (UserGroupMemberAR userGroupId)
-  void . dbUpdate $ AccessControlCreateForUser (groupUser ^. #id)
-                                               (EidImpersonatorAR userGroupId)
-
-  author <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
-
-  void . dbUpdate $ AccessControlCreateForUser (author ^. #id) (FolderUserAR folderId)
-
-  do -- Document preparation phase
-    doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
-                                                   , rdaStatuses = OneOf [Preparation]
-                                                   , rdaSharings = OneOf [Private]
-                                                   , rdaFolderId = folderId
-                                                   }
-
-    let authorSigLink = fromJust $ getSigLinkFor (author ^. #id) doc
-    let participantSigLink =
-          fromJust $ find (not . signatoryisauthor) (documentsignatorylinks doc)
-
-    assertHasDocumentPermission "author should have permission to draft document"
-                                doc
-                                (Just author)
-                                Nothing
-
-    -- Draft documents don't allow generation of magic hashes for signatory links,
-    -- but since this is internal function call we can still test signatory
-    -- access for draft documents if they can ever be authenticated.
-    assertNoDocumentPermission
-      "author signatory should not have permission to draft document"
-      doc
-      Nothing
-      (Just authorSigLink)
-
-    assertHasDocumentPermission "folder user should have permission to draft document"
-                                doc
-                                (Just folderUser)
-                                Nothing
-
-    assertNoDocumentPermission "signatory should not have permission to draft document"
-                               doc
-                               Nothing
-                               (Just participantSigLink)
-
-    assertNoDocumentPermission
-      "folder admin should not have permission to draft document"
-      doc
-      (Just folderAdmin)
-      Nothing
-
-    assertNoDocumentPermission
-      "shared template user should not have permission to draft document"
-      doc
-      (Just folderGuest)
-      Nothing
-
-    assertNoDocumentPermission "other user should not have permission to draft document"
-                               doc
-                               (Just otherUser)
-                               Nothing
-
-    assertNoDocumentPermission
-      "other folder user should not have permission to draft document"
-      doc
-      (Just otherFolderUser)
-      Nothing
-
-    assertNoDocumentPermission "group user should not have permission to draft document"
-                               doc
-                               (Just groupUser)
-                               Nothing
-
-    assertNoDocumentPermission
-      "group admin should not have permission to draft document"
-      doc
-      (Just groupAdmin)
-      Nothing
-
-    assertNoDocumentPermission
-      "anonymous user should not have permission to draft document"
-      doc
-      Nothing
-      Nothing
-
-  do -- Document signing phase
-    doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
-                                                   , rdaStatuses = OneOf [Pending]
-                                                   , rdaSharings = OneOf [Private]
-                                                   , rdaFolderId = folderId
-                                                   }
-
-    let authorSigLink = fromJust $ getSigLinkFor (author ^. #id) doc
-    let participantSigLink =
-          fromJust $ find (not . signatoryisauthor) (documentsignatorylinks doc)
-
-    assertHasDocumentPermission "Author should have permission to pending document"
-                                doc
-                                (Just author)
-                                Nothing
-
-    assertHasDocumentPermission
-      "Author signatory should have permission to pending document"
-      doc
-      Nothing
-      (Just authorSigLink)
-
-    assertHasDocumentPermission
-      "Author user or signatory should have permission to pending document"
-      doc
-      (Just author)
-      (Just authorSigLink)
-
-    assertHasDocumentPermission
-      "Participant signatory should have permission to pending document"
-      doc
-      Nothing
-      (Just participantSigLink)
-
-    assertHasDocumentPermission
-      "Participant signatory as other user should have permission to pending document"
-      doc
-      (Just otherUser)
-      (Just participantSigLink)
-
-    assertHasDocumentPermission "Folder user should have permission to pending document"
-                                doc
-                                (Just folderUser)
-                                Nothing
-
-    assertHasDocumentPermission
-      "Folder admin should not have permission to pending document"
-      doc
-      (Just folderAdmin)
-      Nothing
-
-    assertNoDocumentPermission
-      "Other folder user not should have permission to pending document"
-      doc
-      (Just otherFolderUser)
-      Nothing
-
-    assertNoDocumentPermission
-      "Group user should not have permission to pending document"
-      doc
-      (Just groupUser)
-      Nothing
-
-    assertNoDocumentPermission
-      "Group admin should not have permission to pending document"
-      doc
-      (Just groupAdmin)
-      Nothing
-
-    assertNoDocumentPermission
-      "Anonymous should not have permission to pending document"
-      doc
-      Nothing
-      Nothing
-
-  do -- Cancelled document
-    doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
-                                                   , rdaStatuses = OneOf [Canceled]
-                                                   , rdaSharings = OneOf [Private]
-                                                   , rdaFolderId = folderId
-                                                   }
-
-    let authorSigLink = fromJust $ getSigLinkFor (author ^. #id) doc
-    let participantSigLink =
-          fromJust $ find (not . signatoryisauthor) (documentsignatorylinks doc)
-
-    assertHasDocumentPermission "Author should have permission to cancelled document"
-                                doc
-                                (Just author)
-                                Nothing
-
-    assertNoDocumentPermission
-      "Author signatory should not have permission to cancelled document"
-      doc
-      Nothing
-      (Just authorSigLink)
-
-    assertNoDocumentPermission
-      "Participant signatory should not have permission to cancelled document"
-      doc
-      Nothing
-      (Just participantSigLink)
-
-    assertHasDocumentPermission
-      "Folder user should have permission to cancelled document"
-      doc
-      (Just folderUser)
-      Nothing
-
-    assertHasDocumentPermission
-      "Folder admin should have permission to cancelled document"
-      doc
-      (Just folderUser)
-      Nothing
-
-    assertNoDocumentPermission
-      "Other folder user not should have permission to cancelled document"
-      doc
-      (Just otherFolderUser)
-      Nothing
-
-    assertNoDocumentPermission
-      "Group user should not have permission to cancelled document"
-      doc
-      (Just groupUser)
-      Nothing
-
-    assertNoDocumentPermission
-      "Group admin should not have permission to cancelled document"
-      doc
-      (Just groupAdmin)
-      Nothing
-
-    assertNoDocumentPermission
-      "Anonymous should not have permission to cancelled document"
-      doc
-      Nothing
-      Nothing
+  let code = rsCode response
+  assertBool message $ code == 401 || code == 403
 
 testBasicAccessControl :: TestEnv ()
 testBasicAccessControl = do
@@ -609,8 +312,8 @@ testBasicAccessControl = do
       authorCtx
       []
 
-    assertGetDocumentFails
-      "Author signatory should not be able to get cancelled document"
+    assertGetDocumentSucceed
+      "Author signatory should be able to get cancelled document"
       docId
       authorSignCtx
       [("signatory_id", inText . showt $ signatorylinkid authorSigLink)]
@@ -699,8 +402,8 @@ testAuthorAccessControl = do
 
     void . dbUpdate $ AccessControlRemoveRole roleId
 
-    assertGetDocumentFails
-      "Author should not able to get document with folder permission removed"
+    assertGetDocumentSucceed
+      "Author should still able to get document with folder permission removed"
       docId
       authorCtx
       []
@@ -902,8 +605,7 @@ testGroupAccessControl = do
         , rdaStatuses    = OneOf [Preparation]
         , rdaSharings    = OneOf [Private]
         , rdaFolderId    = folderId
-        , rdaSignatories = let signatory =
-                                 OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+        , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                            in  OneOf $ map (`replicate` signatory) [2 .. 10]
         }
 
@@ -1530,14 +1232,18 @@ testDocumentFileAccessControl = do
   void . dbUpdate $ AccessControlCreateForUser (author ^. #id) (FolderUserAR folderId)
   void . dbUpdate $ AccessControlCreateForUser (folderUser ^. #id) (FolderUserAR folderId)
 
-  doc <- addRandomDocumentWithFile fileId $ (rdaDefault author) { rdaTypes    = OneOf
-                                                                  [Signable]
-                                                                , rdaStatuses = OneOf
-                                                                  [Pending]
-                                                                , rdaSharings = OneOf
-                                                                  [Private]
-                                                                , rdaFolderId = folderId
-                                                                }
+  doc <- addRandomDocumentWithFile fileId $ (rdaDefault author)
+    { rdaTypes       = OneOf [Signable]
+    , rdaStatuses    = OneOf [Pending]
+    , rdaSharings    = OneOf [Private]
+    , rdaSignatories = OneOf
+                         [ [ OneOf [[RSC_AuthToViewIs StandardAuthenticationToView]]
+                           , OneOf [[RSC_AuthToViewIs StandardAuthenticationToView]]
+                           , OneOf [[RSC_AuthToViewIs SEBankIDAuthenticationToView]]
+                           ]
+                         ]
+    , rdaFolderId    = folderId
+    }
 
   anonCtx       <- mkContext defaultLang
   authorCtx     <- set #maybeUser (Just author) <$> mkContext defaultLang
@@ -1545,13 +1251,28 @@ testDocumentFileAccessControl = do
   folderUserCtx <- set #maybeUser (Just folderUser) <$> mkContext defaultLang
   groupUserCtx  <- set #maybeUser (Just groupUser) <$> mkContext defaultLang
 
-  let docId         = documentid doc
-      authorSigLink = fromJust $ getSigLinkFor (author ^. #id) doc
-      participantSigLink =
-        fromJust $ find (not . signatoryisauthor) (documentsignatorylinks doc)
+  let docId              = documentid doc
+      authorSigLink      = fromJust $ getSigLinkFor (author ^. #id) doc
+      participantSigLink = fromJust $ find
+        (\signatory ->
+          not (signatoryisauthor signatory)
+            && signatorylinkauthenticationtoviewmethod signatory
+            == StandardAuthenticationToView
+        )
+        (documentsignatorylinks doc)
+      participantWithAuthToView = fromJust $ find
+        (\signatory ->
+          not (signatoryisauthor signatory)
+            && signatorylinkauthenticationtoviewmethod signatory
+            /= StandardAuthenticationToView
+        )
+        (documentsignatorylinks doc)
 
-  authorSignCtx      <- createSignatoryContext docId (signatorylinkid authorSigLink)
+  authorSignCtx <- createSignatoryContext docId (signatorylinkid authorSigLink)
   participantSignCtx <- createSignatoryContext docId (signatorylinkid participantSigLink)
+  participantWithAuthToViewCtx <- createSignatoryContext
+    docId
+    (signatorylinkid participantWithAuthToView)
 
   let docIdParam = [("document_id", inText . showt $ docId)]
       authorSignatoryParam =
@@ -1559,6 +1280,10 @@ testDocumentFileAccessControl = do
         , ("signatory_id", inText . showt $ signatorylinkid authorSigLink)
         ]
       participantSignatoryParam =
+        [ ("document_id" , inText . showt $ docId)
+        , ("signatory_id", inText . showt $ signatorylinkid participantSigLink)
+        ]
+      participantWithAuthToViewSignatoryParam =
         [ ("document_id" , inText . showt $ docId)
         , ("signatory_id", inText . showt $ signatorylinkid participantSigLink)
         ]
@@ -1577,6 +1302,12 @@ testDocumentFileAccessControl = do
                       participantSignatoryParam
                       participantSignCtx
                       fileId
+
+  assertNoFileAccess
+    "Participant signatory with auth to view should no have access to document file before authenticated"
+    participantWithAuthToViewSignatoryParam
+    participantWithAuthToViewCtx
+    fileId
 
   assertHasFileAccess "Other folder user should have access to document file"
                       docIdParam

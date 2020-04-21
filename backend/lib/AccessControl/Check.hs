@@ -6,7 +6,6 @@ module AccessControl.Check
   , canDo
   , canGrant
   , alternativePermissionCondition
-  , docResources
   )
 where
 
@@ -16,7 +15,6 @@ import Data.List.Extra (nubOrd)
 import AccessControl.Types
 import DB
 import Doc.DocumentID (DocumentID)
-import Doc.DocInfo (isDocumentShared, isPreparation)
 import Doc.Model
 import Doc.Types.Document (Document(..))
 import Folder.Model
@@ -170,11 +168,3 @@ hasPermissions (SharedTemplateUserAR fid) =
   [Permission PermCanDo ReadA $ SharedTemplateR fid]
 hasPermissions (EidImpersonatorAR ugid) =
   [Permission PermCanDo ReadA $ EidIdentityR ugid]
-
-docResources :: Document -> [AccessResource]
-docResources doc =
-  let folderId = documentfolderid doc
-  in  if
-        | isDocumentShared doc -> [DocumentInFolderR folderId, SharedTemplateR folderId]
-        | isPreparation doc -> [DocumentInFolderR folderId]
-        | otherwise -> [DocumentInFolderR folderId, DocumentAfterPreparationR folderId]

@@ -4,6 +4,7 @@ module Doc.API.V2.DocumentAccess (
 , canSeeSignlinks
 , propertyForCurrentSignatory
 , documentAccessForUser
+, documentAccessModeForUser
 , documentAccessForSlid
 , documentAccessForAuthor
 , documentAccessForAdminonly
@@ -144,12 +145,10 @@ documentAccessModeByFolder user document roles =
     hasReadAccessForDocByFolder = hasReadAccessForFolder (documentfolderid document)
 
     hasReadAccessForFolder fid =
-      accessControlCheck
-        (concatMap (hasPermissions . accessRoleTarget) roles) $
-        OrCond
-          [ Cond . canDo ReadA $ resource fid
-          | resource <- [DocumentInFolderR, DocumentAfterPreparationR]
-          ]
+      accessControlCheck (concatMap (hasPermissions . accessRoleTarget) roles) $ OrCond
+        [ Cond . canDo ReadA $ resource fid
+        | resource <- [DocumentInFolderR, DocumentAfterPreparationR]
+        ]
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
 documentAccessForSlid slid document =

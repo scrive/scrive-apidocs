@@ -397,7 +397,7 @@ testDocApiV2FilesMain = do
   -- GET request via access token
   let ctx' = set #maybeUser Nothing ctx
       vars = [("access_token", inText . T.pack . getMockDocAccessToken $ doc)]
-  getReq ctx' did []   "(no access token - expected failure)" 403
+  getReq ctx' did []   "(no access token - expected failure)" 401
   getReq ctx' did vars "(access token)" 200
 
   where
@@ -452,7 +452,7 @@ testDocApiV2FilesGet = do
   -- GET request via access token
   let ctx' = set #maybeUser Nothing ctx
       vars = [("access_token", inText . T.pack . getMockDocAccessToken $ doc)]
-  getReq ctx' did fid []   "(no access token - expected failure)" 403
+  getReq ctx' did fid []   "(no access token - expected failure)" 401
   getReq ctx' did fid vars "(access token)" 200
 
 

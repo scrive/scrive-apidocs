@@ -37,6 +37,7 @@ import API.V2.Parameters
 import API.V2.Utils
 import AppView (respondWithPDF, respondWithZipFile)
 import DB
+import Doc.AccessControl
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
@@ -218,7 +219,7 @@ docApiV2History did = logDocument did . api $ do
   -- Permissions
   (user, _) <- getAPIUser APIDocCheck
   doc       <- dbQuery $ GetDocumentByDocumentID did
-  permCond  <- apiRequireAnyPermission [ canDo ReadA res | res <- docResources doc ]
+  permCond  <- apiRequireDocPermission ReadA doc
   apiAccessControlWithError user permCond (apiError documentActionForbidden) $ do
     -- Parameters
     mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
@@ -235,10 +236,10 @@ docApiV2History did = logDocument did . api $ do
     return . Ok $ JSObject (J.toJSObject [("events", JSArray events)])
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
+docApiV2EvidenceAttachments did = logDocument did . api . withDocumentID did $ do
   (user, _) <- getAPIUser APIDocCheck
   doc       <- theDocument
-  permCond  <- apiRequireAnyPermission [ canDo ReadA res | res <- docResources doc ]
+  permCond  <- apiRequireDocPermission ReadA doc
   apiAccessControlWithError user permCond (apiError documentActionForbidden) $ do
     eas <- EvidenceAttachments.extractAttachmentsList doc
     let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
@@ -282,7 +283,7 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  requiredPerm  <- apiRequireAnyPermission [ canDo ReadA res | res <- docResources doc ]
+  requiredPerm <- apiRequireDocPermission ReadA doc
   apiAccessControl user requiredPerm $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl

@@ -33,7 +33,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 
 import Control.Monad.Base
 import Crypto.RNG
-import Data.List.Extra (nubOrd)
+import Data.List.Extra (nubOrd, nubOrdOn)
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Log
@@ -42,6 +42,8 @@ import Text.StringTemplates.Templates
 import qualified Data.Set as S
 import qualified Data.Text as T
 
+import AccessControl.Model
+import AccessControl.Types
 import API.V2
 import API.V2.Errors
 import API.V2.Parameters
@@ -49,6 +51,7 @@ import Attachment.Model
 import Chargeable
 import DB
 import DB.TimeZoneName (defaultTimeZoneName)
+import Doc.AccessControl
 import Doc.Action
 import Doc.Anchors
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
@@ -89,6 +92,13 @@ import Util.HasSomeUserInfo (getEmail, getMobile)
 import Util.PDFUtil
 import Util.SignatoryLinkUtils
 
+currentDocumentJsonViewedBy
+  :: (Kontrakcja m, DocumentMonad m) => User -> m (UnjsonDef Document, Document)
+currentDocumentJsonViewedBy user = do
+  ug        <- dbQuery . UserGroupGetByUserID $ user ^. #id
+  userRoles <- nubOrdOn accessRoleTarget <$> dbQuery (GetRolesIncludingInherited user ug)
+  (\d -> (unjsonDocument $ documentAccessByFolder user d userRoles, d)) <$> theDocument
+
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
   -- Permissions
@@ -128,7 +138,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   mBPID         <- apiV2ParameterOptional (ApiV2ParameterText "bpid")  -- RBS hack (CORE-1712)
   -- Guards
   withDocumentID did $ do
-    guardThatUserIsAuthorOrDocumentIsShared user =<< theDocument
+    guardDocumentReadPermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs isTemplate "The document is not a template." =<< theDocument
     guardThatDocumentIs (not . flip documentDeletedForUser $ user ^. #id)
@@ -204,7 +214,7 @@ docApiV2AddEvidenceEvent did = logDocument did . api $ do
   withDocumentID did $ do
     document  <- theDocument
     eventText <- apiV2ParameterObligatory (ApiV2ParameterText "text")
-    guardThatUserIsAuthorOrCompanyAdmin user document
+    guardDocumentUpdatePermission user document
     guardThatDocumentIs (not . isTemplate)
                         "Evidence cannot be added to a template."
                         document
@@ -305,7 +315,7 @@ docApiV2Prolong did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardDocumentUpdatePermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs
         (\d -> isPending d || isTimedout d)
@@ -333,7 +343,7 @@ docApiV2Prolong did = logDocument did . api $ do
       _ -> unexpectedError "Invalid document state - this should be checked earlier"
     triggerAPICallbackIfThereIsOne =<< theDocument
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2Cancel :: Kontrakcja m => DocumentID -> m Response
 docApiV2Cancel did = logDocument did . api $ do
@@ -341,14 +351,14 @@ docApiV2Cancel did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardDocumentUpdatePermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- API call actions
     dbUpdate $ CancelDocument actor
     postDocumentCanceledChange =<< theDocument
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2Trash :: Kontrakcja m => DocumentID -> m Response
 docApiV2Trash = docApiV2TrashDeleteCommon guardThatDocumentCanBeTrashedByUser
@@ -454,7 +464,7 @@ docApiV2Remind did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardDocumentUpdatePermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- API call actions
@@ -473,7 +483,7 @@ docApiV2RemindWithPortal = api $ do
   logInfo "Running remind with portal with ids" $ object ["doc_ids" .= show dids]
   docs1 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
       -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardDocumentUpdatePermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- Parameters
@@ -500,7 +510,9 @@ docApiV2RemindWithPortal = api $ do
     saveDocumentForPortalSignatories
     theDocument -- return changed
   -- Result
-  let docAccess d = (documentAccessForUser user d, d)
+  userRoles <- nubOrdOn accessRoleTarget
+    <$> dbQuery (GetRolesIncludingInherited user $ ugwpUG ugwp)
+  let docAccess d = (documentAccessByFolder user d userRoles, d)
       headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
       jsonBS  = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
@@ -738,7 +750,7 @@ docApiV2Callback did = logDocument did . api $ do
   (user, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardDocumentUpdatePermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (\d -> documentstatus d /= Preparation)
                         "Can not send callbacks for documents in Preparation."
@@ -817,7 +829,7 @@ docApiV2SigSetAuthToView authKind did slid = logDocumentAndSignatory did slid . 
     -- API call actions
     dbUpdate $ ChangeAuthenticationToViewMethod slid authKind authType mSSN mMobile actor
     -- Return
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 ----------------------------------------
 
@@ -828,7 +840,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardDocumentUpdatePermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
@@ -854,7 +866,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     dbUpdate
       $ ChangeAuthenticationToSignMethod slid authentication_type mSSN mMobile actor
     -- Return
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2SigChangeEmailAndMobile
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -863,7 +875,7 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardDocumentUpdatePermission user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
@@ -920,7 +932,7 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
       )
       =<< theDocument
     -- API call actions
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2GenerateShareableLink :: Kontrakcja m => DocumentID -> m Response
 docApiV2GenerateShareableLink did = logDocument did . api $ do

@@ -43,8 +43,8 @@ import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.V2.Errors
-import API.V2.Utils
 import DB
+import Doc.AccessControl
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
@@ -68,8 +68,7 @@ getDocumentByCurrentUser docId = do
   let availablePerm = concatMap (hasPermissions . accessRoleTarget) roles
   withDocumentID docId $ do
     mSL          <- getSigLinkFor user <$> theDocument
-    resources    <- docResources <$> theDocument
-    requiredPerm <- apiRequireAnyPermission [ canDo ReadA res | res <- resources ]
+    requiredPerm <- theDocument >>= apiRequireDocPermission ReadA
     let hasReadPermission = accessControlCheck availablePerm requiredPerm
     if isJust mSL || hasReadPermission
       then theDocument

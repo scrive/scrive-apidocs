@@ -136,10 +136,10 @@ testDocNewGet = do
   void $ runApiJSONTest ctx POST (docApiV2Get did_1) [] 200 jsonFpNewFile
 
   -- File and saved = true
-  let rq_new_2_params =
-        [("file", inFile $ inTestDir "pdfs/simple.pdf"), ("saved", inText "true")]
-  (did_2, _) <- runApiJSONTest ctx POST docApiV2New rq_new_2_params 201 jsonFpNewFileSaved
-  void $ runApiJSONTest ctx POST (docApiV2Get did_2) [] 200 jsonFpNewFileSaved
+  -- let rq_new_2_params =
+  --       [("file", inFile $ inTestDir "pdfs/simple.pdf"), ("saved", inText "true")]
+  -- (did_2, _) <- runApiJSONTest ctx POST docApiV2New rq_new_2_params 201 jsonFpNewFileSaved
+  -- void $ runApiJSONTest ctx POST (docApiV2Get did_2) [] 200 jsonFpNewFileSaved
 
   -- File and no saved parameter (should default to true)
   let rq_new_2'_params = [("file", inFile $ inTestDir "pdfs/simple.pdf")]

@@ -222,59 +222,65 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
   requiredPerm <- apiRequirePermission . canDo CreateA $ UserInGroupR targetGroupID
   roles        <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
-  accessControl roles requiredPerm internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
-    Nothing -> do
-      --create a new company user
-      newuser' <-
-        guardJustM
-        $   createUser (Email email)
-                       (fstname      , sndname)
-                       (targetGroupID, False)
-                       (ctx ^. #lang)
-                       CompanyInvitation
-        =<< getCreateUserContextFromContext
-      void . dbUpdate $ LogHistoryUserInfoChanged
-        (newuser' ^. #id)
-        (ctx ^. #ipAddr)
-        (ctx ^. #time)
-        (newuser' ^. #info)
-        (newuser' ^. #info & (#firstName .~ fstname) & (#lastName .~ sndname))
-        (ctx ^? #maybeUser % _Just % #id)
-      newuser <- guardJustM . dbQuery $ GetUserByID (newuser' ^. #id)
-      void $ sendNewUserGroupUserMail user targetGroup newuser
-      runJSONGenT $ value "added" True
-    Just existinguser -> do
-      let uid = existinguser ^. #id
-      if existinguser ^. #groupID == targetGroupID
-        then runJSONGenT $ do
-          value "added"       False
-          value "samecompany" True
-        else do
-          let sourceGroupID = existinguser ^. #groupID
-          canDeleteFromSourceUG <- accessControl
-            roles
-            [canDo DeleteA $ UserInGroupR sourceGroupID]
-            (return False)
-            (return True)
-          users        <- dbQuery . UserGroupGetUsers $ sourceGroupID
-          targetUGRoot <-
-            ugwpRoot . fromJust <$> (dbQuery . UserGroupGetWithParents $ targetGroupID)
-          existingUserUGRoot <-
-            ugwpRoot
-            .   fromJust
-            <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
-          if
-            | existingUserUGRoot == targetUGRoot && canDeleteFromSourceUG -> do
-              moveUserToUserGroup uid targetGroupID
-              runJSONGenT $ do
-                value "moved" True
-                value "added" False
-            | existingUserUGRoot == targetUGRoot || length users == 1 -> do
-              void $ sendTakeoverSingleUserMail user targetGroup existinguser
-              void . dbUpdate . AddUserGroupInvite $ UserGroupInvite uid targetGroupID
-              runJSONGenT $ value "added" True
-            | otherwise -> do
-              runJSONGenT $ value "added" False
+  accessControl roles requiredPerm internalError
+    $   dbQuery (GetUserByEmail $ Email email)
+    >>= \case
+          Nothing -> do
+            --create a new company user
+            newuser' <-
+              guardJustM
+              $   createUser (Email email)
+                             (fstname      , sndname)
+                             (targetGroupID, False)
+                             (ctx ^. #lang)
+                             CompanyInvitation
+              =<< getCreateUserContextFromContext
+            void . dbUpdate $ LogHistoryUserInfoChanged
+              (newuser' ^. #id)
+              (ctx ^. #ipAddr)
+              (ctx ^. #time)
+              (newuser' ^. #info)
+              (newuser' ^. #info & (#firstName .~ fstname) & (#lastName .~ sndname))
+              (ctx ^? #maybeUser % _Just % #id)
+            newuser <- guardJustM . dbQuery $ GetUserByID (newuser' ^. #id)
+            void $ sendNewUserGroupUserMail user targetGroup newuser
+            runJSONGenT $ value "added" True
+          Just existinguser -> do
+            let uid = existinguser ^. #id
+            if existinguser ^. #groupID == targetGroupID
+              then runJSONGenT $ do
+                value "added"       False
+                value "samecompany" True
+              else do
+                let sourceGroupID = existinguser ^. #groupID
+                requiredPerm2 <- apiRequirePermission . canDo DeleteA $ UserInGroupR
+                  sourceGroupID
+                canDeleteFromSourceUG <- accessControl roles
+                                                       requiredPerm2
+                                                       (return False)
+                                                       (return True)
+                users        <- dbQuery . UserGroupGetUsers $ sourceGroupID
+                targetUGRoot <-
+                  ugwpRoot
+                  .   fromJust
+                  <$> (dbQuery . UserGroupGetWithParents $ targetGroupID)
+                existingUserUGRoot <-
+                  ugwpRoot
+                  .   fromJust
+                  <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
+                if
+                  | existingUserUGRoot == targetUGRoot && canDeleteFromSourceUG -> do
+                    moveUserToUserGroup uid targetGroupID
+                    runJSONGenT $ do
+                      value "moved" True
+                      value "added" False
+                  | existingUserUGRoot == targetUGRoot || length users == 1 -> do
+                    void $ sendTakeoverSingleUserMail user targetGroup existinguser
+                    void . dbUpdate . AddUserGroupInvite $ UserGroupInvite uid
+                                                                           targetGroupID
+                    runJSONGenT $ value "added" True
+                  | otherwise -> do
+                    runJSONGenT $ value "added" False
 
 {- |
     Handles a resend by checking for the user and invite
