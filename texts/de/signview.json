@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Signieren mit norwegischer BankID",
 "_elegSignNOSignMethodClassic":"BankID",
 "_elegSignNOSignMethodMobile":"Mobile BankID",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, Sie signieren mit schwedischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignSEConfirmationTextNoName":"Sie signieren mit schwedischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignSEConfirmationTitle":"Signieren mit schwedischer BankID",

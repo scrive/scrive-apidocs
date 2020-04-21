@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Υπογράψτε μέσω της εφαρμογής Norwegian BankID",
 "_elegSignNOSignMethodClassic":"BankID",
 "_elegSignNOSignMethodMobile":"Το BankID για κινητό",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, θα υπογράψετε χρησιμοποιώντας την εφαρμογή Swedish BankID. Όταν θα έχετε υπογράψει, η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",
 "_elegSignSEConfirmationTextNoName":"Θα υπογράψετε χρησιμοποιώντας την εφαρμογή Swedish BankID. Όταν θα έχετε υπογράψει, η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",
 "_elegSignSEConfirmationTitle":"Υπογράψτε μέσω της εφαρμογής Swedish BankID",

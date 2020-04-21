@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Allekirjoita norjalaisella BankID:llä",
 "_elegSignNOSignMethodClassic":"BankID",
 "_elegSignNOSignMethodMobile":"Mobiili-BankID",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, allekirjoitat käyttämällä ruotsalaista BankID:tä. Kun olet allekirjoittanut, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_elegSignSEConfirmationTextNoName":"Allekirjoitat käyttämällä ruotsalaista BankID:tä. Kun olet allekirjoittanut, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_elegSignSEConfirmationTitle":"Allekirjoita ruotsalaisella BankID:llä",

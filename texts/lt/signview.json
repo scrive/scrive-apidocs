@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Pasirašykite per Norvegijos „BankID“. ",
 "_elegSignNOSignMethodClassic":"„BankID“",
 "_elegSignNOSignMethodMobile":"„BankID mobile“",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong> pasirašysite per Švedijos „BankID“. Pasirašius, jūsų parašas bus užregistruotas e-parašų paslaugoje „Scrive“.",
 "_elegSignSEConfirmationTextNoName":"Pasirašysite per Švedijos „BankID“. Pasirašius, jūsų parašas bus užregistruotas e-parašų paslaugoje „Scrive“.",
 "_elegSignSEConfirmationTitle":"Pasirašykite per Švedijos „BankID“. ",
