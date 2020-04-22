@@ -162,6 +162,9 @@ setBoolField name value ug =
         "padEarchiveEnabled" ->
             modifySettings (\s -> { s | padEarchiveEnabled = value }) ug
 
+        "forceHidePN" ->
+            modifySettings (\s -> { s | forceHidePN = value }) ug
+
         "immediateTrash" ->
             modifySettings (\s -> { s | immediateTrash = value }) ug
 
@@ -257,6 +260,7 @@ type alias Settings =
     , smsProvider : SmsProvider
     , padAppMode : PadAppMode
     , padEarchiveEnabled : Bool
+    , forceHidePN : Bool
     , idleDocTimeoutPreparation : Maybe Int
     , idleDocTimeoutClosed : Maybe Int
     , idleDocTimeoutCancelled : Maybe Int
@@ -283,6 +287,7 @@ settingsDecoder =
         |> DP.required "smsprovider" (JD.string |> JD.andThen smsProviderDecoder)
         |> DP.required "padappmode" (JD.string |> JD.andThen padAppModeDecoder)
         |> DP.required "padearchiveenabled" JD.bool
+        |> DP.required "forcehidepn" JD.bool
         |> DP.required "idledoctimeoutpreparation" (JD.int |> JD.nullable)
         |> DP.required "idledoctimeoutclosed" (JD.int |> JD.nullable)
         |> DP.required "idledoctimeoutcanceled" (JD.int |> JD.nullable)
@@ -483,6 +488,7 @@ formValuesSettings settings =
     , ( "companysmsprovider", encodeSmsProvider settings.smsProvider )
     , ( "companypadappmode", encodePadAppMode settings.padAppMode )
     , ( "companypadearchiveenabled", boolToJson settings.padEarchiveEnabled )
+    , ( "companyforcehidepn", boolToJson settings.forceHidePN )
     , ( "companyimmediatetrash", boolToJson settings.immediateTrash )
     , ( "companyidledoctimeoutpreparation", fromIntWithEmpty settings.idleDocTimeoutPreparation )
     , ( "companyidledoctimeoutclosed", fromIntWithEmpty settings.idleDocTimeoutClosed )

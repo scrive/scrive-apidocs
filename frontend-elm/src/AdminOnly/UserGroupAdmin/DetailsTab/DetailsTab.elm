@@ -494,6 +494,11 @@ viewUserGroup model ug address settings =
                 settings.padEarchiveEnabled
                 (SetBoolField "padEarchiveEnabled")
                 [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "Force hiding personal numbers in all documents"
+                "Force hiding personal numbers in all documents."
+                settings.forceHidePN
+                (SetBoolField "forceHidePN")
+                [ readonly ug.settingsIsInherited ]
             , formCheckboxRowM "Immediate trash"
                 "If enabled, documents in trash will be deleted as soon as possible instead of waiting for 30 days."
                 settings.immediateTrash

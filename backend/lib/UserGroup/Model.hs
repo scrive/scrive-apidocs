@@ -130,6 +130,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "sms_provider" $ ugs ^. #smsProvider
   sqlSet "pad_app_mode" $ ugs ^. #padAppMode
   sqlSet "pad_earchive_enabled" $ ugs ^. #padEarchiveEnabled
+  sqlSet "force_hide_pn" $ ugs ^. #forceHidePN
   sqlSet "legal_text" $ ugs ^. #legalText
   sqlSet "require_bpid_for_new_document" $ ugs ^. #requireBPIDForNewDoc
   sqlSet "send_timeout_notification" $ ugs ^. #sendTimeoutNotification
@@ -485,6 +486,7 @@ ugSettingsSelectors =
   , "eid_service_token"
   , "sealing_method"
   , "document_session_timeout"
+  , "force_hide_pn"
   ]
 
 

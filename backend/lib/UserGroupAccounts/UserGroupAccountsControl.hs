@@ -243,27 +243,38 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
       newuser <- guardJustM . dbQuery $ GetUserByID (newuser' ^. #id)
       void $ sendNewUserGroupUserMail user targetGroup newuser
       runJSONGenT $ value "added" True
-    Just existinguser -> if existinguser ^. #groupID == targetGroupID
-      then runJSONGenT $ do
-        value "added"       False
-        value "samecompany" True
-      else do
-        -- If user exists we allow takeover only if he is the only user in his company
-        users        <- dbQuery . UserGroupGetUsers $ existinguser ^. #groupID
-        targetUGRoot <-
-          ugwpRoot . fromJust <$> (dbQuery . UserGroupGetWithParents $ targetGroupID)
-        existingUserUGRoot <-
-          ugwpRoot
-          .   fromJust
-          <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
-        if existingUserUGRoot == targetUGRoot || length users == 1
-          then do
-            void $ sendTakeoverSingleUserMail user targetGroup existinguser
-            void . dbUpdate $ AddUserGroupInvite
-              (UserGroupInvite (existinguser ^. #id) targetGroupID)
-            runJSONGenT $ value "added" True
-          else do
-            runJSONGenT $ value "added" False
+    Just existinguser -> do
+      let uid = existinguser ^. #id
+      if existinguser ^. #groupID == targetGroupID
+        then runJSONGenT $ do
+          value "added"       False
+          value "samecompany" True
+        else do
+          let sourceGroupID = existinguser ^. #groupID
+          canDeleteFromSourceUG <- accessControl
+            roles
+            [canDo DeleteA $ UserInGroupR sourceGroupID]
+            (return False)
+            (return True)
+          users        <- dbQuery . UserGroupGetUsers $ sourceGroupID
+          targetUGRoot <-
+            ugwpRoot . fromJust <$> (dbQuery . UserGroupGetWithParents $ targetGroupID)
+          existingUserUGRoot <-
+            ugwpRoot
+            .   fromJust
+            <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
+          if
+            | existingUserUGRoot == targetUGRoot && canDeleteFromSourceUG -> do
+              moveUserToUserGroup uid targetGroupID
+              runJSONGenT $ do
+                value "moved" True
+                value "added" False
+            | existingUserUGRoot == targetUGRoot || length users == 1 -> do
+              void $ sendTakeoverSingleUserMail user targetGroup existinguser
+              void . dbUpdate . AddUserGroupInvite $ UserGroupInvite uid targetGroupID
+              runJSONGenT $ value "added" True
+            | otherwise -> do
+              runJSONGenT $ value "added" False
 
 {- |
     Handles a resend by checking for the user and invite

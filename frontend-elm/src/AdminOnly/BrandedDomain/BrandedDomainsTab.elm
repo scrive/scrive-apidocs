@@ -12,8 +12,8 @@ import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table
 import FlashMessage
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, style)
+import Html exposing (Html, div, text, img)
+import Html.Attributes exposing (class, style, src)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as JD
@@ -136,11 +136,13 @@ viewBrandedDomains model brandedDomains =
     Table.table
         { options = [ Table.striped, Table.hover, Table.small ]
         , thead =
-            Table.simpleThead
-                [ th "col-1" []
-                , th "col-5" [ text "URL" ]
-                , th "col-5" [ text "Email originator" ]
-                , th "col-1" []
+            Table.thead []
+                [ Table.tr [ Table.rowAttr <| class "row" ]
+                    [ th "col-1" []
+                    , th "col-5" [ text "URL" ]
+                    , th "col-5" [ text "Email originator" ]
+                    , th "col-1" []
+                    ]
                 ]
         , tbody =
             Table.tbody [] <|
@@ -150,18 +152,23 @@ viewBrandedDomains model brandedDomains =
 
 viewBrandedDomain : Model -> BrandedDomain -> Table.Row Msg
 viewBrandedDomain _ bd =
+    let
+        td colClass =
+            Table.td [ Table.cellAttr <| class colClass ]
+    in
     Table.tr
         [ Table.rowAttr <| onClick <| TableRowClicked bd.id
         , Table.rowAttr <| class "clickable-row"
+        , Table.rowAttr <| class "row"
         ]
-        [ Table.td [] [ text bd.id ]
-        , Table.td [] [ text bd.url ]
-        , Table.td [] [ text bd.emailOriginator ]
-        , Table.td []
-            [ div
-                [ style "max-width" "25px"
+        [ td "col-1" [ text bd.id ]
+        , td "col-5" [ text bd.url ]
+        , td "col-5" [ text bd.emailOriginator ]
+        , td "col-1"
+            [ img
+                [ style "max-height" "25px"
                 , style "max-width" "50px"
-                , style "background-image" ("url('" ++ bd.favicon ++ "')")
+                , src bd.favicon
                 ]
                 []
             ]

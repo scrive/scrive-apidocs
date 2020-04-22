@@ -626,6 +626,7 @@
 "_flashCompanyAccountInviteNotSent":"Sorry, you are not able to send an invite to this user because they are registered to a different company. Contact Scrive if you want to merge the accounts.",
 "_flashCompanyAccountInviteResent":"The invitation has been sent again.",
 "_flashCompanyAccountInviteSent":"An invitation has been sent.",
+"_flashCompanyAccountUserMoved":"User has been moved.",
 "_flashCompanyInviteNotSentSameCompany":"This user is already in your company.",
 "_flashEmailIncorectlyFormed":"The email address is incorrectly formatted.",
 "_flashMessageAttachmentArchiveDone":"The selected attachments have been deleted.",

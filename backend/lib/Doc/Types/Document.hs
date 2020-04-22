@@ -10,6 +10,7 @@ module Doc.Types.Document (
   , documentsealedfile
   , documentsealstatus
   , getSealingMethodForDocument
+  , getForceHidePersonalNumbers
   ) where
 
 import Control.Monad.Base
@@ -540,3 +541,10 @@ getSealingMethodForDocument doc = do
   ugid <- guardJust $ documentauthorugid doc
   ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
   return $ ugwpSettings ugwp ^. #sealingMethod
+
+getForceHidePersonalNumbers
+  :: (MonadBase IO m, MonadDB m, MonadThrow m) => Document -> m Bool
+getForceHidePersonalNumbers doc = do
+  ugid <- guardJust $ documentauthorugid doc
+  ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
+  return $ ugwpSettings ugwp ^. #forceHidePN

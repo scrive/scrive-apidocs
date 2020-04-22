@@ -330,6 +330,7 @@ instance Arbitrary UserGroupSettings where
       <*> pure Nothing -- no custom eidService token
       <*> arbitrary
       <*> pure Nothing -- do not set a custom document session expiry
+      <*> pure False   -- do not set force hide personal numbers
 
 instance Arbitrary UserGroupAddress where
   arbitrary =

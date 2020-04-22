@@ -9,11 +9,13 @@ module User.Utils (
     , withUserAndRoles
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
+    , moveUserToUserGroup
 ) where
 
 import AccessControl.Model
 import AccessControl.Types (AccessRole)
 import DB
+import Folder.Model
 import InternalResponse
 import Kontra
 import KontraLink
@@ -132,3 +134,15 @@ withCompanyAdminOrAdminOnly (Just ugid) action =
 withSalesOrAdminOnly :: Kontrakcja m => UserGroupID -> (UserGroup -> m a) -> m a
 withSalesOrAdminOnly ugid action =
   onlySalesOrAdmin $ guardJustM (dbQuery (UserGroupGet ugid)) >>= action
+
+moveUserToUserGroup :: Kontrakcja m => UserID -> UserGroupID -> m ()
+moveUserToUserGroup uid newugid =
+  (view #id <$>) <$> dbQuery (FolderGetUserGroupHome newugid) >>= \case
+    Nothing         -> internalError
+    Just newugfdrid -> do
+      void . dbUpdate $ SetUserUserGroup uid newugid
+      void . dbUpdate $ SetUserCompanyAdmin uid False
+      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
+      newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
+      void . dbUpdate . SetUserHomeFolder uid $ newhomefdrid
+

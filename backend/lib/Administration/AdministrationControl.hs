@@ -86,6 +86,7 @@ import User.Email
 import User.History.Model
 import User.JSON
 import User.UserControl
+import User.Utils
 import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
 import UserGroup.Types
@@ -396,16 +397,9 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
       else internalError
 
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
-handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
-  newugid <- guardJustM $ readField "companyid"
-  (view #id <$>) <$> dbQuery (FolderGetUserGroupHome newugid) >>= \case
-    Nothing         -> internalError
-    Just newugfdrid -> do
-      void . dbUpdate $ SetUserUserGroup uid newugid
-      void . dbUpdate $ SetUserCompanyAdmin uid False
-      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
-      void . dbUpdate . SetUserHomeFolder uid $ newhomefdrid
+handleMoveUserToDifferentCompany userID = onlySalesOrAdmin $ do
+  targetUserGroupID <- guardJustM $ readField "companyid"
+  moveUserToUserGroup userID targetUserGroupID
 
 handleMergeToOtherCompany :: Kontrakcja m => UserGroupID -> m ()
 handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
@@ -549,6 +543,7 @@ getUserGroupSettingsChange = do
   mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
   mcompanypadappmode <- fmap padAppModeFromText <$> getField' $ "companypadappmode"
   mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
+  mcompanyforcehidepn <- getField "companyforcehidepn"
   mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
   mcompanytotpismandatory <- getField "companytotpismandatory"
   mcompanysessiontimeout <- getSessionTimeoutField "companysessiontimeout"
@@ -582,9 +577,10 @@ getUserGroupSettingsChange = do
     . maybe identity
             (set (#dataRetentionPolicy % #immediateTrash) . (== "true"))
             mcompanyimmediatetrash
-    . maybe identity (set #cgiServiceID) mcompanycgiserviceid
-    . maybe identity (set #smsProvider)  mcompanysmsprovider
-    . maybe identity (set #padAppMode)   mcompanypadappmode
+    . maybe identity (set #cgiServiceID)              mcompanycgiserviceid
+    . maybe identity (set #smsProvider)               mcompanysmsprovider
+    . maybe identity (set #padAppMode)                mcompanypadappmode
+    . maybe identity (set #forceHidePN . (== "true")) mcompanyforcehidepn
     . maybe identity (set #padEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
     . maybe identity
             (set #sendTimeoutNotification . (== "true"))

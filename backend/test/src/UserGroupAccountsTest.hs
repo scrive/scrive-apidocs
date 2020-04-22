@@ -50,6 +50,9 @@ companyAccountsTests env = testGroup
       "Admin user can invite an existing user to their user group with non-default target"
       env
       test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget
+    , testThat "Admin user can move user within company without sending an invitation"
+               env
+               test_movingACompanyAccountWithinTheCompany
     , testThat "Admin user can resend invite to a new user"
                env
                test_resendingInviteToNewCompanyAccount
@@ -223,6 +226,46 @@ test_addingANewCompanyAccountWithDifferentTarget = do
 
   emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 1 (length emails)
+
+test_movingACompanyAccountWithinTheCompany :: TestEnv ()
+test_movingACompanyAccountWithinTheCompany = do
+  admin <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }
+  let targetUGID = admin ^. #groupID
+  ugWithinTheSameCompany <- instantiateUserGroup
+    $ randomUserGroupTemplate { parentGroupID = Just targetUGID }
+
+  let ugWithinTheSameCompanyID = ugWithinTheSameCompany ^. #id
+      companyUserEmail         = "bob@blue.com"
+  void . instantiateUser $ randomUserTemplate { email          = return companyUserEmail
+                                              , isCompanyAdmin = False
+                                              , signupMethod   = CompanyInvitation
+                                              , groupID = return ugWithinTheSameCompanyID
+                                              }
+
+  ctx <- set #maybeUser (Just admin) <$> mkContext defaultLang
+
+  req <- mkRequest
+    POST
+    [ ("add"          , inText "True")
+    , ("email"        , inText companyUserEmail)
+    , ("user_group_id", inText $ showt targetUGID)
+    ]
+
+  (res, _) <- runTestKontra req ctx handleAddUserGroupAccount
+  assertBool "Response is proper JSON" $ res == runJSONGen
+    (do
+      value "moved" True
+      value "added" False
+    )
+  Just movedUser <- dbQuery $ GetUserByEmail (Email companyUserEmail)
+  assertEqual "User is in target user group" targetUGID (movedUser ^. #groupID)
+
+  actions <- getAccountCreatedActions
+  assertEqual "An AccountCreated action was not made" 0 (length actions)
+
+  emails <- dbQuery GetEmailsForTest
+  assertEqual "An email was not sent" 0 (length emails)
+
 
 test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
