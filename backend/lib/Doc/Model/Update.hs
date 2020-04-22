@@ -1091,13 +1091,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBUpdate m PreparationToPending () where
   dbUpdate (PreparationToPending actor tzn) = do
-    sealingMethod <- getSealingMethodForDocument =<< theDocument
+    sealingMethod            <- getSealingMethodForDocument =<< theDocument
+    forceHidePersonalNumbers <- getForceHidePersonalNumbers =<< theDocument
     -- We determine the sealing method (currently Guardtime or PAdES) using
     -- the author's user group settings and store it with the document so that
     -- it doesn't accidentally change later in the process, if the author
     -- or the user group changes.
 
-    (lang, tot)   <- updateDocumentWithID $ \docid -> do
+    (lang, tot)              <- updateDocumentWithID $ \docid -> do
       let time = actorTime actor
 
       -- If we know actor's time zone:
@@ -1143,6 +1144,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBU
         runQuery_ . sqlUpdate "signatory_links" $ do
           sqlSet "can_be_forwarded" False
           sqlWhereIn "delivery_method" [PadDelivery, APIDelivery]
+          sqlWhereEq "document_id" docid
+
+        when forceHidePersonalNumbers . runQuery_ . sqlUpdate "signatory_links" $ do
+          sqlSet "hide_pn_elog" True
           sqlWhereEq "document_id" docid
 
         runQuery_ $ "SELECT timeout_time FROM documents WHERE id =" <?> docid

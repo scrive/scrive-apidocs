@@ -244,6 +244,7 @@ defaultUserGroupSettings = UserGroupSettings
   , smsProvider                = SMSDefault
   , padAppMode                 = ListView
   , padEarchiveEnabled         = True
+  , forceHidePN                = False
   , legalText                  = False
   , requireBPIDForNewDoc       = False
   , sendTimeoutNotification    = False

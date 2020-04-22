@@ -198,6 +198,7 @@ companySettingsJson ugs = do
   value "smsprovider" . show $ ugs ^. #smsProvider
   value "padappmode" . padAppModeText $ ugs ^. #padAppMode
   value "padearchiveenabled" $ ugs ^. #padEarchiveEnabled
+  value "forcehidepn" $ ugs ^. #forceHidePN
   value "idledoctimeoutpreparation" $ drp ^. #idleDocTimeoutPreparation
   value "idledoctimeoutclosed" $ drp ^. #idleDocTimeoutClosed
   value "idledoctimeoutcanceled" $ drp ^. #idleDocTimeoutCanceled

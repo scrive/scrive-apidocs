@@ -543,6 +543,7 @@ getUserGroupSettingsChange = do
   mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
   mcompanypadappmode <- fmap padAppModeFromText <$> getField' $ "companypadappmode"
   mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
+  mcompanyforcehidepn <- getField "companyforcehidepn"
   mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
   mcompanytotpismandatory <- getField "companytotpismandatory"
   mcompanysessiontimeout <- getSessionTimeoutField "companysessiontimeout"
@@ -576,9 +577,10 @@ getUserGroupSettingsChange = do
     . maybe identity
             (set (#dataRetentionPolicy % #immediateTrash) . (== "true"))
             mcompanyimmediatetrash
-    . maybe identity (set #cgiServiceID) mcompanycgiserviceid
-    . maybe identity (set #smsProvider)  mcompanysmsprovider
-    . maybe identity (set #padAppMode)   mcompanypadappmode
+    . maybe identity (set #cgiServiceID)              mcompanycgiserviceid
+    . maybe identity (set #smsProvider)               mcompanysmsprovider
+    . maybe identity (set #padAppMode)                mcompanypadappmode
+    . maybe identity (set #forceHidePN . (== "true")) mcompanyforcehidepn
     . maybe identity (set #padEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
     . maybe identity
             (set #sendTimeoutNotification . (== "true"))

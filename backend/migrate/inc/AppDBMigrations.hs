@@ -254,4 +254,5 @@ kontraMigrations =
   , userGroupSettingsRemoveOldComposites
   , removeFreeUserFeatureFlagsJob
   , featureFlagsAddOnfidoAuthToSign
+  , userGroupSettingsAddForceHidePN
   ]
