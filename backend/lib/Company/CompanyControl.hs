@@ -68,7 +68,7 @@ adminRoutes = choice
 
 -- modelled after user group api v2 and should be moved there!
 handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
-handleGetCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
+handleGetCompanyBranding mugid = withUserOrAdminOnly mugid $ \ug -> do
   ugwp <- dbQuery $ UserGroupGetWithParentsByUG ug
   let (ugforui, ui) = ugwpUIWithID ugwp
       inheritedFrom = if ugforui == ug ^. #id then Nothing else Just ugforui
@@ -110,7 +110,7 @@ handleInheritCompanyBranding ugid = withSalesOrAdminOnly ugid $ \ug -> do
   dbUpdate $ UserGroupUpdateUI (ug ^. #id) newUI
 
 handleGetThemes :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
-handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
+handleGetThemes mugid = withUserOrAdminOnly mugid $ \ug -> do
   inherited <- getField "inherited"
   if inherited == Just "true"
     then handleGetThemesInheritableByUserGroup $ ug ^. #id

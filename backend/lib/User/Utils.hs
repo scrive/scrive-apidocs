@@ -7,6 +7,7 @@ module User.Utils (
     , withUserAndGroup
     , withUserAndGroupWithParents
     , withUserAndRoles
+    , withUserOrAdminOnly
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
     , moveUserToUserGroup
@@ -106,7 +107,6 @@ withUserAndGroupWithParents action = do
   ugwp      <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   action (user, ugwp)
 
-
 {- |
     Guards that there is a user that is logged in. The user and roles are passed as params
     to the given action, to save you having to look them up yourself.
@@ -129,6 +129,11 @@ withCompanyAdminOrAdminOnly
   :: Kontrakcja m => Maybe UserGroupID -> (UserGroup -> m a) -> m a
 withCompanyAdminOrAdminOnly Nothing action = withCompanyAdmin (action . snd)
 withCompanyAdminOrAdminOnly (Just ugid) action =
+  onlySalesOrAdmin $ guardJustM (dbQuery (UserGroupGet ugid)) >>= action
+
+withUserOrAdminOnly :: Kontrakcja m => Maybe UserGroupID -> (UserGroup -> m a) -> m a
+withUserOrAdminOnly Nothing action = withUserAndGroup (action . snd)
+withUserOrAdminOnly (Just ugid) action =
   onlySalesOrAdmin $ guardJustM (dbQuery (UserGroupGet ugid)) >>= action
 
 withSalesOrAdminOnly :: Kontrakcja m => UserGroupID -> (UserGroup -> m a) -> m a
