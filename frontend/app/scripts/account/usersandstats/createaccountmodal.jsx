@@ -87,6 +87,11 @@ module.exports = React.createClass({
               type: "success",
               content: localization.account.companyAccounts.companyInviteSent
             });
+          } else if (resp.moved) {
+            new FlashMessage({
+              type: "success",
+              content: localization.account.companyAccounts.companyUserMoved
+            });
           } else {
             if (resp.samecompany) {
               new FlashMessage({

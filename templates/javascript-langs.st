@@ -1267,6 +1267,7 @@ javascriptLocalisation =
               , companyInviteNotSent : "$_flashCompanyAccountInviteNotSent()$"
               , companyInviteNotSentSameCompany: "$_flashCompanyInviteNotSentSameCompany()$"
               , companyInviteResent : "$_flashCompanyAccountInviteResent()$"
+              , companyUserMoved :  "$_flashCompanyAccountUserMoved()$"
               , companyAccountDeleted : "$_flashMessageCompanyAccountDeleted()$"
               , columnName :  "$_name()$"
               , columnEmail : "$_email()$"
