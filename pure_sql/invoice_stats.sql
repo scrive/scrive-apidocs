@@ -300,6 +300,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "User group ID" BIGINT,
         "User group root ID" BIGINT,
         "Company number" TEXT,
+        "Company country" TEXT,
         "Salesforce ID" TEXT,
         "User group admin" TEXT,
         "Invoice/BillItem contact email" TEXT,
@@ -352,6 +353,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , user_groups.id AS "User group ID"
            , (select coalesce(user_groups.parent_group_path[(select array_length(user_groups.parent_group_path, 1))] :: bigint, user_groups.id :: bigint )) AS "User group root ID"
            , escape_for_csv(user_group_addresses.company_number :: TEXT) AS "Company number"
+           , escape_for_csv(user_group_addresses.country :: TEXT) AS "Company country"
            , escape_for_csv(user_group_tags.value :: TEXT) AS "Salesforce ID"
            , escape_for_csv((SELECT get_user_group_contact(user_groups.id)) :: TEXT) AS "User group admin"
            , escape_for_csv(get_user_group_contact(
@@ -568,14 +570,15 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
   We are unable to use server-side copy too, since it requires raised
   privileges.
 */
-CREATE TABLE report_base AS (SELECT * FROM get_report_base(:'date_from', :'date_to'));
+CREATE TEMPORARY TABLE report_base AS (SELECT * FROM get_report_base(:'date_from', :'date_to'));
 
-CREATE TABLE report_master AS
+CREATE TEMPORARY TABLE report_master AS
 (select
   "User group name",
   "User group ID",
   escape_for_csv((SELECT name FROM user_groups WHERE id="User group root ID") :: TEXT) AS "User group root name",
   "User group root ID",
+  "Company country",
   "Salesforce ID",
   "User group admin",
   "Is invoice",
@@ -615,7 +618,7 @@ CREATE TABLE report_master AS
 
 \copy report_master TO report-master.csv WITH (FORMAT CSV, HEADER, DELIMITER ';');
 
-CREATE TABLE report_aggregated AS
+CREATE TEMPORARY TABLE report_aggregated AS
   (SELECT
         escape_for_csv((SELECT name FROM user_groups WHERE id="User group root ID") :: TEXT) AS "User group root name",
         "User group root ID",
