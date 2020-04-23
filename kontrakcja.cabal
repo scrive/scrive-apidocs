@@ -117,6 +117,7 @@ Library
                   backend/migrate/inc
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
+                  backend/flow/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
@@ -353,6 +354,14 @@ Library
                  , EvidencePackage.EvidenceLog
                  , EvidencePackage.EvidenceOfIntent
                  , EvidencePackage.EvidenceOfTime
+                 , Flow.Aggregator
+                 , Flow.Api
+                 , Flow.Client
+                 , Flow.Db
+                 , Flow.HighTongue
+                 , Flow.Machinize
+                 , Flow.Server
+                 , Flow.Transducer
                  , FeatureFlags.Model
                  , FeatureFlags.Tables
                  , File.Conditions
@@ -421,7 +430,6 @@ Library
                  , Network.XMLCurl
                  , OAuth.Control
                  , OAuth.Model
-                 , OAuth.Parse
                  , OAuth.Tables
                  , OAuth.Util
                  , OAuth.View
@@ -588,6 +596,8 @@ Library
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , kontrakcja-appdir
+               , authentication
+               , flow
                , AES
                , DRBG
                , Decimal
@@ -595,6 +605,7 @@ Library
                , HTTP
                , QuickCheck
                , aeson
+               , aeson-casing
                , amazonka
                , amazonka-core
                , amazonka-kinesis
@@ -674,6 +685,12 @@ Library
                , scientific
                , scrypt
                , semigroups
+               , servant
+               , servant-auth
+               , servant-checked-exceptions
+               , servant-client
+               , servant-client-core
+               , servant-server
                , soap
                , split
                , spreadsheet
@@ -695,6 +712,8 @@ Library
                , utf8-string
                , uuid
                , vector
+               , warp
+               , wai
                , x509
                , xml-conduit
                , xml-conduit-writer
@@ -726,13 +745,15 @@ Executable kontrakcja-server
                , crypto-rng
                , curl
                , directory
-               , filepath
-               , hpqtypes-extras
                , exceptions
+               , filepath
+               , flow
                , happstack-server
                , happstack-static-routing
                , hedis
                , hostname
+               , hpqtypes
+               , hpqtypes-extras
                , lifted-base
                , log-base
                , text
@@ -785,6 +806,7 @@ Executable kontrakcja-migrate
                   backend/migrate/inc backend/migrate/src
                   backend/misc/schema backend/misc/src
                   backend/server/schema
+                  backend/flow/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -846,6 +868,7 @@ Executable kontrakcja-migrate
                  FeatureFlags.Tables
                  File.Migrations
                  File.Tables
+                 Flow.Db
                  UserGroup.Migrations
                  UserGroup.Tables
                  HostClock.Tables
@@ -1007,6 +1030,7 @@ Executable mailing-server
   Build-depends: base-noprelude
                , kontrakcja-appdir
                , kontrakcja-prelude
+               , authentication
                , AES
                , DRBG
                , HTTP
@@ -1296,6 +1320,8 @@ Test-suite kontrakcja-test
                  File.Tables
                  FileTest
                  FlashMessages
+                 FlowTests
+                 Flow.AggregatorTest
                  Folder.APITest
                  UserGroup.APITest
                  UserGroup.UserGroupTest
@@ -1374,6 +1400,7 @@ Test-suite kontrakcja-test
                , kontrakcja-prelude
                , kontrakcja-appdir
                , kontrakcja
+               , flow
                , Decimal
                , HStringTemplate
                , HUnit
@@ -1603,3 +1630,27 @@ Executable sort_imports
                     kontrakcja-appdir,
                     text
   Default-Language: Haskell2010
+
+Library authentication
+  import: common-stanza
+
+  Hs-Source-Dirs: backend/authentication/src
+
+  GHC-Options: -Werror -Wall
+  GHC-Prof-Options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  Exposed-Modules:    Auth.MagicHash
+                    , Auth.Model
+                    , Auth.OAuth
+                    , Auth.Parse
+                    , Auth.Utils
+  Build-Depends:      base-noprelude
+                    , kontrakcja-prelude
+                    , cond
+                    , crypto-rng
+                    , exceptions
+                    , happstack-server
+                    , hpqtypes
+                    , text
+                    , unjson
+                    , HTTP

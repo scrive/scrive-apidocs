@@ -1,0 +1,50 @@
+stages:
+  - initial:
+      actions: []
+      expect:
+        approved-by:
+          users: [approver1]
+          documents: [doc1]
+  - get-data:
+      actions:
+        - notify:
+            users: [party1, party2]
+            message: get-data
+      expect:
+        received-data:
+          fields: [first-name]
+          users: [party1, party2]
+          documents: [doc1, doc2]
+  - approve-again:
+      actions:
+        - notify:
+            users: [approver2]
+            message: approving
+      expect:
+        approved-by:
+          users: [approver2]
+          documents: [doc1, doc2]
+  - signed-by-party1:
+      actions:
+        - notify:
+            users: [party1]
+            message: signing
+      expect:
+        signed-by:
+          users: [party1]
+          documents: [doc1, doc2]
+  - signed-by-party2:
+      actions:
+        - notify:
+            users: [party2]
+            message: signing
+      expect:
+        signed-by:
+          users: [party2]
+          documents: [doc1, doc2]
+  - everybody signed:
+      actions:
+        - notify:
+            users: [author]
+            message: everybody-signed
+      expect: {}

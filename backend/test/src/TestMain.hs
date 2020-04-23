@@ -62,6 +62,7 @@ import FileStorage
 import FileStorage.Amazon.S3Env
 import FileTest
 import FlashMessages
+import FlowTests
 import Folder.APITest
 import Folder.FolderTest
 import Generators.DocumentGeneratorsTest
@@ -141,6 +142,7 @@ allTests =
   , fileTests
   , featureFlagsTest
   , flashMessagesTests
+  , flowTests
   , folderTests
   , userGroupTests
   , userGroupApiTests

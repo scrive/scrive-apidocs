@@ -1,4 +1,7 @@
-module OAuth.Model where
+module OAuth.Model
+  ( module OAuth.Model
+  , module Auth.Model
+  ) where
 
 import Control.Monad.Catch
 import Crypto.RNG
@@ -9,36 +12,12 @@ import Network.URI
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text as T
 
+import Auth.Model
 import DB
 import Log.Identifier
 import MagicHash
 import MinutesTime
 import User.Model
-
-data APIToken = APIToken { atID    :: Int64     -- autoincrement for uniqueness
-                         , atToken :: MagicHash -- random part for security
-                         }
-    deriving (Eq, Ord)
-
-instance Show APIToken where
-  showsPrec _ token = (++) $ show (atToken token) ++ "_" ++ show (atID token)
-
-instance Read APIToken where
-  readsPrec p s = case break (== '_') s of
-    (ts, '_' : is) ->
-      [ (APIToken { atID = i, atToken = read $ T.pack ts }, v)
-      | (i, v) <- readsPrec p is
-      ]
-    _ -> []
-
-unjsonAPIToken :: UnjsonDef APIToken
-unjsonAPIToken = unjsonInvmapR
-  (\s -> case reads s of
-    [(apitoken, [])] -> pure apitoken
-    _                -> fail "cannot parse APIToken"
-  )
-  show
-  unjsonDef
 
 data APIPrivilege = APIDocCreate
                   | APIDocCheck
@@ -104,13 +83,6 @@ data OAuthTokenRequest = OAuthTokenRequest
   , trTempSecret :: MagicHash
   , trVerifier   :: MagicHash
   } deriving Show
-
-data OAuthAuthorization = OAuthAuthorization
-  { oaAPIToken     :: APIToken
-  , oaAPISecret    :: MagicHash
-  , oaAccessToken  :: APIToken
-  , oaAccessSecret :: MagicHash
-  } deriving (Show, Eq)
 
 data OAuthAuthorizationHideSecrets = OAuthAuthorizationHideSecrets
   { oahsAPIToken     :: APIToken

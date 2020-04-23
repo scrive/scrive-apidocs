@@ -1,0 +1,671 @@
+openapi: 3.0.0
+info:
+  description: |
+    This is an API for configuring and managing Flow processes
+  version: "0.2.1"
+  title: Flow API
+  contact:
+    email: marek.bernat@scrive.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: configuration
+    description: Calls used to configure Flow processes
+  - name: control
+    description: Calls used to control Flow processes
+  - name: progress
+    description: Calls used to progress in the Flow processes
+paths:
+  /template:
+    post:
+      tags:
+        - configuration
+      summary: Create a Flow template
+      operationId: createTemplate
+      description: |
+        Creates a draft Flow template
+
+        The `process` field should be a valid Flow DSL format, but we also support saving arbitrary strings, as a user convenience.
+
+        The input will still be validated later in the process, either through the `/template/validate` endpoint or by commiting the template.
+      requestBody:
+        description: Flow template input
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateRequest'
+      responses:
+        201:
+          description: Flow template created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateIdObject'
+        400:
+          description: Error parsing the template description
+  /template/{template_id}:
+    delete:
+      tags:
+        - configuration
+      summary: Delete a Flow template
+      operationId: deleteTemplate
+      description: |
+        Deletes Flow template
+
+        Only draft templates can be deleted.
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      responses:
+        204:
+          description: Flow template deleted
+        404:
+          description: Flow template not found
+        409:
+          description: Commited Flow template cannot be deleted
+    get:
+      tags:
+        - configuration
+      summary: Get a Flow template
+      operationId: getTemplate
+      description: |
+        Gets Flow template
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      responses:
+        200:
+          description: Flow template found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateResponse'
+        404:
+          description: Flow template not found
+    patch:
+      tags:
+        - configuration
+      summary: Update a Flow template
+      operationId: updateTemplate
+      description: |
+        Updates Flow template
+
+        Only draft templates can be updated
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      requestBody:
+        description: Flow template input
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateUpdateRequest'
+      responses:
+        200:
+          description: Flow template created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateResponse'
+        400:
+          description: Error parsing the template description
+        404:
+          description: Flow template not found
+        409:
+          description: Commited Flow template cannot be updated
+
+  /template/{template_id}/commit:
+    post:
+      tags:
+        - configuration
+      summary: Commit a Flow template
+      operationId: commitTemplate
+      description: |
+        Commits Flow template so that instances can be started from it
+
+        Commiting an already commited template has no effect.
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      responses:
+        204:
+          description: Flow template commited successfully
+        404:
+          description: Flow template not found
+        409:
+          description: Flow template "process" contains syntactic or semantic errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowDslValidationResult'
+
+  /template/validate:
+    post:
+      tags:
+        - configuration
+      summary: Validate Flow DSL
+      operationId: validateTemplate
+      description: |
+        Validates Flow DSL
+      requestBody:
+        description: Flow DSL
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowDsl'
+      responses:
+        200:
+          description: Flow template validated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowDslValidationResult'
+
+  /template/{template_id}/start:
+    post:
+      tags:
+        - control
+      summary: Create and start a new instance
+      operationId: startTemplate
+      description: |
+        Creates and starts new flow instance based on a given template
+
+        We validate all the parameters and check that the objects they're referring to are in a good state. For example, all documents must be ready to be started.
+
+        Once the validation is finished, we start the documents (???) and execute the initial action as specified by the Flow DSL `process`.
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      requestBody:
+        description: Flow template parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateParameters'
+      responses:
+        201:
+          description: Returns the ID of a newly created instance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceIdObject'
+        400:
+          description: Flow parameters invalid
+        404:
+          description: Flow template not found
+        409:
+          description: |
+            Possible reasons
+              * Flow template not commited
+              * Referred objects are not prepared to be used in a Flow process
+
+  /instance/{instance_id}:
+    get:
+      tags:
+        - control
+      summary: Get a Flow instance
+      operationId: getFlow
+      description: Admin interface that returns complete instance state
+      parameters:
+        - $ref: '#/components/parameters/InstanceId'
+      responses:
+        200:
+          description: Returns a Flow instance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceGetResponse'
+        404:
+          description: Flow instance not found
+
+  /instance/{instance_id}/view:
+    get:
+      tags:
+        - progress
+      summary: View a Flow instance
+      operationId: viewFlow
+      description: |
+        User interface that returns information relevant to the party involved in the process
+      parameters:
+        - $ref: '#/components/parameters/InstanceId'
+      responses:
+        200:
+          description: View of the instance relevant to the given user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceViewResponse'
+        404:
+          description: Flow instance not found
+
+servers:
+  - url: 'https://virtserver.swaggerhub.com/scrive/Flow/0.1.0'
+components:
+  parameters:
+    TemplateId:
+      name: template_id
+      in: path
+      required: true
+      description: Unique ID of a Flow template
+      schema:
+        $ref: '#/components/schemas/TemplateId'
+    InstanceId:
+      name: instance_id
+      in: path
+      required: true
+      description: Unique ID of a Flow instance
+      schema:
+        $ref: '#/components/schemas/InstanceId'
+  schemas:
+    TemplateCreateRequest:
+      type: object
+      required:
+        - name
+        - process
+      properties:
+        name:
+          type: string
+          example: Spaceship Factory Development Agreements
+        process:
+          $ref: '#/components/schemas/FlowDsl'
+        user:
+          $ref: '#/components/schemas/UserId'
+        user_group:
+          $ref: '#/components/schemas/UserGroupId'
+    TemplateUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Spaceship Factory Development Agreements
+        process:
+          $ref: '#/components/schemas/FlowDsl'
+        user:
+          $ref: '#/components/schemas/UserId'
+        user_group:
+          $ref: '#/components/schemas/UserGroupId'
+    TemplateResponse:
+      type: object
+      required:
+        - id
+        - name
+        - process
+        - user
+        - user_group
+        - commited
+      properties:
+        id:
+          $ref: '#/components/schemas/TemplateId'
+        name:
+          type: string
+          example: Spaceship Factory Development Agreements
+        process:
+          $ref: '#/components/schemas/FlowDsl'
+        user:
+          $ref: '#/components/schemas/UserId'
+        user_group:
+          $ref: '#/components/schemas/UserGroupId'
+        commited:
+          type: boolean
+          example: false
+    TemplateIdObject:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          $ref: '#/components/schemas/TemplateId'
+    TemplateParameters:
+      type: object
+      properties:
+        documents:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DocumentId'
+        users:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/UserId'
+        messages:
+          type: object
+          additionalProperties:
+            type: string
+    DocumentId:
+      description: |
+        Unique identifier for a document.
+      type: string
+      example: 57
+
+    FlowDsl:
+      type: string
+      format: flow_dsl
+      description: |
+        Description of the signing process in Flow DSL, encoded as a string.
+
+        See FlowDslSpec for the specification of the DSL.
+      example:
+        See FlowDslSpec for the specification of the DSL.
+
+    FlowDslSpec:
+      type: object
+      description: |
+        Description of the signing process in Flow DSL.
+
+        Most of the strings encountered in this object are interpreted as abstract variables, to be set when a Flow instance is created. Thus one can reuse this template for multiple concrete processes with their own sets of concrete users, documents, and messages.
+      required: [stages]
+      properties:
+        stages:
+          type: array
+          items:
+            type: object
+            minProperties: 1
+            maxProperties: 1
+            additionalProperties:
+              $ref: '#/components/schemas/FlowDslStage'
+      example:
+        stages:
+          - applicant1-to-sign:
+              actions:
+                - notify:
+                    users: [applicant1]
+                    message: signing
+              expect:
+                signed-by:
+                  users: [applicant1]
+                  documents:
+                    - main-application-form
+                    - cca-credit-card
+                    - direct-debit-form
+          - applicant2-to-sign:
+              actions:
+                - notify:
+                    users: [applicant2]
+                    message: signing
+              expect:
+                signed-by:
+                  users: [applicant2]
+                  documents: [main-application-form]
+                viewed-by:
+                  users: [applicant2]
+                  documents:
+                    - cca-credit-card
+                    - diret-debit-form
+          - author-to-sign:
+              actions:
+                - notify:
+                    users: [author]
+                    message: counter-signing
+              expect:
+                signed-by:
+                  users: [author]
+                  documents:
+                    - main-application-form
+                    - cca-credit-card
+                    - direct-debit-form
+          - close-documents:
+              actions:
+                - close:
+                    documents:
+                      - main-application-form
+                      - cca-credit-card
+                      - direct-debit-form
+              expect: {}
+
+    FlowDslStage:
+      description: |
+        Stage of a Flow process. It consists of actions taken immediately
+        and conditions that need to be satisfied to move to the next stage.
+      type: object
+      required:
+        - actions
+        - expect
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowDslAction'
+        expect:
+          $ref: '#/components/schemas/FlowDslExpect'
+
+    FlowDslAction:
+      description: |
+        Action to be taken when the stage in entered.
+      oneOf:
+        - $ref: '#/components/schemas/FlowDslNotify'
+        - $ref: '#/components/schemas/FlowDslClose'
+
+    FlowDslNotify:
+      type: object
+      required: [notify]
+      properties:
+        notify:
+          description: |
+            Send a message to the specified users.
+          type: object
+          required:
+            - users
+            - message
+          properties:
+            users:
+              type: array
+              items:
+                type: string
+            message:
+              type: string
+
+    FlowDslClose:
+      type: object
+      required: [notify]
+      properties:
+        notify:
+          description: |
+            Close the specified document, i.e. attach an evidence log and seal it.
+          type: object
+          required:
+            - documents
+          properties:
+            documents:
+              type: array
+              items:
+                type: string
+
+    FlowDslExpect:
+      description: |
+        Set of conditions to be satisfied before moving to the next stage.
+        Can be empty.
+      type: object
+      properties:
+        approved-by:
+          $ref: '#/components/schemas/FlowDslDocsAndUsers'
+        signed-by:
+          $ref: '#/components/schemas/FlowDslDocsAndUsers'
+        viewed-by:
+          $ref: '#/components/schemas/FlowDslDocsAndUsers'
+
+    FlowDslDocsAndUsers:
+      description: |
+        List of documents and users to wait for input from.
+        We require each user to act on every document.
+      type: object
+      required:
+        - documents
+        - users
+      properties:
+        documents:
+          type: array
+          items:
+            type: string
+        users:
+          type: array
+          items:
+            type: string
+
+    FlowDslValidationResult:
+      description:
+        This object is unstable
+      type: array
+      items:
+        type: object
+        required:
+         - error_message
+        properties:
+          line_number:
+            type: number
+            format: integer
+            example: 5
+          column:
+            type: number
+            format: integer
+            example: 7
+          error_message:
+            type: string
+            example: |
+              "Error in $.stages[0].actions.actions[0]: expected Expected key `notify`, but encountered Object"
+
+    InstanceId:
+      description: Unique flow instance ID
+      type: string
+      format: uuid
+    InstanceIdObject:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/InstanceId'
+    InstanceGetResponse:
+      type: object
+      required:
+        - id
+        - template
+        - template_parameters
+        - state
+      properties:
+        id:
+          $ref: '#/components/schemas/InstanceId'
+        template:
+          $ref: '#/components/schemas/TemplateId'
+        template_parameters:
+          $ref: '#/components/schemas/TemplateParameters'
+        state:
+          $ref: '#/components/schemas/InstanceState'
+
+    InstanceEvent:
+      type: object
+      required:
+        - deed
+        - user
+        - document
+        - timestamp
+      properties:
+        deed:
+          $ref: "#/components/schemas/InstanceEventDeed"
+        user:
+          $ref: '#/components/schemas/UserId'
+        document:
+          $ref: '#/components/schemas/DocumentId'
+        timestamp:
+          type: string
+          format: date-time
+          example: "1937-01-01T12:00:27.87.00000Z"
+
+    InstanceEventDeed:
+      type: string
+      enum:
+        - approval
+        - signature
+        - view
+
+    InstanceState:
+      description: |
+        Provides a complete overview of a Flow instance.
+
+        This includes actions available to all the participants at this moment and a full process history.
+
+        The history array is ordered from newest to oldest, so the current stage is the first element.
+      type: object
+      required:
+        - available_actions
+        - history
+      properties:
+        available_actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceAuthorAction'
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceStage'
+
+    InstanceStage:
+      type: object
+      required:
+        - stage
+        - events
+      properties:
+        stage:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceEvent'
+
+    InstanceViewResponse:
+      description: |
+        TODO (optional) add a history field
+      type: object
+      required:
+        - id
+        - state
+        - available_actions
+      properties:
+        id:
+          $ref: '#/components/schemas/InstanceId'
+        available_actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceUserAction'
+
+    InstanceAuthorAction:
+      description: |
+        An action available to some participant of the process on some document.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/InstanceActionType'
+        user:
+          $ref: '#/components/schemas/UserId'
+        document:
+          $ref: '#/components/schemas/DocumentId'
+
+    InstanceUserAction:
+      description: |
+        An action available to an authenticated participant of the process on some document.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/InstanceActionType'
+        document:
+          $ref: '#/components/schemas/DocumentId'
+
+    InstanceActionType:
+      description: INSTANCTION
+      type: string
+      enum:
+        - sign
+        - approve
+        - view
+        - reject
+
+    TemplateId:
+      description: Unique flow template ID
+      type: string
+      format: uuid
+    UserId:
+      description: Unique identifier for a user.
+      type: string
+      format: int64
+      example: 47
+    UserGroupId:
+      description: Unique identifier for a use group.
+      type: string
+      format: int64
+      example: 76

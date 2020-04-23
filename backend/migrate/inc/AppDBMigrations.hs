@@ -22,6 +22,7 @@ import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
 import File.Migrations
+import Flow.Db
 import Folder.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations
@@ -266,4 +267,5 @@ kontraMigrations =
   , createTableUserGroupDeletionRequests
   , createTableUserGroupDeletionLog
   , addUserGroupDeletionRequestEvaluationJob
+  , createTableFlowTemplates
   ]

@@ -34,6 +34,7 @@ import EID.Signature.Tables
 import EvidenceLog.Tables
 import FeatureFlags.Tables
 import File.Tables
+import Flow.Db
 import Folder.Tables
 import HostClock.Tables
 import Mails.FromKontra.Tables
@@ -91,7 +92,7 @@ kontraDomains :: [Domain]
 kontraDomains = [domainColor, domainFont]
 
 kontraExtensions :: [Extension]
-kontraExtensions = ["pgcrypto"]
+kontraExtensions = ["pgcrypto", "\"uuid-ossp\""]
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions =
@@ -178,3 +179,4 @@ kontraTables =
        , tableUserGroupDeletionRequests
        , tableUserGroupDeletionLog
        ]
+    ++ flowTables
