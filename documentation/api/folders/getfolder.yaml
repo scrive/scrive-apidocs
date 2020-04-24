@@ -26,8 +26,9 @@ get:
     contents of the folder are not displayed, just the metadata about the
     folder.
 
-    This metadata currently consists of the folder's ID, it's parent ID (if any)
-    and the name/id of its immediate children (if any).
+    This metadata currently consists of the folder's ID, its parent ID (if any)
+    and the name/id of its children (if any). Only the immediate children are
+    included by default (see the `recursive` parameter).
 
   parameters:
     - name: folder_id
@@ -35,6 +36,14 @@ get:
       type: string
       description: The ID of the Folder you wish to view
       required: true
+    - name: recursive
+      in: query
+      type: boolean
+      description: |
+        Set ?recursive=true to include all descendant folders in the metadata
+        instead of just the immediate children.
+      required: false
+      default: false
 
   responses:
     200:
