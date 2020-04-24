@@ -288,6 +288,8 @@ var Field = exports.Field = Backbone.Model.extend({
         && (!signatory.noBankIDAuthenticationToSign())
         && (!signatory.dkNemIDAuthenticationToSign())
         && (!signatory.dkNemIDAuthenticationToView())
+        // I've got no idea what's going on here!
+        && (!signatory.fiTupasAuthenticationToSign())
         && (!signatory.fiTupasAuthenticationToView())
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()

@@ -1088,6 +1088,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.dkNemIDAuthenticationToSign()
         || this.dkNemIDAuthenticationToView()
         || this.dkNemIDAuthenticationToViewArchived()
+        || this.fiTupasAuthenticationToSign()
         || this.fiTupasAuthenticationToView()
         || this.fiTupasAuthenticationToViewArchived();
     },
