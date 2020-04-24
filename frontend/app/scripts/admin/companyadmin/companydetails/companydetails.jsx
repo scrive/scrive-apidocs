@@ -72,7 +72,8 @@ var CompanyDetailsView = React.createClass({
         inheritedAddress: this.props.company.companyinheritedaddress(),
         inheritedSettings: this.props.company.companyinheritedsettings(),
         companyinternaltags: this.props.company.companyinternaltags(),
-        companyexternaltags: this.props.company.companyexternaltags()
+        companyexternaltags: this.props.company.companyexternaltags(),
+        haspostsignview: this.props.company.haspostsignview()
       },
       {
         silent: true
@@ -170,6 +171,7 @@ var CompanyDetailsView = React.createClass({
               inheritedSettings={this.props.viewModel.get("inheritedSettings")}
               companyinternaltags={this.props.viewModel.get("companyinternaltags")}
               companyexternaltags={this.props.viewModel.get("companyexternaltags")}
+              haspostsignview={this.props.viewModel.get("haspostsignview")}
               onFieldChange={this.onDetailsEditorFieldChange}
             />
 

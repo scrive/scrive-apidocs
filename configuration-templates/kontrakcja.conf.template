@@ -110,5 +110,6 @@
           }
       ],
       "saml_entity_base_uri": "http://localhost:8000"
-    }
+    },
+    "postsignview_redirect_url": "http://localhost:8000/signupformthatallowsprefillinganemail"
 }

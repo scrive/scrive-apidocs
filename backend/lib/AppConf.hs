@@ -83,6 +83,7 @@ data AppConf = AppConf
   , eidServiceConf     :: Maybe EIDServiceConf
   , ssoConf            :: Maybe SSOConf
   , kinesisStream      :: Maybe KinesisConf
+  , postSignViewRedirectURL :: Text
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -144,6 +145,9 @@ unjsonAppConf =
     <*> fieldOpt "eid_service"    eidServiceConf "Configuration of eid service"
     <*> fieldOpt "sso"            ssoConf        "Configuration of SSO"
     <*> fieldOpt "kinesis_stream" kinesisStream  "Configuration of kinesis message stream"
+    <*> field "postsignview_redirect_url"
+              postSignViewRedirectURL
+              "Sign-up url linked to by the post sign view"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

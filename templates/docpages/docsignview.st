@@ -95,7 +95,9 @@ $htmlopentag()$
           loggedInAsAuthor: $if(loggedinauthor)$ true $else$ false $endif$,
           authorFullname: "$authorFullname$",
           authorPhone: "$authorPhone$",
-          showLegalText: $if(legaltext)$ true $else$ false $endif$
+          showLegalText: $if(legaltext)$ true $else$ false $endif$,
+          postSignViewEnabled: $if(postsignviewenabled)$ true $else$ false $endif$,
+          postSignViewRedirectUrl: "$postsignviewredirecturl$"
         };
 
       if (window.trackJs !== undefined && trackJs) {

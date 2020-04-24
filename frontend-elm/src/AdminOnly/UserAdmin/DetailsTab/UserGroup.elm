@@ -180,6 +180,9 @@ setBoolField name value ug =
         "settingsIsInherited" ->
             { ug | settingsIsInherited = value }
 
+        "hasPostSignview" ->
+            modifySettings (\s -> { s | hasPostSignview = value }) ug
+
         _ ->
             ug
 
@@ -275,6 +278,7 @@ type alias Settings =
     , portalUrl : Maybe String
     , eidServiceToken : Maybe String
     , sealingMethod : SealingMethod
+    , hasPostSignview : Bool
     }
 
 
@@ -302,6 +306,7 @@ settingsDecoder =
         |> DP.required "portalurl" (JD.string |> JD.nullable)
         |> DP.required "eidservicetoken" (JD.string |> JD.nullable)
         |> DP.required "sealingmethod" (JD.string |> JD.andThen sealingMethodDecoder)
+        |> DP.required "haspostsignview" JD.bool
 
 
 type alias ParentUserGroup =
@@ -503,6 +508,7 @@ formValuesSettings settings =
     , ( "companyportalurl", M.withDefault "" settings.portalUrl )
     , ( "companyeidservicetoken", M.withDefault "" settings.eidServiceToken )
     , ( "companysealingmethod", Enum.toString enumSealingMethod settings.sealingMethod )
+    , ( "companyhaspostsignview", boolToJson settings.hasPostSignview )
     ]
         ++ L.filterMap identity
             [ mField identity ( "companycgiserviceid", settings.cgiServiceID )

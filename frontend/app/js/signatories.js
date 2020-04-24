@@ -275,8 +275,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
            return this.mobile();
          }
     },
-    saved: function() {
-      return this.get("user_id") != undefined;
+    userid: function() {
+      return this.get("user_id");
     },
     signdate: function() {
         if (this.get("sign_time"))

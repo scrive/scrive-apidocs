@@ -255,4 +255,5 @@ kontraMigrations =
   , removeFreeUserFeatureFlagsJob
   , featureFlagsAddOnfidoAuthToSign
   , userGroupSettingsAddForceHidePN
+  , userGroupSettingsAddPostSignViewFlag
   ]

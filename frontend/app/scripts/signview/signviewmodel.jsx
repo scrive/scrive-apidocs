@@ -11,13 +11,16 @@ var SSNForFITupasValidation = require("../../js/validation.js").SSNForFITupasVal
 var PhoneValidation = require("../../js/validation.js").PhoneValidation;
 var TaskList = require("./navigation/task_list");
 var Track = require("../common/track");
+var LocalStorage = require("../../js/storage.js").LocalStorage;
+var moment = require("moment");
 
     module.exports = Backbone.Model.extend({
     defaults: {
       hasChangedPin: false,
       hasTakenFirstScreenshot: false,
       hasSentTrackingData: false,
-      tasks: null
+      tasks: null,
+      hasSeenPostSignviewBefore: true
     },
 
     referenceScreenshotName: function () {
@@ -65,6 +68,11 @@ var Track = require("../common/track");
       });
 
       this.set({tasks});
+
+      this.set({
+        hasSeenPostSignviewBefore:
+          LocalStorage.get("seenpostsignview", args.siglinkid.toString()) ? true : false
+      });
     },
 
     blockReload: function () {
@@ -85,6 +93,10 @@ var Track = require("../common/track");
 
     document: function () {
       return this.get("document");
+    },
+
+    hasSeenPostSignviewBefore: function () {
+      return this.get("hasSeenPostSignviewBefore");
     },
 
     hasPadSigning: function () {
@@ -109,7 +121,8 @@ var Track = require("../common/track");
         || this.hasAuthorAttachmentsSection()
         || this.hasExtraDetailsSection()
         || this.hasSignatoriesAttachmentsSection()
-        || this.hasSignSection();
+        || this.hasSignSection()
+        || this.hasPostSignview();
     },
 
     hasChangedPin: function () {
@@ -305,6 +318,20 @@ var Track = require("../common/track");
 
     hasAccessToDocument: function () {
       return !this.document().isUnavailableForSignOrApprove();
+    },
+
+    hasPostSignview: function () {
+      var document = this.document();
+      var now = moment();
+
+      return document.currentSignatory() != undefined
+         && document.currentSignatory().userid() == undefined  // signatory isn't linked to user account
+         && document.currentSignatory().email()                // signatory has an email address set
+         && document.currentSignatory().hasSigned()
+         && now.diff(document.currentSignatory().signdate(), "days") < 1
+         // ^ it doesn't make sense to show the 'post signview' days after the document was signed
+         && !this.hasSeenPostSignviewBefore()
+         && fromTemplate.postSignViewEnabled;
     },
 
     recall: function (f) {

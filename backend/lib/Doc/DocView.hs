@@ -111,6 +111,8 @@ pageDocumentSignView ctx document siglink ad = do
       _ -> show LinkPreviewLockedImage
     F.value "b64documentdata" $ B64.encode docjson
     F.value "legaltext" $ ugwpSettings authorugwp ^. #legalText
+    F.value "postsignviewenabled" $ ugwpSettings authorugwp ^. #hasPostSignview
+    F.value "postsignviewredirecturl" $ ctx ^. #postSignViewRedirectURL
     standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView

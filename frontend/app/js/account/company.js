@@ -37,7 +37,8 @@ var Company = exports.Company = Backbone.Model.extend({
       companysessiontimeout: null,
       companydocumentsessiontimeout: null,
       companyinternaltags: [],
-      companyexternaltags: []
+      companyexternaltags: [],
+      haspostsignview: true
   },
   initialize : function(args) {
     if (args.forAdmin && args.companyid != undefined)
@@ -162,6 +163,9 @@ var Company = exports.Company = Backbone.Model.extend({
   companyexternaltags: function(){
      return this.get("companyexternaltags");
   },
+  haspostsignview: function(){
+     return this.get("haspostsignview");
+  },
   ready : function() {
      return this.get("ready");
   },
@@ -203,6 +207,7 @@ var Company = exports.Company = Backbone.Model.extend({
       companyinheritedsettings: args.companyinheritedsettings,
       companyinternaltags: args.companyinternaltags,
       companyexternaltags: args.companyexternaltags,
+      haspostsignview: args.haspostsignview,
       ready : true
     };
   }

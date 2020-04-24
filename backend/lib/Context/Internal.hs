@@ -80,6 +80,7 @@ data Context = Context
     -- ^ The user which was effectively used for API call (this includes
     -- api/frontend) This might be the user from session, if the OAuth
     -- authorization was missing.
+    , postSignViewRedirectURL :: Text
     }
 
 makeFieldLabelsWith noPrefixFieldLabels ''Context

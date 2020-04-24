@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -954,6 +954,14 @@
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/m",
 "_paymentsVat":"All prices are exclusive of VAT.",
 "_pendingcompanyaccount":"Pending",
+"_postSignviewDismissButton":"No thanks",
+"_postSignviewInfoReceiveDocument":"You will receive a copy of the signed document after all parties have signed.",
+"_postSignviewProposal":"Sign up for a FREE account and see how easy it is to:",
+"_postSignviewReason1":"Sign agreements online",
+"_postSignviewReason2":"Provide a great customer experience",
+"_postSignviewReason3":"Cut admin time",
+"_postSignviewSignupButton":"Free trial",
+"_postSignviewTitle":"Document signed",
 "_preparingDocument":"Preparing document for <span class='put-person-name'></span>",
 "_problemContactingServer":"We're experiencing difficulties handling your document.<br/>Please reload the page and try again.",
 "_prolongModalButton":"Extend",

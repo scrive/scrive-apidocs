@@ -79,6 +79,7 @@ partnerApiCallV1CompanyCreate partnerUsrGrpID = do
               & (#parentGroupID ?~ partnerUsrGrpID)
               & (#homeFolderID ?~ newUgFolder ^. #id)
               & (#invoicing .~ BillItem Nothing)
+              & (#settings % _Just % #hasPostSignview .~ False)
       ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug =
             updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu

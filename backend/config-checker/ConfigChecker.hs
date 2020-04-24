@@ -102,7 +102,7 @@ checkFieldsEqualAppConfCronConf
     _gaToken            _trackjsToken       _zendeskKey         _hubspotConf
     salesforceConf      _netsConfig         _monitoringConfig   _isAPILogEnabled
     netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf eidServiceConf
-    _ssoConf            kinesisStream)
+    _ssoConf            kinesisStream       _postSignViewRedirectURL)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -144,7 +144,7 @@ checkFieldsEqualAppConfMailerConf
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
-    _eidServiceConf     _ssoConf            _kinesisStream)
+    _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -173,7 +173,7 @@ checkFieldsEqualAppConfMessengerConf
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
-    _eidServiceConf     _ssoConf            _kinesisStream)
+    _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig

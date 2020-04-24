@@ -141,6 +141,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "eid_service_token" $ ugs ^. #eidServiceToken
   sqlSet "sealing_method" $ ugs ^. #sealingMethod
   sqlSet "document_session_timeout" $ ugs ^. #documentSessionTimeoutSecs
+  sqlSet "has_post_signview" $ ugs ^. #hasPostSignview
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -487,6 +488,7 @@ ugSettingsSelectors =
   , "sealing_method"
   , "document_session_timeout"
   , "force_hide_pn"
+  , "has_post_signview"
   ]
 
 

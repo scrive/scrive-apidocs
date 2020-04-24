@@ -39,7 +39,8 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       settingsIsInherited: false,
       inheritedSettings: null,
       companyinternaltags: [],
-      companyexternaltags: []
+      companyexternaltags: [],
+      haspostsignview: true
     },
     saveDetails: function () {
       return new Submit({
@@ -75,7 +76,8 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companyaddressisinherited: this.get("addressIsInherited"),
         companysettingsisinherited: this.get("settingsIsInherited"),
         companyinternaltags: JSON.stringify(this.get("companyinternaltags")),
-        companyexternaltags: JSON.stringify(this.get("companyexternaltags"))
+        companyexternaltags: JSON.stringify(this.get("companyexternaltags")),
+        companyhaspostsignview: this.get("haspostsignview")
       });
     },
     mergeToCompany: function (newCompanyId) {

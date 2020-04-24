@@ -91,7 +91,7 @@ describe("signview/signsection/signfinishview", function () {
     util.createDocument(function (doc) {
       document_ = doc;
 
-      model = new SignViewModel({document: document_});
+      model = new SignViewModel({document: document_, siglinkid: 1});
 
       done();
     });

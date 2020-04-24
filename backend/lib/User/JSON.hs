@@ -213,6 +213,7 @@ companySettingsJson ugs = do
   value "eidservicetoken" $ ugs ^. #eidServiceToken
   value "sealingmethod" . sealingMethodText $ ugs ^. #sealingMethod
   value "documentsessiontimeout" $ ugs ^. #documentSessionTimeoutSecs
+  value "haspostsignview" $ ugs ^. #hasPostSignview
 
 userStatsToJSON
   :: (UTCTime -> Text)

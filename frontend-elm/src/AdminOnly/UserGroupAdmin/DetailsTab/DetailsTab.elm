@@ -575,6 +575,11 @@ viewUserGroup model ug address settings =
                        <| Enum.toString UserGroup.enumSealingMethod
                        <| if b then UserGroup.Pades else UserGroup.GuardTime)
                 [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "Has 'post signview'"
+                "If set, then signatories that don't have an account will be shown a 'post signview' that asks them to sign up for our service."
+                settings.hasPostSignview
+                (SetBoolField "hasPostSignview")
+                [ readonly ug.settingsIsInherited ]
             ]
         , Grid.row [ Row.leftSm ]
             [ Grid.col [ Col.sm12 ]

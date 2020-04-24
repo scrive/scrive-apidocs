@@ -552,6 +552,7 @@ getUserGroupSettingsChange = do
   mcompanysealingmethod <-
     fmap sealingMethodFromText <$> getField' $ "companysealingmethod"
   mcompanydocumentsessiontimeout <- getSessionTimeoutField "companydocumentsessiontimeout"
+  mcompanyhaspostsignview        <- getField "companyhaspostsignview"
 
   return
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
@@ -591,6 +592,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #eidServiceToken)               mcompanyeidservicetoken
     . maybe identity (set #sealingMethod)                 mcompanysealingmethod
     . maybe identity (set #documentSessionTimeoutSecs)    mcompanydocumentsessiontimeout
+    . maybe identity (set #hasPostSignview . (== "true")) mcompanyhaspostsignview
 
 
   where

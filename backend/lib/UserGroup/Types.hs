@@ -255,6 +255,7 @@ defaultUserGroupSettings = UserGroupSettings
   , eidServiceToken            = Nothing
   , sealingMethod              = Guardtime
   , documentSessionTimeoutSecs = Nothing
+  , hasPostSignview            = True
   }
 
 -- UI

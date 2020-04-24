@@ -20,6 +20,7 @@ var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
 var PadSigningView = require("./padsigningview");
 var Arrow = require("./navigation/arrow");
 var TaskList = require("./navigation/task_list");
+var PostSignView = require("./postsignview");
 var _ = require("underscore");
 
   module.exports = React.createClass({
@@ -42,14 +43,16 @@ var _ = require("underscore");
         document: new Document({id: this.props.documentId,
                                 initialdocumentdata: this.props.documentData,
                                 siglinkid: this.props.sigLinkId}),
-        loggedInAsAuthor: this.props.loggedInAsAuthor
+        loggedInAsAuthor: this.props.loggedInAsAuthor,
+        siglinkid: this.props.sigLinkId
       });
 
       return {model: model,
               overlay: false,
               showArrow: true,
               pixelWidth: 1040,
-              highlighting: false};
+              highlighting: false,
+              postsignviewdismissed: false};
     },
 
     childContextTypes: {
@@ -207,6 +210,10 @@ var _ = require("underscore");
       this.setState({highlighting: false});
     },
 
+    onDismissPostSignview: function () {
+      this.setState({postsignviewdismissed: true});
+    },
+
     addArrowRef: function (arrowComponent) {
       this.arrowRefs.push(arrowComponent);
     },
@@ -318,6 +325,13 @@ var _ = require("underscore");
                   disableOverlay={this.disableOverlay}
                   showLegalText={this.props.showLegalText}
                   highlighting={this.state.highlighting}
+                />
+              }
+              {/* if */ model.hasPostSignview() && !this.state.postsignviewdismissed &&
+               <PostSignView
+                  onDismiss={this.onDismissPostSignview}
+                  email={this.state.model.document().currentSignatory().email()}
+                  siglinkid={this.props.sigLinkId}
                 />
               }
               {/* if */ doc.showfooter() &&

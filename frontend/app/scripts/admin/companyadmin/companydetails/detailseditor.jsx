@@ -67,7 +67,8 @@ var settingsPropTypes = React.PropTypes.shape({
   sessiontimeout: React.PropTypes.number,
   documentsessiontimeout: React.PropTypes.number,
   portalurl: React.PropTypes.text,
-  eidservicetoken: React.PropTypes.text
+  eidservicetoken: React.PropTypes.text,
+  haspostsignview: React.PropTypes.bool.isRequired
 });
 
 var DetailsEditorView = React.createClass({
@@ -106,6 +107,7 @@ var DetailsEditorView = React.createClass({
     documentsessiontimeout: React.PropTypes.number,
     portalurl: React.PropTypes.text,
     eidservicetoken: React.PropTypes.text,
+    haspostsignview: React.PropTypes.bool.isRequired,
     addressIsInherited: React.PropTypes.bool.isRequired,
     inheritedAddress: addressPropTypes,
     settingsIsInherited: React.PropTypes.bool.isRequired,
@@ -180,6 +182,9 @@ var DetailsEditorView = React.createClass({
   },
   onEidservicetokenChange: function (event) {
     this.props.onFieldChange("eidservicetoken", event.target.value);
+  },
+  onHasPostSignviewChange: function (event) {
+    this.props.onFieldChange("haspostsignview", event.target.checked);
   },
 
   onSessiontimeout: function (event) {
@@ -674,6 +679,22 @@ var DetailsEditorView = React.createClass({
               If set, then customer specific branding in EID Hub is used (must be also defined in EID Hub).
               If not set, then EID Hub Scrive branding is used.
             </td>
+          </tr>
+          <tr>
+            <td><label>Has 'post signview'</label></td>
+            <td>
+              <input
+                name="haspostsignview"
+                type="checkbox"
+                checked={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.haspostsignview
+                      : this.props.haspostsignview}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onHasPostSignviewChange}
+              />
+            </td>
+            <td>If set, then signatories that don't have an account will
+            be shown a 'post signview' that asks them to sign up for our service.</td>
           </tr>
         </tbody>
       </table>

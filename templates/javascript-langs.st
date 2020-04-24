@@ -1502,5 +1502,15 @@ javascriptLocalisation =
               nemId: "$_eIdInfoTextNemId()$"
           }
       }
+    , postSignview: {
+        title: "$_postSignviewTitle()$",
+        infoReceiveDocument: "$_postSignviewInfoReceiveDocument()$",
+        proposal: "$_postSignviewProposal()$",
+        reason1: "$_postSignviewReason1()$",
+        reason2: "$_postSignviewReason2()$",
+        reason3: "$_postSignviewReason3()$",
+        signupButton: "$_postSignviewSignupButton()$",
+        dismissButton: "$_postSignviewDismissButton()$"
+      }
     };
 ###
