@@ -19,6 +19,8 @@ samlSignatureTest env = testGroup
   [ testThat "Azure signature verifies " env testAzureSignatureVerifies
   , testThat "Okta signature verifies"   env testOktaSignatureVerifies
   , testThat "WAME signature verifies"   env testWAMESignatureVerifies
+  , testThat "ADFS signature verifies"   env testADFSSignatureVerifies
+  , testThat "GSuite signature verifies" env testGSuiteSignatureVerifies
   ]
 
 readBase64XmlFromFile :: FilePath -> IO HXT.XmlTree
@@ -60,5 +62,21 @@ testWAMESignatureVerifies = liftBase $ do
                              "Assertion-uuided7abb95-0170-1012-96b2-d0d544148baa"
                              parsedXml
   assertEqual "WAME assertion signature verified" result2 (Just True)
+  return ()
+
+testADFSSignatureVerifies :: TestEnv ()
+testADFSSignatureVerifies = liftBase $ do
+  parsedXml <- readBase64XmlFromFile "backend/test/src/SSO/adfs-response.b64"
+  publicKeys <- readPubKeyRSA "backend/test/src/SSO/adfs-pubkey.pem"
+  result <- verifySignature publicKeys "_47050483-95e1-4e80-a074-1f5b3e3fe31a" parsedXml
+  assertEqual "Okta assertion signature verified" result (Just True)
+  return ()
+
+testGSuiteSignatureVerifies :: TestEnv ()
+testGSuiteSignatureVerifies = liftBase $ do
+  parsedXml  <- readBase64XmlFromFile "backend/test/src/SSO/gsuite-response.b64"
+  publicKeys <- readPubKeyRSA "backend/test/src/SSO/gsuite-pubkey.pem"
+  result     <- verifySignature publicKeys "_ede2776774b5624585e0851523adc279" parsedXml
+  assertEqual "Okta assertion signature verified" result (Just True)
   return ()
 
