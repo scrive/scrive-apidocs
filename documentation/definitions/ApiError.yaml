@@ -8,6 +8,7 @@ properties:
     type: string
     enum:
       - server_error
+      - request_failed
       - endpoint_not_found
       - invalid_authorisation
       - insufficient_privileges
@@ -19,6 +20,8 @@ properties:
       - document_object_version_mismatch
       - document_state_error
       - signatory_state_error
+      - action_not_permitted
+      - conflict_error
   error_message:
     type: string
   http_code:
