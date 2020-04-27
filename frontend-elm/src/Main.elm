@@ -24,7 +24,6 @@ import Maybe as M
 import Url exposing (Url)
 import Url.Builder as UB
 import Url.Parser as UP exposing ((</>))
-import Util.Http as Util
 import Utils exposing (..)
 
 
@@ -399,7 +398,7 @@ update msg model =
                             model.globals.flashMessage <|
                                 FlashMessage.error <|
                                     "Error logging out: "
-                                        ++ Util.httpErrorToString err
+                                        ++ httpErrorToString err
                     in
                     ( model, cmd )
 

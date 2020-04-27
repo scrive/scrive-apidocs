@@ -17,7 +17,6 @@ import Html exposing (Html, text, div)
 import Html.Attributes exposing (class)
 import Bootstrap.Utilities.Spacing as Spacing
 import Utils exposing (..)
-import Util.Http as Http
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Vendor.ColorPickerExtra as ColorPicker
