@@ -312,13 +312,15 @@ viewDocuments model documents =
             Table.table
                 { options = [ Table.striped, Table.hover, Table.small ]
                 , thead =
-                    Table.simpleThead
-                        [ th "col-2" SCMtime [ text "Dates", sortIndicator SCMtime sorting ]
-                        , th "col-2" SCAuthor [ text "Author", sortIndicator SCAuthor sorting ]
-                        , th "col-3" SCTitle [ text "Title", sortIndicator SCTitle sorting ]
-                        , th "col-1" SCStatus [ text "Status", sortIndicator SCStatus sorting ]
-                        , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Type" ]
-                        , Table.th [ Table.cellAttr <| class "col-3" ] [ text "Signatories" ]
+                    Table.thead []
+                        [ Table.tr [ Table.rowAttr <| class "row" ]
+                            [ th "col-2" SCMtime [ text "Dates", sortIndicator SCMtime sorting ]
+                            , th "col-2" SCAuthor [ text "Author", sortIndicator SCAuthor sorting ]
+                            , th "col-3" SCTitle [ text "Title", sortIndicator SCTitle sorting ]
+                            , th "col-1" SCStatus [ text "Status", sortIndicator SCStatus sorting ]
+                            , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Type" ]
+                            , Table.th [ Table.cellAttr <| class "col-3" ] [ text "Signatories" ]
+                            ]
                         ]
                 , tbody =
                     Table.tbody [] <|
@@ -326,9 +328,18 @@ viewDocuments model documents =
                 }
 
 
-td : List (Html msg) -> Table.Cell msg
-td content =
-    Table.td [ Table.cellAttr <| class "align-middle" ] [ a [] content ]
+td : List (Table.CellOption msg) -> List (Html msg) -> Table.Cell msg
+td extraAttrs content =
+    let
+        attrs =
+            [ Table.cellAttr <| class "align-middle" ] ++ extraAttrs
+    in
+    Table.td attrs [ a [] content ]
+
+
+colAttr : String -> Table.CellOption msg
+colAttr colStr =
+    Table.cellAttr <| class colStr
 
 
 viewDocument : Document -> Table.Row Msg
@@ -336,20 +347,21 @@ viewDocument document =
     Table.tr
         [ Table.rowAttr <| onClick <| TableRowClicked document.id
         , Table.rowAttr <| class "clickable-row"
+        , Table.rowAttr <| class "row"
         ]
-        [ td [ text <| viewTime document.mTime, br [] [], text <| viewTime document.cTime ]
+        [ td [ colAttr "col-2" ] [ text <| viewTime document.mTime, br [] [], text <| viewTime document.cTime ]
         , [ FTName, FTEmail, FTCompany ]
             |> L.filterMap (\ft -> M.map text <| authorFieldText ft document)
             |> L.intersperse (br [] [])
-            |> td
-        , td [ text document.title ]
-        , td [ text <| Enum.toHumanString enumDocumentStatus document.status ]
-        , td [ text <| Enum.toHumanString enumDocumentType document.isTemplate ]
+            |> td [ colAttr "col-2" ]
+        , td [ colAttr "col-3" ] [ text document.title ]
+        , td [ colAttr "col-1" ] [ text <| Enum.toHumanString enumDocumentStatus document.status ]
+        , td [ colAttr "col-1" ] [ text <| Enum.toHumanString enumDocumentType document.isTemplate ]
         , document.signatories
             |> L.filter (\s -> s.role == SignatoryRoleSigningParty)
             |> L.map (text << signatorySmartName)
             |> L.intersperse (br [] [])
-            |> td
+            |> td [ colAttr "col-3" ]
         ]
 
 
@@ -378,14 +390,14 @@ viewTemplate template =
         [ Table.rowAttr <| onClick <| TableRowClicked template.id
         , Table.rowAttr <| class "clickable-row"
         ]
-        [ td [ text <| viewTime template.mTime ]
-        , td [ text template.title ]
+        [ td [ colAttr "col-2" ] [ text <| viewTime template.mTime ]
+        , td [ colAttr "col-2" ] [ text template.title ]
         , [ FTName, FTEmail ]
             |> L.filterMap (\ft -> M.map text <| authorFieldText ft template)
             |> L.intersperse (br [] [])
-            |> td
-        , td [ text <| ite (isJust template.shareableLink) "✔" "" ] -- \{2714}
-        , td [ text <| ite template.isShared "✔" "" ] -- \{2714}
+            |> td [ colAttr "col-2" ]
+        , td [ colAttr "col-2" ] [ text <| ite (isJust template.shareableLink) "✔" "" ] -- \{2714}
+        , td [ colAttr "col-2" ] [ text <| ite template.isShared "✔" "" ] -- \{2714}
         ]
 
 
