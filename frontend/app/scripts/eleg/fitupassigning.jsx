@@ -21,6 +21,12 @@ module.exports = Backbone.Model.extend({
   siglinkid: function () {
     return this.get("siglinkid");
   },
+  errorHandlerIfThereIsOne: function () {
+    var errorHandler = this.get("errorHandler");
+    if (errorHandler) {
+      errorHandler();
+    }
+  },
   sign: function () {
     var self = this;
 
@@ -31,6 +37,7 @@ module.exports = Backbone.Model.extend({
         className: "flash-signview",
         withReload: true
       });
+      self.errorHandlerIfThereIsOne();
     };
 
     var successCallback = function (resp) {

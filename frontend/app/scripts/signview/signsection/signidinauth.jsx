@@ -77,7 +77,7 @@ var classNames = require("classnames");
             type="action"
             className={buttonClass}
             text={localization.process.signbuttontext}
-            onClick={function (e) { if (canSign) { onSign(e); } }}
+            onClick={function () { if (canSign) { onSign(); } }}
           />
           {/* if */ canHaveForwardButton &&
             <Button
