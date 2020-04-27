@@ -20,6 +20,7 @@ import AdminOnly.UserGroupAdmin.Subscription as Subscription
         , invoicingPaymentPlan
         , invoicingType
         , setFeaturesIsInherited
+        , setFreeDocumentTokenData
         , setInvoicingType
         , setPaymentPlan
         , subscriptionDecoder
@@ -27,6 +28,7 @@ import AdminOnly.UserGroupAdmin.Subscription as Subscription
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
@@ -35,18 +37,28 @@ import EnumExtra as Enum exposing (Enum, findEnumValue)
 import FlashMessage
 import Html exposing (Html, div, h4, hr, strong, text)
 import Html.Attributes exposing (checked, class, disabled, readonly, selected, value)
-import Html.Events exposing (onCheck, onClick, onSubmit)
+import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
 import Http
 import Json.Encode as JE
 import List as L
 import Maybe as M
+import Result as Result
 import Time exposing (Month(..))
+import Time.Date as Date
+import Time.Iso8601 as Time
 import Url.Parser exposing (map)
 import Utils exposing (..)
 
 
+type alias FormData =
+    { freeDocumentTokensInput : String
+    , freeDocumentTokensValidityInput : String
+    }
+
+
 type alias Model =
     { sSubscription : Status Subscription
+    , sFormData : Maybe FormData
     , ugid : String
     }
 
@@ -58,6 +70,8 @@ type Msg
     | SetInvoicingType String
     | SetPaymentPlan String
     | SetFeaturesIsInherited Bool
+    | FreeDocumentTokenInputChange String
+    | FreeDocumentTokenInputValidityInputChange String
     | SubmitForm
     | GotSaveResponse (Result Http.Error String)
 
@@ -72,10 +86,18 @@ init embed ugid =
     let
         model =
             { sSubscription = Loading
+            , sFormData = Nothing
             , ugid = ugid
             }
     in
     ( model, Cmd.map embed <| getSubscriptionCmd model )
+
+
+getFormDataFromSubscription : Subscription -> FormData
+getFormDataFromSubscription sub =
+    { freeDocumentTokensInput = String.fromInt sub.freeDocumentTokens
+    , freeDocumentTokensValidityInput = Time.fromDate sub.freeDocumentTokensValidity
+    }
 
 
 getSubscriptionCmd : Model -> Cmd Msg
@@ -193,6 +215,28 @@ setPaidFeatures features =
     }
 
 
+validateFreeTokenFields : Model -> Result String ( Int, Date.Date )
+validateFreeTokenFields model =
+    let
+        mInt v =
+            stringNonEmpty v |> M.andThen String.toInt
+
+        mDate v =
+            stringNonEmpty v |> M.andThen (Time.toDate >> Result.toMaybe)
+    in
+    case model.sFormData of
+        Just fd ->
+            case ( mInt fd.freeDocumentTokensInput, mDate fd.freeDocumentTokensValidityInput ) of
+                ( Just tc, Just tv ) ->
+                    Ok ( tc, tv )
+
+                _ ->
+                    Err "Validation error!"
+
+        Nothing ->
+            Err "Validation in incorrect state. This should not happend!"
+
+
 update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
 update embed globals msg model =
     case msg of
@@ -201,6 +245,7 @@ update embed globals msg model =
                 Ok subscription ->
                     ( { model
                         | sSubscription = Success subscription
+                        , sFormData = Just <| getFormDataFromSubscription subscription
                       }
                     , Cmd.none
                     )
@@ -227,6 +272,26 @@ update embed globals msg model =
             case ( findEnumValue enumInvoicingType value, model.sSubscription ) of
                 ( Ok invType, Success sub ) ->
                     ( { model | sSubscription = Success <| setInvoicingType invType sub }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        FreeDocumentTokenInputChange value ->
+            case model.sFormData of
+                Just fd ->
+                    ( { model | sFormData = Just <| { fd | freeDocumentTokensInput = value } }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        FreeDocumentTokenInputValidityInputChange value ->
+            case model.sFormData of
+                Just fd ->
+                    ( { model | sFormData = Just <| { fd | freeDocumentTokensValidityInput = value } }
                     , Cmd.none
                     )
 
@@ -273,23 +338,28 @@ update embed globals msg model =
                     ( model, Cmd.none )
 
         SubmitForm ->
-            fromStatus model.sSubscription
-                |> M.map
-                    (\subscription ->
-                        ( model
-                        , Http.post
-                            { url = "/adminonly/companyadmin/updatesubscription/" ++ model.ugid
-                            , body =
-                                formBody globals
-                                    [ ( "subscription"
-                                      , JE.encode 0 <| Subscription.toPostJson subscription
-                                      )
-                                    ]
-                            , expect = Http.expectString (embed << GotSaveResponse)
-                            }
-                        )
-                    )
-                |> M.withDefault ( model, Cmd.none )
+            case validateFreeTokenFields model of
+                Err emsg ->
+                    ( model, globals.flashMessage <| FlashMessage.error emsg )
+
+                Ok ( tc, tv ) ->
+                    fromStatus model.sSubscription
+                        |> M.map
+                            (\subscription ->
+                                ( model
+                                , Http.post
+                                    { url = "/adminonly/companyadmin/updatesubscription/" ++ model.ugid
+                                    , body =
+                                        formBody globals
+                                            [ ( "subscription"
+                                              , JE.encode 0 <| Subscription.toPostJson <| setFreeDocumentTokenData tc tv subscription
+                                              )
+                                            ]
+                                    , expect = Http.expectString (embed << GotSaveResponse)
+                                    }
+                                )
+                            )
+                        |> M.withDefault ( model, Cmd.none )
 
         GotSaveResponse response ->
             case response of
@@ -307,16 +377,19 @@ update embed globals msg model =
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
-    case model.sSubscription of
-        Loading ->
+    case ( model.sSubscription, model.sFormData ) of
+        ( Loading, _ ) ->
             h4 [] [ text "Loading ..." ]
 
-        Failure ->
+        ( Failure, _ ) ->
             h4 [] [ text "Failure ..." ]
 
-        Success subscription ->
+        ( _, Nothing ) ->
+            h4 [] [ text "Failure ..." ]
+
+        ( Success subscription, Just formData ) ->
             div [] <|
-                [ Html.map embed <| viewSubscription subscription ]
+                [ Html.map embed <| viewSubscription subscription formData ]
 
 
 formCheckbox :
@@ -430,8 +503,8 @@ featureFlagsStructure =
     ]
 
 
-viewSubscription : Subscription -> Html Msg
-viewSubscription sub =
+viewSubscription : Subscription -> FormData -> Html Msg
+viewSubscription sub formData =
     let
         labelColAttrs =
             [ Col.sm5, Col.md4, Col.lg4 ]
@@ -525,18 +598,36 @@ viewSubscription sub =
                                     optionsPP
                     ]
                 ]
-            , hr [] []
-            , formCheckboxRowM "Inherit feature flags"
-                "If enabled, all feature flags will be inherited from the parent user group."
-                (isJust sub.mInheritedFeatures)
-                SetFeaturesIsInherited
-                []
-            , Form.row [ Row.attrs [ class "form-group-small" ] ]
-                [ Form.colLabel labelSmallColAttrs []
-                , Form.colLabel inputColHalfAttrs [ strong [] <| [ text "Regular users" ] ]
-                , Form.colLabel inputColHalfAttrs [ strong [] <| [ text "Admin users" ] ]
-                ]
             ]
+                ++ (case sub.invoicing of
+                        InvoicingInvoice Free ->
+                            [ Form.row
+                                []
+                                [ Form.colLabel labelColAttrs [ text "Number of free tokens" ]
+                                , Form.colLabel inputColAttrs [ Input.number [ Input.attrs [ value <| formData.freeDocumentTokensInput, onInput <| FreeDocumentTokenInputChange ] ] ]
+                                ]
+                            , Form.row
+                                []
+                                [ Form.colLabel labelColAttrs [ text "Validity of free tokens" ]
+                                , Form.colLabel inputColAttrs [ Input.date [ Input.attrs [ value <| formData.freeDocumentTokensValidityInput, onInput <| FreeDocumentTokenInputValidityInputChange ] ] ]
+                                ]
+                            ]
+
+                        _ ->
+                            []
+                   )
+                ++ [ hr [] []
+                   , formCheckboxRowM "Inherit feature flags"
+                        "If enabled, all feature flags will be inherited from the parent user group."
+                        (isJust sub.mInheritedFeatures)
+                        SetFeaturesIsInherited
+                        []
+                   , Form.row [ Row.attrs [ class "form-group-small" ] ]
+                        [ Form.colLabel labelSmallColAttrs []
+                        , Form.colLabel inputColHalfAttrs [ strong [] <| [ text "Regular users" ] ]
+                        , Form.colLabel inputColHalfAttrs [ strong [] <| [ text "Admin users" ] ]
+                        ]
+                   ]
                 ++ ((\f -> L.concatMap f featureFlagsStructure) <|
                         \( heading, flags ) ->
                             Form.row [ Row.attrs [ class "form-group-small" ] ]

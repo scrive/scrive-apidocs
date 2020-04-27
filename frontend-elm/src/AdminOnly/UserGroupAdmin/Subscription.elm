@@ -12,6 +12,7 @@ module AdminOnly.UserGroupAdmin.Subscription exposing
     , invoicingType
     , setFF
     , setFeaturesIsInherited
+    , setFreeDocumentTokenData
     , setInvoicingType
     , setPaymentPlan
     , subscriptionDecoder
@@ -24,7 +25,10 @@ import Json.Decode as JD exposing (Decoder)
 import Json.Encode as JE
 import List as L
 import Maybe as M
+import Result exposing (toMaybe)
 import Time exposing (Month(..))
+import Time.Date exposing (Date(..), date)
+import Time.Iso8601 exposing (fromDate, toDate)
 import Url.Parser exposing (map)
 import Utils exposing (Status(..), isJust, ite)
 
@@ -38,6 +42,8 @@ type alias Subscription =
     , mInheritedFeatures : Maybe Features -- features which we are inheriting
     , mInheritablePlan : Maybe PaymentPlan
     , numberOfUsers : Int
+    , freeDocumentTokens : Int
+    , freeDocumentTokensValidity : Date
     , invoicing : Invoicing
     }
 
@@ -150,7 +156,7 @@ subscriptionDecoder =
         (JD.maybe (JD.field "inherited_features" featuresDecoder))
         |> JD.andThen
             (\( featuresIsInherited, mInheritableFeatures ) ->
-                JD.map6 Subscription
+                JD.map8 Subscription
                     (currentFeaturesDecoder featuresIsInherited mInheritableFeatures)
                     -- inheritable features
                     (JD.succeed mInheritableFeatures)
@@ -158,6 +164,8 @@ subscriptionDecoder =
                     (inheritedFeaturesDecoder featuresIsInherited mInheritableFeatures)
                     (JD.maybe (JD.field "inherited_plan" paymentPlanDecoder))
                     (JD.field "number_of_users" JD.int)
+                    (JD.field "free_document_tokens" JD.int)
+                    (JD.map (M.withDefault (date 2020 1 1) << toMaybe << toDate) (JD.field "free_document_tokens_valid_till" JD.string))
                     invoicingDecoder
             )
 
@@ -165,26 +173,34 @@ subscriptionDecoder =
 toPostJson : Subscription -> JE.Value
 toPostJson sub =
     JE.object
-        [ ( "invoicing_type"
-          , sub.invoicing
+        ([ ( "invoicing_type"
+           , sub.invoicing
                 |> invoicingType
                 |> encodeInvoicingType
                 |> JE.string
-          )
-        , ( "features_is_inherited"
-          , JE.bool <| isJust sub.mInheritedFeatures
-          )
-        , ( "payment_plan"
-          , sub.invoicing
+           )
+         , ( "features_is_inherited"
+           , JE.bool <| isJust sub.mInheritedFeatures
+           )
+         , ( "payment_plan"
+           , sub.invoicing
                 |> invoicingPaymentPlan
                 |> M.map (JE.string << encodePaymentPlan)
                 |> M.withDefault JE.null
-          )
-        , ( "features"
-          , fToJson sub.features
+           )
+         , ( "features"
+           , fToJson sub.features
                 |> ite (isJust sub.mInheritedFeatures) JE.null
-          )
-        ]
+           )
+         ]
+            ++ (case sub.invoicing of
+                    InvoicingInvoice Free ->
+                        [ ( "free_document_tokens", JE.int sub.freeDocumentTokens ), ( "free_document_tokens_valid_till", JE.string (fromDate sub.freeDocumentTokensValidity ++ "T23:59:59.000Z") ) ]
+
+                    _ ->
+                        []
+               )
+        )
 
 
 setInvoicingType : InvoicingType -> Subscription -> Subscription
@@ -211,6 +227,11 @@ setInvoicingType invType sub =
                         |> M.withDefault Free
                         |> InvoicingInvoice
             }
+
+
+setFreeDocumentTokenData : Int -> Date -> Subscription -> Subscription
+setFreeDocumentTokenData ft ftd sub =
+    { sub | freeDocumentTokens = ft, freeDocumentTokensValidity = ftd }
 
 
 setPaymentPlan : Maybe PaymentPlan -> Subscription -> Subscription
