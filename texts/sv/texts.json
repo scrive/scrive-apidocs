@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Acceptera",
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
@@ -393,6 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"Danskt NemID",
 "_designViewAddPartiesAuthenticationFITupas":"Finskt TUPAS",
 "_designViewAddPartiesAuthenticationNOBankID":"Norskt BankID",
+"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Svenskt BankID",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN via SMS",
 "_designViewAddPartiesAuthenticationStandard":"Ingen extra autentisering",
@@ -567,6 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"finskt TUPAS",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Autentisering för att signera",
 "_docviewSignatoryAuthenticationToSignNOBankID":"norskt BankID",
+"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"svenskt BankID",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN via SMS",
 "_docviewSignatoryAuthenticationToSignStandard":"ingen extra autentisering",

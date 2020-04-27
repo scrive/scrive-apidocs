@@ -831,8 +831,10 @@ instance Arbitrary EIDServiceOnfidoSignature where
   arbitrary = do
     a <- arbText 20 30
     b <- arbText 10 10
+    c <- elements [OnfidoDocumentCheck, OnfidoDocumentAndPhotoCheck]
     return $ EIDServiceOnfidoSignature { eidServiceOnfidoSigSignatoryName = a
                                        , eidServiceOnfidoSigDateOfBirth   = b
+                                       , eidServiceOnfidoSigMethod        = c
                                        }
 
 

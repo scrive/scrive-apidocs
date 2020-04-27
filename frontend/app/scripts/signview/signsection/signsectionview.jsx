@@ -97,7 +97,8 @@ var Task = require("../navigation/task");
       var hasEIDNets = signatory.noBankIDAuthenticationToSign() || signatory.dkNemIDAuthenticationToSign();
       var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
       var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
-      var hasOnfidoAuth = signatory.onfidoAuthenticationToSign();
+      var hasOnfidoAuth = signatory.onfidoDocumentCheckAuthenticationToSign()
+                          || signatory.onfidoDocumentAndPhotoCheckAuthenticationToSign();
 
       if (isApprover) {
         return "approve";

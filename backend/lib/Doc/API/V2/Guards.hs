@@ -372,14 +372,15 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
 
       -- validate is non-trivial iff authToSignNeedsPersonalNumber authToSign = True
       let validate = case authToSign of
-            SEBankIDAuthenticationToSign -> asValidSEBankIdPersonalNumber
-            DKNemIDAuthenticationToSign  -> asValidDanishSSN
-            StandardAuthenticationToSign -> Good
-            SMSPinAuthenticationToSign   -> Good
-            NOBankIDAuthenticationToSign -> Good
-            FITupasAuthenticationToSign  -> Good
-            IDINAuthenticationToSign     -> Good
-            OnfidoAuthenticationToSign   -> Good
+            SEBankIDAuthenticationToSign            -> asValidSEBankIdPersonalNumber
+            DKNemIDAuthenticationToSign             -> asValidDanishSSN
+            StandardAuthenticationToSign            -> Good
+            SMSPinAuthenticationToSign              -> Good
+            NOBankIDAuthenticationToSign            -> Good
+            FITupasAuthenticationToSign             -> Good
+            IDINAuthenticationToSign                -> Good
+            OnfidoDocumentCheckAuthenticationToSign -> Good
+            OnfidoDocumentAndPhotoCheckAuthenticationToSign -> Good
 
       -- Empty is allowed only if we don't need it for
       -- AuthenticationToViewMethod
@@ -442,14 +443,14 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
           Empty  -> return ()
           Good _ -> return ()
 
-      StandardAuthenticationToSign -> return ()
-      SEBankIDAuthenticationToSign -> return ()
-      NOBankIDAuthenticationToSign -> return ()
-      DKNemIDAuthenticationToSign  -> return ()
-      IDINAuthenticationToSign     -> return ()
-      FITupasAuthenticationToSign  -> return ()
-      OnfidoAuthenticationToSign   -> return ()
-
+      StandardAuthenticationToSign            -> return ()
+      SEBankIDAuthenticationToSign            -> return ()
+      NOBankIDAuthenticationToSign            -> return ()
+      DKNemIDAuthenticationToSign             -> return ()
+      IDINAuthenticationToSign                -> return ()
+      FITupasAuthenticationToSign             -> return ()
+      OnfidoDocumentCheckAuthenticationToSign -> return ()
+      OnfidoDocumentAndPhotoCheckAuthenticationToSign -> return ()
 
 
 guardAuthenticationMethodsCanMix
@@ -643,7 +644,8 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
              IDINAuthenticationToSign     -> True
              FITupasAuthenticationToSign  -> T.null (getPersonalNumber sl)
                || isGood (asValidFinnishSSN $ getPersonalNumber sl)
-             OnfidoAuthenticationToSign -> True
+             OnfidoDocumentCheckAuthenticationToSign         -> True
+             OnfidoDocumentAndPhotoCheckAuthenticationToSign -> True
 
     signatoryHasValidSSNOrEmailForIdentifyToView sl =
       case signatorylinkauthenticationtoviewmethod sl of

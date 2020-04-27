@@ -280,8 +280,10 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToSignIDIN;
     } else if (t == "fi_tupas") {
       return localization.designview.addParties.authenticationToSignFITupas;
-    } else if (t == "onfido") {
-      return localization.designview.addParties.authenticationToSignOnfido;
+    } else if (t == "onfido_document_check") {
+      return localization.designview.addParties.authenticationToSignOnfidoDocumentCheck;
+    } else if (t == "onfido_document_and_photo_check") {
+      return localization.designview.addParties.authenticationToSignOnfidoDocumentAndPhotoCheck;
     }
   },
   authenticationToSignOptions: function () {
@@ -289,7 +291,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var allAuthTypes = !sig.signs() ? ["standard"] : [
       "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas",
-      "onfido", "sms_pin"
+      "onfido_document_check", "onfido_document_and_photo_check", "sms_pin"
     ];
     var authTypes = allAuthTypes.slice(0);
 
@@ -317,8 +319,8 @@ module.exports = React.createClass({
       if (!ff.canUseFIAuthenticationToSign() && !sig.fiTupasAuthenticationToSign()) {
         authTypes = _.without(authTypes, "fi_tupas");
       }
-      if (!ff.canUseOnfidoAuthenticationToSign() && !sig.onfidoAuthenticationToSign()) {
-        authTypes = _.without(authTypes, "onfido");
+      if (!ff.canUseOnfidoAuthenticationToSign() && !sig.onfidoDocumentCheckAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "onfido_document_check", "onfido_document_and_photo_check");
       }
     }
 

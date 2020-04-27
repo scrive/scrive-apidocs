@@ -286,14 +286,15 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
             if not validPin then apiError documentActionForbidden else return pin
 
     let mprovider = case signatorylinkauthenticationtosignmethod sl of
-          StandardAuthenticationToSign -> Nothing
-          SMSPinAuthenticationToSign   -> Nothing
-          SEBankIDAuthenticationToSign -> Just CgiGrpBankID
-          NOBankIDAuthenticationToSign -> Just NetsNOBankID
-          DKNemIDAuthenticationToSign  -> Just NetsDKNemID
-          IDINAuthenticationToSign     -> Just EIDServiceIDIN
-          FITupasAuthenticationToSign  -> Just EIDServiceTupas
-          OnfidoAuthenticationToSign   -> Just EIDServiceOnfido
+          StandardAuthenticationToSign            -> Nothing
+          SMSPinAuthenticationToSign              -> Nothing
+          SEBankIDAuthenticationToSign            -> Just CgiGrpBankID
+          NOBankIDAuthenticationToSign            -> Just NetsNOBankID
+          DKNemIDAuthenticationToSign             -> Just NetsDKNemID
+          IDINAuthenticationToSign                -> Just EIDServiceIDIN
+          FITupasAuthenticationToSign             -> Just EIDServiceTupas
+          OnfidoDocumentCheckAuthenticationToSign -> Just EIDServiceOnfido
+          OnfidoDocumentAndPhotoCheckAuthenticationToSign -> Just EIDServiceOnfido
 
     case mprovider of
       Nothing -> do

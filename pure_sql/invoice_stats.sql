@@ -328,7 +328,8 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "Verimi authentications" BIGINT,
         "iDIN authentications" BIGINT,
         "iDIN signatures" BIGINT,
-        "Onfido signatures" BIGINT,
+        "Onfido (document check only) signatures" BIGINT,
+        "Onfido (document check + facial comparison) signatures" BIGINT,
         "Shareable links used" BIGINT,
         "Telia SMSes sent (physical)" BIGINT,
         "Users at start of period" BIGINT,
@@ -491,7 +492,13 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 18
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Onfido signatures"
+                 AND chi.time <= period.to) AS "Onfido (document check only) signatures"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 19
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Onfido (document check + facial comparison) signatures"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
@@ -555,7 +562,8 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
              OR report."Verimi authentications" > 0
              OR report."iDIN authentications" > 0
              OR report."iDIN signatures" > 0
-             OR report."Onfido signatures" > 0
+             OR report."Onfido (document check only) signatures" > 0
+             or report."Onfido (document check + facial comparison) signatures" > 0
              OR report."Shareable links used" > 0
              OR report."Users at start of period" > 0
              OR report."Users at end of period" > 0
@@ -605,7 +613,8 @@ CREATE TEMPORARY TABLE report_master AS
   "Verimi authentications",
   "iDIN authentications",
   "iDIN signatures",
-  "Onfido signatures",
+  "Onfido (document check only) signatures",
+  "Onfido (document check + facial comparison) signatures",
   "Shareable links used",
   "Telia SMSes sent (physical)",
   "Users at start of period",

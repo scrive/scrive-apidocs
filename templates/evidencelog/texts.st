@@ -80,7 +80,9 @@ ChangeAuthenticationToSignFromIDINLog=$ChangeAuthenticationToSignFrom(auth='“D
 ###
 ChangeAuthenticationToSignFromFITupasLog=$ChangeAuthenticationToSignFrom(auth='“Finnish FTN')$
 ###
-ChangeAuthenticationToSignFromOnfidoLog=$ChangeAuthenticationToSignFrom(auth='“Onfido”')$
+ChangeAuthenticationToSignFromOnfidoDocumentCheckLog=$ChangeAuthenticationToSignFrom(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToSignFrom(auth='“Onfido (document check + facial comparison)”')$
 ###
 ChangeAuthenticationToSignToStandardLog=$ChangeAuthenticationToSignTo(auth='“no extra authentication”')$
 ###
@@ -96,7 +98,9 @@ ChangeAuthenticationToSignToIDINLog=$ChangeAuthenticationToSignTo(auth='“Dutch
 ###
 ChangeAuthenticationToSignToFITupasLog=$ChangeAuthenticationToSignTo(auth='“Finnish FTN')$
 ###
-ChangeAuthenticationToSignToOnfidoLog=$ChangeAuthenticationToSignTo(auth='“Onfido”')$
+ChangeAuthenticationToSignToOnfidoDocumentCheckLog=$ChangeAuthenticationToSignTo(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToSignTo(auth='“Onfido (document check + facial comparison)”')$
 ###
 ChangeAuthenticationToViewFromStandardLog=$ChangeAuthenticationToViewFrom(auth='“no extra authentication”')$
 ###
@@ -751,7 +755,7 @@ $if(ocsp_response)$
 </p>
 $endif$
 ###
-provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$elseif(provider_onfido)$Onfido$endif$
+provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$elseif(provider_onfido)$$if(onfido_document)$Onfido (document check only)$else$Onfido (document check + facial comparison)$endif$$endif$
 ###
 providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$elseif(provider_onfido)$Onfido$endif$
 ###

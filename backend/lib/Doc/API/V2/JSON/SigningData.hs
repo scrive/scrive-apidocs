@@ -41,13 +41,17 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
     encAuthMethod =
       maybe "legacy_provider" (unjsonToJSON unjsonAuthenticationToSignMethod)
         $ case ssdData of
-            Left  authToSignMethod                 -> Just authToSignMethod
-            Right (CGISEBankIDSignature_        _) -> Just SEBankIDAuthenticationToSign
-            Right (NetsNOBankIDSignature_       _) -> Just NOBankIDAuthenticationToSign
-            Right (NetsDKNemIDSignature_        _) -> Just DKNemIDAuthenticationToSign
-            Right (EIDServiceIDINSignature_     _) -> Just IDINAuthenticationToSign
-            Right (EIDServiceFITupasSignature_  _) -> Just FITupasAuthenticationToSign
-            Right (EIDServiceOnfidoSignature_   _) -> Just OnfidoAuthenticationToSign
+            Left  authToSignMethod                -> Just authToSignMethod
+            Right (CGISEBankIDSignature_       _) -> Just SEBankIDAuthenticationToSign
+            Right (NetsNOBankIDSignature_      _) -> Just NOBankIDAuthenticationToSign
+            Right (NetsDKNemIDSignature_       _) -> Just DKNemIDAuthenticationToSign
+            Right (EIDServiceIDINSignature_    _) -> Just IDINAuthenticationToSign
+            Right (EIDServiceFITupasSignature_ _) -> Just FITupasAuthenticationToSign
+            Right (EIDServiceOnfidoSignature_ EIDServiceOnfidoSignature {..}) ->
+              case eidServiceOnfidoSigMethod of
+                OnfidoDocumentCheck -> Just OnfidoDocumentCheckAuthenticationToSign
+                OnfidoDocumentAndPhotoCheck ->
+                  Just OnfidoDocumentAndPhotoCheckAuthenticationToSign
             Right (LegacyBankIDSignature_       _) -> Nothing
             Right (LegacyTeliaSignature_        _) -> Nothing
             Right (LegacyNordeaSignature_       _) -> Nothing
@@ -113,9 +117,12 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
         ]
       Right (EIDServiceOnfidoSignature_ EIDServiceOnfidoSignature {..}) ->
         [ "onfido_data" .= object
-            (["signatory_name" .= eidServiceOnfidoSigSignatoryName] <> if hidePN
-              then []
-              else ["signatory_date_of_birth" .= eidServiceOnfidoSigDateOfBirth]
+            (  [ "signatory_name" .= eidServiceOnfidoSigSignatoryName
+               , "report" .= eidServiceOnfidoSigMethod
+               ]
+            <> if hidePN
+                 then []
+                 else ["signatory_date_of_birth" .= eidServiceOnfidoSigDateOfBirth]
             )
         ]
       Right (LegacyBankIDSignature_       _) -> []

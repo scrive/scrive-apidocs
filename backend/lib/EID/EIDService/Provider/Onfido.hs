@@ -6,6 +6,7 @@ module EID.EIDService.Provider.Onfido (
 
 import Control.Monad.Trans.Maybe
 import Data.Aeson
+import Log
 
 import DB
 import Doc.DocStateData
@@ -21,6 +22,14 @@ import Util.MonadUtils
 provider :: EIDServiceTransactionProvider
 provider = EIDServiceTransactionProviderOnfido
 
+newtype OnfidoEIDServiceProviderParams = OnfidoEIDServiceProviderParams {
+    onfidoparamMethod :: OnfidoMethod
+  }
+
+instance ToJSON OnfidoEIDServiceProviderParams where
+  toJSON _ = Null
+  toEncoding OnfidoEIDServiceProviderParams {..} = pairs $ "report" .= onfidoparamMethod
+
 beginEIDServiceTransaction
   :: Kontrakcja m
   => EIDServiceConf
@@ -29,6 +38,15 @@ beginEIDServiceTransaction
   -> SignatoryLink
   -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
+  method <- case signatorylinkauthenticationtosignmethod sl of
+    OnfidoDocumentCheckAuthenticationToSign -> return OnfidoDocumentCheck
+    OnfidoDocumentAndPhotoCheckAuthenticationToSign -> return OnfidoDocumentAndPhotoCheck
+    method -> do
+      logInfo_
+        $  "Tried to start Onfido transaction, but signatory was supposed to use "
+        <> showt method
+        <> "."
+      internalError
   ctx             <- getContext
   mkontraRedirect <- case authKind of
     EIDServiceAuthToView _ -> Just <$> guardJustM (getField "redirect")
@@ -40,7 +58,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
         , cestSignatoryLinkID    = signatorylinkid sl
         , cestAuthKind           = authKind
         , cestKontraRedirectUrl  = mkontraRedirect
-        , cestmProviderParams    = Nothing :: Maybe ()
+        , cestmProviderParams    = Just $ OnfidoEIDServiceProviderParams method
         }
   -- Onfido transactions are not started from the API, we get the URL via the create call
   trans <- createTransactionWithEIDService conf createReq
@@ -50,13 +68,19 @@ beginEIDServiceTransaction conf authKind doc sl = do
 
 data OnfidoEIDServiceCompletionData = OnfidoEIDServiceCompletionData
   { eidonfidoChecksClear :: !Bool
-  , eidonfidoFirstName :: !Text
-  , eidonfidoLastName :: !Text
+  , eidonfidoFirstName   :: !Text
+  , eidonfidoLastName    :: !Text
   , eidonfidoDateOfBirth :: !Text
+  , eidonfidoMethod      :: !OnfidoMethod
   } deriving (Eq, Ord, Show)
 
 instance FromJSON OnfidoEIDServiceCompletionData where
   parseJSON outer = do
+    onfidoMethod <-
+      withObject "object" (.: "providerParameters") outer
+      >>= withObject "object" (.: "auth")
+      >>= withObject "object" (.: toEIDServiceProviderName provider)
+      >>= withObject "object" (.: "report")
     checksClear <-
       withObject "object" (.: "providerInfo") outer
       >>= withObject "object" (.: eidServiceFieldName)
@@ -71,7 +95,8 @@ instance FromJSON OnfidoEIDServiceCompletionData where
               firstname <- o .: "firstName"
               lastname  <- o .: "lastName"
               dob       <- o .: "dateOfBirth"
-              return OnfidoEIDServiceCompletionData { eidonfidoChecksClear = checksClear
+              return OnfidoEIDServiceCompletionData { eidonfidoMethod      = onfidoMethod
+                                                    , eidonfidoChecksClear = checksClear
                                                     , eidonfidoFirstName   = firstname
                                                     , eidonfidoLastName    = lastname
                                                     , eidonfidoDateOfBirth = dob

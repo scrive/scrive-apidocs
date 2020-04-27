@@ -21,7 +21,8 @@ module.exports = React.createClass({
       return false;
     } else if (!ff.canUseFIAuthenticationToSign() && am == "fi_tupas") {
       return false;
-    } else if (!ff.canUseOnfidoAuthenticationToSign() && am == "onfido") {
+    } else if (!ff.canUseOnfidoAuthenticationToSign()
+              && (am == "onfido_document_check" || am == "onfido_document_and_photo_check")) {
       return false;
     } else {
       return true;
@@ -40,7 +41,8 @@ module.exports = React.createClass({
     } else {
       var superthis = this;
       var ams = [
-        "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas", "onfido", "sms_pin"
+        "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas",
+        "onfido_document_check", "onfido_document_and_photo_check", "sms_pin"
       ]
       .filter(function (am) {
           return superthis.isAllowedAuthenticationMethod(am);
@@ -77,8 +79,10 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-sign-icon-idin";
     } else if (sig.fiTupasAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-fi-tupas";
-    } else if (sig.onfidoAuthenticationToSign()) {
-      return "design-view-action-participant-icon-auth-to-sign-icon-onfido";
+    } else if (sig.onfidoDocumentCheckAuthenticationToSign()) {
+      return "design-view-action-participant-icon-auth-to-sign-icon-onfido-doc";
+    } else if (sig.onfidoDocumentAndPhotoCheckAuthenticationToSign()) {
+      return "design-view-action-participant-icon-auth-to-sign-icon-onfido-doc-and-photo";
     }
   },
   title: function () {
@@ -108,9 +112,13 @@ module.exports = React.createClass({
       title.push(
         localization.designview.addParties.authenticationToSignFITupas
       );
-    } else if (authMethod == "onfido") {
+    } else if (authMethod == "onfido_document_check") {
       title.push(
-        localization.designview.addParties.authenticationToSignOnfido
+        localization.designview.addParties.authenticationToSignOnfidoDocumentCheck
+      );
+    } else if (authMethod == "onfido_document_and_photo_check") {
+      title.push(
+        localization.designview.addParties.authenticationToSignOnfidoDocumentAndPhotoCheck
       );
     } else if (authMethod == "sms_pin") {
       title.push(

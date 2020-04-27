@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Sutikti",
 "_CompanyAccounts":"Naudotojai",
 "_CompanySettings":"Prekės ženklo integravimas",
@@ -393,6 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"Danijos „DemID“",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"Norvegijos „BankID“",
+"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Švedijos „BankID“",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN SMS žinute",
 "_designViewAddPartiesAuthenticationStandard":"Nereikia papildomo autentifikavimo",
@@ -567,6 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Autentifikavimas pasirašyti",
 "_docviewSignatoryAuthenticationToSignNOBankID":"Norvegijos „BankID“",
+"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Švedijos „BankID“",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN SMS žinute",
 "_docviewSignatoryAuthenticationToSignStandard":"nereikia papildomai autentifikuoti",

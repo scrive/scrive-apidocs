@@ -95,14 +95,15 @@ unjsonAuthenticationToViewMethod = unjsonEnumBy
 unjsonAuthenticationToSignMethod :: UnjsonDef AuthenticationToSignMethod
 unjsonAuthenticationToSignMethod = unjsonEnumBy
   "AuthenticationToSignMethod"
-  [ (StandardAuthenticationToSign, "standard")
-  , (SEBankIDAuthenticationToSign, "se_bankid")
-  , (NOBankIDAuthenticationToSign, "no_bankid")
-  , (DKNemIDAuthenticationToSign , "dk_nemid")
-  , (SMSPinAuthenticationToSign  , "sms_pin")
-  , (IDINAuthenticationToSign    , "nl_idin")
-  , (FITupasAuthenticationToSign , "fi_tupas")
-  , (OnfidoAuthenticationToSign  , "onfido")
+  [ (StandardAuthenticationToSign           , "standard")
+  , (SEBankIDAuthenticationToSign           , "se_bankid")
+  , (NOBankIDAuthenticationToSign           , "no_bankid")
+  , (DKNemIDAuthenticationToSign            , "dk_nemid")
+  , (SMSPinAuthenticationToSign             , "sms_pin")
+  , (IDINAuthenticationToSign               , "nl_idin")
+  , (FITupasAuthenticationToSign            , "fi_tupas")
+  , (OnfidoDocumentCheckAuthenticationToSign, "onfido_document_check")
+  , (OnfidoDocumentAndPhotoCheckAuthenticationToSign, "onfido_document_and_photo_check")
   ]
 
 unjsonDeliveryMethod :: UnjsonDef DeliveryMethod

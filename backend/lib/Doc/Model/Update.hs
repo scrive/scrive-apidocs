@@ -1009,11 +1009,12 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
             sqlWhereEq "type"              MobileFT
           )
         -- IDINAuthenticationToSign has no obligatory fields
-        (False, IDINAuthenticationToSign   ) -> return ()
+        (False, IDINAuthenticationToSign               ) -> return ()
         -- FITupasAuthenticationToSign has no obligatory fields
-        (False, FITupasAuthenticationToSign) -> return ()
-        -- OnfidoAuthenticationToSign has no obligatory fields
-        (False, OnfidoAuthenticationToSign ) -> return ()
+        (False, FITupasAuthenticationToSign            ) -> return ()
+        -- Onfido has no obligatory fields
+        (False, OnfidoDocumentCheckAuthenticationToSign) -> return ()
+        (False, OnfidoDocumentAndPhotoCheckAuthenticationToSign) -> return ()
       -- If newAuthToSign needs PersonalNumber we need to make sure the field
       -- exists and is obligatory, and maybe set to the value provided
       when (authToSignNeedsPersonalNumber newAuthToSign) $ do
@@ -1838,8 +1839,12 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           sqlWhereSignatoryAuthenticationToSignMethodIs IDINAuthenticationToSign
         (Just (EIDServiceFITupasSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs FITupasAuthenticationToSign
-        (Just (EIDServiceOnfidoSignature_ _), _) ->
-          sqlWhereSignatoryAuthenticationToSignMethodIs OnfidoAuthenticationToSign
+        (Just (EIDServiceOnfidoSignature_ EIDServiceOnfidoSignature {..}), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIs
+            $ case eidServiceOnfidoSigMethod of
+                OnfidoDocumentCheck -> OnfidoDocumentCheckAuthenticationToSign
+                OnfidoDocumentAndPhotoCheck ->
+                  OnfidoDocumentAndPhotoCheckAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
         (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
         (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
@@ -1919,6 +1924,9 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           F.value "hide_pn" $ signatorylinkhidepn sl
           F.value "eleg" True
           F.value "provider_onfido" True
+          case eidServiceOnfidoSigMethod of
+            OnfidoDocumentCheck         -> F.value "onfido_document" True
+            OnfidoDocumentAndPhotoCheck -> F.value "onfido_document_and_photo_check" True
           F.value "signatory_name" eidServiceOnfidoSigSignatoryName
           F.value "signatory_dob" eidServiceOnfidoSigDateOfBirth
         (Nothing, Just _) -> do

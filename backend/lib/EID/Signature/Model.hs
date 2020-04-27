@@ -22,6 +22,8 @@ module EID.Signature.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
+import Data.Aeson
+import Data.Aeson.Text (encodeToLazyText)
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.Text.Encoding
@@ -251,8 +253,12 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceOnfidoSignature (
 
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
-        sqlSet "signatory_link_id"         slid
-        sqlSet "provider"                  EIDServiceOnfido
+        sqlSet "signatory_link_id" slid
+        sqlSet "provider"          EIDServiceOnfido
+        sqlSet "data" $ encodeToLazyText eidServiceOnfidoSigMethod
+        -- ^ Well, this only slightly stretches the original purpose of the
+        -- "data" field... Note that we can't use plain `encode`, since the
+        -- ToSQL instance for ByteString spits out a hexadecimal representation.
         sqlSet "signatory_name"            eidServiceOnfidoSigSignatoryName
         sqlSet "signatory_date_of_birth"   eidServiceOnfidoSigDateOfBirth
         sqlSet "signatory_personal_number" ("" :: Text)  -- can't be null, but we don't actually set one. ugly?!
@@ -371,4 +377,7 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
     EIDServiceOnfido -> EIDServiceOnfidoSignature_ $ EIDServiceOnfidoSignature
       { eidServiceOnfidoSigSignatoryName = fromJust msignatory_name
       , eidServiceOnfidoSigDateOfBirth   = fromJust msignatory_dob
+      , eidServiceOnfidoSigMethod        = fromJust $ do
+                                             dataText <- sdata
+                                             decodeStrict $ encodeUtf8 dataText
       }

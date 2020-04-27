@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Kinnita",
 "_CompanyAccounts":"Kasutajad",
 "_CompanySettings":"Bränding",
@@ -393,6 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"Taani NemID",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"Norra BankID",
+"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Rootsi BankID",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN SMS'i teel",
 "_designViewAddPartiesAuthenticationStandard":"Täiendav autentimine puudub",
@@ -567,6 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Autentimine allkirjastamiseks",
 "_docviewSignatoryAuthenticationToSignNOBankID":"Norra BankID",
+"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Rootsi BankID",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN SMS'i teel",
 "_docviewSignatoryAuthenticationToSignStandard":"täiendav autentimine puudub",

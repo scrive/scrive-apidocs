@@ -406,7 +406,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignFromDKNemID  |
   ChangeAuthenticationToSignFromIDIN     |
   ChangeAuthenticationToSignFromFITupas  |
-  ChangeAuthenticationToSignFromOnfido   |
+  ChangeAuthenticationToSignFromOnfidoDocumentCheck   |
+  ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck   |
   ChangeAuthenticationToSignToStandard   |
   ChangeAuthenticationToSignToSMSPin     |
   ChangeAuthenticationToSignToSEBankID   |
@@ -414,7 +415,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignToDKNemID    |
   ChangeAuthenticationToSignToIDIN       |
   ChangeAuthenticationToSignToFITupas    |
-  ChangeAuthenticationToSignToOnfido     |
+  ChangeAuthenticationToSignToOnfidoDocumentCheck     |
+  ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck     |
   ChangeAuthenticationToViewFromStandard |
   ChangeAuthenticationToViewFromSMSPin   |
   ChangeAuthenticationToViewFromSEBankID |
@@ -998,8 +1000,13 @@ instance ToSQL EvidenceEventType where
   toSQL (Current UpdateSsnAfterAuthenticationToViewWithNets    ) = toSQL (266 :: Int16)
   toSQL (Current ChangeAuthenticationToSignFromFITupas         ) = toSQL (267 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToFITupas           ) = toSQL (268 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignFromOnfido          ) = toSQL (269 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignToOnfido            ) = toSQL (270 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromOnfidoDocumentCheck) =
+    toSQL (269 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToOnfidoDocumentCheck) = toSQL (270 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck) =
+    toSQL (271 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck) =
+    toSQL (272 :: Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -1317,9 +1324,11 @@ instance FromSQL EvidenceEventType where
       266 -> return (Current UpdateSsnAfterAuthenticationToViewWithNets)
       267 -> return (Current ChangeAuthenticationToSignFromFITupas)
       268 -> return (Current ChangeAuthenticationToSignToFITupas)
-      269 -> return (Current ChangeAuthenticationToSignFromOnfido)
-      270 -> return (Current ChangeAuthenticationToSignToOnfido)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 270)], reValue = n }
+      269 -> return (Current ChangeAuthenticationToSignFromOnfidoDocumentCheck)
+      270 -> return (Current ChangeAuthenticationToSignToOnfidoDocumentCheck)
+      271 -> return (Current ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck)
+      272 -> return (Current ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck)
+      _   -> E.throwIO $ RangeError { reRange = [(1, 272)], reValue = n }
 
 
 authToViewChangeEvidence
@@ -1397,7 +1406,10 @@ authToSignChangeFrom a = case a of
   SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignFromSMSPin
   IDINAuthenticationToSign     -> ChangeAuthenticationToSignFromIDIN
   FITupasAuthenticationToSign  -> ChangeAuthenticationToSignFromFITupas
-  OnfidoAuthenticationToSign   -> ChangeAuthenticationToSignFromOnfido
+  OnfidoDocumentCheckAuthenticationToSign ->
+    ChangeAuthenticationToSignFromOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
+    ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck
 
 authToSignChangeTo :: AuthenticationToSignMethod -> CurrentEvidenceEventType
 authToSignChangeTo a = case a of
@@ -1408,4 +1420,7 @@ authToSignChangeTo a = case a of
   SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignToSMSPin
   IDINAuthenticationToSign     -> ChangeAuthenticationToSignToIDIN
   FITupasAuthenticationToSign  -> ChangeAuthenticationToSignToFITupas
-  OnfidoAuthenticationToSign   -> ChangeAuthenticationToSignToOnfido
+  OnfidoDocumentCheckAuthenticationToSign ->
+    ChangeAuthenticationToSignToOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
+    ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck

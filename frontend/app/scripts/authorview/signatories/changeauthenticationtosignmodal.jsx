@@ -89,8 +89,12 @@ var Modal = require("../../common/modal");
       return this.newAuthenticationMethod() == "fi_tupas";
     },
 
-    isNewAuthenticationOnfido: function () {
-      return this.newAuthenticationMethod() == "onfido";
+    isNewAuthenticationOnfidoDocumentCheck: function () {
+      return this.newAuthenticationMethod() == "onfido_document_check";
+    },
+
+    isNewAuthenticationOnfidoDocumentAndPhotoCheck: function () {
+      return this.newAuthenticationMethod() == "onfido_document_and_photo_check";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -192,8 +196,10 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToSignIDIN;
       } else if (model.isNewAuthenticationFITupas()) {
         return localization.docview.signatory.authenticationToSignFITupas;
-      } else if (model.isNewAuthenticationOnfido()) {
-        return localization.docview.signatory.authenticationToSignOnfido;
+      } else if (model.isNewAuthenticationOnfidoDocumentCheck()) {
+        return localization.docview.signatory.authenticationToSignOnfidoDocumentCheck;
+      } else if (model.isNewAuthenticationOnfidoDocumentAndPhotoCheck()) {
+        return localization.docview.signatory.authenticationToSignOnfidoDocumentAndPhotoCheck;
       }
     },
 
@@ -313,13 +319,22 @@ var Modal = require("../../common/modal");
         options.push(tupas);
       }
 
-      var onfido = {
-        name: localization.docview.signatory.authenticationToSignOnfido,
-        selected: model.isNewAuthenticationOnfido(),
-        value: "onfido"
+      var onfidodoc = {
+        name: localization.docview.signatory.authenticationToSignOnfidoDocumentCheck,
+        selected: model.isNewAuthenticationOnfidoDocumentCheck(),
+        value: "onfido_document_check"
       };
-      if (ff.canUseOnfidoAuthenticationToSign() && isAvailable(onfido.value)) {
-        options.push(onfido);
+      if (ff.canUseOnfidoAuthenticationToSign() && isAvailable(onfidodoc.value)) {
+        options.push(onfidodoc);
+      }
+
+      var onfidodocandphoto = {
+        name: localization.docview.signatory.authenticationToSignOnfidoDocumentAndPhotoCheck,
+        selected: model.isNewAuthenticationOnfidoDocumentAndPhotoCheck(),
+        value: "onfido_document_and_photo_check"
+      };
+      if (ff.canUseOnfidoAuthenticationToSign() && isAvailable(onfidodocandphoto.value)) {
+        options.push(onfidodocandphoto);
       }
 
       return options;

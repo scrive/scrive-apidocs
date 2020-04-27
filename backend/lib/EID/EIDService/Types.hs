@@ -20,6 +20,7 @@ module EID.EIDService.Types (
   , EIDServiceNLIDINSignature(..)
   , EIDServiceFITupasSignature(..)
   , EIDServiceOnfidoSignature(..)
+  , OnfidoMethod(..)
 
   -- Provider specific, can be refactored once redundant types above are removed
   , EIDServiceDKNemIDInternalProvider(..)
@@ -366,9 +367,22 @@ data EIDServiceFITupasSignature = EIDServiceFITupasSignature
   }
   deriving (Eq, Ord, Show)
 
+data OnfidoMethod = OnfidoDocumentCheck | OnfidoDocumentAndPhotoCheck
+  deriving (Eq, Ord, Show)
+
+instance ToJSON OnfidoMethod where
+  toJSON OnfidoDocumentCheck         = String "document"
+  toJSON OnfidoDocumentAndPhotoCheck = String "documentFacialSimilarityPhoto"
+
+instance FromJSON OnfidoMethod where
+  parseJSON (String "document") = return OnfidoDocumentCheck
+  parseJSON (String "documentFacialSimilarityPhoto") = return OnfidoDocumentAndPhotoCheck
+  parseJSON _                   = mzero
+
 data EIDServiceOnfidoSignature = EIDServiceOnfidoSignature
   { eidServiceOnfidoSigSignatoryName :: Text
   , eidServiceOnfidoSigDateOfBirth :: Text
+  , eidServiceOnfidoSigMethod :: OnfidoMethod
   }
   deriving (Eq, Ord, Show)
 

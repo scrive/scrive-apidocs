@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Samþykkja",
 "_CompanyAccounts":"Notendur",
 "_CompanySettings":"Merking",
@@ -393,6 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"Danskt NemID",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"Norskt BankID",
+"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Sænskt BankID",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN-númer með textaskilaboðum",
 "_designViewAddPartiesAuthenticationStandard":"Engin sannvottun til viðbótar",
@@ -567,6 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Sannvottun til undirskriftar",
 "_docviewSignatoryAuthenticationToSignNOBankID":"Norskt BankID",
+"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Sænskt BankID",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN-númer með textaskilaboðum",
 "_docviewSignatoryAuthenticationToSignStandard":"engin sannvottun til viðbótar",
