@@ -1695,7 +1695,14 @@ testSealDocument = replicateM_ 1 $ do
               Nothing
               screenshots
               sa
-          OnfidoAuthenticationToSign -> do
+          OnfidoDocumentCheckAuthenticationToSign -> do
+            randomUpdate $ \esig -> SignDocument
+              (signatorylinkid slk)
+              (Just (EIDServiceOnfidoSignature_ esig))
+              Nothing
+              screenshots
+              sa
+          OnfidoDocumentAndPhotoCheckAuthenticationToSign -> do
             randomUpdate $ \esig -> SignDocument
               (signatorylinkid slk)
               (Just (EIDServiceOnfidoSignature_ esig))

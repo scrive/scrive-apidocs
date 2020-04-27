@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Hyväksy",
 "_CompanyAccounts":"Käyttäjät",
 "_CompanySettings":"Brändäys",
@@ -393,7 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"Tanskalainen NemID",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"Norjalainen BankID",
-"_designViewAddPartiesAuthenticationOnfido":"",
+"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Ruotsalainen BankID",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN tekstiviestillä",
 "_designViewAddPartiesAuthenticationStandard":"Ei ylimääräistä todennusta",
@@ -568,7 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Allekirjoituksen todentaminen",
 "_docviewSignatoryAuthenticationToSignNOBankID":"Norjalainen BankID",
-"_docviewSignatoryAuthenticationToSignOnfido":"",
+"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Ruotsalainen BankID",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN tekstiviestillä",
 "_docviewSignatoryAuthenticationToSignStandard":"ei lisätodennusta",

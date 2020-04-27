@@ -263,12 +263,17 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                                                  <> " "
                                                  <> eidonfidoLastName
             , eidServiceOnfidoSigDateOfBirth   = eidonfidoDateOfBirth
+            , eidServiceOnfidoSigMethod        = eidonfidoMethod
             }
 
       dbUpdate $ MergeEIDServiceOnfidoSignature signingSignatoryID sig
       logInfo_ . ("EidHub Onfido Sign succeeded: " <>) . showt $ est
       signFromESignature ds now
-      chargeForItemSingle CIOnfidoSignature . documentid =<< theDocument
+
+      let chargeableitem = case eidonfidoMethod of
+            OnfidoDocumentCheck         -> CIOnfidoDocumentCheckSignature
+            OnfidoDocumentAndPhotoCheck -> CIOnfidoDocumentAndPhotoCheckSignature
+      chargeForItemSingle chargeableitem . documentid =<< theDocument
 
 handleCgiGrpBankID
   :: ( CryptoRNG m

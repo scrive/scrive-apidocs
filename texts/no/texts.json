@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Godta",
 "_CompanyAccounts":"Brukere",
 "_CompanySettings":"Branding",
@@ -393,7 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"Dansk NemID",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"Norsk BankID",
-"_designViewAddPartiesAuthenticationOnfido":"",
+"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Svensk BankID",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN fra SMS",
 "_designViewAddPartiesAuthenticationStandard":"Ingen ekstra autentisering",
@@ -568,7 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Autentisering til å signere",
 "_docviewSignatoryAuthenticationToSignNOBankID":"Norsk BankID",
-"_docviewSignatoryAuthenticationToSignOnfido":"",
+"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Svensk BankID",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN fra SMS",
 "_docviewSignatoryAuthenticationToSignStandard":"ingen ekstra autentisering",

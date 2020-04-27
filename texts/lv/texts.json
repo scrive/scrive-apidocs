@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Apstiprināt",
 "_CompanyAccounts":"Lietotāji",
 "_CompanySettings":"Zīmolrade",
@@ -393,7 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"Dānijas NemID",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"Norvēģijas BankID",
-"_designViewAddPartiesAuthenticationOnfido":"",
+"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Zviedrijas BankID",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN kods īsziņā",
 "_designViewAddPartiesAuthenticationStandard":"Bez papildu autentifikācijas",
@@ -568,7 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Autentifikācija, lai parakstītos",
 "_docviewSignatoryAuthenticationToSignNOBankID":"Norvēģijas BankID",
-"_docviewSignatoryAuthenticationToSignOnfido":"",
+"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Zviedrijas BankID",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN kods īsziņā",
 "_docviewSignatoryAuthenticationToSignStandard":"bez papildu autentifikācijas",

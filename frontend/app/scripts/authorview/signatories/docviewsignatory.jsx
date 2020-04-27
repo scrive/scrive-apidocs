@@ -537,8 +537,10 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToSignIDIN;
       } else if (signatory.fiTupasAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignFITupas;
-      } else if (signatory.onfidoAuthenticationToSign()) {
-        return localization.docview.signatory.authenticationToSignOnfido;
+      } else if (signatory.onfidoDocumentCheckAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignOnfidoDocumentCheck;
+      } else if (signatory.onfidoDocumentAndPhotoCheckAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignOnfidoDocumentAndPhotoCheck;
       }
     },
 

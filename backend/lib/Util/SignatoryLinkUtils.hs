@@ -259,14 +259,15 @@ atvToMix VerimiAuthenticationToView   = MAM_Verimi
 atvToMix IDINAuthenticationToView     = MAM_NLIDIN
 
 atsToMix :: AuthenticationToSignMethod -> MixAuthMethod
-atsToMix StandardAuthenticationToSign = MAM_Standard
-atsToMix SEBankIDAuthenticationToSign = MAM_SEBankID
-atsToMix SMSPinAuthenticationToSign   = MAM_SMSPin
-atsToMix NOBankIDAuthenticationToSign = MAM_NOBankID
-atsToMix DKNemIDAuthenticationToSign  = MAM_DKNemID
-atsToMix IDINAuthenticationToSign     = MAM_NLIDIN
-atsToMix FITupasAuthenticationToSign  = MAM_FITupas
-atsToMix OnfidoAuthenticationToSign   = MAM_Onfido
+atsToMix StandardAuthenticationToSign            = MAM_Standard
+atsToMix SEBankIDAuthenticationToSign            = MAM_SEBankID
+atsToMix SMSPinAuthenticationToSign              = MAM_SMSPin
+atsToMix NOBankIDAuthenticationToSign            = MAM_NOBankID
+atsToMix DKNemIDAuthenticationToSign             = MAM_DKNemID
+atsToMix IDINAuthenticationToSign                = MAM_NLIDIN
+atsToMix FITupasAuthenticationToSign             = MAM_FITupas
+atsToMix OnfidoDocumentCheckAuthenticationToSign = MAM_Onfido
+atsToMix OnfidoDocumentAndPhotoCheckAuthenticationToSign = MAM_Onfido
 
 authenticationMethodsCanMix
   :: AuthenticationToViewMethod
@@ -320,21 +321,23 @@ authToViewNeedsMobileNumber VerimiAuthenticationToView   = False
 authToViewNeedsMobileNumber IDINAuthenticationToView     = False
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
-authToSignNeedsPersonalNumber StandardAuthenticationToSign = False
-authToSignNeedsPersonalNumber SMSPinAuthenticationToSign   = False
-authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign = True
-authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign = False
-authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign  = True
-authToSignNeedsPersonalNumber IDINAuthenticationToSign     = False
-authToSignNeedsPersonalNumber FITupasAuthenticationToSign  = False
-authToSignNeedsPersonalNumber OnfidoAuthenticationToSign   = False
+authToSignNeedsPersonalNumber StandardAuthenticationToSign            = False
+authToSignNeedsPersonalNumber SMSPinAuthenticationToSign              = False
+authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign            = True
+authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign            = False
+authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign             = True
+authToSignNeedsPersonalNumber IDINAuthenticationToSign                = False
+authToSignNeedsPersonalNumber FITupasAuthenticationToSign             = False
+authToSignNeedsPersonalNumber OnfidoDocumentCheckAuthenticationToSign = False
+authToSignNeedsPersonalNumber OnfidoDocumentAndPhotoCheckAuthenticationToSign = False
 
 authToSignNeedsMobileNumber :: AuthenticationToSignMethod -> Bool
-authToSignNeedsMobileNumber StandardAuthenticationToSign = False
-authToSignNeedsMobileNumber SMSPinAuthenticationToSign   = True
-authToSignNeedsMobileNumber SEBankIDAuthenticationToSign = False
-authToSignNeedsMobileNumber NOBankIDAuthenticationToSign = False
-authToSignNeedsMobileNumber DKNemIDAuthenticationToSign  = False
-authToSignNeedsMobileNumber IDINAuthenticationToSign     = False
-authToSignNeedsMobileNumber FITupasAuthenticationToSign  = False
-authToSignNeedsMobileNumber OnfidoAuthenticationToSign   = False
+authToSignNeedsMobileNumber StandardAuthenticationToSign            = False
+authToSignNeedsMobileNumber SMSPinAuthenticationToSign              = True
+authToSignNeedsMobileNumber SEBankIDAuthenticationToSign            = False
+authToSignNeedsMobileNumber NOBankIDAuthenticationToSign            = False
+authToSignNeedsMobileNumber DKNemIDAuthenticationToSign             = False
+authToSignNeedsMobileNumber IDINAuthenticationToSign                = False
+authToSignNeedsMobileNumber FITupasAuthenticationToSign             = False
+authToSignNeedsMobileNumber OnfidoDocumentCheckAuthenticationToSign = False
+authToSignNeedsMobileNumber OnfidoDocumentAndPhotoCheckAuthenticationToSign = False

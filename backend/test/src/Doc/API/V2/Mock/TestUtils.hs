@@ -330,14 +330,16 @@ setMockDocSigLinkAuthToSignMethod i auth = setForSigNumberFromMockDoc
   i
   (\msl -> msl { mockSigLinkAuthMethodToSign = toStrAuth auth })
   where
-    toStrAuth StandardAuthenticationToSign = "standard"
-    toStrAuth SEBankIDAuthenticationToSign = "se_bankid"
-    toStrAuth NOBankIDAuthenticationToSign = "no_bankid"
-    toStrAuth DKNemIDAuthenticationToSign  = "dk_nemid"
-    toStrAuth IDINAuthenticationToSign     = "nl_idin"
-    toStrAuth FITupasAuthenticationToSign  = "fi_tupas"
-    toStrAuth SMSPinAuthenticationToSign   = "sms_pin"
-    toStrAuth OnfidoAuthenticationToSign   = "onfido"
+    toStrAuth StandardAuthenticationToSign            = "standard"
+    toStrAuth SEBankIDAuthenticationToSign            = "se_bankid"
+    toStrAuth NOBankIDAuthenticationToSign            = "no_bankid"
+    toStrAuth DKNemIDAuthenticationToSign             = "dk_nemid"
+    toStrAuth IDINAuthenticationToSign                = "nl_idin"
+    toStrAuth FITupasAuthenticationToSign             = "fi_tupas"
+    toStrAuth SMSPinAuthenticationToSign              = "sms_pin"
+    toStrAuth OnfidoDocumentCheckAuthenticationToSign = "onfido_document_check"
+    toStrAuth OnfidoDocumentAndPhotoCheckAuthenticationToSign =
+      "onfido_document_and_photo_check"
 
 getMockDocSigLinkPersonalNumber :: Int -> MockDoc -> String
 getMockDocSigLinkPersonalNumber i =

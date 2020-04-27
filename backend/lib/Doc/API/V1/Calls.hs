@@ -539,12 +539,13 @@ apiCallV1Ready did = logDocument did . api $ do
           isGood . asValidSEBankIdPersonalNumber $ getPersonalNumber sl
         NOBankIDAuthenticationToSign ->
           isGood . asValidNorwegianSSN $ getPersonalNumber sl
-        DKNemIDAuthenticationToSign  -> False -- Danish Nets eSigning is not supported in API v1
-        StandardAuthenticationToSign -> True
-        SMSPinAuthenticationToSign   -> True
-        IDINAuthenticationToSign     -> False -- Dutch iDIN eSigning is not supported in API v1
-        FITupasAuthenticationToSign  -> False -- Finnish TUPAS eSigning is not supported in API v1
-        OnfidoAuthenticationToSign   -> False -- Onfido eSigning is not supported in API v1
+        DKNemIDAuthenticationToSign             -> False -- Danish Nets eSigning is not supported in API v1
+        StandardAuthenticationToSign            -> True
+        SMSPinAuthenticationToSign              -> True
+        IDINAuthenticationToSign                -> False -- Dutch iDIN eSigning is not supported in API v1
+        FITupasAuthenticationToSign             -> False -- Finnish TUPAS eSigning is not supported in API v1
+        OnfidoDocumentCheckAuthenticationToSign -> False -- Onfido eSigning is not supported in API v1
+        OnfidoDocumentAndPhotoCheckAuthenticationToSign -> False -- Onfido eSigning is not supported in API v1
 
     signatoryHasValidSSNForIdentifyToView sl =
       case signatorylinkauthenticationtoviewmethod sl of
@@ -675,7 +676,10 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       FITupasAuthenticationToSign -> do
         logAttention_ "Finnish TUPAS signing attempted in V1 API"
         Left . Failed <$> J.runJSONGenT (J.value "fiTupasNotSupported" True)
-      OnfidoAuthenticationToSign -> do
+      OnfidoDocumentCheckAuthenticationToSign -> do
+        logAttention_ "Onfido signing attempted in V1 API"
+        Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
+      OnfidoDocumentAndPhotoCheckAuthenticationToSign -> do
         logAttention_ "Onfido signing attempted in V1 API"
         Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
 
@@ -767,7 +771,10 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
           FITupasAuthenticationToSign -> do
             logAttention_ "Finnish TUPAS signing attempted in V1 API"
             Left . Failed <$> J.runJSONGenT (J.value "fiTupasNotSupported" True)
-          OnfidoAuthenticationToSign -> do
+          OnfidoDocumentCheckAuthenticationToSign -> do
+            logAttention_ "Onfido signing attempted in V1 API"
+            Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
+          OnfidoDocumentAndPhotoCheckAuthenticationToSign -> do
             logAttention_ "Onfido signing attempted in V1 API"
             Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
     `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) ->
@@ -821,7 +828,10 @@ checkAuthenticationToSignMethodAndValue slid = do
             (True, FITupasAuthenticationToSign) ->
               throwM . SomeDBExtraException $ conflictError
                 "Finnish TUPAS signing not supported in API V1"
-            (True, OnfidoAuthenticationToSign) ->
+            (True, OnfidoDocumentCheckAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Onfido signing not supported in API V1"
+            (True, OnfidoDocumentAndPhotoCheckAuthenticationToSign) ->
               throwM . SomeDBExtraException $ conflictError
                 "Onfido signing not supported in API V1"
         Nothing ->
@@ -1206,8 +1216,12 @@ apiCallV1ChangeAuthenticationToSign did slid =
           "Dutch iDIN signing is not supported in API V1"
         FITupasAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "Finnish TUPAS signing is not supported in API V1"
-        OnfidoAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
-          "Onfido signing is not supported in API V1"
+        OnfidoDocumentCheckAuthenticationToSign ->
+          throwM . SomeDBExtraException $ badInput
+            "Onfido signing is not supported in API V1"
+        OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
+          throwM . SomeDBExtraException $ badInput
+            "Onfido signing is not supported in API V1"
 
       -- Change authentication to sign method and return Document JSON
       dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor

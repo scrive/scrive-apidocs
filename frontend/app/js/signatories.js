@@ -614,8 +614,11 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     fiTupasAuthenticationToSign: function() {
         return this.get("authentication_method_to_sign") == "fi_tupas";
     },
-    onfidoAuthenticationToSign: function() {
-      return this.get("authentication_method_to_sign") == "onfido";
+    onfidoDocumentCheckAuthenticationToSign: function() {
+      return this.get("authentication_method_to_sign") == "onfido_document_check";
+    },
+    onfidoDocumentAndPhotoCheckAuthenticationToSign: function() {
+      return this.get("authentication_method_to_sign") == "onfido_document_and_photo_check";
     },
     emailDelivery: function() {
           return this.get("delivery_method") == "email";
