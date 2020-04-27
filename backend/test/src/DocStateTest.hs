@@ -1698,14 +1698,24 @@ testSealDocument = replicateM_ 1 $ do
           OnfidoDocumentCheckAuthenticationToSign -> do
             randomUpdate $ \esig -> SignDocument
               (signatorylinkid slk)
-              (Just (EIDServiceOnfidoSignature_ esig))
+              (Just
+                (EIDServiceOnfidoSignature_ esig
+                  { eidServiceOnfidoSigMethod = OnfidoDocumentCheck
+                  }
+                )
+              )
               Nothing
               screenshots
               sa
           OnfidoDocumentAndPhotoCheckAuthenticationToSign -> do
             randomUpdate $ \esig -> SignDocument
               (signatorylinkid slk)
-              (Just (EIDServiceOnfidoSignature_ esig))
+              (Just
+                (EIDServiceOnfidoSignature_ esig
+                  { eidServiceOnfidoSigMethod = OnfidoDocumentAndPhotoCheck
+                  }
+                )
+              )
               Nothing
               screenshots
               sa
