@@ -275,8 +275,21 @@ docApiV2StartWithPortal = api $ do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
-      sendPortalInvites user portalUrl docs1
+      let signatoriesWhoNeedInviting = nubPortalSignatories
+            [ sl
+            | doc <- docs1
+            , sl <- documentsignatorylinks doc
+            , signatorylinkdeliverymethod sl == PortalDelivery  -- is portal signatory
+            , not $ isForwarded sl  -- redundant, but here for clarity
+            , signatorysignorder sl <= documentcurrentsignorder doc
+            ]  -- ^ is actived
+
+      forM_ signatoriesWhoNeedInviting $ \sl -> do
+        uctx <- getCreateUserContextFromContext
+        sendPortalMail PortalInvitation user portalUrl sl uctx
+
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
+
   docs2 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
     saveDocumentForPortalSignatories
     theDocument -- return changed
@@ -285,11 +298,6 @@ docApiV2StartWithPortal = api $ do
       headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
       jsonBS  = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
-  where
-    sendPortalInvites authorUser portalUrl docs = do
-      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs) $ \(email, name) ->
-        sendPortalInvite authorUser portalUrl email name
-          =<< getCreateUserContextFromContext
 
 docApiV2Prolong :: Kontrakcja m => DocumentID -> m Response
 docApiV2Prolong did = logDocument did . api $ do
@@ -473,8 +481,20 @@ docApiV2RemindWithPortal = api $ do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
-      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs1)
-        $ uncurry (sendPortalReminder user portalUrl)
+      let signatoriesWhoNeedReminding = nubPortalSignatories
+            [ sl
+            | doc <- docs1
+            , sl <- documentsignatorylinks doc
+            , signatorylinkdeliverymethod sl == PortalDelivery  -- is portal signatory
+            , signatorysignorder sl <= documentcurrentsignorder doc  -- is actived
+            , not $ isForwarded sl  -- redundant, but here for clarity
+            , isSignatoryAndHasNotSigned sl || isApproverAndHasNotApproved sl
+            ]  -- ^ needs to act
+
+      forM_ signatoriesWhoNeedReminding $ \sl -> do
+        uctx <- getCreateUserContextWithoutContext
+        sendPortalMail PortalReminder user portalUrl sl uctx
+
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
   docs2 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
     saveDocumentForPortalSignatories

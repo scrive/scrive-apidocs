@@ -28,9 +28,9 @@ import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature)
 import Doc.DocInfo
 import Doc.DocMails
-  ( sendClosedEmails, sendDocumentErrorEmail, sendDocumentTimeoutedEmail
-  , sendForwardSigningMessages, sendInvitationEmails
-  , sendPartyProcessFinalizedNotification, sendPortalInvite, sendRejectEmails
+  ( PortalMailKind(..), sendClosedEmails, sendDocumentErrorEmail
+  , sendDocumentTimeoutedEmail, sendForwardSigningMessages, sendInvitationEmails
+  , sendPartyProcessFinalizedNotification, sendPortalMail, sendRejectEmails
   )
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
@@ -380,6 +380,8 @@ saveDocumentForPortalSignatories = do
         (not . isAuthor) && (\sl -> signatorylinkdeliverymethod sl == PortalDelivery)
   mapM_ saveDocumentForSignatory $ filter portalSigFilter sigs
 
+-- | Invite portal signatories that have just got activated to sign/approve/view
+-- the document. Triggered for signatories of signing order 2 upwards.
 sendInbetweenPortalInvitations
   :: ( CryptoRNG m
      , MonadThrow m
@@ -391,27 +393,33 @@ sendInbetweenPortalInvitations
      )
   => m ()
 sendInbetweenPortalInvitations = do
-  auser <- getDocAuthor =<< theDocument
-  case auser of
-    Nothing   -> return ()
-    Just user -> do
-      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
-      case ugwpSettings ugwp ^. #portalUrl of
-        Nothing        -> return ()
-        Just portalUrl -> do
-          sigs <- inbetweenPortalSignatories <$> theDocument
-          forM_ sigs $ \sig -> do
-            sendPortalInvite user portalUrl (Email $ getEmail sig) (getFullName sig)
-              =<< getCreateUserContextWithoutContext
-            saveDocumentForSignatory sig
-  where
-    inbetweenPortalSignatories d = filter
-      (\sl -> (signatorylinkdeliverymethod sl == PortalDelivery) && matchingSignOrder d sl
-      )
-      (documentsignatorylinks d)
-    matchingSignOrder d sl =
-      let so = signatorysignorder sl
-      in  so > documentprevioussignorder d && so <= documentcurrentsignorder d
+  mauthor    <- getDocAuthor =<< theDocument
+  mPortalUrl <- case mauthor of
+    Nothing     -> return Nothing
+    Just author -> do
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ author ^. #id
+      return $ ugwpSettings ugwp ^. #portalUrl
+
+  case (mauthor, mPortalUrl) of
+    (Just author, Just portalUrl) -> do
+      doc <- theDocument
+      -- Note that 'nubbing' the signatories here is probably unneccessary, but
+      -- we still do it for consistency.
+      let signatoriesWhoNeedInviting = nubPortalSignatories
+            [ sl
+            | sl <- documentsignatorylinks doc
+            , signatorylinkdeliverymethod sl == PortalDelivery  -- is portal signatory
+            , not $ isForwarded sl  -- redundant, but here for clarity
+            , signatorysignorder sl <= documentcurrentsignorder doc  -- is actived
+            , documentprevioussignorder doc < signatorysignorder sl
+            ]  -- ^ wasn't previously activated
+
+      forM_ signatoriesWhoNeedInviting $ \sl -> do
+        uctx <- getCreateUserContextWithoutContext
+        sendPortalMail PortalInvitation author portalUrl sl uctx
+        saveDocumentForSignatory sl
+
+    _ -> return ()
 
 {- |
     Saves the document for the given signatorylink.  It does this by checking to see

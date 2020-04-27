@@ -158,33 +158,54 @@ mailForwardSigningForNewSignatoryButton=
 ####
 ####
 #### PORTAL MAILS
-####
-mailPortalInviteWithUser=$mailPortalInvite()$
-####
-mailPortalInviteWithoutUser=$mailPortalInvite()$
-####
-mailPortalInvite=
+mailPortalInviteToSign=
 $_mailPortalInviteTitle()$
 $nicemail(
     mailp1 = _mailPortalClickToSign();
     mailspacing1 = "<br/><br/>";
     mailp2 = nicebutton(link=link; text=_mailPortalSignDocumentsButton());
     mailspacing2 = "<br/><br/>";
-    mailp3 = _mailPortalIfNoAccout();
+    mailp3 = _mailPortalIfNoAccoutToSign();
     mailspacing3 = "<br/><br/>";
-    mailp4 = _mailPortalIfDontWantToSign()
+    mailp4 = _mailPortalIfDontWantToSignUp()
 )$
 ####
-mailPortalRemindWithUser=$mailPortalRemind()$
-####
-mailPortalRemindWithoutUser=$mailPortalRemind()$
-###
-mailPortalRemind=
-$_mailPortalRemindTitle()$
+mailPortalInviteToApprove=
+$_mailPortalInviteTitle()$
 $nicemail(
-    mailp1 = _mailPortalRemindContent();
+    mailp1 = _mailPortalClickToApprove();
+    mailspacing1 = "<br/><br/>";
+    mailp2 = nicebutton(link=link; text=_mailPortalApproveDocumentsButton());
+    mailspacing2 = "<br/><br/>";
+    mailp3 = _mailPortalIfNoAccoutToApprove();
+    mailspacing3 = "<br/><br/>";
+    mailp4 = _mailPortalIfDontWantToSignUp()
+)$
+####
+mailPortalInviteToView=
+$_mailPortalInviteTitle()$
+$nicemail(
+    mailp1 = _mailPortalClickToView();
+    mailspacing1 = "<br/><br/>";
+    mailp2 = nicebutton(link=link; text=_mailPortalViewDocumentsButton());
+    mailspacing2 = "<br/><br/>";
+    mailp3 = _mailPortalIfNoAccoutToView()
+)$
+####
+mailPortalRemindToSign=
+$_mailPortalRemindToSignTitle()$
+$nicemail(
+    mailp1 = _mailPortalRemindToSignContent();
     mailspacing1 = "<br/><br/>";
     mailp2 = nicebutton(link=link; text=_mailPortalSignDocumentsButton())
+)$
+###
+mailPortalRemindToApprove=
+$_mailPortalRemindToApproveTitle()$
+$nicemail(
+    mailp1 = _mailPortalRemindToApproveContent();
+    mailspacing1 = "<br/><br/>";
+    mailp2 = nicebutton(link=link; text=_mailPortalApproveDocumentsButton())
 )$
 ####
 ####

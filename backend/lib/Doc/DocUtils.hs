@@ -26,9 +26,9 @@ module Doc.DocUtils (
   , userCanPerformSigningAction
   , fileFromMainFile
   , allRequiredAttachmentsAreOnList
-  , detailsOfGroupedPortalSignatoriesThatCanSignNow
   , hasDigitalSignature
   , hasGuardtimeSignature
+  , nubPortalSignatories
 ) where
 
 import Control.Monad.Catch
@@ -46,7 +46,6 @@ import Doc.SignatoryLinkID
 import File.File
 import File.Model
 import Templates
-import User.Email
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
@@ -300,17 +299,18 @@ requiredAuthorAttachments :: Document -> [AuthorAttachment]
 requiredAuthorAttachments doc =
   filter authorattachmentrequired $ documentauthorattachments doc
 
-detailsOfGroupedPortalSignatoriesThatCanSignNow :: [Document] -> [(Email, Text)]
-detailsOfGroupedPortalSignatoriesThatCanSignNow docs =
-  nubOrdOn fst $ concatMap detailsOfPortalSignatoriesThatCanSignNow docs
-
-detailsOfPortalSignatoriesThatCanSignNow :: Document -> [(Email, Text)]
-detailsOfPortalSignatoriesThatCanSignNow doc = map slToData portalSigs
+-- | Drop all but one signatory link per email address, keeping signing over
+-- approving over viewing links; used for grouping emails to portal signatories.
+nubPortalSignatories :: [SignatoryLink] -> [SignatoryLink]
+nubPortalSignatories = nubOrdOn getEmail
+  . sortOn (\sl -> (roleAsInt $ signatoryrole sl, getEmail sl))
   where
-    portalSig sl =
-      signatorylinkdeliverymethod sl == PortalDelivery && canSignatorySignNow doc sl
-    portalSigs = filter portalSig $ documentsignatorylinks doc
-    slToData sl = (Email $ getEmail sl, getFullName sl)
+    roleAsInt SignatoryRoleSigningParty          = 0
+    roleAsInt SignatoryRoleApprover              = 1
+    roleAsInt SignatoryRoleViewer                = 2
+    -- forwarded parties shouldn't receive any mail!
+    roleAsInt SignatoryRoleForwardedSigningParty = 3
+    roleAsInt SignatoryRoleForwardedApprover     = 4
 
 hasGuardtimeSignature :: Document -> Bool
 hasGuardtimeSignature doc = (isGuardtime <$> documentsealstatus doc) == Just True

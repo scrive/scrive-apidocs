@@ -12,8 +12,8 @@ module Doc.DocMails (
   , sendDocumentErrorEmail
   , sendPartyProcessFinalizedNotification
   , sendPinCode
-  , sendPortalInvite
-  , sendPortalReminder
+  , sendPortalMail
+  , PortalMailKind(..)
   , makeMailAttachments
   , runMailT
   , MailT
@@ -52,6 +52,7 @@ import File.Model
 import Folder.Model
 import InputValidation
 import Kontra
+import KontraLink
 import Log.Identifier
 import MailContext
 import Mails.MailsData
@@ -825,7 +826,9 @@ sendPinCode sl phone pin = do
       =<< signatoryActor ctx sl
   scheduleSMS doc =<< smsPinCodeSendout doc sl phone pin
 
-sendPortalInvite
+-- | Send an invitation or reminder email to a signatory that was configured to
+-- use the `PortalMethod` `DeliveryMethod`.
+sendPortalMail
   :: ( MonadLog m
      , TemplatesMonad m
      , MonadThrow m
@@ -833,59 +836,34 @@ sendPortalInvite
      , MailContextMonad m
      , MonadDB m
      )
-  => User
-  -> Text
-  -> Email
-  -> Text
+  => PortalMailKind
+  -> User  -- ^ The author of the document that triggered the invitation.
+  -> Text  -- ^ The portal URL configured for the user group of the document author.
+  -> SignatoryLink  -- ^ The signatory we want to invite.
   -> CreateUserContext
   -> m ()
-sendPortalInvite authorUser portalUrl email name cuctx = do
+sendPortalMail kind authorUser portalUrl sl cuctx = do
+  let email = Email $ getEmail sl
+      name  = getFullName sl
+      role  = signatoryrole sl
   muser <- dbQuery $ GetUserByEmail email
-  case (muser, view #hasAcceptedTOS =<< muser) of
-    (Just _, Just _) -> sendPortalInviteWithActivatedUser authorUser portalUrl email name
-    (Just user, Nothing) ->
-      sendPortalInviteWithNotActivatedUser authorUser portalUrl email name user
-    (Nothing, _) -> do
-      user <- createUserForPortal (getLang authorUser) email cuctx
-      sendPortalInviteWithNotActivatedUser authorUser portalUrl email name user
+  case muser of
+    -- existing, activated user account
+    Just user | isJust $ user ^. #hasAcceptedTOS -> do
+      let link = LinkPortalInviteWithAccount portalUrl email
+      mail <- constructPortalMail kind authorUser link role
+      scheduleEmailSendout
+        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
 
-sendPortalInviteWithActivatedUser
-  :: ( MonadLog m
-     , TemplatesMonad m
-     , MonadThrow m
-     , CryptoRNG m
-     , MailContextMonad m
-     , MonadDB m
-     )
-  => User
-  -> Text
-  -> Email
-  -> Text
-  -> m ()
-sendPortalInviteWithActivatedUser authorUser portalUrl email name = do
-  mail <- mailPortalInviteWithUser authorUser portalUrl email name
-  scheduleEmailSendout
-    $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
-
-sendPortalInviteWithNotActivatedUser
-  :: ( MonadLog m
-     , TemplatesMonad m
-     , MonadThrow m
-     , CryptoRNG m
-     , MailContextMonad m
-     , MonadDB m
-     )
-  => User
-  -> Text
-  -> Email
-  -> Text
-  -> User
-  -> m ()
-sendPortalInviteWithNotActivatedUser authorUser portalUrl email name user = do
-  uar  <- newUserAccountRequest $ user ^. #id
-  mail <- mailPortalInviteWithoutUser authorUser portalUrl email name uar
-  scheduleEmailSendout
-    $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
+    -- account not yet activated, or not existing
+    _ -> do
+      user <- whenNothing muser $ createUserForPortal (getLang authorUser) email cuctx
+      uar  <- newUserAccountRequest $ user ^. #id
+      let link =
+            LinkPortalInviteWithoutAccount portalUrl email (uarToken uar) (uarExpires uar)
+      mail <- constructPortalMail kind authorUser link role
+      scheduleEmailSendout
+        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
 
 createUserForPortal
   :: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadDB m)
@@ -901,41 +879,6 @@ createUserForPortal lang email cuctx = do
   case mnuser of
     Nothing    -> unexpectedError "User was not created"
     Just nuser -> return nuser
-
-sendPortalReminder
-  :: ( MonadLog m
-     , TemplatesMonad m
-     , MonadThrow m
-     , CryptoRNG m
-     , MailContextMonad m
-     , KontraMonad m
-     , MonadDB m
-     )
-  => User
-  -> Text
-  -> Email
-  -> Text
-  -> m ()
-sendPortalReminder authorUser portalUrl email name = do
-  muser <- dbQuery $ GetUserByEmail email
-  case (muser, view #hasAcceptedTOS =<< muser) of
-    (Just _   , Just _ ) -> sendPortalReminderWithActivatedUser
-    (Just user, Nothing) -> sendPortalReminderWithNotActivatedUser user
-    (Nothing  , _      ) -> do
-      user <-
-        createUserForPortal (getLang authorUser) email =<< getCreateUserContextFromContext
-      sendPortalReminderWithNotActivatedUser user
-  where
-    sendPortalReminderWithActivatedUser = do
-      mail <- mailPortalRemindWithUser authorUser portalUrl email name
-      scheduleEmailSendout
-        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
-
-    sendPortalReminderWithNotActivatedUser user = do
-      uar  <- newUserAccountRequest $ user ^. #id
-      mail <- mailPortalRemindWithoutUser authorUser portalUrl email name uar
-      scheduleEmailSendout
-        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
 
 -- Notification sendout
 

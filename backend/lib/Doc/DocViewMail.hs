@@ -11,10 +11,8 @@ module Doc.DocViewMail
     , mailDocumentRemindContent
     , mailPartyProcessFinalizedNotification
     , mailForwardSigned
-    , mailPortalInviteWithUser
-    , mailPortalInviteWithoutUser
-    , mailPortalRemindWithUser
-    , mailPortalRemindWithoutUser
+    , constructPortalMail
+    , PortalMailKind(..)
     , InvitationTo(..)
     , mailInvitation
     , mailInvitationContent
@@ -48,9 +46,7 @@ import Mails.SendMail
 import MinutesTime
 import Templates
 import Theme.Model
-import User.Email
 import User.Model
-import User.UserAccountRequest
 import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
@@ -339,25 +335,11 @@ smartOrUnnamedName sl doc
         Just i  -> i + 1
         Nothing -> 0
 
-mailPortalInviteWithUser
-  :: ( CryptoRNG m
-     , MonadDB m
-     , MonadThrow m
-     , TemplatesMonad m
-     , MailContextMonad m
-     , MonadTime m
-     )
-  => User
-  -> Text
-  -> Email
-  -> Text
-  -> m Mail
-mailPortalInviteWithUser authorUser portalUrl email _name = do
-  otherMail (Just authorUser) (templateName "mailPortalInviteWithUser") $ do
-    F.value "link" $ show (LinkPortalInviteWithAccount portalUrl email)
-    F.value "authorname" $ getSmartName authorUser
+data PortalMailKind = PortalInvitation | PortalReminder
 
-mailPortalInviteWithoutUser
+-- | Construct the invitiation or reminder email sent to a portal signatory
+-- (approver, viewer).
+constructPortalMail
   :: ( CryptoRNG m
      , MonadDB m
      , MonadThrow m
@@ -365,54 +347,32 @@ mailPortalInviteWithoutUser
      , MailContextMonad m
      , MonadTime m
      )
-  => User
-  -> Text
-  -> Email
-  -> Text
-  -> UserAccountRequest
+  => PortalMailKind
+  -> User  -- ^ The author of the document that triggered the invitation.
+  -> KontraLink  -- ^ The link the sign/approve/view button will point to.
+  -> SignatoryRole  -- ^ The role of the signatory we want to invite/remind.
   -> m Mail
-mailPortalInviteWithoutUser authorUser portalUrl email _name uar = do
-  otherMail (Just authorUser) (templateName "mailPortalInviteWithoutUser") $ do
-    F.value "link" $ show
-      (LinkPortalInviteWithoutAccount portalUrl email (uarToken uar) (uarExpires uar))
-    F.value "authorname" $ getSmartName authorUser
+constructPortalMail kind authorUser link role = do
+  let
+    -- List all templates explicitly so that detect_old_templates picks them up.
+    template = case kind of
+      PortalInvitation -> case role of
+        SignatoryRoleSigningParty -> templateName "mailPortalInviteToSign"
+        SignatoryRoleApprover -> templateName "mailPortalInviteToApprove"
+        SignatoryRoleViewer   -> templateName "mailPortalInviteToView"
+        _                     -> unexpectedError
+          "Tried to construct a portal invitation email for a _forwarded_ signatory!"
+      PortalReminder -> case role of
+        SignatoryRoleSigningParty -> templateName "mailPortalRemindToSign"
+        SignatoryRoleApprover     -> templateName "mailPortalRemindToApprove"
+        SignatoryRoleViewer ->
+          unexpectedError
+            "Tried to construct a portal reminder email for a viewing party, but viewing parties are not supposed to receive reminders!"
+        _ -> unexpectedError
+          "Tried to construct a portal remuinder email for a _forwarded_ signatory!"
 
-mailPortalRemindWithUser
-  :: ( CryptoRNG m
-     , MonadDB m
-     , MonadThrow m
-     , TemplatesMonad m
-     , MailContextMonad m
-     , MonadTime m
-     )
-  => User
-  -> Text
-  -> Email
-  -> Text
-  -> m Mail
-mailPortalRemindWithUser authorUser portalUrl email _name = do
-  otherMail (Just authorUser) (templateName "mailPortalRemindWithUser") $ do
-    F.value "link" $ show (LinkPortalInviteWithAccount portalUrl email)
-    F.value "authorname" $ getSmartName authorUser
-
-mailPortalRemindWithoutUser
-  :: ( CryptoRNG m
-     , MonadDB m
-     , MonadThrow m
-     , TemplatesMonad m
-     , MailContextMonad m
-     , MonadTime m
-     )
-  => User
-  -> Text
-  -> Email
-  -> Text
-  -> UserAccountRequest
-  -> m Mail
-mailPortalRemindWithoutUser authorUser portalUrl email _name uar = do
-  otherMail (Just authorUser) (templateName "mailPortalRemindWithoutUser") $ do
-    F.value "link" $ show
-      (LinkPortalInviteWithoutAccount portalUrl email (uarToken uar) (uarExpires uar))
+  otherMail (Just authorUser) template $ do
+    F.value "link" $ show link
     F.value "authorname" $ getSmartName authorUser
 
 mailDocumentErrorForAuthor
