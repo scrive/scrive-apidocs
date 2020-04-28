@@ -554,37 +554,6 @@ userGroupSettingsAddPortalUrl = Migration
         }
   }
 
-userGroupAddressAddEntityNameField :: MonadDB m => Migration m
-userGroupAddressAddEntityNameField = Migration
-  { mgrTableName = tblName tableUserGroupAddresses
-  , mgrFrom      = 1
-  , mgrAction    =
-    StandardMigration $ do
-      runQuery_ $ sqlAlterTable
-        (tblName tableUserGroupAddresses)
-        [ sqlAddColumn $ tblColumn { colName     = "entity_name"
-                                   , colType     = TextT
-                                   , colNullable = False
-                                   , colDefault  = Just "''::text"
-                                   }
-        ]
-      runQuery_ . sqlCreateComposite $ CompositeType
-        { ctName    = "user_group_address_c2"
-        , ctColumns = [ CompositeColumn { ccName = "company_number", ccType = TextT }
-                      , CompositeColumn { ccName = "entity_name", ccType = TextT }
-                      , CompositeColumn { ccName = "address", ccType = TextT }
-                      , CompositeColumn { ccName = "zip", ccType = TextT }
-                      , CompositeColumn { ccName = "city", ccType = TextT }
-                      , CompositeColumn { ccName = "country", ccType = TextT }
-                      ]
-        }
-      -- Populate Entity Name from the User Group name
-      runQuery_ . sqlUpdate "user_group_addresses" $ do
-        sqlSetCmd "entity_name" "user_groups.name"
-        sqlFrom "user_groups"
-        sqlWhere "user_group_addresses.user_group_id = user_groups.id"
-  }
-
 userGroupSettingsAddEidServiceToken :: MonadDB m => Migration m
 userGroupSettingsAddEidServiceToken = Migration
   { mgrTableName = tblName tableUserGroupSettings
@@ -624,6 +593,36 @@ userGroupSettingsAddEidServiceToken = Migration
         }
   }
 
+userGroupAddressAddEntityNameField :: MonadDB m => Migration m
+userGroupAddressAddEntityNameField = Migration
+  { mgrTableName = tblName tableUserGroupAddresses
+  , mgrFrom      = 1
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableUserGroupAddresses)
+        [ sqlAddColumn $ tblColumn { colName     = "entity_name"
+                                   , colType     = TextT
+                                   , colNullable = False
+                                   , colDefault  = Just "''::text"
+                                   }
+        ]
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "user_group_address_c2"
+        , ctColumns = [ CompositeColumn { ccName = "company_number", ccType = TextT }
+                      , CompositeColumn { ccName = "entity_name", ccType = TextT }
+                      , CompositeColumn { ccName = "address", ccType = TextT }
+                      , CompositeColumn { ccName = "zip", ccType = TextT }
+                      , CompositeColumn { ccName = "city", ccType = TextT }
+                      , CompositeColumn { ccName = "country", ccType = TextT }
+                      ]
+        }
+      -- Populate Entity Name from the User Group name
+      runQuery_ . sqlUpdate "user_group_addresses" $ do
+        sqlSetCmd "entity_name" "user_groups.name"
+        sqlFrom "user_groups"
+        sqlWhere "user_group_addresses.user_group_id = user_groups.id"
+  }
 
 createTableUserGroupFreeDocumentTokens :: MonadDB m => Migration m
 createTableUserGroupFreeDocumentTokens = Migration
@@ -931,3 +930,52 @@ userGroupSettingsAddPostSignViewFlag = Migration
           ]
         }
   }
+
+userGroupSettingsAddSSOConfiguration :: MonadDB m => Migration m
+userGroupSettingsAddSSOConfiguration = Migration
+  { mgrTableName = tblName tableUserGroupSettings
+  , mgrFrom      = 16
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableUserGroupSettings)
+        [sqlAddColumn $ tblColumn { colName = "sso_config", colType = JsonbT }]
+      runQuery_
+        . sqlCreateIndexSequentially (tblName tableUserGroupSettings)
+        $ indexOnColumn "(sso_config ->> 'idp_id'::text)"
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "user_group_settings_c11"
+        , ctColumns =
+          [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
+          , CompositeColumn { ccName = "idle_doc_timeout_preparation"
+                            , ccType = SmallIntT
+                            }
+          , CompositeColumn { ccName = "idle_doc_timeout_closed", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_canceled", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_timedout", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_rejected", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_error", ccType = SmallIntT }
+          , CompositeColumn { ccName = "immediate_trash", ccType = BoolT }
+          , CompositeColumn { ccName = "cgi_display_name", ccType = TextT }
+          , CompositeColumn { ccName = "sms_provider", ccType = SmallIntT }
+          , CompositeColumn { ccName = "cgi_service_id", ccType = TextT }
+          , CompositeColumn { ccName = "pad_app_mode", ccType = SmallIntT }
+          , CompositeColumn { ccName = "pad_earchive_enabled", ccType = BoolT }
+          , CompositeColumn { ccName = "legal_text", ccType = BoolT }
+          , CompositeColumn { ccName = "require_bpid_for_new_document", ccType = BoolT }
+          , CompositeColumn { ccName = "send_timeout_notification", ccType = BoolT }
+          , CompositeColumn { ccName = "use_folder_list_calls", ccType = BoolT }
+          , CompositeColumn { ccName = "totp_is_mandatory", ccType = BoolT }
+          , CompositeColumn { ccName = "session_timeout", ccType = IntegerT }
+          , CompositeColumn { ccName = "portal_url", ccType = TextT }
+          , CompositeColumn { ccName = "eid_service_token", ccType = TextT }
+          , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "document_session_timeout", ccType = IntegerT }
+          , CompositeColumn { ccName = "force_hide_pn", ccType = BoolT }
+          , CompositeColumn { ccName = "sso_config", ccType = JsonbT }
+          ]
+        }
+      runQuery_ $ sqlDropComposite "user_group_settings_c8"
+      runQuery_ $ sqlDropComposite "user_group_settings_c9"
+  }
+

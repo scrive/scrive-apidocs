@@ -12,7 +12,6 @@ import Data.Time.Format
 import Happstack.Server hiding (dir, host, https, path, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir)
 import Log
-import qualified Crypto.PubKey.RSA.Types as RSA
 import qualified Network.URI as U
 import qualified SAML2.XML.Signature as SIG
 import qualified Text.StringTemplates.Fields as F
@@ -38,6 +37,8 @@ import User.Action
 import User.Email (Email(..))
 import User.Model
 import User.Utils
+import UserGroup.Model
+import UserGroup.Types
 import Util.MonadUtils
 import Utils.HTTP (isSecure)
 
@@ -53,8 +54,11 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
   samlResponse       <- apiV2ParameterObligatory $ ApiV2ParameterText "SAMLResponse"
   xmlTree            <- parseSAMLXML samlResponse
   idpID              <- maybe idpApiErr return (getIDPID xmlTree)
-  publicKeys         <- maybe (pubKeyApiErr idpID) return (getPublicKeys ssoConf idpID)
-  verifiedAssertions <- getVerifiedAssertionsFromSAML publicKeys xmlTree
+  (ugSSOConf :: UserGroupSSOConfiguration)  <- dbQuery (UserGroupGetBySSOIDPID idpID)
+    >>= maybe idpApiErr (return . view #settings)
+    >>= maybe idpApiErr (return . view #ssoConfig)
+    >>= maybe (ssoConfigErr idpID) return
+  verifiedAssertions <- getVerifiedAssertionsFromSAML (getPublicKeys ugSSOConf) xmlTree
   guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
                                   (const currentTime)
                                   verifiedAssertions
@@ -70,12 +74,12 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
   case memailRaw of
           Just emailRaw -> do
             let email = Email emailRaw
-            loginOrCreateNewAccount (SAMLPrincipal
+            loginOrCreateNewAccount ugSSOConf
+                                    (SAMLPrincipal
                                       (fromMaybe "" mFirstName)
                                       (fromMaybe "" mLastName)
                                       email
                                       (fromMaybe "" mNameID))
-                                    idpID
           Nothing ->
             apiError
               . requestFailed
@@ -104,35 +108,23 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
         . requestFailed
         $ "idpID not found (ie. Issuer element in the SAMLResponse)"
 
-    pubKeyApiErr :: (Kontrakcja m, TextShow t) => t -> m a
-    pubKeyApiErr t =
+    ssoConfigErr :: (Kontrakcja m) => String -> m a
+    ssoConfigErr idpID =
       apiError
-        .  requestFailed
-        $  "No public keys configured for the provider with id "
-        <> showt t
+         .  requestFailed
+         $  "No public keys configured for the provider with id "
+         <> T.pack idpID
 
-    getPublicKeys :: SSOConf -> String -> Maybe SIG.PublicKeys
-    getPublicKeys ssoConf idpID = do
-      let rsaPublicKey = getRSAPublicKey ssoConf idpID
-      fmap (\k -> SIG.PublicKeys { publicKeyRSA = Just k, publicKeyDSA = Nothing })
-           rsaPublicKey
+    getPublicKeys :: UserGroupSSOConfiguration -> SIG.PublicKeys
+    getPublicKeys ssoConf = SIG.PublicKeys { publicKeyRSA = Just $ ssoConf ^. #publicKey, publicKeyDSA = Nothing }
 
-    getIDPConf :: String -> SSOConf -> Maybe IDPConf
-    getIDPConf idpID ssoc =
-      Prelude.find (\ic -> icID ic == T.pack idpID) (scIdpConfs ssoc)
-
-    getRSAPublicKey :: SSOConf -> String -> Maybe RSA.PublicKey
-    getRSAPublicKey ssoc idpID = icPublicKey <$> getIDPConf idpID ssoc
-
-    loginOrCreateNewAccount :: Kontrakcja m => SAMLPrincipal -> String -> m InternalKontraResponse
-    loginOrCreateNewAccount p idpID = do
-      ctx     <- getContext
-      ssoc    <- guardJust $ ssoConf ctx
-      idpconf <- guardJust $ getIDPConf idpID ssoc
+    loginOrCreateNewAccount :: Kontrakcja m => UserGroupSSOConfiguration -> SAMLPrincipal -> m InternalKontraResponse
+    loginOrCreateNewAccount ugSSOConf p = do
       mAccount <- getAccountInAcceptedStateOrFail $ spEmail p
-      account <- maybe (createAccount idpconf p) return mAccount
+      let ugID = ugSSOConf ^. #userInitialGroupID
+      account <- maybe (createAccount p ugID) return mAccount
       startSessionForSAMLUser account
-      withPositionUpdated <- updateUserWithNameIdInCompanyPosition idpconf account (spNameID p)
+      withPositionUpdated <- updateUserWithNameIdInCompanyPosition ugSSOConf account (spNameID p)
       withTosCheck (\_ -> return . internalResponse $ LinkLogin LANG_EN) withPositionUpdated
 
     getAccountInAcceptedStateOrFail :: Kontrakcja m => Email -> m (Maybe User)
@@ -142,12 +134,12 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
             when (isDeleted || (user ^. #accountSuspended)) . apiError $ invalidAuthorizationWithMsg ("can't log in " <> showt email <> ", account either deleted or suspended")
             return user)
 
-    createAccount :: Kontrakcja m => IDPConf -> SAMLPrincipal -> m User
-    createAccount idpconf p = do
+    createAccount :: Kontrakcja m => SAMLPrincipal -> UserGroupID -> m User
+    createAccount p ugID = do
       cuctx <- getCreateUserContextFromContext
       createUser (spEmail p)
                       (spFirstname p               , spLastname p)
-                      (icUserInitialGroupID idpconf, False)
+                      (ugID, False)
                       LANG_EN
                       BySSO
                       cuctx
@@ -157,9 +149,9 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
                     void . dbUpdate $ SetLoginAuth (user ^. #id) LoginAuthSSO
                     return $ set #sysAuth LoginAuthSSO user
 
-    updateUserWithNameIdInCompanyPosition :: Kontrakcja m => IDPConf -> User -> Text -> m User
-    updateUserWithNameIdInCompanyPosition idpconf user nameID = do
-      if icPutNameIDInCompanyPosition idpconf then do
+    updateUserWithNameIdInCompanyPosition :: Kontrakcja m => UserGroupSSOConfiguration -> User -> Text -> m User
+    updateUserWithNameIdInCompanyPosition ssoConfig user nameID = do
+      if ssoConfig ^. #putNameIDInCompanyPosition then do
         let positionWithNameID = "NameID:" <> nameID
             oldUI = view #info user
             newUI = set #companyPosition positionWithNameID oldUI
@@ -178,9 +170,6 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
       case msession of
         Nothing -> unexpectedError "No session could be established"
         Just _  -> return ()
-
-getConf :: Kontrakcja m => m (Maybe SSOConf)
-getConf = ssoConf <$> getContext
 
 data SAMLPrincipal =
   SAMLPrincipal
@@ -208,3 +197,6 @@ renderMetadata = do
       U.relativeTo (fromJust . U.parseRelativeReference $ path) base
     calculateValidUntil :: UTCTime -> UTCTime
     calculateValidUntil = addUTCTime (7 * nominalDay)
+
+getConf :: Kontrakcja m => m (Maybe SSOConf)
+getConf = ssoConf <$> getContext

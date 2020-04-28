@@ -332,6 +332,7 @@ instance Arbitrary UserGroupSettings where
       <*> pure Nothing -- do not set a custom document session expiry
       <*> pure False   -- do not set force hide personal numbers
       <*> arbitrary
+      <*> pure Nothing
 
 instance Arbitrary UserGroupAddress where
   arbitrary =

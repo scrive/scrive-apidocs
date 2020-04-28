@@ -29,6 +29,7 @@ module UserGroup.Types
   , fromUserGroupID
   , UserGroupSettings
   , defaultUserGroupSettings
+  , UserGroupSSOConfiguration
   , UserGroupAddress
   , defaultUserGroupAddress
   , UserGroupUI
@@ -256,6 +257,7 @@ defaultUserGroupSettings = UserGroupSettings
   , sealingMethod              = Guardtime
   , documentSessionTimeoutSecs = Nothing
   , hasPostSignview            = True
+  , ssoConfig                  = Nothing
   }
 
 -- UI

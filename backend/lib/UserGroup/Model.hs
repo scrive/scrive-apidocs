@@ -7,6 +7,7 @@ module UserGroup.Model (
   , UserGroupGetWithParents(..)
   , UserGroupGetWithParentsByUG(..)
   , UserGroupGetWithParentsByUserID(..)
+  , UserGroupGetBySSOIDPID(..)
   , UserGroupsGetFiltered(..)
   , FindOldUserGroups(..)
   , UserGroupUpdate(..)
@@ -280,6 +281,17 @@ instance (MonadDB m, MonadThrow m)
     ug <- fetchOne fetchUserGroup
     dbQuery . UserGroupGetWithParentsByUG $ ug
 
+newtype UserGroupGetBySSOIDPID = UserGroupGetBySSOIDPID String
+instance (MonadDB m, MonadThrow m) =>
+  DBQuery m UserGroupGetBySSOIDPID (Maybe UserGroup) where
+  dbQuery (UserGroupGetBySSOIDPID idpID) = do
+    runQuery_ . sqlSelect "user_groups" $ do
+      mapM_ sqlResult userGroupSelectors
+      sqlJoinOn "user_group_settings as ugs" "user_groups.id = ugs.user_group_id"
+      sqlWhereEq "ugs.sso_config->>'idp_id'" idpID
+      sqlWhereIsNULL "user_groups.deleted"
+    fetchMaybe fetchUserGroup
+
 newtype FindOldUserGroups = FindOldUserGroups Int
 instance (MonadDB m, MonadTime m) => DBQuery m FindOldUserGroups [UserGroup] where
   dbQuery (FindOldUserGroups batchLimit) = do
@@ -489,6 +501,7 @@ ugSettingsSelectors =
   , "document_session_timeout"
   , "force_hide_pn"
   , "has_post_signview"
+  , "sso_config"
   ]
 
 

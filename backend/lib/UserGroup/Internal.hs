@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module UserGroup.Internal (
     InvoicingType(..)
   , UserGroup(..)
@@ -8,6 +9,7 @@ module UserGroup.Internal (
   , unsafeUserGroupID
   , fromUserGroupID
   , UserGroupSettings(..)
+  , UserGroupSSOConfiguration(..)
   , UserGroupAddress(..)
   , UserGroupUI(..)
   , UserGroupInvoicing(..)
@@ -16,18 +18,24 @@ module UserGroup.Internal (
   , UserGroupWithChildren(..)
   ) where
 
-import Data.Aeson
+import Data.Aeson (FromJSON, ToJSON, parseJSON, toJSON)
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
+import Database.PostgreSQL.PQTypes.JSON
 import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Happstack.Server
 import Optics.TH
 import qualified Control.Exception.Lifted as E
+import qualified Crypto.PubKey.RSA.Types as RSA
+import qualified Crypto.Store.X509 as X509Store
+import qualified Data.Aeson as Aeson
 import qualified Data.Binary as B
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as S
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Data.X509 as X509
 
 import DataRetentionPolicy
 import DB
@@ -222,7 +230,9 @@ data UserGroupSettings = UserGroupSettings
   , documentSessionTimeoutSecs :: !(Maybe Int32)
   , forceHidePN                :: !Bool
   , hasPostSignview            :: !Bool
+  , ssoConfig                 :: !(Maybe UserGroupSSOConfiguration)
   } deriving (Show, Eq)
+
 
 type instance CompositeRow UserGroupSettings
   = ( Maybe Text
@@ -250,20 +260,84 @@ type instance CompositeRow UserGroupSettings
     , Maybe Int32
     , Bool
     , Bool
+    , Maybe UserGroupSSOConfiguration
     )
 
 instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = I.DataRetentionPolicy { .. }
       , ..
       }
 
+instance PQFormat UserGroupSSOConfiguration where
+  pqFormat = pqFormat @(JSONB UserGroupSSOConfiguration)
+
+instance FromSQL UserGroupSSOConfiguration where
+  type PQBase UserGroupSSOConfiguration = PQBase (JSONB BS.ByteString)
+  fromSQL mbase = do
+    jsonb <- fromSQL mbase
+    case parse unjsonSSOConfigurationDef $ unJSONB jsonb of
+      (Result conf []) -> return conf
+      (Result _ problems) ->
+        fail $ "Issues while reading SSOConfiguration JSON " <> show problems
+
 ----------------------------------------
+
+data UserGroupSSOConfiguration = UserGroupSSOConfiguration {
+  idpID              :: !T.Text,
+  publicKey          :: !RSA.PublicKey,
+  userInitialGroupID :: !UserGroupID,
+  putNameIDInCompanyPosition :: !Bool
+} deriving (Show, Eq)
+
+unjsonSSOConfigurationDef :: UnjsonDef UserGroupSSOConfiguration
+unjsonSSOConfigurationDef = objectOf
+  (   UserGroupSSOConfiguration
+  <$> field "idp_id"         idpID     "Entity name of IdP"
+  <*> field "idp_public_key" publicKey "IdP public RSA key"
+  <*> field "initial_user_group_id"
+            userInitialGroupID
+            "Group used for user provisioning"
+  <*> fieldDef "put_name_id_in_company_position"
+               False
+               putNameIDInCompanyPosition
+               "Put NameID in company position field of the user"
+  )
+unjsonRSAPublicKey :: UnjsonDef RSA.PublicKey
+unjsonRSAPublicKey = SimpleUnjsonDef "Crypto.PubKey.RSA.PublicKey"
+                                     jsonToPubKey
+                                     pubKeyToJson
+  where
+    pubKeyToJson :: RSA.PublicKey -> Aeson.Value
+    pubKeyToJson publicKey =
+      Aeson.String
+        . T.decodeUtf8
+        . X509Store.writePubKeyFileToMemory
+        $ [X509.PubKeyRSA publicKey]
+    jsonToPubKey :: Aeson.Value -> Result RSA.PublicKey
+    jsonToPubKey (Aeson.String s) =
+      case listToMaybe . X509Store.readPubKeyFileFromMemory . T.encodeUtf8 $ s of
+        (Just (X509.PubKeyRSA pubKey)) -> Result pubKey []
+        (Just _) -> Result
+          undefined
+          [Anchored (Path [PathElemKey "."]) "Only RSA keys are supported"]
+        Nothing -> Result
+          undefined
+          [ Anchored
+              (Path [PathElemKey "."])
+              "Unable to read the public key from config - make sure it's properly formatted"
+          ]
+    jsonToPubKey _ = Result
+      undefined
+      [Anchored (Path [PathElemKey "."]) "RSA key can only be represented as String"]
+
+instance Unjson RSA.PublicKey where
+  unjsonDef = unjsonRSAPublicKey
 
 data UserGroupUI = UserGroupUI
   { mailTheme     :: !(Maybe ThemeID)
@@ -326,3 +400,4 @@ makeFieldLabelsWith noPrefixFieldLabels ''UserGroupUI
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupAddress
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupRoot
 makeFieldLabelsWith noPrefixFieldLabels ''UserGroupWithChildren
+makeFieldLabelsWith noPrefixFieldLabels ''UserGroupSSOConfiguration
