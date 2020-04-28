@@ -972,6 +972,7 @@ userGroupSettingsAddSSOConfiguration = Migration
           , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
           , CompositeColumn { ccName = "document_session_timeout", ccType = IntegerT }
           , CompositeColumn { ccName = "force_hide_pn", ccType = BoolT }
+          , CompositeColumn { ccName = "has_post_signview", ccType = BoolT }
           , CompositeColumn { ccName = "sso_config", ccType = JsonbT }
           ]
         }
