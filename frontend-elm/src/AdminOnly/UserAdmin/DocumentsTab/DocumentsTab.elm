@@ -23,6 +23,7 @@ import AdminOnly.UserAdmin.DocumentsTab.Document
         , documentsDecoder
         , enumDocumentStatus
         , enumDocumentType
+        , extendedDocumentStatus
         , signatoryFieldText
         , signatorySmartName
         )
@@ -355,7 +356,7 @@ viewDocument document =
             |> L.intersperse (br [] [])
             |> td [ colAttr "col-2" ]
         , td [ colAttr "col-3" ] [ text document.title ]
-        , td [ colAttr "col-1" ] [ text <| Enum.toHumanString enumDocumentStatus document.status ]
+        , td [ colAttr "col-1" ] [ text <| extendedDocumentStatus document ]
         , td [ colAttr "col-1" ] [ text <| Enum.toHumanString enumDocumentType document.isTemplate ]
         , document.signatories
             |> L.filter (\s -> s.role == SignatoryRoleSigningParty)
