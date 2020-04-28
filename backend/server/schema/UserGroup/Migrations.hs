@@ -942,7 +942,7 @@ userGroupSettingsAddSSOConfiguration = Migration
         [sqlAddColumn $ tblColumn { colName = "sso_config", colType = JsonbT }]
       runQuery_
         . sqlCreateIndexSequentially (tblName tableUserGroupSettings)
-        $ indexOnColumn "(sso_config ->> 'idp_id'::text)"
+        $ uniqueIndexOnColumn "(sso_config ->> 'idp_id'::text)"
       runQuery_ . sqlCreateComposite $ CompositeType
         { ctName    = "user_group_settings_c11"
         , ctColumns =
