@@ -222,7 +222,7 @@ matchSignatoryName' :: Text -> Text -> Text -> IdinMatchResult
 matchSignatoryName' slFullName eidInitials eidLastName
   | slFullName == eidFullName = Match
   | slInitials == eidInitials = matchName eidLastName slRestName
-  | T.length slInitials <= 1 = Mismatch "initials does not match"
+  | T.length slInitials <= 1 = Misspelled
   | otherwise = case
       matchSignatoryName' slFullName (T.dropEnd 1 eidInitials) eidLastName
     of

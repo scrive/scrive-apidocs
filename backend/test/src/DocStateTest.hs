@@ -3429,7 +3429,7 @@ testSignatoryNameMatch = do
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "G van Rosett")
 
-  assertMismatch "signatory with different initials should mismatch"
+  assertEqual "signatory with different initials should misspell" SigningData.Misspelled
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "K van Rossum")
 
