@@ -186,7 +186,7 @@ finaliseTransaction doc sl estDB trans = validateCompletionData sl trans >>= \ca
     mergeEIDServiceTransactionWithStatus status
     updateDBTransactionWithCompletionData doc sl cd
     updateEvidenceLog doc sl cd
-    chargeForItemSingle CIIDINAuthentication $ documentid doc
+    chargeForItemSingle CIDKNemIDAuthentication $ documentid doc
     return status
   where
     mergeEIDServiceTransactionWithStatus newstatus =
