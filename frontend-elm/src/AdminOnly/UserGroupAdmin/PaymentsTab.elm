@@ -230,8 +230,14 @@ validateFreeTokenFields model =
                 ( Just tc, Just tv ) ->
                     Ok ( tc, tv )
 
-                _ ->
-                    Err "Validation error!"
+                ( Just _, Nothing ) ->
+                    Err "Incorrect free tokens validity!"
+
+                ( Nothing, Just _ ) ->
+                    Err "Incorrect amount of free tokens!"
+
+                ( Nothing, Nothing ) ->
+                    Err "Incorrect free tokens data!"
 
         Nothing ->
             Err "Validation in incorrect state. This should not happend!"
@@ -281,7 +287,14 @@ update embed globals msg model =
         FreeDocumentTokenInputChange value ->
             case model.sFormData of
                 Just fd ->
-                    ( { model | sFormData = Just <| { fd | freeDocumentTokensInput = value } }
+                    let
+                        incorrectValue =
+                            (M.withDefault 0 <| String.toInt value) < 0
+
+                        newValue =
+                            ite incorrectValue "0" value
+                    in
+                    ( { model | sFormData = Just <| { fd | freeDocumentTokensInput = newValue } }
                     , Cmd.none
                     )
 
