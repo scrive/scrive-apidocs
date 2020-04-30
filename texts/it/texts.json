@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accetta",
 "_CompanyAccounts":"Utenti",
 "_CompanySettings":"Branding",
@@ -393,7 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"NemID danese",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"BankID norvegese",
-"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
+"_designViewAddPartiesAuthenticationOnfido":"",
 "_designViewAddPartiesAuthenticationSEBankID":"BankID svedese",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN via SMS",
 "_designViewAddPartiesAuthenticationStandard":"Nessuna ulteriore autenticazione",
@@ -568,7 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Autenticazione per la firma",
 "_docviewSignatoryAuthenticationToSignNOBankID":"BankID norvegese",
-"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
+"_docviewSignatoryAuthenticationToSignOnfido":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"BankID Svedese",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN via SMS",
 "_docviewSignatoryAuthenticationToSignStandard":"nessuna ulteriore autenticazione",

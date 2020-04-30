@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"",
 "_CompanyAccounts":"",
 "_CompanySettings":"",
@@ -393,7 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"",
-"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
+"_designViewAddPartiesAuthenticationOnfido":"",
 "_designViewAddPartiesAuthenticationSEBankID":"",
 "_designViewAddPartiesAuthenticationSMSPin":"",
 "_designViewAddPartiesAuthenticationStandard":"",
@@ -568,7 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"",
 "_docviewSignatoryAuthenticationToSignNOBankID":"",
-"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
+"_docviewSignatoryAuthenticationToSignOnfido":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"",
 "_docviewSignatoryAuthenticationToSignSMSPin":"",
 "_docviewSignatoryAuthenticationToSignStandard":"",

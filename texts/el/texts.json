@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Αποδοχή",
 "_CompanyAccounts":"Χρήστες ",
 "_CompanySettings":"Επωνυμία ",
@@ -393,7 +393,7 @@
 "_designViewAddPartiesAuthenticationDKNemID":"εφαρμογή Danish NemID",
 "_designViewAddPartiesAuthenticationFITupas":"",
 "_designViewAddPartiesAuthenticationNOBankID":"εφαρμογή Norwegian BankID",
-"_designViewAddPartiesAuthenticationOnfidoDocCheck":"",
+"_designViewAddPartiesAuthenticationOnfido":"",
 "_designViewAddPartiesAuthenticationSEBankID":"Σουηδικό BankID ",
 "_designViewAddPartiesAuthenticationSMSPin":"PIN μέσω SMS ",
 "_designViewAddPartiesAuthenticationStandard":"Χωρίς επιπλέον έλεγχο πιστοποίησης ",
@@ -568,7 +568,7 @@
 "_docviewSignatoryAuthenticationToSignFITupas":"",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Πιστοποίηση για υπογραφή  ",
 "_docviewSignatoryAuthenticationToSignNOBankID":"Εφαρμογή Norwegian BankID",
-"_docviewSignatoryAuthenticationToSignOnfidoDocCheck":"",
+"_docviewSignatoryAuthenticationToSignOnfido":"",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Σουηδικό BankID  ",
 "_docviewSignatoryAuthenticationToSignSMSPin":"PIN μέσω SMS  ",
 "_docviewSignatoryAuthenticationToSignStandard":"χωρίς επιπλέον πιστοποίηση ",
