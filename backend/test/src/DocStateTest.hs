@@ -414,7 +414,8 @@ docStateTests env = testGroup
   , testThat "ChangeAuthenticationToSignMethod works and evidence is as expected"
              env
              testChangeAuthenticationToSignMethod
-  , testThat "Signatory name match algorithm" env testSinatoryNameMatch
+  , testThat "Signatory name match algorithm"     env testSignatoryNameMatch
+  , testThat "Signatory birthday match algorithm" env testSignatoryBirthdayMatch
   ]
 
 testNewDocumentForNonCompanyUser :: TestEnv ()
@@ -3330,8 +3331,8 @@ signatoryLinksListsAreAlmostEqualForTests (s : ss) (s' : ss') =
 signatoryLinksListsAreAlmostEqualForTests [] [] = True
 signatoryLinksListsAreAlmostEqualForTests _  _  = False
 
-testSinatoryNameMatch :: TestEnv ()
-testSinatoryNameMatch = do
+testSignatoryNameMatch :: TestEnv ()
+testSignatoryNameMatch = do
   assertEqual "two equal name strings should match" SigningData.Match
     $ SigningData.matchName "John Smith" "John Smith"
 
@@ -3415,11 +3416,11 @@ testSinatoryNameMatch = do
     $ SigningData.matchSignatoryName (mkSignatoryLink "J" "Diderik van der Waals")
                                      (mkTransactionData "JD van der Waals")
 
-  assertEqual "signatory with extra tussenvoegsel should mismatch" SigningData.Mismatch
+  assertMismatch "signatory with extra tussenvoegsel should mismatch"
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "G Rossum")
 
-  assertEqual "signatory with missing tussenvoegsel should mismatch" SigningData.Mismatch
+  assertMismatch "signatory with missing tussenvoegsel should mismatch"
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "Rossum")
                                      (mkTransactionData "G van Rossum")
 
@@ -3441,13 +3442,24 @@ testSinatoryNameMatch = do
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "G van Ross")
 
-  assertEqual "signatory with > 2 letters difference should mismatch" SigningData.Mismatch
+  assertMismatch "signatory with > 2 letters difference should mismatch"
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "G van Rosett")
 
-  assertEqual "signatory with different initials should mismatch" SigningData.Mismatch
+  assertEqual "signatory with different initials should misspell" SigningData.Misspelled
     $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
                                      (mkTransactionData "K van Rossum")
+
+  assertEqual
+      "signatory with different initials and misspelled last name should misspell"
+      SigningData.Misspelled
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "K van Rosum")
+
+  assertMismatch
+      "signatory with different initials and mismatch last name should mismatch"
+    $ SigningData.matchSignatoryName (mkSignatoryLink "Guido" "van Rossum")
+                                     (mkTransactionData "K van Rosett")
 
   assertEqual "signatory with two dot initials should match" SigningData.Match
     $ SigningData.matchSignatoryName (mkSignatoryLink "A.A." "Battery")
@@ -3473,3 +3485,92 @@ testSinatoryNameMatch = do
       , unEIDServiceIDINSigDateOfBirth   = ""
       , unEIDServiceIDINSigCustomerID    = ""
       }
+
+    assertMismatch :: String -> SigningData.IdinMatchResult -> TestEnv ()
+    assertMismatch _ (SigningData.Mismatch _) = return ()
+    assertMismatch message _ = assertFailure message
+
+testSignatoryBirthdayMatch :: TestEnv ()
+testSignatoryBirthdayMatch = do
+  assertMatch "signatory with same birthday should match"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-01-01")
+                                         (mkTransactionData "1980-01-01")
+
+  assertMatch "signatory with same birthday before unix epoch should match"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1850-01-01")
+                                         (mkTransactionData "1850-01-01")
+
+  assertMatch "signatory with same birthday without zero padding should match"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-1-1")
+                                         (mkTransactionData "1980-01-01")
+
+  assertMatch "signatory with same birthday without zero padding should match"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-01-01")
+                                         (mkTransactionData "1980-1-1")
+
+  assertMismatch "signatory with different birthday day should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-01-01")
+                                         (mkTransactionData "1980-01-02")
+
+  assertMismatch "signatory with different birthday month should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-01-01")
+                                         (mkTransactionData "1980-02-01")
+
+  assertMismatch "signatory with different birthday year should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-01-01")
+                                         (mkTransactionData "1981-01-01")
+
+  assertMismatch "signatory with month and day format swapped should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-04-01")
+                                         (mkTransactionData "1980-01-04")
+
+  assertMismatch "signatory with missing signatory birthday should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "")
+                                         (mkTransactionData "1980-01-01")
+
+  assertMismatch "signatory with missing signatory birthday should mismatch"
+    $ SigningData.matchSignatoryBirthday
+        (defaultSignatoryLink
+          { signatoryfields = [ fieldForTests (NameFI (NameOrder 1)) "John"
+                              , fieldForTests (NameFI (NameOrder 2)) "Smith"
+                              ]
+          }
+        )
+        (mkTransactionData "1980-01-01")
+
+  assertMismatch "signatory with missing idin birthday should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-04-01")
+                                         (mkTransactionData "")
+
+  assertMismatch "signatory with missing both birthdays should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "") (mkTransactionData "")
+
+  assertMismatch "signatory with wrong birthday format should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "01/01/1980")
+                                         (mkTransactionData "01/01/1980")
+
+  assertMismatch "signatory with invalid date should mismatch"
+    $ SigningData.matchSignatoryBirthday (mkSignatoryLink "1980-04-31")
+                                         (mkTransactionData "1980-04-31")
+
+  where
+    mkSignatoryLink birthday = defaultSignatoryLink
+      { signatoryfields = [ fieldForTests (NameFI (NameOrder 1)) "John"
+                          , fieldForTests (NameFI (NameOrder 2)) "Smith"
+                          , fieldForTests (TextFI "DOB")         birthday
+                          ]
+      }
+
+    mkTransactionData birthday = EIDServiceNLIDINSignature
+      { unEIDServiceIDINSigSignatoryName = "J Smith"
+      , unEIDServiceIDINSigDateOfBirth   = birthday
+      , unEIDServiceIDINSigCustomerID    = ""
+      }
+
+
+    assertMatch :: String -> SigningData.BirthdayMatchResult -> TestEnv ()
+    assertMatch message = assertEqual message SigningData.SameDate
+
+    assertMismatch :: String -> SigningData.BirthdayMatchResult -> TestEnv ()
+    assertMismatch _ (SigningData.MismatchDate _) = return ()
+    assertMismatch message _ = assertFailure message
