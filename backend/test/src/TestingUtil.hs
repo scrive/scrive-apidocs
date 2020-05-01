@@ -825,7 +825,7 @@ instance Arbitrary EIDServiceFITupasSignature where
     c <- arbText 10 10
     return $ EIDServiceFITupasSignature { eidServiceFITupasSigSignatoryName  = a
                                         , eidServiceFITupasSigPersonalNumber = Just b
-                                        , eidServiceFITupasSigDateOfBirth    = c
+                                        , eidServiceFITupasSigDateOfBirth    = Just c
                                         }
 
 instance Arbitrary EIDServiceOnfidoSignature where

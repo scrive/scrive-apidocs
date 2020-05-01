@@ -11,6 +11,7 @@ data EIDServiceConf = EIDServiceConf
   , eidServiceToken :: T.Text
   , eidUseForDK :: Bool
   , eidUseForNOView :: Bool
+  , eidUseForFIView :: Bool
   } deriving (Show, Eq, Ord)
 
 unjsonEIDServiceConf :: UnjsonDef EIDServiceConf
@@ -27,6 +28,10 @@ unjsonEIDServiceConf =
                  False
                  eidUseForNOView
                  "Use EIDService for Norwegian BankID for auth to view"
+    <*> fieldDef "useForFIView"
+                 False
+                 eidUseForFIView
+                 "Use EIDService for Finnish Tupas/FTN for auth to view"
 
 instance Unjson EIDServiceConf where
   unjsonDef = unjsonEIDServiceConf

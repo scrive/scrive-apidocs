@@ -122,6 +122,8 @@ pageDocumentIdentifyView ctx document siglink ad = do
       useEIDHubForNemID = fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForDK
       useEIDHubForNOBankIDView =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOView
+      useEIDHubForFITupasView =
+        fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForFIView
   auser      <- fromJust <$> dbQuery (GetUserByIDIncludeDeleted authorid)
   authorugwp <- dbQuery . UserGroupGetWithParentsByUserID $ auser ^. #id
 
@@ -134,6 +136,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #netsConfig
     F.value "useEIDHubForNemID" useEIDHubForNemID
     F.value "useEIDHubForNOBankIDView" useEIDHubForNOBankIDView
+    F.value "useEIDHubForFITupasView" useEIDHubForFITupasView
     F.value "previewLink" $ show LinkPreviewLockedImage
     standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company
 

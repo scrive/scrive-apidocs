@@ -372,7 +372,7 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
     EIDServiceTupas -> EIDServiceFITupasSignature_ $ EIDServiceFITupasSignature
       { eidServiceFITupasSigSignatoryName  = fromJust msignatory_name
       , eidServiceFITupasSigPersonalNumber = msignatory_personal_number
-      , eidServiceFITupasSigDateOfBirth    = fromJust msignatory_dob
+      , eidServiceFITupasSigDateOfBirth    = msignatory_dob
       }
     EIDServiceOnfido -> EIDServiceOnfidoSignature_ $ EIDServiceOnfidoSignature
       { eidServiceOnfidoSigSignatoryName = fromJust msignatory_name

@@ -16,7 +16,8 @@ $(function () {
       doc: doc,
       siglinkid: fromTemplate.sigLinkId,
       useEIDHubForNemID: fromTemplate.useEIDHubForNemID,
-      useEIDHubForNOBankIDView: fromTemplate.useEIDHubForNOBankIDView
+      useEIDHubForNOBankIDView: fromTemplate.useEIDHubForNOBankIDView,
+      useEIDHubForFITupasView: fromTemplate.useEIDHubForFITupasView
     }), $(".global-table-cell")[0]);
 
     FlashMessages.FlashMessageTryFromCookie();

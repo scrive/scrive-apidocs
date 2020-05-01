@@ -17,6 +17,7 @@ module EID.EIDService.Types (
   , EIDServiceNLIDINAuthentication(..)
   , EIDServiceDKNemIDAuthentication(..)
   , EIDServiceNOBankIDAuthentication(..)
+  , EIDServiceFITupasAuthentication(..)
   , EIDServiceNLIDINSignature(..)
   , EIDServiceFITupasSignature(..)
   , EIDServiceOnfidoSignature(..)
@@ -345,6 +346,13 @@ data EIDServiceDKNemIDAuthentication = EIDServiceDKNemIDAuthentication
   , eidServiceNemIDCertificate      :: !ByteString
   } deriving (Eq, Ord, Show)
 
+data EIDServiceFITupasAuthentication = EIDServiceFITupasAuthentication
+  { eidServiceFITupasSignatoryName :: Text
+  , eidServiceFITupasPersonalNumber :: Maybe Text
+  , eidServiceFITupasDateOfBirth :: Maybe Text
+  }
+  deriving (Eq, Ord, Show)
+
 data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
   { eidServiceNOBankIDInternalProvider     :: !EIDServiceNOBankIDInternalProvider
   , eidServiceNOBankIDSignatoryName        :: !Text
@@ -363,7 +371,7 @@ data EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
 data EIDServiceFITupasSignature = EIDServiceFITupasSignature
   { eidServiceFITupasSigSignatoryName :: Text
   , eidServiceFITupasSigPersonalNumber :: Maybe Text
-  , eidServiceFITupasSigDateOfBirth :: Text
+  , eidServiceFITupasSigDateOfBirth :: Maybe Text
   }
   deriving (Eq, Ord, Show)
 

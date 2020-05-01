@@ -1,7 +1,6 @@
 var React = require("react");
 var BackboneMixin = require("../../../common/backbone_mixin");
 var FinnishIdentifyModel = require("./finnishidentifymodel");
-var FinnishInquiry = require("./finnishinquiry");
 var FinnishIdentify = require("./finnishidentify");
 var FinnishProcessing = require("./finnishprocessing");
 
@@ -20,16 +19,9 @@ var FinnishProcessing = require("./finnishprocessing");
       var model = this.props.model;
       var doc = model.doc();
       var sig = doc.currentSignatory();
-      var personalNumber = sig.personalnumber();
       return (
         <div>
-          { /* if */ model.inquiryRequired() && model.isInquiry() &&
-            <FinnishInquiry
-              ref="inquiry"
-              model={model}
-            />
-          }
-          { /* else if, UNUSED! */ model.isIdentify() &&
+          { /* if */ model.isIdentify() &&
             <FinnishIdentify
               ref="identify"
               model={model}
@@ -40,6 +32,9 @@ var FinnishProcessing = require("./finnishprocessing");
               ref="processing"
               model={model}
             />
+          }
+          { /* else if */ model.isLoading() &&
+            <div className="loadingSpinner"/>
           }
         </div>
       );

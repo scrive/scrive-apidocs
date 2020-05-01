@@ -12,6 +12,8 @@ var DanishEIDHubIdentifyView = require("./danish-eidhub/danishidentifyview");
 var DanishEIDHubIdentifyModel = require("./danish-eidhub/danishidentifymodel");
 var FinnishIdentifyView = require("./finnish/finnishidentifyview");
 var FinnishIdentifyModel = require("./finnish/finnishidentifymodel");
+var FinnishEIDHubIdentifyView = require("./finnish-eidhub/finnishidentifyview");
+var FinnishEIDHubIdentifyModel = require("./finnish-eidhub/finnishidentifymodel");
 var SMSPinIdentifyView = require("./smspin/smspinidentifyview");
 var SMSPinIdentifyModel = require("./smspin/smspinidentifymodel");
 var VerimiIdentifyView = require("./verimi/verimiidentifyview");
@@ -29,7 +31,8 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
       doc: React.PropTypes.instanceOf(Document).isRequired,
       siglinkid: React.PropTypes.string.isRequired,
       useEIDHubForNemID: React.PropTypes.bool.isRequired,
-      useEIDHubForNOBankIDView: React.PropTypes.bool.isRequired
+      useEIDHubForNOBankIDView: React.PropTypes.bool.isRequired,
+      useEIDHubForFITupasView: React.PropTypes.bool.isRequired
     },
     getInitialState: function () {
       return this.stateFromProps(this.props);
@@ -60,7 +63,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
             model = new DanishIdentifyModel(args);
           }
         } else if (sig.fiTupasAuthenticationToViewArchived()) {
-          model = new FinnishIdentifyModel(args);
+          if (this.props.useEIDHubForFITupasView) {
+            model = new FinnishEIDHubIdentifyModel(args);
+          } else {
+            model = new FinnishIdentifyModel(args);
+          }
         } else if (sig.smsPinAuthenticationToViewArchived()) {
           model = new SMSPinIdentifyModel(args);
         } else if (sig.verimiAuthenticationToViewArchived()) {
@@ -84,7 +91,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
             model = new DanishIdentifyModel(args);
           }
         } else if (sig.fiTupasAuthenticationToView()) {
-          model = new FinnishIdentifyModel(args);
+          if (this.props.useEIDHubForFITupasView) {
+            model = new FinnishEIDHubIdentifyModel(args);
+          } else {
+            model = new FinnishIdentifyModel(args);
+          }
         } else if (sig.smsPinAuthenticationToView()) {
           model = new SMSPinIdentifyModel(args);
         } else if (sig.verimiAuthenticationToView()) {
@@ -184,8 +195,14 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 model={model}
               />
             }
-            { /* else if */ model.isFinnish() &&
+            { /* else if */ model.isFinnish() && !this.props.useEIDHubForFITupasView &&
               <FinnishIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
+            { /* else if */ model.isFinnish() && this.props.useEIDHubForFITupasView &&
+              <FinnishEIDHubIdentifyView
                 ref="identify"
                 model={model}
               />

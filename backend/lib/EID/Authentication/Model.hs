@@ -12,6 +12,7 @@ module EID.Authentication.Model (
   , MergeEIDServiceIDINAuthentication(..)
   , MergeEIDServiceNemIDAuthentication(..)
   , MergeEIDServiceNOBankIDAuthentication(..)
+  , MergeEIDServiceFITupasAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
   ) where
@@ -46,6 +47,7 @@ data EAuthentication
   | EIDServiceIDINAuthentication_ !EIDServiceNLIDINAuthentication
   | EIDServiceNemIDAuthentication_ !EIDServiceDKNemIDAuthentication
   | EIDServiceNOBankIDAuthentication_ !EIDServiceNOBankIDAuthentication
+  | EIDServiceFITupasAuthentication_ !EIDServiceFITupasAuthentication
     deriving (Show)
 
 ----------------------------------------
@@ -64,6 +66,7 @@ data AuthenticationProvider
   | IDINAuth
   | NemIDAuth
   | NOBankIDAuth
+  | FITupasAuth
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -74,16 +77,17 @@ instance FromSQL AuthenticationProvider where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1 -> return CgiGrpBankID
-      2 -> return NetsNOBankID
-      3 -> return NetsDKNemID
-      4 -> return SMSPinAuth
-      5 -> return NetsFITupas
-      6 -> return VerimiAuth
-      7 -> return IDINAuth
-      8 -> return NemIDAuth
-      9 -> return NOBankIDAuth
-      _ -> throwM RangeError { reRange = [(1, 9)], reValue = n }
+      1  -> return CgiGrpBankID
+      2  -> return NetsNOBankID
+      3  -> return NetsDKNemID
+      4  -> return SMSPinAuth
+      5  -> return NetsFITupas
+      6  -> return VerimiAuth
+      7  -> return IDINAuth
+      8  -> return NemIDAuth
+      9  -> return NOBankIDAuth
+      10 -> return FITupasAuth
+      _  -> throwM RangeError { reRange = [(1, 10)], reValue = n }
 
 instance ToSQL AuthenticationProvider where
   type PQDest AuthenticationProvider = PQDest Int16
@@ -96,6 +100,7 @@ instance ToSQL AuthenticationProvider where
   toSQL IDINAuth     = toSQL (7 :: Int16)
   toSQL NemIDAuth    = toSQL (8 :: Int16)
   toSQL NOBankIDAuth = toSQL (9 :: Int16)
+  toSQL FITupasAuth  = toSQL (10 :: Int16)
 
 ----------------------------------------
 
@@ -228,6 +233,17 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNOBankIDAuthentic
         sqlSet "signatory_name"          eidServiceNOBankIDSignatoryName
         sqlSet "signatory_date_of_birth" eidServiceNOBankIDDateOfBirth
 
+-- | Insert FITupas authentication for a given signatory or replace the existing one.
+data MergeEIDServiceFITupasAuthentication = MergeEIDServiceFITupasAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceFITupasAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceFITupasAuthentication () where
+  dbUpdate (MergeEIDServiceFITupasAuthentication authKind sid slid EIDServiceFITupasAuthentication {..})
+    = do
+      mergeAuthenticationInternal authKind sid slid $ do
+        sqlSet "provider"                  FITupasAuth
+        sqlSet "signatory_name"            eidServiceFITupasSignatoryName
+        sqlSet "signatory_personal_number" eidServiceFITupasPersonalNumber
+        sqlSet "signatory_date_of_birth"   eidServiceFITupasDateOfBirth
+
 -- Get authentication - internal - just to unify code
 data GetEAuthenticationInternal = GetEAuthenticationInternal AuthenticationKind SignatoryLinkID (Maybe SessionID)
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Maybe EAuthentication) where
@@ -329,5 +345,10 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
       , eidServiceNOBankIDDateOfBirth      = fromJust signatory_dob
       , eidServiceNOBankIDCertificate      = msignature
       , eidServiceNOBankIDPhoneNumber      = signatory_phone_number
+      }
+    FITupasAuth -> EIDServiceFITupasAuthentication_ EIDServiceFITupasAuthentication
+      { eidServiceFITupasSignatoryName  = fromJust msignatory_name
+      , eidServiceFITupasPersonalNumber = signatory_personal_number
+      , eidServiceFITupasDateOfBirth    = signatory_dob
       }
 

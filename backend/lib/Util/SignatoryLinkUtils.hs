@@ -295,6 +295,7 @@ authViewMatchesAuth IDINAuthenticationToView     EIDServiceIDINAuthentication_{}
 authViewMatchesAuth DKNemIDAuthenticationToView  EIDServiceNemIDAuthentication_{}  = True
 authViewMatchesAuth NOBankIDAuthenticationToView EIDServiceNOBankIDAuthentication_{} =
   True
+authViewMatchesAuth FITupasAuthenticationToView EIDServiceFITupasAuthentication_{} = True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or

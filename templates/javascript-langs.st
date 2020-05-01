@@ -69,6 +69,7 @@ javascriptLocalisation =
                  authorizationDataMismatch : "$_identifyVerimiDataMismatch()$"
                , identifyWithVerimi: "$_identifyWithVerimi()$"
                , identifyWithIdin: "$_identifyWithIdin()$"
+               , identifyWithTupas: "$_identifyWithTupas()$"
              }
              , signNOBankIDError : {
                  generic   : "$_SignBankIdNOErrorGeneric()$"

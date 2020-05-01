@@ -55,7 +55,7 @@ completeEIDServiceAuthTransaction conf provider doc sl = case provider of
   EIDServiceTransactionProviderVerimi ->
     Verimi.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderFITupas ->
-    unexpectedError "FITupas auth not supported via EID service"
+    FITupas.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderOnfido ->
     unexpectedError "Onfido auth not supported via EID service"
 
@@ -67,12 +67,12 @@ completeEIDServiceSignTransaction
   -> m Bool
 completeEIDServiceSignTransaction conf provider sl = case provider of
   EIDServiceTransactionProviderDKNemID ->
-    unexpectedError "DKNemID auth not supported via EID service"
+    unexpectedError "DKNemID sign not supported via EID service"
   EIDServiceTransactionProviderNLIDIN -> NLIDIN.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderNOBankID ->
-    unexpectedError "NOBankID auth not supported via EID service"
+    unexpectedError "NOBankID sign not supported via EID service"
   EIDServiceTransactionProviderVerimi ->
-    unexpectedError "Verimi auth not supported via EID service"
+    unexpectedError "Verimi sign not supported via EID service"
   EIDServiceTransactionProviderFITupas ->
     FITupas.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderOnfido -> Onfido.completeEIDServiceSignTransaction conf sl

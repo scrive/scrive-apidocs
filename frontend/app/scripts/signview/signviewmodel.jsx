@@ -231,9 +231,6 @@ var moment = require("moment");
                    || signatory.dkNemIDAuthenticationToViewArchived()
                    || signatory.dkNemIDAuthenticationToSign()) {
           return !new SSNForDKNemIDValidation().validateData(field.value());
-        } else if (signatory.fiTupasAuthenticationToView()
-                   || signatory.fiTupasAuthenticationToViewArchived()) {
-          return !new SSNForFITupasValidation().validateData(field.value());
         } else {
           return !new NoValidation().validateData(field.value());
         }
