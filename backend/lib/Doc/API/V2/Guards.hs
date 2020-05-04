@@ -782,22 +782,6 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
       "consent_responses"
       "Consent responses are corrupted"
 
--- | For the given DocumentID:
---
--- 1. Try to get a valid session for the given `Maybe SignatoryLinkID`
---
--- if that fails or no SignatoryLinkID is given, then:
---
--- Get permissions using `getAPIUser` with given privileges.
--- If the user account is not linked to the document then also guard extra
--- permissions using guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
---
--- SYSTEM ADMINS WILL ALWAYS SUCCEED
---
--- This is useful in all situations where a signatory or other users could use
--- the API call (e.g. document GET call), but not that this function is focused only
--- on ability to read document
-
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do
   unless (isAccessibleBySignatories doc) . apiError $ documentStateErrorWithCode

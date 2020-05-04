@@ -1,7 +1,6 @@
 module AccessControl.Check
   ( accessControl
   , accessControlCheck
-  , accessControlPure
   , hasPermissions
   , canDo
   , canGrant
@@ -14,9 +13,6 @@ import Data.List.Extra (nubOrd)
 
 import AccessControl.Types
 import DB
-import Doc.DocumentID (DocumentID)
-import Doc.Model
-import Doc.Types.Document (Document(..))
 import Folder.Model
 import User.Model.Query
 import UserGroup.Model
@@ -50,14 +46,6 @@ accessControlCheck :: [Permission] -> PermissionCondition -> Bool
 accessControlCheck availablePerms =
   evalPermissionCondition (\perm -> elem perm $ Data.List.Extra.nubOrd availablePerms)
 
-accessControlCheckAll :: [Permission] -> [Permission] -> Bool
-accessControlCheckAll availablePerms requiredPerms =
-  accessControlCheck availablePerms . AndCond $ (Cond <$> requiredPerms)
-
-accessControlPure :: [AccessRole] -> [Permission] -> Bool
-accessControlPure roles =
-  accessControlCheckAll . join $ fmap (hasPermissions . accessRoleTarget) roles
-
 evalPermissionCondition :: (Permission -> Bool) -> PermissionCondition -> Bool
 evalPermissionCondition f (Cond    p   ) = f p
 evalPermissionCondition f (OrCond  aces) = or $ fmap (evalPermissionCondition f) aces
@@ -79,7 +67,6 @@ alternativePermissionCondition perm = case permResource perm of
   SharedTemplateR           fid   -> addForAllParentsFid SharedTemplateR fid
   DocumentAfterPreparationR fid   -> addForAllParentsFid DocumentAfterPreparationR fid
   EidIdentityR              ugid  -> addForAllParentsUgid EidIdentityR ugid
-  DocumentR                 docId -> addForDocument docId
   where
     addForAllParentsFid
       :: (FolderID -> AccessResource) -> FolderID -> m PermissionCondition
@@ -102,12 +89,6 @@ alternativePermissionCondition perm = case permResource perm of
         let mkExprBase g = Cond $ perm { permResource = mkRes $ g ^. #id }
         return . OrCond . (Cond perm :) . map mkExprBase $ ugwpToList ugwp
       )
-    addForDocument :: DocumentID -> m PermissionCondition
-    addForDocument docId = do
-      doc   <- dbQuery $ GetDocumentByDocumentID docId
-      perms <- addForAllParentsFid DocumentInFolderR $ documentfolderid doc
-      return $ OrCond [Cond perm, perms]
-
 hasPermissions :: AccessRoleTarget -> [Permission]
 hasPermissions (UserAR uid) =
   -- user can read and update himself and cannot grant it to anyone

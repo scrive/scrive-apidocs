@@ -38,7 +38,6 @@ import qualified Data.Binary as B
 import qualified Data.Text as T
 
 import DB
-import Doc.DocumentID (DocumentID)
 import Folder.Model
 import Log.Identifier
 import User.UserID
@@ -172,7 +171,6 @@ data AccessResource
   | SharedTemplateR FolderID
   -- Document after starting (not Draft, not Template) in Folderor any subfolder
   | DocumentAfterPreparationR FolderID
-  | DocumentR DocumentID
   -- Assignee of this role can use UserGroup (but not subgroups) for EID purposes (Display name and charging)
   | EidIdentityR UserGroupID
   deriving (Eq, Ord)
@@ -189,7 +187,6 @@ instance Show AccessResource where
   show (FolderR                   _) = "folder"
   show (SharedTemplateR           _) = "shared_template"
   show (DocumentAfterPreparationR _) = "document_after_preparation"
-  show (DocumentR                 _) = "document"
   show (EidIdentityR              _) = "eid_identity"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
