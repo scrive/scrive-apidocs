@@ -608,8 +608,9 @@ var Task = require("../navigation/task");
       });
     },
 
-    handleIDINAuth: function () {
+    handleIDINAuth: function (errorHandler) {
       if (!this.canSignDocument()) {
+        errorHandler();
         return this.context.blinkArrow();
       }
 
@@ -618,12 +619,14 @@ var Task = require("../navigation/task");
 
       new IDINSignModel({
         doc: document,
-        siglinkid: signatory.signatoryid()
+        siglinkid: signatory.signatoryid(),
+        errorHandler: errorHandler
       }).sign();
     },
 
-    handleFITupasAuth: function () {
+    handleFITupasAuth: function (errorHandler) {
       if (!this.canSignDocument()) {
+        errorHandler();
         return this.context.blinkArrow();
       }
 
@@ -632,12 +635,14 @@ var Task = require("../navigation/task");
 
       new FITupasSignModel({
         doc: document,
-        siglinkid: signatory.signatoryid()
+        siglinkid: signatory.signatoryid(),
+        errorHandler: errorHandler
       }).sign();
     },
 
-    handleOnfidoAuth: function () {
+    handleOnfidoAuth: function (errorHandler) {
       if (!this.canSignDocument()) {
+        errorHandler();
         return this.context.blinkArrow();
       }
 
@@ -646,7 +651,8 @@ var Task = require("../navigation/task");
 
       new OnfidoSignModel({
         doc: document,
-        siglinkid: signatory.signatoryid()
+        siglinkid: signatory.signatoryid(),
+        errorHandler: errorHandler
       }).sign();
     },
 
@@ -827,12 +833,16 @@ var Task = require("../navigation/task");
               field={phoneField}
               onReject={this.handleSetStep("reject")}
               onForward={this.handleSetStep("forward")}
-              onSign={ function () {
+              onSign={function () {
+                if (!self.state.signingButtonBlocked) {
+                  self.setState({signingButtonBlocked: true});
                   doc.takeSigningScreenshot(function () {
-                    self.handleIDINAuth();
+                    self.handleIDINAuth(function () {
+                      self.setState({signingButtonBlocked: false});
+                    });
                   }, {});
                 }
-              }
+              }}
             />
           }
           {/* if */ this.isOnStep("eid-fi-tupas-auth") &&
@@ -842,12 +852,16 @@ var Task = require("../navigation/task");
               field={phoneField}
               onReject={this.handleSetStep("reject")}
               onForward={this.handleSetStep("forward")}
-              onSign={ function () {
+              onSign={function () {
+                if (!self.state.signingButtonBlocked) {
+                  self.setState({signingButtonBlocked: true});
                   doc.takeSigningScreenshot(function () {
-                    self.handleFITupasAuth();
+                    self.handleFITupasAuth(function () {
+                      self.setState({signingButtonBlocked: false});
+                    });
                   }, {});
                 }
-              }
+              }}
             />
           }
           {/* if */ this.isOnStep("eid-onfido-auth") &&
@@ -857,12 +871,16 @@ var Task = require("../navigation/task");
               field={phoneField}
               onReject={this.handleSetStep("reject")}
               onForward={this.handleSetStep("forward")}
-              onSign={ function () {
+              onSign={function () {
+                if (!self.state.signingButtonBlocked) {
+                  self.setState({signingButtonBlocked: true});
                   doc.takeSigningScreenshot(function () {
-                    self.handleOnfidoAuth();
+                    self.handleOnfidoAuth(function () {
+                      self.setState({signingButtonBlocked: false});
+                    });
                   }, {});
                 }
-              }
+              }}
             />
           }
         </div>

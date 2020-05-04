@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Podpisz przy użyciu norweskiego BankID",
 "_elegSignNOSignMethodClassic":"Elektroniczny dowód tożsamości BankID",
 "_elegSignNOSignMethodMobile":"Elektroniczny dowód tożsamości BankID na urządzenia przenośne",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, do złożenia podpisu użyjesz szwedzkiego BankID. Po podpisaniu dokumentu Twój podpis zostanie zarejestrowany przez serwis podpisów elektronicznych Scrive.",
 "_elegSignSEConfirmationTextNoName":"Do złożenia podpisu użyjesz szwedzkiego BankID. Po podpisaniu dokumentu Twój podpis zostanie zarejestrowany przez serwis podpisów elektronicznych Scrive.",
 "_elegSignSEConfirmationTitle":"Podpisz przy użyciu szwedzkiego BankID",

@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Parakstīties ar Norvēģijas BankID",
 "_elegSignNOSignMethodClassic":"BankID",
 "_elegSignNOSignMethodMobile":"BankID mobilajā ierīcē",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, lai parakstītos, izmantojiet Zviedrijas BankID. Pēc parakstīšanās e-parakstu pakalpojums Scrive saglabās Jūsu parakstu.",
 "_elegSignSEConfirmationTextNoName":"Lai parakstītos, izmantojiet Zviedrijas BankID. Pēc parakstīšanās e-parakstu pakalpojums Scrive saglabās Jūsu parakstu.",
 "_elegSignSEConfirmationTitle":"Parakstīties ar Zviedrijas BankID",

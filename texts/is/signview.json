@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Skrifa undir með norsku BankID",
 "_elegSignNOSignMethodClassic":"BankID",
 "_elegSignNOSignMethodMobile":"BankID í farsíma",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, þú skrifar undir með því að nota sænskt BankID. Þegar þú hefur skrifað undir verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_elegSignSEConfirmationTextNoName":"Þú skrifar undir með því að nota sænskt BankID. Þegar þú hefur skrifað undir verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_elegSignSEConfirmationTitle":"Skrifa undir með sænsku BankID",

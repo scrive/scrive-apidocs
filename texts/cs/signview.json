@@ -83,6 +83,7 @@
 "_elegSignNOConfirmationTitle":"Podpis pomocí norské služby BankID",
 "_elegSignNOSignMethodClassic":"Služba BankID",
 "_elegSignNOSignMethodMobile":"Služba BankID na mobilu",
+"_elegSignOnfidoConfirmationTitle":"",
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, dokument podepíšete pomocí švédské služby BankID. Po podepsání dokumentu služba Scrive elektronický podpis zaregistruje.",
 "_elegSignSEConfirmationTextNoName":"Dokument podepíšete pomocí švédské služby BankID. Po podepsání dokumentu služba Scrive elektronický podpis zaregistruje.",
 "_elegSignSEConfirmationTitle":"Podpis pomocí švédské služby BankID",

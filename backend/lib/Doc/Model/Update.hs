@@ -1423,6 +1423,8 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
               signatorylinkauthenticationtoviewmethod sl
             , signatorylinkauthenticationtosignmethod =
               signatorylinkauthenticationtosignmethod sl
+            , signatorylinkauthenticationtoviewarchivedmethod =
+              signatorylinkauthenticationtoviewarchivedmethod sl
             , signatorylinkdeliverymethod     = signatorylinkdeliverymethod sl
             , signatorylinkconfirmationdeliverymethod =
               signatorylinkconfirmationdeliverymethod sl
