@@ -55,9 +55,12 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
   ssoConf            <- guardJustM getConf
   samlResponse       <- apiV2ParameterObligatory $ ApiV2ParameterText "SAMLResponse"
   xmlTree            <- parseSAMLXML samlResponse
-  idpID              <- maybe idpApiErr return (getIDPID xmlTree)
+  idpID              <- maybe idpApiErr (return . T.pack) (getIDPID xmlTree)
   ug <- dbQuery $ UserGroupGetBySSOIDPID idpID
-  ugSSOConf <- maybe (ssoConfigErr idpID) return $ ug >>= view #settings >>= view #ssoConfig
+  ugSSOConf <- maybe (ssoConfigErr idpID) return $
+      (ug >>= view #settings >>= view #ssoConfig)
+      <|>
+      getSSOConfFromConfig ssoConf idpID
   verifiedAssertions <- getVerifiedAssertionsFromSAML (getPublicKeys ugSSOConf) xmlTree
   guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
                                   (const currentTime)
@@ -103,8 +106,11 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
     idpApiErr :: (Kontrakcja m) => m a
     idpApiErr = badRequest "idpID not found (ie. Issuer element in the SAMLResponse)"
 
-    ssoConfigErr :: (Kontrakcja m) => String -> m a
-    ssoConfigErr idpID = unauthorized $ "No SSO configuration for IDP with ID: " <> T.pack idpID
+    ssoConfigErr :: (Kontrakcja m) => Text -> m a
+    ssoConfigErr idpID = unauthorized $ "No SSO configuration for IDP with ID: " <> idpID
+
+    getSSOConfFromConfig :: SSOConf -> Text -> Maybe UserGroupSSOConfiguration
+    getSSOConfFromConfig systemSSOConfig idpID = Prelude.find (\i -> (i ^. #idpID) == idpID) $ scSamlIdps systemSSOConfig
 
     getPublicKeys :: UserGroupSSOConfiguration -> SIG.PublicKeys
     getPublicKeys ssoConf = SIG.PublicKeys { publicKeyRSA = Just $ ssoConf ^. #publicKey, publicKeyDSA = Nothing }

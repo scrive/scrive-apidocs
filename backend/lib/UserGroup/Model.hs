@@ -281,7 +281,7 @@ instance (MonadDB m, MonadThrow m)
     ug <- fetchOne fetchUserGroup
     dbQuery . UserGroupGetWithParentsByUG $ ug
 
-newtype UserGroupGetBySSOIDPID = UserGroupGetBySSOIDPID String
+newtype UserGroupGetBySSOIDPID = UserGroupGetBySSOIDPID Text
 instance (MonadDB m, MonadThrow m) =>
   DBQuery m UserGroupGetBySSOIDPID (Maybe UserGroup) where
   dbQuery (UserGroupGetBySSOIDPID idpID) = do

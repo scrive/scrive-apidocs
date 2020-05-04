@@ -298,8 +298,8 @@ data UserGroupSSOConfiguration = UserGroupSSOConfiguration {
 unjsonSSOConfigurationDef :: UnjsonDef UserGroupSSOConfiguration
 unjsonSSOConfigurationDef = objectOf
   (   UserGroupSSOConfiguration
-  <$> field "idp_id"         idpID     "Entity name of IdP"
-  <*> field "idp_public_key" publicKey "IdP public RSA key"
+  <$> field "idp_id"     idpID     "Entity name of IdP"
+  <*> field "public_key" publicKey "IdP public RSA key"
   <*> field "initial_user_group_id"
             userInitialGroupID
             "Group used for user provisioning"
