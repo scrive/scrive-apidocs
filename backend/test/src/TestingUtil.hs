@@ -1,8 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell #-}
-module TestingUtil (
-  arbitraryText
+module TestingUtil
+  ( arbitraryText
   , genUnicodeString
   , genMaybeUnicodeString
   , extendRandomness
@@ -64,7 +64,8 @@ module TestingUtil (
   , isFlashOfType
   , getFlashType
   , OneOf(..)
-  , AllOf(..)
+  , SignatoryTemplate
+  , randomSignatory
   , documentAllStatuses
   , rand
   , arbText
@@ -77,7 +78,7 @@ module TestingUtil (
   , RandomSignatoryCondition(..)
   , randomQuery
   , ArbitraryUnicode(..)
-) where
+  ) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
@@ -1120,22 +1121,24 @@ randomPersonalNumber = rand 10 $ arbText 3 30
 newtype OneOf a = OneOf { fromOneOf :: [a] }
   deriving (Eq, Show)
 
-newtype AllOf a = AllOf { fromAllOf :: [a] }
-  deriving (Eq, Show)
-
 -- | Choose one of sets of signatory conditions at random.
-type RandomSignatorySpec = OneOf (AllOf RandomSignatoryCondition)
+type SignatoryTemplate = OneOf [RandomSignatoryCondition]
+
+-- | Template for a random signatory without any constraints.
+randomSignatory :: SignatoryTemplate
+randomSignatory = OneOf [[]]
 
 -- | Generate list of alternatives for signatories where one of them has a
--- bounded spec and the rest are free.
+-- bounded spec and the rest are completely random.
 anyRandomSignatoryCondition
-  :: Int -> Int -> RandomSignatorySpec -> OneOf [RandomSignatorySpec]
-anyRandomSignatoryCondition a b cond =
-  let freeSig = OneOf [AllOf []]
-  in  OneOf $ do
-        n <- [a .. b]
-        k <- [1 .. n]
-        return $ replicate (k - 1) freeSig ++ [cond] ++ replicate (n - k) freeSig
+  :: Int -> Int -> SignatoryTemplate -> OneOf [SignatoryTemplate]
+anyRandomSignatoryCondition a b cond = OneOf $ do
+  n <- [a .. b]
+  k <- [1 .. n]
+  return
+    $  replicate (k - 1) randomSignatory
+    ++ [cond]
+    ++ replicate (n - k) randomSignatory
 
 {-# ANN type RandomSignatoryCondition ("HLint: ignore Use camelCase" :: String) #-}
 data RandomSignatoryCondition
@@ -1157,7 +1160,7 @@ data RandomDocumentAllows = RandomDocumentAllows
   { rdaTypes       :: OneOf DocumentType
   , rdaStatuses    :: OneOf DocumentStatus
   , rdaSharings    :: OneOf DocumentSharing
-  , rdaSignatories :: OneOf [RandomSignatorySpec]
+  , rdaSignatories :: OneOf [SignatoryTemplate]
   , rdaAuthor      :: User
   , rdaSharedLink  :: Bool
   , rdaTimeoutTime :: Bool
@@ -1171,7 +1174,7 @@ rdaDefault user = RandomDocumentAllows
   { rdaTypes          = OneOf documentAllTypes
   , rdaStatuses       = OneOf documentAllStatuses
   , rdaSharings       = OneOf documentAllSharings
-  , rdaSignatories    = OneOf $ map (`replicate` freeSignatory) [1 .. 10]
+  , rdaSignatories    = OneOf $ map (`replicate` randomSignatory) [1 .. 10]
   , rdaAuthor         = user
   , rdaSharedLink     = False
   , rdaTimeoutTime    = True
@@ -1179,9 +1182,6 @@ rdaDefault user = RandomDocumentAllows
   , rdaSealingMethods = OneOf documentAllSealingMethods
   , rdaFolderId       = fromJust $ user ^. #homeFolderID
   }
-  where
-    freeSignatory :: OneOf (AllOf RandomSignatoryCondition)
-    freeSignatory = OneOf [AllOf []]
 
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomSigLinkByStatus Closed = do
@@ -1329,7 +1329,7 @@ addRandomDocumentWithFile fileid rda = do
                 return sig { maybereadinvite = Just timeReadInvite }
               else return sig { maybereadinvite = Nothing }
 
-        foldrM applyCond siglink (fromAllOf sigcond)
+        foldrM applyCond siglink sigcond
 
       let
         doc = doc'

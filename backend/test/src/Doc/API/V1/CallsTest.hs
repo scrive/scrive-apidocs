@@ -855,15 +855,13 @@ testCloseEvidenceAttachments = do
   doc    <- addRandomDocument (rdaDefault author)
     { rdaTypes       = OneOf [Signable]
     , rdaStatuses    = OneOf [Pending]
-    , rdaSignatories =
-      let
-        signatory = OneOf
-          [ AllOf
-              [ RSC_IsSignatoryThatHasntSigned
-              , RSC_AuthToSignIs StandardAuthenticationToSign
-              ]
-          ]
-      in  OneOf [[signatory]]
+    , rdaSignatories = let signatory =
+                             OneOf
+                               [ [ RSC_IsSignatoryThatHasntSigned
+                                 , RSC_AuthToSignIs StandardAuthenticationToSign
+                                 ]
+                               ]
+                       in  OneOf [[signatory]]
     }
 
   req <- mkRequest GET []
