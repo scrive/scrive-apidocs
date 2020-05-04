@@ -192,8 +192,7 @@ testLastPersonSigningADocumentClosesIt = do
       (rdaDefault user)
         { rdaTypes       = OneOf [Signable]
         , rdaStatuses    = OneOf [Preparation]
-        , rdaSignatories = let signatory =
-                                 OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+        , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                            in  OneOf $ map (`replicate` signatory) [1 .. 10]
         }
   withDocumentM genDoc $ do
@@ -290,8 +289,7 @@ testSigningWithPin = do
       (rdaDefault user1)
         { rdaTypes          = OneOf [Signable]
         , rdaStatuses       = OneOf [Preparation]
-        , rdaSignatories    = let signatory =
-                                    OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+        , rdaSignatories    = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                               in  OneOf $ map (`replicate` signatory) [1 .. 10]
         , rdaSealingMethods = OneOf [Guardtime]
         }
@@ -400,7 +398,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   doc <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
     , rdaTypes       = OneOf [Signable]
-    , rdaSignatories = let signatory = OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+    , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                        in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
@@ -433,7 +431,7 @@ testSendReminderEmailByCompanyAdmin = do
   doc      <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
     , rdaTypes       = OneOf [Signable]
-    , rdaSignatories = let signatory = OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+    , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                        in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
@@ -561,13 +559,12 @@ testDownloadFileWithAuthToView = do
   doc <- addRandomDocument (rdaDefault user)
     { rdaTypes       = OneOf [Signable]
     , rdaStatuses    = OneOf [Pending]
-    , rdaSignatories =
-      let author = OneOf [AllOf []]
-          signatory =
-            let authsToView = [toEnum 0 ..] \\ [StandardAuthenticationToView]
-            in  OneOf . (`map` authsToView) $ \auth ->
-                  AllOf [RSC_IsSignatoryThatHasntSigned, RSC_AuthToViewIs auth]
-      in  OneOf [[author, signatory]]
+    , rdaSignatories = let signatory =
+                             let authsToView =
+                                     [toEnum 0 ..] \\ [StandardAuthenticationToView]
+                             in  OneOf . (`map` authsToView) $ \auth ->
+                                   [RSC_IsSignatoryThatHasntSigned, RSC_AuthToViewIs auth]
+                       in  OneOf [[randomSignatory, signatory]]
     }
   let sl = last (documentsignatorylinks doc)
   req1 <- mkRequest GET []
@@ -722,7 +719,7 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput :: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  bd               <- view #brandedDomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
+  bd               <- view #brandedDomain <$> mkContext defaultLang -- We need to get default branded domain. it can be fetched from default ctx
   theme            <- dbQuery . GetTheme $ bd ^. #signviewTheme
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty"
@@ -757,8 +754,7 @@ testDownloadSignviewBrandingAccess = do
     (rdaDefault user)
       { rdaTypes       = OneOf [Signable]
       , rdaStatuses    = OneOf [Preparation]
-      , rdaSignatories = let signatory =
-                               OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+      , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                          in  OneOf $ map (`replicate` signatory) [1 .. 10]
       }
 
@@ -858,19 +854,17 @@ testDocumentFromShareableTemplate = replicateM_ 10 $ do
   tpl  <- addRandomDocument (rdaDefault user)
     { rdaTypes       = OneOf [Template]
     , rdaSignatories = let author = OneOf
-                             [ AllOf
-                                 [ RSC_IsViewer
-                                 , RSC_AuthToViewIs StandardAuthenticationToView
-                                 , RSC_AuthToSignIs StandardAuthenticationToSign
-                                 ]
+                             [ [ RSC_IsViewer
+                               , RSC_AuthToViewIs StandardAuthenticationToView
+                               , RSC_AuthToSignIs StandardAuthenticationToSign
+                               ]
                              ]
                            signatory = OneOf
-                             [ AllOf
-                                 [ RSC_IsSignatoryThatHasntSigned
-                                 , RSC_AuthToViewIs StandardAuthenticationToView
-                                 , RSC_AuthToSignIs StandardAuthenticationToSign
-                                 , RSC_DeliveryMethodIs APIDelivery
-                                 ]
+                             [ [ RSC_IsSignatoryThatHasntSigned
+                               , RSC_AuthToViewIs StandardAuthenticationToView
+                               , RSC_AuthToSignIs StandardAuthenticationToSign
+                               , RSC_DeliveryMethodIs APIDelivery
+                               ]
                              ]
                        in  OneOf [[author, signatory]]
     }
@@ -1013,7 +1007,7 @@ testShortLinkRedirectTest = do
   doc <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
     , rdaTypes       = OneOf [Signable]
-    , rdaSignatories = let signatory = OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+    , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                        in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
   let sl = last $ documentsignatorylinks doc

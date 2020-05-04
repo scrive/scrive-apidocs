@@ -140,9 +140,8 @@ test_startDocumentCharging = do
         (rdaDefault user)
           { rdaTypes          = OneOf [Signable]
           , rdaStatuses       = OneOf [Preparation]
-          , rdaSignatories    = let signatory =
-                                      OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
-                                in  OneOf $ map (`replicate` signatory) [1 .. 10]
+          , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
+                             in  OneOf $ map (`replicate` signatory) [1 .. 10]
           , rdaSealingMethods = OneOf [Guardtime]
           }
 
