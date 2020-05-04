@@ -68,6 +68,17 @@ assertGetDocumentFails message docId ctx params = do
   let code = rsCode response
   assertBool message $ code == 401 || code == 403
 
+-- Random signatories condition when adding new random document
+randomSignatories :: OneOf [OneOf [RandomSignatoryCondition]]
+randomSignatories = OneOf
+  [ [ OneOf [[RSC_AuthToViewIs StandardAuthenticationToView]] -- Author
+    , OneOf [[RSC_AuthToViewIs StandardAuthenticationToView]] -- Signatory with standard auth
+    , OneOf [[RSC_AuthToViewIs SEBankIDAuthenticationToView]] -- Signatory with custom auth
+    , randomSignatory -- Some other random signatories we don't care
+    , randomSignatory
+    ]
+  ]
+
 testBasicAccessControl :: TestEnv ()
 testBasicAccessControl = do
   userGroup <- instantiateUserGroup randomUserGroupTemplate
@@ -130,10 +141,11 @@ testBasicAccessControl = do
     logInfo_ "Test access control for draft document"
 
     docId <- fmap documentid . addRandomDocument $ (rdaDefault author)
-      { rdaTypes    = OneOf [Signable]
-      , rdaStatuses = OneOf [Preparation]
-      , rdaSharings = OneOf [Private]
-      , rdaFolderId = folderId
+      { rdaTypes       = OneOf [Signable]
+      , rdaStatuses    = OneOf [Preparation]
+      , rdaSharings    = OneOf [Private]
+      , rdaFolderId    = folderId
+      , rdaSignatories = randomSignatories
       }
 
     assertGetDocumentSucceed
@@ -193,10 +205,11 @@ testBasicAccessControl = do
   do -- Document signing phase
     logInfo_ "Test access control for started document"
 
-    doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
-                                                   , rdaStatuses = OneOf [Pending]
-                                                   , rdaSharings = OneOf [Private]
-                                                   , rdaFolderId = folderId
+    doc <- addRandomDocument $ (rdaDefault author) { rdaTypes       = OneOf [Signable]
+                                                   , rdaStatuses    = OneOf [Pending]
+                                                   , rdaSharings    = OneOf [Private]
+                                                   , rdaFolderId    = folderId
+                                                   , rdaSignatories = randomSignatories
                                                    }
 
     let docId         = documentid doc
@@ -289,10 +302,11 @@ testBasicAccessControl = do
   do -- Document cancelled
     logInfo_ "Test access control after document cancellation"
 
-    doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
-                                                   , rdaStatuses = OneOf [Pending]
-                                                   , rdaSharings = OneOf [Private]
-                                                   , rdaFolderId = folderId
+    doc <- addRandomDocument $ (rdaDefault author) { rdaTypes       = OneOf [Signable]
+                                                   , rdaStatuses    = OneOf [Pending]
+                                                   , rdaSharings    = OneOf [Private]
+                                                   , rdaFolderId    = folderId
+                                                   , rdaSignatories = randomSignatories
                                                    }
 
     let docId         = documentid doc
@@ -383,10 +397,11 @@ testAuthorAccessControl = do
   role <- dbUpdate $ AccessControlCreateForUser (author ^. #id) (FolderUserAR folderId)
   let roleId = fromJust . accessRoleGetAccessRoleId $ fromJust role
 
-  doc <- addRandomDocument $ (rdaDefault author) { rdaTypes    = OneOf [Signable]
-                                                 , rdaStatuses = OneOf [Pending]
-                                                 , rdaSharings = OneOf [Private]
-                                                 , rdaFolderId = folderId
+  doc <- addRandomDocument $ (rdaDefault author) { rdaTypes       = OneOf [Signable]
+                                                 , rdaStatuses    = OneOf [Pending]
+                                                 , rdaSharings    = OneOf [Private]
+                                                 , rdaFolderId    = folderId
+                                                 , rdaSignatories = randomSignatories
                                                  }
 
   let docId         = documentid doc
@@ -500,10 +515,11 @@ testSharedAccessControl = do
   let roleId = fromJust . accessRoleGetAccessRoleId $ fromJust role
 
   docId <- fmap documentid . addRandomDocument $ (rdaDefault author)
-    { rdaTypes    = OneOf [Template]
-    , rdaStatuses = OneOf [Preparation]
-    , rdaSharings = OneOf [Shared]
-    , rdaFolderId = folderId
+    { rdaTypes       = OneOf [Template]
+    , rdaStatuses    = OneOf [Preparation]
+    , rdaSharings    = OneOf [Shared]
+    , rdaFolderId    = folderId
+    , rdaSignatories = randomSignatories
     }
 
   assertGetDocumentSucceed
@@ -605,8 +621,7 @@ testGroupAccessControl = do
         , rdaStatuses    = OneOf [Preparation]
         , rdaSharings    = OneOf [Private]
         , rdaFolderId    = folderId
-        , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
-                           in  OneOf $ map (`replicate` signatory) [2 .. 10]
+        , rdaSignatories = randomSignatories
         }
 
       assertGetDocumentSucceed
@@ -629,10 +644,11 @@ testGroupAccessControl = do
 
     do -- Document signing phase
       docId <- fmap documentid . addRandomDocument $ (rdaDefault author)
-        { rdaTypes    = OneOf [Signable]
-        , rdaStatuses = OneOf [Pending]
-        , rdaSharings = OneOf [Private]
-        , rdaFolderId = folderId
+        { rdaTypes       = OneOf [Signable]
+        , rdaStatuses    = OneOf [Pending]
+        , rdaSharings    = OneOf [Private]
+        , rdaFolderId    = folderId
+        , rdaSignatories = randomSignatories
         }
 
       assertGetDocumentSucceed
@@ -655,10 +671,11 @@ testGroupAccessControl = do
 
   do -- Shared documents
     docId <- fmap documentid . addRandomDocument $ (rdaDefault author)
-      { rdaTypes    = OneOf [Template]
-      , rdaStatuses = OneOf [Preparation]
-      , rdaSharings = OneOf [Shared]
-      , rdaFolderId = folderId
+      { rdaTypes       = OneOf [Template]
+      , rdaStatuses    = OneOf [Preparation]
+      , rdaSharings    = OneOf [Shared]
+      , rdaFolderId    = folderId
+      , rdaSignatories = randomSignatories
       }
 
     assertGetDocumentSucceed
@@ -756,10 +773,11 @@ testFolderAccessControl = do
       logInfo_ "Test access control for draft document in base folder"
 
       docId <- fmap documentid . addRandomDocument $ (rdaDefault baseFolderUser)
-        { rdaTypes    = OneOf [Signable]
-        , rdaStatuses = OneOf [Preparation]
-        , rdaSharings = OneOf [Private]
-        , rdaFolderId = baseFolderId
+        { rdaTypes       = OneOf [Signable]
+        , rdaStatuses    = OneOf [Preparation]
+        , rdaSharings    = OneOf [Private]
+        , rdaFolderId    = baseFolderId
+        , rdaSignatories = randomSignatories
         }
 
       assertGetDocumentSucceed "Base folder user should be able to get draft document"
@@ -802,10 +820,11 @@ testFolderAccessControl = do
 
     do -- Pending document
       docId <- fmap documentid . addRandomDocument $ (rdaDefault baseFolderUser)
-        { rdaTypes    = OneOf [Signable]
-        , rdaStatuses = OneOf [Pending]
-        , rdaSharings = OneOf [Private]
-        , rdaFolderId = baseFolderId
+        { rdaTypes       = OneOf [Signable]
+        , rdaStatuses    = OneOf [Pending]
+        , rdaSharings    = OneOf [Private]
+        , rdaFolderId    = baseFolderId
+        , rdaSignatories = randomSignatories
         }
 
       assertGetDocumentSucceed "Base folder user should be able to get started document"
@@ -862,12 +881,12 @@ testFolderAccessControl = do
       logInfo_ "Test access control for draft document in base folder"
 
       docId <- fmap documentid . addRandomDocument $ (rdaDefault parentFolderUser)
-        { rdaTypes    = OneOf [Signable]
-        , rdaStatuses = OneOf [Preparation]
-        , rdaSharings = OneOf [Private]
-        , rdaFolderId = parentFolderId
+        { rdaTypes       = OneOf [Signable]
+        , rdaStatuses    = OneOf [Preparation]
+        , rdaSharings    = OneOf [Private]
+        , rdaFolderId    = parentFolderId
+        , rdaSignatories = randomSignatories
         }
-
 
       assertGetDocumentSucceed "Base folder user should be able to get draft document"
                                docId
@@ -909,10 +928,11 @@ testFolderAccessControl = do
 
     do -- Pending document
       docId <- fmap documentid . addRandomDocument $ (rdaDefault parentFolderUser)
-        { rdaTypes    = OneOf [Signable]
-        , rdaStatuses = OneOf [Pending]
-        , rdaSharings = OneOf [Private]
-        , rdaFolderId = parentFolderId
+        { rdaTypes       = OneOf [Signable]
+        , rdaStatuses    = OneOf [Pending]
+        , rdaSharings    = OneOf [Private]
+        , rdaFolderId    = parentFolderId
+        , rdaSignatories = randomSignatories
         }
 
       assertGetDocumentSucceed "Base folder user should be able to get started document"
@@ -1036,10 +1056,11 @@ testSharedFolderAccessControl = do
     logInfo_ "Testing shared document access control for document in base folder"
 
     docId <- fmap documentid . addRandomDocument $ (rdaDefault baseFolderUser)
-      { rdaTypes    = OneOf [Template]
-      , rdaStatuses = OneOf [Preparation]
-      , rdaSharings = OneOf [Shared]
-      , rdaFolderId = baseFolderId
+      { rdaTypes       = OneOf [Template]
+      , rdaStatuses    = OneOf [Preparation]
+      , rdaSharings    = OneOf [Shared]
+      , rdaFolderId    = baseFolderId
+      , rdaSignatories = randomSignatories
       }
 
     assertGetDocumentSucceed "Base folder user should be able to get shared document"
@@ -1090,10 +1111,11 @@ testSharedFolderAccessControl = do
     logInfo_ "Testing shared document access control for document in parent folder"
 
     docId <- fmap documentid . addRandomDocument $ (rdaDefault parentFolderUser)
-      { rdaTypes    = OneOf [Template]
-      , rdaStatuses = OneOf [Preparation]
-      , rdaSharings = OneOf [Shared]
-      , rdaFolderId = parentFolderId
+      { rdaTypes       = OneOf [Template]
+      , rdaStatuses    = OneOf [Preparation]
+      , rdaSharings    = OneOf [Shared]
+      , rdaFolderId    = parentFolderId
+      , rdaSignatories = randomSignatories
       }
 
     assertGetDocumentSucceed "Base folder user should be able to get shared document"
@@ -1144,10 +1166,11 @@ testSharedFolderAccessControl = do
     logInfo_ "Testing shared document access control for document in grandparent folder"
 
     docId <- fmap documentid . addRandomDocument $ (rdaDefault grandParentFolderUser)
-      { rdaTypes    = OneOf [Template]
-      , rdaStatuses = OneOf [Preparation]
-      , rdaSharings = OneOf [Shared]
-      , rdaFolderId = grandParentFolderId
+      { rdaTypes       = OneOf [Template]
+      , rdaStatuses    = OneOf [Preparation]
+      , rdaSharings    = OneOf [Shared]
+      , rdaFolderId    = grandParentFolderId
+      , rdaSignatories = randomSignatories
       }
 
     assertGetDocumentSucceed "Base folder user should be able to get shared document"
@@ -1236,13 +1259,8 @@ testDocumentFileAccessControl = do
     { rdaTypes       = OneOf [Signable]
     , rdaStatuses    = OneOf [Pending]
     , rdaSharings    = OneOf [Private]
-    , rdaSignatories = OneOf
-                         [ [ OneOf [[RSC_AuthToViewIs StandardAuthenticationToView]]
-                           , OneOf [[RSC_AuthToViewIs StandardAuthenticationToView]]
-                           , OneOf [[RSC_AuthToViewIs SEBankIDAuthenticationToView]]
-                           ]
-                         ]
     , rdaFolderId    = folderId
+    , rdaSignatories = randomSignatories
     }
 
   anonCtx       <- mkContext defaultLang
@@ -1332,10 +1350,11 @@ testDocumentFileAccessControl = do
 
   do
     docId2 <- fmap documentid . addRandomDocument $ (rdaDefault author)
-      { rdaTypes    = OneOf [Signable]
-      , rdaStatuses = OneOf [Preparation]
-      , rdaSharings = OneOf [Private]
-      , rdaFolderId = folderId
+      { rdaTypes       = OneOf [Signable]
+      , rdaStatuses    = OneOf [Preparation]
+      , rdaSharings    = OneOf [Private]
+      , rdaFolderId    = folderId
+      , rdaSignatories = randomSignatories
       }
 
     assertNoFileAccess "Should not have access if file is not in document"

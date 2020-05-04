@@ -62,11 +62,11 @@ alternativePermissionCondition perm = case permResource perm of
   UserPersonalTokenR uid  -> addForAllParentsUid PersonalTokenOfAnyUserInGroupR uid
   PersonalTokenOfAnyUserInGroupR ugid ->
     addForAllParentsUgid PersonalTokenOfAnyUserInGroupR ugid
-  DocumentInFolderR         fid   -> addForAllParentsFid DocumentInFolderR fid
-  FolderR                   fid   -> addForAllParentsFid FolderR fid
-  SharedTemplateR           fid   -> addForAllParentsFid SharedTemplateR fid
-  DocumentAfterPreparationR fid   -> addForAllParentsFid DocumentAfterPreparationR fid
-  EidIdentityR              ugid  -> addForAllParentsUgid EidIdentityR ugid
+  DocumentInFolderR         fid  -> addForAllParentsFid DocumentInFolderR fid
+  FolderR                   fid  -> addForAllParentsFid FolderR fid
+  SharedTemplateR           fid  -> addForAllParentsFid SharedTemplateR fid
+  DocumentAfterPreparationR fid  -> addForAllParentsFid DocumentAfterPreparationR fid
+  EidIdentityR              ugid -> addForAllParentsUgid EidIdentityR ugid
   where
     addForAllParentsFid
       :: (FolderID -> AccessResource) -> FolderID -> m PermissionCondition
