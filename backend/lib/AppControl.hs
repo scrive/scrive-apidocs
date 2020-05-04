@@ -280,6 +280,15 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                           mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
                           logInfo "Respond404" . object $ logRequest rq mbody
                           notFoundPage >>= notFound
+                        RespondWithCustomHttpCode code message -> do
+                          rq    <- askRq
+                          mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+                          logInfo "RespondWithCustomHttpCode"
+                            . object
+                            $ ("code" .= code)
+                            : ("message" .= message)
+                            : logRequest rq mbody
+                          customHttpCodePage code message >>= resp code
                         LinkInvalid -> do
                           rq    <- askRq
                           mbody <- liftIO (tryReadMVar $ rqInputsBody rq)

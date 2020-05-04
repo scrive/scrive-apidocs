@@ -6,8 +6,7 @@ import Data.Time.Clock
 import SAML2.Core.Assertions
 import SAML2.Core.Datatypes
 
-import API.V2.Errors
-import API.V2.MonadUtils
+import KontraError
 
 guardAssertionsConditionsAreMet
   :: (MonadBase IO m, MonadThrow m) => AnyURI -> (() -> m UTCTime) -> [Assertion] -> m ()
@@ -19,7 +18,7 @@ guardAssertionsConditionsAreMet audienceURI nowF assertions = forM_
       case assertionConditions assertion of
         Just conditions -> guardConditionsAreMet audienceURI nowF conditions
         Nothing ->
-          authErr
+          unauthorized
             "Too weak SAML provided. Please provide one with at least notBefore, notOnAndAfter and audience conditions."
 
 guardConditionsAreMet
@@ -28,25 +27,21 @@ guardConditionsAreMet audienceURI nowF Conditions { conditionsNotBefore = mNotBe
   = do
     currentTime <- nowF ()
     maybe
-      (authErr "NotOnOrAfter condition not passed")
+      (unauthorized "NotOnOrAfter condition not passed")
       (\notOnOrAfter -> when (currentTime >= notOnOrAfter)
-        $ authErr ("Assertion used too late " <> showt notOnOrAfter)
+        $ unauthorized ("Assertion used too late " <> showt notOnOrAfter)
       )
       mNotOnOrAfter
     maybe
-      (authErr "NotBefore condition not passed")
+      (unauthorized "NotBefore condition not passed")
       (\notBefore -> when (currentTime < notBefore)
-        $ authErr ("Assertion used too early " <> showt notBefore)
+        $ unauthorized ("Assertion used too early " <> showt notBefore)
       )
       mNotBefore
     unless (any isMatchingAudience conditions)
-      $ authErr ("No matching audience condition in assertion" <> showt conditions)
+      $ unauthorized ("No matching audience condition in assertion" <> showt conditions)
   where
     isMatchingAudience :: Condition -> Bool
     isMatchingAudience (AudienceRestriction restriction) =
       Audience { audience = audienceURI } `elem` restriction
     isMatchingAudience _ = False
-
-
-authErr :: MonadThrow m => Text -> m ()
-authErr = apiError . invalidAuthorizationWithMsg

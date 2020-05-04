@@ -6,6 +6,7 @@ module AppView (
                 renderFromBody
               , renderFromBodyWithFields
               , notFoundPage
+              , customHttpCodePage
               , internalServerErrorPage
               , linkInvalidPage
               , simpleJsonResponse
@@ -113,6 +114,16 @@ notFoundPage = pageWhereLanguageCanBeInUrl $ do
   ctx     <- getContext
   ad      <- getAnalyticsData
   content <- renderTextTemplate "notFound" (standardPageFields ctx Nothing ad)
+  simpleHtmlResponse content
+
+customHttpCodePage :: Kontrakcja m => Int -> Text -> m Response
+customHttpCodePage code message = pageWhereLanguageCanBeInUrl $ do
+  ctx     <- getContext
+  ad      <- getAnalyticsData
+  content <- renderTextTemplate "customHttpCode" $ do
+    standardPageFields ctx Nothing ad
+    F.value "httpCode" code
+    F.value "message" message
   simpleHtmlResponse content
 
 linkInvalidPage :: Kontrakcja m => m Response

@@ -10,6 +10,7 @@ import qualified Control.Exception.Lifted as E
 
 data KontraError =
     Respond404
+  | RespondWithCustomHttpCode Int Text
   | InternalError [String]
   | LinkInvalid
   deriving (Eq, Show, Typeable)
@@ -23,6 +24,15 @@ internalError = do
 
 respond404 :: MonadThrow m => m a
 respond404 = throwM Respond404
+
+respondWithCustomHttpCode :: MonadThrow m => Int -> Text -> m a
+respondWithCustomHttpCode code message = throwM $ RespondWithCustomHttpCode code message
+
+badRequest :: MonadThrow m => Text -> m a
+badRequest = respondWithCustomHttpCode 400
+
+unauthorized :: MonadThrow m => Text -> m a
+unauthorized = respondWithCustomHttpCode 401
 
 respondLinkInvalid :: MonadThrow m => m a
 respondLinkInvalid = throwM LinkInvalid

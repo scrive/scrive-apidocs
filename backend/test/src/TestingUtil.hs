@@ -1548,9 +1548,8 @@ assertEqualJson msg expected got = unless (expected == got) $ do
 assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
 assertRaisesInternalError a = catchJust
   (\case
-    KE.Respond404      -> Nothing
     KE.InternalError _ -> Just ()
-    KE.LinkInvalid     -> Nothing
+    _                  -> Nothing
   )
   (a >>= assertFailure . ("Expecting InternalError but got " <>) . show)
   return
@@ -1558,9 +1557,8 @@ assertRaisesInternalError a = catchJust
 assertRaises404 :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
 assertRaises404 a = catchJust
   (\case
-    KE.Respond404      -> Just ()
-    KE.InternalError _ -> Nothing
-    KE.LinkInvalid     -> Nothing
+    KE.Respond404 -> Just ()
+    _             -> Nothing
   )
   (a >>= assertFailure . ("Expecting Respond404 but got " <>) . show)
   return
@@ -1569,7 +1567,6 @@ assertRaisesDBException :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
 assertRaisesDBException a =
   (a >>= (\v -> assertFailure $ "Expecting db exception but got " <> show v))
     `catches` [Handler $ \_e@DBException {..} -> return ()]
-
 
 assertRaisesKontra
   :: forall e v m

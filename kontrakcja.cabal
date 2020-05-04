@@ -451,7 +451,7 @@ Library
                  , SMS.Model
                  , SMS.SMS
                  , SMS.Tables
-                 , SSO.API
+                 , SSO.Control
                  , SSO.Conf
                  , SSO.SAML
                  , SSO.Guards

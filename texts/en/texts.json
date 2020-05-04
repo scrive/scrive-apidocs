@@ -331,6 +331,7 @@
 "_createNewTemplate":"New template",
 "_csvFilePersons":"one person for each row defined in the CSV file",
 "_currentemailaddress":"Current email address",
+"_customHttpError": "Server responded with $httpCode$ HTTP error code",
 "_dataRetentionCanceledDescription":"Moves withdrawn documents to trash after chosen number of days after cancellation.",
 "_dataRetentionCanceledText":"Trash withdrawn documents after <span class='put-field'/> days",
 "_dataRetentionClosedDescription":"Moves signed documents to trash after chosen number of days after document was signed by all parties.",

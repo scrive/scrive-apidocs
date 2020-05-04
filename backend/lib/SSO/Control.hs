@@ -1,7 +1,7 @@
 -- Due to a possibly bug in Brittany, we'll disable the formatter altogether
 -- brittany --exactprint-only
 
-module SSO.API(sso)
+module SSO.Control(sso)
   where
 
 import Control.Monad.Catch
@@ -9,7 +9,9 @@ import Data.Foldable (asum)
 import Data.Text as T hiding (map)
 import Data.Time.Clock (addUTCTime, nominalDay)
 import Data.Time.Format
-import Happstack.Server hiding (dir, host, https, path, simpleHTTP)
+import Happstack.Server hiding
+  ( badRequest, dir, host, https, path, simpleHTTP, unauthorized
+  )
 import Happstack.StaticRouting (Route, choice, dir)
 import Log
 import qualified Network.URI as U
@@ -54,10 +56,8 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
   samlResponse       <- apiV2ParameterObligatory $ ApiV2ParameterText "SAMLResponse"
   xmlTree            <- parseSAMLXML samlResponse
   idpID              <- maybe idpApiErr return (getIDPID xmlTree)
-  (ugSSOConf :: UserGroupSSOConfiguration)  <- dbQuery (UserGroupGetBySSOIDPID idpID)
-    >>= maybe idpApiErr (return . view #settings)
-    >>= maybe idpApiErr (return . view #ssoConfig)
-    >>= maybe (ssoConfigErr idpID) return
+  ug <- dbQuery $ UserGroupGetBySSOIDPID idpID
+  ugSSOConf <- maybe (ssoConfigErr idpID) return $ ug >>= view #settings >>= view #ssoConfig
   verifiedAssertions <- getVerifiedAssertionsFromSAML (getPublicKeys ugSSOConf) xmlTree
   guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
                                   (const currentTime)
@@ -81,14 +81,12 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
                                       email
                                       (fromMaybe "" mNameID))
           Nothing ->
-            apiError
-              . requestFailed
-              $ "No valid 'email' attribute provided in passed SAML assertions."
+              badRequest "No valid 'email' attribute provided in passed SAML assertions."
   where
     handleSAMLException :: Kontrakcja m => SAMLException -> m InternalKontraResponse
     handleSAMLException = \case
-                    XMLParseException msg -> apiError . requestParameterParseError "SAMLResponse" . T.pack $ msg
-                    SignatureVerificationException msg -> apiError . invalidAuthorizationWithMsg . T.pack $ msg
+                    XMLParseException msg -> badRequest $ "Parsing of \"SAMLResponse\" parameter failed: " <> T.pack msg
+                    SignatureVerificationException msg -> unauthorized $ T.pack msg
 
     guardHttps :: Kontrakcja m => m InternalKontraResponse -> m InternalKontraResponse
     guardHttps action = do
@@ -100,20 +98,13 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
                                   unexpectedError "The system is not set up correctly"
 
     noAssertionsApiErr :: (Kontrakcja m) => m a
-    noAssertionsApiErr = apiError . requestFailed $ "No verified SAML assertions found."
+    noAssertionsApiErr = badRequest "No verified SAML assertions found."
 
     idpApiErr :: (Kontrakcja m) => m a
-    idpApiErr =
-      apiError
-        . requestFailed
-        $ "idpID not found (ie. Issuer element in the SAMLResponse)"
+    idpApiErr = badRequest "idpID not found (ie. Issuer element in the SAMLResponse)"
 
     ssoConfigErr :: (Kontrakcja m) => String -> m a
-    ssoConfigErr idpID =
-      apiError
-         .  requestFailed
-         $  "No public keys configured for the provider with id "
-         <> T.pack idpID
+    ssoConfigErr idpID = unauthorized $ "No SSO configuration for IDP with ID: " <> T.pack idpID
 
     getPublicKeys :: UserGroupSSOConfiguration -> SIG.PublicKeys
     getPublicKeys ssoConf = SIG.PublicKeys { publicKeyRSA = Just $ ssoConf ^. #publicKey, publicKeyDSA = Nothing }
@@ -131,7 +122,7 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
     getAccountInAcceptedStateOrFail email = do
       (dbQuery . GetUserWithStatusByEmail $ email) >>=
         mapM (\(user, isDeleted) -> do
-            when (isDeleted || (user ^. #accountSuspended)) . apiError $ invalidAuthorizationWithMsg ("can't log in " <> showt email <> ", account either deleted or suspended")
+            when (isDeleted || (user ^. #accountSuspended)) $ unauthorized ("can't log in " <> showt email)
             return user)
 
     createAccount :: Kontrakcja m => SAMLPrincipal -> UserGroupID -> m User

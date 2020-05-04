@@ -26,7 +26,7 @@ import Partner.API
 import Redirect
 import Routing
 import Salesforce.Control as Salesforce
-import SSO.API
+import SSO.Control
 import User.API
 import User.APILog.API
 import UserGroup.API

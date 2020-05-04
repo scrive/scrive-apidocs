@@ -9,7 +9,7 @@ import SAML2.Core.Assertions
 import SAML2.Core.Datatypes
 import Test.Framework
 
-import DB
+import KontraError
 import SSO.Guards
 import TestingUtil (assertLeft, assertRight, testThat)
 import TestKontra
@@ -47,7 +47,6 @@ testConditionsGuard = do
   assertRight =<< testConditions someURI goodDate conditions
   return ()
   where
-    testConditions
-      :: URI -> DateTime -> Conditions -> TestEnv (Either SomeDBExtraException ())
+    testConditions :: URI -> DateTime -> Conditions -> TestEnv (Either KontraError ())
     testConditions audienceURI dateTime conditions = do
       try $ guardConditionsAreMet audienceURI (\_ -> return dateTime) conditions
