@@ -7,23 +7,37 @@ example:
     "id": "1",
     "parent_id": null,
     "name": "Root folder",
-    "children": [{ "id": "2", "name": "Subfolder of 1" }],
+    "children": [
+      {
+        "id": "2",
+        "name": "Subfolder of 1",
+        "children": [
+          {
+            "id": "3",
+            "name": "Subfolder of 2"
+          }
+        ]
+      }
+    ]
   }
 description: |
   JSON representation of a Folder.
+required:
+  - id
+  - name
 properties:
   id:
     type: string
   parent_id:
-    type: string
+    type: ['string', 'null']
+    description: |
+      Optional property. If present contains either the ID of the parent folder
+      or null if the requested folder is root.
   name:
     type: string
   children:
     type: array
     items:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
+      type: Folder
+    description: |
+      Optional property. If present contains either the immediate children or all descendant folders.
