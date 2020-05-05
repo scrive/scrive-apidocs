@@ -14,4 +14,4 @@ CERTIFICATE="$(echo $METADATA | xmllint --xpath "(/*[local-name() = 'EntityDescr
 echo $CERTIFICATE
 PUBLIC_KEY=`echo $CERTIFICATE | $BASEDIR/x509-extract-public-key.sh | $BASEDIR/pem-to-one-line.sh`
 
-echo "{\"idp_id\": \"$IDP_ID\", \"idp_public_key\": \"$PUBLIC_KEY\", \"idp_init_ug\": \"$1\"}" | jq
+echo "{\"idp_name\": \"\", \"idp_id\": \"$IDP_ID\", \"idp_public_key\": \"$PUBLIC_KEY\", \"idp_init_ug\": \"$1\"}" | jq
