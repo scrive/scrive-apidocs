@@ -28,8 +28,8 @@ import Kontra
 import KontraLink
 import LoginAuth.LoginAuthMethod
 import Routing
+import Session.Cookies (startSessionCookieWithExpiry)
 import Session.Model
-import Session.Types
 import SSO.Conf
 import SSO.Guards
 import SSO.SAML
@@ -173,11 +173,7 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
       let userID = user ^. #id
       when (user ^. #sysAuth /= LoginAuthSSO) $ apiError insufficientPrivileges
       logInfo_ "Creating session for SSO:SAML"
-      session  <- startNewSessionWithUser userID
-      msession <- updateSession session tempSessionID (Just userID) Nothing
-      case msession of
-        Nothing -> unexpectedError "No session could be established"
-        Just _  -> return ()
+      startNewSessionWithUser userID >>= startSessionCookieWithExpiry
 
 getConf :: Kontrakcja m => m (Maybe SSOConf)
 getConf = ssoConf <$> getContext
