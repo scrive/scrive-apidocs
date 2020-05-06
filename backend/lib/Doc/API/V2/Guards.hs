@@ -664,7 +664,8 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
       NOBankIDAuthenticationToView ->
         isGood (asValidPhoneForNorwegianBankID (getMobile sl))
           || isEmpty (asValidPhoneForNorwegianBankID (getMobile sl))
-      SMSPinAuthenticationToView -> isGood $ asValidPhoneForSMS (getMobile sl)
+      SMSPinAuthenticationToView ->
+        isJust (getFieldByIdentity MobileFI $ signatoryfields sl)
       _ -> True
 
     signatoryThatIsApproverHasStandardAuthToSign sl =
