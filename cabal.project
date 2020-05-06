@@ -55,3 +55,8 @@ source-repository-package
     type: git
     location: https://github.com/scrive/pool.git
     tag: 902e01e8a5b250b63971c0fbd0724c1288fb18d6
+
+source-repository-package
+    type: git
+    location: https://github.com/GaloisInc/json.git
+    tag: 329bbce8fd68a04a5377f48102c37d28160b246b
