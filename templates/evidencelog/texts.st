@@ -532,6 +532,8 @@ $elseif(provider_nobankid)$
       $_SignDocumentEvidenceTextSimpleArchiveNOBankID()$
 $elseif(provider_dknemid)$
       $_SignDocumentEvidenceTextSimpleArchiveDKNemID()$
+$elseif(provider_fitupas)$
+      $_SignDocumentEvidenceTextSimpleArchiveFinnishFTN()$
 $elseif(eleg)$
       $_SignDocumentEvidenceTextSimpleArchiveEleg()$
 $else$
@@ -757,7 +759,7 @@ $endif$
 ###
 provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$elseif(provider_onfido)$$if(onfido_document)$Onfido (document check only)$else$Onfido (document check + facial comparison)$endif$$endif$
 ###
-providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$elseif(provider_onfido)$Onfido$endif$
+providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish FTN$elseif(provider_onfido)$Onfido$endif$
 ###
 AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$
