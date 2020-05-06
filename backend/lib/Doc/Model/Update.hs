@@ -3021,17 +3021,37 @@ instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where
         sqlResult "1"
         sqlWhereEq "acr.document_id" did
 
-data TransferDocument = TransferDocument DocumentID UserID
-instance MonadDB m
+data TransferDocument = TransferDocument DocumentID UserID (Text, Text, Text)
+instance (MonadDB m, MonadThrow m)
   => DBUpdate m TransferDocument () where
-  dbUpdate (TransferDocument did uid) = do
-    runQuery_ . sqlUpdate "signatory_links" $ do
-      sqlFrom "documents"
+  dbUpdate (TransferDocument did uid (name1, name2, email)) = do
+    -- Get author signatory id
+    runQuery_ . sqlSelect "signatory_links" $ do
+      sqlJoinOn "documents" "signatory_links.document_id = documents.id"
       sqlWhereEq "documents.id" did
       sqlWhereEq "type"         Template
-      sqlWhere "signatory_links.document_id = documents.id"
       sqlWhere "signatory_links.id = documents.author_id" -- only authors
+      sqlResult "signatory_links.id"
+    slid :: SignatoryLinkID <- fetchOne runIdentity
+
+    -- transfer ownership
+    runQuery_ . sqlUpdate "signatory_links" $ do
+      sqlWhereEq "id" slid
       sqlSet "user_id" uid
+
+    -- update name&email so it looks ok in list calls
+    let updateField newVal reqs = runQuery_ . sqlUpdate "signatory_link_fields" $ do
+          sqlWhereEq "signatory_link_id" slid
+          reqs
+          sqlSet "value_text" newVal
+        updateName newVal nameOrder = updateField newVal $ do
+          sqlWhereEq "type"       NameFT
+          sqlWhereEq "name_order" (nameOrder :: Int)
+    updateName name1 1
+    updateName name2 2
+    updateField email $ sqlWhereEq "type" EmailFT
+
+    -- update folder stuff
     runQuery_ . sqlUpdate "documents" $ do
       sqlFrom "users"
       sqlWhereEq "documents.id" did
