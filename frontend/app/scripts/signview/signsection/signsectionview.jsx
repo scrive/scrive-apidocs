@@ -207,7 +207,7 @@ var Task = require("../navigation/task");
       step = step || this.state.step;
       var noOverlayStep = [
         "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth",
-        "eid-fi-tupas-sign", "eid-onfido-auth"
+        "eid-fi-tupas-auth", "eid-onfido-auth"
       ];
       return !(noOverlayStep.indexOf(step) > -1);
     },
