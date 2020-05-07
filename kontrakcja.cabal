@@ -1326,6 +1326,7 @@ Test-suite kontrakcja-test
                  FlowTests
                  Flow.AggregatorTest
                  Flow.IntegrationTest
+                 Flow.MachinizeTest
                  Folder.APITest
                  UserGroup.APITest
                  UserGroup.UserGroupTest
@@ -1478,6 +1479,7 @@ Test-suite kontrakcja-test
                , vector
                , x509
                , xml-conduit
+               , yaml
 
 Executable config-checker
   import: common-stanza
