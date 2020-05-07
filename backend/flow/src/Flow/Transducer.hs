@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -9,15 +8,16 @@
 module Flow.Transducer where
 
 import Data.Either.Extra (maybeToEither)
-import Data.Map.Strict
-import qualified Data.Map.Strict as M
-import Data.Text hiding (find)
 import Data.Foldable
+import Data.Map.Strict
+import Data.Text hiding (find)
 import GHC.Generics
-
+import qualified Data.Map.Strict as M
 
 type StateId = Text
 
+
+-- TODO: Cleanup these data structures... i.e. remove duplicate fields.
 data TransducerEdge a b = TransducerEdge
     { edgeInputLabel :: a
     , edgeOutputLabel :: b
@@ -32,7 +32,7 @@ data TransducerState a b = TransducerState
   deriving (Show, Eq, Generic)
 
 data Transducer a b = Transducer
-    { _states :: (Map StateId (TransducerState a b))
+    { _states :: Map StateId (TransducerState a b)
     , _initialState :: StateId
     , _endStates :: [StateId]
     }
@@ -44,40 +44,55 @@ data Error
     | DuplicitEdge Text
   deriving (Eq, Show)
 
-step :: forall a b. (Eq a, Ord a) => Transducer a b -> StateId -> a -> Either Error (TransducerEdge a b)
-step Transducer{..} stateId input
-    = getState >>= findEdge
+step
+  :: forall a b
+   . (Eq a, Ord a)
+  => Transducer a b
+  -> StateId
+  -> a
+  -> Either Error (TransducerEdge a b)
+step Transducer {..} stateId input = getState >>= findEdge
   where
     getState = maybeToEither StateIdNotFound $ _states !? stateId
     findEdge :: TransducerState a b -> Either Error (TransducerEdge a b)
-    findEdge TransducerState{..} = maybeToEither TransitionNotFound
-        $ _stateEdges !? input
+    findEdge TransducerState {..} =
+      maybeToEither TransitionNotFound $ _stateEdges !? input
 
 createTransducer
-    :: forall a b
-    . Ord a
-    => Show a
-    => Show b
-    => StateId
-    -> [StateId]
-    -> [(StateId, TransducerEdge a b)]
-    -> Either Error (Transducer a b)
+  :: forall a b
+   . Ord a
+  => Show a
+  => Show b
+  => StateId
+  -> [StateId]
+  -> [(StateId, TransducerEdge a b)]
+  -> Either Error (Transducer a b)
 createTransducer _initialState _endStates edges = do
-    _states <- foldlM addStateAndEndge M.empty edges
-    pure Transducer{..}
+  _states <- foldlM addStateAndEndge M.empty edges
+  pure Transducer { .. }
   where
-    addStateAndEndge :: Map StateId (TransducerState a b) -> (StateId, TransducerEdge a b) -> Either Error (Map StateId (TransducerState a b))
+    addStateAndEndge
+      :: Map StateId (TransducerState a b)
+      -> (StateId, TransducerEdge a b)
+      -> Either Error (Map StateId (TransducerState a b))
     addStateAndEndge stateMap (stateId, edge) =
-        alterF (addState stateId edge) stateId stateMap
+      alterF (addState stateId edge) stateId stateMap
 
-    addState :: StateId -> TransducerEdge a b -> Maybe (TransducerState a b) -> Either Error (Maybe (TransducerState a b))
+    addState
+      :: StateId
+      -> TransducerEdge a b
+      -> Maybe (TransducerState a b)
+      -> Either Error (Maybe (TransducerState a b))
     addState _stateId edge Nothing = pure . Just $ TransducerState
-        { _stateId
-        , _stateEdges = M.singleton (edgeInputLabel edge) edge
-        }
-    addState _ edge (Just state@TransducerState{..}) = do
-        _stateEdges <- alterF (addEdge edge) (edgeInputLabel edge) _stateEdges
-        pure . Just $ state { _stateEdges }
-    addEdge :: TransducerEdge a b -> Maybe (TransducerEdge a b) -> Either Error (Maybe (TransducerEdge a b))
-    addEdge edge Nothing = pure $ Just edge
+      { _stateId
+      , _stateEdges = M.singleton (edgeInputLabel edge) edge
+      }
+    addState _ edge (Just state@TransducerState {..}) = do
+      _stateEdges <- alterF (addEdge edge) (edgeInputLabel edge) _stateEdges
+      pure . Just $ state { _stateEdges }
+    addEdge
+      :: TransducerEdge a b
+      -> Maybe (TransducerEdge a b)
+      -> Either Error (Maybe (TransducerEdge a b))
+    addEdge edge  Nothing  = pure $ Just edge
     addEdge _edge (Just e) = Left . DuplicitEdge . pack $ show e

@@ -3,8 +3,9 @@ module Auth.Model where
 import Control.Monad.Catch
 import Data.Int
 import Data.Unjson
-import qualified Data.Text as T
 import Database.PostgreSQL.PQTypes
+import qualified Data.Text as T
+
 --import Database.PostgreSQL.PQTypes.Model
 --import Database.PostgreSQL.PQTypes.SQL.Builder
 
@@ -43,7 +44,8 @@ data OAuthAuthorization = OAuthAuthorization
   } deriving (Show, Eq)
 
 -- TODO use UserId and UserGroupId types, once they are available in some ID component
-authenticateToken :: (MonadDB m, MonadThrow m) => OAuthAuthorization -> m (Maybe (Int64, Int64))
+authenticateToken
+  :: (MonadDB m, MonadThrow m) => OAuthAuthorization -> m (Maybe (Int64, Int64))
 authenticateToken (OAuthAuthorization token secret atoken asecret) = do
   runQuery_ $ rawSQL
     (  "SELECT u.id, ug.id "
@@ -54,14 +56,6 @@ authenticateToken (OAuthAuthorization token secret atoken asecret) = do
     <> "JOIN user_groups ug    ON u.user_group_id   = ug.id "
     <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 AND p.privilege = $7 LIMIT 1"
     )
-    ( atID token
-    , atToken token
-    , secret
-    , atID atoken
-    , atToken atoken
-    , asecret
-    , apiPersonal
-    )
+    (atID token, atToken token, secret, atID atoken, atToken atoken, asecret, apiPersonal)
   fetchMaybe identity
-  where
-    apiPersonal = 0 :: Int64 -- APIPersonal
+  where apiPersonal = 0 :: Int64 -- APIPersonal

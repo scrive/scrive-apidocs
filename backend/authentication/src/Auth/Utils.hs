@@ -15,3 +15,4 @@ pad0 len str = replicate missing '0' <> str
   where
     diff    = len - length str
     missing = max 0 diff
+

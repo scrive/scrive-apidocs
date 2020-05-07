@@ -2,8 +2,8 @@ module Main (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
-import Control.Monad.IO.Class
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Internal.Connection
@@ -33,6 +33,7 @@ import DB.PostgreSQL
 import FeatureFlags.Model
 import FileStorage
 import FileStorage.Amazon.S3Env
+import Flow.Server
 import Folder.Model
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -50,6 +51,7 @@ import Utils.IO
 import Utils.Network
 import qualified HostClock.Model as HC
 import Flow.Server
+import qualified HostClock.Model as HC
 import qualified VersionTH
 
 {-# ANN type CmdConf ("HLint: ignore Use newtype instead of data" :: String) #-}
@@ -123,7 +125,8 @@ main = withCurlDo $ do
                         , amazons3env       = amazonEnv
                         , pdftoolslambdaenv = lambdaEnv
                         }
-    liftIO . void . fork . runFlow $ FlowConfiguration (unConnectionSource . simpleSource $ connSettings [])
+    liftIO . void . fork . runFlow $ FlowConfiguration
+      (unConnectionSource . simpleSource $ connSettings [])
     startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> MainM ()

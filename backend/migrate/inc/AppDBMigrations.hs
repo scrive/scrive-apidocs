@@ -269,3 +269,4 @@ kontraMigrations =
   , addUserGroupDeletionRequestEvaluationJob
   , createTableFlowTemplates
   ]
+    <> flowMigrations

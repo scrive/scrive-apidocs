@@ -18,11 +18,11 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import Auth.OAuth
+import Auth.Parse
 import DB
 import Happstack.Fields
 import Kontra
 import OAuth.Model
-import Auth.Parse
 import User.Model.Query
 import User.Types.User
 import Util.Actor
@@ -148,7 +148,7 @@ getTokenRequest = do
           }
 
 getAuthorization :: Kontrakcja m => m (Maybe (Either Text OAuthAuthorization))
-getAuthorization = (fmap parseParams) <$> getAuthorizationHeader
+getAuthorization = fmap parseParams <$> getAuthorizationHeader
 
 getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either Text (User, Actor)))
 getOAuthUser privs = do

@@ -2,6 +2,7 @@ module TestMain where
 
 import Control.Arrow
 import Control.Concurrent
+import Control.Concurrent.Lifted (fork)
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Crypto.RNG
@@ -62,6 +63,7 @@ import FileStorage
 import FileStorage.Amazon.S3Env
 import FileTest
 import FlashMessages
+import Flow.Server
 import FlowTests
 import Folder.APITest
 import Folder.FolderTest
@@ -232,8 +234,10 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
   staticSource <-
     (\conn -> ConnectionSource $ ConnectionSourceM { withConnection = ($ conn) })
       <$> connect (connSettings kontraComposites)
-  cs                 <- poolSource (connSettings kontraComposites) 1 10 50
+  cs <- poolSource (connSettings kontraComposites) 1 10 50
 
+  void . fork . runFlow $ FlowConfiguration
+    (unConnectionSource . simpleSource $ connSettings [])
   active_tests       <- atomically $ newTVar (True, 0)
   rejected_documents <- newMVar 0
   test_durations     <- newMVar []
