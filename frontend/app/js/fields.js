@@ -280,6 +280,10 @@ var Field = exports.Field = Backbone.Model.extend({
       var viewerNeedsFieldForDelivery = !signatory.signs()
                                      && (field.isEmail() && (signatory.emailConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()) ||
                                          field.isMobile() && (signatory.mobileConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()));
+      var nonsignerNeedForArchive = !signatory.signs() && field.isSSN() && (signatory.seBankIDAuthenticationToViewArchived() ||
+                                                                            signatory.noBankIDAuthenticationToViewArchived() ||
+                                                                            signatory.dkNemIDAuthenticationToViewArchived() ||
+                                                                            signatory.fiTupasAuthenticationToViewArchived());
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
         && (!signatory.seBankIDAuthenticationToSign())
@@ -294,7 +298,7 @@ var Field = exports.Field = Backbone.Model.extend({
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
-      if(senderMustFill || willSignNowAndFieldNeeded || viewerNeedsFieldForDelivery) {
+      if(senderMustFill || willSignNowAndFieldNeeded || viewerNeedsFieldForDelivery || nonsignerNeedForArchive) {
         concatValidations = this.validateFilled();
       }
 
