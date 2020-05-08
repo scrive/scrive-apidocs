@@ -29,8 +29,6 @@ import Kontra
 import KontraLink
 import LoginAuth.LoginAuthMethod
 import Routing
-import Session.Model
-import Session.Types
 import SSO.Conf
 import SSO.Guards
 import SSO.SAML
@@ -46,7 +44,7 @@ import Utils.HTTP (isSecure)
 
 sso :: Route (Kontra Response)
 sso = choice
-  [ (dir "sso" . dir "saml" . dir "acs" . hPost . toK0) consumeAssertions
+  [ (dir "sso" . dir "saml" . dir "acs" . hPostNoXToken . toK0) consumeAssertions
   , (dir "sso" . dir "saml" . dir "metadata" . hGet) renderMetadata
   ]
 
@@ -159,14 +157,9 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
 
     startSessionForSAMLUser :: Kontrakcja m => User -> m ()
     startSessionForSAMLUser user = do
-      let userID = user ^. #id
       when (user ^. #sysAuth /= LoginAuthSSO) $ apiError insufficientPrivileges
-      logInfo_ "Creating session for SSO:SAML"
-      session  <- startNewSessionWithUser userID
-      msession <- updateSession session tempSessionID (Just userID) Nothing
-      case msession of
-        Nothing -> unexpectedError "No session could be established"
-        Just _  -> return ()
+      logInfo_ "Logging in user via SAML"
+      logUserToContext $ Just user
 
 data SAMLPrincipal =
   SAMLPrincipal
