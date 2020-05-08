@@ -246,7 +246,13 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
               || (getPersonalNumber sl == fromMaybe "" eidtupasSSN)
             | otherwise
             = False
-      unless personalNumberMatchesSiglink $ throwE (Failed Remove)
+
+      unless personalNumberMatchesSiglink $ do
+        dbUpdate $ UpdateDocumentSigning
+          signingSignatoryID
+          True
+          "Personal number of signatory doesn't match the one authenticated by FTN."
+        throwE . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
 
       dbUpdate $ MergeEIDServiceFITupasSignature signingSignatoryID sig
       logInfo_ . ("EidHub FI TUPAS Sign succeeded: " <>) . showt $ est
@@ -256,7 +262,12 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
     processCompleteOnfidoTransaction ds@DocumentSigning {..} est ct now = do
       let mctd = estRespCompletionData ct
       OnfidoEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
-      unless eidonfidoChecksClear $ throwE (Failed Remove)
+
+      unless eidonfidoChecksClear $ do
+        dbUpdate $ UpdateDocumentSigning signingSignatoryID
+                                         True
+                                         "Onfido rejected the identification document."
+        throwE . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
 
       let sig = EIDServiceOnfidoSignature
             { eidServiceOnfidoSigSignatoryName = eidonfidoFirstName
