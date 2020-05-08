@@ -190,11 +190,11 @@ instance CompositeFromSQL FeatureFlags where
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
 firstAllowedAuthenticationToView ff
   | ffCanUseStandardAuthenticationToView ff = StandardAuthenticationToView
+  | ffCanUseSMSPinAuthenticationToView ff = SMSPinAuthenticationToView
   | ffCanUseSEAuthenticationToView ff = SEBankIDAuthenticationToView
   | ffCanUseDKAuthenticationToView ff = DKNemIDAuthenticationToView
   | ffCanUseNOAuthenticationToView ff = NOBankIDAuthenticationToView
   | ffCanUseFIAuthenticationToView ff = FITupasAuthenticationToView
-  | ffCanUseSMSPinAuthenticationToView ff = SMSPinAuthenticationToView
   | ffCanUseVerimiAuthenticationToView ff = VerimiAuthenticationToView
   | ffCanUseIDINAuthenticationToView ff = IDINAuthenticationToView
   |
@@ -204,11 +204,11 @@ firstAllowedAuthenticationToView ff
 firstAllowedAuthenticationToSign :: FeatureFlags -> AuthenticationToSignMethod
 firstAllowedAuthenticationToSign ff
   | ffCanUseStandardAuthenticationToSign ff = StandardAuthenticationToSign
+  | ffCanUseSMSPinAuthenticationToSign ff = SMSPinAuthenticationToSign
   | ffCanUseSEAuthenticationToSign ff = SEBankIDAuthenticationToSign
   | ffCanUseDKAuthenticationToSign ff = DKNemIDAuthenticationToSign
   | ffCanUseNOAuthenticationToSign ff = NOBankIDAuthenticationToSign
   | ffCanUseFIAuthenticationToSign ff = FITupasAuthenticationToSign
-  | ffCanUseSMSPinAuthenticationToSign ff = SMSPinAuthenticationToSign
   | ffCanUseIDINAuthenticationToSign ff = IDINAuthenticationToSign
   |
   -- Someone can turn off all FFs, not recommended

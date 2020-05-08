@@ -158,8 +158,8 @@ module.exports = React.createClass({
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var allAuthTypes = ["standard", "se_bankid", "no_bankid",
-                        "dk_nemid", "fi_tupas", "sms_pin",
+    var allAuthTypes = ["standard", "sms_pin", "se_bankid",
+                        "no_bankid", "dk_nemid", "fi_tupas",
                         "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 
