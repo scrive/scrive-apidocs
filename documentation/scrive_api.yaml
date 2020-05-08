@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2020-05-08  | Added IP address to [Environments & IP Addresses](#environments-amp-ip-addresses). |
     | 2020-04-20  | Added `nl_idin` and `fi_tupas` to various `authentication_method_to_*`. |
     | 2020-04-02  | Updated endpoint list to include missing ip-addresses. |
     | 2020-03-04  | Add user tags API. |
@@ -118,6 +119,7 @@ info:
     * 54.72.251.235
     * 34.251.5.243
     * 52.208.131.2
+    * 99.80.133.235
 
     ### API Testbed
 
