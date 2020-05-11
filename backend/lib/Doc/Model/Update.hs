@@ -451,6 +451,7 @@ insertDocument document@Document {..} = do
     sqlSet "folder_id"           documentfolderid
     sqlSet "user_group_to_impersonate_for_eid" documentusergroupforeid
     sqlSet "sealing_method"      documentsealingmethod
+    sqlSet "add_metadata_to_pdf" documentaddmetadatatopdf
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -1093,6 +1094,7 @@ data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBUpdate m PreparationToPending () where
   dbUpdate (PreparationToPending actor tzn) = do
     sealingMethod            <- getSealingMethodForDocument =<< theDocument
+    addMetadataToPDF         <- getAddMetadataToPDFForDocument =<< theDocument
     forceHidePersonalNumbers <- getForceHidePersonalNumbers =<< theDocument
     -- We determine the sealing method (currently Guardtime or PAdES) using
     -- the author's user group settings and store it with the document so that
@@ -1122,8 +1124,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBU
       withTimeZone defaultTimeZoneName $ do
         lang :: Lang <-
           kRunAndFetch1OrThrowWhyNot runIdentity . sqlUpdate "documents" $ do
-            sqlSet "status"         Pending
-            sqlSet "sealing_method" sealingMethod
+            sqlSet "status"              Pending
+            sqlSet "sealing_method"      sealingMethod
+            sqlSet "add_metadata_to_pdf" addMetadataToPDF
             sqlSetCmd "timeout_time"
               $   "cast ("
               <?> timestamp

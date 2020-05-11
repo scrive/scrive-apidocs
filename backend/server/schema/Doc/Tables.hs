@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable
   { tblName        = "documents"
-  , tblVersion     = 57
+  , tblVersion     = 58
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -101,6 +101,7 @@ tableDocuments = tblTable
     , tblColumn { colName = "sealing_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "sms_invite_text", colType = TextT, colNullable = True }
     , tblColumn { colName = "sms_confirm_text", colType = TextT, colNullable = True }
+    , tblColumn { colName = "add_metadata_to_pdf", colType = BoolT, colNullable = False }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys = [
@@ -191,6 +192,7 @@ ctDocument = CompositeType
     , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
     , CompositeColumn { ccName = "user_group_to_impersonate_for_eid", ccType = BigIntT }
     , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
+    , CompositeColumn { ccName = "add_metadata_to_pdf", ccType = BoolT }
     ]
   }
 

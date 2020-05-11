@@ -11,6 +11,7 @@ module Doc.Types.Document (
   , documentsealstatus
   , getSealingMethodForDocument
   , getForceHidePersonalNumbers
+  , getAddMetadataToPDFForDocument
   ) where
 
 import Control.Monad.Base
@@ -240,6 +241,7 @@ data Document = Document
   -- the party they are entering into a transaction with. Implements CORE-1633.
   , documentusergroupforeid        :: !(Maybe UserGroupID)
   , documentsealingmethod          :: !SealingMethod
+  , documentaddmetadatatopdf       :: !Bool
   } deriving (Show)
 
 type instance ID Document = DocumentID
@@ -292,6 +294,7 @@ defaultDocument = Document { documentid                = unsafeDocumentID 0
                            , documentfolderid          = unsafeFolderID 0
                            , documentusergroupforeid   = Nothing
                            , documentsealingmethod     = Guardtime
+                           , documentaddmetadatatopdf  = False
                            }
 
 instance HasID Document where
@@ -364,6 +367,7 @@ documentsSelectors =
   , "documents.folder_id"
   , "documents.user_group_to_impersonate_for_eid"
   , "documents.sealing_method"
+  , "documents.add_metadata_to_pdf"
   ]
 
 documentStatusClassExpression :: SQL
@@ -467,13 +471,14 @@ type instance CompositeRow Document
     , FolderID
     , Maybe UserGroupID
     , SealingMethod
+    , Bool
     )
 
 instance PQFormat Document where
   pqFormat = compositeTypePqFormat ctDocument
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, sms_invite_text, sms_confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid, sealing_method)
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, sms_invite_text, sms_confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid, sealing_method, add_metadata_to_pdf)
     = Document
       { documentid                = did
       , documenttitle             = title
@@ -521,6 +526,7 @@ instance CompositeFromSQL Document where
       , documentfolderid          = fid
       , documentusergroupforeid   = user_group_to_impersonate_for_eid
       , documentsealingmethod     = sealing_method
+      , documentaddmetadatatopdf  = add_metadata_to_pdf
       }
 
 ---------------------------------
@@ -548,3 +554,10 @@ getForceHidePersonalNumbers doc = do
   ugid <- guardJust $ documentauthorugid doc
   ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
   return $ ugwpSettings ugwp ^. #forceHidePN
+
+getAddMetadataToPDFForDocument
+  :: (MonadBase IO m, MonadDB m, MonadThrow m) => Document -> m Bool
+getAddMetadataToPDFForDocument doc = do
+  ugid <- guardJust $ documentauthorugid doc
+  ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
+  return $ ugwpSettings ugwp ^. #addMetadataToPDFs

@@ -334,6 +334,7 @@ instance Arbitrary UserGroupSettings where
       <*> pure False   -- do not set force hide personal numbers
       <*> arbitrary
       <*> pure Nothing
+      <*> arbitrary
 
 instance Arbitrary UserGroupAddress where
   arbitrary =

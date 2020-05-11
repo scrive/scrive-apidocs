@@ -24,6 +24,8 @@ sealSpecToLambdaSpec spec = do
   initiator_   <- mapM sealSpecForPerson (maybeToList $ initiator spec)
   attachments_ <- mapM sealSpecForSealAttachment (attachments spec)
   files_       <- mapM sealSpecForFile (filesList spec)
+  metadata_    <- mapM sealSpecForMetadata (metadata spec)
+
   return
     .  Aeson.encode
     .  Aeson.object
@@ -32,6 +34,7 @@ sealSpecToLambdaSpec spec = do
        , "secretaries" .= secretaries_
        , "attachments" .= attachments_
        , "filesList" .= files_
+       , "metadata" .= metadata_
        ]
     ++ (("initiator" .=) <$> initiator_)
     ++ [ "mainFileInput"
@@ -140,6 +143,8 @@ sealSpecForFile fd = do
            ["fileInput" .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode fc)]]
          _ -> []
 
+sealSpecForMetadata :: (MonadLog m, MonadBase IO m) => (Text, Text) -> m Aeson.Value
+sealSpecForMetadata (mdn, mdv) = return $ Aeson.object ["name" .= mdn, "value" .= mdv]
 
 addImageSpecToLambdaSpec :: MonadBase IO m => AddImageSpec -> m BSL.ByteString
 addImageSpecToLambdaSpec spec = do

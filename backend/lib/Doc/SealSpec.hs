@@ -90,6 +90,7 @@ data SealSpec = SealSpec
     , attachments    :: [SealAttachment]
     , filesList      :: [FileDesc]
     , disableFooter  :: Bool
+    , metadata       :: [(Text,Text)]
     }
     deriving (Eq,Ord,Show,Read)
 

@@ -258,6 +258,7 @@ defaultUserGroupSettings = UserGroupSettings
   , documentSessionTimeoutSecs = Nothing
   , hasPostSignview            = True
   , ssoConfig                  = Nothing
+  , addMetadataToPDFs          = False
   }
 
 -- UI

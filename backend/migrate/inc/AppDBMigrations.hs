@@ -257,4 +257,6 @@ kontraMigrations =
   , userGroupSettingsAddForceHidePN
   , userGroupSettingsAddPostSignViewFlag
   , userGroupSettingsAddSSOConfiguration
+  , addAddMetadataOptionToDocuments
+  , addAddMetadataSettingToUserGroupSettings
   ]

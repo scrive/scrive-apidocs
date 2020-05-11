@@ -26,6 +26,7 @@ import qualified Crypto.Hash as H
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.ICU.Normalize as ICU
@@ -733,7 +734,32 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
                                                   }
                                   ]
                                     <> additionalAttachments
+      , Seal.metadata           = documentMetadata document
       }
+
+documentMetadata :: Document -> [(Text, Text)]
+documentMetadata doc = if documentaddmetadatatopdf doc
+  then signatoriesMetadata ++ tagsMetadata
+  else []
+  where
+    tagsMetadata = map tagToMeta . S.toList $ documenttags doc
+    tagToMeta tag = ("tag." <> tagname tag, tagvalue tag)
+    signatoriesMetadata =
+      concatMap signatoryMeta $ zip [(1 :: Int) ..] (documentsignatorylinks doc)
+    signatoryMeta (i, s) =
+      map (\(n, v) -> ("sig" <> showt i <> "." <> n, v)) . catMaybes $ map
+        fieldMeta
+        (signatoryfields s)
+    fieldMeta f = case (fieldIdentity f, fieldTextValue f) of
+      (NameFI (NameOrder o), Just v) -> Just ("name" <> showt o, v)
+      (CompanyFI, Just v) -> Just ("company", v)
+      (PersonalNumberFI, Just v) -> Just ("personal_number", v)
+      (CompanyNumberFI, Just v) -> Just ("company_number", v)
+      (EmailFI, Just v) -> Just ("email", v)
+      (MobileFI, Just v) -> Just ("mobile", v)
+      (TextFI n, Just v) -> Just (n, v)
+      _ -> Nothing
+
 
 presealSpecFromDocument
   :: ( MonadIO m
