@@ -33,7 +33,7 @@ import DB.PostgreSQL
 import FeatureFlags.Model
 import FileStorage
 import FileStorage.Amazon.S3Env
-import Flow.Server
+import Flow.Server (FlowConfiguration(FlowConfiguration), runFlow)
 import Folder.Model
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -125,8 +125,12 @@ main = withCurlDo $ do
                         , amazons3env       = amazonEnv
                         , pdftoolslambdaenv = lambdaEnv
                         }
-    liftIO . void . fork . runFlow $ FlowConfiguration
-      (unConnectionSource . simpleSource $ connSettings [])
+    liftIO
+      . void
+      . fork
+      . runFlow
+      . FlowConfiguration (unConnectionSource . simpleSource $ connSettings [])
+      $ flowPort appConf
     startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> MainM ()

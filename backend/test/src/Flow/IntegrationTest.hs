@@ -4,6 +4,7 @@
 module Flow.IntegrationTest where
 
 import Control.Monad.IO.Class
+import Control.Monad.Reader.Class
 import Data.Text.Lazy (unpack)
 import Network.HTTP.Client
 import Servant.Client
@@ -17,6 +18,7 @@ import DB
 import Flow.Api
 import Flow.Client
 import OAuth.Model
+import TestEnvSt.Internal
 import TestingUtil hiding (assertRight)
 import TestKontra
 
@@ -125,9 +127,10 @@ getToken = do
 
 getEnv :: TestEnv ClientEnv
 getEnv = do
-  mgr <- liftIO $ newManager defaultManagerSettings
-  url <- parseBaseUrl "localhost:9173"
-  pure $ mkClientEnv mgr url
+  TestEnvSt {..} <- ask
+  mgr            <- liftIO $ newManager defaultManagerSettings
+  url            <- parseBaseUrl "localhost"
+  pure . mkClientEnv mgr $ url { baseUrlPort = flowPort }
 
 request :: ClientEnv -> ClientM a -> TestEnv (Either ClientError a)
 request env req = liftIO $ runClientM req env

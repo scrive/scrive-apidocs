@@ -236,8 +236,11 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
       <$> connect (connSettings kontraComposites)
   cs <- poolSource (connSettings kontraComposites) 1 10 50
 
-  void . fork . runFlow $ FlowConfiguration
-    (unConnectionSource . simpleSource $ connSettings [])
+  void
+    . fork
+    . runFlow
+    . FlowConfiguration (unConnectionSource . simpleSource $ connSettings [])
+    $ testFlowPort tconf
   active_tests       <- atomically $ newTVar (True, 0)
   rejected_documents <- newMVar 0
   test_durations     <- newMVar []
@@ -262,6 +265,7 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
                              , cronDBConfig       = testDBConfig tconf
                              , cronMonthlyInvoice = testMonthlyInvoiceConf tconf
                              , testDurations      = test_durations
+                             , flowPort           = testFlowPort tconf
                              }
       ts' = if env ^. #stagingTests then stagingTests ++ ts else ts
   forM_ (env ^. #outputDirectory) $ createDirectoryIfMissing True

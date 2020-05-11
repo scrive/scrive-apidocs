@@ -38,9 +38,10 @@ import User.UserID (UserID, unUserID, unsafeUserID)
 import UserGroup.Internal (UserGroupID, unsafeUserGroupID)
 import qualified Flow.Model as Model
 
-newtype FlowConfiguration = FlowConfiguration
+data FlowConfiguration = FlowConfiguration
     { dbConnectionPool :: forall m . (MonadBase IO m, MonadMask m)
         => ConnectionSourceM m
+    , flowPort :: Int
     }
 
 type AppM = ReaderT FlowConfiguration (DBT Handler)
@@ -245,4 +246,5 @@ app flowConfiguration =
                              server
 
 runFlow :: FlowConfiguration -> IO ()
-runFlow = run 9173 . app
+runFlow conf@FlowConfiguration {..} = runSettings warpSettings $ app conf
+  where warpSettings = setPort flowPort defaultSettings
