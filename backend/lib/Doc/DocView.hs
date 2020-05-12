@@ -118,10 +118,7 @@ pageDocumentSignView ctx document siglink ad = do
 pageDocumentIdentifyView
   :: Kontrakcja m => Context -> Document -> SignatoryLink -> AnalyticsData -> m Text
 pageDocumentIdentifyView ctx document siglink ad = do
-  let authorid          = fromJust $ getAuthorSigLink document >>= maybesignatory
-      useEIDHubForNemID = fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForDK
-      useEIDHubForNOBankIDView =
-        fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOView
+  let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
       useEIDHubForFITupasView =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForFIView
   auser      <- fromJust <$> dbQuery (GetUserByIDIncludeDeleted authorid)
@@ -134,8 +131,6 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctx ^. #netsConfig
     F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #netsConfig
     F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #netsConfig
-    F.value "useEIDHubForNemID" useEIDHubForNemID
-    F.value "useEIDHubForNOBankIDView" useEIDHubForNOBankIDView
     F.value "useEIDHubForFITupasView" useEIDHubForFITupasView
     F.value "previewLink" $ show LinkPreviewLockedImage
     standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company

@@ -4,8 +4,6 @@ module EID.Authentication.Model (
   -- from EID.CGI.GRP.Types
   , CGISEBankIDAuthentication(..)
   , MergeCGISEBankIDAuthentication(..)
-  , MergeNetsNOBankIDAuthentication(..)
-  , MergeNetsDKNemIDAuthentication(..)
   , MergeNetsFITupasAuthentication(..)
   , MergeSMSPinAuthentication(..)
   , MergeEIDServiceVerimiAuthentication(..)
@@ -143,31 +141,6 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication (
         sqlSet "signatory_personal_number" cgisebidaSignatoryPersonalNumber
         sqlSet "ocsp_response"             cgisebidaOcspResponse
         sqlSet "signatory_ip"              cgisebidaSignatoryIP
-
--- | Insert bank id authentication for a given signatory or replace the existing one.
-data MergeNetsNOBankIDAuthentication = MergeNetsNOBankIDAuthentication AuthenticationKind SessionID SignatoryLinkID NetsNOBankIDAuthentication
-instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDAuthentication () where
-  dbUpdate (MergeNetsNOBankIDAuthentication authKind sid slid NetsNOBankIDAuthentication {..})
-    = do
-      mergeAuthenticationInternal authKind sid slid $ do
-        sqlSet "provider"                NetsNOBankID
-        sqlSet "internal_provider"       netsNOBankIDInternalProvider
-        sqlSet "signature"               netsNOBankIDCertificate
-        sqlSet "signatory_name"          netsNOBankIDSignatoryName
-        sqlSet "signatory_phone_number"  netsNOBankIDPhoneNumber
-        sqlSet "signatory_date_of_birth" netsNOBankIDDateOfBirth
-
--- | Insert NemID authentication for a given signatory or replace the existing one.
-data MergeNetsDKNemIDAuthentication = MergeNetsDKNemIDAuthentication AuthenticationKind SessionID SignatoryLinkID NetsDKNemIDAuthentication
-instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDAuthentication () where
-  dbUpdate (MergeNetsDKNemIDAuthentication authKind sid slid NetsDKNemIDAuthentication {..})
-    = do
-      mergeAuthenticationInternal authKind sid slid $ do
-        sqlSet "provider"                NetsDKNemID
-        sqlSet "internal_provider"       netsDKNemIDInternalProvider
-        sqlSet "signature"               netsDKNemIDCertificate
-        sqlSet "signatory_name"          netsDKNemIDSignatoryName
-        sqlSet "signatory_date_of_birth" netsDKNemIDDateOfBirth
 
 data MergeSMSPinAuthentication = MergeSMSPinAuthentication AuthenticationKind SessionID SignatoryLinkID Text
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeSMSPinAuthentication () where

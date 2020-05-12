@@ -2,12 +2,8 @@ var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var SwedishIdentifyView = require("./swedish/swedishidentifyview");
 var SwedishIdentifyModel = require("./swedish/swedishidentifymodel");
-var NorwegianIdentifyView = require("./norwegian/norwegianidentifyview");
-var NorwegianIdentifyModel = require("./norwegian/norwegianidentifymodel");
 var NorwegianEIDHubIdentifyView = require("./norwegian-eidhub/norwegianidentifyview");
 var NorwegianEIDHubIdentifyModel = require("./norwegian-eidhub/norwegianidentifymodel");
-var DanishIdentifyView = require("./danish/danishidentifyview");
-var DanishIdentifyModel = require("./danish/danishidentifymodel");
 var DanishEIDHubIdentifyView = require("./danish-eidhub/danishidentifyview");
 var DanishEIDHubIdentifyModel = require("./danish-eidhub/danishidentifymodel");
 var FinnishIdentifyView = require("./finnish/finnishidentifyview");
@@ -51,17 +47,9 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
         if (sig.seBankIDAuthenticationToViewArchived()) {
           model = new SwedishIdentifyModel(args);
         } else if (sig.noBankIDAuthenticationToViewArchived()) {
-          if (this.props.useEIDHubForNOBankIDView) {
-            model = new NorwegianEIDHubIdentifyModel(args);
-          } else {
-            model = new NorwegianIdentifyModel(args);
-          }
+          model = new NorwegianEIDHubIdentifyModel(args);
         } else if (sig.dkNemIDAuthenticationToViewArchived()) {
-          if (this.props.useEIDHubForNemID) {
-            model = new DanishEIDHubIdentifyModel(args);
-          } else {
-            model = new DanishIdentifyModel(args);
-          }
+          model = new DanishEIDHubIdentifyModel(args);
         } else if (sig.fiTupasAuthenticationToViewArchived()) {
           if (this.props.useEIDHubForFITupasView) {
             model = new FinnishEIDHubIdentifyModel(args);
@@ -79,17 +67,9 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
         if (sig.seBankIDAuthenticationToView()) {
           model = new SwedishIdentifyModel(args);
         } else if (sig.noBankIDAuthenticationToView()) {
-          if (this.props.useEIDHubForNOBankIDView) {
-            model = new NorwegianEIDHubIdentifyModel(args);
-          } else {
-            model = new NorwegianIdentifyModel(args);
-          }
+          model = new NorwegianEIDHubIdentifyModel(args);
         } else if (sig.dkNemIDAuthenticationToView()) {
-          if (this.props.useEIDHubForNemID) {
-            model = new DanishEIDHubIdentifyModel(args);
-          } else {
-            model = new DanishIdentifyModel(args);
-          }
+          model = new DanishEIDHubIdentifyModel(args);
         } else if (sig.fiTupasAuthenticationToView()) {
           if (this.props.useEIDHubForFITupasView) {
             model = new FinnishEIDHubIdentifyModel(args);
@@ -171,26 +151,14 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 />
               </div>
             }
-            { /* else if */ model.isNorwegian() && this.props.useEIDHubForNOBankIDView &&
+            { /* else if */ model.isNorwegian() &&
               <NorwegianEIDHubIdentifyView
                 ref="identify"
                 model={model}
               />
             }
-            { /* else if */ model.isNorwegian() && !this.props.useEIDHubForNOBankIDView  &&
-              <NorwegianIdentifyView
-                ref="identify"
-                model={model}
-              />
-            }
-            { /* else if */ model.isDanish() && this.props.useEIDHubForNemID &&
+            { /* else if */ model.isDanish() &&
               <DanishEIDHubIdentifyView
-                ref="identify"
-                model={model}
-              />
-            }
-            { /* else if */ model.isDanish() && !this.props.useEIDHubForNemID &&
-              <DanishIdentifyView
                 ref="identify"
                 model={model}
               />

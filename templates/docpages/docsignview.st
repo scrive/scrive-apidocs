@@ -142,8 +142,6 @@ $htmlopentag()$
     var fromTemplate = {
       documentId: "$documentid$",
       sigLinkId: "$siglinkid$",
-      useEIDHubForNemID: $if(useEIDHubForNemID)$ true $else$ false $endif$,
-      useEIDHubForNOBankIDView: $if(useEIDHubForNOBankIDView)$ true $else$ false $endif$,
       useEIDHubForFITupasView: $if(useEIDHubForFITupasView)$ true $else$ false $endif$
     };
     </script>

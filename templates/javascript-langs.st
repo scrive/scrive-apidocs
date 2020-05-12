@@ -30,31 +30,10 @@ javascriptLocalisation =
              , signviewPdfOrPhoto: "$_pdfOrPhoto()$"
              , identifyDocument: "$_IdentifyDocument()$"
              , identifyBankId: "$_IdentifyBankId()$"
-             , identifyBankIdNo: "$_IdentifyBankIdNO()$"
-             , identifyBankIdNoMobile: "$_IdentifyBankIdNOMobile()$"
-             , identifyNOBankIdError: {
-               failed: "$_IdentifyBankIdNOFailed()$"
-               , canceled: "$_IdentifyBankIdNOCanceled()$"
-               , useragent: "$_IdentifyBankIdNOUserAgent()$"
-               , auth: "$_IdentifyBankIdNOAuth()$"
-               , blocked: "$_IdentifyBankIdNOBlocked()$"
-               , revoked: "$_IdentifyBankIdNORevoked()$"
-               , expired: "$_IdentifyBankIdNOExpired()$"
-               , mobile: "$_IdentifyBankIdNOMobileError()$"
-             }
              , identifyWithPin: {
                 invalidPin: "$_identifyWithPinInvalidPin()$"
                 , enterPin: "$_identifyWithPinEnterPin()$"
                 , pinInfotext: "$_identifyWithPinInfotext()$"
-             }
-             , identifyDKNemIdError: {
-               failed: "$_IdentifyDKNemIdFailed()$"
-               , canceled: "$_IdentifyDKNemIdCanceled()$"
-               , useragent: "$_IdentifyDKNemIdUserAgent()$"
-               , auth: "$_IdentifyDKNemIdAuth()$"
-               , blocked: "$_IdentifyDKNemIdBlocked()$"
-               , revoked: "$_IdentifyDKNemIdRevoked()$"
-               , expired: "$_IdentifyDKNemIdExpired()$"
              }
              , identifyFITupasError: {
                  failed: "$_IdentifyFITupasFailed()$"
@@ -93,10 +72,6 @@ javascriptLocalisation =
              , signNOBankIDCanceled : "$_SignBankIdNOCanceled()$"
              , signDKNemIDSuccess : "$_SignNemIdDKSuccess()$"
              , signDKNemIDCanceled : "$_SignNemIdDKCanceled()$"
-             , identifyPhoneError: "$_IdentifyPhoneError()$"
-             , identifyPhoneNumber: "$_IdentifyPhoneNumber()$"
-             , identifyPhoneNumber8: "$_IdentifyPhoneNumber8()$"
-             , identifyDateOfBirth: "$_IdentifyDateOfBirth()$"
              , openBankId: "$_OpenBankId()$"
              , yourIdNumber: "$_YourIdNumber()$"
              , yourMobileNumber:"$_YourMobileNumber()$"
