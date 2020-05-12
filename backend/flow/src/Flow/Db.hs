@@ -94,7 +94,7 @@ tableFlowInstancesKVStore = tblTable
                  , tblColumn { colName = "key", colType = TextT, colNullable = False }
                  , tblColumn { colName = "value", colType = TextT, colNullable = False }
                  ]
-  , tblIndexes     = [indexOnColumn "instance_id"]
+  , tblPrimaryKey  = pkOnColumns ["instance_id", "type", "key", "value"]
   , tblForeignKeys =
     [(fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyRestrict }]
   }
@@ -118,7 +118,7 @@ tableFlowStateMachines = tblTable
     -- TODO: Maybe use JSON type instead of Text???
                  , tblColumn { colName = "data", colType = TextT, colNullable = False }
                  ]
-  , tblIndexes     = [indexOnColumn "template_id"]
+  , tblPrimaryKey  = pkOnColumn "template_id"
   , tblForeignKeys =
     [(fkOnColumn "template_id" "flow_templates" "id") { fkOnDelete = ForeignKeyRestrict }]
   }

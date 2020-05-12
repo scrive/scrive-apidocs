@@ -99,6 +99,13 @@ main = withCurlDo $ do
   hostname <- getHostName
   let globalLogContext = ["server_hostname" .= hostname]
 
+  (errsFlow, logRunnerFlow) <- mkLogRunner "flow" (logConfig appConf) rng
+  mapM_ T.putStrLn errsFlow
+  liftIO . void . fork $ runFlow
+    logRunnerFlow
+    ( FlowConfiguration (unConnectionSource . simpleSource $ connSettings [])
+    $ flowPort appConf
+    )
   runWithLogRunner lr . localData globalLogContext $ do
     logInfo "Starting kontrakcja-server" $ object ["version" .= VersionTH.versionID]
     checkExecutables
@@ -125,12 +132,6 @@ main = withCurlDo $ do
                         , amazons3env       = amazonEnv
                         , pdftoolslambdaenv = lambdaEnv
                         }
-    liftIO
-      . void
-      . fork
-      . runFlow
-      . FlowConfiguration (unConnectionSource . simpleSource $ connSettings [])
-      $ flowPort appConf
     startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> MainM ()

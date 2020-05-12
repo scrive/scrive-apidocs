@@ -363,6 +363,7 @@ Library
                  , Flow.Machinize
                  , Flow.Model
                  , Flow.Model.Types
+                 , Flow.OrphanInstances
                  , Flow.Server
                  , Flow.Transducer
                  , FeatureFlags.Model

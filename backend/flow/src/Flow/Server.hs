@@ -18,6 +18,8 @@ import Data.Text.Encoding
 import Data.Yaml
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
+import Log.Class
+import Log.Monad (LogT)
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
@@ -34,6 +36,8 @@ import Flow.HighTongue
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types
+import Flow.OrphanInstances ()
+import Log.Configuration (LogRunner(LogRunner, withLogger))
 import User.UserID (UserID, unUserID, unsafeUserID)
 import UserGroup.Internal (UserGroupID, unsafeUserGroupID)
 import qualified Flow.Model as Model
@@ -44,7 +48,7 @@ data FlowConfiguration = FlowConfiguration
     , flowPort :: Int
     }
 
-type AppM = ReaderT FlowConfiguration (DBT Handler)
+type AppM = ReaderT FlowConfiguration (LogT (DBT Handler))
 
 server :: ServerT FlowAPI AppM
 server = authenticated :<|> validateTemplate
@@ -100,6 +104,7 @@ authHandler flowConfiguration = mkAuthHandler handler
 -- TODO: Check user permissions to create templates.
 createTemplate :: Account -> CreateTemplate -> AppM GetCreateTemplate
 createTemplate Account {..} CreateTemplate {..} = do
+  logInfo_ "creating template"
   id <- Model.insertTemplate $ InsertTemplate name process userId userGroupId
   pure $ GetCreateTemplate { id, name }
 
@@ -108,6 +113,7 @@ createTemplate Account {..} CreateTemplate {..} = do
 -- TODO: Check user permissions to delete given template.
 deleteTemplate :: Account -> TemplateId -> AppM NoContent
 deleteTemplate _account id = do
+  logInfo_ "deleting template"
     -- TODO: Can committed template be deleted?
   Model.deleteTemplate id
   pure NoContent
@@ -117,12 +123,16 @@ sqlMaybeSet :: (MonadState v m, SqlSet v, Show a, ToSQL a) => SQL -> Maybe a -> 
 sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
 
 getTemplate :: Account -> TemplateId -> AppM GetTemplate
-getTemplate _account = Model.selectTemplate
+getTemplate _account templateId = do
+  logInfo_ "getting template"
+  Model.selectTemplate templateId
 
 -- TODO: Committed templates can't be updated.
 -- TODO: Check user permissions to update given template.
 patchTemplate :: Account -> TemplateId -> PatchTemplate -> AppM GetTemplate
-patchTemplate Account {..} = Model.updateTemplate
+patchTemplate Account {..} templateId patch = do
+  logInfo_ "patching template"
+  Model.updateTemplate templateId patch
 
 throwValidationErr409 :: [ValidationError] -> AppM a
 throwValidationErr409 errors =
@@ -132,6 +142,7 @@ throwValidationErr409 errors =
 -- TODO: Check if the template is already committed and return 204 in case of conflict.
 commitTemplate :: Account -> TemplateId -> AppM NoContent
 commitTemplate Account {..} id = do
+  logInfo_ "committing template"
   now      <- liftIO currentTime
   template <- Model.getTemplateDsl id
   machine  <- either throwValidationErr409 pure $ decodeHightTang template >>= machinize
@@ -160,11 +171,13 @@ decodeHightTang template = packError `left` decodeEither' (encodeUtf8 template)
 -- TODO: Do better error messages.
 -- TODO: Compilation step?
 validateTemplate :: FlowDSL -> AppM [ValidationError]
-validateTemplate template =
+validateTemplate template = do
+  logInfo_ "validating template"
   either pure (const (pure [])) $ decodeHightTang template >>= machinize
 
 startInstance :: Account -> TemplateId -> InstanceToTemplateMapping -> AppM GetInstance
 startInstance Account {..} templateId tp@InstanceToTemplateMapping {..} = do
+  logInfo_ "starting instance"
   -- TODO: Check permissions create instance..
   -- TODO: Check permissions to the template.
   -- TODO: Validate mapping...
@@ -199,6 +212,7 @@ startInstance Account {..} templateId tp@InstanceToTemplateMapping {..} = do
 
 getInstance :: InstanceId -> AppM GetInstance
 getInstance instanceId = do
+  logInfo_ "getting instance"
   -- TODO: Authorize user.
   -- TODO: Model instance state inside database somehow!
   templateId <- Model.selectInstance instanceId
@@ -229,22 +243,28 @@ getInstance instanceId = do
 getInstanceView :: InstanceId -> AppM GetInstanceView
 getInstanceView = undefined
 
-naturalFlow :: FlowConfiguration -> AppM a -> Handler a
-naturalFlow flowConfiguration flowApp =
+naturalFlow
+  :: (LogT (DBT Handler) a -> DBT Handler a) -> FlowConfiguration -> AppM a -> Handler a
+naturalFlow runLogger flowConfiguration flowApp =
   runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
+    . runLogger
     $ runReaderT flowApp flowConfiguration
 
 genAuthServerContext :: FlowConfiguration -> Context (AuthHandler Request Account ': '[])
 genAuthServerContext flowConfiguration = authHandler flowConfiguration :. EmptyContext
 
-app :: FlowConfiguration -> Application
-app flowConfiguration =
+app
+  :: (forall a . LogT (DBT Handler) a -> DBT Handler a)
+  -> FlowConfiguration
+  -> Application
+app runLogger flowConfiguration =
   serveWithContext apiProxy (genAuthServerContext flowConfiguration)
     $ hoistServerWithContext apiProxy
                              (Proxy :: Proxy '[AuthHandler Request Account])
-                             (naturalFlow flowConfiguration)
+                             (naturalFlow runLogger flowConfiguration)
                              server
 
-runFlow :: FlowConfiguration -> IO ()
-runFlow conf@FlowConfiguration {..} = runSettings warpSettings $ app conf
+runFlow :: LogRunner -> FlowConfiguration -> IO ()
+runFlow LogRunner {..} conf@FlowConfiguration {..} = withLogger $ \runLogger -> do
+  runSettings warpSettings $ app runLogger conf
   where warpSettings = setPort flowPort defaultSettings

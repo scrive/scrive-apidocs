@@ -40,7 +40,9 @@ unjsonTestConf =
     <*> fieldOpt "cron_monthly_invoice"
                  testMonthlyInvoiceConf
                  "Monthly-invoice cron job configuration"
-    <*> fieldDef "flow_port" 9173 testFlowPort "Flow listening port"
+    -- TODO: This port is different from the one in AppConf because flow is
+    -- started as part of test as well. Thus we are preventing port clash.
+    <*> fieldDef "flow_port" 9174 testFlowPort "Flow listening port"
 
 instance Unjson TestConf where
   unjsonDef = unjsonTestConf

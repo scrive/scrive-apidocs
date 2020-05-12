@@ -196,19 +196,27 @@ testMany workspaceRoot (allargs, ts) = do
   (errs, lr) <- mkLogRunner "test" testLogConfig rng
   mapM_ T.putStrLn errs
 
-  withLogger lr $ \runLogger -> testMany' workspaceRoot (allargs, ts) runLogger rng
+  tconf@TestConf {..} <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
+
+  void . fork $ runFlow
+    lr
+    (FlowConfiguration
+      (unConnectionSource . simpleSource $ pgConnSettings testDBConfig [])
+      testFlowPort
+    )
+
+  withLogger lr $ \runLogger -> testMany' tconf (allargs, ts) runLogger rng
 
 testMany'
-  :: FilePath
+  :: TestConf
   -> ([String], [TestEnvSt -> Test])
   -> (forall m r . LogT m r -> m r)
   -> CryptoRNGState
   -> IO ()
-testMany' workspaceRoot (allargs, ts) runLogger rng = do
+testMany' tconf (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  tconf     <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
   templates <- readGlobalTemplates
 
   let connSettings  = pgConnSettings (testDBConfig tconf)
@@ -234,13 +242,8 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
   staticSource <-
     (\conn -> ConnectionSource $ ConnectionSourceM { withConnection = ($ conn) })
       <$> connect (connSettings kontraComposites)
-  cs <- poolSource (connSettings kontraComposites) 1 10 50
+  cs                 <- poolSource (connSettings kontraComposites) 1 10 50
 
-  void
-    . fork
-    . runFlow
-    . FlowConfiguration (unConnectionSource . simpleSource $ connSettings [])
-    $ testFlowPort tconf
   active_tests       <- atomically $ newTVar (True, 0)
   rejected_documents <- newMVar 0
   test_durations     <- newMVar []
