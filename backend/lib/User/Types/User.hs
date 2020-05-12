@@ -1,7 +1,7 @@
 module User.Types.User
-  ( I.User
-  , I.UserInfo
-  , I.UserSettings
+  ( User(User)
+  , UserInfo(UserInfo)
+  , UserSettings(UserSettings)
   , composeFullName
   , defaultUser
   , defaultUserInfo
@@ -29,42 +29,42 @@ import User.Email
 import User.Lang
 import User.Password
 import User.Types.SignupMethod
+import User.Types.User.Internal
 import User.UserID
 import UserGroup.Types
-import qualified DataRetentionPolicy.Internal as I
-import qualified User.Types.User.Internal as I
+import qualified DataRetentionPolicy.Internal
 
-defaultUser :: I.User
-defaultUser = I.User { id                 = unsafeUserID 0
-                     , password           = Nothing
-                     , totpKey            = Nothing
-                     , totpActive         = False
-                     , totpIsMandatory    = False
-                     , isCompanyAdmin     = False
-                     , accountSuspended   = False
-                     , hasAcceptedTOS     = Nothing
-                     , signupMethod       = ByAdmin
-                     , info               = defaultUserInfo
-                     , settings           = defaultUserSettings
-                     , associatedDomainID = unsafeBrandedDomainID 0
-                     , groupID            = emptyUserGroupID
-                     , homeFolderID       = Nothing
-                     , sysAuth            = LoginAuthNative
-                     , internalTags       = S.empty
-                     , externalTags       = S.empty
-                     }
+defaultUser :: User
+defaultUser = User { id                 = unsafeUserID 0
+                   , password           = Nothing
+                   , totpKey            = Nothing
+                   , totpActive         = False
+                   , totpIsMandatory    = False
+                   , isCompanyAdmin     = False
+                   , accountSuspended   = False
+                   , hasAcceptedTOS     = Nothing
+                   , signupMethod       = ByAdmin
+                   , info               = defaultUserInfo
+                   , settings           = defaultUserSettings
+                   , associatedDomainID = unsafeBrandedDomainID 0
+                   , groupID            = emptyUserGroupID
+                   , homeFolderID       = Nothing
+                   , sysAuth            = LoginAuthNative
+                   , internalTags       = S.empty
+                   , externalTags       = S.empty
+                   }
 
-defaultUserInfo :: I.UserInfo
-defaultUserInfo = I.UserInfo { firstName       = ""
-                             , lastName        = ""
-                             , personalNumber  = ""
-                             , companyPosition = ""
-                             , phone           = ""
-                             , email           = Email ""
-                             }
+defaultUserInfo :: UserInfo
+defaultUserInfo = UserInfo { firstName       = ""
+                           , lastName        = ""
+                           , personalNumber  = ""
+                           , companyPosition = ""
+                           , phone           = ""
+                           , email           = Email ""
+                           }
 
-defaultUserSettings :: I.UserSettings
-defaultUserSettings = I.UserSettings LANG_EN defaultDataRetentionPolicy
+defaultUserSettings :: UserSettings
+defaultUserSettings = UserSettings LANG_EN defaultDataRetentionPolicy
 
 internalUserTagsSelector :: SQL
 internalUserTagsSelector =
@@ -205,14 +205,14 @@ fetchUser
      , CompositeArray1 Tag
      , CompositeArray1 Tag
      )
-  -> I.User
+  -> User
 fetchUser (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags)
-  = I.User
+  = User
     { password = maybeMkPassword password salt (int16ToPwdAlgorithm <$> passwordAlgorithm)
-    , info         = I.UserInfo { .. }
-    , settings     = I.UserSettings { lang                = lang
-                                    , dataRetentionPolicy = I.DataRetentionPolicy { .. }
-                                    }
+    , info         = UserInfo { .. }
+    , settings     = UserSettings { lang                = lang
+                                  , dataRetentionPolicy = DataRetentionPolicy { .. }
+                                  }
     , internalTags = S.fromList iTags
     , externalTags = S.fromList eTags
     , ..
@@ -252,18 +252,18 @@ fetchUserWithUserGroupName
      , CompositeArray1 Tag
      , Text
      )
-  -> (I.User, Text)
+  -> (User, Text)
 fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags, name)
   = (user, name)
   where
-    user = I.User
+    user = User
       { password     = maybeMkPassword password
                                        salt
                                        (int16ToPwdAlgorithm <$> passwordAlgorithm)
-      , info         = I.UserInfo { .. }
-      , settings     = I.UserSettings { lang                = lang
-                                      , dataRetentionPolicy = I.DataRetentionPolicy { .. }
-                                      }
+      , info         = UserInfo { .. }
+      , settings     = UserSettings { lang                = lang
+                                    , dataRetentionPolicy = DataRetentionPolicy { .. }
+                                    }
       , internalTags = S.fromList iTags
       , externalTags = S.fromList eTags
       , ..

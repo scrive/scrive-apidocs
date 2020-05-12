@@ -63,7 +63,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
-import qualified MailContext.Internal as I
+import qualified MailContext.Internal
 
 -- | Log a document event, adding some standard properties.
 logDocEvent
@@ -471,11 +471,11 @@ findAndTimeoutDocuments = do
       Just author -> do
         ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents (author ^. #groupID)
         bd   <- dbQuery $ GetBrandedDomainByUserID (author ^. #id)
-        let mc = I.MailContext { lang               = lang
-                               , brandedDomain      = bd
-                               , time               = now
-                               , mailNoreplyAddress = noreplyAddress
-                               }
+        let mc = MailContext { lang               = lang
+                             , brandedDomain      = bd
+                             , time               = now
+                             , mailNoreplyAddress = noreplyAddress
+                             }
         runTemplatesT (lang, gt) . runMailContextT mc $ do
           when (ugwpSettings ugwp ^. #sendTimeoutNotification) $ do
             sendDocumentTimeoutedEmail =<< theDocument

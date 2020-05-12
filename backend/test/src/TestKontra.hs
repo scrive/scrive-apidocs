@@ -78,8 +78,8 @@ import TestEnvSt
 import TestFileStorage
 import User.Lang
 import User.Types.User
-import qualified Context.Internal as I
-import qualified TestEnvSt.Internal as I
+import qualified Context.Internal
+import qualified TestEnvSt.Internal
 
 inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
@@ -124,10 +124,10 @@ ununTestEnv st =
   -- for each test start with no time delay
     . flip
         evalStateT
-        I.TestEnvStRW { timeDelay   = 0
-                      , currentTime = Nothing
-                      , requestUri  = "http://testkontra.fake"
-                      }
+        TestEnvStRW { timeDelay   = 0
+                    , currentTime = Nothing
+                    , requestUri  = "http://testkontra.fake"
+                    }
     . evalTestFileStorageT
         ((, st ^. #redisConn, st ^. #fileMemCache) <$> st ^. #amazonS3Env)
     . unTestEnv
@@ -412,48 +412,48 @@ mkContext lang = do
   bd               <- dbQuery GetMainBrandedDomain
   liftIO $ do
     filecache <- newFileMemCache 52428800
-    return I.Context { maybeUser               = Nothing
-                     , time                    = time
-                     , clientName              = Nothing
-                     , clientTime              = Nothing
-                     , ipAddr                  = noIP
-                     , production              = False
-                     , cdnBaseUrl              = Nothing
-                     , templates               = localizedVersion lang globaltemplates
-                     , globalTemplates         = globaltemplates
-                     , lang                    = lang
-                     , isMailBackdoorOpen      = False
-                     , mailNoreplyAddress      = "noreply@scrive.com"
-                     , cgiGrpConfig            = Nothing
-                     , redisCache              = Nothing
-                     , fileCache               = filecache
-                     , xToken                  = unexpectedError "xtoken is not defined"
-                     , adminAccounts           = []
-                     , salesAccounts           = []
-                     , maybePadUser            = Nothing
-                     , useHttps                = False
-                     , gtConf                  = testGTConf
-                     , sessionID               = SessionID.tempSessionID
-                     , trackJsToken            = Nothing
-                     , zendeskKey              = Nothing
-                     , mixpanelToken           = Nothing
-                     , gaToken                 = Nothing
-                     , hubspotConf             = Nothing
-                     , brandedDomain           = bd
-                     , salesforceConf          = Nothing
-                     , netsConfig              = Nothing
-                     , isApiLogEnabled         = True
-                     , netsSignConfig          = Nothing
+    return Context { maybeUser               = Nothing
+                   , time                    = time
+                   , clientName              = Nothing
+                   , clientTime              = Nothing
+                   , ipAddr                  = noIP
+                   , production              = False
+                   , cdnBaseUrl              = Nothing
+                   , templates               = localizedVersion lang globaltemplates
+                   , globalTemplates         = globaltemplates
+                   , lang                    = lang
+                   , isMailBackdoorOpen      = False
+                   , mailNoreplyAddress      = "noreply@scrive.com"
+                   , cgiGrpConfig            = Nothing
+                   , redisCache              = Nothing
+                   , fileCache               = filecache
+                   , xToken                  = unexpectedError "xtoken is not defined"
+                   , adminAccounts           = []
+                   , salesAccounts           = []
+                   , maybePadUser            = Nothing
+                   , useHttps                = False
+                   , gtConf                  = testGTConf
+                   , sessionID               = SessionID.tempSessionID
+                   , trackJsToken            = Nothing
+                   , zendeskKey              = Nothing
+                   , mixpanelToken           = Nothing
+                   , gaToken                 = Nothing
+                   , hubspotConf             = Nothing
+                   , brandedDomain           = bd
+                   , salesforceConf          = Nothing
+                   , netsConfig              = Nothing
+                   , isApiLogEnabled         = True
+                   , netsSignConfig          = Nothing
                      -- We use real Lambda config here because we want our tests
                      -- to check it.  This Lambda and S3 bucket are dedicated
                      -- for tests and development.
-                     , pdfToolsLambdaEnv       = pdfSealLambdaEnv
-                     , passwordServiceConf     = defaultPasswordService
-                     , maybeApiUser            = Nothing
-                     , eidServiceConf          = Nothing
-                     , ssoConf                 = Nothing
-                     , postSignViewRedirectURL = ""
-                     }
+                   , pdfToolsLambdaEnv       = pdfSealLambdaEnv
+                   , passwordServiceConf     = defaultPasswordService
+                   , maybeApiUser            = Nothing
+                   , eidServiceConf          = Nothing
+                   , ssoConf                 = Nothing
+                   , postSignViewRedirectURL = ""
+                   }
 
 mkContextWithUser :: Lang -> User -> TestEnv Context
 mkContextWithUser lang user = set #maybeUser (Just user) <$> mkContext lang

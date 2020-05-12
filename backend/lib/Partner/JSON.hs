@@ -1,11 +1,11 @@
 module Partner.JSON
-  ( I.UserForUpdate
+  ( UserForUpdate(UserForUpdate)
   , unjsonUserForUpdate
   , userInfoFromUserForUpdate
   , userToUserForUpdate
   , unjsonUsersForUpdate
 
-  , I.UserGroupForUpdate
+  , UserGroupForUpdate(UserGroupForUpdate)
   , unjsonUserGroupForUpdate
   , unjsonUserGroupsForUpdate
   , userGroupToUserGroupForUpdate
@@ -15,29 +15,29 @@ module Partner.JSON
 import Data.Unjson
 
 import InputValidation
+import Partner.JSON.Internal
 import User.Email (Email(..))
 import User.Model
 import UserGroup.Types
-import qualified Partner.JSON.Internal as I
-import qualified User.Types.User.Internal as I
-import qualified UserGroup.Internal as I
+import qualified User.Types.User.Internal
+import qualified UserGroup.Internal
 
-defaultUserForUpdate :: I.UserForUpdate
-defaultUserForUpdate = I.UserForUpdate { id              = ""
-                                       , email           = Email ""
-                                       , firstName       = ""
-                                       , lastName        = ""
-                                       , personalNumber  = ""
-                                       , phone           = ""
-                                       , companyPosition = ""
-                                       , lang            = LANG_EN
-                                       , hasAcceptedTOS  = False
-                                       }
+defaultUserForUpdate :: UserForUpdate
+defaultUserForUpdate = UserForUpdate { id              = ""
+                                     , email           = Email ""
+                                     , firstName       = ""
+                                     , lastName        = ""
+                                     , personalNumber  = ""
+                                     , phone           = ""
+                                     , companyPosition = ""
+                                     , lang            = LANG_EN
+                                     , hasAcceptedTOS  = False
+                                     }
 
-userInfoFromUserForUpdate :: I.UserForUpdate -> UserInfo
-userInfoFromUserForUpdate I.UserForUpdate {..} = I.UserInfo { .. }
+userInfoFromUserForUpdate :: UserForUpdate -> UserInfo
+userInfoFromUserForUpdate UserForUpdate {..} = UserInfo { .. }
 
-unjsonUserForUpdate :: UnjsonDef I.UserForUpdate
+unjsonUserForUpdate :: UnjsonDef UserForUpdate
 unjsonUserForUpdate =
   objectOf
     $    defaultUserForUpdate
@@ -78,8 +78,8 @@ unjsonUserForUpdate =
          <**> pure (#hasAcceptedTOS .~)
          )
 
-userToUserForUpdate :: User -> I.UserForUpdate
-userToUserForUpdate user = I.UserForUpdate
+userToUserForUpdate :: User -> UserForUpdate
+userToUserForUpdate user = UserForUpdate
   { id              = showt $ user ^. #id
   , email           = user ^. #info % #email
   , firstName       = user ^. #info % #firstName
@@ -91,23 +91,23 @@ userToUserForUpdate user = I.UserForUpdate
   , hasAcceptedTOS  = isJust (user ^. #hasAcceptedTOS)
   }
 
-unjsonUsersForUpdate :: UnjsonDef [I.UserForUpdate]
+unjsonUsersForUpdate :: UnjsonDef [UserForUpdate]
 unjsonUsersForUpdate =
   objectOf $ fieldBy "users" identity "List of users" (arrayOf unjsonUserForUpdate)
 
 ----------------------------------------
 
-defaultUserGroupForUpdate :: I.UserGroupForUpdate
-defaultUserGroupForUpdate = I.UserGroupForUpdate { id            = ""
-                                                 , entityName    = ""
-                                                 , companyNumber = ""
-                                                 , address       = ""
-                                                 , zipCode       = ""
-                                                 , city          = ""
-                                                 , country       = ""
-                                                 }
+defaultUserGroupForUpdate :: UserGroupForUpdate
+defaultUserGroupForUpdate = UserGroupForUpdate { id            = ""
+                                               , entityName    = ""
+                                               , companyNumber = ""
+                                               , address       = ""
+                                               , zipCode       = ""
+                                               , city          = ""
+                                               , country       = ""
+                                               }
 
-unjsonUserGroupForUpdate :: UnjsonDef I.UserGroupForUpdate
+unjsonUserGroupForUpdate :: UnjsonDef UserGroupForUpdate
 unjsonUserGroupForUpdate =
   objectOf
     $    defaultUserGroupForUpdate
@@ -144,39 +144,39 @@ unjsonUserGroupForUpdate =
          <**> pure (#country .~)
          )
 
-unjsonUserGroupsForUpdate :: UnjsonDef [I.UserGroupForUpdate]
+unjsonUserGroupsForUpdate :: UnjsonDef [UserGroupForUpdate]
 unjsonUserGroupsForUpdate = objectOf
   $ fieldBy "companies" identity "List of companies" (arrayOf unjsonUserGroupForUpdate)
 
 -- This is intended for PartnerAPI only. It uses inherited data and the caller
 -- does not know about UserGroups or inheritance
-userGroupToUserGroupForUpdate :: UserGroupWithParents -> I.UserGroupForUpdate
+userGroupToUserGroupForUpdate :: UserGroupWithParents -> UserGroupForUpdate
 userGroupToUserGroupForUpdate ugwp =
   let ug         = ugwpUG ugwp
       ug_address = ugwpAddress ugwp
-  in  I.UserGroupForUpdate { id            = showt $ ug ^. #id
-                           , entityName    = ug ^. #name
-                           , companyNumber = ug_address ^. #companyNumber
-                           , address       = ug_address ^. #address
-                           , zipCode       = ug_address ^. #zipCode
-                           , city          = ug_address ^. #city
-                           , country       = ug_address ^. #country
-                           }
+  in  UserGroupForUpdate { id            = showt $ ug ^. #id
+                         , entityName    = ug ^. #name
+                         , companyNumber = ug_address ^. #companyNumber
+                         , address       = ug_address ^. #address
+                         , zipCode       = ug_address ^. #zipCode
+                         , city          = ug_address ^. #city
+                         , country       = ug_address ^. #country
+                         }
 
 -- This is intended for PartnerAPI only. We compare the set values with
 -- inherited data and update only if there is any change.
 updateUserGroupWithUserGroupForUpdate
-  :: UserGroupWithParents -> I.UserGroupForUpdate -> UserGroup
-updateUserGroupWithUserGroupForUpdate ugwp I.UserGroupForUpdate {..} =
+  :: UserGroupWithParents -> UserGroupForUpdate -> UserGroup
+updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate {..} =
   let ug          = ugwpUG ugwp
       old_address = ugwpAddress ugwp
-      new_address = I.UserGroupAddress { companyNumber = companyNumber
-                                       , entityName    = entityName
-                                       , address       = address
-                                       , zipCode       = zipCode
-                                       , city          = city
-                                       , country       = country
-                                       }
+      new_address = UserGroupAddress { companyNumber = companyNumber
+                                     , entityName    = entityName
+                                     , address       = address
+                                     , zipCode       = zipCode
+                                     , city          = city
+                                     , country       = country
+                                     }
       -- don't stop inheriting address, unless it has been changed
       updateAddress =
           if new_address == old_address then identity else set #address $ Just new_address

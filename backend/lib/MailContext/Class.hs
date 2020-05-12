@@ -1,15 +1,14 @@
-
-module MailContext.Class (
-    I.MailContext
+module MailContext.Class
+  ( MailContext(MailContext)
   , MailContextMonad(..)
   ) where
 
 import Control.Monad.Trans
 
-import qualified MailContext.Internal as I
+import MailContext.Internal
 
 class Monad m => MailContextMonad m where
-  getMailContext :: m I.MailContext
+  getMailContext :: m MailContext
 
 -- | Generic, overlappable instance.
 instance {-# OVERLAPPABLE #-} (

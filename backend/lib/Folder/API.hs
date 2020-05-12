@@ -36,7 +36,6 @@ import Kontra
 import Log.Identifier
 import OAuth.Model
 import Routing
-import qualified Folder.Internal as I
 
 folderAPIRoutes :: Route (Kontra Response)
 folderAPIRoutes = dir "api" $ choice [dir "frontend" folderAPI, dir "v2" folderAPI]
@@ -187,7 +186,7 @@ folderAPIListDocs fid = api $ do
 fGetOrErrNotFound :: Kontrakcja m => FolderID -> m Folder
 fGetOrErrNotFound fid = apiGuardJustM folderNotFoundErr . dbQuery $ FolderGet fid
 
-fwcGetOrErrNotFound :: Kontrakcja m => FolderID -> m I.FolderWithChildren
+fwcGetOrErrNotFound :: Kontrakcja m => FolderID -> m FolderWithChildren
 fwcGetOrErrNotFound fid =
   dbQuery (FolderGet fid) >>= addChildrenIfJust >>= apiGuardJust folderNotFoundErr
   where
@@ -196,9 +195,8 @@ fwcGetOrErrNotFound fid =
       Just folder -> do
         -- we retrieve only the immediate children, as in the user group API.
         fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
-        return . Just . I.FolderWithChildren folder $ map
-          (\c -> I.FolderWithChildren c [])
-          fdrChildren
+        return . Just . FolderWithChildren folder $ map (\c -> FolderWithChildren c [])
+                                                        fdrChildren
 
 folderNotFoundErr :: APIError
 folderNotFoundErr = serverError "Impossible happened: No folder with ID, or deleted."

@@ -17,16 +17,15 @@ import Folder.Types
 import User.UserID
 import UserGroup.Model
 import UserGroup.Types
-import qualified Folder.Internal as I
 
-newtype FolderCreate = FolderCreate I.Folder
+newtype FolderCreate = FolderCreate Folder
 instance (MonadDB m, MonadThrow m)
-    => DBUpdate m FolderCreate I.Folder where
+    => DBUpdate m FolderCreate Folder where
   dbUpdate (FolderCreate folder) = do
     let name      = folder ^. #name
         mParentID = folder ^. #parentID
     newParentPath <- case mParentID of
-      Nothing       -> return $ Array1 ([] :: [I.FolderID])
+      Nothing       -> return $ Array1 ([] :: [FolderID])
       Just parentID -> do
         runQuery_ . sqlSelect "folders" $ do
           sqlWhereEq "id" parentID
@@ -43,17 +42,17 @@ instance (MonadDB m, MonadThrow m)
       Nothing      -> unexpectedError "Folder could not be read from DB"
       Just folder' -> return folder'
 
-newtype FolderUpdate = FolderUpdate I.Folder
+newtype FolderUpdate = FolderUpdate Folder
 instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
   dbUpdate (FolderUpdate newFolder) = do
     let fid = newFolder ^. #id
     -- updated group may have children already, these need to be adjusted
-    Array1 (oldParentPath :: [I.FolderID]) <- do
+    Array1 (oldParentPath :: [FolderID]) <- do
       runQuery_ . sqlSelect "folders" $ do
         sqlResult "parent_path"
         sqlWhereEq "id" fid
       fetchOne runIdentity
-    (Array1 newParentPath :: Array1 I.FolderID) <- do
+    (Array1 newParentPath :: Array1 FolderID) <- do
       case newFolder ^. #parentID of
         Nothing       -> return . Array1 $ []
         Just parentID -> do
@@ -94,7 +93,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
 -- Create a folder and link it to a user group.
 newtype FolderCreateByUserGroup = FolderCreateByUserGroup UserGroupID
 instance (MonadDB m, MonadThrow m) =>
-  DBUpdate m FolderCreateByUserGroup (Maybe I.Folder) where
+  DBUpdate m FolderCreateByUserGroup (Maybe Folder) where
   dbUpdate (FolderCreateByUserGroup ugid) = do
     mfdr <- dbQuery . FolderGetUserGroupHome $ ugid
     mug  <- dbQuery . UserGroupGet $ ugid
@@ -118,9 +117,9 @@ instance (MonadDB m, MonadThrow m) =>
         sqlSet "home_folder_id" fdrid'
         sqlWhereEq "id" ugid'
 
-data FolderCreateForUser = FolderCreateForUser UserID (Maybe I.FolderID)
+data FolderCreateForUser = FolderCreateForUser UserID (Maybe FolderID)
 instance (MonadDB m, MonadThrow m) =>
-  DBUpdate m FolderCreateForUser (Maybe I.Folder)where
+  DBUpdate m FolderCreateForUser (Maybe Folder)where
     -- make sure there isn't one already set for this user
   dbUpdate (FolderCreateForUser uid mfdrparentid) = do
     (view #id <$>) <$> (dbQuery . FolderGetUserHome $ uid) >>= \case
@@ -162,14 +161,14 @@ instance (MonadDB m, MonadThrow m) =>
     forM_ ugids $ dbUpdate . FolderCreateForUsersInUserGroup
     return numActuallyCreatedFolders
 
-data FolderSetUserHomeFolder = FolderSetUserHomeFolder UserID I.FolderID
+data FolderSetUserHomeFolder = FolderSetUserHomeFolder UserID FolderID
 instance (MonadDB m, MonadThrow m) => DBUpdate m FolderSetUserHomeFolder () where
   dbUpdate (FolderSetUserHomeFolder uid fdrid) = do
     runQuery01_ . sqlUpdate "users" $ do
       sqlWhereEq "id" uid
       sqlSet "home_folder_id" (Just fdrid)
 
-newtype FoldersFormCycle = FoldersFormCycle I.FolderID
+newtype FoldersFormCycle = FoldersFormCycle FolderID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue FoldersFormCycle where

@@ -165,13 +165,11 @@ import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import Util.Actor
-import qualified DataRetentionPolicy.Internal as I
-import qualified Folder.Internal as I
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
-import qualified User.Types.User.Internal as I
-import qualified UserGroup.Internal as I
+import qualified User.Types.User.Internal
+import qualified UserGroup.Internal
 
 newtype XMLChar = XMLChar { unXMLChar :: Char }
   deriving (Enum, Eq, Ord)
@@ -221,7 +219,7 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary Folder where
-  arbitrary = I.Folder emptyFolderID Nothing <$> arbitraryName
+  arbitrary = Folder emptyFolderID Nothing <$> arbitraryName
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
@@ -272,7 +270,7 @@ genMaybeUnicodeString = oneof [pure Nothing, Just <$> genUnicodeString]
 
 instance Arbitrary UserGroup where
   arbitrary =
-    I.UserGroup emptyUserGroupID Nothing
+    UserGroup emptyUserGroupID Nothing
       <$> arbitraryName
       <*> pure Nothing
       <*> arbitrary
@@ -285,7 +283,7 @@ instance Arbitrary UserGroup where
 
 instance Arbitrary UserGroupRoot where
   arbitrary =
-    I.UserGroupRoot emptyUserGroupID
+    UserGroupRoot emptyUserGroupID
       <$> arbitraryUnicodeText
       <*> pure Nothing
       <*> arbitrary
@@ -298,7 +296,7 @@ instance Arbitrary UserGroupRoot where
 
 instance Arbitrary DataRetentionPolicy where
   arbitrary =
-    I.DataRetentionPolicy
+    DataRetentionPolicy
       <$> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
       <*> oneof [return Nothing, Just <$> choose (1, 365)]
@@ -312,7 +310,7 @@ instance Arbitrary Tag where
 
 instance Arbitrary UserGroupSettings where
   arbitrary =
-    I.UserGroupSettings
+    UserGroupSettings
       <$> arbitrary
       <*> arbitrary
       <*> arbitraryMaybe arbitraryUnicodeText
@@ -337,7 +335,7 @@ instance Arbitrary UserGroupSettings where
 
 instance Arbitrary UserGroupAddress where
   arbitrary =
-    I.UserGroupAddress
+    UserGroupAddress
       <$> arbitraryUnicodeText
       <*> arbitraryUnicodeText
       <*> arbitraryUnicodeText
@@ -347,7 +345,7 @@ instance Arbitrary UserGroupAddress where
 
 instance Arbitrary UserGroupUI where
   arbitrary =
-    I.UserGroupUI Nothing Nothing Nothing
+    UserGroupUI Nothing Nothing Nothing
       <$> arbitraryMaybe arbitraryUnicodeText
       <*> arbitraryMaybe arbitraryUnicodeText
       <*> arbitrary
@@ -726,13 +724,13 @@ instance Arbitrary UserInfo where
     pn <- arbitraryUnicodeText
     em <- arbEmail
 
-    return $ I.UserInfo { firstName       = fn
-                        , lastName        = ln
-                        , personalNumber  = pn
-                        , companyPosition = ""
-                        , phone           = ""
-                        , email           = Email em
-                        }
+    return $ UserInfo { firstName       = fn
+                      , lastName        = ln
+                      , personalNumber  = pn
+                      , companyPosition = ""
+                      , phone           = ""
+                      , email           = Email em
+                      }
 
 instance Arbitrary Scrypt.EncryptedPass where
   arbitrary = do
@@ -750,11 +748,11 @@ instance Arbitrary SignupMethod where
   arbitrary = elements [AccountRequest, ViralInvitation, ByAdmin, CompanyInvitation]
 
 instance Arbitrary UserSettings where
-  arbitrary = I.UserSettings <$> arbitrary <*> arbitrary
+  arbitrary = UserSettings <$> arbitrary <*> arbitrary
 
 instance Arbitrary User where
   arbitrary =
-    I.User
+    User
       <$> arbitrary
       <*> arbitrary    -- Messes with tests if these are set:
       <*> pure Nothing -- usertotp
@@ -991,7 +989,7 @@ instantiateUserGroup UserGroupTemplate { groupHomeFolderID = generateHomeFolderI
     homeFolderID <- generateHomeFolderID
     internalTags <- generateInternalTags
     externalTags <- generateExternalTags
-    ug           <- dbUpdate . UserGroupCreate $ I.UserGroup { .. }
+    ug           <- dbUpdate . UserGroupCreate $ UserGroup { .. }
     now          <- currentTime
     let fdts = freeDocumentTokensFromValues 10 (10 `minutesAfter` now)
     dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) fdts
@@ -1112,7 +1110,7 @@ tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = gene
         -- AddUser doesn't allow us to provide all of UserInfo so we need to use
         -- SetUserInfo as well
         let userID = user ^. #id
-        void . dbUpdate $ SetUserInfo userID I.UserInfo { email = Email email, .. }
+        void . dbUpdate $ SetUserInfo userID UserInfo { email = Email email, .. }
         dbQuery $ GetUserByID userID
 
 randomPersonalNumber :: CryptoRNG m => m Text

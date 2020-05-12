@@ -58,7 +58,7 @@ import Templates
 import Text.JSON.Convert
 import User.Model
 import Utils.HTTP
-import qualified Context.Internal as I
+import qualified Context.Internal
 
 -- | Global application data
 data AppGlobals = AppGlobals {
@@ -375,42 +375,42 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       -- work out the language
       userlang      <- getStandardLang muser
 
-      return I.Context { maybeUser               = muser
-                       , time                    = minutestime
-                       , clientName              = clientName `mplus` userAgent
-                       , clientTime              = clientTime
-                       , ipAddr                  = peerip
-                       , production              = production appConf
-                       , cdnBaseUrl              = cdnBaseUrl appConf
-                       , templates               = localizedVersion userlang templates2
-                       , globalTemplates         = templates2
-                       , lang                    = userlang
-                       , isMailBackdoorOpen      = isMailBackdoorOpen appConf
-                       , mailNoreplyAddress      = mailNoreplyAddress appConf
-                       , gtConf                  = guardTimeConf appConf
-                       , cgiGrpConfig            = cgiGrpConfig appConf
-                       , redisCache              = mrediscache appGlobals
-                       , fileCache               = filecache appGlobals
-                       , xToken                  = sesCSRFToken session
-                       , adminAccounts           = admins appConf
-                       , salesAccounts           = sales appConf
-                       , maybePadUser            = mpaduser
-                       , useHttps                = useHttps appConf
-                       , sessionID               = sesID session
-                       , trackJsToken            = trackjsToken appConf
-                       , zendeskKey              = zendeskKey appConf
-                       , gaToken                 = gaToken appConf
-                       , mixpanelToken           = mixpanelToken appConf
-                       , hubspotConf             = hubspotConf appConf
-                       , brandedDomain           = brandeddomain
-                       , salesforceConf          = salesforceConf appConf
-                       , netsConfig              = netsConfig appConf
-                       , isApiLogEnabled         = isAPILogEnabled appConf
-                       , netsSignConfig          = netsSignConfig appConf
-                       , pdfToolsLambdaEnv       = pdftoolslambdaenv appGlobals
-                       , passwordServiceConf     = passwordServiceConf appConf
-                       , eidServiceConf          = eidServiceConf appConf
-                       , ssoConf                 = ssoConf appConf
-                       , maybeApiUser            = Nothing
-                       , postSignViewRedirectURL = postSignViewRedirectURL appConf
-                       }
+      return Context { maybeUser               = muser
+                     , time                    = minutestime
+                     , clientName              = clientName `mplus` userAgent
+                     , clientTime              = clientTime
+                     , ipAddr                  = peerip
+                     , production              = production appConf
+                     , cdnBaseUrl              = cdnBaseUrl appConf
+                     , templates               = localizedVersion userlang templates2
+                     , globalTemplates         = templates2
+                     , lang                    = userlang
+                     , isMailBackdoorOpen      = isMailBackdoorOpen appConf
+                     , mailNoreplyAddress      = mailNoreplyAddress appConf
+                     , gtConf                  = guardTimeConf appConf
+                     , cgiGrpConfig            = cgiGrpConfig appConf
+                     , redisCache              = mrediscache appGlobals
+                     , fileCache               = filecache appGlobals
+                     , xToken                  = sesCSRFToken session
+                     , adminAccounts           = admins appConf
+                     , salesAccounts           = sales appConf
+                     , maybePadUser            = mpaduser
+                     , useHttps                = useHttps appConf
+                     , sessionID               = sesID session
+                     , trackJsToken            = trackjsToken appConf
+                     , zendeskKey              = zendeskKey appConf
+                     , gaToken                 = gaToken appConf
+                     , mixpanelToken           = mixpanelToken appConf
+                     , hubspotConf             = hubspotConf appConf
+                     , brandedDomain           = brandeddomain
+                     , salesforceConf          = salesforceConf appConf
+                     , netsConfig              = netsConfig appConf
+                     , isApiLogEnabled         = isAPILogEnabled appConf
+                     , netsSignConfig          = netsSignConfig appConf
+                     , pdfToolsLambdaEnv       = pdftoolslambdaenv appGlobals
+                     , passwordServiceConf     = passwordServiceConf appConf
+                     , eidServiceConf          = eidServiceConf appConf
+                     , ssoConf                 = ssoConf appConf
+                     , maybeApiUser            = Nothing
+                     , postSignViewRedirectURL = postSignViewRedirectURL appConf
+                     }

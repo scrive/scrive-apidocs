@@ -19,7 +19,7 @@ import BrandedDomain.BrandedDomain
 import DB
 import Theme.Model
 import User.UserID
-import qualified BrandedDomain.BrandedDomain.Internal as I
+import qualified BrandedDomain.BrandedDomain.Internal
 
 fetchBrandedDomain
   :: ( BrandedDomainID
@@ -50,32 +50,32 @@ fetchBrandedDomain
      )
   -> BrandedDomain
 fetchBrandedDomain (xid, maindomain, url, smsoriginator, emailoriginator, mail_theme, signview_theme, service_theme, login_theme, browser_title, favicon, participant_color_1, participant_color_2, participant_color_3, participant_color_4, participant_color_5, participant_color_6, draft_color, cancelled_color, initiated_color, sent_color, delivered_color, opened_color, reviewed_color, signed_color)
-  = I.BrandedDomain { id                = xid
-                    , mainDomain        = maindomain
-                    , url               = url
-                    , smsOriginator     = smsoriginator
-                    , emailOriginator   = emailoriginator
-                    , mailTheme         = mail_theme
-                    , signviewTheme     = signview_theme
-                    , serviceTheme      = service_theme
-                    , loginTheme        = login_theme
-                    , browserTitle      = browser_title
-                    , favicon           = favicon
-                    , participantColor1 = participant_color_1
-                    , participantColor2 = participant_color_2
-                    , participantColor3 = participant_color_3
-                    , participantColor4 = participant_color_4
-                    , participantColor5 = participant_color_5
-                    , participantColor6 = participant_color_6
-                    , draftColor        = draft_color
-                    , cancelledColor    = cancelled_color
-                    , initatedColor     = initiated_color
-                    , sentColor         = sent_color
-                    , deliveredColor    = delivered_color
-                    , openedColor       = opened_color
-                    , reviewedColor     = reviewed_color
-                    , signedColor       = signed_color
-                    }
+  = BrandedDomain { id                = xid
+                  , mainDomain        = maindomain
+                  , url               = url
+                  , smsOriginator     = smsoriginator
+                  , emailOriginator   = emailoriginator
+                  , mailTheme         = mail_theme
+                  , signviewTheme     = signview_theme
+                  , serviceTheme      = service_theme
+                  , loginTheme        = login_theme
+                  , browserTitle      = browser_title
+                  , favicon           = favicon
+                  , participantColor1 = participant_color_1
+                  , participantColor2 = participant_color_2
+                  , participantColor3 = participant_color_3
+                  , participantColor4 = participant_color_4
+                  , participantColor5 = participant_color_5
+                  , participantColor6 = participant_color_6
+                  , draftColor        = draft_color
+                  , cancelledColor    = cancelled_color
+                  , initatedColor     = initiated_color
+                  , sentColor         = sent_color
+                  , deliveredColor    = delivered_color
+                  , openedColor       = opened_color
+                  , reviewedColor     = reviewed_color
+                  , signedColor       = signed_color
+                  }
 
 brandedDomainSelector :: [SQL]
 brandedDomainSelector =

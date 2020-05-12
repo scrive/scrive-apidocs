@@ -99,10 +99,8 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
 import qualified API.V2 as V2
-import qualified BrandedDomain.BrandedDomain.Internal as I
 import qualified Company.CompanyControl as Company
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified UserGroup.Internal as I
 import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 adminonlyRoutes :: Route (Kontra Response)
@@ -959,11 +957,9 @@ handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
   let root = ugwpRoot ugwp
   children <- dbQuery . UserGroupGetAllChildrenRecursive $ root ^. #id
   return $ object
-    [ "user_group_structure"
-        .= ugWithChildrenToJson (I.UserGroupWithChildren root children)
-    ]
+    ["user_group_structure" .= ugWithChildrenToJson (UserGroupWithChildren root children)]
   where
-    ugWithChildrenToJson (I.UserGroupWithChildren ug children) = object
+    ugWithChildrenToJson (UserGroupWithChildren ug children) = object
       [ "group" .= object ["name" .= (ug ^. #name), identifier $ ug ^. #id]
       , "children" .= map ugWithChildrenToJson children
       ]
@@ -1003,7 +999,7 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
 unjsonBrandedDomain :: UnjsonDef BrandedDomain
 unjsonBrandedDomain =
   objectOf
-    $   I.BrandedDomain
+    $   BrandedDomain
     <$> field "id"              (^. #id)              "Id of a branded domain (unique)"
     <*> field "mainDomain"      (^. #mainDomain)      "Is this a main domain"
     <*> field "url"             (^. #url)             "URL that will match this domain"

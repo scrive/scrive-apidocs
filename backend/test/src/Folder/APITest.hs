@@ -29,7 +29,7 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import Util.Actor
-import qualified Folder.Internal as I
+import qualified Folder.Internal
 
 folderApiTests :: TestEnvSt -> Test
 folderApiTests env = testGroup
@@ -201,12 +201,11 @@ testFolderAPIGet = do
     forM subs $ createChildrenForParentByAPI ctxAdmin
   fdrwcfuFromAPI <- fdrAPIGet ctxAdmin fdrRoot 200
   fdrChildren    <- dbQuery $ FolderGetImmediateChildren (fdrRoot ^. #id)
-  let
-    fdrwc =
-      I.FolderWithChildren fdrRoot $ map (\c -> I.FolderWithChildren c []) fdrChildren
-    fdrwcbs =
-      fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren
-        fdrwc
+  let fdrwc =
+        FolderWithChildren fdrRoot $ map (\c -> FolderWithChildren c []) fdrChildren
+      fdrwcbs =
+        fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren
+          fdrwc
   assertEqual "Folder data output corresponds to what was sent in" fdrwcfuFromAPI fdrwcbs
   -- signatories should have access to folders for documents they participate in siging in
   mockDoc <- testDocApiV2New' ctxAdmin
@@ -429,8 +428,7 @@ createFolder mparentID =
   fmap (view #id) . dbUpdate . FolderCreate $ set #parentID mparentID defaultFolder
 
 folderToFolderWithChildren :: Folder -> FolderWithChildren
-folderToFolderWithChildren folder =
-  I.FolderWithChildren { folder = folder, children = [] }
+folderToFolderWithChildren folder = FolderWithChildren { folder = folder, children = [] }
 
 jsonToFolder :: Aeson.Value -> Folder
 jsonToFolder val = let Unjson.Result fdr _ = Unjson.parse unjsonFolderReadAll val in fdr
@@ -450,7 +448,7 @@ createChildrenForParentByAPI ctx fdrParent = do
 unjsonFolderReadAll :: Unjson.UnjsonDef Folder
 unjsonFolderReadAll =
   objectOf
-    $   I.Folder
+    $   Folder
     <$> fieldBy "id" (^. #id) "The folder ID" Unjson.unjsonDef
     <*> fieldOptBy "parent_id" (^. #parentID) "Parent folder ID" Unjson.unjsonDef
     <*> field "name" (^. #name) "The folder name"
