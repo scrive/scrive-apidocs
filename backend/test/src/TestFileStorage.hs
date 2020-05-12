@@ -9,7 +9,6 @@ module TestFileStorage
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Fail
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG

@@ -119,7 +119,6 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Tables
-import Doc.Types.Document (getSealingMethodForDocument)
 import Doc.Types.SignatoryAccessToken
 import EID.EIDService.Types
 import EID.Signature.Model

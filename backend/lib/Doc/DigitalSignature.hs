@@ -9,7 +9,6 @@ import Control.Monad.Catch
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
-import Data.Text (Text)
 import Log
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))

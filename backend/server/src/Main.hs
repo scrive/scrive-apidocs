@@ -12,7 +12,7 @@ import Network.Curl
 import Network.HostName
 import System.Console.CmdArgs hiding (def)
 import System.Environment
-import System.FilePath ((</>), FilePath)
+import System.FilePath ((</>))
 import qualified Control.Exception.Lifted as E
 import qualified Data.Set as S
 import qualified Data.Text as T

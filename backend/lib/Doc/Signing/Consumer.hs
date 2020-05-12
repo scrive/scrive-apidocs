@@ -8,7 +8,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Except
 import Crypto.RNG
-import Data.Aeson ((.=), object)
+import Data.Aeson (object)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class

@@ -1,1 +1,1 @@
-import ./ghc-8.6.5.nix
+import ./ghc-8.8.nix

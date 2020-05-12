@@ -9,8 +9,6 @@ module Mails.Tables (
   , ctMailAttachment
   ) where
 
-import Data.Text (Text)
-
 import DB
 import MinutesTime
 

@@ -37,7 +37,7 @@ module Doc.DocControl (
 import Control.Conditional (unlessM, whenM)
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Reader
+import Control.Monad.Reader hiding (fail)
 import Happstack.Server hiding (lookCookieValue, simpleHTTP, timeout)
 import Log
 import System.Directory

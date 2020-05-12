@@ -4,12 +4,10 @@ module User.APITest (userAPITests) where
 import Control.Monad.IO.Class
 import Crypto.Hash.Algorithms (SHA1(..))
 import Data.Aeson
-import Data.Either (Either(..))
 import Data.List.Split (splitOneOf)
 import Data.OTP (totp)
 import Data.Unjson
 import Happstack.Server
-import Optics (Lens')
 import Test.Framework
 import Test.QuickCheck
 import qualified Codec.Binary.Base32 as B32

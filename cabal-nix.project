@@ -1,0 +1,6 @@
+packages: . ./Shake
+
+write-ghc-environment-files: never
+
+package *
+    ghc-options: -j4 +RTS -A32m -RTS

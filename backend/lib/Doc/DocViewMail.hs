@@ -36,7 +36,6 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Model.Update
 import Doc.Types.SignatoryAccessToken
-import Doc.Types.SignatoryLink (ProcessFinishedAction(..))
 import File.FileID
 import KontraLink
 import MagicHash (MagicHash)

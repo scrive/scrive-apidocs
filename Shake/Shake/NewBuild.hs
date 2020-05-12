@@ -92,16 +92,15 @@ componentSubDir cabalInstallVer optlevel cname = ctype </> cbuilddir
   where
     ctype
       | useSeparateComponentDirs cabalInstallVer = case cname of
-        CLibName      -> ""
-        CSubLibName _ -> "l"
-        CExeName    _ -> "x"
-        CTestName   _ -> "t"
-        CBenchName  _ -> "b"
-        CFLibName   _ -> "f"
+        CLibName   _ -> ""
+        CExeName   _ -> "x"
+        CTestName  _ -> "t"
+        CBenchName _ -> "b"
+        CFLibName  _ -> "f"
       | otherwise = "c"
 
     cbuilddir = case cname of
-      CLibName -> unComponentName cname </> coptlevel </> "build"
+      CLibName _ -> unComponentName cname </> coptlevel </> "build"
       _ -> unComponentName cname </> coptlevel </> "build" </> unComponentName cname
 
     coptlevel = case optlevel of
@@ -114,9 +113,8 @@ componentArtifactName :: CabalComponentName -> String
 componentArtifactName c =
   let libname = "libHS" <> unComponentName c <> "1.0-inplace" <.> "a"
   in  case c of
-        CLibName      -> libname
-        CSubLibName _ -> libname
-        _             -> unComponentName c <.> exe
+        CLibName _ -> libname
+        _          -> unComponentName c <.> exe
 
 -- | Given a component name and type, return the path to the
 -- corresponding executable.
@@ -148,8 +146,8 @@ hpcPaths cabalFile newBuild opt =
           </> unComponentName c
           </> hdm
           </> (case c of
-                CLibName -> packageId cabalFile
-                _        -> unComponentName c
+                CLibName _ -> packageId cabalFile
+                _          -> unComponentName c
               )
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
@@ -168,7 +166,7 @@ componentBuildRules sourceRoot newBuild optlevel cabalFile =
           depsSourceDirs = concatMap (componentHsSourceDirs cabalFile)
                                      (componentDependencies cname cabalFile)
       if useNewBuild newBuild
-        then need ["cabal.project.local"]
+        then need ["_build/cabal-configure-with-flags"]
         else need ["dist/setup-config"]
       needPatternsInDirectories sourceRoot
                                 ["//*.hs"]

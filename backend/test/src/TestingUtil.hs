@@ -83,7 +83,6 @@ module TestingUtil
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Fail
 import Control.Monad.Trans
 import Crypto.RNG
 import Data.Char

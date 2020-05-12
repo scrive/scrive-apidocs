@@ -62,8 +62,7 @@ type InnerKontra
 newtype Kontra a = Kontra { unKontra :: InnerKontra a }
   deriving ( Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad
            , MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow
-           , ServerMonad, MonadFileStorage, MonadEventStream, MonadLog)
-
+           , ServerMonad, MonadFileStorage, MonadEventStream, MonadLog, MonadFail)
 runKontra
   :: Context
   -> Kontra a

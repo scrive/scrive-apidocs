@@ -15,7 +15,6 @@ module Text.XML.DirtyContent
 
 import Data.Map (Map)
 import Data.String (IsString(..))
-import Data.Text (Text)
 import Text.XML (Name)
 import qualified Data.Text as T
 

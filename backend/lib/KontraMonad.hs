@@ -31,6 +31,7 @@ type Kontrakcja m
     , HasRqData m
     , KontraMonad m
     , MailContextMonad m
+    , MonadFail m
     , MonadLog m
     , MonadDB m
     , MonadMask m

@@ -10,7 +10,6 @@ import Data.Time.Clock
 import Data.Time.Format
 import Development.Shake
 import Development.Shake.Classes
-import System.FilePath (FilePath)
 
 -- * These newtypes are used by `askOracle` to get environment variables
 -- Treat them as black-boxes that you don't need to know about!

@@ -30,7 +30,7 @@ defaultTimeZoneName = TimeZoneName "Europe/Stockholm"
 unsafeTimeZoneName :: Text -> TimeZoneName
 unsafeTimeZoneName = TimeZoneName
 
-mkTimeZoneName :: (MonadDB m, MonadCatch m) => Text -> m TimeZoneName
+mkTimeZoneName :: (MonadFail m, MonadDB m, MonadCatch m) => Text -> m TimeZoneName
 mkTimeZoneName s
   | not (sanityCheck s) = fail $ "mkTimeZoneName: illegal time zone string: " <> show s
   | otherwise = do

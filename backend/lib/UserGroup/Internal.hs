@@ -20,7 +20,6 @@ module UserGroup.Internal (
 
 import Data.Aeson (FromJSON, ToJSON, parseJSON, toJSON)
 import Data.Int
-import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes.JSON
 import Database.PostgreSQL.PQTypes.Model.CompositeType

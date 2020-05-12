@@ -30,7 +30,7 @@ import FileStorage.Class
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
-  deriving ( Applicative, Monad, MonadDB, Functor, MonadIO
+  deriving ( Applicative, Monad, MonadFail, MonadDB, Functor, MonadIO
            , MonadTrans, MonadBase b, MonadThrow, MonadCatch
            , MonadMask, MonadFileStorage )
 

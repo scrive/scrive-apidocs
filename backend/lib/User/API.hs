@@ -18,7 +18,6 @@ module User.API (
     apiCallUpdateTags
   ) where
 
-import Control.Monad (when)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Aeson

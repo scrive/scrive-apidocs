@@ -4,7 +4,7 @@ import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
-import System.FilePath ((</>), FilePath)
+import System.FilePath ((</>))
 import qualified Data.Text.IO as T
 
 import AppDBConfig

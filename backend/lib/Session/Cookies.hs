@@ -12,7 +12,7 @@ module Session.Cookies (
 import Control.Arrow
 import Control.Monad.IO.Class
 import Happstack.Server hiding (Session, addCookie)
-import TextShow (TextShow(..), fromText)
+import TextShow (fromText)
 import qualified Data.Text as T
 
 import Cookies

@@ -1,22 +1,12 @@
--- If you need to build 'kontrakcja' against an unreleased version of
--- some package, just add the path to that package's source directory
--- to 'packages'. For example, if you're working on both 'log' and
--- 'kontrakcja' at the same time, use
---
--- packages: . ../path/to/log
+packages: . ./Shake
 
-packages: . Shake
-write-ghc-environment-files: always
+write-ghc-environment-files: never
 
 repository hackage.scrive.com
     url: https://hackage.scrive.com/
 
-package kontrakcja
+package *
     ghc-options: -j4 +RTS -A32m -RTS
-
-    -- ^ Ideally we'd like to enable '+RTS -A32m' for all deps,
-    -- however that triggers a rebuild of all deps due to
-    -- https://github.com/haskell/cabal/issues/5575.
 
 package text-icu
     extra-include-dirs: /usr/local/opt/icu4c/include
@@ -24,11 +14,5 @@ package text-icu
 
 source-repository-package
     type: git
-    location: https://github.com/kubek2k/test-framework.git
-    tag: 7e8b4451a91759debfda44963020d2c02f8f5790
-    subdir: core
-
-source-repository-package
-    type: git
-    location: https://github.com/kubek2k/hsaml2.git
-    tag: a09ab6fc87fe2311e7bfa56e0dd5141edc758fe7
+    location: https://github.com/scrive/hsaml2.git
+    tag: fb247044dfa62f45944f161c71dabea9fd06dca3

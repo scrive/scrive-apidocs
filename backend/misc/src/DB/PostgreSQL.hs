@@ -6,7 +6,6 @@ import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Pool
-import Data.Text (Text)
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import Database.PostgreSQL.PQTypes.Model.CompositeType

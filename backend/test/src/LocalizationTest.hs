@@ -3,7 +3,6 @@ module LocalizationTest (localizationTest) where
 
 import Data.List.Extra
 import Data.Map ((!), Map)
-import Data.Text (Text)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertBool)

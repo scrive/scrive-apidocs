@@ -10,7 +10,7 @@ import Log
 import Network.HostName (getHostName)
 import System.Console.CmdArgs hiding (def)
 import System.Environment
-import System.FilePath ((</>), FilePath)
+import System.FilePath ((</>))
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text.IO as T
 import qualified Happstack.StaticRouting as R

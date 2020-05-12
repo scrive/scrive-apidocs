@@ -32,10 +32,16 @@ regular-css-compiled.css
 cabal.sandbox.config
 cabal.project.local
 cabal.project.local~
+cabal-nix.project.local
+cabal-nix.project.local~
 /.ghci
 /.ghcid
 *.bak
 *.*\~
+
+result
+result-*
+pdftools-lambda.local.json
 
 frontend/app/localization/*.js
 

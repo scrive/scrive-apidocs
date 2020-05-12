@@ -18,7 +18,7 @@ Executable kontrakcja-shake
   GHC-Options:      -Wall -Werror -threaded -rtsopts
 
   Build-Depends:    base
-                  , Cabal >= 2.4 && < 3.0
+                  , Cabal >= 3.0 && < 4.0
                   , aeson
                   , attoparsec
                   , bytestring

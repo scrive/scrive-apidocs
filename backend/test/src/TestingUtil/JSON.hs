@@ -5,7 +5,6 @@ module TestingUtil.JSON
 
 import Control.Monad.IO.Class
 import Data.Aeson
-import Data.Text (Text)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H

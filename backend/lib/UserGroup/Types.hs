@@ -42,7 +42,6 @@ module UserGroup.Types
   , Tag
   ) where
 
-import Data.Text (Text)
 import qualified Data.Set as S
 
 import DataRetentionPolicy

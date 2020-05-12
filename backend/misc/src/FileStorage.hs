@@ -20,7 +20,6 @@ module FileStorage
   , newFileMemCache
   ) where
 
-import Control.Monad (void)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -48,7 +47,7 @@ type FileStorageConfig = (AmazonS3Env, Maybe R.Connection, FileMemCache)
 
 newtype FileStorageT m a
   = FileStorageT { unFileStorageT :: ReaderT FileStorageConfig m a }
-  deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
+  deriving ( Alternative, Applicative, Functor, Monad, MonadFail, MonadDB, MonadIO
            , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
            , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask
            , MonadTransControl)

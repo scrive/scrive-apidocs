@@ -6,7 +6,6 @@ module Main where
 -- regex currently parses valid tokens like 'localization2' as 'localization',
 -- which results in a false-positive.
 
-import Control.Monad (forM_)
 import Data.Bifunctor
 import Data.Foldable (foldlM)
 import Data.List (intercalate, isPrefixOf, isSuffixOf, unfoldr)

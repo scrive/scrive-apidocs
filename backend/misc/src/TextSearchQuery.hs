@@ -9,10 +9,7 @@ module TextSearchQuery
   , mkTerm
   ) where
 
-import Data.List (foldl', intersperse)
 import Data.List.Extra (nubOrd)
-import Data.Monoid ((<>))
-import Data.Text (Text)
 import Database.PostgreSQL.PQTypes.SQL (SQL, mkSQL)
 import Prelude
 import qualified Data.Text as T

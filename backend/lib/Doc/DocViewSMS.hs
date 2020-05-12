@@ -25,7 +25,6 @@ import Doc.DocStateData hiding (DocumentStatus(..))
 import Doc.DocViewMail (InvitationTo(..))
 import Doc.Model.Update
 import Doc.Types.SignatoryAccessToken
-import Doc.Types.SignatoryLink (ProcessFinishedAction(..))
 import KontraLink
 import MagicHash
 import MailContext

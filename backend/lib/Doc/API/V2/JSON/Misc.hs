@@ -44,8 +44,7 @@ import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 -- | Convert UTCTime to ISO8601 time format with two decimal places that we use
 utcTimeToAPIFormat :: UTCTime -> Text
 utcTimeToAPIFormat time =
-  T.pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%5Q")) time)
-    <> "Z"
+  T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%5Q" time) <> "Z"
 
 -- Unjson for few simple enum types used
 unjsonDocumentStatus :: UnjsonDef DocumentStatus

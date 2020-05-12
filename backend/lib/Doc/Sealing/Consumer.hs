@@ -40,6 +40,7 @@ data DocumentSealing = DocumentSealing {
 documentSealing
   :: ( CryptoRNG m
      , MonadBaseControl IO m
+     , MonadFail m
      , MonadFileStorage m
      , MonadIO m
      , MonadLog m
