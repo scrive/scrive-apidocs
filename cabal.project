@@ -5,8 +5,6 @@ write-ghc-environment-files: never
 repository hackage.scrive.com
     url: https://hackage.scrive.com/
 
-allow-newer: list-tries:base
-
 package *
     ghc-options: -j4 +RTS -A32m -RTS
 
