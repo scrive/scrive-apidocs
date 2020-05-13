@@ -39,8 +39,14 @@ var NewPasswordView = React.createClass({
   },
   onSubmitSuccess: function (response) {
     if (response.logged === true) {
+      var content;
+      if (response.login_required === true) {
+        content = localization.newPasswordModal.flashMessageUserPasswordChangedLoginReq;
+      } else {
+        content = localization.newPasswordModal.flashMessageUserPasswordChanged;
+      }
       new FlashMessages.FlashMessageAfterReload({
-        content: localization.newPasswordModal.flashMessageUserPasswordChanged,
+        content: content,
         type: "success"
       });
 

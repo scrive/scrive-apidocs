@@ -10,6 +10,7 @@ module Session.Model (
   , startNewSessionWithUser
   , terminateAllUserSessionsExceptCurrent
   , TerminateAllButOneUserSessions(..)
+  , TerminateAllUserSessions(..)
   , DeleteExpiredSessions(..)
   , PurgeExpiredTemporaryLoginTokens(..)
   , NewTemporaryLoginToken(..)
@@ -391,6 +392,13 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
     runQuery_ . sqlDelete "sessions" $ do
       sqlWhereAny [sqlWhere $ "user_id =" <?> uid, sqlWhere $ "pad_user_id =" <?> uid]
       sqlWhere $ "id <>" <?> sid
+
+newtype TerminateAllUserSessions = TerminateAllUserSessions UserID
+instance (MonadDB m, MonadThrow m, MonadTime m) =>
+  DBUpdate m TerminateAllUserSessions () where
+  dbUpdate (TerminateAllUserSessions uid) = do
+    runQuery_ . sqlDelete "sessions" $ sqlWhereAny
+      [sqlWhere $ "user_id =" <?> uid, sqlWhere $ "pad_user_id =" <?> uid]
 
 newtype GetSession = GetSession SessionID
 instance (MonadDB m, MonadThrow m, MonadTime m) =>

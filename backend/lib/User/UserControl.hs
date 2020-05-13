@@ -398,11 +398,21 @@ handlePasswordReminderPost uid token = do
                                                     ipnumber
                                                     time
                                                     (view #id <$> maybeuser)
-          terminateAllUserSessionsExceptCurrent (user ^. #id)
-          logUserToContext $ Just user
-          J.runJSONGenT $ do
-            J.value "logged" True
-            J.value "location" $ show LinkDesignView
+          if user ^. #totpActive
+            then do
+              dbUpdate $ TerminateAllUserSessions uid
+              J.runJSONGenT $ do
+                -- frontend will show a message and redirect to location despite not actually logged
+                J.value "logged" True
+                J.value "login_required" True
+                J.value "location" . show $ LinkLogin (getLang user)
+            else do
+              terminateAllUserSessionsExceptCurrent (user ^. #id)
+              logUserToContext $ Just user
+              J.runJSONGenT $ do
+                J.value "logged" True
+                J.value "login_required" False
+                J.value "location" $ show LinkDesignView
         else do
           J.runJSONGenT $ J.value "logged" False
     Just _ -> do

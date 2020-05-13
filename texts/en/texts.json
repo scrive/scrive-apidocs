@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"The ID number you used does not match the ID number required to view the document.",
 "_flashMessageUserHasLiveDocs":"Unable to remove the account as the user has documents that have not yet been finalised or cancelled.",
 "_flashMessageUserPasswordChanged":"Your password has been set.",
+"_flashMessageUserPasswordChangedLoginReq":"Your password has been reset. Please continue and enter 2FA to log in.",
 "_flashMessageUserWithSameEmailExists":"A user with the same email already exists.",
 "_flashMessageWrongTwoFactorCode":"The two-factor code was incorrect",
 "_flashMessageYourEmailHasChanged":"Your username and email have been successfully changed.",

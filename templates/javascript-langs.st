@@ -593,6 +593,7 @@ javascriptLocalisation =
            , flashMessagePasswordsDontMatch: "$_flashMessagePasswordsDontMatch()$"
            , flashMessagePasswordChangeLinkNotValid: "$_flashMessagePasswordChangeLinkNotValid()$"
            , flashMessageUserPasswordChanged : "$_flashMessageUserPasswordChanged()$"
+           , flashMessageUserPasswordChangedLoginReq: "$_flashMessageUserPasswordChangedLoginReq()$"
          }
          , signupModal: {
              modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
