@@ -540,8 +540,11 @@ testSharedAccessControl = do
     folderGuestCtx
     []
 
+  -- User group admins are implicitly given FolderUserAR for accessing documents in folder.
+  -- With the current architecture an explicit folder admin should really be given both
+  -- FolderAdminAR and FolderUserAR roles.
   assertGetDocumentFails
-    "Folder admin should not able to get shared document with no folder permission"
+    "User with only FolderAdminAR role should not able to get shared document with no folder permission"
     docId
     folderAdminCtx
     []
@@ -596,9 +599,9 @@ testGroupAccessControl :: TestEnv ()
 testGroupAccessControl = do
   userGroup <- instantiateUserGroup randomUserGroupTemplate
   let userGroupId = userGroup ^. #id
-      folderId    = fromJust $ userGroup ^. #homeFolderID
+  author <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
 
-  author     <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
+  let folderId = fromJust $ author ^. #homeFolderID
 
   -- From derivedRoles, group user have SharedTemplateUserAR on group home folder
   groupUser  <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
@@ -610,9 +613,6 @@ testGroupAccessControl = do
   authorCtx     <- set #maybeUser (Just author) <$> mkContext defaultLang
   groupUserCtx  <- set #maybeUser (Just groupUser) <$> mkContext defaultLang
   groupAdminCtx <- set #maybeUser (Just groupAdmin) <$> mkContext defaultLang
-
-  -- Group users still require explicit FolderUserAR role to create documents and access created draft documents
-  void . dbUpdate $ AccessControlCreateForUser (author ^. #id) (FolderUserAR folderId)
 
   do -- Normal documents
     do -- Document preparation phase
@@ -698,72 +698,67 @@ testGroupAccessControl = do
 
 testFolderAccessControl :: TestEnv ()
 testFolderAccessControl = do
-  baseFolderUser         <- instantiateRandomUser
-  parentFolderUser       <- instantiateRandomUser
-  grandParentFolderUser  <- instantiateRandomUser
+  baseFolderUser        <- instantiateRandomUser
+  childFolderUser       <- instantiateRandomUser
+  grandChildFolderUser  <- instantiateRandomUser
 
-  baseFolderAdmin        <- instantiateRandomUser
-  parentFolderAdmin      <- instantiateRandomUser
-  grandParentFolderAdmin <- instantiateRandomUser
+  baseFolderAdmin       <- instantiateRandomUser
+  childFolderAdmin      <- instantiateRandomUser
+  grandChildFolderAdmin <- instantiateRandomUser
 
-  baseFolderGuest        <- instantiateRandomUser
-  parentFolderGuest      <- instantiateRandomUser
-  grandParentFolderGuest <- instantiateRandomUser
+  baseFolderGuest       <- instantiateRandomUser
+  childFolderGuest      <- instantiateRandomUser
+  grandChildFolderGuest <- instantiateRandomUser
 
-  baseFolder             <- dbUpdate . FolderCreate $ defaultFolder
+  baseFolder            <- dbUpdate . FolderCreate $ defaultFolder
   let baseFolderId = baseFolder ^. #id
 
-  parentFolder <- dbUpdate . FolderCreate $ set #parentID
-                                                (Just baseFolderId)
-                                                defaultFolder
-  let parentFolderId = parentFolder ^. #id
+  childFolder <- dbUpdate . FolderCreate $ set #parentID (Just baseFolderId) defaultFolder
+  let childFolderId = childFolder ^. #id
 
-  grandParentFolder <- dbUpdate . FolderCreate $ set #parentID
-                                                     (Just parentFolderId)
-                                                     defaultFolder
-  let grandParentFolderId = grandParentFolder ^. #id
+  grandChildFolder <- dbUpdate . FolderCreate $ set #parentID
+                                                    (Just childFolderId)
+                                                    defaultFolder
+  let grandChildFolderId = grandChildFolder ^. #id
 
   void . dbUpdate $ AccessControlCreateForUser (baseFolderUser ^. #id)
                                                (FolderUserAR baseFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (parentFolderUser ^. #id)
-                                               (FolderUserAR parentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (childFolderUser ^. #id)
+                                               (FolderUserAR childFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (grandParentFolderUser ^. #id)
-                                               (FolderUserAR grandParentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (grandChildFolderUser ^. #id)
+                                               (FolderUserAR grandChildFolderId)
 
   void . dbUpdate $ AccessControlCreateForUser (baseFolderAdmin ^. #id)
                                                (FolderAdminAR baseFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (parentFolderAdmin ^. #id)
-                                               (FolderAdminAR parentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (childFolderAdmin ^. #id)
+                                               (FolderAdminAR childFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (grandParentFolderAdmin ^. #id)
-                                               (FolderAdminAR grandParentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (grandChildFolderAdmin ^. #id)
+                                               (FolderAdminAR grandChildFolderId)
 
   void . dbUpdate $ AccessControlCreateForUser (baseFolderGuest ^. #id)
                                                (SharedTemplateUserAR baseFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (parentFolderGuest ^. #id)
-                                               (SharedTemplateUserAR parentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (childFolderGuest ^. #id)
+                                               (SharedTemplateUserAR childFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser
-    (grandParentFolderGuest ^. #id)
-    (SharedTemplateUserAR grandParentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (grandChildFolderGuest ^. #id)
+                                               (SharedTemplateUserAR grandChildFolderId)
 
-  baseFolderUserCtx    <- set #maybeUser (Just baseFolderUser) <$> mkContext defaultLang
-  baseFolderAdminCtx   <- set #maybeUser (Just baseFolderAdmin) <$> mkContext defaultLang
-  baseFolderGuestCtx   <- set #maybeUser (Just baseFolderGuest) <$> mkContext defaultLang
+  baseFolderUserCtx <- set #maybeUser (Just baseFolderUser) <$> mkContext defaultLang
+  baseFolderAdminCtx <- set #maybeUser (Just baseFolderAdmin) <$> mkContext defaultLang
+  baseFolderGuestCtx <- set #maybeUser (Just baseFolderGuest) <$> mkContext defaultLang
 
-  parentFolderUserCtx  <- set #maybeUser (Just parentFolderUser) <$> mkContext defaultLang
-  parentFolderAdminCtx <- set #maybeUser (Just parentFolderAdmin)
+  childFolderUserCtx <- set #maybeUser (Just childFolderUser) <$> mkContext defaultLang
+  childFolderAdminCtx <- set #maybeUser (Just childFolderAdmin) <$> mkContext defaultLang
+  childFolderGuestCtx <- set #maybeUser (Just childFolderGuest) <$> mkContext defaultLang
+
+  grandChildFolderUserCtx <- set #maybeUser (Just grandChildFolderUser)
     <$> mkContext defaultLang
-  parentFolderGuestCtx <- set #maybeUser (Just parentFolderGuest)
-    <$> mkContext defaultLang
-
-  grandParentFolderUserCtx <- set #maybeUser (Just grandParentFolderUser)
-    <$> mkContext defaultLang
-  grandParentFolderAdminCtx <- set #maybeUser (Just grandParentFolderAdmin)
+  grandChildFolderAdminCtx <- set #maybeUser (Just grandChildFolderAdmin)
     <$> mkContext defaultLang
 
   do -- Document in base folder
@@ -785,15 +780,15 @@ testFolderAccessControl = do
                                baseFolderUserCtx
                                []
 
-      assertGetDocumentFails "Parent folder user should not able to get draft document"
+      assertGetDocumentFails "Child folder user should not able to get draft document"
                              docId
-                             parentFolderUserCtx
+                             childFolderUserCtx
                              []
 
       assertGetDocumentFails
-        "Grandparent folder user should not able to get draft document"
+        "Grandchild folder user should not able to get draft document"
         docId
-        grandParentFolderUserCtx
+        grandChildFolderUserCtx
         []
 
       assertGetDocumentFails "Base folder admin should not able to get draft document"
@@ -801,9 +796,9 @@ testFolderAccessControl = do
                              baseFolderAdminCtx
                              []
 
-      assertGetDocumentFails "Parent Folder admin should not able to get draft document"
+      assertGetDocumentFails "Child Folder admin should not able to get draft document"
                              docId
-                             parentFolderAdminCtx
+                             childFolderAdminCtx
                              []
 
       assertGetDocumentFails
@@ -813,9 +808,9 @@ testFolderAccessControl = do
         []
 
       assertGetDocumentFails
-        "Parent folder shared template user should not able to get draft document"
+        "Child folder shared template user should not able to get draft document"
         docId
-        parentFolderGuestCtx
+        childFolderGuestCtx
         []
 
     do -- Pending document
@@ -832,16 +827,15 @@ testFolderAccessControl = do
                                baseFolderUserCtx
                                []
 
-      assertGetDocumentFails
-        "Parent folder user should not able to get started document"
-        docId
-        parentFolderUserCtx
-        []
+      assertGetDocumentFails "Child folder user should not able to get started document"
+                             docId
+                             childFolderUserCtx
+                             []
 
       assertGetDocumentFails
-        "Grandparent folder user should not able to get started document"
+        "Grandchild folder user should not able to get started document"
         docId
-        grandParentFolderUserCtx
+        grandChildFolderUserCtx
         []
 
       assertGetDocumentSucceed
@@ -851,9 +845,9 @@ testFolderAccessControl = do
         []
 
       assertGetDocumentFails
-        "Parent Folder admin should not able to get started document"
+        "Child Folder admin should not able to get started document"
         docId
-        parentFolderAdminCtx
+        childFolderAdminCtx
         []
 
       assertGetDocumentFails
@@ -869,22 +863,22 @@ testFolderAccessControl = do
         []
 
       assertGetDocumentFails
-        "Parent folder shared template user should not able to get started document"
+        "Child folder shared template user should not able to get started document"
         docId
-        parentFolderGuestCtx
+        childFolderGuestCtx
         []
 
-  do -- Document in parent folder
+  do -- Document in child folder
     logInfo_ "Test access control for document in base folder"
 
     do -- Document preparation phase
       logInfo_ "Test access control for draft document in base folder"
 
-      docId <- fmap documentid . addRandomDocument $ (rdaDefault parentFolderUser)
+      docId <- fmap documentid . addRandomDocument $ (rdaDefault childFolderUser)
         { rdaTypes       = OneOf [Signable]
         , rdaStatuses    = OneOf [Preparation]
         , rdaSharings    = OneOf [Private]
-        , rdaFolderId    = parentFolderId
+        , rdaFolderId    = childFolderId
         , rdaSignatories = randomSignatories
         }
 
@@ -893,15 +887,15 @@ testFolderAccessControl = do
                                baseFolderUserCtx
                                []
 
-      assertGetDocumentSucceed "Parent folder user should be able to get draft document"
+      assertGetDocumentSucceed "Child folder user should be able to get draft document"
                                docId
-                               parentFolderUserCtx
+                               childFolderUserCtx
                                []
 
       assertGetDocumentFails
-        "Grandparent folder user should not able to get draft document"
+        "Grandchild folder user should not able to get draft document"
         docId
-        grandParentFolderUserCtx
+        grandChildFolderUserCtx
         []
 
       assertGetDocumentFails "Base folder admin should not able to get draft document"
@@ -909,9 +903,9 @@ testFolderAccessControl = do
                              baseFolderAdminCtx
                              []
 
-      assertGetDocumentFails "Parent Folder admin should not able to get draft document"
+      assertGetDocumentFails "Child Folder admin should not able to get draft document"
                              docId
-                             parentFolderAdminCtx
+                             childFolderAdminCtx
                              []
 
       assertGetDocumentFails
@@ -921,17 +915,17 @@ testFolderAccessControl = do
         []
 
       assertGetDocumentFails
-        "Parent folder shared template user should not able to get draft document"
+        "Child folder shared template user should not able to get draft document"
         docId
-        parentFolderGuestCtx
+        childFolderGuestCtx
         []
 
     do -- Pending document
-      docId <- fmap documentid . addRandomDocument $ (rdaDefault parentFolderUser)
+      docId <- fmap documentid . addRandomDocument $ (rdaDefault childFolderUser)
         { rdaTypes       = OneOf [Signable]
         , rdaStatuses    = OneOf [Pending]
         , rdaSharings    = OneOf [Private]
-        , rdaFolderId    = parentFolderId
+        , rdaFolderId    = childFolderId
         , rdaSignatories = randomSignatories
         }
 
@@ -941,15 +935,15 @@ testFolderAccessControl = do
                                []
 
       assertGetDocumentSucceed
-        "Parent folder user should be able to get started document"
+        "Child folder user should be able to get started document"
         docId
-        parentFolderUserCtx
+        childFolderUserCtx
         []
 
       assertGetDocumentFails
-        "Grandparent folder user should not able to get started document"
+        "Grandchild folder user should not able to get started document"
         docId
-        grandParentFolderUserCtx
+        grandChildFolderUserCtx
         []
 
       assertGetDocumentSucceed
@@ -959,15 +953,15 @@ testFolderAccessControl = do
         []
 
       assertGetDocumentSucceed
-        "Parent folder admin should be able to get started document"
+        "Child folder admin should be able to get started document"
         docId
-        parentFolderAdminCtx
+        childFolderAdminCtx
         []
 
       assertGetDocumentFails
-        "Grandparent folder admin should not able to get started document"
+        "Grandchild folder admin should not able to get started document"
         docId
-        grandParentFolderAdminCtx
+        grandChildFolderAdminCtx
         []
 
       assertGetDocumentFails
@@ -977,79 +971,74 @@ testFolderAccessControl = do
         []
 
       assertGetDocumentFails
-        "Parent folder shared template user should not able to get started document"
+        "Child folder shared template user should not able to get started document"
         docId
-        parentFolderGuestCtx
+        childFolderGuestCtx
         []
 
 testSharedFolderAccessControl :: TestEnv ()
 testSharedFolderAccessControl = do
-  baseFolderUser         <- instantiateRandomUser
-  parentFolderUser       <- instantiateRandomUser
-  grandParentFolderUser  <- instantiateRandomUser
+  baseFolderUser        <- instantiateRandomUser
+  childFolderUser       <- instantiateRandomUser
+  grandChildFolderUser  <- instantiateRandomUser
 
-  baseFolderAdmin        <- instantiateRandomUser
-  parentFolderAdmin      <- instantiateRandomUser
-  grandParentFolderAdmin <- instantiateRandomUser
+  baseFolderAdmin       <- instantiateRandomUser
+  childFolderAdmin      <- instantiateRandomUser
+  grandChildFolderAdmin <- instantiateRandomUser
 
-  baseFolderGuest        <- instantiateRandomUser
-  parentFolderGuest      <- instantiateRandomUser
-  grandParentFolderGuest <- instantiateRandomUser
+  baseFolderGuest       <- instantiateRandomUser
+  childFolderGuest      <- instantiateRandomUser
+  grandChildFolderGuest <- instantiateRandomUser
 
-  baseFolder             <- dbUpdate . FolderCreate $ defaultFolder
+  baseFolder            <- dbUpdate . FolderCreate $ defaultFolder
   let baseFolderId = baseFolder ^. #id
 
-  parentFolder <- dbUpdate . FolderCreate $ set #parentID
-                                                (Just baseFolderId)
-                                                defaultFolder
-  let parentFolderId = parentFolder ^. #id
+  childFolder <- dbUpdate . FolderCreate $ set #parentID (Just baseFolderId) defaultFolder
+  let childFolderId = childFolder ^. #id
 
-  grandParentFolder <- dbUpdate . FolderCreate $ set #parentID
-                                                     (Just parentFolderId)
-                                                     defaultFolder
-  let grandParentFolderId = grandParentFolder ^. #id
+  grandChildFolder <- dbUpdate . FolderCreate $ set #parentID
+                                                    (Just childFolderId)
+                                                    defaultFolder
+  let grandChildFolderId = grandChildFolder ^. #id
 
   void . dbUpdate $ AccessControlCreateForUser (baseFolderUser ^. #id)
                                                (FolderUserAR baseFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (parentFolderUser ^. #id)
-                                               (FolderUserAR parentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (childFolderUser ^. #id)
+                                               (FolderUserAR childFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (grandParentFolderUser ^. #id)
-                                               (FolderUserAR grandParentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (grandChildFolderUser ^. #id)
+                                               (FolderUserAR grandChildFolderId)
 
   void . dbUpdate $ AccessControlCreateForUser (baseFolderAdmin ^. #id)
                                                (FolderAdminAR baseFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (parentFolderAdmin ^. #id)
-                                               (FolderAdminAR parentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (childFolderAdmin ^. #id)
+                                               (FolderAdminAR childFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (grandParentFolderAdmin ^. #id)
-                                               (FolderAdminAR grandParentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (grandChildFolderAdmin ^. #id)
+                                               (FolderAdminAR grandChildFolderId)
 
   void . dbUpdate $ AccessControlCreateForUser (baseFolderGuest ^. #id)
                                                (SharedTemplateUserAR baseFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser (parentFolderGuest ^. #id)
-                                               (SharedTemplateUserAR parentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (childFolderGuest ^. #id)
+                                               (SharedTemplateUserAR childFolderId)
 
-  void . dbUpdate $ AccessControlCreateForUser
-    (grandParentFolderGuest ^. #id)
-    (SharedTemplateUserAR grandParentFolderId)
+  void . dbUpdate $ AccessControlCreateForUser (grandChildFolderGuest ^. #id)
+                                               (SharedTemplateUserAR grandChildFolderId)
 
-  baseFolderUserCtx    <- set #maybeUser (Just baseFolderUser) <$> mkContext defaultLang
-  baseFolderAdminCtx   <- set #maybeUser (Just baseFolderAdmin) <$> mkContext defaultLang
-  baseFolderGuestCtx   <- set #maybeUser (Just baseFolderGuest) <$> mkContext defaultLang
+  baseFolderUserCtx <- set #maybeUser (Just baseFolderUser) <$> mkContext defaultLang
+  baseFolderAdminCtx <- set #maybeUser (Just baseFolderAdmin) <$> mkContext defaultLang
+  baseFolderGuestCtx <- set #maybeUser (Just baseFolderGuest) <$> mkContext defaultLang
 
-  parentFolderUserCtx  <- set #maybeUser (Just parentFolderUser) <$> mkContext defaultLang
-  parentFolderAdminCtx <- set #maybeUser (Just parentFolderAdmin)
+  childFolderUserCtx <- set #maybeUser (Just childFolderUser) <$> mkContext defaultLang
+  childFolderAdminCtx <- set #maybeUser (Just childFolderAdmin) <$> mkContext defaultLang
+  childFolderGuestCtx <- set #maybeUser (Just childFolderGuest) <$> mkContext defaultLang
+
+  grandChildFolderUserCtx <- set #maybeUser (Just grandChildFolderUser)
     <$> mkContext defaultLang
-  parentFolderGuestCtx <- set #maybeUser (Just parentFolderGuest)
-    <$> mkContext defaultLang
-
-  grandParentFolderUserCtx <- set #maybeUser (Just grandParentFolderUser)
-    <$> mkContext defaultLang
-  grandParentFolderGuestCtx <- set #maybeUser (Just grandParentFolderGuest)
+  grandChildFolderGuestCtx <- set #maybeUser (Just grandChildFolderGuest)
     <$> mkContext defaultLang
 
   do -- Shared document in base folder
@@ -1068,15 +1057,15 @@ testSharedFolderAccessControl = do
                              baseFolderUserCtx
                              []
 
-    assertGetDocumentFails "Parent folder user should not able to get shared document"
+    assertGetDocumentFails "Child folder user should not able to get shared document"
                            docId
-                           parentFolderUserCtx
+                           childFolderUserCtx
                            []
 
     assertGetDocumentFails
-      "Grandparent folder user should not able to get shared document"
+      "Grandchild folder user should not able to get shared document"
       docId
-      grandParentFolderUserCtx
+      grandChildFolderUserCtx
       []
 
     assertGetDocumentFails "Base folder admin should not able to get shared document"
@@ -1084,9 +1073,9 @@ testSharedFolderAccessControl = do
                            baseFolderAdminCtx
                            []
 
-    assertGetDocumentFails "Parent Folder admin should not able to get shared document"
+    assertGetDocumentFails "Child Folder admin should not able to get shared document"
                            docId
-                           parentFolderAdminCtx
+                           childFolderAdminCtx
                            []
 
     assertGetDocumentSucceed
@@ -1096,25 +1085,25 @@ testSharedFolderAccessControl = do
       []
 
     assertGetDocumentFails
-      "Parent folder shared template user should not able to get shared document"
+      "Child folder shared template user should not able to get shared document"
       docId
-      parentFolderGuestCtx
+      childFolderGuestCtx
       []
 
     assertGetDocumentFails
-      "Grandparent folder shared template user should not able to get shared document"
+      "Grandchild folder shared template user should not able to get shared document"
       docId
-      grandParentFolderGuestCtx
+      grandChildFolderGuestCtx
       []
 
-  do -- Shared document in parent folder
-    logInfo_ "Testing shared document access control for document in parent folder"
+  do -- Shared document in child folder
+    logInfo_ "Testing shared document access control for document in child folder"
 
-    docId <- fmap documentid . addRandomDocument $ (rdaDefault parentFolderUser)
+    docId <- fmap documentid . addRandomDocument $ (rdaDefault childFolderUser)
       { rdaTypes       = OneOf [Template]
       , rdaStatuses    = OneOf [Preparation]
       , rdaSharings    = OneOf [Shared]
-      , rdaFolderId    = parentFolderId
+      , rdaFolderId    = childFolderId
       , rdaSignatories = randomSignatories
       }
 
@@ -1123,15 +1112,15 @@ testSharedFolderAccessControl = do
                              baseFolderUserCtx
                              []
 
-    assertGetDocumentSucceed "Parent folder user should be able to get shared document"
+    assertGetDocumentSucceed "Child folder user should be able to get shared document"
                              docId
-                             parentFolderUserCtx
+                             childFolderUserCtx
                              []
 
     assertGetDocumentFails
-      "Grandparent folder user should not able to get shared document"
+      "Grandchild folder user should not able to get shared document"
       docId
-      grandParentFolderUserCtx
+      grandChildFolderUserCtx
       []
 
     assertGetDocumentFails "Base folder admin should not able to get shared document"
@@ -1139,9 +1128,9 @@ testSharedFolderAccessControl = do
                            baseFolderAdminCtx
                            []
 
-    assertGetDocumentFails "Parent Folder admin should not able to get shared document"
+    assertGetDocumentFails "Child Folder admin should not able to get shared document"
                            docId
-                           parentFolderAdminCtx
+                           childFolderAdminCtx
                            []
 
     assertGetDocumentSucceed
@@ -1151,25 +1140,25 @@ testSharedFolderAccessControl = do
       []
 
     assertGetDocumentSucceed
-      "Parent folder shared template user should be able to get shared document"
+      "Child folder shared template user should be able to get shared document"
       docId
-      parentFolderGuestCtx
+      childFolderGuestCtx
       []
 
     assertGetDocumentFails
-      "Grandparent folder shared template user should not able to get shared document"
+      "Grandchild folder shared template user should not able to get shared document"
       docId
-      grandParentFolderGuestCtx
+      grandChildFolderGuestCtx
       []
 
-  do -- Shared document in grandparent folder
-    logInfo_ "Testing shared document access control for document in grandparent folder"
+  do -- Shared document in grandchild folder
+    logInfo_ "Testing shared document access control for document in grandchild folder"
 
-    docId <- fmap documentid . addRandomDocument $ (rdaDefault grandParentFolderUser)
+    docId <- fmap documentid . addRandomDocument $ (rdaDefault grandChildFolderUser)
       { rdaTypes       = OneOf [Template]
       , rdaStatuses    = OneOf [Preparation]
       , rdaSharings    = OneOf [Shared]
-      , rdaFolderId    = grandParentFolderId
+      , rdaFolderId    = grandChildFolderId
       , rdaSignatories = randomSignatories
       }
 
@@ -1178,15 +1167,15 @@ testSharedFolderAccessControl = do
                              baseFolderUserCtx
                              []
 
-    assertGetDocumentSucceed "Parent folder user should be able to get shared document"
+    assertGetDocumentSucceed "Child folder user should be able to get shared document"
                              docId
-                             parentFolderUserCtx
+                             childFolderUserCtx
                              []
 
     assertGetDocumentSucceed
-      "Grandparent folder user should be able to get shared document"
+      "Grandchild folder user should be able to get shared document"
       docId
-      grandParentFolderUserCtx
+      grandChildFolderUserCtx
       []
 
     assertGetDocumentFails "Base folder admin should not able to get shared document"
@@ -1194,9 +1183,9 @@ testSharedFolderAccessControl = do
                            baseFolderAdminCtx
                            []
 
-    assertGetDocumentFails "Parent Folder admin should not able to get shared document"
+    assertGetDocumentFails "Child Folder admin should not able to get shared document"
                            docId
-                           parentFolderAdminCtx
+                           childFolderAdminCtx
                            []
 
     assertGetDocumentSucceed
@@ -1206,15 +1195,15 @@ testSharedFolderAccessControl = do
       []
 
     assertGetDocumentSucceed
-      "Parent folder shared template user should be able to get shared document"
+      "Child folder shared template user should be able to get shared document"
       docId
-      parentFolderGuestCtx
+      childFolderGuestCtx
       []
 
     assertGetDocumentSucceed
-      "Grandparent folder shared template user should be able to get shared document"
+      "Grandchild folder shared template user should be able to get shared document"
       docId
-      grandParentFolderGuestCtx
+      grandChildFolderGuestCtx
       []
 
 hasFileAccess :: [(Text, Input)] -> Context -> FileID -> TestEnv Bool

@@ -120,6 +120,17 @@ guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did =
                         "Pending documents can not be trashed or deleted"
       =<< theDocument
 
+-- | Internal function used in guardDocumentAuthorIs
+-- Helps code reuse and keep error messages consistent
+getDocumentAuthor :: Kontrakcja m => Document -> m User
+getDocumentAuthor doc = do
+  let msgNoAuthor =
+        "Document doesn't have author signatory link connected with user account"
+  authorUserId <- apiGuardJust (serverError msgNoAuthor) $ getAuthorUserId doc
+  let msgNoUser =
+        "Document doesn't have author user account for the author signatory link"
+  apiGuardJustM (serverError msgNoUser) . dbQuery $ GetUserByIDIncludeDeleted authorUserId
+
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent
 guardDocumentAuthorIs :: Kontrakcja m => (User -> Bool) -> Document -> m ()

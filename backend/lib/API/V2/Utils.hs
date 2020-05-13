@@ -43,9 +43,6 @@ apiAccessControlWithError
 apiAccessControlWithError apiuser requiredPerm failAction successAction = do
   roles <- dbQuery . GetRoles $ apiuser
   accessControl roles requiredPerm failAction successAction
-    `catchDBExtraException` (\(UserNonExistent _) -> apiError insufficientPrivileges)
-    `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
-    `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
 
 apiAccessControl :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a
 apiAccessControl user requiredPerm successAction = do

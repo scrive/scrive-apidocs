@@ -25,7 +25,6 @@ module Doc.DocUtils (
   , documentReallyDeletedForUser
   , userCanPerformSigningAction
   , fileFromMainFile
-  , getDocumentAuthor
   , allRequiredAttachmentsAreOnList
   , hasDigitalSignature
   , hasGuardtimeSignature
@@ -38,8 +37,6 @@ import Text.StringTemplates.Templates
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
-import API.V2.Errors
-import API.V2.MonadUtils
 import DB
 import Doc.DocInfo
 import Doc.DocStateData
@@ -48,24 +45,12 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import File.File
 import File.Model
-import Kontra
 import Templates
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-
--- | Internal function used in guardDocumentAuthorIs
--- Helps code reuse and keep error messages consistent
-getDocumentAuthor :: Kontrakcja m => Document -> m User
-getDocumentAuthor doc = do
-  let msgNoAuthor =
-        "Document doesn't have author signatory link connected with user account"
-  authorUserId <- apiGuardJust (serverError msgNoAuthor) $ getAuthorUserId doc
-  let msgNoUser =
-        "Document doesn't have author user account for the author signatory link"
-  apiGuardJustM (serverError msgNoUser) . dbQuery $ GetUserByIDIncludeDeleted authorUserId
 
 renderLocalListTemplate :: (HasLang a, TemplatesMonad m) => a -> [Text] -> m Text
 renderLocalListTemplate = renderListTemplateHelper . renderLocalTemplate

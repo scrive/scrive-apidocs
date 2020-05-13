@@ -71,8 +71,14 @@ guardDocumentReadAccess mSignatoryId doc = do
     bindMaybeM mUserFromSignatory $ \user ->
       documentAccessModeForAuthenticatedUser doc user userIsAuthor mPickedSignatoryId
 
-  -- Pick a desired document access to show, prioritize by user > signatory,
-  -- main identity > derived identity.
+  {-
+    Pick a desired document access to show, prioritize by user > signatory,
+    main identity > derived identity.
+      - if a valid signatory is provided in the request, use that.
+      - else if a valid user is logged in, use that.
+      - else if the user is logged in and is a valid signatory, use that.
+      - else if the signatory link is valid and is linked to a user, use that.
+  -}
   let mPickedDocumentAccess =
         mSignatoryDocumentAccess
           <|> mUserDocumentAccess
@@ -90,6 +96,11 @@ guardDocumentReadAccess mSignatoryId doc = do
       Nothing ->
         -- Otherwise for signatory or unauthenticated session, invalidAuthorization
         apiError invalidAuthorization
+  where
+    bindMaybeM :: (Monad m) => Maybe a -> (a -> m (Maybe b)) -> m (Maybe b)
+    bindMaybeM mx cont = case mx of
+      Just x  -> cont x
+      Nothing -> return Nothing
 
 guardDocumentUpdatePermission :: Kontrakcja m => User -> Document -> m ()
 guardDocumentUpdatePermission user doc = do

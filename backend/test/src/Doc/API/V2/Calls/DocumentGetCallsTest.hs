@@ -7,8 +7,6 @@ import Log
 import Test.Framework
 import qualified Data.Text as T
 
-import AccessControl.Model
-import AccessControl.Types
 import Context
 import DB.Query (dbQuery, dbUpdate)
 import DB.TimeZoneName (mkTimeZoneName)
@@ -278,11 +276,9 @@ testDocApiV2GetByAdmin = do
   did       <- getMockDocId <$> testDocApiV2New' ctxauthor
   void $ testDocApiV2Start' ctxauthor did
 
-  let (Just folderId) = author ^. #homeFolderID
   admin <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return ugid }
-  ctx <- mkContextWithUser defaultLang admin
-  void . dbUpdate . AccessControlCreateForUser (admin ^. #id) $ FolderAdminAR folderId
+  ctx        <- mkContextWithUser defaultLang admin
 
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
@@ -306,14 +302,12 @@ testDocApiV2GetShared = do
     dbUpdate $ SetDocumentSharing [did] True
   assert setshare
 
-  let (Just folderId) = author ^. #homeFolderID
-  user <- instantiateUser $ randomUserTemplate { groupID = return ugid }
-  void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ FolderUserAR folderId
+  user       <- instantiateUser $ randomUserTemplate { groupID = return ugid }
 
   ctx        <- mkContextWithUser defaultLang user
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be"
-              "company_admin"
+              "company_shared"
               (getMockDocViewerRole getMockDoc)
   assertEqual "Document should be template" True (getMockDocIsTemplate getMockDoc)
   assertEqual "Document should be shared"   True (getMockDocIsShared getMockDoc)

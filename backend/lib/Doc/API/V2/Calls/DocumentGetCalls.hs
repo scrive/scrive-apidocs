@@ -217,10 +217,10 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = logDocument did . api $ do
   -- Permissions
-  (user, _) <- getAPIUser APIDocCheck
-  doc       <- dbQuery $ GetDocumentByDocumentID did
-  permCond  <- apiRequireDocPermission ReadA doc
-  apiAccessControlWithError user permCond (apiError documentActionForbidden) $ do
+  (user, _)    <- getAPIUser APIDocCheck
+  doc          <- dbQuery $ GetDocumentByDocumentID did
+  requiredPerm <- apiRequireDocPermission ReadA doc
+  apiAccessControlWithError user requiredPerm (apiError documentActionForbidden) $ do
     -- Parameters
     mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
     mLang     <- case fmap langFromCode mLangCode of
@@ -237,10 +237,10 @@ docApiV2History did = logDocument did . api $ do
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2EvidenceAttachments did = logDocument did . api . withDocumentID did $ do
-  (user, _) <- getAPIUser APIDocCheck
-  doc       <- theDocument
-  permCond  <- apiRequireDocPermission ReadA doc
-  apiAccessControlWithError user permCond (apiError documentActionForbidden) $ do
+  (user, _)    <- getAPIUser APIDocCheck
+  doc          <- theDocument
+  requiredPerm <- apiRequireDocPermission ReadA doc
+  apiAccessControlWithError user requiredPerm (apiError documentActionForbidden) $ do
     eas <- EvidenceAttachments.extractAttachmentsList doc
     let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
     return . Ok $ Response 200
