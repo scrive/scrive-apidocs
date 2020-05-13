@@ -19,7 +19,6 @@ import Doc.Conditions
 import Folder.Types
 import User.UserID
 import UserGroup.Types
-import qualified Folder.Internal as I
 
 newtype FolderGet = FolderGet FolderID
 instance (MonadDB m, MonadThrow m) => DBQuery m FolderGet (Maybe Folder) where
@@ -93,7 +92,7 @@ instance (MonadDB m, MonadThrow m)
     let directChildren parentID =
           filter ((== Just parentID) . view #parentID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
-        mkChild folder = I.FolderWithChildren folder . mkChildren $ folder ^. #id
+        mkChild folder = FolderWithChildren folder . mkChildren $ folder ^. #id
     return $ mkChildren fid
 
 newtype FolderGetParents = FolderGetParents FolderID

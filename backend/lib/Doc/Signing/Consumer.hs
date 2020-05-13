@@ -64,7 +64,7 @@ import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified MailContext.Internal as I
+import qualified MailContext.Internal
 
 data DocumentSigning = DocumentSigning {
     signingSignatoryID          :: !SignatoryLinkID
@@ -159,11 +159,11 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
         withDocumentM getDocM $ do
           now <- currentTime
           bd  <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
-          let mc = I.MailContext { lang               = signingLang
-                                 , brandedDomain      = bd
-                                 , time               = now
-                                 , mailNoreplyAddress = mailNoreplyAddress
-                                 }
+          let mc = MailContext { lang               = signingLang
+                               , brandedDomain      = bd
+                               , time               = now
+                               , mailNoreplyAddress = mailNoreplyAddress
+                               }
           runTemplatesT (signingLang, templates)
             . runMailContextT mc
             . runGuardTimeConfT guardTimeConf

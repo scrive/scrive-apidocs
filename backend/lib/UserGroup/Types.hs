@@ -1,6 +1,6 @@
 module UserGroup.Types
   ( InvoicingType(..)
-  , UserGroup
+  , UserGroup(UserGroup)
   , fetchUserGroup
   , defaultUserGroup
   , defaultChildUserGroup
@@ -27,19 +27,19 @@ module UserGroup.Types
   , emptyUserGroupID
   , unsafeUserGroupID
   , fromUserGroupID
-  , UserGroupSettings
+  , UserGroupSettings(UserGroupSettings)
   , defaultUserGroupSettings
-  , UserGroupSSOConfiguration
-  , UserGroupAddress
+  , UserGroupSSOConfiguration(UserGroupSSOConfiguration)
+  , UserGroupAddress(UserGroupAddress)
   , defaultUserGroupAddress
-  , UserGroupUI
+  , UserGroupUI(UserGroupUI)
   , defaultUserGroupUI
   , UserGroupInvoicing(..)
   , UserGroupWithParents
-  , UserGroupRoot
+  , UserGroupRoot(UserGroupRoot)
   , ugFromUGRoot
-  , UserGroupWithChildren
-  , Tag
+  , UserGroupWithChildren(UserGroupWithChildren)
+  , Tag(Tag)
   ) where
 
 import qualified Data.Set as S

@@ -29,7 +29,7 @@ import PdfToolsLambda.Conf
 import PdfToolsLambda.Monad
 import Templates
 import User.Lang
-import qualified MailContext.Internal as I
+import qualified MailContext.Internal
 
 data DocumentSealing = DocumentSealing {
     dsDocumentID      :: !DocumentID
@@ -76,11 +76,11 @@ documentSealing guardTimeConf pdfToolsLambdaEnv templates pool mailNoreplyAddres
           bd   <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
           doc  <- theDocument
           let lang = getLang doc
-              mc   = I.MailContext { lang               = lang
-                                   , brandedDomain      = bd
-                                   , time               = now0
-                                   , mailNoreplyAddress = mailNoreplyAddress
-                                   }
+              mc   = MailContext { lang               = lang
+                                 , brandedDomain      = bd
+                                 , time               = now0
+                                 , mailNoreplyAddress = mailNoreplyAddress
+                                 }
           logInfo_ "Running postDocumentClosedActions"
           resultisok <-
             runGuardTimeConfT guardTimeConf

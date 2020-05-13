@@ -69,7 +69,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Doc.DocStateData as DS
-import qualified MailContext.Internal as I
+import qualified MailContext.Internal
 import qualified SMS.SMS as SMS
 
 {- |
@@ -917,11 +917,11 @@ runMailT templates mailNoreplyAddress doc m = do
   bd  <- case maybesignatory =<< getAuthorSigLink doc of
     Just uid -> dbQuery $ GetBrandedDomainByUserID uid
     Nothing  -> dbQuery GetMainBrandedDomain
-  let mctx = I.MailContext { lang               = documentlang doc
-                           , brandedDomain      = bd
-                           , time               = now
-                           , mailNoreplyAddress = mailNoreplyAddress
-                           }
+  let mctx = MailContext { lang               = documentlang doc
+                         , brandedDomain      = bd
+                         , time               = now
+                         , mailNoreplyAddress = mailNoreplyAddress
+                         }
   runTemplatesT (getLang doc, templates) . runMailContextT mctx $ m
 
 -- Local utils

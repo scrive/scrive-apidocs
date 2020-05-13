@@ -1,7 +1,7 @@
 module Folder.Types
-  ( Folder
+  ( Folder(Folder)
   , FolderID
-  , FolderWithChildren
+  , FolderWithChildren(FolderWithChildren)
   , fetchFolder
   , defaultFolder
   , fromFolderID

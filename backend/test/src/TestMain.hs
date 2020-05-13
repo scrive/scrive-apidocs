@@ -101,7 +101,7 @@ import UserHistoryTest
 import UserPasswordTest
 import UserStateTest
 import qualified HostClock.Model as HC
-import qualified TestEnvSt.Internal as I
+import qualified TestEnvSt.Internal
 
 allTests :: [TestEnvSt -> Test]
 allTests =
@@ -237,24 +237,24 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
   mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
   mAmazonEnv         <- sequence (s3envFromConfig <$> testAmazonConfig tconf)
   lambdaEnv          <- pdfToolsLambdaEnvFromConf $ testPdfToolsLambdaConf tconf
-  let env = envf $ I.TestEnvSt { connSource         = cs
-                               , staticConnSource   = staticSource
-                               , transSettings      = defaultTransactionSettings
-                               , rngState           = rng
-                               , runLogger          = RunLogger runLogger
-                               , globalTemplates    = templates
-                               , activeTests        = active_tests
-                               , rejectedDocuments  = rejected_documents
-                               , outputDirectory    = Nothing
-                               , stagingTests       = False
-                               , pdfToolsLambdaEnv  = lambdaEnv
-                               , amazonS3Env        = mAmazonEnv
-                               , fileMemCache       = memcache
-                               , redisConn          = mRedisConn
-                               , cronDBConfig       = testDBConfig tconf
-                               , cronMonthlyInvoice = testMonthlyInvoiceConf tconf
-                               , testDurations      = test_durations
-                               }
+  let env = envf $ TestEnvSt { connSource         = cs
+                             , staticConnSource   = staticSource
+                             , transSettings      = defaultTransactionSettings
+                             , rngState           = rng
+                             , runLogger          = RunLogger runLogger
+                             , globalTemplates    = templates
+                             , activeTests        = active_tests
+                             , rejectedDocuments  = rejected_documents
+                             , outputDirectory    = Nothing
+                             , stagingTests       = False
+                             , pdfToolsLambdaEnv  = lambdaEnv
+                             , amazonS3Env        = mAmazonEnv
+                             , fileMemCache       = memcache
+                             , redisConn          = mRedisConn
+                             , cronDBConfig       = testDBConfig tconf
+                             , cronMonthlyInvoice = testMonthlyInvoiceConf tconf
+                             , testDurations      = test_durations
+                             }
       ts' = if env ^. #stagingTests then stagingTests ++ ts else ts
   forM_ (env ^. #outputDirectory) $ createDirectoryIfMissing True
   E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do

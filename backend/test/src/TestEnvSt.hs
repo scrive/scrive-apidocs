@@ -1,7 +1,7 @@
 module TestEnvSt
   ( RunLogger(..)
-  , TestEnvSt
-  , TestEnvStRW
+  , TestEnvSt(TestEnvSt)
+  , TestEnvStRW(TestEnvStRW)
   ) where
 
 import TestEnvSt.Internal

@@ -1,22 +1,22 @@
 module Context
-  ( I.Context
+  ( Context(Context)
   , contextUser
-  , I.anonymiseContext
+  , anonymiseContext
   , contextToMailContext
   ) where
 
+import Context.Internal
+import MailContext
 import User.Types.User (User)
-import qualified Context.Internal as I
-import qualified MailContext.Internal as I
+import qualified MailContext.Internal
 
 -- | Get a user from `Context` (user takes precedence over pad user).
-contextUser :: I.Context -> Maybe User
+contextUser :: Context -> Maybe User
 contextUser ctx = ctx ^. #maybeUser <|> ctx ^. #maybePadUser
 
-contextToMailContext :: I.Context -> I.MailContext
-contextToMailContext ctx = I.MailContext
-  { lang               = ctx ^. #lang
-  , brandedDomain      = ctx ^. #brandedDomain
-  , time               = ctx ^. #time
-  , mailNoreplyAddress = ctx ^. #mailNoreplyAddress
-  }
+contextToMailContext :: Context -> MailContext
+contextToMailContext ctx = MailContext { lang               = ctx ^. #lang
+                                       , brandedDomain      = ctx ^. #brandedDomain
+                                       , time               = ctx ^. #time
+                                       , mailNoreplyAddress = ctx ^. #mailNoreplyAddress
+                                       }

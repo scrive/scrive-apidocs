@@ -49,7 +49,7 @@ import Tag
 import Theme.ThemeID
 import UserGroup.Tables
 import UserGroup.Types.PaymentPlan
-import qualified DataRetentionPolicy.Internal as I
+import qualified DataRetentionPolicy.Internal
 
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
@@ -271,7 +271,7 @@ instance CompositeFromSQL UserGroupSettings where
   toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig, addMetadataToPDFs)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
-      , dataRetentionPolicy = I.DataRetentionPolicy { .. }
+      , dataRetentionPolicy = DataRetentionPolicy { .. }
       , ..
       }
 

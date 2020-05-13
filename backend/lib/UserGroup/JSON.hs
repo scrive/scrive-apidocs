@@ -19,7 +19,6 @@ import DataRetentionPolicy
 import InputValidation
 import Tag
 import UserGroup.Types
-import qualified UserGroup.Internal as I
 
 encodeUserGroup :: Bool -> UserGroupWithParents -> [UserGroup] -> Encoding
 encodeUserGroup inheritable ugwp children =
@@ -115,7 +114,7 @@ updateUserGroupContactDetailsFromRequest ugAddr contactDetailsChanges =
 unjsonUserGroupAddress :: UnjsonDef UserGroupAddress
 unjsonUserGroupAddress =
   objectOf
-    $   I.UserGroupAddress
+    $   UserGroupAddress
     <$> fieldBy "company_number"
                 (^. #companyNumber)
                 "User Group Address Company Number"

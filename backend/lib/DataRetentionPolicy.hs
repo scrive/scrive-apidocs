@@ -1,5 +1,5 @@
 module DataRetentionPolicy
-  ( DataRetentionPolicy
+  ( DataRetentionPolicy(DataRetentionPolicy)
   , defaultDataRetentionPolicy
   , drpIdleDocTimeout
   , makeStricterDataRetentionPolicy

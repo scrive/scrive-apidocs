@@ -1,6 +1,6 @@
 module BrandedDomain.BrandedDomain
   ( BrandedDomainID
-  , BrandedDomain
+  , BrandedDomain(BrandedDomain)
   ) where
 
 import BrandedDomain.BrandedDomain.Internal

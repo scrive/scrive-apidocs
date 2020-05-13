@@ -82,7 +82,7 @@ import Utils.Monad
 import qualified API.V2 as V2
 import qualified API.V2.Errors as V2
 import qualified API.V2.Parameters as V2
-import qualified UserGroup.Internal as I
+import qualified UserGroup.Internal
 
 userAPI :: Route (Kontra Response)
 userAPI = dir "api" $ choice
@@ -402,13 +402,13 @@ apiCallUpdateUserProfile = api $ do
         city       <- getAddrParameter "companycity" asValidCity #city
         country    <- getAddrParameter "companycountry" asValidCountry #country
         let ug'         = set #name companyname ug
-            new_address = I.UserGroupAddress { companyNumber = number
-                                             , entityName    = entityname
-                                             , address       = address
-                                             , zipCode       = zip'
-                                             , city          = city
-                                             , country       = country
-                                             }
+            new_address = UserGroupAddress { companyNumber = number
+                                           , entityName    = entityname
+                                           , address       = address
+                                           , zipCode       = zip'
+                                           , city          = city
+                                           , country       = country
+                                           }
             ug'' = case ug' ^. #address of
               Just _ ->
                 -- change address directly if it wasn't inherited

@@ -39,7 +39,6 @@ import User.Email (Email(..))
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
-import qualified User.Types.User.Internal as I
 
 partnerAPI :: Route (Kontra Response)
 partnerAPI = dir "api" $ choice [dir "v1" partnerAPIV1]
@@ -244,7 +243,7 @@ partnerApiCallV1UserUpdate partnerUsrGrpID uid = do
       unless (ufu ^. #hasAcceptedTOS) tosNotAcceptedErr
       didUpdateInfo     <- dbUpdate $ SetUserInfo uid userInfo
       didUpdateSettings <- dbUpdate
-        $ SetUserSettings uid (I.UserSettings (ufu ^. #lang) defaultDataRetentionPolicy)
+        $ SetUserSettings uid (UserSettings (ufu ^. #lang) defaultDataRetentionPolicy)
       -- @todo fix retention policy ^
       unless (didUpdateInfo && didUpdateSettings) $ srvLogErr "Could not update user"
       -- re-fetch original to get what's really in the DB.
