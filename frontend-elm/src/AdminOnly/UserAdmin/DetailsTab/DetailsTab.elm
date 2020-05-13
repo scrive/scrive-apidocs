@@ -505,42 +505,44 @@ viewUser user =
             , formSelectRowM enumAccountType "Account type" user.accountType SetAccountType
             , formTextRowM "Callback URL" user.callbackUrl SetCallbackUrl [ readonly <| not user.callbackUrlIsEditable ]
             ]
-        , Grid.row [ Row.leftSm, Row.attrs [ class "mb-sm-2" ] ]
-            [ Grid.col [ Col.sm12 ]
-                [ Button.button
-                    [ Button.primary
-                    , Button.attrs [ onClick ResendInvitationClicked ]
+        , div [ class "d-inline-block"]
+            [ Grid.row [ Row.leftSm, Row.attrs [ class "mb-sm-2" ] ]
+                [ Grid.col [ Col.sm12 ]
+                    [ Button.button
+                        [ Button.primary
+                        , Button.attrs [ onClick ResendInvitationClicked ]
+                        ]
+                        [ text "Resend invitation" ]
+                    , Button.button
+                        [ Button.primary
+                        , Button.attrs [ class "ml-sm-2", onClick MoveUserClicked ]
+                        ]
+                        [ text "Move to different company" ]
+                    , Button.button
+                        [ Button.primary
+                        , Button.attrs [ class "ml-sm-2", onClick ChangePasswordClicked ]
+                        ]
+                        [ text "Change password" ]
+                    , Button.button
+                        [ Button.primary
+                        , Button.attrs [ class "ml-sm-2", onClick ResetPasswordClicked ]
+                        ]
+                        [ text "Send password reset link" ]
                     ]
-                    [ text "Resend invitation" ]
-                , Button.button
-                    [ Button.primary
-                    , Button.attrs [ class "ml-sm-2", onClick MoveUserClicked ]
-                    ]
-                    [ text "Move to different company" ]
-                , Button.button
-                    [ Button.primary
-                    , Button.attrs [ class "ml-sm-2", onClick ChangePasswordClicked ]
-                    ]
-                    [ text "Change password" ]
-                , Button.button
-                    [ Button.primary
-                    , Button.attrs [ class "ml-sm-2", onClick ResetPasswordClicked ]
-                    ]
-                    [ text "Send password reset link" ]
                 ]
-            ]
-        , Grid.row [ Row.leftSm ]
-            [ Grid.col [ Col.sm12 ]
-                [ Button.button
-                    [ Button.danger
-                    , Button.attrs [ onClick DeleteUserClicked ]
+            , Grid.row [ Row.leftSm ]
+                [ Grid.col [ Col.sm12 ]
+                    [ Button.button
+                        [ Button.danger
+                        , Button.attrs [ onClick DeleteUserClicked ]
+                        ]
+                        [ text "Delete user" ]
+                    , Button.button
+                        [ Button.success
+                        , Button.attrs [ class "ml-sm-2 float-right", onClick SubmitForm ]
+                        ]
+                        [ text "Save" ]
                     ]
-                    [ text "Delete user" ]
-                , Button.button
-                    [ Button.success
-                    , Button.attrs [ class "ml-sm-2", onClick SubmitForm ]
-                    ]
-                    [ text "Save" ]
                 ]
             ]
         ]
