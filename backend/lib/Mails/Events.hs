@@ -123,7 +123,7 @@ handleEventInvitation slid timeDiff templates eventType mailNoreplyAddress =
       Nothing -> (Nothing, "")
       Just sl -> (maybesignatory sl, getEmail sl)
     let (email, nev) = normaliseEvent signemail eventType
-    bd <- theDocument >>= \doc -> case getAuthorSigLink doc >>= maybesignatory of
+    bd <- theDocument >>= \doc -> case getAuthorUserId doc of
       Nothing  -> dbQuery GetMainBrandedDomain
       Just uid -> dbQuery $ GetBrandedDomainByUserID uid
 
@@ -150,7 +150,7 @@ handleEventConfirmation slid timeDiff templates eventType mailNoreplyAddress =
 
     signemail <- maybe "" getEmail . getSigLinkFor slid <$> theDocument
     let (email, nev) = normaliseEvent signemail eventType
-    bd <- theDocument >>= \doc -> case getAuthorSigLink doc >>= maybesignatory of
+    bd <- theDocument >>= \doc -> case getAuthorUserId doc of
       Nothing  -> dbQuery GetMainBrandedDomain
       Just uid -> dbQuery $ GetBrandedDomainByUserID uid
 

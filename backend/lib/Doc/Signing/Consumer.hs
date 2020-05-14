@@ -33,7 +33,6 @@ import Doc.SignatoryScreenshots
 import Doc.Signing.Model
 import Doc.Types.AuthorAttachment
 import Doc.Types.Document
-import Doc.Types.SignatoryLink
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
 import EID.CGI.GRP.Types
@@ -396,7 +395,7 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
   doc  <- theDocument
 
   conf <- do
-    authorID <- whenNothing (maybesignatory =<< getAuthorSigLink doc) $ do
+    authorID <- whenNothing (getAuthorUserId doc) $ do
       logAttention "Impossible happened - no author for document"
         $ object [identifier $ documentid doc]
       throwE $ Failed Remove

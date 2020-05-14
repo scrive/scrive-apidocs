@@ -196,6 +196,7 @@ Library
                  , Database.Redis.Cache
                  , Database.Redis.Configuration
                  , Database.Redis.Helpers
+                 , Doc.AccessControl
                  , Doc.API
                  , Doc.API.Callback.Types
                  , Doc.API.Callback.Execute
@@ -1231,6 +1232,7 @@ Test-suite kontrakcja-test
                  Cron.Migrations
                  Cron.Tables
                  CronStatsTest
+                 Doc.AccessControlTest
                  Doc.API.Callback.Tables
                  Doc.API.V1.CallsTest
                  Doc.API.V1.ForwardsCompatibilityTest

@@ -1,4 +1,3 @@
-{-# LANGUAGE ExistentialQuantification #-}
 module AccessControl.Types
   ( toAccessRoleType
   , AccessAction(..)
@@ -11,21 +10,22 @@ module AccessControl.Types
   , accessRoleGetTargetFolderID
   , accessRoleGetTargetUserID
   , accessRoleGetTargetUserGroupID
+  , accessRoleGetAccessRoleId
   , AccessRoleTarget(..)
   , AccessRoleType(..)
-  , NeededPermissionsExpr(..)
   , UserGroupNonExistent(..)
   , UserNonExistent(..)
   , FolderNonExistent(..)
   , Permission(..)
   , PermissionKind(..)
   , AccessRoleID
+  , PermissionCondition(..)
   , unsafeAccessRoleID
   , emptyAccessRoleID
   , fromAccessRoleID
   , extractDeleteUserUGID
   )
-  where
+where
 
 import Data.Aeson
 import Data.Int
@@ -112,6 +112,11 @@ accessRoleGetSourceUserGroupID role = case role of
   AccessRoleUserGroup _ ugid _       -> Just ugid
   AccessRoleImplicitUser      _    _ -> Nothing
   AccessRoleImplicitUserGroup ugid _ -> Just ugid
+
+accessRoleGetAccessRoleId :: AccessRole -> Maybe AccessRoleID
+accessRoleGetAccessRoleId (AccessRoleUser roleId _ _) = Just roleId
+accessRoleGetAccessRoleId (AccessRoleUserGroup roleId _ _) = Just roleId
+accessRoleGetAccessRoleId _ = Nothing
 
 -- | The roles we use are mostly rooted in some user group; rather than have
 -- this implicit in implementation we expose it in the constructors. The meaning
@@ -207,12 +212,12 @@ data Permission =
     }
   deriving (Eq, Ord, Show)
 
--- | An 'NeededPermissionsExpr' is evaluated by means of 'evalNeededPermExpr' and is a
+-- | An 'PermissionCondition' is evaluated by means of 'evalPermissionCondition' and is a
 -- wrapper to do boolean logic on several levels.
-data NeededPermissionsExpr
-  = NeededPermissionsExprBase Permission
-  | NeededPermissionsExprOr [NeededPermissionsExpr]
-  | NeededPermissionsExprAnd [NeededPermissionsExpr]
+data PermissionCondition
+  = Cond Permission
+  | OrCond [PermissionCondition]
+  | AndCond [PermissionCondition]
   deriving Eq
 
 newtype UserGroupNonExistent = UserGroupNonExistent UserGroupID

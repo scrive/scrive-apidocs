@@ -48,7 +48,7 @@ mkSMS
   -> m SMS
 mkSMS doc sl mkontraInfoForSMS msgBody = do
   mctx                    <- getMailContext
-  (moriginator, provider) <- case maybesignatory =<< getAuthorSigLink doc of
+  (moriginator, provider) <- case getAuthorUserId doc of
     Nothing  -> return (Nothing, SMSDefault)
     Just uid -> do
       muser <- dbQuery $ GetUserByID uid

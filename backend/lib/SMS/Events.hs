@@ -90,7 +90,7 @@ processEvents = do
               msl <- getSigLinkFor slid <$> theDocument
               let signphone = maybe "" getMobile msl
               templates <- asks ceTemplates
-              bd        <- (maybesignatory <=< getAuthorSigLink) <$> theDocument >>= \case
+              bd        <- getAuthorUserId <$> theDocument >>= \case
                 Nothing  -> dbQuery GetMainBrandedDomain
                 Just uid -> dbQuery $ GetBrandedDomainByUserID uid
               let host = bd ^. #url

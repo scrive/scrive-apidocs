@@ -1,15 +1,15 @@
 module AccessControl.Check
   ( accessControl
-  , accessControlPure
+  , accessControlCheck
   , hasPermissions
   , canDo
   , canGrant
+  , alternativePermissionCondition
   )
 where
 
-import Control.Monad.Catch
+import Control.Monad.Catch (MonadThrow(..))
 import Data.List.Extra (nubOrd)
-import Log
 
 import AccessControl.Types
 import DB
@@ -34,38 +34,28 @@ canGrant = nubOrd . map (\p -> p { permKind = PermCanGrant }) . hasPermissions
 crudActions :: [AccessAction]
 crudActions = [CreateA, ReadA, UpdateA, DeleteA]
 
-accessControl
-  :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
-  => [AccessRole]
-  -> [Permission]
-  -> m a
-  -> m a
-  -> m a
-accessControl roles permissions err ma = do
-  accNeeded <- NeededPermissionsExprAnd <$> mapM addAlternativePermissions permissions
-  if accessControlCheck roles accNeeded then ma else err
+accessControlWith :: (Monad m) => [Permission] -> PermissionCondition -> m a -> m a -> m a
+accessControlWith availablePerms requiredPerms onError onSuccess = do
+  if accessControlCheck availablePerms requiredPerms then onSuccess else onError
 
-accessControlCheck :: [AccessRole] -> NeededPermissionsExpr -> Bool
-accessControlCheck roles accNeeded =
-  let accHad = nubOrd $ concatMap (hasPermissions . accessRoleTarget) roles
-  in  evalNeededPermExpr (`elem` accHad) accNeeded
+accessControl :: (Monad m) => [AccessRole] -> PermissionCondition -> m a -> m a -> m a
+accessControl roles =
+  accessControlWith . join $ fmap (hasPermissions . accessRoleTarget) roles
 
-accessControlPure :: [AccessRole] -> [Permission] -> Bool
-accessControlPure roles =
-  accessControlCheck roles . NeededPermissionsExprAnd . map NeededPermissionsExprBase
+accessControlCheck :: [Permission] -> PermissionCondition -> Bool
+accessControlCheck availablePerms =
+  evalPermissionCondition (\perm -> elem perm $ Data.List.Extra.nubOrd availablePerms)
 
-evalNeededPermExpr :: (Permission -> Bool) -> NeededPermissionsExpr -> Bool
-evalNeededPermExpr f (NeededPermissionsExprBase p) = f p
-evalNeededPermExpr f (NeededPermissionsExprOr aces) =
-  or $ fmap (evalNeededPermExpr f) aces
-evalNeededPermExpr f (NeededPermissionsExprAnd aces) =
-  and $ fmap (evalNeededPermExpr f) aces
+evalPermissionCondition :: (Permission -> Bool) -> PermissionCondition -> Bool
+evalPermissionCondition f (Cond    p   ) = f p
+evalPermissionCondition f (OrCond  aces) = or $ fmap (evalPermissionCondition f) aces
+evalPermissionCondition f (AndCond aces) = and $ fmap (evalPermissionCondition f) aces
 
 -- By specification, it should be enough to have permission for the
 -- wanted action on _any_ parent.
-addAlternativePermissions
-  :: (MonadThrow m, MonadDB m) => Permission -> m NeededPermissionsExpr
-addAlternativePermissions perm = case permResource perm of
+alternativePermissionCondition
+  :: forall  m . (MonadThrow m, MonadDB m) => Permission -> m PermissionCondition
+alternativePermissionCondition perm = case permResource perm of
   UserR              uid  -> addForAllParentsUid UserInGroupR uid
   UserInGroupR       ugid -> addForAllParentsUgid UserInGroupR ugid
   UserGroupR         ugid -> addForAllParentsUgid UserGroupR ugid
@@ -78,31 +68,27 @@ addAlternativePermissions perm = case permResource perm of
   DocumentAfterPreparationR fid  -> addForAllParentsFid DocumentAfterPreparationR fid
   EidIdentityR              ugid -> addForAllParentsUgid EidIdentityR ugid
   where
+    addForAllParentsFid
+      :: (FolderID -> AccessResource) -> FolderID -> m PermissionCondition
     addForAllParentsFid mkRes fid = dbQuery (FolderGet fid) >>= \case
       Nothing     -> throwM . SomeDBExtraException $ FolderNonExistent fid
       Just folder -> do
         folderParents <- dbQuery . FolderGetParents $ fid
-        let mkExprBase f =
-              NeededPermissionsExprBase $ perm { permResource = mkRes $ f ^. #id }
-        return . NeededPermissionsExprOr . map mkExprBase $ folder : folderParents
+        let mkExprBase f = Cond $ perm { permResource = mkRes $ f ^. #id }
+        return . OrCond . map mkExprBase $ (folder : folderParents)
+
     addForAllParentsUgid mkRes ugid = dbQuery (UserGroupGetWithParents ugid) >>= \case
       Nothing   -> throwM . SomeDBExtraException . UserGroupNonExistent $ ugid
       Just ugwp -> do
-        let mkExprBase g =
-              NeededPermissionsExprBase $ perm { permResource = mkRes $ g ^. #id }
-        return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
+        let mkExprBase g = Cond $ perm { permResource = mkRes $ g ^. #id }
+        return . OrCond . map mkExprBase $ ugwpToList ugwp
+
     addForAllParentsUid mkRes uid = dbQuery (GetUserByID uid) >>= maybe
       (throwM . SomeDBExtraException $ UserNonExistent uid)
       (\_ -> dbQuery (UserGroupGetWithParentsByUserID uid) >>= \ugwp -> do
-        let mkExprBase g =
-              NeededPermissionsExprBase $ perm { permResource = mkRes $ g ^. #id }
-        return
-          . NeededPermissionsExprOr
-          . (NeededPermissionsExprBase perm :)
-          . map mkExprBase
-          $ ugwpToList ugwp
+        let mkExprBase g = Cond $ perm { permResource = mkRes $ g ^. #id }
+        return . OrCond . (Cond perm :) . map mkExprBase $ ugwpToList ugwp
       )
-
 hasPermissions :: AccessRoleTarget -> [Permission]
 hasPermissions (UserAR uid) =
   -- user can read and update himself and cannot grant it to anyone

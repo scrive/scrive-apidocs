@@ -69,7 +69,7 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
       return True
     else do
       doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
-      case maybesignatory =<< getAuthorSigLink doc of
+      case getAuthorUserId doc of
         Nothing ->
           unexpectedError $ "Document" <+> showt dacDocumentID <+> "has no author"
         Just uid -> do

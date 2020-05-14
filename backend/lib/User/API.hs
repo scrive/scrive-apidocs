@@ -215,8 +215,9 @@ apiCallGetUserPersonalToken = api $ do
 
 setup2FA :: Kontrakcja m => m Response
 setup2FA = V2.api $ do
-  (user, _) <- V2.getAPIUserWithAnyPrivileges
-  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+  (user, _)    <- V2.getAPIUserWithAnyPrivileges
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     if user ^. #totpActive
       then V2.Ok <$> runJSONGenT (value "twofactor_active" True)
       else do
@@ -234,11 +235,12 @@ setup2FA = V2.api $ do
 
 confirm2FA :: Kontrakcja m => m Response
 confirm2FA = V2.api $ do
-  ctx       <- getContext
-  (user, _) <- V2.getAPIUserWithAnyPrivileges
-  totpcode  <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterInt "totp"
-  now       <- currentTime
-  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+  ctx          <- getContext
+  (user, _)    <- V2.getAPIUserWithAnyPrivileges
+  totpcode     <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterInt "totp"
+  now          <- currentTime
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     case (user ^. #totpKey, user ^. #totpActive) of
       (Just totpkey, False) -> if verifyTOTPCode totpkey now (fromIntegral totpcode)
         then do
@@ -257,9 +259,10 @@ confirm2FA = V2.api $ do
 
 disable2FA :: Kontrakcja m => m Response
 disable2FA = V2.api $ do
-  ctx       <- getContext
-  (user, _) <- V2.getAPIUserWithAnyPrivileges
-  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+  ctx          <- getContext
+  (user, _)    <- V2.getAPIUserWithAnyPrivileges
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     if user ^. #totpActive
       then do
         r <- dbUpdate $ DisableUserTOTP (user ^. #id)
@@ -275,22 +278,25 @@ disable2FA = V2.api $ do
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile = api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+  requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
     return . Ok $ userJSONWithCompany user ugwp
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription = api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
-  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+  requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
     sub  <- getSubscription ugwp
     return . Ok $ unjsonToJSON unjsonDef sub
 
 apiCallGetUsersFeatures :: Kontrakcja m => m Response
 apiCallGetUsersFeatures = V2.api $ do
-  user <- V2.getAPIUserWithAPIPersonal
-  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     jsonWithData <- getUserFeaturesJSON user
     return . V2.Ok $ jsonWithData
 
@@ -335,9 +341,10 @@ apiCallLoginUser = api $ do
 
 apiCallUpdateUserProfile :: forall  m . Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
-  user <- V2.getAPIUserWithAPIPersonal
-  ctx  <- getContext
-  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  ctx          <- getContext
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     -- allow empty strings through validation
     let
       getParameter :: Text -> (Text -> InputValidation.Result Text) -> Text -> m Text
@@ -439,10 +446,11 @@ apiCallUpdateUserProfile = api $ do
 
 apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do
-  ctx       <- getContext
-  user      <- V2.getAPIUserWithAPIPersonal
-  mnewemail <- getOptionalField asValidEmail "newemail"
-  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+  ctx          <- getContext
+  user         <- V2.getAPIUserWithAPIPersonal
+  mnewemail    <- getOptionalField asValidEmail "newemail"
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     case Email <$> mnewemail of
       (Just newemail) -> do
         mexistinguser <- dbQuery $ GetUserByEmail newemail
@@ -586,8 +594,9 @@ sendPasswordReminder user = do
 
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do
-  user <- V2.getAPIUserWithAPIPersonal
-  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     scheme <- dbQuery . GetUserCallbackSchemeByUserID $ user ^. #id
     Ok <$> case scheme of
       Just (ConstantUrlScheme url) -> runJSONGenT $ do
@@ -617,7 +626,8 @@ apiCallTestSalesforceIntegration = api $ do
   url          <- case murl of
     Nothing  -> throwM . SomeDBExtraException . badInput $ "No 'url' parameter provided"
     Just url -> return url
-  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     Ok <$> case scheme of
       Just (SalesforceScheme token) -> do
         logInfo "Testing salesforce integration with user that has sf callback scheme"
@@ -651,8 +661,9 @@ apiCallSetSalesforceCallbacks = do
   V2.api $ do
     -- We allow all permission although workflow with Partners API
     -- should use APIPersonal.
-    user <- fst <$> V2.getAPIUserWithAnyPrivileges
-    apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+    user         <- fst <$> V2.getAPIUserWithAnyPrivileges
+    requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+    apiAccessControl user requiredPerm $ do
       ctx <- getContext
       case ctx ^. #salesforceConf of
         Nothing ->
@@ -693,8 +704,9 @@ apiCallLoginUserAndGetSession = V2.api $ do
 
 apiCallIsUserDeletable :: Kontrakcja m => m Response
 apiCallIsUserDeletable = V2.api $ do
-  user <- V2.getAPIUserWithAPIPersonal
-  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     mReason <- dbQuery $ IsUserDeletable user
     return . V2.Ok . runJSONGen $ case mReason of
       Just reason -> do
@@ -705,10 +717,11 @@ apiCallIsUserDeletable = V2.api $ do
 
 apiCallDeleteUser :: Kontrakcja m => m Response
 apiCallDeleteUser = V2.api $ do
-  user  <- V2.getAPIUserWithAPIPersonal
-  ctx   <- getContext
-  email <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
-  apiAccessControl user [canDo DeleteA . UserR $ user ^. #id] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  ctx          <- getContext
+  email        <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
+  requiredPerm <- apiRequirePermission . canDo DeleteA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     unless (unEmail (user ^. #info % #email) == email)
       . V2.apiError
       $ V2.requestParameterParseError
@@ -731,8 +744,9 @@ apiCallDeleteUser = V2.api $ do
  -}
 apiCallGetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallGetDataRetentionPolicy = V2.api $ do
-  user <- V2.getAPIUserWithAPIPersonal
-  apiAccessControl user [canDo ReadA . UserR $ user ^. #id] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     let drp = user ^. #settings % #dataRetentionPolicy
     ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
     let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
@@ -743,9 +757,10 @@ apiCallGetDataRetentionPolicy = V2.api $ do
 
 apiCallSetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallSetDataRetentionPolicy = V2.api $ do
-  user <- V2.getAPIUserWithAPIPersonal
-  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
-  apiAccessControl user [canDo UpdateA . UserR $ user ^. #id] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+  apiAccessControl user requiredPerm $ do
     let ugDRP = ugwpSettings ugwp ^. #dataRetentionPolicy
     drp <- V2.apiV2ParameterObligatory
       $ V2.ApiV2ParameterJSON "data_retention_policy" unjsonDataRetentionPolicy
@@ -757,8 +772,9 @@ apiCallSetDataRetentionPolicy = V2.api $ do
 apiCallGetTokenForPersonalCredentials :: Kontrakcja m => UserID -> m Response
 apiCallGetTokenForPersonalCredentials uid = V2.api $ do
   -- Guards
-  user <- V2.getAPIUserWithAPIPersonal
-  apiAccessControl user [canDo UpdateA $ UserR uid] $ do
+  user         <- V2.getAPIUserWithAPIPersonal
+  requiredPerm <- apiRequirePermission . canDo UpdateA $ UserR uid
+  apiAccessControl user requiredPerm $ do
     minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
     when (minutes < 1 || minutes > maxMinutes) invalidMinsParamError
     -- Create login token
@@ -791,8 +807,8 @@ apiCallCheckPassword = api $ do
 
 guardCanChangeUser :: Kontrakcja m => User -> User -> m ()
 guardCanChangeUser adminuser otheruser = do
-  let acc = [canDo UpdateA . UserR $ otheruser ^. #id]
-  apiAccessControlOrIsAdmin adminuser acc $ return ()
+  requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (otheruser ^. #id)
+  apiAccessControlOrIsAdmin adminuser requiredPerm $ return ()
 
 apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
@@ -906,8 +922,8 @@ apiCallActivateAccount = V2.api $ do
     (Nothing  , _      ) -> throwApiTokenInvalid
     (_        , Just _ ) -> throwApiTokenInvalid
     (Just user, Nothing) -> do
-      let permissions = [canDo UpdateA . UserR $ user ^. #id]
-      apiAccessControlWithError user permissions throwApiTokenInvalid $ do
+      requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
+      apiAccessControlWithError user requiredPerm throwApiTokenInvalid $ do
         token        <- apiV2ParameterObligatory (ApiV2ParameterRead "token")
         validRequest <- isJust <$> getUserAccountRequestUser (user ^. #id) token
         unless validRequest $ void throwApiTokenInvalid

@@ -1,5 +1,6 @@
 module API.V2.User (
     getAPIUser
+  , getMaybeAPIUser
   , getAPIUserWithAnyPrivileges
   , getAPIUserWithPrivileges
   , getAPIUserWithPad
@@ -24,6 +25,9 @@ import Util.Actor
 getAPIUser :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUser priv = getAPIUserWithPrivileges [priv]
 
+getMaybeAPIUser :: Kontrakcja m => APIPrivilege -> m (Maybe (User, Actor))
+getMaybeAPIUser priv = getMaybeAPIUserWith (view #maybeUser) [priv]
+
 -- | Get the User and Actor for the API, as long as any privileges are granted
 -- Same behaviour as `getAPIUserWithPrivileges`
 getAPIUserWithAnyPrivileges :: Kontrakcja m => m (User, Actor)
@@ -41,35 +45,38 @@ getAPIUserWithPrivileges = getAPIUserWith (view #maybeUser)
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUserWithPad priv = getAPIUserWith contextUser [priv]
 
+getMaybeAPIUserWith
+  :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (Maybe (User, Actor))
+getMaybeAPIUserWith ctxUser privs = do
+  moauthuser <- getOAuthUser privs
+  case moauthuser of
+    Just (Left  msg          ) -> apiError $ invalidAuthorizationWithMsg msg
+    Just (Right (user, actor)) -> return $ Just (user, actor)
+    Nothing                    -> do
+      ctx <- getContext
+      case ctxUser ctx of
+        Nothing   -> return Nothing
+        Just user -> return $ Just (user, authorActor ctx user)
 
 -- * Internal functions
 getAPIUserWith
   :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (User, Actor)
 getAPIUserWith ctxUser privs = do
-  moauthuser <- getOAuthUser privs
-  case moauthuser of
-    Just (Left  msg          ) -> apiError $ invalidAuthorizationWithMsg msg
-    Just (Right (user, actor)) -> return (user, actor)
-    Nothing                    -> do
-      msessionuser <- do
-        ctx <- getContext
-        case ctxUser ctx of
-          Nothing   -> return Nothing
-          Just user -> return $ Just (user, authorActor ctx user)
-      case msessionuser of
-        Just (user, actor) -> return (user, actor)
-        Nothing            -> do
-          sesids  <- lookCookieValues cookieNameSessionID . rqHeaders <$> askRq
-          auth    <- lookCookieValues "authorization" . rqHeaders <$> askRq
-          xtoken  <- lookCookieValues cookieNameXToken . rqHeaders <$> askRq
-          cookies <- lookCookieNames . rqHeaders <$> askRq
-          logInfo "Could not find user session" $ object
-            [ "session_id_cookies" .= sesids
-            , "authorization" .= auth
-            , "cookie names" .= show cookies
-            , "xtoken" .= xtoken
-            ]
-          apiError invalidAuthorization
+  mApiOrSessionUser <- getMaybeAPIUserWith ctxUser privs
+  case mApiOrSessionUser of
+    Just (user, actor) -> return (user, actor)
+    Nothing            -> do
+      sesids  <- lookCookieValues cookieNameSessionID . rqHeaders <$> askRq
+      auth    <- lookCookieValues "authorization" . rqHeaders <$> askRq
+      xtoken  <- lookCookieValues cookieNameXToken . rqHeaders <$> askRq
+      cookies <- lookCookieNames . rqHeaders <$> askRq
+      logInfo "Could not find user session" $ object
+        [ "session_id_cookies" .= sesids
+        , "authorization" .= auth
+        , "cookie names" .= show cookies
+        , "xtoken" .= xtoken
+        ]
+      apiError invalidAuthorization
 
 getAPIUserWithAPIPersonal :: Kontrakcja m => m User
 getAPIUserWithAPIPersonal = do

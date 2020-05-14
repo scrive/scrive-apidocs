@@ -658,7 +658,7 @@ documentMailFields doc mctx theme = do
   -- brandingdomainid and brandinguserid are needed only for
   -- preview/email logo
   F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
-  F.value "brandinguserid" (show <$> (maybesignatory =<< getAuthorSigLink doc))
+  F.value "brandinguserid" (show <$> getAuthorUserId doc)
   brandingMailFields theme
 
 otherMailFields :: Monad m => Maybe User -> MailContext -> Theme -> Fields m ()
@@ -681,7 +681,7 @@ documentMail
 documentMail haslang doc mailname otherfields = do
   mctx <- getMailContext
   let domainthemeid = mctx ^. #brandedDomain % #mailTheme
-  themeid <- case maybesignatory =<< getAuthorSigLink doc of
+  themeid <- case getAuthorUserId doc of
     Just suid -> do
       ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ suid
       return . fromMaybe domainthemeid $ ugwpUI ugwp ^. #mailTheme

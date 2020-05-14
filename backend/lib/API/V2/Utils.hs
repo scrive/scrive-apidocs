@@ -1,6 +1,9 @@
 module API.V2.Utils
     ( apiAccessControl
     , apiAccessControlWithError
+    , apiRequirePermission
+    , apiRequireAllPermissions
+    , apiRequireAnyPermission
     , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
     , apiAccessControlCheck
@@ -20,35 +23,51 @@ import Kontra
 import User.Model
 import Util.MonadUtils
 
-apiAccessControlWithError :: Kontrakcja m => User -> [Permission] -> m a -> m a -> m a
-apiAccessControlWithError apiuser perms failAction successAction = do
-  roles <- dbQuery . GetRoles $ apiuser
-  accessControl roles perms failAction successAction
+apiRequirePermission :: forall  m . (Kontrakcja m) => Permission -> m PermissionCondition
+apiRequirePermission permission =
+  alternativePermissionCondition permission
     `catchDBExtraException` (\(UserNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
 
-apiAccessControl :: Kontrakcja m => User -> [Permission] -> m a -> m a
-apiAccessControl user perms successAction = do
-  apiAccessControlWithError user perms (apiError insufficientPrivileges) successAction
+apiRequireAllPermissions
+  :: forall  m . (Kontrakcja m) => [Permission] -> m PermissionCondition
+apiRequireAllPermissions = fmap AndCond . mapM apiRequirePermission
 
-apiAccessControlCheck :: Kontrakcja m => User -> [Permission] -> m Bool
-apiAccessControlCheck apiUser perms = do
-  apiAccessControlWithError apiUser perms (return False) (return True)
+apiRequireAnyPermission
+  :: forall  m . (Kontrakcja m) => [Permission] -> m PermissionCondition
+apiRequireAnyPermission = fmap OrCond . mapM apiRequirePermission
 
-apiAccessControlOrIsAdmin :: Kontrakcja m => User -> [Permission] -> m a -> m a
-apiAccessControlOrIsAdmin apiuser perms successAction = do
+apiAccessControlWithError
+  :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a -> m a
+apiAccessControlWithError apiuser requiredPerm failAction successAction = do
+  roles <- dbQuery . GetRoles $ apiuser
+  accessControl roles requiredPerm failAction successAction
+
+apiAccessControl :: (Kontrakcja m) => User -> PermissionCondition -> m a -> m a
+apiAccessControl user requiredPerm successAction = do
+  apiAccessControlWithError user
+                            requiredPerm
+                            (apiError insufficientPrivileges)
+                            successAction
+
+apiAccessControlCheck :: (Kontrakcja m) => User -> PermissionCondition -> m Bool
+apiAccessControlCheck apiUser requiredPerm = do
+  apiAccessControlWithError apiUser requiredPerm (return False) (return True)
+
+apiAccessControlOrIsAdmin :: Kontrakcja m => User -> PermissionCondition -> m a -> m a
+apiAccessControlOrIsAdmin apiuser requiredPerm successAction = do
   isAdminOrSales <- checkAdminOrSales
   -- If scrive admin or sales, should perform action anyway (unless non-existance error)
   let failAction =
         if isAdminOrSales then successAction else apiError insufficientPrivileges
-  apiAccessControlWithError apiuser perms failAction successAction
+  apiAccessControlWithError apiuser requiredPerm failAction successAction
 
-accessControlLoggedIn :: Kontrakcja m => [Permission] -> m a -> m a
-accessControlLoggedIn perms successAction = do
+accessControlLoggedIn :: Kontrakcja m => PermissionCondition -> m a -> m a
+accessControlLoggedIn requiredPerm successAction = do
   user  <- guardJustM (view #maybeUser <$> getContext)
   roles <- dbQuery . GetRoles $ user
-  accessControl roles perms internalError successAction
+  accessControl roles requiredPerm internalError successAction
 
 checkAdminOrSales :: Kontrakcja m => m Bool
 checkAdminOrSales = (isApiAdmin || isApiSales) <$> getContext

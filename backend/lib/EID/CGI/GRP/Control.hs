@@ -23,6 +23,7 @@ import qualified Text.StringTemplates.Fields as F
 import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
+import API.V2.Utils
 import Chargeable
 import DB hiding (InternalError)
 import Doc.DocInfo
@@ -473,8 +474,8 @@ guardThatSwedishPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc 
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-    roles <- dbQuery . GetRoles $ user
-    let policy = [canDo ReadA $ EidIdentityR ugid]
+    roles        <- dbQuery . GetRoles $ user
+    requiredPerm <- apiRequirePermission . canDo ReadA $ EidIdentityR ugid
     let
       action = do
         logInfo
@@ -484,5 +485,5 @@ guardUserMayImpersonateUserGroupForEid user doc
           $ object
               [identifier $ documentid doc, identifier $ user ^. #id, identifier ugid]
         respond404
-    accessControl roles policy action $ return ()
+    accessControl roles requiredPerm action $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()

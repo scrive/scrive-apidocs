@@ -4,10 +4,12 @@ module Doc.API.V2.DocumentAccess (
 , canSeeSignlinks
 , propertyForCurrentSignatory
 , documentAccessForUser
+, documentAccessModeForUser
 , documentAccessForSlid
 , documentAccessForAuthor
 , documentAccessForAdminonly
 , documentAccessByFolder
+, documentAccess
 ) where
 
 import AccessControl.Check
@@ -75,31 +77,24 @@ propertyForCurrentSignatory da f doc = case slForAccess da doc of
       getAuthorSigLink
 
 documentAccessForUser :: User -> Document -> DocumentAccess
-documentAccessForUser user document = DocumentAccess
-  { daDocumentID = documentid document
-  , daAccessMode = documentAccessModeForUser user document
-  , daStatus     = documentstatus document
-  }
+documentAccessForUser user document =
+  documentAccess document $ documentAccessModeForUser user document
 
 documentAccessByFolder :: User -> Document -> [AccessRole] -> DocumentAccess
-documentAccessByFolder user document roles = DocumentAccess
-  { daDocumentID = documentid document
-  , daAccessMode = documentAccessModeByFolder user document roles
-  , daStatus     = documentstatus document
-  }
+documentAccessByFolder user document roles =
+  documentAccess document $ documentAccessModeByFolder user document roles
+
+documentAccess :: Document -> DocumentAccessMode -> DocumentAccess
+documentAccess doc mode = DocumentAccess { daDocumentID = documentid doc
+                                         , daAccessMode = mode
+                                         , daStatus     = documentstatus doc
+                                         }
 
 documentAccessForAuthor :: Document -> DocumentAccess
-documentAccessForAuthor document = DocumentAccess { daDocumentID = documentid document
-                                                  , daAccessMode = AuthorDocumentAccess
-                                                  , daStatus     = documentstatus document
-                                                  }
+documentAccessForAuthor document = documentAccess document AuthorDocumentAccess
 
 documentAccessForAdminonly :: Document -> DocumentAccess
-documentAccessForAdminonly document = DocumentAccess
-  { daDocumentID = documentid document
-  , daAccessMode = SystemAdminDocumentAccess
-  , daStatus     = documentstatus document
-  }
+documentAccessForAdminonly document = documentAccess document SystemAdminDocumentAccess
 
 documentAccessModeForUser :: User -> Document -> DocumentAccessMode
 documentAccessModeForUser user document = case getSigLinkFor user document of
@@ -148,16 +143,16 @@ documentAccessModeByFolder user document roles =
         <+> "by folder without any permission. This should be caught earlier."
   where
     hasReadAccessForDocByFolder = hasReadAccessForFolder (documentfolderid document)
+
     hasReadAccessForFolder fid =
-      accessControlPure roles [canDo ReadA $ DocumentInFolderR fid]
-        || accessControlPure roles [canDo ReadA $ DocumentAfterPreparationR fid]
+      accessControlCheck (concatMap (hasPermissions . accessRoleTarget) roles) $ OrCond
+        [ Cond . canDo ReadA $ resource fid
+        | resource <- [DocumentInFolderR, DocumentAfterPreparationR]
+        ]
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
-documentAccessForSlid slid document = DocumentAccess
-  { daDocumentID = documentid document
-  , daAccessMode = documentAccessModeForSlid slid document
-  , daStatus     = documentstatus document
-  }
+documentAccessForSlid slid document =
+  documentAccess document $ documentAccessModeForSlid slid document
 
 documentAccessModeForSlid :: SignatoryLinkID -> Document -> DocumentAccessMode
 documentAccessModeForSlid slid document = case getSigLinkFor slid document of

@@ -361,7 +361,7 @@ stateMismatchError funame expected doc = do
 
 getDocAuthor :: (MonadDB m, MonadThrow m, MonadBase IO m) => Document -> m (Maybe User)
 getDocAuthor doc = do
-  authorid <- guardJust $ getAuthorSigLink doc >>= maybesignatory
+  authorid <- guardJust $ getAuthorUserId doc
   dbQuery $ GetUserByID authorid
 
 {- |

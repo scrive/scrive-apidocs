@@ -55,6 +55,7 @@ import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.Monad.V1
+import API.V2.Utils
 import AppView (respondWithPDF)
 import Attachment.Model
 import Chargeable
@@ -202,7 +203,7 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   (user, actor, external) <- getAPIUser APIDocCreate
   template                <- dbQuery $ GetDocumentByDocumentID did
   auid                    <- apiGuardJustM (serverError "No author found")
-    $ return (maybesignatory =<< getAuthorSigLink template)
+    $ return (getAuthorUserId template)
   auser <-
     apiGuardJustM (serverError "No user found") . dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission =
@@ -246,9 +247,7 @@ apiCallV1Update did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   (maybesignatory <=< getAuthorSigLink)
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unlessM (isPreparation <$> theDocument) $ checkObjectVersionIfProvidedAndThrowError
       did
       (serverError "Document is not a draft or template")
@@ -290,9 +289,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   (maybesignatory <=< getAuthorSigLink)
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       checkObjectVersionIfProvidedAndThrowError
         did
@@ -405,9 +402,7 @@ apiCallV1Ready did = logDocument did . api $ do
     guardNoPades =<< getSealingMethodForDocument =<< theDocument
 
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   (maybesignatory <=< getAuthorSigLink)
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     guardUserMayImpersonateUserGroupForEid user =<< theDocument
@@ -882,9 +877,8 @@ apiCallV1Restart :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Restart did = logDocument did . api $ do
   checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocSend
-  doc              <- dbQuery $ GetDocumentByDocumentID did
-  auid             <- apiGuardJustM (serverError "No author found")
-    $ return (maybesignatory =<< getAuthorSigLink doc)
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  auid <- apiGuardJustM (serverError "No author found") $ return (getAuthorUserId doc)
   unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
     "Permission problem. Not an author."
   when (documentstatus doc `elem` [Pending, Preparation, Closed]) $ do
@@ -926,9 +920,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
   (user, _actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   (maybesignatory <=< getAuthorSigLink)
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
     unlessM (isPending <$> theDocument) . throwM . SomeDBExtraException $ conflictError
@@ -1278,7 +1270,7 @@ apiCallV1Delete :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Delete did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    mauser <- theDocument >>= \d -> case maybesignatory =<< getAuthorSigLink d of
+    mauser <- theDocument >>= \d -> case getAuthorUserId d of
       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
       _         -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
@@ -1300,7 +1292,7 @@ apiCallV1ReallyDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallV1ReallyDelete did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    mauser <- theDocument >>= \d -> case maybesignatory =<< getAuthorSigLink d of
+    mauser <- theDocument >>= \d -> case getAuthorUserId d of
       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
       _         -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
@@ -1342,7 +1334,7 @@ apiCallV1Get did = logDocument did . api $ do
     _ -> do
       (user, _actor, external) <- getAPIUser APIDocCheck
       let msiglink = getSigLinkFor user doc
-      mauser <- case maybesignatory =<< getAuthorSigLink doc of
+      mauser <- case getAuthorUserId doc of
         Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
         _         -> return Nothing
 
@@ -1547,8 +1539,8 @@ apiCallV1History did = logDocument did . api $ do
   mlang <- (langFromCode =<<) <$> getField "lang"
   switchLang $ fromMaybe (user ^. #settings % #lang) mlang
 
-  doc         <- getDocByDocID did
-  evidenceLog <- dbQuery $ GetEvidenceLog did
+  doc         <- getDocumentByCurrentUser did
+  evidenceLog <- dbQuery . GetEvidenceLog $ did
   events      <- eventsJSListFromEvidenceLog doc evidenceLog
   res         <- J.runJSONGenT $ do
     J.value "list" . for (reverse events) $ J.runJSONGen . J.value "fields"
@@ -1590,10 +1582,10 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
           then do
             ctx <- getContext
             modifyContext $ set #maybeUser (Just user)
-            res <- getDocByDocID did
+            res <- getDocumentByCurrentUser did
             modifyContext $ set #maybeUser (ctx ^. #maybeUser)
             return res
-          else getDocByDocID did
+          else getDocumentByCurrentUser did
 
   content <- case documentstatus doc of
     Closed -> do
@@ -1642,10 +1634,10 @@ apiCallV1DownloadFile did fileid nameForBrowser =
             then do
               ctx <- getContext
               modifyContext $ set #maybeUser (Just user)
-              res <- getDocByDocID did
+              res <- getDocumentByCurrentUser did
               modifyContext $ set #maybeUser (ctx ^. #maybeUser)
               return res
-            else getDocByDocID did
+            else getDocumentByCurrentUser did
     let allfiles =
           maybeToList (mainfileid <$> documentfile doc)
             <> maybeToList (mainfileid <$> documentsealedfile doc)
@@ -1673,9 +1665,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
   checkObjectVersionIfProvided docid
   withDocumentID docid $ do
     auid <-
-      apiGuardJustM (serverError "No author found")
-      $   (maybesignatory <=< getAuthorSigLink)
-      <$> theDocument
+      apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ serverError "Document is not a draft or template"
     unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
@@ -1841,9 +1831,7 @@ checkObjectVersionIfProvidedAndThrowError did err = do
 guardAuthorOrAuthorsAdmin :: (Kontrakcja m, DocumentMonad m) => User -> Text -> m ()
 guardAuthorOrAuthorsAdmin user forbidenMessage = do
   docUserID <-
-    apiGuardJustM (serverError "No author found")
-    $   (maybesignatory <=< getAuthorSigLink)
-    <$> theDocument
+    apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
   docUser <-
     apiGuardJustM (serverError "No user found for author")
     . dbQuery
@@ -1874,10 +1862,10 @@ guardSignatoryAccessFromSessionOrCredentials did slid = do
 guardUserMayImpersonateUserGroupForEid :: Kontrakcja m => User -> Document -> m ()
 guardUserMayImpersonateUserGroupForEid user doc
   | Just ugid <- documentusergroupforeid doc = do
-    roles <- dbQuery . GetRoles $ user
-    let policy    = [canDo ReadA $ EidIdentityR ugid]
+    roles        <- dbQuery . GetRoles $ user
+    requiredPerm <- apiRequirePermission . canDo ReadA $ EidIdentityR ugid
     let exception = throwM . SomeDBExtraException $ forbidden'
-    accessControl roles policy exception $ return ()
+    accessControl roles requiredPerm exception $ return ()
 guardUserMayImpersonateUserGroupForEid _ _ = return ()
 
 -- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.

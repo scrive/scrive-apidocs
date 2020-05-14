@@ -51,7 +51,7 @@ eidServiceConf doc = do
       let err =
             unexpectedError $ "Impossible happened - no author for document: " <> showt
               (documentid doc)
-      authorid <- maybe err return $ maybesignatory =<< getAuthorSigLink doc
+      authorid <- maybe err return $ getAuthorUserId doc
       ugwp     <- dbQuery . UserGroupGetWithParentsByUserID $ authorid
       return $ case ugwpSettings ugwp ^. #eidServiceToken of
         Nothing    -> conf0

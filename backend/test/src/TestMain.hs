@@ -43,6 +43,7 @@ import DB
 import DB.PostgreSQL
 import DB.SQLFunction
 import DB.SQLTrigger
+import Doc.AccessControlTest
 import Doc.API.V1.CallsTest
 import Doc.API.V1.ForwardsCompatibilityTest
 import Doc.API.V1.JSONTest
@@ -131,10 +132,12 @@ allTests =
   , docControlTests
   , docStateSideEffectsTests
   , docStateTests
+  , docAccessControlTests
   , dumpAllEvidenceTexts
   , eSignatureTests
   , evidenceAttachmentsTest
   , evidenceLogTests
+  , folderApiTests
   , fileTests
   , featureFlagsTest
   , flashMessagesTests
@@ -169,7 +172,6 @@ allTests =
   , occurenceControlTests
   , samlConditionsGuardsTests
   , samlSignatureTest
-  , folderApiTests
   ]
 
 stagingTests :: [TestEnvSt -> Test]

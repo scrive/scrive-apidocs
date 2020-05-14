@@ -37,6 +37,7 @@ import API.V2.Parameters
 import API.V2.Utils
 import AppView (respondWithPDF, respondWithZipFile)
 import DB
+import Doc.AccessControl
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
@@ -216,35 +217,37 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = logDocument did . api $ do
   -- Permissions
-  (user, _) <- getAPIUser APIDocCheck
-  doc       <- dbQuery $ GetDocumentByDocumentID did
-  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
-  -- Parameters
-  mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
-  mLang     <- case fmap langFromCode mLangCode of
-    Nothing      -> return Nothing
-    Just Nothing -> do
-      apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
-    Just (Just l) -> return $ Just l
-  -- API call actions
-  switchLang $ fromMaybe (user ^. #settings % #lang) mLang
-  evidenceLog <- dbQuery $ GetEvidenceLog did
-  events      <- reverse <$> eventsJSListFromEvidenceLog doc evidenceLog
-  -- Result
-  return . Ok $ JSObject (J.toJSObject [("events", JSArray events)])
+  (user, _)    <- getAPIUser APIDocCheck
+  doc          <- dbQuery $ GetDocumentByDocumentID did
+  requiredPerm <- apiRequireDocPermission ReadA doc
+  apiAccessControlWithError user requiredPerm (apiError documentActionForbidden) $ do
+    -- Parameters
+    mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
+    mLang     <- case fmap langFromCode mLangCode of
+      Nothing      -> return Nothing
+      Just Nothing -> do
+        apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
+      Just (Just l) -> return $ Just l
+    -- API call actions
+    switchLang $ fromMaybe (user ^. #settings % #lang) mLang
+    evidenceLog <- dbQuery $ GetEvidenceLog did
+    events      <- reverse <$> eventsJSListFromEvidenceLog doc evidenceLog
+    -- Result
+    return . Ok $ JSObject (J.toJSObject [("events", JSArray events)])
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2EvidenceAttachments did = (logDocument did . api) . withDocumentID did $ do
-  (user, _) <- getAPIUser APIDocCheck
-  doc       <- theDocument
-  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
-  eas <- EvidenceAttachments.extractAttachmentsList doc
-  let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-  return . Ok $ Response 200
-                         headers
-                         nullRsFlags
-                         (evidenceAttachmentsToJSONBS (documentid doc) eas)
-                         Nothing
+docApiV2EvidenceAttachments did = logDocument did . api . withDocumentID did $ do
+  (user, _)    <- getAPIUser APIDocCheck
+  doc          <- theDocument
+  requiredPerm <- apiRequireDocPermission ReadA doc
+  apiAccessControlWithError user requiredPerm (apiError documentActionForbidden) $ do
+    eas <- EvidenceAttachments.extractAttachmentsList doc
+    let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+    return . Ok $ Response 200
+                           headers
+                           nullRsFlags
+                           (evidenceAttachmentsToJSONBS (documentid doc) eas)
+                           Nothing
 
 docApiV2FilesMain :: forall  m . Kontrakcja m => DocumentID -> m Response
 docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
@@ -280,8 +283,8 @@ docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)
     . getSigLinkFor slid
     $ doc
-  let acc = [canDo ReadA . DocumentInFolderR $ documentfolderid doc]
-  apiAccessControl user acc $ do
+  requiredPerm <- apiRequireDocPermission ReadA doc
+  apiAccessControl user requiredPerm $ do
     ssdData <- dbQuery (GetESignature slid) >>= \case
       Nothing   -> return . Left $ signatorylinkauthenticationtosignmethod sl
       Just esig -> return $ Right esig

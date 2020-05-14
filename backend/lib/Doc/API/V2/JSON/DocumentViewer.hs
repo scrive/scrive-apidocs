@@ -20,7 +20,7 @@ data DocumentViewer =
     SignatoryDocumentViewer SignatoryLinkID
   | CompanyAdminDocumentViewer (Maybe SignatoryLinkID)
   | CompanySharedDocumentViewer
-  | FolderDocumentViewer SignatoryLinkID
+  | FolderDocumentViewer (Maybe SignatoryLinkID)
 
 viewerForDocument :: DocumentAccess -> Document -> DocumentViewer
 viewerForDocument DocumentAccess { daAccessMode = SignatoryDocumentAccess sid } _ =
@@ -33,8 +33,8 @@ viewerForDocument DocumentAccess { daAccessMode = AuthorDocumentAccess } doc =
   SignatoryDocumentViewer $ dvGetAuthorSigLink doc
 viewerForDocument DocumentAccess { daAccessMode = SystemAdminDocumentAccess } _ =
   CompanyAdminDocumentViewer Nothing
-viewerForDocument DocumentAccess { daAccessMode = FolderDocumentAccess msid } doc =
-  FolderDocumentViewer . fromMaybe (dvGetAuthorSigLink doc) $ msid
+viewerForDocument DocumentAccess { daAccessMode = FolderDocumentAccess msid } _ =
+  FolderDocumentViewer msid
 
 dvGetAuthorSigLink :: Document -> SignatoryLinkID
 dvGetAuthorSigLink doc = case getAuthorSigLink doc of
@@ -44,14 +44,13 @@ dvGetAuthorSigLink doc = case getAuthorSigLink doc of
 dvSignatoryLinkID :: DocumentViewer -> Maybe SignatoryLinkID
 dvSignatoryLinkID (SignatoryDocumentViewer sid) = Just sid
 dvSignatoryLinkID (CompanyAdminDocumentViewer msid) = msid
-dvSignatoryLinkID (FolderDocumentViewer sid) = Just sid
+dvSignatoryLinkID (FolderDocumentViewer msid) = msid
 dvSignatoryLinkID _ = Nothing
 
 dvRole :: DocumentViewer -> Text
 dvRole (SignatoryDocumentViewer    _) = "signatory"
 dvRole (CompanyAdminDocumentViewer _) = "company_admin"
 dvRole CompanySharedDocumentViewer    = "company_shared"
--- This is done to stay somewhat backwards compatible
 dvRole (FolderDocumentViewer _)       = "company_admin"
 
 -- We should not introduce instance for DocumentViewer since this can't be really parsed. And instance for Maybe DocumentViewer would be missleading

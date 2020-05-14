@@ -22,7 +22,7 @@ import qualified Data.Text as T
 import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
-import API.V2.Utils (accessControlLoggedIn)
+import API.V2.Utils
 import DB
 import Folder.Model
 import Happstack.Fields
@@ -219,62 +219,68 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
       Just trgug -> return $ Just trgug
   let targetGroup   = fromMaybe currentUserGroup mTargetGroup
       targetGroupID = targetGroup ^. #id
-      acc           = [canDo CreateA $ UserInGroupR targetGroupID]
-  roles <- dbQuery . GetRoles $ user
+  requiredPerm <- apiRequirePermission . canDo CreateA $ UserInGroupR targetGroupID
+  roles        <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
-  accessControl roles acc internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
-    Nothing -> do
-      --create a new company user
-      newuser' <-
-        guardJustM
-        $   createUser (Email email)
-                       (fstname      , sndname)
-                       (targetGroupID, False)
-                       (ctx ^. #lang)
-                       CompanyInvitation
-        =<< getCreateUserContextFromContext
-      void . dbUpdate $ LogHistoryUserInfoChanged
-        (newuser' ^. #id)
-        (ctx ^. #ipAddr)
-        (ctx ^. #time)
-        (newuser' ^. #info)
-        (newuser' ^. #info & (#firstName .~ fstname) & (#lastName .~ sndname))
-        (ctx ^? #maybeUser % _Just % #id)
-      newuser <- guardJustM . dbQuery $ GetUserByID (newuser' ^. #id)
-      void $ sendNewUserGroupUserMail user targetGroup newuser
-      runJSONGenT $ value "added" True
-    Just existinguser -> do
-      let uid = existinguser ^. #id
-      if existinguser ^. #groupID == targetGroupID
-        then runJSONGenT $ do
-          value "added"       False
-          value "samecompany" True
-        else do
-          let sourceGroupID = existinguser ^. #groupID
-          canDeleteFromSourceUG <- accessControl
-            roles
-            [canDo DeleteA $ UserInGroupR sourceGroupID]
-            (return False)
-            (return True)
-          users        <- dbQuery . UserGroupGetUsers $ sourceGroupID
-          targetUGRoot <-
-            ugwpRoot . fromJust <$> (dbQuery . UserGroupGetWithParents $ targetGroupID)
-          existingUserUGRoot <-
-            ugwpRoot
-            .   fromJust
-            <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
-          if
-            | existingUserUGRoot == targetUGRoot && canDeleteFromSourceUG -> do
-              moveUserToUserGroup uid targetGroupID
-              runJSONGenT $ do
-                value "moved" True
-                value "added" False
-            | existingUserUGRoot == targetUGRoot || length users == 1 -> do
-              void $ sendTakeoverSingleUserMail user targetGroup existinguser
-              void . dbUpdate . AddUserGroupInvite $ UserGroupInvite uid targetGroupID
-              runJSONGenT $ value "added" True
-            | otherwise -> do
-              runJSONGenT $ value "added" False
+  accessControl roles requiredPerm internalError
+    $   dbQuery (GetUserByEmail $ Email email)
+    >>= \case
+          Nothing -> do
+            --create a new company user
+            newuser' <-
+              guardJustM
+              $   createUser (Email email)
+                             (fstname      , sndname)
+                             (targetGroupID, False)
+                             (ctx ^. #lang)
+                             CompanyInvitation
+              =<< getCreateUserContextFromContext
+            void . dbUpdate $ LogHistoryUserInfoChanged
+              (newuser' ^. #id)
+              (ctx ^. #ipAddr)
+              (ctx ^. #time)
+              (newuser' ^. #info)
+              (newuser' ^. #info & (#firstName .~ fstname) & (#lastName .~ sndname))
+              (ctx ^? #maybeUser % _Just % #id)
+            newuser <- guardJustM . dbQuery $ GetUserByID (newuser' ^. #id)
+            void $ sendNewUserGroupUserMail user targetGroup newuser
+            runJSONGenT $ value "added" True
+          Just existinguser -> do
+            let uid = existinguser ^. #id
+            if existinguser ^. #groupID == targetGroupID
+              then runJSONGenT $ do
+                value "added"       False
+                value "samecompany" True
+              else do
+                let sourceGroupID = existinguser ^. #groupID
+                requiredPerm2 <- apiRequirePermission . canDo DeleteA $ UserInGroupR
+                  sourceGroupID
+                canDeleteFromSourceUG <- accessControl roles
+                                                       requiredPerm2
+                                                       (return False)
+                                                       (return True)
+                users        <- dbQuery . UserGroupGetUsers $ sourceGroupID
+                targetUGRoot <-
+                  ugwpRoot
+                  .   fromJust
+                  <$> (dbQuery . UserGroupGetWithParents $ targetGroupID)
+                existingUserUGRoot <-
+                  ugwpRoot
+                  .   fromJust
+                  <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
+                if
+                  | existingUserUGRoot == targetUGRoot && canDeleteFromSourceUG -> do
+                    moveUserToUserGroup uid targetGroupID
+                    runJSONGenT $ do
+                      value "moved" True
+                      value "added" False
+                  | existingUserUGRoot == targetUGRoot || length users == 1 -> do
+                    void $ sendTakeoverSingleUserMail user targetGroup existinguser
+                    void . dbUpdate . AddUserGroupInvite $ UserGroupInvite uid
+                                                                           targetGroupID
+                    runJSONGenT $ value "added" True
+                  | otherwise -> do
+                    runJSONGenT $ value "added" False
 
 {- |
     Handles a resend by checking for the user and invite
@@ -352,8 +358,9 @@ handleChangeRoleOfUserGroupAccount = do
           -- hack and to grant is_company_admin in subGroup only check, if the actor is able
           -- to grant managing users in subGroup.
           -- CORE-1990
+  requiredPerm <- apiRequireAllPermissions acc
   when (wasAdmin /= becomeAdmin) $ do
-    accessControlLoggedIn acc $ do
+    accessControlLoggedIn requiredPerm $ do
       ctx <- getContext
       void . dbUpdate $ SetUserCompanyAdmin changeid becomeAdmin
       logInfo "Changing user group role" $ object
@@ -380,12 +387,13 @@ handleChangeRoleOfUserGroupAccount = do
 -}
 handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
 handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
-  removeuid  <- getCriticalField asValidUserID "removeid"
-  removeuser <- guardJustM . dbQuery $ GetUserByID removeuid
-  let acc = [canDo DeleteA . UserInGroupR $ removeuser ^. #groupID]
+  removeuid    <- getCriticalField asValidUserID "removeid"
+  removeuser   <- guardJustM . dbQuery $ GetUserByID removeuid
+  requiredPerm <-
+    apiRequirePermission . canDo DeleteA . UserInGroupR $ (removeuser ^. #groupID)
   -- Even if we don't execute the main action for whatever reason we remove all invites
   -- that we possibly can, restricted by the caller's permissions.
-  accessControl roles acc (removeInvitesOnly roles removeuser) $ do
+  accessControl roles requiredPerm (removeInvitesOnly roles removeuser) $ do
     isdeletable <- isUserDeletable removeuser
     ctx         <- getContext
     if isdeletable
