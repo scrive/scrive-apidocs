@@ -9,6 +9,7 @@ module AdminOnly.UserAdmin.DocumentsTab.Document exposing
     , enumDocumentType
     , extendedDocumentStatus
     , signatoryFieldText
+    , signatoryFullName
     , signatorySmartName
     )
 
@@ -20,7 +21,7 @@ import Maybe as M
 import Maybe.Extra as M
 import Time exposing (Posix)
 import Tuple
-import Utils exposing (datetimeDecoder, firstJust, ite)
+import Utils exposing (datetimeDecoder, firstJust, ite, stringNonEmpty)
 
 
 type alias Document =
@@ -249,18 +250,32 @@ signatorySmartName signatory =
     M.withDefault "Not named party" <|
         firstJust <|
             L.map (\f -> f signatory)
-                [ signatoryFieldText FTName
+                [ signatoryFullName
                 , signatoryFieldText FTEmail
                 , signatoryFieldText FTMobile
                 ]
 
 
-signatoryFieldText : FieldType -> Signatory -> Maybe String
-signatoryFieldText fieldType signatory =
+signatoryFullName : Signatory -> Maybe String
+signatoryFullName signatory =
+    signatoryFieldsTexts FTName signatory
+        |> L.intersperse " "
+        |> String.concat
+        |> String.trim
+        |> stringNonEmpty
+
+
+signatoryFieldsTexts : FieldType -> Signatory -> List String
+signatoryFieldsTexts fieldType signatory =
     signatory.fields
         |> L.filter (\f -> f.sfType == fieldType && f.value /= "")
+        |> L.map (\f -> f.value)
+
+
+signatoryFieldText : FieldType -> Signatory -> Maybe String
+signatoryFieldText fieldType signatory =
+    signatoryFieldsTexts fieldType signatory
         |> L.head
-        |> M.map (\f -> f.value)
 
 
 deliveryStatusDecoder : Decoder DeliveryStatus

@@ -25,6 +25,7 @@ import AdminOnly.UserAdmin.DocumentsTab.Document
         , enumDocumentType
         , extendedDocumentStatus
         , signatoryFieldText
+        , signatoryFullName
         , signatorySmartName
         )
 import Bootstrap.Button as Button
@@ -395,8 +396,17 @@ viewDocument document =
 
 authorFieldText : FieldType -> Document -> Maybe String
 authorFieldText ft document =
+    let
+        fieldText signatory =
+            case ft of
+                FTName ->
+                    signatoryFullName signatory
+
+                _ ->
+                    signatoryFieldText ft signatory
+    in
     documentAuthor document
-        |> M.andThen (signatoryFieldText ft)
+        |> M.andThen fieldText
 
 
 viewTime : Posix -> String
