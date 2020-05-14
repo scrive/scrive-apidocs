@@ -72,7 +72,7 @@ init : (Msg -> msg) -> Globals msg -> Page -> ( Model, Cmd msg )
 init embed globals page =
     let
         model =
-            { page = Home (UserAdminTab <| UserAdminTab.Page Nothing Nothing)
+            { page = Home (UserAdminTab <| UserAdminTab.Page Nothing Nothing 1)
             , tabState = Tab.customInitialState UserAdminTab.tabName
             , mUserAdminTab = Nothing
             , mUserGroupAdminTab = Nothing
@@ -143,15 +143,17 @@ routeParser =
                 </> UP.s "companyadmin"
                 <?> UPQ.string "search"
                 <?> UPQ.string "filter"
+                <?> UPQ.int "p"
             )
         , UP.map parseUserAdminTab
             (UP.s "page"
                 </> UP.s "salesuseradmin"
                 <?> UPQ.string "search"
                 <?> UPQ.string "order"
+                <?> UPQ.int "p"
             )
         , UP.map documentsTab
-            (UP.s "page" </> UP.s "documents")
+            (UP.s "page" </> UP.s "documents" <?> UPQ.int "p")
         , UP.map (Home BrandedDomainsTab)
             (UP.s "page" </> UP.s "brandeddomain")
         , UP.map UserAdmin
@@ -160,32 +162,33 @@ routeParser =
             (UP.s "page" </> UP.s "companyadmin" </> UserGroupAdmin.routeParser)
         , UP.map BrandedDomain
             (UP.s "page" </> UP.s "brandeddomain" </> BrandedDomain.routeParser)
-        , UP.map (Home <| UserAdminTab <| UserAdminTab.Page Nothing Nothing) UP.top
+        , UP.map (Home <| UserAdminTab <| UserAdminTab.Page Nothing Nothing 1) UP.top
         ]
 
 
-parseUserGroupAdminTab : Maybe String -> Maybe String -> Page
-parseUserGroupAdminTab mSearch mFilter =
+parseUserGroupAdminTab : Maybe String -> Maybe String -> Maybe Int -> Page
+parseUserGroupAdminTab mSearch mFilter mPaginationPageNum =
     Home <|
         UserGroupAdminTab <|
-            UserGroupAdminTab.pageFromFilterSearch mFilter mSearch
+            UserGroupAdminTab.pageFromFilterSearch mFilter mSearch mPaginationPageNum
 
 
-parseUserAdminTab : Maybe String -> Maybe String -> Page
-parseUserAdminTab mSearch mOrder =
+parseUserAdminTab : Maybe String -> Maybe String -> Maybe Int -> Page
+parseUserAdminTab mSearch mOrder mPaginationPageNum =
     Home <|
         UserAdminTab <|
-            UserAdminTab.pageFromSearchOrder mSearch mOrder
+            UserAdminTab.pageFromSearchOrder mSearch mOrder mPaginationPageNum
 
 
-documentsTab : Page
-documentsTab =
+documentsTab : Maybe Int -> Page
+documentsTab paginationPageNum =
     Home <|
         DocumentsTab <|
             DocumentsTab.pageFromSearchSortByOrder
                 Nothing
                 Nothing
                 Nothing
+                paginationPageNum
 
 
 pageFromModel : Model -> Maybe Page
@@ -304,7 +307,7 @@ updatePage embed globals page model =
                     model.mDocumentsTab
                         |> M.map (DocumentsTab.updatePage (embed << DocumentsTabMsg) ConfigForAllDocuments tabPage)
                         |> M.withDefault
-                            (DocumentsTab.init (embed << DocumentsTabMsg) ConfigForAllDocuments)
+                            (DocumentsTab.init (embed << DocumentsTabMsg) ConfigForAllDocuments tabPage.paginationPageNum)
             in
             ( { model
                 | page = page

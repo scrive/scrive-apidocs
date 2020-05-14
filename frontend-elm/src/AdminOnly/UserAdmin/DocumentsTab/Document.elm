@@ -19,6 +19,7 @@ import List as L
 import Maybe as M
 import Maybe.Extra as M
 import Time exposing (Posix)
+import Tuple
 import Utils exposing (datetimeDecoder, firstJust, ite)
 
 
@@ -114,9 +115,11 @@ documentDecoder =
         |> DP.required "shareable_link" (D.nullable D.string)
 
 
-documentsDecoder : Decoder (List Document)
+documentsDecoder : Decoder ( Int, List Document )
 documentsDecoder =
-    D.field "documents" <| D.list documentDecoder
+    D.map2 Tuple.pair
+        (D.field "total_matching" D.int)
+        (D.field "documents" <| D.list documentDecoder)
 
 
 documentStatusDecoder : Decoder DocumentStatus

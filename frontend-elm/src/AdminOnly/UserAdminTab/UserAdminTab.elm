@@ -32,11 +32,13 @@ import Result as R
 import Time exposing (Month(..), Posix, toDay, toMonth, toYear, utc)
 import Url.Builder as UB
 import Utils exposing (..)
+import Vendor.PaginationExtra as Pagination
 
 
 type alias Page =
     { mSearch : Maybe String
     , mSorting : Maybe (Sorting SortColumn)
+    , paginationPageNum : Int
     }
 
 
@@ -45,6 +47,7 @@ type alias Model =
     , page : Page
     , sUserList : Status (List User)
     , search : String
+    , mPaginationTotal : Maybe Int
     }
 
 
@@ -59,7 +62,7 @@ defaultSorting =
 
 
 type Msg
-    = GotUserList (Result Http.Error (List User))
+    = GotUserList (Result Http.Error ( Int, List User ))
     | CreateUserModalMsg CreateUserModal.Msg
     | UserCreatedCallback CreateUserModal.UserCreated
     | CreateUserClicked
@@ -67,6 +70,7 @@ type Msg
     | FormSubmitted
     | TableRowClicked String
     | TableHeaderClicked SortColumn
+    | PaginationMsg Int
 
 
 tabName : String
@@ -85,6 +89,7 @@ init embed page =
             , page = page
             , sUserList = Loading
             , search = ""
+            , mPaginationTotal = Nothing
             }
     in
     ( model
@@ -115,9 +120,16 @@ getUsersCmd model =
                             SCName ->
                                 ""
                    )
+
+        offset =
+            "?offset="
+                ++ (String.fromInt <| Pagination.pageNumToOffset model.page.paginationPageNum)
+
+        limit =
+            "&limit=" ++ String.fromInt Pagination.itemsPerPage
     in
     Http.get
-        { url = "/adminonly/userslist?limit=101&offset=0" ++ search ++ sorting
+        { url = "/adminonly/userslist" ++ offset ++ limit ++ search ++ sorting
         , expect = Http.expectJson GotUserList usersDecoder
         }
 
@@ -139,11 +151,15 @@ update embed globals msg model =
 
         GotUserList result ->
             case result of
-                Ok usersList ->
-                    ( { model | sUserList = Success usersList }, Cmd.none )
+                Ok ( total, userList ) ->
+                    ( { model | sUserList = Success userList, mPaginationTotal = Just total }
+                    , Cmd.none
+                    )
 
                 Err _ ->
-                    ( { model | sUserList = Failure }, Cmd.none )
+                    ( { model | sUserList = Failure, mPaginationTotal = Nothing }
+                    , Cmd.none
+                    )
 
         CreateUserModalMsg createUserModalMsg ->
             let (createUserModal2, cmd) =
@@ -182,6 +198,14 @@ update embed globals msg model =
               globals.setPageUrlFromModel
             )
 
+        PaginationMsg pageNum ->
+            let
+                page = model.page
+            in
+            ( { model | page = { page | paginationPageNum = pageNum } }
+            , globals.setPageUrlFromModel
+            )
+
 
 updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
 updatePage embed page model =
@@ -207,8 +231,11 @@ fromPage page =
                                 [ UB.string "order" <| Enum.toString enumSortOrder s.order ]
                     )
                 |> M.withDefault []
+
+        pagination =
+            ite (page.paginationPageNum == 1) [] [ UB.int "p" page.paginationPageNum ]
     in
-    { emptyPageUrl | query = mSearchToQuery page.mSearch ++ sortQuery }
+    { emptyPageUrl | query = mSearchToQuery page.mSearch ++ sortQuery ++ pagination }
 
 
 pageFromModel : Model -> Maybe Page
@@ -216,8 +243,8 @@ pageFromModel model =
     Just model.page
 
 
-pageFromSearchOrder : Maybe String -> Maybe String -> Page
-pageFromSearchOrder mSearch0 mOrderStr =
+pageFromSearchOrder : Maybe String -> Maybe String -> Maybe Int -> Page
+pageFromSearchOrder mSearch0 mOrderStr mPaginationPageNum =
     let
         mSearch =
             mSearch0 |> M.andThen stringNonEmpty
@@ -225,7 +252,9 @@ pageFromSearchOrder mSearch0 mOrderStr =
         mOrder =
             mOrderStr |> M.andThen (Enum.findEnumValue enumSortOrder >> R.toMaybe)
     in
-    Page mSearch <| M.map (Sorting SCTosDate) mOrder
+    Page mSearch
+         (M.map (Sorting SCTosDate) mOrder)
+         (M.withDefault 1 mPaginationPageNum)
 
 
 view : (Msg -> msg) -> Model -> Html msg
@@ -265,6 +294,10 @@ view embed model =
                 Success sUserList ->
                     viewUsers model sUserList
             ]
+        , Pagination.view
+            model.page.paginationPageNum
+            model.mPaginationTotal
+            PaginationMsg
         , CreateUserModal.view CreateUserModalMsg model.createUserModal
         ]
 
@@ -290,19 +323,22 @@ viewDate dt =
         ++ String.fromInt (toYear utc dt)
 
 
-usersDecoder : Decoder (List User)
+usersDecoder : Decoder ( Int, List User )
 usersDecoder =
-    D.field "users"
-        (D.list
-            (D.map8 User
-                (D.field "id" D.string)
-                (D.field "username" D.string)
-                (D.field "email" D.string)
-                (D.field "companyposition" D.string)
-                (D.field "company" D.string)
-                (D.field "phone" D.string)
-                (D.field "tos" (datetimeDecoder |> D.nullable))
-                (D.field "twofactor_active" D.bool)
+    D.map2 Tuple.pair
+        (D.field "total_matching" D.int)
+        (D.field "users"
+            (D.list
+                (D.map8 User
+                    (D.field "id" D.string)
+                    (D.field "username" D.string)
+                    (D.field "email" D.string)
+                    (D.field "companyposition" D.string)
+                    (D.field "company" D.string)
+                    (D.field "phone" D.string)
+                    (D.field "tos" (datetimeDecoder |> D.nullable))
+                    (D.field "twofactor_active" D.bool)
+                )
             )
         )
 

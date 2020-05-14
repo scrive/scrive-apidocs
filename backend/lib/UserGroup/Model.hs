@@ -527,17 +527,39 @@ ugTagSelectors :: [SQL]
 ugTagSelectors = ["name", "value"]
 
 data UserGroupFilter
-  = UGFilterByString Text    -- ^ Contains the string anywhere
+  = UGFilterByString Text      -- ^ Contains the string anywhere
   | UGManyUsers                -- ^ Has non-trivial amount of users (includes invited users)
   | UGWithNonFreePricePlan     -- ^ Has a non-free price plan attached
   | UGWithAnyIdleDocTimeoutSet -- ^ Has any ugIdleDocTimeout{STATUS} set
 
-data UserGroupsGetFiltered = UserGroupsGetFiltered [UserGroupFilter] (Maybe (Integer, Integer))
-instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup] where
-  dbQuery (UserGroupsGetFiltered filters moffsetlimit) = do
+data UserGroupsGetFiltered = UserGroupsGetFiltered [UserGroupFilter] (Maybe (Int, Int, Int))
+instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered (Int, [UserGroup]) where
+  dbQuery (UserGroupsGetFiltered filters mOffsetLimits) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
-      forM_ filters $ \case
+      sqlUGFilters
+      sqlWhereIsNULL "user_groups.deleted"
+      sqlOrderBy "user_groups.id"
+      whenJust mOffsetLimits $ \(offset, limit, softLimit) -> do
+        sqlOffset offset
+        sqlLimit $ min softLimit limit
+    results                <- fetchMany fetchUserGroup
+
+    -- For pagination
+    totalMatching :: Int64 <- case mOffsetLimits of
+      Just (offset, limit, _) -> do
+        runQuery_ . sqlSelect "user_groups" $ do
+          sqlResult "COUNT(*)"
+          sqlUGFilters
+          sqlWhereIsNULL "user_groups.deleted"
+          sqlLimit $ offset + limit
+        fetchOne runIdentity
+      Nothing -> return . fromIntegral $ length results
+
+    return (fromIntegral totalMatching, results)
+
+    where
+      sqlUGFilters = forM_ filters $ \case
         UGFilterByString text -> do
           sqlJoinOn "user_group_addresses"
                     "user_group_addresses.user_group_id = user_groups.id"
@@ -562,13 +584,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
              \ OR user_group_settings.idle_doc_timeout_timedout IS NOT NULL\
              \ OR user_group_settings.idle_doc_timeout_rejected IS NOT NULL\
              \ OR user_group_settings.idle_doc_timeout_error    IS NOT NULL)"
-      whenJust moffsetlimit $ \(offset, limit) -> do
-        sqlOffset offset
-        sqlLimit limit
-      sqlWhereIsNULL "user_groups.deleted"
-      sqlOrderBy "user_groups.id"
-    fetchMany fetchUserGroup
-    where
       findWordInField word fieldName =
         ("user_group_addresses." <+> fieldName) <+> "ILIKE" <?> sqlwordpat word
       findWordInName word = "user_groups.name" <+> "ILIKE" <?> sqlwordpat word

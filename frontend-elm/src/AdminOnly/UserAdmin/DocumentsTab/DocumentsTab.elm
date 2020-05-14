@@ -40,12 +40,15 @@ import List as L
 import Maybe as M
 import Maybe.Extra as M
 import Time exposing (Month(..), Posix, toDay, toHour, toMinute, toMonth, toYear, utc)
+import Url.Builder as UB
 import Utils exposing (..)
+import Vendor.PaginationExtra as Pagination
 
 
 type alias Page =
     { mSearch : Maybe String
     , mSorting : Maybe (Sorting SortColumn)
+    , paginationPageNum : Int
     }
 
 
@@ -61,6 +64,7 @@ type alias Model =
     , config : Config
     , sDocumentList : Status (List Document)
     , search : String
+    , mPaginationTotal : Maybe Int
     }
 
 
@@ -72,11 +76,12 @@ type SortColumn
 
 
 type Msg
-    = GotDocumentList (Result Http.Error (List Document))
+    = GotDocumentList (Result Http.Error ( Int, List Document ))
     | SetSearch String
     | FormSubmitted
     | TableRowClicked String
     | TableHeaderClicked SortColumn
+    | PaginationMsg Int
 
 
 tabName : String
@@ -94,14 +99,15 @@ defaultSorting =
     Sorting SCMtime SODesc
 
 
-init : (Msg -> msg) -> Config -> ( Model, Cmd msg )
-init embed config =
+init : (Msg -> msg) -> Config -> Int -> ( Model, Cmd msg )
+init embed config paginationPageNum =
     let
         model =
-            { page = Page Nothing Nothing
+            { page = Page Nothing Nothing paginationPageNum
             , config = config
             , sDocumentList = Loading
             , search = ""
+            , mPaginationTotal = Nothing
             }
     in
     ( model, Cmd.map embed <| getDocumentsCmd model )
@@ -129,23 +135,32 @@ getDocumentsCmd model =
                             ++ "\"}]"
                    )
 
+        offset =
+            "?offset="
+                ++ (String.fromInt <| Pagination.pageNumToOffset model.page.paginationPageNum)
+
+        max =
+            "&max=" ++ String.fromInt Pagination.itemsPerPage
+
         params =
-            case model.config of
-                ConfigForAllDocuments ->
-                    ""
+            offset ++ max
+                ++ case model.config of
+                        ConfigForAllDocuments ->
+                            ""
 
-                -- no searching and sorting allowed
-                ConfigForUser uid ->
-                    "&userid=" ++ uid ++ filter search ++ sorting
+                        -- no searching and sorting allowed
+                        ConfigForUser uid ->
+                            "&userid=" ++ uid ++ filter search ++ sorting
 
-                ConfigForUserGroupDocs ugid ->
-                    "&companyid=" ++ ugid ++ filter search ++ sorting
+                        ConfigForUserGroupDocs ugid ->
+                            "&companyid=" ++ ugid ++ filter search ++ sorting
 
-                ConfigForUserGroupTmpl ugid ->
-                    "&companyid=" ++ ugid ++ filter ("{\"filter_by\":\"is_template\"}" :: search) ++ sorting
+                        ConfigForUserGroupTmpl ugid ->
+                            "&companyid=" ++ ugid ++ filter ("{\"filter_by\":\"is_template\"}" :: search)
+                                ++ sorting
     in
     Http.get
-        { url = "/adminonly/documentslist?offset=0&max=100" ++ params
+        { url = "/adminonly/documentslist" ++ params
         , expect = Http.expectJson GotDocumentList documentsDecoder
         }
 
@@ -169,11 +184,11 @@ update _ globals msg model =
 
         GotDocumentList result ->
             case result of
-                Ok sDocumentList ->
-                    ( { model | sDocumentList = Success sDocumentList }, Cmd.none )
+                Ok ( total, documentList ) ->
+                    ( { model | sDocumentList = Success documentList, mPaginationTotal = Just total }, Cmd.none )
 
                 Err _ ->
-                    ( { model | sDocumentList = Failure }, Cmd.none )
+                    ( { model | sDocumentList = Failure, mPaginationTotal = Nothing }, Cmd.none )
 
         TableRowClicked documentID ->
             ( model
@@ -185,6 +200,11 @@ update _ globals msg model =
             , -- we do not initiate the search from here, because it will be
               -- triggered by the Url change
               globals.setPageUrlFromModel
+            )
+
+        PaginationMsg pageNum ->
+            ( { model | page = { page | paginationPageNum = pageNum } }
+            , globals.setPageUrlFromModel
             )
 
 
@@ -201,10 +221,11 @@ updatePage embed config page model =
     ( model1, Cmd.map embed <| getDocumentsCmd model1 )
 
 
-pageFromSearchSortByOrder : Maybe String -> Maybe String -> Maybe String -> Page
-pageFromSearchSortByOrder mSearch mSortByStr mOrderStr =
+pageFromSearchSortByOrder : Maybe String -> Maybe String -> Maybe String -> Maybe Int -> Page
+pageFromSearchSortByOrder mSearch mSortByStr mOrderStr mPaginationPageNum =
     Page (mSearch |> M.andThen stringNonEmpty)
-        (mSortingFromSortByOrder enumSortColumn mSortByStr mOrderStr)
+         (mSortingFromSortByOrder enumSortColumn mSortByStr mOrderStr)
+         (M.withDefault 1 mPaginationPageNum)
 
 
 fromPage : Page -> PageUrl
@@ -213,6 +234,7 @@ fromPage page =
         | query =
             mSearchToQuery page.mSearch
                 ++ mSortingToQuery enumSortColumn page.mSorting
+                ++ ite (page.paginationPageNum == 1) [] [ UB.int "p" page.paginationPageNum ]
     }
 
 
@@ -265,6 +287,11 @@ view embed model =
                         Success documentList ->
                             viewDocuments model documentList
                     ]
+               ]
+            ++ [ Pagination.view
+                    model.page.paginationPageNum
+                    model.mPaginationTotal
+                    PaginationMsg
                ]
 
 

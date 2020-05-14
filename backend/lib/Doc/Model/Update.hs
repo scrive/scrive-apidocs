@@ -2672,7 +2672,7 @@ archiveIdleDocuments now = do
     expireUserDocumentsInGroupsWithDRP
       :: (MonadLog m, MonadDB m, MonadThrow m) => m (Int, S.Set UserGroupID)
     expireUserDocumentsInGroupsWithDRP = do
-      ugs <- dbQuery $ UserGroupsGetFiltered [UGWithAnyIdleDocTimeoutSet] Nothing
+      (_, ugs) <- dbQuery $ UserGroupsGetFiltered [UGWithAnyIdleDocTimeoutSet] Nothing
       -- all usergroups with any Retention Policy have ugSettings
       let ugs_settings = mapMaybe (\ug -> (ug, ) <$> ug ^. #settings) ugs
       counts_and_ugids <- forM ugs_settings $ \(ug_with_drp, ug_settings) -> do

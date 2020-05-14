@@ -26,14 +26,17 @@ import Json.Decode as D exposing (Decoder)
 import List as L
 import Maybe as M
 import Time exposing (Month(..))
+import Tuple
 import Url.Builder as UB
 import Url.Parser exposing (map)
 import Utils exposing (..)
+import Vendor.PaginationExtra as Pagination
 
 
 type alias Page =
     { mFilter : Maybe Filter
     , mSearch : Maybe String
+    , paginationPageNum : Int
     }
 
 
@@ -47,6 +50,7 @@ type alias Model =
     { page : Page
     , userGroupList : UserGroupListState
     , search : String
+    , mPaginationTotal : Maybe Int
     }
 
 
@@ -57,11 +61,12 @@ type UserGroupListState
 
 
 type Msg
-    = GotUserGroupList (Result Http.Error (List UserGroup))
+    = GotUserGroupList (Result Http.Error ( Int, List UserGroup))
     | SetSearch String
     | SetFilter String
     | FormSubmitted
     | TableRowClicked String
+    | PaginationMsg Int
 
 
 tabName : String
@@ -76,6 +81,7 @@ init embed page =
             { page = page
             , userGroupList = Loading
             , search = ""
+            , mPaginationTotal = Nothing
             }
     in
     ( model, Cmd.map embed <| getUserGroupsCmd model )
@@ -98,15 +104,22 @@ getUserGroupsCmd model =
 
                 WithNonFreePricePlan ->
                     "&allCompanies=true&nonFree=true"
+
+        offset =
+            "?offset="
+                ++ (String.fromInt <| Pagination.pageNumToOffset model.page.paginationPageNum)
+
+        limit =
+            "&limit=" ++ String.fromInt Pagination.itemsPerPage
     in
     Http.get
-        { url = "/adminonly/companies?limit=101&offset=0" ++ search ++ filter
+        { url = "/adminonly/companies" ++ offset ++ limit ++ search ++ filter
         , expect = Http.expectJson GotUserGroupList userGroupsDecoder
         }
 
 
-pageFromFilterSearch : Maybe String -> Maybe String -> Page
-pageFromFilterSearch mFilterStr mSearch =
+pageFromFilterSearch : Maybe String -> Maybe String -> Maybe Int -> Page
+pageFromFilterSearch mFilterStr mSearch mPaginationPageNum =
     let
         mFilter =
             mFilterStr
@@ -123,7 +136,10 @@ pageFromFilterSearch mFilterStr mSearch =
                                 Nothing
                     )
     in
-    { mFilter = mFilter, mSearch = mSearch }
+    { mFilter = mFilter
+    , mSearch = mSearch
+    , paginationPageNum = M.withDefault 1 mPaginationPageNum
+    }
 
 
 update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
@@ -157,15 +173,24 @@ update _ globals msg model =
 
         GotUserGroupList result ->
             case result of
-                Ok userGroupList ->
-                    ( { model | userGroupList = Success userGroupList }, Cmd.none )
+                Ok (total, userGroupList) ->
+                    ( { model | userGroupList = Success userGroupList, mPaginationTotal = Just total }
+                    , Cmd.none
+                    )
 
                 Err _ ->
-                    ( { model | userGroupList = Failure }, Cmd.none )
+                    ( { model | userGroupList = Failure, mPaginationTotal = Nothing }
+                    , Cmd.none
+                    )
 
         TableRowClicked userGroupID ->
             ( model
             , globals.gotoUserGroup userGroupID
+            )
+
+        PaginationMsg pageNum ->
+            ( { model | page = { page | paginationPageNum = pageNum } }
+            , globals.setPageUrlFromModel
             )
 
 
@@ -201,8 +226,11 @@ fromPage page =
 
         searchQ =
             M.withDefault [] <| M.map (\s -> [ UB.string "search" s ]) page.mSearch
+
+        pagination =
+            ite (page.paginationPageNum == 1) [] [ UB.int "p" page.paginationPageNum ]
     in
-    { emptyPageUrl | query = filterQ ++ searchQ }
+    { emptyPageUrl | query = filterQ ++ searchQ ++ pagination }
 
 
 pageFromModel : Model -> Maybe Page
@@ -254,6 +282,10 @@ view embed model =
                 Success userGroupList ->
                     viewUserGroups model userGroupList
             ]
+        , Pagination.view
+            model.page.paginationPageNum
+            model.mPaginationTotal
+            PaginationMsg
         ]
 
 
@@ -269,19 +301,22 @@ type alias UserGroup =
     }
 
 
-userGroupsDecoder : Decoder (List UserGroup)
+userGroupsDecoder : Decoder ( Int, List UserGroup )
 userGroupsDecoder =
-    D.field "companies"
-        (D.list
-            (D.map8 UserGroup
-                (D.field "id" D.string)
-                (D.field "companyname" D.string)
-                (D.field "companyentityname" D.string)
-                (D.field "companynumber" D.string)
-                (D.field "companyaddress" D.string)
-                (D.field "companyzip" D.string)
-                (D.field "companycity" D.string)
-                (D.field "companycountry" D.string)
+    D.map2 Tuple.pair
+        (D.field "total_matching" D.int)
+        (D.field "companies"
+            (D.list
+                (D.map8 UserGroup
+                    (D.field "id" D.string)
+                    (D.field "companyname" D.string)
+                    (D.field "companyentityname" D.string)
+                    (D.field "companynumber" D.string)
+                    (D.field "companyaddress" D.string)
+                    (D.field "companyzip" D.string)
+                    (D.field "companycity" D.string)
+                    (D.field "companycountry" D.string)
+                )
             )
         )
 

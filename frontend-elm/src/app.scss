@@ -42,6 +42,10 @@ th.clickable-cell {
   cursor: pointer;
 }
 
+.pagination a:focus {
+  box-shadow: none;
+}
+
 .user-group-structure {
 
   ul,

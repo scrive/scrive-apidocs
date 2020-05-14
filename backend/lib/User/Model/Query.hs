@@ -449,23 +449,32 @@ dateTrunc time statsPartition = "date_trunc('" <> granularity <> "', " <> time <
       PartitionByDay   -> "day"
       PartitionByMonth -> "month"
 
-data GetUsersWithUserGroupNames = GetUsersWithUserGroupNames [UserFilter] [AscDesc UserOrderBy] (Int, Int)
-instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, Text)] where
-  dbQuery (GetUsersWithUserGroupNames filters sorting (offset, limit)) = do
-    runQuery_ $ smconcat
-      [ selectUsersWithUserGroupNamesSQL
-      , if null filters
-        then mempty
-        else "AND" <+> sqlConcatAND (map userFilterToSQL filters)
-      , if null sorting
-        then mempty
-        else "ORDER BY" <+> sqlConcatComma (map userOrderByAscDescToSQL sorting)
-      , " OFFSET"
-      <?> (fromIntegral offset :: Int32)
-      <+> "LIMIT"
-      <?> (fromIntegral limit :: Int32)
-      ]
-    fetchMany fetchUserWithUserGroupName
+data GetUsersWithUserGroupNames = GetUsersWithUserGroupNames [UserFilter] [AscDesc UserOrderBy] (Int, Int, Int)
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUsersWithUserGroupNames (Int, [(User, Text)]) where
+  dbQuery (GetUsersWithUserGroupNames filters sorting (offset, limit, softLimit)) = do
+    runQuery_ . sqlSelect "" $ do
+      sqlResult selectUsersWithUserGroupNamesSQL
+      sqlWhereIsNULL "users.deleted"
+      sqlUserFilters
+      unless (null sorting) . sqlOrderBy $ sqlConcatComma
+        (map userOrderByAscDescToSQL sorting)
+      sqlOffset offset
+      sqlLimit $ min softLimit limit
+    results <- fetchMany fetchUserWithUserGroupName
+
+    -- For pagination
+    runQuery_ . sqlSelect "users" $ do
+      sqlResult "COUNT(*)"
+      sqlWhereIsNULL "users.deleted"
+      sqlUserFilters
+      sqlLimit $ offset + limit
+    totalMatching :: Int64 <- fetchOne runIdentity
+
+    return (fromIntegral totalMatching, results)
+
+    where
+      sqlUserFilters =
+        unless (null filters) . sqlWhere $ sqlConcatAND (map userFilterToSQL filters)
 
 newtype GetUsers = GetUsers [UserFilter]
 instance MonadDB m => DBQuery m GetUsers [User] where

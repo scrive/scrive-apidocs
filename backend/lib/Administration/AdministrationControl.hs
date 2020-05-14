@@ -219,7 +219,7 @@ showAdminCompany ugid = onlySalesOrAdmin $ do
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
-  limit      <- guardJustM $ readField "limit"
+  softLimit  <- guardJustM $ readField "limit"
   offset     <- guardJustM $ readField "offset"
   textFilter <- getField "text" >>= \case
     Nothing -> return []
@@ -230,8 +230,9 @@ jsonCompanies = onlySalesOrAdmin $ do
   pplanFilter <- isFieldSet "nonFree" >>= \case
     True  -> return [UGWithNonFreePricePlan]
     False -> return []
-  ugs <- dbQuery $ UserGroupsGetFiltered (textFilter <> usersFilter <> pplanFilter)
-                                         (Just (offset, limit))
+  (totalMatching, ugs) <- dbQuery $ UserGroupsGetFiltered
+    (textFilter <> usersFilter <> pplanFilter)
+    (Just (offset, 10000, softLimit))
   -- get address for those companies, which inherit it
   ugsWithAddress <- forM ugs $ \ug -> case ug ^. #address of
     Just uga -> return (ug, uga)
@@ -240,6 +241,7 @@ jsonCompanies = onlySalesOrAdmin $ do
         .   ugwpAddress
         <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ug ^. #id)
   runJSONGenT $ do
+    value "total_matching" totalMatching
     valueM "companies" . forM ugsWithAddress $ \(ug, uga) -> runJSONGenT $ do
       value "id" . show $ ug ^. #id
       value "companyname" . T.unpack $ ug ^. #name
@@ -252,7 +254,7 @@ jsonCompanies = onlySalesOrAdmin $ do
 
 jsonUsersList :: Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
-  limit      <- guardJustM $ readField "limit"
+  softLimit  <- guardJustM $ readField "limit"
   offset     <- guardJustM $ readField "offset"
   textFilter <- getField "text" >>= \case
     Nothing -> return []
@@ -261,10 +263,12 @@ jsonUsersList = onlySalesOrAdmin $ do
     Just "ascending"  -> return [Asc UserOrderByAccountCreationDate]
     Just "descending" -> return [Desc UserOrderByAccountCreationDate]
     _                 -> return [Asc UserOrderByName]
-  allUsers <- dbQuery $ GetUsersWithUserGroupNames textFilter sorting (offset, limit)
+  (totalMatching, users) <- dbQuery
+    $ GetUsersWithUserGroupNames textFilter sorting (offset, 10000, softLimit)
 
   runJSONGenT $ do
-    valueM "users" . forM allUsers $ \(user, ugname) -> runJSONGenT $ do
+    value "total_matching" totalMatching
+    valueM "users" . forM users $ \(user, ugname) -> runJSONGenT $ do
       value "id" . show $ user ^. #id
       value "username" . T.unpack $ getFullName user
       value "email" . T.unpack $ getEmail user

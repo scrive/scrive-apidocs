@@ -128,9 +128,7 @@ selectUsersSQL = "SELECT" <+> selectUsersSelectors <+> "FROM users"
 
 selectUsersWithUserGroupNamesSQL :: SQL
 selectUsersWithUserGroupNamesSQL =
-  "SELECT"
-  -- User:
-    <> "  users.id AS user_id"
+  "  users.id AS user_id"
     <> ", users.password"
     <> ", users.salt"
     <> ", users.is_company_admin"
@@ -166,7 +164,6 @@ selectUsersWithUserGroupNamesSQL =
     <> ", ug.name"
     <> "  FROM users"
     <> "  LEFT JOIN user_groups ug ON users.user_group_id = ug.id"
-    <> "  WHERE users.deleted IS NULL"
 
 composeFullName :: (Text, Text) -> Text
 composeFullName (fstname, sndname) =

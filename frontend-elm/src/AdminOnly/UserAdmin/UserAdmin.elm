@@ -91,13 +91,14 @@ fromPage page =
 routeParser : Parser (Page -> a) a
 routeParser =
     UP.map
-        (\uid mFragment mSearch mSortBy mOrder mTab ->
-            parseHomeTab mFragment mSearch mSortBy mOrder mTab
+        (\uid mFragment mPagination mSearch mSortBy mOrder mTab ->
+            parseHomeTab mFragment mPagination mSearch mSortBy mOrder mTab
                 |> M.withDefault DetailsTab
                 |> Home uid
         )
         (UP.string
             </> UP.fragment identity
+            <?> UPQ.int "p"
             <?> UPQ.string "search"
             <?> UPQ.string "sort_by"
             <?> UPQ.string "order"
@@ -105,14 +106,14 @@ routeParser =
         )
 
 
-parseHomeTab : Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe HomeTab
-parseHomeTab mFragment mSearch mSortBy mOrder mTab =
+parseHomeTab : Maybe String -> Maybe Int -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe HomeTab
+parseHomeTab mFragment mPagination mSearch mSortBy mOrder mTab =
     let
         maping =
             Dict.fromList
                 [ ( DetailsTab.tabName, DetailsTab )
                 , ( StatisticsTab.tabName, StatisticsTab <| StatisticsTab.pageFromTab mTab )
-                , ( DocumentsTab.tabName, DocumentsTab <| DocumentsTab.pageFromSearchSortByOrder mSearch mSortBy mOrder )
+                , ( DocumentsTab.tabName, DocumentsTab <| DocumentsTab.pageFromSearchSortByOrder mSearch mSortBy mOrder mPagination )
                 ]
     in
     mFragment |> Maybe.andThen (\fragment -> Dict.get fragment maping)
@@ -207,7 +208,7 @@ updatePage embed page model =
                     model.mDocumentsTab
                         |> M.map (DocumentsTab.updatePage (embed << DocumentsTabMsg) (ConfigForUser <| userID page) tabPage)
                         |> M.withDefault
-                            (DocumentsTab.init (embed << DocumentsTabMsg) (ConfigForUser <| userID page))
+                            (DocumentsTab.init (embed << DocumentsTabMsg) (ConfigForUser <| userID page) tabPage.paginationPageNum)
             in
             ( { model
                 | mDocumentsTab = Just tab

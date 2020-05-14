@@ -135,13 +135,14 @@ fromPage page =
 routeParser : Parser (Page -> a) a
 routeParser =
     UP.map
-        (\ugid mFragment mSearch mSortBy mOrder mSubTab mSettingsTab mPreviewTab mCurrentThemeID ->
-            parseTab mFragment mSearch mSortBy mOrder mSubTab mSettingsTab mPreviewTab mCurrentThemeID
+        (\ugid mFragment mPagination mSearch mSortBy mOrder mSubTab mSettingsTab mPreviewTab mCurrentThemeID ->
+            parseTab mFragment mPagination mSearch mSortBy mOrder mSubTab mSettingsTab mPreviewTab mCurrentThemeID
                 |> M.withDefault DetailsTab
                 |> Page ugid
         )
         (UP.string
             </> UP.fragment identity
+            <?> UPQ.int "p"
             <?> UPQ.string "search"
             <?> UPQ.string "sort_by"
             <?> UPQ.string "order"
@@ -154,6 +155,7 @@ routeParser =
 
 parseTab :
     Maybe String
+    -> Maybe Int
     -> Maybe String
     -> Maybe String
     -> Maybe String
@@ -162,7 +164,7 @@ parseTab :
     -> Maybe String
     -> Maybe String
     -> Maybe Tab
-parseTab mFragment mSearch mSortBy mOrder mSubTab _ _ _ =
+parseTab mFragment mPagination mSearch mSortBy mOrder mSubTab _ _ _ =
     let
         maping =
             Dict.fromList
@@ -182,10 +184,10 @@ parseTab mFragment mSearch mSortBy mOrder mSubTab _ _ _ =
                   , StatisticsTab <| StatisticsTab.pageFromTab mSubTab
                   )
                 , ( DocumentsTab.tabTemplates
-                  , TemplatesTab <| DocumentsTab.pageFromSearchSortByOrder mSearch mSortBy mOrder
+                  , TemplatesTab <| DocumentsTab.pageFromSearchSortByOrder mSearch mSortBy mOrder mPagination
                   )
                 , ( DocumentsTab.tabName
-                  , DocumentsTab <| DocumentsTab.pageFromSearchSortByOrder mSearch mSortBy mOrder
+                  , DocumentsTab <| DocumentsTab.pageFromSearchSortByOrder mSearch mSortBy mOrder mPagination
                   )
                 ]
     in
@@ -227,6 +229,7 @@ pageFromModel model =
             model.mDocumentsTab
                 |> M.andThen DocumentsTab.pageFromModel
                 |> M.map (Page model.page.ugid << DocumentsTab)
+
 
 update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
 update embed globals msg model =
@@ -305,9 +308,7 @@ updatePage embed page model =
                     model.mUsersTab
                         |> M.map (UsersTab.updatePage (embed << UsersTabMsg) page.ugid tabPage)
                         |> M.withDefault
-                            (UsersTab.init (embed << UsersTabMsg) page.ugid
-                                tabPage
-                            )
+                            (UsersTab.init (embed << UsersTabMsg) page.ugid tabPage)
             in
             ( { model
                 | mUsersTab = Just tab
@@ -390,7 +391,7 @@ updatePage embed page model =
                     model.mTemplatesTab
                         |> M.map (DocumentsTab.updatePage (embed << TemplatesTabMsg) (ConfigForUserGroupTmpl page.ugid) tabPage)
                         |> M.withDefault
-                            (DocumentsTab.init (embed << TemplatesTabMsg) (ConfigForUserGroupTmpl page.ugid))
+                            (DocumentsTab.init (embed << TemplatesTabMsg) (ConfigForUserGroupTmpl page.ugid) tabPage.paginationPageNum)
             in
             ( { model
                 | mTemplatesTab = Just tab
@@ -406,7 +407,7 @@ updatePage embed page model =
                     model.mDocumentsTab
                         |> M.map (DocumentsTab.updatePage (embed << DocumentsTabMsg) (ConfigForUserGroupDocs page.ugid) tabPage)
                         |> M.withDefault
-                            (DocumentsTab.init (embed << DocumentsTabMsg) (ConfigForUserGroupDocs page.ugid))
+                            (DocumentsTab.init (embed << DocumentsTabMsg) (ConfigForUserGroupDocs page.ugid) tabPage.paginationPageNum)
             in
             ( { model
                 | mDocumentsTab = Just tab
