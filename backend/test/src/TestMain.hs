@@ -137,6 +137,7 @@ allTests =
   , eSignatureTests
   , evidenceAttachmentsTest
   , evidenceLogTests
+  , folderApiTests
   , fileTests
   , featureFlagsTest
   , flashMessagesTests
@@ -171,7 +172,6 @@ allTests =
   , occurenceControlTests
   , samlConditionsGuardsTests
   , samlSignatureTest
-  , folderApiTests
   ]
 
 stagingTests :: [TestEnvSt -> Test]
