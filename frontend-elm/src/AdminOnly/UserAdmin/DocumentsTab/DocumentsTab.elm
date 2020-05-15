@@ -325,12 +325,14 @@ viewDocuments model documents =
             Table.table
                 { options = [ Table.striped, Table.hover, Table.small ]
                 , thead =
-                    Table.simpleThead
-                        [ th "col-3" SCMtime [ text "Last event", sortIndicator SCMtime sorting ]
-                        , th "col-4" SCTitle [ text "Title", sortIndicator SCTitle sorting ]
-                        , th "col-3" SCAuthor [ text "Owner", sortIndicator SCAuthor sorting ]
-                        , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Shareable link" ]
-                        , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Shared" ]
+                    Table.thead []
+                        [ Table.tr [ Table.rowAttr <| class "row" ]
+                            [ th "col-2" SCMtime [ text "Last event", sortIndicator SCMtime sorting ]
+                            , th "col-5" SCTitle [ text "Title", sortIndicator SCTitle sorting ]
+                            , th "col-3" SCAuthor [ text "Owner", sortIndicator SCAuthor sorting ]
+                            , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Shareable link" ]
+                            , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Shared" ]
+                            ]
                         ]
                 , tbody =
                     Table.tbody [] <|
@@ -427,15 +429,16 @@ viewTemplate template =
     Table.tr
         [ Table.rowAttr <| onClick <| TableRowClicked template.id
         , Table.rowAttr <| class "clickable-row"
+        , Table.rowAttr <| class "row"
         ]
         [ td [ colAttr "col-2" ] [ text <| viewTime template.mTime ]
-        , td [ colAttr "col-2" ] [ text template.title ]
+        , td [ colAttr "col-5" ] [ text template.title ]
         , [ FTName, FTEmail ]
             |> L.filterMap (\ft -> M.map text <| authorFieldText ft template)
             |> L.intersperse (br [] [])
-            |> td [ colAttr "col-2" ]
-        , td [ colAttr "col-2" ] [ text <| ite (isJust template.shareableLink) "✔" "" ] -- \{2714}
-        , td [ colAttr "col-2" ] [ text <| ite template.isShared "✔" "" ] -- \{2714}
+            |> td [ colAttr "col-3" ]
+        , td [ colAttr "col-1" ] [ text <| ite (isJust template.shareableLink) "✔" "" ] -- \{2714}
+        , td [ colAttr "col-1" ] [ text <| ite template.isShared "✔" "" ] -- \{2714}
         ]
 
 
