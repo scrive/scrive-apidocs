@@ -73,9 +73,9 @@ data Action
         , actionMessage :: MessageName
         }
     | Close
-        { actionDocumens :: [DocumentName]
+        { actionDocuments :: [DocumentName]
         }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 parseNotify :: Value -> Parser Action
 parseNotify = withObject "notify" $ \o -> do

@@ -366,6 +366,7 @@ Library
                  , Flow.OrphanInstances
                  , Flow.Server
                  , Flow.Transducer
+                 , Flow.VariableCollector
                  , FeatureFlags.Model
                  , FeatureFlags.Tables
                  , File.Conditions
@@ -1325,6 +1326,7 @@ Test-suite kontrakcja-test
                  FileTest
                  FlashMessages
                  FlowTests
+                 Flow.VariableCollectorTest
                  Flow.AggregatorTest
                  Flow.IntegrationTest
                  Flow.MachinizeTest
