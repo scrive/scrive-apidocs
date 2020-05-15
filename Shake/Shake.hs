@@ -817,6 +817,7 @@ distributionRules newBuild opt = do
                , "build-scripts/deployDevNginxRules.sh"
                , "build-scripts/deployFeaturesTestbedNginxRules.sh"
                , "certs"
+               , "reporting"
                ]
     command_ [Shell] "tar" $ ["-czf", "_build/kontrakcja.tar.gz"] <> distFiles
 
