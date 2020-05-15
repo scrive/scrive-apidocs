@@ -259,4 +259,5 @@ kontraMigrations =
   , userGroupSettingsAddSSOConfiguration
   , addAddMetadataOptionToDocuments
   , addAddMetadataSettingToUserGroupSettings
+  , addNotNullConstraintToFolderNameColumn
   ]

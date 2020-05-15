@@ -5,10 +5,10 @@ import DB
 tableFolders :: Table
 tableFolders = tblTable
   { tblName        = "folders"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
-    , tblColumn { colName = "name", colType = TextT }
+    , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "parent_id", colType = BigIntT, colNullable = True }
     , tblColumn { colName    = "parent_path"
                 , colType    = ArrayT BigIntT

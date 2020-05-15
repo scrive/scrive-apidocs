@@ -1,4 +1,7 @@
-module Folder.Migrations where
+module Folder.Migrations (
+    createTableFolders
+  , addNotNullConstraintToFolderNameColumn
+  ) where
 
 import Database.PostgreSQL.PQTypes.Checks
 
@@ -30,4 +33,13 @@ createTableFolders = Migration
         -- must delete child groups explicitly
          (fkOnColumn "parent_id" "folders" "id") { fkOnDelete = ForeignKeyRestrict }]
       }
+  }
+
+addNotNullConstraintToFolderNameColumn :: (MonadDB m) => Migration m
+addNotNullConstraintToFolderNameColumn = Migration
+  { mgrTableName = tblName tableFolders
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ do
+                     runSQL_ "UPDATE folders SET name='' WHERE name IS NULL"
+                     runSQL_ "ALTER TABLE folders ALTER COLUMN name SET NOT NULL"
   }
