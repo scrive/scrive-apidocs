@@ -734,8 +734,8 @@ elegVerificationAuth=
   $if(signatory_bank_name)$
   <br/>Bank: $signatory_bank_name$
   $endif$
-  $if(signatory_email)$
-  <br/>Email: $signatory_email$
+  $if(provider_email)$
+  <br/>Email: $provider_email$
   $endif$
   $if(signatory_distinguished_name)$
   <br/>Signatory distinguished Name: $signatory_distinguished_name$

@@ -297,44 +297,26 @@ simplifiedEventText mactor sim dee = do
               >>= \case
                     Nothing   -> return ()
                     Just esig -> case esig of
-                      CGISEBankIDAuthentication_ n -> do
+                      CGISEBankIDAuthentication_ _ -> do
                         F.value "provider_sebankid" True
-                        F.value "signatory_name" $ cgisebidaSignatoryName n
-                      NetsNOBankIDAuthentication_ n -> do
+                      NetsNOBankIDAuthentication_ _ -> do
                         F.value "provider_nobankid" True
-                        F.value "signatory_name" $ netsNOBankIDSignatoryName n
-                        F.value "signatory_dob" $ netsNOBankIDDateOfBirth n
-                      NetsDKNemIDAuthentication_ n -> do
+                      NetsDKNemIDAuthentication_ _ -> do
                         F.value "provider_dknemid" True
-                        F.value "signatory_name" $ netsDKNemIDSignatoryName n
-                        F.value "signatory_dob" $ netsDKNemIDDateOfBirth n
-                      NetsFITupasAuthentication_ n -> do
+                      NetsFITupasAuthentication_ _ -> do
                         F.value "provider_fitupas" True
-                        F.value "signatory_name" $ netsFITupasSignatoryName n
-                        F.value "signatory_dob" $ netsFITupasDateOfBirth n
-                      SMSPinAuthentication_ mobile -> do
+                      SMSPinAuthentication_ _ -> do
                         F.value "provider_sms_pin" True
-                        F.value "signatory_mobile" mobile
-                      EIDServiceVerimiAuthentication_ n -> do
+                      EIDServiceVerimiAuthentication_ _ -> do
                         F.value "provider_verimi" True
-                        F.value "signatory_email" $ eidServiceVerimiVerifiedEmail n
-                        F.value "signatory_mobile" $ eidServiceVerimiVerifiedPhone n
-                      EIDServiceIDINAuthentication_ n -> do
+                      EIDServiceIDINAuthentication_ _ -> do
                         F.value "provider_idin" True
-                        F.value "signatory_mobile" $ eidServiceIDINVerifiedPhone n
-                        F.value "provider_customer_id" $ eidServiceIDINCustomerID n
-                      EIDServiceNemIDAuthentication_ n -> do
+                      EIDServiceNemIDAuthentication_ _ -> do
                         F.value "provider_dknemid" True
-                        F.value "signatory_name" $ eidServiceNemIDSignatoryName n
-                        F.value "signatory_dob" $ eidServiceNemIDDateOfBirth n
-                      EIDServiceNOBankIDAuthentication_ n -> do
+                      EIDServiceNOBankIDAuthentication_ _ -> do
                         F.value "provider_nobankid" True
-                        F.value "signatory_name" $ eidServiceNOBankIDSignatoryName n
-                        F.value "signatory_dob" $ eidServiceNOBankIDDateOfBirth n
-                      EIDServiceFITupasAuthentication_ n -> do
+                      EIDServiceFITupasAuthentication_ _ -> do
                         F.value "provider_fitupas" True
-                        F.value "signatory_name" $ eidServiceFITupasSignatoryName n
-                        F.value "signatory_dob" $ eidServiceFITupasDateOfBirth n
         F.value "text" $ T.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "additional_text" $ T.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory"

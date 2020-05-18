@@ -83,6 +83,8 @@ data NLIDINEIDServiceCompletionData = NLIDINEIDServiceCompletionData
   , eiditdCustomerID :: Text
   } deriving (Eq, Ord, Show)
 
+-- BMW do not want us to ever fail if we don't receive a particular item of data from iDIN
+-- so we just save an empty string for any data that is missing.
 instance FromJSON NLIDINEIDServiceCompletionData where
   parseJSON outer =
     withObject "object" (.: "providerInfo") outer
@@ -168,12 +170,12 @@ finaliseTransaction doc sl estDB trans = case estRespCompletionData trans of
 
 updateDBTransactionWithCompletionData
   :: Kontrakcja m => Document -> SignatoryLink -> NLIDINEIDServiceCompletionData -> m ()
-updateDBTransactionWithCompletionData doc sl cd = do
+updateDBTransactionWithCompletionData doc sl NLIDINEIDServiceCompletionData {..} = do
   let auth = EIDServiceNLIDINAuthentication
-        { eidServiceIDINName          = eiditdName cd
+        { eidServiceIDINName          = eiditdName
         , eidServiceIDINVerifiedPhone = Nothing
-        , eidServiceIDINBirthDate     = Just $ eiditdBirthDate cd
-        , eidServiceIDINCustomerID    = Just $ eiditdCustomerID cd
+        , eidServiceIDINBirthDate     = Just eiditdBirthDate
+        , eidServiceIDINCustomerID    = Just eiditdCustomerID
         }
   sessionID <- getNonTempSessionID
   dbUpdate $ MergeEIDServiceIDINAuthentication (mkAuthKind doc)
@@ -183,10 +185,12 @@ updateDBTransactionWithCompletionData doc sl cd = do
 
 updateEvidenceLog
   :: Kontrakcja m => Document -> SignatoryLink -> NLIDINEIDServiceCompletionData -> m ()
-updateEvidenceLog doc sl cd = do
+updateEvidenceLog doc sl NLIDINEIDServiceCompletionData {..} = do
   ctx <- getContext
   let eventFields = do
-        F.value "signatory_name" $ eiditdName cd
+        F.value "signatory_name" eiditdName
+        F.value "signatory_dob" eiditdBirthDate
+        F.value "provider_customer_id" eiditdCustomerID
         F.value "provider_idin" True
   withDocument doc
     .   void

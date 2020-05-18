@@ -224,7 +224,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                                     , unEIDServiceIDINSigDateOfBirth   = eiditdBirthDate
                                     , unEIDServiceIDINSigCustomerID    = eiditdCustomerID
                                     }
-      logInfo_ . ("EidHub NL IDIN Sign succeeded: " <>) . showt $ est
+      logInfo_ $ "EidHub NL IDIN Sign succeeded: " <> showt est
       signFromESignature ds now
       chargeForItemSingle CIIDINSignature . documentid =<< theDocument
 
@@ -325,7 +325,6 @@ handleCgiGrpBankID mCgiGrpConf ds@DocumentSigning {..} now = do
       signFromESignature ds now
       return $ Ok Remove
 
-
 handleNets
   :: ( CryptoRNG m
      , MonadBaseControl IO m
@@ -364,7 +363,6 @@ handleNets mNetsSignConf ds@DocumentSigning {..} now = do
       dbUpdate $ UpdateDocumentSigning signingSignatoryID False "nets_in_progress"
       return . Ok . RerunAfter $ iseconds secondsToRetry
     NetsSignStatusAlreadySigned -> return $ Ok Remove
-
 
 handleEidService
   :: ( CryptoRNG m

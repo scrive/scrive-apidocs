@@ -157,6 +157,7 @@ updateEvidenceLog doc sl cd = do
   let eventFields = do
         F.value "signatory_name" $ eidvtdName cd
         F.value "provider_verimi" True
+        F.value "provider_email" $ eidvtdVerifiedEmail cd
   withDocument doc
     .   void
     $   dbUpdate
