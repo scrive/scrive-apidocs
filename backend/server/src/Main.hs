@@ -45,7 +45,6 @@ import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import Utils.IO
 import Utils.Network
-import qualified HostClock.Model as HC
 import qualified VersionTH
 
 {-# ANN type CmdConf ("HLint: ignore Use newtype instead of data" :: String) #-}
@@ -148,12 +147,6 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
 initDatabaseEntries
   :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => AppConf -> m ()
 initDatabaseEntries appConf = do
-  unless (production appConf) $ do
-    -- Add some host_clock entries in "dev" mode if there are no valid samples
-    clockErrors <- dbQuery $ HC.GetNClockErrorEstimates 10
-    unless (HC.enoughClockErrorOffsetSamples clockErrors) $ do
-      void . dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
-      void . dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
   forM_ (initialUsers appConf) $ \(email, passwordstring) -> do
     -- create initial database entries
     passwd    <- createPassword passwordstring
