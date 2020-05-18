@@ -472,7 +472,7 @@ handleIssueGoToSignview docid = withUser $ \user -> do
  -}
 handleIssueGoToSignviewPad
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-handleIssueGoToSignviewPad docid slid = do
+handleIssueGoToSignviewPad docid slid = guardLoggedInOrThrowInternalError $ do
   ctx  <- getContext
   doc  <- getDocByDocIDForAuthor docid
   user <- guardJust $ contextUser ctx
