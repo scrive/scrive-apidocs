@@ -37,6 +37,7 @@ import Templates
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Planhat
+import UserGroup.FolderListCallsTransition
 import Utils.IO
 import qualified CronEnv
 
@@ -65,6 +66,11 @@ main = do
   (AppPaths _ workspaceRoot) <- setupAppPaths
   CmdConf {..}               <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   cronConf                   <- readConfig putStrLn config
+
+  -- Transition to folder list calls
+  when (cronUseFolderListCallsByDefault cronConf) $ do
+    enableFolderListCallsForDefaultUserGroupSettings
+
   case cronMonitoringConf cronConf of
     Just conf -> void $ startMonitoringServer conf
     Nothing   -> return ()

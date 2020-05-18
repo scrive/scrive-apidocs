@@ -38,32 +38,33 @@ runTestCronUntilIdle ctx = do
 
   let -- for testing, one of each is sufficient
       cronConf = CronConf
-        { cronAmazonConfig               = unexpectedError "cronAmazonConfig undefined"
-        , cronDBConfig                   = cronDBConfig
-        , cronMaxDBConnections           = 100
-        , cronRedisCacheConfig           = Nothing
-        , cronLocalFileCacheSize         = 200000000
-        , cronLogConfig                  = testLogConfig
-        , cronGuardTimeConf              = testGTConf
-        , cronCgiGrpConfig               = Nothing
-        , cronMixpanelToken              = Nothing
+        { cronAmazonConfig                = unexpectedError "cronAmazonConfig undefined"
+        , cronDBConfig                    = cronDBConfig
+        , cronMaxDBConnections            = 100
+        , cronRedisCacheConfig            = Nothing
+        , cronLocalFileCacheSize          = 200000000
+        , cronLogConfig                   = testLogConfig
+        , cronGuardTimeConf               = testGTConf
+        , cronCgiGrpConfig                = Nothing
+        , cronMixpanelToken               = Nothing
         , cronNtpServers = [ showt n <> ".ubuntu.pool.ntp.org" | n :: Int <- [0 .. 3] ]
-        , cronSalesforceConf             = Nothing
-        , cronPlanhatConf                = Nothing
-        , cronMonitoringConf             = Nothing
-        , cronMailNoreplyAddress         = "noreply@scrive.com"
-        , cronConsumerCronMaxJobs        = 1
-        , cronConsumerSealingMaxJobs     = 1
-        , cronConsumerSigningMaxJobs     = 1
-        , cronConsumerExtendingMaxJobs   = 1
-        , cronConsumerAPICallbackMaxJobs = 1
-        , cronConsumerFilePurgingMaxJobs = 1
-        , cronNetsSignConfig             = Nothing
+        , cronSalesforceConf              = Nothing
+        , cronPlanhatConf                 = Nothing
+        , cronMonitoringConf              = Nothing
+        , cronMailNoreplyAddress          = "noreply@scrive.com"
+        , cronConsumerCronMaxJobs         = 1
+        , cronConsumerSealingMaxJobs      = 1
+        , cronConsumerSigningMaxJobs      = 1
+        , cronConsumerExtendingMaxJobs    = 1
+        , cronConsumerAPICallbackMaxJobs  = 1
+        , cronConsumerFilePurgingMaxJobs  = 1
+        , cronNetsSignConfig              = Nothing
         , cronPdfToolsLambdaConf = unexpectedError "cronPdfToolsLambdaConf undefined"
-        , cronMonthlyInvoiceConf         = cronMonthlyInvoiceConf
-        , cronStatsDConf                 = Nothing
-        , cronEIDServiceConf             = Nothing
-        , cronKinesisStream              = unexpectedError "cronKinesisStream undefined"
+        , cronMonthlyInvoiceConf          = cronMonthlyInvoiceConf
+        , cronStatsDConf                  = Nothing
+        , cronEIDServiceConf              = Nothing
+        , cronKinesisStream               = unexpectedError "cronKinesisStream undefined"
+        , cronUseFolderListCallsByDefault = False
         }
 
       -- make timeouts small, so that the test runs faster

@@ -52,6 +52,7 @@ import PadApplication.Types
 import SealingMethod
 import SMS.Types
 import Tag
+import UserGroup.FolderListCallsTransition
 import UserGroup.Internal
 import UserGroup.Types.PaymentPlan
 
@@ -248,7 +249,7 @@ defaultUserGroupSettings = UserGroupSettings
   , legalText                  = False
   , requireBPIDForNewDoc       = False
   , sendTimeoutNotification    = False
-  , useFolderListCalls         = False
+  , useFolderListCalls         = defaultUseFolderListCalls
   , totpIsMandatory            = False
   , sessionTimeoutSecs         = Nothing
   , portalUrl                  = Nothing

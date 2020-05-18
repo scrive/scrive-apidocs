@@ -40,6 +40,7 @@ import RoutingTable
 import Templates
 import User.Email
 import User.Model
+import UserGroup.FolderListCallsTransition
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -74,6 +75,11 @@ main = withCurlDo $ do
 
   CmdConf {..}               <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   appConf                    <- readConfig putStrLn config
+
+  -- Transition to folder list calls
+  when (useFolderListCallsByDefault appConf) $ do
+    enableFolderListCallsForDefaultUserGroupSettings
+
   case monitoringConfig appConf of
     Just conf -> void $ startMonitoringServer conf
     Nothing   -> return ()

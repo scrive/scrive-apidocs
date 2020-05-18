@@ -59,6 +59,7 @@ data CronConf = CronConf
   , cronStatsDConf                 :: !(Maybe StatsDConf)
   , cronEIDServiceConf             :: Maybe EIDServiceConf
   , cronKinesisStream             :: Maybe KinesisConf
+  , cronUseFolderListCallsByDefault :: Bool
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -115,6 +116,10 @@ unjsonCronConf =
     <*> fieldOpt "kinesis_stream"
                  cronKinesisStream
                  "Configuration of kinesis message stream"
+    <*> field "use_folder_list_calls_by_default"
+              cronUseFolderListCallsByDefault
+              "Enable folder list calls for default user group settings"
+
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf

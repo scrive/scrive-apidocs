@@ -499,6 +499,11 @@ viewUserGroup model ug address settings =
                 settings.forceHidePN
                 (SetBoolField "forceHidePN")
                 [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "Use folder list calls"
+                "Use folder based list calls instead of legacy ones."
+                settings.useFolderListCalls
+                (SetBoolField "useFolderListCalls")
+                [ readonly ug.settingsIsInherited ]
             , formCheckboxRowM "Immediate trash"
                 "If enabled, documents in trash will be deleted as soon as possible instead of waiting for 30 days."
                 settings.immediateTrash

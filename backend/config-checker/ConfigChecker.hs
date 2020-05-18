@@ -102,7 +102,8 @@ checkFieldsEqualAppConfCronConf
     _gaToken            _trackjsToken       _zendeskKey         _hubspotConf
     salesforceConf      _netsConfig         _monitoringConfig   _isAPILogEnabled
     netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf eidServiceConf
-    _ssoConf            kinesisStream       _postSignViewRedirectURL)
+    _ssoConf            kinesisStream       _postSignViewRedirectURL
+    useFolderListCallsByDefault)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -112,7 +113,8 @@ checkFieldsEqualAppConfCronConf
     _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
     _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs _cronConsumerFilePurgingMaxJobs
      cronNetsSignConfig           cronPdfToolsLambdaConf          _cronMonthlyInvoiceConf
-    _cronStatsDConf               cronEIDServiceConf              cronKinesisStream)
+    _cronStatsDConf               cronEIDServiceConf              cronKinesisStream
+    cronUseFolderListCallsByDefault)
 
   = checkEq "amazon"               amazonConfig       cronAmazonConfig       *>
     checkEq "database"             dbConfig           cronDBConfig           *>
@@ -124,8 +126,12 @@ checkFieldsEqualAppConfCronConf
     checkEq "salesforce"           salesforceConf     cronSalesforceConf     *>
     checkEq "nets_sign"            netsSignConfig     cronNetsSignConfig     *>
     checkEq "pdftools_lambda"      pdfToolsLambdaConf cronPdfToolsLambdaConf *>
-    checkEq "eid_service"          eidServiceConf cronEIDServiceConf *>
-    checkEq "kinesis.region"       (kinesisConfRegion <$> kinesisStream) (kinesisConfRegion <$> cronKinesisStream)
+    checkEq "eid_service"          eidServiceConf     cronEIDServiceConf *>
+    checkEq "kinesis.region"       (kinesisConfRegion <$> kinesisStream)
+                                   (kinesisConfRegion <$> cronKinesisStream) *>
+    checkEq "use_folder_list_calls_by_default"
+            useFolderListCallsByDefault
+            cronUseFolderListCallsByDefault
 
   where
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
@@ -144,7 +150,8 @@ checkFieldsEqualAppConfMailerConf
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
-    _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL)
+    _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL
+    _useFolderListCallsByDefault)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -173,7 +180,8 @@ checkFieldsEqualAppConfMessengerConf
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
-    _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL)
+    _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL
+    _useFolderListCallsByDefault)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig

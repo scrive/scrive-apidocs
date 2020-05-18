@@ -199,6 +199,7 @@ companySettingsJson ugs = do
   value "padappmode" . padAppModeText $ ugs ^. #padAppMode
   value "padearchiveenabled" $ ugs ^. #padEarchiveEnabled
   value "forcehidepn" $ ugs ^. #forceHidePN
+  value "usefolderlistcalls" $ ugs ^. #useFolderListCalls
   value "idledoctimeoutpreparation" $ drp ^. #idleDocTimeoutPreparation
   value "idledoctimeoutclosed" $ drp ^. #idleDocTimeoutClosed
   value "idledoctimeoutcanceled" $ drp ^. #idleDocTimeoutCanceled

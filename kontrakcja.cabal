@@ -533,6 +533,7 @@ Library
                  , User.Utils
                  , UserGroup
                  , UserGroup.API
+                 , UserGroup.FolderListCallsTransition
                  , UserGroup.JSON
                  , UserGroup.Types
                  , UserGroup.Types.PaymentPlan

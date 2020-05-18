@@ -536,22 +536,23 @@ getUserGroupSettingsChange = do
   mcompanycgiserviceid <- fmap emptyToNothing <$> getField "companycgiserviceid"
   mcompanyidledoctimeoutpreparation <- getIdleDocTimeoutField
     "companyidledoctimeoutpreparation"
-  mcompanyidledoctimeoutclosed <- getIdleDocTimeoutField "companyidledoctimeoutclosed"
+  mcompanyidledoctimeoutclosed    <- getIdleDocTimeoutField "companyidledoctimeoutclosed"
   mcompanyidledoctimeoutcanceled <- getIdleDocTimeoutField "companyidledoctimeoutcanceled"
   mcompanyidledoctimeouttimedout <- getIdleDocTimeoutField "companyidledoctimeouttimedout"
   mcompanyidledoctimeoutrejected <- getIdleDocTimeoutField "companyidledoctimeoutrejected"
-  mcompanyidledoctimeouterror <- getIdleDocTimeoutField "companyidledoctimeouterror"
-  mcompanyimmediatetrash <- getField "companyimmediatetrash"
-  mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
+  mcompanyidledoctimeouterror     <- getIdleDocTimeoutField "companyidledoctimeouterror"
+  mcompanyimmediatetrash          <- getField "companyimmediatetrash"
+  mcompanysmsprovider             <- fmap maybeRead <$> getField' $ "companysmsprovider"
   mcompanypadappmode <- fmap padAppModeFromText <$> getField' $ "companypadappmode"
-  mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
-  mcompanyforcehidepn <- getField "companyforcehidepn"
+  mcompanypadearchiveenabled      <- getField "companypadearchiveenabled"
+  mcompanyforcehidepn             <- getField "companyforcehidepn"
+  mcompanyusefolderlistcalls      <- getField "companyusefolderlistcalls"
   mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
-  mcompanytotpismandatory <- getField "companytotpismandatory"
-  mcompanysessiontimeout <- getSessionTimeoutField "companysessiontimeout"
-  mcompanyportalurl <- fmap emptyToNothing <$> getField "companyportalurl"
+  mcompanytotpismandatory         <- getField "companytotpismandatory"
+  mcompanysessiontimeout          <- getSessionTimeoutField "companysessiontimeout"
+  mcompanyportalurl               <- fmap emptyToNothing <$> getField "companyportalurl"
   mcompanyeidservicetoken <- fmap emptyToNothing <$> getField "companyeidservicetoken"
-  mcompanysealingmethod <-
+  mcompanysealingmethod           <-
     fmap sealingMethodFromText <$> getField' $ "companysealingmethod"
   mcompanydocumentsessiontimeout <- getSessionTimeoutField "companydocumentsessiontimeout"
   mcompanyhaspostsignview        <- getField "companyhaspostsignview"
@@ -584,6 +585,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #smsProvider)               mcompanysmsprovider
     . maybe identity (set #padAppMode)                mcompanypadappmode
     . maybe identity (set #forceHidePN . (== "true")) mcompanyforcehidepn
+    . maybe identity (set #useFolderListCalls . (== "true")) mcompanyusefolderlistcalls
     . maybe identity (set #padEarchiveEnabled . (== "true")) mcompanypadearchiveenabled
     . maybe identity
             (set #sendTimeoutNotification . (== "true"))

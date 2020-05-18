@@ -165,6 +165,9 @@ setBoolField name value ug =
         "forceHidePN" ->
             modifySettings (\s -> { s | forceHidePN = value }) ug
 
+        "useFolderListCalls" ->
+            modifySettings (\s -> { s | useFolderListCalls = value }) ug
+
         "immediateTrash" ->
             modifySettings (\s -> { s | immediateTrash = value }) ug
 
@@ -264,6 +267,7 @@ type alias Settings =
     , padAppMode : PadAppMode
     , padEarchiveEnabled : Bool
     , forceHidePN : Bool
+    , useFolderListCalls : Bool
     , idleDocTimeoutPreparation : Maybe Int
     , idleDocTimeoutClosed : Maybe Int
     , idleDocTimeoutCancelled : Maybe Int
@@ -292,6 +296,7 @@ settingsDecoder =
         |> DP.required "padappmode" (JD.string |> JD.andThen padAppModeDecoder)
         |> DP.required "padearchiveenabled" JD.bool
         |> DP.required "forcehidepn" JD.bool
+        |> DP.required "usefolderlistcalls" JD.bool
         |> DP.required "idledoctimeoutpreparation" (JD.int |> JD.nullable)
         |> DP.required "idledoctimeoutclosed" (JD.int |> JD.nullable)
         |> DP.required "idledoctimeoutcanceled" (JD.int |> JD.nullable)
@@ -494,6 +499,7 @@ formValuesSettings settings =
     , ( "companypadappmode", encodePadAppMode settings.padAppMode )
     , ( "companypadearchiveenabled", boolToJson settings.padEarchiveEnabled )
     , ( "companyforcehidepn", boolToJson settings.forceHidePN )
+    , ( "companyusefolderlistcalls", boolToJson settings.useFolderListCalls )
     , ( "companyimmediatetrash", boolToJson settings.immediateTrash )
     , ( "companyidledoctimeoutpreparation", fromIntWithEmpty settings.idleDocTimeoutPreparation )
     , ( "companyidledoctimeoutclosed", fromIntWithEmpty settings.idleDocTimeoutClosed )

@@ -84,6 +84,7 @@ data AppConf = AppConf
   , ssoConf            :: Maybe SSOConf
   , kinesisStream      :: Maybe KinesisConf
   , postSignViewRedirectURL :: Text
+  , useFolderListCallsByDefault :: Bool
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -148,6 +149,9 @@ unjsonAppConf =
     <*> field "postsignview_redirect_url"
               postSignViewRedirectURL
               "Sign-up url linked to by the post sign view"
+    <*> field "use_folder_list_calls_by_default"
+              useFolderListCallsByDefault
+              "Enable folder list calls for default user group settings"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

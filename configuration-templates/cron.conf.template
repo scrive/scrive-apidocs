@@ -96,5 +96,6 @@
         "script_path": "pure_sql/invoice_stats.sql",
         "recipient_name": "Invoicing Stats",
         "recipient_email": "invoicing-stats@scrive.com"
-    }
+    },
+    "use_folder_list_calls_by_default": true
 }
