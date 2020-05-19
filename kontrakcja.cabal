@@ -299,6 +299,7 @@ Library
                  , Doc.Tokens.Model
                  , Doc.Tokens.Tables
                  , Doc.Trigger
+                 , Doc.Validation.Starting
                  , Folder.API
                  , Folder.JSON
                  , Folder.Types
