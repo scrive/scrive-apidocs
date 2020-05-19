@@ -1,10 +1,9 @@
 module Doc.AccessControl
   ( maybeAuthenticateSignatory
   , guardDocumentReadAccess
-  , guardDocumentUpdatePermission
-  , guardDocumentReadPermission
-  , docResources
+  , guardDocumentActionPermission
   , apiRequireDocPermission
+  , accessControlDocCheck
   )
 where
 
@@ -102,17 +101,9 @@ guardDocumentReadAccess mSignatoryId doc = do
       Just x  -> cont x
       Nothing -> return Nothing
 
-guardDocumentUpdatePermission :: Kontrakcja m => User -> Document -> m ()
-guardDocumentUpdatePermission user doc = do
-  requiredPerm <- apiRequireAnyPermission [ canDo UpdateA res | res <- docResources doc ]
-  apiAccessControlWithError user
-                            requiredPerm
-                            (apiError documentActionForbidden)
-                            (return ())
-
-guardDocumentReadPermission :: Kontrakcja m => User -> Document -> m ()
-guardDocumentReadPermission user doc = do
-  requiredPerm <- apiRequireAnyPermission [ canDo ReadA res | res <- docResources doc ]
+guardDocumentActionPermission :: Kontrakcja m => AccessAction -> User -> Document -> m ()
+guardDocumentActionPermission action user doc = do
+  requiredPerm <- apiRequireAnyPermission [ canDo action res | res <- docResources doc ]
   apiAccessControlWithError user
                             requiredPerm
                             (apiError documentActionForbidden)
@@ -163,14 +154,6 @@ maybeAuthenticateSignatory doc slid = do
       slid
       doc
     else return Nothing
-
-docResources :: Document -> [AccessResource]
-docResources doc =
-  let folderId = documentfolderid doc
-  in  if
-        | isDocumentShared doc -> [DocumentInFolderR folderId, SharedTemplateR folderId]
-        | isPreparation doc -> [DocumentInFolderR folderId]
-        | otherwise -> [DocumentInFolderR folderId, DocumentAfterPreparationR folderId]
 
 apiRequireDocPermission
   :: Kontrakcja m => AccessAction -> Document -> m PermissionCondition

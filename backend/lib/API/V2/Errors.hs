@@ -274,8 +274,6 @@ tryToConvertConditionalExceptionIntoAPIError = foldr
   , convertShortDocumentIDHasNoMatch
   , convertDocumentTypeShouldBe
   , convertDocumentStatusShouldBe
-  , convertUserShouldBeSelfOrCompanyAdmin
-  , convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument
   , convertSignatoryLinkDoesNotExist
   , convertSigningPartyHasNotYetSignedOrApproved
   , convertSignatoryRoleIsNotSigningParty
@@ -314,19 +312,6 @@ convertDocumentStatusShouldBe (SomeDBExtraException ex) = case cast ex of
   Just DocumentStatusShouldBe{} ->
     SomeDBExtraException . documentStateError $ "Invalid document state"
   Nothing -> SomeDBExtraException ex
-
-convertUserShouldBeSelfOrCompanyAdmin :: SomeDBExtraException -> SomeDBExtraException
-convertUserShouldBeSelfOrCompanyAdmin (SomeDBExtraException ex) = case cast ex of
-  Just UserShouldBeSelfOrCompanyAdmin{} -> SomeDBExtraException insufficientPrivileges
-  Nothing -> SomeDBExtraException ex
-
-convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument
-  :: SomeDBExtraException -> SomeDBExtraException
-convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument (SomeDBExtraException ex) =
-  case cast ex of
-    Just UserShouldBeDirectlyOrIndirectlyRelatedToDocument{} ->
-      SomeDBExtraException insufficientPrivileges
-    Nothing -> SomeDBExtraException ex
 
 convertSignatoryLinkDoesNotExist :: SomeDBExtraException -> SomeDBExtraException
 convertSignatoryLinkDoesNotExist (SomeDBExtraException ex) = case cast ex of

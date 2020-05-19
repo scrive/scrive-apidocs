@@ -113,7 +113,7 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   fetchOne runIdentity >>= assertEqual "Document is scheduled for extending" True
 
   -- Purge document
-  withDocumentID did . void $ randomUpdate (ArchiveDocument (user ^. #id) . systemActor)
+  withDocumentID did . void $ randomUpdate =<< runArchiveAction user ArchiveDocument
   modifyTestTime (31 `daysAfter`)
   purgedcount <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 purgedcount

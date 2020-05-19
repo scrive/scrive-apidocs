@@ -2,6 +2,8 @@
 module Doc.Model.Update
   ( AddDocumentAttachment(..)
   , ArchiveDocument(..)
+  , runArchiveAction
+  , runArchiveActionWithAllRoles
   , AttachFile(..)
   , DetachFile(..)
   , AppendSealedFile(..)
@@ -89,6 +91,7 @@ module Doc.Model.Update
 import Control.Arrow (second)
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.State.Class
 import Crypto.RNG
 import Data.Decimal (realFracToDecimal)
 import Data.Int
@@ -101,6 +104,9 @@ import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
+import AccessControl.Check
+import AccessControl.Model
+import AccessControl.Types
 import API.APIVersion
 import Control.Monad.Trans.Instances ()
 import DataRetentionPolicy
@@ -498,74 +504,109 @@ instance
       )
       actor
 
-data ArchiveDocument = ArchiveDocument UserID Actor
+
+-- when hasDeleteDocPermission delete signatory link of author
+-- delete signatory links of all users in ugids
+-- delete signatory link of user
+
+sqlWhereSignatoryLinkCanBeDeleted
+  :: (MonadState v m, SqlWhere v) => Bool -> [UserGroupID] -> UserID -> m ()
+sqlWhereSignatoryLinkCanBeDeleted hasDeleteDocPerm ugidsWithUpdateUserPerm uid =
+  sqlWhereAny
+    . catMaybes
+    $ [  -- delete own signatory link
+        Just $ sqlWhereEq "signatory_links.user_id" uid
+         -- delete document for all signatories, who can be updated
+      , Just . sqlWhereExists . sqlSelect "users" $ do
+        sqlWhere "signatory_links.user_id = users.id"
+        sqlWhereIn "users.user_group_id" ugidsWithUpdateUserPerm
+      , if hasDeleteDocPerm
+        then
+                 -- delete doc from Folder == delete authors signatory link
+             Just . sqlWhereExists . sqlSelect "documents" $ do
+          sqlWhere "signatory_links.id = documents.author_id"
+          sqlWhere "documents.id = signatory_links.document_id"
+        else Nothing
+      ]
+
+runArchiveAction
+  :: (DocumentMonad m, MonadThrow m, DBUpdate m q a, MonadLog m)
+  => User
+  -> (Bool -> [UserGroupID] -> UserID -> q)
+  -> m q
+runArchiveAction user action = do
+  allUserRoles <- getRolesIncludingInherited user
+  runArchiveActionWithAllRoles user allUserRoles action
+
+runArchiveActionWithAllRoles
+  :: (DocumentMonad m, MonadThrow m, DBUpdate m q a, MonadLog m)
+  => User
+  -> [AccessRole]
+  -> (Bool -> [UserGroupID] -> UserID -> q)
+  -> m q
+runArchiveActionWithAllRoles user allUserRoles action = do
+  hasDeleteDocPerm <- accessControlDocCheck DeleteA allUserRoles <$> theDocument
+  let toMUgidWithUpdateUserPerm perm = case perm of
+        Permission PermCanDo UpdateA (UserInGroupR ugid) -> Just ugid
+        _ -> Nothing
+      ugidsWithUpdateUserPerm = mapMaybe toMUgidWithUpdateUserPerm
+        $ concatMap (hasPermissions . accessRoleTarget) allUserRoles
+  return $ action hasDeleteDocPerm ugidsWithUpdateUserPerm (user ^. #id)
+
+data ArchiveDocument = ArchiveDocument Bool [UserGroupID] UserID
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument Bool where
-  dbUpdate (ArchiveDocument uid _actor) = updateDocumentWithID $ \did -> do
-    now <- currentTime
-    runQuery_ . sqlUpdate "signatory_links" $ do
-      sqlSet "deleted" now
-      sqlResult "id"
+  dbUpdate (ArchiveDocument hasDeleteDocPerm ugidsWithUpdateUserPerm uid) =
+    updateDocumentWithID $ \did -> do
+      now <- currentTime
+      runQuery_ . sqlUpdate "signatory_links" $ do
+        sqlSet "deleted" now
+        sqlResult "id"
+        sqlWhereSignatoryLinkCanBeDeleted hasDeleteDocPerm ugidsWithUpdateUserPerm uid
 
-      sqlWhereExists . sqlSelect "users" $ do
-        sqlJoinOn
-          "users AS same_usergroup_users"
-          "(users.user_group_id = same_usergroup_users.user_group_id OR users.id = same_usergroup_users.id)"
-        sqlWhere "signatory_links.user_id = users.id"
+        sqlWhereExists . sqlSelect "documents" $ do
+          sqlWhere $ "signatory_links.document_id =" <?> did
+          sqlWhere "documents.id = signatory_links.document_id"
 
-        sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid
-        sqlWhereUserIsSelfOrCompanyAdmin
+          sqlWhereDocumentIsNotDeleted
+          sqlWhereDocumentStatusIsOneOf
+            [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
-      sqlWhereExists . sqlSelect "documents" $ do
-        sqlWhere $ "signatory_links.document_id =" <?> did
-        sqlWhere "documents.id = signatory_links.document_id"
+      -- Synchronize with documents
+      slids :: [SignatoryLinkID] <- fetchMany runIdentity
+      runQuery_ . sqlUpdate "documents" $ do
+        sqlSet "author_deleted" now
+        sqlWhereDocumentIDIs did
+        sqlWhereIn "author_id" slids
 
-        sqlWhereDocumentIsNotDeleted
-        sqlWhereDocumentStatusIsOneOf
-          [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
+      return . not null $ slids
 
-    -- Synchronize with documents
-    slids :: [SignatoryLinkID] <- fetchMany runIdentity
-    runQuery_ . sqlUpdate "documents" $ do
-      sqlSet "author_deleted" now
-      sqlWhereDocumentIDIs did
-      sqlWhereIn "author_id" slids
-
-    return . not null $ slids
-
-data ReallyDeleteDocument = ReallyDeleteDocument UserID Actor
+data ReallyDeleteDocument = ReallyDeleteDocument Bool [UserGroupID] UserID
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ReallyDeleteDocument Bool where
-  dbUpdate (ReallyDeleteDocument uid _actor) = updateDocumentWithID $ \did -> do
-    now <- currentTime
-    runQuery_ . sqlUpdate "signatory_links" $ do
-      sqlSet "really_deleted" now
-      sqlResult "id"
+  dbUpdate (ReallyDeleteDocument hasDeleteDocPerm ugidsWithUpdateUserPerm uid) =
+    updateDocumentWithID $ \did -> do
+      now <- currentTime
+      runQuery_ . sqlUpdate "signatory_links" $ do
+        sqlSet "really_deleted" now
+        sqlResult "id"
+        sqlWhereSignatoryLinkCanBeDeleted hasDeleteDocPerm ugidsWithUpdateUserPerm uid
 
-      sqlWhereExists . sqlSelect "users" $ do
-        sqlJoinOn
-          "users AS same_usergroup_users"
-          "(users.user_group_id = same_usergroup_users.user_group_id OR users.id = same_usergroup_users.id)"
-        sqlWhere "signatory_links.user_id = users.id"
+        sqlWhereExists . sqlSelect "documents" $ do
+          sqlWhere $ "signatory_links.document_id =" <?> did
+          sqlWhere "documents.id = signatory_links.document_id"
 
-        sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid
-        sqlWhereUserIsSelfOrCompanyAdmin
+          sqlWhereDocumentIsDeleted
+          sqlWhereDocumentIsNotReallyDeleted
+          sqlWhereDocumentStatusIsOneOf
+            [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
-      sqlWhereExists . sqlSelect "documents" $ do
-        sqlWhere $ "signatory_links.document_id =" <?> did
-        sqlWhere "documents.id = signatory_links.document_id"
+      -- Synchronize with documents
+      slids :: [SignatoryLinkID] <- fetchMany runIdentity
+      runQuery_ . sqlUpdate "documents" $ do
+        sqlSet "author_really_deleted" now
+        sqlWhereDocumentIDIs did
+        sqlWhereIn "author_id" slids
 
-        sqlWhereDocumentIsDeleted
-        sqlWhereDocumentIsNotReallyDeleted
-        sqlWhereDocumentStatusIsOneOf
-          [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
-
-    -- Synchronize with documents
-    slids :: [SignatoryLinkID] <- fetchMany runIdentity
-    runQuery_ . sqlUpdate "documents" $ do
-      sqlSet "author_really_deleted" now
-      sqlWhereDocumentIDIs did
-      sqlWhereIn "author_id" slids
-
-    return . not null $ slids
+      return . not null $ slids
 
 
 -- | Attach a main file to a document associating it with preparation
@@ -1442,33 +1483,27 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                    , documentsignatorylinks = newSignLinks
                    }
 
-data RestoreArchivedDocument = RestoreArchivedDocument User Actor
+data RestoreArchivedDocument = RestoreArchivedDocument Bool [UserGroupID] UserID
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RestoreArchivedDocument () where
-  dbUpdate (RestoreArchivedDocument user _actor) = updateDocumentWithID $ \did -> do
-    kRunManyOrThrowWhyNot . sqlUpdate "signatory_links" $ do
-      sqlSet "deleted" (Nothing :: Maybe UTCTime)
-      sqlResult "id"
+  dbUpdate (RestoreArchivedDocument hasDeleteDocPerm ugidsWithUpdateUserPerm uid) =
+    updateDocumentWithID $ \did -> do
+      kRunManyOrThrowWhyNot . sqlUpdate "signatory_links" $ do
+        sqlSet "deleted" (Nothing :: Maybe UTCTime)
+        sqlResult "id"
 
-      sqlWhereExists . sqlSelect "users" $ do
-        sqlJoinOn
-          "users AS same_usergroup_users"
-          "(users.user_group_id = same_usergroup_users.user_group_id OR users.id = same_usergroup_users.id)"
-        sqlWhere "signatory_links.user_id = users.id"
+        sqlWhereSignatoryLinkCanBeDeleted hasDeleteDocPerm ugidsWithUpdateUserPerm uid
 
-        sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument (user ^. #id)
-        sqlWhereUserIsSelfOrCompanyAdmin
+        sqlWhereExists . sqlSelect "documents" $ do
+          sqlWhereDocumentWasNotPurged
+          sqlWhere $ "signatory_links.document_id =" <?> did
+          sqlWhere "documents.id = signatory_links.document_id"
 
-      sqlWhereExists . sqlSelect "documents" $ do
-        sqlWhereDocumentWasNotPurged
-        sqlWhere $ "signatory_links.document_id =" <?> did
-        sqlWhere "documents.id = signatory_links.document_id"
-
-    -- Synchronize with documents
-    slids :: [SignatoryLinkID] <- fetchMany runIdentity
-    runQuery_ . sqlUpdate "documents" $ do
-      sqlSet "author_deleted" (Nothing :: Maybe UTCTime)
-      sqlWhereDocumentIDIs did
-      sqlWhereIn "author_id" slids
+      -- Synchronize with documents
+      slids :: [SignatoryLinkID] <- fetchMany runIdentity
+      runQuery_ . sqlUpdate "documents" $ do
+        sqlSet "author_deleted" (Nothing :: Maybe UTCTime)
+        sqlWhereDocumentIDIs did
+        sqlWhereIn "author_id" slids
 
 {- |
     Links up a signatory link to a user account.  This should happen when

@@ -9,7 +9,7 @@ import Test.Framework
 import AccessControl.Model
 import AccessControl.Types
 import Attachment.Model
-import DB.Query
+import DB.Query (dbUpdate)
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.DocControl
 import Doc.DocumentID (DocumentID)

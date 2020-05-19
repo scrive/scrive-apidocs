@@ -894,7 +894,9 @@ apiCallV1Prolong did = logDocument did . api $ do
   checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
+    requiredPerm <-
+      apiRequireAnyPermission . map (canDo UpdateA) . docResources =<< theDocument
+    hasPermission <- apiAccessControlCheck user requiredPerm
     unless hasPermission . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author[s admin]."
     unlessM (isTimedout <$> theDocument) . throwM . SomeDBExtraException $ conflictError
@@ -1236,7 +1238,9 @@ apiCallV1Remind did = logDocument did . api $ do
     unlessM (isPending <$> theDocument) $ do
       throwM . SomeDBExtraException $ serverError
         "Can't send reminder for documents that are not pending"
-    hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
+    requiredPerm <-
+      apiRequireAnyPermission . map (canDo UpdateA) . docResources =<< theDocument
+    hasPermission <- apiAccessControlCheck user requiredPerm
     unless hasPermission . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author[s admin]."
     void $ sendAllReminderEmailsExceptAuthor actor False
@@ -1268,7 +1272,7 @@ apiCallV1Forward did = logDocument did . api $ do
 
 apiCallV1Delete :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Delete did = logDocument did . api $ do
-  (user, actor, _) <- getAPIUser APIDocSend
+  (user, _, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     mauser <- theDocument >>= \d -> case getAuthorUserId d of
       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
@@ -1282,7 +1286,7 @@ apiCallV1Delete did = logDocument did . api $ do
             Nothing -> False
     unless haspermission . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not connected to document."
-    deleted <- dbUpdate $ ArchiveDocument (user ^. #id) actor
+    deleted <- dbUpdate =<< runArchiveAction user ArchiveDocument
     unless deleted . throwM . SomeDBExtraException $ conflictError
       "Document can't be deleted."
     Accepted <$> J.runJSONGenT (return ())
@@ -1290,7 +1294,7 @@ apiCallV1Delete did = logDocument did . api $ do
 
 apiCallV1ReallyDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallV1ReallyDelete did = logDocument did . api $ do
-  (user, actor, _) <- getAPIUser APIDocSend
+  (user, _, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     mauser <- theDocument >>= \d -> case getAuthorUserId d of
       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
@@ -1304,7 +1308,7 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
             Nothing -> False
     unless haspermission . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not connected to document."
-    reallydeleted <- dbUpdate $ ReallyDeleteDocument (user ^. #id) actor
+    reallydeleted <- dbUpdate $ ReallyDeleteDocument False [] (user ^. #id)
     unless reallydeleted . throwM . SomeDBExtraException $ conflictError
       "Document can't be really deleted."
     Accepted <$> J.runJSONGenT (return ())

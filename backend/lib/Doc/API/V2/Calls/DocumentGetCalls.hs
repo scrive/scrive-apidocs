@@ -104,9 +104,10 @@ docApiV2List = api $ do
     then do {- new style -}
       -- we don't care if the role is explicit (set) or implicit (derived from
       -- some user or user group property), hence `nubBy`
-      userRoles <- nubOrdOn accessRoleTarget
+      allUserRoles <- nubOrdOn accessRoleTarget
         <$> dbQuery (GetRolesIncludingInherited user $ ugwpUG ugwp)
-      let allPerms = nubOrd . concatMap hasPermissions $ map accessRoleTarget userRoles
+      let allPerms =
+            nubOrd . concatMap hasPermissions $ map accessRoleTarget allUserRoles
           fullReadFids = (`mapMaybe` allPerms) $ \case
             Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
             _ -> Nothing
@@ -139,7 +140,9 @@ docApiV2List = api $ do
         headers
         nullRsFlags
         (listToJSONBS
-          (allDocsCount, (\d -> (documentAccessByFolder user d userRoles, d)) <$> allDocs)
+          ( allDocsCount
+          , (\d -> (documentAccessByFolder user d allUserRoles, d)) <$> allDocs
+          )
         )
         Nothing
     else do {- old style -}

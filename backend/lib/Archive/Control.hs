@@ -24,6 +24,9 @@ import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
+import AccessControl.Check
+import AccessControl.Model
+import AccessControl.Types
 import API.V2.Parameters (ApiV2Parameter(..), apiV2ParameterDefault)
 import AppView
 import Archive.View
@@ -35,7 +38,7 @@ import Doc.API.V1.DocumentToJSON
   , docForListCSVV1
   )
 import Doc.API.V2.JSON.List
-import Doc.DocInfo (isPending)
+import Doc.DocInfo
 import Doc.DocMails
 import Doc.DocStateData
 import Doc.DocumentID
@@ -59,25 +62,24 @@ handleArchiveDocumentsAction
   :: forall m a
    . Kontrakcja m
   => Text
-  -> (User -> Document -> Bool)
-  -> ((User, Actor) -> DocumentT m a)
+  -> (User -> [AccessRole] -> Document -> Bool)
+  -> (User -> [AccessRole] -> Actor -> DocumentT m a)
   -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
-  ctx  <- getContext
-  user <- guardJust $ contextUser ctx
-  ids  <- getCriticalField asValidDocIDList "documentids"
-  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ user ^. #id)
-                                 [DocumentFilterByDocumentIDs ids]
-                                 []
-                                 100
+  ctx          <- getContext
+  user         <- guardJust $ contextUser ctx
+  ids          <- getCriticalField asValidDocIDList "documentids"
+  allUserRoles <- getRolesIncludingInherited user
+  docs         <- dbQuery
+    $ GetDocuments DocumentsOfWholeUniverse [DocumentFilterByDocumentIDs ids] [] 100
   when (sort (map documentid docs) /= sort ids)
     $ failWithMsg user ids "Retrieved documents didn't match specified document ids"
-  if all (docPermission user) docs
+  if all (docPermission user allUserRoles) docs
     then do
       logInfo "Archive operation"
         $ object ["action" .= actionStr, identifier $ user ^. #id, identifier ids]
       let actor = userActor ctx user
-      forM docs . flip withDocument $ m (user, actor)
+      forM docs . flip withDocument $ m user allUserRoles actor
     else do
       failWithMsg user ids "User didn't have permission to do an action"
   where
@@ -90,8 +92,8 @@ handleArchiveDocumentsAction actionStr docPermission m = do
 handleArchiveDocumentsAction'
   :: Kontrakcja m
   => Text
-  -> (User -> Document -> Bool)
-  -> ((User, Actor) -> DocumentT m a)
+  -> (User -> [AccessRole] -> Document -> Bool)
+  -> (User -> [AccessRole] -> Actor -> DocumentT m a)
   -> m JSValue
 handleArchiveDocumentsAction' actionStr docPermission m = do
   void $ handleArchiveDocumentsAction actionStr docPermission m
@@ -99,10 +101,11 @@ handleArchiveDocumentsAction' actionStr docPermission m = do
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
-  handleArchiveDocumentsAction' "cancel/reject documents" isDocumentVisibleToUser
-    $ \(user, actor) -> do
+  handleArchiveDocumentsAction' "cancel/reject documents"
+                                (isSignatoryOrCanDoAction DeleteA)
+    $ \user allUserRoles actor -> do
         doc <- theDocument
-        when (isPending doc) $ if isAuthorOrAuthorsAdmin user doc
+        when (isPending doc) $ if canDoAction UpdateA user allUserRoles doc
           then do
             dbUpdate $ CancelDocument actor
             postDocumentCanceledChange =<< theDocument
@@ -113,55 +116,57 @@ handleDelete = do
             sl_actor <- signatoryActor ctx sl
             dbUpdate $ RejectDocument signatorylinkid (isApprover sl) Nothing sl_actor
             theDocument >>= postDocumentRejectedChange signatorylinkid Nothing
-        success <- dbUpdate $ ArchiveDocument (user ^. #id) actor
+        success <-
+          dbUpdate =<< runArchiveActionWithAllRoles user allUserRoles ArchiveDocument
         unless success internalError
-
 
 handleProlong :: Kontrakcja m => m JSValue
 handleProlong = do
-  let prolongable user doc =
-        isAuthorOrAuthorsAdmin user doc && documentstatus doc == Timedout
+  let prolongable user roles doc = canDoAction UpdateA user roles doc && isTimedout doc
   days <- getCriticalField asValidNumber "days"
   when (days < 1 || days > 365) internalError
-  handleArchiveDocumentsAction' "prolong documents" prolongable $ \(_, actor) -> do
+  handleArchiveDocumentsAction' "prolong documents" prolongable $ \_ _ actor -> do
     doc <- theDocument
     dbUpdate $ ProlongTimeoutedDocument days (documenttimezonename doc) actor
     triggerAPICallbackIfThereIsOne =<< theDocument
 
 handleReallyDelete :: Kontrakcja m => m JSValue
 handleReallyDelete = do
-  handleArchiveDocumentsAction' "really delete documents" isDocumentVisibleToUser
-    $ \(user, actor) -> do
-        success <- dbUpdate $ ReallyDeleteDocument (user ^. #id) actor
+  handleArchiveDocumentsAction' "really delete documents"
+                                (isSignatoryOrCanDoAction DeleteA)
+    $ \user allUserRoles _ -> do
+        success <-
+          dbUpdate =<< runArchiveActionWithAllRoles user allUserRoles ReallyDeleteDocument
         unless success internalError
 
 handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders =
-  handleArchiveDocumentsAction' "send reminders" isAuthorOrAuthorsAdmin $ \(_, actor) ->
-    do
-      remindedsiglinks <- sendAllReminderEmailsExceptAuthor actor False
-      when (null remindedsiglinks) internalError
+  handleArchiveDocumentsAction' "send reminders" (canDoAction UpdateA) $ \_ _ actor -> do
+    remindedsiglinks <- sendAllReminderEmailsExceptAuthor actor False
+    when (null remindedsiglinks) internalError
 
 handleCancel :: Kontrakcja m => m JSValue
 handleCancel =
-  handleArchiveDocumentsAction' "cancel documents" isAuthorOrAuthorsAdmin
-    $ \(_, actor) -> do
-        unlessM (isPending <$> theDocument) internalError
-        dbUpdate $ CancelDocument actor
-        postDocumentCanceledChange =<< theDocument
+  handleArchiveDocumentsAction' "cancel documents" (canDoAction UpdateA) $ \_ _ actor ->
+    do
+      unlessM (isPending <$> theDocument) internalError
+      dbUpdate $ CancelDocument actor
+      postDocumentCanceledChange =<< theDocument
 
 handleRestore :: Kontrakcja m => m JSValue
-handleRestore = handleArchiveDocumentsAction' "restore documents" isDocumentVisibleToUser
-  $ \(user, actor) -> dbUpdate $ RestoreArchivedDocument user actor
+handleRestore =
+  handleArchiveDocumentsAction' "restore documents" (isSignatoryOrCanDoAction DeleteA)
+    $ \user allUserRoles _ -> do
+        dbUpdate
+          =<< runArchiveActionWithAllRoles user allUserRoles RestoreArchivedDocument
 
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do
   logInfo_ "Downloading zip list"
   mentries <-
-    handleArchiveDocumentsAction "download zipped documents" isDocumentVisibleToUser
-    . const
-    $ do
-        docToEntry =<< theDocument
+    handleArchiveDocumentsAction "download zipped documents"
+                                 (isSignatoryOrCanDoAction ReadA)
+      $ \_ _ _ -> docToEntry =<< theDocument
   return . ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive
                                                   emptyArchive
                                                   (catMaybes mentries)
@@ -225,3 +230,11 @@ docToEntry doc = do
       content <- getFileIDContents fid
       return . Just $ toEntry (T.unpack name) 0 (BSL.pack $ BSS.unpack content)
     Nothing -> return Nothing
+
+canDoAction :: AccessAction -> User -> [AccessRole] -> Document -> Bool
+canDoAction action _ allUserRoles doc =
+  accessControlCheckAny allUserRoles [ canDo action res | res <- docResources doc ]
+
+isSignatoryOrCanDoAction :: AccessAction -> User -> [AccessRole] -> Document -> Bool
+isSignatoryOrCanDoAction action user allUserRoles doc =
+  isJust (getSigLinkFor user doc) || canDoAction action user allUserRoles doc

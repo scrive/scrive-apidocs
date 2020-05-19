@@ -12,8 +12,6 @@ import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryLinkID
 import MagicHash
 import MinutesTime
-import User.UserID
-import UserGroup.Types
 
 -- This is the part where we define all that could possibly go wrong
 -- with a document.
@@ -95,60 +93,6 @@ sqlWhereDocumentStatusIsOneOf sx = sqlWhereEVV
 
 sqlWhereDocumentStatusIs :: (MonadState v m, SqlWhere v) => DocumentStatus -> m ()
 sqlWhereDocumentStatusIs status = sqlWhereDocumentStatusIsOneOf [status]
-
-
-data UserShouldBeSelfOrCompanyAdmin = UserShouldBeSelfOrCompanyAdmin
-  { userShouldBeSelfOrCompanyAdminUserID    :: UserID
-  , userShouldBeSelfOrCompanyAdminUserEmail :: String
-  , userShouldBeSelfOrCompanyAdminUserGroupID :: UserGroupID
-  } deriving (Eq, Ord, Typeable, Show)
-
-instance ToJSValue UserShouldBeSelfOrCompanyAdmin where
-  toJSValue (UserShouldBeSelfOrCompanyAdmin d a b) = runJSONGen $ do
-    value "message"    ("User is not company admin" :: String)
-    value "user_id"    (show d)
-    value "user_email" a
-    value "company_id" (show b)
-
-instance DBExtraException UserShouldBeSelfOrCompanyAdmin
-
-sqlWhereUserIsSelfOrCompanyAdmin :: (MonadState v m, SqlWhere v) => m ()
-sqlWhereUserIsSelfOrCompanyAdmin = sqlWhereEVVV
-  ( UserShouldBeSelfOrCompanyAdmin
-  , "same_usergroup_users.id"
-  , "same_usergroup_users.email"
-  , "same_usergroup_users.user_group_id"
-  )
-  ("(users.id = same_usergroup_users.id" <+> "OR same_usergroup_users.is_company_admin)")
-
-data UserShouldBeDirectlyOrIndirectlyRelatedToDocument =
-  UserShouldBeDirectlyOrIndirectlyRelatedToDocument
-  { userShouldBeDirectlyOrIndirectlyRelatedToDocumentUserID        :: UserID
-  , userShouldBeDirectlyOrIndirectlyRelatedToDocumentDocumentID    :: DocumentID
-  , userShouldBeDirectlyOrIndirectlyRelatedToDocumentDocumentTitle :: String
-  , userShouldBeDirectlyOrIndirectlyRelatedToDocumentUserEmail     :: String
-  } deriving (Eq, Ord, Typeable, Show)
-
-instance ToJSValue UserShouldBeDirectlyOrIndirectlyRelatedToDocument where
-  toJSValue (UserShouldBeDirectlyOrIndirectlyRelatedToDocument d a g b) = runJSONGen $ do
-    value "message"        ("User is not related to document" :: String)
-    value "user_id"        (show d)
-    value "document_id"    (show a)
-    value "document_title" g
-    value "user_email"     b
-
-instance DBExtraException UserShouldBeDirectlyOrIndirectlyRelatedToDocument
-
-sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument
-  :: (MonadState v m, SqlWhere v) => UserID -> m ()
-sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid = sqlWhereEVVV
-  ( UserShouldBeDirectlyOrIndirectlyRelatedToDocument uid
-  , "(SELECT signatory_links.document_id)"
-  , "(SELECT documents.title FROM documents"
-    <+> "WHERE documents.id = signatory_links.document_id)"
-  , "(SELECT email FROM users WHERE id =" <?> uid <> ")"
-  )
-  ("same_usergroup_users.id =" <?> uid)
 
 newtype DocumentDoesNotExist = DocumentDoesNotExist DocumentID
   deriving (Eq, Ord, Show, Typeable)

@@ -4,6 +4,7 @@ module AccessControl.Model
   , AccessRoleGet(..)
   , GetRoles(..)
   , GetRolesIncludingInherited(..)
+  , getRolesIncludingInherited
   , AccessControlDeleteRolesByFolder(..)
   , AccessControlGetExplicitRoles(..)
   , AccessControlDeleteRolesByUserGroup(..)
@@ -16,6 +17,7 @@ module AccessControl.Model
 import Control.Monad.Catch
 import Control.Monad.Extra (concatForM)
 import Control.Monad.State.Class (MonadState)
+import Data.List.Extra (nubOrdOn)
 
 import AccessControl.Types
 import DB
@@ -108,6 +110,11 @@ derivedRoles user ug =
             <> maybe [] (\hfid -> [FolderUserAR hfid]) (user ^. #homeFolderID)
             <> [UserAR uid]
   in  AccessRoleImplicitUser uid <$> adminOrUserRoles <> userRoles
+
+getRolesIncludingInherited :: (MonadDB m, MonadThrow m) => User -> m [AccessRole]
+getRolesIncludingInherited user = do
+  ug <- dbQuery . UserGroupGetByUserID $ user ^. #id
+  nubOrdOn accessRoleTarget <$> dbQuery (GetRolesIncludingInherited user ug)
 
 data GetRolesIncludingInherited = GetRolesIncludingInherited User UserGroup
 instance (MonadDB m, MonadThrow m) => DBQuery m GetRolesIncludingInherited [AccessRole] where

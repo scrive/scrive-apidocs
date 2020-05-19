@@ -18,6 +18,7 @@ tableEIDSignatures = tblTable
     , tblColumn { colName = "ocsp_response", colType = BinaryT }
     , tblColumn { colName = "signatory_ip", colType = TextT }
     , tblColumn { colName = "signatory_date_of_birth", colType = TextT }
+    , tblColumn { colName = "eid_service_json", colType = TextT }
     ]
 -- only one signature per signatory. can be relaxed later if necessary.
   , tblPrimaryKey  = pkOnColumn "signatory_link_id"

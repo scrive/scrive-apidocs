@@ -47,6 +47,7 @@ data DocumentAccessMode =
     -- If we ever want to drop DocumentAccessMode and use Roles, Permissions and Resources:
     --   - signatory should have ReadA access to DocumentR
     --   - admin/folder user should have ReadA access to DocumentR and DocumentSecretsR
+    deriving (Show)
 
 canSeeSignlinks :: DocumentAccess -> Bool
 canSeeSignlinks DocumentAccess { daAccessMode = AuthorDocumentAccess } = True
@@ -126,7 +127,11 @@ documentAccessModeForUser user document = case getSigLinkFor user document of
 documentAccessModeByFolder :: User -> Document -> [AccessRole] -> DocumentAccessMode
 documentAccessModeByFolder user document roles =
   case (getSigLinkFor user document, hasReadAccessForDocByFolder) of
-    (Just sl, True ) -> FolderDocumentAccess . Just $ signatorylinkid sl
+    (Just sl, True) -> if signatoryisauthor sl
+                       -- FIXME: Currently we use AuthorDocumentAccess to preserve legacy behavior of author.
+                       -- For author accessing his own document, frontend expects to see the "signatory" viewer role.
+      then AuthorDocumentAccess
+      else FolderDocumentAccess . Just $ signatorylinkid sl
     (Nothing, True ) -> FolderDocumentAccess Nothing
     (Just sl, False) -> SignatoryDocumentAccess $ signatorylinkid sl
     (Nothing, False) ->
@@ -142,13 +147,9 @@ documentAccessModeByFolder user document roles =
         <+> showt (documentid document)
         <+> "by folder without any permission. This should be caught earlier."
   where
-    hasReadAccessForDocByFolder = hasReadAccessForFolder (documentfolderid document)
-
-    hasReadAccessForFolder fid =
-      accessControlCheck (concatMap (hasPermissions . accessRoleTarget) roles) $ OrCond
-        [ Cond . canDo ReadA $ resource fid
-        | resource <- [DocumentInFolderR, DocumentAfterPreparationR]
-        ]
+    hasReadAccessForDocByFolder =
+      accessControlCheckAny roles
+        $ [ canDo ReadA resource | resource <- docResources document ]
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
 documentAccessForSlid slid document =

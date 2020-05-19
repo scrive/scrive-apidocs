@@ -1,10 +1,14 @@
 module AccessControl.Check
   ( accessControl
   , accessControlCheck
+  , accessControlCheckAll
+  , accessControlCheckAny
   , hasPermissions
+  , docResources
   , canDo
   , canGrant
   , alternativePermissionCondition
+  , accessControlDocCheck
   )
 where
 
@@ -13,6 +17,8 @@ import Data.List.Extra (nubOrd)
 
 import AccessControl.Types
 import DB
+import Doc.DocInfo (isDocumentShared, isPreparation)
+import Doc.Types.Document (Document(..))
 import Folder.Model
 import User.Model.Query
 import UserGroup.Model
@@ -34,17 +40,22 @@ canGrant = nubOrd . map (\p -> p { permKind = PermCanGrant }) . hasPermissions
 crudActions :: [AccessAction]
 crudActions = [CreateA, ReadA, UpdateA, DeleteA]
 
-accessControlWith :: (Monad m) => [Permission] -> PermissionCondition -> m a -> m a -> m a
-accessControlWith availablePerms requiredPerms onError onSuccess = do
-  if accessControlCheck availablePerms requiredPerms then onSuccess else onError
-
 accessControl :: (Monad m) => [AccessRole] -> PermissionCondition -> m a -> m a -> m a
-accessControl roles =
-  accessControlWith . join $ fmap (hasPermissions . accessRoleTarget) roles
+accessControl roles requiredPerms onError onSuccess = do
+  if accessControlCheck roles requiredPerms then onSuccess else onError
 
-accessControlCheck :: [Permission] -> PermissionCondition -> Bool
-accessControlCheck availablePerms =
-  evalPermissionCondition (\perm -> elem perm $ Data.List.Extra.nubOrd availablePerms)
+accessControlCheck :: [AccessRole] -> PermissionCondition -> Bool
+accessControlCheck roles =
+  let availablePerms = concatMap (hasPermissions . accessRoleTarget) roles
+  in  evalPermissionCondition (\perm -> elem perm $ Data.List.Extra.nubOrd availablePerms)
+
+accessControlCheckAll :: [AccessRole] -> [Permission] -> Bool
+accessControlCheckAll allUserRoles requiredPerms =
+  accessControlCheck allUserRoles . AndCond $ Cond <$> requiredPerms
+
+accessControlCheckAny :: [AccessRole] -> [Permission] -> Bool
+accessControlCheckAny allUserRoles requiredPerms =
+  accessControlCheck allUserRoles . OrCond $ Cond <$> requiredPerms
 
 evalPermissionCondition :: (Permission -> Bool) -> PermissionCondition -> Bool
 evalPermissionCondition f (Cond    p   ) = f p
@@ -149,3 +160,16 @@ hasPermissions (SharedTemplateUserAR fid) =
   [Permission PermCanDo ReadA $ SharedTemplateR fid]
 hasPermissions (EidImpersonatorAR ugid) =
   [Permission PermCanDo ReadA $ EidIdentityR ugid]
+
+docResources :: Document -> [AccessResource]
+docResources doc =
+  let folderId = documentfolderid doc
+  in  if
+        | isDocumentShared doc -> [DocumentInFolderR folderId, SharedTemplateR folderId]
+        | isPreparation doc -> [DocumentInFolderR folderId]
+        | otherwise -> [DocumentInFolderR folderId, DocumentAfterPreparationR folderId]
+
+
+accessControlDocCheck :: AccessAction -> [AccessRole] -> Document -> Bool
+accessControlDocCheck action allUserRoles doc =
+  accessControlCheckAny allUserRoles [ canDo action res | res <- docResources doc ]

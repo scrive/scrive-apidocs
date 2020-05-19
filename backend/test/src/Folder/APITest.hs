@@ -28,7 +28,6 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Model
-import Util.Actor
 import qualified Folder.Internal
 
 folderApiTests :: TestEnvSt -> Test
@@ -372,9 +371,7 @@ testCannotDeleteFolderWithOnlyTrashedDocument = do
   req      <- mkRequest POST []
   fidChild <- createFolder $ user ^. #homeFolderID
   doc      <- addRandomDocument (rdaDefault user) { rdaFolderId = fidChild }
-  now      <- currentTime
-  withDocument doc . void . randomUpdate $ \t ->
-    ArchiveDocument (user ^. #id) (systemActor t) { actorTime = now }
+  withDocument doc $ void . randomUpdate =<< runArchiveAction user ArchiveDocument
   res         <- fst <$> runTestKontra req ctx (folderAPIDelete fidChild)
   existsAfter <- isJust <$> dbQuery (FolderGet fidChild)
   assertEqual "Cannot delete folder with trashed document" 400 $ rsCode res
@@ -391,12 +388,9 @@ testCanDeleteFolderWithOnlyPurgedDocument = do
   req      <- mkRequest POST []
   fidChild <- createFolder $ user ^. #homeFolderID
   doc      <- addRandomDocument (rdaDefault user) { rdaFolderId = fidChild }
-  now      <- currentTime
   withDocument doc $ do
-    void . randomUpdate $ \t ->
-      ArchiveDocument (user ^. #id) (systemActor t) { actorTime = now }
-    void . randomUpdate $ \t ->
-      ReallyDeleteDocument (user ^. #id) (systemActor t) { actorTime = now }
+    void . randomUpdate =<< runArchiveAction user ArchiveDocument
+    void . randomUpdate =<< runArchiveAction user ReallyDeleteDocument
   modifyTestTime (31 `daysAfter`)
   void . dbUpdate $ PurgeDocuments 0
   res          <- fst <$> runTestKontra req ctx (folderAPIDelete fidChild)

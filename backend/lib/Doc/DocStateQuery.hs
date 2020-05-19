@@ -65,11 +65,10 @@ getDocumentByCurrentUser :: Kontrakcja m => DocumentID -> m Document
 getDocumentByCurrentUser docId = do
   user  <- guardJust . contextUser =<< getContext
   roles <- dbQuery $ GetRoles user
-  let availablePerm = concatMap (hasPermissions . accessRoleTarget) roles
   withDocumentID docId $ do
     mSL          <- getSigLinkFor user <$> theDocument
     requiredPerm <- theDocument >>= apiRequireDocPermission ReadA
-    let hasReadPermission = accessControlCheck availablePerm requiredPerm
+    let hasReadPermission = accessControlCheck roles requiredPerm
     if isJust mSL || hasReadPermission
       then theDocument
       else throwM . SomeDBExtraException $ insufficientPrivileges

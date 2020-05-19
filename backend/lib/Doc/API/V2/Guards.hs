@@ -14,10 +14,8 @@ module Doc.API.V2.Guards (
 -- * User guards
 , guardThatUserExists
 , guardThatUserIsAuthor
-, guardThatUserIsAuthorOrCompanyAdmin
-, guardThatUserIsAuthorOrDocumentIsShared
-, guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 , guardUserMayImpersonateUserGroupForEid
+, guardThatUserHasActionPermission
 -- * Signatory guards
 , guardGetSignatoryFromIdForDocument
 , guardSignatoryNeedsToIdentifyToView
@@ -88,22 +86,30 @@ guardDocumentStatus s doc = unless (documentstatus doc == s)
   where errorMsg = "The document status should be '" <> showt s <> "'."
 
 
-guardThatDocumentCanBeTrashedByUser :: Kontrakcja m => User -> DocumentID -> m ()
+guardThatDocumentCanBeTrashedByUser
+  :: Kontrakcja m => User -> [AccessRole] -> DocumentID -> m ()
 guardThatDocumentCanBeTrashedByUser =
   guardThatDocumentCanBeTrashedOrDeletedByUserWithCond
     (isNothing . signatorylinkdeleted)
     "The document is in Trash"
 
-guardThatDocumentCanBeDeletedByUser :: Kontrakcja m => User -> DocumentID -> m ()
+guardThatDocumentCanBeDeletedByUser
+  :: Kontrakcja m => User -> [AccessRole] -> DocumentID -> m ()
 guardThatDocumentCanBeDeletedByUser =
   guardThatDocumentCanBeTrashedOrDeletedByUserWithCond
     (isNothing . signatorylinkreallydeleted)
     "Document was purged"
 
 guardThatDocumentCanBeTrashedOrDeletedByUserWithCond
-  :: Kontrakcja m => (SignatoryLink -> Bool) -> Text -> User -> DocumentID -> m ()
-guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did =
-  withDocumentID did $ do
+  :: Kontrakcja m
+  => (SignatoryLink -> Bool)
+  -> Text
+  -> User
+  -> [AccessRole]
+  -> DocumentID
+  -> m ()
+guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user allUserRoles did
+  = withDocumentID did $ do
     let condAPIError = apiError . documentStateError $ errorMsg
     msl <- getSigLinkFor user <$> theDocument
     case msl of -- This might be a user with an account
@@ -114,7 +120,7 @@ guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did =
               "Document doesn't have author signatory link connected with user account"
         asl <-
           apiGuardJust (serverError msgNoAuthor) =<< (getAuthorSigLink <$> theDocument)
-        guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+        guardThatUserHasActionPermissionWithAllRoles DeleteA allUserRoles =<< theDocument
         unless (cond asl) condAPIError
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (not . isPending)
@@ -150,33 +156,22 @@ guardThatUserExists uid = do
 guardThatUserIsAuthor :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthor user = guardDocumentAuthorIs (\a -> user ^. #id == a ^. #id)
 
-guardThatUserIsAuthorOrCompanyAdmin :: Kontrakcja m => User -> Document -> m ()
-guardThatUserIsAuthorOrCompanyAdmin user = guardDocumentAuthorIs
-  (\a ->
-    (user ^. #id == a ^. #id)
-      || (user ^. #groupID == a ^. #groupID && user ^. #isCompanyAdmin)
-  )
+guardThatUserHasActionPermission
+  :: Kontrakcja m => AccessAction -> User -> Document -> m ()
+guardThatUserHasActionPermission action user doc = do
+  requiredPerm <- apiRequireAnyPermission [ canDo action res | res <- docResources doc ]
+  apiAccessControlWithError user
+                            requiredPerm
+                            (apiError documentActionForbidden)
+                            (return ())
 
-guardThatUserIsAuthorOrDocumentIsShared :: Kontrakcja m => User -> Document -> m ()
-guardThatUserIsAuthorOrDocumentIsShared user doc = do
-  guardDocumentAuthorIs
-    (\a ->
-      (user ^. #id == a ^. #id)
-        || (user ^. #groupID == a ^. #groupID && isDocumentShared doc)
-    )
-    doc
 
-guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
-  :: Kontrakcja m => User -> Document -> m ()
-guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc =
-  guardDocumentAuthorIs (userIsAuthorOrCompanyAdminOrDocumentIsShared user doc) doc
-
-userIsAuthorOrCompanyAdminOrDocumentIsShared :: User -> Document -> User -> Bool
-userIsAuthorOrCompanyAdminOrDocumentIsShared user doc author =
-  (user ^. #id == author ^. #id)
-    || (  (user ^. #groupID == author ^. #groupID)
-       && (user ^. #isCompanyAdmin || isDocumentShared doc)
-       )
+guardThatUserHasActionPermissionWithAllRoles
+  :: (Kontrakcja m) => AccessAction -> [AccessRole] -> Document -> m ()
+guardThatUserHasActionPermissionWithAllRoles action allUserRoles doc = do
+  if accessControlCheckAny allUserRoles [ canDo action res | res <- docResources doc ]
+    then return ()
+    else apiError documentActionForbidden
 
 guardThatObjectVersionMatchesIfProvided :: Kontrakcja m => DocumentID -> m ()
 guardThatObjectVersionMatchesIfProvided did = do
@@ -219,7 +214,7 @@ guardDocumentCreateInFolderIsAllowed user location =
 guardDocumentMoveIsAllowed :: Kontrakcja m => User -> FolderID -> FolderID -> m ()
 guardDocumentMoveIsAllowed user oldLocation newLocation =
   when (oldLocation /= newLocation)
-    $ guardFolderActionIsAllowed user [(CreateA, oldLocation), (DeleteA, oldLocation)]
+    $ guardFolderActionIsAllowed user [(CreateA, newLocation), (DeleteA, oldLocation)]
 
 -- | Make sure the given user (the document author) is allowed to use the
 -- display name and service id of the given user group.

@@ -179,9 +179,12 @@ folderAPIListDocs fid = api $ do
       [ "query_time"
           .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
       ]
+    allUserRoles <- getRolesIncludingInherited user
     let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
         jsonbs  = listToJSONBS
-          (allDocsCount, (\d -> (documentAccessForUser user d, d)) <$> allDocs)
+          ( allDocsCount
+          , (\d -> (documentAccessByFolder user d allUserRoles, d)) <$> allDocs
+          )
     return . Ok $ Response 200 headers nullRsFlags jsonbs Nothing
 
 fGetOrErrNotFound :: Kontrakcja m => FolderID -> m Folder

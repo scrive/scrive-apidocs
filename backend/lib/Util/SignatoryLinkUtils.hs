@@ -24,8 +24,6 @@ module Util.SignatoryLinkUtils (
   isApproverAndHasApproved,
   isApproverAndHasNotApproved,
   isAuthor,
-  isAuthorOrAuthorsAdmin,
-  isDocumentVisibleToUser,
   isSignatory,
   isApprover,
   isViewer,
@@ -198,16 +196,6 @@ hasConfirmationDelivery sl =
  -}
 isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
 isAuthor = isSigLinkFor signatoryisauthor
-
-isAuthorOrAuthorsAdmin :: User -> Document -> Bool
-isAuthorOrAuthorsAdmin user doc =
-  isAuthor (doc, user)
-    || (user ^. #isCompanyAdmin && documentauthorugid doc == Just (user ^. #groupID))
-
-isDocumentVisibleToUser :: User -> Document -> Bool
-isDocumentVisibleToUser user doc =
-  isJust (getSigLinkFor user doc) || isAuthorOrAuthorsAdmin user doc
-
 
 -- | Is the given SignatoryLink marked as a signatory (someone who must sign)?
 isSignatory :: (MaybeSignatoryLink msl) => msl -> Bool

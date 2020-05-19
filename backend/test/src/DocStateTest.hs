@@ -1039,7 +1039,8 @@ testArchiveDocumentPendingLeft = replicateM_ 10 $ do
                                                   , rdaStatuses = OneOf [Pending]
                                                   }
   withDocument doc $ do
-    res <- randomUpdate $ \t -> ArchiveDocument (author ^. #id) (systemActor t)
+
+    res <- randomUpdate =<< runArchiveAction author ArchiveDocument
     assertEqual "Document that is pending can't be archived" False res
 
 testArchiveDocumentAuthorRight :: TestEnv ()
@@ -1049,7 +1050,7 @@ testArchiveDocumentAuthorRight = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    void . randomUpdate $ ArchiveDocument (author ^. #id) . systemActor
+    void . randomUpdate $ ArchiveDocument True [] (author ^. #id)
     assertOneArchivedSigLink =<< theDocument
 
 testArchiveDocumentCompanyAdminRight :: TestEnv ()
@@ -1062,8 +1063,11 @@ testArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    void . randomUpdate $ ArchiveDocument (adminuser ^. #id) . systemActor
+    void . randomUpdate =<< runArchiveAction adminuser ArchiveDocument
     assertOneArchivedSigLink =<< theDocument
+
+
+
 
 testRestoreArchivedDocumentAuthorRight :: TestEnv ()
 testRestoreArchivedDocumentAuthorRight = replicateM_ 10 $ do
@@ -1072,8 +1076,8 @@ testRestoreArchivedDocumentAuthorRight = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    void . randomUpdate $ ArchiveDocument (author ^. #id) . systemActor
-    randomUpdate $ \t -> RestoreArchivedDocument author (systemActor t)
+    void . randomUpdate =<< runArchiveAction author ArchiveDocument
+    randomUpdate =<< runArchiveAction author RestoreArchivedDocument
     assertNoArchivedSigLink =<< theDocument
 
 testRestoreArchiveDocumentCompanyAdminRight :: TestEnv ()
@@ -1086,8 +1090,8 @@ testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    void . randomUpdate $ ArchiveDocument (author ^. #id) . systemActor
-    randomUpdate $ \t -> RestoreArchivedDocument adminuser (systemActor t)
+    void . randomUpdate =<< runArchiveAction author ArchiveDocument
+    randomUpdate =<< runArchiveAction adminuser RestoreArchivedDocument
 
     assertNoArchivedSigLink =<< theDocument
 
@@ -1147,14 +1151,13 @@ testReallyDeleteDocument = replicateM_ 10 $ do
     }
 
   withDocument doc $ do
-    res <- randomUpdate $ \t -> ReallyDeleteDocument (author ^. #id) (systemActor t)
+    res <- randomUpdate =<< runArchiveAction author ReallyDeleteDocument
     assertEqual "Document that is not deleted can't be really deleted" False res
 
-  withDocument doc . void $ randomUpdate (ArchiveDocument (author ^. #id) . systemActor)
-  withDocument doc . void $ randomUpdate
-    (ReallyDeleteDocument (author ^. #id) . systemActor)
+  withDocument doc $ void . randomUpdate =<< runArchiveAction author ArchiveDocument
+  withDocument doc $ void . randomUpdate =<< runArchiveAction author ReallyDeleteDocument
   withDocument doc $ do
-    res <- randomUpdate $ \t -> ReallyDeleteDocument (author ^. #id) (systemActor t)
+    res <- randomUpdate =<< runArchiveAction author ReallyDeleteDocument
     assertEqual "Document can't be really deleted twice" False res
 
   docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
@@ -1173,10 +1176,10 @@ testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    res <- randomUpdate $ \t -> ReallyDeleteDocument (adminuser ^. #id) (systemActor t)
+    res <- randomUpdate =<< runArchiveAction adminuser ReallyDeleteDocument
     assertEqual "Document that is not deleted can't be really deleted" False res
-    void . randomUpdate $ ArchiveDocument (adminuser ^. #id) . systemActor
-    void . randomUpdate $ ReallyDeleteDocument (adminuser ^. #id) . systemActor
+    void . randomUpdate =<< runArchiveAction adminuser ArchiveDocument
+    void . randomUpdate =<< runArchiveAction adminuser ReallyDeleteDocument
     assertOneArchivedSigLink =<< theDocument
     doc  <- theDocument
     docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ author ^. #id)
@@ -1196,9 +1199,9 @@ testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    res1 <- randomUpdate $ \t -> ArchiveDocument (other ^. #id) (systemActor t)
+    res1 <- randomUpdate =<< runArchiveAction other ArchiveDocument
     assertEqual "ReallyDeleteDocument can be done by other user" False res1
-    res2 <- randomUpdate $ \t -> ReallyDeleteDocument (other ^. #id) (systemActor t)
+    res2 <- randomUpdate =<< runArchiveAction other ReallyDeleteDocument
     assertEqual "ReallyDeleteDocument can be done by other user" False res2
     doc <- theDocument
     assertEqual
@@ -1216,11 +1219,9 @@ testPurgeDocument = replicateM_ 10 $ do
                                                   , rdaStatuses = OneOf
                                                     [Closed, Canceled, Rejected]
                                                   }
-  now       <- currentTime
   archived1 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged zero documents when not deleted" 0 archived1
-  withDocument doc . void $ randomUpdate
-    (\t -> ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now }))
+  withDocument doc $ void . randomUpdate =<< runArchiveAction author ArchiveDocument
   archived2 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 archived2
 
@@ -1239,9 +1240,7 @@ testPurgeDocumentUserSaved = replicateM_ 10 $ do
                                                     [Closed, Canceled, Rejected]
                                                   }
   archived1 <- dbUpdate $ PurgeDocuments 1
-  now       <- currentTime
-  withDocument doc . void $ randomUpdate
-    (\t -> ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now }))
+  withDocument doc . void $ randomUpdate =<< runArchiveAction author ArchiveDocument
   archived2 <- dbUpdate $ PurgeDocuments 1
   assertEqual "Purged zero documents before delete"                   0 archived1
   assertEqual "Purged zero documents before time passed after delete" 0 archived2
@@ -1252,9 +1251,7 @@ testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   doc <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed]
                                                }
-  now <- currentTime
-  withDocument doc . void $ randomUpdate
-    (\t -> ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now }))
+  withDocument doc . void $ randomUpdate =<< runArchiveAction author ArchiveDocument
   void . dbUpdate $ PurgeDocuments 0
   let sidsSql = "SELECT id FROM signatory_links WHERE document_id = " <?> documentid doc
 
@@ -1355,9 +1352,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   doc <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed]
                                                }
-  now <- currentTime
-  withDocument doc . void $ randomUpdate
-    (\t -> ArchiveDocument (author ^. #id) ((systemActor t) { actorTime = now }))
+  withDocument doc . void $ randomUpdate =<< runArchiveAction author ArchiveDocument
 
   do
     archived <- dbUpdate $ PurgeDocuments 1 -- purge after 1 day
@@ -1445,7 +1440,7 @@ testArchiveDocumentUnrelatedUserLeft = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    res <- randomUpdate $ \t -> ArchiveDocument (unrelateduser ^. #id) (systemActor t)
+    res <- randomUpdate =<< runArchiveAction unrelateduser ArchiveDocument
     assertEqual "ArchiveDocument can be done by unrelated user" False res
 
 testArchiveDocumentCompanyStandardLeft :: TestEnv ()
@@ -1457,7 +1452,7 @@ testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    res <- randomUpdate $ \t -> ArchiveDocument (standarduser ^. #id) (systemActor t)
+    res <- randomUpdate =<< runArchiveAction standarduser ArchiveDocument
     assertEqual "ArchiveDocument can be done by user that is not company admin" False res
 
 testRestoreArchivedDocumentUnrelatedUserLeft :: TestEnv ()
@@ -1468,9 +1463,12 @@ testRestoreArchivedDocumentUnrelatedUserLeft = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    void . randomUpdate $ ArchiveDocument (author ^. #id) . systemActor
-    assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument{} -> True) $ do
-      randomUpdate $ \t -> RestoreArchivedDocument unrelateduser (systemActor t)
+    void . randomUpdate =<< runArchiveAction author ArchiveDocument
+    -- we are not reporting the cause of SQL failure, because we check for the same error higher
+    -- up and reporting the cause there
+    assertRaisesKontra (\DBBaseLineConditionIsFalse{} -> True)
+      $   randomUpdate
+      =<< runArchiveAction unrelateduser RestoreArchivedDocument
 
 testRestoreArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testRestoreArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
@@ -1481,9 +1479,12 @@ testRestoreArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
                                                        [Preparation, Closed]
                                                      }
   withDocumentM genDoc $ do
-    void . randomUpdate $ ArchiveDocument (author ^. #id) . systemActor
-    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin{} -> True) $ do
-      randomUpdate $ \t -> RestoreArchivedDocument standarduser (systemActor t)
+    void . randomUpdate =<< runArchiveAction author ArchiveDocument
+    -- we are not reporting the cause of SQL failure, because we check for the same error higher
+    -- up and reporting the cause there
+    assertRaisesKontra (\DBBaseLineConditionIsFalse{} -> True)
+      $   randomUpdate
+      =<< runArchiveAction standarduser RestoreArchivedDocument
 
 testGetDocumentsByAuthorNoArchivedDocs :: TestEnv ()
 testGetDocumentsByAuthorNoArchivedDocs =
@@ -1505,10 +1506,10 @@ checkQueryDoesntContainArchivedDocs qry = replicateM_ 10 $ do
     assertEqual "Expecting one doc before archive"
                 [did]
                 (map documentid docsbeforearchive)
-    void . randomUpdate $ ArchiveDocument (author ^. #id) . systemActor
+    void . randomUpdate =<< runArchiveAction author ArchiveDocument
     docsafterarchive <- dbQuery (qry author)
     assertEqual "Expecting no docs after archive" [] (map documentid docsafterarchive)
-    randomUpdate $ \t -> RestoreArchivedDocument author (systemActor t)
+    randomUpdate =<< runArchiveAction author RestoreArchivedDocument
     docsafterestore <- dbQuery (qry author)
     assertEqual "Expecting one doc after restoring" [did] (map documentid docsafterestore)
 

@@ -33,7 +33,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 
 import Control.Monad.Base
 import Crypto.RNG
-import Data.List.Extra (nubOrd, nubOrdOn)
+import Data.List.Extra (nubOrd)
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Log
@@ -42,6 +42,7 @@ import Text.StringTemplates.Templates
 import qualified Data.Set as S
 import qualified Data.Text as T
 
+import AccessControl.Check
 import AccessControl.Model
 import AccessControl.Types
 import API.V2
@@ -87,17 +88,9 @@ import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import UserGroup.Types.Subscription
-import Util.Actor (Actor)
 import Util.HasSomeUserInfo (getEmail, getMobile)
 import Util.PDFUtil
 import Util.SignatoryLinkUtils
-
-currentDocumentJsonViewedBy
-  :: (Kontrakcja m, DocumentMonad m) => User -> m (UnjsonDef Document, Document)
-currentDocumentJsonViewedBy user = do
-  ug        <- dbQuery . UserGroupGetByUserID $ user ^. #id
-  userRoles <- nubOrdOn accessRoleTarget <$> dbQuery (GetRolesIncludingInherited user ug)
-  (\d -> (unjsonDocument $ documentAccessByFolder user d userRoles, d)) <$> theDocument
 
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
@@ -127,7 +120,10 @@ docApiV2New = api $ do
       Just f  -> do
         dbUpdate $ AttachFile (fileid f) actor
     theDocument >>= \doc -> logInfo "New document created" $ logObject_ doc
-    Created . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    allUserRoles <- getRolesIncludingInherited user
+    Created
+      .   (\d -> (unjsonDocument $ documentAccessByFolder user d allUserRoles, d))
+      <$> theDocument
 
 docApiV2NewFromTemplate :: Kontrakcja m => DocumentID -> m Response
 docApiV2NewFromTemplate did = logDocument did . api $ do
@@ -138,7 +134,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   mBPID         <- apiV2ParameterOptional (ApiV2ParameterText "bpid")  -- RBS hack (CORE-1712)
   -- Guards
   withDocumentID did $ do
-    guardDocumentReadPermission user =<< theDocument
+    guardDocumentActionPermission ReadA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs isTemplate "The document is not a template." =<< theDocument
     guardThatDocumentIs (not . flip documentDeletedForUser $ user ^. #id)
@@ -168,7 +164,9 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     newDoc <- theDocument
     logInfo "New document created from template"
       $ object [logPair ("new_" <>) newDoc, logPair ("template_" <>) template]
-    return $ Created (unjsonDocument $ documentAccessForUser user newDoc, newDoc)
+    allUserRoles <- getRolesIncludingInherited user
+    return $ Created
+      (unjsonDocument $ documentAccessByFolder user newDoc allUserRoles, newDoc)
 
 docApiV2Update :: Kontrakcja m => DocumentID -> m Response
 docApiV2Update did = logDocument did . api $ do
@@ -192,7 +190,8 @@ docApiV2Update did = logDocument did . api $ do
     -- Parameters
     documentJSON <- apiV2ParameterObligatory (ApiV2ParameterAeson "document")
     doc          <- theDocument
-    let da = documentAccessForUser user doc
+    allUserRoles <- getRolesIncludingInherited user
+    let da = documentAccessByFolder user doc allUserRoles
     draftData <- case Unjson.update doc (unjsonDocument da) documentJSON of
       (Result draftData []) -> do
         guardThatConsentModulesAreOnSigningParties draftData
@@ -214,7 +213,7 @@ docApiV2AddEvidenceEvent did = logDocument did . api $ do
   withDocumentID did $ do
     document  <- theDocument
     eventText <- apiV2ParameterObligatory (ApiV2ParameterText "text")
-    guardDocumentUpdatePermission user document
+    guardDocumentActionPermission UpdateA user document
     guardThatDocumentIs (not . isTemplate)
                         "Evidence cannot be added to a template."
                         document
@@ -255,7 +254,7 @@ docApiV2Start did = logDocument did . api $ do
       _ -> return ()
     chargeForItemSingle CIStartingDocument did
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2StartWithPortal :: Kontrakcja m => m Response
 docApiV2StartWithPortal = api $ do
@@ -304,7 +303,8 @@ docApiV2StartWithPortal = api $ do
     saveDocumentForPortalSignatories
     theDocument -- return changed
   -- Result
-  let docAccess d = (documentAccessForUser user d, d)
+  allUserRoles <- getRolesIncludingInherited user
+  let docAccess d = (documentAccessByFolder user d allUserRoles, d)
       headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
       jsonBS  = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
@@ -315,7 +315,7 @@ docApiV2Prolong did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardDocumentUpdatePermission user =<< theDocument
+    guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs
         (\d -> isPending d || isTimedout d)
@@ -351,7 +351,7 @@ docApiV2Cancel did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardDocumentUpdatePermission user =<< theDocument
+    guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- API call actions
@@ -372,22 +372,26 @@ docApiV2Delete = docApiV2TrashDeleteCommon guardThatDocumentCanBeDeletedByUser
 
 docApiV2TrashDeleteCommon
   :: (Kontrakcja m, DBUpdate (DocumentT m) t Bool)
-  => (User -> DocumentID -> m ())
-  -> (UserID -> Actor -> t)
+  => (User -> [AccessRole] -> DocumentID -> m ())
+  -> (Bool -> [UserGroupID] -> UserID -> t)
   -> Text
   -> DocumentID
   -> m Response
 docApiV2TrashDeleteCommon guardAction dbAction errorMsg did = logDocument did . api $ do
   -- Permissions
-  (user, actor) <- getAPIUser APIDocSend
+  (user, _)    <- getAPIUser APIDocSend
+  allUserRoles <- getRolesIncludingInherited user
+
   -- Guards
-  guardAction user did
+  guardAction user allUserRoles did
   withDocumentID did $ do
     -- API call actions
-    success <- dbUpdate $ dbAction (user ^. #id) actor
+    success <- dbUpdate =<< runArchiveActionWithAllRoles user allUserRoles dbAction
     unless success . apiError . documentStateError $ errorMsg
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok
+      .   (\d -> (unjsonDocument $ documentAccessByFolder user d allUserRoles, d))
+      <$> theDocument
 
 docApiV2TrashMultiple :: Kontrakcja m => m Response
 docApiV2TrashMultiple = do
@@ -416,17 +420,18 @@ docApiV2DeleteMultiple = do
 
 docApiV2TrashDeleteMultipleCommon
   :: (Kontrakcja m, DBUpdate (DocumentT m) t Bool)
-  => (User -> DocumentID -> m ())
-  -> (UserID -> Actor -> t)
+  => (User -> [AccessRole] -> DocumentID -> m ())
+  -> (Bool -> [UserGroupID] -> UserID -> t)
   -> (SignatoryLink -> SignatoryLink)
   -> Text
   -> m Response
 docApiV2TrashDeleteMultipleCommon guardAction dbAction setSignatoryLink errorMsg =
   api $ do
   -- Permissions
-    (user, actor) <- getAPIUser APIDocSend
+    (user, _)    <- getAPIUser APIDocSend
+    allUserRoles <- getRolesIncludingInherited user
     -- Parameters
-    dids <- apiV2ParameterObligatory . ApiV2ParameterJSON "document_ids" $ arrayOf
+    dids         <- apiV2ParameterObligatory . ApiV2ParameterJSON "document_ids" $ arrayOf
       unjsonDef
     -- Guards
     when (length dids > 100) . apiError $ requestParameterInvalid
@@ -438,21 +443,28 @@ docApiV2TrashDeleteMultipleCommon guardAction dbAction setSignatoryLink errorMsg
     when (length (nubOrd dids) /= length dids) . apiError $ requestParameterInvalid
       "document_ids"
       "document_ids parameter can't contain duplicates"
-    forM_ dids $ guardAction user
+    forM_ dids $ guardAction user allUserRoles
     -- Result needs to be calculated before actions (because delete might make them unretrievable)
-    let docDomain = DocumentsVisibleToUser $ user ^. #id
-        docFilter = [DocumentFilterByDocumentIDs dids]
-        limits    = (0, 100, 100)
-        docQuery  = GetDocumentsWithSoftLimit docDomain docFilter [] limits
-        docAccess d = (documentAccessForUser user d, d)
-        headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
-    (docCount, allDocs) <- dbQuery docQuery
+    (docCount, docs) <- dbQuery $ GetDocumentsWithSoftLimit
+      DocumentsOfWholeUniverse
+      [DocumentFilterByDocumentIDs dids]
+      []
+      (0, 100, 100)
     -- API call actions
     forM_ dids $ \did -> withDocumentID did $ do
-      success <- dbUpdate $ dbAction (user ^. #id) actor
+      let toMUgidWithUpdateUserPerm perm = case perm of
+            Permission PermCanDo UpdateA (UserInGroupR ugid) -> Just ugid
+            _ -> Nothing
+          ugidsWithUpdateUserPerm = mapMaybe toMUgidWithUpdateUserPerm
+            $ concatMap (hasPermissions . accessRoleTarget) allUserRoles
+      hasDeleteDocPerm <- accessControlDocCheck DeleteA allUserRoles <$> theDocument
+      success          <- dbUpdate
+        $ dbAction hasDeleteDocPerm ugidsWithUpdateUserPerm (user ^. #id)
       unless success . apiError . documentStateError $ T.concat
         [errorMsg, "(", showt did, ")"]
-    let jsonBS = listToJSONBS (docCount, docAccess . updateDocState <$> allDocs)
+    let docAccess d = (documentAccessByFolder user d allUserRoles, d)
+        jsonBS  = listToJSONBS (docCount, docAccess . updateDocState <$> docs)
+        headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
     return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
   where
     updateDocState doc@Document {..} =
@@ -464,7 +476,7 @@ docApiV2Remind did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardDocumentUpdatePermission user =<< theDocument
+    guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- API call actions
@@ -483,7 +495,7 @@ docApiV2RemindWithPortal = api $ do
   logInfo "Running remind with portal with ids" $ object ["doc_ids" .= show dids]
   docs1 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
       -- Guards
-    guardDocumentUpdatePermission user =<< theDocument
+    guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- Parameters
@@ -510,9 +522,8 @@ docApiV2RemindWithPortal = api $ do
     saveDocumentForPortalSignatories
     theDocument -- return changed
   -- Result
-  userRoles <- nubOrdOn accessRoleTarget
-    <$> dbQuery (GetRolesIncludingInherited user $ ugwpUG ugwp)
-  let docAccess d = (documentAccessByFolder user d userRoles, d)
+  allUserRoles <- getRolesIncludingInherited user
+  let docAccess d = (documentAccessByFolder user d allUserRoles, d)
       headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
       jsonBS  = listToJSONBS (length docs2, docAccess <$> docs2)
   return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
@@ -560,7 +571,7 @@ docApiV2SetFile did = logDocument did . api $ do
           Just oldfileid -> recalculateAnchoredFieldPlacements oldfileid (fileid file)
           Nothing        -> return ()
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2RemovePages :: Kontrakcja m => DocumentID -> m Response
 docApiV2RemovePages did = logDocument did . api $ do
@@ -612,7 +623,7 @@ docApiV2RemovePages did = logDocument did . api $ do
     -- Changing signatory fiels
     adjustFieldAndPlacementsAfterRemovingPages pages actor
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2SetAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2SetAttachments did = logDocument did . api $ do
@@ -668,7 +679,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
       (aadAddToSealedFile ad)
       (fileid newFile)
       actor
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
   where
     attachmentsQueryFor user fid = GetAttachments
       [ AttachmentsSharedInUsersUserGroup (user ^. #id)
@@ -703,7 +714,8 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
     timezone <- documenttimezonename <$> theDocument
     setAutomaticReminder did (fmap fromIntegral days) timezone
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
+
 
 docApiV2Clone :: Kontrakcja m => DocumentID -> m Response
 docApiV2Clone did = logDocument did . api $ do
@@ -722,7 +734,10 @@ docApiV2Clone did = logDocument did . api $ do
     -- Result
     logInfo "New document created by cloning"
       $ object [logPair_ newdoc, "parent doc id" .= show did]
-    return . Created $ (\d -> (unjsonDocument $ documentAccessForUser user d, d)) newdoc
+    allUserRoles <- getRolesIncludingInherited user
+    return
+      . Created
+      $ (\d -> (unjsonDocument $ documentAccessByFolder user d allUserRoles, d)) newdoc
 
 docApiV2Restart :: Kontrakcja m => DocumentID -> m Response
 docApiV2Restart did = logDocument did . api $ do
@@ -740,9 +755,11 @@ docApiV2Restart did = logDocument did . api $ do
     doc     <- theDocument
     mNewDoc <- dbUpdate $ RestartDocument doc actor
     case mNewDoc of
-      Nothing -> apiError $ serverError "Could not restart document"
-      Just newDoc ->
-        return $ Created (unjsonDocument $ documentAccessForUser user newDoc, newDoc)
+      Nothing     -> apiError $ serverError "Could not restart document"
+      Just newDoc -> do
+        allUserRoles <- getRolesIncludingInherited user
+        return $ Created
+          (unjsonDocument $ documentAccessByFolder user newDoc allUserRoles, newDoc)
 
 docApiV2Callback :: Kontrakcja m => DocumentID -> m Response
 docApiV2Callback did = logDocument did . api $ do
@@ -750,7 +767,7 @@ docApiV2Callback did = logDocument did . api $ do
   (user, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardDocumentUpdatePermission user =<< theDocument
+    guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (\d -> documentstatus d /= Preparation)
                         "Can not send callbacks for documents in Preparation."
@@ -778,7 +795,7 @@ docApiV2SetSharing = api $ do
     "document_ids"
     "document_ids parameter can't contain duplicates"
   forM_ dids $ \did ->
-    withDocumentID did $ guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    withDocumentID did $ guardThatUserHasActionPermission UpdateA user =<< theDocument
   -- API call actions
   void . dbUpdate $ SetDocumentSharing dids sharing
   -- Return
@@ -802,7 +819,7 @@ docApiV2SigSetAuthToView authKind did slid = logDocumentAndSignatory did slid . 
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardThatUserHasActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
@@ -840,7 +857,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardDocumentUpdatePermission user =<< theDocument
+    guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
@@ -875,7 +892,7 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardDocumentUpdatePermission user =<< theDocument
+    guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
@@ -944,7 +961,7 @@ docApiV2GenerateShareableLink did = logDocument did . api $ do
     guardThatDocumentCanBeStarted doc'
     hash <- random
     dbUpdate . UpdateShareableLinkHash $ Just hash
-    (\d -> Ok (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2DiscardShareableLink :: Kontrakcja m => DocumentID -> m Response
 docApiV2DiscardShareableLink did = logDocument did . api $ do
@@ -996,4 +1013,12 @@ docApiV2AddImage did = logDocument did . api $ do
                 dbUpdate $ DetachFile actor
                 dbUpdate $ AttachFile nfileid actor
     -- Result
-    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+    Ok <$> currentDocumentJsonViewedBy user
+
+currentDocumentJsonViewedBy
+  :: (Kontrakcja m, DocumentMonad m) => User -> m (UnjsonDef Document, Document)
+currentDocumentJsonViewedBy user = do
+  allUserRoles <- getRolesIncludingInherited user
+  (\d -> (unjsonDocument $ documentAccessByFolder user d allUserRoles, d)) <$> theDocument
+
+

@@ -53,6 +53,9 @@ import qualified Data.Text as T
 import qualified Data.Traversable as T
 import qualified Text.JSON.Gen as J
 
+import AccessControl.Check
+import AccessControl.Model
+import AccessControl.Types
 import Analytics.Include
 import API.V2.Errors
 import API.V2.MonadUtils
@@ -500,60 +503,50 @@ handleEvidenceAttachment docid aname =
  -}
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
-  document      <- getDocumentByCurrentUser docid
-  muser         <- view #maybeUser <$> getContext
-
-  authorsiglink <- guardJust $ getAuthorSigLink document
+  document <- getDocumentByCurrentUser docid
+  muser    <- view #maybeUser <$> getContext
 
   let ispreparation = documentstatus document == Preparation
-      isauthor      = (view #id <$> muser) == maybesignatory authorsiglink
-  mauthoruser <- maybe (return Nothing)
-                       (dbQuery . GetUserByIDIncludeDeleted)
-                       (maybesignatory authorsiglink)
 
-  let isincompany = case muser of
-        Nothing -> False
-        Just user ->
-          (user ^. #isCompanyAdmin)
-            && Just (user ^. #groupID)
-            == (view #groupID <$> mauthoruser)
-      msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
+  hasUpdatePermission <- case muser of
+    Nothing   -> return False
+    Just user -> do
+      roles    <- dbQuery $ GetRoles user
+      reqPerms <- OrCond <$> mapM alternativePermissionCondition
+                                  [ canDo UpdateA res | res <- docResources document ]
+      return $ accessControlCheck roles reqPerms
+  let msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
   ad  <- getAnalyticsData
 
   ctx <- getContext
-  case (ispreparation, msiglink) of
-    (True, _) -> do
-       -- Never cache design view. IE8 hack. Should be fixed in different wasy
-      internalResponse
-        <$> (   setHeaderBS "Cache-Control" "no-cache"
-            <$> (simpleHtmlResponse =<< pageDocumentDesign ctx document ad)
-            )
-    (False, Just sl)
-      | isauthor -> if isClosed document
-        -- If authenticate to view archived is set for author, we can't show him
-        -- the signed document in author's view before he authenticates.
-        then signatoryNeedsToIdentifyToView sl document >>= \case
-          True ->
-            fmap internalResponse
-              .   simpleHtmlResponse
-              =<< pageDocumentIdentifyView ctx document sl ad
-          False ->
-            internalResponse <$> pageDocumentView ctx document msiglink isincompany
-        else internalResponse <$> pageDocumentView ctx document msiglink isincompany
-      | canSignatorySignNow document sl -> do
-       -- We also need to authenticate signatory in current session.
-        sid <- getNonTempSessionID
-        dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
-       -- Simply loading pageDocumentSignView doesn't work when signatory needs
-        -- to authenticate to view, redirect to proper sign view.
-        return . internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
-      | isincompany ->  internalResponse
-      <$> pageDocumentView ctx document msiglink isincompany
-      | otherwise -> internalError -- can this happen at all?
-    (False, Nothing) | isincompany ->
-      internalResponse <$> pageDocumentView ctx document msiglink isincompany
-    _ -> internalError
-
+  if ispreparation
+    then internalResponse <$> (simpleHtmlResponse =<< pageDocumentDesign ctx document ad)
+    else case msiglink of
+      Just sl
+        | hasUpdatePermission -> do
+          -- If authenticate to view archived is set for author (or another signatory with Folder access to document), we can't show him
+          -- the signed document in author's view before he authenticates.
+          needsAuthToView <- if isClosed document
+            then signatoryNeedsToIdentifyToView sl document
+            else return False
+          if needsAuthToView
+            then
+              internalResponse
+                <$> (simpleHtmlResponse =<< pageDocumentIdentifyView ctx document sl ad)
+            else internalResponse <$> pageDocumentView ctx document msiglink True
+        | canSignatorySignNow document sl -> do
+              -- We also need to authenticate signatory in current session.
+          sid <- getNonTempSessionID
+          dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
+        -- Simply loading pageDocumentSignView doesn't work when signatory needs
+          -- to authenticate to view, redirect to proper sign view.
+          return . internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
+        | otherwise -> internalError -- can this happen at all?
+      Nothing
+        | hasUpdatePermission
+        -> internalResponse <$> pageDocumentView ctx document msiglink True
+        | otherwise
+        -> internalError
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => FileID -> m Response
