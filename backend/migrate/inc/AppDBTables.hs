@@ -92,7 +92,7 @@ kontraDomains :: [Domain]
 kontraDomains = [domainColor, domainFont]
 
 kontraExtensions :: [Extension]
-kontraExtensions = ["pgcrypto", "\"uuid-ossp\""]
+kontraExtensions = ["pgcrypto"]
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions =

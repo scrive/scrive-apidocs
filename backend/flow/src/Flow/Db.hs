@@ -28,7 +28,7 @@ tableFlowTemplates = tblTable
     [ tblColumn { colName     = "id"
                 , colType     = UuidT
                 , colNullable = False
-                , colDefault  = Just "uuid_generate_v4()"
+                , colDefault  = Just "gen_random_uuid()"
                 }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "process", colType = TextT, colNullable = False }
@@ -61,7 +61,7 @@ tableFlowInstances = tblTable
   , tblColumns     = [ tblColumn { colName     = "id"
                                  , colType     = UuidT
                                  , colNullable = False
-                                 , colDefault  = Just "uuid_generate_v4()"
+                                 , colDefault  = Just "gen_random_uuid()"
                                  }
                      , tblColumn { colName     = "template_id"
                                  , colType     = UuidT
