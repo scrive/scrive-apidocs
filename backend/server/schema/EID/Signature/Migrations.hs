@@ -3,6 +3,7 @@ module EID.Signature.Migrations (
   , eidSignaturesAddProviderNetsNOBankID
   , addSignatoryDobAndEmailToEIDSignatures
   , dropEmailFromEIDSignatures
+  , addEidJson
 ) where
 
 import DB
@@ -70,4 +71,15 @@ dropEmailFromEIDSignatures = Migration
   , mgrAction    = StandardMigration $ do
                      runQuery_ $ sqlAlterTable (tblName tableEIDSignatures)
                                                [sqlDropColumn "signatory_email"]
+  }
+
+addEidJson :: MonadDB m => Migration m
+addEidJson = Migration
+  { mgrTableName = tblName tableEIDSignatures
+  , mgrFrom      = 5
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableEIDSignatures)
+        [ sqlAddColumn $ tblColumn { colName = "eid_service_json", colType = TextT } ]
   }

@@ -260,4 +260,5 @@ kontraMigrations =
   , addAddMetadataOptionToDocuments
   , addAddMetadataSettingToUserGroupSettings
   , addNotNullConstraintToFolderNameColumn
+  , addEidJson
   ]

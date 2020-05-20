@@ -5,7 +5,7 @@ import DB
 tableEIDSignatures :: Table
 tableEIDSignatures = tblTable
   { tblName        = "eid_signatures"
-  , tblVersion     = 5
+  , tblVersion     = 6
   , tblColumns     =
     [ tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
