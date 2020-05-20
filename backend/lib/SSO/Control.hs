@@ -5,7 +5,6 @@ module SSO.Control(sso)
   where
 
 import Control.Monad.Catch
-import Data.Foldable (asum)
 import Data.Text as T hiding (map)
 import Data.Time.Clock (addUTCTime, nominalDay)
 import Data.Time.Format
@@ -60,22 +59,24 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
       <|>
       getSSOConfFromConfig ssoConf idpID
   verifiedAssertions <- getVerifiedAssertionsFromSAML (getPublicKeys ugSSOConf) xmlTree
+  let mFirstAssertion = listToMaybe verifiedAssertions
   guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
                                   (const currentTime)
                                   verifiedAssertions
   (mNameID, memailRaw, mFirstName, mLastName) <- do
     maybe noAssertionsApiErr (\a -> do
-           let maybeGetSomeAttribute as =
-                 T.pack <$> (asum . map (`getFirstNonEmptyAttribute` a) $ as)
            return (T.pack <$> getNonEmptyNameID a,
-                   maybeGetSomeAttribute ["email", "emailaddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
-                   maybeGetSomeAttribute ["firstname", "givenname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"],
-                   maybeGetSomeAttribute ["lastname", "surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"]))
-           (listToMaybe verifiedAssertions)
+                   maybeGetSomeAttribute ["email", "emailaddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] a,
+                   maybeGetSomeAttribute ["firstname", "givenname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"] a,
+                   maybeGetSomeAttribute ["lastname", "surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"] a))
+           mFirstAssertion
   case memailRaw of
           Just emailRaw -> do
+            let mDefaultUserGroupOverride = read <$> (maybeGetSomeAttribute ["scrive.usergroupid"] =<< mFirstAssertion)
             let email = Email emailRaw
             loginOrCreateNewAccount ugSSOConf
+                                    mDefaultUserGroupOverride
+                                    (ugSSOConf ^. #userInitialGroupID)
                                     (SAMLPrincipal
                                       (fromMaybe "" mFirstName)
                                       (fromMaybe "" mLastName)
@@ -113,14 +114,31 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
     getPublicKeys :: UserGroupSSOConfiguration -> SIG.PublicKeys
     getPublicKeys ssoConf = SIG.PublicKeys { publicKeyRSA = Just $ ssoConf ^. #publicKey, publicKeyDSA = Nothing }
 
-    loginOrCreateNewAccount :: Kontrakcja m => UserGroupSSOConfiguration -> SAMLPrincipal -> m InternalKontraResponse
-    loginOrCreateNewAccount ugSSOConf p = do
+    loginOrCreateNewAccount :: (Kontrakcja m)
+                               => UserGroupSSOConfiguration
+                               -> Maybe UserGroupID
+                               -> UserGroupID
+                               -> SAMLPrincipal
+                               -> m InternalKontraResponse
+    loginOrCreateNewAccount ugSSOConf mDefaultUserGroupOverride idpConfUGID p = do
       mAccount <- getAccountInAcceptedStateOrFail $ spEmail p
-      let ugID = ugSSOConf ^. #userInitialGroupID
-      account <- maybe (createAccount p ugID) return mAccount
-      startSessionForSAMLUser account
-      withPositionUpdated <- updateUserWithNameIdInCompanyPosition ugSSOConf account (spNameID p)
-      withTosCheck (\_ -> return . internalResponse $ LinkLogin LANG_EN) withPositionUpdated
+      let initugID = fromMaybe (ugSSOConf ^. #userInitialGroupID) mDefaultUserGroupOverride
+      fstDescOfSnd <- checkThatFirstIsDescendantOfSecond initugID idpConfUGID
+      if fstDescOfSnd
+         then do
+           account <- maybe (createAccount p initugID) return mAccount
+           startSessionForSAMLUser account
+           withPositionUpdated <- updateUserWithNameIdInCompanyPosition ugSSOConf account (spNameID p)
+           withTosCheck (\_ -> return . internalResponse $ LinkLogin LANG_EN) withPositionUpdated
+         else do apiError insufficientPrivileges
+
+    checkThatFirstIsDescendantOfSecond :: Kontrakcja m => UserGroupID -> UserGroupID -> m Bool
+    checkThatFirstIsDescendantOfSecond ugID1 ugID2 = do
+      dbQuery (UserGroupGetWithParents ugID1) >>= \case
+        Just (ugRoot, ugParents) -> do
+          if (ugID2 `elem` map (^. #id) ugParents) || (ugID2 == (ugRoot ^. #id))
+          then return True else return False
+        Nothing -> return False
 
     getAccountInAcceptedStateOrFail :: Kontrakcja m => Email -> m (Maybe User)
     getAccountInAcceptedStateOrFail email = do
