@@ -1,7 +1,8 @@
-module SSO.SAML (getVerifiedAssertionsFromSAML, getIDPID, parseSAMLXML, getFirstNonEmptyAttribute, getNonEmptyNameID, SAMLException(..)) where
+module SSO.SAML (getVerifiedAssertionsFromSAML, getIDPID, parseSAMLXML, getFirstNonEmptyAttribute, getNonEmptyNameID, maybeGetSomeAttribute, SAMLException(..)) where
 
 import Control.Exception
 import Control.Monad.Base
+import Data.Foldable (asum)
 import Data.List.NonEmpty (toList)
 import Text.XML.HXT.Core ((/>), (>>>))
 import qualified Data.ByteString.Base64 as B64
@@ -124,3 +125,7 @@ getNonEmptyNameID assertion = getDecryptedSubjectIdentifier
 
     getSimpleBaseIDName :: A.NameID -> XML.XString
     getSimpleBaseIDName = A.baseID . A.nameBaseID
+
+maybeGetSomeAttribute :: [String] -> A.Assertion -> Maybe Text
+maybeGetSomeAttribute attrs a =
+  T.pack <$> (asum . map (`getFirstNonEmptyAttribute` a) $ attrs)
