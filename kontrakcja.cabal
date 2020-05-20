@@ -719,6 +719,7 @@ Library
                , vector
                , warp
                , wai
+               , wai-log
                , x509
                , xml-conduit
                , xml-conduit-writer

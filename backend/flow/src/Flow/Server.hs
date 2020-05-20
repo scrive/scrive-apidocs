@@ -22,6 +22,7 @@ import Log.Class
 import Log.Monad (LogT)
 import Network.Wai
 import Network.Wai.Handler.Warp
+import Network.Wai.Log (mkApplicationLogger)
 import Servant
 import Servant.Server.Experimental.Auth
 import qualified Data.ByteString.Lazy as BL
@@ -253,12 +254,12 @@ naturalFlow runLogger flowConfiguration flowApp =
 genAuthServerContext :: FlowConfiguration -> Context (AuthHandler Request Account ': '[])
 genAuthServerContext flowConfiguration = authHandler flowConfiguration :. EmptyContext
 
-app
-  :: (forall a . LogT (DBT Handler) a -> DBT Handler a)
-  -> FlowConfiguration
-  -> Application
-app runLogger flowConfiguration =
-  serveWithContext apiProxy (genAuthServerContext flowConfiguration)
+app :: (forall m a . LogT m a -> m a) -> FlowConfiguration -> IO Application
+app runLogger flowConfiguration = do
+  loggingMiddleware <- runLogger mkApplicationLogger
+  return
+    . loggingMiddleware
+    . serveWithContext apiProxy (genAuthServerContext flowConfiguration)
     $ hoistServerWithContext apiProxy
                              (Proxy :: Proxy '[AuthHandler Request Account])
                              (naturalFlow runLogger flowConfiguration)
@@ -266,5 +267,5 @@ app runLogger flowConfiguration =
 
 runFlow :: LogRunner -> FlowConfiguration -> IO ()
 runFlow LogRunner {..} conf@FlowConfiguration {..} = withLogger $ \runLogger -> do
-  runSettings warpSettings $ app runLogger conf
+  runSettings warpSettings =<< app runLogger conf
   where warpSettings = setPort flowPort defaultSettings
