@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # e.g. use this like ./run_reports $FROM_DATE $TO_DATE
-# for Crontab: /home/prod/kontrakcja/reporting/b3/run_reports $(date +"%Y%m%d" -d "1 day ago") $(date +"%Y%m%d")
+# for Crontab: /home/prod/kontrakcja/reporting/BI/run_reports $(date +"%Y%m%d" -d "1 day ago") $(date +"%Y%m%d")
 
 # Script actions for the uninitiated:
 # 1. run psql over script files

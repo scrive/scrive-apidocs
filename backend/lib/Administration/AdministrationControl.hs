@@ -1055,6 +1055,9 @@ handleTransferDocument :: Kontrakcja m => DocumentID -> m ()
 handleTransferDocument did = onlySalesOrAdmin $ do
   newuid <- guardJustM $ readField "userid"
   doc    <- dbQuery $ GetDocumentByDocumentID did
-  if documenttype doc == Template
-    then dbUpdate $ TransferDocument did newuid
-    else internalError
+  user   <- guardJustM . dbQuery $ GetUserByID newuid
+  case documenttype doc of
+    Template -> do
+      let userInfo = (getFirstName user, getLastName user, getEmail user)
+      dbUpdate $ TransferDocument did newuid userInfo
+    _ -> internalError

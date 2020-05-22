@@ -1,6 +1,7 @@
 module Session.Cookies (
     SessionCookieInfo(..)
   , startSessionCookie
+  , startSessionCookieWithExpiry
   , stopSessionCookie
   , sessionCookieInfoFromSession
   , currentSessionInfoCookies
@@ -68,6 +69,18 @@ startSessionCookie s = do
   addCookie ishttps (MaxAge maxSessionTimeoutSecs)
     . mkCookieFromText cookieNameXToken
     $ showt (sesCSRFToken s)
+
+-- | Add a session cookie to browser with same expiry as supplied session
+startSessionCookieWithExpiry
+  :: (FilterMonad Response m, ServerMonad m, MonadIO m) => Session -> m ()
+startSessionCookieWithExpiry s = do
+  ishttps <- isHTTPS
+  addHttpOnlyCookie ishttps (Expires . sesExpires $ s)
+    . mkCookieFromText cookieNameSessionID
+    . showt
+    $ sessionCookieInfoFromSession s
+  addCookie ishttps (Expires . sesExpires $ s) . mkCookieFromText cookieNameXToken $ showt
+    (sesCSRFToken s)
 
 -- | Remove session cookie from browser.
 stopSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m) => m ()

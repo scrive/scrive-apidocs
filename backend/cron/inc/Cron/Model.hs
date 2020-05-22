@@ -45,6 +45,7 @@ import User.UserAccountRequest (expireUserAccountRequests)
 import UserGroup.Model
 import Utils.List
 import qualified CronEnv
+import qualified HostClock.Model as HC
 
 data JobType
   = AsyncEventsProcessing
@@ -196,7 +197,12 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
             return . RerunAfter $ iseconds 1
           ClockErrorCollection -> do
             runDB $ collectClockError (cronNtpServers cronConf)
-            return . RerunAfter $ ihours 1
+            clockErrors <- runDB . dbQuery $ HC.GetNClockErrorEstimates 10
+            return $ RerunAfter
+              (if HC.enoughClockErrorOffsetSamples clockErrors
+                then ihours 1
+                else iseconds 10
+              )
           CronStats -> do
             ((), time) <- timed . runDB $ reportCronStats (cronStatsDConf cronConf)
             logInfo "Cron stats generated" $ object ["time" .= time]

@@ -102,7 +102,7 @@ instance (MonadThrow m, MonadIO m, MonadCatch m, MonadLog m)
 runKinesisT
   :: (MonadCatch m, MonadIO m, MonadLog m) => Maybe KinesisConf -> KinesisT m a -> m a
 runKinesisT Nothing m = do
-  logAttention_ "Kinesis stream is disabled."
+  logInfo_ "Kinesis stream is disabled"
   runReaderT (unKinesis m) Nothing
 runKinesisT (Just KinesisConf {..}) m = do
   logger <- awsLogger
