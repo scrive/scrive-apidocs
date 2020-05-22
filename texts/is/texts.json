@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Kennitalan sem þú notaðir samsvarar ekki þeirri kennitölu sem nauðsynleg er til að skoða skjalið.",
 "_flashMessageUserHasLiveDocs":"Ekki var hægt að fjarlægja aðganginn þar sem notandinn er með skjöl sem ekki enn hefur verið lokið við eða hætt hefur verið við.",
 "_flashMessageUserPasswordChanged":"Lykilorð þitt hefur verið uppsett.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Notandi með sama netfang er þegar til staðar.",
 "_flashMessageWrongTwoFactorCode":"Tveggja þátta kóðinn var rangur",
 "_flashMessageYourEmailHasChanged":"Breytt hefur verið um notandanafn þitt og netfang.",

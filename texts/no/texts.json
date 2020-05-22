@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Fødselsnummeret som du brukte stemmer ikke overens med fødselsnummeret som kreves for å vise dokumentet. ",
 "_flashMessageUserHasLiveDocs":"Kan ikke fjerne kontoen ettersom brukeren har dokumenter som ennå ikke er avsluttede eller kansellerte.",
 "_flashMessageUserPasswordChanged":"Ditt passord har blitt lagret.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"En bruker med den samme e-posten finnes allerede.",
 "_flashMessageWrongTwoFactorCode":"Tofaktorautentiseringskoden var ukorrekt",
 "_flashMessageYourEmailHasChanged":"Ditt brukernavn og e-post har blitt endret.",

@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"Uživateli $signatory$ byla na číslo $text$ odeslána zpráva SMS s kódem PIN určeným pro autentizaci.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Uživatel podepsal dokument prostřednictvím autentizace dánskou službou NemID.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Uživatel podepsal dokument prostřednictvím autentizace švédskou službou BankID.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Uživatel podepsal dokument prostřednictvím autentizace norskou službou BankID.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument podepsán prostřednictvím autentizace kódem PIN zaslaným zprávou SMS.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument byl podepsán.",

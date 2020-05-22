@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"PIN koodi sisaldav SMS saadeti autentimiseks isikule $signatory$ numbrile $text$.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Allkirjastas dokumendi Taani NemID abil.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Allkirjastas dokumendi Rootsi BankID abil.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Allkirjastas dokumendi Norra BankID abil.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument allkirjastati, kasutades autentimiseks SMSi teel saadetud PIN koodi.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument allkirjastati.",

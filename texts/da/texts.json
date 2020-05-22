@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Det anvendte ID-nummer matcher ikke det ID-nummer, der er påkrævet for at se dokumentet.",
 "_flashMessageUserHasLiveDocs":"Kan ikke fjerne kontoen, da brugeren har dokumenter, der endnu ikke er blevet afsluttet eller annulleret.",
 "_flashMessageUserPasswordChanged":"Din adgangskode er blevet sendt.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"En bruger med den samme e-mail findes allerede.",
 "_flashMessageWrongTwoFactorCode":"To faktor-koden var ikke korrekt",
 "_flashMessageYourEmailHasChanged":"Dit brugernavn og e-mail er blevet ændret.",

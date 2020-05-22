@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"$signatory$ īsziņā uz $text$ tika nosūtīts viens PIN kods, kas jāizmanto autentifikācijā.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Parakstīja dokumentu, autentifikācijai izmantojot Dānijas NemID.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Parakstīja dokumentu, autentifikācijai izmantojot Zviedrijas BankID.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Parakstīja dokumentu, autentifikācijai izmantojot Norvēģijas BankID.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Parakstīja dokumentu, autentifikācijai izmantojot īsziņā nosūtīto PIN kodu.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokuments ir parakstīts.",

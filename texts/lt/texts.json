@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Įvestas ID numeris nesutampa su ID numeriu, būtinu siekiant peržiūrėti dokumentą.",
 "_flashMessageUserHasLiveDocs":"Nepavyko panaikinti paskyros, nes naudotojas vis dar turi nebaigtų ar neatšauktų dokumentų. ",
 "_flashMessageUserPasswordChanged":"Jūsų slaptažodis nustatytas.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Naudotojas su tokiu el. paštu jau yra.",
 "_flashMessageWrongTwoFactorCode":"Dviejų veiksnių kodas neteisingas",
 "_flashMessageYourEmailHasChanged":"Jūsų naudotojo vardas ir el. paštas sėkmingai pakeisti.",

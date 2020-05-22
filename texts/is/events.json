@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"Textaskilaboð með PIN-númeri voru send til $text$ fyrir $signatory$ til notkunar við sannvottun.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Skrifaði undir skjalið með því að nota danskt NemID sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Skrifaði undir skjalið með því að nota sænskt bankaauðkenni sem sannvottunaraðferð.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Skrifaði undir skjalið með því að nota norskt bankaauðkenni sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Skrifað var undir skjalið með PIN-númeri sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Skrifað var undir skjalið.",

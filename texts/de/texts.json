@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Die benutzte ID-Nummer stimmt nicht mit der für die Ansicht des Dokuments erforderlichen ID-Nummer überein.",
 "_flashMessageUserHasLiveDocs":"Das Konto kann nicht entfernt werden, da der Benutzer Dokumente hat, die noch nicht abgeschlossen sind oder abgebrochen wurden.",
 "_flashMessageUserPasswordChanged":"Ihr Passwort wurde gesetzt.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Ein Benutzer mit dieser E-Mail Adresse ist schon vorhanden.",
 "_flashMessageWrongTwoFactorCode":"Der Zwei-Faktor-Code wurde falsch eingegeben",
 "_flashMessageYourEmailHasChanged":"Ihr Benutzername und E-Mail wurden erfolgreich geändert.",

@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"El número de DNI usado no coincide con el DNI requerido para ver el documento.",
 "_flashMessageUserHasLiveDocs":"Es imposible eliminar la cuenta porque el usuario tiene documentos que no han sido terminados todavía o cancelados. ",
 "_flashMessageUserPasswordChanged":"Su contraseña ha sido establecida.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Un usuario con el mismo email ya existe.",
 "_flashMessageWrongTwoFactorCode":"El código de dos factores es incorrecto",
 "_flashMessageYourEmailHasChanged":"Su nombre de usuario y su email han sido cambiados con éxito. ",

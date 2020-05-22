@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"PIN-koodin sisältävä tekstiviesti lähetettiin numeroon $text$, jotta $signatory$ voi käyttää sitä tunnistautumiseen.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Allekirjoitti dokumentin käyttäen tanskalaista NemID:tä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Allekirjoitti dokumentin käyttäen ruotsalaista BankID:tä tunnistautumismuotona.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Allekirjoitti dokumentin käyttäen norjalaista BankID:tä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentti allekirjoitettiin käyttämällä PIN by SMS -palvelua tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentti allekirjoitettiin.",

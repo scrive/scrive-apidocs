@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Het ID-nummer die u gebruikt heeft komt niet overeen met het ID-nummer dat nodig is om het document te bekijken.",
 "_flashMessageUserHasLiveDocs":"Niet mogelijk de account te verwijderen aangezien de gebruiker documenten heeft die nog niet voltooid of geannuleerd zijn.",
 "_flashMessageUserPasswordChanged":"Uw wachtwoord is ingesteld.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Een gebruiker met dezelfde e-mail bestaat al. ",
 "_flashMessageWrongTwoFactorCode":"De twee-factor code was incorrect.",
 "_flashMessageYourEmailHasChanged":"Uw gebruikersnaam en wachtwoord zijn met succes gewijzigd.",

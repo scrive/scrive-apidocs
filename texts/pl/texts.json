@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Użyty osobisty numer identyfikacyjny nie jest zgodny z numerem uprawniającym do podglądu dokumentu.",
 "_flashMessageUserHasLiveDocs":"Nie można usunąć konta, ponieważ użytkownik posiada dokumenty, które nie zostały sfinalizowane lub wycofane.",
 "_flashMessageUserPasswordChanged":"Twoje hasło zostało ustawione.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Istnieje już użytkownik o tym samym adresie e-mail.",
 "_flashMessageWrongTwoFactorCode":"Kod dwuskładnikowy był nieprawidłowy",
 "_flashMessageYourEmailHasChanged":"Twoja nazwa użytkownika i adres e-mail zostały zmienione.",
