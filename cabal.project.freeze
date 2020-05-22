@@ -345,6 +345,6 @@ constraints: any.AES ==0.2.9,
              any.zip-archive ==0.4.1,
              zip-archive -executable,
              any.zlib ==0.6.2.1,
-             zlib -non-blocking-ffi -pkg-config
+             zlib -non-blocking-ffi -pkg-config,
              any.servant ==0.16.2,
              any.servant-server ==0.16.2
