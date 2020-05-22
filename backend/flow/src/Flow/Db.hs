@@ -10,6 +10,7 @@ flowTables =
   , tableFlowInstances
   , tableFlowStateMachines
   , tableFlowInstancesKVStore
+  , tableFlowInstanceSignatories
   ]
 
 flowMigrations :: MonadDB m => [Migration m]
@@ -18,6 +19,7 @@ flowMigrations =
   , createTableFlowInstances
   , createTableFlowStateMachines
   , createTableFlowInstancesKVStore
+  , createTableFlowInstanceSignatories
   ]
 
 tableFlowTemplates :: Table
@@ -89,12 +91,16 @@ tableFlowInstancesKVStore = tblTable
                              , colType     = UuidT
                              , colNullable = False
                              }
-                 -- TODO: Type type should be enumu.
-                 , tblColumn { colName = "type", colType = TextT, colNullable = False }
+                 -- TODO: `type` should be an enum.
+                 -- The possible values are as follows.
+                 -- * user: `email`, `phone_number`, `user_id`.
+                 -- * document: `document_id`
+                 -- * message: `string`.
                  , tblColumn { colName = "key", colType = TextT, colNullable = False }
+                 , tblColumn { colName = "type", colType = TextT, colNullable = False }
                  , tblColumn { colName = "value", colType = TextT, colNullable = False }
                  ]
-  , tblPrimaryKey  = pkOnColumns ["instance_id", "type", "key", "value"]
+  , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
   , tblForeignKeys =
     [(fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyRestrict }]
   }
@@ -106,6 +112,34 @@ createTableFlowInstancesKVStore = Migration
   , mgrAction    = StandardMigration $ createTable True tableFlowInstancesKVStore
   }
 
+tableFlowInstanceSignatories :: Table
+tableFlowInstanceSignatories = tblTable
+  { tblName        = "flow_instance_signatories"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "key", colType = TextT, colNullable = False }
+    , tblColumn { colName = "signatory_id", colType = BigIntT, colNullable = False }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
+  , tblIndexes     = [indexOnColumns ["instance_id", "signatory_id"]]
+  , tblForeignKeys =
+    [ (fkOnColumns ["instance_id", "key"]
+                   "flow_instance_key_value_store"
+                   ["instance_id", "key"]
+      ) { fkOnDelete = ForeignKeyRestrict
+        }
+    , (fkOnColumn "signatory_id" "signatory_links" "id") { fkOnDelete = ForeignKeyRestrict
+                                                         }
+    ]
+  }
+
+createTableFlowInstanceSignatories :: MonadDB m => Migration m
+createTableFlowInstanceSignatories = Migration
+  { mgrTableName = tblName tableFlowInstanceSignatories
+  , mgrFrom      = 0
+  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSignatories
+  }
 
 tableFlowStateMachines :: Table
 tableFlowStateMachines = tblTable
