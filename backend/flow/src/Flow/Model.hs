@@ -58,8 +58,7 @@ fetchGetTemplate :: (TemplateId, Text, Text, Maybe UTCTime, Maybe UTCTime) -> Ge
 fetchGetTemplate (id, name, process, committed, deleted) =
   GetTemplate id name process committed deleted
 
--- TODO: Return maybe to indicate no template was found?
-selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m GetTemplate
+selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe GetTemplate)
 selectTemplate templateId = do
   runQuery_ . sqlSelect "flow_templates" $ do
     sqlResult "id"
@@ -69,10 +68,10 @@ selectTemplate templateId = do
     sqlResult "deleted"
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
-  fetchOne fetchGetTemplate
+  fetchMaybe fetchGetTemplate
 
 updateTemplate
-  :: (MonadDB m, MonadThrow m) => TemplateId -> PatchTemplate -> m GetTemplate
+  :: (MonadDB m, MonadThrow m) => TemplateId -> PatchTemplate -> m (Maybe GetTemplate)
 updateTemplate templateId PatchTemplate {..} = do
   runQuery_ . sqlUpdate "flow_templates" $ do
     sqlMaybeSet "name"    name -- TODO: validate size?
@@ -84,7 +83,7 @@ updateTemplate templateId PatchTemplate {..} = do
     sqlResult "deleted"
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
-  fetchOne fetchGetTemplate
+  fetchMaybe fetchGetTemplate
 
 commitTemplate :: MonadDB m => UTCTime -> TemplateId -> m ()
 commitTemplate now templateId = do
@@ -93,12 +92,12 @@ commitTemplate now templateId = do
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
 
-getTemplateDsl :: (MonadDB m, MonadThrow m) => TemplateId -> m FlowDSL
+getTemplateDsl :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe FlowDSL)
 getTemplateDsl templateId = do
   runQuery_ . sqlSelect "flow_templates" $ do
     sqlResult "process"
     sqlWhereEq "id" templateId
-  fetchOne runIdentity
+  fetchMaybe runIdentity
 
 insertParsedStateMachine :: MonadDB m => TemplateId -> Machine -> m ()
 insertParsedStateMachine templateId machine = do
@@ -125,13 +124,12 @@ insertFlowInstanceKeyValue instanceId valueType (key, value) =
     sqlSet "key"         key
     sqlSet "value"       value
 
--- TODO: Move to Maybe with selects?
-selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m TemplateId
+selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe TemplateId)
 selectInstance instanceId = do
   runQuery_ . sqlSelect "flow_instances" $ do
     sqlResult "template_id"
     sqlWhereEq "id" instanceId
-  fetchOne runIdentity
+  fetchMaybe runIdentity
 
 -- TODO: Move to Maybe with selects?
 selectInstanceKeyValues

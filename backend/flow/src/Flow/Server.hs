@@ -8,6 +8,7 @@ module Flow.Server where
 import Control.Arrow (left)
 import Control.Monad.Base
 import Control.Monad.Catch hiding (Handler)
+import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Control.Monad.State
@@ -119,21 +120,20 @@ deleteTemplate _account id = do
   Model.deleteTemplate id
   pure NoContent
 
-
 sqlMaybeSet :: (MonadState v m, SqlSet v, Show a, ToSQL a) => SQL -> Maybe a -> m ()
 sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
 
 getTemplate :: Account -> TemplateId -> AppM GetTemplate
 getTemplate _account templateId = do
   logInfo_ "getting template"
-  Model.selectTemplate templateId
+  fromMaybeM (throwError err404) $ Model.selectTemplate templateId
 
 -- TODO: Committed templates can't be updated.
 -- TODO: Check user permissions to update given template.
 patchTemplate :: Account -> TemplateId -> PatchTemplate -> AppM GetTemplate
 patchTemplate Account {..} templateId patch = do
   logInfo_ "patching template"
-  Model.updateTemplate templateId patch
+  fromMaybeM (throwError err404) $ Model.updateTemplate templateId patch
 
 throwValidationErr409 :: [ValidationError] -> AppM a
 throwValidationErr409 errors =
@@ -145,7 +145,7 @@ commitTemplate :: Account -> TemplateId -> AppM NoContent
 commitTemplate Account {..} id = do
   logInfo_ "committing template"
   now      <- liftIO currentTime
-  template <- Model.getTemplateDsl id
+  template <- fromMaybeM (throwError err404) $ Model.getTemplateDsl id
   machine  <- either throwValidationErr409 pure $ decodeHightTang template >>= machinize
   Model.commitTemplate now id
   Model.insertParsedStateMachine id machine
@@ -216,7 +216,7 @@ getInstance instanceId = do
   logInfo_ "getting instance"
   -- TODO: Authorize user.
   -- TODO: Model instance state inside database somehow!
-  templateId <- Model.selectInstance instanceId
+  templateId <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
   documents  <-
     Map.fromList . fmap (fmap unsafeDocumentID) <$> Model.selectInstanceKeyValues
       instanceId
@@ -239,7 +239,6 @@ getInstance instanceId = do
                             , current = InstanceStage { stage = "test", events = [] }
                             }
     }
-
 
 getInstanceView :: InstanceId -> AppM GetInstanceView
 getInstanceView = undefined
