@@ -17,18 +17,25 @@ import EID.EIDService.Types
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import Session.Model
+import Util.HasSomeUserInfo
 import Util.MonadUtils
 
 provider :: EIDServiceTransactionProvider
 provider = EIDServiceTransactionProviderOnfido
 
-newtype OnfidoEIDServiceProviderParams = OnfidoEIDServiceProviderParams {
+data OnfidoEIDServiceProviderParams = OnfidoEIDServiceProviderParams {
     onfidoparamMethod :: OnfidoMethod
+  , onfidoparamFirstName :: Text
+  , onfidoparamLastName :: Text
   }
 
 instance ToJSON OnfidoEIDServiceProviderParams where
   toJSON _ = Null
-  toEncoding OnfidoEIDServiceProviderParams {..} = pairs $ "report" .= onfidoparamMethod
+  toEncoding OnfidoEIDServiceProviderParams {..} =
+    pairs
+      $  ("report" .= onfidoparamMethod)
+      <> ("firstName" .= onfidoparamFirstName)
+      <> ("lastName" .= onfidoparamLastName)
 
 beginEIDServiceTransaction
   :: Kontrakcja m
@@ -58,7 +65,11 @@ beginEIDServiceTransaction conf authKind doc sl = do
         , cestSignatoryLinkID    = signatorylinkid sl
         , cestAuthKind           = authKind
         , cestKontraRedirectUrl  = mkontraRedirect
-        , cestmProviderParams    = Just $ OnfidoEIDServiceProviderParams method
+        , cestmProviderParams    = Just $ OnfidoEIDServiceProviderParams
+                                     { onfidoparamMethod    = method
+                                     , onfidoparamFirstName = getFirstName sl
+                                     , onfidoparamLastName  = getLastName sl
+                                     }
         }
   -- Onfido transactions are not started from the API, we get the URL via the create call
   trans <- createTransactionWithEIDService conf createReq

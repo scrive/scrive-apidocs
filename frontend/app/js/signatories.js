@@ -1027,14 +1027,18 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
 
       if (signatory.fstnameField() != undefined && !signatory.fstnameField().hasPlacements())
       {
-        signatory.fstnameField().authorObligatory = 'optional';
-        signatory.fstnameField().setObligatoryAndShouldBeFilledBySender(true,false);
+        var shouldBeFilledBySender = this.onfidoDocumentCheckAuthenticationToSign()
+              || this.onfidoDocumentAndPhotoCheckAuthenticationToSign();
+        signatory.fstnameField().authorObligatory = shouldBeFilledBySender ? 'sender' : 'signatory';
+        signatory.fstnameField().setObligatoryAndShouldBeFilledBySender(true,shouldBeFilledBySender);
       }
 
       if (signatory.sndnameField() != undefined && !signatory.sndnameField().hasPlacements())
       {
-        signatory.sndnameField().authorObligatory = 'optional';
-        signatory.sndnameField().setObligatoryAndShouldBeFilledBySender(true,false);
+        var shouldBeFilledBySender = this.onfidoDocumentCheckAuthenticationToSign()
+              || this.onfidoDocumentAndPhotoCheckAuthenticationToSign();
+        signatory.sndnameField().authorObligatory = shouldBeFilledBySender ? 'sender' : 'signatory';
+        signatory.sndnameField().setObligatoryAndShouldBeFilledBySender(true,shouldBeFilledBySender);
       }
 
       if (signatory.personalnumberField() != undefined && !signatory.personalnumberField().hasPlacements())
