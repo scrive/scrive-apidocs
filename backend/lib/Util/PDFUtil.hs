@@ -35,6 +35,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
 
+import Kontra
 import Log.Utils
 import PdfToolsLambda.Class
 import Utils.Directory
@@ -130,7 +131,13 @@ data FileError = FileSizeError Int Int
                deriving (Eq, Ord, Show, Read, Typeable)
 
 preCheckPDFsHelper
-  :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m)
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadLog m
+     , PdfToolsLambdaMonad m
+     , KontraMonad m
+     )
   => [BS.ByteString]
   -> Text
   -> m (Either FileError [BS.ByteString])
@@ -165,14 +172,14 @@ preCheckPDFsHelper contents tmppath = runExceptT $ do
           Nothing -> throwError FileRemoveJavaScriptError
 
     checkFlatten = do
+      useNewFlattener <- view #useNewFlattener <$> getContext
+      let flattenerJar = if useNewFlattener
+            then "scrivepdftools/scrivepdftoolsflattener-itext7.jar"
+            else "scrivepdftools/scrivepdftoolsflattener.jar"
       forM_ (take (length contents) [1 ..]) $ \num -> do
         (code, stdout, stderr) <- liftBase $ readProcessWithExitCode
           "java"
-          [ "-jar"
-          , "scrivepdftools/scrivepdftoolsflattener.jar"
-          , jsremovedpath num
-          , flattenedpath num
-          ]
+          ["-jar", flattenerJar, jsremovedpath num, flattenedpath num]
           BSL.empty
         case code of
           ExitSuccess   -> return ()
@@ -222,7 +229,13 @@ preCheckPDFsHelper contents tmppath = runExceptT $ do
 -- content or 'FileError' enumeration stating what is going on.
 --
 preCheckPDFs
-  :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m)
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadLog m
+     , PdfToolsLambdaMonad m
+     , KontraMonad m
+     )
   => [BS.ByteString]
   -> m (Either FileError [BS.ByteString])
 preCheckPDFs contents = withSystemTempDirectory' "precheck" $ \tmppath -> do
@@ -234,7 +247,13 @@ preCheckPDFs contents = withSystemTempDirectory' "precheck" $ \tmppath -> do
   return res
 
 preCheckPDF
-  :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m)
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadLog m
+     , PdfToolsLambdaMonad m
+     , KontraMonad m
+     )
   => BS.ByteString
   -> m (Either FileError BS.ByteString)
 preCheckPDF content = do
