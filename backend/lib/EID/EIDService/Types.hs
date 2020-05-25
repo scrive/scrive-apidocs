@@ -3,7 +3,7 @@ module EID.EIDService.Types (
   , unsafeEIDServiceTransactionID
   , fromEIDServiceTransactionID
   , EIDServiceTransactionProvider(..)
-  , ToEIDServiceTransactionProvider(..)
+  , toEIDServiceProviderName
   , EIDServiceEndpointType(..)
   , EIDServiceTransactionStatus (..)
   , EIDServiceAuthenticationKind(..)
@@ -11,12 +11,15 @@ module EID.EIDService.Types (
   , CreateEIDServiceTransactionResponse(..)
   , EIDServiceTransactionResponse(..)
   , EIDServiceTransactionFromDB(..)
+  , UnifiedRedirectUrl(..)
+  , EIDServiceMethod(..)
 
   -- Redundant types, will be removed later
   , EIDServiceVerimiAuthentication(..)
   , EIDServiceNLIDINAuthentication(..)
   , EIDServiceDKNemIDAuthentication(..)
   , EIDServiceNOBankIDAuthentication(..)
+  , EIDServiceSEBankIDAuthentication(..)
   , EIDServiceFITupasAuthentication(..)
   , EIDServiceNLIDINSignature(..)
   , EIDServiceFITupasSignature(..)
@@ -30,9 +33,9 @@ module EID.EIDService.Types (
   , unsafeEIDServiceNOBankIDInternalProviderFromInt16
   ) where
 
+import Control.Exception (throw)
 import Control.Monad.Catch
 import Data.Aeson
-import Data.Aeson.Encoding hiding (day)
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.Time
@@ -81,33 +84,26 @@ data EIDServiceTransactionProvider =
   | EIDServiceTransactionProviderNOBankID
   | EIDServiceTransactionProviderFITupas
   | EIDServiceTransactionProviderOnfido
+  | EIDServiceTransactionProviderSEBankID
   deriving (Eq, Ord, Show)
 
-class ToEIDServiceTransactionProvider a where
-  toProvider :: a -> EIDServiceTransactionProvider
+toEIDServiceProviderName :: EIDServiceTransactionProvider -> Text
+toEIDServiceProviderName EIDServiceTransactionProviderVerimi   = "verimi"
+toEIDServiceProviderName EIDServiceTransactionProviderNLIDIN   = "nlIDIN"
+toEIDServiceProviderName EIDServiceTransactionProviderDKNemID  = "dkNemID"
+toEIDServiceProviderName EIDServiceTransactionProviderNOBankID = "noBankID"
+toEIDServiceProviderName EIDServiceTransactionProviderFITupas  = "fiTupas"
+toEIDServiceProviderName EIDServiceTransactionProviderOnfido   = "onfido"
+toEIDServiceProviderName EIDServiceTransactionProviderSEBankID = "seBankID"
 
-  toEIDServiceProviderName :: a -> Text
-  toEIDServiceProviderName = toEIDServiceProviderName . toProvider
-
-  toRedirectURLName :: a -> Text
-  toRedirectURLName = toRedirectURLName . toProvider
-
-instance ToEIDServiceTransactionProvider EIDServiceTransactionProvider where
-  toProvider = identity
-
-  toEIDServiceProviderName EIDServiceTransactionProviderVerimi   = "verimi"
-  toEIDServiceProviderName EIDServiceTransactionProviderNLIDIN   = "nlIDIN"
-  toEIDServiceProviderName EIDServiceTransactionProviderDKNemID  = "dkNemID"
-  toEIDServiceProviderName EIDServiceTransactionProviderNOBankID = "noBankID"
-  toEIDServiceProviderName EIDServiceTransactionProviderFITupas  = "fiTupas"
-  toEIDServiceProviderName EIDServiceTransactionProviderOnfido   = "onfido"
-
-  toRedirectURLName EIDServiceTransactionProviderVerimi   = "verimi"
-  toRedirectURLName EIDServiceTransactionProviderNLIDIN   = "idin"
-  toRedirectURLName EIDServiceTransactionProviderDKNemID  = "nemid"
-  toRedirectURLName EIDServiceTransactionProviderNOBankID = "nobankid"
-  toRedirectURLName EIDServiceTransactionProviderFITupas  = "fitupas"
-  toRedirectURLName EIDServiceTransactionProviderOnfido   = "onfido"
+toRedirectURLName :: EIDServiceTransactionProvider -> Text
+toRedirectURLName EIDServiceTransactionProviderVerimi   = "verimi"
+toRedirectURLName EIDServiceTransactionProviderNLIDIN   = "idin"
+toRedirectURLName EIDServiceTransactionProviderDKNemID  = "nemid"
+toRedirectURLName EIDServiceTransactionProviderNOBankID = "nobankid"
+toRedirectURLName EIDServiceTransactionProviderFITupas  = "fitupas"
+toRedirectURLName EIDServiceTransactionProviderOnfido   = "onfido"
+toRedirectURLName EIDServiceTransactionProviderSEBankID = "sebankid"
 
 instance FromReqURI EIDServiceTransactionProvider where
   fromReqURI = \case
@@ -117,6 +113,7 @@ instance FromReqURI EIDServiceTransactionProvider where
     "nobankid" -> Just EIDServiceTransactionProviderNOBankID
     "fitupas"  -> Just EIDServiceTransactionProviderFITupas
     "onfido"   -> Just EIDServiceTransactionProviderOnfido
+    "sebankid" -> Just EIDServiceTransactionProviderSEBankID
     _          -> Nothing
 
 instance PQFormat EIDServiceTransactionProvider where
@@ -133,7 +130,8 @@ instance FromSQL EIDServiceTransactionProvider where
       4 -> return EIDServiceTransactionProviderNOBankID
       5 -> return EIDServiceTransactionProviderFITupas
       6 -> return EIDServiceTransactionProviderOnfido
-      _ -> throwM RangeError { reRange = [(1, 6)], reValue = n }
+      7 -> return EIDServiceTransactionProviderSEBankID
+      _ -> throwM RangeError { reRange = [(1, 7)], reValue = n }
 
 instance ToSQL EIDServiceTransactionProvider where
   type PQDest EIDServiceTransactionProvider = PQDest Int16
@@ -143,6 +141,7 @@ instance ToSQL EIDServiceTransactionProvider where
   toSQL EIDServiceTransactionProviderNOBankID = toSQL (4 :: Int16)
   toSQL EIDServiceTransactionProviderFITupas  = toSQL (5 :: Int16)
   toSQL EIDServiceTransactionProviderOnfido   = toSQL (6 :: Int16)
+  toSQL EIDServiceTransactionProviderSEBankID = toSQL (7 :: Int16)
 
 data EIDServiceEndpointType = EIDServiceAuthEndpoint | EIDServiceSignEndpoint
 
@@ -228,53 +227,69 @@ instance FromJSON EIDServiceTransactionProvider where
     "noBankID" -> return EIDServiceTransactionProviderNOBankID
     "fiTupas"  -> return EIDServiceTransactionProviderFITupas
     "onfido"   -> return EIDServiceTransactionProviderOnfido
+    "seBankID" -> return EIDServiceTransactionProviderSEBankID
     _          -> fail "JSON is invalid: unrecognised value for \"provider\""
 
--- Corresponds to POST /transaction/new request to EID service
-data CreateEIDServiceTransactionRequest a = CreateEIDServiceTransactionRequest {
-    cestDomain :: Text
-  , cestEIDServiceProvider :: EIDServiceTransactionProvider
-  , cestDocumentID :: DocumentID
-  , cestSignatoryLinkID :: SignatoryLinkID
-  , cestAuthKind :: EIDServiceAuthenticationKind
-  , cestKontraRedirectUrl :: Maybe Text
-  , cestmProviderParams :: Maybe a
+-- | We redirect to "<domain>/eid-service/redirect-endpoint/<provider>/<view/sign>
+--                    /<docid>/<siglinkid>(?redirect=<postredirectredirect>)",
+-- which is then handled by `redirectEndpointFromEIDServiceTransaction`. The
+-- _auth_ `redirect-endpoint` spits out `posteidauthdredirect.jsx`, which then
+-- redirects `window.top` to `redPostRedirectUrl` to break out of the iframe.
+data UnifiedRedirectUrl = UnifiedRedirectUrl {
+    redDomain :: Text
+  , redProvider :: EIDServiceTransactionProvider
+  , redAuthKind :: EIDServiceAuthenticationKind
+  , redDocumentID :: DocumentID
+  , redSignatoryLinkID :: SignatoryLinkID
+  , redPostRedirectUrl :: Maybe Text
   }
 
-instance ToEIDServiceTransactionProvider (CreateEIDServiceTransactionRequest a) where
-  toProvider = cestEIDServiceProvider
-
-instance ToJSON a => ToJSON (CreateEIDServiceTransactionRequest a) where
-  toJSON _ = Null
-  toEncoding req@CreateEIDServiceTransactionRequest {..} =
-    pairs
-      $  ("method" .= ("auth" :: Text))
-      <> ("provider" .= eidServiceProviderName)
-      <> ("redirectUrl" .= redirectUrl)
-      <> providerParams
+instance Show UnifiedRedirectUrl where
+  show UnifiedRedirectUrl {..} =
+    intercalate
+        "/"
+        [ T.unpack redDomain
+        , "eid-service"
+        , "redirect-endpoint"
+        , T.unpack $ toRedirectURLName redProvider
+        , endpointType
+        , show redDocumentID
+        , show redSignatoryLinkID
+        ]
+      <> postRedirectFragment
     where
-      eidServiceProviderName = toEIDServiceProviderName req
-      makeProviderParams =
-        pair "providerParameters" . pairs . pair eidServiceProviderName
-      providerParams = maybe mempty (makeProviderParams . toEncoding) cestmProviderParams
-      redirectUrl =
-        let providerName = toRedirectURLName req
-            endpointType = case cestAuthKind of
-              (EIDServiceAuthToView _) -> "view"
-              EIDServiceAuthToSign     -> "sign"
-            rdFragment = case cestKontraRedirectUrl of
-              Just kontraRedirect -> "?redirect=" <> kontraRedirect
-              Nothing             -> ""
-        in  cestDomain
-              <> "/eid-service/redirect-endpoint/"
-              <> providerName
-              <> "/"
-              <> endpointType
-              <> "/"
-              <> showt cestDocumentID
-              <> "/"
-              <> showt cestSignatoryLinkID
-              <> rdFragment
+      endpointType = case redAuthKind of
+        (EIDServiceAuthToView _) -> "view"
+        EIDServiceAuthToSign     -> "sign"
+      postRedirectFragment
+        | Just target <- redPostRedirectUrl = "?redirect=" <> T.unpack target
+        | otherwise = ""
+
+data EIDServiceMethod = EIDServiceAuthMethod | EIDServiceSignMethod
+instance ToJSON EIDServiceMethod where
+  toJSON EIDServiceAuthMethod = String "auth"
+  toJSON EIDServiceSignMethod = String "sign"
+
+-- Corresponds to POST /transaction/new request to EID service
+data CreateEIDServiceTransactionRequest = CreateEIDServiceTransactionRequest {
+    cestProvider :: EIDServiceTransactionProvider
+  , cestMethod :: EIDServiceMethod
+  , cestRedirectUrl :: Text
+  , cestProviderParameters :: Maybe Value  -- Encoding does not compose?!
+  }
+
+instance ToJSON CreateEIDServiceTransactionRequest where
+  toJSON CreateEIDServiceTransactionRequest {..} = object
+    [ "method" .= cestMethod
+    , "provider" .= providerName
+    , "redirectUrl" .= cestRedirectUrl
+    , "providerParameters" .= wrappedProviderParameters
+    ]
+    where
+      providerName              = toEIDServiceProviderName cestProvider
+      wrappedProviderParameters = case cestProviderParameters of
+        Just params -> object [providerName .= params]
+        Nothing     -> object []
 
 -- Corresponds to POST /transaction/new response from EID service
 data CreateEIDServiceTransactionResponse = CreateEIDServiceTransactionResponse {
@@ -297,9 +312,6 @@ data EIDServiceTransactionResponse a = EIDServiceTransactionResponse {
   , estRespStatus :: EIDServiceTransactionStatus
   , estRespCompletionData :: Maybe a
   } deriving Show
-
-instance ToEIDServiceTransactionProvider (EIDServiceTransactionResponse a) where
-  toProvider = estRespProvider
 
 instance FromJSON a => FromJSON (EIDServiceTransactionResponse a) where
   parseJSON outer = withObject "object" return outer >>= \o -> do
@@ -361,6 +373,14 @@ data EIDServiceNOBankIDAuthentication = EIDServiceNOBankIDAuthentication
   , eidServiceNOBankIDCertificate          :: !(Maybe ByteString)
   } deriving (Eq, Ord, Show)
 
+data EIDServiceSEBankIDAuthentication = EIDServiceSEBankIDAuthentication
+  { eidServiceSEBankIDSignatoryName           :: !Text
+  , eidServiceSEBankIDSignatoryPersonalNumber :: !Text
+  , eidServiceSEBankIDSignatoryIP             :: !Text
+  , eidServiceSEBankIDSignature               :: !ByteString
+  , eidServiceSEBankIDOcspResponse            :: !ByteString
+  } deriving (Eq, Ord, Show)
+
 data EIDServiceNLIDINSignature = EIDServiceNLIDINSignature
   { unEIDServiceIDINSigSignatoryName :: Text
   , unEIDServiceIDINSigDateOfBirth :: Text
@@ -407,8 +427,7 @@ unsafeEIDServiceDKNemIDInternalProviderFromInt16
 unsafeEIDServiceDKNemIDInternalProviderFromInt16 v = case v of
   1 -> EIDServiceNemIDKeyCard
   2 -> EIDServiceNemIDKeyFile
-  _ ->
-    unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
+  _ -> throw $ RangeError { reRange = [(1, 2)], reValue = v }
 
 instance PQFormat EIDServiceDKNemIDInternalProvider where
   pqFormat = pqFormat @Int16
@@ -437,8 +456,7 @@ unsafeEIDServiceNOBankIDInternalProviderFromInt16
 unsafeEIDServiceNOBankIDInternalProviderFromInt16 v = case v of
   1 -> EIDServiceNOBankIDStandard
   2 -> EIDServiceNOBankIDMobile
-  _ ->
-    unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
+  _ -> throw $ RangeError { reRange = [(1, 2)], reValue = v }
 
 instance PQFormat EIDServiceNOBankIDInternalProvider where
   pqFormat = pqFormat @Int16

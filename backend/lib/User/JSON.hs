@@ -215,6 +215,7 @@ companySettingsJson ugs = do
   value "sealingmethod" . sealingMethodText $ ugs ^. #sealingMethod
   value "documentsessiontimeout" $ ugs ^. #documentSessionTimeoutSecs
   value "haspostsignview" $ ugs ^. #hasPostSignview
+  value "eiduseforseview" $ ugs ^. #eidUseForSEView
 
 userStatsToJSON
   :: (UTCTime -> Text)

@@ -15,8 +15,7 @@ $(function () {
     React.render(React.createElement(IdentifyView, {
       doc: doc,
       siglinkid: fromTemplate.sigLinkId,
-      useEIDHubForNemID: fromTemplate.useEIDHubForNemID,
-      useEIDHubForNOBankIDView: fromTemplate.useEIDHubForNOBankIDView,
+      useEIDHubForSEBankIDView: fromTemplate.useEIDHubForSEBankIDView,
       useEIDHubForFITupasView: fromTemplate.useEIDHubForFITupasView
     }), $(".global-table-cell")[0]);
 

@@ -44,10 +44,10 @@ guardExitCode calltype provider (exitcode, stdout, stderr) = case exitcode of
       $ object ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
 
 cURLCall
-  :: (MonadBase IO m, MonadLog m, ToEIDServiceTransactionProvider a)
+  :: (MonadBase IO m, MonadLog m)
   => EIDServiceConf
   -> CallType
-  -> a
+  -> EIDServiceTransactionProvider
   -> Text
   -> Maybe BSL.ByteString
   -> m BSL.ByteString
@@ -69,12 +69,12 @@ cURLCall conf calltype provider endpoint mjsonData = do
   return stdout
 
 createTransactionWithEIDService
-  :: (Kontrakcja m, ToJSON a, ToEIDServiceTransactionProvider a, FromJSON b)
+  :: (Kontrakcja m, FromJSON b)
   => EIDServiceConf
-  -> a
+  -> CreateEIDServiceTransactionRequest
   -> m b
 createTransactionWithEIDService conf req = do
-  mresp <- fmap decode . cURLCall conf Create req "new" . Just $ encode req
+  mresp <- fmap decode . cURLCall conf Create (cestProvider req) "new" . Just $ encode req
   case mresp of
     Nothing -> do
       logAttention_ "Failed to read create transaction response"
@@ -82,9 +82,9 @@ createTransactionWithEIDService conf req = do
     Just resp -> return resp
 
 startTransactionWithEIDService
-  :: (Kontrakcja m, ToEIDServiceTransactionProvider a, FromJSON b)
+  :: (Kontrakcja m, FromJSON b)
   => EIDServiceConf
-  -> a
+  -> EIDServiceTransactionProvider
   -> EIDServiceTransactionID
   -> m b
 startTransactionWithEIDService conf provider tid = localData [identifier tid] $ do
@@ -99,9 +99,9 @@ startTransactionWithEIDService conf provider tid = localData [identifier tid] $ 
     Just resp -> return resp
 
 getTransactionFromEIDService
-  :: (MonadLog m, MonadBaseControl IO m, ToEIDServiceTransactionProvider a, FromJSON b)
+  :: (MonadLog m, MonadBaseControl IO m, FromJSON b)
   => EIDServiceConf
-  -> a
+  -> EIDServiceTransactionProvider
   -> EIDServiceTransactionID
   -> m (Maybe b)
 getTransactionFromEIDService conf provider tid = localData [identifier tid] $ do

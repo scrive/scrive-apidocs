@@ -186,6 +186,9 @@ setBoolField name value ug =
         "hasPostSignview" ->
             modifySettings (\s -> { s | hasPostSignview = value }) ug
 
+        "eidUseForSEView" ->
+            modifySettings (\s -> { s | eidUseForSEView = value }) ug
+
         _ ->
             ug
 
@@ -283,6 +286,7 @@ type alias Settings =
     , eidServiceToken : Maybe String
     , sealingMethod : SealingMethod
     , hasPostSignview : Bool
+    , eidUseForSEView : Bool
     }
 
 
@@ -312,6 +316,7 @@ settingsDecoder =
         |> DP.required "eidservicetoken" (JD.string |> JD.nullable)
         |> DP.required "sealingmethod" (JD.string |> JD.andThen sealingMethodDecoder)
         |> DP.required "haspostsignview" JD.bool
+        |> DP.required "eiduseforseview" JD.bool
 
 
 type alias ParentUserGroup =
@@ -515,6 +520,7 @@ formValuesSettings settings =
     , ( "companyeidservicetoken", M.withDefault "" settings.eidServiceToken )
     , ( "companysealingmethod", Enum.toString enumSealingMethod settings.sealingMethod )
     , ( "companyhaspostsignview", boolToJson settings.hasPostSignview )
+    , ( "companyeiduseforseview", boolToJson settings.eidUseForSEView )
     ]
         ++ L.filterMap identity
             [ mField identity ( "companycgiserviceid", settings.cgiServiceID )

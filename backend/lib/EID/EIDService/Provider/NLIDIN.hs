@@ -62,14 +62,18 @@ beginEIDServiceTransaction conf authKind doc sl = do
   mkontraRedirect <- case authKind of
     EIDServiceAuthToView _ -> Just <$> guardJustM (getField "redirect")
     EIDServiceAuthToSign   -> return Nothing
+  let redirectUrl = UnifiedRedirectUrl { redDomain          = ctx ^. #brandedDomain % #url
+                                       , redProvider        = provider
+                                       , redAuthKind        = authKind
+                                       , redDocumentID      = documentid doc
+                                       , redSignatoryLinkID = signatorylinkid sl
+                                       , redPostRedirectUrl = mkontraRedirect
+                                       }
   let createReq = CreateEIDServiceTransactionRequest
-        { cestDomain             = ctx ^. #brandedDomain % #url
-        , cestEIDServiceProvider = provider
-        , cestDocumentID         = documentid doc
-        , cestSignatoryLinkID    = signatorylinkid sl
-        , cestAuthKind           = authKind
-        , cestKontraRedirectUrl  = mkontraRedirect
-        , cestmProviderParams    = Just $ NLIDINEIDServiceProviderParams
+        { cestProvider           = provider
+        , cestMethod             = EIDServiceAuthMethod
+        , cestRedirectUrl        = showt redirectUrl
+        , cestProviderParameters = Just . toJSON $ NLIDINEIDServiceProviderParams
                                      { cnlestRequestBirthdate = True
                                      }
         }

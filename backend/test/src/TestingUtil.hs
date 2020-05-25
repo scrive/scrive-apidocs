@@ -332,6 +332,7 @@ instance Arbitrary UserGroupSettings where
       <*> arbitrary
       <*> pure Nothing
       <*> arbitrary
+      <*> arbitrary
 
 instance Arbitrary UserGroupAddress where
   arbitrary =

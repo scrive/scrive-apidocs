@@ -261,4 +261,5 @@ kontraMigrations =
   , addAddMetadataSettingToUserGroupSettings
   , addNotNullConstraintToFolderNameColumn
   , addEidJson
+  , userGroupSettingsAddEidUseForSEViewFlag
   ]

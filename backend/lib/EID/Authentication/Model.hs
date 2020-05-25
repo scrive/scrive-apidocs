@@ -10,6 +10,7 @@ module EID.Authentication.Model (
   , MergeEIDServiceIDINAuthentication(..)
   , MergeEIDServiceNemIDAuthentication(..)
   , MergeEIDServiceNOBankIDAuthentication(..)
+  , MergeEIDServiceSEBankIDAuthentication(..)
   , MergeEIDServiceFITupasAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
@@ -46,6 +47,7 @@ data EAuthentication
   | EIDServiceNemIDAuthentication_ !EIDServiceDKNemIDAuthentication
   | EIDServiceNOBankIDAuthentication_ !EIDServiceNOBankIDAuthentication
   | EIDServiceFITupasAuthentication_ !EIDServiceFITupasAuthentication
+  | EIDServiceSEBankIDAuthentication_ !EIDServiceSEBankIDAuthentication
     deriving (Show)
 
 ----------------------------------------
@@ -65,6 +67,7 @@ data AuthenticationProvider
   | NemIDAuth
   | NOBankIDAuth
   | FITupasAuth
+  | SEBankIDAuth
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -85,7 +88,8 @@ instance FromSQL AuthenticationProvider where
       8  -> return NemIDAuth
       9  -> return NOBankIDAuth
       10 -> return FITupasAuth
-      _  -> throwM RangeError { reRange = [(1, 10)], reValue = n }
+      11 -> return SEBankIDAuth
+      _  -> throwM RangeError { reRange = [(1, 11)], reValue = n }
 
 instance ToSQL AuthenticationProvider where
   type PQDest AuthenticationProvider = PQDest Int16
@@ -99,6 +103,7 @@ instance ToSQL AuthenticationProvider where
   toSQL NemIDAuth    = toSQL (8 :: Int16)
   toSQL NOBankIDAuth = toSQL (9 :: Int16)
   toSQL FITupasAuth  = toSQL (10 :: Int16)
+  toSQL SEBankIDAuth = toSQL (11 :: Int16)
 
 ----------------------------------------
 
@@ -205,6 +210,19 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNOBankIDAuthentic
         sqlSet "signature"               eidServiceNOBankIDCertificate
         sqlSet "signatory_name"          eidServiceNOBankIDSignatoryName
         sqlSet "signatory_date_of_birth" eidServiceNOBankIDDateOfBirth
+
+-- | Insert SEBankID authentication for a given signatory or replace the existing one.
+data MergeEIDServiceSEBankIDAuthentication = MergeEIDServiceSEBankIDAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceSEBankIDAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceSEBankIDAuthentication () where
+  dbUpdate (MergeEIDServiceSEBankIDAuthentication authKind sid slid EIDServiceSEBankIDAuthentication {..})
+    = do
+      mergeAuthenticationInternal authKind sid slid $ do
+        sqlSet "provider"                  SEBankIDAuth
+        sqlSet "signatory_name"            eidServiceSEBankIDSignatoryName
+        sqlSet "signatory_personal_number" eidServiceSEBankIDSignatoryPersonalNumber
+        sqlSet "signatory_ip"              eidServiceSEBankIDSignatoryIP
+        sqlSet "signature"                 eidServiceSEBankIDSignature
+        sqlSet "ocsp_response"             eidServiceSEBankIDOcspResponse
 
 -- | Insert FITupas authentication for a given signatory or replace the existing one.
 data MergeEIDServiceFITupasAuthentication = MergeEIDServiceFITupasAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceFITupasAuthentication
@@ -318,6 +336,13 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
       , eidServiceNOBankIDDateOfBirth      = fromJust signatory_dob
       , eidServiceNOBankIDCertificate      = msignature
       , eidServiceNOBankIDPhoneNumber      = signatory_phone_number
+      }
+    SEBankIDAuth -> EIDServiceSEBankIDAuthentication_ EIDServiceSEBankIDAuthentication
+      { eidServiceSEBankIDSignatoryName           = fromJust msignatory_name
+      , eidServiceSEBankIDSignatoryPersonalNumber = fromJust signatory_personal_number
+      , eidServiceSEBankIDSignatoryIP             = fromJust msignatory_ip
+      , eidServiceSEBankIDSignature               = fromJust msignature
+      , eidServiceSEBankIDOcspResponse            = fromJust ocsp_response
       }
     FITupasAuth -> EIDServiceFITupasAuthentication_ EIDServiceFITupasAuthentication
       { eidServiceFITupasSignatoryName  = fromJust msignatory_name

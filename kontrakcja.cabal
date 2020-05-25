@@ -339,6 +339,7 @@ Library
                  , EID.EIDService.Provider.NLIDIN
                  , EID.EIDService.Provider.NOBankID
                  , EID.EIDService.Provider.Onfido
+                 , EID.EIDService.Provider.SEBankID
                  , EID.EIDService.Provider.Verimi
                  , EID.EIDService.Tables
                  , EID.EIDService.Types

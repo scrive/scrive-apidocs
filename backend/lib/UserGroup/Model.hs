@@ -143,6 +143,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "document_session_timeout" $ ugs ^. #documentSessionTimeoutSecs
   sqlSet "has_post_signview" $ ugs ^. #hasPostSignview
   sqlSet "add_metadata_to_pdfs" $ ugs ^. #addMetadataToPDFs
+  sqlSet "use_eid_service_for_se_view" $ ugs ^. #eidUseForSEView
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -503,6 +504,7 @@ ugSettingsSelectors =
   , "has_post_signview"
   , "sso_config"
   , "add_metadata_to_pdfs"
+  , "use_eid_service_for_se_view"
   ]
 
 

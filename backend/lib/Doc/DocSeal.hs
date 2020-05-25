@@ -149,6 +149,10 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       renderTextTemplate "_identifiedByNOBankIDText"
         . F.value "name"
         $ eidServiceNOBankIDSignatoryName authentication
+    Just (EIDServiceSEBankIDAuthentication_ authentication) ->
+      renderTextTemplate "_identifiedBySwedishBankIDText"
+        . F.value "name"
+        $ eidServiceSEBankIDSignatoryName authentication
     Just (EIDServiceFITupasAuthentication_ authentication) ->
       renderTextTemplate "_identifiedByFITupasText"
         . F.value "name"

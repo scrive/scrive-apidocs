@@ -2,6 +2,8 @@ var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var SwedishIdentifyView = require("./swedish/swedishidentifyview");
 var SwedishIdentifyModel = require("./swedish/swedishidentifymodel");
+var SwedishEIDHubIdentifyView = require("./swedish-eidhub/swedishidentifyview");
+var SwedishEIDHubIdentifyModel = require("./swedish-eidhub/swedishidentifymodel");
 var NorwegianEIDHubIdentifyView = require("./norwegian-eidhub/norwegianidentifyview");
 var NorwegianEIDHubIdentifyModel = require("./norwegian-eidhub/norwegianidentifymodel");
 var DanishEIDHubIdentifyView = require("./danish-eidhub/danishidentifyview");
@@ -26,8 +28,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
     propTypes: {
       doc: React.PropTypes.instanceOf(Document).isRequired,
       siglinkid: React.PropTypes.string.isRequired,
-      useEIDHubForNemID: React.PropTypes.bool.isRequired,
-      useEIDHubForNOBankIDView: React.PropTypes.bool.isRequired,
+      useEIDHubForSEBankIDView: React.PropTypes.bool.isRequired,
       useEIDHubForFITupasView: React.PropTypes.bool.isRequired
     },
     getInitialState: function () {
@@ -45,7 +46,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
       var sig = args.doc.currentSignatory();
       if (args.doc.closed()) {
         if (sig.seBankIDAuthenticationToViewArchived()) {
-          model = new SwedishIdentifyModel(args);
+          if (this.props.useEIDHubForSEBankIDView) {
+            model = new SwedishEIDHubIdentifyModel(args);
+          } else {
+            model = new SwedishIdentifyModel(args);
+          }
         } else if (sig.noBankIDAuthenticationToViewArchived()) {
           model = new NorwegianEIDHubIdentifyModel(args);
         } else if (sig.dkNemIDAuthenticationToViewArchived()) {
@@ -65,7 +70,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
         }
       } else {
         if (sig.seBankIDAuthenticationToView()) {
-          model = new SwedishIdentifyModel(args);
+          if (this.props.useEIDHubForSEBankIDView) {
+            model = new SwedishEIDHubIdentifyModel(args);
+          } else {
+            model = new SwedishIdentifyModel(args);
+          }
         } else if (sig.noBankIDAuthenticationToView()) {
           model = new NorwegianEIDHubIdentifyModel(args);
         } else if (sig.dkNemIDAuthenticationToView()) {
@@ -143,7 +152,15 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 <span>{localization.verifyIdentityWithoutName}</span>
               }
             </div>
-            { /* if */ model.isSwedish() &&
+            { /* if */ model.isSwedish() && this.props.useEIDHubForSEBankIDView &&
+              <div className="identify-box-content">
+                <SwedishEIDHubIdentifyView
+                  ref="identify"
+                  model={model}
+                />
+              </div>
+            }
+            { /* if */ model.isSwedish() && !this.props.useEIDHubForSEBankIDView &&
               <div className="identify-box-content">
                 <SwedishIdentifyView
                   ref="identify"

@@ -259,6 +259,7 @@ defaultUserGroupSettings = UserGroupSettings
   , hasPostSignview            = True
   , ssoConfig                  = Nothing
   , addMetadataToPDFs          = False
+  , eidUseForSEView            = False
   }
 
 -- UI

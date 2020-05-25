@@ -585,6 +585,11 @@ viewUserGroup model ug address settings =
                 settings.hasPostSignview
                 (SetBoolField "hasPostSignview")
                 [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "Uses EID Hub for SEBankID auth-to-view"
+                "If set, then the EID Hub will be used to initiate the BankID transaction, rather than our internal implementation via CGI-GRP."
+                settings.eidUseForSEView
+                (SetBoolField "eidUseForSEView")
+                [ readonly ug.settingsIsInherited ]
             ]
         , Grid.row [ Row.leftSm ]
             [ Grid.col [ Col.sm12 ]

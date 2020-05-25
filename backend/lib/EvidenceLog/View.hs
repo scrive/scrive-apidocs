@@ -315,6 +315,8 @@ simplifiedEventText mactor sim dee = do
                         F.value "provider_dknemid" True
                       EIDServiceNOBankIDAuthentication_ _ -> do
                         F.value "provider_nobankid" True
+                      EIDServiceSEBankIDAuthentication_ _ -> do
+                        F.value "provider_sebankid_eidservice" True
                       EIDServiceFITupasAuthentication_ _ -> do
                         F.value "provider_fitupas" True
         F.value "text" $ T.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page

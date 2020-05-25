@@ -131,6 +131,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctx ^. #netsConfig
     F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #netsConfig
     F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #netsConfig
+    F.value "useEIDHubForSEBankIDView" $ ugwpSettings authorugwp ^. #eidUseForSEView
     F.value "useEIDHubForFITupasView" useEIDHubForFITupasView
     F.value "previewLink" $ show LinkPreviewLockedImage
     standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company

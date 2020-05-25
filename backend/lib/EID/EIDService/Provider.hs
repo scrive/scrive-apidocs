@@ -13,6 +13,7 @@ import qualified EID.EIDService.Provider.FITupas as FITupas
 import qualified EID.EIDService.Provider.NLIDIN as NLIDIN
 import qualified EID.EIDService.Provider.NOBankID as NOBankID
 import qualified EID.EIDService.Provider.Onfido as Onfido
+import qualified EID.EIDService.Provider.SEBankID as SEBankID
 import qualified EID.EIDService.Provider.Verimi as Verimi
 
 beginEIDServiceTransaction
@@ -37,6 +38,8 @@ beginEIDServiceTransaction conf provider authKind doc sl = do
       FITupas.beginEIDServiceTransaction conf authKind doc sl
     EIDServiceTransactionProviderOnfido ->
       Onfido.beginEIDServiceTransaction conf authKind doc sl
+    EIDServiceTransactionProviderSEBankID ->
+      SEBankID.beginEIDServiceTransaction conf authKind doc sl
 
 completeEIDServiceAuthTransaction
   :: Kontrakcja m
@@ -58,6 +61,8 @@ completeEIDServiceAuthTransaction conf provider doc sl = case provider of
     FITupas.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderOnfido ->
     unexpectedError "Onfido auth not supported via EID service"
+  EIDServiceTransactionProviderSEBankID ->
+    SEBankID.completeEIDServiceAuthTransaction conf doc sl
 
 completeEIDServiceSignTransaction
   :: Kontrakcja m
@@ -76,3 +81,5 @@ completeEIDServiceSignTransaction conf provider sl = case provider of
   EIDServiceTransactionProviderFITupas ->
     FITupas.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderOnfido -> Onfido.completeEIDServiceSignTransaction conf sl
+  EIDServiceTransactionProviderSEBankID ->
+    unexpectedError "SEBankID sign not supported via EID service"

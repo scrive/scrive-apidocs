@@ -289,6 +289,8 @@ authViewMatchesAuth IDINAuthenticationToView     EIDServiceIDINAuthentication_{}
 authViewMatchesAuth DKNemIDAuthenticationToView  EIDServiceNemIDAuthentication_{}  = True
 authViewMatchesAuth NOBankIDAuthenticationToView EIDServiceNOBankIDAuthentication_{} =
   True
+authViewMatchesAuth SEBankIDAuthenticationToView EIDServiceSEBankIDAuthentication_{} =
+  True
 authViewMatchesAuth FITupasAuthenticationToView EIDServiceFITupasAuthentication_{} = True
 authViewMatchesAuth _ _ = False
 
