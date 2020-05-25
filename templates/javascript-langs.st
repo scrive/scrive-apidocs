@@ -1254,7 +1254,7 @@ javascriptLocalisation =
               , companyAccountDeleted : "$_flashMessageCompanyAccountDeleted()$"
               , columnName :  "$_name()$"
               , columnEmail : "$_email()$"
-              , columnCompany : "$_company()$"
+              , columnCompany : "$_userGroup()$"
               , columnRole :  "$_role()$"
               , editModal : {
                   editDetails : "$_modalEditUsersEditDetails()$"

@@ -1099,6 +1099,7 @@
 "_userDeletionModalMessageLine3":"This action is not reversible.",
 "_userDeletionModalMessageLine4":"Please type the email address used for this account (<span class='email'></span>) to confirm deletion.",
 "_userDeletionModalTitle":"Delete account",
+"_userGroup":"User group",
 "_userNotDeletableDueToPendingDocumentsLine1":"Please check your e-archive as you have pending documents. To delete your user account you can't have pending documents.",
 "_userNotDeletableDueToPendingDocumentsLine2":"The documents must be either signed, rejected, withdrawn or timed out before your account can be deleted.",
 "_verificationDescription":"By uploading a document here you can check the authenticity of the document to make sure it hasn’t been compromised.",
