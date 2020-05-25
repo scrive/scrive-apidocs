@@ -17,4 +17,4 @@ sed -i '
   /any.template-haskell ==/d
   /any.text ==/d
   /any.time ==/d
-  ' cabal.config
+  ' cabal.project.freeze
