@@ -49,6 +49,7 @@ module.exports = React.createClass({
     getInitialState: function () {
       return {
         showShareModal: false,
+        share: null,
         attachmentsToShare: null,
         showRemoveModal: false,
         attachmentsToRemove: null
@@ -57,9 +58,16 @@ module.exports = React.createClass({
     attachmentDownloadLink : function(d) {
       return "/api/frontend/attachments/"+ d.field("id") + "/download/" + d.field("title") +".pdf";
     },
+    anyShared: function (selected) {
+      return undefined !== _.find(selected, function (doc) {
+        return doc.field("shared");
+      });
+    },
     openShareModal: function(selected) {
+      var share = !this.anyShared(selected);
       this.setState({
         showShareModal: true,
+        share: share,
         attachmentsToShare: _.map(
           selected,
           function (doc) {
@@ -69,10 +77,11 @@ module.exports = React.createClass({
       });
     },
     onShareModalClose: function () {
-      this.setState({showShareModal: false, attachmentsToShare: null});
+      this.setState({showShareModal: false, attachmentsToShare: null, share: null});
     },
     onShareModalAccept: function () {
       var self = this;
+      var share = self.state.share;
       var attachmentIds = _.map(
         this.state.attachmentsToShare,
         function (attid) {
@@ -84,13 +93,15 @@ module.exports = React.createClass({
         url: "/api/frontend/attachments/setsharing",
         method: "POST",
         attachment_ids: JSON.stringify(attachmentIds),
-        shared: true,
+        shared: share,
         ajaxsuccess : function() {
-          new FlashMessage({
-            type: "success",
-            content: localization.archive.attachments.share.successMessage
-          });
-
+          var message;
+          if (share) {
+            message = localization.archive.attachments.share.successMessage;
+          } else {
+            message = localization.archive.attachments.share.successMessageUnshare;
+          }
+          new FlashMessage({type: "success", content: message});
           self.reload();
           self.onShareModalClose();
         }
@@ -185,7 +196,13 @@ module.exports = React.createClass({
             />
 
             <List.ListAction
-              name={localization.archive.attachments.share.action}
+              makeName={function (selected) {
+                if (self.anyShared(selected)) {
+                  return localization.archive.attachments.share.actionunshare;
+                } else {
+                  return localization.archive.attachments.share.action;
+                }
+              }}
               onSelect={function(selected,model) {
                 if (selected.length ==0 ) {
                   new FlashMessage({type: 'error', content: localization.archive.attachments.share.emptyMessage});
@@ -240,12 +257,19 @@ module.exports = React.createClass({
 
           <Modal.Container active={self.state.showShareModal}>
             <Modal.Header
-              title={localization.archive.attachments.share.head}
+              title={self.state.share ?
+                       localization.archive.attachments.share.head
+                     : localization.archive.attachments.share.headunshare}
               showClose={true}
               onClose={self.onShareModalClose}
             />
             <Modal.Content>
-              <p>{localization.archive.attachments.share.body}</p>
+              {/* if */ self.state.share &&
+                <p>{localization.archive.attachments.share.body}</p>
+              }
+              {/* else */ !self.state.share &&
+                <p>{localization.archive.attachments.share.bodyunshare}</p>
+              }
             </Modal.Content>
             <Modal.Footer>
               <Modal.CancelButton onClick={self.onShareModalClose} />

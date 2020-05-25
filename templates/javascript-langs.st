@@ -1048,9 +1048,13 @@ javascriptLocalisation =
                         }
                     ,  share : {
                               action: "$_pageAttachmentListShare()$"
+                            , actionunshare: "$_pageAttachmentListUnShare()$"
                             , head : "$_listShareDialogHead()$"
+                            , headunshare : "$_listShareDialogHeadUnshare()$"
                             , body : "$_listShareDialogBody()$"
+                            , bodyunshare : "$_listShareDialogBodyUnshare()$"
                             , successMessage : "$_flashMessageAttachmentShareDone()$"
+                            , successMessageUnshare : "$_flashMessageAttachmentShareDoneUnshare()$"
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  createnew : {
