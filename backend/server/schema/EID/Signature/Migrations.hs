@@ -77,9 +77,10 @@ addEidJson :: MonadDB m => Migration m
 addEidJson = Migration
   { mgrTableName = tblName tableEIDSignatures
   , mgrFrom      = 5
-  , mgrAction    =
-    StandardMigration $ do
-      runQuery_ $ sqlAlterTable
-        (tblName tableEIDSignatures)
-        [ sqlAddColumn $ tblColumn { colName = "eid_service_json", colType = TextT } ]
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlAlterTable
+                       (tblName tableEIDSignatures)
+                       [ sqlAddColumn
+                           $ tblColumn { colName = "eid_service_json", colType = TextT }
+                       ]
   }

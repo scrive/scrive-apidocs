@@ -454,7 +454,6 @@ mkContext lang = do
                    , ssoConf                 = Nothing
                    , postSignViewRedirectURL = ""
                    , useNewFlattener         = False
-
                    }
 
 mkContextWithUser :: Lang -> User -> TestEnv Context

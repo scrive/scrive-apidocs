@@ -414,5 +414,4 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                      , maybeApiUser            = Nothing
                      , postSignViewRedirectURL = postSignViewRedirectURL appConf
                      , useNewFlattener         = useNewFlattener appConf
-
                      }
