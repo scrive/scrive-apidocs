@@ -87,22 +87,32 @@ tableFlowInstancesKVStore :: Table
 tableFlowInstancesKVStore = tblTable
   { tblName        = "flow_instance_key_value_store"
   , tblVersion     = 1
-  , tblColumns = [ tblColumn { colName     = "instance_id"
-                             , colType     = UuidT
-                             , colNullable = False
-                             }
-                 -- TODO: `type` should be an enum.
-                 -- The possible values are as follows.
-                 -- * user: `email`, `phone_number`, `user_id`.
-                 -- * document: `document_id`
-                 -- * message: `string`.
-                 , tblColumn { colName = "key", colType = TextT, colNullable = False }
-                 , tblColumn { colName = "type", colType = TextT, colNullable = False }
-                 , tblColumn { colName = "value", colType = TextT, colNullable = False }
-                 ]
+  , tblColumns     =
+    [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "key", colType = TextT, colNullable = False }
+                 -- TODO: Column `type` should be an enum, see the check below for allowed values.
+    , tblColumn { colName = "type", colType = TextT, colNullable = False }
+    , tblColumn { colName = "string", colType = TextT, colNullable = True }
+    , tblColumn { colName = "document_id", colType = BigIntT, colNullable = True }
+    , tblColumn { colName = "user_id", colType = BigIntT, colNullable = True }
+    ]
   , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
   , tblForeignKeys =
-    [(fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyRestrict }]
+    [ (fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyRestrict }
+    , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyRestrict }
+    , (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyRestrict }
+    ]
+  , tblChecks      =
+    [ tblCheck
+        { chkName      = "check_value"
+        , chkCondition =
+          "type = 'document_id'::text AND document_id IS NOT NULL OR \
+        \type = 'user_id'::text AND user_id IS NOT NULL OR \
+        \type = 'email'::text AND string IS NOT NULL OR \
+        \type = 'phone_number'::text AND string IS NOT NULL OR \
+        \type = 'message'::text AND string IS NOT NULL"
+        }
+    ]
   }
 
 createTableFlowInstancesKVStore :: MonadDB m => Migration m

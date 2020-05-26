@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Flow.Model.Types where
 
 import GHC.Generics (Generic)
 
+import Doc.DocumentID (DocumentID)
 import User.UserID (UserID)
 import UserGroup.Internal (UserGroupID)
 
@@ -14,3 +16,25 @@ data InsertTemplate = InsertTemplate
     , userGroupId :: UserGroupID
     }
   deriving (Show, Eq, Generic)
+
+data StoreValue
+    = StoreDocumentId DocumentID
+    | StoreUserId UserID
+    | StoreEmail Text
+    | StorePhoneNumber Text
+    | StoreMessage Text
+  deriving (Show, Eq, Generic)
+
+data StoreValueType
+    = Document
+    | User
+    | Email
+    | PhoneNumber
+    | Message
+
+storeValueTypeToText :: StoreValueType -> Text
+storeValueTypeToText Document    = "document"
+storeValueTypeToText User        = "user"
+storeValueTypeToText Email       = "email"
+storeValueTypeToText PhoneNumber = "phone_number"
+storeValueTypeToText Message     = "message"

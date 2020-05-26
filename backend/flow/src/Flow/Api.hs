@@ -13,7 +13,6 @@ module Flow.Api where
 
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Int
 import Data.Map
 import Data.Proxy
 import Data.Time.Clock
@@ -26,7 +25,7 @@ import Flow.Id
 import User.UserID (UserID)
 
 -- TODO: What to do with MessageId and messages in general?
-type MessageId = Int64
+type MessageId = Text
 
 type FlowDSL = Text
 

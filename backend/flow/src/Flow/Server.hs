@@ -13,7 +13,6 @@ import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Time
-import Data.Int
 import Data.Text
 import Data.Text.Encoding
 import Data.Yaml
@@ -32,7 +31,7 @@ import qualified Data.Map as Map
 import Auth.Model
 import Auth.OAuth
 import Auth.Parse
-import Doc.DocumentID (fromDocumentID, unsafeDocumentID)
+import Doc.DocumentID (unsafeDocumentID)
 import Flow.Api
 import Flow.HighTongue
 import Flow.Id
@@ -40,7 +39,7 @@ import Flow.Machinize
 import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Log.Configuration (LogRunner(LogRunner, withLogger))
-import User.UserID (UserID, unUserID, unsafeUserID)
+import User.UserID (UserID, unsafeUserID)
 import UserGroup.Internal (UserGroupID, unsafeUserGroupID)
 import qualified Flow.Model as Model
 
@@ -187,9 +186,9 @@ startInstance Account {..} templateId tp@InstanceToTemplateMapping {..} = do
   -- TODO: Replace value type with enum???
   -- TODO: Model instance state inside database somehow!
   id <- Model.insertFlowInstance templateId
-  insertFlowInstanceKeyValues id "document" documents fromDocumentID
-  insertFlowInstanceKeyValues id "user"     users     unUserID
-  insertFlowInstanceKeyValues id "message"  messages  identity
+  insertFlowInstanceKeyValues id documents StoreDocumentId
+  insertFlowInstanceKeyValues id users     StoreUserId
+  insertFlowInstanceKeyValues id messages  StoreMessage
 
   pure $ GetInstance
     { id
@@ -206,9 +205,9 @@ startInstance Account {..} templateId tp@InstanceToTemplateMapping {..} = do
   where
     -- TODO: this probably needs to be moved to Model module.
     insertFlowInstanceKeyValues
-      :: InstanceId -> Text -> Map.Map Text a -> (a -> Int64) -> AppM ()
-    insertFlowInstanceKeyValues instanceId valueType keyValues f =
-      mapM_ (Model.insertFlowInstanceKeyValue instanceId valueType . fmap f)
+      :: InstanceId -> Map.Map Text a -> (a -> StoreValue) -> AppM ()
+    insertFlowInstanceKeyValues instanceId keyValues f =
+      mapM_ (\(k, v) -> Model.insertFlowInstanceKeyValue instanceId k $ f v)
         $ Map.toList keyValues
 
 getInstance :: InstanceId -> AppM GetInstance
@@ -218,15 +217,17 @@ getInstance instanceId = do
   -- TODO: Model instance state inside database somehow!
   templateId <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
   documents  <-
-    Map.fromList . fmap (fmap unsafeDocumentID) <$> Model.selectInstanceKeyValues
-      instanceId
-      "document"
-  users <- Map.fromList . fmap (fmap unsafeUserID) <$> Model.selectInstanceKeyValues
-    instanceId
-    "user"
-  messages <- Map.fromList . fmap (fmap identity) <$> Model.selectInstanceKeyValues
-    instanceId
-    "message"
+    Map.fromList
+    .   fmap (fmap unsafeDocumentID)
+    <$> Model.selectInstanceKeyValues instanceId Document
+  users <-
+    Map.fromList
+    .   fmap (fmap unsafeUserID)
+    <$> Model.selectInstanceKeyValues instanceId User
+  messages <-
+    Map.fromList
+    .   fmap (fmap identity)
+    <$> Model.selectInstanceKeyValues instanceId Message
   pure $ GetInstance
     { id                 = instanceId
     , template           = templateId

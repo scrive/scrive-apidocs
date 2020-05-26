@@ -15,7 +15,6 @@ module Flow.Model
 
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
-import Data.Int (Int64)
 import Data.Text (pack)
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Database.PostgreSQL.PQTypes
@@ -114,15 +113,27 @@ insertFlowInstance templateId = do
 
 insertFlowInstanceKeyValue
     -- TODO: Make Id type for original kontra IDs.
-    -- TODO: Think of a way how to make this more typed. Text -> (text, Int64)
-    -- is really ugly...
-  :: MonadDB m => InstanceId -> Text -> (Text, Int64) -> m ()
-insertFlowInstanceKeyValue instanceId valueType (key, value) =
+  :: MonadDB m => InstanceId -> Text -> StoreValue -> m ()
+insertFlowInstanceKeyValue instanceId key value =
   runQuery_ . sqlInsert "flow_instance_key_value_store" $ do
     sqlSet "instance_id" instanceId
-    sqlSet "type"        valueType
     sqlSet "key"         key
-    sqlSet "value"       value
+    case value of
+      StoreDocumentId document -> do
+        sqlSet "type" $ storeValueTypeToText Document
+        sqlSet "document_id" document
+      StoreUserId user -> do
+        sqlSet "type" $ storeValueTypeToText User
+        sqlSet "user_id" user
+      StoreEmail email -> do
+        sqlSet "type" $ storeValueTypeToText Email
+        sqlSet "string" email
+      StorePhoneNumber number -> do
+        sqlSet "type" $ storeValueTypeToText PhoneNumber
+        sqlSet "string" number
+      StoreMessage msg -> do
+        sqlSet "type" $ storeValueTypeToText Message
+        sqlSet "string" msg
 
 selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe TemplateId)
 selectInstance instanceId = do
@@ -131,13 +142,19 @@ selectInstance instanceId = do
     sqlWhereEq "id" instanceId
   fetchMaybe runIdentity
 
--- TODO: Move to Maybe with selects?
+-- TODO: Think about making this function a bit more type safe???
 selectInstanceKeyValues
-  :: (MonadDB m, MonadThrow m) => InstanceId -> Text -> m [(Text, Int64)]
+  :: (MonadDB m, MonadThrow m, FromSQL t) => InstanceId -> StoreValueType -> m [(Text, t)]
 selectInstanceKeyValues instanceId valueType = do
   runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
     sqlResult "key"
-    sqlResult "value"
+    sqlResult $ storeValueTypeToValueColumn valueType
     sqlWhereEq "instance_id" instanceId
-    sqlWhereEq "type"        valueType
+    sqlWhereEq "type" $ storeValueTypeToText valueType
   fetchMany identity
+  where
+    storeValueTypeToValueColumn Document    = "document_id"
+    storeValueTypeToValueColumn User        = "user_id"
+    storeValueTypeToValueColumn Email       = "string"
+    storeValueTypeToValueColumn PhoneNumber = "string"
+    storeValueTypeToValueColumn Message     = "string"
