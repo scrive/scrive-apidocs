@@ -1048,7 +1048,7 @@ userGroupSettingsAddEidUseForSEViewFlag = Migration
         ]
 
       runQuery_ . sqlCreateComposite $ CompositeType
-        { ctName    = "user_group_settings_c12"
+        { ctName    = "user_group_settings_c13"
         , ctColumns =
           [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
           , CompositeColumn { ccName = "idle_doc_timeout_preparation"
@@ -1078,6 +1078,7 @@ userGroupSettingsAddEidUseForSEViewFlag = Migration
           , CompositeColumn { ccName = "force_hide_pn", ccType = BoolT }
           , CompositeColumn { ccName = "has_post_signview", ccType = BoolT }
           , CompositeColumn { ccName = "sso_config", ccType = JsonbT }
+          , CompositeColumn { ccName = "add_metadata_to_pdfs", ccType = BoolT }
           , CompositeColumn { ccName = "use_eid_service_for_se_view", ccType = BoolT }
           ]
         }
