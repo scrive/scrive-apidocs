@@ -1,12 +1,38 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
+{-# LANGUAGE TypeOperators #-}
 
-module Flow.Aggregator where
+module Flow.Aggregator
+    ( AggregatorState(..)
+    , AggregatorError(..)
+    , AggregatorStep(..)
+    , aggregate
+    , aggregateAndStep
+    , prepareAggregatorState
+    , runAggregatorStep
+    )
+  where
 
+import Control.Arrow (left)
+import Control.Exception (Exception, throwIO)
+import Data.Aeson
+import Data.Aeson.Casing
 import Data.Set (Set)
+import Database.PostgreSQL.PQTypes
+import GHC.Generics
 import qualified Control.Monad.Except as E
+import qualified Control.Monad.Reader as R
 import qualified Control.Monad.State.Strict as S
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -16,51 +42,110 @@ import Flow.Machinize
 import Flow.Transducer
 
 data AggregatorState = AggregatorState
-    { machine :: Machine
-    , stateId :: StateId
-    , receivedEvents :: Set EventInfo
-    , allowedEvents :: Set EventInfo
-    , edgeInputs :: [Set EventInfo]
+    { receivedEvents :: Set EventInfo
+    , currentState :: StateId
     }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-data AggregatorResult
+newtype AggregatorConstans = AggregatorConstans
+    { machine :: Machine
+    }
+  deriving (Show, Eq, Generic)
+
+{- HLINT ignore AggregatorMarshallingException -}
+data AggregatorMarshallingException = AggregatorMarshallingException String
+  deriving (Show, Exception)
+
+instance PQFormat AggregatorState where
+  pqFormat = pqFormat @(JSON Value)
+
+instance FromSQL AggregatorState where
+  type PQBase AggregatorState = PQBase (JSON Value)
+  fromSQL mbase = do
+    (JSON jsonValue) <- fromSQL mbase
+    case fromJSON jsonValue of
+      Error   err -> throwIO $ AggregatorMarshallingException err
+      Success v   -> pure v
+
+instance ToSQL AggregatorState where
+  type PQDest AggregatorState = PQDest (JSON Value)
+  toSQL v = toSQL (JSON $ toJSON v)
+
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+instance FromJSON AggregatorState where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON AggregatorState where
+  toEncoding = genericToEncoding aesonOptions
+
+data AggregatorStep
     = NeedMoreEvents
-    | UnknownEventInfo
+    | StateChange [LowAction]
+    | FinalState [LowAction]
+  deriving (Eq, Show, Generic)
+
+data AggregatorError
+    = UnknownEventInfo
     | DuplicateEvent
     | TransducerError Flow.Transducer.Error
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
-type AggregatorT = E.ExceptT AggregatorResult (S.State AggregatorState)
+type AggregatorT = E.ExceptT AggregatorError (R.ReaderT Machine (S.State AggregatorState))
 
-aggregate :: EventInfo -> AggregatorT (Set EventInfo)
+put :: AggregatorState -> AggregatorT ()
+put = S.put
+
+aggregate :: EventInfo -> AggregatorT (Maybe (Set EventInfo))
 aggregate event = do
   state@AggregatorState {..} <- S.get
-  when (Set.notMember event allowedEvents) $ E.throwError UnknownEventInfo
+  machine <- R.ask
+  machineState <- E.liftEither . left TransducerError $ getState machine currentState
+  when (Set.notMember event $ getAllowedEvents machineState)
+    $ E.throwError UnknownEventInfo
   -- TODO: Think hard about various scenarios where events may be duplicate.
   -- For example typos can lead to multiple events of the same type.
   when (Set.member event receivedEvents) $ E.throwError DuplicateEvent
   let newReceivedEvents = Set.insert event receivedEvents
-  S.put $ state { receivedEvents = newReceivedEvents }
-  maybe (E.throwError NeedMoreEvents) pure
-    $ List.find (`Set.isSubsetOf` newReceivedEvents) edgeInputs
+  put $ state { receivedEvents = newReceivedEvents }
+  pure . List.find (`Set.isSubsetOf` newReceivedEvents) $ getEdgeInputs machineState
 
-aggregateAndStep :: EventInfo -> AggregatorT Edge
+aggregateAndStep :: EventInfo -> AggregatorT AggregatorStep
 aggregateAndStep event = do
-  AggregatorState {..} <- S.get
-  edgeInput            <- aggregate event
-  either (E.throwError . TransducerError) pure $ step machine stateId edgeInput
+  AggregatorState {..}    <- S.get
+  machine@Transducer {..} <- R.ask
+  maybeEdgeInput          <- aggregate event
+  case maybeEdgeInput of
+    Nothing        -> pure NeedMoreEvents
+    Just edgeInput -> do
+      TransducerEdge {..} <- either (E.throwError . TransducerError) pure
+        $ step machine currentState edgeInput
+      put $ makeNewState edgeNextState
+      pure $ if isFinalState machine edgeNextState
+        then FinalState edgeOutputLabel
+        else StateChange edgeOutputLabel
 
-prepareAggregatorState :: Machine -> State -> AggregatorState
-prepareAggregatorState machine TransducerState {..} = AggregatorState
-  { machine
-  , stateId        = _stateId
-  , receivedEvents = Set.empty
-  , allowedEvents  = foldl Set.union Set.empty $ Map.keys _stateEdges
-  , edgeInputs     = Map.keys _stateEdges
-  }
+makeNewState :: StateId -> AggregatorState
+makeNewState newState =
+  AggregatorState { currentState = newState, receivedEvents = mempty }
+
+prepareAggregatorState :: Machine -> AggregatorState
+prepareAggregatorState Transducer {..} = makeNewState initialState
+
+getAllowedEvents :: State -> Set EventInfo
+getAllowedEvents TransducerState {..} = foldl Set.union Set.empty $ Map.keys stateEdges
+
+getEdgeInputs :: State -> [Set EventInfo]
+getEdgeInputs TransducerState {..} = Map.keys stateEdges
 
 runAggregatorStep
-  :: EventInfo -> AggregatorState -> (Either AggregatorResult Edge, AggregatorState)
-runAggregatorStep event aggregatorState =
-  flip S.runState aggregatorState . E.runExceptT $ aggregateAndStep event
+  :: EventInfo
+  -> AggregatorState
+  -> Machine
+  -> (Either AggregatorError AggregatorStep, AggregatorState)
+runAggregatorStep event aggregatorState machine = do
+  flip S.runState aggregatorState
+    . flip R.runReaderT machine
+    . E.runExceptT
+    $ aggregateAndStep event

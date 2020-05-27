@@ -9,7 +9,27 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Flow.Api where
+module Flow.Api
+    ( MessageId
+    , FlowDSL
+    , CreateTemplate(..)
+    , GetCreateTemplate(..)
+    , GetTemplate(..)
+    , PatchTemplate(..)
+    , ValidationError(..)
+    , InstanceToTemplateMapping(..)
+    , InstanceEventDeed(..)
+    , InstanceEvent(..)
+    , InstanceStage(..)
+    , InstanceState(..)
+    , GetInstance(..)
+    , InstanceAction(..)
+    , GetInstanceView(..)
+    , StartTemplate(..)
+    , FlowAPI
+    , apiProxy
+    )
+  where
 
 import Data.Aeson
 import Data.Aeson.Casing

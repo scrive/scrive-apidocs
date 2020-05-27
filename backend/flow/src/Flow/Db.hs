@@ -11,6 +11,7 @@ flowTables =
   , tableFlowStateMachines
   , tableFlowInstancesKVStore
   , tableFlowInstanceSignatories
+  , tableFlowInstanceAggregator
   ]
 
 flowMigrations :: MonadDB m => [Migration m]
@@ -20,6 +21,7 @@ flowMigrations =
   , createTableFlowStateMachines
   , createTableFlowInstancesKVStore
   , createTableFlowInstanceSignatories
+  , createTableFlowInstanceAggregator
   ]
 
 tableFlowTemplates :: Table
@@ -159,8 +161,7 @@ tableFlowStateMachines = tblTable
                              , colType     = UuidT
                              , colNullable = False
                              }
-    -- TODO: Maybe use JSON type instead of Text???
-                 , tblColumn { colName = "data", colType = TextT, colNullable = False }
+                 , tblColumn { colName = "data", colType = JsonT, colNullable = False }
                  ]
   , tblPrimaryKey  = pkOnColumn "template_id"
   , tblForeignKeys =
@@ -172,4 +173,27 @@ createTableFlowStateMachines = Migration
   { mgrTableName = tblName tableFlowStateMachines
   , mgrFrom      = 0
   , mgrAction    = StandardMigration $ createTable True tableFlowStateMachines
+  }
+
+
+tableFlowInstanceAggregator :: Table
+tableFlowInstanceAggregator = tblTable
+  { tblName        = "flow_instance_aggregator"
+  , tblVersion     = 1
+  , tblColumns = [ tblColumn { colName     = "instance_id"
+                             , colType     = UuidT
+                             , colNullable = False
+                             }
+                 , tblColumn { colName = "data", colType = JsonT, colNullable = False }
+                 ]
+  , tblPrimaryKey  = pkOnColumn "instance_id"
+  , tblForeignKeys =
+    [(fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyRestrict }]
+  }
+
+createTableFlowInstanceAggregator :: MonadDB m => Migration m
+createTableFlowInstanceAggregator = Migration
+  { mgrTableName = tblName tableFlowInstanceAggregator
+  , mgrFrom      = 0
+  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceAggregator
   }

@@ -10,16 +10,24 @@ module Flow.Model
     , insertParsedStateMachine
     , selectInstance
     , selectInstanceKeyValues
+    , selectAggregatorState
+    , insertAggregatorState
+    , updateAggregatorState
+    , selectAggregatorData
+    , selectDocumentNameFromKV
+    , selectUserNameFromKV
     )
   where
 
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
-import Data.Text (pack)
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
 
+import Doc.DocumentID (DocumentID)
+import Doc.SignatoryLinkID (SignatoryLinkID)
+import Flow.Aggregator
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types
@@ -99,7 +107,7 @@ insertParsedStateMachine :: MonadDB m => TemplateId -> Machine -> m ()
 insertParsedStateMachine templateId machine = do
   runQuery_ . sqlInsert "flow_compiled_state_machine" $ do
     sqlSet "template_id" templateId
-    sqlSet "data" . pack $ show machine
+    sqlSet "data"        machine
 
 insertFlowInstance :: (MonadDB m, MonadThrow m) => TemplateId -> m InstanceId
 insertFlowInstance templateId = do
@@ -155,3 +163,54 @@ selectInstanceKeyValues instanceId valueType = do
     storeValueTypeToValueColumn Email       = "string"
     storeValueTypeToValueColumn PhoneNumber = "string"
     storeValueTypeToValueColumn Message     = "string"
+
+insertAggregatorState :: MonadDB m => AggregatorState -> InstanceId -> m ()
+insertAggregatorState aggregatorState instanceId =
+  runQuery_ . sqlInsert "flow_instance_aggregator" $ do
+    sqlSet "instance_id" instanceId
+    sqlSet "data"        aggregatorState
+
+selectAggregatorState :: (MonadDB m, MonadThrow m) => InstanceId -> m AggregatorState
+selectAggregatorState instanceId = do
+  runQuery_ . sqlSelect "flow_instance_aggregator" $ do
+    sqlResult "data"
+    sqlWhereEq "instanceId" instanceId
+  fetchOne runIdentity
+
+updateAggregatorState :: (MonadDB m) => InstanceId -> AggregatorState -> m ()
+updateAggregatorState instanceId aggregatorState = do
+  runQuery_ . sqlUpdate "flow_instance_aggregator" $ do
+    sqlSet "instance_id" instanceId
+    sqlSet "data"        aggregatorState
+
+selectAggregatorData
+  :: (MonadDB m, MonadThrow m) => InstanceId -> m (Machine, AggregatorState)
+selectAggregatorData instanceId = do
+  runQuery_ . sqlSelect "flow_instance" $ do
+    sqlResult "machine.data"
+    sqlResult "aggregator.data"
+    sqlJoinOn "flow_instance_aggregator aggregator"
+              "flow_instance.id = aggregator.instance_id"
+    sqlJoinOn "flow_compiled_state_machine machine"
+              "instance.template_id = machine.template_id"
+    sqlWhereEq "flow_instance.id" instanceId
+  fetchOne identity
+
+selectDocumentNameFromKV
+  :: (MonadDB m, MonadThrow m) => InstanceId -> DocumentID -> m (Maybe Text)
+selectDocumentNameFromKV instanceId documentId = do
+  runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
+    sqlResult "key"
+    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "type" $ storeValueTypeToText Document
+    sqlWhereEq "document_id" documentId
+  fetchMaybe runIdentity
+
+selectUserNameFromKV
+  :: (MonadDB m, MonadThrow m) => InstanceId -> SignatoryLinkID -> m (Maybe Text)
+selectUserNameFromKV instanceId signatoryLinkId = do
+  runQuery_ . sqlSelect "flow_instance_signatories" $ do
+    sqlResult "key"
+    sqlWhereEq "instance_id"  instanceId
+    sqlWhereEq "signatory_id" signatoryLinkId
+  fetchMaybe runIdentity

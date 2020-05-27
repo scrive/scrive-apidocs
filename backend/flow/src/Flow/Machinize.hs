@@ -1,15 +1,31 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Flow.Machinize where
+module Flow.Machinize
+    ( Deed(..)
+    , EventInfo(..)
+    , LowAction(..)
+    , Machine
+    , State
+    , Edge
+    , linear
+    )
+  where
 
+import Data.Aeson hiding (pairs)
+import Data.Aeson.Casing
 import Data.List.Extra (snoc)
 import Data.Set (Set)
+import GHC.Generics
 import qualified Data.Set as Set
 
 import Flow.HighTongue
 import Flow.Transducer
+
+aesonOptions :: Options
+aesonOptions = aesonPrefix snakeCase
 
 -- | Types of actions performed by the user.
 data Deed
@@ -27,7 +43,13 @@ data Deed
   -- | User had not provided a response within the time limit.
   -- Currently not used.
   | Timeout
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
+
+instance FromJSON Deed where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON Deed where
+  toJSON = genericToJSON aesonOptions
 
 -- | A record of an event relevant to a Flow process.
 -- What happened, who did it, and which document was involved?
@@ -36,7 +58,13 @@ data EventInfo = EventInfo
     , eventInfoUser     :: UserName
     , eventInfoDocument :: DocumentName
     }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
+
+instance FromJSON EventInfo where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON EventInfo where
+  toJSON = genericToJSON aesonOptions
 
 -- | Abstract actions triggered by the engine when transitioning
 -- between states.
@@ -45,7 +73,13 @@ data LowAction
   = Action Action
   -- | An action representing a failure of the Flow process.
   | Fail
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+
+instance FromJSON LowAction where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON LowAction where
+  toJSON = genericToJSON aesonOptions
 
 -- | A state machine reacting to user events and triggering
 -- corresponding actions. Transitions are guarded by sets of events

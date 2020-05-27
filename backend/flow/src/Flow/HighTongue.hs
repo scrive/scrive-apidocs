@@ -2,9 +2,21 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Flow.HighTongue where
+module Flow.HighTongue
+    ( Expect(..)
+    , Action(..)
+    , HighTongue(..)
+    , Stage(..)
+    , DocumentName
+    , UserName
+    , MessageName
+    , FieldName
+    , StateName
+    )
+  where
 
 import Data.Aeson
+import Data.Aeson.Casing
 import Data.Aeson.Types
 import Data.Set (Set)
 import GHC.Generics
@@ -17,6 +29,9 @@ type MessageName = Text
 type FieldName = Text
 type StateName = Text
 
+
+aesonOptions :: Options
+aesonOptions = aesonPrefix snakeCase
 
 data Expect
     = ReceivedData
@@ -75,7 +90,10 @@ data Action
     | Close
         { actionDocuments :: [DocumentName]
         }
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic)
+
+instance ToJSON Action where
+  toJSON = genericToJSON aesonOptions
 
 parseNotify :: Value -> Parser Action
 parseNotify = withObject "notify" $ \o -> do

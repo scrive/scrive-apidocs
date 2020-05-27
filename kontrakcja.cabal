@@ -358,6 +358,7 @@ Library
                  , Flow.Api
                  , Flow.Client
                  , Flow.Db
+                 , Flow.Engine
                  , Flow.HighTongue
                  , Flow.Id
                  , Flow.Machinize
@@ -1326,11 +1327,14 @@ Test-suite kontrakcja-test
                  File.Tables
                  FileTest
                  FlashMessages
-                 FlowTests
-                 Flow.VariableCollectorTest
                  Flow.AggregatorTest
                  Flow.IntegrationTest
                  Flow.MachinizeTest
+                 FlowTests
+                 FlowTests
+                 Flow.VariableCollectorTest
+                 Flow.TransducerTest
+                 Flow.VariableCollectorTest
                  Folder.APITest
                  UserGroup.APITest
                  UserGroup.UserGroupTest
@@ -1431,6 +1435,7 @@ Test-suite kontrakcja-test
                , cryptostore
                , data-default
                , directory
+               , either
                , exceptions
                , extra
                , optics

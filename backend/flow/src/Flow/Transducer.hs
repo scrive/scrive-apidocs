@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -5,12 +6,27 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-module Flow.Transducer where
+module Flow.Transducer
+    ( TransducerEdge(..)
+    , StateId
+    , TransducerState(..)
+    , Transducer(..)
+    , Error(..)
+    , createTransducer
+    , step
+    , getState
+    , isFinalState
+    )
+  where
 
+import Control.Exception (Exception, throwIO)
+import Data.Aeson
+import Data.Aeson.Casing
 import Data.Either.Extra (maybeToEither)
 import Data.Foldable
 import Data.Map.Strict
 import Data.Text hiding (find)
+import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import qualified Data.Map.Strict as M
 
@@ -25,18 +41,64 @@ data TransducerEdge a b = TransducerEdge
     }
   deriving (Show, Eq, Generic)
 
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+instance (FromJSON a, FromJSON b) => FromJSON (TransducerEdge a b) where
+  parseJSON = genericParseJSON aesonOptions
+
+instance (ToJSON a, ToJSON b) => ToJSON (TransducerEdge a b) where
+  toJSON = genericToJSON aesonOptions
+
 data TransducerState a b = TransducerState
-    { _stateId :: StateId
-    , _stateEdges :: Map a (TransducerEdge a b)
+    { stateId :: StateId
+    , stateEdges :: Map a (TransducerEdge a b)
     }
   deriving (Show, Eq, Generic)
 
+instance (Ord a, FromJSON a, FromJSON b) => FromJSON (TransducerState a b) where
+  parseJSON = withObject "TransducerState" $ \v -> do
+    stateId    <- v .: "state-id"
+    stateEdges <- M.fromList <$> v .: "state-edges"
+    pure TransducerState { .. }
+
+instance (Ord a, ToJSON a, ToJSON b) => ToJSON (TransducerState a b) where
+  toJSON TransducerState {..} =
+    object ["state-id" .= stateId, "state-edges" .= M.toList stateEdges]
+
 data Transducer a b = Transducer
-    { _states :: Map StateId (TransducerState a b)
-    , _initialState :: StateId
-    , _endStates :: [StateId]
+    { states :: Map StateId (TransducerState a b)
+    , initialState :: StateId
+    , endStates :: [StateId]
     }
   deriving (Show, Eq, Generic)
+
+instance (Ord a, FromJSON a, FromJSON b) => FromJSON (Transducer a b) where
+  parseJSON = genericParseJSON aesonOptions
+
+instance (Ord a, ToJSON a, ToJSON b) => ToJSON (Transducer a b) where
+  toJSON = genericToJSON aesonOptions
+
+{- HLINT ignore TranducerMarshallingException -}
+data TranducerMarshallingException = TransducerFromJsonDecoding String
+  deriving (Show, Exception)
+
+instance (Ord a, FromJSON a, FromJSON b, ToJSON a, ToJSON b)
+  => PQFormat (Transducer a b) where
+  pqFormat = pqFormat @(JSON Value)
+
+instance (Ord a, FromJSON a, FromJSON b, ToJSON a, ToJSON b) => FromSQL (Transducer a b) where
+  type PQBase (Transducer a b) = PQBase (JSON Value)
+  fromSQL mbase = do
+    (JSON jsonValue) <- fromSQL mbase
+    case fromJSON jsonValue of
+      Error   err -> throwIO $ TransducerFromJsonDecoding err
+      Success v   -> pure v
+
+instance (Ord a, FromJSON a, FromJSON b, ToJSON a, ToJSON b) => ToSQL (Transducer a b) where
+  type PQDest (Transducer a b) = PQDest (JSON Value)
+  toSQL v = toSQL (JSON $ toJSON v)
+
 
 data Error
     = TransitionNotFound
@@ -51,12 +113,12 @@ step
   -> StateId
   -> a
   -> Either Error (TransducerEdge a b)
-step Transducer {..} stateId input = getState >>= findEdge
+step transducer@Transducer {..} stateId' input =
+  getState transducer stateId' >>= findEdge
   where
-    getState = maybeToEither StateIdNotFound $ _states !? stateId
     findEdge :: TransducerState a b -> Either Error (TransducerEdge a b)
     findEdge TransducerState {..} =
-      maybeToEither TransitionNotFound $ _stateEdges !? input
+      maybeToEither TransitionNotFound $ stateEdges !? input
 
 createTransducer
   :: forall a b
@@ -67,8 +129,9 @@ createTransducer
   -> [StateId]
   -> [(StateId, TransducerEdge a b)]
   -> Either Error (Transducer a b)
-createTransducer _initialState _endStates edges = do
-  _states <- foldlM addStateAndEndge M.empty edges
+createTransducer initialState endStates edges = do
+  states <-
+    (fromList (fmap toEndState endStates) <>) <$> foldlM addStateAndEndge M.empty edges
   pure Transducer { .. }
   where
     addStateAndEndge
@@ -83,16 +146,30 @@ createTransducer _initialState _endStates edges = do
       -> TransducerEdge a b
       -> Maybe (TransducerState a b)
       -> Either Error (Maybe (TransducerState a b))
-    addState _stateId edge Nothing = pure . Just $ TransducerState
-      { _stateId
-      , _stateEdges = M.singleton (edgeInputLabel edge) edge
+    addState stateId edge Nothing = pure . Just $ TransducerState
+      { stateId
+      , stateEdges = M.singleton (edgeInputLabel edge) edge
       }
     addState _ edge (Just state@TransducerState {..}) = do
-      _stateEdges <- alterF (addEdge edge) (edgeInputLabel edge) _stateEdges
-      pure . Just $ state { _stateEdges }
+      stateEdges' <- alterF (addEdge edge) (edgeInputLabel edge) stateEdges
+      pure . Just $ state { stateEdges = stateEdges' }
+
     addEdge
       :: TransducerEdge a b
       -> Maybe (TransducerEdge a b)
       -> Either Error (Maybe (TransducerEdge a b))
     addEdge edge  Nothing  = pure $ Just edge
     addEdge _edge (Just e) = Left . DuplicitEdge . pack $ show e
+
+    toEndState :: StateId -> (StateId, TransducerState a b)
+    toEndState stateId = (stateId, emptyState stateId)
+
+    emptyState :: StateId -> TransducerState a b
+    emptyState stateId = TransducerState { stateId, stateEdges = mempty }
+
+getState :: Transducer a b -> StateId -> Either Error (TransducerState a b)
+getState Transducer {..} stateId = maybeToEither StateIdNotFound $ states !? stateId
+
+-- TODO: tests
+isFinalState :: Transducer a b -> StateId -> Bool
+isFinalState Transducer {..} stateId = stateId `elem` endStates
