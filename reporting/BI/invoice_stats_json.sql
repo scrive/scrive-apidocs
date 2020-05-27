@@ -584,7 +584,7 @@ create temporary table report_master_json as
 
 \copy report_master_json TO master_tmp.json WITH (FORMAT TEXT);
 
-\! jq -s -c <master_tmp.json > master_$(date '+%Y-%m-%d_%H:%M:%S').json
+\! /usr/local/bin/jq -s -c <master_tmp.json > master_$(date '+%Y-%m-%d_%H:%M:%S').json
 \! rm master_tmp.json
 
 CREATE TABLE report_aggregated AS
@@ -650,7 +650,7 @@ create temporary table report_aggregated_json as
   (select row_to_json(report_aggregated) from report_aggregated);
 
 \copy report_aggregated_json to aggregated_tmp.json with (format text);
-\! jq -s -c < aggregated_tmp.json > aggregated_$(date '+%Y-%m-%d_%H:%M:%S').json
+\! /usr/local/bin/jq -s -c < aggregated_tmp.json > aggregated_$(date '+%Y-%m-%d_%H:%M:%S').json
 \! rm aggregated_tmp.json
 
 ROLLBACK;

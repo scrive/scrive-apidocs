@@ -1,27 +1,22 @@
 #!/usr/bin/bash
-# e.g. use this like ./run_reports $FROM_DATE $TO_DATE
-# for Crontab: /home/prod/kontrakcja/reporting/BI/run_reports $(date +"%Y%m%d" -d "1 day ago") $(date +"%Y%m%d")
-
-# Script actions for the uninitiated:
-# 1. run psql over script files
-# 2. gzip the output
-# 3. put in s3
-# 4. clean up
 
 cd /home/prod/kontrakcja/reporting/BI
 echo "Changing working dir" $(pwd)
 
-DBCXN=$(cat /home/prod/kontrakcja/kontrakcja.conf | jq -r '.database')
+DBCXN=$(/usr/local/bin/jq -r '.database' < /home/prod/kontrakcja/kontrakcja.conf)
 
-time psql "$DBCXN" -v date_from=$1 -v date_to=$2 -f invoice_stats_json.sql
+FROM=$(date +"%Y%m%d" -d "1 day ago")
+TO=$(date +"%Y%m%d")
+
+time psql "$DBCXN" -v date_from=$FROM -v date_to=$TO -f invoice_stats_json.sql
 time psql "$DBCXN" -f groups_for_b3.sql
 time psql "$DBCXN" -f users_for_b3.sql
 
 gzip *.json
 
 ls *.json.gz | while read file;do
-  PATH_PREFIX=$(echo $file | awk -F'_' '{print $1}')/
-  PATH_SUFFIX=$(echo $file | awk -F'_' '{print $2;}' | sed 's/-/\//g')/
+  PATH_PREFIX=$(echo $file | awk -F'_' '{print $FROM}')/
+  PATH_SUFFIX=$(echo $file | awk -F'_' '{print $TO;}' | sed 's/-/\//g')/
   s3cmd put $file s3://scrive-b3-data/core/${PATH_PREFIX}${PATH_SUFFIX}
 done
 

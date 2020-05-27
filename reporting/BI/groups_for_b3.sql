@@ -38,7 +38,7 @@ create temporary table report_groups_json as
 
 \copy report_groups_json to groups_tmp.json with (format text);
 \! sed 's/\\"/\"/g' < groups_tmp.json | sed 's/\\\\t//g' > groups_tmp2.json
-\! jq -s -c <groups_tmp2.json > groups_$(date '+%Y-%m-%d_%H:%M:%S').json
+\! /usr/local/bin/jq -s -c <groups_tmp2.json > groups_$(date '+%Y-%m-%d_%H:%M:%S').json
 \! rm groups_tmp.json
 \! rm groups_tmp2.json
 drop table report_groups;
