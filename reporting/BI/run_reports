@@ -15,8 +15,8 @@ time psql "$DBCXN" -f users_for_b3.sql
 gzip *.json
 
 ls *.json.gz | while read file;do
-  PATH_PREFIX=$(echo $file | awk -F'_' '{print $FROM}')/
-  PATH_SUFFIX=$(echo $file | awk -F'_' '{print $TO;}' | sed 's/-/\//g')/
+  PATH_PREFIX=$(echo $file | awk -F'_' '{print $1}')/
+  PATH_SUFFIX=$(echo $file | awk -F'_' '{print $2;}' | sed 's/-/\//g')/
   s3cmd put $file s3://scrive-b3-data/core/${PATH_PREFIX}${PATH_SUFFIX}
 done
 
