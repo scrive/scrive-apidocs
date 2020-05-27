@@ -146,8 +146,10 @@ commitTemplate :: Account -> TemplateId -> AppM NoContent
 commitTemplate Account {..} id = do
   logInfo_ "committing template"
   now      <- liftIO currentTime
-  template <- fromMaybeM (throwError err404) $ Model.getTemplateDsl id
-  machine  <- either throwValidationErr409 pure $ decodeHightTang template >>= machinize
+  template <- fromMaybeM (throwError err404) $ Model.selectTemplate id
+  when (isJust $ committed template) $ throwError err409
+  templateDSL <- fromMaybeM (throwError err404) $ Model.getTemplateDsl id
+  machine <- either throwValidationErr409 pure $ decodeHightTang templateDSL >>= machinize
   Model.commitTemplate now id
   Model.insertParsedStateMachine id machine
   pure NoContent
