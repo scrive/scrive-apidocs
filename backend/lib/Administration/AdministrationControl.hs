@@ -268,12 +268,13 @@ jsonUsersList = onlySalesOrAdmin $ do
 
   runJSONGenT $ do
     value "total_matching" totalMatching
-    valueM "users" . forM users $ \(user, ugname) -> runJSONGenT $ do
+    valueM "users" . forM users $ \(user, ugname, entityName) -> runJSONGenT $ do
       value "id" . show $ user ^. #id
       value "username" . T.unpack $ getFullName user
       value "email" . T.unpack $ getEmail user
       value "companyposition" . T.unpack $ user ^. #info % #companyPosition
-      value "company" . T.unpack $ ugname
+      value "company" . T.unpack $ entityName
+      value "usergroup" . T.unpack $ ugname
       value "phone" . T.unpack $ user ^. #info % #phone
       value "tos" $ formatTimeISO <$> (user ^. #hasAcceptedTOS)
       value "twofactor_active" $ user ^. #totpActive

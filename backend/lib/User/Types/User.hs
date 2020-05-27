@@ -161,9 +161,10 @@ selectUsersWithUserGroupNamesSQL =
     <> internalUserTagsSelector
     <> ", "
     <> externalUserTagsSelector
-    <> ", ug.name"
+    <> ", ug.name, uga.entity_name"
     <> "  FROM users"
     <> "  LEFT JOIN user_groups ug ON users.user_group_id = ug.id"
+    <> "  LEFT JOIN user_group_addresses uga ON ug.id = uga.user_group_id"
 
 composeFullName :: (Text, Text) -> Text
 composeFullName (fstname, sndname) =
@@ -248,10 +249,11 @@ fetchUserWithUserGroupName
      , CompositeArray1 Tag
      , CompositeArray1 Tag
      , Text
+     , Text
      )
-  -> (User, Text)
-fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags, name)
-  = (user, name)
+  -> (User, Text, Text)
+fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags, ugname, entityName)
+  = (user, ugname, entityName)
   where
     user = User
       { password     = maybeMkPassword password
