@@ -25,7 +25,7 @@ import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
 import Servant
 import Servant.Server.Experimental.Auth
-import qualified Data.ByteString.Lazy as BL
+import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
 
 import Auth.Model
@@ -135,8 +135,10 @@ patchTemplate Account {..} templateId patch = do
   fromMaybeM (throwError err404) $ Model.updateTemplate templateId patch
 
 throwValidationErr409 :: [ValidationError] -> AppM a
-throwValidationErr409 errors =
-  throwError $ err409 { errBody = BL.fromStrict $ encode errors }
+throwValidationErr409 errors = throwError $ err409
+  { errBody    = Aeson.encode errors
+  , errHeaders = [("Content-Type", "application/json")]
+  }
 
 -- TODO: Check user permissions to commit given template.
 -- TODO: Check if the template is already committed and return 204 in case of conflict.
