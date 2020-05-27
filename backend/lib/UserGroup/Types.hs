@@ -47,7 +47,7 @@ import qualified Data.Set as S
 import DataRetentionPolicy
 import DB
 import FeatureFlags.Model
-import Folder.Types
+import Folder.FolderID
 import PadApplication.Types
 import SealingMethod
 import SMS.Types

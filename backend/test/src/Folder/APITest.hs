@@ -33,9 +33,9 @@ import qualified Folder.Internal
 folderApiTests :: TestEnvSt -> Test
 folderApiTests env = testGroup
   "FolderAPI"
-  [ testThat "Test creating groups works in API "              env testFolderAPICreate
-  , testThat "Test updating groups works in API"               env testFolderAPIUpdate
-  , testThat "Test reading groups works in API"                env testFolderAPIGet
+  [ testThat "Test creating folders works in API "             env testFolderAPICreate
+  , testThat "Test updating folders works in API"              env testFolderAPIUpdate
+  , testThat "Test reading folders works in API"               env testFolderAPIGet
   , testThat "Test folder deletion endpoint works in API"      env testFolderAPIDelete
   , testThat "Test listing documents in a folder works in API" env testFolderAPIListDocs
   , testThat "Test deleting empty non-home folder which user has permissons upon works"
@@ -75,7 +75,7 @@ testFolderAPICreate = do
   let fdrTest = set #name folderNameTest . set #parentID (Just fdrRootID) $ defaultFolder
       newFolderJSONBS =
         AE.encodingToLazyByteString
-          . encodeFolderWithChildren
+          . encodeFolderWithChildren False
           $ folderToFolderWithChildren fdrTest
       reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
   -- should not be able to create a child since the user is not an admin of the
@@ -165,7 +165,7 @@ testFolderAPIUpdate = do
     fdrUpdateParams :: Folder -> [(Text, Input)]
     fdrUpdateParams fdr =
       let fdrwc   = folderToFolderWithChildren fdr
-          fdrJSON = AE.encodingToLazyByteString $ encodeFolderWithChildren fdrwc
+          fdrJSON = AE.encodingToLazyByteString $ encodeFolderWithChildren False fdrwc
       in  [("folder", inTextBS fdrJSON)]
 
     fdrAPIUpdate :: Context -> Folder -> Int -> TestEnv Aeson.Value
@@ -195,18 +195,29 @@ testFolderAPIGet = do
       folderAdminR = FolderAdminAR fdrRootID
       admid        = grpAdmin ^. #id
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminR
-  subs@[_fdr1          , _fdr2          ] <- createChildrenForParentByAPI ctxAdmin fdrRoot
-  [     _childrenOfFDR1, _childrenOfFDR2] <- do
-    forM subs $ createChildrenForParentByAPI ctxAdmin
-  fdrwcfuFromAPI <- fdrAPIGet ctxAdmin fdrRoot 200
-  fdrChildren    <- dbQuery $ FolderGetImmediateChildren (fdrRoot ^. #id)
-  let fdrwc =
-        FolderWithChildren fdrRoot $ map (\c -> FolderWithChildren c []) fdrChildren
-      fdrwcbs =
-        fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren
-          fdrwc
-  assertEqual "Folder data output corresponds to what was sent in" fdrwcfuFromAPI fdrwcbs
-  -- signatories should have access to folders for documents they participate in siging in
+
+  -- Make sure we have at least 2 levels of child folders
+  -- so that we can test the "recursive" param.
+  subs <- createChildrenForParentByAPI ctxAdmin fdrRoot
+  forM_ subs $ createChildrenForParentByAPI ctxAdmin
+
+  -- Get without the "recursive" param (default)
+  fdrwcFromAPI <- fdrAPIGet ctxAdmin False fdrRoot 200
+  fdrwcFromDB  <- fdrDBGet False fdrRoot
+
+  assertEqual "Folder data output corresponds to what was sent in (non-recursive)"
+              fdrwcFromDB
+              fdrwcFromAPI
+
+  -- Get with the "recursive" param
+  fdrwcFromAPIRecursive <- fdrAPIGet ctxAdmin True fdrRoot 200
+  fdrwcFromDBRecursive  <- fdrDBGet True fdrRoot
+
+  assertEqual "Folder data output corresponds to what was sent in (recursive)"
+              fdrwcFromDBRecursive
+              fdrwcFromAPIRecursive
+
+  -- Signatories should have access to folders for documents they participate in siging in
   mockDoc <- testDocApiV2New' ctxAdmin
   let signatoryEmail = "jakub.janczak@scrive.com" :: String
   signatoryUser <- instantiateUser $ randomUserTemplate
@@ -248,10 +259,26 @@ testFolderAPIGet = do
                                200
 
   where
-    fdrAPIGet :: Context -> Folder -> Int -> TestEnv Aeson.Value
-    fdrAPIGet ctx fdr code = do
+    fdrAPIGet :: Context -> Bool -> Folder -> Int -> TestEnv Aeson.Value
+    fdrAPIGet ctx recursive fdr code = do
       let apiCall = folderAPIGet $ fdr ^. #id
-      jsonTestRequestHelper ctx GET [] apiCall code
+          params  = if recursive then [("recursive", inText "true")] else []
+      jsonTestRequestHelper ctx GET params apiCall code
+
+    fdrDBGet :: Bool -> Folder -> TestEnv Aeson.Value
+    fdrDBGet recursive fdr = do
+      fdrwc <- if recursive
+        then do
+          children <- dbQuery $ FolderGetAllChildrenRecursive (fdr ^. #id)
+          return $ FolderWithChildren fdr children
+        else do
+          children <- dbQuery $ FolderGetImmediateChildren (fdr ^. #id)
+          return . FolderWithChildren fdr $ map (\c -> FolderWithChildren c []) children
+      return
+        . fromJust
+        . Aeson.decode
+        . AE.encodingToLazyByteString
+        $ encodeFolderWithChildren recursive fdrwc
 
 testFolderAPIDelete :: TestEnv ()
 testFolderAPIDelete = do
@@ -262,7 +289,7 @@ testFolderAPIDelete = do
   let fdrTestDeleteChild = set #parentID (Just $ userFolder ^. #id) defaultFolder
       newFolderJSONBS =
         AE.encodingToLazyByteString
-          . encodeFolderWithChildren
+          . encodeFolderWithChildren False
           $ folderToFolderWithChildren fdrTestDeleteChild
       reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
   newFdrFromAPI <- jsonToFolder
@@ -286,7 +313,7 @@ testFolderAPIListDocs = do
   let newFolderBase = set #parentID (Just $ userFolder ^. #id) defaultFolder
       newFolderBaseJSONBS =
         AE.encodingToLazyByteString
-          . encodeFolderWithChildren
+          . encodeFolderWithChildren False
           $ folderToFolderWithChildren newFolderBase
       reqNewFolderPrms = [("folder", inTextBS newFolderBaseJSONBS)]
   newFdr <- jsonToFolder
@@ -433,7 +460,7 @@ createChildrenForParentByAPI ctx fdrParent = do
     let newFolder = set #parentID (Just $ fdrp ^. #id) defaultFolder
         newFolderJSONBS =
           AE.encodingToLazyByteString
-            . encodeFolderWithChildren
+            . encodeFolderWithChildren False
             $ folderToFolderWithChildren newFolder
         reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
     jsonToFolder <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
@@ -446,3 +473,11 @@ unjsonFolderReadAll =
     <$> fieldBy "id" (^. #id) "The folder ID" Unjson.unjsonDef
     <*> fieldOptBy "parent_id" (^. #parentID) "Parent folder ID" Unjson.unjsonDef
     <*> field "name" (^. #name) "The folder name"
+    <*> fieldOptBy "home_for_user"
+                   (^. #homeForUser)
+                   "Home folder for user"
+                   Unjson.unjsonDef
+    <*> fieldOptBy "home_for_user_group"
+                   (^. #homeForUserGroup)
+                   "Home folder for user group"
+                   Unjson.unjsonDef

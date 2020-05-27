@@ -88,6 +88,7 @@ instance (MonadDB m, MonadThrow m)
     runQuery_ . sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
       sqlWhere $ "parent_path @> " <?> Array1 [fid]
+      sqlWhereIsNULL "deleted"
     allChildren <- fetchMany fetchFolder
     let directChildren parentID =
           filter ((== Just parentID) . view #parentID) allChildren
@@ -141,4 +142,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m FolderDelete () wh
       sqlWhereEq "id" $ Just fdrid
 
 folderSelectors :: [SQL]
-folderSelectors = ("folders." <>) <$> ["id", "parent_id", "name"]
+folderSelectors =
+  [ "folders.id"
+  , "folders.parent_id"
+  , "folders.name"
+  , "(SELECT id FROM users WHERE users.home_folder_id = folders.id) AS home_for_user"
+  , "(SELECT id FROM user_groups WHERE user_groups.home_folder_id = folders.id)"
+    <> "AS home_for_user_group"
+  ]

@@ -301,13 +301,14 @@ Library
                  , Doc.Trigger
                  , Doc.Validation.Starting
                  , Folder.API
-                 , Folder.JSON
-                 , Folder.Types
+                 , Folder.FolderID
                  , Folder.Internal
+                 , Folder.JSON
                  , Folder.Model
                  , Folder.Model.Query
                  , Folder.Model.Update
                  , Folder.Tables
+                 , Folder.Types
                  , EID.Authentication.Migrations
                  , EID.Authentication.Model
                  , EID.Authentication.Tables

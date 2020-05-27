@@ -219,7 +219,8 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary Folder where
-  arbitrary = Folder emptyFolderID Nothing <$> arbitraryName
+  arbitrary =
+    Folder emptyFolderID Nothing <$> arbitraryName <*> pure Nothing <*> pure Nothing
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary

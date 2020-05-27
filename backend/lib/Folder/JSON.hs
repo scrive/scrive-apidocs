@@ -6,23 +6,29 @@ module Folder.JSON (
 import Data.Aeson
 import Data.Aeson.Encoding
 import Data.Unjson
-import Optics (folded)
 
 import Folder.Types
 import InputValidation
 
-encodeFolderWithChildren :: FolderWithChildren -> Encoding
-encodeFolderWithChildren fdrwc =
+encodeFolderWithChildren :: Bool -> FolderWithChildren -> Encoding
+encodeFolderWithChildren recursive fdrwc =
   pairs
-    $  ("id" .= (folder ^. #id))
-    <> ("parent_id" .= (folder ^. #parentID))
-    <> ("name" .= (folder ^. #name))
-    <> pair "children" (list encodeChild children)
+    $  commonFields (fdrwc ^. #folder)
+    <> ("parent_id" .= (fdrwc ^. #folder % #parentID))
+    <> pair "children" (list encodeChild (fdrwc ^. #children))
   where
-    folder   = fdrwc ^. #folder
-    children = fdrwc ^.. #children % folded % #folder
-    encodeChild childFolder =
-      pairs $ "id" .= (childFolder ^. #id) <> "name" .= (childFolder ^. #name)
+    commonFields folder =
+      ("id" .= (folder ^. #id))
+        <> ("name" .= (folder ^. #name))
+        <> ("home_for_user" .= (folder ^. #homeForUser))
+        <> ("home_for_user_group" .= (folder ^. #homeForUserGroup))
+    encodeChild child =
+      pairs
+        $  commonFields (child ^. #folder)
+        <> (if recursive
+             then pair "children" (list encodeChild (child ^. #children))
+             else mempty
+           )
 
 unjsonFolderForUpdate :: UnjsonDef (Maybe FolderID, Text)
 unjsonFolderForUpdate =

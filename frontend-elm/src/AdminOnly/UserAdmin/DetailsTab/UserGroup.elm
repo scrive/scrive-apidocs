@@ -48,6 +48,7 @@ type alias UserGroup =
     , inheritedSettings : Maybe Settings
     , internalTags : D.Dict String String
     , initialInternalTags : D.Dict String String
+    , homeFolderID : Maybe String
     }
 
 
@@ -68,6 +69,7 @@ decoder =
         |> DP.optional "companyinternaltags" (JD.list tagDecoder |> JD.map D.fromList) D.empty
         -- initialInternalTags are exactly the same as internalTags
         |> DP.optional "companyinternaltags" (JD.list tagDecoder |> JD.map D.fromList) D.empty
+        |> DP.required "companyhomefolderid" (JD.nullable JD.string)
 
 
 modifySettings : (Settings -> Settings) -> UserGroup -> UserGroup

@@ -23,6 +23,7 @@
             "elm-community/maybe-extra": "5.1.0",
             "genthaler/elm-enum": "1.0.2",
             "isaacseymour/deprecated-time": "1.0.0",
+            "jzxhuang/http-extras": "2.1.0",
             "rtfeldman/elm-hex": "1.0.0",
             "rundis/elm-bootstrap": "5.2.0",
             "toastal/either": "3.5.1"

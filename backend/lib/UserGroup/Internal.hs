@@ -39,7 +39,7 @@ import qualified Data.X509 as X509
 import DataRetentionPolicy
 import DB
 import FeatureFlags.Model
-import Folder.Types
+import Folder.FolderID
 import IPAddress
 import Log.Identifier
 import PadApplication.Types

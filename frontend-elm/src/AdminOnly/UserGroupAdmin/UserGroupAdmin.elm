@@ -13,6 +13,7 @@ module AdminOnly.UserGroupAdmin.UserGroupAdmin exposing
 
 import AdminOnly.UserAdmin.DocumentsTab.DocumentsTab as DocumentsTab exposing (Config(..))
 import AdminOnly.UserGroupAdmin.DetailsTab.DetailsTab as DetailsTab
+import AdminOnly.UserGroupAdmin.FoldersTab.FoldersTab as FoldersTab
 import AdminOnly.UserGroupAdmin.PaymentsTab as PaymentsTab
 import AdminOnly.UserGroupAdmin.StatisticsTab as StatisticsTab exposing (Config(..))
 import AdminOnly.UserGroupAdmin.StructureTab as StructureTab
@@ -45,6 +46,7 @@ type Tab
     | StatisticsTab StatisticsTab.Page
     | TemplatesTab DocumentsTab.Page
     | DocumentsTab DocumentsTab.Page
+    | FoldersTab
 
 
 type alias Model =
@@ -58,6 +60,7 @@ type alias Model =
     , mStatisticsTab : Maybe StatisticsTab.Model
     , mTemplatesTab : Maybe DocumentsTab.Model
     , mDocumentsTab : Maybe DocumentsTab.Model
+    , mFoldersTab : Maybe FoldersTab.Model
     , xtoken : String
     }
 
@@ -72,6 +75,7 @@ type Msg
     | StatisticsTabMsg StatisticsTab.Msg
     | TemplatesTabMsg DocumentsTab.Msg
     | DocumentsTabMsg DocumentsTab.Msg
+    | FoldersTabMsg FoldersTab.Msg
 
 
 init : (Msg -> msg) -> Globals msg -> Page -> ( Model, Cmd msg )
@@ -86,6 +90,7 @@ init embed globals page =
             , mStatisticsTab = Nothing
             , mTemplatesTab = Nothing
             , mDocumentsTab = Nothing
+            , mFoldersTab = Nothing
             , tabState = Tab.customInitialState DetailsTab.tabName
             , xtoken = globals.xtoken
             }
@@ -128,6 +133,10 @@ fromPage page =
 
                 DocumentsTab tabPage ->
                     ( DocumentsTab.tabName, DocumentsTab.fromPage tabPage )
+
+                FoldersTab ->
+                    ( FoldersTab.tabName, emptyPageUrl )
+
     in
     { pageUrl | path = [ page.ugid ], fragment = Just tabName }
 
@@ -189,6 +198,7 @@ parseTab mFragment mPagination mSearch mSortBy mOrder mSubTab _ _ _ =
                 , ( DocumentsTab.tabName
                   , DocumentsTab <| DocumentsTab.pageFromSearchSortByOrder mSearch mSortBy mOrder mPagination
                   )
+                , ( FoldersTab.tabName, FoldersTab )
                 ]
     in
     mFragment |> Maybe.andThen (\fragment -> Dict.get fragment maping)
@@ -229,6 +239,9 @@ pageFromModel model =
             model.mDocumentsTab
                 |> M.andThen DocumentsTab.pageFromModel
                 |> M.map (Page model.page.ugid << DocumentsTab)
+
+        FoldersTab ->
+            Just model.page
 
 
 update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
@@ -281,6 +294,11 @@ update embed globals msg model =
             let updateDocumentsTab = DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
                 (newDocumentsTab, cmd) = maybeUpdate updateDocumentsTab model.mDocumentsTab
             in ({ model | mDocumentsTab = newDocumentsTab}, cmd)
+
+        FoldersTabMsg tabMsg ->
+            let updateFoldersTab = FoldersTab.update (embed << FoldersTabMsg) globals tabMsg
+                (newFoldersTab, cmd) = maybeUpdate updateFoldersTab model.mFoldersTab
+            in ({ model | mFoldersTab = newFoldersTab}, cmd)
 
 
 updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
@@ -417,6 +435,22 @@ updatePage embed page model =
             , tabCmd
             )
 
+        FoldersTab ->
+            let
+                ( tab, tabCmd ) =
+                    model.mFoldersTab
+                        |> M.map (FoldersTab.setUserGroupID (embed << FoldersTabMsg) page.ugid)
+                        |> M.withDefault
+                            (FoldersTab.init (embed << FoldersTabMsg) page.ugid)
+            in
+            ( { model
+                | tabState = Tab.customInitialState FoldersTab.tabName
+                , page = page
+                , mFoldersTab = Just tab
+              }
+            , tabCmd
+            )
+
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
@@ -505,6 +539,16 @@ view embed model =
                     Tab.pane [ Spacing.mt3 ] <|
                         [ model.mDocumentsTab
                             |> M.map (DocumentsTab.view <| embed << DocumentsTabMsg)
+                            |> M.withDefault viewError
+                        ]
+                }
+            , Tab.item
+                { id = FoldersTab.tabName
+                , link = Tab.link [] [ text "Folders" ]
+                , pane =
+                    Tab.pane [ Spacing.mt3 ] <|
+                        [ model.mFoldersTab
+                            |> M.map (FoldersTab.view <| embed << FoldersTabMsg)
                             |> M.withDefault viewError
                         ]
                 }

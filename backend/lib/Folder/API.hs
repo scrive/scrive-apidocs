@@ -36,6 +36,7 @@ import Kontra
 import Log.Identifier
 import OAuth.Model
 import Routing
+import User.Model
 
 folderAPIRoutes :: Route (Kontra Response)
 folderAPIRoutes = dir "api" $ choice [dir "frontend" folderAPI, dir "v2" folderAPI]
@@ -65,7 +66,7 @@ folderAPICreate = api $ do
       requiredPerm <- apiRequirePermission . canDo CreateA $ FolderR parent_id
       apiuser      <- getAPIUserWithAPIPersonal
       apiAccessControlOrIsAdmin apiuser requiredPerm . dbUpdate $ FolderCreate fdrIn
-  Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
+  Ok . encodeFolderWithChildren False <$> fwcGetOrErrNotFound False fid
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
@@ -73,16 +74,18 @@ folderAPIGet fid = api $ do
   requiredPerm   <- apiRequirePermission . canDo ReadA $ FolderR fid
   hasReadAccess  <- apiAccessControlCheck user requiredPerm
   isAdminOrSales <- checkAdminOrSales
+  recursive      <- apiV2ParameterDefault False $ ApiV2ParameterFlag "recursive"
   fdrwc          <- if hasReadAccess || isAdminOrSales
-    then fwcGetOrErrNotFound fid
+    then fwcGetOrErrNotFound recursive fid
     else do
-      isSignatory <- isSignatoryOfOneOfDocuments
-      if isSignatory then fwcGetOrErrNotFound fid else apiError insufficientPrivileges
-  return . Ok $ encodeFolderWithChildren fdrwc
+      isSignatory <- isSignatoryOfOneOfDocuments user
+      if isSignatory && not recursive
+        then fwcGetOrErrNotFound False fid
+        else apiError insufficientPrivileges
+  return . Ok $ encodeFolderWithChildren recursive fdrwc
   where
-    isSignatoryOfOneOfDocuments :: Kontrakcja m => m Bool
-    isSignatoryOfOneOfDocuments = do
-      user      <- fst <$> getAPIUserWithAnyPrivileges
+    isSignatoryOfOneOfDocuments :: Kontrakcja m => User -> m Bool
+    isSignatoryOfOneOfDocuments user = do
       documents <- dbQuery $ GetDocumentsIDs
         (DocumentsUserHasAnyLinkTo $ user ^. #id)
         [DocumentFilterDeleted False, DocumentFilterByFolderID fid]
@@ -121,7 +124,7 @@ folderAPIUpdate fid = api $ do
       requiredPerm <- apiRequireAllPermissions $ canDo UpdateA (FolderR fid) : accParents
       apiAccessControlOrIsAdmin apiuser requiredPerm $ do
         void . dbUpdate . FolderUpdate $ fdrNew
-        Ok . encodeFolderWithChildren <$> fwcGetOrErrNotFound fid
+        Ok . encodeFolderWithChildren False <$> fwcGetOrErrNotFound False fid
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
@@ -190,17 +193,21 @@ folderAPIListDocs fid = api $ do
 fGetOrErrNotFound :: Kontrakcja m => FolderID -> m Folder
 fGetOrErrNotFound fid = apiGuardJustM folderNotFoundErr . dbQuery $ FolderGet fid
 
-fwcGetOrErrNotFound :: Kontrakcja m => FolderID -> m FolderWithChildren
-fwcGetOrErrNotFound fid =
+fwcGetOrErrNotFound :: Kontrakcja m => Bool -> FolderID -> m FolderWithChildren
+fwcGetOrErrNotFound recursive fid =
   dbQuery (FolderGet fid) >>= addChildrenIfJust >>= apiGuardJust folderNotFoundErr
   where
     addChildrenIfJust = \case
       Nothing     -> return Nothing
-      Just folder -> do
-        -- we retrieve only the immediate children, as in the user group API.
-        fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
-        return . Just . FolderWithChildren folder $ map (\c -> FolderWithChildren c [])
-                                                        fdrChildren
+      Just folder -> if recursive
+        then do
+          fdrChildren <- dbQuery $ FolderGetAllChildrenRecursive fid
+          return . Just . FolderWithChildren folder $ fdrChildren
+        else do
+          fdrChildren <- dbQuery $ FolderGetImmediateChildren fid
+          return . Just . FolderWithChildren folder $ map
+            (\c -> FolderWithChildren c [])
+            fdrChildren
 
 folderNotFoundErr :: APIError
 folderNotFoundErr = serverError "Impossible happened: No folder with ID, or deleted."

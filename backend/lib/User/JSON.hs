@@ -172,6 +172,8 @@ companyJSONAdminOnly ugwp = do
       value "group_id" . show $ parent ^. #id
       value "group_name" $ parent ^. #name
 
+    value "companyhomefolderid" $ ug ^. #homeFolderID
+
 tagsJsons :: S.Set Tag -> [JSONGenT Identity ()]
 tagsJsons = map tagJson . S.toList
 

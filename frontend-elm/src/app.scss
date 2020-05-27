@@ -66,6 +66,20 @@ th.clickable-cell {
   margin-bottom: 0px;
 }
 
+
+// Company admin > Folders
+.folder-list {
+  border-right: 1px solid #ddd;
+  min-height: 120px;
+
+  ul,
+  li {
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none;
+  }
+}
+
 .color-display {
   background: url("/adminonly-assets/images/color-select.png") repeat scroll center center transparent;
   border: solid 1px #eeeeee;
