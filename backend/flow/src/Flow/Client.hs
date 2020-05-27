@@ -21,8 +21,8 @@ data TemplateClient = TemplateClient {
   , getTemplate      :: TemplateId -> ClientM GetTemplate
   , patchTemplate    :: TemplateId -> PatchTemplate -> ClientM GetTemplate
   , commitTemplate   :: TemplateId -> ClientM NoContent
-  , startTemplate    :: TemplateId -> InstanceToTemplateMapping -> ClientM GetInstance
-  , getInstnace      :: InstanceId -> ClientM GetInstance
+  , startTemplate    :: TemplateId -> InstanceToTemplateMapping -> ClientM StartTemplate
+  , getInstance      :: InstanceId -> ClientM GetInstance
   , validateTemplate :: FlowDSL -> ClientM [ValidationError]
 }
 
@@ -37,7 +37,7 @@ mkTemplateClient oauth = TemplateClient { .. }
         :<|> patchTemplate
         :<|> commitTemplate
         :<|> startTemplate
-        :<|> getInstnace
+        :<|> getInstance
       = authenticatedEndpoints oauthReq
     authenticatedEndpoints :<|> validateTemplate = client apiProxy
 

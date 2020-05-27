@@ -107,7 +107,7 @@ createTemplate :: Account -> CreateTemplate -> AppM GetCreateTemplate
 createTemplate Account {..} CreateTemplate {..} = do
   logInfo_ "creating template"
   id <- Model.insertTemplate $ InsertTemplate name process userId userGroupId
-  pure $ GetCreateTemplate { id, name }
+  pure $ GetCreateTemplate { id }
 
 -- TODO: Authorization
 -- TODO: Committed templates shouldn't be deleted.
@@ -177,8 +177,8 @@ validateTemplate template = do
   logInfo_ "validating template"
   either pure (const (pure [])) $ decodeHightTang template >>= machinize
 
-startInstance :: Account -> TemplateId -> InstanceToTemplateMapping -> AppM GetInstance
-startInstance Account {..} templateId tp@InstanceToTemplateMapping {..} = do
+startInstance :: Account -> TemplateId -> InstanceToTemplateMapping -> AppM StartTemplate
+startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
   logInfo_ "starting instance"
   -- TODO: Check permissions create instance..
   -- TODO: Check permissions to the template.
@@ -192,18 +192,7 @@ startInstance Account {..} templateId tp@InstanceToTemplateMapping {..} = do
   insertFlowInstanceKeyValues id users     StoreUserId
   insertFlowInstanceKeyValues id messages  StoreMessage
 
-  pure $ GetInstance
-    { id
-    , template           = templateId
-    , templateParameters = tp
-    , state = InstanceState
-          -- TODO: What is purpose of this events field. Isn't it part of
-          -- current stage?
-                             { events = []
-                            , history = []
-                            , current = InstanceStage { stage = "test", events = [] }
-                            }
-    }
+  pure $ StartTemplate { id }
   where
     -- TODO: this probably needs to be moved to Model module.
     insertFlowInstanceKeyValues

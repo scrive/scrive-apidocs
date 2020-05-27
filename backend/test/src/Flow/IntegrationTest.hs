@@ -97,13 +97,12 @@ testZeroToInstance = do
   void . assertRight "commit template response" . request env $ commitTemplate tid
   void . assertRight "validate response" . request env $ validateTemplate process1
 
-  instance1 <- assertRight "start template response" . request env $ startTemplate
-    tid
-    mapping
+  startTemplateResponse1 <-
+    assertRight "start template response" . request env $ startTemplate tid mapping
   {- HLINT ignore "Redundant id" -}
-  let iid = id (instance1 :: GetInstance)
-  instance2 <- assertRight "get instance" . request env $ getInstnace iid
-  assertEqual "get after start" instance1 instance2
+  let iid = id (startTemplateResponse1 :: StartTemplate)
+  instance2 <- assertRight "get instance" . request env $ getInstance iid
+  assertEqual "get after start" iid $ id (instance2 :: GetInstance)
   where mapping = InstanceToTemplateMapping Map.empty Map.empty Map.empty
 
 
@@ -111,7 +110,7 @@ testZeroToInstance = do
 
   , commitTemplate   :: TemplateId -> ClientM NoContent
   , startTemplate    :: TemplateId -> InstanceToTemplateMapping -> ClientM GetInstance
-  , getInstnace      :: InstanceId -> ClientM GetInstance
+  , getInstance      :: InstanceId -> ClientM GetInstance
   , validateTemplate :: FlowDSL -> ClientM [ValidationError]
 
 --}

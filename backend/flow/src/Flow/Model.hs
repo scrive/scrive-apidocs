@@ -53,9 +53,8 @@ deleteTemplate templateId = do
     sqlWhereEq "id" templateId
 
 -- TODO: Maybe use uncurryN functions?
-fetchGetTemplate :: (TemplateId, Text, Text, Maybe UTCTime, Maybe UTCTime) -> GetTemplate
-fetchGetTemplate (id, name, process, committed, deleted) =
-  GetTemplate id name process committed deleted
+fetchGetTemplate :: (TemplateId, Text, Text, Maybe UTCTime) -> GetTemplate
+fetchGetTemplate (id, name, process, committed) = GetTemplate id name process committed
 
 selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe GetTemplate)
 selectTemplate templateId = do
@@ -64,7 +63,6 @@ selectTemplate templateId = do
     sqlResult "name"
     sqlResult "process"
     sqlResult "committed"
-    sqlResult "deleted"
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
   fetchMaybe fetchGetTemplate
@@ -79,7 +77,6 @@ updateTemplate templateId PatchTemplate {..} = do
     sqlResult "name"
     sqlResult "process"
     sqlResult "committed"
-    sqlResult "deleted"
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
   fetchMaybe fetchGetTemplate

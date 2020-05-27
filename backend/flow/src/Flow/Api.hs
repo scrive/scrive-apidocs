@@ -44,10 +44,7 @@ instance FromJSON CreateTemplate where
 instance ToJSON CreateTemplate where
   toEncoding = genericToEncoding aesonOptions
 
-data GetCreateTemplate = GetCreateTemplate
-    { id :: TemplateId
-    , name :: Text
-    }
+newtype GetCreateTemplate = GetCreateTemplate { id :: TemplateId }
   deriving (Eq, Generic, Show)
 
 instance FromJSON GetCreateTemplate where
@@ -57,12 +54,21 @@ instance ToJSON GetCreateTemplate where
   toEncoding = genericToEncoding aesonOptions
 
 
+newtype StartTemplate = StartTemplate { id :: InstanceId }
+  deriving (Eq, Generic, Show)
+
+instance FromJSON StartTemplate where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON StartTemplate where
+  toEncoding = genericToEncoding aesonOptions
+
+
 data GetTemplate = GetTemplate
     { id :: TemplateId
     , name :: Text
     , process :: Text
     , committed :: Maybe UTCTime
-    , deleted :: Maybe UTCTime
     }
   deriving (Eq, Generic, Show)
 
@@ -223,7 +229,7 @@ type FlowAPI
         -- Control
         :<|> "template" :> Capture "template_id" TemplateId :> "commit" :> PostNoContent '[JSON] NoContent
         :<|> "template" :> Capture "template_id" TemplateId :> "start"
-            :> ReqBody '[JSON] InstanceToTemplateMapping :> PostCreated '[JSON] GetInstance
+            :> ReqBody '[JSON] InstanceToTemplateMapping :> PostCreated '[JSON] StartTemplate
         :<|> "instance" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
         )
     :<|> "template" :> "validate" :> ReqBody '[JSON] FlowDSL :> Post '[JSON] [ValidationError]
