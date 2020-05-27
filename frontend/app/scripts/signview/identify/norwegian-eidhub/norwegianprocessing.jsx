@@ -9,15 +9,9 @@ var NorwegianIdentifyModel = require("./norwegianidentifymodel");
     },
 
     render: function () {
-      var link = this.props.model.noBankIDLink();
+      window.location = this.props.model.noBankIDLink();
       return (
-        <div style={{padding: "10px"}} >
-            <iframe
-          ref="iframe"
-          style={{minHeight: "350px", width: "100%", margin: "auto"}}
-          src={link}
-          />
-      </div>
+        <div className="loadingSpinner"/>
       );
 
     }
