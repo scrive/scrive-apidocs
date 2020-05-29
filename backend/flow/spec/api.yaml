@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.3.1"
+  version: "0.3.2"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -43,8 +43,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TemplateIdObject'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         400:
           description: Error parsing the template description.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /template/{template_id}:
     delete:
       tags:
@@ -60,10 +70,24 @@ paths:
       responses:
         204:
           description: Flow template deleted
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Flow template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         409:
           description: Committed Flow template cannot be deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     get:
       tags:
         - configuration
@@ -80,8 +104,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TemplateResponse'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Flow template not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     patch:
       tags:
         - configuration
@@ -117,10 +151,28 @@ paths:
                 committed: null
         400:
           description: Error parsing the template description.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Flow template not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         409:
           description: Committed Flow template cannot be updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /template/{template_id}/commit:
     post:
@@ -137,14 +189,24 @@ paths:
       responses:
         204:
           description: Flow template committed successfully.
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Flow template not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         409:
           description: Flow template "process" contains syntactic or semantic errors.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FlowDslValidationResult'
+                $ref: '#/components/schemas/ErrorResponse'
 
   /template/validate:
     post:
@@ -169,7 +231,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FlowDslValidationResult'
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /template/{template_id}/start:
     post:
@@ -201,13 +269,31 @@ paths:
                 $ref: '#/components/schemas/InstanceIdObject'
         400:
           description: Flow parameters invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Flow template not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         409:
           description: |
             Flow template is in an invalid state; possible reasons follow.
               * Flow template not committed.
               * Referred objects are not prepared to be used in a Flow process.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /instance/{instance_id}:
     get:
@@ -225,8 +311,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InstanceGetResponse'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Flow instance not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /instance/{instance_id}/view:
     get:
@@ -246,8 +342,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InstanceViewResponse'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Flow instance not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 servers:
   - url: 'https://virtserver.swaggerhub.com/scrive/Flow/0.1.0'
@@ -268,6 +374,27 @@ components:
       schema:
         $ref: '#/components/schemas/InstanceId'
   schemas:
+    ErrorResponse:
+      type: object
+      description: >-
+        A unified error response format that informs the caller why their request failed.
+      required:
+        - code
+        - message
+        - explanation
+      properties:
+        code:
+          type: integer
+          description: A for-convenience reiteration of the returned HTTP code.
+          example: 409
+        message:
+          type: string
+          description: A short and simple summary of the error.
+          example: Template not found
+        explanation:
+          type: string
+          description: A longer explanation of the error perhaps with specific details.
+          example: There is no template associated with this ID
     TemplateCreateRequest:
       type: object
       required:
