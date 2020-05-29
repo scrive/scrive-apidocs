@@ -143,6 +143,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "sealing_method" $ ugs ^. #sealingMethod
   sqlSet "document_session_timeout" $ ugs ^. #documentSessionTimeoutSecs
   sqlSet "has_post_signview" $ ugs ^. #hasPostSignview
+  sqlSet "sso_config" $ ugs ^. #ssoConfig
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()

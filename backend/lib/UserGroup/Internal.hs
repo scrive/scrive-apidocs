@@ -286,6 +286,10 @@ instance FromSQL UserGroupSSOConfiguration where
       (Result _ problems) ->
         fail $ "Issues while reading SSOConfiguration JSON " <> show problems
 
+instance ToSQL UserGroupSSOConfiguration where
+  type PQDest UserGroupSSOConfiguration = PQDest (JSONB BS.ByteString)
+  toSQL mbase = toSQL (JSONB $ unjsonToJSON unjsonSSOConfigurationDef mbase)
+
 ----------------------------------------
 
 data UserGroupSSOConfiguration = UserGroupSSOConfiguration {
