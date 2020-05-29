@@ -25,7 +25,6 @@ import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
 import Servant
 import Servant.Server.Experimental.Auth
-import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
 
 import Auth.Model
@@ -33,6 +32,7 @@ import Auth.OAuth
 import Auth.Parse
 import Doc.DocumentID (unsafeDocumentID)
 import Flow.Api
+import Flow.Error
 import Flow.HighTongue
 import Flow.Id
 import Flow.Machinize
@@ -80,12 +80,12 @@ authHandler flowConfiguration = mkAuthHandler handler
     maybeToRight e = maybe (Left e) Right
     handler :: Request -> Handler Account
     handler req = do
-      oauthTokens <- either (throwError401 "Cannot parse OAuth header") pure
+      oauthTokens <- either (throwAuthError OAuthHeaderParseFailureError) pure
         $ getOAuthAuthorization req
       liftIO $ print oauthTokens
       maybeIds <- runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
         $ authenticateToken oauthTokens
-      (userId, userGroupId) <- maybe (throwError401 "Not a valid token" "") pure maybeIds
+      (userId, userGroupId) <- maybe (throwAuthError InvalidTokenError "") pure maybeIds
       pure $ Account { userId      = unsafeUserID userId
                      , userGroupId = unsafeUserGroupID userGroupId
                      }
@@ -97,9 +97,9 @@ authHandler flowConfiguration = mkAuthHandler handler
 
     -- TODO handle the exception somehow
     -- ... but don't put it into the response, it leaks internal information!
-    throwError401 errorName e = do
+    throwAuthError errorName e = do
       liftIO $ print e
-      throwError err401 { errBody = errorName }
+      throwAuthenticationError errorName
     err = "AUTHORIZATION header not found."
 
 -- TODO: Check user permissions to create templates.
@@ -125,20 +125,14 @@ sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
 getTemplate :: Account -> TemplateId -> AppM GetTemplate
 getTemplate _account templateId = do
   logInfo_ "getting template"
-  fromMaybeM (throwError err404) $ Model.selectTemplate templateId
+  fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
 
 -- TODO: Committed templates can't be updated.
 -- TODO: Check user permissions to update given template.
 patchTemplate :: Account -> TemplateId -> PatchTemplate -> AppM GetTemplate
 patchTemplate Account {..} templateId patch = do
   logInfo_ "patching template"
-  fromMaybeM (throwError err404) $ Model.updateTemplate templateId patch
-
-throwValidationErr409 :: [ValidationError] -> AppM a
-throwValidationErr409 errors = throwError $ err409
-  { errBody    = Aeson.encode errors
-  , errHeaders = [("Content-Type", "application/json")]
-  }
+  fromMaybeM throwTemplateNotFoundError $ Model.updateTemplate templateId patch
 
 -- TODO: Check user permissions to commit given template.
 -- TODO: Check if the template is already committed and return 204 in case of conflict.
@@ -146,21 +140,28 @@ commitTemplate :: Account -> TemplateId -> AppM NoContent
 commitTemplate Account {..} id = do
   logInfo_ "committing template"
   now      <- liftIO currentTime
-  template <- fromMaybeM (throwError err404) $ Model.selectTemplate id
-  when (isJust $ committed template) $ throwError err409
-  templateDSL <- fromMaybeM (throwError err404) $ Model.getTemplateDsl id
-  machine <- either throwValidationErr409 pure $ decodeHightTang templateDSL >>= machinize
+  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
+  when (isJust $ committed template) throwTemplateAlreadyCommittedError
+  templateDSL <- fromMaybeM throwTemplateNotFoundError $ Model.getTemplateDsl id
+  machine     <-
+    either throwDSLValidationError' pure $ decodeHightTang templateDSL >>= machinize
   Model.commitTemplate now id
   Model.insertParsedStateMachine id machine
   pure NoContent
+  where
+    -- TODO: Currently, there's no way to get more than a singleton list of validation
+    -- TODO: errors. This allows the Error module to be prettier, all this should be
+    -- TODO: improved later.
+    throwDSLValidationError' = \case
+      []      -> throwDSLValidationError "Unknown validation error"
+      err : _ -> throwDSLValidationError $ error_message err
 
 machinize :: HighTongue -> Either [ValidationError] Machine
 machinize highTongue = packError `left` linear highTongue
   where
+    -- TODO: better error messages from transducer and machinize modules.
     packError err =
-      [ValidationError { line_number = 0, column = 0
-            -- TODO: better error messages from transducer and machinize modules.
-                                                    , error_message = pack $ show err }]
+      [ValidationError { line_number = 0, column = 0, error_message = pack $ show err }]
 
 decodeHightTang :: FlowDSL -> Either [ValidationError] HighTongue
 decodeHightTang template = packError `left` decodeEither' (encodeUtf8 template)
@@ -208,7 +209,7 @@ getInstance instanceId = do
   logInfo_ "getting instance"
   -- TODO: Authorize user.
   -- TODO: Model instance state inside database somehow!
-  templateId <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
+  templateId <- fromMaybeM throwInstanceNotFoundError $ Model.selectInstance instanceId
   documents  <-
     Map.fromList
     .   fmap (fmap unsafeDocumentID)

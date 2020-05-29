@@ -359,6 +359,7 @@ Library
                  , Flow.Client
                  , Flow.Db
                  , Flow.Engine
+                 , Flow.Error
                  , Flow.HighTongue
                  , Flow.Id
                  , Flow.Machinize
