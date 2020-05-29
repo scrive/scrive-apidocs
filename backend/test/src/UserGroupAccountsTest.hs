@@ -236,11 +236,18 @@ test_movingACompanyAccountWithinTheCompany = do
 
   let ugWithinTheSameCompanyID = ugWithinTheSameCompany ^. #id
       companyUserEmail         = "bob@blue.com"
-  void . instantiateUser $ randomUserTemplate { email          = return companyUserEmail
-                                              , isCompanyAdmin = False
-                                              , signupMethod   = CompanyInvitation
-                                              , groupID = return ugWithinTheSameCompanyID
-                                              }
+
+  user <- instantiateUser $ randomUserTemplate { email          = return companyUserEmail
+                                               , isCompanyAdmin = False
+                                               , signupMethod   = CompanyInvitation
+                                               , groupID = return ugWithinTheSameCompanyID
+                                               }
+
+  let userId         = user ^. #id
+      sourceFolderId = fromJust $ user ^. #homeFolderID
+
+  doc1 <- addRandomDocument (rdaDefault user) { rdaFolderId = sourceFolderId }
+  let docId1 = documentid doc1
 
   ctx <- set #maybeUser (Just admin) <$> mkContext defaultLang
 
@@ -258,14 +265,25 @@ test_movingACompanyAccountWithinTheCompany = do
       value "added" False
     )
   Just movedUser <- dbQuery $ GetUserByEmail (Email companyUserEmail)
-  assertEqual "User is in target user group" targetUGID (movedUser ^. #groupID)
+  assertEqual "Moved user has the same user id" userId     (movedUser ^. #id)
+  assertEqual "User is in target user group"    targetUGID (movedUser ^. #groupID)
+
+  let targetFolderId = fromJust $ movedUser ^. #homeFolderID
+
+  assertNotEqual "Moved user should have a different home folder"
+                 sourceFolderId
+                 targetFolderId
+
+  doc2 <- dbQuery $ GetDocumentByDocumentID docId1
+  assertEqual "User's documents should be moved to new home folder"
+              targetFolderId
+              (documentfolderid doc2)
 
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was not made" 0 (length actions)
 
   emails <- dbQuery GetEmailsForTest
   assertEqual "An email was not sent" 0 (length emails)
-
 
 test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do

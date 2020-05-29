@@ -401,7 +401,8 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany userID = onlySalesOrAdmin $ do
   targetUserGroupID <- guardJustM $ readField "companyid"
-  moveUserToUserGroup userID targetUserGroupID
+  user              <- guardJustM . dbQuery $ GetUserByID userID
+  void $ moveUserToUserGroupWithDocuments user targetUserGroupID
 
 handleMergeToOtherCompany :: Kontrakcja m => UserGroupID -> m ()
 handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
@@ -424,6 +425,12 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
             let newhomefdr = set #parentID (Just targetfdrid) defaultFolder
             newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
             void . dbUpdate . SetUserHomeFolder (u ^. #id) $ newhomefdrid
+            case u ^. #homeFolderID of
+              Just sourceFolderId -> void . dbUpdate $ MoveAuthorDocuments
+                (u ^. #id)
+                sourceFolderId
+                newhomefdrid
+              Nothing -> return ()
           invites <- dbQuery $ UserGroupGetInvites ugid_source
           forM_ invites $ \i ->
             void . dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)

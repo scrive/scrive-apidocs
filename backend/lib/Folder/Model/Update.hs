@@ -2,7 +2,6 @@ module Folder.Model.Update
   (
     AddFoldersToUserGroups(..) -- remove after initial migration of Folders
   , FolderCreate(..)
-  , FolderSetUserHomeFolder(..)
   , FolderUpdate(..)
   , FoldersFormCycle(..)
   ) where
@@ -160,13 +159,6 @@ instance (MonadDB m, MonadThrow m) =>
       length . catMaybes <$> forM ugids (dbUpdate . FolderCreateByUserGroup)
     forM_ ugids $ dbUpdate . FolderCreateForUsersInUserGroup
     return numActuallyCreatedFolders
-
-data FolderSetUserHomeFolder = FolderSetUserHomeFolder UserID FolderID
-instance (MonadDB m, MonadThrow m) => DBUpdate m FolderSetUserHomeFolder () where
-  dbUpdate (FolderSetUserHomeFolder uid fdrid) = do
-    runQuery01_ . sqlUpdate "users" $ do
-      sqlWhereEq "id" uid
-      sqlSet "home_folder_id" (Just fdrid)
 
 newtype FoldersFormCycle = FoldersFormCycle FolderID
   deriving (Eq, Ord, Show, Typeable)
