@@ -7,12 +7,13 @@ module User.Model.Update (
   , SetSignupMethod(..)
   , SetUserUserGroup(..)
   , SetUserGroup(..)
-  , SetUserHomeFolder(..)
   , SetUserEmail(..)
   , SetUserCompanyAdmin(..)
   , SetUserInfo(..)
   , SetUserPassword(..)
   , SetUserTOTPKey(..)
+  , SetUserHomeFolder(..)
+  , MoveAuthorDocuments(..)
   , ConfirmUserTOTPSetup(..)
   , DisableUserTOTP(..)
   , SetUserTags(..)
@@ -389,12 +390,20 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
         sqlWhereEq "documents.status"        Preparation
         sqlWhereEq "signatory_links.user_id" userid
 
+data MoveAuthorDocuments = MoveAuthorDocuments UserID FolderID FolderID
+instance (MonadDB m, MonadThrow m) => DBUpdate m MoveAuthorDocuments () where
+  dbUpdate (MoveAuthorDocuments authorId sourceFolderId targetFolderId) = do
+    runQuery_ . sqlUpdate "documents" $ do
+      sqlSet "folder_id" targetFolderId
+      sqlWhereEq "author_user_id" authorId
+      sqlWhereEq "folder_id"      sourceFolderId
+
 data SetUserHomeFolder = SetUserHomeFolder UserID FolderID
-instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserHomeFolder Bool where
-  dbUpdate (SetUserHomeFolder userid fdrid) = do
-    runQuery01 . sqlUpdate "users" $ do
-      sqlSet "home_folder_id" fdrid
-      sqlWhereEq "id" userid
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserHomeFolder () where
+  dbUpdate (SetUserHomeFolder uid fdrid) = do
+    runQuery01_ . sqlUpdate "users" $ do
+      sqlWhereEq "id" uid
+      sqlSet "home_folder_id" (Just fdrid)
       sqlWhereIsNULL "deleted"
 
 data SetLoginAuth = SetLoginAuth UserID LoginAuthMethod

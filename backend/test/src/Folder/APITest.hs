@@ -15,6 +15,7 @@ import AccessControl.Model
 import AccessControl.Types
 import Context
 import DB
+import DB.TimeZoneName
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Mock.TestUtils
@@ -28,6 +29,7 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Model
+import Util.Actor
 import qualified Folder.Internal
 
 folderApiTests :: TestEnvSt -> Test
@@ -38,6 +40,7 @@ folderApiTests env = testGroup
   , testThat "Test reading groups works in API"                env testFolderAPIGet
   , testThat "Test folder deletion endpoint works in API"      env testFolderAPIDelete
   , testThat "Test listing documents in a folder works in API" env testFolderAPIListDocs
+  , testThat "Test moving author documents"                    env testMoveAuthorDocuments
   , testThat "Test deleting empty non-home folder which user has permissons upon works"
              env
              testDeleteFolder
@@ -273,6 +276,41 @@ testFolderAPIDelete = do
                                (folderAPIDelete $ newFdrFromAPI ^. #id)
                                200
 
+testMoveAuthorDocuments :: TestEnv ()
+testMoveAuthorDocuments = do
+  author       <- instantiateUser randomUserTemplate
+  otherUser    <- instantiateUser randomUserTemplate
+  targetFolder <- dbUpdate . FolderCreate $ defaultFolder
+
+  let authorId       = author ^. #id
+      sourceFolderId = fromJust $ author ^. #homeFolderID
+      targetFolderId = targetFolder ^. #id
+
+  docA1 <- addRandomDocument (rdaDefault author) { rdaFolderId = sourceFolderId }
+  docB1 <- addRandomDocument (rdaDefault otherUser) { rdaFolderId = sourceFolderId }
+  let docId1 = documentid docA1
+      docId2 = documentid docB1
+
+  assertEqual "author's document should be in source folder id"
+              sourceFolderId
+              (documentfolderid docA1)
+
+  assertEqual "other user's document should be in source folder id"
+              sourceFolderId
+              (documentfolderid docB1)
+
+  dbUpdate $ MoveAuthorDocuments authorId sourceFolderId targetFolderId
+
+  docA2 <- dbQuery $ GetDocumentByDocumentID docId1
+  assertEqual "author's document should be in target folder id"
+              targetFolderId
+              (documentfolderid docA2)
+
+  docB2 <- dbQuery $ GetDocumentByDocumentID docId2
+  assertEqual "other user's document should be in original folder id"
+              sourceFolderId
+              (documentfolderid docB2)
+
 testFolderAPIListDocs :: TestEnv ()
 testFolderAPIListDocs = do
   user       <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }  -- TODO: Fix properly!
@@ -292,13 +330,13 @@ testFolderAPIListDocs = do
   newFdr <- jsonToFolder
     <$> jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
   -- HACK to enable user to start documents in another folder
-  dbUpdate $ FolderSetUserHomeFolder (user ^. #id) (newFdr ^. #id)
+  dbUpdate $ SetUserHomeFolder (user ^. #id) (newFdr ^. #id)
   user' <- fromJust <$> dbQuery (GetUserByID (user ^. #id))
   let ctx'            = set #maybeUser (Just user') ctx
       numDocsToStart' = 3
   replicateM_ numDocsToStart' $ testDocApiV2New' ctx'
   -- switch back to original home folder for user
-  dbUpdate $ FolderSetUserHomeFolder (user ^. #id) fdrid
+  dbUpdate $ SetUserHomeFolder (user ^. #id) fdrid
   docsVal <- jsonTestRequestHelper ctx GET [] (folderAPIListDocs fdrid) 200
   assertEqual "Listing by folder id does not retrieve documents in child folders"
               numDocsToStart
@@ -379,6 +417,7 @@ testCannotDeleteFolderWithOnlyTrashedDocument = do
 
 testCanDeleteFolderWithOnlyPurgedDocument :: TestEnv ()
 testCanDeleteFolderWithOnlyPurgedDocument = do
+  now  <- currentTime
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Arthur"
                                                , lastName       = return "Dent"
                                                , email = return "arthur.dent@scrive.com"
@@ -387,10 +426,12 @@ testCanDeleteFolderWithOnlyPurgedDocument = do
   ctx      <- mkContextWithUser defaultLang user
   req      <- mkRequest POST []
   fidChild <- createFolder $ user ^. #homeFolderID
-  doc      <- addRandomDocument (rdaDefault user) { rdaFolderId = fidChild }
+  doc      <- dbUpdate
+    $ NewDocument user "test" Signable defaultTimeZoneName 0 (systemActor now) fidChild
+
   withDocument doc $ do
-    void . randomUpdate =<< runArchiveAction user ArchiveDocument
-    void . randomUpdate =<< runArchiveAction user ReallyDeleteDocument
+    void $ dbUpdate =<< runArchiveAction user ArchiveDocument
+    void $ dbUpdate =<< runArchiveAction user ReallyDeleteDocument
   modifyTestTime (31 `daysAfter`)
   void . dbUpdate $ PurgeDocuments 0
   res          <- fst <$> runTestKontra req ctx (folderAPIDelete fidChild)

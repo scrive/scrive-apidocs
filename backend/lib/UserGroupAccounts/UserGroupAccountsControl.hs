@@ -270,7 +270,7 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
                   <$> (dbQuery . UserGroupGetWithParents $ existinguser ^. #groupID)
                 if
                   | existingUserUGRoot == targetUGRoot && canDeleteFromSourceUG -> do
-                    moveUserToUserGroup uid targetGroupID
+                    void $ moveUserToUserGroupWithDocuments existinguser targetGroupID
                     runJSONGenT $ do
                       value "moved" True
                       value "added" False
@@ -447,10 +447,14 @@ handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
     Just newugfdrid -> do
       void . dbUpdate $ SetUserCompanyAdmin (user ^. #id) False
       void . dbUpdate $ SetUserUserGroup (user ^. #id) (newug ^. #id)
-      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
-      newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
-      void . dbUpdate $ SetUserHomeFolder (user ^. #id) newhomefdrid
+      let newFolder = set #parentID (Just newugfdrid) defaultFolder
+      newFolderId <- view #id <$> dbUpdate (FolderCreate newFolder)
+      void . dbUpdate $ SetUserHomeFolder (user ^. #id) newFolderId
       void . dbUpdate $ RemoveUserGroupInvite [ugid] (user ^. #id)
+      case user ^. #homeFolderID of
+        Just sourceFolderId ->
+          void . dbUpdate $ MoveAuthorDocuments (user ^. #id) sourceFolderId newFolderId
+        Nothing -> return ()
       -- if we are inviting a user with a plan to join the company, we
       -- should delete their personal plan
       flashmessage <- flashMessageUserHasBecomeCompanyAccount newug

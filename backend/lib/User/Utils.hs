@@ -10,7 +10,7 @@ module User.Utils (
     , withUserOrAdminOnly
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
-    , moveUserToUserGroup
+    , moveUserToUserGroupWithDocuments
 ) where
 
 import AccessControl.Model
@@ -140,7 +140,18 @@ withSalesOrAdminOnly :: Kontrakcja m => UserGroupID -> (UserGroup -> m a) -> m a
 withSalesOrAdminOnly ugid action =
   onlySalesOrAdmin $ guardJustM (dbQuery (UserGroupGet ugid)) >>= action
 
-moveUserToUserGroup :: Kontrakcja m => UserID -> UserGroupID -> m ()
+-- [CORE-2185] Workaround to automatically move a user's authored documents in their
+-- old home folder when moving them to a new home folder. In the long term the
+-- front end should have proper UI for moving users with their documents.
+moveUserToUserGroupWithDocuments :: Kontrakcja m => User -> UserGroupID -> m ()
+moveUserToUserGroupWithDocuments user targetUserGroupId = do
+  targetFolderId <- moveUserToUserGroup (user ^. #id) targetUserGroupId
+  case user ^. #homeFolderID of
+    Just sourceFolderId ->
+      dbUpdate $ MoveAuthorDocuments (user ^. #id) sourceFolderId targetFolderId
+    Nothing -> return ()
+
+moveUserToUserGroup :: Kontrakcja m => UserID -> UserGroupID -> m FolderID
 moveUserToUserGroup uid newugid =
   (view #id <$>) <$> dbQuery (FolderGetUserGroupHome newugid) >>= \case
     Nothing         -> internalError
@@ -150,4 +161,4 @@ moveUserToUserGroup uid newugid =
       let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
       newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
       void . dbUpdate . SetUserHomeFolder uid $ newhomefdrid
-
+      return newhomefdrid

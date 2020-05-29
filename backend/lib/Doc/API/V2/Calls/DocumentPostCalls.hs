@@ -1020,5 +1020,3 @@ currentDocumentJsonViewedBy
 currentDocumentJsonViewedBy user = do
   allUserRoles <- getRolesIncludingInherited user
   (\d -> (unjsonDocument $ documentAccessByFolder user d allUserRoles, d)) <$> theDocument
-
-
