@@ -55,6 +55,14 @@ data DocumentFilter
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
   | DocumentFilterByFolderID FolderID         -- ^ Documents only in given folder
   | DocumentFilterByFolderTree FolderID       -- ^ Documents that are in any of subfolder of given folder
+  | DocumentFilterEverythingOut               -- ^ Filter everything out. Used
+                                              -- by mixed domains (eg. one
+                                              -- responsible for folder list
+                                              -- calls) to filter out documents
+                                              -- in folder specific parts when a
+                                              -- filter doesn't make sense in
+                                              -- this context.
+
   deriving Show
 
 -- | Mapping for filtering/substitution for specific combinations of
@@ -71,9 +79,9 @@ legacyFilterMap = Just
 -- document.
 folderFilterMap :: DocumentFilterMap
 folderFilterMap = \case
-  DocumentFilterLinkIsAuthor _ -> Nothing
-  DocumentFilterByCanSign _  -> Nothing
-  DocumentFilterSignNowOnPad -> Nothing
+  DocumentFilterLinkIsAuthor _ -> Just DocumentFilterEverythingOut
+  DocumentFilterByCanSign _  -> Just DocumentFilterEverythingOut
+  DocumentFilterSignNowOnPad -> Just DocumentFilterEverythingOut
   DocumentFilterDeleted flag -> Just $ DocumentFilterAuthorDeleted flag
   filter_                    -> Just filter_
 
@@ -210,6 +218,9 @@ documentFilterToSQL (DocumentFilterByFolderTree fid) = do
   sqlWhereExists . sqlSelect "folders" $ do
     sqlWhere "folders.id = documents.folder_id"
     sqlWhere $ "folders.id =" <?> fid <+> "OR folders.parent_path @>" <?> Array1 [fid]
+
+documentFilterToSQL DocumentFilterEverythingOut = do
+  sqlWhere "FALSE"
 
 data FilterString = Quoted Text | Unquoted Text
   deriving (Show, Eq)
