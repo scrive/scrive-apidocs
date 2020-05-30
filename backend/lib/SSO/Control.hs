@@ -76,7 +76,10 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
             let email = Email emailRaw
             loginOrCreateNewAccount ugSSOConf
                                     mDefaultUserGroupOverride
-                                    (ugSSOConf ^. #userInitialGroupID)
+                                    -- legacy hack since we don't have any other UG associated in kontrakcja.conf,
+                                    -- only userInitialGroupID.
+                                    (fromMaybe (ugSSOConf ^. #userInitialGroupID)
+                                               (view #id <$> ug))
                                     (SAMLPrincipal
                                       (fromMaybe "" mFirstName)
                                       (fromMaybe "" mLastName)
