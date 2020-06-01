@@ -30,6 +30,7 @@ post:
         - se_bankid
         - no_bankid
         - dk_nemid
+        - fi_tupas
         - onfido_document_check
         - onfido_document_and_photo_check
       required: true
