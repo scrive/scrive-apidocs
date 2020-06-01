@@ -63,7 +63,8 @@ import FileStorage
 import FileStorage.Amazon.S3Env
 import FileTest
 import FlashMessages
-import Flow.Server
+import Flow.Server (runFlow)
+import Flow.Server.Types (FlowConfiguration(..))
 import FlowTests
 import Folder.APITest
 import Folder.FolderTest

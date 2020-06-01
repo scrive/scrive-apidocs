@@ -23,9 +23,13 @@ module Flow.Api
     , InstanceStage(..)
     , InstanceState(..)
     , GetInstance(..)
-    , InstanceAction(..)
+    , InstanceAuthorAction(..)
+    , InstanceUserAction(..)
     , GetInstanceView(..)
     , StartTemplate(..)
+    , InstanceUserState(..)
+    , DocumentOverview(..)
+    , DocumentState(..)
     , FlowAPI
     , apiProxy
     )
@@ -141,16 +145,18 @@ instance ToJSON InstanceToTemplateMapping where
 
 
 data InstanceEventDeed
-    = Approval
-    | Signature
+    = Approve
+    | Sign
     | View
-  deriving (Eq, Generic, Show)
+    | Reject
+  deriving (Eq, Ord, Generic, Show)
 
 instance FromJSON InstanceEventDeed where
   parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
 
 instance ToJSON InstanceEventDeed where
   toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
+
 
 data InstanceEvent = InstanceEvent
     { deed :: InstanceEventDeed
@@ -181,9 +187,8 @@ instance ToJSON InstanceStage where
 
 
 data InstanceState = InstanceState
-    { events :: [InstanceEvent]
+    { availableActions :: [InstanceAuthorAction]
     , history :: [InstanceStage]
-    , current :: InstanceStage
     }
   deriving (Eq, Generic, Show)
 
@@ -196,7 +201,7 @@ instance ToJSON InstanceState where
 
 data GetInstance = GetInstance
     { id :: InstanceId
-    , template :: TemplateId
+    , templateId :: TemplateId
     , templateParameters :: InstanceToTemplateMapping
     , state :: InstanceState
     }
@@ -211,23 +216,79 @@ instance ToJSON GetInstance where
 
 -- Maybe there should be a timestamp as well?
 -- Though the timestamp doesn't make sense in case of POST event.
-data InstanceAction = InstanceAction
-    { deed :: InstanceEventDeed
-    , document :: DocumentID
+data InstanceAuthorAction = InstanceAuthorAction
+    { actionType :: InstanceEventDeed
+    , actionUser :: UserID
+    , actionDocument :: DocumentID
+    }
+  deriving (Eq, Generic, Ord, Show)
+
+instance FromJSON InstanceAuthorAction where
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+instance ToJSON InstanceAuthorAction where
+  toEncoding = genericToEncoding $ aesonPrefix snakeCase
+
+
+-- Maybe there should be a timestamp as well?
+-- Though the timestamp doesn't make sense in case of POST event.
+data InstanceUserAction = InstanceUserAction
+    { actionType :: InstanceEventDeed
+    , actionDocument :: DocumentID
+    }
+  deriving (Eq, Generic, Ord, Show)
+
+instance FromJSON InstanceUserAction where
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+instance ToJSON InstanceUserAction where
+  toEncoding = genericToEncoding $ aesonPrefix snakeCase
+
+
+newtype InstanceUserState = InstanceUserState
+    { documents :: [DocumentOverview]
     }
   deriving (Eq, Generic, Show)
 
-
-instance FromJSON InstanceAction where
+instance FromJSON InstanceUserState where
   parseJSON = genericParseJSON aesonOptions
 
-instance ToJSON InstanceAction where
+instance ToJSON InstanceUserState where
   toEncoding = genericToEncoding aesonOptions
 
+
+data DocumentOverview = DocumentOverview
+    { documentId    :: DocumentID
+    , documentState :: DocumentState
+    }
+  deriving (Eq, Generic, Ord, Show)
+
+instance FromJSON DocumentOverview where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON DocumentOverview where
+  toEncoding = genericToEncoding aesonOptions
+
+
+data DocumentState
+    = Started
+    | Signed
+    | Approved
+    | Viewed
+    | Rejected
+  deriving (Eq, Generic, Ord, Show)
+
+instance FromJSON DocumentState where
+  parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
+
+instance ToJSON DocumentState where
+  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
+
+
 data GetInstanceView = GetInstanceView
-    { id :: InstanceId
-    , state :: InstanceState
-    , actions :: [InstanceAction]
+    { id      :: InstanceId
+    , state   :: InstanceUserState
+    , actions :: [InstanceUserAction]
     }
   deriving (Eq, Generic, Show)
 
@@ -250,11 +311,11 @@ type FlowAPI
         :<|> "templates" :> Capture "template_id" TemplateId :> "commit" :> PostNoContent '[JSON] NoContent
         :<|> "templates" :> Capture "template_id" TemplateId :> "start"
             :> ReqBody '[JSON] InstanceToTemplateMapping :> PostCreated '[JSON] StartTemplate
+        -- Progress
         :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
+        :<|> "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
         )
     :<|> "templates" :> "validate" :> ReqBody '[JSON] FlowDSL :> Post '[JSON] [ValidationError]
---    -- Progress
---    :<|> "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
 
 apiProxy :: Proxy FlowAPI
 apiProxy = Proxy

@@ -2,12 +2,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Flow.Server where
 
 import Control.Arrow (left)
-import Control.Monad.Base
-import Control.Monad.Catch hiding (Handler)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
@@ -25,31 +24,23 @@ import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
 import Servant
 import Servant.Server.Experimental.Auth
-import qualified Data.Map as Map
 
 import Auth.Model
 import Auth.OAuth
 import Auth.Parse
-import Doc.DocumentID (unsafeDocumentID)
-import Flow.Api
+import Flow.Api as Api
 import Flow.Error
 import Flow.HighTongue
 import Flow.Id
-import Flow.Machinize
+import Flow.Machinize as Machinize
 import Flow.Model.Types
 import Flow.OrphanInstances ()
+import Flow.Server.Handlers.Instance
+import Flow.Server.Types
 import Log.Configuration (LogRunner(LogRunner, withLogger))
-import User.UserID (UserID, unsafeUserID)
-import UserGroup.Internal (UserGroupID, unsafeUserGroupID)
+import User.UserID (unsafeUserID)
+import UserGroup.Internal (unsafeUserGroupID)
 import qualified Flow.Model as Model
-
-data FlowConfiguration = FlowConfiguration
-    { dbConnectionPool :: forall m . (MonadBase IO m, MonadMask m)
-        => ConnectionSourceM m
-    , flowPort :: Int
-    }
-
-type AppM = ReaderT FlowConfiguration (LogT (DBT Handler))
 
 server :: ServerT FlowAPI AppM
 server = authenticated :<|> validateTemplate
@@ -62,16 +53,7 @@ server = authenticated :<|> validateTemplate
         :<|> commitTemplate account
         :<|> startInstance account
         :<|> getInstance
---    :<|> getInstanceView
-
-data Account = Account
-    { userId :: UserID
-    , userGroupId :: UserGroupID
-    }
-  deriving (Show)
-
-
-type instance AuthServerData (AuthProtect "oauth") = Account
+        :<|> getInstanceView account
 
 -- TODO: Handle decodeUtf8 exceptions
 authHandler :: FlowConfiguration -> AuthHandler Request Account
@@ -179,64 +161,6 @@ validateTemplate :: FlowDSL -> AppM [ValidationError]
 validateTemplate template = do
   logInfo_ "validating template"
   either pure (const (pure [])) $ decodeHightTang template >>= machinize
-
-startInstance :: Account -> TemplateId -> InstanceToTemplateMapping -> AppM StartTemplate
-startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
-  logInfo_ "starting instance"
-  -- TODO: Check permissions create instance..
-  -- TODO: Check permissions to the template.
-  -- TODO: Validate mapping...
-  -- TODO: Check template is committed.
-  -- TODO: Check mapping value sizes???
-  -- TODO: Replace value type with enum???
-  -- TODO: Model instance state inside database somehow!
-  id <- Model.insertFlowInstance templateId
-  insertFlowInstanceKeyValues id documents StoreDocumentId
-  insertFlowInstanceKeyValues id users     StoreUserId
-  insertFlowInstanceKeyValues id messages  StoreMessage
-
-  pure $ StartTemplate { id }
-  where
-    -- TODO: this probably needs to be moved to Model module.
-    insertFlowInstanceKeyValues
-      :: InstanceId -> Map.Map Text a -> (a -> StoreValue) -> AppM ()
-    insertFlowInstanceKeyValues instanceId keyValues f =
-      mapM_ (\(k, v) -> Model.insertFlowInstanceKeyValue instanceId k $ f v)
-        $ Map.toList keyValues
-
-getInstance :: InstanceId -> AppM GetInstance
-getInstance instanceId = do
-  logInfo_ "getting instance"
-  -- TODO: Authorize user.
-  -- TODO: Model instance state inside database somehow!
-  templateId <- fromMaybeM throwInstanceNotFoundError $ Model.selectInstance instanceId
-  documents  <-
-    Map.fromList
-    .   fmap (fmap unsafeDocumentID)
-    <$> Model.selectInstanceKeyValues instanceId Document
-  users <-
-    Map.fromList
-    .   fmap (fmap unsafeUserID)
-    <$> Model.selectInstanceKeyValues instanceId User
-  messages <-
-    Map.fromList
-    .   fmap (fmap identity)
-    <$> Model.selectInstanceKeyValues instanceId Message
-  pure $ GetInstance
-    { id                 = instanceId
-    , template           = templateId
-    , templateParameters = InstanceToTemplateMapping { .. }
-    , state = InstanceState
-          -- TODO: What is purpose of this events field. Isn't it part of
-          -- current stage?
-                             { events = []
-                            , history = []
-                            , current = InstanceStage { stage = "test", events = [] }
-                            }
-    }
-
-getInstanceView :: InstanceId -> AppM GetInstanceView
-getInstanceView = undefined
 
 naturalFlow
   :: (LogT (DBT Handler) a -> DBT Handler a) -> FlowConfiguration -> AppM a -> Handler a

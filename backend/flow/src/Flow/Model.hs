@@ -8,6 +8,7 @@ module Flow.Model
     , insertFlowInstance
     , insertFlowInstanceKeyValue
     , insertParsedStateMachine
+    , selectParsedStateMachine
     , selectInstance
     , selectInstanceKeyValues
     , selectAggregatorState
@@ -109,6 +110,13 @@ insertParsedStateMachine templateId machine = do
     sqlSet "template_id" templateId
     sqlSet "data"        machine
 
+selectParsedStateMachine :: (MonadDB m, MonadThrow m) => TemplateId -> m Machine
+selectParsedStateMachine templateId = do
+  runQuery_ . sqlSelect "flow_compiled_state_machine" $ do
+    sqlResult "data"
+    sqlWhereEq "template_id" templateId
+  fetchOne runIdentity
+
 insertFlowInstance :: (MonadDB m, MonadThrow m) => TemplateId -> m InstanceId
 insertFlowInstance templateId = do
   runQuery_ . sqlInsert "flow_instances" $ do
@@ -140,12 +148,16 @@ insertFlowInstanceKeyValue instanceId key value =
         sqlSet "type" $ storeValueTypeToText Message
         sqlSet "string" msg
 
-selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe TemplateId)
+selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe Instance)
 selectInstance instanceId = do
   runQuery_ . sqlSelect "flow_instances" $ do
+    sqlResult "id"
     sqlResult "template_id"
     sqlWhereEq "id" instanceId
-  fetchMaybe runIdentity
+  fetchMaybe fetchInstance
+
+fetchInstance :: (InstanceId, TemplateId) -> Instance
+fetchInstance (id, templateId) = Instance { .. }
 
 -- TODO: Think about making this function a bit more type safe???
 selectInstanceKeyValues
@@ -186,14 +198,14 @@ updateAggregatorState instanceId aggregatorState = do
 selectAggregatorData
   :: (MonadDB m, MonadThrow m) => InstanceId -> m (Machine, AggregatorState)
 selectAggregatorData instanceId = do
-  runQuery_ . sqlSelect "flow_instance" $ do
+  runQuery_ . sqlSelect "flow_instances" $ do
     sqlResult "machine.data"
     sqlResult "aggregator.data"
     sqlJoinOn "flow_instance_aggregator aggregator"
-              "flow_instance.id = aggregator.instance_id"
+              "flow_instances.id = aggregator.instance_id"
     sqlJoinOn "flow_compiled_state_machine machine"
-              "instance.template_id = machine.template_id"
-    sqlWhereEq "flow_instance.id" instanceId
+              "flow_instances.template_id = machine.template_id"
+    sqlWhereEq "flow_instances.id" instanceId
   fetchOne identity
 
 selectDocumentNameFromKV

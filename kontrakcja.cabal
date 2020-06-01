@@ -367,6 +367,8 @@ Library
                  , Flow.Model.Types
                  , Flow.OrphanInstances
                  , Flow.Server
+                 , Flow.Server.Handlers.Instance
+                 , Flow.Server.Types
                  , Flow.Transducer
                  , Flow.VariableCollector
                  , FeatureFlags.Model

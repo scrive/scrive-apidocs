@@ -108,8 +108,8 @@ tableFlowInstancesKVStore = tblTable
     [ tblCheck
         { chkName      = "check_value"
         , chkCondition =
-          "type = 'document_id'::text AND document_id IS NOT NULL OR \
-        \type = 'user_id'::text AND user_id IS NOT NULL OR \
+          "type = 'document'::text AND document_id IS NOT NULL OR \
+        \type = 'user'::text AND user_id IS NOT NULL OR \
         \type = 'email'::text AND string IS NOT NULL OR \
         \type = 'phone_number'::text AND string IS NOT NULL OR \
         \type = 'message'::text AND string IS NOT NULL"

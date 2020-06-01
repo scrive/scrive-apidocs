@@ -33,7 +33,8 @@ import DB.PostgreSQL
 import FeatureFlags.Model
 import FileStorage
 import FileStorage.Amazon.S3Env
-import Flow.Server (FlowConfiguration(FlowConfiguration), runFlow)
+import Flow.Server (runFlow)
+import Flow.Server.Types (FlowConfiguration(FlowConfiguration))
 import Folder.Model
 import Happstack.Server.ReqHandler
 import Log.Configuration

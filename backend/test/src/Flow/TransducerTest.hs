@@ -3,16 +3,23 @@
 module Flow.TransducerTest where
 
 import Data.Aeson
+import Data.Set (Set)
 import Data.Text
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
+import Test.QuickCheck (withMaxSuccess)
 import Test.QuickCheck.Arbitrary
+import Test.QuickCheck.Gen
 import Test.QuickCheck.Modifiers
 
+import Flow.HighTongue
+import Flow.Machinize
 import Flow.Transducer
 
 instance Arbitrary StateId where
   arbitrary = fmap (pack . getASCIIString) arbitrary
+
+-- Transducer Int Int
 
 instance Arbitrary (TransducerEdge Int Int) where
   arbitrary = TransducerEdge <$> arbitrary <*> arbitrary <*> arbitrary
@@ -23,14 +30,50 @@ instance Arbitrary (TransducerState Int Int) where
 instance Arbitrary (Transducer Int Int) where
   arbitrary = Transducer <$> arbitrary <*> arbitrary <*> arbitrary
 
+transducerIntJSONSerializeDeserialize :: Transducer Int Int -> Bool
+transducerIntJSONSerializeDeserialize transducer =
+  isJust . decode @(Transducer Int Int) $ encode transducer
+
+-- Transducer (Set EventInfo) [LowAction]
+
+instance Arbitrary Action where
+  arbitrary = oneof [Notify <$> arbitrary <*> arbitrary, Close <$> arbitrary]
+
+instance Arbitrary LowAction where
+  arbitrary = oneof [Action <$> arbitrary, pure Fail]
+
+instance Arbitrary Deed where
+  arbitrary = elements [Field "somefield", Approval, Signature, View, Rejection, Timeout]
+
+instance Arbitrary EventInfo where
+  arbitrary = EventInfo <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance Arbitrary (TransducerEdge (Set EventInfo) [LowAction]) where
+  arbitrary = TransducerEdge <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance Arbitrary (TransducerState (Set EventInfo) [LowAction]) where
+  arbitrary = TransducerState <$> arbitrary <*> arbitrary
+
+instance Arbitrary (Transducer (Set EventInfo) [LowAction]) where
+  arbitrary = Transducer <$> arbitrary <*> arbitrary <*> arbitrary
+
+transducerEventInfoJSONSerializeDeserialize
+  :: Transducer (Set EventInfo) [LowAction] -> Bool
+transducerEventInfoJSONSerializeDeserialize transducer =
+  isJust . decode @(Transducer (Set EventInfo) [LowAction]) $ encode transducer
+
+-- Test group
+
 tests :: Test
 tests = testGroup
   "Transducer"
-  [ testProperty "Tranducer JSON serialization deserialization"
-                 transducerJSONSerializationDesereialization
+  [ testProperty "Transducer Int Int: JSON serialization deserialization"
+                 transducerIntJSONSerializeDeserialize
+  , testProperty
+    "Transducer (Set EventInfo) [LowAction]: JSON serialization deserialization"
+    (withMaxSuccess 30 transducerEventInfoJSONSerializeDeserialize)
   ]
 
-transducerJSONSerializationDesereialization :: Transducer Int Int -> Bool
-transducerJSONSerializationDesereialization transducer =
-  isJust . decode @(Transducer Int Int) $ encode transducer
+
+
 

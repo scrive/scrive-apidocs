@@ -19,6 +19,8 @@ module Flow.Aggregator
     , AggregatorStep(..)
     , aggregate
     , aggregateAndStep
+    , getAllowedEvents
+    , makeNewState
     , prepareAggregatorState
     , runAggregatorStep
     )
@@ -78,7 +80,7 @@ instance FromJSON AggregatorState where
   parseJSON = genericParseJSON aesonOptions
 
 instance ToJSON AggregatorState where
-  toEncoding = genericToEncoding aesonOptions
+  toJSON = genericToJSON aesonOptions
 
 data AggregatorStep
     = NeedMoreEvents

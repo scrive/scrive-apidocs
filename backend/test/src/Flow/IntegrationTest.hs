@@ -21,6 +21,7 @@ import OAuth.Model
 import TestEnvSt.Internal
 import TestingUtil hiding (assertRight)
 import TestKontra
+import User.UserID
 
 tests :: TestEnvSt -> Test
 tests env = testGroup
@@ -31,7 +32,8 @@ tests env = testGroup
 
 testTemplateHappyCrud :: TestEnv ()
 testTemplateHappyCrud = do
-  oauth <- getToken
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
   let TemplateClient {..} = mkTemplateClient oauth
   env <- getEnv
 
@@ -84,7 +86,8 @@ stages:
 
 testZeroToInstance :: TestEnv ()
 testZeroToInstance = do
-  oauth <- getToken
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
   let TemplateClient {..} = mkTemplateClient oauth
   env <- getEnv
 
@@ -98,12 +101,24 @@ testZeroToInstance = do
   void . assertRight "validate response" . request env $ validateTemplate process1
 
   startTemplateResponse1 <-
-    assertRight "start template response" . request env $ startTemplate tid mapping
+    assertRight "start template response" . request env $ startTemplate
+      tid
+      (mapping (user ^. #id))
+
   {- HLINT ignore "Redundant id" -}
   let iid = id (startTemplateResponse1 :: StartTemplate)
+
   instance2 <- assertRight "get instance" . request env $ getInstance iid
   assertEqual "get after start" iid $ id (instance2 :: GetInstance)
-  where mapping = InstanceToTemplateMapping Map.empty Map.empty Map.empty
+
+  instanceView <- assertRight "view instance response" . request env $ getInstanceView iid
+  assertEqual "view instance: id in response" iid $ id (instanceView :: GetInstanceView)
+
+  where
+    mapping uid = InstanceToTemplateMapping { documents = Map.empty
+                                            , users = Map.fromList [("approver1", uid)]
+                                            , messages = Map.empty
+                                            }
 
 
 {-
@@ -115,11 +130,8 @@ testZeroToInstance = do
 
 --}
 
-getToken :: TestEnv OAuthAuthorization
-getToken = do
-  user <- instantiateRandomUser
-
-  let uid = user ^. #id
+getToken :: UserID -> TestEnv OAuthAuthorization
+getToken uid = do
   void . dbUpdate $ CreatePersonalToken uid
   commit
   fmap fromJust . dbQuery $ GetPersonalToken uid

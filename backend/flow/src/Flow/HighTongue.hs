@@ -16,7 +16,6 @@ module Flow.HighTongue
   where
 
 import Data.Aeson
-import Data.Aeson.Casing
 import Data.Aeson.Types
 import Data.Set (Set)
 import GHC.Generics
@@ -28,10 +27,6 @@ type UserName = Text
 type MessageName = Text
 type FieldName = Text
 type StateName = Text
-
-
-aesonOptions :: Options
-aesonOptions = aesonPrefix snakeCase
 
 data Expect
     = ReceivedData
@@ -93,7 +88,9 @@ data Action
   deriving (Show, Eq, Ord, Generic)
 
 instance ToJSON Action where
-  toJSON = genericToJSON aesonOptions
+  toJSON (Notify users message) =
+    object ["notify" .= object ["users" .= toJSON users, "message" .= toJSON message]]
+  toJSON (Close documents) = object ["close" .= object ["documents" .= toJSON documents]]
 
 parseNotify :: Value -> Parser Action
 parseNotify = withObject "notify" $ \o -> do

@@ -6,6 +6,7 @@ module Flow.Model.Types where
 import GHC.Generics (Generic)
 
 import Doc.DocumentID (DocumentID)
+import Flow.Id
 import User.UserID (UserID)
 import UserGroup.Internal (UserGroupID)
 
@@ -16,6 +17,11 @@ data InsertTemplate = InsertTemplate
     , userGroupId :: UserGroupID
     }
   deriving (Show, Eq, Generic)
+
+data Instance = Instance
+    { id :: InstanceId
+    , templateId :: TemplateId
+    }
 
 data StoreValue
     = StoreDocumentId DocumentID
