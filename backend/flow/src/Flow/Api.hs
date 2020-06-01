@@ -242,19 +242,19 @@ instance ToJSON GetInstanceView where
 type FlowAPI
     = AuthProtect "oauth" :> "flow" :>
         -- Configuration
-        ("template" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
-        :<|> "template" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
-        :<|> "template" :> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
-        :<|> "template" :> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate :> Patch '[JSON] GetTemplate
+        ("templates" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
+        :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
+        :<|> "templates" :> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
+        :<|> "templates" :> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate :> Patch '[JSON] GetTemplate
         -- Control
-        :<|> "template" :> Capture "template_id" TemplateId :> "commit" :> PostNoContent '[JSON] NoContent
-        :<|> "template" :> Capture "template_id" TemplateId :> "start"
+        :<|> "templates" :> Capture "template_id" TemplateId :> "commit" :> PostNoContent '[JSON] NoContent
+        :<|> "templates" :> Capture "template_id" TemplateId :> "start"
             :> ReqBody '[JSON] InstanceToTemplateMapping :> PostCreated '[JSON] StartTemplate
-        :<|> "instance" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
+        :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
         )
-    :<|> "template" :> "validate" :> ReqBody '[JSON] FlowDSL :> Post '[JSON] [ValidationError]
+    :<|> "templates" :> "validate" :> ReqBody '[JSON] FlowDSL :> Post '[JSON] [ValidationError]
 --    -- Progress
---    :<|> "instance" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
+--    :<|> "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
 
 apiProxy :: Proxy FlowAPI
 apiProxy = Proxy

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.3.2"
+  version: "0.4.0"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -17,7 +17,7 @@ tags:
   - name: participation
     description: Calls used to participate in Flow processes.
 paths:
-  /template:
+  /templates:
     post:
       tags:
         - configuration
@@ -28,7 +28,7 @@ paths:
 
         The `process` field should be a valid Flow DSL format, but we also support saving arbitrary strings, as a user convenience.
 
-        The input will still be validated later in the process, either through the `/template/validate` endpoint or by committing the template.
+        The input will still be validated later in the process, either through the `/templates/validate` endpoint or by committing the template.
       requestBody:
         description: Flow template input.
         required: true
@@ -55,7 +55,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /template/{template_id}:
+  /templates/{template_id}:
     delete:
       tags:
         - configuration
@@ -174,7 +174,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /template/{template_id}/commit:
+  /templates/{template_id}/commit:
     post:
       tags:
         - configuration
@@ -208,7 +208,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /template/validate:
+  /templates/validate:
     post:
       tags:
         - configuration
@@ -239,7 +239,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /template/{template_id}/start:
+  /templates/{template_id}/start:
     post:
       tags:
         - control
@@ -295,7 +295,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /instance/{instance_id}:
+  /instances/{instance_id}:
     get:
       tags:
         - control
@@ -324,7 +324,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /instance/{instance_id}/view:
+  /instances/{instance_id}/view:
     get:
       tags:
         - participation
