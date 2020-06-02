@@ -125,19 +125,37 @@ setStringField name value ug =
             { ug | parentID = stringNonEmpty value }
 
         "padAppMode" ->
-            modifySettings (\s ->
-              let mNewPadAppMode = Enum.fromString enumPadAppMode value
-              in { s | padAppMode = M.withDefault s.padAppMode mNewPadAppMode }) ug
+            modifySettings
+                (\s ->
+                    let
+                        mNewPadAppMode =
+                            Enum.fromString enumPadAppMode value
+                    in
+                    { s | padAppMode = M.withDefault s.padAppMode mNewPadAppMode }
+                )
+                ug
 
         "smsProvider" ->
-            modifySettings (\s ->
-              let mNewSmsProvider = Enum.fromString enumSmsProvider value
-              in { s | smsProvider = M.withDefault s.smsProvider mNewSmsProvider }) ug
+            modifySettings
+                (\s ->
+                    let
+                        mNewSmsProvider =
+                            Enum.fromString enumSmsProvider value
+                    in
+                    { s | smsProvider = M.withDefault s.smsProvider mNewSmsProvider }
+                )
+                ug
 
         "sealingMethod" ->
-            modifySettings (\s ->
-              let mNewSealingMethod = Enum.fromString enumSealingMethod value
-              in { s | sealingMethod = M.withDefault s.sealingMethod mNewSealingMethod }) ug
+            modifySettings
+                (\s ->
+                    let
+                        mNewSealingMethod =
+                            Enum.fromString enumSealingMethod value
+                    in
+                    { s | sealingMethod = M.withDefault s.sealingMethod mNewSealingMethod }
+                )
+                ug
 
         _ ->
             ug
@@ -190,6 +208,9 @@ setBoolField name value ug =
 
         "eidUseForSEView" ->
             modifySettings (\s -> { s | eidUseForSEView = value }) ug
+
+        "appFrontend" ->
+            modifySettings (\s -> { s | appFrontend = value }) ug
 
         _ ->
             ug
@@ -289,6 +310,7 @@ type alias Settings =
     , sealingMethod : SealingMethod
     , hasPostSignview : Bool
     , eidUseForSEView : Bool
+    , appFrontend : Bool
     }
 
 
@@ -319,6 +341,7 @@ settingsDecoder =
         |> DP.required "sealingmethod" (JD.string |> JD.andThen sealingMethodDecoder)
         |> DP.required "haspostsignview" JD.bool
         |> DP.required "eiduseforseview" JD.bool
+        |> DP.required "app_frontend" JD.bool
 
 
 type alias ParentUserGroup =
@@ -341,25 +364,49 @@ tagDecoder =
         (JD.field "value" JD.string)
 
 
+
 -- Sealing method
-type SealingMethod = GuardTime | Pades
+
+
+type SealingMethod
+    = GuardTime
+    | Pades
+
 
 enumSealingMethod : Enum SealingMethod
 enumSealingMethod =
-  let toString sm = case sm of
-        GuardTime -> "guardtime"
-        Pades -> "pades"
-      toHumanString sm = case sm of
-        GuardTime -> "GuardTime"
-        Pades -> "PAdES"
-      allValues = [GuardTime, Pades]
-  in makeEnum allValues toString toHumanString
+    let
+        toString sm =
+            case sm of
+                GuardTime ->
+                    "guardtime"
+
+                Pades ->
+                    "pades"
+
+        toHumanString sm =
+            case sm of
+                GuardTime ->
+                    "GuardTime"
+
+                Pades ->
+                    "PAdES"
+
+        allValues =
+            [ GuardTime, Pades ]
+    in
+    makeEnum allValues toString toHumanString
+
 
 sealingMethodDecoder : String -> Decoder SealingMethod
 sealingMethodDecoder sealingMethodString =
     case findEnumValue enumSealingMethod sealingMethodString of
-        Err _ -> JD.fail <| "Cannot parse sealing method: " ++ sealingMethodString
-        Ok sealingMethod -> JD.succeed sealingMethod
+        Err _ ->
+            JD.fail <| "Cannot parse sealing method: " ++ sealingMethodString
+
+        Ok sealingMethod ->
+            JD.succeed sealingMethod
+
 
 
 -- PAD APP MODE
@@ -523,6 +570,7 @@ formValuesSettings settings =
     , ( "companysealingmethod", Enum.toString enumSealingMethod settings.sealingMethod )
     , ( "companyhaspostsignview", boolToJson settings.hasPostSignview )
     , ( "companyeiduseforseview", boolToJson settings.eidUseForSEView )
+    , ( "companyappfrontend", boolToJson settings.appFrontend )
     ]
         ++ L.filterMap identity
             [ mField identity ( "companycgiserviceid", settings.cgiServiceID )

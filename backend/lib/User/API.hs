@@ -520,7 +520,10 @@ apiCallSignup = api $ do
     Nothing -> do
       ugFolder <- dbUpdate . FolderCreate $ defaultFolder
       let ug0 =
-            defaultUserGroup & (#name .~ companyName) & (#homeFolderID ?~ ugFolder ^. #id)
+            defaultUserGroup
+              & (#name .~ companyName)
+              & (#homeFolderID ?~ ugFolder ^. #id)
+              & (#settings % _Just % #appFrontend .~ True)
       ug                    <- dbUpdate $ UserGroupCreate ug0
       freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
       let freeDocumentsCount = 3

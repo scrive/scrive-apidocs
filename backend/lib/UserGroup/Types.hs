@@ -260,6 +260,7 @@ defaultUserGroupSettings = UserGroupSettings
   , ssoConfig                  = Nothing
   , addMetadataToPDFs          = False
   , eidUseForSEView            = False
+  , appFrontend                = False
   }
 
 -- UI

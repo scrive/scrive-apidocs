@@ -564,6 +564,7 @@ getUserGroupSettingsChange = do
   mcompanydocumentsessiontimeout <- getSessionTimeoutField "companydocumentsessiontimeout"
   mcompanyhaspostsignview        <- getField "companyhaspostsignview"
   mcompanyeiduseforseview        <- getField "companyeiduseforseview"
+  mcompanyappfrontend            <- getField "companyappfrontend"
 
   return
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
@@ -606,7 +607,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #documentSessionTimeoutSecs)    mcompanydocumentsessiontimeout
     . maybe identity (set #hasPostSignview . (== "true")) mcompanyhaspostsignview
     . maybe identity (set #eidUseForSEView . (== "true")) mcompanyeiduseforseview
-
+    . maybe identity (set #appFrontend . (== "true"))     mcompanyappfrontend
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))

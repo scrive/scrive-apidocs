@@ -144,6 +144,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "has_post_signview" $ ugs ^. #hasPostSignview
   sqlSet "add_metadata_to_pdfs" $ ugs ^. #addMetadataToPDFs
   sqlSet "use_eid_service_for_se_view" $ ugs ^. #eidUseForSEView
+  sqlSet "use_app_frontend" $ ugs ^. #appFrontend
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -505,6 +506,7 @@ ugSettingsSelectors =
   , "sso_config"
   , "add_metadata_to_pdfs"
   , "use_eid_service_for_se_view"
+  , "use_app_frontend"
   ]
 
 

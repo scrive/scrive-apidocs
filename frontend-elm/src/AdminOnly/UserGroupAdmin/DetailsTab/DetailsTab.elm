@@ -139,9 +139,13 @@ update embed globals msg model =
 
         SetIntField name mRange value ->
             let
-                mClamp = case mRange of
-                    Just range -> clamp range.min range.max
-                    Nothing -> identity
+                mClamp =
+                    case mRange of
+                        Just range ->
+                            clamp range.min range.max
+
+                        Nothing ->
+                            identity
 
                 mInt =
                     stringNonEmpty value
@@ -205,10 +209,10 @@ update embed globals msg model =
                 Just userGroup ->
                     ( model
                     , Http.post
-                            { url = "/adminonly/companyadmin/" ++ userGroup.id
-                            , body = formBody globals <| UserGroup.formValues userGroup
-                            , expect = Http.expectString <| embed << GotSaveResponse
-                            }
+                        { url = "/adminonly/companyadmin/" ++ userGroup.id
+                        , body = formBody globals <| UserGroup.formValues userGroup
+                        , expect = Http.expectString <| embed << GotSaveResponse
+                        }
                     )
 
                 Nothing ->
@@ -222,9 +226,9 @@ update embed globals msg model =
                 Ok _ ->
                     ( { model | sUserGroup = statusMap UserGroup.afterSaved model.sUserGroup }
                     , Cmd.batch
-                            [ globals.flashMessage <| FlashMessage.success "Saved"
-                            , globals.setPageUrlFromModel -- reloads UserGroup Details
-                            ]
+                        [ globals.flashMessage <| FlashMessage.success "Saved"
+                        , globals.setPageUrlFromModel -- reloads UserGroup Details
+                        ]
                     )
 
         -- MOVE USER
@@ -235,9 +239,14 @@ update embed globals msg model =
                 |> M.withDefault ( model, Cmd.none )
 
         MergeUserGroupModalMsg modalMsg ->
-            let updateMergeUserGroupModal = MergeUserGroupModal.update (embed << MergeUserGroupModalMsg) globals modalMsg
-                (newMergeUserGroupModal, cmd) = maybeUpdate updateMergeUserGroupModal model.mMergeUserGroupModal
-            in ({ model | mMergeUserGroupModal = newMergeUserGroupModal}, cmd)
+            let
+                updateMergeUserGroupModal =
+                    MergeUserGroupModal.update (embed << MergeUserGroupModalMsg) globals modalMsg
+
+                ( newMergeUserGroupModal, cmd ) =
+                    maybeUpdate updateMergeUserGroupModal model.mMergeUserGroupModal
+            in
+            ( { model | mMergeUserGroupModal = newMergeUserGroupModal }, cmd )
 
 
 view : (Msg -> msg) -> Model -> Html msg
@@ -265,11 +274,10 @@ view embed model =
                         text "Inheritance inconsistency. Report to bugs@scrive.com."
                 ]
                     ++ M.values
-                            [ M.map
-                                (MergeUserGroupModal.view <| embed << MergeUserGroupModalMsg)
-                                model.mMergeUserGroupModal
-                            ]
-
+                        [ M.map
+                            (MergeUserGroupModal.view <| embed << MergeUserGroupModalMsg)
+                            model.mMergeUserGroupModal
+                        ]
 
 
 formText :
@@ -388,7 +396,8 @@ viewUserGroup model ug address settings =
                             Success userGroupName ->
                                 ( True, [ Input.success ], [ Form.validFeedback [] [ text <| "Company with name: " ++ userGroupName ] ] )
 
-        docTimeoutRange = Just (Range 1 365)
+        docTimeoutRange =
+            Just (Range 1 365)
     in
     Grid.container []
         [ Form.form [ onSubmit SubmitForm ]
@@ -556,12 +565,14 @@ viewUserGroup model ug address settings =
             , formIntRowM "Session timeout"
                 "If set, users cookie session expiry is set based on the provided seconds. Valid values are between 5 minutes to 30 days. Leave field empty to use the default session timeout."
                 (M.withDefault "" <| M.map String.fromInt settings.sessionTimeout)
-                (SetIntField "sessionTimeout" (Just <| Range 300 2592000)) -- 5 mins to 30 days
+                (SetIntField "sessionTimeout" (Just <| Range 300 2592000))
+                -- 5 mins to 30 days
                 [ readonly ug.settingsIsInherited ]
             , formIntRowM "Document session timeout"
                 "A session timeout (in seconds) specific to document views. Leave this field empty to use the default session timeout."
                 (M.withDefault "" <| M.map String.fromInt settings.documentSessionTimeout)
-                (SetIntField "documentSessionTimeout" (Just <| Range 300 2592000)) -- 5 mins to 30 days
+                (SetIntField "documentSessionTimeout" (Just <| Range 300 2592000))
+                -- 5 mins to 30 days
                 [ readonly ug.settingsIsInherited ]
             , formTextRowM "Portal URL"
                 ""
@@ -576,9 +587,15 @@ viewUserGroup model ug address settings =
             , formCheckboxRowM "PAdES sealing"
                 "If enabled, use PAdES instead of GuardTime sealing."
                 (settings.sealingMethod == UserGroup.Pades)
-                (\b -> SetStringField "sealingMethod"
-                       <| Enum.toString UserGroup.enumSealingMethod
-                       <| if b then UserGroup.Pades else UserGroup.GuardTime)
+                (\b ->
+                    SetStringField "sealingMethod" <|
+                        Enum.toString UserGroup.enumSealingMethod <|
+                            if b then
+                                UserGroup.Pades
+
+                            else
+                                UserGroup.GuardTime
+                )
                 [ readonly ug.settingsIsInherited ]
             , formCheckboxRowM "Has 'post signview'"
                 "If set, then signatories that don't have an account will be shown a 'post signview' that asks them to sign up for our service."
@@ -589,6 +606,11 @@ viewUserGroup model ug address settings =
                 "If set, then the EID Hub will be used to initiate the BankID transaction, rather than our internal implementation via CGI-GRP."
                 settings.eidUseForSEView
                 (SetBoolField "eidUseForSEView")
+                [ readonly ug.settingsIsInherited ]
+            , formCheckboxRowM "Uses new frontend"
+                "If set, then the users of company will see new frontend by default after loging in."
+                settings.appFrontend
+                (SetBoolField "appFrontend")
                 [ readonly ug.settingsIsInherited ]
             ]
         , Grid.row [ Row.leftSm ]

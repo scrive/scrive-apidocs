@@ -232,6 +232,7 @@ data UserGroupSettings = UserGroupSettings
   , ssoConfig                  :: !(Maybe UserGroupSSOConfiguration)
   , addMetadataToPDFs          :: !Bool
   , eidUseForSEView            :: !Bool
+  , appFrontend                :: !Bool
   } deriving (Show, Eq)
 
 
@@ -264,13 +265,14 @@ type instance CompositeRow UserGroupSettings
     , Maybe UserGroupSSOConfiguration
     , Bool
     , Bool
+    , Bool
     )
 
 instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig, addMetadataToPDFs, eidUseForSEView)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig, addMetadataToPDFs, eidUseForSEView, appFrontend)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = DataRetentionPolicy { .. }
