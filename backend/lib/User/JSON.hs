@@ -218,7 +218,7 @@ companySettingsJson ugs = do
   value "documentsessiontimeout" $ ugs ^. #documentSessionTimeoutSecs
   value "haspostsignview" $ ugs ^. #hasPostSignview
   value "eiduseforseview" $ ugs ^. #eidUseForSEView
-  value "app_frontend" $ ugs ^. #appFrontend
+  value "appfrontend" $ ugs ^. #appFrontend
 
 
 userStatsToJSON

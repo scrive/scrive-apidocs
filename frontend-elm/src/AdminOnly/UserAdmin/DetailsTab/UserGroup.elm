@@ -341,7 +341,7 @@ settingsDecoder =
         |> DP.required "sealingmethod" (JD.string |> JD.andThen sealingMethodDecoder)
         |> DP.required "haspostsignview" JD.bool
         |> DP.required "eiduseforseview" JD.bool
-        |> DP.required "app_frontend" JD.bool
+        |> DP.required "appfrontend" JD.bool
 
 
 type alias ParentUserGroup =
