@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Ο αριθμός Α.Δ.Τ. που χρησιμοποιήσατε δεν ταιριάζει με τον αριθμό Α.Δ.Τ. που απαιτείται για την προβολή του εγγράφου.",
 "_flashMessageUserHasLiveDocs":"Η αφαίρεση του λογαριασμού είναι αδύνατη επειδή ο χρήστης έχει έγγραφα τα οποία δεν έχουν ακόμα ολοκληρωθεί ή έχουν ακυρωθεί. ",
 "_flashMessageUserPasswordChanged":"Ο κωδικός πρόσβασης σας έχει οριστεί. ",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Υπάρχει ήδη χρήστης με το ίδιο email. ",
 "_flashMessageWrongTwoFactorCode":"Ο κωδικός δύο παραγόντων ήταν εσφαλμένος",
 "_flashMessageYourEmailHasChanged":"Ο κωδικός χρήστη και το email σας έχουν αλλαχθεί με επιτυχία. ",

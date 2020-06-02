@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Il numero ID utilizzato nel documento non corrisponde al numero ID richiesto per vedere il documento.",
 "_flashMessageUserHasLiveDocs":"Impossibile rimuovere l'account in quanto l'utente è in possesso di documenti che non sono ancora stati finalizzati o eliminati.",
 "_flashMessageUserPasswordChanged":"La tua password è stata confermata.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Esiste già un utente con la stessa email.",
 "_flashMessageWrongTwoFactorCode":"Il codice a due fattori era errato",
 "_flashMessageYourEmailHasChanged":"Il tuo nome utente e la tua email sono stati modificati con successo.",

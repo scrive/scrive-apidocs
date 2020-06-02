@@ -143,6 +143,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "document_session_timeout" $ ugs ^. #documentSessionTimeoutSecs
   sqlSet "has_post_signview" $ ugs ^. #hasPostSignview
   sqlSet "add_metadata_to_pdfs" $ ugs ^. #addMetadataToPDFs
+  sqlSet "sso_config" $ ugs ^. #ssoConfig
   sqlSet "use_eid_service_for_se_view" $ ugs ^. #eidUseForSEView
   sqlSet "use_app_frontend" $ ugs ^. #appFrontend
 

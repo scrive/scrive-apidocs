@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"Autentifikuoti $signatory$ į $text$ buvo išsiųsta SMS žinutė su PIN.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Pasirašė dokumentą per Danijos „NemID“ autentifikavimo sistemą.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Pasirašė dokumentą per Švedijos „BankID“ autentifikavimo sistemą.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Pasirašė dokumentą per Norvegijos „BankID“ autentifikavimo sistemą.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentas pasirašytas autentifikuojant PIN arba SMS žinute.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentas buvo pasirašytas.",

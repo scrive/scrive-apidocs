@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Zadané rodné číslo se neshoduje s rodným číslem požadovaným pro zobrazení dokumentu.",
 "_flashMessageUserHasLiveDocs":"Účet nelze odstranit. Některé z dokumentů uživatele nejsou hotovy a podepsány, případně stornovány.",
 "_flashMessageUserPasswordChanged":"Heslo bylo nastaveno.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Uživatel s tímto e-mailem již existuje.",
 "_flashMessageWrongTwoFactorCode":"Dvoufaktorový kód nebyl správný",
 "_flashMessageYourEmailHasChanged":"Změna uživatelského jména a e-mailu proběhla úspěšně.",

@@ -85,6 +85,7 @@ data AppConf = AppConf
   , kinesisStream      :: Maybe KinesisConf
   , postSignViewRedirectURL :: Text
   , useFolderListCallsByDefault :: Bool
+  , useNewFlattener    :: Bool -- Temporary. Remove after June 2020. MR
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -152,6 +153,10 @@ unjsonAppConf =
     <*> field "use_folder_list_calls_by_default"
               useFolderListCallsByDefault
               "Enable folder list calls for default user group settings"
+    <*> fieldDef "use_new_flattener"
+                 False
+                 useNewFlattener
+                 "If itext7 flattener should be used. Temporary option"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

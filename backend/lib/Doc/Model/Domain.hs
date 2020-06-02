@@ -59,7 +59,7 @@ documentDomainNeedsDistinct :: DocumentDomain -> Bool
 documentDomainNeedsDistinct = \case
   DocumentsOfWholeUniverse{}       -> False
   DocumentsVisibleViaAccessToken{} -> False
-  DocumentsOfUserGroup{}           -> True
+  DocumentsOfUserGroup{}           -> False
   DocumentsVisibleToUser{}         -> True
   DocumentsByFolderOnly{}          -> False
   DocumentsUserHasAnyLinkTo{}      -> True
@@ -111,13 +111,12 @@ documentDomainToSQL (DocumentsVisibleViaAccessToken token) =
     sqlWhereAnySignatoryLinkNotReallyDeleted
     sqlWhereEq "documents.token" token
 
-documentDomainToSQL (DocumentsOfUserGroup ugid) = pure . (legacyFilterMap, ) $ do
-  sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
-  sqlJoinOn "users"           "signatory_links.user_id = users.id"
+documentDomainToSQL (DocumentsOfUserGroup ugid) = pure . (folderFilterMap, ) $ do
+  sqlWhereInSql "documents.author_user_id" . sqlSelect "users" $ do
+    sqlResult "users.id"
+    sqlWhereEq "users.user_group_id" ugid
   sqlWhereDocumentWasNotPurged
-  sqlWhereDocumentIsNotReallyDeleted
-  sqlWhere "documents.author_id = signatory_links.id"
-  sqlWhereEq "users.user_group_id" ugid
+  sqlWhereAnySignatoryLinkNotReallyDeleted
 
 documentDomainToSQL (DocumentsVisibleToUser uid) = pure . (legacyFilterMap, ) $ do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"

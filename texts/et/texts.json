@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Kasutatud isikukood ei kattu dokumendi vaatamiseks vajaliku isikukoodiga.",
 "_flashMessageUserHasLiveDocs":"Kontot pole võimalik eemaldada, kuna kasutajal on dokumente, mis on lõpetamata või tühistatud.",
 "_flashMessageUserPasswordChanged":"Teie salasõna on kinnitatud.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Sama e-maili aadressiga kasutaja on juba olemas.",
 "_flashMessageWrongTwoFactorCode":"Kahekordse tuvastamise kood oli vale",
 "_flashMessageYourEmailHasChanged":"Teie kasutajanimi ja e-maili aadress on edukalt salvestatud. ",

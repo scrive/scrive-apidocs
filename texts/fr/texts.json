@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Le numéro d'identification que vous avez utilisé ne correspond pas au numéro d'identification requis pour afficher le document.",
 "_flashMessageUserHasLiveDocs":"Impossible de supprimer le compte car l'utilisateur a des documents qui ne sont ni finalisés ni annulés.",
 "_flashMessageUserPasswordChanged":"Votre mot de passe a été enregistré.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Un utilisateur avec la même adresse mail existe déjà.",
 "_flashMessageWrongTwoFactorCode":"Le code à deux facteurs était incorrect",
 "_flashMessageYourEmailHasChanged":"Votre nom d'utilisateur et adresse mail ont été changés.",

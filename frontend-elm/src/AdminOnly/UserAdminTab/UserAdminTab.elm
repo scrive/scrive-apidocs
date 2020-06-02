@@ -306,8 +306,8 @@ type alias User =
     { id : String
     , username : String
     , email : String
-    , companyPosition : String
     , company : String
+    , usergroup : String
     , phone : String
     , tos : Maybe Posix
     , twoFAActive : Bool
@@ -333,8 +333,8 @@ usersDecoder =
                     (D.field "id" D.string)
                     (D.field "username" D.string)
                     (D.field "email" D.string)
-                    (D.field "companyposition" D.string)
                     (D.field "company" D.string)
+                    (D.field "usergroup" D.string)
                     (D.field "phone" D.string)
                     (D.field "tos" (datetimeDecoder |> D.nullable))
                     (D.field "twofactor_active" D.bool)
@@ -364,7 +364,7 @@ viewUsers model users =
                     [ th "col-2" SCName [ text "Username", sortIndicator SCName sorting ]
                     , Table.th [ Table.cellAttr <| class "col-3" ] [ text "Email" ]
                     , Table.th [ Table.cellAttr <| class "col-2" ] [ text "Company" ]
-                    , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Position" ]
+                    , Table.th [ Table.cellAttr <| class "col-1" ] [ text "User Group" ]
                     , Table.th [ Table.cellAttr <| class "col-1" ] [ text "Phone" ]
                     , th "col-2" SCTosDate [ text "TOS date", sortIndicator SCTosDate sorting ]
                     , Table.th [ Table.cellAttr <| class "col-1" ] [ text "2FA" ]
@@ -390,7 +390,7 @@ viewUser user =
         [ Table.td [ colAttr "col-2" ] [ text user.username ]
         , Table.td [ colAttr "col-3" ] [ text user.email ]
         , Table.td [ colAttr "col-2" ] [ text user.company ]
-        , Table.td [ colAttr "col-1" ] [ text user.companyPosition ]
+        , Table.td [ colAttr "col-1" ] [ text user.usergroup ]
         , Table.td [ colAttr "col-1" ] [ text user.phone ]
         , Table.td [ colAttr "col-2" ] [ text <| M.withDefault "" <| M.map viewDate user.tos ]
         , Table.td [ colAttr "col-1" ] [ text <| ite user.twoFAActive "x" "" ]

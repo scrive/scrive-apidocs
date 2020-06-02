@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"Un SMS avec un code PIN à utiliser pour s'identifier a été envoyé à $text$ pour $signatory$.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"A signé le document avec le NemID danois comme méthode d'authentification.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"A signé le document avec l'identifiant bancaire suédois comme méthode d'authentification.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"A signé le document en utilisant le BankID norvégien comme méthode d'authentification.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Le document a été signé avec comme méthode d'identification un code PIN envoyé par SMS.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Le document a été signé.",

@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"O número de ID que usou não coincide com o número de ID necessário para visualizar o documento.",
 "_flashMessageUserHasLiveDocs":"Não é possível remover a conta porque o utilizador tem documentos que ainda não foram finalizados ou cancelados.",
 "_flashMessageUserPasswordChanged":"A sua palavra-passe foi definida.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Já existe um utilizador com o mesmo email.",
 "_flashMessageWrongTwoFactorCode":"O código de dois factores estava incorrecto",
 "_flashMessageYourEmailHasChanged":"O seu nome de utilizador e email foram alterados com êxito.",

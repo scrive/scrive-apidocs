@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Käyttämäsi ID-numero ei vastaa dokumentin tarkastelemiseen vaadittavaa ID-numeroa.",
 "_flashMessageUserHasLiveDocs":"Tiliä ei voi poistaa, sillä käyttäjällä on dokumentteja, joita ei ole viimeistelty tai poistettu.",
 "_flashMessageUserPasswordChanged":"Salasanasi on asetettu.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Samalla sähköpostilla on jo käyttäjä.",
 "_flashMessageWrongTwoFactorCode":"Kaksivaiheinen koodi oli virheellinen",
 "_flashMessageYourEmailHasChanged":"Käyttäjänimesi ja sähköpostisi on muutettu onnistuneesti.",

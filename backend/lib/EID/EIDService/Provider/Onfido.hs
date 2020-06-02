@@ -66,10 +66,13 @@ beginEIDServiceTransaction conf authKind doc sl = do
                                        , redPostRedirectUrl = mkontraRedirect
                                        }
   let createReq = CreateEIDServiceTransactionRequest
-        { cestProvider           = provider
-        , cestMethod             = EIDServiceAuthMethod
-        , cestRedirectUrl        = showt redirectUrl
-        , cestProviderParameters = Just . toJSON $ OnfidoEIDServiceProviderParams
+        { cestDomain             = ctx ^. #brandedDomain % #url
+        , cestEIDServiceProvider = provider
+        , cestDocumentID         = documentid doc
+        , cestSignatoryLinkID    = signatorylinkid sl
+        , cestAuthKind           = authKind
+        , cestKontraRedirectUrl  = mkontraRedirect
+        , cestmProviderParams    = Just $ OnfidoEIDServiceProviderParams
                                      { onfidoparamMethod    = method
                                      , onfidoparamFirstName = getFirstName sl
                                      , onfidoparamLastName  = getLastName sl

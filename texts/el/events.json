@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"Ένα SMS με ένα PIN εστάλη στο $text$ προς τον $signatory$ για χρήση πιστοποίησης. ",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Το έγγραφο υπογράφηκε με χρήση Δανέζικου NemID ως μέθοδο πιστοποίησης.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Το έγγραφο υπογράφηκε με χρήση Σουηδικού BankID ως μέθοδο πιστοποίησης. ",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Το έγγραφο υπογράφηκε με χρήση Νορβηγικού BankID ως μέθοδο πιστοποίησης.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Το έγγραφο υπογράφηκε με χρήση PIN μέσω SMS ως μέθοδος πιστοποίησης. ",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Το έγγραφο υπογράφηκε. ",

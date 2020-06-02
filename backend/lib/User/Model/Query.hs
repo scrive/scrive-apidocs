@@ -450,7 +450,7 @@ dateTrunc time statsPartition = "date_trunc('" <> granularity <> "', " <> time <
       PartitionByMonth -> "month"
 
 data GetUsersWithUserGroupNames = GetUsersWithUserGroupNames [UserFilter] [AscDesc UserOrderBy] (Int, Int, Int)
-instance (MonadDB m, MonadThrow m) => DBQuery m GetUsersWithUserGroupNames (Int, [(User, Text)]) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUsersWithUserGroupNames (Int, [(User, Text, Text)]) where
   dbQuery (GetUsersWithUserGroupNames filters sorting (offset, limit, softLimit)) = do
     runQuery_ . sqlSelect "" $ do
       sqlResult selectUsersWithUserGroupNamesSQL

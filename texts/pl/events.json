@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"SMS zawierający PIN został wysłany na numer $text$ dla użytkownika $signatory$ celem uwierzytelnienia danych.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Dokument podpisano po uwierzytelnieniu danych przy użyciu duńskiego NemID.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Dokument podpisano po uwierzytelnieniu danych przy użyciu szwedzkiego BankID.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Dokument podpisano po uwierzytelnieniu danych przy użyciu norweskiego BankID.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument podpisano po uwierzytelnieniu danych przy użyciu kodu PIN przesłanego SMS-em.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument został podpisany.",

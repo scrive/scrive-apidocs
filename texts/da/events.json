@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"En SMS med PIN-kode blev sendt til $text$ for $signatory$, så den kunne anvendes til godkendelsen.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Signerede dokumentet ved at anvende det danske NemID som godkendelsesmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Dokumentet blev signeret ved at anvende Swedish BankID som godkendelsesmetode.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Signerede dokumentet ved at bruge det norske BankID som godkendelsesmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentet blev signeret ved at anvende PIN-kode via SMS som godkendelsesmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentet blev signeret.",

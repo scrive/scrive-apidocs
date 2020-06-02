@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Ievadītais personas kods nesakrīt ar nepieciešamo personas kodu, lai apskatītu dokumentu.",
 "_flashMessageUserHasLiveDocs":"Nevar izdzēst kontu, jo lietotājam ir aktīvi dokumenti, kas nav vēl pabeigti vai atcelti.",
 "_flashMessageUserPasswordChanged":"Jūsu parole ir iestatīta.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"Lietotājs ar šādu e-pasta adresi jau eksistē.",
 "_flashMessageWrongTwoFactorCode":"Divu faktoru kods bija nepareizs",
 "_flashMessageYourEmailHasChanged":"Jūsu lietotājvārds un e-pasta adrese ir sekmīgi nomainīti.",

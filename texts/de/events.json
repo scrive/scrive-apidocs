@@ -78,6 +78,7 @@
 "_SMSPinSendEvidenceText":"Eine SMS mit einer PIN wurde an $text$ zur Authentifizierung durch $signatory$ gesendet.",
 "_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Das Dokument wurde mittels dänischer NemID als Authentifizierungsmethode signiert. ",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Signierte das Dokument mittels schwedischer BankID als Authentifizierungsmethode.",
+"_SignDocumentEvidenceTextSimpleArchiveFinnishFTN":"",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Das Dokument wurde mittels norwegischer BankID als Authentifizierungsmethode signiert. ",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Das Dokument wurde mit PIN per SMS als Authentifizierungsmethode signiert.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Das Dokument wurde signiert. ",

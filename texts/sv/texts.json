@@ -652,6 +652,7 @@
 "_flashMessageUserHasIdentifiedWithDifferentSSN":"Personnumret du valt stämmer inte överens med personnumret som efterfrågas för att se dokumentet.",
 "_flashMessageUserHasLiveDocs":"Det går inte att ta bort kontot eftersom användaren har dokument som ännu inte avslutats eller avbrutits.",
 "_flashMessageUserPasswordChanged":"Ditt lösenord har sparats.",
+"_flashMessageUserPasswordChangedLoginReq":"",
 "_flashMessageUserWithSameEmailExists":"En användare med samma e-post existerar redan.",
 "_flashMessageWrongTwoFactorCode":"Fel tvåfaktorskod",
 "_flashMessageYourEmailHasChanged":"Ditt användarnamn och din e-post har nu ändrats.",
