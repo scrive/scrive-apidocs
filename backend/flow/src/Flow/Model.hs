@@ -2,6 +2,7 @@ module Flow.Model
     ( deleteTemplate
     , insertTemplate
     , selectTemplate
+    , selectTemplatesByUserID
     , updateTemplate
     , commitTemplate
     , getTemplateDsl
@@ -32,6 +33,7 @@ import Flow.Aggregator
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types
+import User.UserID (UserID)
 
 -- TODO: Is it good idea to have Flow.Api used in the model???
 -- MB: it isn't. But if we're going to create complex types
@@ -75,6 +77,17 @@ selectTemplate templateId = do
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
   fetchMaybe fetchGetTemplate
+
+selectTemplatesByUserID :: (MonadDB m, MonadThrow m) => UserID -> m [GetTemplate]
+selectTemplatesByUserID userId = do
+  runQuery_ . sqlSelect "flow_templates" $ do
+    sqlResult "id"
+    sqlResult "name"
+    sqlResult "process"
+    sqlResult "committed"
+    sqlWhereEq "user_id" userId
+    sqlWhereIsNULL "deleted"
+  fetchMany fetchGetTemplate
 
 updateTemplate
   :: (MonadDB m, MonadThrow m) => TemplateId -> PatchTemplate -> m (Maybe GetTemplate)

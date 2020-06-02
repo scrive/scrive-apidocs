@@ -20,6 +20,7 @@ data TemplateClient = TemplateClient {
   , deleteTemplate   :: TemplateId -> ClientM NoContent
   , getTemplate      :: TemplateId -> ClientM GetTemplate
   , patchTemplate    :: TemplateId -> PatchTemplate -> ClientM GetTemplate
+  , listTemplates    :: ClientM [GetTemplate]
   , commitTemplate   :: TemplateId -> ClientM NoContent
   , startTemplate    :: TemplateId -> InstanceToTemplateMapping -> ClientM StartTemplate
   , getInstance      :: InstanceId -> ClientM GetInstance
@@ -36,6 +37,7 @@ mkTemplateClient oauth = TemplateClient { .. }
         :<|> deleteTemplate
         :<|> getTemplate
         :<|> patchTemplate
+        :<|> listTemplates
         :<|> commitTemplate
         :<|> startTemplate
         :<|> getInstance

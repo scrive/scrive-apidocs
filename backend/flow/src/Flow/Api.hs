@@ -307,6 +307,7 @@ type FlowAPI
         :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
         :<|> "templates" :> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
         :<|> "templates" :> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate :> Patch '[JSON] GetTemplate
+        :<|> "templates" :> Get '[JSON] [GetTemplate]
         -- Control
         :<|> "templates" :> Capture "template_id" TemplateId :> "commit" :> PostNoContent '[JSON] NoContent
         :<|> "templates" :> Capture "template_id" TemplateId :> "start"

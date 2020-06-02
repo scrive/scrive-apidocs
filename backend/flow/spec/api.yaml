@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.4.0"
+  version: "0.4.1"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -294,7 +294,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
+  /templates:
+    get:
+      tags:
+        - configuration
+      summary: Get all Flow templates for user
+      operationId: listTemplates
+      description: |
+        Gets list of Flow templates associated with the authenticated user.
+      responses:
+        200:
+          description: 0 or more Flow templates found.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemplateResponse'
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /instances/{instance_id}:
     get:
       tags:

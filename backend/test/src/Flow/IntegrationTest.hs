@@ -28,6 +28,7 @@ tests env = testGroup
   "Integration"
   [ testThat "Template CRUD happy path" env testTemplateHappyCrud
   , testThat "From zero to instance"    env testZeroToInstance
+  , testThat "List template endpoint"   env testListEndpoint
   ]
 
 testTemplateHappyCrud :: TestEnv ()
@@ -120,7 +121,6 @@ testZeroToInstance = do
                                             , messages = Map.empty
                                             }
 
-
 {-
 
   , commitTemplate   :: TemplateId -> ClientM NoContent
@@ -129,6 +129,27 @@ testZeroToInstance = do
   , validateTemplate :: FlowDSL -> ClientM [ValidationError]
 
 --}
+
+testListEndpoint :: TestEnv ()
+testListEndpoint = do
+  user  <- instantiateRandomUser
+  oauth <- getToken $ user ^. #id
+  let TemplateClient {..} = mkTemplateClient oauth
+      createTemplateData  = CreateTemplate "name" process1
+  env <- getEnv
+
+  ts1 <- assertRight "list endpoint works when no templates" . request env $ listTemplates
+  assertBool "first list call should be empty" $ null ts1
+
+  void . assertRight "create template" . request env $ createTemplate createTemplateData
+
+  ts2 <- assertRight "list endpoint works when 1 template" . request env $ listTemplates
+  assertBool "second list call should have 1 item" $ length ts2 == 1
+
+  void . assertRight "create template" . request env $ createTemplate createTemplateData
+
+  ts3 <- assertRight "list endpoint works when 2 templates" . request env $ listTemplates
+  assertBool "third list call should have 2 items" $ length ts3 == 2
 
 getToken :: UserID -> TestEnv OAuthAuthorization
 getToken uid = do

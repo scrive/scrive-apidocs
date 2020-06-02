@@ -50,6 +50,7 @@ server = authenticated :<|> validateTemplate
         :<|> deleteTemplate account
         :<|> getTemplate account
         :<|> patchTemplate account
+        :<|> listTemplates account
         :<|> commitTemplate account
         :<|> startInstance account
         :<|> getInstance
@@ -161,6 +162,11 @@ validateTemplate :: FlowDSL -> AppM [ValidationError]
 validateTemplate template = do
   logInfo_ "validating template"
   either pure (const (pure [])) $ decodeHightTang template >>= machinize
+
+listTemplates :: Account -> AppM [GetTemplate]
+listTemplates Account {..} = do
+  logInfo_ "list templates"
+  Model.selectTemplatesByUserID userId
 
 naturalFlow
   :: (LogT (DBT Handler) a -> DBT Handler a) -> FlowConfiguration -> AppM a -> Handler a
