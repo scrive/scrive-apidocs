@@ -34,6 +34,7 @@ import SSO.SAML
 import Templates
 import User.Action
 import User.Email (Email(..))
+import User.History.Model
 import User.Model
 import User.Utils
 import UserGroup.Model
@@ -127,7 +128,7 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
       if fstDescOfSnd
          then do
            account <- maybe (createAccount p initugID) return mAccount
-           startSessionForSAMLUser account
+           loginSAMLUser account
            withPositionUpdated <- updateUserWithNameIdInCompanyPosition ugSSOConf account (spNameID p)
            withTosCheck (\_ -> return . internalResponse $ LinkLogin LANG_EN) withPositionUpdated
          else do apiError insufficientPrivileges
@@ -144,7 +145,12 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
     getAccountInAcceptedStateOrFail email = do
       (dbQuery . GetUserWithStatusByEmail $ email) >>=
         mapM (\(user, isDeleted) -> do
-            when (isDeleted || (user ^. #accountSuspended)) $ unauthorized ("can't log in " <> showt email)
+            when (isDeleted || (user ^. #accountSuspended)) $ do
+              ctx <- getContext
+              void . dbUpdate $ LogHistorySSOLoginFailure (user ^. #id)
+                                           (ctx ^. #ipAddr)
+                                           (ctx ^. #time)
+              unauthorized ("can't log in " <> showt email)
             return user)
 
     createAccount :: Kontrakcja m => SAMLPrincipal -> UserGroupID -> m User
@@ -173,10 +179,14 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
       else
         return user
 
-    startSessionForSAMLUser :: Kontrakcja m => User -> m ()
-    startSessionForSAMLUser user = do
+    loginSAMLUser :: Kontrakcja m => User -> m ()
+    loginSAMLUser user = do
+      ctx <- getContext
       when (user ^. #sysAuth /= LoginAuthSSO) $ apiError insufficientPrivileges
       logInfo_ "Logging in user via SAML"
+      void . dbUpdate $ LogHistorySSOLoginSuccess (user ^. #id)
+                                           (ctx ^. #ipAddr)
+                                           (ctx ^. #time)
       logUserToContext $ Just user
 
 data SAMLPrincipal =

@@ -20,6 +20,8 @@ module User.History.Model (
   , LogHistoryAPIGetPersonalTokenSuccess(..)
   , GetUserHistoryByUserID(..)
   , GetUserRecentAuthFailureCount(..)
+  , LogHistorySSOLoginFailure(..)
+  , LogHistorySSOLoginSuccess(..)
   ) where
 
 import Control.Monad.Catch
@@ -68,6 +70,8 @@ data UserHistoryEventType = UserLoginFailure
                           | UserAPIGetPersonalTokenFailure
                           | UserAPIGetPersonalTokenSuccess
                           | UserAccountDeleted
+                          | UserSSOLoginFailure
+                          | UserSSOLoginSuccess
   deriving (Eq, Show)
 
 {- |
@@ -97,6 +101,8 @@ instance FromSQL UserHistoryEventType where
       13 -> return UserTOTPEnable
       14 -> return UserTOTPDisable
       15 -> return UserAccountDeleted
+      16 -> return UserSSOLoginFailure
+      17 -> return UserSSOLoginSuccess
       _  -> throwM RangeError { reRange = [(1, 15)], reValue = n }
 
 instance ToSQL UserHistoryEventType where
@@ -116,6 +122,8 @@ instance ToSQL UserHistoryEventType where
   toSQL UserTOTPEnable                 = toSQL (13 :: Int32)
   toSQL UserTOTPDisable                = toSQL (14 :: Int32)
   toSQL UserAccountDeleted             = toSQL (15 :: Int32)
+  toSQL UserSSOLoginFailure            = toSQL (16 :: Int32)
+  toSQL UserSSOLoginSuccess            = toSQL (17 :: Int32)
 
 newtype GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
@@ -316,6 +324,24 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountDeleted Bool w
     ip
     time
     (Just deletinguserid)
+
+data LogHistorySSOLoginFailure = LogHistorySSOLoginFailure UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistorySSOLoginFailure Bool where
+  dbUpdate (LogHistorySSOLoginFailure userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent { uheventtype = UserSSOLoginFailure, uheventdata = Nothing }
+    ip
+    time
+    Nothing
+
+data LogHistorySSOLoginSuccess = LogHistorySSOLoginSuccess UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistorySSOLoginSuccess Bool where
+  dbUpdate (LogHistorySSOLoginSuccess userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent { uheventtype = UserSSOLoginSuccess, uheventdata = Nothing }
+    ip
+    time
+    (Just userid)
 
 diffUserInfos :: UserInfo -> UserInfo -> [(Text, Text, Text)]
 diffUserInfos old new =
