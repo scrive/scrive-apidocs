@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE Strict #-}
 
 module Flow.OrphanInstances () where
 

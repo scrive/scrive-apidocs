@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE Strict #-}
+
 module Flow.VariableCollectorTest where
 
 import Data.Text.Encoding

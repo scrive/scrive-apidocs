@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE Strict #-}
+
 module Flow.MachinizeTest where
 
 import Data.Either.Extra

@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE Strict #-}
 
 module Flow.Client where
 

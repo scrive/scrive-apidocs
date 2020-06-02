@@ -1,3 +1,5 @@
+{-# LANGUAGE Strict #-}
+
 module Flow.Db where
 
 import Database.PostgreSQL.PQTypes.Checks

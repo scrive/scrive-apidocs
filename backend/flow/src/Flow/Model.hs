@@ -1,3 +1,5 @@
+{-# LANGUAGE Strict #-}
+
 module Flow.Model
     ( deleteTemplate
     , insertTemplate
