@@ -33,8 +33,8 @@ source nodeenv/bin/activate
 echo "source /home/vagrant/kontrakcja/nodeenv/bin/activate" >> /home/vagrant/.bash_profile
 cd frontend
 npm install
-# cd ../frontend-elm/
-# npm install
+cd ../frontend-elm/
+npm install
 cd ..
 gem install --user-install fakes3t1
 export PATH=/home/vagrant/.gem/ruby/2.7.0/bin:/home/vagrant/kontrakcja/frontend/node_modules/.bin:$PATH
