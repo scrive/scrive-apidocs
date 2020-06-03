@@ -571,6 +571,12 @@ showPage fid pageNo = logFile fid $ do
   pixelwidth <- guardJustM $ readField "pixelwidth"
   let clampedPixelWidth = min 2000 (max 100 pixelwidth)
   fileData <- getFileIDContents fid
+
+  -- In some cases checkFileAccess can lock document in DB
+  -- For documents with many pages this can cause trouble
+  -- This is a teporary fix for production - 03.VI.2020 MR
+  commit
+
   rp       <- renderPage fileData pageNo clampedPixelWidth
   case rp of
     Just pageData ->
