@@ -48,7 +48,6 @@ import Doc.AccessControl
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocumentMonad
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
@@ -65,13 +64,13 @@ getDocumentByCurrentUser :: Kontrakcja m => DocumentID -> m Document
 getDocumentByCurrentUser docId = do
   user  <- guardJust . contextUser =<< getContext
   roles <- dbQuery $ GetRoles user
-  withDocumentID docId $ do
-    mSL          <- getSigLinkFor user <$> theDocument
-    requiredPerm <- theDocument >>= apiRequireDocPermission ReadA
-    let hasReadPermission = accessControlCheck roles requiredPerm
-    if isJust mSL || hasReadPermission
-      then theDocument
-      else throwM . SomeDBExtraException $ insufficientPrivileges
+  doc   <- dbQuery $ GetDocumentByDocumentID docId
+  let mSL = getSigLinkFor user doc
+  requiredPerm <- apiRequireDocPermission ReadA doc
+  let hasReadPermission = accessControlCheck roles requiredPerm
+  if isJust mSL || hasReadPermission
+    then return doc
+    else throwM . SomeDBExtraException $ insufficientPrivileges
 
 getDocByDocIDAndAccessTokenV1
   :: Kontrakcja m => DocumentID -> Maybe MagicHash -> m Document

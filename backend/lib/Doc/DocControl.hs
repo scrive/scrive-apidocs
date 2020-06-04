@@ -577,7 +577,7 @@ showPage fid pageNo = logFile fid $ do
   -- This is a teporary fix for production - 03.VI.2020 MR
   commit
 
-  rp       <- renderPage fileData pageNo clampedPixelWidth
+  rp <- renderPage fileData pageNo clampedPixelWidth
   case rp of
     Just pageData ->
       return
