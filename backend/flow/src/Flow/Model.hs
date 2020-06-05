@@ -35,6 +35,7 @@ import Flow.Aggregator
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types
+import Folder.Types
 import User.UserID (UserID)
 
 -- TODO: Is it good idea to have Flow.Api used in the model???
@@ -50,10 +51,10 @@ sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
 insertTemplate :: (MonadIO m, MonadDB m, MonadThrow m) => InsertTemplate -> m TemplateId
 insertTemplate InsertTemplate {..} = do
   runQuery_ . sqlInsert "flow_templates" $ do
-    sqlSet "name"          name -- TODO: validate size?
-    sqlSet "process"       process -- TODO: validate size?
-    sqlSet "user_id"       userId
-    sqlSet "user_group_id" userGroupId
+    sqlSet "name"      name -- TODO: validate size?
+    sqlSet "process"   process -- TODO: validate size?
+    sqlSet "user_id"   userId
+    sqlSet "folder_id" folderId
     sqlResult "id"
   fetchOne runIdentity
 
@@ -66,16 +67,22 @@ deleteTemplate templateId = do
     sqlWhereEq "id" templateId
 
 -- TODO: Maybe use uncurryN functions?
-fetchGetTemplate :: (TemplateId, Text, Text, Maybe UTCTime) -> GetTemplate
-fetchGetTemplate (id, name, process, committed) = GetTemplate id name process committed
+fetchGetTemplate :: (TemplateId, Text, Text, Maybe UTCTime, FolderID) -> GetTemplate
+fetchGetTemplate (id, name, process, committed, folderId) =
+  GetTemplate id name process committed folderId
+
+templateSelectors :: (MonadState v m, SqlResult v) => m ()
+templateSelectors = do
+  sqlResult "id"
+  sqlResult "name"
+  sqlResult "process"
+  sqlResult "committed"
+  sqlResult "folder_id"
 
 selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe GetTemplate)
 selectTemplate templateId = do
   runQuery_ . sqlSelect "flow_templates" $ do
-    sqlResult "id"
-    sqlResult "name"
-    sqlResult "process"
-    sqlResult "committed"
+    templateSelectors
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
   fetchMaybe fetchGetTemplate
@@ -83,10 +90,7 @@ selectTemplate templateId = do
 selectTemplatesByUserID :: (MonadDB m, MonadThrow m) => UserID -> m [GetTemplate]
 selectTemplatesByUserID userId = do
   runQuery_ . sqlSelect "flow_templates" $ do
-    sqlResult "id"
-    sqlResult "name"
-    sqlResult "process"
-    sqlResult "committed"
+    templateSelectors
     sqlWhereEq "user_id" userId
     sqlWhereIsNULL "deleted"
   fetchMany fetchGetTemplate
@@ -97,10 +101,7 @@ updateTemplate templateId PatchTemplate {..} = do
   runQuery_ . sqlUpdate "flow_templates" $ do
     sqlMaybeSet "name"    name -- TODO: validate size?
     sqlMaybeSet "process" process -- TODO: validate size?
-    sqlResult "id"
-    sqlResult "name"
-    sqlResult "process"
-    sqlResult "committed"
+    templateSelectors
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
   fetchMaybe fetchGetTemplate

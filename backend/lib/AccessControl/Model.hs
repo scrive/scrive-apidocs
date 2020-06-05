@@ -261,8 +261,6 @@ fetchAccessRole (Nothing, rtype, Nothing, Just ugid, trg_uid, trg_ugid, trg_fole
 fetchAccessRole row =
   unexpectedError $ "invalid access_control row in database" <> showt row
 
-
-
 fetchAccessRoleTarget
   :: (AccessRoleType, Maybe UserID, Maybe UserGroupID, Maybe FolderID) -> AccessRoleTarget
 fetchAccessRoleTarget (UserART, Just usrID, Nothing, Nothing) = UserAR usrID

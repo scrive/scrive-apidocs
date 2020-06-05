@@ -16,9 +16,13 @@ import Servant
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
+import AccessControl.Check
+import AccessControl.Types
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Flow.Aggregator as Aggregator
 import Flow.Api as Api
+import Flow.Error
+import Flow.Guards
 import Flow.HighTongue (DocumentName, UserName)
 import Flow.Id
 import Flow.Machinize as Machinize
@@ -56,12 +60,12 @@ startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
       mapM_ (\(k, v) -> Model.insertFlowInstanceKeyValue instanceId k $ f v)
         $ Map.toList keyValues
 
-getInstance :: InstanceId -> AppM GetInstance
-getInstance instanceId = do
+getInstance :: Account -> InstanceId -> AppM GetInstance
+getInstance account instanceId = do
   logInfo_ "getting instance"
   -- TODO: Authorize user.
   -- TODO: Model instance state inside database somehow!
-  flowInstance <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
+  flowInstance <- checkInstancePerms account instanceId ReadA
   documents    <-
     Map.fromList
     .   fmap (fmap unsafeDocumentID)
@@ -170,3 +174,11 @@ getInstanceView account@Account {..} instanceId = do
                  | docHasDeed Machinize.Rejection = Rejected
                  | otherwise                     = Started
 
+checkInstancePerms :: Account -> InstanceId -> AccessAction -> AppM Instance
+checkInstancePerms account instanceId action = do
+  flowInstance <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
+  let tid = templateId (flowInstance :: Instance)
+  template <- fromMaybeM throwTemplateNotFoundError . Model.selectTemplate $ tid
+  let fid = folderId (template :: GetTemplate)
+  guardUserHasPermission account [canDo action $ FlowTemplateR fid]
+  pure flowInstance

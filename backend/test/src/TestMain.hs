@@ -202,7 +202,7 @@ testMany workspaceRoot (allargs, ts) = do
   void . fork $ runFlow
     lr
     (FlowConfiguration
-      (unConnectionSource . simpleSource $ pgConnSettings testDBConfig [])
+      (unConnectionSource . simpleSource $ pgConnSettings testDBConfig kontraComposites)
       testFlowPort
     )
 

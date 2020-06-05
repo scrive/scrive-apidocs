@@ -8,14 +8,14 @@ import GHC.Generics (Generic)
 
 import Doc.DocumentID (DocumentID)
 import Flow.Id
+import Folder.Types (FolderID)
 import User.UserID (UserID)
-import UserGroup.Internal (UserGroupID)
 
 data InsertTemplate = InsertTemplate
     { name :: Text
     , process :: Text
     , userId :: UserID
-    , userGroupId :: UserGroupID
+    , folderId :: FolderID
     }
   deriving (Show, Eq, Generic)
 

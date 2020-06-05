@@ -16,6 +16,7 @@ import Servant
 import Servant.Server.Experimental.Auth
 
 import Flow.OrphanInstances ()
+import Folder.Types (FolderID)
 import User.UserID (UserID)
 import UserGroup.Internal (UserGroupID)
 
@@ -33,6 +34,7 @@ type AppM = ReaderT FlowConfiguration (LogT (DBT Handler))
 data Account = Account
     { userId :: UserID
     , userGroupId :: UserGroupID
+    , folderId :: FolderID
     }
   deriving (Generic, Show)
 

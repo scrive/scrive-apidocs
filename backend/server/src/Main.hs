@@ -103,7 +103,7 @@ main = withCurlDo $ do
   mapM_ T.putStrLn errsFlow
   liftIO . void . fork $ runFlow
     logRunnerFlow
-    ( FlowConfiguration (unConnectionSource . simpleSource $ connSettings [])
+    (FlowConfiguration (unConnectionSource . simpleSource $ connSettings kontraComposites)
     $ flowPort appConf
     )
   runWithLogRunner lr . localData globalLogContext $ do

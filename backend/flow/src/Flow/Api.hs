@@ -47,6 +47,7 @@ import Servant.API
 
 import Doc.DocumentID (DocumentID)
 import Flow.Id
+import Folder.Types
 import User.UserID (UserID)
 
 -- TODO: What to do with MessageId and messages in general?
@@ -94,6 +95,7 @@ data GetTemplate = GetTemplate
     , name :: Text
     , process :: Text
     , committed :: Maybe UTCTime
+    , folderId :: FolderID
     }
   deriving (Eq, Generic, Show)
 

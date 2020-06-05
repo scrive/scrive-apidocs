@@ -23,12 +23,13 @@ data FlowError = FlowError {
 instance ToJSON FlowError where
   toEncoding = genericToEncoding defaultOptions { fieldLabelModifier = snakeCase }
 
-data AuthError = OAuthHeaderParseFailureError | InvalidTokenError
+data AuthError = OAuthHeaderParseFailureError | InvalidTokenError | AccessControlError
 
 instance Show AuthError where
   show = \case
     OAuthHeaderParseFailureError -> "Cannot parse OAuth header"
-    InvalidTokenError            -> "The provided OAuth token is not valid"
+    InvalidTokenError -> "The provided OAuth token is not valid"
+    AccessControlError -> "You do not have permission to perform the requested action"
 
 makeError :: FlowError -> ServerError
 makeError err@FlowError {..} = ServerError

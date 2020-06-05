@@ -39,17 +39,17 @@ tableFlowTemplates = tblTable
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "process", colType = TextT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "folder_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "committed", colType = TimestampWithZoneT }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
-  , tblIndexes     = [indexOnColumn "user_id", indexOnColumn "user_group_id"]
+  , tblIndexes     = [indexOnColumn "user_id", indexOnColumn "folder_id"]
   , tblForeignKeys =
     [
     -- Do not allow to delete users or user groups that still contain templates.
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyRestrict }
-    , (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyRestrict }
+    , (fkOnColumn "folder_id" "folders" "id") { fkOnDelete = ForeignKeyRestrict }
     ]
   }
 
@@ -176,7 +176,6 @@ createTableFlowStateMachines = Migration
   , mgrFrom      = 0
   , mgrAction    = StandardMigration $ createTable True tableFlowStateMachines
   }
-
 
 tableFlowInstanceAggregator :: Table
 tableFlowInstanceAggregator = tblTable

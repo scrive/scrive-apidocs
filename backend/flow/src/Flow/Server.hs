@@ -11,13 +11,11 @@ import Control.Arrow (left)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
-import Control.Monad.State
 import Control.Monad.Time
 import Data.Text
 import Data.Text.Encoding
 import Data.Yaml
 import Database.PostgreSQL.PQTypes
-import Database.PostgreSQL.PQTypes.SQL.Builder
 import Log.Class
 import Log.Monad (LogT)
 import Network.Wai
@@ -26,11 +24,14 @@ import Network.Wai.Log (mkApplicationLogger)
 import Servant
 import Servant.Server.Experimental.Auth
 
+import AccessControl.Check
+import AccessControl.Types
 import Auth.Model
 import Auth.OAuth
 import Auth.Parse
 import Flow.Api as Api
 import Flow.Error
+import Flow.Guards
 import Flow.HighTongue
 import Flow.Id
 import Flow.Machinize as Machinize
@@ -38,8 +39,9 @@ import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Server.Handlers.Instance
 import Flow.Server.Types
+import Folder.Types (FolderID, unsafeFolderID)
 import Log.Configuration (LogRunner(LogRunner, withLogger))
-import User.UserID (unsafeUserID)
+import User.Model
 import UserGroup.Internal (unsafeUserGroupID)
 import qualified Flow.Model as Model
 
@@ -54,7 +56,7 @@ server = authenticated :<|> validateTemplate
         :<|> listTemplates account
         :<|> commitTemplate account
         :<|> startInstance account
-        :<|> getInstance
+        :<|> getInstance account
         :<|> getInstanceView account
 
 -- TODO: Handle decodeUtf8 exceptions
@@ -69,9 +71,12 @@ authHandler flowConfiguration = mkAuthHandler handler
       liftIO $ print oauthTokens
       maybeIds <- runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
         $ authenticateToken oauthTokens
-      (userId, userGroupId) <- maybe (throwAuthError InvalidTokenError "") pure maybeIds
+      (userId, userGroupId, folderId) <- maybe (throwAuthError InvalidTokenError "")
+                                               pure
+                                               maybeIds
       pure $ Account { userId      = unsafeUserID userId
                      , userGroupId = unsafeUserGroupID userGroupId
+                     , folderId    = unsafeFolderID folderId
                      }
 
     getOAuthAuthorization :: Request -> Either Text OAuthAuthorization
@@ -88,40 +93,41 @@ authHandler flowConfiguration = mkAuthHandler handler
 
 -- TODO: Check user permissions to create templates.
 createTemplate :: Account -> CreateTemplate -> AppM GetCreateTemplate
-createTemplate Account {..} CreateTemplate {..} = do
+createTemplate account@Account {..} CreateTemplate {..} = do
   logInfo_ "creating template"
-  id <- Model.insertTemplate $ InsertTemplate name process userId userGroupId
+  guardUserHasPermission account [canDo CreateA $ FlowTemplateR folderId]
+  id <- Model.insertTemplate $ InsertTemplate name process userId folderId
   pure $ GetCreateTemplate { id }
 
--- TODO: Authorization
 -- TODO: Committed templates shouldn't be deleted.
--- TODO: Check user permissions to delete given template.
 deleteTemplate :: Account -> TemplateId -> AppM NoContent
-deleteTemplate _account id = do
+deleteTemplate account id = do
   logInfo_ "deleting template"
-    -- TODO: Can committed template be deleted?
+  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
+  let fid = folderId (template :: GetTemplate)
+  guardUserHasPermission account [canDo DeleteA $ FlowTemplateR fid]
   Model.deleteTemplate id
   pure NoContent
 
-sqlMaybeSet :: (MonadState v m, SqlSet v, Show a, ToSQL a) => SQL -> Maybe a -> m ()
-sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
-
 getTemplate :: Account -> TemplateId -> AppM GetTemplate
-getTemplate _account templateId = do
+getTemplate account templateId = do
   logInfo_ "getting template"
-  fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
+  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
+  let fid = folderId (template :: GetTemplate)
+  guardUserHasPermission account [canDo ReadA $ FlowTemplateR fid]
+  pure template
 
--- TODO: Committed templates can't be updated.
--- TODO: Check user permissions to update given template.
 patchTemplate :: Account -> TemplateId -> PatchTemplate -> AppM GetTemplate
-patchTemplate Account {..} templateId patch = do
+patchTemplate account templateId patch = do
   logInfo_ "patching template"
+  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
+  when (isJust $ committed template) throwTemplateAlreadyCommittedError
+  let fid = folderId (template :: GetTemplate)
+  guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
   fromMaybeM throwTemplateNotFoundError $ Model.updateTemplate templateId patch
 
--- TODO: Check user permissions to commit given template.
--- TODO: Check if the template is already committed and return 204 in case of conflict.
 commitTemplate :: Account -> TemplateId -> AppM NoContent
-commitTemplate Account {..} id = do
+commitTemplate account id = do
   logInfo_ "committing template"
   now      <- liftIO currentTime
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
@@ -129,6 +135,8 @@ commitTemplate Account {..} id = do
   templateDSL <- fromMaybeM throwTemplateNotFoundError $ Model.getTemplateDsl id
   machine     <-
     either throwDSLValidationError' pure $ decodeHightTang templateDSL >>= machinize
+  let fid = folderId (template :: GetTemplate)
+  guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
   Model.commitTemplate now id
   Model.insertParsedStateMachine id machine
   pure NoContent
@@ -165,9 +173,12 @@ validateTemplate template = do
   either pure (const (pure [])) $ decodeHightTang template >>= machinize
 
 listTemplates :: Account -> AppM [GetTemplate]
-listTemplates Account {..} = do
+listTemplates account = do
   logInfo_ "list templates"
-  Model.selectTemplatesByUserID userId
+  templates <- Model.selectTemplatesByUserID $ userId (account :: Account)
+  let fids = (folderId :: GetTemplate -> FolderID) <$> templates
+  guardUserHasPermission account [ canDo ReadA $ FlowTemplateR fid | fid <- fids ]
+  pure templates
 
 naturalFlow
   :: (LogT (DBT Handler) a -> DBT Handler a) -> FlowConfiguration -> AppM a -> Handler a

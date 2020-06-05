@@ -2,13 +2,13 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.4.1"
+  version: "0.4.2"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
   license:
     name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 tags:
   - name: configuration
     description: Calls used to configure Flow processes.
@@ -18,6 +18,28 @@ tags:
     description: Calls used to participate in Flow processes.
 paths:
   /templates:
+    get:
+      tags:
+        - configuration
+      summary: Get all Flow templates for user
+      operationId: listTemplates
+      description: |
+        Gets list of Flow templates associated with the authenticated user.
+      responses:
+        200:
+          description: 0 or more Flow templates found.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemplateResponse"
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     post:
       tags:
         - configuration
@@ -35,26 +57,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TemplateCreateRequest'
+              $ref: "#/components/schemas/TemplateCreateRequest"
       responses:
         201:
           description: Flow template created successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateIdObject'
+                $ref: "#/components/schemas/TemplateIdObject"
         401:
           description: Error authenticating the API caller.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         400:
           description: Error parsing the template description.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /templates/{template_id}:
     delete:
       tags:
@@ -66,7 +88,7 @@ paths:
 
         Only draft templates can be deleted.
       parameters:
-        - $ref: '#/components/parameters/TemplateId'
+        - $ref: "#/components/parameters/TemplateId"
       responses:
         204:
           description: Flow template deleted
@@ -75,19 +97,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow template not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         409:
           description: Committed Flow template cannot be deleted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
     get:
       tags:
         - configuration
@@ -96,26 +118,26 @@ paths:
       description: |
         Gets Flow template.
       parameters:
-        - $ref: '#/components/parameters/TemplateId'
+        - $ref: "#/components/parameters/TemplateId"
       responses:
         200:
           description: Flow template found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateResponse'
+                $ref: "#/components/schemas/TemplateResponse"
         401:
           description: Error authenticating the API caller.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow template not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
     patch:
       tags:
         - configuration
@@ -128,21 +150,21 @@ paths:
 
         Only draft templates can be updated.
       parameters:
-        - $ref: '#/components/parameters/TemplateId'
+        - $ref: "#/components/parameters/TemplateId"
       requestBody:
         description: Flow template input.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TemplateUpdateRequest'
+              $ref: "#/components/schemas/TemplateUpdateRequest"
       responses:
         200:
           description: Flow template created successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateResponse'
+                $ref: "#/components/schemas/TemplateResponse"
               example:
                 id: 31ebc664-3a61-41ec-b03b-d7b48b7b3a9e
                 name: Bean eating contest NDA
@@ -154,25 +176,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         401:
           description: Error authenticating the API caller.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow template not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         409:
           description: Committed Flow template cannot be updated.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /templates/{template_id}/commit:
     post:
@@ -185,7 +207,7 @@ paths:
 
         Committing an already committed template has no effect.
       parameters:
-        - $ref: '#/components/parameters/TemplateId'
+        - $ref: "#/components/parameters/TemplateId"
       responses:
         204:
           description: Flow template committed successfully.
@@ -194,19 +216,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow template not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         409:
           description: Flow template "process" contains syntactic or semantic errors.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /templates/validate:
     post:
@@ -222,7 +244,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FlowDsl'
+              $ref: "#/components/schemas/FlowDsl"
             example: |
               "stages: ..."
       responses:
@@ -231,13 +253,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         401:
           description: Error authenticating the API caller.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /templates/{template_id}/start:
     post:
@@ -252,39 +274,39 @@ paths:
 
         Once the validation is finished, we start the documents and execute the initial action as specified by the Flow DSL `process`.
       parameters:
-        - $ref: '#/components/parameters/TemplateId'
+        - $ref: "#/components/parameters/TemplateId"
       requestBody:
         description: Flow template parameters.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TemplateParameters'
+              $ref: "#/components/schemas/TemplateParameters"
       responses:
         201:
           description: Returns the ID of a newly created instance.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstanceIdObject'
+                $ref: "#/components/schemas/InstanceIdObject"
         400:
           description: Flow parameters invalid.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         401:
           description: Error authenticating the API caller.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow template not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         409:
           description: |
             Flow template is in an invalid state; possible reasons follow.
@@ -293,30 +315,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /templates:
-    get:
-      tags:
-        - configuration
-      summary: Get all Flow templates for user
-      operationId: listTemplates
-      description: |
-        Gets list of Flow templates associated with the authenticated user.
-      responses:
-        200:
-          description: 0 or more Flow templates found.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TemplateResponse'
-        401:
-          description: Error authenticating the API caller.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /instances/{instance_id}:
     get:
       tags:
@@ -325,26 +324,26 @@ paths:
       operationId: getFlow
       description: Admin interface that returns complete instance state.
       parameters:
-        - $ref: '#/components/parameters/InstanceId'
+        - $ref: "#/components/parameters/InstanceId"
       responses:
         200:
           description: Returns a Flow instance.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstanceGetResponse'
+                $ref: "#/components/schemas/InstanceGetResponse"
         401:
           description: Error authenticating the API caller.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow instance not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /instances/{instance_id}/view:
     get:
@@ -356,29 +355,29 @@ paths:
         User interface that returns information relevant
         to the party involved in a Flow process.
       parameters:
-        - $ref: '#/components/parameters/InstanceId'
+        - $ref: "#/components/parameters/InstanceId"
       responses:
         200:
           description: View of the instance relevant to the given user.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstanceViewResponse'
+                $ref: "#/components/schemas/InstanceViewResponse"
         401:
           description: Error authenticating the API caller.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow instance not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
 servers:
-  - url: 'https://virtserver.swaggerhub.com/scrive/Flow/0.1.0'
+  - url: "https://virtserver.swaggerhub.com/scrive/Flow/0.1.0"
 components:
   parameters:
     TemplateId:
@@ -387,14 +386,14 @@ components:
       required: true
       description: Unique ID of a Flow template.
       schema:
-        $ref: '#/components/schemas/TemplateId'
+        $ref: "#/components/schemas/TemplateId"
     InstanceId:
       name: instance_id
       in: path
       required: true
       description: Unique ID of a Flow instance.
       schema:
-        $ref: '#/components/schemas/InstanceId'
+        $ref: "#/components/schemas/InstanceId"
   schemas:
     ErrorResponse:
       type: object
@@ -427,7 +426,7 @@ components:
           type: string
           example: Spaceship Factory Development Agreement
         process:
-          $ref: '#/components/schemas/FlowDsl'
+          $ref: "#/components/schemas/FlowDsl"
     TemplateUpdateRequest:
       type: object
       properties:
@@ -435,7 +434,7 @@ components:
           type: string
           example: Bean eating contest NDA
         process:
-          $ref: '#/components/schemas/FlowDsl'
+          $ref: "#/components/schemas/FlowDsl"
     TemplateResponse:
       type: object
       required:
@@ -443,14 +442,15 @@ components:
         - name
         - process
         - committed
+        - folder_id
       properties:
         id:
-          $ref: '#/components/schemas/TemplateId'
+          $ref: "#/components/schemas/TemplateId"
         name:
           type: string
           example: TOP SECRET
         process:
-          $ref: '#/components/schemas/FlowDsl'
+          $ref: "#/components/schemas/FlowDsl"
         committed:
           description: |
             Date and time when the template was committed.
@@ -460,15 +460,16 @@ components:
           nullable: true
           format: date-time
           example: "1997-01-01T12:00:27.87.00000Z"
+        folder_id:
+          $ref: "#/components/schemas/FolderId"
     TemplateIdObject:
       type: object
       required: [id]
       properties:
         id:
-          $ref: '#/components/schemas/TemplateId'
+          $ref: "#/components/schemas/TemplateId"
     RichUserId:
-      description:
-        Rich user ID is an ID together with a type specifying
+      description: Rich user ID is an ID together with a type specifying
         what kind of an ID it is.
 
         The reason for this is that Document signatories can be identified
@@ -507,11 +508,11 @@ components:
         documents:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/DocumentId'
+            $ref: "#/components/schemas/DocumentId"
         users:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/RichUserId'
+            $ref: "#/components/schemas/RichUserId"
         messages:
           type: object
           additionalProperties:
@@ -562,7 +563,7 @@ components:
             minProperties: 1
             maxProperties: 1
             additionalProperties:
-              $ref: '#/components/schemas/FlowDslStage'
+              $ref: "#/components/schemas/FlowDslStage"
       example:
         stages:
           - applicant1-to-sign:
@@ -624,16 +625,16 @@ components:
         actions:
           type: array
           items:
-            $ref: '#/components/schemas/FlowDslAction'
+            $ref: "#/components/schemas/FlowDslAction"
         expect:
-          $ref: '#/components/schemas/FlowDslExpect'
+          $ref: "#/components/schemas/FlowDslExpect"
 
     FlowDslAction:
       description: |
         Action to be taken when the stage in entered.
       oneOf:
-        - $ref: '#/components/schemas/FlowDslNotify'
-        - $ref: '#/components/schemas/FlowDslClose'
+        - $ref: "#/components/schemas/FlowDslNotify"
+        - $ref: "#/components/schemas/FlowDslClose"
 
     FlowDslNotify:
       type: object
@@ -676,11 +677,11 @@ components:
       type: object
       properties:
         approved-by:
-          $ref: '#/components/schemas/FlowDslDocsAndUsers'
+          $ref: "#/components/schemas/FlowDslDocsAndUsers"
         signed-by:
-          $ref: '#/components/schemas/FlowDslDocsAndUsers'
+          $ref: "#/components/schemas/FlowDslDocsAndUsers"
         viewed-by:
-          $ref: '#/components/schemas/FlowDslDocsAndUsers'
+          $ref: "#/components/schemas/FlowDslDocsAndUsers"
 
     FlowDslDocsAndUsers:
       description: |
@@ -709,7 +710,7 @@ components:
       items:
         type: object
         required:
-         - error_message
+          - error_message
         properties:
           line_number:
             type: number
@@ -734,7 +735,7 @@ components:
       required: [id]
       properties:
         id:
-          $ref: '#/components/schemas/InstanceId'
+          $ref: "#/components/schemas/InstanceId"
     InstanceGetResponse:
       type: object
       required:
@@ -744,13 +745,13 @@ components:
         - state
       properties:
         id:
-          $ref: '#/components/schemas/InstanceId'
+          $ref: "#/components/schemas/InstanceId"
         template:
-          $ref: '#/components/schemas/TemplateId'
+          $ref: "#/components/schemas/TemplateId"
         template_parameters:
-          $ref: '#/components/schemas/TemplateParameters'
+          $ref: "#/components/schemas/TemplateParameters"
         state:
-          $ref: '#/components/schemas/InstanceState'
+          $ref: "#/components/schemas/InstanceState"
 
     InstanceEvent:
       type: object
@@ -763,9 +764,9 @@ components:
         deed:
           $ref: "#/components/schemas/InstanceEventDeed"
         user:
-          $ref: '#/components/schemas/RichUserId'
+          $ref: "#/components/schemas/RichUserId"
         document:
-          $ref: '#/components/schemas/DocumentId'
+          $ref: "#/components/schemas/DocumentId"
         timestamp:
           type: string
           format: date-time
@@ -794,11 +795,11 @@ components:
         available_actions:
           type: array
           items:
-            $ref: '#/components/schemas/InstanceAuthorAction'
+            $ref: "#/components/schemas/InstanceAuthorAction"
         history:
           type: array
           items:
-            $ref: '#/components/schemas/InstanceStage'
+            $ref: "#/components/schemas/InstanceStage"
 
     InstanceStage:
       type: object
@@ -811,7 +812,7 @@ components:
         events:
           type: array
           items:
-            $ref: '#/components/schemas/InstanceEvent'
+            $ref: "#/components/schemas/InstanceEvent"
 
     InstanceViewResponse:
       description: |
@@ -823,13 +824,13 @@ components:
         - available_actions
       properties:
         id:
-          $ref: '#/components/schemas/InstanceId'
+          $ref: "#/components/schemas/InstanceId"
         state:
-          $ref: '#/components/schemas/InstanceUserState'
+          $ref: "#/components/schemas/InstanceUserState"
         available_actions:
           type: array
           items:
-            $ref: '#/components/schemas/InstanceUserAction'
+            $ref: "#/components/schemas/InstanceUserAction"
 
     InstanceUserState:
       description: |
@@ -842,7 +843,7 @@ components:
         documents:
           type: array
           items:
-            $ref: '#/components/schemas/DocumentOverview'
+            $ref: "#/components/schemas/DocumentOverview"
 
     DocumentOverview:
       description: |
@@ -856,7 +857,7 @@ components:
         - document_state
       properties:
         document_id:
-          $ref: '#/components/schemas/DocumentId'
+          $ref: "#/components/schemas/DocumentId"
         document_state:
           type: string
           enum:
@@ -876,11 +877,11 @@ components:
         - document
       properties:
         type:
-          $ref: '#/components/schemas/InstanceActionType'
+          $ref: "#/components/schemas/InstanceActionType"
         user:
-          $ref: '#/components/schemas/RichUserId'
+          $ref: "#/components/schemas/RichUserId"
         document:
-          $ref: '#/components/schemas/DocumentId'
+          $ref: "#/components/schemas/DocumentId"
 
     InstanceUserAction:
       description: |
@@ -891,9 +892,9 @@ components:
         - document
       properties:
         type:
-          $ref: '#/components/schemas/InstanceActionType'
+          $ref: "#/components/schemas/InstanceActionType"
         document:
-          $ref: '#/components/schemas/DocumentId'
+          $ref: "#/components/schemas/DocumentId"
 
     InstanceActionType:
       description: INSTANCTION
@@ -909,3 +910,9 @@ components:
       type: string
       format: uuid
       example: 31ebc664-3a61-41ec-b03b-d7b48b7b3a9e
+
+    FolderId:
+      description: Unique Folder ID.
+      type: string
+      format: number
+      example: 42

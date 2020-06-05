@@ -45,10 +45,10 @@ data OAuthAuthorization = OAuthAuthorization
 
 -- TODO use UserId and UserGroupId types, once they are available in some ID component
 authenticateToken
-  :: (MonadDB m, MonadThrow m) => OAuthAuthorization -> m (Maybe (Int64, Int64))
+  :: (MonadDB m, MonadThrow m) => OAuthAuthorization -> m (Maybe (Int64, Int64, Int64))
 authenticateToken (OAuthAuthorization token secret atoken asecret) = do
   runQuery_ $ rawSQL
-    (  "SELECT u.id, ug.id "
+    (  "SELECT u.id, ug.id, u.home_folder_id "
     <> "FROM oauth_access_token a "
     <> "JOIN oauth_privilege p ON p.access_token_id = a.id "
     <> "JOIN oauth_api_token t ON a.api_token_id    = t.id "
