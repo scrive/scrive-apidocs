@@ -27,10 +27,12 @@ import Servant.Server.Experimental.Auth
 import Web.Cookie (parseCookies)
 
 import AccessControl.Check
+import AccessControl.Model (GetRolesIncludingInherited(..))
 import AccessControl.Types
 import Auth.Model
 import Auth.OAuth
 import Auth.Session
+import DB
 import Flow.Api as Api
 import Flow.Error
 import Flow.Guards
@@ -41,10 +43,12 @@ import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Server.Handlers.Instance
 import Flow.Server.Types
+import Folder.Model (FolderGet(..))
 import Folder.Types (FolderID, unsafeFolderID)
 import Log.Configuration (LogRunner(LogRunner, withLogger))
 import User.Model
 import UserGroup.Internal (unsafeUserGroupID)
+import UserGroup.Model (UserGroupGet(..))
 import qualified Flow.Model as Model
 
 server :: ServerT FlowAPI AppM
@@ -66,39 +70,39 @@ authHandler :: FlowConfiguration -> AuthHandler Request Account
 authHandler flowConfiguration = mkAuthHandler handler
   where
     handler :: Request -> Handler Account
-    handler req = do
-      (userId, userGroupId, folderId) <-
-        case lookup "authorization" $ requestHeaders req of
-          -- OAuth
-          Just oauthHeader -> do
-            oauthTokens <- either (throwAuthError OAuthHeaderParseFailureError) pure
-              $ parseOAuthAuthorization oauthHeader
-            liftIO . putStrLn $ ("Authenticating using OAuth: " <> show oauthTokens)
-            maybeIds <-
-              runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
-                $ authenticateToken oauthTokens
-            maybe (throwAuthError InvalidTokenError (show InvalidTokenError))
-                  pure
-                  maybeIds
-          -- Session cookies
-          Nothing -> do
-            authCookies <- maybe
-              (throwAuthError AuthCookiesParseError (show AuthCookiesParseError))
-              pure
-              (getAuthCookies req)
-            liftIO . putStrLn $ ("Authenticating using cookies: " <> show authCookies)
-            maybeIds <-
-              runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
-                $ authenticateSession authCookies
-            maybe
-              (throwAuthError InvalidAuthCookiesError (show InvalidAuthCookiesError))
-              pure
-              maybeIds
+    handler req =
+      runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings $ do
+        (userId, userGroupId, folderId) <-
+          case lookup "authorization" $ requestHeaders req of
+            -- OAuth
+            Just oauthHeader -> do
+              oauthTokens <- either (throwAuthError OAuthHeaderParseFailureError) pure
+                $ parseOAuthAuthorization oauthHeader
+              liftIO . putStrLn $ ("Authenticating using OAuth: " <> show oauthTokens)
+              maybeIds <- authenticateToken oauthTokens
+              maybe (throwAuthError InvalidTokenError (show InvalidTokenError))
+                    pure
+                    maybeIds
+            -- Session cookies
+            Nothing -> do
+              authCookies <- maybe
+                (throwAuthError AuthCookiesParseError (show AuthCookiesParseError))
+                pure
+                (getAuthCookies req)
+              liftIO . putStrLn $ ("Authenticating using cookies: " <> show authCookies)
+              maybeIds <- authenticateSession authCookies
+              maybe
+                (throwAuthError InvalidAuthCookiesError (show InvalidAuthCookiesError))
+                pure
+                maybeIds
 
-      pure $ Account { userId      = unsafeUserID userId
-                     , userGroupId = unsafeUserGroupID userGroupId
-                     , folderId    = unsafeFolderID folderId
-                     }
+        -- TODO: fromJust is verboten - Handle the Nothing case with an error
+        user   <- fmap fromJust . dbQuery . GetUserByID $ unsafeUserID userId
+        ug     <- fmap fromJust . dbQuery . UserGroupGet $ unsafeUserGroupID userGroupId
+        folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
+        roles  <- dbQuery $ GetRolesIncludingInherited user ug
+
+        pure $ Account { user = user, userGroup = ug, folder = folder, roles = roles }
 
     getAuthCookies :: Request -> Maybe (SessionCookieInfo, XToken)
     getAuthCookies req = do
@@ -128,8 +132,8 @@ authHandler flowConfiguration = mkAuthHandler handler
 createTemplate :: Account -> CreateTemplate -> AppM GetCreateTemplate
 createTemplate account@Account {..} CreateTemplate {..} = do
   logInfo_ "creating template"
-  guardUserHasPermission account [canDo CreateA $ FlowTemplateR folderId]
-  id <- Model.insertTemplate $ InsertTemplate name process userId folderId
+  guardUserHasPermission account [canDo CreateA $ FlowTemplateR (folder ^. #id)]
+  id <- Model.insertTemplate $ InsertTemplate name process (user ^. #id) (folder ^. #id)
   pure $ GetCreateTemplate { id }
 
 -- TODO: Committed templates shouldn't be deleted.
@@ -206,9 +210,9 @@ validateTemplate template = do
   either pure (const (pure [])) $ decodeHightTang template >>= machinize
 
 listTemplates :: Account -> AppM [GetTemplate]
-listTemplates account = do
+listTemplates account@Account {..} = do
   logInfo_ "list templates"
-  templates <- Model.selectTemplatesByUserID $ userId (account :: Account)
+  templates <- Model.selectTemplatesByUserID $ user ^. #id
   let fids = (folderId :: GetTemplate -> FolderID) <$> templates
   guardUserHasPermission account [ canDo ReadA $ FlowTemplateR fid | fid <- fids ]
   pure templates

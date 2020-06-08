@@ -103,7 +103,7 @@ getInstanceView account@Account {..} instanceId = do
 
   (machine, aggrState) <- Model.selectAggregatorData instanceId
 
-  case (getUserName userId users, mAllowedEvents machine aggrState) of
+  case (getUserName (user ^. #id) users, mAllowedEvents machine aggrState) of
     (Just userName, Just allowedEvents) ->
       pure
         $ let
