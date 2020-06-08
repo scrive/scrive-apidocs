@@ -1,47 +1,12 @@
 module Auth.Model where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 import Data.Int
-import Data.Unjson
 import Database.PostgreSQL.PQTypes
-import qualified Data.Text as T
 
---import Database.PostgreSQL.PQTypes.Model
---import Database.PostgreSQL.PQTypes.SQL.Builder
-
-import Auth.MagicHash
-
-data APIToken = APIToken { atID    :: Int64     -- autoincrement for uniqueness
-                         , atToken :: MagicHash -- random part for security
-                         }
-    deriving (Eq, Ord)
-
-instance Show APIToken where
-  showsPrec _ token = (++) $ show (atToken token) ++ "_" ++ show (atID token)
-
-instance Read APIToken where
-  readsPrec p s = case break (== '_') s of
-    (ts, '_' : is) ->
-      [ (APIToken { atID = i, atToken = read $ T.pack ts }, v)
-      | (i, v) <- readsPrec p is
-      ]
-    _ -> []
-
-unjsonAPIToken :: UnjsonDef APIToken
-unjsonAPIToken = unjsonInvmapR
-  (\s -> case reads s of
-    [(apitoken, [])] -> pure apitoken
-    _                -> fail "cannot parse APIToken"
-  )
-  show
-  unjsonDef
-
-data OAuthAuthorization = OAuthAuthorization
-  { oaAPIToken     :: APIToken
-  , oaAPISecret    :: MagicHash
-  , oaAccessToken  :: APIToken
-  , oaAccessSecret :: MagicHash
-  } deriving (Show, Eq)
+import Auth.OAuth
+import Auth.Session
 
 -- TODO use UserId and UserGroupId types, once they are available in some ID component
 authenticateToken
@@ -59,3 +24,20 @@ authenticateToken (OAuthAuthorization token secret atoken asecret) = do
     (atID token, atToken token, secret, atID atoken, atToken atoken, asecret, apiPersonal)
   fetchMaybe identity
   where apiPersonal = 0 :: Int64 -- APIPersonal
+
+-- TODO use UserId and UserGroupId types, once they are available in some ID component
+authenticateSession
+  :: (MonadDB m, MonadThrow m, MonadTime m)
+  => (SessionCookieInfo, XToken)
+  -> m (Maybe (Int64, Int64, Int64))
+authenticateSession (SessionCookieInfo {..}, xtoken) = do
+  now <- currentTime
+  runQuery_ $ rawSQL
+    (  "SELECT u.id, ug.id, u.home_folder_id "
+    <> "FROM sessions s "
+    <> "JOIN users u           ON s.user_id         = u.id "
+    <> "JOIN user_groups ug    ON u.user_group_id   = ug.id "
+    <> "WHERE s.id = $1 AND s.token = $2 AND s.csrf_token = $3 AND s.expires >= $4 LIMIT 1"
+    )
+    (cookieSessionID, cookieSessionToken, xtoken, now)
+  fetchMaybe identity

@@ -12,7 +12,8 @@ import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Control.Monad.Time
-import Data.Text
+import Data.ByteString (ByteString)
+import Data.Text as T
 import Data.Text.Encoding
 import Data.Yaml
 import Database.PostgreSQL.PQTypes
@@ -23,12 +24,13 @@ import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
 import Servant
 import Servant.Server.Experimental.Auth
+import Web.Cookie (parseCookies)
 
 import AccessControl.Check
 import AccessControl.Types
 import Auth.Model
 import Auth.OAuth
-import Auth.Parse
+import Auth.Session
 import Flow.Api as Api
 import Flow.Error
 import Flow.Guards
@@ -63,33 +65,64 @@ server = authenticated :<|> validateTemplate
 authHandler :: FlowConfiguration -> AuthHandler Request Account
 authHandler flowConfiguration = mkAuthHandler handler
   where
-    maybeToRight e = maybe (Left e) Right
     handler :: Request -> Handler Account
     handler req = do
-      oauthTokens <- either (throwAuthError OAuthHeaderParseFailureError) pure
-        $ getOAuthAuthorization req
-      liftIO $ print oauthTokens
-      maybeIds <- runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
-        $ authenticateToken oauthTokens
-      (userId, userGroupId, folderId) <- maybe (throwAuthError InvalidTokenError "")
-                                               pure
-                                               maybeIds
+      (userId, userGroupId, folderId) <-
+        case lookup "authorization" $ requestHeaders req of
+          -- OAuth
+          Just oauthHeader -> do
+            oauthTokens <- either (throwAuthError OAuthHeaderParseFailureError) pure
+              $ parseOAuthAuthorization oauthHeader
+            liftIO . putStrLn $ ("Authenticating using OAuth: " <> show oauthTokens)
+            maybeIds <-
+              runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
+                $ authenticateToken oauthTokens
+            maybe (throwAuthError InvalidTokenError (show InvalidTokenError))
+                  pure
+                  maybeIds
+          -- Session cookies
+          Nothing -> do
+            authCookies <- maybe
+              (throwAuthError AuthCookiesParseError (show AuthCookiesParseError))
+              pure
+              (getAuthCookies req)
+            liftIO . putStrLn $ ("Authenticating using cookies: " <> show authCookies)
+            maybeIds <-
+              runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
+                $ authenticateSession authCookies
+            maybe
+              (throwAuthError InvalidAuthCookiesError (show InvalidAuthCookiesError))
+              pure
+              maybeIds
+
       pure $ Account { userId      = unsafeUserID userId
                      , userGroupId = unsafeUserGroupID userGroupId
                      , folderId    = unsafeFolderID folderId
                      }
 
-    getOAuthAuthorization :: Request -> Either Text OAuthAuthorization
-    getOAuthAuthorization req =
-      (maybeToRight err . lookup "authorization" $ requestHeaders req)
-        >>= (parseParams . splitAuthorization . decodeUtf8)
+    getAuthCookies :: Request -> Maybe (SessionCookieInfo, XToken)
+    getAuthCookies req = do
+      cookies       <- parseCookies <$> lookup "cookie" (requestHeaders req)
+      sessionCookie <- readCookie cookieNameSessionID cookies
+      xtoken        <- readCookie cookieNameXToken cookies
+      pure (sessionCookie, xtoken)
+      where
+        readCookie name cookies = do -- Maybe
+          cookie <-
+            T.dropWhile (== '"')
+            .   T.dropWhileEnd (== '"')
+            .   decodeLatin1
+            <$> lookup (encodeUtf8 name) cookies
+          maybeRead cookie
+
+    parseOAuthAuthorization :: ByteString -> Either Text OAuthAuthorization
+    parseOAuthAuthorization = parseParams . splitAuthorization . decodeUtf8
 
     -- TODO handle the exception somehow
     -- ... but don't put it into the response, it leaks internal information!
     throwAuthError errorName e = do
       liftIO $ print e
       throwAuthenticationError errorName
-    err = "AUTHORIZATION header not found."
 
 -- TODO: Check user permissions to create templates.
 createTemplate :: Account -> CreateTemplate -> AppM GetCreateTemplate

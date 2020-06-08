@@ -1,6 +1,6 @@
 module OAuth.Model
   ( module OAuth.Model
-  , module Auth.Model
+  , module Auth.OAuth
   ) where
 
 import Control.Monad.Catch
@@ -12,7 +12,7 @@ import Network.URI
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text as T
 
-import Auth.Model
+import Auth.OAuth
 import DB
 import Log.Identifier
 import MagicHash

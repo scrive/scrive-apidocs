@@ -41,4 +41,4 @@ data Account = Account
 instance ToJSON Account where
   toJSON = genericToJSON aesonOptions
 
-type instance AuthServerData (AuthProtect "oauth") = Account
+type instance AuthServerData (AuthProtect "oauth-or-cookies") = Account

@@ -23,12 +23,19 @@ data FlowError = FlowError {
 instance ToJSON FlowError where
   toEncoding = genericToEncoding defaultOptions { fieldLabelModifier = snakeCase }
 
-data AuthError = OAuthHeaderParseFailureError | InvalidTokenError | AccessControlError
+data AuthError
+  = OAuthHeaderParseFailureError
+  | InvalidTokenError
+  | AuthCookiesParseError
+  | InvalidAuthCookiesError
+  | AccessControlError
 
 instance Show AuthError where
   show = \case
     OAuthHeaderParseFailureError -> "Cannot parse OAuth header"
-    InvalidTokenError -> "The provided OAuth token is not valid"
+    InvalidTokenError            -> "The provided OAuth token is not valid"
+    AuthCookiesParseError        -> "Cannot parse the authentication cookies"
+    InvalidAuthCookiesError      -> "The provided authentication cookies are invalid"
     AccessControlError -> "You do not have permission to perform the requested action"
 
 makeError :: FlowError -> ServerError
@@ -39,7 +46,7 @@ makeError err@FlowError {..} = ServerError
   , errHeaders      = [("Content-Type", "application/json")]
   }
 
-throwAuthenticationError :: AuthError -> MonadError ServerError m => m a
+throwAuthenticationError :: MonadError ServerError m => AuthError -> m a
 throwAuthenticationError explanation = throwError $ makeError FlowError
   { code        = 401
   , message     = "Authentication Error"

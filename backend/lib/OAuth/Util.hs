@@ -18,7 +18,6 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import Auth.OAuth
-import Auth.Parse
 import DB
 import Happstack.Fields
 import Kontra

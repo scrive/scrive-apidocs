@@ -304,7 +304,7 @@ instance ToJSON GetInstanceView where
 
 -- brittany-disable-next-binding
 type FlowAPI
-    = AuthProtect "oauth" :> "flow" :>
+    = AuthProtect "oauth-or-cookies" :> "flow" :>
         -- Configuration
         ("templates" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
         :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent

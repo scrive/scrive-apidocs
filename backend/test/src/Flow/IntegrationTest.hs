@@ -4,25 +4,16 @@
 
 module Flow.IntegrationTest where
 
-import Control.Monad.IO.Class
-import Control.Monad.Reader.Class
-import Data.Text.Lazy (unpack)
-import Network.HTTP.Client
-import Servant.Client
 import Test.Framework
-import Text.Pretty.Simple
 import Text.RawString.QQ
 import qualified Data.Map as Map
 
-import Auth.Model
-import DB
 import Flow.Api
 import Flow.Client
-import OAuth.Model
+import Flow.TestUtil
 import TestEnvSt.Internal
 import TestingUtil hiding (assertRight)
 import TestKontra
-import User.UserID
 
 tests :: TestEnvSt -> Test
 tests env = testGroup
@@ -36,7 +27,7 @@ testTemplateHappyCrud :: TestEnv ()
 testTemplateHappyCrud = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let TemplateClient {..} = mkTemplateClient oauth
+  let TemplateClient {..} = mkTemplateClient $ Left oauth
   env <- getEnv
 
   -- TODO nicer check
@@ -57,13 +48,6 @@ testTemplateHappyCrud = do
               template3
 
   void . assertRight "deleteResponse" . request env $ deleteTemplate tid
-
-assertRight :: String -> TestEnv (Either ClientError b) -> TestEnv b
-assertRight msg req = do
-  res <- req
-  case res of
-    Right v   -> pure v
-    Left  err -> fail $ msg <> ": " <> unpack (pShow err)
 
 process1 :: Text
 process1 = [r|
@@ -90,7 +74,7 @@ testZeroToInstance :: TestEnv ()
 testZeroToInstance = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let TemplateClient {..} = mkTemplateClient oauth
+  let TemplateClient {..} = mkTemplateClient $ Left oauth
   env <- getEnv
 
   let createTemplateData = CreateTemplate "name" process1
@@ -135,7 +119,7 @@ testListEndpoint :: TestEnv ()
 testListEndpoint = do
   user  <- instantiateRandomUser
   oauth <- getToken $ user ^. #id
-  let TemplateClient {..} = mkTemplateClient oauth
+  let TemplateClient {..} = mkTemplateClient $ Left oauth
       createTemplateData  = CreateTemplate "name" process1
   env <- getEnv
 
@@ -151,19 +135,3 @@ testListEndpoint = do
 
   ts3 <- assertRight "list endpoint works when 2 templates" . request env $ listTemplates
   assertBool "third list call should have 2 items" $ length ts3 == 2
-
-getToken :: UserID -> TestEnv OAuthAuthorization
-getToken uid = do
-  void . dbUpdate $ CreatePersonalToken uid
-  commit
-  fmap fromJust . dbQuery $ GetPersonalToken uid
-
-getEnv :: TestEnv ClientEnv
-getEnv = do
-  TestEnvSt {..} <- ask
-  mgr            <- liftIO $ newManager defaultManagerSettings
-  url            <- parseBaseUrl "localhost"
-  pure . mkClientEnv mgr $ url { baseUrlPort = flowPort }
-
-request :: ClientEnv -> ClientM a -> TestEnv (Either ClientError a)
-request env req = liftIO $ runClientM req env

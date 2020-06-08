@@ -1,4 +1,4 @@
-module SessionsTest (sessionsTests) where
+module SessionsTest (sessionsTests, insertNewSession) where
 
 import Data.Int
 import Data.Time

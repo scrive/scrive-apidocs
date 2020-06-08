@@ -630,6 +630,7 @@ Library
                , conduit
                , consumers
                , containers
+               , cookie
                , crypto-rng
                , cryptonite
                , cryptostore
@@ -1331,14 +1332,14 @@ Test-suite kontrakcja-test
                  File.Tables
                  FileTest
                  FlashMessages
+                 Flow.AuthenticationTest
                  Flow.AggregatorTest
                  Flow.IntegrationTest
                  Flow.MachinizeTest
-                 FlowTests
-                 FlowTests
-                 Flow.VariableCollectorTest
+                 Flow.TestUtil
                  Flow.TransducerTest
                  Flow.VariableCollectorTest
+                 FlowTests
                  Folder.APITest
                  UserGroup.APITest
                  UserGroup.UserGroupTest
@@ -1665,15 +1666,19 @@ Library authentication
   Exposed-Modules:    Auth.MagicHash
                     , Auth.Model
                     , Auth.OAuth
-                    , Auth.Parse
+                    , Auth.Session
+                    , Auth.Session.SessionID
                     , Auth.Utils
   Build-Depends:      base-noprelude
+                    , bytestring
                     , kontrakcja-prelude
                     , cond
                     , crypto-rng
                     , exceptions
                     , happstack-server
                     , hpqtypes
+                    , monad-time
                     , text
+                    , text-show
                     , unjson
                     , HTTP
