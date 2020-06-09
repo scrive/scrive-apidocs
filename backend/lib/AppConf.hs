@@ -87,6 +87,7 @@ data AppConf = AppConf
   , useFolderListCallsByDefault :: Bool
   , useNewFlattener    :: Bool -- Temporary. Remove after June 2020. MR
   , flowPort :: Int
+  , runFlowServer :: Bool
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -159,6 +160,10 @@ unjsonAppConf =
                  useNewFlattener
                  "If itext7 flattener should be used. Temporary option"
     <*> fieldDef "flow_port" 9173 flowPort "Flow listening port"
+    <*> fieldDef "run_flow_server"
+                 False
+                 runFlowServer
+                 "Start Flow server instead of Kontrakcja"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
