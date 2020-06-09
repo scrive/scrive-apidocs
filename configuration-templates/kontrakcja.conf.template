@@ -112,5 +112,7 @@
       "saml_entity_base_uri": "http://localhost:8000"
     },
     "postsignview_redirect_url": "http://localhost:8000/signupformthatallowsprefillinganemail",
-    "use_folder_list_calls_by_default": true
+    "use_folder_list_calls_by_default": true,
+    "flow_port": 9173,
+    "run_flow_server": false
 }
