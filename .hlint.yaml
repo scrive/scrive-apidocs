@@ -21,3 +21,6 @@
 
 # Replace a $ b $ c with a . b $ c
 - group: {name: dollar, enabled: true}
+
+# Annoying when a field accessor is called `id`
+- ignore: {name: "Redundant id"}

@@ -358,6 +358,7 @@ Library
                  , Flow.Api
                  , Flow.Client
                  , Flow.Db
+                 , Flow.DocumentChecker
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
@@ -1334,6 +1335,7 @@ Test-suite kontrakcja-test
                  FlashMessages
                  Flow.AuthenticationTest
                  Flow.AggregatorTest
+                 Flow.DocumentCheckerTest
                  Flow.IntegrationTest
                  Flow.MachinizeTest
                  Flow.TestUtil

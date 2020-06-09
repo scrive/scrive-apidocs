@@ -52,10 +52,10 @@ testCollectFlowVariables = do
       , messages                = Set.fromList ["get-data"]
       , documentUserAssociation =
         Set.fromList
-          [ DocRoleFor { role = Viewer, user = "user1", documentId = "document1" }
-          , DocRoleFor { role = Viewer, user = "user1", documentId = "document2" }
-          , DocRoleFor { role = Viewer, user = "user2", documentId = "document1" }
-          , DocRoleFor { role = Viewer, user = "user2", documentId = "document2" }
-          , DocRoleFor { role = SigningParty, user = "user1", documentId = "document1" }
+          [ DocRoleFor { role = Viewer, user = "user1", document = "document1" }
+          , DocRoleFor { role = Viewer, user = "user1", document = "document2" }
+          , DocRoleFor { role = Viewer, user = "user2", document = "document1" }
+          , DocRoleFor { role = Viewer, user = "user2", document = "document2" }
+          , DocRoleFor { role = SigningParty, user = "user1", document = "document1" }
           ]
       }

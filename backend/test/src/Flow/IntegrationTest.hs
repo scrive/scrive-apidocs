@@ -80,7 +80,6 @@ testZeroToInstance = do
   let createTemplateData = CreateTemplate "name" process1
   template1 <- assertRight "create template" . request env $ createTemplate
     createTemplateData
-  {- HLINT ignore "Redundant id" -}
   let tid = id (template1 :: GetCreateTemplate)
 
   void . assertRight "commit template response" . request env $ commitTemplate tid
@@ -91,7 +90,6 @@ testZeroToInstance = do
       tid
       (mapping (user ^. #id))
 
-  {- HLINT ignore "Redundant id" -}
   let iid = id (startTemplateResponse1 :: StartTemplate)
 
   instance2 <- assertRight "get instance" . request env $ getInstance iid
