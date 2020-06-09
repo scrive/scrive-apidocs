@@ -171,6 +171,10 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         sig
     Just (NetsDKNemIDSignature_ sig) ->
       renderTextTemplate "_nameFromDKNemIDText" . F.value "name" $ netsdkSignatoryName sig
+    Just (EIDServiceFITupasSignature_ sig) ->
+      renderTextTemplate "_nameFromFiTupasIDText"
+        . F.value "name"
+        $ eidServiceFITupasSigSignatoryName sig
     _ -> return ""
 
   fields <-
@@ -207,6 +211,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       SEBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_se.png"
       NOBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_no.png"
       DKNemIDAuthenticationToSign -> addBankIDLogo "nemid_logo_dk.png"
+      FITupasAuthenticationToSign -> addBankIDLogo "tupas_logo_fi.png"
       _ -> return
 
     addBankIDLogo :: FilePath -> [Seal.Field] -> m [Seal.Field]
