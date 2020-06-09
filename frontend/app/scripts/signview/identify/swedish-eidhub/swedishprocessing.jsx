@@ -9,15 +9,9 @@ var SEBankIDModel = require("./swedishidentifymodel");
     },
 
     render: function () {
-      var link = this.props.model.SEBankIDLink();
+      window.location = this.props.model.SEBankIDLink();
       return (
-        <div style={{padding: "10px"}} >
-            <iframe
-          ref="iframe"
-          style={{minHeight: "350px", width: "100%", margin: "auto"}}
-          src={link}
-          />
-      </div>
+        <div className="loadingSpinner"/>
       );
 
     }
