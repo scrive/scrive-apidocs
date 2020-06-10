@@ -39,6 +39,7 @@ import Control.Conditional (unlessM, whenM)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader hiding (fail)
+import Crypto.RNG
 import Happstack.Server hiding (lookCookieValue, simpleHTTP, timeout)
 import Log
 import System.Directory
@@ -105,17 +106,16 @@ import Kontra
 import KontraLink
 import Log.Identifier
 import MagicHash
+import MailContext
 import Redirect
 import Session.Model
 import Templates (renderTextTemplate, renderTextTemplate_)
 import Text.JSON.Convert
-import User.Email
 import User.Model
 import User.Utils
 import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
-import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.PDFUtil
 import Util.SignatoryLinkUtils
@@ -257,17 +257,19 @@ showCreateFromTemplate = withUser . with2FACheck $ \user -> do
 -- | Call after signing in order to save the document for any user,
 -- and put up the appropriate modal.
 handleAfterSigning
-  :: (MonadLog m, MonadThrow m, TemplatesMonad m, DocumentMonad m, MonadBase IO m)
+  :: ( MailContextMonad m
+     , CryptoRNG m
+     , MonadLog m
+     , MonadThrow m
+     , TemplatesMonad m
+     , DocumentMonad m
+     , MonadBase IO m
+     )
   => SignatoryLinkID
   -> m ()
 handleAfterSigning slid = logSignatory slid $ do
   signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
-  maybeuser     <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
-  case maybeuser of
-    Just user | isJust $ user ^. #hasAcceptedTOS ->
-      void . dbUpdate $ SaveDocumentForUser user slid
-    _ -> return ()
-
+  saveDocumentForSignatory signatorylink
 
 -- |
 -- Show the document to be signed.
