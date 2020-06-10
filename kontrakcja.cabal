@@ -702,6 +702,7 @@ Library
                , servant-checked-exceptions
                , servant-client
                , servant-client-core
+               , servant-errors
                , servant-server
                , soap
                , split

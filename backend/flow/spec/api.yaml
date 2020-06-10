@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.4.2"
+  version: "0.4.3"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -402,7 +402,6 @@ components:
       required:
         - code
         - message
-        - explanation
       properties:
         code:
           type: integer

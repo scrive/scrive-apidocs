@@ -16,12 +16,13 @@ import Data.ByteString (ByteString)
 import Data.Text as T
 import Data.Text.Encoding
 import Data.Yaml
-import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Class
 import Log.Monad (LogT)
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
+import Network.Wai.Middleware.Servant.Errors (errorMw)
 import Servant
 import Servant.Server.Experimental.Auth
 import Web.Cookie (parseCookies)
@@ -32,7 +33,7 @@ import AccessControl.Types
 import Auth.Model
 import Auth.OAuth
 import Auth.Session
-import DB
+import DB hiding (JSON(..))
 import Flow.Api as Api
 import Flow.Error
 import Flow.Guards
@@ -231,6 +232,7 @@ app :: (forall m a . LogT m a -> m a) -> FlowConfiguration -> IO Application
 app runLogger flowConfiguration = do
   loggingMiddleware <- runLogger mkApplicationLogger
   return
+    . errorMw @JSON @'["message", "code"]
     . loggingMiddleware
     . serveWithContext apiProxy (genAuthServerContext flowConfiguration)
     $ hoistServerWithContext apiProxy
