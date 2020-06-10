@@ -74,11 +74,6 @@ validateDocumentForStarting doc = execWriter $ do
   validateAll
       (signatoryHasValidMobileForIdentifyToView signatorylinkauthenticationtoviewmethod)
     $ AuthError AuthToView
-  validateAll
-      (signatoryHasValidMobileForIdentifyToView
-        signatorylinkauthenticationtoviewarchivedmethod
-      )
-    $ AuthError AuthToViewArchived
   validateAll signatoryThatIsApproverHasStandardAuthToSign
     $ ApproverError ApproverNonStandardAuth
   validateAll signatoryThatIsApproverHasNoPlacements $ ApproverError ApproverPlacedField
