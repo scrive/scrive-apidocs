@@ -72,7 +72,7 @@ data UserGroupRequestJSON = UserGroupRequestJSON {
 newtype UGAddrJSON = UGAddrJSON UserGroupAddress
 
 instance ToJSON UGAddrJSON where
-  toJSON _ = Null -- Redundant - Only needed to avoid `deriving Generic`
+  toJSON _ = unexpectedError "`toJSON : UGAddrJSON -> Value` not implemented!"
   toEncoding (UGAddrJSON addr) =
     pairs
       $  ("company_number" .= (addr ^. #companyNumber))
@@ -143,7 +143,7 @@ unjsonUserGroupAddress =
 newtype UGDRPJSON = UGDRPJSON DataRetentionPolicy
 
 instance ToJSON UGDRPJSON where
-  toJSON _ = Null -- Redundant - Only needed to avoid `deriving Generic`
+  toJSON _ = unexpectedError "`toJSON : UGDRPJSON -> Value` not implemented!"
   toEncoding (UGDRPJSON drp) =
     pairs
       $  ("idle_doc_timeout_preparation" .= (drp ^. #idleDocTimeoutPreparation))

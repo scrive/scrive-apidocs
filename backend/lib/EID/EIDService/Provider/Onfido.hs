@@ -30,12 +30,11 @@ data OnfidoEIDServiceProviderParams = OnfidoEIDServiceProviderParams {
   }
 
 instance ToJSON OnfidoEIDServiceProviderParams where
-  toJSON _ = Null
-  toEncoding OnfidoEIDServiceProviderParams {..} =
-    pairs
-      $  ("report" .= onfidoparamMethod)
-      <> ("firstName" .= onfidoparamFirstName)
-      <> ("lastName" .= onfidoparamLastName)
+  toJSON OnfidoEIDServiceProviderParams {..} = object
+    [ "report" .= onfidoparamMethod
+    , "firstName" .= onfidoparamFirstName
+    , "lastName" .= onfidoparamLastName
+    ]
 
 beginEIDServiceTransaction
   :: Kontrakcja m

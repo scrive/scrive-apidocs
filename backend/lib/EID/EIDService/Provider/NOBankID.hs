@@ -42,9 +42,8 @@ data NOBankIDEIDServiceProviderParams = NOBankIDEIDServiceProviderParams {
   }
 
 instance ToJSON NOBankIDEIDServiceProviderParams where
-  toJSON _ = Null
-  toEncoding req = pairs $ ("personalNumber" .= cnoestPersonalNumber req) <> phonePair
-    where phonePair = maybe mempty ("phoneNumber" .=) $ cnoestPhoneNumber req
+  toJSON req = object $ ["personalNumber" .= cnoestPersonalNumber req] <> phoneField
+    where phoneField = maybe [] (\pn -> ["phoneNumber" .= pn]) $ cnoestPhoneNumber req
 
 newtype StartNOBankIDEIDServiceTransactionResponse = StartNOBankIDEIDServiceTransactionResponse {
     snoestAuthURL :: Text
