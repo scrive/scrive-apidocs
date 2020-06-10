@@ -34,8 +34,8 @@ newtype NLIDINEIDServiceProviderParams = NLIDINEIDServiceProviderParams {
   }
 
 instance ToJSON NLIDINEIDServiceProviderParams where
-  toJSON _ = Null
-  toEncoding = pairs . ("requestBirthdate" .=) . cnlestRequestBirthdate
+  toJSON NLIDINEIDServiceProviderParams {..} =
+    object ["requestBirthdate" .= cnlestRequestBirthdate]
 
 newtype StartNLIDINEIDServiceTransactionResponse = StartNLIDINEIDServiceTransactionResponse {
     snlestAuthURL :: Text

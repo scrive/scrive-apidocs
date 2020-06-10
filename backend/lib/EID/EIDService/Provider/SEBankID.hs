@@ -47,11 +47,10 @@ data SEBankIDEIDServiceProviderParams = SEBankIDEIDServiceProviderParams {
   }
 
 instance ToJSON SEBankIDEIDServiceProviderParams where
-  toJSON _ = Null
-  toEncoding req =
-    pairs
-      $  ("personalNumber" .= cseestPersonalNumber req)
-      <> ("requireAutoStartToken" .= cseestRequireAutoStartToken req)
+  toJSON req = object
+    [ "personalNumber" .= cseestPersonalNumber req
+    , "requireAutoStartToken" .= cseestRequireAutoStartToken req
+    ]
 
 beginEIDServiceTransaction
   :: Kontrakcja m

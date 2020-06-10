@@ -43,11 +43,8 @@ data DKNemIDEIDServiceProviderParams = DKNemIDEIDServiceProviderParams {
   }
 
 instance ToJSON DKNemIDEIDServiceProviderParams where
-  toJSON _ = Null
-  toEncoding req =
-    pairs
-      $  ("limitedClientMode" .= cdkestLimitedClientMode req)
-      <> ("uiLocale" .= localeText)
+  toJSON req = object
+    ["limitedClientMode" .= cdkestLimitedClientMode req, "uiLocale" .= localeText]
     where
       localeText :: Text
       localeText = case cdkestUILocale req of
