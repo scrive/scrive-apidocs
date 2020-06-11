@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.4.3"
+  version: "0.4.4"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -312,6 +312,29 @@ paths:
             Flow template is in an invalid state; possible reasons follow.
               * Flow template not committed.
               * Referred objects are not prepared to be used in a Flow process.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /instances:
+    get:
+      tags:
+        - configuration
+      summary: Get all Flow instances for user
+      operationId: listInstances
+      description: |
+        Gets list of Flow instances associated with the authenticated user.
+      responses:
+        200:
+          description: 0 or more Flow instances found.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstanceGetResponse"
+        401:
+          description: Error authenticating the API caller.
           content:
             application/json:
               schema:

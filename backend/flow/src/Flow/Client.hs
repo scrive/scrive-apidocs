@@ -31,6 +31,7 @@ data TemplateClient = TemplateClient {
   , startTemplate    :: TemplateId -> InstanceToTemplateMapping -> ClientM StartTemplate
   , getInstance      :: InstanceId -> ClientM GetInstance
   , getInstanceView  :: InstanceId -> ClientM GetInstanceView
+  , listInstances    :: ClientM [GetInstance]
   , validateTemplate :: FlowDSL -> ClientM [ValidationError]
 }
 
@@ -48,6 +49,7 @@ mkTemplateClient authData = TemplateClient { .. }
         :<|> startTemplate
         :<|> getInstance
         :<|> getInstanceView
+        :<|> listInstances
       = authenticatedEndpoints authReq
     authenticatedEndpoints :<|> validateTemplate = client apiProxy
 

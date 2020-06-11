@@ -65,6 +65,7 @@ server = authenticated :<|> validateTemplate
         :<|> startInstance account
         :<|> getInstance account
         :<|> getInstanceView account
+        :<|> listInstances account
 
 -- TODO: Handle decodeUtf8 exceptions
 authHandler :: FlowConfiguration -> AuthHandler Request Account
@@ -129,7 +130,6 @@ authHandler flowConfiguration = mkAuthHandler handler
       liftIO $ print e
       throwAuthenticationError errorName
 
--- TODO: Check user permissions to create templates.
 createTemplate :: Account -> CreateTemplate -> AppM GetCreateTemplate
 createTemplate account@Account {..} CreateTemplate {..} = do
   logInfo_ "creating template"

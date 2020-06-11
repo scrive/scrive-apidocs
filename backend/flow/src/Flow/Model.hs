@@ -13,6 +13,7 @@ module Flow.Model
     , insertParsedStateMachine
     , selectParsedStateMachine
     , selectInstance
+    , selectInstancesByUserID
     , selectInstanceKeyValues
     , selectAggregatorState
     , insertAggregatorState
@@ -171,6 +172,16 @@ selectInstance instanceId = do
     sqlResult "template_id"
     sqlWhereEq "id" instanceId
   fetchMaybe fetchInstance
+
+selectInstancesByUserID :: (MonadDB m, MonadThrow m) => UserID -> m [Instance]
+selectInstancesByUserID userId = do
+  runQuery_ . sqlSelect "flow_instances i" $ do
+    sqlResult "i.id"
+    sqlResult "i.template_id"
+    sqlJoinOn "flow_templates t" "template_id = t.id"
+    sqlWhereEq "t.user_id" userId
+    sqlWhereIsNULL "t.deleted"
+  fetchMany fetchInstance
 
 fetchInstance :: (InstanceId, TemplateId) -> Instance
 fetchInstance (id, templateId) = Instance { .. }

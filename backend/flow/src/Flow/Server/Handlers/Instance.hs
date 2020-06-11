@@ -86,6 +86,12 @@ getInstance account instanceId = do
                      , state = InstanceState { availableActions = [], history = [] }
                      }
 
+listInstances :: Account -> AppM [GetInstance]
+listInstances account@Account {..} = do
+  is <- Model.selectInstancesByUserID $ user ^. #id
+  let iids = map (id :: Instance -> InstanceId) is
+  mapM (getInstance account) iids
+
 getInstanceView :: Account -> InstanceId -> AppM GetInstanceView
 getInstanceView account@Account {..} instanceId = do
   logInfo "Getting instance view"

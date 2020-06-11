@@ -318,6 +318,7 @@ type FlowAPI
         -- Progress
         :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
         :<|> "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
+        :<|> "instances" :> Get '[JSON] [GetInstance]
         )
     :<|> "templates" :> "validate" :> ReqBody '[JSON] FlowDSL :> Post '[JSON] [ValidationError]
 
