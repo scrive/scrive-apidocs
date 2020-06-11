@@ -203,7 +203,8 @@ module.exports = React.createClass({
       img.src = pagelink;
       img.addEventListener("error", function () {
         var fakeXHR = {getResponseHeader: () => { return undefined; },
-                       status: 0};
+                       status: 0,
+                       responseText: ""};
         var doc = file.document();
         var details = {"Document ID": doc.documentid(),
                        "Signatory ID": doc.currentSignatory().signatoryid()};
