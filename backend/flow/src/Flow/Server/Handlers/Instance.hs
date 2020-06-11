@@ -6,7 +6,7 @@
 
 module Flow.Server.Handlers.Instance where
 
-import Control.Monad.Extra (fromMaybeM)
+import Control.Monad.Extra (fromMaybeM, whenM)
 import Data.Aeson
 import Data.Either.Combinators (rightToMaybe)
 import Data.Map (Map)
@@ -39,16 +39,18 @@ startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
   -- TODO: Check permissions create instance..
   -- TODO: Check permissions to the template.
   -- TODO: Validate mapping...
-  -- TODO: Check template is committed.
   -- TODO: Check mapping value sizes???
   -- TODO: Replace value type with enum???
   -- TODO: Model instance state inside database somehow!
+  whenM (isNothing <$> Model.selectTemplate templateId) throwTemplateNotFoundError
   id <- Model.insertFlowInstance templateId
   insertFlowInstanceKeyValues id documents StoreDocumentId
   insertFlowInstanceKeyValues id users     StoreUserId
   insertFlowInstanceKeyValues id messages  StoreMessage
 
-  stateId <- Transducer.initialState <$> Model.selectParsedStateMachine templateId
+  stateId <- Transducer.initialState <$> fromMaybeM
+    throwTemplateNotCommittedError
+    (Model.selectParsedStateMachine templateId)
   Model.insertAggregatorState (Aggregator.makeNewState stateId) id
 
   pure $ StartTemplate { id }

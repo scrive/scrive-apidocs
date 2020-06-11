@@ -2,6 +2,7 @@ module Flow.Error (
     throwAuthenticationError
   , throwTemplateNotFoundError
   , throwTemplateAlreadyCommittedError
+  , throwTemplateNotCommittedError
   , throwInstanceNotFoundError
   , throwDSLValidationError
   , AuthError(..)
@@ -65,6 +66,13 @@ throwTemplateAlreadyCommittedError = throwError $ makeError FlowError
   { code        = 409
   , message     = "Template already committed"
   , explanation = "This template has already been committed and cannot be altered"
+  }
+
+throwTemplateNotCommittedError :: MonadError ServerError m => m a
+throwTemplateNotCommittedError = throwError $ makeError FlowError
+  { code        = 409
+  , message     = "Committed template not found"
+  , explanation = "The template associated with this ID has not yet been committed"
   }
 
 throwInstanceNotFoundError :: MonadError ServerError m => m a

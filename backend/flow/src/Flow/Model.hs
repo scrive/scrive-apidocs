@@ -126,12 +126,12 @@ insertParsedStateMachine templateId machine = do
     sqlSet "template_id" templateId
     sqlSet "data"        machine
 
-selectParsedStateMachine :: (MonadDB m, MonadThrow m) => TemplateId -> m Machine
+selectParsedStateMachine :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe Machine)
 selectParsedStateMachine templateId = do
   runQuery_ . sqlSelect "flow_compiled_state_machine" $ do
     sqlResult "data"
     sqlWhereEq "template_id" templateId
-  fetchOne runIdentity
+  fetchMaybe runIdentity
 
 insertFlowInstance :: (MonadDB m, MonadThrow m) => TemplateId -> m InstanceId
 insertFlowInstance templateId = do
