@@ -31,9 +31,9 @@ module.exports = React.createClass({
           <hr/>
           {localization.postSignview.proposal}
           <ul>
-            <li>{"\u1F784 " + localization.postSignview.reason1}</li>
-            <li>{"\u1F784 " + localization.postSignview.reason2}</li>
-            <li>{"\u1F784 " + localization.postSignview.reason3}</li>
+            <li>{"\u25CF " + localization.postSignview.reason1}</li>
+            <li>{"\u25CF " + localization.postSignview.reason2}</li>
+            <li>{"\u25CF " + localization.postSignview.reason3}</li>
             </ul>
           </div>
         </Modal.Content>
