@@ -4,6 +4,7 @@ module Folder.Model.Update
   , FolderCreate(..)
   , FolderUpdate(..)
   , FoldersFormCycle(..)
+  , FolderMovingBetweenDifferentsUserGroupTrees(..)
   ) where
 
 import Control.Monad.Catch
@@ -60,6 +61,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
             sqlWhereEq "id" . Just $ parentID
           Array1 parentpath <- fetchOne runIdentity
           return . Array1 . (parentID :) $ parentpath
+    -- verify, that folder is not moving between dirrented UserGroup trees
+    oldRootUGID <- folderUGIDRoot $ fid : oldParentPath
+    newRootUGID <- folderUGIDRoot $ fid : newParentPath
+    when (oldRootUGID /= newRootUGID)
+      . throwM
+      . SomeDBExtraException
+      $ FolderMovingBetweenDifferentsUserGroupTrees fid oldRootUGID newRootUGID
     -- verify, that groups will not form a cycle
     when (fid `elem` newParentPath)
       . throwM
@@ -88,6 +96,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FolderUpdate () where
           <>  ","
           <?> Array1 newParentPath
           <+> ")"
+
+
 
 -- Create a folder and link it to a user group.
 newtype FolderCreateByUserGroup = FolderCreateByUserGroup UserGroupID
@@ -169,3 +179,31 @@ instance ToJSValue FoldersFormCycle where
     value "folder_id" (show dgid)
 
 instance DBExtraException FoldersFormCycle
+
+data FolderMovingBetweenDifferentsUserGroupTrees =
+  FolderMovingBetweenDifferentsUserGroupTrees {
+    fmFid :: FolderID,
+    fmOldRootUgid :: UserGroupID,
+    fmNewRootUgid :: UserGroupID }
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue FolderMovingBetweenDifferentsUserGroupTrees where
+  toJSValue (FolderMovingBetweenDifferentsUserGroupTrees {..}) = runJSONGen $ do
+    value "message" ("Folder is moving between 2 different UserGroup trees" :: String)
+    value "folder_id" $ show fmFid
+    value "old_root_user_group_id" $ show fmOldRootUgid
+    value "new_root_user_group_id" $ show fmNewRootUgid
+
+instance DBExtraException FolderMovingBetweenDifferentsUserGroupTrees
+
+folderUGIDRoot :: (MonadDB m, MonadThrow m) => [FolderID] -> m UserGroupID
+folderUGIDRoot fidAndParentPath = do
+  mUGs      <- mapM (dbQuery . UserGroupGetByHomeFolderID) fidAndParentPath
+  closestUG <- case listToMaybe . catMaybes $ mUGs of
+    Nothing ->
+      unexpectedError
+        $  "None of Folder + parents is home Folder of some UserGroup"
+        <> showt fidAndParentPath
+    Just closestUG -> return closestUG
+  closestUgwp <- dbQuery $ UserGroupGetWithParentsByUG closestUG
+  return . view #id . ugwpRoot $ closestUgwp

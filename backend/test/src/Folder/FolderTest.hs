@@ -42,6 +42,9 @@ folderTests env = testGroup
   , testThat "Cannot delete a Folder with subfolders"
              env
              testCannotDeleteFolderWithSubfolders
+  , testThat "Cannot move Folder between different UserGroup trees"
+             env
+             testCannotMoveFolderBetweenDifferentUserGroupTrees
   ]
 
 testCreateFolders :: TestEnv ()
@@ -273,6 +276,23 @@ testMoveFolderCycleError = do
     #parentID
     (Just $ folderB ^. #id)
     folderA
+
+testCannotMoveFolderBetweenDifferentUserGroupTrees :: TestEnv ()
+testCannotMoveFolderBetweenDifferentUserGroupTrees = do
+  userA         <- instantiateRandomUser
+  userB         <- instantiateRandomUser
+  movingFolder0 <- rand 10 arbitrary
+  let userAHomeFid = userA ^. #homeFolderID
+      userBHomeFid = userB ^. #homeFolderID
+  movingFolder1 <- dbUpdate . FolderCreate . set #parentID userAHomeFid $ movingFolder0
+
+  -- try moving Folder to the other user home Folder
+  -- random users have separate UserGroup trees by default
+
+  assertRaisesKontra (\(FolderMovingBetweenDifferentsUserGroupTrees _ _ _) -> True)
+    . dbUpdate
+    . FolderUpdate
+    $ set #parentID userBHomeFid movingFolder1
 
 testCannotDeleteFolderWithSubfolders :: TestEnv ()
 testCannotDeleteFolderWithSubfolders = do
