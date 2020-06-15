@@ -15,8 +15,8 @@ import GHC.Generics
 import Servant
 import qualified Data.Text as T
 
-data FlowError = FlowError {
-    code :: Int
+data FlowError = FlowError
+  { code :: Int
   , message :: Text
   , explanation :: Text
   } deriving Generic

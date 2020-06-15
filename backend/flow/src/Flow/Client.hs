@@ -21,8 +21,8 @@ import Flow.Id
 type instance AuthClientData (AuthProtect "oauth-or-cookies") = OAuthOrCookies
 type OAuthOrCookies = Either OAuthAuthorization (Maybe SessionCookieInfo, Maybe XToken)
 
-data TemplateClient = TemplateClient {
-    createTemplate   :: CreateTemplate -> ClientM GetCreateTemplate
+data TemplateClient = TemplateClient
+  { createTemplate   :: CreateTemplate -> ClientM GetCreateTemplate
   , deleteTemplate   :: TemplateId -> ClientM NoContent
   , getTemplate      :: TemplateId -> ClientM GetTemplate
   , patchTemplate    :: TemplateId -> PatchTemplate -> ClientM GetTemplate
