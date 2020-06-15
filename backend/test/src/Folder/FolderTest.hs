@@ -289,7 +289,7 @@ testCannotMoveFolderBetweenDifferentUserGroupTrees = do
   -- try moving Folder to the other user home Folder
   -- random users have separate UserGroup trees by default
 
-  assertRaisesKontra (\(FolderMovingBetweenDifferentsUserGroupTrees _ _ _) -> True)
+  assertRaisesKontra (\FolderMovingBetweenDifferentsUserGroupTrees {} -> True)
     . dbUpdate
     . FolderUpdate
     $ set #parentID userBHomeFid movingFolder1

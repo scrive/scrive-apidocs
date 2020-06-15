@@ -189,7 +189,7 @@ data FolderMovingBetweenDifferentsUserGroupTrees =
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue FolderMovingBetweenDifferentsUserGroupTrees where
-  toJSValue (FolderMovingBetweenDifferentsUserGroupTrees {..}) = runJSONGen $ do
+  toJSValue FolderMovingBetweenDifferentsUserGroupTrees {..} = runJSONGen $ do
     -- FIXME in a better way; FC did this only to fix this for users and quickly move on
     -- since this is going to Elm FE we mimic APIError
     value "error_type" ("folder_action_forbidden" :: String)

@@ -79,8 +79,7 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
                                     mDefaultUserGroupOverride
                                     -- legacy hack since we don't have any other UG associated in kontrakcja.conf,
                                     -- only userInitialGroupID.
-                                    (fromMaybe (ugSSOConf ^. #userInitialGroupID)
-                                               (view #id <$> ug))
+                                    (maybe (ugSSOConf ^. #userInitialGroupID) (view #id) ug)
                                     (SAMLPrincipal
                                       (fromMaybe "" mFirstName)
                                       (fromMaybe "" mLastName)
