@@ -81,7 +81,6 @@ data Context = Context
     -- api/frontend) This might be the user from session, if the OAuth
     -- authorization was missing.
     , postSignViewRedirectURL :: Text
-    , useNewFlattener     :: Bool -- Temporary. Remove after June 2020. MR
     }
 
 makeFieldLabelsWith noPrefixFieldLabels ''Context

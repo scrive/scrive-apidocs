@@ -172,10 +172,7 @@ preCheckPDFsHelper contents tmppath = runExceptT $ do
           Nothing -> throwError FileRemoveJavaScriptError
 
     checkFlatten = do
-      useNewFlattener <- view #useNewFlattener <$> getContext
-      let flattenerJar = if useNewFlattener
-            then "scrivepdftools/scrivepdftoolsflattener-itext7.jar"
-            else "scrivepdftools/scrivepdftoolsflattener.jar"
+      let flattenerJar = "scrivepdftools/scrivepdftoolsflattener.jar"
       forM_ (take (length contents) [1 ..]) $ \num -> do
         (code, stdout, stderr) <- liftBase $ readProcessWithExitCode
           "java"
