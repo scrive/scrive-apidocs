@@ -1,3 +1,4 @@
+-- brittany --exactprint-only
 module Folder.Model.Update
   (
     AddFoldersToUserGroups(..) -- remove after initial migration of Folders
@@ -189,6 +190,11 @@ data FolderMovingBetweenDifferentsUserGroupTrees =
 
 instance ToJSValue FolderMovingBetweenDifferentsUserGroupTrees where
   toJSValue (FolderMovingBetweenDifferentsUserGroupTrees {..}) = runJSONGen $ do
+    -- FIXME in a better way; FC did this only to fix this for users and quickly move on
+    -- since this is going to Elm FE we mimic APIError
+    value "error_type" ("folder_action_forbidden" :: String)
+    value "error_message" ("Folder is moving between 2 different UserGroup trees" :: String)
+    value "http_code" (403 :: Int)
     value "message" ("Folder is moving between 2 different UserGroup trees" :: String)
     value "folder_id" $ show fmFid
     value "old_root_user_group_id" $ show fmOldRootUgid
