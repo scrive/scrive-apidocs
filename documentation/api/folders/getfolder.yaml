@@ -11,12 +11,16 @@ get:
     ```json
     {
       "id": "1",
-      "parent_id": null,
       "name": "Root folder",
+      "home_for_user": null,
+      "home_for_user_group": "10",
+      "parent_id": null,
       "children": [
         {
           "id": "2",
-          "name": "Subfolder of 1"
+          "name": "Subfolder of 1",
+          "home_for_user": "33",
+          "home_for_user_group": null
         }
       ]
     }
@@ -26,8 +30,9 @@ get:
     contents of the folder are not displayed, just the metadata about the
     folder.
 
-    This metadata currently consists of the folder's ID, its parent ID (if any)
-    and the name/id of its children (if any). Only the immediate children are
+    This metadata currently consists of the folder's ID, name, its parent ID (if any),
+    IDs of the user and the user group for whom the folder is a home folder
+    and information about its children. Only the immediate children are
     included by default (see the `recursive` parameter).
 
   parameters:
