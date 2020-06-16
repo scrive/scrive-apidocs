@@ -37,15 +37,15 @@ properties:
   name:
     type: string
   home_for_user:
-    type: ['string', 'null']
+    type: string
     description: |
       If the folder is a home folder for a user this field contains the ID of that user. Otherwise it's null.
   home_for_user_group:
-    type: ['string', 'null']
+    type: string
     description: |
       If the folder is a home folder for a user group this field contains the ID of that group. Otherwise it's null.
   parent_id:
-    type: ['string', 'null']
+    type: string
     description: |
       Optional property. If present contains either the ID of the parent folder
       or null if the requested folder is root.
