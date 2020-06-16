@@ -44,6 +44,6 @@ chcon -Rt httpd_sys_content_t /srv/features-testbed.scrive.com
 
 supervisorctl start features-testbed-cron features-testbed-messenger features-testbed-mailer features-testbed-kontrakcja
 
-sudo /home/features-testbed/kontrakcja/build-scripts/deployFeaturesTestbedNginxRules.sh
+sudo /usr/local/sbin/reload-nginx.sh
 
 EOF
