@@ -6,26 +6,35 @@
 
 module Flow.Engine (processMachinizeEvent, finalizeFlow, processEvent) where
 
-import Control.Exception (Exception)
-import Control.Monad.Catch (MonadThrow, throwM)
+import Control.Monad.Catch
 import Control.Monad.Extra (fromMaybeM)
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Crypto.RNG
 import Data.Aeson.Types
 import Database.PostgreSQL.PQTypes (MonadDB)
 import GHC.Generics
 import Log (MonadLog, localData, logAttention_, logTrace_)
+import Text.StringTemplates.Templates (TemplatesMonad)
 
 import Doc.DocumentID (DocumentID)
+import Doc.DocumentMonad
 import Doc.SignatoryLinkID (SignatoryLinkID, fromSignatoryLinkID)
+import EventStream.Class
 import Flow.Aggregator
   ( AggregatorError(DuplicateEvent, TransducerError, UnknownEventInfo)
   , AggregatorStep(FinalState, NeedMoreEvents, StateChange), runAggregatorStep
   )
+import File.Storage (MonadFileStorage)
+import Flow.ActionConsumers (toConsumableAction, consumeFlowAction) -- in backend/lib/Flow
 import Flow.Id (InstanceId)
 import Flow.Machinize (Deed(..), EventInfo(..), LowAction)
 import Flow.Model
   ( selectAggregatorData, selectDocumentNameFromKV, selectUserNameFromKV
   , updateAggregatorState
   )
+import GuardTime (GuardTimeConfMonad)
+import MailContext
 import qualified Flow.Transducer as Transducer (Error)
 
 data EngineEvent = EngineEvent
@@ -53,9 +62,23 @@ data EngineError
     | NotImplemented Text
   deriving (Show, Exception)
 
-
--- TODO: Take engine event dereference all ides and call processMachinizeEvent.
-processEvent :: (MonadLog m, MonadDB m, MonadThrow m) => EngineEvent -> m ()
+processEvent
+  :: ( CryptoRNG m
+     , DocumentMonad m
+     , GuardTimeConfMonad m
+     , MailContextMonad m
+     , MonadBaseControl IO m
+     , MonadDB m
+     , MonadEventStream m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     , MonadThrow m
+     , TemplatesMonad m
+     )
+  => EngineEvent
+  -> m ()
 processEvent event@EngineEvent {..} = do
   localData (toPairs event) $ do
     documentName <- fromMaybeM noDocumentNameFound
@@ -75,14 +98,49 @@ processEvent event@EngineEvent {..} = do
       logAttention_ "Signatory not associated with flow intance."
       throwM NoAssociatedUser
 
-pushActions :: (MonadLog m, MonadDB m, MonadThrow m) => [LowAction] -> m ()
-pushActions _ = throwM $ NotImplemented "Push action"
+pushActions
+  :: ( CryptoRNG m
+     , DocumentMonad m
+     , GuardTimeConfMonad m
+     , MailContextMonad m
+     , MonadBaseControl IO m
+     , MonadDB m
+     , MonadEventStream m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     , MonadThrow m
+     , TemplatesMonad m
+     )
+  => InstanceId
+  -> [LowAction]
+  -> m ()
+pushActions instanceId actions = do
+  consumableActions <- mapM (toConsumableAction instanceId) actions
+  mapM_ consumeFlowAction consumableActions
 
 finalizeFlow :: (MonadLog m, MonadDB m, MonadThrow m) => m ()
 finalizeFlow = throwM $ NotImplemented "Finalizing flow"
 
 processMachinizeEvent
-  :: (MonadLog m, MonadDB m, MonadThrow m) => InstanceId -> EventInfo -> m ()
+  :: ( CryptoRNG m
+     , DocumentMonad m
+     , GuardTimeConfMonad m
+     , MailContextMonad m
+     , MonadBaseControl IO m
+     , MonadDB m
+     , MonadEventStream m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     , MonadThrow m
+     , TemplatesMonad m
+     )
+  => InstanceId
+  -> EventInfo
+  -> m ()
 processMachinizeEvent instanceId eventInfo = do
   (machine, aggregator) <- selectAggregatorData instanceId
   let (aggregatorResult, newState) = runAggregatorStep eventInfo aggregator machine
@@ -103,10 +161,9 @@ processMachinizeEvent instanceId eventInfo = do
       logAttention_ $ "Transducer is in inconsistent state: " <> showt err
       throwM $ TransducerSteppingFailed err
 
-    processStep :: (MonadLog m, MonadDB m, MonadThrow m) => AggregatorStep -> m ()
     processStep NeedMoreEvents        = logTrace_ "Aggregator needs more events to step."
-    processStep (StateChange actions) = pushActions actions
+    processStep (StateChange actions) = pushActions instanceId actions
     processStep (FinalState  actions) = do
-      pushActions actions
+      pushActions instanceId actions
       finalizeFlow
 

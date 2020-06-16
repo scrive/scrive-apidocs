@@ -6,11 +6,12 @@ module Doc.Action (
   , postDocumentPendingChange
   , postDocumentClosedActions
   , findAndTimeoutDocuments
+  , commonDocumentClosingActions
   , saveDocumentForPortalSignatories
   , saveDocumentForSignatory
   ) where
 
-import Control.Conditional (ifM, unlessM, whenM)
+import Control.Conditional (unlessM, whenM)
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -205,52 +206,29 @@ postDocumentPendingChange olddoc signatoryLink = do
 
   chargeForItemSingle CIClosingSignature $ documentid olddoc
 
-  ifM
-      (allPartiesSignedOrApproved <$> theDocument)
-  {-then-}(do
-            document <- theDocument
-            logInfo "All have signed, document will be closed" $ logObject_ document
-            time <- view #time <$> getMailContext
-            dbUpdate $ CloseDocument (systemActor time)
-            chargeForItemSingle CIClosingDocument $ documentid olddoc
-            when (documentfromshareablelink olddoc)
-              . chargeForItemSingle CIShareableLink
-              $ documentid olddoc
-            mauthor <- getDocAuthor document
-            case mauthor of
-              Nothing     -> return ()
-              Just author -> do
-                logDocEvent "Doc Closed" author [] document
-                -- report
-                now <- currentTime
-                asyncLogEvent SetUserProps
-                              (simplePlanhatAction "Document closed" author now)
-                              EventPlanhat
-                asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
-            dbUpdate
-              .   ScheduleDocumentSealing
-              .   view (#brandedDomain % #id)
-              =<< getMailContext
-            when
-                (  signatorylinkconfirmationdeliverymethod signatoryLink
-                == NoConfirmationDelivery
-                )
-              $ do
-                  sendPartyProcessFinalizedNotification document signatoryLink
+  allSignedOrApproved <- allPartiesSignedOrApproved <$> theDocument
+  if allSignedOrApproved
+    then do
+      commonDocumentClosingActions olddoc
+      document <- theDocument
+      when
+          (  signatorylinkconfirmationdeliverymethod signatoryLink
+          == NoConfirmationDelivery
           )
-  {-else-}$ do
-              document <- theDocument
-              theDocument >>= triggerAPICallbackIfThereIsOne
-              whenM
-                  (   (/=) (documentcurrentsignorder olddoc)
-                  .   documentcurrentsignorder
-                  <$> theDocument
-                  )
-                $ do
-                    theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject_ d
-                    sendInvitationEmails False
-                    sendInbetweenPortalInvitations
-              sendPartyProcessFinalizedNotification document signatoryLink
+        $ sendPartyProcessFinalizedNotification document signatoryLink
+    else do
+      document <- theDocument
+      theDocument >>= triggerAPICallbackIfThereIsOne
+      whenM
+          (   (/=) (documentcurrentsignorder olddoc)
+          .   documentcurrentsignorder
+          <$> theDocument
+          )
+        $ do
+            theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject_ d
+            sendInvitationEmails False
+            sendInbetweenPortalInvitations
+      sendPartyProcessFinalizedNotification document signatoryLink
   where
     allPartiesSignedOrApproved =
       all
@@ -258,6 +236,46 @@ postDocumentPendingChange olddoc signatoryLink = do
           && (isApprover --> isApproverAndHasApproved)
           )
         . documentsignatorylinks
+
+-- | Common document closing actions used in the standard single-document
+--   workflow and the multi-document Flow action consumers
+commonDocumentClosingActions
+  :: ( CryptoRNG m
+     , TemplatesMonad m
+     , MonadFileStorage m
+     , MonadBaseControl IO m
+     , DocumentMonad m
+     , MonadMask m
+     , MonadLog m
+     , MonadIO m
+     , MailContextMonad m
+     , GuardTimeConfMonad m
+     , MonadEventStream m
+     )
+  => Document
+  -> m ()
+commonDocumentClosingActions olddoc = do
+  document <- theDocument
+  logInfo "All have signed, document will be closed" $ logObject_ document
+  time <- view #time <$> getMailContext
+  dbUpdate $ CloseDocument (systemActor time)
+  chargeForItemSingle CIClosingDocument $ documentid olddoc
+  when (documentfromshareablelink olddoc)
+    . chargeForItemSingle CIShareableLink
+    $ documentid olddoc
+  mauthor <- getDocAuthor document
+  case mauthor of
+    Nothing     -> return ()
+    Just author -> do
+      logDocEvent "Doc Closed" author [] document
+      -- report
+      now <- currentTime
+      asyncLogEvent SetUserProps
+                    (simplePlanhatAction "Document closed" author now)
+                    EventPlanhat
+      asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
+  dbUpdate . ScheduleDocumentSealing . view (#brandedDomain % #id) =<< getMailContext
+  where
     userMixpanelData author time =
       [UserIDProp (author ^. #id), someProp "Last Doc Closed" time]
 
