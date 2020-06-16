@@ -24,6 +24,7 @@ module Cron.Migrations (
   , addUserGroupGarbageCollectionJob
   , addFreeUserFeatureFlagsJob
   , removeFreeUserFeatureFlagsJob
+  , addUserGroupDeletionRequestEvaluationJob
   ) where
 
 import Cron.Tables
@@ -264,4 +265,14 @@ removeFreeUserFeatureFlagsJob = Migration
   , mgrFrom      = 28
   , mgrAction    = StandardMigration
                      $ runSQL_ "DELETE FROM cron_jobs WHERE id='set_free_user_feature_flags'"
+  }
+
+addUserGroupDeletionRequestEvaluationJob :: MonadDB m => Migration m
+addUserGroupDeletionRequestEvaluationJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom      = 29
+  , mgrAction    =
+    StandardMigration
+      $ runSQL_
+          "INSERT INTO cron_jobs (id, run_at) VALUES ('user_group_deletion_requests_evaluation', to_timestamp(0))"
   }

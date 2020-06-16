@@ -18,6 +18,9 @@ module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     , setInternalTag
     , setStringField
     , smsProviderDecoder
+    , DeletionStatus
+    , DeletionRequest
+    , deletionRequestDecoder
     )
 
 import Dict as D
@@ -27,13 +30,15 @@ import Json.Decode.Pipeline as DP
 import Json.Encode as JE
 import List as L
 import Maybe as M
-import Utils exposing (boolToJson, ite, stringNonEmpty)
+import Utils exposing (boolToJson, ite, stringNonEmpty, flip)
 
 
 
 -- USER GROUP
 
-
+-- Note that `UserGroup` is a misnomer: this type represents a user group _along
+-- with_ ad-hoc facts about the user group. We should split this type into its
+-- conceptual components.
 type alias UserGroup =
     { id : String
     , name : String
@@ -49,6 +54,7 @@ type alias UserGroup =
     , internalTags : D.Dict String String
     , initialInternalTags : D.Dict String String
     , homeFolderID : Maybe String
+    , deletionStatus : DeletionStatus
     }
 
 
@@ -70,7 +76,23 @@ decoder =
         -- initialInternalTags are exactly the same as internalTags
         |> DP.optional "companyinternaltags" (JD.list tagDecoder |> JD.map D.fromList) D.empty
         |> DP.required "companyhomefolderid" (JD.nullable JD.string)
+        |> DP.optional "deletionrequest" (JD.nullable deletionRequestDecoder) Nothing
 
+deletionRequestDecoder : Decoder DeletionRequest
+deletionRequestDecoder =
+    JD.succeed DeletionRequest
+    |> DP.required "requested_by" JD.string
+    |> DP.required "requested_deletion_date" JD.string
+    |> DP.optional "signed_off_by" (JD.nullable JD.string) Nothing
+
+
+type alias DeletionStatus = Maybe DeletionRequest
+
+type alias DeletionRequest =
+    { requestedBy : String
+    , requestedDeletionDate : String
+    , signedOffBy : Maybe String
+    }
 
 modifySettings : (Settings -> Settings) -> UserGroup -> UserGroup
 modifySettings modify ug =

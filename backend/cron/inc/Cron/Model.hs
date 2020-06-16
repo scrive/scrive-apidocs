@@ -40,8 +40,16 @@ import Session.Model
 import SMS.Events
 import ThirdPartyStats.Core
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
+import User.Model.Query (UserGroupGetUsers(..))
+import User.Model.Update (DeleteUser(..))
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
+import UserGroup.DeletionRequest.Model
+  ( DeleteExpiredUserGroupDeletionRequest(..)
+  , DeleteUserGroupDeletionRequest(..), GetSignedOffAndReadyDeletionRequests(..)
+  , LogUserGroupDeletion(..)
+  )
+import UserGroup.DeletionRequest.Types (UserGroupDeletionRequest(..))
 import UserGroup.Model
 import Utils.List
 import qualified CronEnv
@@ -74,6 +82,7 @@ data JobType
   | TimeoutedEIDTransactionsPurge
   | PopulateDocumentAuthorDeleted
   | UserGroupGarbageCollection
+  | UserGroupDeletionRequestsEvaluation
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, Text)]
@@ -106,6 +115,7 @@ jobTypeMapper = map (identity &&& jobTypeToText) [minBound .. maxBound]
       TimeoutedEIDTransactionsPurge -> "timeouted_eid_transactions_purge"
       PopulateDocumentAuthorDeleted -> "populate_document_author_deleted"
       UserGroupGarbageCollection    -> "user_group_garbage_collection"
+      UserGroupDeletionRequestsEvaluation -> "user_group_deletion_requests_evaluation"
 
 instance PQFormat JobType where
   pqFormat = pqFormat @Text
@@ -364,6 +374,23 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
               if numMatches < batchLimit
                 then RerunAt . nextDayAtHour 5 <$> currentTime
                 else return . RerunAfter $ iminutes 5
+
+          UserGroupDeletionRequestsEvaluation -> do
+            runDB $ do
+              -- remove expired requests (that were not signed off)
+              dbUpdate DeleteExpiredUserGroupDeletionRequest
+              -- collect deletion requests that have been signed off
+              deletionRequests <- dbQuery GetSignedOffAndReadyDeletionRequests
+              -- mark the user groups and their users as deleted
+              forM_ deletionRequests $ \req -> do
+                let ugid = requestedFor req
+                users <- dbQuery $ UserGroupGetUsers ugid
+                forM_ users $ \user -> do
+                  dbUpdate . DeleteUser $ user ^. #id
+                dbUpdate $ UserGroupDelete ugid
+                dbUpdate $ DeleteUserGroupDeletionRequest ugid
+                dbUpdate $ LogUserGroupDeletion req
+            RerunAt . nextDayAtHour 4 <$> currentTime
 
         endTime <- currentTime
         logInfo "Job processed successfully" $ object

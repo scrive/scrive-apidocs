@@ -31,12 +31,14 @@ import Time exposing (Month(..))
 import Url.Parser exposing (map)
 import Utils exposing (..)
 
+import AdminOnly.UserGroupAdmin.DetailsTab.DeletionRequest as DeletionRequest
 
 type alias Model =
     { sUserGroup : Status UserGroup
     , origParentID : Maybe String
     , sNewParentName : Status String
     , mMergeUserGroupModal : Maybe MergeUserGroupModal.Model
+    , mDeletionRequest : Maybe DeletionRequest.State
     }
 
 
@@ -56,6 +58,8 @@ type Msg
       -- MERGE TO DIFFERENT USER GROUP
     | MergeUserGroupModalMsg MergeUserGroupModal.Msg
     | MergeUserGroupClicked
+      -- REQUEST USER GROUP DELETION
+    | DeletionRequestMsg DeletionRequest.Msg
 
 
 type alias Range =
@@ -77,6 +81,7 @@ init embed ugid =
             , origParentID = Nothing
             , sNewParentName = Failure
             , mMergeUserGroupModal = Nothing
+            , mDeletionRequest = Nothing
             }
     in
     ( model, Cmd.map embed <| getUserGroupCmd ugid model )
@@ -117,14 +122,25 @@ update embed globals msg model =
                     let
                         ( mergeModal, mergeModalCmd ) =
                             MergeUserGroupModal.init (embed << MergeUserGroupModalMsg) userGroup
+
+                        deletionRequestParams =
+                            { embed = embed << DeletionRequestMsg
+                            , userGroupId = userGroup.id
+                            , xtoken = globals.xtoken
+                            , updateDeletionStatus = \_ -> globals.gotoUserGroup userGroup.id
+                            , showFlashMessage = globals.flashMessage
+                            }
+
+                        (deletionRequest, deletionRequestCmd) = DeletionRequest.init deletionRequestParams
                     in
                     ( { model
                         | sUserGroup = Success userGroup
                         , origParentID = userGroup.parentID
                         , sNewParentName = Loading
                         , mMergeUserGroupModal = Just mergeModal
+                        , mDeletionRequest = Just deletionRequest
                       }
-                    , mergeModalCmd
+                    , Cmd.batch [mergeModalCmd, deletionRequestCmd]
                     )
 
                 Err _ ->
@@ -248,6 +264,24 @@ update embed globals msg model =
             in
             ( { model | mMergeUserGroupModal = newMergeUserGroupModal }, cmd )
 
+        DeletionRequestMsg deletionRequestMsg ->
+          case (model.sUserGroup, model.mDeletionRequest) of
+            (Success userGroup, Just deletionRequest) ->
+              let
+                  params =
+                    { embed = embed << DeletionRequestMsg
+                    , userGroupId = userGroup.id
+                    , xtoken = globals.xtoken
+                    , updateDeletionStatus = \_ -> globals.gotoUserGroup userGroup.id
+                    , showFlashMessage = globals.flashMessage
+                    }
+
+                  ( newDeletionRequest, cmd ) =
+                      DeletionRequest.update params deletionRequestMsg deletionRequest
+              in
+              ( { model | mDeletionRequest = Just newDeletionRequest }, cmd )
+
+            _ -> (model, Cmd.none)
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
@@ -277,6 +311,7 @@ view embed model =
                         [ M.map
                             (MergeUserGroupModal.view <| embed << MergeUserGroupModalMsg)
                             model.mMergeUserGroupModal
+                        , M.map (Html.map <| embed << DeletionRequestMsg) <| M.andThen DeletionRequest.viewModal model.mDeletionRequest
                         ]
 
 
@@ -613,11 +648,11 @@ viewUserGroup model ug address settings =
                 (SetBoolField "appFrontend")
                 [ readonly ug.settingsIsInherited ]
             ]
-        , Grid.row [ Row.leftSm ]
+        , Grid.row [ Row.leftSm ] <|
             [ Grid.col [ Col.sm12 ]
                 [ Button.button
                     [ Button.primary
-                    , Button.attrs [ class "ml-sm-2", onClick MergeUserGroupClicked ]
+                    , Button.attrs [ onClick MergeUserGroupClicked ]
                     ]
                     [ text "Merge to different company" ]
                 , Button.button
@@ -628,4 +663,9 @@ viewUserGroup model ug address settings =
                     [ text "Save" ]
                 ]
             ]
+            ++ case model.mDeletionRequest of
+                Just deletionRequest ->
+                  [ DeletionRequest.viewButtons DeletionRequestMsg {deletionStatus = ug.deletionStatus} deletionRequest
+                  ]
+                Nothing -> []
         ]

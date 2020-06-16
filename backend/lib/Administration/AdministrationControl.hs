@@ -87,6 +87,8 @@ import User.History.Model
 import User.JSON
 import User.UserControl
 import User.Utils
+import UserGroup.DeletionRequest.Model
+import UserGroup.DeletionRequest.Types
 import UserGroup.FreeDocumentTokens.Model
 import UserGroup.Model
 import UserGroup.Types
@@ -145,6 +147,12 @@ adminonlyRoutes = onlySalesOrAdmin <$> choice
   , (dir "companyadmin" . dir "updatesubscription" . hPost . toK1)
     handleCompanyUpdateSubscription
   , (dir "companyadmin" . dir "getstructure" . hGet . toK1) handleCompanyGetStructure
+  , (dir "companyadmin" . dir "requestdeletion" . hPost . toK1)
+    handleRequestUserGroupDeletion
+  , (dir "companyadmin" . dir "signoffdeletion" . hPost . toK1)
+    handleSignOffUserGroupDeletion
+  , (dir "companyadmin" . dir "canceldeletion" . hPost . toK1)
+    handleCancelUserGroupDeletion
   , (dir "documentslist" . hGet . toK0) jsonDocuments
   , (dir "companies" . hGet . toK0) jsonCompanies
   , (dir "brandeddomainslist" . hGet . toK0) jsonBrandedDomainsList
@@ -207,10 +215,37 @@ handleUserGetProfile uid = onlySalesOrAdmin $ do
   return $ userJSONWithCallBackInfo user ugwp callback
 
 handleCompanyGetProfile :: Kontrakcja m => UserGroupID -> m JSValue
-handleCompanyGetProfile ugid =
-  onlySalesOrAdmin
-    $   companyJSONAdminOnly
-    <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ugid)
+handleCompanyGetProfile ugid = onlySalesOrAdmin $ do
+  ugwp             <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
+  mDeletionRequest <- dbQuery $ GetUserGroupDeletionRequest ugid
+  return $ companyJSONAdminOnly mDeletionRequest ugwp
+
+-- | Full scrive admins (not mere sales admins) can request the deletion of
+-- arbitrary user groups. The request expires after 1 day unless signed off by
+-- another scrive admin.
+handleRequestUserGroupDeletion :: Kontrakcja m => UserGroupID -> m JSValue
+handleRequestUserGroupDeletion requestedFor = onlyAdmin $ do
+  requestedBy           <- guardJustM $ preview (#maybeUser % _Just % #id) <$> getContext
+  requestedDeletionDate <- guardJustM $ readField "deletion_date"
+  expires               <- Just . (1 `daysAfter`) <$> currentTime
+  let signedOffBy = Nothing
+  toJSValue <$> dbUpdate (UserGroupCreateDeletionRequest UserGroupDeletionRequest { .. })
+
+-- | Full scrive admins (not mere sales admins) can remove existing deletion
+-- requests for any user group; they needn't have requested the deletion
+-- themselves in the first place.
+handleCancelUserGroupDeletion :: Kontrakcja m => UserGroupID -> m ()
+handleCancelUserGroupDeletion requestedFor = onlyAdmin $ do
+  dbUpdate $ DeleteUserGroupDeletionRequest requestedFor
+
+-- | A second scrive admin (not mere sales admin) needs to sign off on a
+-- deletion request. A signed off deletion request will cause the user group and
+-- any contained users to be deleted on the requested deletion time, unless the
+-- request is withdrawn ('unrequested') before that time.
+handleSignOffUserGroupDeletion :: Kontrakcja m => UserGroupID -> m JSValue
+handleSignOffUserGroupDeletion requestedFor = onlyAdmin $ do
+  signedOffBy <- guardJustM $ preview (#maybeUser % _Just % #id) <$> getContext
+  toJSValue <$> dbUpdate (UserGroupSignOffDeletion requestedFor signedOffBy)
 
 showAdminCompany :: Kontrakcja m => UserGroupID -> m Text
 showAdminCompany ugid = onlySalesOrAdmin $ do

@@ -393,3 +393,74 @@ tableUserGroupTags = tblTable
   , tblForeignKeys =
     [(fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }]
   }
+
+tableUserGroupDeletionRequests :: Table
+tableUserGroupDeletionRequests = tblTable
+  { tblName        = "user_group_deletion_requests"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName = "for_user_group_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName     = "requested_by_user_id"
+                , colType     = BigIntT
+                , colNullable = False
+                }
+    , tblColumn { colName     = "signed_off_by_user_id"
+                , colType     = BigIntT
+                , colNullable = True
+                }
+    , tblColumn { colName     = "requested_deletion_date"
+                , colType     = DateT
+                , colNullable = False
+                }
+    , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = True }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["for_user_group_id"]
+  , tblIndexes     =
+    [ indexOnColumns
+        ["for_user_group_id", "requested_by_user_id", "signed_off_by_user_id"]
+    ]
+  , tblForeignKeys =
+    [ (fkOnColumn "for_user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade
+                                                          }
+    , (fkOnColumn "requested_by_user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "signed_off_by_user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
+  }
+
+tableUserGroupDeletionLog :: Table
+tableUserGroupDeletionLog = tblTable
+  { tblName        = "user_group_deletion_log"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName     = "deleted_user_group_id"
+                , colType     = BigIntT
+                , colNullable = False
+                }
+    , tblColumn { colName     = "requested_by_user_id"
+                , colType     = BigIntT
+                , colNullable = False
+                }
+    , tblColumn { colName     = "signed_off_by_user_id"
+                , colType     = BigIntT
+                , colNullable = False
+                }
+    , tblColumn { colName     = "requested_deletion_date"
+                , colType     = DateT
+                , colNullable = False
+                }
+    , tblColumn { colName     = "deletion_time"
+                , colType     = TimestampWithZoneT
+                , colNullable = False
+                }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["deleted_user_group_id"]
+  , tblIndexes     =
+    [ indexOnColumns
+        ["deleted_user_group_id", "requested_by_user_id", "signed_off_by_user_id"]
+    ]
+  , tblForeignKeys =
+    [ (fkOnColumn "requested_by_user_id" "users" "id") { fkOnDelete = ForeignKeyRestrict }
+    , (fkOnColumn "signed_off_by_user_id" "users" "id") { fkOnDelete = ForeignKeyRestrict
+                                                        }
+    ]
+  }

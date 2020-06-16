@@ -544,6 +544,8 @@ Library
                  , UserGroup.Internal
                  , UserGroup.Model
                  , UserGroup.Tables
+                 , UserGroup.DeletionRequest.Model
+                 , UserGroup.DeletionRequest.Types
                  , UserGroup.FreeDocumentTokens.Model
                  , UserGroup.FreeDocumentTokens.Types
                  , UserGroupAccounts.Migrations

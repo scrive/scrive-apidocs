@@ -263,4 +263,7 @@ kontraMigrations =
   , addEidJson
   , userGroupSettingsAddEidUseForSEViewFlag
   , userGroupSettingsAddAppFrontendFlag
+  , createTableUserGroupDeletionRequests
+  , createTableUserGroupDeletionLog
+  , addUserGroupDeletionRequestEvaluationJob
   ]

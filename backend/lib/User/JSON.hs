@@ -29,6 +29,7 @@ import PadApplication.Types
 import SealingMethod
 import User.CallbackScheme.Model (UserCallbackScheme(..))
 import User.Model
+import UserGroup.DeletionRequest.Types (UserGroupDeletionRequest)
 import UserGroup.Types
 import Util.HasSomeUserInfo
 
@@ -143,8 +144,8 @@ companyJSON ugwp = do
     companySettingsJson $ ugwpSettings ugwp
     objects "companyexternaltags" . tagsJsons $ ug ^. #externalTags
 
-companyJSONAdminOnly :: UserGroupWithParents -> JSValue
-companyJSONAdminOnly ugwp = do
+companyJSONAdminOnly :: Maybe UserGroupDeletionRequest -> UserGroupWithParents -> JSValue
+companyJSONAdminOnly mDeletionRequest ugwp = do
   let ug                    = ugwpUG ugwp
       activeAddress         = ugwpAddress ugwp
       activeSettings        = ugwpSettings ugwp
@@ -173,6 +174,8 @@ companyJSONAdminOnly ugwp = do
       value "group_name" $ parent ^. #name
 
     value "companyhomefolderid" $ ug ^. #homeFolderID
+
+    whenJust mDeletionRequest $ value "deletionrequest"
 
 tagsJsons :: S.Set Tag -> [JSONGenT Identity ()]
 tagsJsons = map tagJson . S.toList

@@ -80,7 +80,7 @@ perform =
     Task.perform identity << Task.succeed
 
 
-formBody : Globals msg -> List ( String, String ) -> Http.Body
+formBody : { a | xtoken : String } -> List ( String, String ) -> Http.Body
 formBody globals object =
     (object ++ [ ( "xtoken", globals.xtoken ) ])
         |> L.map

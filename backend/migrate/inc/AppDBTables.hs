@@ -175,4 +175,6 @@ kontraTables =
        , tableTemporaryLoginTokens
        , tableApiCallbackResult
        , tableSignatoryAccessTokens
+       , tableUserGroupDeletionRequests
+       , tableUserGroupDeletionLog
        ]
