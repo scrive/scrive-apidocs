@@ -744,6 +744,10 @@ This is the only officially supported encoding for our API.
 </tr>
 </thead><tbody>
 <tr>
+<td>2020-06-15</td>
+<td>View Folder endpoint: added <code>recursive</code> parameter and fields: <code>home_for_user</code>, <code>home_for_user_group</code>.</td>
+</tr>
+<tr>
 <td>2020-06-02</td>
 <td>Add Onfido authentication to sign methods, also add missing <code>fi_tupas</code> for setauthenticationtosign`.</td>
 </tr>
@@ -5254,12 +5258,16 @@ the role). Either that, or no Access Role exists with this <code>id</code>.</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
   </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Root folder"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"home_for_user"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"home_for_user_group"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Subfolder of 1"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Subfolder of 1"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"home_for_user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"33"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"home_for_user_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -5268,13 +5276,18 @@ the role). Either that, or no Access Role exists with this <code>id</code>.</p>
 contents of the folder are not displayed, just the metadata about the
 folder.</p>
 
-<p>This metadata currently consists of the folder&#39;s ID, it&#39;s parent ID (if any)
-and the name/id of its immediate children (if any).</p>
+<p>This metadata currently consists of the folder&#39;s ID, name, its parent ID (if any),
+IDs of the user and the user group for whom the folder is a home folder
+and information about its children. Only the immediate children are
+included by default (see the <code>recursive</code> parameter).</p>
 <h3 id='parameters-60'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to view</p>
 </td><td><p>string</p></td><td>url</td></tr>
+<tr><td><p><code>recursive</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><p>Set ?recursive=true to include all descendant folders in the metadata
+instead of just the immediate children.</p>
+</td><td><p>boolean</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-66'>Responses</h3>
 <table>
@@ -20220,12 +20233,24 @@ Other value types lead to 400 Bad Request response.</p>
 <h3 id='example-json-for-quot-folder-quot'>Example JSON: for &quot;Folder&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
   </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Root folder"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"home_for_user"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"home_for_user_group"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Subfolder of 1"</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Subfolder of 1"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"home_for_user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"33"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"home_for_user_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Subfolder of 2"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"home_for_user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"home_for_user_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -20237,10 +20262,34 @@ Other value types lead to 400 Bad Request response.</p>
 
 <p>This object has the following properties:</p>
 
-<h3><code>id</code> (string)</h3>
+<h3><code>id</code> (string, required)</h3>
 
 
 <div class="json-schema">
+
+</div>
+
+<h3><code>name</code> (string, required)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>home_for_user</code> (string)</h3>
+
+<div class="json-schema">
+
+<p>If the folder is a home folder for a user this field contains the ID of that user. Otherwise it's null.</p>
+
+
+</div>
+
+<h3><code>home_for_user_group</code> (string)</h3>
+
+<div class="json-schema">
+
+<p>If the folder is a home folder for a user group this field contains the ID of that group. Otherwise it's null.</p>
+
 
 </div>
 
@@ -20248,11 +20297,9 @@ Other value types lead to 400 Bad Request response.</p>
 
 <div class="json-schema">
 
-</div>
+<p>Optional property. If present contains either the ID of the parent folder
+or null if the requested folder is root.</p>
 
-<h3><code>name</code> (string)</h3>
-
-<div class="json-schema">
 
 </div>
 
@@ -20260,29 +20307,17 @@ Other value types lead to 400 Bad Request response.</p>
 
 <div class="json-schema">
 
+<p>Optional property. If present contains either the immediate children or all descendant folders.</p>
+
+
 <p>All array elements must be of type:</p>
 
-<h4>(object)</h4>
-
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h5><code>id</code> (string)</h5>
+<h4>(Folder)</h4>
 
 
 <div class="json-schema">
 
 </div>
-
-<h5><code>name</code> (string)</h5>
-
-<div class="json-schema">
-
-</div>
-
-<p></div></p>
 
 <p></div></p>
 
