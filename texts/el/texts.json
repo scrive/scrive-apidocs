@@ -867,6 +867,7 @@
 "_more":"Εξαγωγή",
 "_name":"Όνομα",
 "_nameFromDKNemIDText":"Το όνομα που προέκυψε από την εφαρμογή Danish NemID ήταν \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Το όνομα που προέκυψε από την εφαρμογή Norwegian BankID ήταν \"$name$\"",
 "_nameFromSwedishBankIDText":"Το όνομα που προέκυψε από την εφαρμογή Swedish BankID ήταν \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> περιέχει μη έγκυρους χαρακτήρες.",

@@ -867,6 +867,7 @@
 "_more":"Exportovat",
 "_name":"Jméno",
 "_nameFromDKNemIDText":"Název vyhledaný dánskou službou NemID byl \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Název vyhledaný norskou službou BankID byl \"$name$\"",
 "_nameFromSwedishBankIDText":"Název vyhledaný švédskou službou BankID byl \"$name$\"",
 "_nameInvalidChars":"Pole <span class='put-field-name'></span> obsahuje nepovolené znaky.",

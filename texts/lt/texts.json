@@ -867,6 +867,7 @@
 "_more":"Perkelti",
 "_name":"Vardas",
 "_nameFromDKNemIDText":"Danijos „NemID“ aptiktas vardas „$name$“ ",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Norvegijos „BankID“ aptiktas vardas „$name$“ ",
 "_nameFromSwedishBankIDText":"Švedijos „BankID“ aptiktas vardas „$name$“ ",
 "_nameInvalidChars":"<span class='put-field-name'></span> yra neleistinų ženklų.",

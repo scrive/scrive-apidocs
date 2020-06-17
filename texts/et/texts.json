@@ -867,6 +867,7 @@
 "_more":"Ekspordi",
 "_name":"Nimi",
 "_nameFromDKNemIDText":"Taani NemID kasutajaks on \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Norra BankID kasutajaks on \"$name$\"",
 "_nameFromSwedishBankIDText":"Rootsi BankID kasutajaks on \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> sisaldab valesid sümboleid.",

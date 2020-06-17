@@ -867,6 +867,7 @@
 "_more":"Exporteren",
 "_name":"Naam",
 "_nameFromDKNemIDText":"De naam die door Danish NemID werd teruggestuurd is \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"De naam die door Norwegian BankID werd teruggestuurd is \"$name$\"",
 "_nameFromSwedishBankIDText":"De naam die door Swedish BankID werd teruggestuurd is \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> bevat ongeldige tekens",

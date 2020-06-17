@@ -867,6 +867,7 @@
 "_more":"Eksportēt",
 "_name":"Nosaukums",
 "_nameFromDKNemIDText":"Dānijas NemID identificēja ar nosaukumu: \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Norvēģijas BankID identificēja ar nosaukumu: \"$name$\"",
 "_nameFromSwedishBankIDText":"Zviedrijas BankID identificēja ar nosaukumu: \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> ievadītas neatbilstošas zīmes.",

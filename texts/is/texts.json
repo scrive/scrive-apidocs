@@ -867,6 +867,7 @@
 "_more":"Flytja út",
 "_name":"Nafn",
 "_nameFromDKNemIDText":"Uppgefið nafn úr dönsku NemID var \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Uppgefið nafn úr norsku BankID var \"$name$\"",
 "_nameFromSwedishBankIDText":"Uppgefið nafn úr sænsku BankID var \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> inniheldur ógilda stafi.",

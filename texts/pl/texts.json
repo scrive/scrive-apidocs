@@ -867,6 +867,7 @@
 "_more":"Eksportuj",
 "_name":"Imię i nazwisko",
 "_nameFromDKNemIDText":"Duński identyfikator NemID zidentyfikował imię i nazwisko jako \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Norweski BankID zidentyfikował imię i nazwisko jako \"$name$\"",
 "_nameFromSwedishBankIDText":"Szwedzki BankID zidentyfikował imię i nazwisko jako \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> zawiera niedozwolone znaki.",

@@ -867,6 +867,7 @@
 "_more":"Vie",
 "_name":"Nimi",
 "_nameFromDKNemIDText":"Tanskalaisen NemID:n palauttama nimi oli \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Norjalaisen BankID:n palauttama nimi oli \"$name$\"",
 "_nameFromSwedishBankIDText":"Ruotsalaisen BankID:n palauttama nimi oli \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> sisältää virheellisiä merkkejä.",

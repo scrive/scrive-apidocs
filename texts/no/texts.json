@@ -867,6 +867,7 @@
 "_more":"Eksporter",
 "_name":"Navn",
 "_nameFromDKNemIDText":"Navnet dansk NemID oppga var \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Navnet norsk BankID oppga var \"$name$\"",
 "_nameFromSwedishBankIDText":"Navnet svensk BankID oppga var \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> inneholder ugyldige tegn.",

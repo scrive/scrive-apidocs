@@ -867,6 +867,7 @@
 "_more":"Exportera",
 "_name":"Namn",
 "_nameFromDKNemIDText":"Namnet som returnerades från danskt NemID var \"$name$\"",
+"_nameFromFiTupasIDText":"",
 "_nameFromNOBankIDText":"Namnet som returnerades från norskt BankID var \"$name$\"",
 "_nameFromSwedishBankIDText":"Namnet som returnerades från svenskt BankID var \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> innehåller ogiltiga tecken.",
