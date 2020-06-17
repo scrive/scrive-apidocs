@@ -817,7 +817,6 @@ distributionRules newBuild opt = do
                , "urls.txt"
                , "urls_list.txt"
                , "build-scripts/deployDevNginxRules.sh"
-               , "build-scripts/deployFeaturesTestbedNginxRules.sh"
                , "certs"
                , "reporting"
                ]
