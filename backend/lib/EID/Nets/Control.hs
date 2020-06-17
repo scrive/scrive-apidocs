@@ -304,7 +304,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
                                                              Nothing
           =<< signatoryActor ctx sl
 
-      chargeForItemSingle CIFITupasAuthentication $ documentid doc
+      chargeForItemSingle CIFITupasAuthenticationFinished $ documentid doc
       return Success
 
 ------------------------------------------
@@ -404,15 +404,14 @@ handleSignRequest did slid = do
                               xpGetSigningProcessesResponse
                               (show did)
     dbUpdate $ MergeNetsSignOrder nso
+
+
+    case auth_to_sign of
+      NOBankIDAuthenticationToSign -> chargeForItemSingle CINOBankIDSignatureStarted did
+      DKNemIDAuthenticationToSign -> chargeForItemSingle CIDKNemIDSignatureStarted did
+      _ -> return ()
+
     let nets_sign_url = gsprsSignURL getSignProcRs <> encodeNetsUrlParams sign_url_params
-    logInfo_ "Nets signing started - debug message 1 (CORE-1534)"
-    logInfo "Nets signing started - debug message 2 (CORE-1534)" $ object
-      ["nets_sign_url" .= nets_sign_url, logPair_ insOrdRs, logPair_ getSignProcRs]
-    logInfo "Nets signing started - debug message 3 (CORE-1534)" $ object
-      [ "nets_sign_url" .= nets_sign_url
-      , "nets_provider" .= showt provider
-      , "nets_eid_method" .= showt eidmethod
-      ]
     logInfo "Nets signing started" $ object
       [ "nets_sign_url" .= nets_sign_url
       , logPair_ insOrdRs
@@ -420,7 +419,6 @@ handleSignRequest did slid = do
       , "nets_provider" .= showt provider
       , "nets_eid_method" .= showt eidmethod
       ]
-    logInfo_ "Nets signing started - debug message 4 (CORE-1534)"
 
     return $ object ["nets_sign_url" .= nets_sign_url]
   where
@@ -524,7 +522,7 @@ checkNetsSignStatus nets_conf did slid = do
                           , netsnoSignedText    = nsoTextToBeSigned nso
                           , netsnoB64SDO        = gsdorsB64SDOBytes getSdoRs
                           }
-                      chargeForItemSingle CINOBankIDSignature $ documentid doc
+                      chargeForItemSingle CINOBankIDSignatureFinished $ documentid doc
                       return NetsSignStatusSuccess
                     NetsSignDK -> do
                       getSignerSSNAndIPAddress (gsdorsB64SDOBytes getSdoRs)
@@ -548,7 +546,8 @@ checkNetsSignStatus nets_conf did slid = do
                                   , netsdkSignatorySSN  = fromMaybe "" m_signer_ssn
                                   , netsdkSignatoryIP   = fromMaybe "" m_ipaddress
                                   }
-                              chargeForItemSingle CIDKNemIDSignature $ documentid doc
+                              chargeForItemSingle CIDKNemIDSignatureFinished
+                                $ documentid doc
                               return NetsSignStatusSuccess
 
   where

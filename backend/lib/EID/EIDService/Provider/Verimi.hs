@@ -69,6 +69,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
         }
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- svestAuthURL <$> startTransactionWithEIDService conf provider tid
+  chargeForItemSingle CIVerimiAuthenticationStarted $ documentid doc
   return (tid, turl, EIDServiceTransactionStatusStarted)
 
 data VerimiEIDServiceCompletionData = VerimiEIDServiceCompletionData
@@ -126,7 +127,7 @@ finaliseTransaction doc sl estDB trans = case validateCompletionData sl trans of
     mergeEIDServiceTransactionWithStatus status
     updateDBTransactionWithCompletionData doc sl cd
     updateEvidenceLog doc sl cd
-    chargeForItemSingle CIVerimiAuthentication $ documentid doc
+    chargeForItemSingle CIVerimiAuthenticationFinished $ documentid doc
     return status
   where
     mergeEIDServiceTransactionWithStatus newstatus =

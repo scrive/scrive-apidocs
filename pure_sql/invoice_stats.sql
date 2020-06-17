@@ -293,6 +293,7 @@ STRICT IMMUTABLE;
 -- here in the 'head' of the function, meaning any 'AS' naming of columns are
 -- ignored upon returning the table. We still keep them to be able to line up
 -- the columns in a human-friendly manner.
+
 CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
     RETURNS TABLE
       (
@@ -317,19 +318,32 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "Sigs closed" BIGINT,
         "SMSes sent" BIGINT,
         "SMSes sent (physical)" BIGINT,
-        "Swedish BankID signatures" BIGINT,
-        "Swedish BankID authorization" BIGINT,
-        "Norwegian BankID signatures" BIGINT,
-        "Norwegian BankID authorization" BIGINT,
-        "Danish NemID signatures" BIGINT,
-        "Danish NemID authorization" BIGINT,
-        "Finnish TUPAS authorization" BIGINT,
-        "Finnish FTN signatures" BIGINT,
-        "Verimi authentications" BIGINT,
-        "iDIN authentications" BIGINT,
-        "iDIN signatures" BIGINT,
-        "Onfido (document check only) signatures" BIGINT,
-        "Onfido (document check + facial comparison) signatures" BIGINT,
+        "Swedish BankID signatures (started)" BIGINT,
+        "Swedish BankID signatures (finished)" BIGINT,
+        "Swedish BankID authorization (started)" BIGINT,
+        "Swedish BankID authorization (finished)" BIGINT,
+        "Norwegian BankID signatures (started)" BIGINT,
+        "Norwegian BankID signatures (finished)" BIGINT,
+        "Norwegian BankID authorization (started)" BIGINT,
+        "Norwegian BankID authorization (finished)" BIGINT,
+        "Danish NemID signatures (started)" BIGINT,
+        "Danish NemID signatures (finished)" BIGINT,
+        "Danish NemID authorization (started)" BIGINT,
+        "Danish NemID authorization (finished)" BIGINT,
+        "Finnish TUPAS authorization (started)" BIGINT,
+        "Finnish TUPAS authorization (finished)" BIGINT,
+        "Finnish FTN signatures (started)" BIGINT,
+        "Finnish FTN signatures (finished)" BIGINT,
+        "Verimi authentications (started)" BIGINT,
+        "Verimi authentications (finished)" BIGINT,
+        "iDIN authentications (started)" BIGINT,
+        "iDIN authentications (finished)" BIGINT,
+        "iDIN signatures (started)" BIGINT,
+        "iDIN signatures (finished)" BIGINT,
+        "Onfido (document check only) signatures (started)" BIGINT,
+        "Onfido (document check only) signatures (finished)" BIGINT,
+        "Onfido (doc check + facial comparison) signatures (started)" BIGINT,
+        "Onfido (doc check + facial comparison) signatures (finished)" BIGINT,
         "Shareable links used" BIGINT,
         "Telia SMSes sent (physical)" BIGINT,
         "Users at start of period" BIGINT,
@@ -424,81 +438,159 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 20 -- eleg signatures
+                 AND chi.time >= period.from
+                 AND chi.time < period.to)  as "Swedish BankID signatures (started)"
+           ,(SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 2 -- eleg signatures
                  AND chi.time >= period.from
-                 AND chi.time < period.to)  as "Swedish BankID signatures"
+                 AND chi.time < period.to)  as "Swedish BankID signatures (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 21 -- eleg authentication
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Swedish BankID authorization (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 3 -- eleg authentication
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Swedish BankID authorization"
+                 AND chi.time <= period.to) AS "Swedish BankID authorization (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 22
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Norwegian BankID signatures (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 10
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Norwegian BankID signatures"
+                 AND chi.time <= period.to) AS "Norwegian BankID signatures (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 24
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Norwegian BankID authorization (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 4
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Norwegian BankID authorization"
+                 AND chi.time <= period.to) AS "Norwegian BankID authorization (finished)"
            , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 25
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Danish NemID signatures (started)"
+           ,  (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 11
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Danish NemID signatures"
+                 AND chi.time <= period.to) AS "Danish NemID signatures (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 23
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Danish NemID authorization (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 7
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Danish NemID authorization"
+                 AND chi.time <= period.to) AS "Danish NemID authorization (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 26
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Finnish TUPAS authorization (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 12
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Finnish TUPAS authorization"
+                 AND chi.time <= period.to) AS "Finnish TUPAS authorization (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 27
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Finnish FTN signatures (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 17
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Finnish FTN signatures"
+                 AND chi.time <= period.to) AS "Finnish FTN signatures (finished)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
-                 AND chi.type = 14 -- CIVerimiAuthentication
+                 AND chi.type = 28 -- CIVerimiAuthenticationStarted
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Verimi authentications"
+                 AND chi.time <= period.to) AS "Verimi authentications (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
-                 AND chi.type = 15 -- CIIDINAuthentication
+                 AND chi.type = 14 -- CIVerimiAuthenticationFinished
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "iDIN authentications"
+                 AND chi.time <= period.to) AS "Verimi authentications (finished)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
-                 AND chi.type = 16 -- CIIDINSignature
+                 AND chi.type = 29 -- CIIDINAuthenticationStarted
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "iDIN signatures"
+                 AND chi.time <= period.to) AS "iDIN authentications (started)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 15 -- CIIDINAuthenticationFinished
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "iDIN authentications (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 30 -- CIIDINSignatureStarted
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "iDIN signatures (started)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 16 -- CIIDINSignatureFinished
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "iDIN signatures (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 31
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Onfido (document check only) signatures (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 18
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Onfido (document check only) signatures"
+                 AND chi.time <= period.to) AS "Onfido (document check only) signatures (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 32
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Onfido (doc check + facial comparison) signatures (started)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 19
                  AND chi.time >= period.from
-                 AND chi.time <= period.to) AS "Onfido (document check + facial comparison) signatures"
+                 AND chi.time <= period.to) AS "Onfido (doc check + facial comparison) signatures (finished)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
@@ -551,19 +643,32 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
           WHERE report."Sigs closed" > 0
              OR report."Docs closed" > 0
              OR report."SMSes sent" > 0
-             OR report."Swedish BankID signatures" > 0
-             OR report."Swedish BankID authorization" > 0
-             OR report."Norwegian BankID signatures" > 0
-             OR report."Norwegian BankID authorization" > 0
-             OR report."Danish NemID signatures" > 0
-             OR report."Danish NemID authorization" > 0
-             OR report."Finnish TUPAS authorization" > 0
-             OR report."Finnish FTN signatures" > 0
-             OR report."Verimi authentications" > 0
-             OR report."iDIN authentications" > 0
-             OR report."iDIN signatures" > 0
-             OR report."Onfido (document check only) signatures" > 0
-             or report."Onfido (document check + facial comparison) signatures" > 0
+             OR report."Swedish BankID signatures (started)" > 0
+             OR report."Swedish BankID signatures (finished)" > 0
+             OR report."Swedish BankID authorization (started)" > 0
+             OR report."Swedish BankID authorization (finished)" > 0
+             OR report."Norwegian BankID signatures (started)" > 0
+             OR report."Norwegian BankID signatures (finished)" > 0
+             OR report."Norwegian BankID authorization (started)" > 0
+             OR report."Norwegian BankID authorization (finished)" > 0
+             OR report."Danish NemID signatures (started)" > 0
+             OR report."Danish NemID signatures (finished)" > 0
+             OR report."Danish NemID authorization (started)" > 0
+             OR report."Danish NemID authorization (finished)" > 0
+             OR report."Finnish TUPAS authorization (started)" > 0
+             OR report."Finnish TUPAS authorization (finished)" > 0
+             OR report."Finnish FTN signatures (started)" > 0
+             OR report."Finnish FTN signatures (finished)" > 0
+             OR report."Verimi authentications (started)" > 0
+             OR report."Verimi authentications (finished)" > 0
+             OR report."iDIN authentications (started)" > 0
+             OR report."iDIN authentications (finished)" > 0
+             OR report."iDIN signatures (started)" > 0
+             OR report."iDIN signatures (finished)" > 0
+             OR report."Onfido (document check only) signatures (started)" > 0
+             OR report."Onfido (document check only) signatures (finished)" > 0
+             or report."Onfido (doc check + facial comparison) signatures (started)" > 0
+             or report."Onfido (doc check + facial comparison) signatures (finished)" > 0
              OR report."Shareable links used" > 0
              OR report."Users at start of period" > 0
              OR report."Users at end of period" > 0
@@ -602,19 +707,32 @@ CREATE TEMPORARY TABLE report_master AS
   "Sigs closed",
   "SMSes sent",
   "SMSes sent (physical)",
-  "Swedish BankID signatures",
-  "Swedish BankID authorization",
-  "Norwegian BankID signatures",
-  "Norwegian BankID authorization",
-  "Danish NemID signatures",
-  "Danish NemID authorization",
-  "Finnish TUPAS authorization",
-  "Finnish FTN signatures",
-  "Verimi authentications",
-  "iDIN authentications",
-  "iDIN signatures",
-  "Onfido (document check only) signatures",
-  "Onfido (document check + facial comparison) signatures",
+  "Swedish BankID signatures (started)",
+  "Swedish BankID signatures (finished)",
+  "Swedish BankID authorization (started)",
+  "Swedish BankID authorization (finished)",
+  "Norwegian BankID signatures (started)",
+  "Norwegian BankID signatures (finished)",
+  "Norwegian BankID authorization (started)",
+  "Norwegian BankID authorization (finished)",
+  "Danish NemID signatures (started)",
+  "Danish NemID signatures (finished)",
+  "Danish NemID authorization (started)",
+  "Danish NemID authorization (finished)",
+  "Finnish TUPAS authorization (started)",
+  "Finnish TUPAS authorization (finished)",
+  "Finnish FTN signatures (started)",
+  "Finnish FTN signatures (finished)",
+  "Verimi authentications (started)",
+  "Verimi authentications (finished)",
+  "iDIN authentications (started)",
+  "iDIN authentications (finished)",
+  "iDIN signatures (started)",
+  "iDIN signatures (finished)",
+  "Onfido (document check only) signatures (started)",
+  "Onfido (document check only) signatures (finished)",
+  "Onfido (doc check + facial comparison) signatures (started)",
+  "Onfido (doc check + facial comparison) signatures (finished)",
   "Shareable links used",
   "Telia SMSes sent (physical)",
   "Users at start of period",
@@ -658,16 +776,26 @@ CREATE TEMPORARY TABLE report_aggregated AS
         sum("Sigs closed") AS "Sigs closed",
         sum("SMSes sent") AS "SMSes sent",
         sum("SMSes sent (physical)") AS "SMSes sent (physical)",
-        sum("Swedish BankID signatures") AS "Swedish BankID signatures",
-        sum("Swedish BankID authorization") AS "Swedish BankID authorization",
-        sum("Norwegian BankID signatures") AS "Norwegian BankID signatures",
-        sum("Norwegian BankID authorization") AS "Norwegian BankID authorization",
-        sum("Danish NemID signatures") AS "Danish NemID signatures",
-        sum("Danish NemID authorization") AS "Danish NemID authorization",
-        sum("Finnish TUPAS authorization") AS "Finnish TUPAS authorization",
-        sum("Verimi authentications") AS "Verimi authentications",
-        sum("iDIN authentications") AS "iDIN authentications",
-        sum("iDIN signatures") AS "iDIN signatures",
+        sum("Swedish BankID signatures (started)") AS "Swedish BankID signatures (started)",
+        sum("Swedish BankID signatures (finished)") AS "Swedish BankID signatures (finished)",
+        sum("Swedish BankID authorization (started)") AS "Swedish BankID authorization (started)",
+        sum("Swedish BankID authorization (finished)") AS "Swedish BankID authorization (finished)",
+        sum("Norwegian BankID signatures (started)") AS "Norwegian BankID signatures (started)",
+        sum("Norwegian BankID signatures (finished)") AS "Norwegian BankID signatures (finished)",
+        sum("Norwegian BankID authorization (started)") AS "Norwegian BankID authorization (started)",
+        sum("Norwegian BankID authorization (finished)") AS "Norwegian BankID authorization (finished)",
+        sum("Danish NemID signatures (started)") AS "Danish NemID signatures (started)",
+        sum("Danish NemID signatures (finished)") AS "Danish NemID signatures (finished)",
+        sum("Danish NemID authorization (started)") AS "Danish NemID authorization (started)",
+        sum("Danish NemID authorization (finished)") AS "Danish NemID authorization (finished)",
+        sum("Finnish TUPAS authorization (started)") AS "Finnish TUPAS authorization (started)",
+        sum("Finnish TUPAS authorization (finished)") AS "Finnish TUPAS authorization (finished)",
+        sum("Verimi authentications (started)") AS "Verimi authentications (started)",
+        sum("Verimi authentications (finished)") AS "Verimi authentications (finished)",
+        sum("iDIN authentications (started)") AS "iDIN authentications (started)",
+        sum("iDIN authentications (finished)") AS "iDIN authentications (finished)",
+        sum("iDIN signatures (started)") AS "iDIN signatures (started)",
+        sum("iDIN signatures (finished)") AS "iDIN signatures (finished)",
         sum("Shareable links used") AS "Shareable links used",
         sum("Telia SMSes sent (physical)") AS "Telia SMSes sent (physical)",
         sum("Users at start of period") AS "Users at start of period",

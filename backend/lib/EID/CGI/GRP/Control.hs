@@ -118,12 +118,13 @@ handleAuthRequest did slid = do
                                                                 arsTransactionID
                                                                 arsOrderRef
                                                                 (sesID sess)
+      chargeForItemSpecificUserGroup CISEBankIDAuthenticationStarted did ugidforeid 1
       return
         $ unjsonToJSON unjsonDef (arsAutoStartToken, sessionCookieInfoFromSession sess)
 ----------------------------------------
 
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
-handleSignRequest _did slid = do
+handleSignRequest did slid = do
   ctx                    <- getContext
   cgiGrpConfig@CgiGrpConfig {..} <- getCgiGrpConfig
   (doc     , _         ) <- getDocumentAndSignatoryForEIDSign slid
@@ -174,6 +175,7 @@ handleSignRequest _did slid = do
                                                                 srsTransactionID
                                                                 srsOrderRef
                                                                 (sesID sess)
+      chargeForItemSpecificUserGroup CISEBankIDSignatureStarted did ugidforeid 1
       return
         $ unjsonToJSON unjsonDef (srsAutoStartToken, sessionCookieInfoFromSession sess)
 
@@ -279,7 +281,7 @@ checkCGISignStatus cgiGrpConfig@CgiGrpConfig {..} did slid = do
                                                           "Validation.ocsp.response"
                                                           crsAttributes
                               }
-                          chargeForItemSpecificUserGroup CISEBankIDSignature
+                          chargeForItemSpecificUserGroup CISEBankIDSignatureFinished
                                                          did
                                                          ugidforeid
                                                          1
@@ -380,7 +382,10 @@ checkCGIAuthStatus did slid = do
                             (Just sl)
                             Nothing
                       =<< signatoryActor ctx sl
-                  chargeForItemSpecificUserGroup CISEBankIDAuthentication did ugidforeid 1
+                  chargeForItemSpecificUserGroup CISEBankIDAuthenticationFinished
+                                                 did
+                                                 ugidforeid
+                                                 1
                   return $ Right Complete
                 CgiGrpSignTransaction{} ->
                   unexpectedError

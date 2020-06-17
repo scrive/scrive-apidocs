@@ -79,6 +79,10 @@ beginEIDServiceTransaction conf authKind doc sl = do
         }
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- snlestAuthURL <$> startTransactionWithEIDService conf provider tid
+  case authKind of
+    EIDServiceAuthToView _ ->
+      chargeForItemSingle CIIDINAuthenticationStarted $ documentid doc
+    EIDServiceAuthToSign -> chargeForItemSingle CIIDINSignatureStarted $ documentid doc
   return (tid, turl, EIDServiceTransactionStatusStarted)
 
 data NLIDINEIDServiceCompletionData = NLIDINEIDServiceCompletionData
@@ -166,7 +170,7 @@ finaliseTransaction doc sl estDB trans = case estRespCompletionData trans of
     mergeEIDServiceTransactionWithStatus status
     updateDBTransactionWithCompletionData doc sl cd
     updateEvidenceLog doc sl cd
-    chargeForItemSingle CIIDINAuthentication $ documentid doc
+    chargeForItemSingle CIIDINAuthenticationFinished $ documentid doc
     return status
   where
     mergeEIDServiceTransactionWithStatus newstatus =

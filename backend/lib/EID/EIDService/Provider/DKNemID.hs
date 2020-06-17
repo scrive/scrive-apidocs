@@ -96,6 +96,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
         }
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- sdkestAuthURL <$> startTransactionWithEIDService conf provider tid
+  chargeForItemSingle CIDKNemIDAuthenticationStarted $ documentid doc
   return (tid, turl, EIDServiceTransactionStatusStarted)
 
 data DKNemIDEIDServiceCompletionData = DKNemIDEIDServiceCompletionData
@@ -184,7 +185,7 @@ finaliseTransaction doc sl estDB trans = validateCompletionData sl trans >>= \ca
     mergeEIDServiceTransactionWithStatus status
     updateDBTransactionWithCompletionData doc sl cd
     updateEvidenceLog doc sl cd
-    chargeForItemSingle CIDKNemIDAuthentication $ documentid doc
+    chargeForItemSingle CIDKNemIDAuthenticationFinished $ documentid doc
     return status
   where
     mergeEIDServiceTransactionWithStatus newstatus =

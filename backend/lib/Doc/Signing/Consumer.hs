@@ -226,7 +226,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                                     }
       logInfo_ $ "EidHub NL IDIN Sign succeeded: " <> showt est
       signFromESignature ds now
-      chargeForItemSingle CIIDINSignature . documentid =<< theDocument
+      chargeForItemSingle CIIDINSignatureFinished . documentid =<< theDocument
 
     processCompleteFITupasTransaction ds@DocumentSigning {..} est ct now = do
       let mctd = estRespCompletionData ct
@@ -256,7 +256,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       dbUpdate $ MergeEIDServiceFITupasSignature signingSignatoryID sig
       logInfo_ . ("EidHub FI TUPAS Sign succeeded: " <>) . showt $ est
       signFromESignature ds now
-      chargeForItemSingle CIFITupasSignature . documentid =<< theDocument
+      chargeForItemSingle CIFITupasSignatureFinished . documentid =<< theDocument
 
     processCompleteOnfidoTransaction ds@DocumentSigning {..} est ct now = do
       let mctd = estRespCompletionData ct
@@ -281,8 +281,8 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       signFromESignature ds now
 
       let chargeableitem = case eidonfidoMethod of
-            OnfidoDocumentCheck         -> CIOnfidoDocumentCheckSignature
-            OnfidoDocumentAndPhotoCheck -> CIOnfidoDocumentAndPhotoCheckSignature
+            OnfidoDocumentCheck         -> CIOnfidoDocumentCheckSignatureFinished
+            OnfidoDocumentAndPhotoCheck -> CIOnfidoDocumentAndPhotoCheckSignatureFinished
       chargeForItemSingle chargeableitem . documentid =<< theDocument
 
 handleCgiGrpBankID

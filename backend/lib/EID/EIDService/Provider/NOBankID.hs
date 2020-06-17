@@ -94,6 +94,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
         }
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- snoestAuthURL <$> startTransactionWithEIDService conf provider tid
+  chargeForItemSingle CINOBankIDAuthenticationStarted $ documentid doc
   return (tid, turl, EIDServiceTransactionStatusStarted)
 
 data NOBankIDEIDServiceCompletionData = NOBankIDEIDServiceCompletionData
@@ -178,7 +179,7 @@ finaliseTransaction doc sl estDB trans = validateCompletionData sl trans >>= \ca
     mergeEIDServiceTransactionWithStatus status
     updateDBTransactionWithCompletionData doc sl cd
     updateEvidenceLog doc sl cd
-    chargeForItemSingle CINOBankIDAuthentication $ documentid doc
+    chargeForItemSingle CINOBankIDAuthenticationFinished $ documentid doc
     return status
   where
     mergeEIDServiceTransactionWithStatus newstatus =

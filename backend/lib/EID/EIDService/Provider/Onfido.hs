@@ -8,6 +8,7 @@ import Control.Monad.Trans.Maybe
 import Data.Aeson
 import Log
 
+import Chargeable
 import DB
 import Doc.DocStateData
 import EID.EIDService.Communication
@@ -76,6 +77,11 @@ beginEIDServiceTransaction conf authKind doc sl = do
         }
   -- Onfido transactions are not started from the API, we get the URL via the create call
   trans <- createTransactionWithEIDService conf createReq
+  case method of
+    OnfidoDocumentCheck ->
+      chargeForItemSingle CIOnfidoDocumentCheckSignatureStarted $ documentid doc
+    OnfidoDocumentAndPhotoCheck ->
+      chargeForItemSingle CIOnfidoDocumentAndPhotoCheckSignatureStarted $ documentid doc
   let tid  = cestRespTransactionID trans
       turl = cestRespAccessUrl trans
   return (tid, turl, EIDServiceTransactionStatusNew)
