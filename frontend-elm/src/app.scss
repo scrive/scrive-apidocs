@@ -70,7 +70,9 @@ th.clickable-cell {
 // Company admin > Folders
 .folder-list {
   border-right: 1px solid #ddd;
+  max-height: 500px;
   min-height: 120px;
+  overflow: scroll;
 
   ul,
   li {

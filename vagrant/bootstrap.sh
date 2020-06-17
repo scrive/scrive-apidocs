@@ -23,25 +23,30 @@ apt-get install --yes gnuplot
 apt-get install --yes libxi-dev
 apt-get install --yes libgmp-dev
 apt-get install --yes rubygems
+apt-get install --yes build-essential
+apt-get install --yes libxml2-dev
+
+ln -s libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
+ln -s libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so
 
 cd /tmp/
-wget https://downloads.haskell.org/~ghc/8.4.4/ghc-8.4.4-x86_64-deb8-linux.tar.xz
-tar xf ghc-8.4.4-x86_64-deb8-linux.tar.xz
-cd ghc-8.4.4
+wget https://downloads.haskell.org/~ghc/8.6.5/ghc-8.6.5-x86_64-deb8-linux.tar.xz
+tar xf ghc-8.6.5-x86_64-deb8-linux.tar.xz
+cd ghc-8.6.5
 ./configure
 make install
 cd
-rm -rf /tmp/ghc-8.4.4
+rm -rf /tmp/ghc-8.6.5
 
 apt-get install --yes zlib1g-dev
 
 cd /tmp/
-wget https://hackage.haskell.org/package/cabal-install-2.4.1.0/cabal-install-2.4.1.0.tar.gz
-tar xf cabal-install-2.4.1.0.tar.gz
-cd cabal-install-2.4.1.0/
+wget https://hackage.haskell.org/package/cabal-install-3.0.0.0/cabal-install-3.0.0.0.tar.gz
+tar xf cabal-install-3.0.0.0.tar.gz
+cd cabal-install-3.0.0.0/
 ./bootstrap.sh
 cd
-rm -rf /tmp/cabal-install-2.4.1.0/
+rm -rf /tmp/cabal-install-3.0.0.0/
 mv ~/.cabal/bin/cabal  /usr/local/bin/
 
 cd /tmp/

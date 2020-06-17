@@ -7,6 +7,7 @@ module Doc.Action (
   , postDocumentClosedActions
   , findAndTimeoutDocuments
   , saveDocumentForPortalSignatories
+  , saveDocumentForSignatory
   ) where
 
 import Control.Conditional (ifM, unlessM, whenM)

@@ -8,6 +8,7 @@ module Doc.Model.Update
   , DetachFile(..)
   , AppendSealedFile(..)
   , AppendExtendedSealedFile(..)
+  , AppendReflattenedFile(..)
   , CancelDocument(..)  , ChangeSignatoryEmail(..)
   , ChangeSignatoryPhone(..)
   , ChangeAuthenticationToViewMethod(..)
@@ -699,6 +700,20 @@ appendSealedFile did fid status = do
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Closed
       sqlWhereDocumentWasNotPurged
+
+data AppendReflattenedFile = AppendReflattenedFile DocumentID FileID
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendReflattenedFile () where
+  dbUpdate (AppendReflattenedFile did fid) = do
+    kRun1OrThrowWhyNot . sqlInsertSelect "main_files" "" $ do
+      sqlSet "document_id"     did
+      sqlSet "file_id"         fid
+      sqlSet "document_status" Preparation
+      sqlSet "seal_status"     Missing
+      sqlWhereExists . sqlSelect "documents" $ do
+        sqlWhereDocumentIDIs did
+        sqlWhereDocumentStatusIsOneOf
+          [Preparation, Pending, Timedout, Canceled, DocumentError, Rejected] -- Is not closed
+        sqlWhereDocumentWasNotPurged
 
 newtype FixClosedErroredDocument = FixClosedErroredDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m FixClosedErroredDocument () where

@@ -29,6 +29,7 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Model
+import UserGroup.Model
 import Util.Actor
 import qualified Folder.Internal
 
@@ -109,7 +110,9 @@ testFolderAPIUpdate = do
   user     <- instantiateRandomUser
   ctxAdmin <- mkContextWithUser defaultLang grpAdmin
   ctxUser  <- mkContextWithUser defaultLang user
-  fdrRoot  <- dbUpdate $ FolderCreate (set #name "Folder root" defaultFolder)
+  ug <- fromJust <$> dbQuery (UserGroupGet $ grpAdmin ^. #groupID)
+  let fdrRootID = fromJust $ ug ^. #homeFolderID
+  fdrRoot  <- fromJust <$> (dbQuery $ FolderGet fdrRootID)
   let folderAdminRoot = FolderAdminAR (fdrRoot ^. #id)
       admid           = grpAdmin ^. #id
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminRoot

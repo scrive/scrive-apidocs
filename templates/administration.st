@@ -61,7 +61,7 @@ $extraDaveBody:noescape()$
 <BR/>
 <BR/>
 <BR/>
-$if(couldBeClosed)$
+$if(couldDoPostPending)$
   <form method="post" action="/dave/postpending/$id$">
     <input type="submit" value="Postpending"> </input>
   </form>
@@ -70,6 +70,13 @@ $elseif(couldBeResealed)$
     <input type="submit" value="Reseal"> </input>
   </form>
 $endif$
+
+$if(couldBeReflatten)$
+  <form method="post" action="/dave/reflatten/$id$">
+    <input type="submit" value="Reflatten"> </input>
+  </form>
+$endif$
+
 <BR/>
 </div>
 <div class="dave-transfer"></div>

@@ -56,6 +56,8 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
       if (requestid) {
         details["Request ID"] = requestid;
       }
+      details["Status"] = xhr.status;
+      details["Response"] = xhr.responseText;
       return (
         <div className="errordetails">
           <ul>

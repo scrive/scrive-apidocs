@@ -130,6 +130,8 @@ docApiV2List = api $ do
         (offset, 1000, maxcount)
       logInfo "Fetching for docApiV2List done using folders" $ object
         [ "query_time" .= time
+        , identifier $ user ^. #id
+        , identifier $ user ^. #groupID
         , "folder_ids_shared" .= map show sharedFids
         , "folder_ids_started" .= map show startedFids
         , "folder_ids_full_read" .= map show fullReadFids
@@ -151,7 +153,11 @@ docApiV2List = api $ do
         documentFilters
         documentSorting
         (offset, 1000, maxcount)
-      logInfo "Fetching for docApiV2List done" $ object ["query_time" .= time]
+      logInfo "Fetching for docApiV2List done" $ object
+        [ "query_time" .= time
+        , identifier $ user ^. #id
+        , identifier $ user ^. #groupID
+        ]
       -- Result
       let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
       return . Ok $ Response

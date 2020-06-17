@@ -270,9 +270,10 @@ updateEvidenceLog doc sl SEBankIDEIDServiceAuthCompletionData {..} = do
   let eventFields = do
         F.value "signatory_name" eidsebidaSignatoryName
         F.value "signatory_personal_number" eidsebidaSignatoryPersonalNumber
+        F.value "hide_pn" $ signatorylinkhidepn sl
         F.value "provider_sebankid_eidservice" True
         F.value "signatory_ip" eidsebidaSignatoryIP
-        F.value "signature" eidsebidaSignature
+        F.value "signature" $ B64.encode eidsebidaSignature
         F.value "ocsp_response" $ B64.encode eidsebidaOcspResponse
   withDocument doc $ do
     actor <- signatoryActor ctx sl

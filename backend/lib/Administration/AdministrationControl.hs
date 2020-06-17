@@ -54,6 +54,7 @@ import Doc.API.V2.JSON.List
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocumentID)
+import Doc.DocUtils (fileFromMainFile)
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID
@@ -98,6 +99,7 @@ import UserGroupAccounts.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
+import Util.PDFUtil
 import Util.SignatoryLinkUtils
 import Utils.Monoid
 import qualified API.V2 as V2
@@ -182,6 +184,7 @@ daveRoutes = onlyAdmin <$> choice
   , dir "userhistory" . hGet $ toK1 daveUserHistory
   , dir "usergroup" . hGet $ toK1 daveUserGroup
   , dir "reseal" . hPost $ toK1 resealFile
+  , dir "reflatten" . hPost $ toK1 reflattenFile
   , dir "postpending" . hPost $ toK1 triggerPostPending
   , dir "file" . hGet $ toK2 daveFile
   , dir "backdoor" $ hGet handleBackdoorQuery
@@ -793,6 +796,20 @@ resealFile docid = onlyAdmin . withDocumentID docid $ do
   void $ postDocumentClosedActions False True
   return LoopBack
 
+-- This method can be used to reseal a document
+reflattenFile :: Kontrakcja m => DocumentID -> m KontraLink
+reflattenFile docid = onlyAdmin . withDocumentID docid $ do
+  logInfo_ "Reflattening by superadmin, related to issue on 10.06.2020"
+  document               <- dbQuery $ GetDocumentByDocumentID docid
+  baseFile               <- guardJustM $ fileFromMainFile $ documentfile document
+  eReflattenedPdfContent <- preCheckPDF =<< getFileContents baseFile
+  case eReflattenedPdfContent of
+    Left  _                     -> internalError
+    Right reflattenedPdfContent -> do
+      reflattenedFileID <- saveNewFile (filename baseFile) reflattenedPdfContent
+      dbUpdate $ AppendReflattenedFile docid $ reflattenedFileID
+      return LoopBack
+
 guardNoPades :: Kontrakcja m => Document -> m ()
 guardNoPades doc = do
   let sealingMethod = documentsealingmethod doc
@@ -840,14 +857,16 @@ daveDocument documentid = onlyAdmin $ do
               everybodySignedAndStatusIn [Closed, DocumentError]
                 && documentsealingmethod document
                 == Guardtime
-            couldBeClosed  = everybodySignedAndStatusIn [DocumentError, Pending]
-            callbackResult = fromMaybe "Unknown" mCallbackResult
-            extraDoc       = ExtraDocument callbackResult
+            couldDoPostPending = documentstatus document == Pending
+            callbackResult     = fromMaybe "Unknown" mCallbackResult
+            extraDoc           = ExtraDocument callbackResult
         F.value "daveBody" $ inspectXML document
         F.value "extraDaveBody" $ inspectXML extraDoc
         F.value "id" $ show documentid
         F.value "couldBeResealed" couldBeResealed
-        F.value "couldBeClosed" couldBeClosed
+        F.value "couldBeReflatten" $ documentstatus document /= Closed && isJust
+          (documentfile document)
+        F.value "couldDoPostPending" couldDoPostPending
         F.value "istemplate" $ documenttype document == Template
         entryPointFields ctx
       return $ Right r
