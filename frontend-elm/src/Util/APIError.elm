@@ -38,7 +38,7 @@ type APIErrorType
     | SignatoryStateError
     | ActionNotPermitted
     | ConflictError
-
+    | FolderActionForbidden
 
 enumApiErrorType : Enum APIErrorType
 enumApiErrorType =
@@ -59,6 +59,7 @@ enumApiErrorType =
             , SignatoryStateError
             , ActionNotPermitted
             , ConflictError
+            , FolderActionForbidden
             ]
 
         toString e =
@@ -78,7 +79,7 @@ enumApiErrorType =
                 SignatoryStateError -> "signatory_state_error"
                 ActionNotPermitted -> "action_not_permitted"
                 ConflictError -> "conflict_error"
-
+                FolderActionForbidden -> "folder_action_forbidden"
         toHumanString =
             toString
 

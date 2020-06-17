@@ -8,6 +8,7 @@ module UserGroup.Model (
   , UserGroupGetWithParentsByUG(..)
   , UserGroupGetWithParentsByUserID(..)
   , UserGroupGetBySSOIDPID(..)
+  , UserGroupGetByHomeFolderID(..)
   , UserGroupsGetFiltered(..)
   , FindOldUserGroups(..)
   , UserGroupUpdate(..)
@@ -36,6 +37,7 @@ import qualified Data.Text as T
 import DB
 import FeatureFlags.Model
 import FeatureFlags.Tables
+import Folder.FolderID
 import Tag (TagDomain(..))
 import Tag.Tables
 import Theme.Model
@@ -292,6 +294,16 @@ instance (MonadDB m, MonadThrow m) =>
       mapM_ sqlResult userGroupSelectors
       sqlJoinOn "user_group_settings as ugs" "user_groups.id = ugs.user_group_id"
       sqlWhereEq "ugs.sso_config->>'idp_id'" idpID
+      sqlWhereIsNULL "user_groups.deleted"
+    fetchMaybe fetchUserGroup
+
+newtype UserGroupGetByHomeFolderID = UserGroupGetByHomeFolderID FolderID
+instance (MonadDB m, MonadThrow m) =>
+  DBQuery m UserGroupGetByHomeFolderID (Maybe UserGroup) where
+  dbQuery (UserGroupGetByHomeFolderID fid) = do
+    runQuery_ . sqlSelect "user_groups" $ do
+      mapM_ sqlResult userGroupSelectors
+      sqlWhereEq "home_folder_id" fid
       sqlWhereIsNULL "user_groups.deleted"
     fetchMaybe fetchUserGroup
 
