@@ -154,10 +154,7 @@ docApiV2List = api $ do
         documentSorting
         (offset, 1000, maxcount)
       logInfo "Fetching for docApiV2List done" $ object
-        [ "query_time" .= time
-        , identifier $ user ^. #id
-        , identifier $ user ^. #groupID
-        ]
+        ["query_time" .= time, identifier $ user ^. #id, identifier $ user ^. #groupID]
       -- Result
       let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
       return . Ok $ Response

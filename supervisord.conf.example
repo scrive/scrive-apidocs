@@ -1,0 +1,113 @@
+# This is an example configuration of how you can run kontrakcja runtime
+# dependencies using supervisord. Make a copy of this file and name it
+# as supervisord.conf to start using supervisord for your local development.
+# You can disable the services that you don't want to be managed by supervisor
+# by setting autostart to false.
+
+[supervisord]
+logfile = supervisor/supervisord.log
+logfile_maxbytes = 50MB
+logfile_backups = 10
+loglevel = info
+pidfile = supervisor/supervisord.pid
+nodaemon = false
+minfds = 1024
+minprocs = 200
+umask = 022
+identifier = supervisor
+directory = %(here)s
+nocleanup = true
+strip_ansi = false
+
+[unix_http_server]
+file = supervisor/supervisor.sock
+
+[supervisorctl]
+serverurl = unix://supervisor/supervisor.sock
+prompt = supervisor
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[program:postgres]
+command = ./scripts/workspace/run-postgres.sh
+autostart = true
+stopasgroup = true
+priority = 1
+startsecs = 5
+stderr_logfile = supervisor/logs/postgres.log
+stdout_logfile = supervisor/logs/postgres.log
+
+[program:fakes3]
+command = ./scripts/workspace/run-fakes3.sh
+autostart = true
+stopasgroup = true
+priority = 2
+startsecs = 5
+stderr_logfile = supervisor/logs/fakes3.log
+stdout_logfile = supervisor/logs/fakes3.log
+
+[program:sam]
+command = ./scripts/workspace/run-sam.sh
+autostart = true
+stopasgroup = true
+priority = 2
+startsecs = 5
+stderr_logfile = supervisor/logs/sam.log
+stdout_logfile = supervisor/logs/sam.log
+
+[program:kontrakcja-server]
+command = cabal v2-run kontrakcja-server
+autostart = true
+stopasgroup = true
+priority = 100
+startsecs = 10
+stderr_logfile = supervisor/logs/kontrakcja-server.log
+stdout_logfile = supervisor/logs/kontrakcja-server.log
+
+[program:kontrakcja-cron]
+command = cabal v2-run cron
+autostart = true
+stopasgroup = true
+priority = 200
+startsecs = 10
+stderr_logfile = supervisor/logs/kontrakcja-cron.log
+stdout_logfile = supervisor/logs/kontrakcja-cron.log
+
+[program:kontrakcja-mailer]
+command = cabal v2-run mailing-server
+autostart = true
+stopasgroup = true
+priority = 200
+startsecs = 10
+stderr_logfile = supervisor/logs/kontrakcja-mailer.log
+stdout_logfile = supervisor/logs/kontrakcja-mailer.log
+
+[program:kontrakcja-messenger]
+command = cabal v2-run messenger-server
+autostart = true
+stopasgroup = true
+priority = 200
+startsecs = 10
+stderr_logfile = supervisor/logs/messenger-mailer.log
+stdout_logfile = supervisor/logs/messenger-mailer.log
+
+[program:kontrakcja-frontend]
+command = npm run watch
+directory = frontend
+autostart = true
+stopasgroup = true
+priority = 400
+startsecs = 20
+stderr_logfile = supervisor/logs/kontrakcja-frontend.log
+stdout_logfile = supervisor/logs/kontrakcja-frontend.log
+
+[program:kontrakcja-frontend-elm]
+command = npm run watch
+directory = frontend-elm
+autostart = true
+stopasgroup = true
+priority = 400
+startsecs = 20
+stderr_logfile = supervisor/logs/kontrakcja-frontend-elm.log
+stdout_logfile = supervisor/logs/kontrakcja-frontend-elm.log

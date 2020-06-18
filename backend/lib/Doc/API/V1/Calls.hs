@@ -1477,7 +1477,7 @@ apiCallV1List = api $ do
       finishQueryTime <- liftIO getCurrentTime
       logInfo "Fetching for apiCallV1List done" $ object
         [ "query_time"
-            .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
+          .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
         , identifier $ user ^. #id
         , identifier $ user ^. #groupID
         ]

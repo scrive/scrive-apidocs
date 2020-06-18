@@ -5,6 +5,8 @@ let
     "dist"
     "dist-newstyle"
     "node_modules"
+    "docker"
+    "supervisor"
     "elm-stuff"
     "registry.dat"
     "nix-support"

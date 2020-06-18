@@ -801,13 +801,13 @@ reflattenFile :: Kontrakcja m => DocumentID -> m KontraLink
 reflattenFile docid = onlyAdmin . withDocumentID docid $ do
   logInfo_ "Reflattening by superadmin, related to issue on 10.06.2020"
   document               <- dbQuery $ GetDocumentByDocumentID docid
-  baseFile               <- guardJustM $ fileFromMainFile $ documentfile document
+  baseFile               <- guardJustM . fileFromMainFile $ documentfile document
   eReflattenedPdfContent <- preCheckPDF =<< getFileContents baseFile
   case eReflattenedPdfContent of
     Left  _                     -> internalError
     Right reflattenedPdfContent -> do
       reflattenedFileID <- saveNewFile (filename baseFile) reflattenedPdfContent
-      dbUpdate $ AppendReflattenedFile docid $ reflattenedFileID
+      dbUpdate . AppendReflattenedFile docid $ reflattenedFileID
       return LoopBack
 
 guardNoPades :: Kontrakcja m => Document -> m ()

@@ -84,6 +84,7 @@ in
     dev-shell-optimized
     dev-release
     dev-deps
+    kontrakcja-nix
     production-shell
     production-release;
 }
