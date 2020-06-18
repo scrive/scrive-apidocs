@@ -21,6 +21,7 @@ tests = testGroup "Machinize"
 
 process :: Text
 process = [r|
+dsl-version: "1"
 stages:
   - sign:
       actions: []

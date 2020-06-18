@@ -1338,6 +1338,7 @@ Test-suite kontrakcja-test
                  Flow.AuthenticationTest
                  Flow.AggregatorTest
                  Flow.DocumentCheckerTest
+                 Flow.HighTongueTest
                  Flow.IntegrationTest
                  Flow.MachinizeTest
                  Flow.TestUtil

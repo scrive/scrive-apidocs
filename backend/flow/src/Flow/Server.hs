@@ -172,7 +172,7 @@ commitTemplate account id = do
   when (isJust $ committed template) throwTemplateAlreadyCommittedError
   templateDSL <- fromMaybeM throwTemplateNotFoundError $ Model.getTemplateDsl id
   machine     <-
-    either throwDSLValidationError' pure $ decodeHightTang templateDSL >>= machinize
+    either throwDSLValidationError' pure $ decodeHighTongue templateDSL >>= machinize
   let fid = folderId (template :: GetTemplate)
   guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
   Model.commitTemplate now id
@@ -193,8 +193,8 @@ machinize highTongue = packError `left` linear highTongue
     packError err =
       [ValidationError { line_number = 0, column = 0, error_message = pack $ show err }]
 
-decodeHightTang :: FlowDSL -> Either [ValidationError] HighTongue
-decodeHightTang template = packError `left` decodeEither' (encodeUtf8 template)
+decodeHighTongue :: FlowDSL -> Either [ValidationError] HighTongue
+decodeHighTongue template = packError `left` decodeEither' (encodeUtf8 template)
   where
     packError err =
       [ ValidationError { line_number   = 0
@@ -208,7 +208,7 @@ decodeHightTang template = packError `left` decodeEither' (encodeUtf8 template)
 validateTemplate :: FlowDSL -> AppM [ValidationError]
 validateTemplate template = do
   logInfo_ "validating template"
-  either pure (const (pure [])) $ decodeHightTang template >>= machinize
+  either pure (const (pure [])) $ decodeHighTongue template >>= machinize
 
 listTemplates :: Account -> AppM [GetTemplate]
 listTemplates account@Account {..} = do

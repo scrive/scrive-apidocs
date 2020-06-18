@@ -52,6 +52,7 @@ testTemplateHappyCrud = do
 
 process1 :: Text
 process1 = [r|
+dsl-version: "1"
 stages:
   - initial:
       actions: []

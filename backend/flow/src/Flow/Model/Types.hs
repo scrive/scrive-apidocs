@@ -17,7 +17,7 @@ data InsertTemplate = InsertTemplate
     , userId :: UserID
     , folderId :: FolderID
     }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
 data Instance = Instance
     { id :: InstanceId

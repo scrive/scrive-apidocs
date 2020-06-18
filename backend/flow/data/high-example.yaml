@@ -1,3 +1,4 @@
+dsl-version: "1"
 stages:
   - initial:
       actions: []

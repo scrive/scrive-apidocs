@@ -13,10 +13,12 @@ module Flow.HighTongue
     , MessageName
     , FieldName
     , StateName
+    , DSLVersion
     )
   where
 
 import Data.Aeson
+import Data.Aeson.Casing
 import Data.Aeson.Types
 import Data.Set (Set)
 import GHC.Generics
@@ -28,6 +30,15 @@ type UserName = Text
 type MessageName = Text
 type FieldName = Text
 type StateName = Text
+
+data HighTongue = HighTongue
+    { stages :: [Stage]
+    , dslVersion :: DSLVersion
+    }
+  deriving (Show, Eq, Generic)
+
+instance FromJSON HighTongue where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = trainCase }
 
 data Expect
     = ReceivedData
@@ -133,10 +144,15 @@ instance FromJSON Stage where
           <*> explicitParseField parseSetExpect o "expect"
           <?> Key "expect"
 
+newtype DSLVersion = DSLVersion Text
+  deriving (Show, Eq)
 
-newtype HighTongue = HighTongue
-    { stages :: [Stage]
-    }
-  deriving (Show, Eq, Generic)
+instance FromJSON DSLVersion where
+  parseJSON = withText "dsl-version" $ \t -> do
+    unless (DSLVersion t `elem` supportedVersions)
+      $ typeMismatch "supported DSL version" (String t)
+    pure (DSLVersion t)
 
-instance FromJSON HighTongue
+supportedVersions :: [DSLVersion]
+supportedVersions = [DSLVersion "1"]
+

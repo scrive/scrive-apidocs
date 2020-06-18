@@ -568,6 +568,7 @@ components:
 
         See FlowDslSpec for the specification of the DSL.
       example: |
+        dsl-version: "1"
         stages: ...
 
     FlowDslSpec:
@@ -576,8 +577,14 @@ components:
         Description of the signing process in Flow DSL.
 
         Most of the strings encountered in this object are interpreted as abstract variables, to be set when a Flow instance is created. Thus one can reuse this template for multiple concrete processes with their own sets of concrete users, documents, and messages.
-      required: [stages]
+      required:
+        - dsl-version
+        - stages
       properties:
+        dsl-version:
+          type: string
+          description: |
+            Version of the Flow DSL used. Currently the only supported version is "1".
         stages:
           type: array
           items:
@@ -587,6 +594,7 @@ components:
             additionalProperties:
               $ref: "#/components/schemas/FlowDslStage"
       example:
+        dsl-version: "1"
         stages:
           - applicant1-to-sign:
               actions:
