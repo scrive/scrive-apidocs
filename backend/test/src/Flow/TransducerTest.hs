@@ -7,7 +7,6 @@ import Data.Set (Set)
 import Data.Text
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
-import Test.QuickCheck (withMaxSuccess)
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Modifiers
@@ -36,13 +35,13 @@ transducerIntJSONSerializeDeserialize transducer =
 
 -- Transducer (Set EventInfo) [LowAction]
 
-instance Arbitrary Action where
+instance Arbitrary SystemAction where
   arbitrary = oneof [Notify <$> arbitrary <*> arbitrary, Close <$> arbitrary]
 
 instance Arbitrary LowAction where
   arbitrary = oneof [Action <$> arbitrary, pure Fail]
 
-instance Arbitrary Deed where
+instance Arbitrary UserAction where
   arbitrary = elements [Field "somefield", Approval, Signature, View, Rejection, Timeout]
 
 instance Arbitrary EventInfo where
@@ -57,11 +56,6 @@ instance Arbitrary (TransducerState (Set EventInfo) [LowAction]) where
 instance Arbitrary (Transducer (Set EventInfo) [LowAction]) where
   arbitrary = Transducer <$> arbitrary <*> arbitrary <*> arbitrary
 
-transducerEventInfoJSONSerializeDeserialize
-  :: Transducer (Set EventInfo) [LowAction] -> Bool
-transducerEventInfoJSONSerializeDeserialize transducer =
-  isJust . decode @(Transducer (Set EventInfo) [LowAction]) $ encode transducer
-
 -- Test group
 
 tests :: Test
@@ -69,9 +63,6 @@ tests = testGroup
   "Transducer"
   [ testProperty "Transducer Int Int: JSON serialization deserialization"
                  transducerIntJSONSerializeDeserialize
-  , testProperty
-    "Transducer (Set EventInfo) [LowAction]: JSON serialization deserialization"
-    (withMaxSuccess 30 transducerEventInfoJSONSerializeDeserialize)
   ]
 
 

@@ -26,11 +26,8 @@ module Flow.Aggregator
   where
 
 import Control.Arrow (left)
-import Control.Exception (Exception, throwIO)
-import Data.Aeson
-import Data.Aeson.Casing
+import Control.Exception (Exception)
 import Data.Set (Set)
-import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import qualified Control.Monad.Except as E
 import qualified Control.Monad.Reader as R
@@ -56,30 +53,6 @@ newtype AggregatorConstans = AggregatorConstans
 {- HLINT ignore AggregatorMarshallingException -}
 data AggregatorMarshallingException = AggregatorMarshallingException String
   deriving (Show, Exception)
-
-instance PQFormat AggregatorState where
-  pqFormat = pqFormat @(JSON Value)
-
-instance FromSQL AggregatorState where
-  type PQBase AggregatorState = PQBase (JSON Value)
-  fromSQL mbase = do
-    (JSON jsonValue) <- fromSQL mbase
-    case fromJSON jsonValue of
-      Error   err -> throwIO $ AggregatorMarshallingException err
-      Success v   -> pure v
-
-instance ToSQL AggregatorState where
-  type PQDest AggregatorState = PQDest (JSON Value)
-  toSQL v = toSQL (JSON $ toJSON v)
-
-aesonOptions :: Options
-aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
-
-instance FromJSON AggregatorState where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON AggregatorState where
-  toJSON = genericToJSON aesonOptions
 
 data AggregatorStep
     = NeedMoreEvents

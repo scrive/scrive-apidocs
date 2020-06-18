@@ -6,19 +6,15 @@ module Flow.Model
     , selectTemplate
     , selectTemplatesByUserID
     , updateTemplate
-    , commitTemplate
-    , getTemplateDsl
     , insertFlowInstance
     , insertFlowInstanceKeyValue
-    , insertParsedStateMachine
-    , selectParsedStateMachine
     , selectInstance
     , selectInstancesByUserID
     , selectInstanceKeyValues
-    , selectAggregatorState
-    , insertAggregatorState
+    , selectFullInstance
+    , selectAggregatorEvents
     , updateAggregatorState
-    , selectAggregatorData
+    , insertEvent
     , selectDocumentNameFromKV
     , selectUserNameFromKV
     )
@@ -26,7 +22,7 @@ module Flow.Model
 
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
-import Data.Time.Clock (UTCTime, getCurrentTime)
+import Data.Time.Clock (getCurrentTime)
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
 
@@ -34,110 +30,79 @@ import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
 import Flow.Id
-import Flow.Machinize
 import Flow.Model.Types
-import Folder.Types
 import User.UserID (UserID)
-
--- TODO: Is it good idea to have Flow.Api used in the model???
--- MB: it isn't. But if we're going to create complex types
---     between the DB and the API, we should really reconsider
---     capabilities to properly separate the two.
-import Flow.Api
-
 
 sqlMaybeSet :: (MonadState v m, SqlSet v, Show a, ToSQL a) => SQL -> Maybe a -> m ()
 sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
 
 insertTemplate :: (MonadIO m, MonadDB m, MonadThrow m) => InsertTemplate -> m TemplateId
-insertTemplate InsertTemplate {..} = do
+insertTemplate it = do
+  now <- liftIO getCurrentTime
   runQuery_ . sqlInsert "flow_templates" $ do
-    sqlSet "name"      name -- TODO: validate size?
-    sqlSet "process"   process -- TODO: validate size?
-    sqlSet "user_id"   userId
-    sqlSet "folder_id" folderId
+    sqlSet "name" $ it ^. #name -- TODO: validate size?
+    sqlSet "process" $ it ^. #process -- TODO: validate size?
+    sqlSet "user_id" $ it ^. #userId
+    sqlSet "folder_id" $ it ^. #folderId
+    sqlSet "created" now
     sqlResult "id"
   fetchOne runIdentity
 
 deleteTemplate :: (MonadDB m, MonadIO m) => TemplateId -> m ()
 deleteTemplate templateId = do
-    -- TODO:  Can committed template be deleted? Maybe this should be in server instead?
+  -- TODO:  Can committed template be deleted? Maybe this should be in server instead?
   now <- liftIO getCurrentTime
   runQuery_ . sqlUpdate "flow_templates" $ do
     sqlSet "deleted" now
     sqlWhereEq "id" templateId
 
--- TODO: Maybe use uncurryN functions?
-fetchGetTemplate :: (TemplateId, Text, Text, Maybe UTCTime, FolderID) -> GetTemplate
-fetchGetTemplate (id, name, process, committed, folderId) =
-  GetTemplate id name process committed folderId
 
 templateSelectors :: (MonadState v m, SqlResult v) => m ()
 templateSelectors = do
   sqlResult "id"
+  sqlResult "user_id"
+  sqlResult "folder_id"
   sqlResult "name"
   sqlResult "process"
+  sqlResult "created"
   sqlResult "committed"
-  sqlResult "folder_id"
+  sqlResult "deleted"
 
-selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe GetTemplate)
+selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe Template)
 selectTemplate templateId = do
   runQuery_ . sqlSelect "flow_templates" $ do
     templateSelectors
     sqlWhereEq "id" templateId
     sqlWhereIsNULL "deleted"
-  fetchMaybe fetchGetTemplate
+  fetchMaybe fetchTemplate
 
-selectTemplatesByUserID :: (MonadDB m, MonadThrow m) => UserID -> m [GetTemplate]
+selectTemplatesByUserID :: (MonadDB m, MonadThrow m) => UserID -> m [Template]
 selectTemplatesByUserID userId = do
   runQuery_ . sqlSelect "flow_templates" $ do
     templateSelectors
     sqlWhereEq "user_id" userId
     sqlWhereIsNULL "deleted"
-  fetchMany fetchGetTemplate
+  fetchMany fetchTemplate
 
-updateTemplate
-  :: (MonadDB m, MonadThrow m) => TemplateId -> PatchTemplate -> m (Maybe GetTemplate)
-updateTemplate templateId PatchTemplate {..} = do
+updateTemplate :: (MonadDB m, MonadThrow m) => UpdateTemplate -> m (Maybe Template)
+updateTemplate ut = do
   runQuery_ . sqlUpdate "flow_templates" $ do
-    sqlMaybeSet "name"    name -- TODO: validate size?
-    sqlMaybeSet "process" process -- TODO: validate size?
+    sqlMaybeSet "name" $ ut ^. #name
+    sqlMaybeSet "process" $ ut ^. #process
+    sqlMaybeSet "committed" $ ut ^. #committed
     templateSelectors
-    sqlWhereEq "id" templateId
+    sqlWhereEq "id" $ ut ^. #id
     sqlWhereIsNULL "deleted"
-  fetchMaybe fetchGetTemplate
+  fetchMaybe fetchTemplate
 
-commitTemplate :: MonadDB m => UTCTime -> TemplateId -> m ()
-commitTemplate now templateId = do
-  runQuery_ . sqlUpdate "flow_templates" $ do
-    sqlSet "committed" now -- TODO: make use of authenticated user
-    sqlWhereEq "id" templateId
-    sqlWhereIsNULL "deleted"
-
-getTemplateDsl :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe FlowDSL)
-getTemplateDsl templateId = do
-  runQuery_ . sqlSelect "flow_templates" $ do
-    sqlResult "process"
-    sqlWhereEq "id" templateId
-  fetchMaybe runIdentity
-
-insertParsedStateMachine :: MonadDB m => TemplateId -> Machine -> m ()
-insertParsedStateMachine templateId machine = do
-  runQuery_ . sqlInsert "flow_compiled_state_machine" $ do
-    sqlSet "template_id" templateId
-    sqlSet "data"        machine
-
-selectParsedStateMachine :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe Machine)
-selectParsedStateMachine templateId = do
-  runQuery_ . sqlSelect "flow_compiled_state_machine" $ do
-    sqlResult "data"
-    sqlWhereEq "template_id" templateId
-  fetchMaybe runIdentity
-
-insertFlowInstance :: (MonadDB m, MonadThrow m) => TemplateId -> m InstanceId
-insertFlowInstance templateId = do
+insertFlowInstance
+  :: (MonadDB m, MonadIO m, MonadThrow m) => InsertInstance -> m InstanceId
+insertFlowInstance ii = do
+  now <- liftIO getCurrentTime
   runQuery_ . sqlInsert "flow_instances" $ do
-    sqlSet "template_id" templateId -- TODO: validate size?
+    sqlSet "template_id" $ ii ^. #templateId
+    sqlSet "current_state" $ ii ^. #currentState
+    sqlSet "created" now
     sqlResult "id"
   fetchOne runIdentity
 
@@ -165,26 +130,25 @@ insertFlowInstanceKeyValue instanceId key value =
         sqlSet "type" $ storeValueTypeToText Message
         sqlSet "string" msg
 
+instanceSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
+instanceSelectors prefix = mapM_ (\c -> sqlResult $ prefix <> "." <> c)
+                                 ["id", "template_id", "current_state", "created"]
+
 selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe Instance)
 selectInstance instanceId = do
-  runQuery_ . sqlSelect "flow_instances" $ do
-    sqlResult "id"
-    sqlResult "template_id"
+  runQuery_ . sqlSelect "flow_instances i" $ do
+    instanceSelectors "i"
     sqlWhereEq "id" instanceId
   fetchMaybe fetchInstance
 
 selectInstancesByUserID :: (MonadDB m, MonadThrow m) => UserID -> m [Instance]
 selectInstancesByUserID userId = do
   runQuery_ . sqlSelect "flow_instances i" $ do
-    sqlResult "i.id"
-    sqlResult "i.template_id"
+    instanceSelectors "i"
     sqlJoinOn "flow_templates t" "template_id = t.id"
     sqlWhereEq "t.user_id" userId
     sqlWhereIsNULL "t.deleted"
   fetchMany fetchInstance
-
-fetchInstance :: (InstanceId, TemplateId) -> Instance
-fetchInstance (id, templateId) = Instance { .. }
 
 -- TODO: Think about making this function a bit more type safe???
 selectInstanceKeyValues
@@ -203,37 +167,58 @@ selectInstanceKeyValues instanceId valueType = do
     storeValueTypeToValueColumn PhoneNumber = "string"
     storeValueTypeToValueColumn Message     = "string"
 
-insertAggregatorState :: MonadDB m => AggregatorState -> InstanceId -> m ()
-insertAggregatorState aggregatorState instanceId =
-  runQuery_ . sqlInsert "flow_instance_aggregator" $ do
-    sqlSet "instance_id" instanceId
-    sqlSet "data"        aggregatorState
+-- TODO write this as a single query
+selectFullInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe FullInstance)
+selectFullInstance id = do
+  maybeInstance <- selectInstance id
+  case maybeInstance of
+    Nothing           -> pure Nothing
+    Just flowInstance -> do
+      -- This is guaranteed by a foreign key.
+      template         <- fromJust <$> selectTemplate (flowInstance ^. #templateId)
+      aggregatorEvents <- selectAggregatorEvents id
+      pure $ Just FullInstance { .. }
 
-selectAggregatorState :: (MonadDB m, MonadThrow m) => InstanceId -> m AggregatorState
-selectAggregatorState instanceId = do
-  runQuery_ . sqlSelect "flow_instance_aggregator" $ do
-    sqlResult "data"
-    sqlWhereEq "instanceId" instanceId
+updateAggregatorState
+  :: (MonadDB m) => InstanceId -> AggregatorState -> EventId -> Bool -> m ()
+updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
+  runQuery_ . sqlUpdate "flow_instances" $ do
+    sqlSet "current_state" currentState
+    sqlWhereEq "instance_id" instanceId
+
+  if stateChange
+    then runQuery_ . sqlDelete "flow_aggregator_events ae" $ do
+      sqlFrom "flow_events ae"
+      sqlWhereEq "ae.instance_id" instanceId
+    else runQuery_ . sqlInsert "flow_aggregator_events" $ do
+      sqlSet "id" eventId
+
+insertEvent :: (MonadDB m, MonadIO m, MonadThrow m) => InsertEvent -> m EventId
+insertEvent ie = do
+  now <- liftIO getCurrentTime
+  runQuery_ . sqlInsert "flow_events" $ do
+    sqlSet "instance_id" $ ie ^. #instanceId
+    sqlSet "user_name" $ ie ^. #userName
+    sqlSet "document_name" $ ie ^. #documentName
+    sqlSet "user_action" $ ie ^. #userAction
+    sqlSet "created" now
+    sqlResult "id"
   fetchOne runIdentity
 
-updateAggregatorState :: (MonadDB m) => InstanceId -> AggregatorState -> m ()
-updateAggregatorState instanceId aggregatorState = do
-  runQuery_ . sqlUpdate "flow_instance_aggregator" $ do
-    sqlSet "instance_id" instanceId
-    sqlSet "data"        aggregatorState
+eventSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
+eventSelectors prefix = do
+  mapM_ (\c -> sqlResult $ prefix <> "." <> c)
+        ["id", "instance_id", "user_name", "document_name", "user_action", "created"]
 
-selectAggregatorData
-  :: (MonadDB m, MonadThrow m) => InstanceId -> m (Machine, AggregatorState)
-selectAggregatorData instanceId = do
-  runQuery_ . sqlSelect "flow_instances" $ do
-    sqlResult "machine.data"
-    sqlResult "aggregator.data"
-    sqlJoinOn "flow_instance_aggregator aggregator"
-              "flow_instances.id = aggregator.instance_id"
-    sqlJoinOn "flow_compiled_state_machine machine"
-              "flow_instances.template_id = machine.template_id"
-    sqlWhereEq "flow_instances.id" instanceId
-  fetchOne identity
+selectAggregatorEvents :: (MonadDB m, MonadThrow m) => InstanceId -> m [Event]
+selectAggregatorEvents instanceId = do
+  runQuery_ . sqlSelect "flow_instances i" $ do
+    eventSelectors "e"
+    sqlJoinOn "flow_events e"             "e.instance_id = i.id"
+    sqlJoinOn "flow_aggregator_events ae" "ae.id = e.id"
+    sqlWhereEq "i.id" instanceId
+    sqlOrderBy "e.created DESC"
+  fetchMany fetchEvent
 
 selectDocumentNameFromKV
   :: (MonadDB m, MonadThrow m) => InstanceId -> DocumentID -> m (Maybe Text)

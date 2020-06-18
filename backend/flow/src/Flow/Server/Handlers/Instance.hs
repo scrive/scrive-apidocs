@@ -6,7 +6,8 @@
 
 module Flow.Server.Handlers.Instance where
 
-import Control.Monad.Extra (fromMaybeM, whenM)
+import Control.Monad.Except
+import Control.Monad.Extra (fromMaybeM)
 import Data.Aeson
 import Data.Either.Combinators (rightToMaybe)
 import Data.Map (Map)
@@ -21,16 +22,18 @@ import AccessControl.Types
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Flow.Aggregator as Aggregator
 import Flow.Api as Api
+import Flow.Engine
 import Flow.Error
 import Flow.Guards
 import Flow.HighTongue (DocumentName, UserName)
 import Flow.Id
 import Flow.Machinize as Machinize
-import Flow.Model.Types as Model
+import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Server.Types
 import User.UserID (UserID, unsafeUserID)
 import qualified Flow.Model as Model
+import qualified Flow.Model.Types as Model
 import qualified Flow.Transducer as Transducer
 
 startInstance :: Account -> TemplateId -> InstanceToTemplateMapping -> AppM StartTemplate
@@ -39,25 +42,25 @@ startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
   -- TODO: Check permissions create instance..
   -- TODO: Check permissions to the template.
   -- TODO: Validate mapping...
-  -- TODO: Check mapping value sizes???
   -- TODO: Replace value type with enum???
   -- TODO: Model instance state inside database somehow!
-  whenM (isNothing <$> Model.selectTemplate templateId) throwTemplateNotFoundError
-  id <- Model.insertFlowInstance templateId
+  -- TODO: Check the template is committed
+  -- TODO: Check the flow users are unique
+
+  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
+  machine  <- compile $ template ^. #process
+  let ii = InsertInstance templateId $ Transducer.initialState machine
+  id <- Model.insertFlowInstance ii
+
   insertFlowInstanceKeyValues id documents StoreDocumentId
   insertFlowInstanceKeyValues id users     StoreUserId
   insertFlowInstanceKeyValues id messages  StoreMessage
-
-  stateId <- Transducer.initialState <$> fromMaybeM
-    throwTemplateNotCommittedError
-    (Model.selectParsedStateMachine templateId)
-  Model.insertAggregatorState (Aggregator.makeNewState stateId) id
 
   pure $ StartTemplate { id }
   where
     -- TODO: this probably needs to be moved to Model module.
     insertFlowInstanceKeyValues
-      :: InstanceId -> Map.Map Text a -> (a -> StoreValue) -> AppM ()
+      :: InstanceId -> Map.Map Text a -> (a -> Model.StoreValue) -> AppM ()
     insertFlowInstanceKeyValues instanceId keyValues f =
       mapM_ (\(k, v) -> Model.insertFlowInstanceKeyValue instanceId k $ f v)
         $ Map.toList keyValues
@@ -81,7 +84,7 @@ getInstance account instanceId = do
     .   fmap (fmap identity)
     <$> Model.selectInstanceKeyValues instanceId Message
   pure $ GetInstance { id                 = instanceId
-                     , templateId         = templateId (flowInstance :: Model.Instance)
+                     , templateId         = flowInstance ^. #templateId
                      , templateParameters = InstanceToTemplateMapping { .. }
                      , state = InstanceState { availableActions = [], history = [] }
                      }
@@ -89,7 +92,7 @@ getInstance account instanceId = do
 listInstances :: Account -> AppM [GetInstance]
 listInstances account@Account {..} = do
   is <- Model.selectInstancesByUserID $ user ^. #id
-  let iids = map (id :: Instance -> InstanceId) is
+  let iids = map (view #id) is
   mapM (getInstance account) iids
 
 getInstanceView :: Account -> InstanceId -> AppM GetInstanceView
@@ -109,7 +112,10 @@ getInstanceView account@Account {..} instanceId = do
     .   fmap (fmap unsafeUserID)
     <$> Model.selectInstanceKeyValues instanceId User
 
-  (machine, aggrState) <- Model.selectAggregatorData instanceId
+  fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
+  let aggrState = instanceToAggregator fullInstance
+  {- HLINT ignore "Use ." -}
+  machine <- compile $ fullInstance ^. #template ^. #process
 
   case (getUserName (user ^. #id) users, mAllowedEvents machine aggrState) of
     (Just userName, Just allowedEvents) ->
@@ -120,9 +126,9 @@ getInstanceView account@Account {..} instanceId = do
                 Set.filter (\e -> eventInfoUser e == userName) allowedEvents
               userActions = catMaybes . Set.toList $ Set.map
                 (\e -> do
-                  deed  <- toApiDeed $ eventInfoDeed e
-                  docId <- Map.lookup (eventInfoDocument e) documents
-                  pure $ InstanceUserAction deed docId
+                  userAction <- toApiUserAction $ eventInfoAction e
+                  docId      <- Map.lookup (eventInfoDocument e) documents
+                  pure $ InstanceUserAction userAction docId
                 )
                 userAllowedEvents
 
@@ -156,13 +162,13 @@ getInstanceView account@Account {..} instanceId = do
       []      -> Nothing
       (x : _) -> Just x
 
-    toApiDeed :: Machinize.Deed -> Maybe Api.InstanceEventDeed
-    toApiDeed Machinize.Approval  = Just Api.Approve
-    toApiDeed Machinize.Signature = Just Api.Sign
-    toApiDeed Machinize.View      = Just Api.View
-    toApiDeed Machinize.Rejection = Just Api.Reject
-    toApiDeed (Machinize.Field _) = Nothing
-    toApiDeed Machinize.Timeout   = Nothing
+    toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
+    toApiUserAction Machinize.Approval  = Just Api.Approve
+    toApiUserAction Machinize.Signature = Just Api.Sign
+    toApiUserAction Machinize.View      = Just Api.View
+    toApiUserAction Machinize.Rejection = Just Api.Reject
+    toApiUserAction (Machinize.Field _) = Nothing
+    toApiUserAction Machinize.Timeout   = Nothing
 
     toDocumentOverview
       :: Set EventInfo
@@ -174,19 +180,18 @@ getInstanceView account@Account {..} instanceId = do
 
       where
         docEvents = Set.filter (\e -> eventInfoDocument e == docName) userReceivedEvents
-        docHasDeed deed =
-          Set.filter (\e -> eventInfoDeed e == deed) docEvents /= Set.empty
-        docState | docHasDeed Machinize.Approval = Approved
-                 | docHasDeed Machinize.Signature = Signed
-                 | docHasDeed Machinize.View     = Viewed
-                 | docHasDeed Machinize.Rejection = Rejected
-                 | otherwise                     = Started
+        docHasAction action =
+          Set.filter (\e -> eventInfoAction e == action) docEvents /= Set.empty
+        docState | docHasAction Machinize.Approval = Approved
+                 | docHasAction Machinize.Signature = Signed
+                 | docHasAction Machinize.View = Viewed
+                 | docHasAction Machinize.Rejection = Rejected
+                 | otherwise                   = Started
 
-checkInstancePerms :: Account -> InstanceId -> AccessAction -> AppM Instance
+checkInstancePerms :: Account -> InstanceId -> AccessAction -> AppM Model.Instance
 checkInstancePerms account instanceId action = do
   flowInstance <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
-  let tid = templateId (flowInstance :: Instance)
-  template <- fromMaybeM throwTemplateNotFoundError . Model.selectTemplate $ tid
-  let fid = folderId (template :: GetTemplate)
-  guardUserHasPermission account [canDo action $ FlowTemplateR fid]
+  let tid = flowInstance ^. #templateId
+  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate tid
+  guardUserHasPermission account [canDo action . FlowTemplateR $ template ^. #folderId]
   pure flowInstance

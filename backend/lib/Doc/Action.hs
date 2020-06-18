@@ -212,8 +212,7 @@ postDocumentPendingChange olddoc signatoryLink = do
       commonDocumentClosingActions olddoc
       document <- theDocument
       when
-          (  signatorylinkconfirmationdeliverymethod signatoryLink
-          == NoConfirmationDelivery
+          (signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
           )
         $ sendPartyProcessFinalizedNotification document signatoryLink
     else do

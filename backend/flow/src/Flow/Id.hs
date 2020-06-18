@@ -12,7 +12,7 @@ import Servant.API
 data FlowIdKind
     = InstanceId
     | TemplateId
-    | MessageId
+    | EventId
 
 newtype Id (a :: FlowIdKind) = Id UUID
   deriving (Eq, Show, Generic)
@@ -31,6 +31,7 @@ instance ToJSON (Id a) where
 
 type InstanceId = Id 'InstanceId
 type TemplateId = Id 'TemplateId
+type EventId = Id 'EventId
 
 instance PQFormat (Id a) where
   pqFormat = pqFormat @UUID

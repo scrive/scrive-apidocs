@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.4.4"
+  version: "0.5.0"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -786,13 +786,13 @@ components:
     InstanceEvent:
       type: object
       required:
-        - deed
+        - action
         - user
         - document
         - timestamp
       properties:
-        deed:
-          $ref: "#/components/schemas/InstanceEventDeed"
+        action:
+          $ref: "#/components/schemas/InstanceEventAction"
         user:
           $ref: "#/components/schemas/RichUserId"
         document:
@@ -802,7 +802,7 @@ components:
           format: date-time
           example: "1997-01-01T12:00:27.87.00000Z"
 
-    InstanceEventDeed:
+    InstanceEventAction:
       type: string
       enum:
         - approval

@@ -64,10 +64,10 @@ collectVariables HighTongue {..} = foldl toVariables mempty stages
     expectToVariables :: Set Expect -> FlowVariables
     expectToVariables stageExpect = foldMap unexpect $ toList stageExpect
 
-    actionToVariables :: [Action] -> FlowVariables
+    actionToVariables :: [SystemAction] -> FlowVariables
     actionToVariables = foldMap unaction
 
-    unaction :: Action -> FlowVariables
+    unaction :: SystemAction -> FlowVariables
     unaction Notify {..} =
       FlowVariables (fromList actionUsers) mempty (singleton actionMessage) mempty
     unaction Close {..} = FlowVariables mempty (fromList actionDocuments) mempty mempty

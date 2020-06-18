@@ -7,7 +7,6 @@
 
 module Flow.Server where
 
-import Control.Arrow (left)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
@@ -15,7 +14,6 @@ import Control.Monad.Time
 import Data.ByteString (ByteString)
 import Data.Text as T
 import Data.Text.Encoding
-import Data.Yaml
 import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Class
 import Log.Monad (LogT)
@@ -45,7 +43,7 @@ import Flow.OrphanInstances ()
 import Flow.Server.Handlers.Instance
 import Flow.Server.Types
 import Folder.Model (FolderGet(..))
-import Folder.Types (FolderID, unsafeFolderID)
+import Folder.Types (unsafeFolderID)
 import Log.Configuration (LogRunner(LogRunner, withLogger))
 import User.Model
 import UserGroup.Internal (unsafeUserGroupID)
@@ -142,7 +140,7 @@ deleteTemplate :: Account -> TemplateId -> AppM NoContent
 deleteTemplate account id = do
   logInfo_ "deleting template"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
-  let fid = folderId (template :: GetTemplate)
+  let fid = template ^. #folderId
   guardUserHasPermission account [canDo DeleteA $ FlowTemplateR fid]
   Model.deleteTemplate id
   pure NoContent
@@ -151,32 +149,43 @@ getTemplate :: Account -> TemplateId -> AppM GetTemplate
 getTemplate account templateId = do
   logInfo_ "getting template"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
-  let fid = folderId (template :: GetTemplate)
+  let fid = template ^. #folderId
   guardUserHasPermission account [canDo ReadA $ FlowTemplateR fid]
-  pure template
+  pure $ toGetTemplate template
+
+toGetTemplate :: Template -> GetTemplate
+toGetTemplate t = GetTemplate { id        = t ^. #id
+                              , name      = t ^. #name
+                              , process   = t ^. #process
+                              , committed = t ^. #committed
+                              , folderId  = t ^. #folderId
+                              }
 
 patchTemplate :: Account -> TemplateId -> PatchTemplate -> AppM GetTemplate
-patchTemplate account templateId patch = do
+patchTemplate account templateId PatchTemplate {..} = do
   logInfo_ "patching template"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
-  when (isJust $ committed template) throwTemplateAlreadyCommittedError
-  let fid = folderId (template :: GetTemplate)
+  when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
+  let fid = template ^. #folderId
   guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
-  fromMaybeM throwTemplateNotFoundError $ Model.updateTemplate templateId patch
+  let ut = UpdateTemplate templateId name process Nothing
+  updated <- fromMaybeM throwTemplateNotFoundError $ Model.updateTemplate ut
+  pure $ toGetTemplate updated
 
 commitTemplate :: Account -> TemplateId -> AppM NoContent
 commitTemplate account id = do
   logInfo_ "committing template"
   now      <- liftIO currentTime
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
-  when (isJust $ committed template) throwTemplateAlreadyCommittedError
-  templateDSL <- fromMaybeM throwTemplateNotFoundError $ Model.getTemplateDsl id
-  machine     <-
-    either throwDSLValidationError' pure $ decodeHighTongue templateDSL >>= machinize
-  let fid = folderId (template :: GetTemplate)
+  when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
+  let templateDSL = template ^. #process
+  -- We're currently not storing the machine, so we throw it away.
+  either throwDSLValidationError' (const $ pure ())
+    $   decodeHighTongue templateDSL
+    >>= machinize
+  let fid = template ^. #folderId
   guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
-  Model.commitTemplate now id
-  Model.insertParsedStateMachine id machine
+  _ <- Model.updateTemplate $ UpdateTemplate id Nothing Nothing (Just now)
   pure NoContent
   where
     -- TODO: Currently, there's no way to get more than a singleton list of validation
@@ -186,22 +195,6 @@ commitTemplate account id = do
       []      -> throwDSLValidationError "Unknown validation error"
       err : _ -> throwDSLValidationError $ error_message err
 
-machinize :: HighTongue -> Either [ValidationError] Machine
-machinize highTongue = packError `left` linear highTongue
-  where
-    -- TODO: better error messages from transducer and machinize modules.
-    packError err =
-      [ValidationError { line_number = 0, column = 0, error_message = pack $ show err }]
-
-decodeHighTongue :: FlowDSL -> Either [ValidationError] HighTongue
-decodeHighTongue template = packError `left` decodeEither' (encodeUtf8 template)
-  where
-    packError err =
-      [ ValidationError { line_number   = 0
-                        , column        = 0
-                        , error_message = pack $ prettyPrintParseException err
-                        }
-      ]
 
 -- TODO: Do better error messages.
 -- TODO: Compilation step?
@@ -214,9 +207,9 @@ listTemplates :: Account -> AppM [GetTemplate]
 listTemplates account@Account {..} = do
   logInfo_ "list templates"
   templates <- Model.selectTemplatesByUserID $ user ^. #id
-  let fids = (folderId :: GetTemplate -> FolderID) <$> templates
+  let fids = view #folderId <$> templates
   guardUserHasPermission account [ canDo ReadA $ FlowTemplateR fid | fid <- fids ]
-  pure templates
+  pure $ fmap toGetTemplate templates
 
 naturalFlow
   :: (LogT (DBT Handler) a -> DBT Handler a) -> FlowConfiguration -> AppM a -> Handler a

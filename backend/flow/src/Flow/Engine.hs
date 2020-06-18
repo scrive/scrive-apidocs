@@ -1,10 +1,16 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Strict #-}
 
-module Flow.Engine (processMachinizeEvent, finalizeFlow, processEvent) where
+module Flow.Engine
+  ( processMachinizeEvent
+  , finalizeFlow
+  , processEvent
+  , compile
+  ) where
 
 import Control.Monad.Catch
 import Control.Monad.Extra (fromMaybeM)
@@ -21,25 +27,21 @@ import Doc.DocumentID (DocumentID)
 import Doc.DocumentMonad
 import Doc.SignatoryLinkID (SignatoryLinkID, fromSignatoryLinkID)
 import EventStream.Class
-import Flow.Aggregator
-  ( AggregatorError(DuplicateEvent, TransducerError, UnknownEventInfo)
-  , AggregatorStep(FinalState, NeedMoreEvents, StateChange), runAggregatorStep
-  )
 import File.Storage (MonadFileStorage)
-import Flow.ActionConsumers (toConsumableAction, consumeFlowAction) -- in backend/lib/Flow
+import Flow.ActionConsumers (consumeFlowAction, toConsumableAction)
+import Flow.Aggregator
+import Flow.HighTongue
 import Flow.Id (InstanceId)
-import Flow.Machinize (Deed(..), EventInfo(..), LowAction)
-import Flow.Model
-  ( selectAggregatorData, selectDocumentNameFromKV, selectUserNameFromKV
-  , updateAggregatorState
-  )
+import Flow.Machinize
+import Flow.Model as Model
+import Flow.Model.Types
 import GuardTime (GuardTimeConfMonad)
 import MailContext
-import qualified Flow.Transducer as Transducer (Error)
+import qualified Flow.Transducer as Transducer
 
 data EngineEvent = EngineEvent
     { instanceId :: InstanceId
-    , deed :: Deed
+    , userAction :: UserAction
     , signatoryId :: SignatoryLinkID
     , documentId :: DocumentID
     }
@@ -48,7 +50,7 @@ data EngineEvent = EngineEvent
 toPairs :: EngineEvent -> [Pair]
 toPairs EngineEvent {..} =
   [ "instance_id" .= instanceId
-  , "deed" .= deed
+  , "user_action" .= userAction
   , "signatory_id" .= show (fromSignatoryLinkID signatoryId)
   , "document_id" .= documentId
   ]
@@ -56,10 +58,12 @@ toPairs EngineEvent {..} =
 data EngineError
     = NoAssociatedDocument
     | NoAssociatedUser
+    | NoInstance
     | UnexpectedEventReceived
     | TransducerSteppingFailed Transducer.Error
     | DuplicateEventReceived
     | NotImplemented Text
+    | InvalidProcess [ValidationError]
   deriving (Show, Exception)
 
 processEvent
@@ -86,7 +90,7 @@ processEvent event@EngineEvent {..} = do
     userName <- fromMaybeM noUserNameFound $ selectUserNameFromKV instanceId signatoryId
     processMachinizeEvent
       instanceId
-      EventInfo { eventInfoDeed     = deed
+      EventInfo { eventInfoAction   = userAction
                 , eventInfoUser     = userName
                 , eventInfoDocument = documentName
                 }
@@ -123,6 +127,14 @@ pushActions instanceId actions = do
 finalizeFlow :: (MonadLog m, MonadDB m, MonadThrow m) => m ()
 finalizeFlow = throwM $ NotImplemented "Finalizing flow"
 
+compile :: (MonadLog m, MonadThrow m) => Text -> m Machine
+compile process =
+  either throwDSLValidationError' pure $ decodeHighTongue process >>= machinize
+  where
+    throwDSLValidationError' errs = do
+      logAttention_ $ "Flow DSL compatibility broken, compilation failed: " <> showt errs
+      throwM $ InvalidProcess errs
+
 processMachinizeEvent
   :: ( CryptoRNG m
      , DocumentMonad m
@@ -142,10 +154,15 @@ processMachinizeEvent
   -> EventInfo
   -> m ()
 processMachinizeEvent instanceId eventInfo = do
-  (machine, aggregator) <- selectAggregatorData instanceId
-  let (aggregatorResult, newState) = runAggregatorStep eventInfo aggregator machine
+  eventId      <- insertEvent $ toInsertEvent instanceId eventInfo
+  fullInstance <- fromMaybeM noInstance $ selectFullInstance instanceId
+  let aggregator = instanceToAggregator fullInstance
+  {- HLINT ignore "Use ." -}
+  machine <- compile $ fullInstance ^. #template ^. #process
+  let (aggregatorResult, newAggregator) = runAggregatorStep eventInfo aggregator machine
   either failGracefully processStep aggregatorResult
-  updateAggregatorState instanceId newState
+  let stateChange = currentState aggregator /= currentState newAggregator
+  updateAggregatorState instanceId newAggregator eventId stateChange
   where
     -- TODO: Think of some error monad. MonadFail is ugly.
     -- TODO: This fail thing may leak some error to user.
@@ -161,9 +178,13 @@ processMachinizeEvent instanceId eventInfo = do
       logAttention_ $ "Transducer is in inconsistent state: " <> showt err
       throwM $ TransducerSteppingFailed err
 
+
     processStep NeedMoreEvents        = logTrace_ "Aggregator needs more events to step."
     processStep (StateChange actions) = pushActions instanceId actions
     processStep (FinalState  actions) = do
       pushActions instanceId actions
       finalizeFlow
 
+    noInstance = do
+      logAttention_ "Flow instance with this ID does not exist."
+      throwM NoInstance

@@ -36,7 +36,6 @@ testTemplateHappyCrud = do
   template1 <- assertRight "create response" . request env $ createTemplate
     createTemplateData
 
-  {- HLINT ignore "Redundant id" -}
   let tid = id (template1 :: GetCreateTemplate)
   template2 <- assertRight "get response" . request env $ getTemplate tid
 

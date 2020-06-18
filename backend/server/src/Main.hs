@@ -51,7 +51,6 @@ import UserGroup.Types.PaymentPlan
 import Utils.IO
 import Utils.Network
 import qualified HostClock.Model as HC
-import Flow.Server
 import qualified VersionTH
 
 {-# ANN type CmdConf ("HLint: ignore Use newtype instead of data" :: String) #-}

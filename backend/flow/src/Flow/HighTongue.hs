@@ -5,7 +5,7 @@
 
 module Flow.HighTongue
     ( Expect(..)
-    , Action(..)
+    , SystemAction(..)
     , HighTongue(..)
     , Stage(..)
     , DocumentName
@@ -14,13 +14,20 @@ module Flow.HighTongue
     , FieldName
     , StateName
     , DSLVersion
+    , ValidationError(..)
+    , decodeHighTongue
     )
   where
 
+import Control.Arrow
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.Types
 import Data.Set (Set)
+import Data.Text
+import Data.Text.Encoding
+import Data.Word
+import Data.Yaml
 import GHC.Generics
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Set as Set
@@ -89,7 +96,7 @@ parseSetExpect = withObject "expect"
         "Expected one of the keys `approved-by`, `received-data`, `signed-by`, `viewed-by`"
         v
 
-data Action
+data SystemAction
     = Notify
         { actionUsers :: [UserName]
         , actionMessage :: MessageName
@@ -99,20 +106,20 @@ data Action
         }
   deriving (Show, Eq, Ord, Generic)
 
-instance ToJSON Action where
+instance ToJSON SystemAction where
   toJSON (Notify users message) =
     object ["notify" .= object ["users" .= toJSON users, "message" .= toJSON message]]
   toJSON (Close documents) = object ["close" .= object ["documents" .= toJSON documents]]
 
-parseNotify :: Value -> Parser Action
+parseNotify :: Value -> Parser SystemAction
 parseNotify = withObject "notify" $ \o -> do
   Notify <$> o .: "users" <*> o .: "message"
 
-parseClose :: Value -> Parser Action
+parseClose :: Value -> Parser SystemAction
 parseClose = withObject "close" $ \o -> do
   Close <$> o .: "documents"
 
-instance FromJSON Action where
+instance FromJSON SystemAction where
   parseJSON = withObject "action" $ \o -> do
     (k, v) <- case HM.toList o of
       [(k, v)] -> pure (k, v)
@@ -124,7 +131,7 @@ instance FromJSON Action where
 
 data Stage = Stage
     { stageName :: Text
-    , stageActions :: [Action]
+    , stageActions :: [SystemAction]
     , stageExpect :: Set Expect
     }
   deriving (Show, Eq)
@@ -138,11 +145,8 @@ instance FromJSON Stage where
     where
       parseStage k = withObject "stage" $ \o ->
         Stage k
-          <$> o
-          .:  "actions"
-          <?> Key "actions"
-          <*> explicitParseField parseSetExpect o "expect"
-          <?> Key "expect"
+          <$> (o .: "actions" <?> Key "actions")
+          <*> (explicitParseField parseSetExpect o "expect" <?> Key "expect")
 
 newtype DSLVersion = DSLVersion Text
   deriving (Show, Eq)
@@ -156,3 +160,29 @@ instance FromJSON DSLVersion where
 supportedVersions :: [DSLVersion]
 supportedVersions = [DSLVersion "1"]
 
+data ValidationError = ValidationError
+    { line_number :: Word32
+    , column :: Word32
+    , error_message :: Text
+    }
+  deriving (Eq, Generic, Show)
+
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+instance FromJSON ValidationError where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON ValidationError where
+  toEncoding = genericToEncoding aesonOptions
+
+
+decodeHighTongue :: Text -> Either [ValidationError] HighTongue
+decodeHighTongue template = packError `left` decodeEither' (encodeUtf8 template)
+  where
+    packError err =
+      [ ValidationError { line_number   = 0
+                        , column        = 0
+                        , error_message = pack $ prettyPrintParseException err
+                        }
+      ]

@@ -17,9 +17,8 @@ module Flow.Api
     , GetCreateTemplate(..)
     , GetTemplate(..)
     , PatchTemplate(..)
-    , ValidationError(..)
     , InstanceToTemplateMapping(..)
-    , InstanceEventDeed(..)
+    , InstanceEventAction(..)
     , InstanceEvent(..)
     , InstanceStage(..)
     , InstanceState(..)
@@ -41,11 +40,11 @@ import Data.Aeson.Casing
 import Data.Map
 import Data.Proxy
 import Data.Time.Clock
-import Data.Word
 import GHC.Generics
 import Servant.API
 
 import Doc.DocumentID (DocumentID)
+import Flow.HighTongue
 import Flow.Id
 import Folder.Types
 import User.UserID (UserID)
@@ -89,7 +88,6 @@ instance FromJSON StartTemplate where
 instance ToJSON StartTemplate where
   toEncoding = genericToEncoding aesonOptions
 
-
 data GetTemplate = GetTemplate
     { id :: TemplateId
     , name :: Text
@@ -119,20 +117,6 @@ instance ToJSON PatchTemplate where
   toEncoding = genericToEncoding aesonOptions
 
 
-data ValidationError = ValidationError
-    { line_number :: Word32
-    , column :: Word32
-    , error_message :: Text
-    }
-  deriving (Eq, Generic, Show)
-
-instance FromJSON ValidationError where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON ValidationError where
-  toEncoding = genericToEncoding aesonOptions
-
-
 data InstanceToTemplateMapping = InstanceToTemplateMapping
     { documents :: Map Text DocumentID
     , users :: Map Text UserID
@@ -147,22 +131,21 @@ instance ToJSON InstanceToTemplateMapping where
   toEncoding = genericToEncoding aesonOptions
 
 
-data InstanceEventDeed
+data InstanceEventAction
     = Approve
     | Sign
     | View
     | Reject
   deriving (Eq, Ord, Generic, Show)
 
-instance FromJSON InstanceEventDeed where
+instance FromJSON InstanceEventAction where
   parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
 
-instance ToJSON InstanceEventDeed where
+instance ToJSON InstanceEventAction where
   toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
-
 data InstanceEvent = InstanceEvent
-    { deed :: InstanceEventDeed
+    { action :: InstanceEventAction
     , user :: UserID
     , document :: DocumentID
     , timestamp :: Text -- TODO: do something about this text...
@@ -217,10 +200,8 @@ instance ToJSON GetInstance where
   toEncoding = genericToEncoding aesonOptions
 
 
--- Maybe there should be a timestamp as well?
--- Though the timestamp doesn't make sense in case of POST event.
 data InstanceAuthorAction = InstanceAuthorAction
-    { actionType :: InstanceEventDeed
+    { actionType :: InstanceEventAction
     , actionUser :: UserID
     , actionDocument :: DocumentID
     }
@@ -236,7 +217,7 @@ instance ToJSON InstanceAuthorAction where
 -- Maybe there should be a timestamp as well?
 -- Though the timestamp doesn't make sense in case of POST event.
 data InstanceUserAction = InstanceUserAction
-    { actionType :: InstanceEventDeed
+    { actionType :: InstanceEventAction
     , actionDocument :: DocumentID
     }
   deriving (Eq, Generic, Ord, Show)

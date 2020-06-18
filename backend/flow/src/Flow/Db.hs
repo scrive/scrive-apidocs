@@ -10,20 +10,20 @@ flowTables :: [Table]
 flowTables =
   [ tableFlowTemplates
   , tableFlowInstances
-  , tableFlowStateMachines
   , tableFlowInstancesKVStore
   , tableFlowInstanceSignatories
-  , tableFlowInstanceAggregator
+  , tableFlowEvents
+  , tableFlowAggregatorEvents
   ]
 
 flowMigrations :: MonadDB m => [Migration m]
 flowMigrations =
   [ createTableFlowTemplates
   , createTableFlowInstances
-  , createTableFlowStateMachines
   , createTableFlowInstancesKVStore
   , createTableFlowInstanceSignatories
-  , createTableFlowInstanceAggregator
+  , createTableFlowEvents
+  , createTableFlowAggregatorEvents
   ]
 
 tableFlowTemplates :: Table
@@ -40,6 +40,7 @@ tableFlowTemplates = tblTable
     , tblColumn { colName = "process", colType = TextT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "folder_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "committed", colType = TimestampWithZoneT }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     ]
@@ -64,16 +65,16 @@ tableFlowInstances :: Table
 tableFlowInstances = tblTable
   { tblName        = "flow_instances"
   , tblVersion     = 1
-  , tblColumns     = [ tblColumn { colName     = "id"
-                                 , colType     = UuidT
-                                 , colNullable = False
-                                 , colDefault  = Just "gen_random_uuid()"
-                                 }
-                     , tblColumn { colName     = "template_id"
-                                 , colType     = UuidT
-                                 , colNullable = False
-                                 }
-                     ]
+  , tblColumns     =
+    [ tblColumn { colName     = "id"
+                , colType     = UuidT
+                , colNullable = False
+                , colDefault  = Just "gen_random_uuid()"
+                }
+    , tblColumn { colName = "template_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "current_state", colType = TextT, colNullable = False }
+    , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
+    ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "template_id"]
   , tblForeignKeys =
@@ -94,15 +95,21 @@ tableFlowInstancesKVStore = tblTable
   , tblColumns     =
     [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
     , tblColumn { colName = "key", colType = TextT, colNullable = False }
-                 -- TODO: Column `type` should be an enum, see the check below for allowed values.
+    -- TODO: Column `type` should be an enum, see the check below for allowed values.
     , tblColumn { colName = "type", colType = TextT, colNullable = False }
     , tblColumn { colName = "string", colType = TextT, colNullable = True }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = True }
     , tblColumn { colName = "user_id", colType = BigIntT, colNullable = True }
     ]
   , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
+  , tblIndexes     =
+                      -- Documents cannot be associated with multiple instances.
+                     [ uniqueIndexOnColumn "document_id"
+                      -- Users associated with an instance cannot be used for multiple keys.
+                     , uniqueIndexOnColumns ["instance_id", "user_id"]
+                     ]
   , tblForeignKeys =
-    [ (fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyRestrict }
+    [ (fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyRestrict }
     , (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyRestrict }
     ]
@@ -131,17 +138,17 @@ tableFlowInstanceSignatories = tblTable
   { tblName        = "flow_instance_signatories"
   , tblVersion     = 1
   , tblColumns     =
-    [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    [ tblColumn { colName = "signatory_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
     , tblColumn { colName = "key", colType = TextT, colNullable = False }
-    , tblColumn { colName = "signatory_id", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
-  , tblIndexes     = [indexOnColumns ["instance_id", "signatory_id"]]
+  , tblPrimaryKey  = pkOnColumn "signatory_id"
+  , tblIndexes     = [indexOnColumn "instance_id"]
   , tblForeignKeys =
     [ (fkOnColumns ["instance_id", "key"]
                    "flow_instance_key_value_store"
                    ["instance_id", "key"]
-      ) { fkOnDelete = ForeignKeyRestrict
+      ) { fkOnDelete = ForeignKeyCascade
         }
     , (fkOnColumn "signatory_id" "signatory_links" "id") { fkOnDelete = ForeignKeyRestrict
                                                          }
@@ -155,46 +162,48 @@ createTableFlowInstanceSignatories = Migration
   , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSignatories
   }
 
-tableFlowStateMachines :: Table
-tableFlowStateMachines = tblTable
-  { tblName        = "flow_compiled_state_machine"
+tableFlowEvents :: Table
+tableFlowEvents = tblTable
+  { tblName        = "flow_events"
   , tblVersion     = 1
-  , tblColumns = [ tblColumn { colName     = "template_id"
-                             , colType     = UuidT
-                             , colNullable = False
-                             }
-                 , tblColumn { colName = "data", colType = JsonT, colNullable = False }
-                 ]
-  , tblPrimaryKey  = pkOnColumn "template_id"
+  , tblColumns     =
+    [ tblColumn { colName     = "id"
+                , colType     = UuidT
+                , colNullable = False
+                , colDefault  = Just "gen_random_uuid()"
+                }
+    , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "document_name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "user_action", colType = TextT, colNullable = False }
+    , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
+    ]
+  , tblPrimaryKey  = pkOnColumn "id"
+  , tblIndexes     = [indexOnColumn "instance_id"]
   , tblForeignKeys =
-    [(fkOnColumn "template_id" "flow_templates" "id") { fkOnDelete = ForeignKeyRestrict }]
+    [(fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyCascade }]
   }
 
-createTableFlowStateMachines :: MonadDB m => Migration m
-createTableFlowStateMachines = Migration
-  { mgrTableName = tblName tableFlowStateMachines
+createTableFlowEvents :: MonadDB m => Migration m
+createTableFlowEvents = Migration
+  { mgrTableName = tblName tableFlowEvents
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowStateMachines
+  , mgrAction    = StandardMigration $ createTable True tableFlowEvents
   }
 
-tableFlowInstanceAggregator :: Table
-tableFlowInstanceAggregator = tblTable
-  { tblName        = "flow_instance_aggregator"
+tableFlowAggregatorEvents :: Table
+tableFlowAggregatorEvents = tblTable
+  { tblName        = "flow_aggregator_events"
   , tblVersion     = 1
-  , tblColumns = [ tblColumn { colName     = "instance_id"
-                             , colType     = UuidT
-                             , colNullable = False
-                             }
-                 , tblColumn { colName = "data", colType = JsonT, colNullable = False }
-                 ]
-  , tblPrimaryKey  = pkOnColumn "instance_id"
+  , tblColumns     = [tblColumn { colName = "id", colType = UuidT, colNullable = False }]
+  , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys =
-    [(fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyRestrict }]
+    [(fkOnColumn "id" "flow_events" "id") { fkOnDelete = ForeignKeyCascade }]
   }
 
-createTableFlowInstanceAggregator :: MonadDB m => Migration m
-createTableFlowInstanceAggregator = Migration
-  { mgrTableName = tblName tableFlowInstanceAggregator
+createTableFlowAggregatorEvents :: MonadDB m => Migration m
+createTableFlowAggregatorEvents = Migration
+  { mgrTableName = tblName tableFlowAggregatorEvents
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceAggregator
+  , mgrAction    = StandardMigration $ createTable True tableFlowAggregatorEvents
   }

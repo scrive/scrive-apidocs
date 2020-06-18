@@ -368,6 +368,7 @@ Library
                  , Flow.Machinize
                  , Flow.Model
                  , Flow.Model.Types
+                 , Flow.Model.Types.Internal
                  , Flow.OrphanInstances
                  , Flow.Server
                  , Flow.Server.Handlers.Instance

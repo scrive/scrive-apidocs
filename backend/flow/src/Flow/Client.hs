@@ -12,6 +12,7 @@ import Servant.Client.Core.Request as Client
 import Auth.OAuth
 import Auth.Session
 import Flow.Api
+import Flow.HighTongue
 import Flow.Id
 
 -- TODO: Having Maybe in the AuthClientData instance makes it unclear as to what
