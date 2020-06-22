@@ -110,9 +110,9 @@ testFolderAPIUpdate = do
   user     <- instantiateRandomUser
   ctxAdmin <- mkContextWithUser defaultLang grpAdmin
   ctxUser  <- mkContextWithUser defaultLang user
-  ug <- fromJust <$> dbQuery (UserGroupGet $ grpAdmin ^. #groupID)
+  ug       <- fromJust <$> dbQuery (UserGroupGet $ grpAdmin ^. #groupID)
   let fdrRootID = fromJust $ ug ^. #homeFolderID
-  fdrRoot  <- fromJust <$> (dbQuery $ FolderGet fdrRootID)
+  fdrRoot <- fromJust <$> (dbQuery $ FolderGet fdrRootID)
   let folderAdminRoot = FolderAdminAR (fdrRoot ^. #id)
       admid           = grpAdmin ^. #id
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminRoot
