@@ -92,17 +92,23 @@ var Task = require("../navigation/task");
     },
 
     getInitialStep: function () {
+      var useEIDHubForNOBankIDSign;
+      if (window.fromTemplate !== undefined && fromTemplate.useEIDHubForNOBankIDSign !== undefined) {
+        useEIDHubForNOBankIDSign = fromTemplate.useEIDHubForNOBankIDSign;
+      } else {
+        // workaround for tests
+        useEIDHubForNOBankIDSign = false;
+      }
       var document = this.props.model.document();
       var signatory = document.currentSignatory();
       var isApprover = signatory.approves();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
       var hasEIDNets = signatory.dkNemIDAuthenticationToSign();
-      if (!fromTemplate.useEIDHubForNOBankIDSign) {
+      if (!useEIDHubForNOBankIDSign) {
         hasEIDNets = hasEIDNets || signatory.noBankIDAuthenticationToSign();
       }
-      var hasEIDNOBankID = fromTemplate.useEIDHubForNOBankIDSign
-                           && signatory.noBankIDAuthenticationToSign();
+      var hasEIDNOBankID = useEIDHubForNOBankIDSign && signatory.noBankIDAuthenticationToSign();
       var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
       var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
       var hasOnfidoAuth = signatory.onfidoDocumentCheckAuthenticationToSign()
