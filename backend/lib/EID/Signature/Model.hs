@@ -18,6 +18,7 @@ module EID.Signature.Model (
   , MergeEIDServiceFITupasSignature(..)
   , EIDServiceOnfidoSignature(..)
   , MergeEIDServiceOnfidoSignature(..)
+  , MergeEIDServiceNOBankIDSignature(..)
   ) where
 
 import Control.Monad.Catch
@@ -54,6 +55,7 @@ data ESignature
   | EIDServiceIDINSignature_ !EIDServiceNLIDINSignature
   | EIDServiceFITupasSignature_ !EIDServiceFITupasSignature
   | EIDServiceOnfidoSignature_ !EIDServiceOnfidoSignature
+  | EIDServiceNOBankIDSignature_ !EIDServiceNOBankIDSignature
   deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -73,6 +75,7 @@ data SignatureProvider
   | EIDServiceIDIN
   | EIDServiceTupas
   | EIDServiceOnfido
+  | EIDServiceNOBankID
     deriving (Eq, Ord, Show)
 
 instance PQFormat SignatureProvider where
@@ -93,7 +96,8 @@ instance FromSQL SignatureProvider where
       8  -> return EIDServiceIDIN
       9  -> return EIDServiceTupas
       10 -> return EIDServiceOnfido
-      _  -> throwM RangeError { reRange = [(1, 10)], reValue = n }
+      11 -> return EIDServiceNOBankID
+      _  -> throwM RangeError { reRange = [(1, 11)], reValue = n }
 
 instance ToSQL SignatureProvider where
   type PQDest SignatureProvider = PQDest Int16
@@ -107,6 +111,7 @@ instance ToSQL SignatureProvider where
   toSQL EIDServiceIDIN     = toSQL (8 :: Int16)
   toSQL EIDServiceTupas    = toSQL (9 :: Int16)
   toSQL EIDServiceOnfido   = toSQL (10 :: Int16)
+  toSQL EIDServiceNOBankID = toSQL (11 :: Int16)
 
 
 ----------------------------------------
@@ -230,6 +235,36 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceFITupasSignature 
         sqlSet "signatory_name"            eidServiceFITupasSigSignatoryName
         sqlSet "signatory_personal_number" eidServiceFITupasSigPersonalNumber
         sqlSet "signatory_date_of_birth"   eidServiceFITupasSigDateOfBirth
+
+-- | Insert bank id signature for a given signatory or replace the existing one.
+data MergeEIDServiceNOBankIDSignature = MergeEIDServiceNOBankIDSignature SignatoryLinkID EIDServiceNOBankIDSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNOBankIDSignature () where
+  dbUpdate (MergeEIDServiceNOBankIDSignature slid EIDServiceNOBankIDSignature {..}) = do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
+        setFields
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id"       slid
+        sqlSet "provider"                EIDServiceNOBankID
+        sqlSet "signatory_name"          eidServiceNOBankIDSigSignatoryName
+        sqlSet "signatory_personal_number" eidServiceNOBankIDSigPersonalNumber
+        sqlSet "signatory_date_of_birth" eidServiceNOBankIDSigDateOfBirth
+        sqlSet "data"                    eidServiceNOBankIDSigSignedText
+        sqlSet "signature" . encodeUtf8 $ fromMaybe "" eidServiceNOBankIDSigCertificate
 
 -- Note to Tom: please refactor these!
 data MergeEIDServiceOnfidoSignature = MergeEIDServiceOnfidoSignature SignatoryLinkID EIDServiceOnfidoSignature
@@ -380,4 +415,13 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       , eidServiceOnfidoSigMethod        = fromJust $ do
                                              dataText <- sdata
                                              decodeStrict $ encodeUtf8 dataText
+      }
+    EIDServiceNOBankID -> EIDServiceNOBankIDSignature_ $ EIDServiceNOBankIDSignature
+      { eidServiceNOBankIDSigInternalProvider = EIDServiceNOBankIDStandard
+      , eidServiceNOBankIDSigSignatoryName    = fromJust msignatory_name
+      , eidServiceNOBankIDSigPhoneNumber      = Nothing
+      , eidServiceNOBankIDSigPersonalNumber   = msignatory_personal_number
+      , eidServiceNOBankIDSigDateOfBirth      = msignatory_dob
+      , eidServiceNOBankIDSigSignedText       = sdata
+      , eidServiceNOBankIDSigCertificate      = decodeUtf8 <$> signature
       }

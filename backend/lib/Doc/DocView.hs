@@ -94,8 +94,11 @@ pageDocumentSignView ctx document siglink ad = do
         (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document))
         document
       mainfile = maybe (unsafeFileID 0) mainfileid (documentfile document)
+      useEIDHubForNOBankIDSign =
+        fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOSign
   renderTextTemplate "pageDocumentSignView" $ do
     F.value "documentid" . show $ documentid document
+    F.value "useEIDHubForNOBankIDSign" useEIDHubForNOBankIDSign
     F.value "siglinkid" . show $ signatorylinkid siglink
     F.value "documenttitle" $ documenttitle document
     F.value "loggedinsignatory" loggedAsSignatory

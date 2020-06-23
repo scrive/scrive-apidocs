@@ -1,10 +1,13 @@
 module EID.EIDService.Provider.NOBankID (
     beginEIDServiceTransaction
   , completeEIDServiceAuthTransaction
+  , completeEIDServiceSignTransaction
+  , NOBankIDEIDServiceCompletionData(..)
 ) where
 
 import Control.Monad.Trans.Maybe
 import Data.Aeson
+import Data.Aeson.Types (Parser)
 import Log
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
@@ -29,6 +32,7 @@ import Happstack.Fields
 import InputValidation (asValidPhoneForNorwegianBankID, resultToMaybe)
 import Kontra hiding (InternalError)
 import Session.Model
+import Templates
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -36,27 +40,59 @@ import Util.MonadUtils
 provider :: EIDServiceTransactionProvider
 provider = EIDServiceTransactionProviderNOBankID
 
-data NOBankIDEIDServiceProviderParams = NOBankIDEIDServiceProviderParams {
+data NOBankIDEIDServiceProviderAuthParams = NOBankIDEIDServiceProviderAuthParams {
     cnoestPhoneNumber :: Maybe Text
   , cnoestPersonalNumber :: Text
   }
 
-instance ToJSON NOBankIDEIDServiceProviderParams where
+instance ToJSON NOBankIDEIDServiceProviderAuthParams where
   toJSON req = object $ ["personalNumber" .= cnoestPersonalNumber req] <> phoneField
     where phoneField = maybe [] (\pn -> ["phoneNumber" .= pn]) $ cnoestPhoneNumber req
 
+-- BC: sorry, I had no idea what cnoest stands for
+data NOBankIDEIDServiceProviderSignParams = NOBankIDEIDServiceProviderSignParams {
+    cnoest2PhoneNumber :: Maybe Text
+  , cnoest2PersonalNumber :: Maybe Text
+  , cnoest2SignText :: Text
+  , cnoest2SignDescription :: Text
+  , cnoest2UseMobile :: Bool
+  }
+
+instance ToJSON NOBankIDEIDServiceProviderSignParams where
+  toJSON req =
+    object
+      $  personalNumberField
+      <> phoneField
+      <> signField
+      <> descriptionField
+      <> useMobileField
+    where
+      phoneField = maybe [] (\pn -> ["phoneNumber" .= pn]) $ cnoest2PhoneNumber req
+      personalNumberField =
+        maybe [] (\pn -> ["personalNumber" .= pn]) $ cnoest2PersonalNumber req
+      signField        = ["signText" .= cnoest2SignText req]
+      descriptionField = ["signDescription" .= cnoest2SignDescription req]
+      useMobileField   = ["useMobileBankID" .= cnoest2UseMobile req]
+
+withAlternativeObjects
+  :: String -> (Object -> Parser a) -> (Object -> Parser a) -> Value -> Parser a
+withAlternativeObjects name p1 p2 v = withObject name p1 v <|> withObject name p2 v
+
 newtype StartNOBankIDEIDServiceTransactionResponse = StartNOBankIDEIDServiceTransactionResponse {
-    snoestAuthURL :: Text
+    snoestURL :: Text
   }
 
 instance FromJSON StartNOBankIDEIDServiceTransactionResponse where
   parseJSON outer =
     StartNOBankIDEIDServiceTransactionResponse
       <$> (   withObject "object" (.: "providerInfo") outer
-          >>= withObject "object" (.: eidServiceFieldName)
-          >>= withObject "object" (.: "authUrl")
+          >>= withAlternativeObjects "object" (.: providerAuth) (.: providerSign)
+          >>= withAlternativeObjects "object" (.: "signUrl")    (.: "authUrl")
           )
-    where eidServiceFieldName = toEIDServiceProviderName provider <> "Auth"
+    where
+      providerName = toEIDServiceProviderName provider
+      providerAuth = providerName <> "Auth"
+      providerSign = providerName <> "Sign"
 
 beginEIDServiceTransaction
   :: Kontrakcja m
@@ -66,13 +102,20 @@ beginEIDServiceTransaction
   -> SignatoryLink
   -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
-  personalNumberField <-
-    guardJust . getFieldByIdentity PersonalNumberFI . signatoryfields $ sl
-  ssn <- guardJust . fieldTextValue $ personalNumberField
+  let mssn' =
+        fieldTextValue =<< (getFieldByIdentity PersonalNumberFI . signatoryfields $ sl)
+      mssn = case mssn' of
+        Just "" -> Nothing
+        _       -> mssn'
   let mNonEmptyNOPhone = case getMobile sl of
         "" -> Nothing
         p  -> resultToMaybe . asValidPhoneForNorwegianBankID $ p
-  ctx             <- getContext
+  ctx       <- getContext
+  signText' <- renderLocalTemplate doc "tbs" $ do
+    F.value "document_title" $ documenttitle doc
+    F.value "document_id" . show $ documentid doc
+  -- EID HUB breaks on double quotes
+  let signText = T.replace "\"" "" signText'
   mkontraRedirect <- case authKind of
     EIDServiceAuthToView _ -> Just <$> guardJustM (getField "redirect")
     EIDServiceAuthToSign   -> return Nothing
@@ -83,17 +126,36 @@ beginEIDServiceTransaction conf authKind doc sl = do
                                        , redSignatoryLinkID = signatorylinkid sl
                                        , redPostRedirectUrl = mkontraRedirect
                                        }
+      method = case authKind of
+        EIDServiceAuthToView _ -> EIDServiceAuthMethod
+        EIDServiceAuthToSign   -> EIDServiceSignMethod
+  params <- do
+    case authKind of
+      EIDServiceAuthToView _ -> do
+        ssn <- guardJust mssn
+        return . toJSON $ NOBankIDEIDServiceProviderAuthParams
+          { cnoestPhoneNumber    = mNonEmptyNOPhone
+          , cnoestPersonalNumber = ssn
+          }
+      EIDServiceAuthToSign -> do
+        useMobile' <- guardJustM $ getField "useMobile"
+        let useMobile = useMobile' == "true"
+        return . toJSON $ NOBankIDEIDServiceProviderSignParams
+          { cnoest2PhoneNumber     = mNonEmptyNOPhone
+          , cnoest2PersonalNumber  = mssn
+          , cnoest2UseMobile       = useMobile
+                   -- should these 2 text be translated? they never were for NETS
+          , cnoest2SignText        = signText
+          , cnoest2SignDescription = "Scrive document"
+          }
   let createReq = CreateEIDServiceTransactionRequest
         { cestProvider           = provider
-        , cestMethod             = EIDServiceAuthMethod
+        , cestMethod             = method
         , cestRedirectUrl        = showt redirectUrl
-        , cestProviderParameters = Just . toJSON $ NOBankIDEIDServiceProviderParams
-                                     { cnoestPhoneNumber    = mNonEmptyNOPhone
-                                     , cnoestPersonalNumber = ssn
-                                     }
+        , cestProviderParameters = Just params
         }
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
-  turl <- snoestAuthURL <$> startTransactionWithEIDService conf provider tid
+  turl <- snoestURL <$> startTransactionWithEIDService conf provider tid
   chargeForItemSingle CINOBankIDAuthenticationStarted $ documentid doc
   return (tid, turl, EIDServiceTransactionStatusStarted)
 
@@ -105,22 +167,31 @@ data NOBankIDEIDServiceCompletionData = NOBankIDEIDServiceCompletionData
   , eidnobidIssuerDistinguishedName :: !T.Text
   , eidnobidName :: !(Maybe Text)
   , eidnobidPhoneNumber :: !(Maybe T.Text)
+  , eidnobidPersonalNumber :: !(Maybe T.Text)
+  , eidnobidSignText :: !(Maybe T.Text)
   , eidnobidPid :: !T.Text
   } deriving (Eq, Ord, Show)
 
 instance FromJSON NOBankIDEIDServiceCompletionData where
-  parseJSON outer =
+  parseJSON outer = do
+    msigntext <-
+      withObject "object" (.: "providerParameters") outer >>= withObjectOrNothing
+        "object"
+        (.: "sign")
+        (withObject "object" (.: providerName) >=> (.: "signText"))
     withObject "object" (.: "providerInfo") outer
-      >>= withObject "object" (.: providerAuth)
+      >>= withAlternativeObjects "object" (.: providerAuth) (.: providerSign)
       >>= withObject "object" (.: "completionData")
       >>= withObject
             "object"
             (\o -> do
-              pid              <- o .: "pid"
-              usedMobileBankID <- o .: "usedMobileBankID"
-              mphoneNumber     <- o .:? "phoneNumber"
-              idn              <- o .: "issuerDN"
-              (mdob, mname)    <- o .: "profileData" >>= withObject
+              pid  <- o .: "pid"
+              mssn <- o .:? "ssn"
+              msdo <- o .:? "sdo"
+              let usedMobileBankID = False -- TODO this should work somehow
+              mphoneNumber  <- o .:? "phoneNumber"
+              idn           <- o .: "issuerDN"
+              (mdob, mname) <- o .: "profileData" >>= withObject
                 "object"
                 (\cd -> (,) <$> cd .:? "birthdate" <*> cd .:? "name")
               (mcer, dn) <- o .: "certificateData" >>= withObject
@@ -134,14 +205,19 @@ instance FromJSON NOBankIDEIDServiceCompletionData where
                 , eidnobidBirthDate               = mdob
                 , eidnobidDistinguishedName       = dn
                 , eidnobidIssuerDistinguishedName = idn
-                , eidnobidCertificate             = mcer
+                , eidnobidCertificate             = mcer <|> msdo
                 , eidnobidPhoneNumber             = mphoneNumber
+                , eidnobidSignText                = msigntext
                 , eidnobidPid                     = pid
+                , eidnobidPersonalNumber          = mssn
                 }
             )
     where
       providerName = toEIDServiceProviderName provider
       providerAuth = providerName <> "Auth"
+      providerSign = providerName <> "Sign"
+      withObjectOrNothing name p rest v =
+        (withObject name p v >>= rest) <|> return Nothing
 
 completeEIDServiceAuthTransaction
   :: Kontrakcja m
@@ -161,6 +237,23 @@ completeEIDServiceAuthTransaction conf doc sl = do
     if eidServiceStatus == dbStatus
       then return eidServiceStatus
       else finaliseTransaction doc sl estDB trans
+
+completeEIDServiceSignTransaction
+  :: Kontrakcja m => EIDServiceConf -> SignatoryLink -> m Bool
+completeEIDServiceSignTransaction conf sl = do
+  sessionID <- getNonTempSessionID
+  let authKind = EIDServiceAuthToSign
+  mtrans <- runMaybeT $ do
+    Just estDB <- dbQuery
+      $ GetEIDServiceTransactionGuardSessionID sessionID (signatorylinkid sl) authKind
+    Just trans <- getTransactionFromEIDService conf provider (estID estDB)
+    return (trans :: EIDServiceTransactionResponse NOBankIDEIDServiceCompletionData)
+  case mtrans of
+    Nothing    -> return False
+    Just trans -> return $ isSuccessFullTransaction trans
+  where
+    isSuccessFullTransaction trans =
+      estRespStatus trans == EIDServiceTransactionStatusCompleteAndSuccess
 
 finaliseTransaction
   :: Kontrakcja m

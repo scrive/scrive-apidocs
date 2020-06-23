@@ -56,12 +56,13 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
     encAuthMethod =
       maybe "legacy_provider" (unjsonToJSON unjsonAuthenticationToSignMethod)
         $ case ssdData of
-            Left  authToSignMethod                -> Just authToSignMethod
-            Right (CGISEBankIDSignature_       _) -> Just SEBankIDAuthenticationToSign
-            Right (NetsNOBankIDSignature_      _) -> Just NOBankIDAuthenticationToSign
-            Right (NetsDKNemIDSignature_       _) -> Just DKNemIDAuthenticationToSign
-            Right (EIDServiceIDINSignature_    _) -> Just IDINAuthenticationToSign
-            Right (EIDServiceFITupasSignature_ _) -> Just FITupasAuthenticationToSign
+            Left  authToSignMethod                 -> Just authToSignMethod
+            Right (CGISEBankIDSignature_        _) -> Just SEBankIDAuthenticationToSign
+            Right (NetsNOBankIDSignature_       _) -> Just NOBankIDAuthenticationToSign
+            Right (NetsDKNemIDSignature_        _) -> Just DKNemIDAuthenticationToSign
+            Right (EIDServiceIDINSignature_     _) -> Just IDINAuthenticationToSign
+            Right (EIDServiceFITupasSignature_  _) -> Just FITupasAuthenticationToSign
+            Right (EIDServiceNOBankIDSignature_ _) -> Just NOBankIDAuthenticationToSign
             Right (EIDServiceOnfidoSignature_ EIDServiceOnfidoSignature {..}) ->
               case eidServiceOnfidoSigMethod of
                 OnfidoDocumentCheck -> Just OnfidoDocumentCheckAuthenticationToSign
@@ -119,6 +120,18 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
               else
                 [ "signatory_date_of_birth" .= eidServiceFITupasSigDateOfBirth
                 , "signatory_personal_number" .= eidServiceFITupasSigPersonalNumber
+                ]
+            )
+        ]
+      Right (EIDServiceNOBankIDSignature_ EIDServiceNOBankIDSignature {..}) ->
+        [ "no_bankid_data" .= object
+            (["signatory_name" .= eidServiceNOBankIDSigSignatoryName] <> if hidePN
+              then []
+              else
+                [ "signatory_date_of_birth" .= eidServiceNOBankIDSigDateOfBirth
+                , "signatory_personal_number" .= eidServiceNOBankIDSigPersonalNumber
+                , "signatory_mobile" .= eidServiceNOBankIDSigPhoneNumber
+                , "signature" .= eidServiceNOBankIDSigCertificate
                 ]
             )
         ]
