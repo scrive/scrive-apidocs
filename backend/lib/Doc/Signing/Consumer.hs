@@ -269,15 +269,19 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       let mctd = estRespCompletionData ct
       NOBankIDEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
 
-      let sig = EIDServiceNOBankIDSignature
-            { eidServiceNOBankIDSigInternalProvider = eidnobidInternalProvider
-            , eidServiceNOBankIDSigSignatoryName    = fromMaybe "" eidnobidName
-            , eidServiceNOBankIDSigPhoneNumber      = eidnobidPhoneNumber
-            , eidServiceNOBankIDSigPersonalNumber   = eidnobidPersonalNumber
-            , eidServiceNOBankIDSigDateOfBirth      = eidnobidBirthDate
-            , eidServiceNOBankIDSigSignedText       = eidnobidSignText
-            , eidServiceNOBankIDSigCertificate      = eidnobidCertificate
-            }
+      let
+        sig = EIDServiceNOBankIDSignature
+          { eidServiceNOBankIDSigInternalProvider = eidnobidInternalProvider
+          , eidServiceNOBankIDSigSignatoryName    = fromMaybe "" eidnobidName
+          , eidServiceNOBankIDSigPhoneNumber      = eidnobidPhoneNumber
+          -- make sure we insert empty string, not null for case
+          -- where personal number is never provided (mobile bankid)
+          , eidServiceNOBankIDSigPersonalNumber   = Just
+                                                      $ fromMaybe "" eidnobidPersonalNumber
+          , eidServiceNOBankIDSigDateOfBirth      = eidnobidBirthDate
+          , eidServiceNOBankIDSigSignedText       = eidnobidSignText
+          , eidServiceNOBankIDSigCertificate      = eidnobidCertificate
+          }
       dbUpdate $ MergeEIDServiceNOBankIDSignature signingSignatoryID sig
       logInfo_ . ("EidHub NO BankID Sign succeeded: " <>) . showt $ est
       signFromESignature ds now
