@@ -1899,6 +1899,8 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
                 OnfidoDocumentCheck -> OnfidoDocumentCheckAuthenticationToSign
                 OnfidoDocumentAndPhotoCheck ->
                   OnfidoDocumentAndPhotoCheckAuthenticationToSign
+        (Just (EIDServiceNOBankIDSignature_ _), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
         (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
         (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
@@ -1983,6 +1985,19 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             OnfidoDocumentAndPhotoCheck -> F.value "onfido_document_and_photo_check" True
           F.value "signatory_name" eidServiceOnfidoSigSignatoryName
           F.value "signatory_dob" eidServiceOnfidoSigDateOfBirth
+        (Just (EIDServiceNOBankIDSignature_ EIDServiceNOBankIDSignature {..}), _) -> do
+          F.value "hide_pn" $ signatorylinkhidepn sl
+          F.value "eleg" True
+          F.value "signed_text" eidServiceNOBankIDSigSignedText
+          F.value "provider_nobankid_eidservice" True
+          F.value "signatory_name" eidServiceNOBankIDSigSignatoryName
+          F.value "signatory_dob" eidServiceNOBankIDSigDateOfBirth
+          F.value "signatory_personal_number" eidServiceNOBankIDSigPersonalNumber
+          F.value "signatory_mobile" eidServiceNOBankIDSigPhoneNumber
+          F.value "signature" eidServiceNOBankIDSigCertificate
+          F.value "nobankid_mobile" $ case eidServiceNOBankIDSigInternalProvider of
+            EIDServiceNOBankIDStandard -> False
+            EIDServiceNOBankIDMobile   -> True
         (Nothing, Just _) -> do
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl

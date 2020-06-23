@@ -20,7 +20,10 @@ var SignNetsEID = require("./signeidnetsview");
 var SignEIDProcess = require("./signeidprocessview");
 var SignEIDNetsProcess = require("./signeidnetsprocessview");
 var IDINSignModel = require("../../eleg/idinsigning");
+var EIDNOBankIDSignModel = require("../../eleg/eidnobankidsigning");
 var SignIDINAuth = require("./signidinauth");
+var SignEIDNOBankIDAuth = require("./signeidnobankidauth");
+var SignEIDNOBankIDAuthChoose = require("./signeidnobankidauthchoose");
 var FITupasSignModel = require("../../eleg/fitupassigning");
 var SignFITupasAuth = require("./signfitupasauth");
 var OnfidoSignModel = require("../../eleg/onfidosigning");
@@ -94,7 +97,12 @@ var Task = require("../navigation/task");
       var isApprover = signatory.approves();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
-      var hasEIDNets = signatory.noBankIDAuthenticationToSign() || signatory.dkNemIDAuthenticationToSign();
+      var hasEIDNets = signatory.dkNemIDAuthenticationToSign();
+      if (!fromTemplate.useEIDHubForNOBankIDSign) {
+        hasEIDNets = hasEIDNets || signatory.noBankIDAuthenticationToSign();
+      }
+      var hasEIDNOBankID = fromTemplate.useEIDHubForNOBankIDSign
+                           && signatory.noBankIDAuthenticationToSign();
       var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
       var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
       var hasOnfidoAuth = signatory.onfidoDocumentCheckAuthenticationToSign()
@@ -120,6 +128,10 @@ var Task = require("../navigation/task");
         return "eid-idin-auth";
       }
 
+      if (hasEIDNOBankID) {
+        return "eid-nobankid-auth";
+      }
+
       if (hasFITupasAuth) {
         return "eid-fi-tupas-auth";
       }
@@ -140,7 +152,7 @@ var Task = require("../navigation/task");
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
         "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
         "approving", "forward", "eid-idin-auth", "eid-fi-tupas-auth",
-        "eid-onfido-auth"
+        "eid-onfido-auth", "eid-nobankid-auth", "eid-nobankid-auth-choose"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -207,7 +219,7 @@ var Task = require("../navigation/task");
       step = step || this.state.step;
       var noOverlayStep = [
         "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth",
-        "eid-fi-tupas-auth", "eid-onfido-auth"
+        "eid-fi-tupas-auth", "eid-onfido-auth", "eid-nobankid-auth"
       ];
       return !(noOverlayStep.indexOf(step) > -1);
     },
@@ -624,6 +636,22 @@ var Task = require("../navigation/task");
       }).sign();
     },
 
+    handleEIDNOBankIDAuth: function (errorHandler, useMobile) {
+      if (!this.canSignDocument()) {
+        errorHandler();
+        return this.context.blinkArrow();
+      }
+
+      var document = this.props.model.document();
+      var signatory = document.currentSignatory();
+
+      new EIDNOBankIDSignModel({
+        doc: document,
+        siglinkid: signatory.signatoryid(),
+        errorHandler: errorHandler
+      }).sign(useMobile);
+    },
+
     handleFITupasAuth: function (errorHandler) {
       if (!this.canSignDocument()) {
         errorHandler();
@@ -841,6 +869,37 @@ var Task = require("../navigation/task");
                       self.setState({signingButtonBlocked: false});
                     });
                   }, {});
+                }
+              }}
+            />
+          }
+          {/* if */ this.isOnStep("eid-nobankid-auth") &&
+            <SignEIDNOBankIDAuth
+              model={this.props.model}
+              canSign={this.canSignDocument()}
+              field={phoneField}
+              showLegalText={this.props.showLegalText}
+              onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
+              onSign={function () {
+                doc.takeSigningScreenshot(function () {
+                  self.setStep("eid-nobankid-auth-choose");
+                });
+              }}
+            />
+           }
+           {/* if */ this.isOnStep("eid-nobankid-auth-choose") &&
+            <SignEIDNOBankIDAuthChoose
+              model={this.props.model}
+              onBack={function () {
+                self.setStep("eid-nobankid-auth");
+              }}
+              onChoice={function (useMobile) {
+                if (!self.state.signingButtonBlocked) {
+                  self.setState({signingButtonBlocked: true});
+                  self.handleEIDNOBankIDAuth(function () {
+                    self.setState({signingButtonBlocked: false});
+                  }, useMobile);
                 }
               }}
             />

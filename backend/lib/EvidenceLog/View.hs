@@ -290,6 +290,8 @@ simplifiedEventText mactor sim dee = do
                   F.value "provider_idin" True
                 EIDServiceFITupasSignature_ _ -> do
                   F.value "provider_fitupas" True
+                EIDServiceNOBankIDSignature_ _ -> do
+                  F.value "provider_nobankid" True
                 EIDServiceOnfidoSignature_ _ -> do
                   F.value "provider_onfido" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do

@@ -175,6 +175,10 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       renderTextTemplate "_nameFromFiTupasIDText"
         . F.value "name"
         $ eidServiceFITupasSigSignatoryName sig
+    Just (EIDServiceNOBankIDSignature_ sig) ->
+      renderTextTemplate "_nameFromNOBankIDText"
+        . F.value "name"
+        $ eidServiceNOBankIDSigSignatoryName sig
     _ -> return ""
 
   fields <-
