@@ -1,7 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Model.Types
     ( Template(Template)
@@ -32,7 +30,10 @@ import Doc.DocumentID (DocumentID)
 import Flow.Aggregator
 import Flow.Id
 import Flow.Machinize
+import Flow.Message
 import Flow.Model.Types.Internal
+import Flow.Names
+import Flow.Process
 import Folder.Types (FolderID)
 import User.UserID (UserID)
 
@@ -41,7 +42,7 @@ data StoreValue
     | StoreUserId UserID
     | StoreEmail Text
     | StorePhoneNumber Text
-    | StoreMessage Text
+    | StoreMessage Message
   deriving (Show, Eq, Generic)
 
 data StoreValueType
@@ -61,7 +62,7 @@ storeValueTypeToText Message     = "message"
 
 -- TODO: Maybe use uncurryN functions?
 fetchTemplate
-  :: (TemplateId, UserID, FolderID, Text, Text, UTCTime, Maybe UTCTime, Maybe UTCTime)
+  :: (TemplateId, UserID, FolderID, Text, Process, UTCTime, Maybe UTCTime, Maybe UTCTime)
   -> Template
 fetchTemplate (id, userId, folderId, name, process, created, committed, deleted) =
   Template { .. }
@@ -69,7 +70,7 @@ fetchTemplate (id, userId, folderId, name, process, created, committed, deleted)
 fetchInstance :: (InstanceId, TemplateId, Text, UTCTime) -> Instance
 fetchInstance (id, templateId, currentState, created) = Instance { .. }
 
-fetchEvent :: (EventId, InstanceId, Text, Text, UserAction, UTCTime) -> Event
+fetchEvent :: (EventId, InstanceId, UserName, DocumentName, UserAction, UTCTime) -> Event
 fetchEvent (id, instanceId, userName, documentName, userAction, created) = Event { .. }
 
 toEventInfo :: Event -> EventInfo

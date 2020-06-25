@@ -34,7 +34,7 @@ import EID.Signature.Tables
 import EvidenceLog.Tables
 import FeatureFlags.Tables
 import File.Tables
-import Flow.Db
+import Flow.Tables
 import Folder.Tables
 import HostClock.Tables
 import Mails.FromKontra.Tables

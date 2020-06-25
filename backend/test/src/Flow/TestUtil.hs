@@ -4,10 +4,8 @@ module Flow.TestUtil where
 
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
-import Data.Text.Lazy (unpack)
 import Network.HTTP.Client
 import Servant.Client
-import Text.Pretty.Simple
 
 import DB
 import OAuth.Model
@@ -20,7 +18,7 @@ assertRight msg req = do
   res <- req
   case res of
     Right v   -> pure v
-    Left  err -> fail $ msg <> ": " <> unpack (pShow err)
+    Left  err -> fail $ msg <> ": " <> show err
 
 assertLeft :: String -> TestEnv (Either ClientError b) -> TestEnv ClientError
 assertLeft msg req = do

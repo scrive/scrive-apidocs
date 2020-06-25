@@ -85,7 +85,6 @@ data AppConf = AppConf
   , kinesisStream      :: Maybe KinesisConf
   , postSignViewRedirectURL :: Text
   , useFolderListCallsByDefault :: Bool
-  , useNewFlattener    :: Bool -- Temporary. Remove after June 2020. MR
   , flowPort :: Int
   , runFlowServer :: Bool
   } deriving (Eq, Show)
@@ -155,10 +154,6 @@ unjsonAppConf =
     <*> field "use_folder_list_calls_by_default"
               useFolderListCallsByDefault
               "Enable folder list calls for default user group settings"
-    <*> fieldDef "use_new_flattener"
-                 False
-                 useNewFlattener
-                 "If itext7 flattener should be used. Temporary option"
     <*> fieldDef "flow_port" 9173 flowPort "Flow listening port"
     <*> fieldDef "run_flow_server"
                  False

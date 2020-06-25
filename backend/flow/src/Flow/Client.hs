@@ -1,5 +1,4 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Client where
 
@@ -14,6 +13,7 @@ import Auth.Session
 import Flow.Api
 import Flow.HighTongue
 import Flow.Id
+import Flow.Process
 
 -- TODO: Having Maybe in the AuthClientData instance makes it unclear as to what
 -- the correct set of auth credentials is. However, we need to be able to generate
@@ -33,7 +33,7 @@ data TemplateClient = TemplateClient
   , getInstance      :: InstanceId -> ClientM GetInstance
   , getInstanceView  :: InstanceId -> ClientM GetInstanceView
   , listInstances    :: ClientM [GetInstance]
-  , validateTemplate :: FlowDSL -> ClientM [ValidationError]
+  , validateTemplate :: Process -> ClientM [ValidationError]
 }
 
 -- brittany-disable-next-binding

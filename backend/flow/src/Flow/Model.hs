@@ -1,4 +1,4 @@
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Model
     ( deleteTemplate
@@ -22,7 +22,7 @@ module Flow.Model
 
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
-import Data.Time.Clock (getCurrentTime)
+import Control.Monad.Time
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
 
@@ -31,14 +31,15 @@ import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
 import Flow.Id
 import Flow.Model.Types
+import Flow.Names
 import User.UserID (UserID)
 
 sqlMaybeSet :: (MonadState v m, SqlSet v, Show a, ToSQL a) => SQL -> Maybe a -> m ()
 sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
 
-insertTemplate :: (MonadIO m, MonadDB m, MonadThrow m) => InsertTemplate -> m TemplateId
+insertTemplate :: (MonadDB m, MonadTime m, MonadThrow m) => InsertTemplate -> m TemplateId
 insertTemplate it = do
-  now <- liftIO getCurrentTime
+  now <- currentTime
   runQuery_ . sqlInsert "flow_templates" $ do
     sqlSet "name" $ it ^. #name -- TODO: validate size?
     sqlSet "process" $ it ^. #process -- TODO: validate size?
@@ -48,10 +49,10 @@ insertTemplate it = do
     sqlResult "id"
   fetchOne runIdentity
 
-deleteTemplate :: (MonadDB m, MonadIO m) => TemplateId -> m ()
+deleteTemplate :: (MonadDB m, MonadTime m) => TemplateId -> m ()
 deleteTemplate templateId = do
+  now <- currentTime
   -- TODO:  Can committed template be deleted? Maybe this should be in server instead?
-  now <- liftIO getCurrentTime
   runQuery_ . sqlUpdate "flow_templates" $ do
     sqlSet "deleted" now
     sqlWhereEq "id" templateId
@@ -96,9 +97,9 @@ updateTemplate ut = do
   fetchMaybe fetchTemplate
 
 insertFlowInstance
-  :: (MonadDB m, MonadIO m, MonadThrow m) => InsertInstance -> m InstanceId
+  :: (MonadDB m, MonadTime m, MonadThrow m) => InsertInstance -> m InstanceId
 insertFlowInstance ii = do
-  now <- liftIO getCurrentTime
+  now <- currentTime
   runQuery_ . sqlInsert "flow_instances" $ do
     sqlSet "template_id" $ ii ^. #templateId
     sqlSet "current_state" $ ii ^. #currentState
@@ -193,9 +194,9 @@ updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
     else runQuery_ . sqlInsert "flow_aggregator_events" $ do
       sqlSet "id" eventId
 
-insertEvent :: (MonadDB m, MonadIO m, MonadThrow m) => InsertEvent -> m EventId
+insertEvent :: (MonadDB m, MonadTime m, MonadThrow m) => InsertEvent -> m EventId
 insertEvent ie = do
-  now <- liftIO getCurrentTime
+  now <- currentTime
   runQuery_ . sqlInsert "flow_events" $ do
     sqlSet "instance_id" $ ie ^. #instanceId
     sqlSet "user_name" $ ie ^. #userName
@@ -221,7 +222,7 @@ selectAggregatorEvents instanceId = do
   fetchMany fetchEvent
 
 selectDocumentNameFromKV
-  :: (MonadDB m, MonadThrow m) => InstanceId -> DocumentID -> m (Maybe Text)
+  :: (MonadDB m, MonadThrow m) => InstanceId -> DocumentID -> m (Maybe DocumentName)
 selectDocumentNameFromKV instanceId documentId = do
   runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
     sqlResult "key"
@@ -231,7 +232,7 @@ selectDocumentNameFromKV instanceId documentId = do
   fetchMaybe runIdentity
 
 selectUserNameFromKV
-  :: (MonadDB m, MonadThrow m) => InstanceId -> SignatoryLinkID -> m (Maybe Text)
+  :: (MonadDB m, MonadThrow m) => InstanceId -> SignatoryLinkID -> m (Maybe UserName)
 selectUserNameFromKV instanceId signatoryLinkId = do
   runQuery_ . sqlSelect "flow_instance_signatories" $ do
     sqlResult "key"

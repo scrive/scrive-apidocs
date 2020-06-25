@@ -1,16 +1,7 @@
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Aggregator
     ( AggregatorState(..)
@@ -50,9 +41,9 @@ newtype AggregatorConstans = AggregatorConstans
     }
   deriving (Show, Eq, Generic)
 
-{- HLINT ignore AggregatorMarshallingException -}
-data AggregatorMarshallingException = AggregatorMarshallingException String
-  deriving (Show, Exception)
+newtype AggregatorMarshallingException = AggregatorMarshallingException String
+  deriving Show
+  deriving anyclass Exception
 
 data AggregatorStep
     = NeedMoreEvents
@@ -71,6 +62,19 @@ type AggregatorT = E.ExceptT AggregatorError (R.ReaderT Machine (S.State Aggrega
 put :: AggregatorState -> AggregatorT ()
 put = S.put
 
+-- | Our state machine is labeled by a set of events;
+-- more precisely, it requires that several events be received
+-- before moving to another state (for example that several people sign a document).
+--
+-- The purpose of this function is to validate the incoming event
+-- (possibly reporting it as unknown or duplicate),
+-- add it to the set of received events, and finally
+-- decide whether any edge can now fire (it is checked
+-- that only one edge can fire when constructing the state machine).
+--
+-- If a firing edge is found we return Just the set of events to fire that edge
+-- (this will be a subset of all received events in general),
+-- otherwise return Nothing.
 aggregate :: EventInfo -> AggregatorT (Maybe (Set EventInfo))
 aggregate event = do
   state@AggregatorState {..} <- S.get
@@ -85,6 +89,16 @@ aggregate event = do
   put $ state { receivedEvents = newReceivedEvents }
   pure . List.find (`Set.isSubsetOf` newReceivedEvents) $ getEdgeInputs machineState
 
+-- | This functions combines `aggregate` (see above) and `findEdge` (see `Flow.Transducer`).
+-- This means that it tries combine the new `event` with the ones received previously
+-- and then find an edge that should fire upon receiving the combined set of events.
+--
+-- If such an edge is found we follow it which gives us
+-- a new state to move to and an "output label" (transducer terminology), which we use
+-- to trigger actions (e.g. sending notifications).
+--
+-- Current state is updated accordingly and we return the output label, as well as whether
+-- a final state was reached.
 aggregateAndStep :: EventInfo -> AggregatorT AggregatorStep
 aggregateAndStep event = do
   AggregatorState {..}    <- S.get
@@ -94,7 +108,7 @@ aggregateAndStep event = do
     Nothing        -> pure NeedMoreEvents
     Just edgeInput -> do
       TransducerEdge {..} <- either (E.throwError . TransducerError) pure
-        $ step machine currentState edgeInput
+        $ findEdge machine currentState edgeInput
       put $ makeNewState edgeNextState
       pure $ if isFinalState machine edgeNextState
         then FinalState edgeOutputLabel
@@ -108,7 +122,7 @@ prepareAggregatorState :: Machine -> AggregatorState
 prepareAggregatorState Transducer {..} = makeNewState initialState
 
 getAllowedEvents :: State -> Set EventInfo
-getAllowedEvents TransducerState {..} = foldl Set.union Set.empty $ Map.keys stateEdges
+getAllowedEvents TransducerState {..} = Set.unions $ Map.keys stateEdges
 
 getEdgeInputs :: State -> [Set EventInfo]
 getEdgeInputs TransducerState {..} = Map.keys stateEdges

@@ -50,6 +50,7 @@ common common-stanza
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
                     , ConstraintKinds
+                    , DataKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
@@ -62,6 +63,7 @@ common common-stanza
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
+                    , OverloadedLabels
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -74,8 +76,6 @@ common common-stanza
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
-                    , OverloadedLabels
-                    , DataKinds
 
 Library kontrakcja-prelude
 
@@ -358,7 +358,6 @@ Library
                  , Flow.Aggregator
                  , Flow.Api
                  , Flow.Client
-                 , Flow.Db
                  , Flow.DocumentChecker
                  , Flow.Engine
                  , Flow.Error
@@ -366,13 +365,20 @@ Library
                  , Flow.HighTongue
                  , Flow.Id
                  , Flow.Machinize
+                 , Flow.Message
+                 , Flow.Message.Internal
                  , Flow.Model
                  , Flow.Model.Types
                  , Flow.Model.Types.Internal
+                 , Flow.Names
+                 , Flow.Names.Internal
                  , Flow.OrphanInstances
+                 , Flow.Process
+                 , Flow.Process.Internal
                  , Flow.Server
                  , Flow.Server.Handlers.Instance
                  , Flow.Server.Types
+                 , Flow.Tables
                  , Flow.Transducer
                  , Flow.VariableCollector
                  , FeatureFlags.Model
@@ -625,7 +631,7 @@ Library
                , amazonka-s3
                , attoparsec
                , base16-bytestring
-               , base64-bytestring == 1.0.0.3
+               , base64-bytestring
                , binary
                , bytestring
                , case-insensitive
@@ -884,7 +890,7 @@ Executable kontrakcja-migrate
                  FeatureFlags.Tables
                  File.Migrations
                  File.Tables
-                 Flow.Db
+                 Flow.Tables
                  UserGroup.Migrations
                  UserGroup.Tables
                  HostClock.Tables
@@ -927,7 +933,7 @@ Executable kontrakcja-migrate
                , DRBG
                , aeson
                , base16-bytestring
-               , base64-bytestring == 1.0.0.3
+               , base64-bytestring
                , binary
                , bytestring
                , cmdargs
@@ -1055,7 +1061,7 @@ Executable mailing-server
                , amazonka-core
                , amazonka-s3
                , base16-bytestring
-               , base64-bytestring == 1.0.0.3
+               , base64-bytestring
                , binary
                , bytestring
                , cmdargs
@@ -1171,7 +1177,7 @@ Executable messenger-server
                , DRBG
                , aeson
                , base16-bytestring
-               , base64-bytestring == 1.0.0.3
+               , base64-bytestring
                , binary
                , bytestring
                , cmdargs
@@ -1342,6 +1348,7 @@ Test-suite kontrakcja-test
                  Flow.HighTongueTest
                  Flow.IntegrationTest
                  Flow.MachinizeTest
+                 Flow.OrphanTestInstances
                  Flow.TestUtil
                  Flow.TransducerTest
                  Flow.VariableCollectorTest
@@ -1434,7 +1441,7 @@ Test-suite kontrakcja-test
                , aeson >= 1.4.4.0
                , aeson-diff
                , amazonka
-               , base64-bytestring == 1.0.0.3
+               , base64-bytestring
                , binary
                , blaze-markup
                , bytestring
@@ -1676,8 +1683,8 @@ Library authentication
                     , Auth.Session.SessionID
                     , Auth.Utils
   Build-Depends:      base-noprelude
-                    , bytestring
                     , kontrakcja-prelude
+                    , bytestring
                     , cond
                     , crypto-rng
                     , exceptions

@@ -1,19 +1,9 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE Strict #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Api
-    ( MessageId
-    , FlowDSL
-    , CreateTemplate(..)
+    ( CreateTemplate(..)
     , GetCreateTemplate(..)
     , GetTemplate(..)
     , PatchTemplate(..)
@@ -46,20 +36,17 @@ import Servant.API
 import Doc.DocumentID (DocumentID)
 import Flow.HighTongue
 import Flow.Id
+import Flow.Message
+import Flow.Process
 import Folder.Types
 import User.UserID (UserID)
-
--- TODO: What to do with MessageId and messages in general?
-type MessageId = Text
-
-type FlowDSL = Text
 
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 
 data CreateTemplate = CreateTemplate
     { name :: Text
-    , process :: Text
+    , process :: Process
     }
   deriving (Eq, Generic, Show)
 
@@ -91,7 +78,7 @@ instance ToJSON StartTemplate where
 data GetTemplate = GetTemplate
     { id :: TemplateId
     , name :: Text
-    , process :: Text
+    , process :: Process
     , committed :: Maybe UTCTime
     , folderId :: FolderID
     }
@@ -106,7 +93,7 @@ instance ToJSON GetTemplate where
 
 data PatchTemplate = PatchTemplate
     { name :: Maybe Text
-    , process :: Maybe Text
+    , process :: Maybe Process
     }
   deriving (Eq, Generic, Show)
 
@@ -117,10 +104,11 @@ instance ToJSON PatchTemplate where
   toEncoding = genericToEncoding aesonOptions
 
 
+-- TODO use name newtypes (UserName, etc.)
 data InstanceToTemplateMapping = InstanceToTemplateMapping
     { documents :: Map Text DocumentID
     , users :: Map Text UserID
-    , messages :: Map Text MessageId
+    , messages :: Map Text Message
     }
   deriving (Eq, Generic, Show)
 
@@ -301,7 +289,7 @@ type FlowAPI
         :<|> "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
         :<|> "instances" :> Get '[JSON] [GetInstance]
         )
-    :<|> "templates" :> "validate" :> ReqBody '[JSON] FlowDSL :> Post '[JSON] [ValidationError]
+    :<|> "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
 
 apiProxy :: Proxy FlowAPI
 apiProxy = Proxy

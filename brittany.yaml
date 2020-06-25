@@ -19,6 +19,7 @@ conf_forward:
   options_ghc:
     - -XBangPatterns
     - -XConstraintKinds
+    - -XDataKinds
     - -XDeriveDataTypeable
     - -XDeriveFunctor
     - -XDeriveGeneric
@@ -34,6 +35,7 @@ conf_forward:
     - -XOverloadedLabels
     - -XOverloadedStrings
     - -XPatternGuards
+    - -XQuasiQuotes
     - -XRankNTypes
     - -XRecordWildCards
     - -XScopedTypeVariables
@@ -44,7 +46,6 @@ conf_forward:
     - -XTypeOperators
     - -XTypeSynonymInstances
     - -XTemplateHaskell
-    - -XQuasiQuotes
 
 conf_errorHandling:
   # Determines when to fall back on the exactprint'ed output when

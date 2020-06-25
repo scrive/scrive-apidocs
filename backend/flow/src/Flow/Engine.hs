@@ -1,9 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Engine
   ( processMachinizeEvent
@@ -35,6 +32,7 @@ import Flow.Id (InstanceId)
 import Flow.Machinize
 import Flow.Model as Model
 import Flow.Model.Types
+import Flow.Process
 import GuardTime (GuardTimeConfMonad)
 import MailContext
 import qualified Flow.Transducer as Transducer
@@ -127,7 +125,7 @@ pushActions instanceId actions = do
 finalizeFlow :: (MonadLog m, MonadDB m, MonadThrow m) => m ()
 finalizeFlow = throwM $ NotImplemented "Finalizing flow"
 
-compile :: (MonadLog m, MonadThrow m) => Text -> m Machine
+compile :: (MonadLog m, MonadThrow m) => Process -> m Machine
 compile process =
   either throwDSLValidationError' pure $ decodeHighTongue process >>= machinize
   where
@@ -157,8 +155,7 @@ processMachinizeEvent instanceId eventInfo = do
   eventId      <- insertEvent $ toInsertEvent instanceId eventInfo
   fullInstance <- fromMaybeM noInstance $ selectFullInstance instanceId
   let aggregator = instanceToAggregator fullInstance
-  {- HLINT ignore "Use ." -}
-  machine <- compile $ fullInstance ^. #template ^. #process
+  machine <- compile $ fullInstance ^. #template % #process
   let (aggregatorResult, newAggregator) = runAggregatorStep eventInfo aggregator machine
   either failGracefully processStep aggregatorResult
   let stateChange = currentState aggregator /= currentState newAggregator

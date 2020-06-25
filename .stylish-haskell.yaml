@@ -187,6 +187,7 @@ newline: native
 language_extensions:
   - BangPatterns
   - ConstraintKinds
+  - DataKinds
   - DeriveDataTypeable
   - DeriveFunctor
   - DeriveGeneric
@@ -199,6 +200,7 @@ language_extensions:
   - MultiWayIf
   - NamedFieldPuns
   - NoImplicitPrelude
+  - OverloadedLabels
   - OverloadedStrings
   - PatternGuards
   - RankNTypes

@@ -13,6 +13,7 @@ import Test.QuickCheck.Modifiers
 
 import Flow.HighTongue
 import Flow.Machinize
+import Flow.OrphanTestInstances ()
 import Flow.Transducer
 
 instance Arbitrary StateId where

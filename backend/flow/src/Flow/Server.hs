@@ -1,9 +1,5 @@
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Server where
 
@@ -40,6 +36,7 @@ import Flow.Id
 import Flow.Machinize as Machinize
 import Flow.Model.Types
 import Flow.OrphanInstances ()
+import Flow.Process
 import Flow.Server.Handlers.Instance
 import Flow.Server.Types
 import Folder.Model (FolderGet(..))
@@ -78,6 +75,7 @@ authHandler flowConfiguration = mkAuthHandler handler
             Just oauthHeader -> do
               oauthTokens <- either (throwAuthError OAuthHeaderParseFailureError) pure
                 $ parseOAuthAuthorization oauthHeader
+              -- TODO use MonadLog
               liftIO . putStrLn $ ("Authenticating using OAuth: " <> show oauthTokens)
               maybeIds <- authenticateToken oauthTokens
               maybe (throwAuthError InvalidTokenError (show InvalidTokenError))
@@ -89,6 +87,7 @@ authHandler flowConfiguration = mkAuthHandler handler
                 (throwAuthError AuthCookiesParseError (show AuthCookiesParseError))
                 pure
                 (getAuthCookies req)
+              -- TODO use MonadLog
               liftIO . putStrLn $ ("Authenticating using cookies: " <> show authCookies)
               maybeIds <- authenticateSession authCookies
               maybe
@@ -125,12 +124,13 @@ authHandler flowConfiguration = mkAuthHandler handler
     -- TODO handle the exception somehow
     -- ... but don't put it into the response, it leaks internal information!
     throwAuthError errorName e = do
+      -- TODO use MonadLog
       liftIO $ print e
       throwAuthenticationError errorName
 
 createTemplate :: Account -> CreateTemplate -> AppM GetCreateTemplate
 createTemplate account@Account {..} CreateTemplate {..} = do
-  logInfo_ "creating template"
+  logInfo_ "Creating template"
   guardUserHasPermission account [canDo CreateA $ FlowTemplateR (folder ^. #id)]
   id <- Model.insertTemplate $ InsertTemplate name process (user ^. #id) (folder ^. #id)
   pure $ GetCreateTemplate { id }
@@ -138,7 +138,7 @@ createTemplate account@Account {..} CreateTemplate {..} = do
 -- TODO: Committed templates shouldn't be deleted.
 deleteTemplate :: Account -> TemplateId -> AppM NoContent
 deleteTemplate account id = do
-  logInfo_ "deleting template"
+  logInfo_ "Deleting template"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo DeleteA $ FlowTemplateR fid]
@@ -147,7 +147,7 @@ deleteTemplate account id = do
 
 getTemplate :: Account -> TemplateId -> AppM GetTemplate
 getTemplate account templateId = do
-  logInfo_ "getting template"
+  logInfo_ "Getting template"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo ReadA $ FlowTemplateR fid]
@@ -163,7 +163,7 @@ toGetTemplate t = GetTemplate { id        = t ^. #id
 
 patchTemplate :: Account -> TemplateId -> PatchTemplate -> AppM GetTemplate
 patchTemplate account templateId PatchTemplate {..} = do
-  logInfo_ "patching template"
+  logInfo_ "Patching template"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
   when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
   let fid = template ^. #folderId
@@ -174,7 +174,7 @@ patchTemplate account templateId PatchTemplate {..} = do
 
 commitTemplate :: Account -> TemplateId -> AppM NoContent
 commitTemplate account id = do
-  logInfo_ "committing template"
+  logInfo_ "Committing template"
   now      <- liftIO currentTime
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
   when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
@@ -198,14 +198,14 @@ commitTemplate account id = do
 
 -- TODO: Do better error messages.
 -- TODO: Compilation step?
-validateTemplate :: FlowDSL -> AppM [ValidationError]
+validateTemplate :: Process -> AppM [ValidationError]
 validateTemplate template = do
-  logInfo_ "validating template"
+  logInfo_ "Validating template"
   either pure (const (pure [])) $ decodeHighTongue template >>= machinize
 
 listTemplates :: Account -> AppM [GetTemplate]
 listTemplates account@Account {..} = do
-  logInfo_ "list templates"
+  logInfo_ "Listing templates"
   templates <- Model.selectTemplatesByUserID $ user ^. #id
   let fids = view #folderId <$> templates
   guardUserHasPermission account [ canDo ReadA $ FlowTemplateR fid | fid <- fids ]

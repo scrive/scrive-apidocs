@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.IntegrationTest where
 
@@ -10,6 +10,8 @@ import qualified Data.Map as Map
 
 import Flow.Api
 import Flow.Client
+import Flow.OrphanTestInstances ()
+import Flow.Process.Internal
 import Flow.TestUtil
 import TestEnvSt.Internal
 import TestingUtil hiding (assertRight)
@@ -49,8 +51,8 @@ testTemplateHappyCrud = do
 
   void . assertRight "deleteResponse" . request env $ deleteTemplate tid
 
-process1 :: Text
-process1 = [r|
+process1 :: Process
+process1 = Process [r|
 dsl-version: "1"
 stages:
   - initial:

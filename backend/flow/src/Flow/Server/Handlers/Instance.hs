@@ -1,8 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Server.Handlers.Instance where
 
@@ -25,10 +22,10 @@ import Flow.Api as Api
 import Flow.Engine
 import Flow.Error
 import Flow.Guards
-import Flow.HighTongue (DocumentName, UserName)
 import Flow.Id
 import Flow.Machinize as Machinize
 import Flow.Model.Types
+import Flow.Names
 import Flow.OrphanInstances ()
 import Flow.Server.Types
 import User.UserID (UserID, unsafeUserID)
@@ -38,7 +35,7 @@ import qualified Flow.Transducer as Transducer
 
 startInstance :: Account -> TemplateId -> InstanceToTemplateMapping -> AppM StartTemplate
 startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
-  logInfo_ "starting instance"
+  logInfo_ "Starting instance"
   -- TODO: Check permissions create instance..
   -- TODO: Check permissions to the template.
   -- TODO: Validate mapping...
@@ -67,7 +64,7 @@ startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
 
 getInstance :: Account -> InstanceId -> AppM GetInstance
 getInstance account instanceId = do
-  logInfo_ "getting instance"
+  logInfo_ "Getting instance"
   -- TODO: Authorize user.
   -- TODO: Model instance state inside database somehow!
   flowInstance <- checkInstancePerms account instanceId ReadA
@@ -114,8 +111,7 @@ getInstanceView account@Account {..} instanceId = do
 
   fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
   let aggrState = instanceToAggregator fullInstance
-  {- HLINT ignore "Use ." -}
-  machine <- compile $ fullInstance ^. #template ^. #process
+  machine <- compile $ fullInstance ^. #template % #process
 
   case (getUserName (user ^. #id) users, mAllowedEvents machine aggrState) of
     (Just userName, Just allowedEvents) ->
@@ -127,7 +123,8 @@ getInstanceView account@Account {..} instanceId = do
               userActions = catMaybes . Set.toList $ Set.map
                 (\e -> do
                   userAction <- toApiUserAction $ eventInfoAction e
-                  docId      <- Map.lookup (eventInfoDocument e) documents
+                  -- TODO Use DocumentName and get rid of `fromName`
+                  docId      <- Map.lookup (fromName $ eventInfoDocument e) documents
                   pure $ InstanceUserAction userAction docId
                 )
                 userAllowedEvents
@@ -145,7 +142,7 @@ getInstanceView account@Account {..} instanceId = do
                 , actions = userActions
                 }
     _ -> do
-      logAttention "getInstanceView: Invalid userId or broken state for Flow instance "
+      logAttention "GetInstanceView: Invalid userId or broken state for Flow instance "
         $ object ["instance_id" .= instanceId, "account" .= account]
       throwError
         $ err500 { errBody = "Could not reconstruct the state of the Flow process." }
@@ -157,10 +154,11 @@ getInstanceView account@Account {..} instanceId = do
         (currentState aggregatorState)
 
     -- Assuming we allow only one UserName per user.
-    getUserName :: UserID -> Map UserName UserID -> Maybe UserName
+    getUserName :: UserID -> Map Text UserID -> Maybe UserName
     getUserName uid userMap = case Map.keys $ Map.filter (== uid) userMap of
       []      -> Nothing
-      (x : _) -> Just x
+      -- TODO get rid of unsafe
+      (x : _) -> Just $ unsafeName x
 
     toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
     toApiUserAction Machinize.Approval  = Just Api.Approve
@@ -171,12 +169,10 @@ getInstanceView account@Account {..} instanceId = do
     toApiUserAction Machinize.Timeout   = Nothing
 
     toDocumentOverview
-      :: Set EventInfo
-      -> Map DocumentName DocumentID
-      -> DocumentName
-      -> Maybe DocumentOverview
+      :: Set EventInfo -> Map Text DocumentID -> DocumentName -> Maybe DocumentOverview
     toDocumentOverview userReceivedEvents docMap docName =
-      (`DocumentOverview` docState) <$> Map.lookup docName docMap
+      -- TODO Use DocumentName and get rid of `fromName`
+      (`DocumentOverview` docState) <$> Map.lookup (fromName docName) docMap
 
       where
         docEvents = Set.filter (\e -> eventInfoDocument e == docName) userReceivedEvents

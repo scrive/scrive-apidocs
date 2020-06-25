@@ -22,7 +22,7 @@ import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
 import File.Migrations
-import Flow.Db
+import Flow.Tables
 import Folder.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations

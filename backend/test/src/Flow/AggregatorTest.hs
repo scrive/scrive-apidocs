@@ -1,7 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.AggregatorTest where
 
@@ -14,6 +12,7 @@ import qualified Data.Set as Set
 import Flow.Aggregator
 import Flow.HighTongue
 import Flow.Machinize
+import Flow.OrphanTestInstances ()
 import Flow.Transducer
 
 machine' :: Machine

@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flow.Model.Types.Internal
@@ -22,6 +22,8 @@ import Optics.TH
 
 import Flow.Id
 import Flow.Machinize
+import Flow.Names
+import Flow.Process
 import Folder.Types (FolderID)
 import User.UserID (UserID)
 
@@ -30,7 +32,7 @@ data Template = Template
     , userId :: UserID
     , folderId :: FolderID
     , name :: Text
-    , process :: Text
+    , process :: Process
     , created :: UTCTime
     , committed :: Maybe UTCTime
     , deleted :: Maybe UTCTime
@@ -38,7 +40,7 @@ data Template = Template
 
 data InsertTemplate = InsertTemplate
     { name :: Text
-    , process :: Text
+    , process :: Process
     , userId :: UserID
     , folderId :: FolderID
     }
@@ -47,7 +49,7 @@ data InsertTemplate = InsertTemplate
 data UpdateTemplate = UpdateTemplate
     { id :: TemplateId
     , name :: Maybe Text
-    , process :: Maybe Text
+    , process :: Maybe Process
     , committed :: Maybe UTCTime
     }
   deriving (Eq, Generic, Show)
@@ -68,16 +70,16 @@ data InsertInstance = InsertInstance
 data Event = Event
     { id :: EventId
     , instanceId :: InstanceId
-    , userName :: Text
-    , documentName :: Text
+    , userName :: UserName
+    , documentName :: DocumentName
     , userAction :: UserAction
     , created :: UTCTime
     }
 
 data InsertEvent = InsertEvent
     { instanceId :: InstanceId
-    , userName :: Text
-    , documentName :: Text
+    , userName :: UserName
+    , documentName :: DocumentName
     , userAction :: UserAction
     }
 

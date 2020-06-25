@@ -8,6 +8,7 @@ import Auth.MagicHash
 import Auth.Session
 import Flow.Api
 import Flow.Client
+import Flow.OrphanTestInstances ()
 import Flow.TestUtil
 import Session.Types (Session(..))
 import SessionsTest (insertNewSession)

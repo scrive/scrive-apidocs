@@ -1,5 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.VariableCollector
     ( Role(..)
@@ -10,9 +9,10 @@ module Flow.VariableCollector
     )
   where
 
-import Data.Set hiding (fold, foldl)
+import Data.Set hiding (fold, foldl')
 
 import Flow.HighTongue
+import Flow.Names
 
 -- | A role a user can have.
 data Role = Viewer | Approver | SigningParty
@@ -55,7 +55,7 @@ instance Monoid FlowVariables where
                          }
 
 collectVariables :: HighTongue -> FlowVariables
-collectVariables HighTongue {..} = foldl toVariables mempty stages
+collectVariables HighTongue {..} = foldl' toVariables mempty stages
   where
     toVariables :: FlowVariables -> Stage -> FlowVariables
     toVariables variables Stage {..} =

@@ -1,10 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Transducer
     ( TransducerEdge(..)
@@ -13,7 +8,7 @@ module Flow.Transducer
     , Transducer(..)
     , Error(..)
     , createTransducer
-    , step
+    , findEdge
     , getState
     , isFinalState
     )
@@ -30,10 +25,17 @@ import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import qualified Data.Map.Strict as M
 
+-- TODO make this a newtype
 type StateId = Text
 
 
 -- TODO: Cleanup these data structures... i.e. remove duplicate fields.
+-- | `TransducerEdge` specifies a target state,
+-- as well as input and output labels.
+-- The input label is used for comparison when receiving input:
+-- if it matches the input, transducer moves to the target state.
+-- The output label is an additional output that can be produced
+-- by the transition to, e.g., carry out some actions.
 data TransducerEdge a b = TransducerEdge
     { edgeInputLabel :: a
     , edgeOutputLabel :: b
@@ -79,9 +81,9 @@ instance (Ord a, FromJSON a, FromJSON b) => FromJSON (Transducer a b) where
 instance (Ord a, ToJSON a, ToJSON b) => ToJSON (Transducer a b) where
   toJSON = genericToJSON aesonOptions
 
-{- HLINT ignore TranducerMarshallingException -}
-data TranducerMarshallingException = TransducerFromJsonDecoding String
-  deriving (Show, Exception)
+newtype TranducerMarshallingException = TransducerFromJsonDecoding String
+  deriving Show
+  deriving anyclass Exception
 
 instance (Ord a, FromJSON a, FromJSON b, ToJSON a, ToJSON b)
   => PQFormat (Transducer a b) where
@@ -106,20 +108,27 @@ data Error
     | DuplicitEdge Text
   deriving (Eq, Show)
 
-step
+-- | Given a `transducer` (a state machine) in state `stateId'`
+-- find an edge that should fire when receiving `input` event.
+findEdge
   :: forall a b
    . (Eq a, Ord a)
   => Transducer a b
   -> StateId
   -> a
   -> Either Error (TransducerEdge a b)
-step transducer@Transducer {..} stateId' input =
-  getState transducer stateId' >>= findEdge
+findEdge transducer@Transducer {..} stateId' input =
+  getState transducer stateId' >>= findEdge'
   where
-    findEdge :: TransducerState a b -> Either Error (TransducerEdge a b)
-    findEdge TransducerState {..} =
+    findEdge' :: TransducerState a b -> Either Error (TransducerEdge a b)
+    findEdge' TransducerState {..} =
       maybeToEither TransitionNotFound $ stateEdges !? input
 
+-- | Assemble transducer from states and edges.
+-- Besides the initial and final states, one needs to provide
+-- a list of `edges`. Since `TransducerEdge` only contains the
+-- target state, this is provided as a tuple that also contains
+-- a source state.
 createTransducer
   :: forall a b
    . Ord a
@@ -131,28 +140,28 @@ createTransducer
   -> Either Error (Transducer a b)
 createTransducer initialState endStates edges = do
   states <-
-    (fromList (fmap toEndState endStates) <>) <$> foldlM addStateAndEndge M.empty edges
+    (fromList (fmap toEndState endStates) <>) <$> foldlM addStateAndEdge M.empty edges
   pure Transducer { .. }
   where
-    addStateAndEndge
+    addStateAndEdge
       :: Map StateId (TransducerState a b)
       -> (StateId, TransducerEdge a b)
       -> Either Error (Map StateId (TransducerState a b))
-    addStateAndEndge stateMap (stateId, edge) =
-      alterF (addState stateId edge) stateId stateMap
+    addStateAndEdge stateMap (stateId, edge) =
+      alterF (fmap Just . addState stateId edge) stateId stateMap
 
     addState
       :: StateId
       -> TransducerEdge a b
       -> Maybe (TransducerState a b)
-      -> Either Error (Maybe (TransducerState a b))
-    addState stateId edge Nothing = pure . Just $ TransducerState
+      -> Either Error (TransducerState a b)
+    addState stateId edge Nothing = pure TransducerState
       { stateId
       , stateEdges = M.singleton (edgeInputLabel edge) edge
       }
     addState _ edge (Just state@TransducerState {..}) = do
       stateEdges' <- alterF (addEdge edge) (edgeInputLabel edge) stateEdges
-      pure . Just $ state { stateEdges = stateEdges' }
+      pure state { stateEdges = stateEdges' }
 
     addEdge
       :: TransducerEdge a b

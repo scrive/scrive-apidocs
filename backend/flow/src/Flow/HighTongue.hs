@@ -1,18 +1,10 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.HighTongue
     ( Expect(..)
     , SystemAction(..)
     , HighTongue(..)
     , Stage(..)
-    , DocumentName
-    , UserName
-    , MessageName
-    , FieldName
-    , StateName
     , DSLVersion
     , ValidationError(..)
     , decodeHighTongue
@@ -32,11 +24,8 @@ import GHC.Generics
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Set as Set
 
-type DocumentName = Text
-type UserName = Text
-type MessageName = Text
-type FieldName = Text
-type StateName = Text
+import Flow.Names
+import Flow.Process
 
 data HighTongue = HighTongue
     { stages :: [Stage]
@@ -130,7 +119,7 @@ instance FromJSON SystemAction where
       _        -> typeMismatch "Expected key `notify`" (Object o)
 
 data Stage = Stage
-    { stageName :: Text
+    { stageName :: StageName
     , stageActions :: [SystemAction]
     , stageExpect :: Set Expect
     }
@@ -144,7 +133,7 @@ instance FromJSON Stage where
     parseStage k v
     where
       parseStage k = withObject "stage" $ \o ->
-        Stage k
+        Stage (unsafeName k)
           <$> (o .: "actions" <?> Key "actions")
           <*> (explicitParseField parseSetExpect o "expect" <?> Key "expect")
 
@@ -177,8 +166,9 @@ instance ToJSON ValidationError where
   toEncoding = genericToEncoding aesonOptions
 
 
-decodeHighTongue :: Text -> Either [ValidationError] HighTongue
-decodeHighTongue template = packError `left` decodeEither' (encodeUtf8 template)
+decodeHighTongue :: Process -> Either [ValidationError] HighTongue
+decodeHighTongue process = packError
+  `left` decodeEither' (encodeUtf8 $ fromProcess process)
   where
     packError err =
       [ ValidationError { line_number   = 0

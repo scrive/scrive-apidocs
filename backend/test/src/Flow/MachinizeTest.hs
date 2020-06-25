@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.MachinizeTest where
 
@@ -13,6 +13,7 @@ import Text.RawString.QQ
 import qualified Data.Set as Set
 
 import Flow.Machinize
+import Flow.OrphanTestInstances ()
 import Flow.Transducer
 
 tests :: Test
@@ -38,7 +39,7 @@ testRejectionLeadsToFailure :: Assertion
 testRejectionLeadsToFailure = check $ do
   tongue  <- mapLeft YamlError . decodeEither' $ encodeUtf8 process
   machine <- mapLeft MachineError $ linear tongue
-  mapLeft MachineError $ step machine "sign" input
+  mapLeft MachineError $ findEdge machine "sign" input
   where
     check = \case
       Left  e -> fail $ show e

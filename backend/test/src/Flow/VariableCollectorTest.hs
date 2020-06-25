@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.VariableCollectorTest where
 
@@ -11,6 +11,7 @@ import Test.HUnit.Base ((@=?), Assertion)
 import Text.RawString.QQ
 import qualified Data.Set as Set
 
+import Flow.OrphanTestInstances ()
 import Flow.Transducer
 import Flow.VariableCollector
 

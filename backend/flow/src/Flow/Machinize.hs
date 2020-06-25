@@ -1,9 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module Flow.Machinize
     ( EventInfo(..)
@@ -29,6 +25,7 @@ import GHC.Generics
 import qualified Data.Set as Set
 
 import Flow.HighTongue
+import Flow.Names
 import Flow.Transducer
 
 aesonOptions :: Options
@@ -85,7 +82,7 @@ newtype UnknownUserAction = UnknownUserAction Text
 
 decodeUserAction :: Text -> Either UnknownUserAction UserAction
 decodeUserAction = \case
-  "field"     -> Right $ Field ""
+  "field"     -> Right . Field $ unsafeName ""
   "approval"  -> Right Approval
   "signature" -> Right Signature
   "view"      -> Right View
@@ -142,7 +139,7 @@ expectToSuccess = \case
 mkSuccessEdge :: (Stage, StateId) -> (StateId, Edge)
 mkSuccessEdge (stage, next) = (stateId, edge)
   where
-    stateId = stageName stage
+    stateId = fromName $ stageName stage
     events  = Set.fromList $ Set.toList (stageExpect stage) >>= expectToSuccess
     edge    = TransducerEdge events (map Action $ stageActions stage) next
 
@@ -161,7 +158,7 @@ mkFailureEdges :: StateId -> [LowAction] -> Stage -> [(StateId, Edge)]
 mkFailureEdges failureStateId failureLowActions stage = map mkEdge
   $ concatMap expectToFailure expects
   where
-    stateId = stageName stage
+    stateId = fromName $ stageName stage
     expects = Set.toList $ stageExpect stage
     mkEdge e =
       (stateId, TransducerEdge (Set.singleton e) failureLowActions failureStateId)
@@ -180,8 +177,8 @@ linear :: HighTongue -> Either Error Machine
 linear HighTongue {..} = createTransducer initialState ["final"] edges
   where
     edges = map mkSuccessEdge pairs <> concatMap (mkFailureEdges "failure" [Fail]) stages
-    initialState = stageName $ head stages
-    nextStates   = snoc (map stageName $ tail stages) "final"
+    initialState = fromName . stageName $ head stages
+    nextStates   = snoc (map (fromName . stageName) $ tail stages) "final"
     pairs        = zip stages nextStates
 
 machinize :: HighTongue -> Either [ValidationError] Machine

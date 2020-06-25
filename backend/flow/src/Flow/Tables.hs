@@ -1,6 +1,6 @@
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
-module Flow.Db where
+module Flow.Tables where
 
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Class
@@ -46,12 +46,11 @@ tableFlowTemplates = tblTable
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "user_id", indexOnColumn "folder_id"]
-  , tblForeignKeys =
-    [
+  , tblForeignKeys = [
     -- Do not allow to delete users or user groups that still contain templates.
-      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyRestrict }
-    , (fkOnColumn "folder_id" "folders" "id") { fkOnDelete = ForeignKeyRestrict }
-    ]
+                       fkOnColumn "user_id"   "users"   "id"
+                     , fkOnColumn "folder_id" "folders" "id"
+                     ]
   }
 
 createTableFlowTemplates :: MonadDB m => Migration m
@@ -77,8 +76,7 @@ tableFlowInstances = tblTable
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "template_id"]
-  , tblForeignKeys =
-    [(fkOnColumn "template_id" "flow_templates" "id") { fkOnDelete = ForeignKeyRestrict }]
+  , tblForeignKeys = [fkOnColumn "template_id" "flow_templates" "id"]
   }
 
 createTableFlowInstances :: MonadDB m => Migration m
@@ -110,8 +108,8 @@ tableFlowInstancesKVStore = tblTable
                      ]
   , tblForeignKeys =
     [ (fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyCascade }
-    , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyRestrict }
-    , (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyRestrict }
+    , fkOnColumn "document_id" "documents" "id"
+    , fkOnColumn "user_id"     "users"     "id"
     ]
   , tblChecks      =
     [ tblCheck
@@ -143,16 +141,15 @@ tableFlowInstanceSignatories = tblTable
     , tblColumn { colName = "key", colType = TextT, colNullable = False }
     ]
   , tblPrimaryKey  = pkOnColumn "signatory_id"
-  , tblIndexes     = [indexOnColumn "instance_id"]
-  , tblForeignKeys =
-    [ (fkOnColumns ["instance_id", "key"]
-                   "flow_instance_key_value_store"
-                   ["instance_id", "key"]
-      ) { fkOnDelete = ForeignKeyCascade
-        }
-    , (fkOnColumn "signatory_id" "signatory_links" "id") { fkOnDelete = ForeignKeyRestrict
-                                                         }
-    ]
+  , tblIndexes     = [indexOnColumns ["instance_id", "key"]]
+  , tblForeignKeys = [ (fkOnColumns ["instance_id", "key"]
+                                    "flow_instance_key_value_store"
+                                    ["instance_id", "key"]
+                       )
+                       { fkOnDelete = ForeignKeyCascade
+                       }
+                     , fkOnColumn "signatory_id" "signatory_links" "id"
+                     ]
   }
 
 createTableFlowInstanceSignatories :: MonadDB m => Migration m
