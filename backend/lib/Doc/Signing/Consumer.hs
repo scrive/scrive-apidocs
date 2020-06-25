@@ -291,12 +291,6 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       let mctd = estRespCompletionData ct
       OnfidoEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
 
-      unless eidonfidoChecksClear $ do
-        dbUpdate $ UpdateDocumentSigning signingSignatoryID
-                                         True
-                                         "Onfido rejected the identification document."
-        throwE . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
-
       let sig = EIDServiceOnfidoSignature
             { eidServiceOnfidoSigSignatoryName = eidonfidoFirstName
                                                  <> " "
@@ -466,7 +460,9 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
     -- EIDServiceTransactionStatusCompleteAndFailed
     _ -> do
       mergeWithStatus ts
-      throwE $ Failed Remove
+      dbUpdate
+        $ UpdateDocumentSigning signingSignatoryID True "EID Hub Transaction Failed."
+      throwE . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
 
 
 signFromESignature
