@@ -188,7 +188,7 @@ handleListCSV = do
   allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ user ^. #id)
                                     documentFilters
                                     documentSorting
-                                    10000
+                                    30000
   let allDocsCustomFields :: [FieldIdentity] =
         allCustomTextOrCheckboxOrRadioGroupFields allDocs
 

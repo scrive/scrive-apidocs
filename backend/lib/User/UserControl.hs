@@ -1,5 +1,6 @@
 module User.UserControl (
     handleAccountGet
+  , handleAccountSetupGetJSON
   , sendChangeToExistingEmailInternalWarningMail
   , handleGetChangeEmail
   , handlePostChangeEmail
@@ -322,6 +323,23 @@ handleAccountSetupGet uid token sm = do
         CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
         _                 -> flashMessageUserAccountRequestExpired
       return . internalResponseWithFlash flashmessage . LinkLogin $ ctx ^. #lang
+
+handleAccountSetupGetJSON
+  :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
+handleAccountSetupGetJSON uid token sm = do
+  muser <- getUserAccountRequestUser uid token
+  case (muser, view #hasAcceptedTOS =<< muser) of
+    (Just user, Nothing) -> do
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
+      return . J.runJSONGen $ do
+        userJSONUserDetailsForNewSignup user
+        J.value "entity" $ ugwpAddress ugwp ^. #entityName
+    (Just _user, Just _) -> J.runJSONGenT $ do
+      J.value "error" ("account_already_setup" :: Text)
+    _ -> J.runJSONGenT $ do
+      case sm of
+        CompanyInvitation -> J.value "error" ("company_expired" :: Text)
+        _                 -> J.value "error" ("account_request_expired" :: Text)
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do

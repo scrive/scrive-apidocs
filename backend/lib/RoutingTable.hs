@@ -159,6 +159,8 @@ staticRoutes production = choice
   , (allLangDirs . dir "mynewaccount" . hGet . toK2)
     $ \(_ :: String) (_ :: String) -> return LinkArchive
   , (allLangDirs . dir "accountsetup" . hGet . toK3) UserControl.handleAccountSetupGet
+  , (dir "new" . dir "accountsetupjson" . hGet . toK3)
+    UserControl.handleAccountSetupGetJSON
   , (dir "contactsales" . hPostAllowHttp . toK0) UserControl.handleContactSales
   , (dir "accountsetup" . hPostNoXToken . toK3) UserControl.handleAccountSetupPost
   , (dir "salesforce" . dir "integration" . hGet . toK0)
