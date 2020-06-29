@@ -233,6 +233,7 @@ companySettingsJson ugs = do
   value "haspostsignview" $ ugs ^. #hasPostSignview
   value "eiduseforseview" $ ugs ^. #eidUseForSEView
   value "appfrontend" $ ugs ^. #appFrontend
+  value "promptbpid" $ ugs ^. #requireBPIDForNewDoc
 
 
 userStatsToJSON
