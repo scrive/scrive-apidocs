@@ -138,9 +138,17 @@ properties:
   invitation_message:
     description: |
       The invitation message to send to all parties at the start of the signing
-      process.
+      process when using email invitation.
 
-      Default is blank.
+      Default is blank meaning that a default message will be used.
+    type: string
+    default: ""
+  sms_invitation_message:
+    description: |
+      The invitation message to send to all parties at the start of the signing
+      process when using SMS invitation.
+
+      Default is blank meaning that a default message will be used.
     type: string
     default: ""
   confirmation_message:
@@ -148,7 +156,15 @@ properties:
       The confirmation message to send to all parties once the document has
       been signed.
 
-      Default is blank.
+      Default is blank meaning that a default message will be used.
+    type: string
+    default: ""
+  sms_confirmation_message:
+    description: |
+      The confirmation message to send to all parties once the document has
+      been signed when using SMS confirmation.
+
+      Default is blank meaning that a default message will be used.
     type: string
     default: ""
   lang:
