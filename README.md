@@ -7,6 +7,19 @@ Forked and edited from the original
   <img src="https://raw.githubusercontent.com/lord/img/master/logo-slate.png" alt="Slate: API Documentation Generator" width="226">
 </p>
 
+<!-- Generate toc with `markdown-toc -i README.md` -->
+
+<!-- toc -->
+
+- [What's in here?](#whats-in-here)
+  * [Differrences from Slate upstream](#differrences-from-slate-upstream)
+- [Updating the Documentation](#updating-the-documentation)
+  * [Dependencies](#dependencies)
+  * [Generating documentation on your local machine](#generating-documentation-on-your-local-machine)
+  * [Updating documentation on http://apidocs.scrive.com/](#updating-documentation-on-httpapidocsscrivecom)
+
+<!-- tocstop -->
+
 ## What's in here?
 
 **Use with caution:**
