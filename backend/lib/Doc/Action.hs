@@ -413,7 +413,7 @@ sendInbetweenPortalInvitations = do
             , not $ isForwarded sl  -- redundant, but here for clarity
             , signatorysignorder sl <= documentcurrentsignorder doc  -- is actived
             , documentprevioussignorder doc < signatorysignorder sl
-            ]  -- ^ wasn't previously activated
+            ]  -- wasn't previously activated
 
       forM_ signatoriesWhoNeedInviting $ \sl -> do
         uctx <- getCreateUserContextWithoutContext

@@ -1,4 +1,4 @@
-module LocalizationMain(main) where
+module Main (main) where
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath ((</>))

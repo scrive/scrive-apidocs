@@ -202,7 +202,7 @@ validMail :: MonadIO m => Text -> Mail -> m ()
 validMail name m = do
   let c    = content m
       c'   = "<html>" <> TL.fromStrict c <> "</html>"
-           -- ^ XML parser freaks out if there's content after root element.
+           -- XML parser freaks out if there's content after root element.
       exml = XML.parseText XML.def c'
   unless (T.any isAlphaNum $ title m) . assertFailure $ T.unpack
     ("Empty title of mail " <> name)

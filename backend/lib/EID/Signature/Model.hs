@@ -291,7 +291,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceOnfidoSignature (
         sqlSet "signatory_link_id" slid
         sqlSet "provider"          EIDServiceOnfido
         sqlSet "data" $ encodeToLazyText eidServiceOnfidoSigMethod
-        -- ^ Well, this only slightly stretches the original purpose of the
+        -- Well, this only slightly stretches the original purpose of the
         -- "data" field... Note that we can't use plain `encode`, since the
         -- ToSQL instance for ByteString spits out a hexadecimal representation.
         sqlSet "signatory_name"            eidServiceOnfidoSigSignatoryName

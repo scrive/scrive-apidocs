@@ -153,7 +153,7 @@ completeEIDServiceAuthTransaction
 completeEIDServiceAuthTransaction conf doc sl = do
   (session :: SessionCookieInfo) <- guardJustM $ readField "session"
   void . guardJustM $ unsafeSessionTakeover session
-  -- ^ To address AUTH-201 we include the session id as part of the redirect
+  -- To address AUTH-201 we include the session id as part of the redirect
   -- url, and restore the session from there. For posterity: on iOS the redirect
   -- may under certain circumstances land us in another browser, where we don't
   -- have an active session.

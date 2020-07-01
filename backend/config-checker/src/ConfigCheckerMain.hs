@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 
-module Main where
+module Main (main) where
 
 import Data.Either.Validation
 import Data.Unjson

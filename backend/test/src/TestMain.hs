@@ -1,4 +1,4 @@
-module TestMain where
+module Main (main, testone) where
 
 import Control.Arrow
 import Control.Concurrent

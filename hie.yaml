@@ -1,0 +1,77 @@
+cradle:
+  multi:
+    - path: "./Shake"
+      config :  {cradle : { none: } }
+    - path: "./evidence-package"
+      config :  {cradle : { none: } }
+    - path: "./build-scripts"
+      config :  {cradle : { none: } }
+    - path: "./transifex"
+      config :  {cradle : { none: } }
+    - path: "./scripts"
+      config :  {cradle : { none: } }
+    - path: "./backend/config-checker"
+      config :  {cradle : { none: } }
+
+    - path: "./"
+      config:
+        cradle:
+          cabal:
+            - path: "./backend/server/src"
+              component: "kontrakcja:exe:kontrakcja-server"
+
+            - path: "./backend/cron/src"
+              component: "kontrakcja:exe:cron"
+
+            - path: "./backend/migrate/src"
+              component: "kontrakcja:exe:kontrakcja-migrate"
+
+            - path: "./backend/mailer/src"
+              component: "kontrakcja:exe:mailing-server"
+
+            - path: "./backend/messenger/src"
+              component: "kontrakcja:exe:messenger-server"
+
+            - path: "./localization/src"
+              component: "kontrakcja:exe:localization"
+
+            - path: "./backend/routinglist/src"
+              component: "kontrakcja:exe:routinglist"
+
+            - path: "./backend/cron/inc"
+              component: "lib:kontrakcja"
+            - path: "./backend/cron/schema"
+              component: "lib:kontrakcja"
+            - path: "./backend/lib"
+              component: "lib:kontrakcja"
+            - path: "./backend/mailer/inc "
+              component: "lib:kontrakcja"
+            - path: "./backend/messenger/inc"
+              component: "lib:kontrakcja"
+            - path: "./backend/messenger/src"
+              component: "lib:kontrakcja"
+            - path: "./backend/migrate/inc"
+              component: "lib:kontrakcja"
+            - path: "./backend/misc/schema "
+              component: "lib:kontrakcja"
+            - path: "./backend/server/schema"
+              component: "lib:kontrakcja"
+            - path: "backend/server/src"
+              component: "lib:kontrakcja"
+            - path: "backend/misc/src"
+              component: "lib:kontrakcja"
+            - path: "backend/messenger/schema"
+              component: "lib:kontrakcja"
+            - path: "backend/mailer/schema"
+              component: "lib:kontrakcja"
+            - path: "backend/mailer/src"
+              component: "lib:kontrakcja"
+
+            - path: "./backend/kontrakcja-prelude"
+              component: "lib:kontrakcja-prelude"
+
+            - path: "./backend/appdir"
+              component: "lib:kontrakcja-appdir"
+            
+            - path: "./backend/test/src"
+              component: "kontrakcja:test:kontrakcja-test"

@@ -1,4 +1,4 @@
-module RoutingListMain where
+module Main (main) where
 
 {-------------------------------------------------------------------------------
 run this script as: cabal new-run routinglist <filepath> <default nginx rule> < input.json

@@ -291,7 +291,7 @@ docApiV2StartWithPortal = api $ do
             , signatorylinkdeliverymethod sl == PortalDelivery  -- is portal signatory
             , not $ isForwarded sl  -- redundant, but here for clarity
             , signatorysignorder sl <= documentcurrentsignorder doc
-            ]  -- ^ is actived
+            ]  -- is actived
 
       forM_ signatoriesWhoNeedInviting $ \sl -> do
         uctx <- getCreateUserContextFromContext
@@ -511,7 +511,7 @@ docApiV2RemindWithPortal = api $ do
             , signatorysignorder sl <= documentcurrentsignorder doc  -- is actived
             , not $ isForwarded sl  -- redundant, but here for clarity
             , isSignatoryAndHasNotSigned sl || isApproverAndHasNotApproved sl
-            ]  -- ^ needs to act
+            ]  -- needs to act
 
       forM_ signatoriesWhoNeedReminding $ \sl -> do
         uctx <- getCreateUserContextWithoutContext
