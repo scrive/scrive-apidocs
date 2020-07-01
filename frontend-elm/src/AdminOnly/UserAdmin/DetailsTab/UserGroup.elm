@@ -593,12 +593,9 @@ formValuesSettings settings =
     , ( "companyhaspostsignview", boolToJson settings.hasPostSignview )
     , ( "companyeiduseforseview", boolToJson settings.eidUseForSEView )
     , ( "companyappfrontend", boolToJson settings.appFrontend )
+    , ( "companycgiserviceid", M.withDefault "" settings.cgiServiceID )
+    , ( "companycgidisplayname", M.withDefault "" settings.cgiDisplayName )
     ]
-        ++ L.filterMap identity
-            [ mField identity ( "companycgiserviceid", settings.cgiServiceID )
-            , mField identity ( "companycgidisplayname", settings.cgiDisplayName )
-            ]
-
 
 mField : (value -> String) -> ( String, Maybe value ) -> Maybe ( String, String )
 mField toString tuple =

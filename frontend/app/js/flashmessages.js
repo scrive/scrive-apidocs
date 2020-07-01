@@ -90,7 +90,7 @@ exports.FlashMessageTryFromCookie = function () {
     try {
       var cookie = Cookies.get("flashmessage");
       var unescapedCookie = tryUnescapeQuotes(cookie);  // backend wraps string in quotes
-      var decodedCookie = fromBase64(unescapedCookie);
+      var decodedCookie = fromBase64(decodeURIComponent(unescapedCookie));
       var cleanDecodedCookie = decodedCookie.replace(/(\r\n|\n|\r)/gm, "");  // get rid of newlines
       var jsonFlash = JSON.parse(cleanDecodedCookie);
       jsonFlash["content"] = decodeURIComponent(jsonFlash["content"]);

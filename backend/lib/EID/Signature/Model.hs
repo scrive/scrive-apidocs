@@ -420,7 +420,10 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       { eidServiceNOBankIDSigInternalProvider = EIDServiceNOBankIDStandard
       , eidServiceNOBankIDSigSignatoryName    = fromJust msignatory_name
       , eidServiceNOBankIDSigPhoneNumber      = Nothing
-      , eidServiceNOBankIDSigPersonalNumber   = msignatory_personal_number
+      -- make sure we insert empty string, not null for case
+      -- where personal number is never provided (mobile bankid)
+      , eidServiceNOBankIDSigPersonalNumber   = Just
+                                                  $ fromMaybe "" msignatory_personal_number
       , eidServiceNOBankIDSigDateOfBirth      = msignatory_dob
       , eidServiceNOBankIDSigSignedText       = sdata
       , eidServiceNOBankIDSigCertificate      = decodeUtf8 <$> signature
