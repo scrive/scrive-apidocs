@@ -11,6 +11,8 @@ module Flow.Names.Internal
 
 import Data.Aeson
 import Database.PostgreSQL.PQTypes
+import Servant.API
+
 
 data NameKind
     = DocumentName
@@ -21,6 +23,12 @@ data NameKind
 
 newtype Name (a :: NameKind) = Name Text
   deriving (Eq, FromJSON, Ord, Show, ToJSON)
+
+instance FromHttpApiData (Name a) where
+  parseUrlPiece = fmap Name . parseUrlPiece
+
+instance ToHttpApiData (Name a) where
+  toUrlPiece (Name a) = toUrlPiece a
 
 instance PQFormat (Name a) where
   pqFormat = pqFormat @Text

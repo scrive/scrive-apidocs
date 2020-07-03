@@ -2,11 +2,17 @@ module Auth.Model where
 
 import Control.Monad.Catch
 import Control.Monad.Time
+import Crypto.RNG
 import Data.Int
+import Data.Time.Clock
 import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes.SQL.Builder
 
+import Auth.MagicHash
 import Auth.OAuth
 import Auth.Session
+import Auth.Session.Constant
+import Auth.Session.SessionID
 
 -- TODO use UserId and UserGroupId types, once they are available in some ID component
 authenticateToken
@@ -28,9 +34,9 @@ authenticateToken (OAuthAuthorization token secret atoken asecret) = do
 -- TODO use UserId and UserGroupId types, once they are available in some ID component
 authenticateSession
   :: (MonadDB m, MonadThrow m, MonadTime m)
-  => (SessionCookieInfo, XToken)
+  => AuthCookies
   -> m (Maybe (Int64, Int64, Int64))
-authenticateSession (SessionCookieInfo {..}, xtoken) = do
+authenticateSession (AuthCookies SessionCookieInfo {..} xtoken) = do
   now <- currentTime
   runQuery_ $ rawSQL
     (  "SELECT u.id, ug.id, u.home_folder_id "
@@ -41,3 +47,39 @@ authenticateSession (SessionCookieInfo {..}, xtoken) = do
     )
     (cookieSessionID, cookieSessionToken, xtoken, now)
   fetchMaybe identity
+
+getSessionIDByCookies
+  :: (MonadDB m, MonadThrow m, MonadTime m) => AuthCookies -> m (Maybe SessionID)
+getSessionIDByCookies (AuthCookies SessionCookieInfo {..} xtoken) = do
+  now <- currentTime
+  runQuery_ . sqlSelect "sessions" $ do
+    sqlResult "id"
+    sqlWhereEq "id"         cookieSessionID
+    sqlWhereEq "token"      cookieSessionToken
+    sqlWhereEq "csrf_token" xtoken
+    sqlWhere $ "expires >=" <?> now
+  fetchMaybe runIdentity
+
+insertNewSession
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m) => Text -> m AuthCookies
+insertNewSession domain = do
+  sessionToken :: MagicHash <- random
+  xToken :: MagicHash <- random
+  now                 <- currentTime
+  let expires = secondsAfter timeoutSecs now
+  runQuery_ . sqlInsert "sessions" $ do
+    mapM_ sqlResult ["id", "token", "csrf_token"]
+    sqlSet "user_id"     (Nothing :: Maybe Int64)
+    sqlSet "pad_user_id" (Nothing :: Maybe Int64)
+    sqlSet "token"       sessionToken
+    sqlSet "csrf_token"  xToken
+    sqlSet "domain"      domain
+    sqlSet "expires"     expires
+  fetchOne fetchAuthCookies
+  where
+    timeoutSecs  = defaultSessionTimeoutSecs :: Int64
+    secondsAfter = addUTCTime . fromIntegral
+
+fetchAuthCookies :: (SessionID, MagicHash, MagicHash) -> AuthCookies
+fetchAuthCookies (sessionID, sessionToken, xToken) =
+  AuthCookies (SessionCookieInfo sessionID sessionToken) xToken

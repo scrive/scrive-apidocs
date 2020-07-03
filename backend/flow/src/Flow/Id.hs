@@ -12,6 +12,7 @@ data FlowIdKind
     = InstanceId
     | TemplateId
     | EventId
+    | InstanceAccessTokenId
 
 newtype Id (a :: FlowIdKind) = Id UUID
   deriving (Eq, Show, Generic)
@@ -31,6 +32,7 @@ instance ToJSON (Id a) where
 type InstanceId = Id 'InstanceId
 type TemplateId = Id 'TemplateId
 type EventId = Id 'EventId
+type InstanceAccessTokenId = Id 'InstanceAccessTokenId
 
 instance PQFormat (Id a) where
   pqFormat = pqFormat @UUID

@@ -109,9 +109,10 @@ main = withCurlDo $ do
 
     liftIO . maybeFork . void $ runFlow
       logRunnerFlow
-      ( FlowConfiguration
-          (unConnectionSource . simpleSource $ connSettings kontraComposites)
-      $ flowPort appConf
+      (FlowConfiguration
+        (unConnectionSource . simpleSource $ connSettings kontraComposites)
+        (flowPort appConf)
+        rng
       )
 
   -- Start Kontrakcja server

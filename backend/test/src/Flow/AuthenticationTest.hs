@@ -27,35 +27,39 @@ testCookieAuth = do
   user         <- instantiateRandomUser
   (session, _) <- insertNewSession (user ^. #id)
 
-  let
-    validSesID    = sesID session
-    validSesToken = sesToken session
-    validXToken   = sesCSRFToken session
+  let validSesID    = sesID session
+      validSesToken = sesToken session
+      validXToken   = sesCSRFToken session
 
-    TemplateClient { createTemplate = validCreateTemplate } =
-      mkTemplateClient
-        . Right
-        $ (Just (SessionCookieInfo validSesID validSesToken), Just validXToken)
+      validCreateTemplate =
+        createTemplate
+          . mkClient
+          . Right
+          $ (Just (SessionCookieInfo validSesID validSesToken), Just validXToken)
 
-    TemplateClient { createTemplate = invalidCreateTemplate1 } =
-      mkTemplateClient
-        . Right
-        $ (Just (SessionCookieInfo validSesID (unsafeMagicHash 666)), Just validXToken)
+      invalidCreateTemplate1 =
+        createTemplate
+          . mkClient
+          . Right
+          $ (Just (SessionCookieInfo validSesID (unsafeMagicHash 666)), Just validXToken)
 
-    TemplateClient { createTemplate = invalidCreateTemplate2 } =
-      mkTemplateClient
-        . Right
-        $ (Just (SessionCookieInfo validSesID validSesToken), Just (unsafeMagicHash 666))
+      invalidCreateTemplate2 =
+        createTemplate
+          . mkClient
+          . Right
+          $ ( Just (SessionCookieInfo validSesID validSesToken)
+            , Just (unsafeMagicHash 666)
+            )
 
-    TemplateClient { createTemplate = invalidCreateTemplate3 } =
-      mkTemplateClient
-        . Right
-        $ (Just (SessionCookieInfo validSesID validSesToken), Nothing)
+      invalidCreateTemplate3 =
+        createTemplate
+          . mkClient
+          . Right
+          $ (Just (SessionCookieInfo validSesID validSesToken), Nothing)
 
-    TemplateClient { createTemplate = invalidCreateTemplate4 } =
-      mkTemplateClient $ Right (Nothing, Nothing)
+      invalidCreateTemplate4 = createTemplate . mkClient $ Right (Nothing, Nothing)
 
-    createTemplateData = CreateTemplate "dummyname" "dummyprocess"
+      createTemplateData     = CreateTemplate "dummyname" "dummyprocess"
 
   env <- getEnv
 
@@ -83,4 +87,4 @@ testCookieAuth = do
     . assertLeft "Request with both cookies missing should fail"
     . request env
     $ invalidCreateTemplate4 createTemplateData
-
+  where mkClient authDataAccount = mkApiClient authDataAccount (Nothing, Nothing)

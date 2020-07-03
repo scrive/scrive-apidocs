@@ -8,6 +8,11 @@ import qualified Data.Text as T
 import Auth.MagicHash
 import Auth.Session.SessionID
 
+data AuthCookies = AuthCookies
+  { authCookieSession :: SessionCookieInfo
+  , authCookieXToken :: XToken
+  } deriving Show
+
 type XToken = MagicHash
 
 -- | Info that we store in the session cookie.

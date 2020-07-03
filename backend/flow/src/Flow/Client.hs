@@ -19,10 +19,15 @@ import Flow.Process
 -- the correct set of auth credentials is. However, we need to be able to generate
 -- invalid authentication for testing. Maybe it would be better to define a separate
 -- type instance just for the AuthenticationTest.hs
-type instance AuthClientData (AuthProtect "oauth-or-cookies") = OAuthOrCookies
 type OAuthOrCookies = Either OAuthAuthorization (Maybe SessionCookieInfo, Maybe XToken)
+type instance AuthClientData (AuthProtect "account") = OAuthOrCookies
 
-data TemplateClient = TemplateClient
+-- brittany-disable-next-binding
+-- See: https://github.com/lspitzner/brittany/issues/89
+type instance AuthClientData (AuthProtect "instance-user") =
+  (Maybe SessionCookieInfo, Maybe XToken)
+
+data ApiClient = ApiClient
   { createTemplate   :: CreateTemplate -> ClientM GetCreateTemplate
   , deleteTemplate   :: TemplateId -> ClientM NoContent
   , getTemplate      :: TemplateId -> ClientM GetTemplate
@@ -37,10 +42,13 @@ data TemplateClient = TemplateClient
 }
 
 -- brittany-disable-next-binding
-mkTemplateClient :: OAuthOrCookies -> TemplateClient
-mkTemplateClient authData = TemplateClient { .. }
+mkApiClient
+  :: OAuthOrCookies
+  -> (Maybe SessionCookieInfo, Maybe XToken)
+  -> ApiClient
+mkApiClient authDataAccount authDataInstanceUser = ApiClient { .. }
   where
-    authReq = mkAuthenticatedRequest authData addAuthentication
+    accountEndpoints :<|> instanceUserEndpoints :<|> noAuthEndpoints = client apiProxy
     createTemplate
         :<|> deleteTemplate
         :<|> getTemplate
@@ -49,13 +57,14 @@ mkTemplateClient authData = TemplateClient { .. }
         :<|> commitTemplate
         :<|> startTemplate
         :<|> getInstance
-        :<|> getInstanceView
         :<|> listInstances
-      = authenticatedEndpoints authReq
-    authenticatedEndpoints :<|> validateTemplate = client apiProxy
+      = accountEndpoints (mkAuthenticatedRequest authDataAccount addOAuthOrCookies)
+    getInstanceView
+      = instanceUserEndpoints (mkAuthenticatedRequest authDataInstanceUser addAuthCookies)
+    validateTemplate = noAuthEndpoints
 
-addAuthentication :: OAuthOrCookies -> Client.Request -> Client.Request
-addAuthentication authData = case authData of
+addOAuthOrCookies :: OAuthOrCookies -> Client.Request -> Client.Request
+addOAuthOrCookies authData = case authData of
   Left  oauth       -> addOAuthAuthorization oauth
   Right authCookies -> addAuthCookies authCookies
   where
@@ -77,13 +86,14 @@ addAuthentication authData = case authData of
             <> show oaAccessSecret
             <> "\""
 
-    addAuthCookies
-      :: (Maybe SessionCookieInfo, Maybe XToken) -> Client.Request -> Client.Request
-    addAuthCookies (mSessionCookieInfo, mXToken) = Client.addHeader "cookie" cookiesText
-      where
-        cookiesText = T.intercalate "; " $ catMaybes
-          [ renderCookie cookieNameSessionID <$> mSessionCookieInfo
-          , renderCookie cookieNameXToken <$> mXToken
-          ]
-        -- Kontrakcja quotes its auth cookie values and we want to be compatible
-        renderCookie name val = name <> "=\"" <> showt val <> "\""
+addAuthCookies
+  :: (Maybe SessionCookieInfo, Maybe XToken) -> Client.Request -> Client.Request
+addAuthCookies (mSessionCookieInfo, mXToken) = Client.addHeader "cookie" cookiesText
+  where
+    cookiesText = T.intercalate "; " $ catMaybes
+      [ renderCookie cookieNameSessionID <$> mSessionCookieInfo
+      , renderCookie cookieNameXToken <$> mXToken
+      ]
+    -- Kontrakcja quotes its auth cookie values and we want to be compatible
+    renderCookie name val = name <> "=\"" <> showt val <> "\""
+

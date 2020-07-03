@@ -204,6 +204,7 @@ testMany workspaceRoot (allargs, ts) = do
     (FlowConfiguration
       (unConnectionSource . simpleSource $ pgConnSettings testDBConfig kontraComposites)
       testFlowPort
+      rng
     )
 
   withLogger lr $ \runLogger -> testMany' tconf (allargs, ts) runLogger rng

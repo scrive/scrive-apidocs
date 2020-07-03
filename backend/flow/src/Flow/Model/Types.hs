@@ -10,6 +10,7 @@ module Flow.Model.Types
     , Event(Event)
     , InsertEvent(InsertEvent)
     , FullInstance(..)
+    , InstanceSession(InstanceSession)
     , StoreValue(..)
     , StoreValueType(..)
     , fetchInstance
@@ -19,6 +20,7 @@ module Flow.Model.Types
     , toEventInfo
     , toInsertEvent
     , instanceToAggregator
+    , fetchInstanceSession
     )
  where
 
@@ -26,6 +28,7 @@ import Data.Time.Clock
 import GHC.Generics (Generic)
 import qualified Data.Set as Set
 
+import Auth.Session.SessionID
 import Doc.DocumentID (DocumentID)
 import Flow.Aggregator
 import Flow.Id
@@ -85,3 +88,6 @@ instanceToAggregator FullInstance {..} = aggregator
   where
     eventInfos = Set.fromList $ fmap toEventInfo aggregatorEvents
     aggregator = AggregatorState eventInfos $ flowInstance ^. #currentState
+
+fetchInstanceSession :: (SessionID, InstanceId, UserName) -> InstanceSession
+fetchInstanceSession (sessionId, instanceId, userName) = InstanceSession { .. }

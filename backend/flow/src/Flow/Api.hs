@@ -41,6 +41,38 @@ import Flow.Process
 import Folder.Types
 import User.UserID (UserID)
 
+-- brittany-disable-next-binding
+type FlowAPI
+    = "experimental" :> "flow" :>
+      ( AuthProtect "account" :>
+            -- Configuration
+          ( "templates" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
+            :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
+            :<|> "templates" :> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
+            :<|> "templates" :> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate
+                             :> Patch '[JSON] GetTemplate
+            :<|> "templates" :> Get '[JSON] [GetTemplate]
+            -- Control
+            :<|> "templates" :> Capture "template_id" TemplateId :> "commit"
+                             :> PostNoContent '[JSON] NoContent
+            :<|> "templates" :> Capture "template_id" TemplateId :> "start"
+                             :> ReqBody '[JSON] InstanceToTemplateMapping
+                             :> PostCreated '[JSON] StartTemplate
+            -- Progress
+            :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
+            :<|> "instances" :> Get '[JSON] [GetInstance]
+          )
+        :<|>
+          AuthProtect "instance-user" :>
+            "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
+        :<|>
+          -- No authentication
+          "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
+      )
+
+apiProxy :: Proxy FlowAPI
+apiProxy = Proxy
+
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 
@@ -269,29 +301,3 @@ instance FromJSON GetInstanceView where
 
 instance ToJSON GetInstanceView where
   toEncoding = genericToEncoding aesonOptions
-
-
--- brittany-disable-next-binding
-type FlowAPI
-  = "experimental" :> "flow" :>
-    ( AuthProtect "oauth-or-cookies" :>
-        -- Configuration
-        ("templates" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
-        :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
-        :<|> "templates" :> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
-        :<|> "templates" :> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate :> Patch '[JSON] GetTemplate
-        :<|> "templates" :> Get '[JSON] [GetTemplate]
-        -- Control
-        :<|> "templates" :> Capture "template_id" TemplateId :> "commit" :> PostNoContent '[JSON] NoContent
-        :<|> "templates" :> Capture "template_id" TemplateId :> "start"
-            :> ReqBody '[JSON] InstanceToTemplateMapping :> PostCreated '[JSON] StartTemplate
-        -- Progress
-        :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
-        :<|> "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
-        :<|> "instances" :> Get '[JSON] [GetInstance]
-        )
-    :<|> "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
-    )
-
-apiProxy :: Proxy FlowAPI
-apiProxy = Proxy

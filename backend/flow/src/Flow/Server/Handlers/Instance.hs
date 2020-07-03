@@ -5,17 +5,22 @@ module Flow.Server.Handlers.Instance where
 
 import Control.Monad.Except
 import Control.Monad.Extra (fromMaybeM)
+import Crypto.RNG
 import Data.Aeson
 import Data.Either.Combinators (rightToMaybe)
 import Data.Map (Map)
 import Data.Set (Set)
 import Log.Class
 import Servant
+import Web.Cookie
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Text as T
 
 import AccessControl.Check
 import AccessControl.Types
+import Auth.MagicHash
+import Auth.Session
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Flow.Aggregator as Aggregator
 import Flow.Api as Api
@@ -27,9 +32,12 @@ import Flow.Machinize as Machinize
 import Flow.Model.Types
 import Flow.Names
 import Flow.OrphanInstances ()
+import Flow.Server.Cookies
 import Flow.Server.Types
-import User.UserID (UserID, unsafeUserID)
+import User.UserID (unsafeUserID)
+import qualified Auth.Model as AuthModel
 import qualified Flow.Model as Model
+import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.Model.Types as Model
 import qualified Flow.Transducer as Transducer
 
@@ -53,8 +61,20 @@ startInstance Account {..} templateId InstanceToTemplateMapping {..} = do
   insertFlowInstanceKeyValues id users     StoreUserId
   insertFlowInstanceKeyValues id messages  StoreMessage
 
+  -- Generate magic hashes for invitation links
+  -- TODO get rid of unsafe
+  usersWithHashes <- zip (fmap unsafeName $ Map.keys users) <$> replicateM (length users) random
+  mapM_ (uncurry $ Model.insertInstanceAccessToken id) usersWithHashes
+
+  -- TODO: This is for initial debugging/testing only. Remove.
+  mapM_ (logInvitationLink id) usersWithHashes
+
   pure $ StartTemplate { id }
   where
+    logInvitationLink instanceId (userName, hash) = do
+      logInfo_ $ "Invitation link: /flow/overview/" <> T.intercalate
+        "/"
+        [toUrlPiece instanceId, toUrlPiece userName, toUrlPiece hash]
     -- TODO: this probably needs to be moved to Model module.
     insertFlowInstanceKeyValues
       :: InstanceId -> Map.Map Text a -> (a -> Model.StoreValue) -> AppM ()
@@ -92,32 +112,26 @@ listInstances account@Account {..} = do
   let iids = map (view #id) is
   mapM (getInstance account) iids
 
-getInstanceView :: Account -> InstanceId -> AppM GetInstanceView
-getInstanceView account@Account {..} instanceId = do
+getInstanceView :: InstanceUser -> InstanceId -> AppM GetInstanceView
+getInstanceView user@InstanceUser {..} instanceId' = do
   logInfo "Getting instance view"
-    $ object ["instance_id" .= instanceId, "account" .= account]
+    $ object ["instance_id" .= instanceId', "instance_user" .= user]
 
-  -- TODO: Switch to using signatories
-  -- TODO: Authorization
+  when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
 
   documents <-
     Map.fromList
     .   fmap (fmap unsafeDocumentID)
     <$> Model.selectInstanceKeyValues instanceId Document
-  users <-
-    Map.fromList
-    .   fmap (fmap unsafeUserID)
-    <$> Model.selectInstanceKeyValues instanceId User
 
   fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
   let aggrState = instanceToAggregator fullInstance
   machine <- compile $ fullInstance ^. #template % #process
 
-  case (getUserName (user ^. #id) users, mAllowedEvents machine aggrState) of
-    (Just userName, Just allowedEvents) ->
+  case mAllowedEvents machine aggrState of
+    Just allowedEvents ->
       pure
-        $ let
-              -- Actions
+        $ let -- Actions
               userAllowedEvents =
                 Set.filter (\e -> eventInfoUser e == userName) allowedEvents
               userActions = catMaybes . Set.toList $ Set.map
@@ -143,7 +157,7 @@ getInstanceView account@Account {..} instanceId = do
                 }
     _ -> do
       logAttention "GetInstanceView: Invalid userId or broken state for Flow instance "
-        $ object ["instance_id" .= instanceId, "account" .= account]
+        $ object ["instance_id" .= instanceId, "instance_user" .= user]
       throwError
         $ err500 { errBody = "Could not reconstruct the state of the Flow process." }
 
@@ -152,13 +166,6 @@ getInstanceView account@Account {..} instanceId = do
       rightToMaybe $ Aggregator.getAllowedEvents <$> Transducer.getState
         machine
         (currentState aggregatorState)
-
-    -- Assuming we allow only one UserName per user.
-    getUserName :: UserID -> Map Text UserID -> Maybe UserName
-    getUserName uid userMap = case Map.keys $ Map.filter (== uid) userMap of
-      []      -> Nothing
-      -- TODO get rid of unsafe
-      (x : _) -> Just $ unsafeName x
 
     toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
     toApiUserAction Machinize.Approval  = Just Api.Approve
@@ -183,6 +190,64 @@ getInstanceView account@Account {..} instanceId = do
                  | docHasAction Machinize.View = Viewed
                  | docHasAction Machinize.Rejection = Rejected
                  | otherwise                   = Started
+
+-- brittany-disable-next-binding
+instanceOverviewMagicHash
+  :: InstanceId
+  -> UserName
+  -> MagicHash
+  -> Maybe Cookies'
+  -> Maybe Host
+  -> IsSecure
+  -> AppM
+       ( Headers
+           '[ Header "Location" Text
+            , Header "Set-Cookie" SetCookie
+            , Header "Set-Cookie" SetCookie
+            ]
+           NoContent
+       )
+instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
+  _ <-
+    fromMaybeM (throwAuthenticationError InvalidInstanceAccessTokenError)
+      $ Model.verifyInstanceAccessToken instanceId userName hash
+
+  mSessionId <- case getAuthCookies of
+    Just authCookies -> AuthModel.getSessionIDByCookies authCookies
+    Nothing          -> pure Nothing
+
+  -- If we don't have an existing Kontrakcja session - start a new one
+  -- and add sessionId and xtoken cookies to the response.
+  -- TODO: It would be better to let Kontrakcja handle creating the session
+  (sessionId, maybeAddCookieHeaders) <- case mSessionId of
+    Just sessionId -> pure (sessionId, noHeader . noHeader)
+    Nothing        -> do
+      newAuthCookies <- AuthModel.insertNewSession (cookieDomain mHost)
+      pure ( cookieSessionID (authCookieSession newAuthCookies)
+           , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
+           )
+
+  -- The Flow user's access token has been verified so insert an "instance session"
+  -- which is used for cookie authentication in subsequent calls.
+  Model.upsertInstanceSession sessionId instanceId userName
+
+  let response = addHeader redirectUrl $ maybeAddCookieHeaders NoContent
+  pure response
+
+  where
+    getAuthCookies = do
+      Cookies' cookies <- mCookies
+      readAuthCookies cookies
+    redirectUrl = "/flow/overview/"
+      <> T.intercalate "/" [toUrlPiece instanceId, toUrlPiece userName]
+
+-- Instance overview page
+-- TODO: Implement the overview page
+instanceOverview :: InstanceUser -> InstanceId -> UserName -> AppM Text
+instanceOverview InstanceUser {..} instanceId' _ = do
+  when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
+
+  return "<html><body><h1> Flow overview page </h1></body></html>"
 
 checkInstancePerms :: Account -> InstanceId -> AccessAction -> AppM Model.Instance
 checkInstancePerms account instanceId action = do

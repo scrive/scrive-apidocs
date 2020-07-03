@@ -30,14 +30,16 @@ data AuthError
   | AuthCookiesParseError
   | InvalidAuthCookiesError
   | AccessControlError
+  | InvalidInstanceAccessTokenError
 
 instance Show AuthError where
   show = \case
-    OAuthHeaderParseFailureError -> "Cannot parse OAuth header"
-    InvalidTokenError            -> "The provided OAuth token is not valid"
-    AuthCookiesParseError        -> "Cannot parse the authentication cookies"
-    InvalidAuthCookiesError      -> "The provided authentication cookies are invalid"
+    OAuthHeaderParseFailureError    -> "Cannot parse OAuth header"
+    InvalidTokenError               -> "The provided OAuth token is not valid"
+    AuthCookiesParseError           -> "Cannot parse the authentication cookies"
+    InvalidAuthCookiesError         -> "The provided authentication cookies are invalid"
     AccessControlError -> "You do not have permission to perform the requested action"
+    InvalidInstanceAccessTokenError -> "This invitation link is invalid"
 
 makeError :: FlowError -> ServerError
 makeError err@FlowError {..} = ServerError

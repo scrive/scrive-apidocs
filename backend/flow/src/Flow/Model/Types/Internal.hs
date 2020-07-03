@@ -13,6 +13,7 @@ module Flow.Model.Types.Internal
     , Event(..)
     , InsertEvent(..)
     , FullInstance(..)
+    , InstanceSession(..)
     )
  where
 
@@ -20,6 +21,7 @@ import Data.Time.Clock
 import GHC.Generics (Generic)
 import Optics.TH
 
+import Auth.Session.SessionID
 import Flow.Id
 import Flow.Machinize
 import Flow.Names
@@ -90,6 +92,11 @@ data FullInstance = FullInstance
     , aggregatorEvents :: [Event]
     }
 
+data InstanceSession = InstanceSession
+    { sessionId :: SessionID
+    , instanceId :: InstanceId
+    , userName :: UserName
+    }
 
 makeFieldLabelsWith noPrefixFieldLabels ''Template
 makeFieldLabelsWith noPrefixFieldLabels ''InsertTemplate
@@ -99,3 +106,4 @@ makeFieldLabelsWith noPrefixFieldLabels ''InsertInstance
 makeFieldLabelsWith noPrefixFieldLabels ''Event
 makeFieldLabelsWith noPrefixFieldLabels ''InsertEvent
 makeFieldLabelsWith noPrefixFieldLabels ''FullInstance
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceSession

@@ -12,6 +12,8 @@ flowTables =
   , tableFlowInstances
   , tableFlowInstancesKVStore
   , tableFlowInstanceSignatories
+  , tableFlowInstanceAccessTokens
+  , tableFlowInstanceSessions
   , tableFlowEvents
   , tableFlowAggregatorEvents
   ]
@@ -22,6 +24,8 @@ flowMigrations =
   , createTableFlowInstances
   , createTableFlowInstancesKVStore
   , createTableFlowInstanceSignatories
+  , createTableFlowInstanceAccessTokens
+  , createTableFlowInstanceSessions
   , createTableFlowEvents
   , createTableFlowAggregatorEvents
   ]
@@ -157,6 +161,72 @@ createTableFlowInstanceSignatories = Migration
   { mgrTableName = tblName tableFlowInstanceSignatories
   , mgrFrom      = 0
   , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSignatories
+  }
+
+tableFlowInstanceAccessTokens :: Table
+tableFlowInstanceAccessTokens = tblTable
+  { tblName        = "flow_instance_access_tokens"
+  , tblVersion     = 1
+  , tblColumns = [ tblColumn { colName     = "id"
+                             , colType     = UuidT
+                             , colNullable = False
+                             , colDefault  = Just "gen_random_uuid()"
+                             }
+    -- TODO: add expiration time?
+                 , tblColumn { colName = "hash", colType = BigIntT, colNullable = False }
+                 , tblColumn { colName     = "instance_id"
+                             , colType     = UuidT
+                             , colNullable = False
+                             }
+                 , tblColumn { colName = "key", colType = TextT, colNullable = False }
+                 ]
+  , tblPrimaryKey  = pkOnColumn "id"
+  , tblIndexes     = [indexOnColumns ["instance_id", "key"]]
+  , tblForeignKeys = [ (fkOnColumns ["instance_id", "key"]
+                                    "flow_instance_key_value_store"
+                                    ["instance_id", "key"]
+                       )
+                         { fkOnDelete = ForeignKeyCascade
+                         }
+                     ]
+  }
+
+createTableFlowInstanceAccessTokens :: MonadDB m => Migration m
+createTableFlowInstanceAccessTokens = Migration
+  { mgrTableName = tblName tableFlowInstanceAccessTokens
+  , mgrFrom      = 0
+  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceAccessTokens
+  }
+
+-- | This table links Kontrakcja sessions to "Flow instance users", creating
+-- "instance sessions". Instance sessions are created only for Flow users who
+-- have authenticated with a valid invitation link.
+tableFlowInstanceSessions :: Table
+tableFlowInstanceSessions = tblTable
+  { tblName        = "flow_instance_sessions"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName = "session_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "key", colType = TextT, colNullable = False }
+    ]
+  , tblPrimaryKey  = pkOnColumn "session_id"
+  , tblIndexes     = [indexOnColumn "session_id"]
+  , tblForeignKeys =
+    [ (fkOnColumns ["instance_id", "key"]
+                   "flow_instance_key_value_store"
+                   ["instance_id", "key"]
+      ) { fkOnDelete = ForeignKeyCascade
+        }
+    , (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
+  }
+
+createTableFlowInstanceSessions :: MonadDB m => Migration m
+createTableFlowInstanceSessions = Migration
+  { mgrTableName = tblName tableFlowInstanceSessions
+  , mgrFrom      = 0
+  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSessions
   }
 
 tableFlowEvents :: Table

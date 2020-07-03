@@ -385,6 +385,7 @@ Library
                  , Flow.Message
                  , Flow.Message.Internal
                  , Flow.Model
+                 , Flow.Model.InstanceSession
                  , Flow.Model.Types
                  , Flow.Model.Types.Internal
                  , Flow.Names
@@ -393,7 +394,10 @@ Library
                  , Flow.Process
                  , Flow.Process.Internal
                  , Flow.Server
+                 , Flow.Server.AuthHandler
+                 , Flow.Server.Cookies
                  , Flow.Server.Handlers.Instance
+                 , Flow.Server.Routes
                  , Flow.Server.Types
                  , Flow.Tables
                  , Flow.Transducer
@@ -691,6 +695,7 @@ Library
                , http-client
                , http-conduit
                , http-client-tls
+               , http-media
                , http-types
                , iconv
                , invariant
@@ -1435,6 +1440,7 @@ Library authentication
                     , Auth.Model
                     , Auth.OAuth
                     , Auth.Session
+                    , Auth.Session.Constant
                     , Auth.Session.SessionID
                     , Auth.Utils
   Build-Depends:      base-noprelude
@@ -1445,8 +1451,11 @@ Library authentication
                     , exceptions
                     , happstack-server
                     , hpqtypes
+                    , hpqtypes-extras
+                    , http-api-data
                     , monad-time
                     , text
                     , text-show
+                    , time
                     , unjson
                     , HTTP
