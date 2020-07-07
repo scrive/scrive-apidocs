@@ -8,7 +8,7 @@ log/
 .locale
 cron.conf
 kontrakcja.conf
-supervisord.conf
+/supervisord.conf
 mailing_server.conf
 messenger_server.conf
 messenger_server.conf.json

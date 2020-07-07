@@ -13,7 +13,7 @@ nix-channel --update
 nix-env -iA cachix -f https://cachix.org/api/v1/install
 
 set +x
-cachix authtoken $CACHIX_TOKEN
+cachix authtoken $CACHIX_AUTH_TOKEN
 set -eux
 
 cachix use scrive

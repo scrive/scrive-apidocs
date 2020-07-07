@@ -1,5 +1,5 @@
 { nixpkgs
-, nodeVersion ? "13_x"
+, nodeVersion ? "12_x"
 , kontrakcja-src
 , nixpkgs-src
 }:
