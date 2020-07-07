@@ -146,7 +146,7 @@ folderSelectors =
   [ "folders.id"
   , "folders.parent_id"
   , "folders.name"
-  , "(SELECT id FROM users WHERE users.home_folder_id = folders.id) AS home_for_user"
-  , "(SELECT id FROM user_groups WHERE user_groups.home_folder_id = folders.id)"
+  , "(SELECT id FROM users WHERE users.home_folder_id = folders.id limit 1) AS home_for_user"
+  , "(SELECT id FROM user_groups WHERE user_groups.home_folder_id = folders.id limit 1)"
     <> "AS home_for_user_group"
   ]

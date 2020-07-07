@@ -24,6 +24,7 @@ module EID.EIDService.Types (
   , EIDServiceNLIDINSignature(..)
   , EIDServiceFITupasSignature(..)
   , EIDServiceOnfidoSignature(..)
+  , EIDServiceNOBankIDSignature(..)
   , OnfidoMethod(..)
 
   -- Provider specific, can be refactored once redundant types above are removed
@@ -392,6 +393,17 @@ data EIDServiceFITupasSignature = EIDServiceFITupasSignature
   { eidServiceFITupasSigSignatoryName :: Text
   , eidServiceFITupasSigPersonalNumber :: Maybe Text
   , eidServiceFITupasSigDateOfBirth :: Maybe Text
+  }
+  deriving (Eq, Ord, Show)
+
+data EIDServiceNOBankIDSignature = EIDServiceNOBankIDSignature
+  { eidServiceNOBankIDSigInternalProvider :: !EIDServiceNOBankIDInternalProvider
+  , eidServiceNOBankIDSigSignatoryName :: !Text
+  , eidServiceNOBankIDSigPhoneNumber :: !(Maybe Text)
+  , eidServiceNOBankIDSigPersonalNumber :: !(Maybe Text)
+  , eidServiceNOBankIDSigDateOfBirth :: !(Maybe Text)
+  , eidServiceNOBankIDSigSignedText :: !(Maybe Text)
+  , eidServiceNOBankIDSigCertificate :: !(Maybe Text)
   }
   deriving (Eq, Ord, Show)
 

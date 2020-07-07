@@ -1,4 +1,4 @@
-module MessengerServer (main) where
+module Main (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base

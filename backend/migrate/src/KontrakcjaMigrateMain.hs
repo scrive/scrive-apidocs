@@ -1,4 +1,4 @@
-module AppDBMain where
+module Main (main) where
 
 import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks

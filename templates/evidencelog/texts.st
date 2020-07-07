@@ -609,7 +609,7 @@ elegVerificationSign=
 <br/>
 $if(signed_text)$
 <br/>
-<p>The text signed in the $providerType$ client was:</p>
+<p>The text signed in the $providerType()$ client was:</p>
 <pre style='white-space:normal'>$signed_text$</pre>
 $endif$
 <br/>
@@ -655,6 +655,12 @@ $if(provider_onfido)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   <br/>Date of birth: $signatory_dob$
+</p>
+$endif$
+$if(provider_nobankid_eidservice)$
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  $if(signatory_personal_number)$<br/>Personal identification number: $personalNumber(value=signatory_personal_number)$$endif$
 </p>
 $endif$
 $if(signature)$

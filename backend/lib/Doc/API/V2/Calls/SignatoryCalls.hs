@@ -238,6 +238,7 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
 -- and cron takes care of the signing.
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
+  ctx <- getContext
   -- Permissions
   guardAccessToDocumentWithSignatory did slid
   -- We store old document, as it is needed by postDocumentXXX calls
@@ -285,16 +286,20 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
             validPin <- checkSignatoryPinToSign slid fields pin
             if not validPin then apiError documentActionForbidden else return pin
 
-    let mprovider = case signatorylinkauthenticationtosignmethod sl of
-          StandardAuthenticationToSign            -> Nothing
-          SMSPinAuthenticationToSign              -> Nothing
-          SEBankIDAuthenticationToSign            -> Just CgiGrpBankID
-          NOBankIDAuthenticationToSign            -> Just NetsNOBankID
-          DKNemIDAuthenticationToSign             -> Just NetsDKNemID
-          IDINAuthenticationToSign                -> Just EIDServiceIDIN
-          FITupasAuthenticationToSign             -> Just EIDServiceTupas
-          OnfidoDocumentCheckAuthenticationToSign -> Just EIDServiceOnfido
-          OnfidoDocumentAndPhotoCheckAuthenticationToSign -> Just EIDServiceOnfido
+    let
+      useEIDHubForNOBankIDSign =
+        fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOSign
+      mprovider = case signatorylinkauthenticationtosignmethod sl of
+        StandardAuthenticationToSign -> Nothing
+        SMSPinAuthenticationToSign   -> Nothing
+        SEBankIDAuthenticationToSign -> Just CgiGrpBankID
+        NOBankIDAuthenticationToSign | useEIDHubForNOBankIDSign -> Just EIDServiceNOBankID
+                                     | otherwise                -> Just NetsNOBankID
+        DKNemIDAuthenticationToSign             -> Just NetsDKNemID
+        IDINAuthenticationToSign                -> Just EIDServiceIDIN
+        FITupasAuthenticationToSign             -> Just EIDServiceTupas
+        OnfidoDocumentCheckAuthenticationToSign -> Just EIDServiceOnfido
+        OnfidoDocumentAndPhotoCheckAuthenticationToSign -> Just EIDServiceOnfido
 
     case mprovider of
       Nothing -> do
@@ -311,7 +316,6 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         handleAfterSigning slid
        -- Return
       Just provider -> do
-        ctx     <- getContext
         doclang <- getLang <$> theDocument
         dbUpdate $ CleanAllScheduledDocumentSigning slid
         dbUpdate $ ScheduleDocumentSigning slid

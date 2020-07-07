@@ -150,7 +150,7 @@ testImplicitRoles = do
           <$> concatMap inheritForUserGroupRoleUsr [UserGroupMemberAR]
           <>  concatMap inheritForFolderRoleUsr    [SharedTemplateUserAR, FolderUserAR]
           <>  [ SharedTemplateUserAR usrughomefdrid
-                               -- ^ special case since code would be ugly otherwise
+                               -- special case since code would be ugly otherwise
               , UserAR usrid
               ]
   assertBool

@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-module Main where
+module Main (main) where
 
 -- TODO:
 -- regex currently parses valid tokens like 'localization2' as 'localization',

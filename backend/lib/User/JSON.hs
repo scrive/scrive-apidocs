@@ -4,6 +4,7 @@
 module User.JSON (
     userJSONWithCompany,
     userJSONWithCallBackInfo,
+    userJSONUserDetailsForNewSignup,
     unjsonUser,
     unjsonUserWithPassword,
     companyJSON,
@@ -74,6 +75,16 @@ userJSONUserDetails user = do
   value "tos_accepted_time" $ utcTimeToAPIFormat <$> user ^. #hasAcceptedTOS
   objects "internaltags" . tagsJsons $ user ^. #internalTags
   objects "externaltags" . tagsJsons $ user ^. #externalTags
+
+userJSONUserDetailsForNewSignup :: User -> JSONGen ()
+userJSONUserDetailsForNewSignup user = do
+  value "id" . showt $ user ^. #id
+  value "fstname" $ getFirstName user
+  value "sndname" $ getLastName user
+  value "email" $ getEmail user
+  value "phone" $ user ^. #info % #phone
+  value "companyadmin" $ user ^. #isCompanyAdmin
+  value "companyposition" $ user ^. #info % #companyPosition
 
 unjsonUser :: UnjsonDef User
 unjsonUser = unjsonUserPartial identity
@@ -222,6 +233,7 @@ companySettingsJson ugs = do
   value "haspostsignview" $ ugs ^. #hasPostSignview
   value "eiduseforseview" $ ugs ^. #eidUseForSEView
   value "appfrontend" $ ugs ^. #appFrontend
+  value "promptbpid" $ ugs ^. #requireBPIDForNewDoc
 
 
 userStatsToJSON

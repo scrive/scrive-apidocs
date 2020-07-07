@@ -75,7 +75,7 @@ completeEIDServiceSignTransaction conf provider sl = case provider of
     unexpectedError "DKNemID sign not supported via EID service"
   EIDServiceTransactionProviderNLIDIN -> NLIDIN.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderNOBankID ->
-    unexpectedError "NOBankID sign not supported via EID service"
+    NOBankID.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderVerimi ->
     unexpectedError "Verimi sign not supported via EID service"
   EIDServiceTransactionProviderFITupas ->

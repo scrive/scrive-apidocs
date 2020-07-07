@@ -1,4 +1,4 @@
-module Cron (main) where
+module Main (main) where
 
 import Control.Monad.Base
 import Crypto.RNG

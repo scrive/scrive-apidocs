@@ -2,6 +2,7 @@
   nixpkgs
 , haskellPackages
 , nixpkgs-src
+, pdftools-src
 }:
 let
   inherit (nixpkgs) pkgs;
@@ -25,7 +26,8 @@ let
     inherit nixpkgs kontrakcja kontrakcja-src nixpkgs-src;
   };
 
-  scrivepdftools = import ./scrive-pdf-tools.nix { inherit nixpkgs; };
+  scrivepdftools = import ./scrive-pdf-tools.nix
+    { inherit nixpkgs pdftools-src; };
 in
 {
   inherit kontrakcja kontrakcja-frontend scrivepdftools;

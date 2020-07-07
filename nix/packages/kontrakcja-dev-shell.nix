@@ -2,6 +2,7 @@
   nixpkgs
 , haskellPackages
 , kontrakcja-nix-src
+, pdftools-src
 , nixpkgs-src
 , extra-run-deps
 , localeLang
@@ -25,7 +26,8 @@ let
 
   kontrakcja = pkgs.haskell.lib.doCheck release.kontrakcja;
 
-  scrivepdftools = import ./scrive-pdf-tools.nix { inherit nixpkgs; };
+  scrivepdftools = import ./scrive-pdf-tools.nix
+    { inherit nixpkgs pdftools-src; };
 
   elm2nix = import ./elm2nix.nix { inherit nixpkgs; };
 in
@@ -44,15 +46,7 @@ haskellPackages.shellFor {
     kontrakcja-frontend.buildInputs
   ;
 
-  shellHook = ''
-    export LANG=${localeLang}
+  LANG = localeLang;
 
-    cat << EOF
-    ***************************************************************************
-    You are now in Nix shell for kontrakcja. Your Nix workspace directory is:
-    $KONTRAKCJA_WORKSPACE
-
-    ***************************************************************************
-    EOF
-  '';
+  SKIP_CABAL_UPDATE = 1;
 }

@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Main where
+module Main (main) where
 
 import Data.Bifunctor
 import Data.List (isSuffixOf)

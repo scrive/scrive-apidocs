@@ -97,7 +97,8 @@ $htmlopentag()$
           authorPhone: "$authorPhone$",
           showLegalText: $if(legaltext)$ true $else$ false $endif$,
           postSignViewEnabled: $if(postsignviewenabled)$ true $else$ false $endif$,
-          postSignViewRedirectUrl: "$postsignviewredirecturl$"
+          postSignViewRedirectUrl: "$postsignviewredirecturl$",
+          useEIDHubForNOBankIDSign: $if(useEIDHubForNOBankIDSign)$ true $else$ false $endif$
         };
 
       if (window.trackJs !== undefined && trackJs) {
