@@ -7,6 +7,7 @@ module Flow.Error (
   , throwInstanceNotFoundError
   , throwDSLValidationError
   , throwTemplateCannotBeStartedError
+  , throwInternalServerError
   , AuthError(..)
   , FlowError(..)
   , flowError
@@ -111,6 +112,14 @@ throwTemplateCannotBeStartedError explanation details = throwError $ makeError F
   , message     = "Template cannot be started"
   , explanation = explanation
   , details     = Just details
+  }
+
+throwInternalServerError :: Text -> MonadError ServerError m => m a
+throwInternalServerError explanation = throwError $ makeError FlowError
+  { code        = 500
+  , message     = "Internal server error"
+  , explanation = explanation
+  , details     = Nothing
   }
 
 flowError :: ToJSON a => Int -> Text -> Text -> Maybe a -> FlowError

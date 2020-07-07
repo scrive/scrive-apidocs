@@ -85,7 +85,7 @@ createInstance
   -> Text
   -> Process
   -> InstanceKeyValues
-  -> TestEnv (Either ClientError StartTemplate)
+  -> TestEnv (Either ClientError GetInstance)
 createInstance ApiClient {..} name process mapping = do
   let createTemplateData = CreateTemplate name process
   template1 <- assertRight "create template" . request $ createTemplate createTemplateData

@@ -55,6 +55,8 @@ data Account = Account
     -- TODO remove this and implement it by adding Header input to the `startInstance` handler.
     -- It is needed because oauth and cookie headers have to be passed to the document starting API.
     , headers :: [(CI ByteString, ByteString)]
+    -- TODO move this into a separate context type
+    , baseUrl :: Text
     }
   deriving (Generic, Show)
 

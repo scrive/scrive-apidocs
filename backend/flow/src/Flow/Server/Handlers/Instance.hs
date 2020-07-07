@@ -51,7 +51,7 @@ import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.Model.Types as Model
 import qualified Flow.VariableCollector as Collector
 
-startInstance :: Account -> TemplateId -> InstanceKeyValues -> AppM StartTemplate
+startInstance :: Account -> TemplateId -> InstanceKeyValues -> AppM GetInstance
 startInstance account templateId keyValues = do
   logInfo_ "Starting instance"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
@@ -83,7 +83,8 @@ startInstance account templateId keyValues = do
   reportSettings $ checkDocumentSettingsConsistency documents
 
   -- TODO: remove head...
-  let ii = InsertInstance templateId . stageName . head $ stages tongue
+  let stateId = stageName . head $ stages tongue
+  let ii      = InsertInstance templateId stateId
   id <- Model.insertFlowInstance ii
 
   -- The ordering of operations here is crucial.
@@ -116,16 +117,13 @@ startInstance account templateId keyValues = do
   --   zip (unsafeName <$> Map.keys users) <$> replicateM (length users) random
   mapM_ (uncurry $ Model.insertInstanceAccessToken id) usersWithHashes
 
-  -- TODO: This is for initial debugging/testing only. Remove.
-  mapM_ (logInvitationLink id) usersWithHashes
+  let access_links = mkAccessLinks (baseUrl account) id usersWithHashes
 
-  -- TODO return an app link
-  pure $ StartTemplate { id }
+  let templateParameters = keyValues
+  -- TODO add a proper instance state
+  let state = InstanceState { availableActions = [], history = [] }
+  pure $ GetInstance { .. }
   where
-    logInvitationLink instanceId (userName, hash) = do
-      logInfo_ $ "Invitation link: /flow/overview/" <> T.intercalate
-        "/"
-        [toUrlPiece instanceId, toUrlPiece userName, toUrlPiece hash]
 
     validate MatchingResult {..} = null unmatchedFlowUserIds && null unmatchedSignatories
     createPair :: UserMatch -> (UserName, SignatoryLinkID)
@@ -138,6 +136,13 @@ startInstance account templateId keyValues = do
       case Map.keys $ Map.filter (== flowUserId) userMap of
         []      -> Nothing
         (x : _) -> Just x
+
+mkAccessLinks :: Text -> InstanceId -> [(UserName, MagicHash)] -> Map UserName Text
+mkAccessLinks baseUrl instanceId = Map.fromList . fmap (\(u, h) -> (u, mkAccessLink u h))
+  where
+    mkAccessLink userName hash = baseUrl <> "/flow/overview/" <> T.intercalate
+      "/"
+      [toUrlPiece instanceId, toUrlPiece userName, toUrlPiece hash]
 
 reportAssociatedDocuments :: [DocumentID] -> AppM ()
 reportAssociatedDocuments docIds =
@@ -241,10 +246,15 @@ getInstance account instanceId = do
   logInfo_ "Getting instance"
   flowInstance <- checkInstancePerms account instanceId ReadA
   keyValues    <- Model.selectInstanceKeyValues instanceId
+  accessTokens <- Model.selectInstanceAccessTokens instanceId
+  let usersWithHashes = fmap (\at -> (at ^. #userName, at ^. #hash)) accessTokens
+  let access_links    = mkAccessLinks (baseUrl account) instanceId usersWithHashes
   pure $ GetInstance { id                 = instanceId
                      , templateId         = flowInstance ^. #templateId
                      , templateParameters = keyValues
+                     -- TODO add a proper instance state
                      , state = InstanceState { availableActions = [], history = [] }
+                     , access_links
                      }
 
 listInstances :: Account -> AppM [GetInstance]
@@ -295,9 +305,7 @@ getInstanceView user@InstanceUser {..} instanceId' = do
     _ -> do
       logAttention "GetInstanceView: Invalid userId or broken state for Flow instance "
         $ object ["instance_id" .= instanceId, "instance_user" .= user]
-      throwError
-        $ err500 { errBody = "Could not reconstruct the state of the Flow process." }
-
+      throwInternalServerError "Could not reconstruct the state of the Flow process."
   where
     mAllowedEvents HighTongue {..} AggregatorState {..} =
       fold

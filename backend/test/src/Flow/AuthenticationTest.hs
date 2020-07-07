@@ -190,11 +190,12 @@ testInvitationLinkLogin = do
         messages  = Map.empty
 
     getInstanceId createInstanceAction = do
-      startTemplate <- assertRight "create instance" createInstanceAction
-      pure $ id (startTemplate :: StartTemplate)
+      flowInstance <- assertRight "create instance" createInstanceAction
+      pure $ id (flowInstance :: GetInstance)
 
     getInstanceAccessToken instanceId userName = do
-      tokens <- Model.selectInstanceAccessTokens instanceId userName
+      allTokens <- Model.selectInstanceAccessTokens instanceId
+      let tokens = filter (\at -> at ^. #userName == userName) allTokens
       case tokens of
         (t : _) -> pure t
         []      -> fail "No instance access token found"

@@ -80,9 +80,9 @@ processResponse docId = \case
     _ | rsCode < 500 -> throwError . makeError $ toFlowError rsCode details
     _                -> do
       logInfo_ $ "Internal server error when starting document" <> showt rsBody
-      throwError err500
+      throwInternalServerError "Could not start document"
     where details = KontraResponse docId (decode rsBody)
 
   SendFile{} -> do
     logInfo_ "Expected Happstack Response, got SendFile instead."
-    throwError err500
+    throwInternalServerError "Could not start document"

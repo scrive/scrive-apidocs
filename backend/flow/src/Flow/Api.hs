@@ -14,7 +14,6 @@ module Flow.Api
     , InstanceAuthorAction(..)
     , InstanceUserAction(..)
     , GetInstanceView(..)
-    , StartTemplate(..)
     , InstanceUserState(..)
     , DocumentOverview(..)
     , DocumentState(..)
@@ -25,6 +24,7 @@ module Flow.Api
 
 import Data.Aeson
 import Data.Aeson.Casing
+import Data.Map (Map)
 import Data.Proxy
 import Data.Time.Clock
 import GHC.Generics
@@ -34,6 +34,7 @@ import Doc.DocumentID (DocumentID)
 import Flow.HighTongue
 import Flow.Id
 import Flow.Model.Types
+import Flow.Names
 import Flow.Process
 import Folder.Types
 import User.UserID (UserID)
@@ -54,7 +55,7 @@ type FlowAPI
                              :> PostNoContent '[JSON] NoContent
             :<|> "templates" :> Capture "template_id" TemplateId :> "start"
                              :> ReqBody '[JSON] InstanceKeyValues
-                             :> PostCreated '[JSON] StartTemplate
+                             :> PostCreated '[JSON] GetInstance
             -- Progress
             :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
             :<|> "instances" :> Get '[JSON] [GetInstance]
@@ -94,15 +95,6 @@ instance FromJSON GetCreateTemplate where
 instance ToJSON GetCreateTemplate where
   toEncoding = genericToEncoding aesonOptions
 
-
-newtype StartTemplate = StartTemplate { id :: InstanceId }
-  deriving (Eq, Generic, Show)
-
-instance FromJSON StartTemplate where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON StartTemplate where
-  toEncoding = genericToEncoding aesonOptions
 
 data GetTemplate = GetTemplate
     { id :: TemplateId
@@ -163,7 +155,7 @@ instance ToJSON InstanceEvent where
 
 
 data InstanceStage = InstanceStage
-    { stage :: Text
+    { stage :: StageName
     , events :: [InstanceEvent]
     }
   deriving (Eq, Generic, Show)
@@ -193,6 +185,7 @@ data GetInstance = GetInstance
     , templateId :: TemplateId
     , templateParameters :: InstanceKeyValues
     , state :: InstanceState
+    , access_links :: Map UserName Text
     }
   deriving (Eq, Generic, Show)
 

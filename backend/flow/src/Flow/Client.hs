@@ -39,7 +39,7 @@ data ApiClient = ApiClient
   , patchTemplate    :: TemplateId -> PatchTemplate -> ClientM GetTemplate
   , listTemplates    :: ClientM [GetTemplate]
   , commitTemplate   :: TemplateId -> ClientM NoContent
-  , startTemplate    :: TemplateId -> InstanceKeyValues -> ClientM StartTemplate
+  , startTemplate    :: TemplateId -> InstanceKeyValues -> ClientM GetInstance
   , getInstance      :: InstanceId -> ClientM GetInstance
   , listInstances    :: ClientM [GetInstance]
   , validateTemplate :: Process -> ClientM [ValidationError]

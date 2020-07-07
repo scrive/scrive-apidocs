@@ -120,15 +120,18 @@ testZeroToInstance = do
             [("signatory", UserId $ user ^. #id), ("watcher", Email "foo@bar.com")]
           messages = Map.fromList [("was-signed", "Documents were signed")]
 
-  startTemplateResponse1 <- assertRight "start template response"
+  instance1 <- assertRight "start template response"
     $ createInstance ac "name" processZero mapping
 
-  let iid = id (startTemplateResponse1 :: StartTemplate)
+  let iid = id (instance1 :: GetInstance)
   keyValues <- Model.selectInstanceKeyValues iid
   assertEqual "key values" mapping keyValues
 
   instance2 <- assertRight "get instance" . request $ getInstance iid
   assertEqual "get after start" iid $ id (instance2 :: GetInstance)
+  assertEqual "links"
+              (Map.keys $ mapping ^. #users)
+              (Map.keys $ access_links (instance2 :: GetInstance))
 
   -- View instance as "signatory"
   let ParticipantApiClient {..} =

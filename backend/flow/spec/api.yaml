@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.6.0"
+  version: "0.6.1"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -288,7 +288,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InstanceIdObject"
+                $ref: "#/components/schemas/InstanceGetResponse"
         400:
           description: Flow parameters invalid.
           content:
@@ -736,12 +736,6 @@ components:
       type: string
       format: uuid
       example: 31ebc664-3a61-41ec-b03b-d7b48b7b3a9e
-    InstanceIdObject:
-      type: object
-      required: [id]
-      properties:
-        id:
-          $ref: "#/components/schemas/InstanceId"
     InstanceGetResponse:
       type: object
       required:
@@ -749,6 +743,7 @@ components:
         - template
         - template_parameters
         - state
+        - access_links
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
@@ -758,6 +753,17 @@ components:
           $ref: "#/components/schemas/TemplateParameters"
         state:
           $ref: "#/components/schemas/InstanceState"
+        access_links:
+          description: |
+            Flow access links presented as a dictionary with keys being
+            user names used in the process DSL.
+          type: object
+          additionalProperties:
+            type: string
+            description: "A link that a participant can use to access Flow."
+          example:
+            user1: "https://foo.com/flow/123/user1"
+            user2: "https://foo.com/flow/123/user2"
 
     InstanceEvent:
       type: object

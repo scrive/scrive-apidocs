@@ -76,15 +76,23 @@ authHandlerAccount flowConfiguration = mkAuthHandler handler
         folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
         roles  <- dbQuery $ GetRolesIncludingInherited user ug
 
+
         pure $ Account { user      = user
                        , userGroup = ug
                        , folder    = folder
                        , roles     = roles
                        , headers   = requestHeaders req
+                       , baseUrl   = mkBaseUrl (isSecure req) (requestHeaderHost req)
                        }
 
     parseOAuthAuthorization :: ByteString -> Either Text OAuthAuthorization
     parseOAuthAuthorization = parseParams . splitAuthorization . decodeUtf8
+
+mkBaseUrl :: Bool -> Maybe ByteString -> Text
+mkBaseUrl isSecure mHost = protocol <> domain
+  where
+    protocol = if isSecure then "https://" else "http://"
+    domain   = maybe "scrive.com" decodeUtf8 mHost
 
 -- "Instance" users, i.e. users who don't have an account but participate
 -- in a flow process can only authenticate using session cookies.
