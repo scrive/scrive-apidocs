@@ -1,6 +1,6 @@
+{-# LANGUAGE StrictData #-}
 module Flow.DocumentChecker
-  ( FlowUser(..)
-  , FlowUserDocRole
+  ( FlowUserIdDocRole
   , MatchingResult(..)
   , Signatory(..)
   , SignatoryConsistencyError(..)
@@ -9,15 +9,18 @@ module Flow.DocumentChecker
   , aggregateSignatories
   , documentSignatories
   , docRolesMatch
-  , flowUserMatchesSignatory
-  , groupFlowUsers
+  , flowUserIdMatchesSignatory
+  , groupFlowUserIds
   , matchUsers
   )
 where
 
+import Data.Aeson
+import Data.Aeson.Casing
 import Data.Bifunctor
 import Data.Functor
 import Data.Set (Set)
+import GHC.Generics
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 
@@ -26,21 +29,14 @@ import Doc.SignatoryLinkID
 import Doc.Types.Document
 import Doc.Types.SignatoryField
 import Doc.Types.SignatoryLink
+import Flow.Model.Types.FlowUserId
 import Flow.VariableCollector
 import User.UserID
 
--- Every user can only play one role in a document.
--- We should forbid Flow processes that require multiple roles.
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 
--- | This information should be specified in the template parameters.
--- Since documents allow considerable freedom in identifying
--- signing parties, we should support that as well.
-data FlowUser
-  = Email Text
-  | PhoneNumber Text
-  | UserID UserID
-  deriving (Eq, Ord, Show)
-type FlowUserDocRole = DocRoleFor FlowUser DocumentID
+type FlowUserIdDocRole = DocRoleFor FlowUserId DocumentID
 
 -- | This is a simplified version of the `SignatoryLink`.
 -- We only keep the fields we need in Flow.
@@ -49,27 +45,36 @@ data Signatory = Signatory
   , email       :: Maybe Text
   , phoneNumber :: Maybe Text
   , userId      :: Maybe UserID
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Generic, Ord, Show)
 type SignatoryDocRole = DocRoleFor Signatory DocumentID
+
+instance ToJSON Signatory where
+  toEncoding = genericToEncoding aesonOptions
 
 -- | Association between a Flow user, as specified
 -- by a Flow process, and a signatory, as specified
 -- in a document.
 data UserMatch = UserMatch
-  { flow      :: FlowUser
-  , signatory :: Signatory
-  } deriving (Eq, Ord, Show)
+  { flowUserId :: FlowUserId
+  , signatory  :: Signatory
+  } deriving (Eq, Generic, Ord, Show)
+
+instance ToJSON UserMatch where
+  toEncoding = genericToEncoding aesonOptions
 
 -- | Result of matching Flow users with the signatories
 -- in the documents associated with that Flow.
 data MatchingResult = MatchingResult
   { matched              :: Set UserMatch
-  , unmatchedFlowUsers   :: Set FlowUserDocRole
+  , unmatchedFlowUserIds   :: Set FlowUserIdDocRole
   , unmatchedSignatories :: Set SignatoryDocRole
-  } deriving (Eq, Show)
+  } deriving (Eq, Generic,  Show)
+
+instance ToJSON MatchingResult where
+  toEncoding = genericToEncoding aesonOptions
 
 -- | Extract user document roles from a Flow process.
--- signatoryRequirements :: HighTongue -> Set FlowUserDocRole
+-- signatoryRequirements :: HighTongue -> Set FlowUserIdDocRole
 
 -- Forwarded roles only occur in a running process,
 -- so do not concern us here when checking documents for starting.
@@ -107,29 +112,29 @@ signatoryInfo sigLink = (Signatory { .. }, role)
 --
 -- Note: the implementation uses a naive quadratic algorithm that should be fine
 -- until we have hundreds of users signing dozens of documents in a single process.
-matchUsers :: Set FlowUserDocRole -> Set SignatoryDocRole -> MatchingResult
+matchUsers :: Set FlowUserIdDocRole -> Set SignatoryDocRole -> MatchingResult
 matchUsers fudrs sdrs = MatchingResult { .. }
   where
     matched              = Set.fromList $ map toUserMatch matchedDocRoles
     toUserMatch          = uncurry UserMatch . bimap user user
-    unmatchedFlowUsers   = Set.difference fudrs . Set.fromList $ map fst matchedDocRoles
+    unmatchedFlowUserIds = Set.difference fudrs . Set.fromList $ map fst matchedDocRoles
     unmatchedSignatories = Set.difference sdrs . Set.fromList $ map snd matchedDocRoles
     matchedDocRoles      = mapMaybe matchUser $ Set.toList fudrs
 
-    matchUser :: FlowUserDocRole -> Maybe (FlowUserDocRole, SignatoryDocRole)
+    matchUser :: FlowUserIdDocRole -> Maybe (FlowUserIdDocRole, SignatoryDocRole)
     matchUser fudr = (fudr, ) <$> find (docRolesMatch fudr) (Set.toList sdrs)
 
-docRolesMatch :: FlowUserDocRole -> SignatoryDocRole -> Bool
+docRolesMatch :: FlowUserIdDocRole -> SignatoryDocRole -> Bool
 docRolesMatch fudr sdr =
-  flowUserMatchesSignatory (user fudr) (user sdr)
+  flowUserIdMatchesSignatory (user fudr) (user sdr)
     && (document fudr == document sdr)
     && (role fudr == role sdr)
 
-flowUserMatchesSignatory :: FlowUser -> Signatory -> Bool
-flowUserMatchesSignatory flowUser Signatory {..} = case flowUser of
+flowUserIdMatchesSignatory :: FlowUserId -> Signatory -> Bool
+flowUserIdMatchesSignatory flowUserId Signatory {..} = case flowUserId of
   Email       email'       -> Just email' == email
   PhoneNumber phoneNumber' -> Just phoneNumber' == phoneNumber
-  UserID      userId'      -> Just userId' == userId
+  UserId      userId'      -> Just userId' == userId
 
 data SignatoryConsistencyError
   = InconsistentEmail (Set Text)
@@ -137,10 +142,13 @@ data SignatoryConsistencyError
   | InconsistentUserId (Set UserID)
   | NoSignatories
 
-groupFlowUsers :: Set UserMatch -> [(FlowUser, Set Signatory)]
-groupFlowUsers =
-  map toOutput . groupBy (\x y -> flow x == flow y) . sortOn flow . Set.toList
-  where toOutput l = (flow $ head l, Set.fromList $ map signatory l)
+groupFlowUserIds :: Set UserMatch -> [(FlowUserId, Set Signatory)]
+groupFlowUserIds =
+  map toOutput
+    . groupBy (\x y -> flowUserId x == flowUserId y)
+    . sortOn flowUserId
+    . Set.toList
+  where toOutput l = (flowUserId $ head l, Set.fromList $ map signatory l)
 
 -- | This function verifies that the signatory contact/user data
 -- is consistent across several records, i.e. no kind of contact/user datum

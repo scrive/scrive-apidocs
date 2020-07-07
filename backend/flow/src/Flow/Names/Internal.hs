@@ -13,7 +13,6 @@ import Data.Aeson
 import Database.PostgreSQL.PQTypes
 import Servant.API
 
-
 data NameKind
     = DocumentName
     | UserName
@@ -22,7 +21,7 @@ data NameKind
     | StageName
 
 newtype Name (a :: NameKind) = Name Text
-  deriving (Eq, FromJSON, Ord, Show, ToJSON)
+  deriving (Eq, FromJSON, FromJSONKey, Ord, Show, ToJSON, ToJSONKey)
 
 instance FromHttpApiData (Name a) where
   parseUrlPiece = fmap Name . parseUrlPiece

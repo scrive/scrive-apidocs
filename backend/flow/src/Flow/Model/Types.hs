@@ -1,8 +1,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Model.Types
-    ( Template(Template)
+    ( Role(..)
+    , DocRoleFor(..)
+    , InstanceKeyValues(InstanceKeyValues)
+    , Template(Template)
     , InsertTemplate(InsertTemplate)
     , UpdateTemplate(UpdateTemplate)
     , Instance(Instance)
@@ -11,12 +13,9 @@ module Flow.Model.Types
     , InsertEvent(InsertEvent)
     , FullInstance(..)
     , InstanceSession(InstanceSession)
-    , StoreValue(..)
-    , StoreValueType(..)
     , fetchInstance
     , fetchTemplate
     , fetchEvent
-    , storeValueTypeToText
     , toEventInfo
     , toInsertEvent
     , instanceToAggregator
@@ -24,44 +23,45 @@ module Flow.Model.Types
     )
  where
 
+import Data.Aeson
+import Data.Aeson.Casing
 import Data.Time.Clock
-import GHC.Generics (Generic)
+import GHC.Generics
 import qualified Data.Set as Set
 
 import Auth.Session.SessionID
-import Doc.DocumentID (DocumentID)
 import Flow.Aggregator
 import Flow.Id
 import Flow.Machinize
-import Flow.Message
 import Flow.Model.Types.Internal
 import Flow.Names
 import Flow.Process
 import Folder.Types (FolderID)
 import User.UserID (UserID)
 
-data StoreValue
-    = StoreDocumentId DocumentID
-    | StoreUserId UserID
-    | StoreEmail Text
-    | StorePhoneNumber Text
-    | StoreMessage Message
-  deriving (Show, Eq, Generic)
+-- | A role a user can have.
+data Role = Viewer | Approver | SigningParty
+  deriving (Eq, Generic, Ord, Show)
 
-data StoreValueType
-    = Document
-    | User
-    | Email
-    | PhoneNumber
-    | Message
+instance ToJSON Role where
+  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
+-- | This type specifies which role a user has when acting
+-- on a specific document.
+--
+-- Some fields are polymorphic so that we can use this type
+-- with both abstract Flow variables as well as concrete IDs.
+data DocRoleFor u d = DocRoleFor
+  { role     :: Role
+  , user     :: u
+  , document :: d
+  } deriving (Eq, Generic, Ord, Show)
 
-storeValueTypeToText :: StoreValueType -> Text
-storeValueTypeToText Document    = "document"
-storeValueTypeToText User        = "user"
-storeValueTypeToText Email       = "email"
-storeValueTypeToText PhoneNumber = "phone_number"
-storeValueTypeToText Message     = "message"
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+instance (ToJSON u, ToJSON d) => ToJSON (DocRoleFor u d) where
+  toEncoding = genericToEncoding aesonOptions
 
 -- TODO: Maybe use uncurryN functions?
 fetchTemplate

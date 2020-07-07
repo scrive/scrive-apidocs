@@ -4,24 +4,38 @@
 
 module Flow.IntegrationTest where
 
+import Data.Aeson
+import Servant.Client
 import Test.Framework
 import Text.RawString.QQ
 import qualified Data.Map as Map
 
+import DB
+import Doc.Model.Update
+import Doc.Types.Document
+import Doc.Types.DocumentStatus
+import Doc.Types.SignatoryLink
 import Flow.Api
 import Flow.Client
+import Flow.Model.Types
+import Flow.Model.Types.FlowUserId
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.TestUtil
-import TestEnvSt.Internal
-import TestingUtil hiding (assertRight)
+import MinutesTime
+import TestEnvSt.Internal ()
+import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
+import User.Types.User
+import Util.Actor
+import qualified Flow.Model as Model
 
 tests :: TestEnvSt -> Test
 tests env = testGroup
   "Integration"
   [ testThat "Template CRUD happy path" env testTemplateHappyCrud
   , testThat "From zero to instance"    env testZeroToInstance
+  , testThat "Instance failure"         env testInstanceFailure
   , testThat "List template endpoint"   env testTemplateListEndpoint
   , testThat "List instance endpoint"   env testInstanceListEndpoint
   ]
@@ -30,123 +44,180 @@ testTemplateHappyCrud :: TestEnv ()
 testTemplateHappyCrud = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let ApiClient {..} = mkApiClient (Left oauth) (Nothing, Nothing)
-  env <- getEnv
+  let ApiClient {..}     = mkApiClient (Left oauth) (Nothing, Nothing)
 
   -- TODO nicer check
   let createTemplateData = CreateTemplate "name" "process"
-  template1 <- assertRight "create response" . request env $ createTemplate
-    createTemplateData
+  template1 <- assertRight "create response" . request $ createTemplate createTemplateData
 
   let tid = id (template1 :: GetCreateTemplate)
-  template2 <- assertRight "get response" . request env $ getTemplate tid
+  template2 <- assertRight "get response" . request $ getTemplate tid
 
   let patchTemplateData = PatchTemplate (Just "new name") (Just "new process")
-  template3 <- assertRight "patch response" . request env $ patchTemplate
-    tid
-    patchTemplateData
+  template3 <- assertRight "patch response" . request $ patchTemplate tid
+                                                                      patchTemplateData
   assertEqual "patch response equality"
               (template2 :: GetTemplate) { name = "new name", process = "new process" }
               template3
 
-  void . assertRight "deleteResponse" . request env $ deleteTemplate tid
+  void . assertRight "deleteResponse" . request $ deleteTemplate tid
 
-process1 :: Process
-process1 = Process [r|
+
+addDocument :: User -> TestEnv Document
+addDocument user = addRandomDocument (rdaDefault user)
+  { rdaStatuses    = OneOf [Preparation]
+  , rdaTypes       = OneOf [Signable]
+  , rdaSignatories = let signatory = OneOf
+                           [ [ RSC_IsSignatory
+                             , RSC_DeliveryMethodIs EmailDelivery
+                             , RSC_AuthToViewIs StandardAuthenticationToView
+                             , RSC_AuthToSignIs StandardAuthenticationToSign
+                             ]
+                           ]
+                     in  OneOf [[signatory]]
+  }
+
+createInstance
+  :: ApiClient
+  -> Text
+  -> Process
+  -> InstanceKeyValues
+  -> TestEnv (Either ClientError StartTemplate)
+createInstance ApiClient {..} name process mapping = do
+  let createTemplateData = CreateTemplate name process
+  template1 <- assertRight "create template" . request $ createTemplate createTemplateData
+  let tid = id (template1 :: GetCreateTemplate)
+
+  void . assertRight "validate response" . request $ validateTemplate process
+  void . assertRight "commit template response" . request $ commitTemplate tid
+
+  request $ startTemplate tid mapping
+
+processZero :: Process
+processZero = Process [r|
 dsl-version: "1"
 stages:
   - initial:
       actions: []
       expect:
-        approved-by:
-          users: [approver1]
-          documents: [doc1]
-  - get-data:
+        signed-by:
+          users: [signatory]
+          documents: [doc1, doc2]
+  - notification:
       actions:
         - notify:
-            users: [party1, party2]
-            message: get-data
-      expect:
-        received-data:
-          fields: [first-name]
-          users: [party1, party2]
-          documents: [doc1, doc2]
+            users: [watcher]
+            message: was-signed
+      expect: {}
 |]
 
 testZeroToInstance :: TestEnv ()
 testZeroToInstance = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let ApiClient {..} = mkApiClient (Left oauth) (Nothing, Nothing)
-  env <- getEnv
+  let ac@ApiClient {..} = mkApiClient (Left oauth) (Nothing, Nothing)
 
-  let createTemplateData = CreateTemplate "name" process1
-  template1 <- assertRight "create template" . request env $ createTemplate
-    createTemplateData
-  let tid = id (template1 :: GetCreateTemplate)
+  doc1        <- addDocument user
+  now         <- currentTime
+  Just doc2id <- dbUpdate
+    $ CloneDocumentWithUpdatedAuthor Nothing doc1 (systemActor now) identity
 
-  void . assertRight "commit template response" . request env $ commitTemplate tid
-  void . assertRight "validate response" . request env $ validateTemplate process1
+  commit
 
-  startTemplateResponse1 <-
-    assertRight "start template response" . request env $ startTemplate
-      tid
-      (mapping (user ^. #id))
+  let mapping = InstanceKeyValues documents users messages
+        where
+          documents = Map.fromList [("doc1", documentid doc1), ("doc2", doc2id)]
+          users     = Map.fromList
+            [("signatory", UserId $ user ^. #id), ("watcher", Email "foo@bar.com")]
+          messages = Map.fromList [("was-signed", "Documents were signed")]
+
+  startTemplateResponse1 <- assertRight "start template response"
+    $ createInstance ac "name" processZero mapping
 
   let iid = id (startTemplateResponse1 :: StartTemplate)
+  keyValues <- Model.selectInstanceKeyValues iid
+  assertEqual "key values" mapping keyValues
 
-  instance2 <- assertRight "get instance" . request env $ getInstance iid
+  instance2 <- assertRight "get instance" . request $ getInstance iid
   assertEqual "get after start" iid $ id (instance2 :: GetInstance)
 
   -- TODO: Fix the test below (need to call instanceOverviewMagicHash first to get the auth cookies)
-  -- instanceView <- assertRight "view instance response" . request env $ getInstanceView iid
+  -- instanceView <- assertRight "view instance response" . request $ getInstanceView iid
   -- assertEqual "view instance: id in response" iid $ id (instanceView :: GetInstanceView)
 
   pure () -- Makes brittany happy
 
+processFailure :: Process
+processFailure = Process [r|
+dsl-version: "1"
+stages:
+  - initial:
+      actions: []
+      expect:
+        signed-by:
+          users: [signatory]
+          documents: [doc1]
+|]
+
+testInstanceFailure :: TestEnv ()
+testInstanceFailure = do
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
+  let ac@ApiClient {..} = mkApiClient (Left oauth) (Nothing, Nothing)
+
+  doc1 <- addDocument user
+  commit
+
+  let mapping = InstanceKeyValues documents users messages
+        where
+          documents = Map.fromList [("doc1", documentid doc1)]
+          users     = Map.fromList [("signatory", UserId $ user ^. #id)]
+          messages  = Map.empty
+
+  void $ createInstance ac "name" processFailure mapping
+  clientError <- assertLeft "creating second instance"
+    $ createInstance ac "name" processFailure mapping
+  assert $ hasJsonBody clientError
   where
-    mapping uid = InstanceToTemplateMapping { documents = Map.empty
-                                            , users = Map.fromList [("approver1", uid)]
-                                            , messages = Map.empty
-                                            }
+    isJustObject :: Maybe Value -> Bool
+    isJustObject = \case
+      Just (Object _) -> True
+      _               -> False
+    hasJsonBody = \case
+      FailureResponse _ resp -> isJustObject . decode $ responseBody resp
+      _ -> False
 
-{-
 
-  , commitTemplate   :: TemplateId -> ClientM NoContent
-  , startTemplate    :: TemplateId -> InstanceToTemplateMapping -> ClientM GetInstance
-  , getInstance      :: InstanceId -> ClientM GetInstance
-  , validateTemplate :: FlowDSL -> ClientM [ValidationError]
-
---}
+simpleProcess :: Process
+simpleProcess = Process [r|
+dsl-version: "1"
+stages:
+  - initial:
+      actions: []
+      expect: {}
+|]
 
 testTemplateListEndpoint :: TestEnv ()
 testTemplateListEndpoint = do
   user  <- instantiateRandomUser
   oauth <- getToken $ user ^. #id
   let ApiClient {..}     = mkApiClient (Left oauth) (Nothing, Nothing)
-      createTemplateData = CreateTemplate "name" process1
-  env <- getEnv
+      createTemplateData = CreateTemplate "name" "process"
 
-  ts1 <-
-    assertRight "template list endpoint works when no templates"
-    . request env
-    $ listTemplates
+  ts1 <- assertRight "template list endpoint works when no templates"
+    $ request listTemplates
   assertBool "first template list call should be empty" $ null ts1
 
-  void . assertRight "create template" . request env $ createTemplate createTemplateData
+  void . assertRight "create template" . request $ createTemplate createTemplateData
 
-  ts2 <-
-    assertRight "template list endpoint works when 1 template"
-    . request env
-    $ listTemplates
+  ts2 <- assertRight "template list endpoint works when 1 template"
+    $ request listTemplates
   assertBool "second template list call should have 1 item" $ length ts2 == 1
 
-  void . assertRight "create template" . request env $ createTemplate createTemplateData
+  void . assertRight "create template" . request $ createTemplate createTemplateData
 
-  ts3 <-
-    assertRight "template list endpoint works when 2 templates"
-    . request env
-    $ listTemplates
+  ts3 <- assertRight "template list endpoint works when 2 templates"
+    $ request listTemplates
   assertBool "third template list call should have 2 items" $ length ts3 == 2
 
 testInstanceListEndpoint :: TestEnv ()
@@ -154,40 +225,23 @@ testInstanceListEndpoint = do
   user  <- instantiateRandomUser
   oauth <- getToken $ user ^. #id
   let ApiClient {..}     = mkApiClient (Left oauth) (Nothing, Nothing)
-      createTemplateData = CreateTemplate "name" process1
-  env <- getEnv
+      createTemplateData = CreateTemplate "name" simpleProcess
 
-  is1 <-
-    assertRight "instance list endpoint works when no instances"
-    . request env
-    $ listInstances
+  is1 <- assertRight "instance list endpoint works when no instances"
+    $ request listInstances
   assertBool "first instance list call should be empty" $ null is1
 
-  template <- assertRight "create template" . request env $ createTemplate
-    createTemplateData
+  template <- assertRight "create template" . request $ createTemplate createTemplateData
   let tid = id (template :: GetCreateTemplate)
-  void . assertRight "commit template response" . request env $ commitTemplate tid
+  void . assertRight "commit template response" . request $ commitTemplate tid
 
-  void . assertRight "start template response" . request env $ startTemplate
-    tid
-    (mapping (user ^. #id))
-  is2 <-
-    assertRight "instance list endpoint works when 1 instance"
-    . request env
-    $ listInstances
+  void . assertRight "start template response" . request $ startTemplate tid mapping
+  is2 <- assertRight "instance list endpoint works when 1 instance"
+    $ request listInstances
   assertBool "second instance list call should have 1 item" $ length is2 == 1
 
-  void . assertRight "start template response" . request env $ startTemplate
-    tid
-    (mapping (user ^. #id))
-  is3 <-
-    assertRight "instance list endpoint works when 2 instances"
-    . request env
-    $ listInstances
+  void . assertRight "start template response" . request $ startTemplate tid mapping
+  is3 <- assertRight "instance list endpoint works when 2 instances"
+    $ request listInstances
   assertBool "third instance list call should have 2 items" $ length is3 == 2
-
-  where
-    mapping uid = InstanceToTemplateMapping { documents = Map.empty
-                                            , users = Map.fromList [("approver1", uid)]
-                                            , messages = Map.empty
-                                            }
+  where mapping = InstanceKeyValues Map.empty Map.empty Map.empty

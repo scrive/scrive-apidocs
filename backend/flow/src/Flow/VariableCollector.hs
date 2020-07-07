@@ -1,5 +1,4 @@
 {-# LANGUAGE StrictData #-}
-
 module Flow.VariableCollector
     ( Role(..)
     , DocRoleFor(..)
@@ -12,22 +11,8 @@ module Flow.VariableCollector
 import Data.Set hiding (fold, foldl')
 
 import Flow.HighTongue
+import Flow.Model.Types (DocRoleFor(..), Role(..))
 import Flow.Names
-
--- | A role a user can have.
-data Role = Viewer | Approver | SigningParty
-  deriving (Eq, Ord, Show)
-
--- | This type specifies which role a user has when acting
--- on a specific document.
---
--- Some fields are polymorphic so that we can use this type
--- with both abstract Flow variables as well as concrete IDs.
-data DocRoleFor u d = DocRoleFor
-  { role     :: Role
-  , user     :: u
-  , document :: d
-  } deriving (Eq, Ord, Show)
 
 type CollectorDocUserAssociation = DocRoleFor UserName DocumentName
 

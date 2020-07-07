@@ -1,19 +1,23 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Server where
 
+import Control.Exception (SomeException, catch, throw)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Control.Monad.Time
 import Crypto.RNG
+import Data.Aeson.Types
+import Data.Time.Clock
 import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Class
-import Log.Monad (LogT)
+import Log.Data
+import Log.Monad (LogT, getLoggerIO)
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
+import Network.Wai.Log.Internal
 import Network.Wai.Middleware.Servant.Errors (errorMw)
 import Servant
 import Servant.Server.Experimental.Auth
@@ -139,13 +143,15 @@ listTemplates account@Account {..} = do
   guardUserHasPermission account [ canDo ReadA $ FlowTemplateR fid | fid <- fids ]
   pure $ fmap toGetTemplate templates
 
-naturalFlow
-  :: (LogT (DBT Handler) a -> DBT Handler a) -> FlowConfiguration -> AppM a -> Handler a
-naturalFlow runLogger flowConfiguration flowApp =
-  runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
-    . runLogger
-    . runCryptoRNGT (cryptoRNG flowConfiguration)
-    $ runReaderT flowApp flowConfiguration
+type RunLogger = forall m a . LogT m a -> m a
+
+naturalFlow :: RunLogger -> FlowConfiguration -> AppM a -> Handler a
+naturalFlow runLogger FlowConfiguration {..} flowApp =
+  runLogger
+    . runDBT dbConnectionPool defaultTransactionSettings
+    . runCryptoRNGT cryptoRNG
+    . runReaderT flowApp
+    $ FlowContext handleWithKontra
 
 genAuthServerContext
   :: FlowConfiguration
@@ -155,11 +161,23 @@ genAuthServerContext flowConfiguration =
     :. authHandlerInstanceUser flowConfiguration
     :. EmptyContext
 
-app :: (forall m a . LogT m a -> m a) -> FlowConfiguration -> IO Application
+logExceptionMiddleware :: LoggerIO -> Application -> Application
+logExceptionMiddleware loggerIO app' req respond =
+  app' req respond `catch` \(e :: SomeException) -> do
+    logIO "Unhandled exception" $ object ["exception" .= showt e]
+    throw e
+  where
+    logIO message value = do
+      now <- getCurrentTime
+      loggerIO now LogAttention message value
+
+app :: RunLogger -> FlowConfiguration -> IO Application
 app runLogger flowConfiguration = do
   loggingMiddleware <- runLogger mkApplicationLogger
+  loggerIO          <- runLogger getLoggerIO
   return
     . errorMw @JSON @'["message", "code"]
+    . logExceptionMiddleware loggerIO
     . loggingMiddleware
     . serveWithContext routesProxy (genAuthServerContext flowConfiguration)
     $ hoistServerWithContext

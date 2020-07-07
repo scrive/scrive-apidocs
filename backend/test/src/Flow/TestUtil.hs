@@ -40,5 +40,7 @@ getEnv = do
   url            <- parseBaseUrl "localhost"
   pure . mkClientEnv mgr $ url { baseUrlPort = flowPort }
 
-request :: ClientEnv -> ClientM a -> TestEnv (Either ClientError a)
-request env req = liftIO $ runClientM req env
+request :: ClientM a -> TestEnv (Either ClientError a)
+request req = do
+  env <- getEnv
+  liftIO $ runClientM req env

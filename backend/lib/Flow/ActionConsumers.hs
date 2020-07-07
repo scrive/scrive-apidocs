@@ -22,8 +22,6 @@ import EventStream.Class
 import File.Storage
 import Flow.Id
 import Flow.Model as Model
-import Flow.Model.Types as Model
-import Flow.Names
 import GuardTime (GuardTimeConfMonad)
 import MailContext
 import User.Model (UserID)
@@ -51,13 +49,8 @@ toConsumableAction
   :: (MonadThrow m, MonadDB m) => InstanceId -> Machinize.LowAction -> m ConsumableAction
 toConsumableAction instanceId = \case
   Machinize.Action (HighTongue.Close docNames) -> do
-    docMap <-
-      Map.fromList
-      .   fmap (fmap unsafeDocumentID)
-      <$> Model.selectInstanceKeyValues instanceId Document
-
-    -- TODO Use DocumentName and get rid of `fromName`
-    pure $ Close (mapMaybe ((`Map.lookup` docMap) . fromName) docNames)
+    docMap <- view #documents <$> Model.selectInstanceKeyValues instanceId
+    pure $ Close (mapMaybe (`Map.lookup` docMap) docNames)
 
   -- TODO: Convert Action Notify to ConsumableAction Notify
   Machinize.Action (HighTongue.Notify _ _) -> undefined

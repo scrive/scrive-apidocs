@@ -21,6 +21,7 @@ module TestKontra (
     , mkRequest
     , mkRequestWithHeaders
     , mkContext
+    , mkContext'
     , mkContextWithUser
     , modifyTestTime
     , setTestTime
@@ -53,6 +54,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
+import qualified Data.HashMap.Strict as HM
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -72,6 +74,7 @@ import MailContext (MailContextMonad(..))
 import MinutesTime
 import PasswordService.Conf
 import PdfToolsLambda.Class
+import PdfToolsLambda.Conf.Internal
 import PdfToolsLambda.Control
 import Session.SessionID as SessionID
 import Templates
@@ -129,9 +132,17 @@ ununTestEnv st =
                     , currentTime = Nothing
                     , requestUri  = "http://testkontra.fake"
                     }
-    . evalTestFileStorageT
-        ((, st ^. #redisConn, st ^. #fileMemCache) <$> st ^. #amazonS3Env)
+    . runFileStorage
     . unTestEnv
+  where
+    var = st ^. #memoryStorage
+    runFileStorage m = do
+      liftIO . atomically $ writeTVar var HM.empty
+      evalTestFileStorageT
+        var
+        ((, st ^. #redisConn, st ^. #fileMemCache) <$> st ^. #amazonS3Env)
+        m
+
 
 instance CryptoRNG TestEnv where
   randomBytes n = gview #rngState >>= liftIO . randomBytesIO n
@@ -407,56 +418,66 @@ mkRequestWithHeaders method vars headers = do
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
-  pdfSealLambdaEnv <- gview #pdfToolsLambdaEnv
-  globaltemplates  <- gview #globalTemplates
-  time             <- currentTime
-  bd               <- dbQuery GetMainBrandedDomain
-  liftIO $ do
-    filecache <- newFileMemCache 52428800
-    return Context { maybeUser               = Nothing
-                   , time                    = time
-                   , clientName              = Nothing
-                   , clientTime              = Nothing
-                   , ipAddr                  = noIP
-                   , production              = False
-                   , cdnBaseUrl              = Nothing
-                   , templates               = localizedVersion lang globaltemplates
-                   , globalTemplates         = globaltemplates
-                   , lang                    = lang
-                   , isMailBackdoorOpen      = False
-                   , mailNoreplyAddress      = "noreply@scrive.com"
-                   , cgiGrpConfig            = Nothing
-                   , redisCache              = Nothing
-                   , fileCache               = filecache
-                   , xToken                  = unexpectedError "xtoken is not defined"
-                   , adminAccounts           = []
-                   , salesAccounts           = []
-                   , maybePadUser            = Nothing
-                   , useHttps                = False
-                   -- We're using a dummy GT conf because the proper one is not needed
-                   -- and causes timeouts when used outside of VPN.
-                   , gtConf                  = dummyGtConf
-                   , sessionID               = SessionID.tempSessionID
-                   , trackJsToken            = Nothing
-                   , zendeskKey              = Nothing
-                   , mixpanelToken           = Nothing
-                   , gaToken                 = Nothing
-                   , hubspotConf             = Nothing
-                   , brandedDomain           = bd
-                   , salesforceConf          = Nothing
-                   , netsConfig              = Nothing
-                   , isApiLogEnabled         = True
-                   , netsSignConfig          = Nothing
-                     -- We use real Lambda config here because we want our tests
-                     -- to check it.  This Lambda and S3 bucket are dedicated
-                     -- for tests and development.
-                   , pdfToolsLambdaEnv       = pdfSealLambdaEnv
-                   , passwordServiceConf     = defaultPasswordService
-                   , maybeApiUser            = Nothing
-                   , eidServiceConf          = Nothing
-                   , ssoConf                 = Nothing
-                   , postSignViewRedirectURL = ""
-                   }
+  pdfToolsLambdaEnv <- gview #pdfToolsLambdaEnv
+  globalTemplates   <- gview #globalTemplates
+  time              <- currentTime
+  bd                <- dbQuery GetMainBrandedDomain
+  fileCache         <- newFileMemCache 52428800
+  pure $ mkContext' pdfToolsLambdaEnv globalTemplates time bd fileCache lang
+
+mkContext'
+  :: PdfToolsLambdaEnv
+  -> KontrakcjaGlobalTemplates
+  -> UTCTime
+  -> BrandedDomain
+  -> FileMemCache
+  -> Lang
+  -> Context
+mkContext' pdfToolsLambdaEnv globalTemplates time bd fileCache lang = Context
+  { maybeUser               = Nothing
+  , time                    = time
+  , clientName              = Nothing
+  , clientTime              = Nothing
+  , ipAddr                  = noIP
+  , production              = False
+  , cdnBaseUrl              = Nothing
+  , templates               = localizedVersion lang globalTemplates
+  , globalTemplates         = globalTemplates
+  , lang                    = lang
+  , isMailBackdoorOpen      = False
+  , mailNoreplyAddress      = "noreply@scrive.com"
+  , cgiGrpConfig            = Nothing
+  , redisCache              = Nothing
+  , fileCache               = fileCache
+  , xToken                  = unexpectedError "xtoken is not defined"
+  , adminAccounts           = []
+  , salesAccounts           = []
+  , maybePadUser            = Nothing
+  , useHttps                = False
+  -- We're using a dummy GT conf because the proper one is not needed
+  -- and causes timeouts when used outside of VPN.
+  , gtConf                  = dummyGtConf
+  , sessionID               = SessionID.tempSessionID
+  , trackJsToken            = Nothing
+  , zendeskKey              = Nothing
+  , mixpanelToken           = Nothing
+  , gaToken                 = Nothing
+  , hubspotConf             = Nothing
+  , brandedDomain           = bd
+  , salesforceConf          = Nothing
+  , netsConfig              = Nothing
+  , isApiLogEnabled         = True
+  , netsSignConfig          = Nothing
+  -- We use real Lambda config here because we want our tests
+  -- to check it.  This Lambda and S3 bucket are dedicated
+  -- for tests and development.
+  , pdfToolsLambdaEnv       = pdfToolsLambdaEnv
+  , passwordServiceConf     = defaultPasswordService
+  , maybeApiUser            = Nothing
+  , eidServiceConf          = Nothing
+  , ssoConf                 = Nothing
+  , postSignViewRedirectURL = ""
+  }
 
 mkContextWithUser :: Lang -> User -> TestEnv Context
 mkContextWithUser lang user = set #maybeUser (Just user) <$> mkContext lang
@@ -504,15 +525,15 @@ clearTables = do
   runSQL_ "DELETE FROM password_reminders"
   runSQL_ "DELETE FROM user_account_requests"
 
+  runSQL_ "DELETE FROM flow_instances"
+  runSQL_ "DELETE FROM flow_templates"
+
   runSQL_ "DELETE FROM mail_attachments"
   runSQL_ "DELETE FROM author_attachments"
   runSQL_ "DELETE FROM signatory_attachments"
   runSQL_ "DELETE FROM signatory_links"
-  runSQL_ "DELETE FROM documents"
-  runSQL_ "DELETE FROM flow_instance_key_value_store"
-  runSQL_ "DELETE FROM flow_instances"
-  runSQL_ "DELETE FROM flow_templates"
 
+  runSQL_ "DELETE FROM documents"
   runSQL_ "DELETE FROM users"
   runSQL_ "DELETE FROM files"
 

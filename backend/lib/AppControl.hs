@@ -7,6 +7,7 @@ module AppControl
     , maybeReadTemplates
     -- exported for the sake of unit tests
     , getStandardLang
+    , createContext
     ) where
 
 import Control.Concurrent.Lifted
@@ -171,7 +172,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           logInfo_ "Retrieving session"
           session <- getCurrentSession
           logInfo_ "Initializing context"
-          ctx <- createContext session
+          ctx <- createContext appConf appGlobals session
           -- Commit is needed after getting session from the database
           -- since session expiration date is updated while getting it,
           -- which results in pgsql locking the row. Then, if request
@@ -335,82 +336,98 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       ctx' <- getContext
       return (res, ctx')
 
-    createContext :: Session -> InnerHandlerM Context
-    createContext session = do
-      -- rqPeer hostname comes always from showHostAddress
-      -- so it is a bunch of numbers, just read them out
-      rq     <- askRq
-      peerip <- do
-        -- First, we look for x-forwarded-for, which a proxy might insert
-        -- Then, we look for x-real-ip, which nginx might insert
-        let peerhost :: HostName
-            peerhost =
-              head
-                .  catMaybes
-                $  [ BS.toString <$> getHeader h rq
-                   | h <- ["x-forwarded-for", "x-real-ip"]
-                   ]
-                ++ [Just (fst (rqPeer rq))]
-            hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
-        (do
-            addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
-            return $ case addrAddress $ head addrs of
-              SockAddrInet _ hostip -> unsafeIPAddress hostip
-              _                     -> noIP
-          )
-          `E.catch` \(_ :: E.SomeException) -> return noIP
+createContext
+  :: ( FilterMonad Response m
+     , HasRqData m
+     , MonadFail m
+     , MonadLog m
+     , MonadDB m
+     , MonadIO m
+     , MonadFileStorage m
+     , MonadEventStream m
+     , MonadCatch m
+     , MonadMask m
+     , MonadBase IO m
+     , MonadBaseControl IO m
+     , ServerMonad m
+     )
+  => AppConf
+  -> AppGlobals
+  -> Session
+  -> m Context
+createContext appConf appGlobals session = do
+  -- rqPeer hostname comes always from showHostAddress
+  -- so it is a bunch of numbers, just read them out
+  rq     <- askRq
+  peerip <- do
+    -- First, we look for x-forwarded-for, which a proxy might insert
+    -- Then, we look for x-real-ip, which nginx might insert
+    let peerhost :: HostName
+        peerhost =
+          head
+            .  catMaybes
+            $  [ BS.toString <$> getHeader h rq | h <- ["x-forwarded-for", "x-real-ip"] ]
+            ++ [Just (fst (rqPeer rq))]
+        hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
+    (do
+        addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
+        return $ case addrAddress $ head addrs of
+          SockAddrInet _ hostip -> unsafeIPAddress hostip
+          _                     -> noIP
+      )
+      `E.catch` \(_ :: E.SomeException) -> return noIP
 
-      currhostpart <- getHostpart
-      minutestime  <- currentTime
-      let clientName = TE.decodeUtf8 <$> getHeader "client-name" rq
-          clientTime = parseTimeISO =<< (BS.toString <$> getHeader "client-time" rq)
-          userAgent  = TE.decodeUtf8 <$> getHeader "user-agent" rq
-      muser         <- getUserFromSession session
-      mpaduser      <- getPadUserFromSession session
-      brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
+  currhostpart <- getHostpart
+  minutestime  <- currentTime
+  let clientName = TE.decodeUtf8 <$> getHeader "client-name" rq
+      clientTime = parseTimeISO =<< (BS.toString <$> getHeader "client-time" rq)
+      userAgent  = TE.decodeUtf8 <$> getHeader "user-agent" rq
+  muser         <- getUserFromSession session
+  mpaduser      <- getPadUserFromSession session
+  brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
 
-      -- do reload templates in non-production code
-      templates2    <- maybeReadTemplates (production appConf) (templates appGlobals)
+  -- do reload templates in non-production code
+  templates2    <- maybeReadTemplates (production appConf) (templates appGlobals)
 
-      -- work out the language
-      userlang      <- getStandardLang muser
+  -- work out the language
+  userlang      <- getStandardLang muser
 
-      return Context { maybeUser               = muser
-                     , time                    = minutestime
-                     , clientName              = clientName `mplus` userAgent
-                     , clientTime              = clientTime
-                     , ipAddr                  = peerip
-                     , production              = production appConf
-                     , cdnBaseUrl              = cdnBaseUrl appConf
-                     , templates               = localizedVersion userlang templates2
-                     , globalTemplates         = templates2
-                     , lang                    = userlang
-                     , isMailBackdoorOpen      = isMailBackdoorOpen appConf
-                     , mailNoreplyAddress      = mailNoreplyAddress appConf
-                     , gtConf                  = guardTimeConf appConf
-                     , cgiGrpConfig            = cgiGrpConfig appConf
-                     , redisCache              = mrediscache appGlobals
-                     , fileCache               = filecache appGlobals
-                     , xToken                  = sesCSRFToken session
-                     , adminAccounts           = admins appConf
-                     , salesAccounts           = sales appConf
-                     , maybePadUser            = mpaduser
-                     , useHttps                = useHttps appConf
-                     , sessionID               = sesID session
-                     , trackJsToken            = trackjsToken appConf
-                     , zendeskKey              = zendeskKey appConf
-                     , gaToken                 = gaToken appConf
-                     , mixpanelToken           = mixpanelToken appConf
-                     , hubspotConf             = hubspotConf appConf
-                     , brandedDomain           = brandeddomain
-                     , salesforceConf          = salesforceConf appConf
-                     , netsConfig              = netsConfig appConf
-                     , isApiLogEnabled         = isAPILogEnabled appConf
-                     , netsSignConfig          = netsSignConfig appConf
-                     , pdfToolsLambdaEnv       = pdftoolslambdaenv appGlobals
-                     , passwordServiceConf     = passwordServiceConf appConf
-                     , eidServiceConf          = eidServiceConf appConf
-                     , ssoConf                 = ssoConf appConf
-                     , maybeApiUser            = Nothing
-                     , postSignViewRedirectURL = postSignViewRedirectURL appConf
-                     }
+  return Context { maybeUser               = muser
+                 , time                    = minutestime
+                 , clientName              = clientName `mplus` userAgent
+                 , clientTime              = clientTime
+                 , ipAddr                  = peerip
+                 , production              = production appConf
+                 , cdnBaseUrl              = cdnBaseUrl appConf
+                 , templates               = localizedVersion userlang templates2
+                 , globalTemplates         = templates2
+                 , lang                    = userlang
+                 , isMailBackdoorOpen      = isMailBackdoorOpen appConf
+                 , mailNoreplyAddress      = mailNoreplyAddress appConf
+                 , gtConf                  = guardTimeConf appConf
+                 , cgiGrpConfig            = cgiGrpConfig appConf
+                 , redisCache              = mrediscache appGlobals
+                 , fileCache               = filecache appGlobals
+                 , xToken                  = sesCSRFToken session
+                 , adminAccounts           = admins appConf
+                 , salesAccounts           = sales appConf
+                 , maybePadUser            = mpaduser
+                 , useHttps                = useHttps appConf
+                 , sessionID               = sesID session
+                 , trackJsToken            = trackjsToken appConf
+                 , zendeskKey              = zendeskKey appConf
+                 , gaToken                 = gaToken appConf
+                 , mixpanelToken           = mixpanelToken appConf
+                 , hubspotConf             = hubspotConf appConf
+                 , brandedDomain           = brandeddomain
+                 , salesforceConf          = salesforceConf appConf
+                 , netsConfig              = netsConfig appConf
+                 , isApiLogEnabled         = isAPILogEnabled appConf
+                 , netsSignConfig          = netsSignConfig appConf
+                 , pdfToolsLambdaEnv       = pdftoolslambdaenv appGlobals
+                 , passwordServiceConf     = passwordServiceConf appConf
+                 , eidServiceConf          = eidServiceConf appConf
+                 , ssoConf                 = ssoConf appConf
+                 , maybeApiUser            = Nothing
+                 , postSignViewRedirectURL = postSignViewRedirectURL appConf
+                 }

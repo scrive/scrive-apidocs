@@ -76,7 +76,12 @@ authHandlerAccount flowConfiguration = mkAuthHandler handler
         folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
         roles  <- dbQuery $ GetRolesIncludingInherited user ug
 
-        pure $ Account { user = user, userGroup = ug, folder = folder, roles = roles }
+        pure $ Account { user      = user
+                       , userGroup = ug
+                       , folder    = folder
+                       , roles     = roles
+                       , headers   = requestHeaders req
+                       }
 
     parseOAuthAuthorization :: ByteString -> Either Text OAuthAuthorization
     parseOAuthAuthorization = parseParams . splitAuthorization . decodeUtf8

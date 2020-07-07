@@ -8,6 +8,7 @@ module Doc.SignatoryLinkID (
   , fromSignatoryLinkID
   ) where
 
+import Data.Aeson
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
@@ -39,6 +40,10 @@ instance Unjson SignatoryLinkID where
     (maybe (fail "Can't parse SignatoryLinkID") return . maybeRead . T.pack)
     show
     unjsonDef
+
+instance ToJSON SignatoryLinkID where
+  toJSON     = toJSON . show
+  toEncoding = toEncoding . show
 
 instance FromSQL SignatoryLinkID where
   type PQBase SignatoryLinkID = PQBase Int64

@@ -376,11 +376,13 @@ Library
                  , Flow.Api
                  , Flow.Client
                  , Flow.DocumentChecker
+                 , Flow.DocumentStarting
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
                  , Flow.HighTongue
                  , Flow.Id
+                 , Flow.KontraHandler
                  , Flow.Machinize
                  , Flow.Message
                  , Flow.Message.Internal
@@ -388,6 +390,8 @@ Library
                  , Flow.Model.InstanceSession
                  , Flow.Model.Types
                  , Flow.Model.Types.Internal
+                 , Flow.Model.Types.FlowUserId
+                 , Flow.Model.Types.UserIdType
                  , Flow.Names
                  , Flow.Names.Internal
                  , Flow.OrphanInstances
@@ -1147,6 +1151,7 @@ Test-suite kontrakcja-test
                  Flow.IntegrationTest
                  Flow.MachinizeTest
                  Flow.OrphanTestInstances
+                 Flow.TestKontraHandler
                  Flow.TestUtil
                  Flow.TransducerTest
                  Flow.VariableCollectorTest
@@ -1255,6 +1260,7 @@ Test-suite kontrakcja-test
                , scrypt
                , semigroups
                , servant-client
+               , servant-server
                , split
                , stm
                , tagsoup

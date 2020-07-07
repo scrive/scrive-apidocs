@@ -2,7 +2,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Aggregator
     ( AggregatorState(..)
     , AggregatorError(..)

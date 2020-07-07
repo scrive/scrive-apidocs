@@ -1,5 +1,4 @@
 {-# LANGUAGE StrictData #-}
-
 module Flow.Tables where
 
 import Database.PostgreSQL.PQTypes.Checks

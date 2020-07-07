@@ -1,5 +1,5 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Server.Types where
 
 import Control.Monad.Base
@@ -8,9 +8,12 @@ import Control.Monad.Reader
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
+import Data.ByteString
+import Data.CaseInsensitive
 import Data.Either.Combinators (mapLeft)
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
+import Happstack.Server (Request, Response)
 import Log.Monad (LogT)
 import Network.HTTP.Media ((//), (/:))
 import Servant
@@ -20,9 +23,10 @@ import qualified Data.Text.Encoding as T
 
 import AccessControl.Types
 import Flow.Id
-import Flow.OrphanInstances ()
 import Flow.Names
+import Flow.OrphanInstances ()
 import Folder.Types (Folder)
+import KontraMonad (Kontrakcja)
 import User.Types.User (User)
 import UserGroup.Internal (UserGroup)
 
@@ -31,18 +35,26 @@ data FlowConfiguration = FlowConfiguration
         => ConnectionSourceM m
     , flowPort :: Int
     , cryptoRNG :: CryptoRNGState
+    , handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
     }
-
-type AppM = ReaderT FlowConfiguration (CryptoRNGT (LogT (DBT Handler)))
 
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+newtype FlowContext = FlowContext
+  { handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
+  }
+
+type AppM = ReaderT FlowContext (CryptoRNGT (DBT (LogT Handler)))
 
 data Account = Account
     { user :: User
     , userGroup :: UserGroup
     , folder :: Folder
     , roles :: [AccessRole]
+    -- TODO remove this and implement it by adding Header input to the `startInstance` handler.
+    -- It is needed because oauth and cookie headers have to be passed to the document starting API.
+    , headers :: [(CI ByteString, ByteString)]
     }
   deriving (Generic, Show)
 

@@ -5,6 +5,7 @@ import Control.Concurrent
 import Control.Concurrent.Lifted (fork)
 import Control.Concurrent.STM
 import Control.Monad.Base
+import Control.Monad.IO.Class
 import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Internal.Connection
@@ -16,6 +17,7 @@ import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
+import qualified Data.HashMap.Strict as HM
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as T
 
@@ -63,8 +65,9 @@ import FileStorage
 import FileStorage.Amazon.S3Env
 import FileTest
 import FlashMessages
-import Flow.Server (runFlow)
-import Flow.Server.Types (FlowConfiguration(..))
+import Flow.Server
+import Flow.Server.Types
+import Flow.TestKontraHandler as Flow
 import FlowTests
 import Folder.APITest
 import Folder.FolderTest
@@ -190,7 +193,6 @@ modifyTestEnv ("--output-dir" : d : r) =
   second (. set #outputDirectory (Just d)) $ modifyTestEnv r
 modifyTestEnv (d : r) = first (d :) $ modifyTestEnv r
 
-
 testMany :: FilePath -> ([String], [TestEnvSt -> Test]) -> IO ()
 testMany workspaceRoot (allargs, ts) = do
   rng        <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
@@ -198,14 +200,6 @@ testMany workspaceRoot (allargs, ts) = do
   mapM_ T.putStrLn errs
 
   tconf@TestConf {..} <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
-
-  void . fork $ runFlow
-    lr
-    (FlowConfiguration
-      (unConnectionSource . simpleSource $ pgConnSettings testDBConfig kontraComposites)
-      testFlowPort
-      rng
-    )
 
   withLogger lr $ \runLogger -> testMany' tconf (allargs, ts) runLogger rng
 
@@ -253,6 +247,7 @@ testMany' tconf (allargs, ts) runLogger rng = do
   mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
   mAmazonEnv         <- sequence (s3envFromConfig <$> testAmazonConfig tconf)
   lambdaEnv          <- pdfToolsLambdaEnvFromConf $ testPdfToolsLambdaConf tconf
+  memoryStorage      <- liftIO $ newTVarIO HM.empty
   let env = envf $ TestEnvSt { connSource         = cs
                              , staticConnSource   = staticSource
                              , transSettings      = defaultTransactionSettings
@@ -267,12 +262,26 @@ testMany' tconf (allargs, ts) runLogger rng = do
                              , amazonS3Env        = mAmazonEnv
                              , fileMemCache       = memcache
                              , redisConn          = mRedisConn
+                             , memoryStorage      = memoryStorage
                              , cronDBConfig       = testDBConfig tconf
                              , cronMonthlyInvoice = testMonthlyInvoiceConf tconf
                              , testDurations      = test_durations
                              , flowPort           = testFlowPort tconf
                              }
       ts' = if env ^. #stagingTests then stagingTests ++ ts else ts
+
+  (errs, lr) <- mkLogRunner "flow" testLogConfig rng
+  mapM_ T.putStrLn errs
+
+  void . fork $ runFlow
+    lr
+    (FlowConfiguration
+      (unConnectionSource . simpleSource $ connSettings kontraComposites)
+      (testFlowPort tconf)
+      rng
+      (Flow.handle env)
+    )
+
   forM_ (env ^. #outputDirectory) $ createDirectoryIfMissing True
   E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do
     -- Upon interruption (eg. Ctrl+C), prevent next tests in line

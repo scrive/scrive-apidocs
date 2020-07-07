@@ -1,12 +1,13 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Engine
   ( processMachinizeEvent
   , finalizeFlow
   , processEvent
   , compile
+  , parseTongue
+  , translate
   ) where
 
 import Control.Monad.Catch
@@ -125,13 +126,25 @@ pushActions instanceId actions = do
 finalizeFlow :: (MonadLog m, MonadDB m, MonadThrow m) => m ()
 finalizeFlow = throwM $ NotImplemented "Finalizing flow"
 
-compile :: (MonadLog m, MonadThrow m) => Process -> m Machine
-compile process =
-  either throwDSLValidationError' pure $ decodeHighTongue process >>= machinize
+-- TODO use ExceptT
+parseTongue :: (MonadLog m, MonadThrow m) => Process -> m HighTongue
+parseTongue = either throwDSLValidationError' pure . decodeHighTongue
   where
     throwDSLValidationError' errs = do
-      logAttention_ $ "Flow DSL compatibility broken, compilation failed: " <> showt errs
+      logAttention_ $ "Flow DSL compatibility broken, parsing failed: " <> showt errs
       throwM $ InvalidProcess errs
+
+translate :: (MonadLog m, MonadThrow m) => HighTongue -> m Machine
+translate = either throwDSLValidationError' pure . machinize
+  where
+    throwDSLValidationError' errs = do
+      logAttention_
+        $  "Flow DSL compatibility broken, translation to state machine failed: "
+        <> showt errs
+      throwM $ InvalidProcess errs
+
+compile :: (MonadLog m, MonadThrow m) => Process -> m Machine
+compile = parseTongue >=> translate
 
 processMachinizeEvent
   :: ( CryptoRNG m
@@ -152,6 +165,9 @@ processMachinizeEvent
   -> EventInfo
   -> m ()
 processMachinizeEvent instanceId eventInfo = do
+  -- TODO Should we store store duplicate/unknown events?
+  -- Currently they are being thrown away since this code runs in a single transaction
+  -- that is aborted on errors.
   eventId      <- insertEvent $ toInsertEvent instanceId eventInfo
   fullInstance <- fromMaybeM noInstance $ selectFullInstance instanceId
   let aggregator = instanceToAggregator fullInstance

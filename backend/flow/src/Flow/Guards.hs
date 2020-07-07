@@ -1,3 +1,4 @@
+{-# LANGUAGE StrictData #-}
 module Flow.Guards where
 
 import Control.Monad.Except (MonadError)

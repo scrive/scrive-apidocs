@@ -61,30 +61,28 @@ testCookieAuth = do
 
       createTemplateData     = CreateTemplate "dummyname" "dummyprocess"
 
-  env <- getEnv
-
   void
     . assertRight "Request with valid cookies should succeed"
-    . request env
+    . request
     $ validCreateTemplate createTemplateData
 
   void
     . assertLeft "Request with an invalid session token should fail"
-    . request env
+    . request
     $ invalidCreateTemplate1 createTemplateData
 
   void
     . assertLeft "Request with an invalid XToken should fail"
-    . request env
+    . request
     $ invalidCreateTemplate2 createTemplateData
 
   void
     . assertLeft "Request with missing XToken cookie should fail"
-    . request env
+    . request
     $ invalidCreateTemplate3 createTemplateData
 
   void
     . assertLeft "Request with both cookies missing should fail"
-    . request env
+    . request
     $ invalidCreateTemplate4 createTemplateData
   where mkClient authDataAccount = mkApiClient authDataAccount (Nothing, Nothing)

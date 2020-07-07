@@ -48,6 +48,7 @@ import Doc.Signing.Model ()
 import Doc.Types.SignatoryAccessToken
 import EventStream.Class
 import File.Storage
+import Flow.Model
 import GuardTime (GuardTimeConfMonad)
 import Kontra
 import Log.Identifier
@@ -112,7 +113,6 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   logInfo_ "Preparation -> Pending; Sending invitation emails"
   updateDocument $ const initialiseSignatoryAPIMagicHashes
   saveDocumentForSignatories
-  theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject_ d
 
   -- Stat logging
   now     <- currentTime
@@ -125,9 +125,13 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
                     EventPlanhat
       asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
       theDocument >>= logDocEvent "Doc Sent" author []
-  sendInvitationEmails authorsignsimmediately
-  theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn
-  return ()
+
+  did   <- documentid <$> theDocument
+  mFlow <- selectInstanceIdByDocumentId did
+  when (isNothing mFlow) $ do
+    theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject_ d
+    sendInvitationEmails authorsignsimmediately
+    theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn
   where
     userMixpanelData author time =
       [UserIDProp (author ^. #id), someProp "Last Doc Sent" time]

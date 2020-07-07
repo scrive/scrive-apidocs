@@ -1,5 +1,4 @@
 {-# LANGUAGE StrictData #-}
-
 module Flow.Client where
 
 import Data.Text as T
@@ -13,6 +12,7 @@ import Auth.Session
 import Flow.Api
 import Flow.HighTongue
 import Flow.Id
+import Flow.Model.Types
 import Flow.Process
 
 -- TODO: Having Maybe in the AuthClientData instance makes it unclear as to what
@@ -34,7 +34,7 @@ data ApiClient = ApiClient
   , patchTemplate    :: TemplateId -> PatchTemplate -> ClientM GetTemplate
   , listTemplates    :: ClientM [GetTemplate]
   , commitTemplate   :: TemplateId -> ClientM NoContent
-  , startTemplate    :: TemplateId -> InstanceToTemplateMapping -> ClientM StartTemplate
+  , startTemplate    :: TemplateId -> InstanceKeyValues -> ClientM StartTemplate
   , getInstance      :: InstanceId -> ClientM GetInstance
   , getInstanceView  :: InstanceId -> ClientM GetInstanceView
   , listInstances    :: ClientM [GetInstance]

@@ -1,13 +1,11 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Api
     ( CreateTemplate(..)
     , GetCreateTemplate(..)
     , GetTemplate(..)
     , PatchTemplate(..)
-    , InstanceToTemplateMapping(..)
     , InstanceEventAction(..)
     , InstanceEvent(..)
     , InstanceStage(..)
@@ -27,7 +25,6 @@ module Flow.Api
 
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Map
 import Data.Proxy
 import Data.Time.Clock
 import GHC.Generics
@@ -36,7 +33,7 @@ import Servant.API
 import Doc.DocumentID (DocumentID)
 import Flow.HighTongue
 import Flow.Id
-import Flow.Message
+import Flow.Model.Types
 import Flow.Process
 import Folder.Types
 import User.UserID (UserID)
@@ -56,7 +53,7 @@ type FlowAPI
             :<|> "templates" :> Capture "template_id" TemplateId :> "commit"
                              :> PostNoContent '[JSON] NoContent
             :<|> "templates" :> Capture "template_id" TemplateId :> "start"
-                             :> ReqBody '[JSON] InstanceToTemplateMapping
+                             :> ReqBody '[JSON] InstanceKeyValues
                              :> PostCreated '[JSON] StartTemplate
             -- Progress
             :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
@@ -136,21 +133,6 @@ instance ToJSON PatchTemplate where
   toEncoding = genericToEncoding aesonOptions
 
 
--- TODO use name newtypes (UserName, etc.)
-data InstanceToTemplateMapping = InstanceToTemplateMapping
-    { documents :: Map Text DocumentID
-    , users :: Map Text UserID
-    , messages :: Map Text Message
-    }
-  deriving (Eq, Generic, Show)
-
-instance FromJSON InstanceToTemplateMapping where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON InstanceToTemplateMapping where
-  toEncoding = genericToEncoding aesonOptions
-
-
 data InstanceEventAction
     = Approve
     | Sign
@@ -166,6 +148,7 @@ instance ToJSON InstanceEventAction where
 
 data InstanceEvent = InstanceEvent
     { action :: InstanceEventAction
+    -- TODO replace with FlowUserId
     , user :: UserID
     , document :: DocumentID
     , timestamp :: Text -- TODO: do something about this text...
@@ -208,7 +191,7 @@ instance ToJSON InstanceState where
 data GetInstance = GetInstance
     { id :: InstanceId
     , templateId :: TemplateId
-    , templateParameters :: InstanceToTemplateMapping
+    , templateParameters :: InstanceKeyValues
     , state :: InstanceState
     }
   deriving (Eq, Generic, Show)
@@ -222,6 +205,7 @@ instance ToJSON GetInstance where
 
 data InstanceAuthorAction = InstanceAuthorAction
     { actionType :: InstanceEventAction
+    -- TODO replace with FlowUserId
     , actionUser :: UserID
     , actionDocument :: DocumentID
     }
