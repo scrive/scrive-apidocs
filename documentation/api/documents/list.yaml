@@ -9,6 +9,18 @@ get:
   description: |
     Fetch a list of documents, with filtering and sorting options.
 
+    Note that listing a big number of documents frequently is discouraged
+    and in the future will be subject to API rate limiting.
+
+    Under most circumstances it is better to use [callbacks](#callbacks).
+    Once set up, your systems will be notified whenever a document
+    undergoes an important state change.
+
+    In an unlikely event that the callback approach is not sufficient for your integration
+    and you do need to call the list API periodically please make your sure your polling strategy is smart.
+    Do not poll more often than necessary, and if there are no changes between subsequent calls,
+    use an [exponential backoff](https://en.wikipedia.org/wiki/Exponential_backoff).
+
     *OAuth Privileges required: `DOC_CHECK`*
 
   parameters:
