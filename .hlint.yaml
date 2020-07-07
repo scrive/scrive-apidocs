@@ -9,6 +9,7 @@
 - ignore: {name: "Reduce duplication"}
 - ignore: {name: "Redundant do"}
 - ignore: {name: "Use list comprehension"}
+- ignore: {name: "Redundant id"}
 
 # Condemn nub and friends
 - warn: {lhs: nub (sort x), rhs: Data.List.Extra.nubSort x}

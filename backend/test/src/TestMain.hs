@@ -2,6 +2,7 @@ module Main (main, testone) where
 
 import Control.Arrow
 import Control.Concurrent
+import Control.Concurrent.Lifted (fork)
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Crypto.RNG
@@ -62,6 +63,9 @@ import FileStorage
 import FileStorage.Amazon.S3Env
 import FileTest
 import FlashMessages
+import Flow.Server (runFlow)
+import Flow.Server.Types (FlowConfiguration(..))
+import FlowTests
 import Folder.APITest
 import Folder.FolderTest
 import Generators.DocumentGeneratorsTest
@@ -141,6 +145,7 @@ allTests =
   , fileTests
   , featureFlagsTest
   , flashMessagesTests
+  , flowTests
   , folderTests
   , userGroupTests
   , userGroupApiTests
@@ -192,19 +197,27 @@ testMany workspaceRoot (allargs, ts) = do
   (errs, lr) <- mkLogRunner "test" testLogConfig rng
   mapM_ T.putStrLn errs
 
-  withLogger lr $ \runLogger -> testMany' workspaceRoot (allargs, ts) runLogger rng
+  tconf@TestConf {..} <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
+
+  void . fork $ runFlow
+    lr
+    (FlowConfiguration
+      (unConnectionSource . simpleSource $ pgConnSettings testDBConfig kontraComposites)
+      testFlowPort
+    )
+
+  withLogger lr $ \runLogger -> testMany' tconf (allargs, ts) runLogger rng
 
 testMany'
-  :: FilePath
+  :: TestConf
   -> ([String], [TestEnvSt -> Test])
   -> (forall m r . LogT m r -> m r)
   -> CryptoRNGState
   -> IO ()
-testMany' workspaceRoot (allargs, ts) runLogger rng = do
+testMany' tconf (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  tconf     <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
   templates <- readGlobalTemplates
 
   let connSettings  = pgConnSettings (testDBConfig tconf)
@@ -256,6 +269,7 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
                              , cronDBConfig       = testDBConfig tconf
                              , cronMonthlyInvoice = testMonthlyInvoiceConf tconf
                              , testDurations      = test_durations
+                             , flowPort           = testFlowPort tconf
                              }
       ts' = if env ^. #stagingTests then stagingTests ++ ts else ts
   forM_ (env ^. #outputDirectory) $ createDirectoryIfMissing True

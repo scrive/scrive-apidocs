@@ -21,6 +21,7 @@ data TestConf = TestConf
   , testLocalFileCacheSize     :: Maybe Int            -- ^ Optional size for the local file cache
   , testRedisCacheConfig       :: Maybe RedisConfig    -- ^ Optional configuration for the Redis file cache
   , testMonthlyInvoiceConf     :: Maybe MonthlyInvoiceConf
+  , testFlowPort               :: Int
   } deriving (Eq, Show)
 
 unjsonTestConf :: UnjsonDef TestConf
@@ -39,6 +40,9 @@ unjsonTestConf =
     <*> fieldOpt "cron_monthly_invoice"
                  testMonthlyInvoiceConf
                  "Monthly-invoice cron job configuration"
+    -- TODO: This port is different from the one in AppConf because flow is
+    -- started as part of test as well. Thus we are preventing port clash.
+    <*> fieldDef "flow_port" 9174 testFlowPort "Flow listening port"
 
 instance Unjson TestConf where
   unjsonDef = unjsonTestConf

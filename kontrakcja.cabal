@@ -50,6 +50,7 @@ common common-stanza
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
                     , ConstraintKinds
+                    , DataKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
@@ -62,6 +63,7 @@ common common-stanza
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
+                    , OverloadedLabels
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -74,8 +76,6 @@ common common-stanza
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
-                    , OverloadedLabels
-                    , DataKinds
 
 Library kontrakcja-prelude
 
@@ -117,6 +117,7 @@ Library
                   backend/migrate/inc
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
+                  backend/flow/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
@@ -370,6 +371,33 @@ Library
                  , FileStorage.RedisCache
                  , File.Tables
                  , FlashMessage
+                 , Flow.ActionConsumers
+                 , Flow.Aggregator
+                 , Flow.Api
+                 , Flow.Client
+                 , Flow.DocumentChecker
+                 , Flow.Engine
+                 , Flow.Error
+                 , Flow.Guards
+                 , Flow.HighTongue
+                 , Flow.Id
+                 , Flow.Machinize
+                 , Flow.Message
+                 , Flow.Message.Internal
+                 , Flow.Model
+                 , Flow.Model.Types
+                 , Flow.Model.Types.Internal
+                 , Flow.Names
+                 , Flow.Names.Internal
+                 , Flow.OrphanInstances
+                 , Flow.Process
+                 , Flow.Process.Internal
+                 , Flow.Server
+                 , Flow.Server.Handlers.Instance
+                 , Flow.Server.Types
+                 , Flow.Tables
+                 , Flow.Transducer
+                 , Flow.VariableCollector
                  , Folder.API
                  , Folder.FolderID
                  , Folder.Internal
@@ -436,7 +464,6 @@ Library
                  , Network.XMLCurl
                  , OAuth.Control
                  , OAuth.Model
-                 , OAuth.Parse
                  , OAuth.Tables
                  , OAuth.Util
                  , OAuth.View
@@ -608,6 +635,8 @@ Library
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , kontrakcja-appdir
+               , authentication
+               , flow
                , AES
                , DRBG
                , Decimal
@@ -615,6 +644,7 @@ Library
                , HTTP
                , QuickCheck
                , aeson
+               , aeson-casing
                , amazonka
                , amazonka-core
                , amazonka-kinesis
@@ -629,6 +659,7 @@ Library
                , conduit
                , consumers
                , containers
+               , cookie
                , crypto-rng
                , cryptonite
                , cryptostore
@@ -694,6 +725,13 @@ Library
                , scientific
                , scrypt
                , semigroups
+               , servant
+               , servant-auth
+               , servant-checked-exceptions
+               , servant-client
+               , servant-client-core
+               , servant-errors
+               , servant-server
                , soap
                , split
                , spreadsheet
@@ -715,6 +753,9 @@ Library
                , utf8-string
                , uuid
                , vector
+               , warp
+               , wai
+               , wai-log
                , x509
                , xml-conduit
                , xml-conduit-writer
@@ -747,10 +788,12 @@ Executable kontrakcja-server
                , directory
                , exceptions
                , filepath
+               , flow
                , happstack-server
                , happstack-static-routing
                , hedis
                , hostname
+               , hpqtypes
                , hpqtypes-extras
                , lifted-base
                , log-base
@@ -863,7 +906,7 @@ Executable mailing-server
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   Main-is: MailingServerMain.hs
-  Other-Modules: 
+  Other-Modules:
                  AddressUtils
                  Assembler
                  Handlers
@@ -881,6 +924,7 @@ Executable mailing-server
                , kontrakcja
                , kontrakcja-appdir
                , kontrakcja-prelude
+               , authentication
                , AES
                , DRBG
                , HTTP
@@ -1090,6 +1134,17 @@ Test-suite kontrakcja-test
                  FeatureFlagsTest
                  FileTest
                  FlashMessages
+                 Flow.AuthenticationTest
+                 Flow.AggregatorTest
+                 Flow.DocumentCheckerTest
+                 Flow.HighTongueTest
+                 Flow.IntegrationTest
+                 Flow.MachinizeTest
+                 Flow.OrphanTestInstances
+                 Flow.TestUtil
+                 Flow.TransducerTest
+                 Flow.VariableCollectorTest
+                 FlowTests
                  Folder.APITest
                  UserGroup.APITest
                  UserGroup.UserGroupTest
@@ -1137,6 +1192,8 @@ Test-suite kontrakcja-test
                , kontrakcja-prelude
                , kontrakcja-appdir
                , kontrakcja
+               , authentication
+               , flow
                , Decimal
                , HStringTemplate
                , HUnit
@@ -1157,6 +1214,7 @@ Test-suite kontrakcja-test
                , cryptostore
                , data-default
                , directory
+               , either
                , exceptions
                , extra
                , optics
@@ -1181,13 +1239,16 @@ Test-suite kontrakcja-test
                , mtl
                , network-uri
                , one-time-password
-               , quickcheck-unicode
+               , pretty-simple
                , quickcheck-instances
+               , quickcheck-unicode
+               , raw-strings-qq
                , regex-tdfa
                , sandi
                , scientific
                , scrypt
                , semigroups
+               , servant-client
                , split
                , stm
                , tagsoup
@@ -1206,6 +1267,7 @@ Test-suite kontrakcja-test
                , vector
                , x509
                , xml-conduit
+               , yaml
 
 Executable config-checker
   import: common-stanza
@@ -1359,3 +1421,31 @@ Executable sort_imports
                     kontrakcja-appdir,
                     text
   Default-Language: Haskell2010
+
+Library authentication
+  import: common-stanza
+
+  Hs-Source-Dirs: backend/authentication/src
+
+  GHC-Options: -Werror -Wall
+  GHC-Prof-Options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  Exposed-Modules:    Auth.MagicHash
+                    , Auth.Model
+                    , Auth.OAuth
+                    , Auth.Session
+                    , Auth.Session.SessionID
+                    , Auth.Utils
+  Build-Depends:      base-noprelude
+                    , kontrakcja-prelude
+                    , bytestring
+                    , cond
+                    , crypto-rng
+                    , exceptions
+                    , happstack-server
+                    , hpqtypes
+                    , monad-time
+                    , text
+                    , text-show
+                    , unjson
+                    , HTTP

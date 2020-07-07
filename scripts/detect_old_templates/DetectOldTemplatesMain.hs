@@ -43,6 +43,7 @@ kontraExtensions = map
   EnableExtension
   [ BangPatterns
   , ConstraintKinds
+  , DataKinds
   , DeriveDataTypeable
   , DeriveFunctor
   , DeriveGeneric

@@ -502,6 +502,9 @@ clearTables = do
   runSQL_ "DELETE FROM signatory_attachments"
   runSQL_ "DELETE FROM signatory_links"
   runSQL_ "DELETE FROM documents"
+  runSQL_ "DELETE FROM flow_instance_key_value_store"
+  runSQL_ "DELETE FROM flow_instances"
+  runSQL_ "DELETE FROM flow_templates"
 
   runSQL_ "DELETE FROM users"
   runSQL_ "DELETE FROM files"

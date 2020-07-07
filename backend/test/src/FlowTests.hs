@@ -1,0 +1,26 @@
+module FlowTests where
+
+import Test.Framework
+
+import TestKontra
+import qualified Flow.AggregatorTest as Aggregator
+import qualified Flow.AuthenticationTest as Authentication
+import qualified Flow.DocumentCheckerTest as DocumentChecker
+import qualified Flow.HighTongueTest as HighTongue
+import qualified Flow.IntegrationTest as Integration
+import qualified Flow.MachinizeTest as Machinize
+import qualified Flow.TransducerTest as Transducer
+import qualified Flow.VariableCollectorTest as VariableCollector
+
+flowTests :: TestEnvSt -> Test
+flowTests env = testGroup
+  "Flow"
+  [ Aggregator.tests
+  , Authentication.tests env
+  , DocumentChecker.tests
+  , HighTongue.tests
+  , Integration.tests env
+  , Machinize.tests
+  , VariableCollector.tests
+  , Transducer.tests
+  ]

@@ -4,7 +4,7 @@
 -- parallel.
 
 :set -ibackend/server/src -ibackend/kontrakcja-prelude -ibackend/cron/inc -ibackend/cron/schema -ibackend/lib -ibackend/mailer/inc -ibackend/mailer/schema -ibackend/mailer/src -ibackend/messenger/inc -ibackend/messenger/schema -ibackend/messenger/src -ibackend/migrate/inc -ibackend/migrate/src -ibackend/misc/schema -ibackend/misc/src -ibackend/server/schema -ibackend/server/src -ibackend/cron/src -ibackend/test/src
-:set -XBangPatterns -XConstraintKinds -XDeriveDataTypeable -XDeriveFunctor -XDeriveGeneric -XDerivingStrategies -XFlexibleContexts -XFlexibleInstances -XFunctionalDependencies -XGeneralizedNewtypeDeriving -XLambdaCase -XMultiParamTypeClasses -XMultiWayIf -XNamedFieldPuns -XOverloadedStrings -XPatternGuards -XRankNTypes -XRecordWildCards -XScopedTypeVariables -XStandaloneDeriving -XTupleSections -XTypeApplications -XTypeFamilies -XTypeOperators -XTypeSynonymInstances -XUndecidableInstances
+:set -XBangPatterns -XConstraintKinds -XDataKinds -XDeriveDataTypeable -XDeriveFunctor -XDeriveGeneric -XDerivingStrategies -XFlexibleContexts -XFlexibleInstances -XFunctionalDependencies -XGeneralizedNewtypeDeriving -XLambdaCase -XMultiParamTypeClasses -XMultiWayIf -XNamedFieldPuns -XOverloadedLabels -XOverloadedStrings -XPatternGuards -XRankNTypes -XRecordWildCards -XScopedTypeVariables -XStandaloneDeriving -XTupleSections -XTypeApplications -XTypeFamilies -XTypeOperators -XTypeSynonymInstances -XUndecidableInstances
 :set -Wall -fno-warn-type-defaults
 :set -hide-package monads-tf -hide-package cryptohash-sha1 -hide-package cryptohash-md5 -hide-package dataenc
 

@@ -85,6 +85,8 @@ data AppConf = AppConf
   , kinesisStream      :: Maybe KinesisConf
   , postSignViewRedirectURL :: Text
   , useFolderListCallsByDefault :: Bool
+  , flowPort :: Int
+  , runFlowServer :: Bool
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -152,5 +154,11 @@ unjsonAppConf =
     <*> field "use_folder_list_calls_by_default"
               useFolderListCallsByDefault
               "Enable folder list calls for default user group settings"
+    <*> fieldDef "flow_port" 9173 flowPort "Flow listening port"
+    <*> fieldDef "run_flow_server"
+                 False
+                 runFlowServer
+                 "Start Flow server instead of Kontrakcja"
+
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
