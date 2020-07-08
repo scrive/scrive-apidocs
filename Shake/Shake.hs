@@ -203,12 +203,12 @@ main = do
 
     if null targets then want ["help"] else want targets
 
-    -- * First add Oracles
+    -- First add Oracles
     addOracles
 
-    -- * The "help" phony task that is the default target
+    -- The "help" phony task that is the default target
     "help" ~> putNormal usageMsg
-    -- * Main targets
+    -- Main targets
     "all" ~> need ["server", "frontend"]
     "server" ~> need ["_build/cabal-build"]
     "frontend" ~> need ["adminonly-elm", "_build/grunt-build"]
@@ -249,7 +249,7 @@ main = do
       removeFilesAfter "_build/" ["//*"]
       removeFilesAfter "_shake/" ["//*"]
 
-    -- * Rules
+    -- Rules
     componentBuildRules sourceRoot newBuild opt cabalFile
     serverBuildRules newBuild opt exeDynamic cabalFile
     serverTestRules newBuild
@@ -263,7 +263,7 @@ main = do
     distributionRules newBuild opt
     oracleHelpRule
 
--- * Server
+-- Server
 
 getOptimisationLevel :: [ShakeFlag] -> OptimisationLevel
 getOptimisationLevel flags =
@@ -700,7 +700,7 @@ serverFormatLintRules sourceRoot newBuild threads opt cabalFile flags = do
               (componentTargetPath newBuild opt . mkExeName $ "sort_imports")
               sortImportsFlags
 
--- * Frontend
+-- Frontend
 
 gruntNewBuildArg :: UseNewBuild -> String
 gruntNewBuildArg unb | useNewBuild unb = "--new-build"
@@ -760,7 +760,7 @@ frontendTestRules newBuild = do
                "grunt"
                ["test:fast", gruntNewBuildArg newBuild]
 
--- * Create distribution
+-- Create distribution
 distributionRules :: UseNewBuild -> OptimisationLevel -> Rules ()
 distributionRules newBuild opt = do
   "urls.txt" %> \_ -> do
@@ -836,7 +836,7 @@ distributionRules newBuild opt = do
           liftIO $ createDirectoryIfMissing True (takeDirectory targetPath)
           copyFileChanged sourcePath targetPath
 
--- * Utility scripts.
+-- Utility scripts.
 
 scriptsUsageMsg :: String
 scriptsUsageMsg = unlines

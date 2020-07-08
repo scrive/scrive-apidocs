@@ -1,0 +1,48 @@
+dsl-version: "1"
+stages:
+  - applicant1-to-sign:
+      actions:
+        - notify:
+            users: [applicant1]
+            message: signing
+      expect:
+        signed-by:
+          users: [applicant1]
+          documents:
+            - main-application-form
+            - cca-credit-card
+            - direct-debit-form
+  - applicant2-to-sign:
+      actions:
+        - notify:
+            users: [applicant2]
+            message: signing
+      expect:
+        signed-by:
+          users: [applicant2]
+          documents: [main-application-form]
+        viewed-by:
+          users: [applicant2]
+          documents:
+            - cca-credit-card
+            - diret-debit-form
+  - author-to-sign:
+      actions:
+        - notify:
+            users: [author]
+            message: counter-signing
+      expect:
+        signed-by:
+          users: [author]
+          documents:
+            - main-application-form
+            - cca-credit-card
+            - direct-debit-form
+  - close-documents:
+      actions:
+        - close:
+            documents:
+              - main-application-form
+              - cca-credit-card
+              - direct-debit-form
+      expect: {}

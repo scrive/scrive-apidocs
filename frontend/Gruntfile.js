@@ -273,8 +273,7 @@ module.exports = function (grunt) {
         tasks: [
           "watch",
           "webpack:allWatch",
-          "webpack:signviewWatch",
-          "shell:watchAdminElm"
+          "webpack:signviewWatch"
         ],
         options: {logConcurrentOutput: true}
       }
@@ -447,7 +446,8 @@ module.exports = function (grunt) {
       "compileGenerateLocalization",
       "uglify:dev",
       "uglify:signview",
-      "concurrent:watch"
+      "concurrent:watch",
+      "shell:watchAdminElm"
     ]);
   });
 

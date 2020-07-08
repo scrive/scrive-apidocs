@@ -50,6 +50,7 @@ common common-stanza
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
                     , ConstraintKinds
+                    , DataKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
@@ -62,6 +63,7 @@ common common-stanza
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
+                    , OverloadedLabels
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -74,8 +76,6 @@ common common-stanza
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
-                    , OverloadedLabels
-                    , DataKinds
 
 Library kontrakcja-prelude
 
@@ -117,6 +117,7 @@ Library
                   backend/migrate/inc
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
+                  backend/flow/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
@@ -128,6 +129,10 @@ Library
                  , AccessControl.Model
                  , AccessControl.Tables
                  , AccessControl.Types
+                 , Administration.AdministrationControl
+                 , Administration.AdministrationView
+                 , Amazon.Migrations
+                 , Analytics.Include
                  , API.APIVersion
                  , API.Logging
                  , API.Monad.V1
@@ -138,11 +143,9 @@ Library
                  , API.V2.Parameters
                  , API.V2.User
                  , API.V2.Utils
-                 , Administration.AdministrationControl
-                 , Administration.AdministrationView
-                 , Analytics.Include
                  , AppConf
                  , AppControl
+                 , AppDBMigrations
                  , AppDBTables
                  , AppView
                  , Archive.Control
@@ -154,30 +157,42 @@ Library
                  , Attachment.Tables
                  , BrandedDomain.BrandedDomain
                  , BrandedDomain.BrandedDomainID
+                 , BrandedDomain.Migrations
                  , BrandedDomain.Model
                  , BrandedDomain.Tables
                  , Branding.Adler32
-                 , Branding.CSS
                  , Branding.Control
+                 , Branding.CSS
                  , Chargeable
+                 , Chargeable.Migrations
                  , Chargeable.Model
-                 , Chargeable.Types
                  , Chargeable.Tables
+                 , Chargeable.Types
                  , Company.CompanyControl
                  , Company.JSON
+                 , Company.Migrations
                  , Configuration
                  , Context
                  , Context.Internal
                  , Control.Monad.Trans.Control.Util
                  , Control.Monad.Trans.Instances
                  , Cookies
-                 , Cron.Model
-                 , Cron.Tables
                  , CronConf
                  , CronEnv
+                 , Cron.Migrations
+                 , Cron.Model
                  , CronStats.Control
                  , CronStats.Model
+                 , Cron.Tables
                  , Crypto
+                 , Database.Redis.Cache
+                 , Database.Redis.Configuration
+                 , Database.Redis.Helpers
+                 , Data.ByteString.RFC2397
+                 , Data.ByteString.Utils
+                 , DataRetentionPolicy
+                 , DataRetentionPolicy.Guards
+                 , DataRetentionPolicy.Internal
                  , DB
                  , DB.Derive
                  , DB.PostgreSQL
@@ -188,20 +203,15 @@ Library
                  , DB.TimeZoneName
                  , DB.Utils
                  , DB.XML
-                 , Data.ByteString.RFC2397
-                 , Data.ByteString.Utils
-                 , DataRetentionPolicy
-                 , DataRetentionPolicy.Guards
-                 , DataRetentionPolicy.Internal
-                 , Database.Redis.Cache
-                 , Database.Redis.Configuration
-                 , Database.Redis.Helpers
                  , Doc.AccessControl
+                 , Doc.Action
+                 , Doc.AddImageSpec
+                 , Doc.Anchors
                  , Doc.API
-                 , Doc.API.Callback.Types
                  , Doc.API.Callback.Execute
                  , Doc.API.Callback.Model
                  , Doc.API.Callback.Tables
+                 , Doc.API.Callback.Types
                  , Doc.API.V1.Calls
                  , Doc.API.V1.DocumentFromJSON
                  , Doc.API.V1.DocumentToJSON
@@ -226,50 +236,34 @@ Library
                  , Doc.API.V2.JSON.SignatoryConsentQuestion
                  , Doc.API.V2.JSON.SigningData
                  , Doc.API.V2.JSON.Utils
-                 , Doc.Action
-                 , Doc.Anchors
                  , Doc.AutomaticReminder.Model
                  , Doc.AutomaticReminder.Tables
+                 , Doc.CheckboxPlacementsUtils
                  , Doc.Class
                  , Doc.Conditions
-                 , Doc.Types.AuthorAttachment
-                 , Doc.CheckboxPlacementsUtils
-                 , Doc.Types.Document
-                 , Doc.Types.DocumentStatus
-                 , Doc.Types.DocumentTag
-                 , Doc.Types.HighlightedPage
-                 , Doc.Types.MainFile
-                 , Doc.RadiobuttonPlacementsUtils
-                 , Doc.Types.SignatoryAttachment
-                 , Doc.Types.SignatoryConsentQuestion
-                 , Doc.Types.SignatoryField
-                 , Doc.SignatoryFieldUtils
-                 , Doc.Types.SignatoryLink
-                 , Doc.Types.SignatoryAccessToken
-                 , Doc.SignatoryUtils
-                 , Doc.Types.SigningData
                  , Doc.DigitalSignature
-                 , Doc.DocControl
                  , Doc.DocAddImage
+                 , Doc.DocControl
                  , Doc.DocInfo
                  , Doc.DocMails
                  , Doc.DocSeal
                  , Doc.DocStateCommon
                  , Doc.DocStateData
                  , Doc.DocStateQuery
+                 , Doc.DocumentID
+                 , Doc.DocumentMonad
                  , Doc.DocUtils
                  , Doc.DocView
                  , Doc.DocViewMail
                  , Doc.DocViewSMS
-                 , Doc.DocumentID
-                 , Doc.DocumentMonad
                  , Doc.EvidenceAttachments
                  , Doc.Extending.Consumer
+                 , Doc.Extending.Migrations
                  , Doc.Extending.Model
                  , Doc.Extending.Tables
                  , Doc.Functions
-                 , Doc.AddImageSpec
                  , Doc.Logging
+                 , Doc.Migrations
                  , Doc.Model
                  , Doc.Model.Domain
                  , Doc.Model.Expressions
@@ -278,59 +272,54 @@ Library
                  , Doc.Model.Query
                  , Doc.Model.Search
                  , Doc.Model.Update
-                 , Doc.SMSPin.Migrations
-                 , Doc.SMSPin.Model
-                 , Doc.SMSPin.Tables
+                 , Doc.RadiobuttonPlacementsUtils
                  , Doc.Screenshot
-                 , Doc.SealSpec
-                 , Doc.SealStatus
                  , Doc.Sealing.Consumer
                  , Doc.Sealing.Model
                  , Doc.Sealing.Tables
+                 , Doc.SealSpec
+                 , Doc.SealStatus
                  , Doc.SignatoryConsentQuestionID
                  , Doc.SignatoryFieldID
+                 , Doc.SignatoryFieldUtils
                  , Doc.SignatoryIdentification
                  , Doc.SignatoryLinkID
                  , Doc.SignatoryScreenshots
+                 , Doc.SignatoryUtils
                  , Doc.Signing.Consumer
+                 , Doc.Signing.Migrations
                  , Doc.Signing.Model
                  , Doc.Signing.Tables
+                 , Doc.SMSPin.Migrations
+                 , Doc.SMSPin.Model
+                 , Doc.SMSPin.Tables
                  , Doc.Tables
                  , Doc.Tokens.Model
                  , Doc.Tokens.Tables
                  , Doc.Trigger
+                 , Doc.Types.AuthorAttachment
+                 , Doc.Types.Document
+                 , Doc.Types.DocumentStatus
+                 , Doc.Types.DocumentTag
+                 , Doc.Types.HighlightedPage
+                 , Doc.Types.MainFile
+                 , Doc.Types.SignatoryAccessToken
+                 , Doc.Types.SignatoryAttachment
+                 , Doc.Types.SignatoryConsentQuestion
+                 , Doc.Types.SignatoryField
+                 , Doc.Types.SignatoryLink
+                 , Doc.Types.SigningData
                  , Doc.Validation.Starting
-                 , Folder.API
-                 , Folder.FolderID
-                 , Folder.Internal
-                 , Folder.JSON
-                 , Folder.Model
-                 , Folder.Model.Query
-                 , Folder.Model.Update
-                 , Folder.Tables
-                 , Folder.Types
                  , EID.Authentication.Migrations
                  , EID.Authentication.Model
                  , EID.Authentication.Tables
                  , EID.CGI.GRP.Config
                  , EID.CGI.GRP.Control
-                 , EID.CGI.GRP.Types
                  , EID.CGI.GRP.Transaction.Model
                  , EID.CGI.GRP.Transaction.Tables
-                 , EID.Nets.Call
-                 , EID.Nets.Config
-                 , EID.Nets.Control
-                 , EID.Nets.Types
-                 , EID.Nets.Migrations
-                 , EID.Nets.Model
-                 , EID.Nets.SignID
-                 , EID.Nets.Tables
-                 , EID.Signature.Legacy
-                 , EID.Signature.Migrations
-                 , EID.Signature.Model
-                 , EID.Signature.Tables
-                 , EID.EIDService.Conf
+                 , EID.CGI.GRP.Types
                  , EID.EIDService.Communication
+                 , EID.EIDService.Conf
                  , EID.EIDService.Control
                  , EID.EIDService.Migrations
                  , EID.EIDService.Model
@@ -344,30 +333,81 @@ Library
                  , EID.EIDService.Provider.Verimi
                  , EID.EIDService.Tables
                  , EID.EIDService.Types
+                 , EID.Nets.Call
+                 , EID.Nets.Config
+                 , EID.Nets.Control
+                 , EID.Nets.Migrations
+                 , EID.Nets.Model
+                 , EID.Nets.SignID
+                 , EID.Nets.Tables
+                 , EID.Nets.Types
+                 , EID.Signature.Legacy
+                 , EID.Signature.Migrations
+                 , EID.Signature.Model
+                 , EID.Signature.Tables
                  , EventStream
-                 , EventStream.Kinesis
                  , EventStream.Class
+                 , EventStream.Kinesis
                  , EvidenceLog.Model
                  , EvidenceLog.Tables
                  , EvidenceLog.View
                  , EvidencePackage.EvidenceLog
                  , EvidencePackage.EvidenceOfIntent
                  , EvidencePackage.EvidenceOfTime
+                 , FeatureFlags.Migrations
                  , FeatureFlags.Model
                  , FeatureFlags.Tables
                  , File.Conditions
                  , File.File
                  , File.FileID
+                 , File.Migrations
                  , File.Model
                  , File.Storage
-                 , File.Tables
                  , FileStorage
                  , FileStorage.Amazon
                  , FileStorage.Amazon.Config
                  , FileStorage.Amazon.S3Env
                  , FileStorage.Class
                  , FileStorage.RedisCache
+                 , File.Tables
                  , FlashMessage
+                 , Flow.ActionConsumers
+                 , Flow.Aggregator
+                 , Flow.Api
+                 , Flow.Client
+                 , Flow.DocumentChecker
+                 , Flow.Engine
+                 , Flow.Error
+                 , Flow.Guards
+                 , Flow.HighTongue
+                 , Flow.Id
+                 , Flow.Machinize
+                 , Flow.Message
+                 , Flow.Message.Internal
+                 , Flow.Model
+                 , Flow.Model.Types
+                 , Flow.Model.Types.Internal
+                 , Flow.Names
+                 , Flow.Names.Internal
+                 , Flow.OrphanInstances
+                 , Flow.Process
+                 , Flow.Process.Internal
+                 , Flow.Server
+                 , Flow.Server.Handlers.Instance
+                 , Flow.Server.Types
+                 , Flow.Tables
+                 , Flow.Transducer
+                 , Flow.VariableCollector
+                 , Folder.API
+                 , Folder.FolderID
+                 , Folder.Internal
+                 , Folder.JSON
+                 , Folder.Migrations
+                 , Folder.Model
+                 , Folder.Model.Query
+                 , Folder.Model.Update
+                 , Folder.Tables
+                 , Folder.Types
                  , GuardTime
                  , GuardTime.Class
                  , Happstack.Fields
@@ -379,11 +419,11 @@ Library
                  , HostClock.Tables
                  , HtmlToTxt
                  , HubSpot.Conf
-                 , IPAddress
                  , InputValidation
                  , InspectXML
                  , InspectXMLInstances
                  , InternalResponse
+                 , IPAddress
                  , Kontra
                  , KontraError
                  , KontraLink
@@ -392,23 +432,26 @@ Library
                  , Log.Amazon
                  , Log.Configuration
                  , Log.Identifier
+                 , Login
+                 , LoginAuth.LoginAuthMethod
                  , Log.Migrations
                  , Log.Model
                  , Log.Tables
                  , Log.Utils
-                 , Login
                  , MagicHash
                  , MailContext
                  , MailContext.Class
                  , MailingServerConf
-                 , Mails.Types
                  , Mails.Events
+                 , Mails.FromKontra.Migrations
                  , Mails.FromKontra.Tables
                  , Mails.KontraInfoForMail
                  , Mails.MailsData
+                 , Mails.Migrations
                  , Mails.Model
                  , Mails.SendMail
                  , Mails.Tables
+                 , Mails.Types
                  , MemCache
                  , MessengerServerConf
                  , MinutesTime
@@ -421,7 +464,6 @@ Library
                  , Network.XMLCurl
                  , OAuth.Control
                  , OAuth.Model
-                 , OAuth.Parse
                  , OAuth.Tables
                  , OAuth.Util
                  , OAuth.View
@@ -431,6 +473,7 @@ Library
                  , Partner.JSON
                  , Partner.JSON.Internal
                  , Partner.Logging
+                 , Partner.Migrations
                  , PasswordService.Conf
                  , PasswordService.Control
                  , PdfToolsLambda.Class
@@ -447,69 +490,88 @@ Library
                  , Redirect
                  , Routing
                  , RoutingTable
-                 , SealingMethod
-                 , SMS.Types
-                 , SMS.Events
-                 , SMS.FromKontra.Tables
-                 , SMS.KontraInfoForSMS
-                 , SMS.Model
-                 , SMS.SMS
-                 , SMS.Tables
-                 , SSO.Control
-                 , SSO.Conf
-                 , SSO.SAML
-                 , SSO.Guards
                  , Salesforce.AuthorizationWorkflow
                  , Salesforce.Conf
                  , Salesforce.Control
+                 , SealingMethod
                  , ServerUtils.ServerUtils
-                 , Session.Cookies
                  , Session.Constant
-                 , Session.Types
+                 , Session.Cookies
                  , Session.Model
                  , Session.SessionID
                  , Session.Tables
+                 , Session.Types
+                 , SMS.Events
+                 , SMS.FromKontra.Migrations
+                 , SMS.FromKontra.Tables
+                 , SMS.KontraInfoForSMS
+                 , SMS.Migrations
+                 , SMS.Model
+                 , SMS.SMS
+                 , SMS.Tables
+                 , SMS.Types
+                 , SSO.Conf
+                 , SSO.Control
+                 , SSO.Guards
+                 , SSO.SAML
                  , StatsD.Communication
                  , StatsD.Config
-                 , LoginAuth.LoginAuthMethod
                  , System.Random.CryptoRNG
                  , Tag
                  , Tag.Tables
                  , Templates
                  , Text.JSON.Convert
                  , Text.JSON.Orphans
+                 , TextSearchQuery
                  , Text.XML.Content
                  , Text.XML.DirtyContent
                  , Text.XML.Parser
                  , Text.XML.Writer.Extended
                  , Text.XML.XMLDSig
-                 , TextSearchQuery
                  , Theme.Control
+                 , Theme.Migrations
                  , Theme.Model
                  , Theme.Tables
                  , Theme.ThemeID
                  , Theme.View
                  , ThirdPartyStats.Core
+                 , ThirdPartyStats.Migrations
                  , ThirdPartyStats.Mixpanel
                  , ThirdPartyStats.Planhat
                  , ThirdPartyStats.Tables
                  , ThirdPartyStats.Utils
+                 , User.Action
                  , User.API
                  , User.APILog.API
                  , User.APILog.Migrations
                  , User.APILog.Model
                  , User.APILog.Tables
-                 , User.Action
+                 , User.CallbackScheme.Migrations
                  , User.CallbackScheme.Model
                  , User.CallbackScheme.Tables
-                 , User.CallbackScheme.Migrations
-                 , User.Types.SignupMethod
-                 , User.Types.Stats
-                 , User.Types.User
-                 , User.Types.User.Internal
                  , User.Email
                  , User.EmailChangeRequest
                  , User.EmailChangeRequest.Tables
+                 , UserGroup
+                 , UserGroupAccounts.Migrations
+                 , UserGroupAccounts.Model
+                 , UserGroupAccounts.Tables
+                 , UserGroupAccounts.UserGroupAccountsControl
+                 , UserGroupAccounts.UserGroupAccountsView
+                 , UserGroup.API
+                 , UserGroup.DeletionRequest.Model
+                 , UserGroup.DeletionRequest.Types
+                 , UserGroup.FolderListCallsTransition
+                 , UserGroup.FreeDocumentTokens.Model
+                 , UserGroup.FreeDocumentTokens.Types
+                 , UserGroup.Internal
+                 , UserGroup.JSON
+                 , UserGroup.Migrations
+                 , UserGroup.Model
+                 , UserGroup.Tables
+                 , UserGroup.Types
+                 , UserGroup.Types.PaymentPlan
+                 , UserGroup.Types.Subscription
                  , User.History.Migrations
                  , User.History.Model
                  , User.History.Tables
@@ -527,42 +589,24 @@ Library
                  , User.PasswordReminder.Tables
                  , User.Tables
                  , User.TwoFactor
+                 , User.Types.SignupMethod
+                 , User.Types.Stats
+                 , User.Types.User
+                 , User.Types.User.Internal
                  , User.UserAccountRequest
                  , User.UserAccountRequest.Tables
                  , User.UserControl
-                 , User.UserID
                  , User.UserFeatures
+                 , User.UserID
                  , User.UserView
                  , User.Utils
-                 , UserGroup
-                 , UserGroup.API
-                 , UserGroup.FolderListCallsTransition
-                 , UserGroup.JSON
-                 , UserGroup.Types
-                 , UserGroup.Types.PaymentPlan
-                 , UserGroup.Types.Subscription
-                 , UserGroup.Internal
-                 , UserGroup.Model
-                 , UserGroup.Tables
-                 , UserGroup.DeletionRequest.Model
-                 , UserGroup.DeletionRequest.Types
-                 , UserGroup.FreeDocumentTokens.Model
-                 , UserGroup.FreeDocumentTokens.Types
-                 , UserGroupAccounts.Migrations
-                 , UserGroupAccounts.Model
-                 , UserGroupAccounts.Tables
-                 , UserGroupAccounts.UserGroupAccountsControl
-                 , UserGroupAccounts.UserGroupAccountsView
                  , Util.Actor
                  , Util.CSVUtil
                  , Util.HasSomeUserInfo
-                 , Util.MonadUtils
                  , Util.ImageUtil
+                 , Util.MonadUtils
                  , Util.PDFUtil
                  , Util.QRCode
-                 , Util.SignatoryLinkUtils
-                 , Util.SMSLinkShortening
-                 , Util.ZipUtil
                  , Utils.Color
                  , Utils.Directory
                  , Utils.Either
@@ -570,16 +614,19 @@ Library
                  , Utils.Exception
                  , Utils.Font
                  , Utils.HTTP
-                 , Utils.IO
+                 , Util.SignatoryLinkUtils
                  , Utils.Image
+                 , Utils.IO
                  , Utils.List
                  , Utils.Monad
                  , Utils.Monoid
+                 , Util.SMSLinkShortening
                  , Utils.Network
                  , Utils.Prelude
                  , Utils.Read
                  , Utils.String
                  , Utils.TH
+                 , Util.ZipUtil
                  , Version
                  , VersionTH
 
@@ -588,6 +635,8 @@ Library
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , kontrakcja-appdir
+               , authentication
+               , flow
                , AES
                , DRBG
                , Decimal
@@ -595,6 +644,7 @@ Library
                , HTTP
                , QuickCheck
                , aeson
+               , aeson-casing
                , amazonka
                , amazonka-core
                , amazonka-kinesis
@@ -609,6 +659,7 @@ Library
                , conduit
                , consumers
                , containers
+               , cookie
                , crypto-rng
                , cryptonite
                , cryptostore
@@ -674,6 +725,13 @@ Library
                , scientific
                , scrypt
                , semigroups
+               , servant
+               , servant-auth
+               , servant-checked-exceptions
+               , servant-client
+               , servant-client-core
+               , servant-errors
+               , servant-server
                , soap
                , split
                , spreadsheet
@@ -695,6 +753,9 @@ Library
                , utf8-string
                , uuid
                , vector
+               , warp
+               , wai
+               , wai-log
                , x509
                , xml-conduit
                , xml-conduit-writer
@@ -713,8 +774,7 @@ Executable kontrakcja-server
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Main-Is: Main.hs
-  GHC-options: -main-is Main
+  Main-Is: KontrakcjaServerMain.hs
 
   Build-depends: base-noprelude
                , kontrakcja-prelude
@@ -726,13 +786,15 @@ Executable kontrakcja-server
                , crypto-rng
                , curl
                , directory
-               , filepath
-               , hpqtypes-extras
                , exceptions
+               , filepath
+               , flow
                , happstack-server
                , happstack-static-routing
                , hedis
                , hostname
+               , hpqtypes
+               , hpqtypes-extras
                , lifted-base
                , log-base
                , text
@@ -758,131 +820,36 @@ Executable cron
                , data-default
                , exceptions
                , filepath
+               , hedis
                , hostname
                , hpqtypes
                , hpqtypes-extras
-               , hedis
-               , log-base
                , http-client
                , http-client-tls
                , http-conduit
+               , log-base
                , monad-control
                , mtl
                , text
-               , time
                , transformers-base
                , unjson
 
-  Main-is:       Cron.hs
-  GHC-options:   -main-is Cron
+  Main-is:       CronMain.hs
 
 Executable kontrakcja-migrate
   import: common-stanza
 
-  Hs-source-dirs: backend/cron/schema
-                  backend/mailer/schema
-                  backend/messenger/schema
-                  backend/migrate/inc backend/migrate/src
-                  backend/misc/schema backend/misc/src
-                  backend/server/schema
+  Hs-source-dirs: backend/migrate/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Main-is: AppDBMain.hs
-  GHC-options: -main-is AppDBMain
-  Other-Modules: AccessControl.Tables
-                 AccessControl.Migrations
-                 Amazon.Migrations
-                 AppDBConfig
-                 AppDBMigrations
-                 AppDBTables
-                 Attachment.Tables
-                 BrandedDomain.Tables
-                 BrandedDomain.Migrations
-                 Chargeable.Migrations
-                 Chargeable.Tables
-                 Company.Migrations
-                 UserGroupAccounts.Tables
-                 UserGroupAccounts.Migrations
-                 Configuration
-                 Cron.Migrations
-                 Cron.Tables
-                 DB
-                 DB.Derive
-                 DB.PostgreSQL
-                 DB.Query
-                 DB.SQLFunction
-                 DB.SQLTrigger
-                 DB.Utils
-                 Doc.API.Callback.Tables
-                 Doc.AutomaticReminder.Tables
-                 Doc.Extending.Migrations
-                 Doc.Extending.Tables
-                 Doc.Functions
-                 Doc.Migrations
-                 Doc.Trigger
-                 Doc.SMSPin.Migrations
-                 Doc.SMSPin.Tables
-                 Doc.Sealing.Tables
-                 Doc.Signing.Migrations
-                 Doc.Signing.Tables
-                 Doc.Tables
-                 Doc.Tokens.Tables
-                 Folder.Migrations
-                 Folder.Tables
-                 EID.Authentication.Migrations
-                 EID.Authentication.Tables
-                 EID.CGI.GRP.Transaction.Tables
-                 EID.Nets.Migrations
-                 EID.Nets.Tables
-                 EID.Signature.Migrations
-                 EID.Signature.Tables
-                 EID.EIDService.Migrations
-                 EID.EIDService.Tables
-                 EvidenceLog.Tables
-                 FeatureFlags.Migrations
-                 FeatureFlags.Tables
-                 File.Migrations
-                 File.Tables
-                 UserGroup.Migrations
-                 UserGroup.Tables
-                 HostClock.Tables
-                 Log.Configuration
-                 Log.Migrations
-                 Log.Tables
-                 Mails.FromKontra.Migrations
-                 Mails.FromKontra.Tables
-                 Mails.Migrations
-                 Mails.Tables
-                 MinutesTime
-                 OAuth.Tables
-                 Partner.Migrations
-                 SMS.FromKontra.Migrations
-                 SMS.FromKontra.Tables
-                 SMS.Migrations
-                 SMS.Tables
-                 Session.Tables
-                 Tag.Tables
-                 Theme.Migrations
-                 Theme.Tables
-                 ThirdPartyStats.Migrations
-                 ThirdPartyStats.Tables
-                 User.APILog.Migrations
-                 User.APILog.Tables
-                 User.CallbackScheme.Tables
-                 User.CallbackScheme.Migrations
-                 User.EmailChangeRequest.Tables
-                 User.History.Migrations
-                 User.History.Tables
-                 User.Migrations
-                 User.PasswordReminder.Tables
-                 User.Tables
-                 User.UserAccountRequest.Tables
-                 Utils.TH
+  Main-is: KontrakcjaMigrateMain.hs
+  Other-Modules: AppDBConfig
 
   Build-depends: base-noprelude
+               , kontrakcja
                , kontrakcja-appdir
                , kontrakcja-prelude
                , DRBG
@@ -932,81 +899,32 @@ Executable kontrakcja-migrate
 Executable mailing-server
   import: common-stanza
 
-  Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
-                  backend/misc/schema backend/misc/src backend/lib
+  Hs-source-dirs: backend/mailer/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Main-is: MailingServer.hs
-  GHC-options: -main-is MailingServer
-  Other-Modules: AddressUtils
+  Main-is: MailingServerMain.hs
+  Other-Modules:
+                 AddressUtils
                  Assembler
-                 Configuration
-                 Control.Monad.Trans.Control.Util
-                 Control.Monad.Trans.Instances
-                 Crypto
-                 Data.ByteString.Utils
-                 DB
-                 DB.Derive
-                 DB.PostgreSQL
-                 DB.Query
-                 DB.Utils
-                 Database.Redis.Cache
-                 Database.Redis.Configuration
-                 Database.Redis.Helpers
-                 Doc.DocumentID
-                 Doc.SignatoryLinkID
-                 EventStream.Class
-                 File.Conditions
-                 File.File
-                 File.FileID
-                 File.Model
-                 File.Storage
-                 FileStorage
-                 FileStorage.Amazon
-                 FileStorage.Amazon.Config
-                 FileStorage.Amazon.S3Env
-                 FileStorage.Class
-                 FileStorage.RedisCache
                  Handlers
-                 Happstack.Fields
-                 Happstack.Server.Instances
-                 Happstack.Server.ReqHandler
                  HtmlToTxt
-                 Log.Configuration
-                 Log.Identifier
-                 Log.Migrations
-                 Log.Tables
-                 Log.Utils
-                 Log.Amazon
-                 MagicHash
-                 MailGun
-                 MailJet
                  Mailer
+                 MailGun
                  MailingServerConf
-                 Mails.KontraInfoForMail
-                 Mails.Types
-                 Mails.Model
-                 Mails.Tables
-                 MemCache
-                 MinutesTime
-                 Monitoring
-                 SendGrid
+                 MailJet
                  Sender
+                 SendGrid
                  SocketLabs
-                 Text.JSON.Convert
-                 Utils.Exception
-                 Utils.IO
-                 Utils.List
-                 Utils.Network
-                 Utils.Read
-                 Utils.TH
+
 
   Build-depends: base-noprelude
+               , kontrakcja
                , kontrakcja-appdir
                , kontrakcja-prelude
+               , authentication
                , AES
                , DRBG
                , HTTP
@@ -1082,50 +1000,22 @@ Executable mailing-server
 Executable messenger-server
   import: common-stanza
 
-  Hs-source-dirs: backend/messenger/inc backend/messenger/schema
-                  backend/messenger/src
-                  backend/misc/schema backend/misc/src
+  Hs-source-dirs: backend/messenger/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Main-is: MessengerServer.hs
-  GHC-options: -main-is MessengerServer
-  Other-Modules: Configuration
-                 Control.Monad.Trans.Control.Util
-                 Control.Monad.Trans.Instances
-                 DB
-                 DB.Derive
-                 DB.PostgreSQL
-                 DB.Query
-                 DB.Utils
-                 Handlers
-                 Happstack.Fields
-                 Happstack.Server.Instances
-                 Happstack.Server.ReqHandler
-                 Log.Configuration
-                 Log.Identifier
-                 Log.Migrations
-                 Log.Tables
-                 Log.Utils
-                 Mblox
+  Main-is: MessengerServerMain.hs
+  Other-Modules: Mblox
                  Messenger
                  MessengerServerConf
-                 MinutesTime
-                 Monitoring
-                 SMS.Types
-                 SMS.Model
-                 SMS.Tables
+                 Handlers
                  Sender
                  TeliaCallGuide
-                 Utils.Enum
-                 Utils.IO
-                 Utils.List
-                 Utils.Network
-                 Utils.TH
 
   Build-depends: base-noprelude
+               , kontrakcja
                , kontrakcja-appdir
                , kontrakcja-prelude
                , DRBG
@@ -1191,55 +1081,33 @@ Test-suite kontrakcja-test
   import: common-stanza
 
   Type:           exitcode-stdio-1.0
-  Hs-source-dirs: backend/cron/schema
-                  backend/cron/src
-                  backend/mailer/schema
-                  backend/messenger/schema
-                  backend/migrate/inc
-                  backend/misc/schema
-                  backend/server/schema
-                  backend/test/src
+  Hs-source-dirs: backend/test/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   Main-is:       TestMain.hs
-  GHC-options: -main-is TestMain
   Other-Modules: AccessControl.APITest
                  AccessControl.EIDTest
                  AccessControl.RoleTest
-                 AccessControl.Migrations
-                 AccessControl.Tables
                  AccountInfoTest
                  AdministrationTest
-                 Amazon.Migrations
-                 AppDBMigrations
-                 AppDBTables
                  ArchiveTest
                  Attachment.APITest
-                 Attachment.Tables
-                 BrandedDomain.Tables
-                 BrandedDomain.Migrations
                  BrandedDomainTest
                  CSSGenerationTest
                  CSVUtilTest
-                 Chargeable.Migrations
-                 Chargeable.Tables
                  ChargeableTest
-                 Company.Migrations
                  CronMonthlyInvoiceTest
-                 UserGroupAccounts.Tables
-                 UserGroupAccounts.Migrations
                  UserGroupAccountsTest
                  CompanyBrandingTest
                  CompanyControlTest
                  ConfigTests
-                 Cron.Migrations
-                 Cron.Tables
                  CronStatsTest
+                 OAuth
+                 Doc.DBActions
                  Doc.AccessControlTest
-                 Doc.API.Callback.Tables
                  Doc.API.V1.CallsTest
                  Doc.API.V1.ForwardsCompatibilityTest
                  Doc.API.V1.JSONTest
@@ -1254,59 +1122,37 @@ Test-suite kontrakcja-test
                  Doc.API.V2.JSONTest
                  Doc.API.V2.Mock.MockDocInternal
                  Doc.API.V2.Mock.TestUtils
-                 Doc.AutomaticReminder.Tables
-                 Doc.DBActions
-                 Doc.Extending.Migrations
-                 Doc.Extending.Tables
-                 Doc.Functions
-                 Doc.Migrations
-                 Doc.SMSPin.Migrations
-                 Doc.SMSPin.Tables
-                 Doc.Sealing.Tables
-                 Doc.Signing.Migrations
-                 Doc.Signing.Tables
-                 Doc.Tables
                  Doc.TestInvariants
-                 Doc.Tokens.Tables
-                 Doc.Trigger
                  DocControlTest
                  DocStateTest
                  Folder.FolderTest
-                 Folder.Migrations
-                 Folder.Tables
                  DumpEvidenceTexts
-                 EID.Authentication.Migrations
-                 EID.Authentication.Tables
-                 EID.CGI.GRP.Transaction.Tables
-                 EID.Nets.Migrations
-                 EID.Nets.Tables
-                 EID.Signature.Migrations
-                 EID.Signature.Tables
-                 EID.EIDService.Migrations
-                 EID.EIDService.Tables
                  EID.EIDService.CommunicationTest
                  ESignatureTest
                  EvidenceAttachmentsTest
-                 EvidenceLog.Tables
                  EvidenceLogTest
-                 FeatureFlags.Migrations
-                 FeatureFlags.Tables
                  FeatureFlagsTest
-                 File.Migrations
-                 File.Tables
                  FileTest
                  FlashMessages
+                 Flow.AuthenticationTest
+                 Flow.AggregatorTest
+                 Flow.DocumentCheckerTest
+                 Flow.HighTongueTest
+                 Flow.IntegrationTest
+                 Flow.MachinizeTest
+                 Flow.OrphanTestInstances
+                 Flow.TestUtil
+                 Flow.TransducerTest
+                 Flow.VariableCollectorTest
+                 FlowTests
                  Folder.APITest
                  UserGroup.APITest
                  UserGroup.UserGroupTest
-                 UserGroup.Migrations
-                 UserGroup.Tables
                  Generators.DocumentGenerators
                  Generators.DocumentGeneratorsTest
                  Generators.OccurenceControl
                  Generators.OccurenceControlTest
                  GTWorkflowTest
-                 HostClock.Tables
                  HtmlTest
                  InputValidationTest
                  JSONUtilTest
@@ -1315,32 +1161,19 @@ Test-suite kontrakcja-test
                  LogTest
                  LoginTest
                  MailModelTest
-                 Mails.FromKontra.Migrations
-                 Mails.FromKontra.Tables
-                 Mails.Migrations
-                 Mails.Tables
                  MailsTest
                  Monitor.APITest
                  NetsXMLTest
-                 OAuth
-                 OAuth.Tables
                  PadesTest
                  PadApplication.APITest
                  Partner.APITest
-                 Partner.Migrations
                  QRCodeTest
                  ReferenceScreenshotsTest
-                 SMS.FromKontra.Migrations
-                 SMS.FromKontra.Tables
-                 SMS.Migrations
-                 SMS.Tables
                  SMSLinkShorteningTest
-                 Session.Tables
                  SessionsTest
                  SignupTest
                  SSO.GuardsTest
                  SSO.SAMLTest
-                 Tag.Tables
                  TestConf
                  TestCron
                  TestEnvSt
@@ -1349,23 +1182,8 @@ Test-suite kontrakcja-test
                  TestKontra
                  TestingUtil
                  TestingUtil.JSON
-                 Theme.Migrations
-                 Theme.Tables
                  ThirdPartyStats
-                 ThirdPartyStats.Migrations
-                 ThirdPartyStats.Tables
-                 User.APILog.Migrations
-                 User.APILog.Tables
                  User.APITest
-                 User.CallbackScheme.Tables
-                 User.CallbackScheme.Migrations
-                 User.EmailChangeRequest.Tables
-                 User.History.Migrations
-                 User.History.Tables
-                 User.Migrations
-                 User.PasswordReminder.Tables
-                 User.Tables
-                 User.UserAccountRequest.Tables
                  UserHistoryTest
                  UserPasswordTest
                  UserStateTest
@@ -1374,6 +1192,8 @@ Test-suite kontrakcja-test
                , kontrakcja-prelude
                , kontrakcja-appdir
                , kontrakcja
+               , authentication
+               , flow
                , Decimal
                , HStringTemplate
                , HUnit
@@ -1394,6 +1214,7 @@ Test-suite kontrakcja-test
                , cryptostore
                , data-default
                , directory
+               , either
                , exceptions
                , extra
                , optics
@@ -1418,13 +1239,16 @@ Test-suite kontrakcja-test
                , mtl
                , network-uri
                , one-time-password
-               , quickcheck-unicode
+               , pretty-simple
                , quickcheck-instances
+               , quickcheck-unicode
+               , raw-strings-qq
                , regex-tdfa
                , sandi
                , scientific
                , scrypt
                , semigroups
+               , servant-client
                , split
                , stm
                , tagsoup
@@ -1443,18 +1267,19 @@ Test-suite kontrakcja-test
                , vector
                , x509
                , xml-conduit
+               , yaml
 
 Executable config-checker
   import: common-stanza
 
-  Hs-source-dirs: backend/config-checker,
+  Hs-source-dirs: backend/config-checker/src,
                   backend/cron/inc,
                   backend/mailer/src,
                   backend/messenger/src
 
   GHC-options: -Werror -Wall
 
-  Main-is: ConfigChecker.hs
+  Main-is: ConfigCheckerMain.hs
   Other-modules: CronConf
                  MailingServerConf
                  MessengerServerConf
@@ -1473,22 +1298,16 @@ Executable config-checker
 Executable localization
   import: common-stanza
 
-  Hs-source-dirs: backend/lib
-                  backend/misc/src
-                  localization/src
+  Hs-source-dirs: localization/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   Main-Is: LocalizationMain.hs
-  GHC-options: -main-is LocalizationMain
-  Other-Modules: Templates
-                 User.Lang
-                 Utils.Enum
-                 Version
 
   Build-depends: base-noprelude
+               , kontrakcja
                , kontrakcja-prelude
                , kontrakcja-appdir
                , base16-bytestring
@@ -1514,14 +1333,13 @@ Executable localization
 Executable routinglist
   import: common-stanza
 
-  Hs-source-dirs: backend/routinglist
+  Hs-source-dirs: backend/routinglist/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Main-Is: RoutingListMain.hs
-  GHC-options: -main-is RoutingListMain
+  Main-Is: RoutinglistMain.hs
 
   Build-depends: aeson
                , base-noprelude
@@ -1537,8 +1355,8 @@ Executable routinglist
                , unordered-containers
 
 Executable transifex
-  Hs-source-dirs:   transifex
-  Main-is:          Main.hs
+  Hs-source-dirs:   transifex/src
+  Main-is:          TransifexMain.hs
   Other-Modules:    Transifex.Synch,
                     Transifex.Utils
   GHC-Options:      -Wall -Werror
@@ -1555,7 +1373,7 @@ Executable transifex
 Executable detect_old_localizations
   Hs-source-dirs:   scripts/detect_old_localizations,
                     scripts/scripts-prelude
-  Main-is:          detect_old_localizations.hs
+  Main-is:          DetectOldLocalizationsMain.hs
   Other-Modules:    ScriptsPrelude
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
@@ -1570,8 +1388,8 @@ Executable detect_old_localizations
 Executable detect_old_templates
   Hs-source-dirs:   scripts/detect_old_templates,
                     scripts/scripts-prelude
-                    transifex
-  Main-is:          detect_old_templates.hs
+                    transifex/src/
+  Main-is:          DetectOldTemplatesMain.hs
   Other-Modules:    ScriptsPrelude
                     Transifex.Synch
                     Transifex.Utils
@@ -1593,7 +1411,7 @@ Executable detect_old_templates
 
 Executable sort_imports
   Hs-source-dirs:   scripts/sort_imports
-  Main-is:          sort_imports.hs
+  Main-is:          SortImportsMain.hs
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
                     attoparsec,
@@ -1603,3 +1421,31 @@ Executable sort_imports
                     kontrakcja-appdir,
                     text
   Default-Language: Haskell2010
+
+Library authentication
+  import: common-stanza
+
+  Hs-Source-Dirs: backend/authentication/src
+
+  GHC-Options: -Werror -Wall
+  GHC-Prof-Options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  Exposed-Modules:    Auth.MagicHash
+                    , Auth.Model
+                    , Auth.OAuth
+                    , Auth.Session
+                    , Auth.Session.SessionID
+                    , Auth.Utils
+  Build-Depends:      base-noprelude
+                    , kontrakcja-prelude
+                    , bytestring
+                    , cond
+                    , crypto-rng
+                    , exceptions
+                    , happstack-server
+                    , hpqtypes
+                    , monad-time
+                    , text
+                    , text-show
+                    , unjson
+                    , HTTP

@@ -2,7 +2,10 @@
 
 set -eux
 
-./shake.sh all
+if [ ! -f supervisor/supervisor.sock ]
+then
+  supervisord
+fi
 
 supervisorctl -c supervisord.conf start postgres
 

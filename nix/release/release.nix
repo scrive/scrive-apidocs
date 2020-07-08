@@ -9,6 +9,9 @@ let
   kontrakcja-nix-src = import ../source/kontrakcja-nix.nix
     { inherit useLocal; };
 
+  pdftools-src = import ../source/pdftools.nix
+    { inherit useLocal; };
+
   nixpkgs-src = import ../source/nixpkgs.nix
     { inherit useLocal; };
 
@@ -29,22 +32,34 @@ let
   };
 
   dev-shell = import ../packages/kontrakcja-dev-shell.nix {
-    inherit nixpkgs extra-run-deps
-      kontrakcja-nix-src nixpkgs-src
-      workspaceRoot localeLang;
-
-    haskellPackages = haskellPackages;
+    inherit nixpkgs
+      kontrakcja-nix-src
+      pdftools-src
+      nixpkgs-src
+      extra-run-deps
+      workspaceRoot
+      localeLang
+      haskellPackages
+    ;
   };
 
   dev-shell-optimized = import ../packages/kontrakcja-dev-shell.nix {
-    inherit nixpkgs kontrakcja-nix-src extra-run-deps
-      nixpkgs-src workspaceRoot localeLang;
+    inherit nixpkgs
+      kontrakcja-nix-src
+      pdftools-src
+      nixpkgs-src
+      extra-run-deps
+      workspaceRoot
+      localeLang
+    ;
 
     haskellPackages = prodHaskellPackages;
   };
 
   dev-release = import ../packages/kontrakcja-dev-release.nix {
-    inherit nixpkgs haskellPackages nixpkgs-src;
+    inherit nixpkgs nixpkgs-src;
+
+    haskellPackages = prodHaskellPackages;
   };
 
   production-shell = import ../packages/kontrakcja-production-shell.nix {

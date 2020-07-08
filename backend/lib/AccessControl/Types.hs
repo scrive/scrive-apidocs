@@ -169,6 +169,8 @@ data AccessResource
   | FolderR FolderID
   -- Template in Folder or any subfolder
   | SharedTemplateR FolderID
+  -- Flow templates in a folder or any subfolder
+  | FlowTemplateR FolderID
   -- Document after starting (not Draft, not Template) in Folderor any subfolder
   | DocumentAfterPreparationR FolderID
   -- Assignee of this role can use UserGroup (but not subgroups) for EID purposes (Display name and charging)
@@ -186,6 +188,7 @@ instance Show AccessResource where
   show (DocumentInFolderR         _) = "document"
   show (FolderR                   _) = "folder"
   show (SharedTemplateR           _) = "shared_template"
+  show (FlowTemplateR             _) = "flow_template"
   show (DocumentAfterPreparationR _) = "document_after_preparation"
   show (EidIdentityR              _) = "eid_identity"
 

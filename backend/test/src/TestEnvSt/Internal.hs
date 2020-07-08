@@ -38,6 +38,7 @@ data TestEnvSt = TestEnvSt
   , cronDBConfig       :: !Text
   , cronMonthlyInvoice :: Maybe MonthlyInvoiceConf
   , testDurations      :: MVar [(NominalDiffTime, String)]
+  , flowPort :: Int
   }
 
 data TestEnvStRW = TestEnvStRW

@@ -87,8 +87,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
   return (tid, turl, EIDServiceTransactionStatusNew)
 
 data OnfidoEIDServiceCompletionData = OnfidoEIDServiceCompletionData
-  { eidonfidoChecksClear :: !Bool
-  , eidonfidoFirstName   :: !Text
+  { eidonfidoFirstName   :: !Text
   , eidonfidoLastName    :: !Text
   , eidonfidoDateOfBirth :: !Text
   , eidonfidoMethod      :: !OnfidoMethod
@@ -101,10 +100,6 @@ instance FromJSON OnfidoEIDServiceCompletionData where
       >>= withObject "object" (.: "auth")
       >>= withObject "object" (.: toEIDServiceProviderName provider)
       >>= withObject "object" (.: "report")
-    checksClear <-
-      withObject "object" (.: "providerInfo") outer
-      >>= withObject "object" (.: eidServiceFieldName)
-      >>= withObject "object" (.: "checksClear")
     withObject "object" (.: "providerInfo") outer
       >>= withObject "object" (.: eidServiceFieldName)
       >>= withObject "object" (.: "completionData")
@@ -116,7 +111,6 @@ instance FromJSON OnfidoEIDServiceCompletionData where
               lastname  <- o .: "lastName"
               dob       <- o .: "dateOfBirth"
               return OnfidoEIDServiceCompletionData { eidonfidoMethod      = onfidoMethod
-                                                    , eidonfidoChecksClear = checksClear
                                                     , eidonfidoFirstName   = firstname
                                                     , eidonfidoLastName    = lastname
                                                     , eidonfidoDateOfBirth = dob
@@ -137,14 +131,7 @@ completeEIDServiceSignTransaction conf sl = do
   case mtrans of
     Nothing -> return False
     Just trans ->
-      return $ isSuccessFullTransaction trans && isJust (validateCompletionData trans)
+      return $ isSuccessFullTransaction trans && isJust (estRespCompletionData trans)
   where
     isSuccessFullTransaction trans =
       estRespStatus trans == EIDServiceTransactionStatusCompleteAndSuccess
-
-validateCompletionData
-  :: EIDServiceTransactionResponse OnfidoEIDServiceCompletionData
-  -> Maybe OnfidoEIDServiceCompletionData
-validateCompletionData trans = case estRespCompletionData trans of
-  Nothing -> Nothing
-  Just cd -> if eidonfidoChecksClear cd then Just cd else Nothing

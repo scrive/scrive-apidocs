@@ -17,11 +17,11 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
+import Auth.OAuth
 import DB
 import Happstack.Fields
 import Kontra
 import OAuth.Model
-import OAuth.Parse
 import User.Model.Query
 import User.Types.User
 import Util.Actor
@@ -36,6 +36,14 @@ getAuthorizationHeader = do
       case BS.toString <$> listToMaybe auths of
         Nothing   -> return $ Just []
         Just auth -> return . Just $ splitAuthorization (T.pack auth)
+
+readPrivileges :: Text -> Maybe [APIPrivilege]
+readPrivileges s = privs (T.splitOn "+" s) []
+  where
+    privs []       a = Just a
+    privs (p : pp) a = case maybeRead p of
+      Just priv -> privs pp (priv : a)
+      Nothing   -> Nothing
 
 getTempCredRequest :: Kontrakcja m => m (Either Text OAuthTempCredRequest)
 getTempCredRequest = do
@@ -138,47 +146,8 @@ getTokenRequest = do
           , trVerifier   = fromJust mverifier
           }
 
--- Read authorization header for oauth. Returns Nothing if 'authorization' header is missing.
 getAuthorization :: Kontrakcja m => m (Maybe (Either Text OAuthAuthorization))
-getAuthorization = do
-  eparams <- getAuthorizationHeader
-  case eparams of
-    Nothing     -> return Nothing
-    Just params -> do
-      let msigtype   = lookupAndRead "oauth_signature_method" params
-          mapisecret = splitSignature =<< lookupAndRead "oauth_signature" params
-          mapitoken  = lookupAndReadString "oauth_consumer_key" params
-          macctoken  = lookupAndReadString "oauth_token" params
-          errors     = T.intercalate
-            "; "
-            (  ["oauth_signature_method must be 'PLAINTEXT'"]
-            <| Just "PLAINTEXT"
-            /= msigtype
-            |> []
-            <> ["oauth_signature was missing or in bad format"]
-            <| isNothing mapisecret
-            |> []
-            <> ["oauth_signature api secret (first param) is missing"]
-            <| isNothing (fst =<< mapisecret)
-            |> []
-            <> ["oauth_signature token secret (second param) is missing"]
-            <| isNothing (snd =<< mapisecret)
-            |> []
-            <> ["oauth_consumer_key is missing or is invalid"]
-            <| isNothing mapitoken
-            |> []
-            <> ["oauth_token is required"]
-            <| isNothing macctoken
-            |> []
-            )
-      if not $ T.null errors
-        then return . Just $ Left errors
-        else return . Just . Right $ OAuthAuthorization
-          { oaAPIToken     = fromJust mapitoken
-          , oaAPISecret    = fromJust . fst $ fromJust mapisecret
-          , oaAccessToken  = fromJust macctoken
-          , oaAccessSecret = fromJust . snd $ fromJust mapisecret
-          }
+getAuthorization = fmap parseParams <$> getAuthorizationHeader
 
 getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either Text (User, Actor)))
 getOAuthUser privs = do

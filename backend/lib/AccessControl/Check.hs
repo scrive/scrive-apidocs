@@ -76,6 +76,7 @@ alternativePermissionCondition perm = case permResource perm of
   DocumentInFolderR         fid  -> addForAllParentsFid DocumentInFolderR fid
   FolderR                   fid  -> addForAllParentsFid FolderR fid
   SharedTemplateR           fid  -> addForAllParentsFid SharedTemplateR fid
+  FlowTemplateR             fid  -> addForAllParentsFid FlowTemplateR fid
   DocumentAfterPreparationR fid  -> addForAllParentsFid DocumentAfterPreparationR fid
   EidIdentityR              ugid -> addForAllParentsUgid EidIdentityR ugid
   where
@@ -149,9 +150,17 @@ hasPermissions (FolderAdminAR fid) =
        , action <- crudActions
        ]
 
+    <>
+  -- can perform and grant CRUD on flow templates in the folder
+       [ Permission kind action $ FlowTemplateR fid
+       | kind <- [PermCanDo, PermCanGrant]
+       , action <- crudActions
+       ]
+
 hasPermissions (FolderUserAR fid) =
   -- can read the folder and cannot grant the permission to anyone else
   [Permission PermCanDo ReadA $ FolderR fid]
+    <> [ Permission PermCanDo action $ FlowTemplateR fid | action <- crudActions ]
     <>
   -- can CRUD documents in the folder, but not grant it to anyone else
        [ Permission PermCanDo action $ DocumentInFolderR fid | action <- crudActions ]
@@ -168,7 +177,6 @@ docResources doc =
         | isDocumentShared doc -> [DocumentInFolderR folderId, SharedTemplateR folderId]
         | isPreparation doc -> [DocumentInFolderR folderId]
         | otherwise -> [DocumentInFolderR folderId, DocumentAfterPreparationR folderId]
-
 
 accessControlDocCheck :: AccessAction -> [AccessRole] -> Document -> Bool
 accessControlDocCheck action allUserRoles doc =
