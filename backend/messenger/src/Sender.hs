@@ -68,6 +68,7 @@ sendSMSHelper MbloxSender {..} sm@ShortMessage {..} = localData [identifier smID
         value "to"              [clearmsisdn]
         value "body"            smBody
         value "delivery_report" ("per_recipient" :: String)
+        forM_ mbCallbackURL $ value "callback_url"
   (success, resp) <- curlSMSSender
     [ "-X"
     , "POST"
