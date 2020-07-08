@@ -59,6 +59,8 @@ data SenderConfig = MbloxSender
   { mbToken          :: !String
   , mbURL            :: !String
   -- ^ "https://api.mblox.com/xms/v1/{username}/batches"
+  , mbCallbackURL    :: !(Maybe String)
+  -- ^ "https://scrive.com/sms/mblox"
   } | TeliaCallGuideSender
   { tcgSenderUrl      :: !String
   -- ^ "https://sms.ace.teliacompany.com/smsplus/smsextended"
@@ -74,10 +76,10 @@ instance Unjson SenderConfig where
     "type"
     [ ( "mblox"
       , $(isConstr 'MbloxSender)
-      , MbloxSender <$> field "token" mbToken "Mblox api token" <*> field
-        "url"
-        mbURL
-        "Mblox url, with username embedded"
+      , MbloxSender
+      <$> field "token" mbToken "Mblox api token"
+      <*> field "url"   mbURL   "Mblox url, with username embedded"
+      <*> fieldOpt "callback_url" mbCallbackURL "Scrive mblox callback url"
       )
     , ( "telia_callguide"
       , $(isConstr 'TeliaCallGuideSender)
