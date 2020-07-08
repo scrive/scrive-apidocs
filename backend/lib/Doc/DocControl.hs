@@ -33,6 +33,7 @@ module Doc.DocControl (
     , handleToStartShow
     , handleNewDocumentWithBPID
     , checkFileAccess
+    , checkBeforeAddingDocumentSession
 ) where
 
 import Control.Conditional (unlessM, whenM)
@@ -70,10 +71,7 @@ import DB.TimeZoneName
 import Doc.Action
 import Doc.API.Callback.Model
 import Doc.API.V2.DocumentUpdateUtils
-import Doc.API.V2.Guards
-  ( guardDocumentStatus, guardGetSignatoryFromIdForDocument
-  , guardThatDocumentCanBeStarted
-  )
+import Doc.API.V2.Guards (guardDocumentStatus, guardThatDocumentCanBeStarted)
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocMails
@@ -304,21 +302,38 @@ handleSignShowSaveMagicHash did slid mh =
     action = do
       let getDocM = dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
       withDocumentM getDocM $ do
-        guardThatDocumentIsReadableBySignatories =<< theDocument
-        sl <- guardGetSignatoryFromIdForDocument slid
-        if isJust (signatorylinkdeleted sl) || isJust (signatorylinkreallydeleted sl)
-          then respondLinkInvalid
-          else do
-            let authorId doc = fromJust $ getAuthorUserId doc
+        doc <- theDocument
+        case checkBeforeAddingDocumentSession doc slid of
+          Just (DocumentNotAccessibleBySignatories _) -> respondLinkInvalid
+          Just (SignatoryLinkNotFound _) ->
+            apiError $ signatoryLinkForDocumentNotFound (documentid doc) slid
+          Just (SignatoryLinkDeleted _) -> respondLinkInvalid
+          Nothing -> do
+            let authorId = fromJust $ getAuthorUserId doc
             sid <-
-              theDocument
-              >>= (return . authorId)
-              >>= getDocumentSessionTimeoutSecs
-              >>= getNonTempSessionIDWithTimeout
+              getDocumentSessionTimeoutSecs authorId >>= getNonTempSessionIDWithTimeout
             dbUpdate $ AddDocumentSession sid slid
 
-            -- Redirect to propper page
+            -- Redirect to proper page
             sendRedirect $ LinkSignDocNoMagicHash did slid
+
+data AddDocumentSessionError
+  = DocumentNotAccessibleBySignatories DocumentID
+  | SignatoryLinkNotFound SignatoryLinkID
+  | SignatoryLinkDeleted SignatoryLinkID
+  deriving Show
+
+checkBeforeAddingDocumentSession
+  :: Document -> SignatoryLinkID -> Maybe AddDocumentSessionError
+checkBeforeAddingDocumentSession doc slid = if (not . isAccessibleBySignatories) doc
+  then Just . DocumentNotAccessibleBySignatories $ documentid doc
+  else case sigLinkDeleted <$> getSigLinkFor slid doc of
+    Just True  -> Just $ SignatoryLinkDeleted slid
+    Just False -> Nothing
+    Nothing    -> Just $ SignatoryLinkNotFound slid
+  where
+    sigLinkDeleted sl =
+      isJust (signatorylinkdeleted sl) || isJust (signatorylinkreallydeleted sl)
 
 handleSignShowShortRedirect :: Kontrakcja m => T.Text -> m Response
 handleSignShowShortRedirect text = do

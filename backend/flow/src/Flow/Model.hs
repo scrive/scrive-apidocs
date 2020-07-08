@@ -9,6 +9,7 @@ module Flow.Model
     , insertFlowInstanceKeyValues
     , selectInstance
     , selectInstancesByUserID
+    , selectInstanceIdByDocumentId
     , selectInstanceKeyValues
     , selectDocumentIdsAssociatedWithSomeInstance
     , selectFullInstance
@@ -18,7 +19,7 @@ module Flow.Model
     , selectDocumentNameFromKV
     , insertInstanceSignatories
     , selectUserNameFromKV
-    , selectInstanceIdByDocumentId
+    , selectSignatoryIdsByInstanceUser
     )
   where
 
@@ -186,6 +187,7 @@ selectInstancesByUserID userId = do
     sqlWhereIsNULL "t.deleted"
   fetchMany fetchInstance
 
+-- Copy-paste from flow-document-events branch
 selectInstanceIdByDocumentId
   :: (MonadDB m, MonadThrow m) => DocumentID -> m (Maybe InstanceId)
 selectInstanceIdByDocumentId documentId = do
@@ -320,4 +322,12 @@ selectUserNameFromKV instanceId signatoryLinkId = do
     sqlWhereEq "signatory_id" signatoryLinkId
   fetchMaybe runIdentity
 
+selectSignatoryIdsByInstanceUser
+  :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m [SignatoryLinkID]
+selectSignatoryIdsByInstanceUser instanceId userName = do
+  runQuery_ . sqlSelect "flow_instance_signatories" $ do
+    sqlResult "signatory_id"
+    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "key"         userName
+  fetchMany runIdentity
 

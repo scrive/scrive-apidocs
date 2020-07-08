@@ -22,10 +22,12 @@ import AccessControl.Check
 import AccessControl.Types
 import Auth.MagicHash
 import Auth.Session
-import DB.Query
+import DB (dbQuery, dbUpdate)
+import Doc.DocControl (checkBeforeAddingDocumentSession)
 import Doc.DocumentID (DocumentID)
 import Doc.Model.Query
 import Doc.SignatoryLinkID
+import Doc.Tokens.Model
 import Doc.Types.Document
 import Flow.Aggregator as Aggregator
 import Flow.Api as Api hiding (documents)
@@ -362,6 +364,12 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
            , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
            )
 
+  -- TODO: We should only add doc sessions for documents that the participant can act on at
+  -- the current stage rather than all the documents that the participant is a signatory for.
+  -- It should be ok for now since we start all documents at once.
+  slids <- Model.selectSignatoryIdsByInstanceUser instanceId userName
+  mapM_ (addDocumentSession sessionId) slids
+
   -- The Flow user's access token has been verified so insert an "instance session"
   -- which is used for cookie authentication in subsequent calls.
   Model.upsertInstanceSession sessionId instanceId userName
@@ -375,6 +383,13 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
       readAuthCookies cookies
     redirectUrl = "/flow/overview/"
       <> T.intercalate "/" [toUrlPiece instanceId, toUrlPiece userName]
+    addDocumentSession sid slid = do
+      doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
+      case checkBeforeAddingDocumentSession doc slid of
+        Just err -> do
+          logInfo_ $ "Unable to add document session: " <> showt err
+          throwError $ err500 { errBody = "Error: Unable to add a document session." }
+        Nothing -> dbUpdate $ AddDocumentSession sid slid
 
 -- Instance overview page
 -- TODO: Implement the overview page
