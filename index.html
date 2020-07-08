@@ -2811,6 +2811,18 @@ not be used to identify signatories while document is a draft.</p>
 
 <p>Fetch a list of documents, with filtering and sorting options.</p>
 
+<p>Note that listing a large number of documents frequently is discouraged
+and in the future will be subject to API rate limiting.</p>
+
+<p>Under most circumstances it is better to use <a href="#callbacks">callbacks</a>.
+Once set up, your systems will be notified whenever a document
+undergoes an important state change.</p>
+
+<p>In the unlikely event that callbacks are insufficient for your integration
+and you do need to call the list API periodically please make your sure your polling strategy is smart.
+Do not poll more often than necessary, and if there are no changes between subsequent calls,
+use an <a href="https://en.wikipedia.org/wiki/Exponential_backoff">exponential backoff</a>.</p>
+
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
 <h3 id='parameters-12'>Parameters</h3>
 <table class="table-left-col-25">
