@@ -2,6 +2,7 @@
 module Flow.Server.Routes
     ( Routes
     , routesProxy
+    , pagesProxy
     )
   where
 
@@ -40,3 +41,6 @@ type Pages
                                                  , Header "Set-Cookie" SetCookie
                                                  ] NoContent)
        )
+
+pagesProxy :: Proxy Pages
+pagesProxy = Proxy

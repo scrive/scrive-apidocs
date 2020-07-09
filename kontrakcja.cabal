@@ -1220,6 +1220,7 @@ Test-suite kontrakcja-test
                , cond
                , consumers
                , containers
+               , cookie
                , crypto-rng
                , cryptonite
                , cryptostore
@@ -1239,6 +1240,7 @@ Test-suite kontrakcja-test
                , hsaml2
                , http-client
                , http-client-tls
+               , http-types
                , hxt
                , invariant
                , json

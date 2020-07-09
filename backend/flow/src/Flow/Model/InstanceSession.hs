@@ -3,6 +3,7 @@
 module Flow.Model.InstanceSession
     ( insertInstanceAccessToken
     , verifyInstanceAccessToken
+    , selectInstanceAccessTokens
     , upsertInstanceSession
     , selectInstanceSession
     )
@@ -24,6 +25,18 @@ insertInstanceAccessToken instanceId userName hash =
     sqlSet "instance_id" instanceId
     sqlSet "key"         userName
     sqlSet "hash"        hash
+
+selectInstanceAccessTokens
+  :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m [InstanceAccessToken]
+selectInstanceAccessTokens instanceId userName = do
+  runQuery_ . sqlSelect "flow_instance_access_tokens" $ do
+    sqlResult "id"
+    sqlResult "instance_id"
+    sqlResult "key"
+    sqlResult "hash"
+    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "key"         userName
+  fetchMany fetchInstanceAccessToken
 
 verifyInstanceAccessToken
   :: (MonadDB m, MonadThrow m)

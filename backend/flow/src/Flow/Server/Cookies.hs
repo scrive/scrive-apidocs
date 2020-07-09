@@ -75,3 +75,6 @@ addAuthCookieHeaders secure AuthCookies {..} =
 
 cookieDomain :: Maybe Host -> Text
 cookieDomain = fromMaybe "scrive.com"
+
+
+

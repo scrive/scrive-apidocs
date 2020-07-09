@@ -10,6 +10,7 @@ import Test.Framework
 import Text.RawString.QQ
 import qualified Data.Map as Map
 
+import Auth.Session
 import DB
 import Doc.Model.Update
 import Doc.Types.Document
@@ -28,7 +29,9 @@ import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Types.User
 import Util.Actor
+import qualified Auth.Model as AuthModel
 import qualified Flow.Model as Model
+import qualified Flow.Model.InstanceSession as Model
 
 tests :: TestEnvSt -> Test
 tests env = testGroup
@@ -44,7 +47,7 @@ testTemplateHappyCrud :: TestEnv ()
 testTemplateHappyCrud = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let ApiClient {..}     = mkApiClient (Left oauth) (Nothing, Nothing)
+  let ApiClient {..}     = mkApiClient (Left oauth)
 
   -- TODO nicer check
   let createTemplateData = CreateTemplate "name" "process"
@@ -77,22 +80,6 @@ addDocument user = addRandomDocument (rdaDefault user)
                      in  OneOf [[signatory]]
   }
 
-createInstance
-  :: ApiClient
-  -> Text
-  -> Process
-  -> InstanceKeyValues
-  -> TestEnv (Either ClientError StartTemplate)
-createInstance ApiClient {..} name process mapping = do
-  let createTemplateData = CreateTemplate name process
-  template1 <- assertRight "create template" . request $ createTemplate createTemplateData
-  let tid = id (template1 :: GetCreateTemplate)
-
-  void . assertRight "validate response" . request $ validateTemplate process
-  void . assertRight "commit template response" . request $ commitTemplate tid
-
-  request $ startTemplate tid mapping
-
 processZero :: Process
 processZero = Process [r|
 dsl-version: "1"
@@ -113,9 +100,11 @@ stages:
 
 testZeroToInstance :: TestEnv ()
 testZeroToInstance = do
-  user  <- instantiateRandomUser
-  oauth <- getToken (user ^. #id)
-  let ac@ApiClient {..} = mkApiClient (Left oauth) (Nothing, Nothing)
+  user             <- instantiateRandomUser
+  oauth            <- getToken (user ^. #id)
+  AuthCookies {..} <- AuthModel.insertNewSession "localhost"
+
+  let ac@ApiClient {..} = mkApiClient (Left oauth)
 
   doc1        <- addDocument user
   now         <- currentTime
@@ -141,11 +130,13 @@ testZeroToInstance = do
   instance2 <- assertRight "get instance" . request $ getInstance iid
   assertEqual "get after start" iid $ id (instance2 :: GetInstance)
 
-  -- TODO: Fix the test below (need to call instanceOverviewMagicHash first to get the auth cookies)
-  -- instanceView <- assertRight "view instance response" . request $ getInstanceView iid
-  -- assertEqual "view instance: id in response" iid $ id (instanceView :: GetInstanceView)
-
-  pure () -- Makes brittany happy
+  -- View instance as "signatory"
+  let ParticipantApiClient {..} =
+        mkParticipantApiClient (Just authCookieSession, Just authCookieXToken)
+  Model.upsertInstanceSession (cookieSessionID authCookieSession) iid "signatory"
+  commit
+  instanceView <- assertRight "view instance response" . request $ getInstanceView iid
+  assertEqual "view instance: id in response" iid $ id (instanceView :: GetInstanceView)
 
 processFailure :: Process
 processFailure = Process [r|
@@ -163,7 +154,7 @@ testInstanceFailure :: TestEnv ()
 testInstanceFailure = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let ac@ApiClient {..} = mkApiClient (Left oauth) (Nothing, Nothing)
+  let ac@ApiClient {..} = mkApiClient (Left oauth)
 
   doc1 <- addDocument user
   commit
@@ -201,7 +192,7 @@ testTemplateListEndpoint :: TestEnv ()
 testTemplateListEndpoint = do
   user  <- instantiateRandomUser
   oauth <- getToken $ user ^. #id
-  let ApiClient {..}     = mkApiClient (Left oauth) (Nothing, Nothing)
+  let ApiClient {..}     = mkApiClient (Left oauth)
       createTemplateData = CreateTemplate "name" "process"
 
   ts1 <- assertRight "template list endpoint works when no templates"
@@ -224,7 +215,7 @@ testInstanceListEndpoint :: TestEnv ()
 testInstanceListEndpoint = do
   user  <- instantiateRandomUser
   oauth <- getToken $ user ^. #id
-  let ApiClient {..}     = mkApiClient (Left oauth) (Nothing, Nothing)
+  let ApiClient {..}     = mkApiClient (Left oauth)
       createTemplateData = CreateTemplate "name" simpleProcess
 
   is1 <- assertRight "instance list endpoint works when no instances"

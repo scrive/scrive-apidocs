@@ -12,6 +12,7 @@ module Flow.Model.Types.Internal
     , FullInstance(..)
     , InstanceSession(..)
     , InstanceKeyValues(..)
+    , InstanceAccessToken(..)
     )
  where
 
@@ -22,6 +23,7 @@ import Data.Time.Clock
 import GHC.Generics (Generic)
 import Optics.TH
 
+import Auth.MagicHash
 import Auth.Session.SessionID
 import Doc.DocumentID
 import Flow.Id
@@ -119,7 +121,12 @@ instance FromJSON InstanceKeyValues where
 instance ToJSON InstanceKeyValues where
   toEncoding = genericToEncoding aesonOptions
 
-
+data InstanceAccessToken = InstanceAccessToken
+    { id :: InstanceAccessTokenId
+    , instanceId :: InstanceId
+    , userName :: UserName
+    , hash :: MagicHash
+    }
 
 makeFieldLabelsWith noPrefixFieldLabels ''Template
 makeFieldLabelsWith noPrefixFieldLabels ''InsertTemplate
@@ -131,3 +138,4 @@ makeFieldLabelsWith noPrefixFieldLabels ''InsertEvent
 makeFieldLabelsWith noPrefixFieldLabels ''FullInstance
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceSession
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceKeyValues
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceAccessToken

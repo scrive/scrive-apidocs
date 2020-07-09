@@ -6,14 +6,20 @@ import Servant.API
 import Servant.Client
 import Servant.Client.Core.Auth
 import Servant.Client.Core.Request as Client
+import Web.Cookie
 
+import Auth.MagicHash
 import Auth.OAuth
 import Auth.Session
 import Flow.Api
 import Flow.HighTongue
 import Flow.Id
 import Flow.Model.Types
+import Flow.Names
 import Flow.Process
+import Flow.Server.Cookies
+import Flow.Server.Routes
+import Flow.Server.Types
 
 -- TODO: Having Maybe in the AuthClientData instance makes it unclear as to what
 -- the correct set of auth credentials is. However, we need to be able to generate
@@ -36,19 +42,29 @@ data ApiClient = ApiClient
   , commitTemplate   :: TemplateId -> ClientM NoContent
   , startTemplate    :: TemplateId -> InstanceKeyValues -> ClientM StartTemplate
   , getInstance      :: InstanceId -> ClientM GetInstance
-  , getInstanceView  :: InstanceId -> ClientM GetInstanceView
   , listInstances    :: ClientM [GetInstance]
   , validateTemplate :: Process -> ClientM [ValidationError]
-}
+  }
+
+newtype ParticipantApiClient = ParticipantApiClient
+  { getInstanceView  :: InstanceId -> ClientM GetInstanceView
+  }
+
+data PageClient = PageClient
+  { instanceOverview  :: InstanceId -> UserName -> ClientM Text
+  , instanceOverviewMagicHash
+      :: InstanceId -> UserName -> MagicHash -> Maybe Cookies' -> Maybe Host
+      -> ClientM (Headers '[ Header "Location" Text
+                           , Header "Set-Cookie" SetCookie
+                           , Header "Set-Cookie" SetCookie
+                           ] NoContent)
+  }
 
 -- brittany-disable-next-binding
-mkApiClient
-  :: OAuthOrCookies
-  -> (Maybe SessionCookieInfo, Maybe XToken)
-  -> ApiClient
-mkApiClient authDataAccount authDataInstanceUser = ApiClient { .. }
+mkApiClient :: OAuthOrCookies -> ApiClient
+mkApiClient authData = ApiClient { .. }
   where
-    accountEndpoints :<|> instanceUserEndpoints :<|> noAuthEndpoints = client apiProxy
+    accountEndpoints :<|> _ :<|> noAuthEndpoints = client apiProxy
     createTemplate
         :<|> deleteTemplate
         :<|> getTemplate
@@ -58,10 +74,24 @@ mkApiClient authDataAccount authDataInstanceUser = ApiClient { .. }
         :<|> startTemplate
         :<|> getInstance
         :<|> listInstances
-      = accountEndpoints (mkAuthenticatedRequest authDataAccount addOAuthOrCookies)
-    getInstanceView
-      = instanceUserEndpoints (mkAuthenticatedRequest authDataInstanceUser addAuthCookies)
+      = accountEndpoints (mkAuthenticatedRequest authData addOAuthOrCookies)
     validateTemplate = noAuthEndpoints
+
+-- brittany-disable-next-binding
+mkParticipantApiClient :: (Maybe SessionCookieInfo, Maybe XToken) -> ParticipantApiClient
+mkParticipantApiClient authData = ParticipantApiClient { .. }
+  where
+    _ :<|> instanceUserEndpoints :<|> _ = client apiProxy
+    getInstanceView
+      = instanceUserEndpoints (mkAuthenticatedRequest authData addAuthCookies)
+
+mkPageClient :: (Maybe SessionCookieInfo, Maybe XToken) -> PageClient
+mkPageClient authData = PageClient { .. }
+  where
+    instanceUserEndpoints :<|> noAuthEndpoints = client pagesProxy
+    instanceOverview =
+      instanceUserEndpoints (mkAuthenticatedRequest authData addAuthCookies)
+    instanceOverviewMagicHash = noAuthEndpoints
 
 addOAuthOrCookies :: OAuthOrCookies -> Client.Request -> Client.Request
 addOAuthOrCookies authData = case authData of

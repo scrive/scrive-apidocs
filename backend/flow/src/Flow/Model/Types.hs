@@ -13,6 +13,7 @@ module Flow.Model.Types
     , InsertEvent(InsertEvent)
     , FullInstance(..)
     , InstanceSession(InstanceSession)
+    , InstanceAccessToken(InstanceAccessToken)
     , fetchInstance
     , fetchTemplate
     , fetchEvent
@@ -20,6 +21,7 @@ module Flow.Model.Types
     , toInsertEvent
     , instanceToAggregator
     , fetchInstanceSession
+    , fetchInstanceAccessToken
     )
  where
 
@@ -29,6 +31,7 @@ import Data.Time.Clock
 import GHC.Generics
 import qualified Data.Set as Set
 
+import Auth.MagicHash
 import Auth.Session.SessionID
 import Flow.Aggregator
 import Flow.Id
@@ -91,3 +94,7 @@ instanceToAggregator FullInstance {..} = aggregator
 
 fetchInstanceSession :: (SessionID, InstanceId, UserName) -> InstanceSession
 fetchInstanceSession (sessionId, instanceId, userName) = InstanceSession { .. }
+
+fetchInstanceAccessToken
+  :: (InstanceAccessTokenId, InstanceId, UserName, MagicHash) -> InstanceAccessToken
+fetchInstanceAccessToken (id, instanceId, userName, hash) = InstanceAccessToken { .. }
