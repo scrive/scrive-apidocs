@@ -13,6 +13,7 @@ import System.Directory
 
 import DB
 import DB.PostgreSQL
+import GenericSE
 import Happstack.Server.ReqHandler
 import Mblox
 import Messenger
@@ -31,6 +32,7 @@ handlers = choice
   [ hGet showHelloMessage
   , dir "sms" . dir "telia" $ hPost (withDecodedBody_ handleTeliaCallGuideEvents)
   , dir "sms" . dir "mblox" $ hPost handleMbloxEvents
+  , dir "sms" . dir "genericse" $ hPost handleGenericSEEvents
   ]
   where
     hGet  = path GET identity

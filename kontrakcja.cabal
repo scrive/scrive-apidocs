@@ -969,6 +969,7 @@ Executable messenger-server
                  Handlers
                  Sender
                  TeliaCallGuide
+                 GenericSE
 
   Build-depends: base-noprelude
                , kontrakcja

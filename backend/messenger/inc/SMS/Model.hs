@@ -8,9 +8,11 @@ module SMS.Model (
   , CleanSMSesOlderThanDays(..)
   , UpdateSMSWithTeliaID(..)
   , UpdateSMSWithMbloxID(..)
+  , UpdateSMSWithRemoteID(..)
   , UpdateWithSMSEvent(..)
   , UpdateWithSMSEventForTeliaID(..)
   , UpdateWithSMSEventForMbloxID(..)
+  , GetSMSByRemoteID(..)
   , GetUnreadSMSEvents(..)
   , MarkSMSEventAsRead(..)
   ) where
@@ -83,6 +85,22 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithMbloxID Bool where
     runQuery01 . sqlUpdate "smses" $ do
       sqlSet "mblox_id" mlxid
       sqlWhereEq "id" mid
+
+-- TODO: always use this one (instead of mblox/telia) and rename column to remote_id
+data UpdateSMSWithRemoteID = UpdateSMSWithRemoteID ShortMessageID Text
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithRemoteID Bool where
+  dbUpdate (UpdateSMSWithRemoteID mid remote_id) = do
+    runQuery01 . sqlUpdate "smses" $ do
+      sqlSet "mblox_id" remote_id
+      sqlWhereEq "id" mid
+
+newtype GetSMSByRemoteID = GetSMSByRemoteID Text
+instance (MonadThrow m, MonadDB m) => DBQuery m GetSMSByRemoteID (Maybe ShortMessage) where
+  dbQuery (GetSMSByRemoteID remote_id) = do
+    runQuery_ . sqlSelect "smses" $ do
+      sqlWhereEq "mblox_id" remote_id
+      mapM_ sqlResult smsSelectors
+    fetchMaybe smsFetcher
 
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
