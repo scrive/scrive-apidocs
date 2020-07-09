@@ -3,11 +3,8 @@
 {-# LANGUAGE StrictData #-}
 module Flow.Engine
   ( processMachinizeEvent
-  , finalizeFlow
   , processEvent
-  , compile
-  , parseTongue
-  , translate
+  , decodeHighTongueM
   ) where
 
 import Control.Monad.Catch
@@ -36,7 +33,6 @@ import Flow.Model.Types
 import Flow.Process
 import GuardTime (GuardTimeConfMonad)
 import MailContext
-import qualified Flow.Transducer as Transducer
 
 data EngineEvent = EngineEvent
     { instanceId :: InstanceId
@@ -55,14 +51,13 @@ toPairs EngineEvent {..} =
   ]
 
 data EngineError
-    = NoAssociatedDocument
+    = AggregatorSteppingFailed
+    | DuplicateEventReceived
+    | InvalidProcess [ValidationError]
+    | NoAssociatedDocument
     | NoAssociatedUser
     | NoInstance
     | UnexpectedEventReceived
-    | TransducerSteppingFailed Transducer.Error
-    | DuplicateEventReceived
-    | NotImplemented Text
-    | InvalidProcess [ValidationError]
   deriving (Show, Exception)
 
 processEvent
@@ -123,28 +118,15 @@ pushActions instanceId actions = do
   consumableActions <- mapM (toConsumableAction instanceId) actions
   mapM_ consumeFlowAction consumableActions
 
-finalizeFlow :: (MonadLog m, MonadDB m, MonadThrow m) => m ()
-finalizeFlow = throwM $ NotImplemented "Finalizing flow"
-
--- TODO use ExceptT
-parseTongue :: (MonadLog m, MonadThrow m) => Process -> m HighTongue
-parseTongue = either throwDSLValidationError' pure . decodeHighTongue
-  where
-    throwDSLValidationError' errs = do
-      logAttention_ $ "Flow DSL compatibility broken, parsing failed: " <> showt errs
-      throwM $ InvalidProcess errs
-
-translate :: (MonadLog m, MonadThrow m) => HighTongue -> m Machine
-translate = either throwDSLValidationError' pure . machinize
+decodeHighTongueM :: (MonadLog m, MonadThrow m) => Process -> m HighTongue
+decodeHighTongueM process = either throwDSLValidationError' pure
+  $ decodeHighTongue process
   where
     throwDSLValidationError' errs = do
       logAttention_
         $  "Flow DSL compatibility broken, translation to state machine failed: "
         <> showt errs
       throwM $ InvalidProcess errs
-
-compile :: (MonadLog m, MonadThrow m) => Process -> m Machine
-compile = parseTongue >=> translate
 
 processMachinizeEvent
   :: ( CryptoRNG m
@@ -171,11 +153,10 @@ processMachinizeEvent instanceId eventInfo = do
   eventId      <- insertEvent $ toInsertEvent instanceId eventInfo
   fullInstance <- fromMaybeM noInstance $ selectFullInstance instanceId
   let aggregator = instanceToAggregator fullInstance
-  machine <- compile $ fullInstance ^. #template % #process
-  let (aggregatorResult, newAggregator) = runAggregatorStep eventInfo aggregator machine
-  either failGracefully processStep aggregatorResult
-  let stateChange = currentState aggregator /= currentState newAggregator
-  updateAggregatorState instanceId newAggregator eventId stateChange
+  highTongue <- decodeHighTongueM $ fullInstance ^. #template % #process
+  let (aggregatorResult, newAggregator) =
+        runAggregatorStep eventInfo aggregator highTongue
+  either failGracefully (processStep eventId newAggregator) aggregatorResult
   where
     -- TODO: Think of some error monad. MonadFail is ugly.
     -- TODO: This fail thing may leak some error to user.
@@ -187,16 +168,16 @@ processMachinizeEvent instanceId eventInfo = do
     failGracefully DuplicateEvent = do
       logAttention_ "Duplicate event received."
       throwM DuplicateEventReceived
-    failGracefully (TransducerError err) = do
-      logAttention_ $ "Transducer is in inconsistent state: " <> showt err
-      throwM $ TransducerSteppingFailed err
+    failGracefully UnknownStage = do
+      logAttention_ "Aggregator is in inconsistent state"
+      throwM AggregatorSteppingFailed
 
-
-    processStep NeedMoreEvents        = logTrace_ "Aggregator needs more events to step."
-    processStep (StateChange actions) = pushActions instanceId actions
-    processStep (FinalState  actions) = do
+    processStep eventId newAggregator NeedMoreEvents = do
+      updateAggregatorState instanceId newAggregator eventId False
+      logTrace_ "Aggregator needs more events to step."
+    processStep eventId newAggregator (StateChange actions) = do
+      updateAggregatorState instanceId newAggregator eventId True
       pushActions instanceId actions
-      finalizeFlow
 
     noInstance = do
       logAttention_ "Flow instance with this ID does not exist."

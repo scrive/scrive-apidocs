@@ -7,7 +7,7 @@ import Control.Monad.Extra (fromMaybeM)
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Either.Combinators (rightToMaybe)
+import Data.Foldable (fold)
 import Data.Map (Map)
 import Data.Set (Set)
 import GHC.Generics
@@ -36,11 +36,11 @@ import Flow.DocumentStarting
 import Flow.Engine
 import Flow.Error
 import Flow.Guards
+import Flow.HighTongue
 import Flow.Id
 import Flow.Machinize as Machinize
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId as FlowUserId
-import Flow.Names
 import Flow.OrphanInstances ()
 import Flow.Server.Cookies
 import Flow.Server.Types
@@ -49,7 +49,6 @@ import qualified Flow.Api as Api
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.Model.Types as Model
-import qualified Flow.Transducer as Transducer
 import qualified Flow.VariableCollector as Collector
 
 startInstance :: Account -> TemplateId -> InstanceKeyValues -> AppM StartTemplate
@@ -61,7 +60,7 @@ startInstance account templateId keyValues = do
 
   when (isNothing $ template ^. #committed) throwTemplateNotCommittedError
 
-  tongue <- parseTongue $ template ^. #process
+  tongue <- decodeHighTongueM $ template ^. #process
   let variables = Collector.collectVariables tongue
   reportVariables $ validateVariables variables keyValues
 
@@ -83,8 +82,8 @@ startInstance account templateId keyValues = do
   documents <- mapM (dbQuery . GetDocumentByDocumentID) documentIds
   reportSettings $ checkDocumentSettingsConsistency documents
 
-  machine <- translate tongue
-  let ii = InsertInstance templateId $ Transducer.initialState machine
+  -- TODO: remove head...
+  let ii = InsertInstance templateId . stageName . head $ stages tongue
   id <- Model.insertFlowInstance ii
 
   -- The ordering of operations here is crucial.
@@ -112,6 +111,9 @@ startInstance account templateId keyValues = do
 
   -- Generate magic hashes for invitation links
   usersWithHashes <- zip (Map.keys userMapping) <$> replicateM (length userMapping) random
+  -- -- TODO get rid of unsafe
+  -- usersWithHashes <-
+  --   zip (unsafeName <$> Map.keys users) <$> replicateM (length users) random
   mapM_ (uncurry $ Model.insertInstanceAccessToken id) usersWithHashes
 
   -- TODO: This is for initial debugging/testing only. Remove.
@@ -261,7 +263,7 @@ getInstanceView user@InstanceUser {..} instanceId' = do
   keyValues    <- Model.selectInstanceKeyValues instanceId
   fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
   let aggrState = instanceToAggregator fullInstance
-  machine <- compile $ fullInstance ^. #template % #process
+  machine <- decodeHighTongueM $ fullInstance ^. #template % #process
 
   case mAllowedEvents machine aggrState of
     Just allowedEvents ->
@@ -297,10 +299,12 @@ getInstanceView user@InstanceUser {..} instanceId' = do
         $ err500 { errBody = "Could not reconstruct the state of the Flow process." }
 
   where
-    mAllowedEvents machine aggregatorState =
-      rightToMaybe $ Aggregator.getAllowedEvents <$> Transducer.getState
-        machine
-        (currentState aggregatorState)
+    mAllowedEvents HighTongue {..} AggregatorState {..} =
+      fold
+        .   Set.map (Set.fromList . expectToSuccess)
+        .   stageExpect
+        .   fst
+        <$> remainingStages currentStage stages
 
     toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
     toApiUserAction Machinize.Approval  = Just Api.Approve

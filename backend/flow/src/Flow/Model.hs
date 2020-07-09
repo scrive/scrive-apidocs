@@ -20,6 +20,7 @@ module Flow.Model
     , insertInstanceSignatories
     , selectUserNameFromKV
     , selectSignatoryIdsByInstanceUser
+    , selectDocumentsByInstanceId
     )
   where
 
@@ -63,7 +64,6 @@ deleteTemplate templateId = do
   runQuery_ . sqlUpdate "flow_templates" $ do
     sqlSet "deleted" now
     sqlWhereEq "id" templateId
-
 
 templateSelectors :: (MonadState v m, SqlResult v) => m ()
 templateSelectors = do
@@ -109,7 +109,7 @@ insertFlowInstance ii = do
   now <- currentTime
   runQuery_ . sqlInsert "flow_instances" $ do
     sqlSet "template_id" $ ii ^. #templateId
-    sqlSet "current_state" $ ii ^. #currentState
+    sqlSet "current_state" $ ii ^. #currentStage
     sqlSet "created" now
     sqlResult "id"
   fetchOne runIdentity
@@ -170,7 +170,6 @@ selectDocumentIdsAssociatedWithSomeInstance docIds = do
 instanceSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
 instanceSelectors prefix = mapM_ (\c -> sqlResult $ prefix <> "." <> c)
                                  ["id", "template_id", "current_state", "created"]
-
 selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe Instance)
 selectInstance instanceId = do
   runQuery_ . sqlSelect "flow_instances i" $ do
@@ -258,7 +257,7 @@ updateAggregatorState
   :: (MonadDB m) => InstanceId -> AggregatorState -> EventId -> Bool -> m ()
 updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
   runQuery_ . sqlUpdate "flow_instances" $ do
-    sqlSet "current_state" currentState
+    sqlSet "current_state" currentStage
     sqlWhereEq "instance_id" instanceId
 
   if stateChange
@@ -313,6 +312,14 @@ insertInstanceSignatories instanceId links =
     sqlSetList "key" $ map fst links
     sqlSetList "signatory_id" $ map snd links
 
+selectDocumentsByInstanceId :: (MonadDB m, MonadThrow m) => InstanceId -> m [DocumentID]
+selectDocumentsByInstanceId instanceId = do
+  runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
+    sqlResult "document_id"
+    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "type"        ("document" :: Text)
+  fetchMany runIdentity
+
 selectUserNameFromKV
   :: (MonadDB m, MonadThrow m) => InstanceId -> SignatoryLinkID -> m (Maybe UserName)
 selectUserNameFromKV instanceId signatoryLinkId = do
@@ -330,4 +337,3 @@ selectSignatoryIdsByInstanceUser instanceId userName = do
     sqlWhereEq "instance_id" instanceId
     sqlWhereEq "key"         userName
   fetchMany runIdentity
-

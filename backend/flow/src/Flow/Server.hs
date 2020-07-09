@@ -29,7 +29,6 @@ import Flow.Error
 import Flow.Guards
 import Flow.HighTongue
 import Flow.Id
-import Flow.Machinize as Machinize
 import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Process
@@ -112,9 +111,7 @@ commitTemplate account id = do
   when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
   let templateDSL = template ^. #process
   -- We're currently not storing the machine, so we throw it away.
-  either throwDSLValidationError' (const $ pure ())
-    $   decodeHighTongue templateDSL
-    >>= machinize
+  either throwDSLValidationError' (const $ pure ()) $ decodeHighTongue templateDSL
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
   _ <- Model.updateTemplate $ UpdateTemplate id Nothing Nothing (Just now)
@@ -133,7 +130,7 @@ commitTemplate account id = do
 validateTemplate :: Process -> AppM [ValidationError]
 validateTemplate template = do
   logInfo_ "Validating template"
-  either pure (const (pure [])) $ decodeHighTongue template >>= machinize
+  either pure (const (pure [])) $ decodeHighTongue template
 
 listTemplates :: Account -> AppM [GetTemplate]
 listTemplates account@Account {..} = do

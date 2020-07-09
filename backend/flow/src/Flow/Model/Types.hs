@@ -73,7 +73,7 @@ fetchTemplate
 fetchTemplate (id, userId, folderId, name, process, created, committed, deleted) =
   Template { .. }
 
-fetchInstance :: (InstanceId, TemplateId, Text, UTCTime) -> Instance
+fetchInstance :: (InstanceId, TemplateId, StageName, UTCTime) -> Instance
 fetchInstance (id, templateId, currentState, created) = Instance { .. }
 
 fetchEvent :: (EventId, InstanceId, UserName, DocumentName, UserAction, UTCTime) -> Event

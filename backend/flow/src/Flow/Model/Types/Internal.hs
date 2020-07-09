@@ -66,15 +66,13 @@ data UpdateTemplate = UpdateTemplate
 data Instance = Instance
     { id :: InstanceId
     , templateId :: TemplateId
-    -- TODO currentStage :: StageName
-    , currentState :: Text
+    , currentState :: StageName
     , created :: UTCTime
     }
 
 data InsertInstance = InsertInstance
     { templateId :: TemplateId
-    -- TODO currentStage :: StageName
-    , currentState :: Text
+    , currentStage :: StageName
     }
 
 data Event = Event

@@ -10,7 +10,6 @@ import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
-import qualified Data.Map as Map
 
 import DB hiding (JSON(..))
 import Doc.Action (commonDocumentClosingActions)
@@ -21,7 +20,7 @@ import Doc.Signing.Model ()
 import EventStream.Class
 import File.Storage
 import Flow.Id
-import Flow.Model as Model
+import Flow.Model
 import GuardTime (GuardTimeConfMonad)
 import MailContext
 import User.Model (UserID)
@@ -33,12 +32,10 @@ data ConsumableAction
       { users :: [UserID] -- TODO: Add email and phone number
       , message :: Text
       }
-  | Close
+  | CloseAll
       { documentIds :: [DocumentID]
       }
-  | Fail -- Expected failure of the process, e.g. user rejected a document
-      { instanceId :: InstanceId
-      }
+  | Fail
   deriving (Show, Generic)
 
 -- For logging
@@ -48,14 +45,12 @@ instance ToJSON ConsumableAction where
 toConsumableAction
   :: (MonadThrow m, MonadDB m) => InstanceId -> Machinize.LowAction -> m ConsumableAction
 toConsumableAction instanceId = \case
-  Machinize.Action (HighTongue.Close docNames) -> do
-    docMap <- view #documents <$> Model.selectInstanceKeyValues instanceId
-    pure $ Close (mapMaybe (`Map.lookup` docMap) docNames)
+  Machinize.CloseAll -> CloseAll <$> selectDocumentsByInstanceId instanceId
 
   -- TODO: Convert Action Notify to ConsumableAction Notify
   Machinize.Action (HighTongue.Notify _ _) -> undefined
 
-  Machinize.Fail -> pure $ Fail instanceId
+  Machinize.Fail     -> pure Fail
 
 consumeFlowAction
   :: ( CryptoRNG m
@@ -75,12 +70,10 @@ consumeFlowAction
 consumeFlowAction action = do
   logInfo "Consuming Flow action: " action
   case action of
-    Close { documentIds } -> do
-      documents <- mapM (dbQuery . GetDocumentByDocumentID) documentIds
-      mapM_ commonDocumentClosingActions documents
+    CloseAll documentIds -> mapM (dbQuery . GetDocumentByDocumentID) documentIds
+      >>= mapM_ commonDocumentClosingActions
 
     -- TODO: Implement the Notify consumer
     Notify _ _ -> undefined
 
-    Fail _     -> logInfo "Flow process failed: " action
-
+    Fail       -> logInfo "Flow process failed: " action

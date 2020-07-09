@@ -1,8 +1,6 @@
 {-# LANGUAGE StrictData #-}
 module Flow.Tables where
 
-import Database.PostgreSQL.PQTypes.Checks
-import Database.PostgreSQL.PQTypes.Class
 import Database.PostgreSQL.PQTypes.Model
 
 flowTables :: [Table]
@@ -15,18 +13,6 @@ flowTables =
   , tableFlowInstanceSessions
   , tableFlowEvents
   , tableFlowAggregatorEvents
-  ]
-
-flowMigrations :: MonadDB m => [Migration m]
-flowMigrations =
-  [ createTableFlowTemplates
-  , createTableFlowInstances
-  , createTableFlowInstancesKVStore
-  , createTableFlowInstanceSignatories
-  , createTableFlowInstanceAccessTokens
-  , createTableFlowInstanceSessions
-  , createTableFlowEvents
-  , createTableFlowAggregatorEvents
   ]
 
 tableFlowTemplates :: Table
@@ -56,13 +42,6 @@ tableFlowTemplates = tblTable
                      ]
   }
 
-createTableFlowTemplates :: MonadDB m => Migration m
-createTableFlowTemplates = Migration
-  { mgrTableName = tblName tableFlowTemplates
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowTemplates
-  }
-
 tableFlowInstances :: Table
 tableFlowInstances = tblTable
   { tblName        = "flow_instances"
@@ -80,13 +59,6 @@ tableFlowInstances = tblTable
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "template_id"]
   , tblForeignKeys = [fkOnColumn "template_id" "flow_templates" "id"]
-  }
-
-createTableFlowInstances :: MonadDB m => Migration m
-createTableFlowInstances = Migration
-  { mgrTableName = tblName tableFlowInstances
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstances
   }
 
 tableFlowInstancesKVStore :: Table
@@ -127,13 +99,6 @@ tableFlowInstancesKVStore = tblTable
     ]
   }
 
-createTableFlowInstancesKVStore :: MonadDB m => Migration m
-createTableFlowInstancesKVStore = Migration
-  { mgrTableName = tblName tableFlowInstancesKVStore
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstancesKVStore
-  }
-
 tableFlowInstanceSignatories :: Table
 tableFlowInstanceSignatories = tblTable
   { tblName        = "flow_instance_signatories"
@@ -153,13 +118,6 @@ tableFlowInstanceSignatories = tblTable
                        }
                      , fkOnColumn "signatory_id" "signatory_links" "id"
                      ]
-  }
-
-createTableFlowInstanceSignatories :: MonadDB m => Migration m
-createTableFlowInstanceSignatories = Migration
-  { mgrTableName = tblName tableFlowInstanceSignatories
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSignatories
   }
 
 tableFlowInstanceAccessTokens :: Table
@@ -190,13 +148,6 @@ tableFlowInstanceAccessTokens = tblTable
                      ]
   }
 
-createTableFlowInstanceAccessTokens :: MonadDB m => Migration m
-createTableFlowInstanceAccessTokens = Migration
-  { mgrTableName = tblName tableFlowInstanceAccessTokens
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceAccessTokens
-  }
-
 -- | This table links Kontrakcja sessions to "Flow instance users", creating
 -- "instance sessions". Instance sessions are created only for Flow users who
 -- have authenticated with a valid invitation link.
@@ -221,13 +172,6 @@ tableFlowInstanceSessions = tblTable
     ]
   }
 
-createTableFlowInstanceSessions :: MonadDB m => Migration m
-createTableFlowInstanceSessions = Migration
-  { mgrTableName = tblName tableFlowInstanceSessions
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSessions
-  }
-
 tableFlowEvents :: Table
 tableFlowEvents = tblTable
   { tblName        = "flow_events"
@@ -250,13 +194,6 @@ tableFlowEvents = tblTable
     [(fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyCascade }]
   }
 
-createTableFlowEvents :: MonadDB m => Migration m
-createTableFlowEvents = Migration
-  { mgrTableName = tblName tableFlowEvents
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowEvents
-  }
-
 tableFlowAggregatorEvents :: Table
 tableFlowAggregatorEvents = tblTable
   { tblName        = "flow_aggregator_events"
@@ -265,11 +202,4 @@ tableFlowAggregatorEvents = tblTable
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys =
     [(fkOnColumn "id" "flow_events" "id") { fkOnDelete = ForeignKeyCascade }]
-  }
-
-createTableFlowAggregatorEvents :: MonadDB m => Migration m
-createTableFlowAggregatorEvents = Migration
-  { mgrTableName = tblName tableFlowAggregatorEvents
-  , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowAggregatorEvents
   }

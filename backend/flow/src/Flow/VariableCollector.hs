@@ -12,7 +12,6 @@ import Data.Set hiding (fold, foldl')
 
 import Flow.HighTongue
 import Flow.Model.Types (DocRoleFor(..), Role(..))
-import Flow.Names
 
 type CollectorDocUserAssociation = DocRoleFor UserName DocumentName
 
@@ -55,8 +54,6 @@ collectVariables HighTongue {..} = foldl' toVariables mempty stages
     unaction :: SystemAction -> FlowVariables
     unaction Notify {..} =
       FlowVariables (fromList actionUsers) mempty (singleton actionMessage) mempty
-    unaction Close {..} = FlowVariables mempty (fromList actionDocuments) mempty mempty
-
     unexpect :: Expect -> FlowVariables
     unexpect ReceivedData {..} = mempty
     unexpect ApprovedBy {..} =

@@ -1,192 +1,224 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE StrictData #-}
 
-module Flow.AggregatorTest where
+module Flow.AggregatorTest (tests) where
 
 import Data.Either.Combinators
+import Data.Text.Encoding
+import Data.Yaml
 import Test.Framework
 import Test.Framework.Providers.HUnit
-import Test.HUnit.Base ((@?=), Assertion)
+import Test.HUnit.Base hiding (Test)
+import Text.RawString.QQ
 import qualified Data.Set as Set
 
 import Flow.Aggregator
 import Flow.HighTongue
 import Flow.Machinize
 import Flow.OrphanTestInstances ()
-import Flow.Transducer
 
-machine' :: Machine
-machine' = fromRight' $ createTransducer
-  "initial"
-  ["end"]
-  [ ("initial", TransducerEdge inputSet1 [lowAction1] "foo")
-  , ("initial", TransducerEdge inputSet2 [lowAction2] "bar")
-  , ("foo"    , TransducerEdge inputSet3 [lowAction3] "end")
-  , ("bar"    , TransducerEdge inputSet3 [] "end")
-  ]
+process :: Text
+process = [r|
+  dsl-version: '1'
+  stages:
+    - initial:
+        actions:
+          - notify:
+              users: [user1]
+              message: get-data
+        expect:
+          approved-by:
+            users: [approver1]
+            documents: [doc1, doc2, doc3]
+    - foo:
+        actions:
+          - notify:
+              users: [user1, user2]
+              message: get-data2
+        expect:
+          approved-by:
+            users: [approver2]
+            documents: [doc5]
+  |]
 
-lowAction1 :: LowAction
-lowAction1 = Action $ Notify ["user25"] "foo bar baz"
+tongue :: Either ParseException HighTongue
+tongue = decodeEither' $ encodeUtf8 process
 
-lowAction2 :: LowAction
-lowAction2 = Action $ Notify ["user26"] "foo bar baz"
+compiled :: HighTongue
+compiled = fromRight' tongue
 
-lowAction3 :: LowAction
-lowAction3 = Action $ Notify ["user27"] "foo bar baz"
-
-inputSet1 :: Set.Set EventInfo
-inputSet1 = Set.fromList
-  [ EventInfo Signature "user1" "document1"
-  , EventInfo Signature "user2" "document1"
-  , EventInfo Approval  "user2" "document2"
-  ]
-
-inputSet2 :: Set.Set EventInfo
-inputSet2 = Set.fromList
-  [EventInfo Signature "user1" "document3", EventInfo Signature "user2" "document3"]
-
-inputSet3 :: Set.Set EventInfo
-inputSet3 = Set.fromList [EventInfo Signature "user1" "document1"]
-
-input1 :: EventInfo
-input1 = EventInfo Signature "user1" "document1"
-
-input2 :: EventInfo
-input2 = EventInfo Signature "user2" "document1"
-
-input3 :: EventInfo
-input3 = EventInfo Approval "user2" "document2"
-
-input4 :: EventInfo
-input4 = EventInfo (Field "Im on seafood diet") "I see food" " and I eat it"
-
-input5 :: EventInfo
-input5 = EventInfo Signature "user2" "document3"
+prepareAggregatorState :: HighTongue -> Maybe AggregatorState
+prepareAggregatorState HighTongue {..} = makeNewState . stageName <$> listToMaybe stages
 
 initialAggregatorState :: AggregatorState
-initialAggregatorState = prepareAggregatorState machine'
+initialAggregatorState = fromJust $ prepareAggregatorState compiled
+
+testDSLCompiles :: Assertion
+testDSLCompiles = do
+  assertBool "DSL compiles" $ isRight tongue
 
 testUnknownEvent :: Assertion
-testUnknownEvent =
-  runAggregatorStep input4 initialAggregatorState machine'
+testUnknownEvent = do
+  runAggregatorStep event initialAggregatorState compiled
     @?= (Left UnknownEventInfo, initialAggregatorState)
+  where
+    event :: EventInfo
+    event = EventInfo Signature "who??" "what???"
 
 testNeedMoreEventsEvent1 :: Assertion
 testNeedMoreEventsEvent1 = do
   let (result, AggregatorState {..}) =
-        runAggregatorStep input1 initialAggregatorState machine'
+        runAggregatorStep event initialAggregatorState compiled
   result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input1]
+  receivedEvents @?= Set.fromList [event]
+  where
+    event :: EventInfo
+    event = EventInfo Approval "approver1" "doc1"
+
+testDuplicateEventEvent :: Assertion
+testDuplicateEventEvent = do
+  -- Event 1
+  let (_, nextState1@AggregatorState {..}) =
+        runAggregatorStep event initialAggregatorState compiled
+  receivedEvents @?= Set.fromList [event]
+  -- Event 2
+  let (result, _nextState2@AggregatorState {..}) =
+        runAggregatorStep event nextState1 compiled
+  receivedEvents @?= Set.fromList [event]
+  result @?= Left DuplicateEvent
+  where
+    event :: EventInfo
+    event = EventInfo Approval "approver1" "doc1"
 
 testNeedMoreEventsEvent2 :: Assertion
 testNeedMoreEventsEvent2 = do
-  let (result, AggregatorState {..}) =
-        runAggregatorStep input2 initialAggregatorState machine'
+  let (_, state) = runAggregatorStep event1 initialAggregatorState compiled
+      (result, AggregatorState {..}) = runAggregatorStep event2 state compiled
   result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2]
+  receivedEvents @?= Set.fromList [event1, event2]
+  where
+    event1 :: EventInfo
+    event1 = EventInfo Approval "approver1" "doc1"
+    event2 :: EventInfo
+    event2 = EventInfo Approval "approver1" "doc2"
 
 testFullTransition :: Assertion
 testFullTransition = do
-    -- Event 1
-  let (result, nextState1@AggregatorState {..}) =
-        runAggregatorStep input1 initialAggregatorState machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input1]
+  -- Event 1
+  let (_, nextState1@AggregatorState {..}) =
+        runAggregatorStep event1 initialAggregatorState compiled
+  receivedEvents @?= Set.fromList [event1]
   -- Event 2
-  let (result, nextState2@AggregatorState {..}) =
-        runAggregatorStep input2 nextState1 machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input1, input2]
+  let (_, nextState2@AggregatorState {..}) = runAggregatorStep event2 nextState1 compiled
+  receivedEvents @?= Set.fromList [event1, event2]
   -- Event 3
   let (result, _nextState3@AggregatorState {..}) =
-        runAggregatorStep input3 nextState2 machine'
+        runAggregatorStep event3 nextState2 compiled
   receivedEvents @?= Set.empty
-  currentState @?= "foo"
-  result @?= Right (StateChange [lowAction1])
+--   currentState @?= "foo"
+  result @?= Right (StateChange [action])
+  where
+    event1 :: EventInfo
+    event1 = EventInfo Approval "approver1" "doc1"
+    event2 :: EventInfo
+    event2 = EventInfo Approval "approver1" "doc2"
+    event3 :: EventInfo
+    event3 = EventInfo Approval "approver1" "doc3"
+    action :: LowAction
+    action = Action . Notify ["user1", "user2"] $ "get-data2"
 
 testFullTransitionDifferentOrder :: Assertion
 testFullTransitionDifferentOrder = do
-    -- Event 1
-  let (result, nextState1@AggregatorState {..}) =
-        runAggregatorStep input2 initialAggregatorState machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2]
+  -- Event 1
+  let (_, nextState1@AggregatorState {..}) =
+        runAggregatorStep event2 initialAggregatorState compiled
+  receivedEvents @?= Set.fromList [event2]
   -- Event 2
-  let (result, nextState2@AggregatorState {..}) =
-        runAggregatorStep input3 nextState1 machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input3, input2]
+  let (_, nextState2@AggregatorState {..}) = runAggregatorStep event1 nextState1 compiled
+  receivedEvents @?= Set.fromList [event1, event2]
   -- Event 3
   let (result, _nextState3@AggregatorState {..}) =
-        runAggregatorStep input1 nextState2 machine'
+        runAggregatorStep event3 nextState2 compiled
   receivedEvents @?= Set.empty
-  currentState @?= "foo"
-  result @?= Right (StateChange [lowAction1])
-
-testFullTransitionInterleavedEvents :: Assertion
-testFullTransitionInterleavedEvents = do
-    -- Event 1
-  let (result, nextState1@AggregatorState {..}) =
-        runAggregatorStep input2 initialAggregatorState machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2]
-  -- Event 2
-  let (result, nextState2@AggregatorState {..}) =
-        runAggregatorStep input5 nextState1 machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2, input5]
-  -- Event 3
-  let (result, nextState3@AggregatorState {..}) =
-        runAggregatorStep input3 nextState2 machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2, input3, input5]
-  -- Event 4
-  let (result, _nextState4@AggregatorState {..}) =
-        runAggregatorStep input1 nextState3 machine'
-  receivedEvents @?= Set.empty
-  currentState @?= "foo"
-  result @?= Right (StateChange [lowAction1])
+  result @?= Right (StateChange [action])
+  where
+    event1 :: EventInfo
+    event1 = EventInfo Approval "approver1" "doc1"
+    event2 :: EventInfo
+    event2 = EventInfo Approval "approver1" "doc2"
+    event3 :: EventInfo
+    event3 = EventInfo Approval "approver1" "doc3"
+    action :: LowAction
+    action = Action . Notify ["user1", "user2"] $ "get-data2"
 
 testFullTransitionMultipleStates :: Assertion
 testFullTransitionMultipleStates = do
-    -- Event 1
-  let (result, nextState1@AggregatorState {..}) =
-        runAggregatorStep input2 initialAggregatorState machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2]
+  -- Stage 1
+  -- Event 1
+  let (_, nextState1@AggregatorState {..}) =
+        runAggregatorStep event2 initialAggregatorState compiled
+  receivedEvents @?= Set.fromList [event2]
   -- Event 2
-  let (result, nextState2@AggregatorState {..}) =
-        runAggregatorStep input5 nextState1 machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2, input5]
+  let (_, nextState2@AggregatorState {..}) = runAggregatorStep event1 nextState1 compiled
+  receivedEvents @?= Set.fromList [event1, event2]
   -- Event 3
   let (result, nextState3@AggregatorState {..}) =
-        runAggregatorStep input3 nextState2 machine'
-  result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [input2, input3, input5]
+        runAggregatorStep event3 nextState2 compiled
+  receivedEvents @?= Set.empty
+  result @?= Right (StateChange [action])
+  -- Stage 2
   -- Event 4
-  let (result, nextState4@AggregatorState {..}) =
-        runAggregatorStep input1 nextState3 machine'
+  let (result, _nextState4@AggregatorState {..}) =
+        runAggregatorStep event4 nextState3 compiled
   receivedEvents @?= Set.empty
-  currentState @?= "foo"
-  result @?= Right (StateChange [lowAction1])
-  let (result, _nextState5@AggregatorState {..}) =
-        runAggregatorStep input1 nextState4 machine'
+  result @?= Right (StateChange [CloseAll])
+  where
+    event1 :: EventInfo
+    event1 = EventInfo Approval "approver1" "doc1"
+    event2 :: EventInfo
+    event2 = EventInfo Approval "approver1" "doc2"
+    event3 :: EventInfo
+    event3 = EventInfo Approval "approver1" "doc3"
+    action :: LowAction
+    action = Action . Notify ["user1", "user2"] $ "get-data2"
+    event4 :: EventInfo
+    event4 = EventInfo Approval "approver2" "doc5"
+
+testFailure :: Assertion
+testFailure = do
+  let (result, nextState@AggregatorState {..}) =
+        runAggregatorStep event initialAggregatorState compiled
   receivedEvents @?= Set.empty
-  currentState @?= "end"
-  result @?= Right (FinalState [lowAction3])
+  result @?= Right (StateChange [Fail])
+  let (result, _nextState2@AggregatorState {..}) =
+        runAggregatorStep event nextState compiled
+  result @?= Left UnknownStage
+  where
+    event :: EventInfo
+    event = EventInfo Rejection "approver1" "doc1"
+
+testUnknownStage :: Assertion
+testUnknownStage = do
+  let aggState = AggregatorState { currentStage = "FUBAR", receivedEvents = mempty }
+      (result, AggregatorState {..}) = runAggregatorStep event aggState compiled
+  result @?= Left UnknownStage
+  receivedEvents @?= mempty
+  where
+    event :: EventInfo
+    event = EventInfo Approval "foo1" "bar1"
 
 tests :: Test
 tests = testGroup
   "Aggregator"
-  [ testCase "Test rejection of unwanted event" testUnknownEvent
+  [ testCase "Test DSL string compiles"         testDSLCompiles
+  , testCase "Test rejection of unwanted event" testUnknownEvent
   , testCase "Test need more events 1"          testNeedMoreEventsEvent1
+  , testCase "Test duplicate event"             testDuplicateEventEvent
   , testCase "Test need more events 2"          testNeedMoreEventsEvent2
   , testCase "Test full transition"             testFullTransition
   , testCase "Test full transition with different order" testFullTransitionDifferentOrder
-  , testCase "Test full transition with interleaved events"
-             testFullTransitionInterleavedEvents
-  , testCase "Test correct transion over multiple states" testFullTransitionMultipleStates
+  , testCase "Test correct transition over many states" testFullTransitionMultipleStates
+  , testCase "Test unknown stage"               testUnknownStage
+  , testCase "Test failure"                     testFailure
   ]
-
-

@@ -22,7 +22,7 @@ import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
 import File.Migrations
-import Flow.Tables
+import Flow.Migrations
 import Folder.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations
@@ -276,4 +276,6 @@ kontraMigrations =
   , eidSignaturesAddProviderEIDServiceSEBankID
   , userGroupSettingsAddSEBankIDOverride
   , removeEidJson
+  , createTableFlowInstanceAccessTokens
+  , createTableFlowInstanceSessions
   ]

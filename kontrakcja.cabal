@@ -386,6 +386,7 @@ Library
                  , Flow.Machinize
                  , Flow.Message
                  , Flow.Message.Internal
+                 , Flow.Migrations
                  , Flow.Model
                  , Flow.Model.InstanceSession
                  , Flow.Model.Types
@@ -404,7 +405,6 @@ Library
                  , Flow.Server.Routes
                  , Flow.Server.Types
                  , Flow.Tables
-                 , Flow.Transducer
                  , Flow.VariableCollector
                  , Folder.API
                  , Folder.FolderID
@@ -1149,11 +1149,9 @@ Test-suite kontrakcja-test
                  Flow.DocumentCheckerTest
                  Flow.HighTongueTest
                  Flow.IntegrationTest
-                 Flow.MachinizeTest
                  Flow.OrphanTestInstances
                  Flow.TestKontraHandler
                  Flow.TestUtil
-                 Flow.TransducerTest
                  Flow.VariableCollectorTest
                  FlowTests
                  Folder.APITest
