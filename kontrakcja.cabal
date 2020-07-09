@@ -1124,6 +1124,7 @@ Executable messenger-server
                  Utils.List
                  Utils.Network
                  Utils.TH
+                 GenericSE
 
   Build-depends: base-noprelude
                , kontrakcja-appdir

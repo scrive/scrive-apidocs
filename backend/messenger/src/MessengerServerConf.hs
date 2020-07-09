@@ -66,6 +66,13 @@ data SenderConfig = MbloxSender
   -- ^ "https://sms.ace.teliacompany.com/smsplus/smsextended"
   , tcgSenderUser     :: !String
   , tcgSenderPassword :: !String
+  } | GenericSESender
+  -- ^ there's nothing generic about this, the provider is called GenericSE
+  { gseSenderUrl      :: !String
+  -- ^ "https://api.genericmobile.se/SmsGateway/api/v1/Message"
+  , gseSenderUser     :: !String
+  , gseSenderPassword :: !String
+  , gseCallbackURL    :: !String
   } | LocalSender
   { localDirectory   :: !FilePath
   , localOpenCommand :: !(Maybe String)
@@ -87,6 +94,14 @@ instance Unjson SenderConfig where
       <$> field "url"      tcgSenderUrl      "URL for Telia CallGuide service"
       <*> field "username" tcgSenderUser     "Username for Telia CallGuide service"
       <*> field "password" tcgSenderPassword "Password for Telia CallGuide service"
+      )
+    , ( "genericse"
+      , $(isConstr 'GenericSESender)
+      , GenericSESender
+      <$> field "url"          gseSenderUrl      "URL for GenericSE service"
+      <*> field "username"     gseSenderUser     "Username for GenericSE service"
+      <*> field "password"     gseSenderPassword "Password for GenericSE service"
+      <*> field "callback_url" gseCallbackURL    "Scrive GenericSE callback url"
       )
     , ( "local"
       , $(isConstr 'LocalSender)

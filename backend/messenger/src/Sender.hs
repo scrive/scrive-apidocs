@@ -101,6 +101,55 @@ sendSMSHelper MbloxSender {..} sm@ShortMessage {..} = localData [identifier smID
       return False
     _ -> return False
 
+sendSMSHelper GenericSESender {..} sm@ShortMessage {..} =
+  localData [identifier smID] $ do
+    let clearmsisdn = clearMobileNumber smMSISDN
+    logInfoSendSMS "Mblox" sm
+    let smsDataJSON = encode . runJSONGen $ do
+          value "From"              smOriginator
+          value "To"                [clearmsisdn]
+          value "Text"              smBody
+          value "DeliveryReportUrl" gseCallbackURL
+    (success, resp) <- curlSMSSender
+      [ "-X"
+      , "POST"
+      , "--basic"
+      , "-u"
+      , T.pack (gseSenderUser <> ":" <> gseSenderPassword)
+      , "-H"
+      , "Content-Type: application/json"
+      , "-d"
+      , T.pack smsDataJSON
+      , T.pack gseSenderUrl
+      ]
+      clearmsisdn
+    case (success, decode $ T.unpack resp) of
+      (True, Ok jresp) ->
+        case runIdentity . withJSValue jresp $ fromJSValueField "MessageId" of
+          Just [genericSEID] -> do
+            logInfo "SMS sent through GenericSE"
+              $ object [logPair_ sm, "genericseid" .= show genericSEID]
+            dbUpdate $ UpdateSMSWithRemoteID smID genericSEID
+          Just _ -> do
+            logAttention
+                "Sendout with GenericSE failed  - \
+                        \no singleton [id] in response "
+              $ object ["resp" .= show resp]
+            return False
+          Nothing -> do
+            logAttention
+                "Sendout with GenericSE failed  - \
+                        \no id in response "
+              $ object ["resp" .= show resp]
+            return False
+      (True, Error err) -> do
+        logAttention
+            "Sendout with GenericSE failed  - \
+                      \response is not a valid json "
+          $ object ["resp" .= show resp, "err" .= err]
+        return False
+      _ -> return False
+
 sendSMSHelper TeliaCallGuideSender {..} sm@ShortMessage {..} =
   localData [identifier smID] $ do
   -- Telia CallGuide doesn't want leading +
