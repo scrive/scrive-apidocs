@@ -1,4 +1,4 @@
-dsl-version: "1"
+dsl-version: "0.1.0"
 stages:
   - applicant1-to-sign:
       actions:

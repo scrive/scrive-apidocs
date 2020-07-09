@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.5.0"
+  version: "0.6.0"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -568,7 +568,7 @@ components:
 
         See FlowDslSpec for the specification of the DSL.
       example: |
-        dsl-version: "1"
+        dsl-version: "0.1.0"
         stages: ...
 
     FlowDslSpec:
@@ -594,7 +594,7 @@ components:
             additionalProperties:
               $ref: "#/components/schemas/FlowDslStage"
       example:
-        dsl-version: "1"
+        dsl-version: "0.1.0"
         stages:
           - applicant1-to-sign:
               actions:
@@ -634,14 +634,6 @@ components:
                     - main-application-form
                     - cca-credit-card
                     - direct-debit-form
-          - close-documents:
-              actions:
-                - close:
-                    documents:
-                      - main-application-form
-                      - cca-credit-card
-                      - direct-debit-form
-              expect: {}
 
     FlowDslStage:
       description: |
@@ -664,7 +656,6 @@ components:
         Action to be taken when the stage in entered.
       oneOf:
         - $ref: "#/components/schemas/FlowDslNotify"
-        - $ref: "#/components/schemas/FlowDslClose"
 
     FlowDslNotify:
       type: object
@@ -684,21 +675,6 @@ components:
                 type: string
             message:
               type: string
-
-    FlowDslClose:
-      type: object
-      required: [close]
-      properties:
-        close:
-          description: |
-            Close the specified document, i.e. attach an evidence log and seal it.
-          type: object
-          required: [documents]
-          properties:
-            documents:
-              type: array
-              items:
-                type: string
 
     FlowDslExpect:
       description: |

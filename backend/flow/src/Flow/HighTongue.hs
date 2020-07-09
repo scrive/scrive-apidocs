@@ -142,7 +142,7 @@ instance FromJSON DSLVersion where
     pure (DSLVersion t)
 
 supportedVersions :: [DSLVersion]
-supportedVersions = [DSLVersion "1"]
+supportedVersions = [DSLVersion "0.1.0"]
 
 data ValidationError = ValidationError
     { line_number :: Word32

@@ -82,7 +82,7 @@ addDocument user = addRandomDocument (rdaDefault user)
 
 processZero :: Process
 processZero = Process [r|
-dsl-version: "1"
+dsl-version: "0.1.0"
 stages:
   - initial:
       actions: []
@@ -140,7 +140,7 @@ testZeroToInstance = do
 
 processFailure :: Process
 processFailure = Process [r|
-dsl-version: "1"
+dsl-version: "0.1.0"
 stages:
   - initial:
       actions: []
@@ -181,7 +181,7 @@ testInstanceFailure = do
 
 simpleProcess :: Process
 simpleProcess = Process [r|
-dsl-version: "1"
+dsl-version: "0.1.0"
 stages:
   - initial:
       actions: []

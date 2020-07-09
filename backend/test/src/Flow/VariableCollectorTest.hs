@@ -20,7 +20,7 @@ tests =
 
 process :: Text
 process = [r|
-dsl-version: "1"
+dsl-version: "0.1.0"
 stages:
   - view:
       actions:

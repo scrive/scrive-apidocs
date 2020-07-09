@@ -26,7 +26,7 @@ testSupportedDSLVersion = assertRight $ decodeHighTongue process
   where
     -- TODO: use a version from HighTongue.supportedVersions in "process"
     process = unsafeProcess [r|
-          dsl-version: "1"
+          dsl-version: "0.1.0"
           stages:
             - sign:
                 actions: []
@@ -68,7 +68,7 @@ testDuplicateStageNameErrors = assertLeft $ decodeHighTongue process
   where
     -- TODO: use a version from HighTongue.supportedVersions in "process"
     process = unsafeProcess [r|
-          dsl-version: "1"
+          dsl-version: "0.1.0"
           stages:
             - dup:
                 actions: []
