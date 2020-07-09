@@ -104,7 +104,7 @@ sendSMSHelper MbloxSender {..} sm@ShortMessage {..} = localData [identifier smID
 sendSMSHelper GenericSESender {..} sm@ShortMessage {..} =
   localData [identifier smID] $ do
     let clearmsisdn = clearMobileNumber smMSISDN
-    logInfoSendSMS "Mblox" sm
+    logInfoSendSMS "GenericSE" sm
     let smsDataJSON = encode . runJSONGen $ do
           value "From"              smOriginator
           value "To"                [clearmsisdn]
@@ -133,19 +133,19 @@ sendSMSHelper GenericSESender {..} sm@ShortMessage {..} =
           Just _ -> do
             logAttention
                 "Sendout with GenericSE failed  - \
-                        \no singleton [id] in response "
+                          \no singleton [id] in response "
               $ object ["resp" .= show resp]
             return False
           Nothing -> do
             logAttention
                 "Sendout with GenericSE failed  - \
-                        \no id in response "
+                          \no id in response "
               $ object ["resp" .= show resp]
             return False
       (True, Error err) -> do
         logAttention
             "Sendout with GenericSE failed  - \
-                      \response is not a valid json "
+                        \response is not a valid json "
           $ object ["resp" .= show resp, "err" .= err]
         return False
       _ -> return False

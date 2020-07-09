@@ -36,7 +36,7 @@ parseGenericSEStatus = do
     Just "Failed"    -> do
       mreason <- fromJSValueField "Reason"
       case mreason of
-        Just reason -> return $ Just $ Failed reason
+        Just reason -> return . Just $ Failed reason
         _           -> return Nothing
     _ -> return Nothing
 
@@ -47,11 +47,9 @@ handleInterestingEvent json genericSEID mError = do
   case msms of
     Nothing -> logAttention "GenericSE callback for nonexisting sms"
       $ object ["request" .= show json]
-    Just (ShortMessage {..}) -> do
-      let deliverage = case mError of
-            Nothing  -> SMSDelivered
-            Just err -> SMSUndelivered err
-          event = SMSEvent smMSISDN deliverage
+    Just ShortMessage {..} -> do
+      let deliverage = maybe SMSDelivered SMSUndelivered mError
+          event      = SMSEvent smMSISDN deliverage
       res <- dbUpdate $ UpdateWithSMSEvent smID event
       logInfo "UpdateWithSMSEventForGenericSE returned"
         $ object ["messageId" .= genericSEID, "event" .= show event, "result" .= res]
