@@ -93,58 +93,62 @@ main = withCurlDo $ do
     $ createPoolSource (connSettings kontraComposites) (maxDBConnections appConf)
   rng <- newCryptoRNGState
 
-  -- Start Flow server
   -- TODO: This is only a temporary solution. We should move Flow to a proper
   -- standalone service later.
-  if runFlowServer appConf
-    then do
-      (errsFlow, logRunnerFlow) <- mkLogRunner "flow" (logConfig appConf) rng
-      mapM_ T.putStrLn errsFlow
+  let (startFlow, maybeFork, startKontrakcja) = case servicesToRun appConf of
+        RunOnlyKontrakcja -> (False, identity, True)
+        RunOnlyFlow       -> (True, identity, False)
+        RunBoth           -> (True, void . fork, True)
 
-      runWithLogRunner logRunnerFlow $ logInfo_ "Starting flow-server"
+  -- Start Flow server
+  when startFlow $ do
+    (errsFlow, logRunnerFlow) <- mkLogRunner "flow" (logConfig appConf) rng
+    mapM_ T.putStrLn errsFlow
 
-      liftIO . void $ runFlow
-        logRunnerFlow
-        ( FlowConfiguration
-            (unConnectionSource . simpleSource $ connSettings kontraComposites)
-        $ flowPort appConf
-        )
+    runWithLogRunner logRunnerFlow $ logInfo_ "Starting flow-server"
 
-    -- Start Kontrakcja server
-    else do
-      (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf) rng
-      mapM_ T.putStrLn errs
+    liftIO . maybeFork . void $ runFlow
+      logRunnerFlow
+      ( FlowConfiguration
+          (unConnectionSource . simpleSource $ connSettings kontraComposites)
+      $ flowPort appConf
+      )
 
-      hostname <- getHostName
-      let globalLogContext = ["server_hostname" .= hostname]
+  -- Start Kontrakcja server
+  when startKontrakcja $ do
+    (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf) rng
+    mapM_ T.putStrLn errs
 
-      runWithLogRunner lr . localData globalLogContext $ do
-        logInfo "Starting kontrakcja-server" $ object ["version" .= VersionTH.versionID]
-        checkExecutables
+    hostname <- getHostName
+    let globalLogContext = ["server_hostname" .= hostname]
 
-        withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
-          checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
-          unless (readOnlyDatabase appConf) $ do
-            dbUpdate . SetMainDomainURL $ T.unpack (mainDomainUrl appConf)
+    runWithLogRunner lr . localData globalLogContext $ do
+      logInfo "Starting kontrakcja-server" $ object ["version" .= VersionTH.versionID]
+      checkExecutables
 
-        appGlobals <- do
-          templates <-
-            liftBase $ newMVar =<< (,) <$> getTemplatesModTime <*> readGlobalTemplates
-          mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
-          filecache   <- newFileMemCache $ localFileCacheSize appConf
-          amazonEnv   <- s3envFromConfig $ amazonConfig appConf
-          lambdaEnv   <- pdfToolsLambdaEnvFromConf $ pdfToolsLambdaConf appConf
+      withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
+        checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
+        unless (readOnlyDatabase appConf) $ do
+          dbUpdate . SetMainDomainURL $ T.unpack (mainDomainUrl appConf)
 
-          return AppGlobals { templates         = templates
-                            , mrediscache       = mrediscache
-                            , filecache         = filecache
-                            , cryptorng         = rng
-                            , connsource        = pool
-                            , hostname          = T.pack hostname
-                            , amazons3env       = amazonEnv
-                            , pdftoolslambdaenv = lambdaEnv
-                            }
-        startSystem appGlobals appConf
+      appGlobals <- do
+        templates <-
+          liftBase $ newMVar =<< (,) <$> getTemplatesModTime <*> readGlobalTemplates
+        mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
+        filecache   <- newFileMemCache $ localFileCacheSize appConf
+        amazonEnv   <- s3envFromConfig $ amazonConfig appConf
+        lambdaEnv   <- pdfToolsLambdaEnvFromConf $ pdfToolsLambdaConf appConf
+
+        return AppGlobals { templates         = templates
+                          , mrediscache       = mrediscache
+                          , filecache         = filecache
+                          , cryptorng         = rng
+                          , connsource        = pool
+                          , hostname          = T.pack hostname
+                          , amazons3env       = amazonEnv
+                          , pdftoolslambdaenv = lambdaEnv
+                          }
+      startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> MainM ()
 startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm

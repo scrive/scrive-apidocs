@@ -2,8 +2,10 @@ module AppConf (
     AppConf(..)
   , AmazonConfig
   , unjsonAppConf
+  , ServicesToRun(..)
   ) where
 
+import Data.Aeson
 import Data.Unjson
 import Data.Word
 
@@ -22,6 +24,28 @@ import PdfToolsLambda.Conf
 import Salesforce.Conf
 import SSO.Conf
 import User.Email
+
+data ServicesToRun
+  = RunOnlyKontrakcja
+  | RunOnlyFlow
+  | RunBoth
+  deriving (Eq, Show)
+
+instance FromJSON ServicesToRun where
+  parseJSON v = case v of
+    String "kontrakcja" -> pure RunOnlyKontrakcja
+    String "flow"       -> pure RunOnlyFlow
+    String "both"       -> pure RunBoth
+    x -> fail $ "Expected one of `kontrakcja`, `flow`, or `both`, but got: " <> show x
+
+instance ToJSON ServicesToRun where
+  toJSON = \case
+    RunOnlyKontrakcja -> "kontrakcja"
+    RunOnlyFlow       -> "flow"
+    RunBoth           -> "both"
+
+instance Unjson ServicesToRun where
+  unjsonDef = unjsonAeson
 
 -- | Main application configuration.  This includes amongst other
 -- things the http port number, AWS, GuardTime, E-ID and email
@@ -86,7 +110,7 @@ data AppConf = AppConf
   , postSignViewRedirectURL :: Text
   , useFolderListCallsByDefault :: Bool
   , flowPort :: Int
-  , runFlowServer :: Bool
+  , servicesToRun :: ServicesToRun
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -155,10 +179,10 @@ unjsonAppConf =
               useFolderListCallsByDefault
               "Enable folder list calls for default user group settings"
     <*> fieldDef "flow_port" 9173 flowPort "Flow listening port"
-    <*> fieldDef "run_flow_server"
-                 False
-                 runFlowServer
-                 "Start Flow server instead of Kontrakcja"
+    <*> fieldDef "services_to_run"
+                 RunOnlyKontrakcja
+                 servicesToRun
+                 "Which services should be started: `kontrakcja`, `flow`, or `both`"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
