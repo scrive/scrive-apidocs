@@ -66,6 +66,8 @@ cradle:
               component: "lib:kontrakcja"
             - path: "backend/mailer/src"
               component: "lib:kontrakcja"
+            - path: "backend/flow/src"
+              component: "lib:kontrakcja"
 
             - path: "./backend/kontrakcja-prelude"
               component: "lib:kontrakcja-prelude"
