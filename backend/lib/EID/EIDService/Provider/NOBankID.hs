@@ -94,6 +94,41 @@ instance FromJSON StartNOBankIDEIDServiceTransactionResponse where
       providerAuth = providerName <> "Auth"
       providerSign = providerName <> "Sign"
 
+totalSignTextLength :: Int
+totalSignTextLength = 118
+
+properSignTextChars :: String
+properSignTextChars =
+  ['0' .. '9']
+    ++ ['a' .. 'z']
+    ++ ['A' .. 'Z']
+    ++ ['(' .. '?']
+    ++ "æøåÆØÅ #$%&@¡£¤¥§¿ÄÇÉÑÖÜßàäèéìñòöù"
+
+createSignText :: Kontrakcja m => Document -> m Text
+createSignText doc = do
+  let title   = documenttitle doc
+      sdid    = show $ documentid doc
+      unquote = T.replace "\"" ""
+      ellipsise s n | T.length s > n = T.take (n - 3) s <> "..."
+                    | otherwise      = s
+      replaceBadChar c | c `elem` properSignTextChars = c
+                       | otherwise                    = '?'
+      replaceBadChars = T.map replaceBadChar
+      render t d = unquote <$> renderLocalTemplate
+        doc
+        "tbs"
+        (do
+          F.value "document_title" t
+          F.value "document_id" d
+        )
+  -- render empty values to get the length of fixed part of the sign text
+  skeletonText <- render "" ""
+  let skeletonTextLength = T.length skeletonText
+      idLength           = length $ show sdid
+      availableLength    = totalSignTextLength - skeletonTextLength - idLength
+  replaceBadChars <$> render (ellipsise title availableLength) sdid
+
 beginEIDServiceTransaction
   :: Kontrakcja m
   => EIDServiceConf
@@ -110,12 +145,8 @@ beginEIDServiceTransaction conf authKind doc sl = do
   let mNonEmptyNOPhone = case getMobile sl of
         "" -> Nothing
         p  -> resultToMaybe . asValidPhoneForNorwegianBankID $ p
-  ctx       <- getContext
-  signText' <- renderLocalTemplate doc "tbs" $ do
-    F.value "document_title" $ documenttitle doc
-    F.value "document_id" . show $ documentid doc
-  -- EID HUB breaks on double quotes
-  let signText = T.replace "\"" "" signText'
+  ctx             <- getContext
+  signText        <- createSignText doc
   mkontraRedirect <- case authKind of
     EIDServiceAuthToView _ -> Just <$> guardJustM (getField "redirect")
     EIDServiceAuthToSign   -> return Nothing
