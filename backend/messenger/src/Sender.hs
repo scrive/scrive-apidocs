@@ -68,6 +68,7 @@ sendSMSHelper MbloxSender {..} sm@ShortMessage {..} = localData [identifier smID
         value "to"              [clearmsisdn]
         value "body"            smBody
         value "delivery_report" ("per_recipient" :: String)
+        forM_ mbCallbackURL $ value "callback_url"
   (success, resp) <- curlSMSSender
     [ "-X"
     , "POST"
@@ -99,6 +100,68 @@ sendSMSHelper MbloxSender {..} sm@ShortMessage {..} = localData [identifier smID
         $ object ["resp" .= show resp, "err" .= err]
       return False
     _ -> return False
+
+sendSMSHelper GenericSESender {..} sm@ShortMessage {..} = do
+  let clearmsisdn         = clearMobileNumber smMSISDN
+      northAmericanNumber = "+1" `T.isPrefixOf` clearmsisdn
+      mbloxSender         = MbloxSender
+        { mbToken       = "6bbf6c2109ca468cb0df6cc21083a54d"
+        , mbURL         = "https://eu.sms.api.sinch.com/xms/v1/Scrive_gw0/batches"
+        , mbCallbackURL = Just "https://scrive.com/sms/mblox"
+        }
+  if northAmericanNumber
+    then
+      -- THIS IS A HACK
+      -- fallback to mblox sender for american numbers
+      -- should be removed when GenericSE implements american number for us
+         sendSMSHelper mbloxSender sm
+    else do
+      localData [identifier smID] $ do
+        logInfoSendSMS "GenericSE" sm
+        let smsDataJSON = encode . runJSONGen $ do
+              value "From"              smOriginator
+              value "To"                [clearmsisdn]
+              value "Text"              smBody
+              value "DeliveryReportUrl" gseCallbackURL
+        (success, resp) <- curlSMSSender
+          [ "-X"
+          , "POST"
+          , "--basic"
+          , "-u"
+          , T.pack (gseSenderUser <> ":" <> gseSenderPassword)
+          , "-H"
+          , "Content-Type: application/json"
+          , "-d"
+          , T.pack smsDataJSON
+          , T.pack gseSenderUrl
+          ]
+          clearmsisdn
+        case (success, decode $ T.unpack resp) of
+          (True, Ok jresp) ->
+            case runIdentity . withJSValue jresp $ fromJSValueField "MessageId" of
+              Just [genericSEID] -> do
+                logInfo "SMS sent through GenericSE"
+                  $ object [logPair_ sm, "genericseid" .= show genericSEID]
+                dbUpdate $ UpdateSMSWithRemoteID smID genericSEID
+              Just _ -> do
+                logAttention
+                    "Sendout with GenericSE failed  - \
+                            \no singleton [id] in response "
+                  $ object ["resp" .= show resp]
+                return False
+              Nothing -> do
+                logAttention
+                    "Sendout with GenericSE failed  - \
+                            \no id in response "
+                  $ object ["resp" .= show resp]
+                return False
+          (True, Error err) -> do
+            logAttention
+                "Sendout with GenericSE failed  - \
+                          \response is not a valid json "
+              $ object ["resp" .= show resp, "err" .= err]
+            return False
+          _ -> return False
 
 sendSMSHelper TeliaCallGuideSender {..} sm@ShortMessage {..} =
   localData [identifier smID] $ do

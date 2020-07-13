@@ -59,11 +59,20 @@ data SenderConfig = MbloxSender
   { mbToken          :: !String
   , mbURL            :: !String
   -- ^ "https://api.mblox.com/xms/v1/{username}/batches"
+  , mbCallbackURL    :: !(Maybe String)
+  -- ^ "https://scrive.com/sms/mblox"
   } | TeliaCallGuideSender
   { tcgSenderUrl      :: !String
   -- ^ "https://sms.ace.teliacompany.com/smsplus/smsextended"
   , tcgSenderUser     :: !String
   , tcgSenderPassword :: !String
+  } | GenericSESender
+  -- ^ there's nothing generic about this, the provider is called GenericSE
+  { gseSenderUrl      :: !String
+  -- ^ "https://api.genericmobile.se/SmsGateway/api/v1/Message"
+  , gseSenderUser     :: !String
+  , gseSenderPassword :: !String
+  , gseCallbackURL    :: !String
   } | LocalSender
   { localDirectory   :: !FilePath
   , localOpenCommand :: !(Maybe String)
@@ -74,10 +83,10 @@ instance Unjson SenderConfig where
     "type"
     [ ( "mblox"
       , $(isConstr 'MbloxSender)
-      , MbloxSender <$> field "token" mbToken "Mblox api token" <*> field
-        "url"
-        mbURL
-        "Mblox url, with username embedded"
+      , MbloxSender
+      <$> field "token" mbToken "Mblox api token"
+      <*> field "url"   mbURL   "Mblox url, with username embedded"
+      <*> fieldOpt "callback_url" mbCallbackURL "Scrive mblox callback url"
       )
     , ( "telia_callguide"
       , $(isConstr 'TeliaCallGuideSender)
@@ -85,6 +94,14 @@ instance Unjson SenderConfig where
       <$> field "url"      tcgSenderUrl      "URL for Telia CallGuide service"
       <*> field "username" tcgSenderUser     "Username for Telia CallGuide service"
       <*> field "password" tcgSenderPassword "Password for Telia CallGuide service"
+      )
+    , ( "genericse"
+      , $(isConstr 'GenericSESender)
+      , GenericSESender
+      <$> field "url"          gseSenderUrl      "URL for GenericSE service"
+      <*> field "username"     gseSenderUser     "Username for GenericSE service"
+      <*> field "password"     gseSenderPassword "Password for GenericSE service"
+      <*> field "callback_url" gseCallbackURL    "Scrive GenericSE callback url"
       )
     , ( "local"
       , $(isConstr 'LocalSender)
