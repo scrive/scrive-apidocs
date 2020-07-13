@@ -642,6 +642,12 @@ viewUserGroup model ug address settings =
                 settings.eidUseForSEView
                 (SetBoolField "eidUseForSEView")
                 [ readonly ug.settingsIsInherited ]
+            , formSelectRowM "Force SEBankID Signing Provider"
+                ""
+                UserGroup.enumSEBankIDSigningProviderOverride
+                settings.seBankIDSigningOverride
+                (SetStringField "seBankIDSigningOverride")
+                [ disabled ug.settingsIsInherited ]
             , formCheckboxRowM "Uses new frontend"
                 "If set, then the users of company will see new frontend by default after loging in."
                 settings.appFrontend

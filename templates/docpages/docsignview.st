@@ -98,7 +98,8 @@ $htmlopentag()$
           showLegalText: $if(legaltext)$ true $else$ false $endif$,
           postSignViewEnabled: $if(postsignviewenabled)$ true $else$ false $endif$,
           postSignViewRedirectUrl: "$postsignviewredirecturl$",
-          useEIDHubForNOBankIDSign: $if(useEIDHubForNOBankIDSign)$ true $else$ false $endif$
+          useEIDHubForNOBankIDSign: $if(useEIDHubForNOBankIDSign)$ true $else$ false $endif$,
+          useEIDHubForSEBankIDSign: $if(useEIDHubForSEBankIDSign)$ true $else$ false $endif$
         };
 
       if (window.trackJs !== undefined && trackJs) {

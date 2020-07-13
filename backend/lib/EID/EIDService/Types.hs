@@ -25,6 +25,7 @@ module EID.EIDService.Types (
   , EIDServiceFITupasSignature(..)
   , EIDServiceOnfidoSignature(..)
   , EIDServiceNOBankIDSignature(..)
+  , EIDServiceSEBankIDSignature(..)
   , OnfidoMethod(..)
 
   -- Provider specific, can be refactored once redundant types above are removed
@@ -425,6 +426,15 @@ data EIDServiceOnfidoSignature = EIDServiceOnfidoSignature
   , eidServiceOnfidoSigMethod :: OnfidoMethod
   }
   deriving (Eq, Ord, Show)
+
+data EIDServiceSEBankIDSignature = EIDServiceSEBankIDSignature
+  { eidServiceSEBankIDSigSignatoryName  :: Text
+  , eidServiceSEBankIDSigPersonalNumber :: Text
+  , eidServiceSEBankIDSigIP             :: Text
+  , eidServiceSEBankIDSigSignedText     :: Text
+  , eidServiceSEBankIDSigSignature      :: ByteString
+  , eidServiceSEBankIDSigOcspResponse   :: ByteString
+  } deriving (Eq, Ord, Show)
 
 --TODO: THESE BELOW CAN'T BE REFACTORED AWAY OR INTO THE PROVIDER MODULES UNTIL THE
 --TODO: AUTH/SIG TYPES ABOVE ARE REMOVED AND THE TRANSACTION/COMPLETION DATA USED DIRECTLY

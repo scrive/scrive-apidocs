@@ -253,7 +253,7 @@ testMoveFolder = do
   -- a folder needs to be able to have root ug associated with it
   -- create a 4 level tree, each parent 2 subfolders
   (rootfdrid, fids) <- createFolderTree 3
-  void . dbUpdate $ UserGroupCreate (set #homeFolderID (Just rootfdrid) defaultUserGroup)
+  void . dbUpdate . UserGroupCreate $ set #homeFolderID (Just rootfdrid) defaultUserGroup
 
   -- take Root.Left folder and move it to Root.Right....Right folder
   Just folder1 <- dbQuery . FolderGet $ fids !! 1
@@ -270,8 +270,9 @@ testMoveFolderCycleError :: TestEnv ()
 testMoveFolderCycleError = do
   folderA0 <- rand 10 arbitrary
   folderA  <- dbUpdate . FolderCreate . set #parentID Nothing $ folderA0
-  void . dbUpdate $ UserGroupCreate
-    (set #homeFolderID (Just (folderA ^. #id)) defaultUserGroup)
+  void . dbUpdate . UserGroupCreate $ set #homeFolderID
+                                          (Just (folderA ^. #id))
+                                          defaultUserGroup
   -- make B child of A
   folderB0 <- rand 10 arbitrary
   folderB  <- dbUpdate . FolderCreate . set #parentID (Just $ folderA ^. #id) $ folderB0

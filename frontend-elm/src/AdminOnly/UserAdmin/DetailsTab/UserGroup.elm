@@ -9,6 +9,7 @@ module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     , decoder
     , enumPadAppMode
     , enumSealingMethod
+    , enumSEBankIDSigningProviderOverride
     , enumSmsProvider
     , formValues
     , getInternalTag
@@ -30,8 +31,8 @@ import Json.Decode.Pipeline as DP
 import Json.Encode as JE
 import List as L
 import Maybe as M
+import Maybe.Extra as M
 import Utils exposing (boolToJson, ite, stringNonEmpty, flip)
-
 
 
 -- USER GROUP
@@ -176,6 +177,17 @@ setStringField name value ug =
                             Enum.fromString enumSealingMethod value
                     in
                     { s | sealingMethod = M.withDefault s.sealingMethod mNewSealingMethod }
+                )
+                ug
+
+        "seBankIDSigningOverride" ->
+            modifySettings
+                (\s ->
+                    let
+                        mNewSEBankIDSigningOverride =
+                            Enum.fromString enumSEBankIDSigningProviderOverride value
+                    in
+                    { s | seBankIDSigningOverride = M.withDefault s.seBankIDSigningOverride mNewSEBankIDSigningOverride }
                 )
                 ug
 
@@ -333,8 +345,32 @@ type alias Settings =
     , hasPostSignview : Bool
     , eidUseForSEView : Bool
     , appFrontend : Bool
+    , seBankIDSigningOverride : SEBankIDSigningProviderOverride
     }
 
+type SEBankIDSigningProviderOverride = ForceCGIForSEBankIDSigning | ForceEIDHubForSEBankIDSigning | DefaultSEBankIDSigning
+
+enumSEBankIDSigningProviderOverride : Enum SEBankIDSigningProviderOverride
+enumSEBankIDSigningProviderOverride =
+  let allValues = [ForceCGIForSEBankIDSigning, ForceEIDHubForSEBankIDSigning, DefaultSEBankIDSigning]
+      toString override = case override of
+        ForceCGIForSEBankIDSigning -> "force_cgi"
+        ForceEIDHubForSEBankIDSigning -> "force_eidhub"
+        DefaultSEBankIDSigning -> "no_override"
+      toHumanString override = case override of
+        ForceCGIForSEBankIDSigning -> "Force CGI"
+        ForceEIDHubForSEBankIDSigning -> "Force EID Hub"
+        DefaultSEBankIDSigning -> "Use global default"
+  in makeEnum allValues toString toHumanString
+
+seBankIDSigningProviderOverrideDecoder : Decoder SEBankIDSigningProviderOverride
+seBankIDSigningProviderOverrideDecoder =
+    JD.string
+    |> JD.andThen (
+    \str -> case findEnumValue enumSEBankIDSigningProviderOverride str of
+        Err _ -> JD.fail <| "Cannot parse SEBankIDSigningProviderOverride: " ++ str
+        Ok override -> JD.succeed override
+    )
 
 settingsDecoder : Decoder Settings
 settingsDecoder =
@@ -364,6 +400,7 @@ settingsDecoder =
         |> DP.required "haspostsignview" JD.bool
         |> DP.required "eiduseforseview" JD.bool
         |> DP.required "appfrontend" JD.bool
+        |> DP.required "seBankIDSigningOverride" seBankIDSigningProviderOverrideDecoder
 
 
 type alias ParentUserGroup =
@@ -595,6 +632,7 @@ formValuesSettings settings =
     , ( "companyappfrontend", boolToJson settings.appFrontend )
     , ( "companycgiserviceid", M.withDefault "" settings.cgiServiceID )
     , ( "companycgidisplayname", M.withDefault "" settings.cgiDisplayName )
+    , ( "companysebankidsigningoverride", Enum.toString enumSEBankIDSigningProviderOverride settings.seBankIDSigningOverride)
     ]
 
 mField : (value -> String) -> ( String, Maybe value ) -> Maybe ( String, String )

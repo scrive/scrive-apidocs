@@ -148,6 +148,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "sso_config" $ ugs ^. #ssoConfig
   sqlSet "use_eid_service_for_se_view" $ ugs ^. #eidUseForSEView
   sqlSet "use_app_frontend" $ ugs ^. #appFrontend
+  sqlSet "sebankid_signing_override" $ ugs ^. #seBankIDSigningOverride
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -520,6 +521,7 @@ ugSettingsSelectors =
   , "add_metadata_to_pdfs"
   , "use_eid_service_for_se_view"
   , "use_app_frontend"
+  , "sebankid_signing_override"
   ]
 
 

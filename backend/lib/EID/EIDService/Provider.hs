@@ -4,6 +4,8 @@ module EID.EIDService.Provider (
   , completeEIDServiceSignTransaction
   ) where
 
+import Data.Aeson
+
 import Doc.DocStateData
 import EID.EIDService.Conf
 import EID.EIDService.Types
@@ -23,7 +25,7 @@ beginEIDServiceTransaction
   -> EIDServiceAuthenticationKind
   -> Document
   -> SignatoryLink
-  -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf provider authKind doc sl = do
   case provider of
     EIDServiceTransactionProviderVerimi ->
@@ -82,4 +84,4 @@ completeEIDServiceSignTransaction conf provider sl = case provider of
     FITupas.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderOnfido -> Onfido.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderSEBankID ->
-    unexpectedError "SEBankID sign not supported via EID service"
+    SEBankID.completeEIDServiceSignTransaction conf sl

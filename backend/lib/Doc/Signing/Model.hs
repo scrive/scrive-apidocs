@@ -5,6 +5,7 @@ module Doc.Signing.Model (
   , CleanAllScheduledDocumentSigning(..)
   , GetDocumentSigningStatus(..)
   , UpdateDocumentSigning(..)
+  , UpdateDocumentSigningCancelled(..)
   ) where
 
 import Control.Monad.Catch
@@ -104,6 +105,13 @@ instance (MonadDB m, MonadLog m, MonadMask m) => DBQuery m GetDocumentSigningSta
       sqlResult "cancelled"
       sqlResult "last_check_status"
     fetchMaybe identity
+
+data UpdateDocumentSigningCancelled = UpdateDocumentSigningCancelled SignatoryLinkID Bool
+instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m UpdateDocumentSigningCancelled () where
+  dbUpdate (UpdateDocumentSigningCancelled slid cancelled) = do
+    runQuery_ . sqlUpdate "document_signing_jobs" $ do
+      sqlSet "cancelled" cancelled
+      sqlWhereEq "id" slid
 
 data UpdateDocumentSigning = UpdateDocumentSigning SignatoryLinkID Bool Text
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m UpdateDocumentSigning () where

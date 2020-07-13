@@ -40,6 +40,7 @@ module UserGroup.Types
   , ugFromUGRoot
   , UserGroupWithChildren(UserGroupWithChildren)
   , Tag(Tag)
+  , SEBankIDSigningProviderOverride(..)
   ) where
 
 import qualified Data.Set as S
@@ -261,6 +262,7 @@ defaultUserGroupSettings = UserGroupSettings
   , addMetadataToPDFs          = False
   , eidUseForSEView            = False
   , appFrontend                = False
+  , seBankIDSigningOverride    = Nothing
   }
 
 -- UI

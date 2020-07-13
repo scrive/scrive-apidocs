@@ -234,7 +234,10 @@ companySettingsJson ugs = do
   value "eiduseforseview" $ ugs ^. #eidUseForSEView
   value "appfrontend" $ ugs ^. #appFrontend
   value "promptbpid" $ ugs ^. #requireBPIDForNewDoc
-
+  value "seBankIDSigningOverride" $ case ugs ^. #seBankIDSigningOverride of
+    Just ForceCGIForSEBankIDSigning -> "force_cgi"
+    Just ForceEIDHubForSEBankIDSigning -> "force_eidhub"
+    Nothing -> "no_override"
 
 userStatsToJSON
   :: (UTCTime -> Text)

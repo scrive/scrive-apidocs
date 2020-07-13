@@ -267,5 +267,8 @@ kontraMigrations =
     , createTableUserGroupDeletionRequests
     , createTableUserGroupDeletionLog
     , addUserGroupDeletionRequestEvaluationJob
+    , eidSignaturesAddProviderEIDServiceSEBankID
+    , userGroupSettingsAddSEBankIDOverride
+    , removeEidJson
     ]
     <> flowMigrations

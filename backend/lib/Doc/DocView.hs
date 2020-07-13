@@ -39,6 +39,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocUtils
 import Doc.DocViewMail
+import EID.EIDService.Provider.SEBankID (useEIDHubForSEBankIDSign)
 import EID.Nets.Config
 import File.FileID
 import Kontra
@@ -116,6 +117,8 @@ pageDocumentSignView ctx document siglink ad = do
     F.value "legaltext" $ ugwpSettings authorugwp ^. #legalText
     F.value "postsignviewenabled" $ ugwpSettings authorugwp ^. #hasPostSignview
     F.value "postsignviewredirecturl" $ ctx ^. #postSignViewRedirectURL
+    F.value "useEIDHubForSEBankIDSign"
+      $ useEIDHubForSEBankIDSign ctx (ugwpSettings authorugwp)
     standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView

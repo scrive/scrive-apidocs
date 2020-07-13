@@ -16,6 +16,7 @@ module UserGroup.Internal (
   , UserGroupWithParents
   , UserGroupRoot(..)
   , UserGroupWithChildren(..)
+  , SEBankIDSigningProviderOverride(..)
   ) where
 
 import Data.Aeson (FromJSON, ToJSON, parseJSON, toJSON)
@@ -233,6 +234,7 @@ data UserGroupSettings = UserGroupSettings
   , addMetadataToPDFs          :: !Bool
   , eidUseForSEView            :: !Bool
   , appFrontend                :: !Bool
+  , seBankIDSigningOverride    :: !(Maybe SEBankIDSigningProviderOverride)
   } deriving (Show, Eq)
 
 
@@ -266,13 +268,14 @@ type instance CompositeRow UserGroupSettings
     , Bool
     , Bool
     , Bool
+    , Maybe SEBankIDSigningProviderOverride
     )
 
 instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig, addMetadataToPDFs, eidUseForSEView, appFrontend)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig, addMetadataToPDFs, eidUseForSEView, appFrontend, seBankIDSigningOverride)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = DataRetentionPolicy { .. }
@@ -294,6 +297,30 @@ instance FromSQL UserGroupSSOConfiguration where
 instance ToSQL UserGroupSSOConfiguration where
   type PQDest UserGroupSSOConfiguration = PQDest (JSONB BS.ByteString)
   toSQL mbase = toSQL (JSONB $ unjsonToJSON unjsonSSOConfigurationDef mbase)
+
+----------------------------------------
+
+data SEBankIDSigningProviderOverride
+  = ForceCGIForSEBankIDSigning
+  | ForceEIDHubForSEBankIDSigning
+  deriving (Show, Eq)
+
+instance PQFormat SEBankIDSigningProviderOverride where
+  pqFormat = pqFormat @Int16
+
+instance FromSQL SEBankIDSigningProviderOverride where
+  type PQBase SEBankIDSigningProviderOverride = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      0 -> return ForceCGIForSEBankIDSigning
+      1 -> return ForceEIDHubForSEBankIDSigning
+      _ -> E.throwIO $ RangeError { reRange = [(0, 1)], reValue = n }
+
+instance ToSQL SEBankIDSigningProviderOverride where
+  type PQDest SEBankIDSigningProviderOverride = PQDest Int16
+  toSQL ForceCGIForSEBankIDSigning    = toSQL (0 :: Int16)
+  toSQL ForceEIDHubForSEBankIDSigning = toSQL (1 :: Int16)
 
 ----------------------------------------
 

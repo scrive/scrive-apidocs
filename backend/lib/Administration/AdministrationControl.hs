@@ -601,9 +601,16 @@ getUserGroupSettingsChange = do
   mcompanysealingmethod           <-
     fmap sealingMethodFromText <$> getField' $ "companysealingmethod"
   mcompanydocumentsessiontimeout <- getSessionTimeoutField "companydocumentsessiontimeout"
-  mcompanyhaspostsignview        <- getField "companyhaspostsignview"
-  mcompanyeiduseforseview        <- getField "companyeiduseforseview"
-  mcompanyappfrontend            <- getField "companyappfrontend"
+  mcompanyhaspostsignview         <- getField "companyhaspostsignview"
+  mcompanyeiduseforseview         <- getField "companyeiduseforseview"
+  mcompanyappfrontend             <- getField "companyappfrontend"
+  mcompanysebankidsigningoverride <- do
+    mstr <- getField "companysebankidsigningoverride"
+    return $ case mstr of
+      Just "force_cgi"    -> Just $ Just ForceCGIForSEBankIDSigning
+      Just "force_eidhub" -> Just $ Just ForceEIDHubForSEBankIDSigning
+      Just "no_override"  -> Just Nothing
+      _                   -> Nothing
 
   return
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
@@ -647,6 +654,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #hasPostSignview . (== "true")) mcompanyhaspostsignview
     . maybe identity (set #eidUseForSEView . (== "true")) mcompanyeiduseforseview
     . maybe identity (set #appFrontend . (== "true"))     mcompanyappfrontend
+    . maybe identity (set #seBankIDSigningOverride)       mcompanysebankidsigningoverride
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))

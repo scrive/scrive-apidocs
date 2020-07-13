@@ -56,7 +56,7 @@ beginEIDServiceTransaction
   -> EIDServiceAuthenticationKind
   -> Document
   -> SignatoryLink
-  -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
   ctx             <- getContext
   mkontraRedirect <- case authKind of
@@ -83,7 +83,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
     EIDServiceAuthToView _ ->
       chargeForItemSingle CIIDINAuthenticationStarted $ documentid doc
     EIDServiceAuthToSign -> chargeForItemSingle CIIDINSignatureStarted $ documentid doc
-  return (tid, turl, EIDServiceTransactionStatusStarted)
+  return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data NLIDINEIDServiceCompletionData = NLIDINEIDServiceCompletionData
   { eiditdName :: Text

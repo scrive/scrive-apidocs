@@ -46,6 +46,7 @@ import Doc.SignatoryLinkID
 import Doc.Signing.Model
 import Doc.SMSPin.Model
 import EID.Authentication.Model (MergeSMSPinAuthentication(..))
+import EID.EIDService.Provider.SEBankID (useEIDHubForSEBankIDSign)
 import EID.Signature.Model
 import EvidenceLog.Model
 import File.File (File(..))
@@ -54,8 +55,11 @@ import Kontra
 import Session.Model (getCurrentSession)
 import Session.Types (Session(sesID))
 import User.Lang
+import UserGroup (ugwpSettings)
+import UserGroup.Model (UserGroupGetWithParents(..))
 import Util.Actor
 import Util.HasSomeUserInfo (getMobile)
+import Util.MonadUtils (guardJust, guardJustM)
 import Util.SignatoryLinkUtils
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -286,13 +290,20 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
             validPin <- checkSignatoryPinToSign slid fields pin
             if not validPin then apiError documentActionForbidden else return pin
 
+    seBankIDSignProvider <- do
+      authorugid <- guardJust $ documentauthorugid olddoc
+      ugwp       <- guardJustM . dbQuery $ UserGroupGetWithParents authorugid
+      return $ if useEIDHubForSEBankIDSign ctx (ugwpSettings ugwp)
+        then EIDServiceSEBankID
+        else CgiGrpBankID
+
     let
       useEIDHubForNOBankIDSign =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOSign
       mprovider = case signatorylinkauthenticationtosignmethod sl of
         StandardAuthenticationToSign -> Nothing
         SMSPinAuthenticationToSign   -> Nothing
-        SEBankIDAuthenticationToSign -> Just CgiGrpBankID
+        SEBankIDAuthenticationToSign -> Just seBankIDSignProvider
         NOBankIDAuthenticationToSign | useEIDHubForNOBankIDSign -> Just EIDServiceNOBankID
                                      | otherwise                -> Just NetsNOBankID
         DKNemIDAuthenticationToSign             -> Just NetsDKNemID

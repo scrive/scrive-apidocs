@@ -35,7 +35,7 @@ import Doc.Types.AuthorAttachment
 import Doc.Types.Document
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
-import EID.CGI.GRP.Types
+import EID.CGI.GRP.Types as CGI
 import EID.EIDService.Communication
 import EID.EIDService.Conf
 import EID.EIDService.Model
@@ -43,6 +43,10 @@ import EID.EIDService.Provider.FITupas (FITupasEIDServiceCompletionData(..))
 import EID.EIDService.Provider.NLIDIN (NLIDINEIDServiceCompletionData(..))
 import EID.EIDService.Provider.NOBankID (NOBankIDEIDServiceCompletionData(..))
 import EID.EIDService.Provider.Onfido (OnfidoEIDServiceCompletionData(..))
+import EID.EIDService.Provider.SEBankID
+  ( SEBankIDEIDServiceSignCompletionData(..)
+  , SEBankIDEIDServiceSignTransactionData(..), normalisePersonalNumber
+  )
 import EID.EIDService.Types
 import EID.Nets.Config
 import EID.Nets.Control (checkNetsSignStatus)
@@ -64,6 +68,7 @@ import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified InputValidation
 import qualified MailContext.Internal
 
 data DocumentSigning = DocumentSigning {
@@ -199,6 +204,12 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                     mEidServiceConf
                     ds
                     now
+                  EIDServiceSEBankID -> handleEidService
+                    (checkSEBankID signingSignatoryID)
+                    processCompleteSEBankIDTransaction
+                    mEidServiceConf
+                    ds
+                    now
                   LegacyBankID -> legacyProviderFail signingSignatoryID LegacyBankID
                   LegacyTelia  -> legacyProviderFail signingSignatoryID LegacyTelia
                   LegacyNordea -> legacyProviderFail signingSignatoryID LegacyNordea
@@ -234,6 +245,25 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       logInfo_ $ "EidHub NL IDIN Sign succeeded: " <> showt est
       signFromESignature ds now
       chargeForItemSingle CIIDINSignatureFinished . documentid =<< theDocument
+
+    checkSEBankID signingSignatoryID conf transactionID = do
+      -- We parse data from EID service as a whole, not only the completion data, as we need 
+      -- process status information from top level entity
+      transactionResponse :: Maybe
+          (EIDServiceTransactionResponse SEBankIDEIDServiceSignTransactionData) <-
+        getTransactionFromEIDService conf
+                                     EIDServiceTransactionProviderSEBankID
+                                     transactionID
+
+      case transactionResponse of
+        Just response -> do
+          let statusInfo = estRespCompletionData response >>= eidsebidsProcessStatusInfo
+          whenJust statusInfo $ \processStatusInfo -> dbUpdate $ UpdateDocumentSigning
+            signingSignatoryID
+            (estRespStatus response == EIDServiceTransactionStatusFailed)
+            processStatusInfo
+          return transactionResponse
+        Nothing -> return Nothing
 
     processCompleteFITupasTransaction ds@DocumentSigning {..} est ct now = do
       let mctd = estRespCompletionData ct
@@ -307,6 +337,44 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
             OnfidoDocumentCheck         -> CIOnfidoDocumentCheckSignatureFinished
             OnfidoDocumentAndPhotoCheck -> CIOnfidoDocumentAndPhotoCheckSignatureFinished
       chargeForItemSingle chargeableitem . documentid =<< theDocument
+
+    processCompleteSEBankIDTransaction ds@DocumentSigning {..} est ct now = do
+      let mctd = estRespCompletionData ct
+      SEBankIDEIDServiceSignTransactionData {..} <- whenNothing mctd
+        $ throwE (Failed Remove)
+      SEBankIDEIDServiceSignCompletionData {..} <- whenNothing eidsebidsCompletionData
+        $ throwE (Failed Remove)
+
+      msl <- getSigLinkFor signingSignatoryID <$> theDocument
+      let personalNumberMatchesSiglink =
+            case normalisePersonalNumber now . getPersonalNumber <$> msl of
+              Just InputValidation.Empty -> True
+              Just (InputValidation.Good pnFromSigLink) ->
+                pnFromSigLink == eidsebidsSignatoryPersonalNumber
+              _ -> False
+
+      unless personalNumberMatchesSiglink $ do
+        logAttention_
+          "Personal number of signatory doesn't match the one authenticated by Swedish BankID."
+        dbUpdate $ UpdateDocumentSigning signingSignatoryID
+                                         True
+                                         (grpFaultText CGI.InternalError)
+        throwE . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
+
+      let sig = EIDServiceSEBankIDSignature
+            { eidServiceSEBankIDSigSignatoryName  = eidsebidsSignatoryName
+            , eidServiceSEBankIDSigPersonalNumber = eidsebidsSignatoryPersonalNumber
+            , eidServiceSEBankIDSigIP             = eidsebidsSignatoryIP
+            , eidServiceSEBankIDSigSignedText     = eidsebidsSignedText
+            , eidServiceSEBankIDSigSignature      = eidsebidsSignature
+            , eidServiceSEBankIDSigOcspResponse   = eidsebidsOcspResponse
+            }
+
+      dbUpdate $ MergeEIDServiceSEBankIDSignature signingSignatoryID sig
+      logInfo_ . ("EidHub Swedish BankID Sign succeeded: " <>) . showt $ est
+      signFromESignature ds now
+
+      chargeForItemSingle CISEBankIDSignatureFinished . documentid =<< theDocument
 
 handleCgiGrpBankID
   :: ( CryptoRNG m
@@ -460,10 +528,10 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
     -- EIDServiceTransactionStatusCompleteAndFailed
     _ -> do
       mergeWithStatus ts
-      dbUpdate
-        $ UpdateDocumentSigning signingSignatoryID True "EID Hub Transaction Failed."
-      throwE . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
-
+      -- In order for frontend /check calls to work we need to keep failed
+      -- signing job around for a few minutes.
+      dbUpdate $ UpdateDocumentSigningCancelled signingSignatoryID True
+      return . Ok . RerunAfter $ iminutes minutesTillPurgeOfFailedAction
 
 signFromESignature
   :: ( GuardTimeConfMonad m

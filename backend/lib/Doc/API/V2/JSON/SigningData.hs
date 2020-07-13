@@ -68,6 +68,7 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                 OnfidoDocumentCheck -> Just OnfidoDocumentCheckAuthenticationToSign
                 OnfidoDocumentAndPhotoCheck ->
                   Just OnfidoDocumentAndPhotoCheckAuthenticationToSign
+            Right (EIDServiceSEBankIDSignature_ _) -> Just SEBankIDAuthenticationToSign
             Right (LegacyBankIDSignature_       _) -> Nothing
             Right (LegacyTeliaSignature_        _) -> Nothing
             Right (LegacyNordeaSignature_       _) -> Nothing
@@ -143,6 +144,18 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
             <> if hidePN
                  then []
                  else ["signatory_date_of_birth" .= eidServiceOnfidoSigDateOfBirth]
+            )
+        ]
+      Right (EIDServiceSEBankIDSignature_ EIDServiceSEBankIDSignature {..}) ->
+        [ "se_bankid_data" .= object
+            (  [ "signatory_name" .= eidServiceSEBankIDSigSignatoryName
+               , "signature" .= encB64 eidServiceSEBankIDSigSignature
+               , "ocsp_response" .= encB64 eidServiceSEBankIDSigOcspResponse
+               , "signatory_ip" .= eidServiceSEBankIDSigIP
+               ]
+            <> if hidePN
+                 then []
+                 else ["personal_number" .= eidServiceSEBankIDSigPersonalNumber]
             )
         ]
       Right (LegacyBankIDSignature_       _) -> []

@@ -72,7 +72,7 @@ beginEIDServiceTransaction
   -> EIDServiceAuthenticationKind
   -> Document
   -> SignatoryLink
-  -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
   ctx             <- getContext
   mkontraRedirect <- case authKind of
@@ -97,7 +97,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- sdkestAuthURL <$> startTransactionWithEIDService conf provider tid
   chargeForItemSingle CIDKNemIDAuthenticationStarted $ documentid doc
-  return (tid, turl, EIDServiceTransactionStatusStarted)
+  return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data DKNemIDEIDServiceCompletionData = DKNemIDEIDServiceCompletionData
   { eidnidInternalProvider :: !EIDServiceDKNemIDInternalProvider

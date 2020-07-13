@@ -34,7 +34,7 @@ tableUserGroups = tblTable
 tableUserGroupSettings :: Table
 tableUserGroupSettings = tblTable
   { tblName        = "user_group_settings"
-  , tblVersion     = 20
+  , tblVersion     = 21
   , tblColumns     =
     [ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
@@ -134,6 +134,11 @@ tableUserGroupSettings = tblTable
                 , colNullable = False
                 , colDefault  = Just "false"
                 }
+    , tblColumn { colName     = "sebankid_signing_override"
+                , colType     = SmallIntT
+                , colNullable = True
+                , colDefault  = Nothing
+                }
     ]
   , tblPrimaryKey  = pkOnColumn "user_group_id"
   , tblForeignKeys =
@@ -146,6 +151,43 @@ tableUserGroupSettings = tblTable
 -- in your migration code.
 ctUserGroupSettings :: CompositeType
 ctUserGroupSettings = CompositeType
+  { ctName    = "user_group_settings_c15"
+  , ctColumns =
+    [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
+    , CompositeColumn { ccName = "idle_doc_timeout_preparation", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_closed", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_canceled", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_timedout", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_rejected", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_error", ccType = SmallIntT }
+    , CompositeColumn { ccName = "immediate_trash", ccType = BoolT }
+    , CompositeColumn { ccName = "cgi_display_name", ccType = TextT }
+    , CompositeColumn { ccName = "sms_provider", ccType = SmallIntT }
+    , CompositeColumn { ccName = "cgi_service_id", ccType = TextT }
+    , CompositeColumn { ccName = "pad_app_mode", ccType = SmallIntT }
+    , CompositeColumn { ccName = "pad_earchive_enabled", ccType = BoolT }
+    , CompositeColumn { ccName = "legal_text", ccType = BoolT }
+    , CompositeColumn { ccName = "require_bpid_for_new_document", ccType = BoolT }
+    , CompositeColumn { ccName = "send_timeout_notification", ccType = BoolT }
+    , CompositeColumn { ccName = "use_folder_list_calls", ccType = BoolT }
+    , CompositeColumn { ccName = "totp_is_mandatory", ccType = BoolT }
+    , CompositeColumn { ccName = "session_timeout", ccType = IntegerT }
+    , CompositeColumn { ccName = "portal_url", ccType = TextT }
+    , CompositeColumn { ccName = "eid_service_token", ccType = TextT }
+    , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
+    , CompositeColumn { ccName = "document_session_timeout", ccType = IntegerT }
+    , CompositeColumn { ccName = "force_hide_pn", ccType = BoolT }
+    , CompositeColumn { ccName = "has_post_signview", ccType = BoolT }
+    , CompositeColumn { ccName = "sso_config", ccType = JsonbT }
+    , CompositeColumn { ccName = "add_metadata_to_pdfs", ccType = BoolT }
+    , CompositeColumn { ccName = "use_eid_service_for_se_view", ccType = BoolT }
+    , CompositeColumn { ccName = "use_app_frontend", ccType = BoolT }
+    , CompositeColumn { ccName = "sebankid_signing_override", ccType = SmallIntT }
+    ]
+  }
+
+ctUserGroupSettings14 :: CompositeType
+ctUserGroupSettings14 = CompositeType
   { ctName    = "user_group_settings_c14"
   , ctColumns =
     [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
@@ -177,42 +219,6 @@ ctUserGroupSettings = CompositeType
     , CompositeColumn { ccName = "add_metadata_to_pdfs", ccType = BoolT }
     , CompositeColumn { ccName = "use_eid_service_for_se_view", ccType = BoolT }
     , CompositeColumn { ccName = "use_app_frontend", ccType = BoolT }
-    ]
-  }
-
-
-ctUserGroupSettings13 :: CompositeType
-ctUserGroupSettings13 = CompositeType
-  { ctName    = "user_group_settings_c13"
-  , ctColumns =
-    [ CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
-    , CompositeColumn { ccName = "idle_doc_timeout_preparation", ccType = SmallIntT }
-    , CompositeColumn { ccName = "idle_doc_timeout_closed", ccType = SmallIntT }
-    , CompositeColumn { ccName = "idle_doc_timeout_canceled", ccType = SmallIntT }
-    , CompositeColumn { ccName = "idle_doc_timeout_timedout", ccType = SmallIntT }
-    , CompositeColumn { ccName = "idle_doc_timeout_rejected", ccType = SmallIntT }
-    , CompositeColumn { ccName = "idle_doc_timeout_error", ccType = SmallIntT }
-    , CompositeColumn { ccName = "immediate_trash", ccType = BoolT }
-    , CompositeColumn { ccName = "cgi_display_name", ccType = TextT }
-    , CompositeColumn { ccName = "sms_provider", ccType = SmallIntT }
-    , CompositeColumn { ccName = "cgi_service_id", ccType = TextT }
-    , CompositeColumn { ccName = "pad_app_mode", ccType = SmallIntT }
-    , CompositeColumn { ccName = "pad_earchive_enabled", ccType = BoolT }
-    , CompositeColumn { ccName = "legal_text", ccType = BoolT }
-    , CompositeColumn { ccName = "require_bpid_for_new_document", ccType = BoolT }
-    , CompositeColumn { ccName = "send_timeout_notification", ccType = BoolT }
-    , CompositeColumn { ccName = "use_folder_list_calls", ccType = BoolT }
-    , CompositeColumn { ccName = "totp_is_mandatory", ccType = BoolT }
-    , CompositeColumn { ccName = "session_timeout", ccType = IntegerT }
-    , CompositeColumn { ccName = "portal_url", ccType = TextT }
-    , CompositeColumn { ccName = "eid_service_token", ccType = TextT }
-    , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
-    , CompositeColumn { ccName = "document_session_timeout", ccType = IntegerT }
-    , CompositeColumn { ccName = "force_hide_pn", ccType = BoolT }
-    , CompositeColumn { ccName = "has_post_signview", ccType = BoolT }
-    , CompositeColumn { ccName = "sso_config", ccType = JsonbT }
-    , CompositeColumn { ccName = "add_metadata_to_pdfs", ccType = BoolT }
-    , CompositeColumn { ccName = "use_eid_service_for_se_view", ccType = BoolT }
     ]
   }
 

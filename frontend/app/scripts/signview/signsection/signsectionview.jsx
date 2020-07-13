@@ -109,6 +109,7 @@ var Task = require("../navigation/task");
         hasEIDNets = hasEIDNets || signatory.noBankIDAuthenticationToSign();
       }
       var hasEIDNOBankID = useEIDHubForNOBankIDSign && signatory.noBankIDAuthenticationToSign();
+      var hasSEBankIDAuth = signatory.seBankIDAuthenticationToSign();
       var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
       var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
       var hasOnfidoAuth = signatory.onfidoDocumentCheckAuthenticationToSign()
@@ -122,7 +123,7 @@ var Task = require("../navigation/task");
         return "pin";
       }
 
-      if (hasEIDAuth) {
+      if (hasSEBankIDAuth) {
         return "eid";
       }
 

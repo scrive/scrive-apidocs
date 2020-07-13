@@ -53,6 +53,13 @@ module.exports = Backbone.Model.extend({
       return this.get("sessionID");
     },
     setStatus: function (s) {
+      // EID Hub returns camelCase status codes instead of snake_case; in order
+      // to be able to reuse this module for both EID Hub and CGI we convert all
+      // status codes to snake_case.
+      if (s) {
+        s = s.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`);
+      }
+
       this.set({"status": s}, {silent: true});
       this.trigger("change");
     },
@@ -83,7 +90,10 @@ module.exports = Backbone.Model.extend({
       var self = this;
       new Submit({
         method: "POST",
-        url: "/s/eid/cgi/grp/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
+        url: (fromTemplate.useEIDHubForSEBankIDSign ? "/eid-service/start/sebankid/sign/" : "/s/eid/cgi/grp/sign/")
+          + self.document().documentid()
+          + "/"
+          + self.signatory().signatoryid(),
         personal_number: BankIDUtils.normalizedPersonalNumber(self.signatory()),
         ajaxsuccess: function (resp, s, xhr) {
           if (resp.auto_start_token && resp.session_id) {

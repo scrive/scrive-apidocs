@@ -4,6 +4,8 @@ module EID.Signature.Migrations (
   , addSignatoryDobAndEmailToEIDSignatures
   , dropEmailFromEIDSignatures
   , addEidJson
+  , eidSignaturesAddProviderEIDServiceSEBankID
+  , removeEidJson
 ) where
 
 import DB
@@ -84,3 +86,34 @@ addEidJson = Migration
                            $ tblColumn { colName = "eid_service_json", colType = TextT }
                        ]
   }
+
+
+eidSignaturesAddProviderEIDServiceSEBankID :: MonadDB m => Migration m
+eidSignaturesAddProviderEIDServiceSEBankID = Migration
+  { mgrTableName = tblName tableEIDSignatures
+  , mgrFrom      = 6
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ . sqlAlterTable "eid_signatures" $ map
+        sqlDropCheck
+        ["eid_signatures_ocsp_response_well_defined"]
+      runQuery_ . sqlAlterTable "eid_signatures" $ map
+        sqlAddValidCheck
+        [ tblCheck
+            { chkName      = "eid_signatures_ocsp_response_well_defined"
+            , chkCondition =
+              "(provider <= 3 OR provider >= 6) AND ocsp_response IS NULL OR (provider = 4 OR provider = 5 OR provider = 12) AND ocsp_response IS NOT NULL"
+            }
+        ]
+  }
+
+removeEidJson :: MonadDB m => Migration m
+removeEidJson = Migration
+  { mgrTableName = tblName tableEIDSignatures
+  , mgrFrom      = 7
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlAlterTable (tblName tableEIDSignatures)
+                                               [sqlDropColumn "eid_service_json"]
+  }
+
+

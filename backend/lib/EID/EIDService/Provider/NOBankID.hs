@@ -100,7 +100,7 @@ beginEIDServiceTransaction
   -> EIDServiceAuthenticationKind
   -> Document
   -> SignatoryLink
-  -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
   let mssn' =
         fieldTextValue =<< (getFieldByIdentity PersonalNumberFI . signatoryfields $ sl)
@@ -157,7 +157,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- snoestURL <$> startTransactionWithEIDService conf provider tid
   chargeForItemSingle CINOBankIDAuthenticationStarted $ documentid doc
-  return (tid, turl, EIDServiceTransactionStatusStarted)
+  return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data NOBankIDEIDServiceCompletionData = NOBankIDEIDServiceCompletionData
   { eidnobidInternalProvider :: !EIDServiceNOBankIDInternalProvider

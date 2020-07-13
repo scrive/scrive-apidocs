@@ -73,10 +73,10 @@ startEIDServiceTransaction provider epType did slid = do
   let authKind = case epType of
         EIDServiceAuthEndpoint -> EIDServiceAuthToView $ mkAuthKind doc
         EIDServiceSignEndpoint -> EIDServiceAuthToSign
-  conf                <- eidServiceConf doc
-  (tid, turl, status) <- beginEIDServiceTransaction conf provider authKind doc sl
-  sid                 <- getNonTempSessionID
-  now                 <- currentTime
+  conf               <- eidServiceConf doc
+  (tid, val, status) <- beginEIDServiceTransaction conf provider authKind doc sl
+  sid                <- getNonTempSessionID
+  now                <- currentTime
   let newTransaction = EIDServiceTransactionFromDB
         { estID              = tid
         , estStatus          = status
@@ -87,7 +87,7 @@ startEIDServiceTransaction provider epType did slid = do
         , estDeadline        = 60 `minutesAfter` now
         }
   dbUpdate $ MergeEIDServiceTransaction newTransaction
-  return $ object ["accessUrl" .= turl]
+  return val
 
 -- Redirect endpoints
 

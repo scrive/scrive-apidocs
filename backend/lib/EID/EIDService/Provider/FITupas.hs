@@ -50,7 +50,7 @@ beginEIDServiceTransaction
   -> EIDServiceAuthenticationKind
   -> Document
   -> SignatoryLink
-  -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
   ctx             <- getContext
   mkontraRedirect <- case authKind of
@@ -76,7 +76,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
       chargeForItemSingle CIFITupasAuthenticationStarted $ documentid doc
     EIDServiceAuthToSign ->
       chargeForItemSingle CIFITupasSignatureStarted $ documentid doc
-  return (tid, turl, EIDServiceTransactionStatusStarted)
+  return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data FITupasEIDServiceCompletionData = FITupasEIDServiceCompletionData
   { eidtupasName :: !Text

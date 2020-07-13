@@ -620,6 +620,13 @@ $if(provider_sebankid)$
   <br/>IP: $signatory_ip$
 </p>
 $endif$
+$if(provider_sebankid_eidservice)$
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  <br/>ID number: $personalNumber(value=signatory_personal_number)$
+  <br/>IP: $signatory_ip$
+</p>
+$endif$
 $if(provider_nobankid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
@@ -666,7 +673,7 @@ $endif$
 $if(signature)$
 <br/>
 <p>Signature: <div style="word-break:break-word;">$personalNumber(value=signature)$</div></p>
-$if(provider_sebankid)$
+$if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response:
   <div style="word-break:break-word;">$ocsp_response$</div>
 </p>

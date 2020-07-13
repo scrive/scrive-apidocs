@@ -5,7 +5,7 @@ import DB
 tableEIDSignatures :: Table
 tableEIDSignatures = tblTable
   { tblName        = "eid_signatures"
-  , tblVersion     = 6
+  , tblVersion     = 8
   , tblColumns     =
     [ tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -18,7 +18,6 @@ tableEIDSignatures = tblTable
     , tblColumn { colName = "ocsp_response", colType = BinaryT }
     , tblColumn { colName = "signatory_ip", colType = TextT }
     , tblColumn { colName = "signatory_date_of_birth", colType = TextT }
-    , tblColumn { colName = "eid_service_json", colType = TextT }
     ]
 -- only one signature per signatory. can be relaxed later if necessary.
   , tblPrimaryKey  = pkOnColumn "signatory_link_id"
@@ -45,7 +44,7 @@ tableEIDSignatures = tblTable
       { chkName      = "eid_signatures_ocsp_response_well_defined"
       , chkCondition =
       -- ocsp_response is used with legacy mobile_bank_id and cgi_grp_bank_id
-        "(provider <= 3 OR provider >= 6) AND ocsp_response IS NULL OR (provider = 4 OR provider = 5) AND ocsp_response IS NOT NULL"
+        "(provider <= 3 OR provider >= 6) AND ocsp_response IS NULL OR (provider = 4 OR provider = 5 OR provider = 12) AND ocsp_response IS NOT NULL"
       }
     ]
   , tblForeignKeys =

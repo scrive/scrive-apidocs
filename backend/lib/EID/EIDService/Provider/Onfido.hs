@@ -43,7 +43,7 @@ beginEIDServiceTransaction
   -> EIDServiceAuthenticationKind
   -> Document
   -> SignatoryLink
-  -> m (EIDServiceTransactionID, Text, EIDServiceTransactionStatus)
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
   method <- case signatorylinkauthenticationtosignmethod sl of
     OnfidoDocumentCheckAuthenticationToSign -> return OnfidoDocumentCheck
@@ -84,7 +84,7 @@ beginEIDServiceTransaction conf authKind doc sl = do
       chargeForItemSingle CIOnfidoDocumentAndPhotoCheckSignatureStarted $ documentid doc
   let tid  = cestRespTransactionID trans
       turl = cestRespAccessUrl trans
-  return (tid, turl, EIDServiceTransactionStatusNew)
+  return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusNew)
 
 data OnfidoEIDServiceCompletionData = OnfidoEIDServiceCompletionData
   { eidonfidoFirstName   :: !Text

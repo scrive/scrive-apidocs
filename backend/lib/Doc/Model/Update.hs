@@ -1901,6 +1901,8 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
                   OnfidoDocumentAndPhotoCheckAuthenticationToSign
         (Just (EIDServiceNOBankIDSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
+        (Just (EIDServiceSEBankIDSignature_ _), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIs SEBankIDAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
         (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
         (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
@@ -1998,6 +2000,16 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           F.value "nobankid_mobile" $ case eidServiceNOBankIDSigInternalProvider of
             EIDServiceNOBankIDStandard -> False
             EIDServiceNOBankIDMobile   -> True
+        (Just (EIDServiceSEBankIDSignature_ EIDServiceSEBankIDSignature {..}), _) -> do
+          F.value "hide_pn" $ signatorylinkhidepn sl
+          F.value "eleg" True
+          F.value "signatory_name" eidServiceSEBankIDSigSignatoryName
+          F.value "signatory_personal_number" eidServiceSEBankIDSigPersonalNumber
+          F.value "signed_text" eidServiceSEBankIDSigSignedText
+          F.value "signatory_ip" eidServiceSEBankIDSigIP
+          F.value "provider_sebankid_eidservice" True
+          F.value "signature" $ B64.encode eidServiceSEBankIDSigSignature
+          F.value "ocsp_response" $ B64.encode eidServiceSEBankIDSigOcspResponse
         (Nothing, Just _) -> do
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl
