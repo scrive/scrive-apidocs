@@ -2,12 +2,15 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
 module Flow.Engine
-  ( processMachinizeEvent
+  ( EngineEvent(..)
+  , EngineError(..)
+  , processMachinizeEvent
   , processEvent
   , decodeHighTongueM
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Except (ExceptT, throwError)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -25,6 +28,9 @@ import EventStream.Class
 import File.Storage (MonadFileStorage)
 import Flow.ActionConsumers (consumeFlowAction, toConsumableAction)
 import Flow.Aggregator
+  ( AggregatorError(DuplicateEvent, UnknownEventInfo, UnknownStage)
+  , AggregatorStep(NeedMoreEvents, StateChange), runAggregatorStep
+  )
 import Flow.HighTongue
 import Flow.Id (InstanceId)
 import Flow.Machinize
@@ -76,7 +82,7 @@ processEvent
      , TemplatesMonad m
      )
   => EngineEvent
-  -> m ()
+  -> ExceptT EngineError m ()
 processEvent event@EngineEvent {..} = do
   localData (toPairs event) $ do
     documentName <- fromMaybeM noDocumentNameFound
@@ -91,10 +97,10 @@ processEvent event@EngineEvent {..} = do
   where
     noDocumentNameFound = do
       logAttention_ "Given document not associated with flow instance."
-      throwM NoAssociatedDocument
+      throwError NoAssociatedDocument
     noUserNameFound = do
       logAttention_ "Signatory not associated with flow intance."
-      throwM NoAssociatedUser
+      throwError NoAssociatedUser
 
 pushActions
   :: ( CryptoRNG m
@@ -113,7 +119,7 @@ pushActions
      )
   => InstanceId
   -> [LowAction]
-  -> m ()
+  -> ExceptT EngineError m ()
 pushActions instanceId actions = do
   consumableActions <- mapM (toConsumableAction instanceId) actions
   mapM_ consumeFlowAction consumableActions
@@ -123,9 +129,7 @@ decodeHighTongueM process = either throwDSLValidationError' pure
   $ decodeHighTongue process
   where
     throwDSLValidationError' errs = do
-      logAttention_
-        $  "Flow DSL compatibility broken, translation to state machine failed: "
-        <> showt errs
+      logAttention_ $ "Flow DSL compatibility broken: " <> showt errs
       throwM $ InvalidProcess errs
 
 processMachinizeEvent
@@ -145,7 +149,7 @@ processMachinizeEvent
      )
   => InstanceId
   -> EventInfo
-  -> m ()
+  -> ExceptT EngineError m ()
 processMachinizeEvent instanceId eventInfo = do
   -- TODO Should we store store duplicate/unknown events?
   -- Currently they are being thrown away since this code runs in a single transaction
@@ -161,10 +165,13 @@ processMachinizeEvent instanceId eventInfo = do
     -- TODO: Think of some error monad. MonadFail is ugly.
     -- TODO: This fail thing may leak some error to user.
     -- TODO: Improve error messages.
-    failGracefully :: (MonadLog m, MonadDB m, MonadThrow m) => AggregatorError -> m ()
+    failGracefully
+      :: (MonadLog m, MonadDB m, MonadThrow m)
+      => AggregatorError
+      -> ExceptT EngineError m ()
     failGracefully UnknownEventInfo = do
       logAttention_ "Unexpected event received."
-      throwM UnexpectedEventReceived
+      throwError UnexpectedEventReceived
     failGracefully DuplicateEvent = do
       logAttention_ "Duplicate event received."
       throwM DuplicateEventReceived

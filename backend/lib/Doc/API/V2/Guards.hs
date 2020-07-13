@@ -36,6 +36,7 @@ module Doc.API.V2.Guards (
 -- * Joined guard for read-only functions
 , guardThatDocumentIsReadableBySignatories
 , guardAccessToDocumentWithSignatory
+, guardNotInFlow
 ) where
 
 import Control.Conditional (whenM)
@@ -65,6 +66,7 @@ import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import Doc.Validation.Starting
 import File.FileID
+import Flow.Model
 import Folder.Types
 import InputValidation
 import Kontra
@@ -658,3 +660,12 @@ guardAccessToDocumentWithSignatory did slid = do
     user   <- getAPIUserWithAPIPersonal
     check' <- checkIfUserCanAccessDocumentAsSignatory user did slid
     unless check' $ apiError documentActionForbidden
+
+-- | Check if the document is part of the flow instance and fail if so.
+guardNotInFlow :: Kontrakcja m => DocumentID -> m ()
+guardNotInFlow documentId = do
+  maybeInstanceId <- selectInstanceIdByDocumentId documentId
+  when (isJust maybeInstanceId) . apiError $ APIError
+    ActionNotPermitted
+    403
+    "This action is forbidden on a document which is managed by Scrive Flow"

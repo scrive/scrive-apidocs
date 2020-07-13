@@ -269,7 +269,7 @@ kontraMigrations =
   , addUserGroupDeletionRequestEvaluationJob
   , createTableFlowTemplates
   , createTableFlowInstances
-  , createTableFlowInstancesKVStore
+  , createTableFlowInstanceKeyValueStore
   , createTableFlowInstanceSignatories
   , createTableFlowEvents
   , createTableFlowAggregatorEvents
@@ -278,4 +278,5 @@ kontraMigrations =
   , removeEidJson
   , createTableFlowInstanceAccessTokens
   , createTableFlowInstanceSessions
+  , addIndicesToFlowInstanceKeyValueStore
   ]

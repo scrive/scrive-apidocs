@@ -6,21 +6,21 @@ module Flow.Model
     , selectTemplatesByUserID
     , updateTemplate
     , insertFlowInstance
+    , insertEvent
     , insertFlowInstanceKeyValues
+    , insertInstanceSignatories
+    , selectAggregatorEvents
+    , selectDocumentIdsAssociatedWithSomeInstance
+    , selectDocumentNameFromKV
+    , selectDocumentsByInstanceId
+    , selectFullInstance
     , selectInstance
-    , selectInstancesByUserID
     , selectInstanceIdByDocumentId
     , selectInstanceKeyValues
-    , selectDocumentIdsAssociatedWithSomeInstance
-    , selectFullInstance
-    , selectAggregatorEvents
-    , updateAggregatorState
-    , insertEvent
-    , selectDocumentNameFromKV
-    , insertInstanceSignatories
-    , selectUserNameFromKV
+    , selectInstancesByUserID
     , selectSignatoryIdsByInstanceUser
-    , selectDocumentsByInstanceId
+    , selectUserNameFromKV
+    , updateAggregatorState
     )
   where
 
@@ -258,12 +258,13 @@ updateAggregatorState
 updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
   runQuery_ . sqlUpdate "flow_instances" $ do
     sqlSet "current_state" currentStage
-    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "id" instanceId
 
   if stateChange
-    then runQuery_ . sqlDelete "flow_aggregator_events ae" $ do
-      sqlFrom "flow_events ae"
-      sqlWhereEq "ae.instance_id" instanceId
+    then runQuery_ . sqlDelete "flow_aggregator_events" $ do
+      sqlFrom "flow_events"
+      sqlWhere "flow_aggregator_events.id = flow_events.id"
+      sqlWhereEq "flow_events.instance_id" instanceId
     else runQuery_ . sqlInsert "flow_aggregator_events" $ do
       sqlSet "id" eventId
 

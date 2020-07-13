@@ -40,6 +40,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.DocUtils
+import Doc.Flow (processEventThrow)
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
@@ -61,6 +62,9 @@ import Util.Actor
 import Util.HasSomeUserInfo (getMobile)
 import Util.MonadUtils (guardJust, guardJustM)
 import Util.SignatoryLinkUtils
+import qualified Flow.Engine as Flow
+import qualified Flow.Machinize as Flow
+import qualified Flow.Model as Flow (selectInstanceIdByDocumentId)
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
@@ -86,8 +90,17 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     postDocumentRejectedChange slid rejectReason =<< theDocument
 
     -- Result
-    doc <- theDocument
+    doc            <- theDocument
+    flowInstanceId <- Flow.selectInstanceIdByDocumentId did
+    maybe (pure ()) processFlowEvent flowInstanceId
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
+  where
+    processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
+      { instanceId  = instanceId
+      , userAction  = Flow.Rejection
+      , signatoryId = slid
+      , documentId  = did
+      }
 
 
 docApiV2SigForwardSigning :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -159,6 +172,9 @@ docApiV2SigSigningCancel :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m R
 docApiV2SigSigningCancel did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   guardAccessToDocumentWithSignatory did slid
+
+  -- We can't allow cancelling signing on single document as it should be done on flow.
+  guardNotInFlow did
   dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     -- Guards
     guardDocumentStatus Pending =<< theDocument
@@ -233,8 +249,17 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
     postDocumentPendingChange olddoc sl
 
     -- Result
-    doc <- theDocument
+    doc            <- theDocument
+    flowInstanceId <- Flow.selectInstanceIdByDocumentId did
+    maybe (pure ()) processFlowEvent flowInstanceId
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
+  where
+    processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
+      { instanceId  = instanceId
+      , userAction  = Flow.Approval
+      , signatoryId = slid
+      , documentId  = did
+      }
 
 -- | In the case of SMS or 'standard' (i.e. none) authentication, sign the
 -- document for the given signatory right away; otherwise schedule a signing
@@ -325,6 +350,8 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         updatedSigLink <- guardGetSignatoryFromIdForDocument slid
         postDocumentPendingChange olddoc updatedSigLink
         handleAfterSigning slid
+        maybeInstanceId <- Flow.selectInstanceIdByDocumentId did
+        maybe (pure ()) processFlowEvent maybeInstanceId
        -- Return
       Just provider -> do
         doclang <- getLang <$> theDocument
@@ -344,6 +371,13 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
                                            consentResponses
     doc <- theDocument
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
+  where
+    processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
+      { instanceId  = instanceId
+      , userAction  = Flow.Signature
+      , signatoryId = slid
+      , documentId  = did
+      }
 
 docApiV2SigSendSmsPinToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ do

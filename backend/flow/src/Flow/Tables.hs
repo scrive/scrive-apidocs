@@ -7,7 +7,7 @@ flowTables :: [Table]
 flowTables =
   [ tableFlowTemplates
   , tableFlowInstances
-  , tableFlowInstancesKVStore
+  , tableFlowInstanceKeyValueStore
   , tableFlowInstanceSignatories
   , tableFlowInstanceAccessTokens
   , tableFlowInstanceSessions
@@ -61,10 +61,10 @@ tableFlowInstances = tblTable
   , tblForeignKeys = [fkOnColumn "template_id" "flow_templates" "id"]
   }
 
-tableFlowInstancesKVStore :: Table
-tableFlowInstancesKVStore = tblTable
+tableFlowInstanceKeyValueStore :: Table
+tableFlowInstanceKeyValueStore = tblTable
   { tblName        = "flow_instance_key_value_store"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
     , tblColumn { colName = "key", colType = TextT, colNullable = False }
@@ -80,6 +80,8 @@ tableFlowInstancesKVStore = tblTable
                      [ uniqueIndexOnColumn "document_id"
                       -- Users associated with an instance cannot be used for multiple keys.
                      , uniqueIndexOnColumns ["instance_id", "user_id"]
+                     , indexOnColumn "string"
+                     , indexOnColumn "user_id"
                      ]
   , tblForeignKeys =
     [ (fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyCascade }

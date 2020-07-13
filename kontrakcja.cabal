@@ -261,6 +261,7 @@ Library
                  , Doc.Extending.Migrations
                  , Doc.Extending.Model
                  , Doc.Extending.Tables
+                 , Doc.Flow
                  , Doc.Functions
                  , Doc.Logging
                  , Doc.Migrations

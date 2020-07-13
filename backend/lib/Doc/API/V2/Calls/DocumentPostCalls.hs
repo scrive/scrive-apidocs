@@ -315,6 +315,8 @@ docApiV2Prolong did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
+    -- Prolonging document associated with flow is responsibility of flow not document.
+    guardNotInFlow did
     guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs
@@ -351,24 +353,33 @@ docApiV2Cancel did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
+    -- TODO Flow: Cancel should do something about associated flow. Probably pushing
+    -- we will most likely need to push something like rejection action into flow
+    -- engine.
+    guardNotInFlow did
     guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- API call actions
     dbUpdate $ CancelDocument actor
     postDocumentCanceledChange =<< theDocument
+
     -- Result
     Ok <$> currentDocumentJsonViewedBy user
 
 docApiV2Trash :: Kontrakcja m => DocumentID -> m Response
-docApiV2Trash = docApiV2TrashDeleteCommon guardThatDocumentCanBeTrashedByUser
-                                          ArchiveDocument
-                                          "Document can't be trashed"
+docApiV2Trash did = do
+  docApiV2TrashDeleteCommon guardThatDocumentCanBeTrashedByUser
+                            ArchiveDocument
+                            "Document can't be trashed"
+                            did
 
 docApiV2Delete :: Kontrakcja m => DocumentID -> m Response
-docApiV2Delete = docApiV2TrashDeleteCommon guardThatDocumentCanBeDeletedByUser
-                                           ReallyDeleteDocument
-                                           "Document can't be deleted"
+docApiV2Delete did = do
+  docApiV2TrashDeleteCommon guardThatDocumentCanBeDeletedByUser
+                            ReallyDeleteDocument
+                            "Document can't be deleted"
+                            did
 
 docApiV2TrashDeleteCommon
   :: (Kontrakcja m, DBUpdate (DocumentT m) t Bool)
@@ -383,6 +394,9 @@ docApiV2TrashDeleteCommon guardAction dbAction errorMsg did = logDocument did . 
   allUserRoles <- getRolesIncludingInherited user
 
   -- Guards
+  -- For now we don't allow users to delete documents associated with flow.
+  -- This will be change in future when flow instances can be deleted.
+  guardNotInFlow did
   guardAction user allUserRoles did
   withDocumentID did $ do
     -- API call actions
@@ -476,6 +490,8 @@ docApiV2Remind did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
+    -- Reminders should be handled by flow if the document is part of it.
+    guardNotInFlow did
     guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
@@ -495,6 +511,8 @@ docApiV2RemindWithPortal = api $ do
   logInfo "Running remind with portal with ids" $ object ["doc_ids" .= show dids]
   docs1 <- forM dids $ \did -> logDocument did . withDocumentID did $ do
       -- Guards
+    -- Reminders should be handled by flow if the document is part of it.
+    guardNotInFlow did
     guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
@@ -534,6 +552,9 @@ docApiV2Forward did = logDocument did . api $ do
   (user, _) <- getAPIUser APIDocCheck
   withDocumentID did $ do
     -- Guards
+    -- Flow should handle forwarding as part of the flow process and, so it
+    -- can't be allowed on single document.
+    guardNotInFlow did
     guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     -- Make sure we only send out the document with the author's signatory link
@@ -695,6 +716,9 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
   (user, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
+    -- Flow is handling email and SMS notification on its own, thus we don't
+    -- want to allow users modify anything regarding them on documents.
+    guardNotInFlow did
     guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
@@ -892,6 +916,9 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
+    -- Flow is handling email and mobile numbers on its own thus we don't
+    -- want to allow users to change them on concrete documents.
+    guardNotInFlow did
     guardDocumentActionPermission UpdateA user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument

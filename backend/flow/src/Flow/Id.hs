@@ -7,6 +7,8 @@ import Database.PostgreSQL.PQTypes hiding (JSON)
 import GHC.Generics
 import Servant.API
 
+import Log.Identifier (Loggable(logDefaultLabel, logValue))
+
 data FlowIdKind
     = InstanceId
     | TemplateId
@@ -43,3 +45,7 @@ instance FromSQL (Id a) where
 instance ToSQL (Id a) where
   type PQDest (Id a) = PQDest UUID
   toSQL (Id id) = toSQL id
+
+instance Loggable InstanceId where
+  logValue = toJSON
+  logDefaultLabel _ = "flow_instance_id"
