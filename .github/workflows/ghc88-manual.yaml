@@ -25,6 +25,14 @@ jobs:
             -A ghc88.manual-shell \
             release.nix \
             --run "echo Loaded Nix shell"
+      - name: "Cache ~/.cabal"
+        uses: "actions/cache@v2"
+        with:
+          key: "${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}"
+          path: "~/.cabal"
+          restore-keys: |
+            ${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}
+            ${{ runner.os }}-cabal-
       - env:
           PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
         name: Run Backend Tests
@@ -33,7 +41,7 @@ jobs:
             -A ghc88.manual-shell \
             release.nix \
             --run "./ci/scripts/run-backend-tests.sh"
-        timeout-minutes: 60
+        timeout-minutes: 180
   detect-unused:
     runs-on:
       - ubuntu-latest
@@ -60,6 +68,14 @@ jobs:
             -A ghc88.manual-shell \
             release.nix \
             --run "echo Loaded Nix shell"
+      - name: "Cache ~/.cabal"
+        uses: "actions/cache@v2"
+        with:
+          key: "${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}"
+          path: "~/.cabal"
+          restore-keys: |
+            ${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}
+            ${{ runner.os }}-cabal-
       - name: Detect Old Templates
         run: |
           nix-shell -j8 \
@@ -98,6 +114,14 @@ jobs:
             -A ghc88.manual-shell \
             release.nix \
             --run "echo Loaded Nix shell"
+      - name: "Cache ~/.cabal"
+        uses: "actions/cache@v2"
+        with:
+          key: "${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}"
+          path: "~/.cabal"
+          restore-keys: |
+            ${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}
+            ${{ runner.os }}-cabal-
       - name: Test Formatting
         run: |
           nix-shell -j8 \
@@ -130,6 +154,14 @@ jobs:
             -A ghc88.manual-shell \
             release.nix \
             --run "echo Loaded Nix shell"
+      - name: "Cache ~/.cabal"
+        uses: "actions/cache@v2"
+        with:
+          key: "${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}"
+          path: "~/.cabal"
+          restore-keys: |
+            ${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}
+            ${{ runner.os }}-cabal-
       - name: Test HLint
         run: |
           nix-shell -j8 \
@@ -138,6 +170,7 @@ jobs:
             --run "./shake.sh hlint"
 name: GHC 8.8 Backend Tests
 on:
+  pull_request: {}
   push:
     branches:
       - master

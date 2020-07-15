@@ -33,7 +33,7 @@ jobs:
             -A ghc86.dev-shell-optimized \
             release.nix \
             --run "./ci/scripts/run-backend-tests.sh"
-        timeout-minutes: 60
+        timeout-minutes: 180
   detect-unused:
     runs-on:
       - ubuntu-latest

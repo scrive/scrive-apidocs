@@ -16,7 +16,8 @@ BackendWorkflow.createWorkflow
       [ Job.RunsOn.ubuntu-latest
       ]
   , triggers = Workflow.Triggers ::
-      { push = Some
+      { pull_request = Some Workflow.BranchSpec.default
+      , push = Some
           { branches = Some [ "master" ]
           }
       }

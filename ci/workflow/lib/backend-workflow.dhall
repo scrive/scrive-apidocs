@@ -30,14 +30,34 @@ let createWorkflow =
       , runsOn = args.runsOn
       }
 
+    let cacheCabalSteps = merge
+      { manual-shell =
+          [ Step ::
+            { name = "Cache ~/.cabal"
+            , uses = Some "actions/cache@v2"
+            , with = Some toMap
+              { path = "~/.cabal"
+              , key = "\${{ runner.os }}-cabal-\${{ hashFiles('**/*.cabal') }}"
+              , restore-keys = ''
+                ''${{ runner.os }}-cabal-''${{ hashFiles('**/*.cabal') }}
+                ''${{ runner.os }}-cabal-
+                ''
+              }
+            }
+          ]
+      , dev-shell = [] : List Step.Type
+      , dev-shell-optimized = [] : List Step.Type
+      }
+      args.nixShell
+
     let createJob = \(steps: List Step.Type) ->
       CreateJob.createJob
-        ( inArgs // { steps = steps } )
+        ( inArgs // { steps = cacheCabalSteps # steps } )
 
     let backendTests = createJob
       [ Step ::
         { name = "Run Backend Tests"
-        , timeout-minutes = Some 60
+        , timeout-minutes = Some 180
         , run = Some "./ci/scripts/run-backend-tests.sh"
         , env = Some toMap
             { PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
