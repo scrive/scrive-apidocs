@@ -470,8 +470,9 @@ serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
                         | otherwise         = "-t" : intersperse "-t" testPatterns
       target <- askOracle (BuildTarget ())
       let baseFlags = testPatterns' <> case target of
-            "staging" -> ["--staging-tests"]
-            _         -> []
+            "staging"    -> ["--staging-tests"]
+            "production" -> ["--staging-tests"]
+            _            -> []
       tc <- askOracle (TeamCity ())
       if tc
         then do

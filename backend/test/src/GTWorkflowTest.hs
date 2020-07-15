@@ -65,7 +65,7 @@ testExtendDigitalSignatures = do
     templates <- liftBase readGlobalTemplates
     void
       . runTemplatesT (defaultLang, templates)
-      . runGuardTimeConfT testGTConf
+      . runGuardTimeConfT testGtConf
       $ extendDigitalSignature
 
   withDocumentID did $ do
@@ -77,7 +77,8 @@ testExtendingIsNotRescheduledForPurgedDocs :: TestEnv ()
 testExtendingIsNotRescheduledForPurgedDocs = do
   setTestTime unixEpoch
   user    <- instantiateRandomUser
-  ctx     <- mkContextWithUser defaultLang user
+  baseCtx <- mkContextWithUser defaultLang user
+  let ctx = baseCtx & #gtConf .~ testGtConf
   -- Create a document
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc

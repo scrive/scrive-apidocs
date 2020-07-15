@@ -46,7 +46,7 @@ testSealing = do
     dbUpdate $ AppendSealedFile file Missing actor
     void
       . runTemplatesT (defaultLang, templates)
-      . runGuardTimeConfT testGTConf
+      . runGuardTimeConfT testGtConf
       . runPdfToolsLambdaT pdfSealLambdaEnv
       $ addDigitalSignature
 

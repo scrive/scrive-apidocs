@@ -25,7 +25,8 @@ module TestKontra (
     , modifyTestTime
     , setTestTime
     , setRequestURI
-    , testGTConf
+    , testGtConf
+    , dummyGtConf
     , testLogConfig
     ) where
 
@@ -432,7 +433,9 @@ mkContext lang = do
                    , salesAccounts           = []
                    , maybePadUser            = Nothing
                    , useHttps                = False
-                   , gtConf                  = testGTConf
+                   -- We're using a dummy GT conf because the proper one is not needed
+                   -- and causes timeouts when used outside of VPN.
+                   , gtConf                  = dummyGtConf
                    , sessionID               = SessionID.tempSessionID
                    , trackJsToken            = Nothing
                    , zendeskKey              = Nothing
@@ -458,8 +461,8 @@ mkContext lang = do
 mkContextWithUser :: Lang -> User -> TestEnv Context
 mkContextWithUser lang user = set #maybeUser (Just user) <$> mkContext lang
 
-testGTConf :: GuardTimeConf
-testGTConf = GuardTimeConf
+testGtConf :: GuardTimeConf
+testGtConf = GuardTimeConf
   { guardTimeSigningServiceURL      =
     "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080"
       <> "/gt-signingservice"
@@ -472,6 +475,10 @@ testGTConf = GuardTimeConf
   , guardTimeExtendingLoginUser     = "anon"
   , guardTimeExtendingLoginKey      = "1234"
   }
+
+dummyGtConf :: GuardTimeConf
+dummyGtConf =
+  testGtConf { guardTimeSigningServiceURL = "", guardTimeExtendingServiceURL = "" }
 
 testLogConfig :: LogConfig
 testLogConfig = LogConfig { lcSuffix = "dev", lcLoggers = [StandardOutput] }
