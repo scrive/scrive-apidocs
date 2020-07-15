@@ -30,12 +30,12 @@ let createWorkflow =
       , runsOn = args.runsOn
       }
 
-    let createJob = \(finalStep: Step.Type) ->
+    let createJob = \(steps: List Step.Type) ->
       CreateJob.createJob
-        ( inArgs // { finalStep = finalStep } )
+        ( inArgs // { steps = steps } )
 
     let backendTests = createJob
-      Step ::
+      [ Step ::
         { name = "Run Backend Tests"
         , timeout-minutes = Some 60
         , run = Some "./ci/scripts/run-backend-tests.sh"
@@ -43,28 +43,33 @@ let createWorkflow =
             { PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
             }
         }
+      ]
 
     let formatting = createJob
-      Step ::
+      [ Step ::
         { name = "Test Formatting"
         , run = Some "./shake.sh test-formatting"
         }
+      ]
 
     let hlint = createJob
-      Step ::
+      [ Step ::
         { name = "Test HLint"
         , run = Some "./shake.sh hlint"
         }
+      ]
 
 
     let detect-unused = createJob
-      Step ::
-        { name = "Detect Unused"
-        , run = Some ''
-            ./shake.sh detect-old-templates
-            ./shake.sh detect-old-localizations
-            ''
+      [ Step ::
+        { name = "Detect Old Templates"
+        , run = Some "./shake.sh detect-old-templates"
         }
+      , Step ::
+        { name = "Detect Old Localizations"
+        , run = Some "./shake.sh detect-old-localizations"
+        }
+      ]
     in
     Workflow.Workflow ::
       { name = args.name
@@ -73,6 +78,7 @@ let createWorkflow =
           { backend-tests = backendTests
           , formatting = formatting
           , hlint = hlint
+          , detect-unused = detect-unused
           }
       }
 in

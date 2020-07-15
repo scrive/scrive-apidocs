@@ -16,10 +16,12 @@ let
       , runsOn =
           [ Job.RunsOn.ubuntu-latest
           ]
-      , finalStep = Step ::
-        { name = "Test Frontend"
-        , run = Some "./ci/scripts/run-frontend-tests.sh"
-        }
+      , steps =
+          [ Step ::
+            { name = "Test Frontend"
+            , run = Some "./ci/scripts/run-frontend-tests.sh"
+            }
+          ]
       }
 in
 Workflow.Workflow ::

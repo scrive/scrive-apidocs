@@ -1,4 +1,5 @@
-let map = https://prelude.dhall-lang.org/Optional/map
+let listMap = https://prelude.dhall-lang.org/List/map
+let optionalMap = https://prelude.dhall-lang.org/Optional/map
 
 let Step = ../type/Step.dhall
 let Job = ../type/Job.dhall
@@ -9,7 +10,7 @@ let Args =
   { Type =
       { ghcVersion: GHCVersion.Type
       , nixShell: NixShell.Type
-      , finalStep: Step.Type
+      , steps: List Step.Type
       , runsOn: List Job.RunsOn
       , nixExtraArgs: Optional Text
       }
@@ -37,9 +38,11 @@ let createJob =
         --run "${cmd}"
       ''
 
-    let finalStep = args.finalStep //
-        { run = map Text Text wrapCommand args.finalStep.run
-        }
+    let wrapStep = \(step: Step.Type) ->
+          step //
+          { run = optionalMap Text Text wrapCommand step.run }
+
+    let wrappedSteps = listMap Step.Type Step.Type wrapStep args.steps
 
     let steps =
       [ Step ::
@@ -74,8 +77,7 @@ let createJob =
           , run = Some (wrapCommand "echo Loaded Nix shell")
           }
 
-      , finalStep
-      ]
+      ] # wrappedSteps
     in
     Job.Job ::
       { runs-on = args.runsOn
