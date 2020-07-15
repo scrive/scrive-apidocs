@@ -2,8 +2,8 @@
 
 set -eux
 
-cabal v2-update
-./shake.sh all
+cabal update
+./shake.sh server
 
 set +x
 echo "$PDFTOOLS_CONFIG" > ./pdftools-lambda.local.json
