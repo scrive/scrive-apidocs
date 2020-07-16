@@ -15,7 +15,7 @@ module Flow.Routes.Api
     , InstanceUserAction(..)
     , GetInstanceView(..)
     , InstanceUserState(..)
-    , DocumentOverview(..)
+    , InstanceUserDocument(..)
     , DocumentState(..)
     , FlowApi
     , InstanceApi
@@ -33,6 +33,7 @@ import GHC.Generics
 import Servant.API
 
 import Doc.DocumentID (DocumentID)
+import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.HighTongue
 import Flow.Id
 import Flow.Model.Types
@@ -230,6 +231,7 @@ instance ToJSON InstanceAuthorAction where
 data InstanceUserAction = InstanceUserAction
     { actionType :: InstanceEventAction
     , actionDocument :: DocumentID
+    , actionSignatoryId :: SignatoryLinkID
     }
   deriving (Eq, Generic, Ord, Show)
 
@@ -241,7 +243,7 @@ instance ToJSON InstanceUserAction where
 
 
 newtype InstanceUserState = InstanceUserState
-    { documents :: [DocumentOverview]
+    { documents :: [InstanceUserDocument]
     }
   deriving (Eq, Generic, Show)
 
@@ -252,16 +254,17 @@ instance ToJSON InstanceUserState where
   toEncoding = genericToEncoding aesonOptions
 
 
-data DocumentOverview = DocumentOverview
+data InstanceUserDocument = InstanceUserDocument
     { documentId    :: DocumentID
     , documentState :: DocumentState
+    , signatoryId   :: SignatoryLinkID
     }
   deriving (Eq, Generic, Ord, Show)
 
-instance FromJSON DocumentOverview where
+instance FromJSON InstanceUserDocument where
   parseJSON = genericParseJSON aesonOptions
 
-instance ToJSON DocumentOverview where
+instance ToJSON InstanceUserDocument where
   toEncoding = genericToEncoding aesonOptions
 
 

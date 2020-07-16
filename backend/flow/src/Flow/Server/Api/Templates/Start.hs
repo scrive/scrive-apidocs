@@ -229,3 +229,4 @@ reportSettings fields =
     . throwTemplateCannotBeStartedError
         "Some settings are not consistent across all documents."
     $ toJSON fields
+

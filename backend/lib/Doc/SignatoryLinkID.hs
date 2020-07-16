@@ -45,6 +45,10 @@ instance ToJSON SignatoryLinkID where
   toJSON     = toJSON . show
   toEncoding = toEncoding . show
 
+instance FromJSON SignatoryLinkID where
+  parseJSON = withText "SignatoryLinkID"
+                       (maybe (fail "Can't parse SignatoryLinkID") return . maybeRead)
+
 instance FromSQL SignatoryLinkID where
   type PQBase SignatoryLinkID = PQBase Int64
   fromSQL mbase = SignatoryLinkID <$> fromSQL mbase
@@ -55,7 +59,6 @@ instance ToSQL SignatoryLinkID where
 
 unsafeSignatoryLinkID :: Int64 -> SignatoryLinkID
 unsafeSignatoryLinkID = SignatoryLinkID
-
 
 fromSignatoryLinkID :: SignatoryLinkID -> Int64
 fromSignatoryLinkID (SignatoryLinkID did) = did

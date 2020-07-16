@@ -19,6 +19,7 @@ module Flow.Model
     , selectInstanceKeyValues
     , selectInstancesByUserID
     , selectSignatoryIdsByInstanceUser
+    , selectSignatoryInfo
     , selectUserNameFromKV
     , updateAggregatorState
     )
@@ -338,3 +339,16 @@ selectSignatoryIdsByInstanceUser instanceId userName = do
     sqlWhereEq "instance_id" instanceId
     sqlWhereEq "key"         userName
   fetchMany runIdentity
+
+selectSignatoryInfo
+  :: (MonadDB m, MonadThrow m)
+  => InstanceId
+  -> m [(UserName, SignatoryLinkID, DocumentID)]
+selectSignatoryInfo instanceId = do
+  runQuery_ . sqlSelect "flow_instance_signatories fis" $ do
+    sqlJoinOn "signatory_links sl" "sl.id = fis.signatory_id"
+    sqlResult "fis.key"
+    sqlResult "fis.signatory_id"
+    sqlResult "sl.document_id"
+    sqlWhereEq "fis.instance_id" instanceId
+  fetchMany identity

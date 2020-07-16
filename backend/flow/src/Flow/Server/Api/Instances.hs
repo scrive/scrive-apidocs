@@ -8,6 +8,7 @@ import Data.Aeson
 import Data.Foldable (fold)
 import Data.Map (Map)
 import Data.Set (Set)
+import Data.Tuple.Extra
 import Log.Class
 import Servant
 import qualified Data.Map as Map
@@ -18,6 +19,7 @@ import AccessControl.Check
 import AccessControl.Types
 import Auth.MagicHash
 import Doc.DocumentID (DocumentID)
+import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator as Aggregator
 import Flow.Engine
 import Flow.Error
@@ -75,6 +77,7 @@ getInstanceView user@InstanceUser {..} instanceId' = do
   when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
 
   keyValues    <- Model.selectInstanceKeyValues instanceId
+  sigInfo      <- Model.selectSignatoryInfo instanceId
   fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
   let aggrState = instanceToAggregator fullInstance
   machine <- decodeHighTongueM $ fullInstance ^. #template % #process
@@ -90,7 +93,8 @@ getInstanceView user@InstanceUser {..} instanceId' = do
                 (\e -> do
                   userAction <- toApiUserAction $ eventInfoAction e
                   docId      <- Map.lookup (eventInfoDocument e) (keyValues ^. #documents)
-                  pure $ InstanceUserAction userAction docId
+                  sigId      <- findSignatoryId sigInfo (eventInfoUser e) docId
+                  pure $ InstanceUserAction userAction docId sigId
                 )
                 userAllowedEvents
 
@@ -99,7 +103,7 @@ getInstanceView user@InstanceUser {..} instanceId' = do
                 $ Aggregator.receivedEvents (aggrState :: AggregatorState)
               userDocs          = Set.map eventInfoDocument userReceivedEvents
               userDocsWithState = catMaybes . Set.toList $ Set.map
-                (toDocumentOverview userReceivedEvents $ keyValues ^. #documents)
+                (toApiUserDocument sigInfo userReceivedEvents $ keyValues ^. #documents)
                 userDocs
           in  GetInstanceView
                 { id      = instanceId
@@ -111,6 +115,9 @@ getInstanceView user@InstanceUser {..} instanceId' = do
         $ object ["instance_id" .= instanceId, "instance_user" .= user]
       throwInternalServerError "Could not reconstruct the state of the Flow process."
   where
+    findSignatoryId sigInfo name docId =
+      snd3 <$> find (\(un, _, did) -> un == name && did == docId) sigInfo
+
     mAllowedEvents HighTongue {..} AggregatorState {..} =
       fold
         .   Set.map (Set.fromList . expectToSuccess)
@@ -126,13 +133,16 @@ getInstanceView user@InstanceUser {..} instanceId' = do
     toApiUserAction (Machinize.Field _) = Nothing
     toApiUserAction Machinize.Timeout   = Nothing
 
-    toDocumentOverview
-      :: Set EventInfo
+    toApiUserDocument
+      :: [(UserName, SignatoryLinkID, DocumentID)]
+      -> Set EventInfo
       -> Map DocumentName DocumentID
       -> DocumentName
-      -> Maybe DocumentOverview
-    toDocumentOverview userReceivedEvents docMap docName =
-      (`DocumentOverview` docState) <$> Map.lookup docName docMap
+      -> Maybe InstanceUserDocument
+    toApiUserDocument sigInfo userReceivedEvents docMap docName = do
+      docId <- Map.lookup docName docMap
+      sigId <- findSignatoryId sigInfo userName docId
+      pure $ InstanceUserDocument docId docState sigId
 
       where
         docEvents = Set.filter (\e -> eventInfoDocument e == docName) userReceivedEvents
