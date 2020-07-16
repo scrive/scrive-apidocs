@@ -1,19 +1,16 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
-module Flow.Server.Handlers.Instance where
+module Flow.Server.Api.Templates.Start where
 
-import Control.Monad.Except
 import Control.Monad.Extra (fromMaybeM)
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Foldable (fold)
 import Data.Map (Map)
 import Data.Set (Set)
 import GHC.Generics
 import Log.Class
 import Servant
-import Web.Cookie
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text as T
@@ -21,16 +18,11 @@ import qualified Data.Text as T
 import AccessControl.Check
 import AccessControl.Types
 import Auth.MagicHash
-import Auth.Session
-import DB (dbQuery, dbUpdate)
-import Doc.DocControl (checkBeforeAddingDocumentSession)
+import DB (dbQuery)
 import Doc.DocumentID (DocumentID)
 import Doc.Model.Query
 import Doc.SignatoryLinkID
-import Doc.Tokens.Model
 import Doc.Types.Document
-import Flow.Aggregator as Aggregator
-import Flow.Api as Api hiding (documents)
 import Flow.DocumentChecker as DocumentChecker
 import Flow.DocumentStarting
 import Flow.Engine
@@ -38,21 +30,17 @@ import Flow.Error
 import Flow.Guards
 import Flow.HighTongue
 import Flow.Id
-import Flow.Machinize as Machinize
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId as FlowUserId
 import Flow.OrphanInstances ()
-import Flow.Server.Cookies
+import Flow.Routes.Api hiding (documents)
 import Flow.Server.Types
-import qualified Auth.Model as AuthModel
-import qualified Flow.Api as Api
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
-import qualified Flow.Model.Types as Model
 import qualified Flow.VariableCollector as Collector
 
-startInstance :: Account -> TemplateId -> InstanceKeyValues -> AppM GetInstance
-startInstance account templateId keyValues = do
+startTemplate :: Account -> TemplateId -> InstanceKeyValues -> AppM GetInstance
+startTemplate account templateId keyValues = do
   logInfo_ "Starting instance"
   template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
   let fid = template ^. #folderId
@@ -137,6 +125,7 @@ startInstance account templateId keyValues = do
         []      -> Nothing
         (x : _) -> Just x
 
+-- TODO share with instances
 mkAccessLinks :: Text -> InstanceId -> [(UserName, MagicHash)] -> Map UserName Text
 mkAccessLinks baseUrl instanceId = Map.fromList . fmap (\(u, h) -> (u, mkAccessLink u h))
   where
@@ -240,181 +229,3 @@ reportSettings fields =
     . throwTemplateCannotBeStartedError
         "Some settings are not consistent across all documents."
     $ toJSON fields
-
-getInstance :: Account -> InstanceId -> AppM GetInstance
-getInstance account instanceId = do
-  logInfo_ "Getting instance"
-  flowInstance <- checkInstancePerms account instanceId ReadA
-  keyValues    <- Model.selectInstanceKeyValues instanceId
-  accessTokens <- Model.selectInstanceAccessTokens instanceId
-  let usersWithHashes = fmap (\at -> (at ^. #userName, at ^. #hash)) accessTokens
-  let access_links    = mkAccessLinks (baseUrl account) instanceId usersWithHashes
-  pure $ GetInstance { id                 = instanceId
-                     , templateId         = flowInstance ^. #templateId
-                     , templateParameters = keyValues
-                     -- TODO add a proper instance state
-                     , state = InstanceState { availableActions = [], history = [] }
-                     , access_links
-                     }
-
-listInstances :: Account -> AppM [GetInstance]
-listInstances account@Account {..} = do
-  is <- Model.selectInstancesByUserID $ user ^. #id
-  let iids = map (view #id) is
-  mapM (getInstance account) iids
-
-getInstanceView :: InstanceUser -> InstanceId -> AppM GetInstanceView
-getInstanceView user@InstanceUser {..} instanceId' = do
-  logInfo "Getting instance view"
-    $ object ["instance_id" .= instanceId', "instance_user" .= user]
-
-  when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
-
-  keyValues    <- Model.selectInstanceKeyValues instanceId
-  fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
-  let aggrState = instanceToAggregator fullInstance
-  machine <- decodeHighTongueM $ fullInstance ^. #template % #process
-
-  case mAllowedEvents machine aggrState of
-    Just allowedEvents ->
-      pure
-        $ let
-              -- Actions
-              userAllowedEvents =
-                Set.filter (\e -> eventInfoUser e == userName) allowedEvents
-              userActions = catMaybes . Set.toList $ Set.map
-                (\e -> do
-                  userAction <- toApiUserAction $ eventInfoAction e
-                  docId      <- Map.lookup (eventInfoDocument e) (keyValues ^. #documents)
-                  pure $ InstanceUserAction userAction docId
-                )
-                userAllowedEvents
-
-              -- Document state
-              userReceivedEvents = Set.filter (\e -> eventInfoUser e == userName)
-                $ Aggregator.receivedEvents (aggrState :: AggregatorState)
-              userDocs          = Set.map eventInfoDocument userReceivedEvents
-              userDocsWithState = catMaybes . Set.toList $ Set.map
-                (toDocumentOverview userReceivedEvents $ keyValues ^. #documents)
-                userDocs
-          in  GetInstanceView
-                { id      = instanceId
-                , state   = InstanceUserState { Api.documents = userDocsWithState }
-                , actions = userActions
-                }
-    _ -> do
-      logAttention "GetInstanceView: Invalid userId or broken state for Flow instance "
-        $ object ["instance_id" .= instanceId, "instance_user" .= user]
-      throwInternalServerError "Could not reconstruct the state of the Flow process."
-  where
-    mAllowedEvents HighTongue {..} AggregatorState {..} =
-      fold
-        .   Set.map (Set.fromList . expectToSuccess)
-        .   stageExpect
-        .   fst
-        <$> remainingStages currentStage stages
-
-    toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
-    toApiUserAction Machinize.Approval  = Just Api.Approve
-    toApiUserAction Machinize.Signature = Just Api.Sign
-    toApiUserAction Machinize.View      = Just Api.View
-    toApiUserAction Machinize.Rejection = Just Api.Reject
-    toApiUserAction (Machinize.Field _) = Nothing
-    toApiUserAction Machinize.Timeout   = Nothing
-
-    toDocumentOverview
-      :: Set EventInfo
-      -> Map DocumentName DocumentID
-      -> DocumentName
-      -> Maybe DocumentOverview
-    toDocumentOverview userReceivedEvents docMap docName =
-      (`DocumentOverview` docState) <$> Map.lookup docName docMap
-
-      where
-        docEvents = Set.filter (\e -> eventInfoDocument e == docName) userReceivedEvents
-        docHasAction action =
-          Set.filter (\e -> eventInfoAction e == action) docEvents /= Set.empty
-        docState | docHasAction Machinize.Approval = Approved
-                 | docHasAction Machinize.Signature = Signed
-                 | docHasAction Machinize.View = Viewed
-                 | docHasAction Machinize.Rejection = Rejected
-                 | otherwise                   = Started
-
--- brittany-disable-next-binding
-instanceOverviewMagicHash
-  :: InstanceId
-  -> UserName
-  -> MagicHash
-  -> Maybe Cookies'
-  -> Maybe Host
-  -> IsSecure
-  -> AppM
-       ( Headers
-           '[ Header "Location" Text
-            , Header "Set-Cookie" SetCookie
-            , Header "Set-Cookie" SetCookie
-            ]
-           NoContent
-       )
-instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
-  _ <-
-    fromMaybeM (throwAuthenticationError InvalidInstanceAccessTokenError)
-      $ Model.verifyInstanceAccessToken instanceId userName hash
-
-  mSessionId <- case getAuthCookies of
-    Just authCookies -> AuthModel.getSessionIDByCookies authCookies
-    Nothing          -> pure Nothing
-
-  -- If we don't have an existing Kontrakcja session - start a new one
-  -- and add sessionId and xtoken cookies to the response.
-  -- TODO: It would be better to let Kontrakcja handle creating the session
-  (sessionId, maybeAddCookieHeaders) <- case mSessionId of
-    Just sessionId -> pure (sessionId, noHeader . noHeader)
-    Nothing        -> do
-      newAuthCookies <- AuthModel.insertNewSession (cookieDomain mHost)
-      pure ( cookieSessionID (authCookieSession newAuthCookies)
-           , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
-           )
-
-  -- TODO: We should only add doc sessions for documents that the participant can act on at
-  -- the current stage rather than all the documents that the participant is a signatory for.
-  -- It should be ok for now since we start all documents at once.
-  slids <- Model.selectSignatoryIdsByInstanceUser instanceId userName
-  mapM_ (addDocumentSession sessionId) slids
-
-  -- The Flow user's access token has been verified so insert an "instance session"
-  -- which is used for cookie authentication in subsequent calls.
-  Model.upsertInstanceSession sessionId instanceId userName
-
-  let response = addHeader redirectUrl $ maybeAddCookieHeaders NoContent
-  pure response
-
-  where
-    getAuthCookies = do
-      Cookies' cookies <- mCookies
-      readAuthCookies cookies
-    redirectUrl = "/flow/overview/"
-      <> T.intercalate "/" [toUrlPiece instanceId, toUrlPiece userName]
-    addDocumentSession sid slid = do
-      doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
-      case checkBeforeAddingDocumentSession doc slid of
-        Just err -> do
-          logInfo_ $ "Unable to add document session: " <> showt err
-          throwError $ err500 { errBody = "Error: Unable to add a document session." }
-        Nothing -> dbUpdate $ AddDocumentSession sid slid
-
--- Instance overview page
--- TODO: Implement the overview page
-instanceOverview :: InstanceUser -> InstanceId -> UserName -> AppM Text
-instanceOverview InstanceUser {..} instanceId' _ = do
-  when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
-
-  return "<html><body><h1> Flow overview page </h1></body></html>"
-
-checkInstancePerms :: Account -> InstanceId -> AccessAction -> AppM Model.Instance
-checkInstancePerms account instanceId action = do
-  flowInstance <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
-  let tid = flowInstance ^. #templateId
-  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate tid
-  guardUserHasPermission account [canDo action . FlowTemplateR $ template ^. #folderId]
-  pure flowInstance

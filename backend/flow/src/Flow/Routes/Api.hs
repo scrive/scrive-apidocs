@@ -1,7 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData #-}
-module Flow.Api
+module Flow.Routes.Api
     ( CreateTemplate(..)
     , GetCreateTemplate(..)
     , GetTemplate(..)
@@ -17,7 +17,9 @@ module Flow.Api
     , InstanceUserState(..)
     , DocumentOverview(..)
     , DocumentState(..)
-    , FlowAPI
+    , FlowApi
+    , InstanceApi
+    , TemplateApi
     , apiProxy
     )
   where
@@ -36,39 +38,51 @@ import Flow.Id
 import Flow.Model.Types
 import Flow.Names
 import Flow.Process
+import Flow.Routes.Types
 import Folder.Types
 import User.UserID (UserID)
 
 -- brittany-disable-next-binding
-type FlowAPI
-    = "experimental" :> "flow" :>
-      ( AuthProtect "account" :>
-            -- Configuration
-          ( "templates" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
-            :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
-            :<|> "templates" :> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
-            :<|> "templates" :> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate
-                             :> Patch '[JSON] GetTemplate
-            :<|> "templates" :> Get '[JSON] [GetTemplate]
-            -- Control
-            :<|> "templates" :> Capture "template_id" TemplateId :> "commit"
-                             :> PostNoContent '[JSON] NoContent
-            :<|> "templates" :> Capture "template_id" TemplateId :> "start"
-                             :> ReqBody '[JSON] InstanceKeyValues
-                             :> PostCreated '[JSON] GetInstance
-            -- Progress
-            :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
-            :<|> "instances" :> Get '[JSON] [GetInstance]
-          )
-        :<|>
-          AuthProtect "instance-user" :>
-            "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
-        :<|>
-          -- No authentication
-          "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
-      )
+type TemplateApi
+  = -- Configuration
+         ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
+    :<|> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
+    :<|> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
+    :<|> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate
+                     :> Patch '[JSON] GetTemplate
+    :<|> Get '[JSON] [GetTemplate]
+    -- Control
+    :<|> Capture "template_id" TemplateId :> "commit"
+                     :> PostNoContent '[JSON] NoContent
+    :<|> Capture "template_id" TemplateId :> "start"
+                     :> ReqBody '[JSON] InstanceKeyValues
+                     :> PostCreated '[JSON] GetInstance
 
-apiProxy :: Proxy FlowAPI
+-- brittany-disable-next-binding
+type InstanceApi
+  = -- Progress
+         Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
+    :<|> Get '[JSON] [GetInstance]
+
+-- brittany-disable-next-binding
+type AllApis
+  = AuthProtect "account" :>
+      (    "templates" :> TemplateApi
+      :<|> "instances" :> InstanceApi
+      )
+    :<|>
+      AuthProtect "instance-user"
+        :> "instances"
+        :> Capture "instance_id" InstanceId
+        :> "view"
+        :> Get '[JSON] GetInstanceView
+    :<|>
+      -- No authentication
+      "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
+
+type FlowApi = AddFlowPrefix AllApis
+
+apiProxy :: Proxy FlowApi
 apiProxy = Proxy
 
 aesonOptions :: Options

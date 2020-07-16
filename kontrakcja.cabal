@@ -374,7 +374,6 @@ Library
                  , FlashMessage
                  , Flow.ActionConsumers
                  , Flow.Aggregator
-                 , Flow.Api
                  , Flow.Client
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
@@ -399,11 +398,18 @@ Library
                  , Flow.OrphanInstances
                  , Flow.Process
                  , Flow.Process.Internal
+                 , Flow.Routes
+                 , Flow.Routes.Api
+                 , Flow.Routes.Pages
+                 , Flow.Routes.Types
                  , Flow.Server
+                 , Flow.Server.Api
+                 , Flow.Server.Api.Instances
+                 , Flow.Server.Api.Templates
+                 , Flow.Server.Api.Templates.Start
                  , Flow.Server.AuthHandler
                  , Flow.Server.Cookies
-                 , Flow.Server.Handlers.Instance
-                 , Flow.Server.Routes
+                 , Flow.Server.Pages
                  , Flow.Server.Types
                  , Flow.Tables
                  , Flow.VariableCollector

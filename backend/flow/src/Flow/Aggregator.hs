@@ -1,3 +1,8 @@
+-- This module provides an implementation of the Flow DSL
+-- as a simple, nearly-linear, state machine that handles incoming events
+-- and reports errors, moves through the stages, and triggers actions accordingly.
+--
+-- Additional information: https://scriveab.atlassian.net/wiki/spaces/EN/pages/1573355521/Flow+DSL
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE KindSignatures #-}
@@ -65,9 +70,6 @@ remainingStages name stages = case dropWhile (\Stage {..} -> stageName /= name) 
 -- flow will be terminated. Currently, these failure events are caused by rejections.
 --
 -- Unexpected events will not be processed but will not cause failure of the flow.
---
--- If the stage which is being exited is the final state in the DSL then we "fall off the
--- bottom" to termination state.
 aggregateAndStep :: HighTongue -> EventInfo -> AggregatorT AggregatorStep
 aggregateAndStep HighTongue {..} event = do
   AggregatorState {..} <- S.get

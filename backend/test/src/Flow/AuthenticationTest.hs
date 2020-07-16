@@ -16,12 +16,12 @@ import DB
 import Doc.Types.Document
 import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
-import Flow.Api
 import Flow.Client
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
+import Flow.Routes.Api
 import Flow.Server.Cookies
 import Flow.TestUtil
 import Session.Types (Session(..))
@@ -164,8 +164,8 @@ testInvitationLinkLogin = do
                                  Nothing
   response <- assertJustAndExtract mResponse
   assertEqual "instanceOverviewMagicHash should respond with a redirect"
-              (statusCode . responseStatusCode $ response)
               302
+              (statusCode . responseStatusCode $ response)
 
   -- If the link login is successful we should get auth cookies
   let mAuthCookies = readAuthCookies . toCookies $ responseSetCookieHeaders response

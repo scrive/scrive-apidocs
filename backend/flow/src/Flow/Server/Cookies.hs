@@ -13,7 +13,7 @@ import qualified Data.Text.Encoding as T
 
 import Auth.Session
 import Auth.Session.Constant
-import Flow.Server.Types (Host)
+import Flow.Routes.Types (Host)
 
 newtype Cookies' = Cookies' Cookies -- type Cookies = [(BS.ByteString, BS.ByteString)]
   deriving Show

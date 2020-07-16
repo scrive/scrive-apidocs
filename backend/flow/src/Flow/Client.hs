@@ -11,14 +11,14 @@ import Web.Cookie
 import Auth.MagicHash
 import Auth.OAuth
 import Auth.Session
-import Flow.Api
 import Flow.HighTongue
 import Flow.Id
 import Flow.Model.Types
 import Flow.Process
+import Flow.Routes.Api
+import Flow.Routes.Pages
+import Flow.Routes.Types
 import Flow.Server.Cookies
-import Flow.Server.Routes
-import Flow.Server.Types
 
 -- TODO: Having Maybe in the AuthClientData instance makes it unclear as to what
 -- the correct set of auth credentials is. However, we need to be able to generate
@@ -64,15 +64,16 @@ mkApiClient :: OAuthOrCookies -> ApiClient
 mkApiClient authData = ApiClient { .. }
   where
     accountEndpoints :<|> _ :<|> noAuthEndpoints = client apiProxy
-    createTemplate
+    (createTemplate
         :<|> deleteTemplate
         :<|> getTemplate
         :<|> patchTemplate
         :<|> listTemplates
         :<|> commitTemplate
-        :<|> startTemplate
-        :<|> getInstance
-        :<|> listInstances
+        :<|> startTemplate)
+      :<|>
+        (getInstance
+        :<|> listInstances)
       = accountEndpoints (mkAuthenticatedRequest authData addOAuthOrCookies)
     validateTemplate = noAuthEndpoints
 
