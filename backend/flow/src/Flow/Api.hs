@@ -273,7 +273,8 @@ instance ToJSON GetInstanceView where
 
 -- brittany-disable-next-binding
 type FlowAPI
-    = AuthProtect "oauth-or-cookies" :> "flow" :>
+  = "experimental" :> "flow" :>
+    ( AuthProtect "oauth-or-cookies" :>
         -- Configuration
         ("templates" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
         :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
@@ -290,6 +291,7 @@ type FlowAPI
         :<|> "instances" :> Get '[JSON] [GetInstance]
         )
     :<|> "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
+    )
 
 apiProxy :: Proxy FlowAPI
 apiProxy = Proxy
