@@ -83,8 +83,8 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
     getAuthCookies = do
       Cookies' cookies <- mCookies
       readAuthCookies cookies
-    redirectUrl = "/flow/overview/"
-      <> T.intercalate "/" [toUrlPiece instanceId, toUrlPiece userName]
+    redirectUrl = "/"
+      <> T.intercalate "/" [flowPath, "overview", toUrlPiece instanceId, toUrlPiece userName]
     addDocumentSession sid slid = do
       doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
       case checkBeforeAddingDocumentSession doc slid of

@@ -24,6 +24,7 @@ import Flow.Error
 import Flow.OrphanInstances ()
 import Flow.Server.Cookies
 import Flow.Server.Types
+import Flow.Server.Utils
 import Folder.Model (FolderGet(..))
 import Folder.Types (unsafeFolderID)
 import User.Model
@@ -75,24 +76,20 @@ authHandlerAccount flowConfiguration = mkAuthHandler handler
         ug     <- fmap fromJust . dbQuery . UserGroupGet $ unsafeUserGroupID userGroupId
         folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
         roles  <- dbQuery $ GetRolesIncludingInherited user ug
+        let domainUrl = mainDomainUrl (flowConfiguration :: FlowConfiguration)
+        let baseUrl =
+              mkBaseUrl domainUrl (isSecure req) (decodeUtf8 <$> requestHeaderHost req)
 
-
-        pure $ Account { user      = user
+        pure $ Account { user
                        , userGroup = ug
-                       , folder    = folder
-                       , roles     = roles
+                       , folder
+                       , roles
                        , headers   = requestHeaders req
-                       , baseUrl   = mkBaseUrl (isSecure req) (requestHeaderHost req)
+                       , baseUrl
                        }
 
     parseOAuthAuthorization :: ByteString -> Either Text OAuthAuthorization
     parseOAuthAuthorization = parseParams . splitAuthorization . decodeUtf8
-
-mkBaseUrl :: Bool -> Maybe ByteString -> Text
-mkBaseUrl isSecure mHost = protocol <> domain
-  where
-    protocol = if isSecure then "https://" else "http://"
-    domain   = maybe "scrive.com" decodeUtf8 mHost
 
 -- "Instance" users, i.e. users who don't have an account but participate
 -- in a flow process can only authenticate using session cookies.

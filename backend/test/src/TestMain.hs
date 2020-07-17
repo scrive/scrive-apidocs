@@ -248,6 +248,8 @@ testMany' tconf (allargs, ts) runLogger rng = do
   mAmazonEnv         <- sequence (s3envFromConfig <$> testAmazonConfig tconf)
   lambdaEnv          <- pdfToolsLambdaEnvFromConf $ testPdfToolsLambdaConf tconf
   memoryStorage      <- liftIO $ newTVarIO HM.empty
+  let flowPort = testFlowPort tconf
+
   let env = envf $ TestEnvSt { connSource         = cs
                              , staticConnSource   = staticSource
                              , transSettings      = defaultTransactionSettings
@@ -266,7 +268,7 @@ testMany' tconf (allargs, ts) runLogger rng = do
                              , cronDBConfig       = testDBConfig tconf
                              , cronMonthlyInvoice = testMonthlyInvoiceConf tconf
                              , testDurations      = test_durations
-                             , flowPort           = testFlowPort tconf
+                             , flowPort
                              }
       ts' = if env ^. #stagingTests then stagingTests ++ ts else ts
 
@@ -280,6 +282,7 @@ testMany' tconf (allargs, ts) runLogger rng = do
       (testFlowPort tconf)
       rng
       (Flow.handle env)
+      ("http://localhost:" <> showt flowPort)
     )
 
   forM_ (env ^. #outputDirectory) $ createDirectoryIfMissing True

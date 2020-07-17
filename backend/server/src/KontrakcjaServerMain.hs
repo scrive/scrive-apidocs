@@ -138,6 +138,7 @@ main = withCurlDo $ do
         (flowPort appConf)
         rng
         (Flow.handle appConf appGlobals)
+        (mainDomainUrl appConf)
       )
 
   -- Start Kontrakcja server

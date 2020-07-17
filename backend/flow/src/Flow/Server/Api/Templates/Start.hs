@@ -10,14 +10,11 @@ import Data.Map (Map)
 import Data.Set (Set)
 import GHC.Generics
 import Log.Class
-import Servant
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Data.Text as T
 
 import AccessControl.Check
 import AccessControl.Types
-import Auth.MagicHash
 import DB (dbQuery)
 import Doc.DocumentID (DocumentID)
 import Doc.Model.Query
@@ -35,6 +32,7 @@ import Flow.Model.Types.FlowUserId as FlowUserId
 import Flow.OrphanInstances ()
 import Flow.Routes.Api hiding (documents)
 import Flow.Server.Types
+import Flow.Server.Utils
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.VariableCollector as Collector
@@ -105,7 +103,7 @@ startTemplate account templateId keyValues = do
   --   zip (unsafeName <$> Map.keys users) <$> replicateM (length users) random
   mapM_ (uncurry $ Model.insertInstanceAccessToken id) usersWithHashes
 
-  let access_links = mkAccessLinks (baseUrl account) id usersWithHashes
+  let accessLinks = mkAccessLinks (baseUrl account) id usersWithHashes
 
   let templateParameters = keyValues
   -- TODO add a proper instance state
@@ -124,14 +122,6 @@ startTemplate account templateId keyValues = do
       case Map.keys $ Map.filter (== flowUserId) userMap of
         []      -> Nothing
         (x : _) -> Just x
-
--- TODO share with instances
-mkAccessLinks :: Text -> InstanceId -> [(UserName, MagicHash)] -> Map UserName Text
-mkAccessLinks baseUrl instanceId = Map.fromList . fmap (\(u, h) -> (u, mkAccessLink u h))
-  where
-    mkAccessLink userName hash = baseUrl <> "/flow/overview/" <> T.intercalate
-      "/"
-      [toUrlPiece instanceId, toUrlPiece userName, toUrlPiece hash]
 
 reportAssociatedDocuments :: [DocumentID] -> AppM ()
 reportAssociatedDocuments docIds =

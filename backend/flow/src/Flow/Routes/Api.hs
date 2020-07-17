@@ -76,6 +76,8 @@ type AllApis
         :> "instances"
         :> Capture "instance_id" InstanceId
         :> "view"
+        :> Header "Host" Host
+        :> IsSecure
         :> Get '[JSON] GetInstanceView
     :<|>
       -- No authentication
@@ -200,7 +202,7 @@ data GetInstance = GetInstance
     , templateId :: TemplateId
     , templateParameters :: InstanceKeyValues
     , state :: InstanceState
-    , access_links :: Map UserName Text
+    , accessLinks :: Map UserName Url
     }
   deriving (Eq, Generic, Show)
 
@@ -232,6 +234,7 @@ data InstanceUserAction = InstanceUserAction
     { actionType :: InstanceEventAction
     , actionDocument :: DocumentID
     , actionSignatoryId :: SignatoryLinkID
+    , actionLink :: Url
     }
   deriving (Eq, Generic, Ord, Show)
 

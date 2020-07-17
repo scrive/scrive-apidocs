@@ -4,11 +4,13 @@
 
 module Flow.IntegrationTest where
 
+import Control.Monad.Catch
 import Data.Aeson
 import Servant.Client
 import Test.Framework
 import Text.RawString.QQ
 import qualified Data.Map as Map
+import qualified Data.Text as Text
 
 import Auth.Session
 import DB
@@ -22,6 +24,7 @@ import Flow.Model.Types.FlowUserId
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
+import Flow.Routes.Types
 import Flow.TestUtil
 import MinutesTime
 import TestEnvSt.Internal ()
@@ -131,15 +134,38 @@ testZeroToInstance = do
   assertEqual "get after start" iid $ id (instance2 :: GetInstance)
   assertEqual "links"
               (Map.keys $ mapping ^. #users)
-              (Map.keys $ access_links (instance2 :: GetInstance))
+              (Map.keys $ accessLinks (instance2 :: GetInstance))
 
   -- View instance as "signatory"
   let ParticipantApiClient {..} =
         mkParticipantApiClient (Just authCookieSession, Just authCookieXToken)
   Model.upsertInstanceSession (cookieSessionID authCookieSession) iid "signatory"
   commit
-  instanceView <- assertRight "view instance response" . request $ getInstanceView iid
+  instanceView <- assertRight "view instance response" . request $ getInstanceView
+    iid
+    Nothing
   assertEqual "view instance: id in response" iid $ id (instanceView :: GetInstanceView)
+  assertEqual "view instance: there are 2 document actions" 2
+    $ length (actions instanceView)
+
+  defaultBaseUrl <- getDefaultFlowBaseUrl
+  baseUrl        <- getBaseUrl . actionLink . head $ actions instanceView
+  assertEqual "action link has correct base url when Host is Nothing"
+              defaultBaseUrl
+              baseUrl
+
+  instanceView2 <- assertRight "view instance response" . request $ getInstanceView
+    iid
+    (Just "scrive.com")
+  baseUrl2 <- getBaseUrl . actionLink . head $ actions instanceView2
+  assertEqual "action link has correctbase url when Host is Just"
+              "http://scrive.com"
+              baseUrl2
+
+getBaseUrl :: MonadThrow m => Url -> m Text
+getBaseUrl (Url u) = do
+  url <- parseBaseUrl $ Text.unpack u
+  pure . Text.pack . showBaseUrl $ url { baseUrlPath = "" }
 
 processFailure :: Process
 processFailure = Process [r|

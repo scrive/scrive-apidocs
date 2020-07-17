@@ -46,7 +46,7 @@ data ApiClient = ApiClient
   }
 
 newtype ParticipantApiClient = ParticipantApiClient
-  { getInstanceView  :: InstanceId -> ClientM GetInstanceView
+  { getInstanceView  :: InstanceId -> Maybe Host -> ClientM GetInstanceView
   }
 
 data PageClient = PageClient

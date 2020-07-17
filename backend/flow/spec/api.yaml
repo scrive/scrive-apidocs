@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.6.2"
+  version: "0.6.3"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -912,6 +912,7 @@ components:
         - type
         - document
         - signatory_id
+        - action_link
       properties:
         type:
           $ref: "#/components/schemas/InstanceActionType"
@@ -919,6 +920,11 @@ components:
           $ref: "#/components/schemas/DocumentId"
         signatory_id:
           $ref: "#/components/schemas/SignatoryId"
+        action_link:
+          description: |
+            Link that can be followed to perform this action.
+          type: string
+          example: "https://scrive.com/s/123/456"
 
     InstanceActionType:
       description: INSTANCTION

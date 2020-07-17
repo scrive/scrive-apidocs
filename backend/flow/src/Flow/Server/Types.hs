@@ -32,13 +32,15 @@ data FlowConfiguration = FlowConfiguration
     , flowPort :: Int
     , cryptoRNG :: CryptoRNGState
     , handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
+    , mainDomainUrl :: Text
     }
 
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 
-newtype FlowContext = FlowContext
+data FlowContext = FlowContext
   { handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
+  , mainDomainUrl :: Text
   }
 
 type AppM = ReaderT FlowContext (CryptoRNGT (DBT (LogT Handler)))

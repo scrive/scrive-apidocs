@@ -95,3 +95,8 @@ createInstance ApiClient {..} name process mapping = do
   void . assertRight "commit template response" . request $ commitTemplate tid
 
   request $ startTemplate tid mapping
+
+getDefaultFlowBaseUrl :: TestEnv Text
+getDefaultFlowBaseUrl = do
+  testEnv <- ask
+  pure $ "http://localhost:" <> showt (flowPort testEnv)

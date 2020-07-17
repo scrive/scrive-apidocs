@@ -4,6 +4,7 @@ module Flow.Server.Api.Instances where
 
 import Control.Monad.Except
 import Control.Monad.Extra (fromMaybeM)
+import Control.Monad.Reader
 import Data.Aeson
 import Data.Foldable (fold)
 import Data.Map (Map)
@@ -13,11 +14,9 @@ import Log.Class
 import Servant
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Data.Text as T
 
 import AccessControl.Check
 import AccessControl.Types
-import Auth.MagicHash
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator as Aggregator
@@ -30,22 +29,16 @@ import Flow.Machinize as Machinize
 import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Routes.Api as Api
+import Flow.Routes.Types
 import Flow.Server.Types
+import Flow.Server.Utils
+import KontraLink
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.Model.Types as Model
 
 accountEndpoints :: ServerT (AuthProtect "account" :> InstanceApi) AppM
 accountEndpoints account = getInstance account :<|> listInstances account
-
--- TODO share with templates.start
-mkAccessLinks :: Text -> InstanceId -> [(UserName, MagicHash)] -> Map UserName Text
-mkAccessLinks baseUrl instanceId = Map.fromList . fmap (\(u, h) -> (u, mkAccessLink u h))
-  where
-    mkAccessLink userName hash = baseUrl <> "/flow/overview/" <> T.intercalate
-      "/"
-      [toUrlPiece instanceId, toUrlPiece userName, toUrlPiece hash]
-
 
 getInstance :: Account -> InstanceId -> AppM GetInstance
 getInstance account instanceId = do
@@ -54,13 +47,13 @@ getInstance account instanceId = do
   keyValues    <- Model.selectInstanceKeyValues instanceId
   accessTokens <- Model.selectInstanceAccessTokens instanceId
   let usersWithHashes = fmap (\at -> (at ^. #userName, at ^. #hash)) accessTokens
-  let access_links    = mkAccessLinks (baseUrl account) instanceId usersWithHashes
+  let accessLinks     = mkAccessLinks (baseUrl account) instanceId usersWithHashes
   pure $ GetInstance { id                 = instanceId
                      , templateId         = flowInstance ^. #templateId
                      , templateParameters = keyValues
                      -- TODO add a proper instance state
                      , state = InstanceState { availableActions = [], history = [] }
-                     , access_links
+                     , accessLinks
                      }
 
 listInstances :: Account -> AppM [GetInstance]
@@ -69,12 +62,16 @@ listInstances account@Account {..} = do
   let iids = map (view #id) is
   mapM (getInstance account) iids
 
-getInstanceView :: InstanceUser -> InstanceId -> AppM GetInstanceView
-getInstanceView user@InstanceUser {..} instanceId' = do
+getInstanceView
+  :: InstanceUser -> InstanceId -> Maybe Host -> IsSecure -> AppM GetInstanceView
+getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
   logInfo "Getting instance view"
     $ object ["instance_id" .= instanceId', "instance_user" .= user]
 
   when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
+
+  FlowContext {..} <- ask
+  let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
 
   keyValues    <- Model.selectInstanceKeyValues instanceId
   sigInfo      <- Model.selectSignatoryInfo instanceId
@@ -94,7 +91,8 @@ getInstanceView user@InstanceUser {..} instanceId' = do
                   userAction <- toApiUserAction $ eventInfoAction e
                   docId      <- Map.lookup (eventInfoDocument e) (keyValues ^. #documents)
                   sigId      <- findSignatoryId sigInfo (eventInfoUser e) docId
-                  pure $ InstanceUserAction userAction docId sigId
+                  let link = mkLink baseUrl docId sigId
+                  pure $ InstanceUserAction userAction docId sigId link
                 )
                 userAllowedEvents
 
@@ -124,6 +122,9 @@ getInstanceView user@InstanceUser {..} instanceId' = do
         .   stageExpect
         .   fst
         <$> remainingStages currentStage stages
+
+    mkLink baseUrl documentId signatoryId =
+      Url $ baseUrl <> showt (LinkSignDocNoMagicHash documentId signatoryId)
 
     toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
     toApiUserAction Machinize.Approval  = Just Api.Approve
