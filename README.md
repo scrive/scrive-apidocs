@@ -62,7 +62,7 @@ Since the `documentation/` files use JSON references to bring it other files,
 you need to manually generate a single OpenAPI / Swagger file if someone needs it.
 
 Conveniently `openapi2slate` provides a `--difference` option ([not yet
-released](https://github.com/scrive/openapi2slate/pull/6)], so using that you
+released](https://github.com/scrive/openapi2slate/pull/6)), so using that you
 should be able to get a JSON that somewhat matches what you need, however
 **note that it will include all "internal" API endpoints as well**.
 
