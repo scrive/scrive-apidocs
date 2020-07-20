@@ -138,6 +138,7 @@ jobs:
             --run "./shake.sh hlint"
 name: "GHC 8.8 Backend Tests (Nix)"
 on:
+  pull_request: {}
   push:
     branches:
       - master

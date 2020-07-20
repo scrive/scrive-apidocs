@@ -30,17 +30,18 @@ let createWorkflow =
       , runsOn = args.runsOn
       }
 
-    let cacheCabalSteps = merge
+    let cacheCabalSteps = \(name: Text) ->
+      merge
       { manual-shell =
           [ Step ::
             { name = "Cache ~/.cabal"
             , uses = Some "actions/cache@v2"
             , with = Some toMap
               { path = "~/.cabal"
-              , key = "\${{ runner.os }}-cabal-\${{ hashFiles('**/*.cabal') }}"
+              , key = "\${{ runner.os }}-cabal-${name}-\${{ hashFiles('**/*.cabal') }}"
               , restore-keys = ''
-                ''${{ runner.os }}-cabal-''${{ hashFiles('**/*.cabal') }}
-                ''${{ runner.os }}-cabal-
+                ''${{ runner.os }}-cabal-${name}-''${{ hashFiles('**/*.cabal') }}
+                ''${{ runner.os }}-cabal-${name}-
                 ''
               }
             }
@@ -50,11 +51,11 @@ let createWorkflow =
       }
       args.nixShell
 
-    let createJob = \(steps: List Step.Type) ->
+    let createJob = \(name: Text) -> \(steps: List Step.Type) ->
       CreateJob.createJob
-        ( inArgs // { steps = cacheCabalSteps # steps } )
+        ( inArgs // { steps = cacheCabalSteps name # steps } )
 
-    let backendTests = createJob
+    let backendTests = createJob "backend-tests"
       [ Step ::
         { name = "Run Backend Tests"
         , timeout-minutes = Some 180
@@ -65,22 +66,21 @@ let createWorkflow =
         }
       ]
 
-    let formatting = createJob
+    let formatting = createJob "test-formatting"
       [ Step ::
         { name = "Test Formatting"
         , run = Some "./shake.sh test-formatting"
         }
       ]
 
-    let hlint = createJob
+    let hlint = createJob "hlint"
       [ Step ::
         { name = "Test HLint"
         , run = Some "./shake.sh hlint"
         }
       ]
 
-
-    let detect-unused = createJob
+    let detect-unused = createJob "detect-unused"
       [ Step ::
         { name = "Detect Old Templates"
         , run = Some "./shake.sh detect-old-templates"
