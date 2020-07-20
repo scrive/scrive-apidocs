@@ -77,9 +77,9 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
   sigInfo      <- Model.selectSignatoryInfo instanceId
   fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
   let aggrState = instanceToAggregator fullInstance
-  machine <- decodeHighTongueM $ fullInstance ^. #template % #process
+  tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
 
-  case mAllowedEvents machine aggrState of
+  case mAllowedEvents tongue aggrState of
     Just allowedEvents ->
       pure
         $ let
@@ -116,8 +116,9 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
     findSignatoryId sigInfo name docId =
       snd3 <$> find (\(un, _, did) -> un == name && did == docId) sigInfo
 
-    mAllowedEvents HighTongue {..} AggregatorState {..} =
-      fold
+    mAllowedEvents HighTongue {..} aggrState@AggregatorState {..} =
+      Set.filter (`Set.notMember` Aggregator.receivedEvents aggrState)
+        .   fold
         .   Set.map (Set.fromList . expectToSuccess)
         .   stageExpect
         .   fst
