@@ -26,7 +26,7 @@ tar xvf kontrakcja.tar.gz
 
 cd -
 
-supervisorctl stop dev-cron dev-messenger dev-mailer dev-kontrakcja
+supervisorctl stop dev-cron dev-messenger dev-mailer dev-kontrakcja dev-flow
 
 mv kontrakcja kontrakcja_old
 
@@ -42,7 +42,7 @@ rsync -avz -e ssh --delete /home/dev/kontrakcja/frontend/dist/ /srv/dev.scrive.c
 
 chcon -Rt httpd_sys_content_t /srv/dev.scrive.com
 
-supervisorctl start dev-cron dev-messenger dev-mailer dev-kontrakcja
+supervisorctl start dev-cron dev-messenger dev-mailer dev-kontrakcja dev-flow
 
 sudo /home/dev/kontrakcja/build-scripts/deployDevNginxRules.sh
 
