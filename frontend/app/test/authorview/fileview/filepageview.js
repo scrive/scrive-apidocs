@@ -1,5 +1,6 @@
 var backend = require("../../backend");
 var util = require("../../util");
+var sinon = require("sinon/pkg/sinon");
 var React = require("react");
 var _ = require("underscore");
 
@@ -114,7 +115,7 @@ describe("/authorview/fileview/filepageview", function () {
         return component.props.onReady.called;
       },
       function () {
-        assert.isTrue(component.props.page.setSize.calledWith(950, 593.75));
+        sinon.assert.called(page.setSize);
         done();
       }
     );

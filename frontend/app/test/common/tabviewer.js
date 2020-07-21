@@ -280,8 +280,10 @@ describe("common/tabviewer", function () {
 
     it("should set new location hash when clicking a tab with hash", function () {
       var tabViewer = renderTabViewer();
-
       tabViewer.onTabClick(1);
+
+      console.log("Testing should set new location hash when clicking a tab with hash");
+      console.log(window.location);
       assert.equal(window.location.hash, "#aliased");
     });
 

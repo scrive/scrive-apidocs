@@ -12,6 +12,7 @@ BackendWorkflow.createWorkflow
   { name = "GHC 8.8 Backend Tests"
   , ghcVersion = GHCVersion.Type.ghc88
   , nixShell = NixShell.Type.manual-shell
+  , cacheCabal = True
   , runsOn =
       [ Job.RunsOn.ubuntu-latest
       ]

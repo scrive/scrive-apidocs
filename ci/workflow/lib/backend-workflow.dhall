@@ -10,14 +10,16 @@ let Args =
       { name: Text
       , ghcVersion: GHCVersion.Type
       , nixShell: NixShell.Type
-      , nixExtraArgs: Optional Text
+      , testFrontend: Bool
+      , cacheCabal: Bool
       , runsOn: List Job.RunsOn
       , triggers: Workflow.Triggers.Type
       }
   , default =
       { ghcVersion = GHCVersion.Type.ghc88
       , nixShell = NixShell.Type.dev-shell-optimized
-      , nixExtraArgs = None Text
+      , testFrontend = False
+      , cacheCabal = False
       }
   }
 
@@ -26,13 +28,13 @@ let createWorkflow =
     let inArgs =
       { ghcVersion = args.ghcVersion
       , nixShell = args.nixShell
-      , nixExtraArgs = args.nixExtraArgs
       , runsOn = args.runsOn
+      , nixExtraArgs = None Text
       }
 
-    let cacheCabalSteps = \(name: Text) ->
-      merge
-      { manual-shell =
+    let cacheCabalSteps =
+      if args.cacheCabal
+      then \(name: Text) ->
           [ Step ::
             { name = "Cache ~/.cabal"
             , uses = Some "actions/cache@v2"
@@ -46,16 +48,13 @@ let createWorkflow =
               }
             }
           ]
-      , dev-shell = [] : List Step.Type
-      , dev-shell-optimized = [] : List Step.Type
-      }
-      args.nixShell
+      else \(name: Text) -> ([] : List Step.Type)
 
     let createJob = \(name: Text) -> \(steps: List Step.Type) ->
       CreateJob.createJob
         ( inArgs // { steps = cacheCabalSteps name # steps } )
 
-    let backendTests = createJob "backend-tests"
+    let backendTests1 =
       [ Step ::
         { name = "Run Backend Tests"
         , timeout-minutes = Some 180
@@ -65,6 +64,26 @@ let createWorkflow =
             }
         }
       ]
+
+    let backendTests2 : List Step.Type =
+      if args.testFrontend
+      then
+        backendTests1 #
+        [ Step ::
+          { name = "Test Frontend"
+          , run = Some "./ci/scripts/run-frontend-tests.sh"
+          }
+        ]
+      else backendTests1
+
+    let backendTests = CreateJob.createJob
+      ( inArgs //
+          { steps = cacheCabalSteps "backend-tests" # backendTests2
+          , nixExtraArgs = if args.testFrontend
+              then Some "--arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.chromium ]'"
+              else None Text
+          }
+      )
 
     let formatting = createJob "test-formatting"
       [ Step ::
@@ -90,16 +109,19 @@ let createWorkflow =
         , run = Some "./shake.sh detect-old-localizations"
         }
       ]
+
+    let jobs =
+      { backend-tests = backendTests
+      , formatting = formatting
+      , hlint = hlint
+      , detect-unused = detect-unused
+      }
+
     in
     Workflow.Workflow ::
       { name = args.name
       , on = Some args.triggers
-      , jobs = toMap
-          { backend-tests = backendTests
-          , formatting = formatting
-          , hlint = hlint
-          , detect-unused = detect-unused
-          }
+      , jobs = toMap jobs
       }
 in
 { Args = Args

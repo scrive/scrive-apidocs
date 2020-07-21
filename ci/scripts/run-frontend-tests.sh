@@ -7,4 +7,7 @@ export CHROME_BIN=$(which chromium)
 ( cd frontend && npm install )
 ( cd frontend-elm && npm install )
 
-./shake.sh test-frontend
+cd frontend
+
+grunt build --new-build
+grunt test:fast --new-build

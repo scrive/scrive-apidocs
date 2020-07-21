@@ -9,7 +9,6 @@ module.exports = function(config) {
     frameworks: ["mocha", "sinon-chai"],
 
     files: [
-      "./node_modules/phantomjs-polyfill/bind-polyfill.js",
       "./app/localization/*.en.js",
       "./app/bower_components/jquery/dist/jquery.js",
       "./app/bower_components/moment/moment.js",
@@ -34,7 +33,16 @@ module.exports = function(config) {
 
     autoWatch: false,
 
-    browsers: ["PhantomJS"],
+    browsers: [
+      'ChromeHeadlessNoSandbox'
+    ],
+
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox']
+      }
+    },
 
     singleRun: false,
 
@@ -51,7 +59,10 @@ module.exports = function(config) {
             test: /\.less$/,
             use: [
               {
-                loader: "less-interop-loader"
+                loader: "css-loader"
+              },
+              {
+                loader: "less-loader"
               }
             ]
           },
@@ -73,8 +84,9 @@ module.exports = function(config) {
         ],
         noParse: [
           /html2canvas/
-        ]
+        ],
       },
+      mode: "development",
 
       externals: {
         "jquery": "jQuery",

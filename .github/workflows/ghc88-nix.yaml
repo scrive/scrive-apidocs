@@ -21,7 +21,7 @@ jobs:
           echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
       - name: Load Nix Shell
         run: |
-          nix-shell -j8 \
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.chromium ]' \
             -A ghc88.dev-shell-optimized \
             release.nix \
             --run "echo Loaded Nix shell"
@@ -29,11 +29,17 @@ jobs:
           PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
         name: Run Backend Tests
         run: |
-          nix-shell -j8 \
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.chromium ]' \
             -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./ci/scripts/run-backend-tests.sh"
         timeout-minutes: 180
+      - name: Test Frontend
+        run: |
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.chromium ]' \
+            -A ghc88.dev-shell-optimized \
+            release.nix \
+            --run "./ci/scripts/run-frontend-tests.sh"
   detect-unused:
     runs-on:
       - ubuntu-latest
@@ -136,7 +142,7 @@ jobs:
             -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./shake.sh hlint"
-name: "GHC 8.8 Backend Tests (Nix)"
+name: "GHC 8.8 Backend + Frontend Tests (Nix)"
 on:
   pull_request: {}
   push:

@@ -65,7 +65,7 @@ window.FileParamView  = Backbone.View.extend({
         if (multifile.slaves[i] != undefined && multifile.slaves[i] != multifile.current) {
           var row = $("<tr/>");
           row.append($("<td/>").text(param.argName(rowCount)));
-          row.append($("<td/>").text((multifile.slaves[i].value || "").match(/[^\/\\]+$/gi)[0]));
+          row.append($("<td/>").text((multifile.slaves[i].value || "").match(/[^/\\]+$/gi)[0]));
           row.append($("<td class='text-right'/>")
              .append($("<button class='btn btn-xs btn-default' type='button'>Remove</button>").click(remover(i)))
             );

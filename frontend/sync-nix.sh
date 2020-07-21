@@ -12,4 +12,3 @@
 # Nix shell, simple enter the respective directory and run `npm run sync-nix`.
 
 node2nix --nodejs-12 -d -l package-lock.json
-patch -u default.nix -i default.nix.patch

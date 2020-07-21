@@ -58,11 +58,6 @@ module.exports = function (grunt) {
         {
           devtool: "source-map",
           plugins: [
-            new webpack.optimize.UglifyJsPlugin({
-              minimize: true,
-              sourceMap: true,
-              compress: {warnings: false}
-            }),
             new webpack.DefinePlugin({
               "process.env": {"NODE_ENV": JSON.stringify("production")}
             })
@@ -89,7 +84,7 @@ module.exports = function (grunt) {
       },
       full: {
         autoWatch: false,
-        browsers: ["PhantomJS"],
+        browsers: ["ChromeHeadlessNoSandbox"],
         reporters: ["teamcity", "coverage-istanbul"],
         singleRun: true,
         webpackMiddleware: {
@@ -99,7 +94,7 @@ module.exports = function (grunt) {
       },
       fast: {
         autoWatch: false,
-        browsers: ["PhantomJS"],
+        browsers: ["ChromeHeadlessNoSandbox"],
         reporters: ["teamcity"],
         singleRun: true,
         webpackMiddleware: {
@@ -191,7 +186,7 @@ module.exports = function (grunt) {
         // We can't just invoke `../shake.sh localization` because
         // Shake doesn't allow us to run two Shake processes in the
         // same working dir simultaneously.
-        command: "cabal new-build localization",
+        command: "cabal v2-build localization",
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcjaWorkspace %>"
@@ -200,7 +195,7 @@ module.exports = function (grunt) {
       },
       generateLocalization: {
         command: (process.env.LOCALIZATION_BIN ||
-                  "cabal new-run localization"),
+                  "cabal v2-run localization"),
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcjaWorkspace %>"
@@ -348,6 +343,7 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/jquery/dist/jquery.min.js",
           "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.min.js",
           "<%= yeoman.app %>/bower_components/underscore/underscore-min.js",
+          "<%= yeoman.app %>/bower_components/react/react-with-addons.min.js",
           "<%= yeoman.app %>/bower_components/moment/min/moment.min.js",
           util.format("<%= yeoman.app %>/bower_components/moment/locale/{%s}.js", langFromTexts.join(",")),
           "<%= yeoman.app %>/bower_components/es6-promise/promise.min.js",

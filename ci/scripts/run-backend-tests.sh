@@ -2,9 +2,6 @@
 
 set -eux
 
-cabal update
-./shake.sh server
-
 set +x
 echo "$PDFTOOLS_CONFIG" > ./pdftools-lambda.local.json
 set -x
@@ -20,11 +17,15 @@ initdb --pgdata "$db_path" --locale "en_US.UTF-8"
 
 supervisord -c "$supervisor_config"
 
-supervisorctl -c "$supervisor_config" start all
+supervisorctl -c "$supervisor_config" start postgres fakes3
 
 supervisorctl -c "$supervisor_config" status
 
 createdb -h "$db_path" kontrakcja_test
+
+cabal update
+
+./shake.sh server
 
 cabal run kontrakcja-test -- --plain --output-dir _build/test-outputs
 

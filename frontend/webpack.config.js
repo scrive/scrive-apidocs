@@ -30,7 +30,10 @@ function defaultConfig (obj) {
           test: /\.less$/,
           use: [
             {
-              loader: "less-interop-loader"
+              loader: "css-loader"
+            },
+            {
+              loader: "less-loader"
             }
           ]
         },
@@ -93,7 +96,10 @@ var signviewConfig = defaultConfig({
       "react": "react/react-with-addons.min.js",
       "react-dom": "react",
       "react/addons": "react"
-    }
+    },
+    modules: [
+      "node_modules"
+    ]
   }
 });
 
@@ -102,7 +108,10 @@ signviewConfig.externals = {
   "tinycolor": "tinycolor",
   "moment": "moment",
   "base64": "Base64",
-  "underscore": "_"
+  "underscore": "_",
+  "react": "React",
+  "react-dom": "React",
+  "react/addons": "React"
 };
 
 var allConfig = defaultConfig({
