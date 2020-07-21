@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.7.0"
+  version: "0.8.0"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -248,12 +248,8 @@ paths:
             example: |
               "stages: ..."
       responses:
-        200:
+        204:
           description: Flow template validated.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
         401:
           description: Error authenticating the API caller.
           content:
@@ -400,7 +396,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
 servers:
-  - url: "https://virtserver.swaggerhub.com/scrive/Flow/0.1.0"
+  - url: "https://scrive.com/experimental/flow"
 components:
   parameters:
     TemplateId:
@@ -746,7 +742,7 @@ components:
       type: object
       required:
         - id
-        - template
+        - template_id
         - template_parameters
         - state
         - access_links
@@ -948,5 +944,4 @@ components:
     FolderId:
       description: Unique Folder ID.
       type: string
-      format: number
       example: 42
