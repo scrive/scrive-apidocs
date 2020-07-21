@@ -2,6 +2,7 @@
 {-# LANGUAGE StrictData #-}
 module Flow.Server.Api.Instances where
 
+import Control.Monad.Catch
 import Control.Monad.Except
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader
@@ -11,6 +12,7 @@ import Data.Map (Map)
 import Data.Set (Set)
 import Data.Tuple.Extra
 import Log.Class
+import Optics
 import Servant
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -46,21 +48,71 @@ getInstance account instanceId = do
   flowInstance <- checkInstancePerms account instanceId ReadA
   keyValues    <- Model.selectInstanceKeyValues instanceId
   accessTokens <- Model.selectInstanceAccessTokens instanceId
-  let usersWithHashes = fmap (\at -> (at ^. #userName, at ^. #hash)) accessTokens
+  let usersWithHashes = fmap (\act -> (act ^. #userName, act ^. #hash)) accessTokens
   let accessLinks     = mkAccessLinks (baseUrl account) instanceId usersWithHashes
-  pure $ GetInstance { id                 = instanceId
-                     , templateId         = flowInstance ^. #templateId
-                     , templateParameters = keyValues
-                     -- TODO add a proper instance state
-                     , state = InstanceState { availableActions = [], history = [] }
-                     , accessLinks
-                     }
+  fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
+  let aggrState = instanceToAggregator fullInstance
+  tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
+  let mAvailableActions =
+        mAllowedEvents tongue aggrState >>= (mapM (magic keyValues) . Set.toList)
+  let mkGetInstance availableActions status = GetInstance
+        { id                 = instanceId
+        , templateId         = flowInstance ^. #templateId
+        , templateParameters = keyValues
+        -- TODO add a proper instance state
+        , state              = InstanceState { availableActions }
+        , accessLinks
+        , status
+        }
+
+  if
+    | currentStage aggrState == failureStageName -> pure $ mkGetInstance [] Failed
+    | currentStage aggrState == finalStageName -> pure $ mkGetInstance [] Completed
+    | otherwise -> case mAvailableActions of
+      Just availableActions -> pure $ mkGetInstance availableActions InProgress
+      _                     -> inconsistantInstanceState instanceId account
+  where
+    magic :: InstanceKeyValues -> EventInfo -> Maybe InstanceAuthorAction
+    magic keyValues EventInfo {..} = do
+      actionType     <- toApiUserAction eventInfoAction
+      actionUser     <- keyValues ^. #users % at eventInfoUser
+      actionDocument <- keyValues ^. #documents % at eventInfoDocument
+      pure InstanceAuthorAction { actionType, actionUser, actionDocument }
 
 listInstances :: Account -> AppM [GetInstance]
 listInstances account@Account {..} = do
   is <- Model.selectInstancesByUserID $ user ^. #id
   let iids = map (view #id) is
   mapM (getInstance account) iids
+
+mAllowedEvents :: HighTongue -> AggregatorState -> Maybe (Set EventInfo)
+mAllowedEvents HighTongue {..} aggrState@AggregatorState {..} =
+  Set.filter (`Set.notMember` Aggregator.receivedEvents aggrState)
+    .   fold
+    .   Set.map (Set.fromList . expectToSuccess)
+    .   stageExpect
+    .   fst
+    <$> remainingStages currentStage stages
+
+
+inconsistantInstanceState
+  :: (MonadLog m, MonadThrow m, MonadError ServerError m, ToJSON b)
+  => InstanceId
+  -> b
+  -> m a
+inconsistantInstanceState instanceId user = do
+  logAttention "GetInstanceView: Invalid userId or broken state for Flow instance "
+    $ object ["instance_id" .= instanceId, "instance_user" .= user]
+  throwInternalServerError "Could not reconstruct the state of the Flow process."
+
+toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
+toApiUserAction Machinize.Approval  = Just Api.Approve
+toApiUserAction Machinize.Signature = Just Api.Sign
+toApiUserAction Machinize.View      = Just Api.View
+toApiUserAction Machinize.Rejection = Just Api.Reject
+toApiUserAction (Machinize.Field _) = Nothing
+toApiUserAction Machinize.Timeout   = Nothing
+
 
 getInstanceView
   :: InstanceUser -> InstanceId -> Maybe Host -> IsSecure -> AppM GetInstanceView
@@ -79,61 +131,48 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
   let aggrState = instanceToAggregator fullInstance
   tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
 
-  case mAllowedEvents tongue aggrState of
-    Just allowedEvents ->
-      pure
-        $ let
-              -- Actions
-              userAllowedEvents =
-                Set.filter (\e -> eventInfoUser e == userName) allowedEvents
-              userActions = catMaybes . Set.toList $ Set.map
-                (\e -> do
-                  userAction <- toApiUserAction $ eventInfoAction e
-                  docId      <- Map.lookup (eventInfoDocument e) (keyValues ^. #documents)
-                  sigId      <- findSignatoryId sigInfo (eventInfoUser e) docId
-                  let link = mkLink baseUrl docId sigId
-                  pure $ InstanceUserAction userAction docId sigId link
-                )
-                userAllowedEvents
+  -- Document state
+  let userReceivedEvents = Set.filter (\e -> eventInfoUser e == userName)
+        $ Aggregator.receivedEvents (aggrState :: AggregatorState)
+  let userDocs = Set.map eventInfoDocument userReceivedEvents
+  let userDocsWithState = catMaybes . Set.toList $ Set.map
+        (toApiUserDocument sigInfo userReceivedEvents $ keyValues ^. #documents)
+        userDocs
 
-              -- Document state
-              userReceivedEvents = Set.filter (\e -> eventInfoUser e == userName)
-                $ Aggregator.receivedEvents (aggrState :: AggregatorState)
-              userDocs          = Set.map eventInfoDocument userReceivedEvents
-              userDocsWithState = catMaybes . Set.toList $ Set.map
-                (toApiUserDocument sigInfo userReceivedEvents $ keyValues ^. #documents)
-                userDocs
-          in  GetInstanceView
-                { id      = instanceId
-                , state   = InstanceUserState { Api.documents = userDocsWithState }
-                , actions = userActions
-                }
-    _ -> do
-      logAttention "GetInstanceView: Invalid userId or broken state for Flow instance "
-        $ object ["instance_id" .= instanceId, "instance_user" .= user]
-      throwInternalServerError "Could not reconstruct the state of the Flow process."
+  let mkGetInstanceView actions status = GetInstanceView
+        { id      = instanceId
+        , state   = InstanceUserState { Api.documents = userDocsWithState }
+        , actions
+        , status
+        }
+
+  if
+    | currentStage aggrState == failureStageName -> pure $ mkGetInstanceView [] Failed
+    | currentStage aggrState == finalStageName -> pure $ mkGetInstanceView [] Completed
+    | otherwise -> case mAllowedEvents tongue aggrState of
+      Just allowedEvents ->
+        pure
+          $ let
+                -- Actions
+                userAllowedEvents =
+                  Set.filter (\e -> eventInfoUser e == userName) allowedEvents
+                userActions = catMaybes . Set.toList $ Set.map
+                  (\e -> do
+                    userAction <- toApiUserAction $ eventInfoAction e
+                    docId <- Map.lookup (eventInfoDocument e) (keyValues ^. #documents)
+                    sigId <- findSignatoryId sigInfo (eventInfoUser e) docId
+                    let link = mkLink baseUrl docId sigId
+                    pure $ InstanceUserAction userAction docId sigId link
+                  )
+                  userAllowedEvents
+            in  mkGetInstanceView userActions InProgress
+      _ -> inconsistantInstanceState instanceId user
   where
     findSignatoryId sigInfo name docId =
       snd3 <$> find (\(un, _, did) -> un == name && did == docId) sigInfo
 
-    mAllowedEvents HighTongue {..} aggrState@AggregatorState {..} =
-      Set.filter (`Set.notMember` Aggregator.receivedEvents aggrState)
-        .   fold
-        .   Set.map (Set.fromList . expectToSuccess)
-        .   stageExpect
-        .   fst
-        <$> remainingStages currentStage stages
-
     mkLink baseUrl documentId signatoryId =
       Url $ baseUrl <> showt (LinkSignDocNoMagicHash documentId signatoryId)
-
-    toApiUserAction :: Machinize.UserAction -> Maybe Api.InstanceEventAction
-    toApiUserAction Machinize.Approval  = Just Api.Approve
-    toApiUserAction Machinize.Signature = Just Api.Sign
-    toApiUserAction Machinize.View      = Just Api.View
-    toApiUserAction Machinize.Rejection = Just Api.Reject
-    toApiUserAction (Machinize.Field _) = Nothing
-    toApiUserAction Machinize.Timeout   = Nothing
 
     toApiUserDocument
       :: [(UserName, SignatoryLinkID, DocumentID)]

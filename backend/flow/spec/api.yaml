@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.6.3"
+  version: "0.7.0"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -802,22 +802,15 @@ components:
       description: |
         Provides a complete overview of a Flow instance.
 
-        This includes actions available to all the participants at this moment and a full process history.
-
-        The history array is ordered from newest to oldest, so the current stage is the first element.
+        This includes actions available to all the participants at this moment.
       type: object
       required:
         - available_actions
-        - history
       properties:
         available_actions:
           type: array
           items:
             $ref: "#/components/schemas/InstanceAuthorAction"
-        history:
-          type: array
-          items:
-            $ref: "#/components/schemas/InstanceStage"
 
     InstanceStage:
       type: object
@@ -840,6 +833,7 @@ components:
         - id
         - state
         - available_actions
+        - status
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
@@ -849,6 +843,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/InstanceUserAction"
+        status:
+          $ref: "#/components/schemas/InstanceStatus"
 
     InstanceUserState:
       description: |
@@ -925,6 +921,14 @@ components:
             Link that can be followed to perform this action.
           type: string
           example: "https://scrive.com/s/123/456"
+
+    InstanceStatus:
+      description: Describes in which status the flow instance is.
+      type: string
+      enum:
+        - in_progress
+        - completed
+        - failed
 
     InstanceActionType:
       description: INSTANCTION

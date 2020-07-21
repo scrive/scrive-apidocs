@@ -14,6 +14,8 @@ module Flow.Aggregator
     , aggregateAndStep
     , runAggregatorStep
     , remainingStages
+    , failureStageName
+    , finalStageName
     , makeNewState
     )
   where
@@ -60,6 +62,12 @@ remainingStages name stages = case dropWhile (\Stage {..} -> stageName /= name) 
   []       -> Nothing
   (s : ss) -> Just (s, ss)
 
+failureStageName :: StageName
+failureStageName = unsafeName "__FAILURE__"
+
+finalStageName :: StageName
+finalStageName = unsafeName "__FINAL__"
+
 -- | This function looks at the events that have been received and the current state of
 -- the Aggregator. If the requirements have been met, then the Aggregator is stepped to
 -- the next stage as defined in the DSL.
@@ -86,13 +94,13 @@ aggregateAndStep HighTongue {..} event = do
 
   if Set.member event failureEvents
     then do
-      put . makeNewState $ unsafeName "__FAILURE__"
+      put $ makeNewState failureStageName
       pure $ StateChange [Fail]
     else do
       if successEvents == newReceivedEvents
         then case nextStages of
           [] -> do
-            put . makeNewState $ unsafeName "__FINAL__"
+            put $ makeNewState finalStageName
             pure $ StateChange [CloseAll]
           (Stage {..} : _) -> do
             put $ makeNewState stageName

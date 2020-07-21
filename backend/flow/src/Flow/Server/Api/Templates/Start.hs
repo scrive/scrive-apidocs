@@ -107,7 +107,8 @@ startTemplate account templateId keyValues = do
 
   let templateParameters = keyValues
   -- TODO add a proper instance state
-  let state = InstanceState { availableActions = [], history = [] }
+  let state = InstanceState { availableActions = [] }
+  let status             = InProgress
   pure $ GetInstance { .. }
   where
 

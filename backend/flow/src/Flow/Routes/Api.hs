@@ -8,7 +8,6 @@ module Flow.Routes.Api
     , PatchTemplate(..)
     , InstanceEventAction(..)
     , InstanceEvent(..)
-    , InstanceStage(..)
     , InstanceState(..)
     , GetInstance(..)
     , InstanceAuthorAction(..)
@@ -18,6 +17,7 @@ module Flow.Routes.Api
     , InstanceUserDocument(..)
     , DocumentState(..)
     , FlowApi
+    , Status(..)
     , InstanceApi
     , TemplateApi
     , apiProxy
@@ -37,11 +37,10 @@ import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.HighTongue
 import Flow.Id
 import Flow.Model.Types
-import Flow.Names
+import Flow.Model.Types.FlowUserId
 import Flow.Process
 import Flow.Routes.Types
 import Folder.Types
-import User.UserID (UserID)
 
 -- brittany-disable-next-binding
 type TemplateApi
@@ -157,8 +156,7 @@ instance ToJSON InstanceEventAction where
 
 data InstanceEvent = InstanceEvent
     { action :: InstanceEventAction
-    -- TODO replace with FlowUserId
-    , user :: UserID
+    , user :: FlowUserId
     , document :: DocumentID
     , timestamp :: Text -- TODO: do something about this text...
     }
@@ -171,22 +169,8 @@ instance ToJSON InstanceEvent where
   toEncoding = genericToEncoding aesonOptions
 
 
-data InstanceStage = InstanceStage
-    { stage :: StageName
-    , events :: [InstanceEvent]
-    }
-  deriving (Eq, Generic, Show)
-
-instance FromJSON InstanceStage where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON InstanceStage where
-  toEncoding = genericToEncoding aesonOptions
-
-
-data InstanceState = InstanceState
+newtype InstanceState = InstanceState
     { availableActions :: [InstanceAuthorAction]
-    , history :: [InstanceStage]
     }
   deriving (Eq, Generic, Show)
 
@@ -203,6 +187,7 @@ data GetInstance = GetInstance
     , templateParameters :: InstanceKeyValues
     , state :: InstanceState
     , accessLinks :: Map UserName Url
+    , status :: Status
     }
   deriving (Eq, Generic, Show)
 
@@ -215,8 +200,7 @@ instance ToJSON GetInstance where
 
 data InstanceAuthorAction = InstanceAuthorAction
     { actionType :: InstanceEventAction
-    -- TODO replace with FlowUserId
-    , actionUser :: UserID
+    , actionUser :: FlowUserId
     , actionDocument :: DocumentID
     }
   deriving (Eq, Generic, Ord, Show)
@@ -285,11 +269,23 @@ instance FromJSON DocumentState where
 instance ToJSON DocumentState where
   toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
+data Status
+    = InProgress
+    | Completed
+    | Failed
+  deriving (Eq, Generic, Ord, Show)
+
+instance FromJSON Status where
+  parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
+
+instance ToJSON Status where
+  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
 data GetInstanceView = GetInstanceView
     { id      :: InstanceId
     , state   :: InstanceUserState
     , actions :: [InstanceUserAction]
+    , status :: Status
     }
   deriving (Eq, Generic, Show)
 
