@@ -10,6 +10,7 @@ module Flow.Model
     , insertFlowInstanceKeyValues
     , insertInstanceSignatories
     , selectAggregatorEvents
+    , selectDocumentIdsByDocumentIds
     , selectDocumentIdsAssociatedWithSomeInstance
     , selectDocumentNameFromKV
     , selectDocumentsByInstanceId
@@ -160,6 +161,13 @@ insertFlowInstanceKeyValues instanceId keyValues =
 
     strings :: [Maybe Text]
     strings = applyToValues (const Nothing) (thd3 . toUserInfo) (Just . fromMessage)
+
+selectDocumentIdsByDocumentIds :: MonadDB m => [DocumentID] -> m [DocumentID]
+selectDocumentIdsByDocumentIds docIds = do
+  runQuery_ . sqlSelect "documents d" $ do
+    sqlResult "d.id"
+    sqlWhereIn "d.id" docIds
+  fetchMany runIdentity
 
 selectDocumentIdsAssociatedWithSomeInstance :: MonadDB m => [DocumentID] -> m [DocumentID]
 selectDocumentIdsAssociatedWithSomeInstance docIds = do

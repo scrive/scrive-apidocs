@@ -70,8 +70,9 @@ consumeFlowAction
 consumeFlowAction action = do
   logInfo "Consuming Flow action: " action
   case action of
-    CloseAll documentIds -> mapM (dbQuery . GetDocumentByDocumentID) documentIds
-      >>= mapM_ commonDocumentClosingActions
+    CloseAll documentIds -> forM_ documentIds $ \docId -> do
+      doc <- dbQuery $ GetDocumentByDocumentID docId
+      withDocument doc $ commonDocumentClosingActions doc
 
     -- TODO: Implement the Notify consumer
     Notify _ _ -> undefined

@@ -23,13 +23,20 @@ import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.DocumentID
 import Flow.Error
 import Flow.Server.Types
+import KontraMonad
+import User.Types.User
 
 startDocument :: Account -> DocumentID -> AppM ()
 startDocument account docId = do
   FlowContext {..} <- ask
   request          <- liftIO $ startDocumentRequest account
-  response         <- lift $ handleWithKontra (docApiV2Start docId) request
+  response         <- lift $ handleWithKontra (kontraActions (user account) docId) request
   processResponse docId response
+
+kontraActions :: User -> DocumentID -> (forall  m . Kontrakcja m => m Response)
+kontraActions user docId = do
+  modifyContext $ \ctx -> ctx & (#maybeUser ?~ user)
+  docApiV2Start docId
 
 startDocumentRequest :: Account -> IO Request
 startDocumentRequest Account {..} = do

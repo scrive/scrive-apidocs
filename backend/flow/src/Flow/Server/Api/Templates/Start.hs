@@ -2,6 +2,7 @@
 {-# LANGUAGE StrictData #-}
 module Flow.Server.Api.Templates.Start where
 
+import Control.Monad.Except
 import Control.Monad.Extra (fromMaybeM)
 import Crypto.RNG
 import Data.Aeson
@@ -10,6 +11,7 @@ import Data.Map (Map)
 import Data.Set (Set)
 import GHC.Generics
 import Log.Class
+import Servant
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
@@ -52,6 +54,9 @@ startTemplate account templateId keyValues = do
 
   let documentMapping = keyValues ^. #documents
   let documentIds     = Map.elems documentMapping
+  validDocumentIds <- Model.selectDocumentIdsByDocumentIds documentIds
+  reportMissingDocuments . Set.toList $ Set.difference (Set.fromList documentIds)
+                                                       (Set.fromList validDocumentIds)
 
   when (hasDuplicates documentMapping) $ throwTemplateCannotBeStartedError
     "Invalid parameters"
@@ -124,7 +129,13 @@ startTemplate account templateId keyValues = do
         []      -> Nothing
         (x : _) -> Just x
 
-reportAssociatedDocuments :: [DocumentID] -> AppM ()
+reportMissingDocuments :: MonadError ServerError m => [DocumentID] -> m ()
+reportMissingDocuments docIds =
+  unless (null docIds)
+    . throwTemplateCannotBeStartedError "Some of the documents do not exist"
+    $ object ["missing_document_ids" .= docIds]
+
+reportAssociatedDocuments :: MonadError ServerError m => [DocumentID] -> m ()
 reportAssociatedDocuments docIds =
   unless (null docIds)
     . throwTemplateCannotBeStartedError
