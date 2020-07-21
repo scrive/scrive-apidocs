@@ -47,6 +47,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import Log.Identifier
+import LoginAuth.LoginAuthMethod
 import Mails.SendMail
 import MinutesTime
 import OAuth.Model
@@ -575,8 +576,15 @@ apiCallSendPasswordReminder = api $ do
         Nothing -> do
           runJSONGenT $ value "send" True
         Just user -> do
-          sendPasswordReminder user
-          runJSONGenT $ value "send" True
+          case user ^. #sysAuth of
+            LoginAuthSSO -> do
+              -- we need to pretend that the SSO users do not exist
+              -- for password reminder feature (so no actual reminder email)
+              -- but still not leak any information about them
+              runJSONGenT $ value "send" True
+            LoginAuthNative -> do
+              sendPasswordReminder user
+              runJSONGenT $ value "send" True
 
 sendPasswordReminder :: Kontrakcja m => User -> m ()
 sendPasswordReminder user = do
