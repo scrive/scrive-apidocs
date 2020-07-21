@@ -35,41 +35,47 @@ authenticateToken (OAuthAuthorization token secret atoken asecret) = do
 authenticateSession
   :: (MonadDB m, MonadThrow m, MonadTime m)
   => AuthCookies
+  -> Text
   -> m (Maybe (Int64, Int64, Int64))
-authenticateSession (AuthCookies SessionCookieInfo {..} xtoken) = do
+authenticateSession (AuthCookies SessionCookieInfo {..} xtoken) domain = do
   now <- currentTime
   runQuery_ $ rawSQL
     (  "SELECT u.id, ug.id, u.home_folder_id "
     <> "FROM sessions s "
     <> "JOIN users u           ON s.user_id         = u.id "
     <> "JOIN user_groups ug    ON u.user_group_id   = ug.id "
-    <> "WHERE s.id = $1 AND s.token = $2 AND s.csrf_token = $3 AND s.expires >= $4 LIMIT 1"
+    <> "WHERE s.id = $1 AND s.token = $2 AND s.csrf_token = $3 AND s.domain = $4 AND s.expires >= $5"
+    <> "LIMIT 1"
     )
-    (cookieSessionID, cookieSessionToken, xtoken, now)
+    (cookieSessionID, cookieSessionToken, xtoken, domain, now)
   fetchMaybe identity
 
 getSessionIDByCookies
-  :: (MonadDB m, MonadThrow m, MonadTime m) => AuthCookies -> m (Maybe SessionID)
-getSessionIDByCookies (AuthCookies SessionCookieInfo {..} xtoken) = do
+  :: (MonadDB m, MonadThrow m, MonadTime m) => AuthCookies -> Text -> m (Maybe SessionID)
+getSessionIDByCookies (AuthCookies SessionCookieInfo {..} xtoken) domain = do
   now <- currentTime
   runQuery_ . sqlSelect "sessions" $ do
     sqlResult "id"
     sqlWhereEq "id"         cookieSessionID
     sqlWhereEq "token"      cookieSessionToken
     sqlWhereEq "csrf_token" xtoken
+    sqlWhereEq "domain"     domain
     sqlWhere $ "expires >=" <?> now
   fetchMaybe runIdentity
 
 insertNewSession
-  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m) => Text -> m AuthCookies
-insertNewSession domain = do
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
+  => Text
+  -> Maybe Int64
+  -> m AuthCookies
+insertNewSession domain mUserId = do
   sessionToken :: MagicHash <- random
   xToken :: MagicHash <- random
   now                 <- currentTime
   let expires = secondsAfter timeoutSecs now
   runQuery_ . sqlInsert "sessions" $ do
     mapM_ sqlResult ["id", "token", "csrf_token"]
-    sqlSet "user_id"     (Nothing :: Maybe Int64)
+    sqlSet "user_id"     mUserId
     sqlSet "pad_user_id" (Nothing :: Maybe Int64)
     sqlSet "token"       sessionToken
     sqlSet "csrf_token"  xToken

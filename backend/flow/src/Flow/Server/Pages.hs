@@ -52,7 +52,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
       $ Model.verifyInstanceAccessToken instanceId userName hash
 
   mSessionId <- case getAuthCookies of
-    Just authCookies -> AuthModel.getSessionIDByCookies authCookies
+    Just authCookies -> AuthModel.getSessionIDByCookies authCookies (cookieDomain mHost)
     Nothing          -> pure Nothing
 
   -- If we don't have an existing Kontrakcja session - start a new one
@@ -61,7 +61,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
   (sessionId, maybeAddCookieHeaders) <- case mSessionId of
     Just sessionId -> pure (sessionId, noHeader . noHeader)
     Nothing        -> do
-      newAuthCookies <- AuthModel.insertNewSession (cookieDomain mHost)
+      newAuthCookies <- AuthModel.insertNewSession (cookieDomain mHost) Nothing
       pure ( cookieSessionID (authCookieSession newAuthCookies)
            , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
            )

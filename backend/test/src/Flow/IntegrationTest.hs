@@ -105,7 +105,7 @@ testZeroToInstance :: TestEnv ()
 testZeroToInstance = do
   user             <- instantiateRandomUser
   oauth            <- getToken (user ^. #id)
-  AuthCookies {..} <- AuthModel.insertNewSession "localhost"
+  AuthCookies {..} <- AuthModel.insertNewSession flowTestCookieDomain Nothing
 
   let ac@ApiClient {..} = mkApiClient (Left oauth)
 
@@ -148,18 +148,23 @@ testZeroToInstance = do
   assertEqual "view instance: there are 2 document actions" 2
     $ length (actions instanceView)
 
-  defaultBaseUrl <- getDefaultFlowBaseUrl
-  baseUrl        <- getBaseUrl . actionLink . head $ actions instanceView
+  void
+    . assertLeft "view instance with incorrect Host should fail"
+    . request
+    $ getInstanceView iid (Just "wrongdomain.com")
+
+  -- Action links
+  baseUrl <- getBaseUrl . actionLink . head $ actions instanceView
   assertEqual "action link has correct base url when Host is Nothing"
-              defaultBaseUrl
+              ("http://" <> flowTestCookieDomain)
               baseUrl
 
   instanceView2 <- assertRight "view instance response" . request $ getInstanceView
     iid
-    (Just "scrive.com")
+    (Just flowTestCookieDomain)
   baseUrl2 <- getBaseUrl . actionLink . head $ actions instanceView2
   assertEqual "action link has correctbase url when Host is Just"
-              "http://scrive.com"
+              ("http://" <> flowTestCookieDomain)
               baseUrl2
 
 getBaseUrl :: MonadThrow m => Url -> m Text

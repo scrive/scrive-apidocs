@@ -24,12 +24,12 @@ import Flow.Process.Internal
 import Flow.Routes.Api
 import Flow.Server.Cookies
 import Flow.TestUtil
-import Session.Types (Session(..))
-import SessionsTest (insertNewSession)
 import TestEnvSt.Internal
 import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Types.User
+import User.UserID
+import qualified Auth.Model as AuthModel
 import qualified Flow.Model.InstanceSession as Model
 
 tests :: TestEnvSt -> Test
@@ -43,12 +43,14 @@ tests env = testGroup
 
 testCookieAuthAccount :: TestEnv ()
 testCookieAuthAccount = do
-  user         <- instantiateRandomUser
-  (session, _) <- insertNewSession (user ^. #id)
+  user             <- instantiateRandomUser
+  validAuthCookies <- AuthModel.insertNewSession flowTestCookieDomain
+                                                 (Just . unUserID $ user ^. #id)
+  commit
 
-  let validSesID    = sesID session
-      validSesToken = sesToken session
-      validXToken   = sesCSRFToken session
+  let validSesID    = cookieSessionID . authCookieSession $ validAuthCookies
+      validSesToken = cookieSessionToken . authCookieSession $ validAuthCookies
+      validXToken   = authCookieXToken validAuthCookies
 
       validCreateTemplate =
         createTemplate

@@ -22,6 +22,7 @@ import Auth.Session
 import DB hiding (JSON(..))
 import Flow.Error
 import Flow.OrphanInstances ()
+import Flow.Routes.Types (Host)
 import Flow.Server.Cookies
 import Flow.Server.Types
 import Flow.Server.Utils
@@ -65,7 +66,7 @@ authHandlerAccount flowConfiguration = mkAuthHandler handler
               liftIO
                 . putStrLn
                 $ ("Authenticating Account using cookies: " <> show authCookies)
-              maybeIds <- authenticateSession authCookies
+              maybeIds <- authenticateSession authCookies (cookieDomain $ mHost req)
               maybe
                 (throwAuthError InvalidAuthCookiesError (show InvalidAuthCookiesError))
                 pure
@@ -77,8 +78,7 @@ authHandlerAccount flowConfiguration = mkAuthHandler handler
         folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
         roles  <- dbQuery $ GetRolesIncludingInherited user ug
         let domainUrl = mainDomainUrl (flowConfiguration :: FlowConfiguration)
-        let baseUrl =
-              mkBaseUrl domainUrl (isSecure req) (decodeUtf8 <$> requestHeaderHost req)
+        let baseUrl   = mkBaseUrl domainUrl (isSecure req) (mHost req)
 
         pure $ Account { user
                        , userGroup = ug
@@ -109,13 +109,17 @@ authHandlerInstanceUser flowConfiguration = mkAuthHandler handler
             . putStrLn
             $ ("Authenticating InstanceUser using cookies: " <> show authCookies)
           mInstanceSession <- runMaybeT $ do
-            sessionId <- MaybeT $ getSessionIDByCookies authCookies
+            sessionId <- MaybeT
+              $ getSessionIDByCookies authCookies (cookieDomain $ mHost req)
             MaybeT $ Model.selectInstanceSession sessionId
           maybe (throwAuthError InvalidAuthCookiesError (show InvalidAuthCookiesError))
                 pure
                 mInstanceSession
         pure
           $ InstanceUser (instanceSession ^. #userName) (instanceSession ^. #instanceId)
+
+mHost :: Request -> Maybe Host
+mHost req = decodeUtf8 <$> requestHeaderHost req
 
 -- TODO handle the exception somehow
 -- ... but don't put it into the response, it leaks internal information!

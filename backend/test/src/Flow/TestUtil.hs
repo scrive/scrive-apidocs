@@ -6,12 +6,13 @@ import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
 import Network.HTTP.Client
   ( ManagerSettings, defaultManagerSettings, managerModifyRequest, newManager
-  , redirectCount
+  , redirectCount, requestHeaders
   )
-import Network.HTTP.Types.Header (hSetCookie)
+import Network.HTTP.Types.Header (hHost, hSetCookie)
 import Servant.Client
 import Web.Cookie
 import qualified Data.Foldable as Foldable
+import qualified Data.Text.Encoding as T
 
 import DB
 import Flow.Client
@@ -52,16 +53,27 @@ getEnv mgrSettings = do
 
 request :: ClientM a -> TestEnv (Either ClientError a)
 request req = do
-  env <- getEnv defaultManagerSettings
+  env <- getEnv managerSettings
   liftIO $ runClientM req env
 
 requestWithEnv :: ClientEnv -> ClientM a -> TestEnv (Either ClientError a)
 requestWithEnv env req = liftIO $ runClientM req env
 
+managerSettings :: ManagerSettings
+managerSettings = defaultManagerSettings { managerModifyRequest = setHostHeader }
+  where
+    setHostHeader req =
+      let headers = requestHeaders req
+          host    = T.encodeUtf8 flowTestCookieDomain
+      in  case lookup "host" headers of
+            Nothing -> pure $ req { requestHeaders = (hHost, host) : headers }
+            Just _  -> pure req
+
 managerSettingsNoRedirects :: ManagerSettings
-managerSettingsNoRedirects = defaultManagerSettings
-  { managerModifyRequest = \req -> pure $ req { redirectCount = 0 }
+managerSettingsNoRedirects = managerSettings
+  { managerModifyRequest = managerModifyRequest managerSettings >=> setRedirectCount
   }
+  where setRedirectCount req = pure $ req { redirectCount = 0 }
 
 errorResponse :: ClientError -> Maybe Response
 errorResponse (FailureResponse        _ resp) = Just resp
@@ -69,6 +81,9 @@ errorResponse (DecodeFailure          _ resp) = Just resp
 errorResponse (UnsupportedContentType _ resp) = Just resp
 errorResponse (InvalidContentTypeHeader resp) = Just resp
 errorResponse (ConnectionError          _   ) = Nothing
+
+flowTestCookieDomain :: Text
+flowTestCookieDomain = "testdummy.scrive.com"
 
 responseSetCookieHeaders :: Response -> [SetCookie]
 responseSetCookieHeaders response =
@@ -95,8 +110,3 @@ createInstance ApiClient {..} name process mapping = do
   void . assertRight "commit template response" . request $ commitTemplate tid
 
   request $ startTemplate tid mapping
-
-getDefaultFlowBaseUrl :: TestEnv Text
-getDefaultFlowBaseUrl = do
-  testEnv <- ask
-  pure $ "http://localhost:" <> showt (flowPort testEnv)
