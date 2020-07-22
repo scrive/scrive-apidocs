@@ -3,7 +3,6 @@
 module Flow.Server.Api.Templates.Start where
 
 import Control.Monad.Except
-import Control.Monad.Extra (fromMaybeM)
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
@@ -33,6 +32,7 @@ import Flow.Model.Types
 import Flow.Model.Types.FlowUserId as FlowUserId
 import Flow.OrphanInstances ()
 import Flow.Routes.Api hiding (documents)
+import Flow.Server.Api.Common
 import Flow.Server.Types
 import Flow.Server.Utils
 import qualified Flow.Model as Model
@@ -42,7 +42,7 @@ import qualified Flow.VariableCollector as Collector
 startTemplate :: Account -> TemplateId -> InstanceKeyValues -> AppM GetInstance
 startTemplate account templateId keyValues = do
   logInfo_ "Starting instance"
-  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
+  template <- selectTemplate templateId
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo CreateA $ FlowTemplateR fid]
 
@@ -103,9 +103,6 @@ startTemplate account templateId keyValues = do
 
   -- Generate magic hashes for invitation links
   usersWithHashes <- zip (Map.keys userMapping) <$> replicateM (length userMapping) random
-  -- -- TODO get rid of unsafe
-  -- usersWithHashes <-
-  --   zip (unsafeName <$> Map.keys users) <$> replicateM (length users) random
   mapM_ (uncurry $ Model.insertInstanceAccessToken id) usersWithHashes
 
   let accessLinks = mkAccessLinks (baseUrl account) id usersWithHashes

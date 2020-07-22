@@ -81,9 +81,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
   -- which is used for cookie authentication in subsequent calls.
   Model.upsertInstanceSession sessionId instanceId userName
 
-  let response = addHeader redirectUrl $ maybeAddCookieHeaders NoContent
-  pure response
-
+  pure . addHeader redirectUrl $ maybeAddCookieHeaders NoContent
   where
     getAuthCookies = do
       Cookies' cookies <- mCookies

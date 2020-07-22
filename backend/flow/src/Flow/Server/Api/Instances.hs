@@ -32,6 +32,7 @@ import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Routes.Api as Api
 import Flow.Routes.Types
+import Flow.Server.Api.Common
 import Flow.Server.Types
 import Flow.Server.Utils
 import KontraLink
@@ -54,7 +55,7 @@ getInstance account instanceId = do
   let aggrState = instanceToAggregator fullInstance
   tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
   let mAvailableActions =
-        mAllowedEvents tongue aggrState >>= (mapM (magic keyValues) . Set.toList)
+        mAllowedEvents tongue aggrState >>= (mapM (toAuthorAction keyValues) . Set.toList)
   let mkGetInstance availableActions status = GetInstance
         { id                 = instanceId
         , templateId         = flowInstance ^. #templateId
@@ -72,8 +73,8 @@ getInstance account instanceId = do
       Just availableActions -> pure $ mkGetInstance availableActions InProgress
       _                     -> inconsistentInstanceState instanceId account
   where
-    magic :: InstanceKeyValues -> EventInfo -> Maybe InstanceAuthorAction
-    magic keyValues EventInfo {..} = do
+    toAuthorAction :: InstanceKeyValues -> EventInfo -> Maybe InstanceAuthorAction
+    toAuthorAction keyValues EventInfo {..} = do
       actionType     <- toApiUserAction eventInfoAction
       actionUser     <- keyValues ^. #users % at eventInfoUser
       actionDocument <- keyValues ^. #documents % at eventInfoDocument
@@ -155,21 +156,20 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
     | currentStage aggrState == finalStageName -> pure $ mkGetInstanceView [] Completed
     | otherwise -> case mAllowedEvents tongue aggrState of
       Just allowedEvents ->
-        pure
-          $ let
-                -- Actions
-                userAllowedEvents =
-                  Set.filter (\e -> eventInfoUser e == userName) allowedEvents
-                userActions = catMaybes . Set.toList $ Set.map
-                  (\e -> do
-                    userAction <- toApiUserAction $ eventInfoAction e
-                    docId <- Map.lookup (eventInfoDocument e) (keyValues ^. #documents)
-                    sigId <- findSignatoryId sigInfo (eventInfoUser e) docId
-                    let link = mkLink baseUrl docId sigId
-                    pure $ InstanceUserAction userAction docId sigId link
-                  )
-                  userAllowedEvents
-            in  mkGetInstanceView userActions InProgress
+        let
+            -- Actions
+            userAllowedEvents =
+                Set.filter (\e -> eventInfoUser e == userName) allowedEvents
+            userActions = catMaybes . Set.toList $ Set.map
+              (\e -> do
+                userAction <- toApiUserAction $ eventInfoAction e
+                docId      <- Map.lookup (eventInfoDocument e) (keyValues ^. #documents)
+                sigId      <- findSignatoryId sigInfo (eventInfoUser e) docId
+                let link = mkLink baseUrl docId sigId
+                pure $ InstanceUserAction userAction docId sigId link
+              )
+              userAllowedEvents
+        in  pure $ mkGetInstanceView userActions InProgress
       _ -> inconsistentInstanceState instanceId user
   where
     findSignatoryId sigInfo name docId =
@@ -202,6 +202,6 @@ checkInstancePerms :: Account -> InstanceId -> AccessAction -> AppM Model.Instan
 checkInstancePerms account instanceId action = do
   flowInstance <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
   let tid = flowInstance ^. #templateId
-  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate tid
+  template <- selectTemplate tid
   guardUserHasPermission account [canDo action . FlowTemplateR $ template ^. #folderId]
   pure flowInstance

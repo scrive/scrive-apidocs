@@ -1,6 +1,15 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
-module Flow.Server.Types where
+module Flow.Server.Types
+  ( Account(..)
+  , AppM
+  , FlowConfiguration(..)
+  , FlowContext(..)
+  , InstanceUser(..)
+  , RunLogger
+  , aesonOptions
+  )
+where
 
 import Control.Monad.Base
 import Control.Monad.Catch hiding (Handler)
@@ -77,3 +86,5 @@ instance ToJSON InstanceUser where
   toJSON = genericToJSON aesonOptions
 
 type instance AuthServerData (AuthProtect "instance-user") = InstanceUser
+
+type RunLogger = forall m a . LogT m a -> m a

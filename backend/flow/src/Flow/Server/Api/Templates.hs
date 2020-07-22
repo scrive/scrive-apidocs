@@ -19,6 +19,7 @@ import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Process
 import Flow.Routes.Api as Api
+import Flow.Server.Api.Common
 import Flow.Server.Api.Templates.Start
 import Flow.Server.Types
 import qualified Flow.Model as Model
@@ -44,7 +45,7 @@ createTemplate account@Account {..} CreateTemplate {..} = do
 deleteTemplate :: Account -> TemplateId -> AppM NoContent
 deleteTemplate account id = do
   logInfo_ "Deleting template"
-  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
+  template <- selectTemplate id
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo DeleteA $ FlowTemplateR fid]
   Model.deleteTemplate id
@@ -53,7 +54,7 @@ deleteTemplate account id = do
 getTemplate :: Account -> TemplateId -> AppM GetTemplate
 getTemplate account templateId = do
   logInfo_ "Getting template"
-  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
+  template <- selectTemplate templateId
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo ReadA $ FlowTemplateR fid]
   pure $ toGetTemplate template
@@ -69,7 +70,7 @@ toGetTemplate t = GetTemplate { id        = t ^. #id
 patchTemplate :: Account -> TemplateId -> PatchTemplate -> AppM GetTemplate
 patchTemplate account templateId PatchTemplate {..} = do
   logInfo_ "Patching template"
-  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate templateId
+  template <- selectTemplate templateId
   when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
@@ -81,7 +82,7 @@ commitTemplate :: Account -> TemplateId -> AppM NoContent
 commitTemplate account id = do
   logInfo_ "Committing template"
   now      <- liftIO currentTime
-  template <- fromMaybeM throwTemplateNotFoundError $ Model.selectTemplate id
+  template <- selectTemplate id
   when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
   let templateDSL = template ^. #process
   -- We're currently not storing the machine, so we throw it away.

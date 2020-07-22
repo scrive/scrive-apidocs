@@ -9,7 +9,7 @@ import Data.Aeson.Types
 import Data.Time.Clock
 import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Data
-import Log.Monad (LogT, getLoggerIO)
+import Log.Monad (getLoggerIO)
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
@@ -29,8 +29,6 @@ import Log.Configuration (LogRunner(LogRunner, withLogger))
 server :: ServerT Routes AppM
 server = api :<|> pages
 
-type RunLogger = forall m a . LogT m a -> m a
-
 naturalFlow :: RunLogger -> FlowConfiguration -> AppM a -> Handler a
 naturalFlow runLogger FlowConfiguration {..} flowApp =
   runLogger
@@ -40,11 +38,13 @@ naturalFlow runLogger FlowConfiguration {..} flowApp =
     $ FlowContext handleWithKontra mainDomainUrl
 
 genAuthServerContext
-  :: FlowConfiguration
-  -> Context (AuthHandler Request Account ': AuthHandler Request InstanceUser ': '[])
-genAuthServerContext flowConfiguration =
-  authHandlerAccount flowConfiguration
-    :. authHandlerInstanceUser flowConfiguration
+  :: RunLogger
+  -> FlowConfiguration
+  -> Context
+       (AuthHandler Request Account ': AuthHandler Request InstanceUser ': '[])
+genAuthServerContext runLogger flowConfiguration =
+  authHandlerAccount runLogger flowConfiguration
+    :. authHandlerInstanceUser runLogger flowConfiguration
     :. EmptyContext
 
 logExceptionMiddleware :: LoggerIO -> Application -> Application
@@ -65,7 +65,7 @@ app runLogger flowConfiguration = do
     . errorMw @JSON @'["message", "code"]
     . logExceptionMiddleware loggerIO
     . loggingMiddleware
-    . serveWithContext routesProxy (genAuthServerContext flowConfiguration)
+    . serveWithContext routesProxy (genAuthServerContext runLogger flowConfiguration)
     $ hoistServerWithContext
         routesProxy
         (Proxy :: Proxy '[AuthHandler Request Account, AuthHandler Request InstanceUser])

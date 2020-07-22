@@ -5,9 +5,11 @@
 
 module Flow.Server.Cookies where
 
+import Data.Binary.Builder
 import Servant.API
 import Web.Cookie
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
@@ -23,7 +25,8 @@ instance FromHttpApiData Cookies' where
   parseQueryParam = return . Cookies' . parseCookies . T.encodeUtf8
 
 instance ToHttpApiData Cookies' where
-  toUrlPiece = undefined -- TODO: Implement, for use in Client.hs
+  toUrlPiece (Cookies' c) =
+    T.decodeUtf8 . BSL.toStrict . toLazyByteString $ renderCookies c
 
 readAuthCookies :: Cookies -> Maybe AuthCookies
 readAuthCookies cookies = do

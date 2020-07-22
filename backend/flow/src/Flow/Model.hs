@@ -2,7 +2,7 @@
 module Flow.Model
     ( deleteTemplate
     , insertTemplate
-    , selectTemplate
+    , selectMaybeTemplate
     , selectTemplatesByUserID
     , updateTemplate
     , insertFlowInstance
@@ -78,8 +78,8 @@ templateSelectors = do
   sqlResult "committed"
   sqlResult "deleted"
 
-selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe Template)
-selectTemplate templateId = do
+selectMaybeTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe Template)
+selectMaybeTemplate templateId = do
   runQuery_ . sqlSelect "flow_templates" $ do
     templateSelectors
     sqlWhereEq "id" templateId
@@ -258,7 +258,7 @@ selectFullInstance id = do
     Nothing           -> pure Nothing
     Just flowInstance -> do
       -- This is guaranteed by a foreign key.
-      template         <- fromJust <$> selectTemplate (flowInstance ^. #templateId)
+      template         <- fromJust <$> selectMaybeTemplate (flowInstance ^. #templateId)
       aggregatorEvents <- selectInstanceEvents id True
       allEvents        <- selectInstanceEvents id False
       pure $ Just FullInstance { .. }

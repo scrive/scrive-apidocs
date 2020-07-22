@@ -54,9 +54,6 @@ import qualified Flow.KontraHandler as Flow
 import qualified HostClock.Model as HC
 import qualified VersionTH
 
---import Doc.DocumentID
---import Doc.API.V2.Calls.DocumentPostCalls
-
 {-# ANN type CmdConf ("HLint: ignore Use newtype instead of data" :: String) #-}
 -- newtype doesn't work, see https://github.com/ndmitchell/cmdargs/issues/44
 data CmdConf = CmdConf
