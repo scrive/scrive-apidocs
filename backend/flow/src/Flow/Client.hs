@@ -42,7 +42,7 @@ data ApiClient = ApiClient
   , startTemplate    :: TemplateId -> InstanceKeyValues -> ClientM GetInstance
   , getInstance      :: InstanceId -> ClientM GetInstance
   , listInstances    :: ClientM [GetInstance]
-  , validateTemplate :: Process -> ClientM [ValidationError]
+  , validateTemplate :: Process -> ClientM NoContent
   }
 
 newtype ParticipantApiClient = ParticipantApiClient

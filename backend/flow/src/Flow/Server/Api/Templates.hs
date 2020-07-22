@@ -5,6 +5,7 @@ module Flow.Server.Api.Templates where
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Time
+import Data.Either.Combinators
 import Log.Class
 import Servant
 
@@ -84,25 +85,27 @@ commitTemplate account id = do
   when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
   let templateDSL = template ^. #process
   -- We're currently not storing the machine, so we throw it away.
-  either throwDSLValidationError' (const $ pure ()) $ decodeHighTongue templateDSL
+  checkDSL templateDSL
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo UpdateA $ FlowTemplateR fid]
-  _ <- Model.updateTemplate $ UpdateTemplate id Nothing Nothing (Just now)
+  void . Model.updateTemplate $ UpdateTemplate id Nothing Nothing (Just now)
   pure NoContent
-  where
-    -- TODO: Currently, there's no way to get more than a singleton list of validation
-    -- TODO: errors. This allows the Error module to be prettier, all this should be
-    -- TODO: improved later.
-    throwDSLValidationError' = \case
-      []      -> throwDSLValidationError "Unknown validation error"
-      err : _ -> throwDSLValidationError $ error_message err
 
+validateTemplate :: Process -> AppM NoContent
+validateTemplate templateDSL = do
+  logInfo_ "Validating templateDSL"
+  checkDSL templateDSL
+  pure NoContent
 
--- TODO: Improve error messages.
-validateTemplate :: Process -> AppM [ValidationError]
-validateTemplate template = do
-  logInfo_ "Validating template"
-  either pure (const (pure [])) $ decodeHighTongue template
+-- TODO: Currently, there's no way to get more than a singleton list of validation
+-- TODO: errors. This allows the Error module to be prettier, all this should be
+-- TODO: improved later.
+checkDSL :: Process -> AppM ()
+checkDSL templateDSL = do
+  whenLeft (decodeHighTongue templateDSL) $ \case
+    -- TODO: Improve error messages.
+    []      -> throwDSLValidationError "Unknown validation error"
+    err : _ -> throwDSLValidationError $ error_message err
 
 listTemplates :: Account -> AppM [GetTemplate]
 listTemplates account@Account {..} = do

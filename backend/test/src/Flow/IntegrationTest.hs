@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE StrictData #-}
 
-module Flow.IntegrationTest where
+module Flow.IntegrationTest (tests) where
 
 import Control.Monad.Catch
 import Data.Aeson
@@ -44,6 +44,7 @@ tests env = testGroup
   , testThat "Instance failure"         env testInstanceFailure
   , testThat "List template endpoint"   env testTemplateListEndpoint
   , testThat "List instance endpoint"   env testInstanceListEndpoint
+  , testThat "Verify endpoint"          env testVerifyEndpoint
   ]
 
 testTemplateHappyCrud :: TestEnv ()
@@ -202,15 +203,7 @@ testInstanceFailure = do
   void $ createInstance ac "name" processFailure mapping
   clientError <- assertLeft "creating second instance"
     $ createInstance ac "name" processFailure mapping
-  assert $ hasJsonBody clientError
-  where
-    isJustObject :: Maybe Value -> Bool
-    isJustObject = \case
-      Just (Object _) -> True
-      _               -> False
-    hasJsonBody = \case
-      FailureResponse _ resp -> isJustObject . decode $ responseBody resp
-      _ -> False
+  assertIsJsonError clientError
 
 
 simpleProcess :: Process
@@ -270,3 +263,45 @@ testInstanceListEndpoint = do
     $ request listInstances
   assertBool "third instance list call should have 2 items" $ length is3 == 2
   where mapping = InstanceKeyValues Map.empty Map.empty Map.empty
+
+
+processInvalid :: Process
+processInvalid = Process [r|
+dsl-version: "0.1.0"
+stages:
+  - initial:
+      actions: []
+      expect:
+        signed-by:
+sdfgsdfg          users: [signatory]
+          documents: [doc1 doc2]
+  - notification:
+      actions:dfgdfsg
+        - notify:
+            users: [watcher
+            message: was-signed
+      expect: {}
+|]
+
+testVerifyEndpoint :: TestEnv ()
+testVerifyEndpoint = do
+  -- Verify does not need Auth to use
+  let ApiClient {..} = mkApiClient $ Right (Nothing, Nothing)
+      blankReq       = request $ validateTemplate ""
+      failureReq     = request $ validateTemplate processInvalid
+      successReq     = request $ validateTemplate processZero
+  assertIsJsonError =<< assertLeft "validating blank DSL" blankReq
+  assertIsJsonError =<< assertLeft "validating invalid DSL" failureReq
+  void $ assertRight "validating valid DSL" successReq
+
+assertIsJsonError :: ClientError -> TestEnv ()
+assertIsJsonError = assert . hasJsonBody
+  where
+    isJustObject :: Maybe Value -> Bool
+    isJustObject = \case
+      Just (Object _) -> True
+      _               -> False
+    hasJsonBody :: ClientError -> Bool
+    hasJsonBody = \case
+      FailureResponse _ resp -> isJustObject . decode $ responseBody resp
+      _ -> False

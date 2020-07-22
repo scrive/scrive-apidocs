@@ -80,7 +80,7 @@ type AllApis
         :> Get '[JSON] GetInstanceView
     :<|>
       -- No authentication
-      "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
+      "templates" :> "validate" :> ReqBody '[JSON] Process :> PostNoContent '[JSON] NoContent
 
 type FlowApi = AddFlowPrefix AllApis
 
