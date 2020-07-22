@@ -7,7 +7,10 @@ import Control.Monad.Extra (fromMaybeM)
 import Log.Class
 import Servant
 import Web.Cookie
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 import Auth.MagicHash
 import Auth.Session
@@ -23,7 +26,9 @@ import Flow.Routes.Pages
 import Flow.Routes.Types
 import Flow.Server.Cookies
 import Flow.Server.Types
+import VersionTH (versionID)
 import qualified Auth.Model as AuthModel
+import qualified Flow.Html as Html
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 
@@ -93,10 +98,15 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
           throwError $ err500 { errBody = "Error: Unable to add a document session." }
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
--- Instance overview page
--- TODO: Implement the overview page
 instanceOverview :: InstanceUser -> InstanceId -> UserName -> AppM Text
 instanceOverview InstanceUser {..} instanceId' _ = do
   when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
 
-  return "<html><body><h1> Flow overview page </h1></body></html>"
+  return . Html.renderInstanceOverview $ Html.InstanceOverviewTemplateVars { .. }
+  where
+    versionCode    = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
+    -- TODO: Get the cdnBaseUrl from .conf file
+    cdnBaseUrl     = ""
+    kontraApiUrl   = "/api/v2"
+    flowApiUrl     = "/" <> flowPath
+    flowInstanceId = instanceId'

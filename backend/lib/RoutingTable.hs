@@ -212,7 +212,7 @@ staticRoutes production = choice
     $ serveDirectory EnableBrowsing ["index.html"] (staticDir ++ "/api-explorer")
 
   -- static files
-  , (dir "adminonly-assets" . remainingPath GET . runSandbox)
+  , (dir "elm-assets" . remainingPath GET . runSandbox)
     $ serveDirectory DisableBrowsing [] adminElmStaticDir
   , (remainingPath GET . runSandbox) $ serveDirectory DisableBrowsing [] staticDir
   ]
@@ -220,7 +220,6 @@ staticRoutes production = choice
     runSandbox m =
       runWebSandboxT (runPlusSandboxT m) >>= either return (maybe respond404 return)
 
-    staticDir         = if production then "frontend/dist" else "frontend/app"
-    adminElmStaticDir = if production
-      then "frontend/dist/adminonly-assets"
-      else "frontend-elm/dist/adminonly-assets"
+    staticDir = if production then "frontend/dist" else "frontend/app"
+    adminElmStaticDir =
+      if production then "frontend/dist/elm-assets" else "frontend-elm/dist/elm-assets"

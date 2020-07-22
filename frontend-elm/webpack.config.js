@@ -7,9 +7,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const { versionIdFromEnv } = require('./webpack/helper')
 
-const distPath = path.join(__dirname,
-  'dist/adminonly-assets')
-  // '..', 'frontend/app/adminonly-assets')
+const distPath = path.join(__dirname, 'dist/elm-assets')
 
 const versionId = versionIdFromEnv()
 
@@ -17,12 +15,13 @@ var config = (prodMode) => {
   return {
 
     entry: {
-      app: './src/adminonly.js'
+      "adminonly": './src/adminonly.js',
+      "flow-overview": './src/flow-overview.js'
     },
 
     output: {
       path: distPath,
-      filename: `adminonly-elm-${versionId}.js`,
+      filename: `[name]-${versionId}.js`,
       publicPath: '/'
     },
 
