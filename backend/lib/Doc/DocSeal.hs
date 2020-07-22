@@ -114,72 +114,65 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     else renderTextTemplate "_contractsealingtextspersonalNumberText"
       $ F.value "idnumber" personalnumber
 
-  eauthentication <-
+  meauthentication <-
     dbQuery . GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid
       signatory
-  identifiedNameText <- case eauthentication of
-    Just (CGISEBankIDAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedBySwedishBankIDText"
-        . F.value "name"
-        $ cgisebidaSignatoryName authentication
-    Just (NetsNOBankIDAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByNOBankIDText"
-        . F.value "name"
-        $ netsNOBankIDSignatoryName authentication
-    Just (NetsDKNemIDAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByDKNemIDText"
-        . F.value "name"
-        $ netsDKNemIDSignatoryName authentication
-    Just (NetsFITupasAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByFITupasText"
-        . F.value "name"
-        $ netsFITupasSignatoryName authentication
-    Just (EIDServiceVerimiAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByVerimiText"
-        . F.value "email"
-        $ eidServiceVerimiVerifiedEmail authentication
-    Just (EIDServiceIDINAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByIDINText" . F.value "name" $ eidServiceIDINName
-        authentication
-    Just (EIDServiceNemIDAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByDKNemIDText"
-        . F.value "name"
-        $ eidServiceNemIDSignatoryName authentication
-    Just (EIDServiceNOBankIDAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByNOBankIDText"
-        . F.value "name"
-        $ eidServiceNOBankIDSignatoryName authentication
-    Just (EIDServiceSEBankIDAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedBySwedishBankIDText"
-        . F.value "name"
-        $ eidServiceSEBankIDSignatoryName authentication
-    Just (EIDServiceFITupasAuthentication_ authentication) ->
-      renderTextTemplate "_identifiedByFITupasText"
-        . F.value "name"
-        $ eidServiceFITupasSignatoryName authentication
-    Just (SMSPinAuthentication_ _) -> return ""
-    Nothing -> return ""
 
-  esignature   <- dbQuery . GetESignature $ signatorylinkid signatory
-  nameFromText <- case esignature of
-    Just (CGISEBankIDSignature_ sig) ->
-      renderTextTemplate "_nameFromSwedishBankIDText"
-        . F.value "name"
-        $ cgisebidsSignatoryName sig
-    Just (NetsNOBankIDSignature_ sig) ->
-      renderTextTemplate "_nameFromNOBankIDText" . F.value "name" $ netsnoSignatoryName
-        sig
-    Just (NetsDKNemIDSignature_ sig) ->
-      renderTextTemplate "_nameFromDKNemIDText" . F.value "name" $ netsdkSignatoryName sig
-    Just (EIDServiceFITupasSignature_ sig) ->
-      renderTextTemplate "_nameFromFiTupasIDText"
-        . F.value "name"
-        $ eidServiceFITupasSigSignatoryName sig
-    Just (EIDServiceNOBankIDSignature_ sig) ->
-      renderTextTemplate "_nameFromNOBankIDText"
-        . F.value "name"
-        $ eidServiceNOBankIDSigSignatoryName sig
-    _ -> return ""
+  identifiedNameText <- do
+    case meauthentication of
+      Nothing              -> return ""
+      Just eauthentication -> do
+        let fields = F.value "identity" $ authenticationIdentity eauthentication
+        case eauthentication of
+          SMSPinAuthentication_ _ -> return ""
+          CGISEBankIDAuthentication_ _ ->
+            renderTextTemplate "_identifiedBySwedishBankIDText" fields
+          NetsNOBankIDAuthentication_ _ ->
+            renderTextTemplate "_identifiedByNOBankIDText" fields
+          NetsDKNemIDAuthentication_ _ ->
+            renderTextTemplate "_identifiedByDKNemIDText" fields
+          NetsFITupasAuthentication_ _ ->
+            renderTextTemplate "_identifiedByFITupasText" fields
+          EIDServiceVerimiAuthentication_ _ ->
+            renderTextTemplate "_identifiedByVerimiText" fields
+          EIDServiceIDINAuthentication_ _ ->
+            renderTextTemplate "_identifiedByIDINText" fields
+          EIDServiceNemIDAuthentication_ _ ->
+            renderTextTemplate "_identifiedByDKNemIDText" fields
+          EIDServiceNOBankIDAuthentication_ _ ->
+            renderTextTemplate "_identifiedByNOBankIDText" fields
+          EIDServiceSEBankIDAuthentication_ _ ->
+            renderTextTemplate "_identifiedBySwedishBankIDText" fields
+          EIDServiceFITupasAuthentication_ _ ->
+            renderTextTemplate "_identifiedByFITupasText" fields
+
+  mesignature  <- dbQuery . GetESignature $ signatorylinkid signatory
+  nameFromText <- do
+    case mesignature of
+      Nothing         -> return ""
+      Just esignature -> do
+        let templateField = F.value "name" $ signatureSignatoryName esignature
+        case esignature of
+          LegacyBankIDSignature_       _ -> return ""
+          LegacyTeliaSignature_        _ -> return ""
+          LegacyNordeaSignature_       _ -> return ""
+          LegacyMobileBankIDSignature_ _ -> return ""
+          CGISEBankIDSignature_ _ ->
+            renderTextTemplate "_nameFromSwedishBankIDText" templateField
+          NetsNOBankIDSignature_ _ ->
+            renderTextTemplate "_nameFromNOBankIDText" templateField
+          NetsDKNemIDSignature_ _ ->
+            renderTextTemplate "_nameFromDKNemIDText" templateField
+          EIDServiceFITupasSignature_ _ ->
+            renderTextTemplate "_nameFromFiTupasIDText" templateField
+          EIDServiceNOBankIDSignature_ _ ->
+            renderTextTemplate "_nameFromNOBankIDText" templateField
+          EIDServiceSEBankIDSignature_ _ ->
+            renderTextTemplate "_nameFromSwedishBankIDText" templateField
+          EIDServiceOnfidoSignature_ _ ->
+            renderTextTemplate "_nameFromOnfidoText" templateField
+          EIDServiceIDINSignature_ _ ->
+            renderTextTemplate "_nameFromIDINText" templateField
 
   fields <-
     maybeAddBankIDLogo
@@ -212,11 +205,15 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
   where
     maybeAddBankIDLogo :: [Seal.Field] -> m [Seal.Field]
     maybeAddBankIDLogo = case signatorylinkauthenticationtosignmethod signatory of
-      SEBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_se.png"
-      NOBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_no.png"
-      DKNemIDAuthenticationToSign -> addBankIDLogo "nemid_logo_dk.png"
-      FITupasAuthenticationToSign -> addBankIDLogo "tupas_logo_fi.png"
-      _ -> return
+      SEBankIDAuthenticationToSign            -> addBankIDLogo "bankid_logo_se.png"
+      NOBankIDAuthenticationToSign            -> addBankIDLogo "bankid_logo_no.png"
+      DKNemIDAuthenticationToSign             -> addBankIDLogo "nemid_logo_dk.png"
+      FITupasAuthenticationToSign             -> addBankIDLogo "tupas_logo_fi.png"
+      OnfidoDocumentAndPhotoCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
+      OnfidoDocumentCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
+      IDINAuthenticationToSign                -> return
+      StandardAuthenticationToSign            -> return
+      SMSPinAuthenticationToSign              -> return
 
     addBankIDLogo :: FilePath -> [Seal.Field] -> m [Seal.Field]
     addBankIDLogo fname fields = do
@@ -234,6 +231,42 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                                            , Seal.onlyForSummary   = True
                                            , Seal.keyColor         = Just (255, 255, 255)
                                            }
+    signatureSignatoryName :: ESignature -> Text
+    signatureSignatoryName = \case
+      LegacyMobileBankIDSignature_ _   -> ""
+      LegacyTeliaSignature_        _   -> ""
+      LegacyNordeaSignature_       _   -> ""
+      LegacyBankIDSignature_       _   -> ""
+      CGISEBankIDSignature_        sig -> cgisebidsSignatoryName sig
+      NetsNOBankIDSignature_       sig -> netsnoSignatoryName sig
+      NetsDKNemIDSignature_        sig -> netsdkSignatoryName sig
+      EIDServiceIDINSignature_     sig -> unEIDServiceIDINSigSignatoryName sig
+      EIDServiceFITupasSignature_  sig -> eidServiceFITupasSigSignatoryName sig
+      EIDServiceOnfidoSignature_   sig -> eidServiceOnfidoSigSignatoryName sig
+      EIDServiceNOBankIDSignature_ sig -> eidServiceNOBankIDSigSignatoryName sig
+      EIDServiceSEBankIDSignature_ sig -> eidServiceSEBankIDSigSignatoryName sig
+
+    authenticationIdentity :: EAuthentication -> Text
+    authenticationIdentity = \case
+      CGISEBankIDAuthentication_ authentication -> cgisebidaSignatoryName authentication
+      NetsNOBankIDAuthentication_ authentication ->
+        netsNOBankIDSignatoryName authentication
+      NetsDKNemIDAuthentication_ authentication ->
+        netsDKNemIDSignatoryName authentication
+      NetsFITupasAuthentication_ authentication ->
+        netsFITupasSignatoryName authentication
+      EIDServiceVerimiAuthentication_ authentication ->
+        fromMaybe "" $ eidServiceVerimiVerifiedEmail authentication
+      EIDServiceIDINAuthentication_ authentication -> eidServiceIDINName authentication
+      EIDServiceNemIDAuthentication_ authentication ->
+        eidServiceNemIDSignatoryName authentication
+      EIDServiceNOBankIDAuthentication_ authentication ->
+        eidServiceNOBankIDSignatoryName authentication
+      EIDServiceSEBankIDAuthentication_ authentication ->
+        eidServiceSEBankIDSignatoryName authentication
+      EIDServiceFITupasAuthentication_ authentication ->
+        eidServiceFITupasSignatoryName authentication
+      SMSPinAuthentication_ _ -> ""
 
 
 personExFromSignatoryLink
