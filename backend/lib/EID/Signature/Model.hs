@@ -61,8 +61,6 @@ data ESignature
   | EIDServiceSEBankIDSignature_ !EIDServiceSEBankIDSignature
   deriving (Eq, Ord, Show)
 
-----------------------------------------
-
 -- | Signature provider. Used internally to distinguish between
 -- signatures in the database. Should not be exported, as the
 -- distinction between various signatures on the outside should
