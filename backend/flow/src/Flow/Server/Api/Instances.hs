@@ -70,7 +70,7 @@ getInstance account instanceId = do
     | currentStage aggrState == finalStageName -> pure $ mkGetInstance [] Completed
     | otherwise -> case mAvailableActions of
       Just availableActions -> pure $ mkGetInstance availableActions InProgress
-      _                     -> inconsistantInstanceState instanceId account
+      _                     -> inconsistentInstanceState instanceId account
   where
     magic :: InstanceKeyValues -> EventInfo -> Maybe InstanceAuthorAction
     magic keyValues EventInfo {..} = do
@@ -95,12 +95,12 @@ mAllowedEvents HighTongue {..} aggrState@AggregatorState {..} =
     <$> remainingStages currentStage stages
 
 
-inconsistantInstanceState
+inconsistentInstanceState
   :: (MonadLog m, MonadThrow m, MonadError ServerError m, ToJSON b)
   => InstanceId
   -> b
   -> m a
-inconsistantInstanceState instanceId user = do
+inconsistentInstanceState instanceId user = do
   logAttention "GetInstanceView: Invalid userId or broken state for Flow instance "
     $ object ["instance_id" .= instanceId, "instance_user" .= user]
   throwInternalServerError "Could not reconstruct the state of the Flow process."
@@ -132,10 +132,14 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
   tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
 
   -- Document state
-  let userReceivedEvents = Set.filter (\e -> eventInfoUser e == userName)
-        $ Aggregator.receivedEvents (aggrState :: AggregatorState)
-  let userDocs = Set.map eventInfoDocument userReceivedEvents
-  let userDocsWithState = catMaybes . Set.toList $ Set.map
+  -- TODO Flow: This works because there is at most one event per document
+  -- for every user. We should get relevant document for given users and
+  -- compute state of the document by folding over all events.
+  let userReceivedEvents =
+        filter (\e -> eventInfoUser e == userName) . fmap toEventInfo $ allEvents
+          fullInstance
+  let userDocs = map eventInfoDocument userReceivedEvents
+  let userDocsWithState = mapMaybe
         (toApiUserDocument sigInfo userReceivedEvents $ keyValues ^. #documents)
         userDocs
 
@@ -166,7 +170,7 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
                   )
                   userAllowedEvents
             in  mkGetInstanceView userActions InProgress
-      _ -> inconsistantInstanceState instanceId user
+      _ -> inconsistentInstanceState instanceId user
   where
     findSignatoryId sigInfo name docId =
       snd3 <$> find (\(un, _, did) -> un == name && did == docId) sigInfo
@@ -176,7 +180,7 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
 
     toApiUserDocument
       :: [(UserName, SignatoryLinkID, DocumentID)]
-      -> Set EventInfo
+      -> [EventInfo]
       -> Map DocumentName DocumentID
       -> DocumentName
       -> Maybe InstanceUserDocument
@@ -184,11 +188,10 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
       docId <- Map.lookup docName docMap
       sigId <- findSignatoryId sigInfo userName docId
       pure $ InstanceUserDocument docId docState sigId
-
       where
-        docEvents = Set.filter (\e -> eventInfoDocument e == docName) userReceivedEvents
+        docEvents = filter (\e -> eventInfoDocument e == docName) userReceivedEvents
         docHasAction action =
-          Set.filter (\e -> eventInfoAction e == action) docEvents /= Set.empty
+          filter (\e -> eventInfoAction e == action) docEvents /= mempty
         docState | docHasAction Machinize.Approval = Approved
                  | docHasAction Machinize.Signature = Signed
                  | docHasAction Machinize.View = Viewed

@@ -96,6 +96,7 @@ data FullInstance = FullInstance
     { flowInstance :: Instance
     , template :: Template
     , aggregatorEvents :: [Event]
+    , allEvents :: [Event]
     }
 
 data InstanceSession = InstanceSession

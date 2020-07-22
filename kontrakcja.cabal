@@ -1269,7 +1269,9 @@ Test-suite kontrakcja-test
                , scientific
                , scrypt
                , semigroups
+               , servant
                , servant-client
+               , servant-client-core
                , servant-server
                , split
                , stm

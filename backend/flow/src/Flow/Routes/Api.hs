@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Flow.Routes.Api
     ( CreateTemplate(..)
     , GetCreateTemplate(..)
@@ -30,6 +31,7 @@ import Data.Map (Map)
 import Data.Proxy
 import Data.Time.Clock
 import GHC.Generics
+import Optics.TH
 import Servant.API
 
 import Doc.DocumentID (DocumentID)
@@ -294,3 +296,9 @@ instance FromJSON GetInstanceView where
 
 instance ToJSON GetInstanceView where
   toEncoding = genericToEncoding aesonOptions
+
+-- TODO: Add all optics...
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserDocument
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserState
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserAction
+makeFieldLabelsWith noPrefixFieldLabels ''GetInstanceView

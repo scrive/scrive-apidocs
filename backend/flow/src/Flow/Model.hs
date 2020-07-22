@@ -9,7 +9,7 @@ module Flow.Model
     , insertEvent
     , insertFlowInstanceKeyValues
     , insertInstanceSignatories
-    , selectAggregatorEvents
+    , selectInstanceEvents
     , selectDocumentIdsByDocumentIds
     , selectDocumentIdsAssociatedWithSomeInstance
     , selectDocumentNameFromKV
@@ -259,7 +259,8 @@ selectFullInstance id = do
     Just flowInstance -> do
       -- This is guaranteed by a foreign key.
       template         <- fromJust <$> selectTemplate (flowInstance ^. #templateId)
-      aggregatorEvents <- selectAggregatorEvents id
+      aggregatorEvents <- selectInstanceEvents id True
+      allEvents        <- selectInstanceEvents id False
       pure $ Just FullInstance { .. }
 
 updateAggregatorState
@@ -294,12 +295,12 @@ eventSelectors prefix = do
   mapM_ (\c -> sqlResult $ prefix <> "." <> c)
         ["id", "instance_id", "user_name", "document_name", "user_action", "created"]
 
-selectAggregatorEvents :: (MonadDB m, MonadThrow m) => InstanceId -> m [Event]
-selectAggregatorEvents instanceId = do
+selectInstanceEvents :: (MonadDB m, MonadThrow m) => InstanceId -> Bool -> m [Event]
+selectInstanceEvents instanceId onlyAggregatorEvents = do
   runQuery_ . sqlSelect "flow_instances i" $ do
     eventSelectors "e"
-    sqlJoinOn "flow_events e"             "e.instance_id = i.id"
-    sqlJoinOn "flow_aggregator_events ae" "ae.id = e.id"
+    sqlJoinOn "flow_events e" "e.instance_id = i.id"
+    when onlyAggregatorEvents $ sqlJoinOn "flow_aggregator_events ae" "ae.id = e.id"
     sqlWhereEq "i.id" instanceId
     sqlOrderBy "e.created DESC"
   fetchMany fetchEvent
