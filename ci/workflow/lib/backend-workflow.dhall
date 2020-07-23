@@ -85,19 +85,47 @@ let createWorkflow =
           }
       )
 
-    let formatting = createJob "test-formatting"
-      [ Step ::
-        { name = "Test Formatting"
-        , run = Some "./shake.sh test-formatting"
-        }
-      ]
+    let formatting = CreateJob.createJob
+      ( inArgs //
+          { steps = cacheCabalSteps "test-formatting" #
+            [ Step ::
+              { name = "Test Formatting"
+              , run = Some "./ci/scripts/test-formatting.sh"
+              }
+            , Step ::
+              { name = "Upload Formatting Patch"
+              , uses = Some "actions/upload-artifact@v2"
+              , if = Some "\${{ failure() }}"
+              , with = Some toMap
+                { name = "formatting.patch"
+                , path = "_build/formatting.patch"
+                }
+              }
+            ]
+            , nixExtraArgs = Some "--arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]'"
+          }
+      )
 
-    let hlint = createJob "hlint"
-      [ Step ::
-        { name = "Test HLint"
-        , run = Some "./shake.sh hlint"
-        }
-      ]
+    let hlint = CreateJob.createJob
+      ( inArgs //
+          { steps = cacheCabalSteps "hlint" #
+            [ Step ::
+              { name = "Test HLint"
+              , run = Some "./ci/scripts/test-hlint.sh"
+              }
+            , Step ::
+              { name = "Upload HLint Patch"
+              , uses = Some "actions/upload-artifact@v2"
+              , if = Some "\${{ failure() }}"
+              , with = Some toMap
+                { name = "hlint.patch"
+                , path = "_build/hlint.patch"
+                }
+              }
+            ]
+            , nixExtraArgs = Some "--arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]'"
+          }
+      )
 
     let detect-unused = createJob "detect-unused"
       [ Step ::

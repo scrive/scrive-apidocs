@@ -4,6 +4,7 @@ let Step =
   { name: Text
   , uses: Optional Text
   , run: Optional Text
+  , if: Optional Text
   , env: Optional (Map Text Text)
   , with: Optional (Map Text Text)
   , timeout-minutes: Optional Natural
@@ -12,6 +13,7 @@ let Step =
 let default =
   { uses = None Text
   , run = None Text
+  , if = None Text
   , env = None (Map Text Text)
   , with = None (Map Text Text)
   , timeout-minutes = None Natural

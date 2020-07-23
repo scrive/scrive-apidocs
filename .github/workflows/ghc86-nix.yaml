@@ -94,16 +94,22 @@ jobs:
           echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
       - name: Load Nix Shell
         run: |
-          nix-shell -j8 \
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
             -A ghc86.dev-shell-optimized \
             release.nix \
             --run "echo Loaded Nix shell"
       - name: Test Formatting
         run: |
-          nix-shell -j8 \
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
             -A ghc86.dev-shell-optimized \
             release.nix \
-            --run "./shake.sh test-formatting"
+            --run "./ci/scripts/test-formatting.sh"
+      - if: "${{ failure() }}"
+        name: Upload Formatting Patch
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: formatting.patch
+          path: "_build/formatting.patch"
   hlint:
     runs-on:
       - ubuntu-latest
@@ -126,16 +132,22 @@ jobs:
           echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
       - name: Load Nix Shell
         run: |
-          nix-shell -j8 \
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
             -A ghc86.dev-shell-optimized \
             release.nix \
             --run "echo Loaded Nix shell"
       - name: Test HLint
         run: |
-          nix-shell -j8 \
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
             -A ghc86.dev-shell-optimized \
             release.nix \
-            --run "./shake.sh hlint"
+            --run "./ci/scripts/test-hlint.sh"
+      - if: "${{ failure() }}"
+        name: Upload HLint Patch
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: hlint.patch
+          path: "_build/hlint.patch"
 name: "GHC 8.6 Backend Tests (Nix)"
 on:
   push:
