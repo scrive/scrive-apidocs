@@ -615,6 +615,7 @@ serverFormatLintRules sourceRoot newBuild threads opt cabalFile flags = do
         then return []
         else do
           putNormal $ "file is not formatted: " <> srcPath
+          displayFormatted srcPath
           return [srcPath]
     case unformattedFiles of
       [] -> return ()
@@ -685,6 +686,17 @@ serverFormatLintRules sourceRoot newBuild threads opt cabalFile flags = do
           , "-XTypeApplications"
           , "-i"
           ]
+
+    displayFormatted :: FilePath -> Action ()
+    displayFormatted srcPath = command
+      []
+      "brittany"
+      [ "--config-file"
+      , sourceRoot </> "brittany.yaml"
+      , "--write-mode"
+      , "display"
+      , srcPath
+      ]
 
     checkFormatted srcPath = do
       Exit code <- command

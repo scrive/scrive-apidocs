@@ -8,6 +8,7 @@ import Control.Monad.Time
 import Data.Either.Combinators
 import Log.Class
 import Servant
+import qualified Data.Text as T
 
 import AccessControl.Check
 import AccessControl.Types
@@ -103,6 +104,10 @@ validateTemplate templateDSL = do
 -- TODO: improved later.
 checkDSL :: Process -> AppM ()
 checkDSL templateDSL = do
+  when (T.null $ fromProcess templateDSL)
+    .  throwDSLValidationError
+    $  "No template DSL text available. "
+    <> "Please update the template with non-empty process and try again."
   whenLeft (decodeHighTongue templateDSL) $ \case
     -- TODO: Improve error messages.
     []      -> throwDSLValidationError "Unknown validation error"
