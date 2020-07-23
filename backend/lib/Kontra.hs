@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Kontra
     ( module KontraError
     , module KontraMonad
@@ -89,7 +91,7 @@ instance TemplatesMonad Kontra where
     globaltemplates <- view #globalTemplates <$> getContext
     return $ TL.localizedVersion langStr globaltemplates
 
-instance GuardTimeConfMonad Kontra where
+instance {-# OVERLAPPABLE #-} (Monad m, KontraMonad m) => GuardTimeConfMonad m  where
   getGuardTimeConf = view #gtConf <$> getContext
 
 instance PdfToolsLambdaMonad Kontra where

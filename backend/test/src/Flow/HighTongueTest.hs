@@ -1,16 +1,15 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE StrictData #-}
 
-module Flow.HighTongueTest where
+module Flow.HighTongueTest (tests) where
 
-import Data.Text.Encoding
-import Data.Yaml
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit.Base (Assertion)
 import Text.RawString.QQ
 
 import Flow.HighTongue
+import Flow.Process
 import TestingUtil (assertLeft, assertRight)
 
 tests :: Test
@@ -19,15 +18,15 @@ tests = testGroup
   [ testCase "Parsing succeeds when dsl-version is supported" testSupportedDSLVersion
   , testCase "Parsing fails when dsl-version is missing"      testMissingDSLVersion
   , testCase "Parsing fails when dsl-version is unsupported"  testUnsupportedDSLVersion
+  , testCase "Parsing fails when duplicate stage names"       testDuplicateStageNameErrors
   ]
 
 testSupportedDSLVersion :: Assertion
-testSupportedDSLVersion = assertRight tongue
+testSupportedDSLVersion = assertRight $ decodeHighTongue process
   where
-    tongue = decodeEither' $ encodeUtf8 process :: Either ParseException HighTongue
     -- TODO: use a version from HighTongue.supportedVersions in "process"
-    process = [r|
-          dsl-version: "1"
+    process = unsafeProcess [r|
+          dsl-version: "0.1.0"
           stages:
             - sign:
                 actions: []
@@ -38,10 +37,9 @@ testSupportedDSLVersion = assertRight tongue
           |]
 
 testUnsupportedDSLVersion :: Assertion
-testUnsupportedDSLVersion = assertLeft tongue
+testUnsupportedDSLVersion = assertLeft $ decodeHighTongue process
   where
-    tongue = decodeEither' $ encodeUtf8 process :: Either ParseException HighTongue
-    process = [r|
+    process = unsafeProcess [r|
           dsl-version: "666"
           stages:
             - sign:
@@ -53,12 +51,38 @@ testUnsupportedDSLVersion = assertLeft tongue
           |]
 
 testMissingDSLVersion :: Assertion
-testMissingDSLVersion = assertLeft tongue
+testMissingDSLVersion = assertLeft $ decodeHighTongue process
   where
-    tongue = decodeEither' $ encodeUtf8 process :: Either ParseException HighTongue
-    process = [r|
+    process = unsafeProcess [r|
           stages:
             - sign:
+                actions: []
+                expect:
+                  signed-by:
+                    users: [user1]
+                    documents: [document1]
+          |]
+
+testDuplicateStageNameErrors :: Assertion
+testDuplicateStageNameErrors = assertLeft $ decodeHighTongue process
+  where
+    -- TODO: use a version from HighTongue.supportedVersions in "process"
+    process = unsafeProcess [r|
+          dsl-version: "0.1.0"
+          stages:
+            - dup:
+                actions: []
+                expect:
+                  signed-by:
+                    users: [user1]
+                    documents: [document1]
+            - nondup:
+                actions: []
+                expect:
+                  signed-by:
+                    users: [user1]
+                    documents: [document1]
+            - dup:
                 actions: []
                 expect:
                   signed-by:

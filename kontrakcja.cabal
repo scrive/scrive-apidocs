@@ -261,6 +261,7 @@ Library
                  , Doc.Extending.Migrations
                  , Doc.Extending.Model
                  , Doc.Extending.Tables
+                 , Doc.Flow
                  , Doc.Functions
                  , Doc.Logging
                  , Doc.Migrations
@@ -373,30 +374,47 @@ Library
                  , FlashMessage
                  , Flow.ActionConsumers
                  , Flow.Aggregator
-                 , Flow.Api
                  , Flow.Client
                  , Flow.DocumentChecker
+                 , Flow.DocumentStarting
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
                  , Flow.HighTongue
+                 , Flow.Html
                  , Flow.Id
+                 , Flow.KontraHandler
                  , Flow.Machinize
                  , Flow.Message
                  , Flow.Message.Internal
+                 , Flow.Migrations
                  , Flow.Model
+                 , Flow.Model.InstanceSession
                  , Flow.Model.Types
                  , Flow.Model.Types.Internal
+                 , Flow.Model.Types.FlowUserId
+                 , Flow.Model.Types.UserIdType
                  , Flow.Names
                  , Flow.Names.Internal
                  , Flow.OrphanInstances
                  , Flow.Process
                  , Flow.Process.Internal
+                 , Flow.Routes
+                 , Flow.Routes.Api
+                 , Flow.Routes.Pages
+                 , Flow.Routes.Types
                  , Flow.Server
-                 , Flow.Server.Handlers.Instance
+                 , Flow.Server.Api
+                 , Flow.Server.Api.Common
+                 , Flow.Server.Api.Instances
+                 , Flow.Server.Api.Templates
+                 , Flow.Server.Api.Templates.Start
+                 , Flow.Server.AuthHandler
+                 , Flow.Server.Cookies
+                 , Flow.Server.Pages
                  , Flow.Server.Types
+                 , Flow.Server.Utils
                  , Flow.Tables
-                 , Flow.Transducer
                  , Flow.VariableCollector
                  , Folder.API
                  , Folder.FolderID
@@ -691,6 +709,7 @@ Library
                , http-client
                , http-conduit
                , http-client-tls
+               , http-media
                , http-types
                , iconv
                , invariant
@@ -719,6 +738,7 @@ Library
                , psqueues
                , quickcheck-instances
                , random
+               , raw-strings-qq
                , regex-tdfa
                , resource-pool
                , sandi
@@ -1140,10 +1160,9 @@ Test-suite kontrakcja-test
                  Flow.DocumentCheckerTest
                  Flow.HighTongueTest
                  Flow.IntegrationTest
-                 Flow.MachinizeTest
                  Flow.OrphanTestInstances
+                 Flow.TestKontraHandler
                  Flow.TestUtil
-                 Flow.TransducerTest
                  Flow.VariableCollectorTest
                  FlowTests
                  Folder.APITest
@@ -1210,6 +1229,7 @@ Test-suite kontrakcja-test
                , cond
                , consumers
                , containers
+               , cookie
                , crypto-rng
                , cryptonite
                , cryptostore
@@ -1229,6 +1249,7 @@ Test-suite kontrakcja-test
                , hsaml2
                , http-client
                , http-client-tls
+               , http-types
                , hxt
                , invariant
                , json
@@ -1249,7 +1270,10 @@ Test-suite kontrakcja-test
                , scientific
                , scrypt
                , semigroups
+               , servant
                , servant-client
+               , servant-client-core
+               , servant-server
                , split
                , stm
                , tagsoup
@@ -1435,6 +1459,7 @@ Library authentication
                     , Auth.Model
                     , Auth.OAuth
                     , Auth.Session
+                    , Auth.Session.Constant
                     , Auth.Session.SessionID
                     , Auth.Utils
   Build-Depends:      base-noprelude
@@ -1445,8 +1470,11 @@ Library authentication
                     , exceptions
                     , happstack-server
                     , hpqtypes
+                    , hpqtypes-extras
+                    , http-api-data
                     , monad-time
                     , text
                     , text-show
+                    , time
                     , unjson
                     , HTTP

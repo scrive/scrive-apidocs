@@ -25,7 +25,7 @@ module.exports = function (grunt) {
   var yeomanConfig = {
     app: require("./bower.json").appPath || "app",
     dist: "dist",
-    adminElm: "../frontend-elm",
+    frontendElm: "../frontend-elm",
     kontrakcjaRoot: sourceDir,
     kontrakcjaWorkspace: workspaceDir
   };
@@ -119,10 +119,10 @@ module.exports = function (grunt) {
               ".tmp",
               "<%= yeoman.app %>/compiled/",
               "<%= yeoman.app %>/localization/",
-              "<%= yeoman.app %>/adminonly-assets/",
+              "<%= yeoman.app %>/elm-assets/",
               "<%= yeoman.dist %>/*",
               "!<%= yeoman.dist %>/.git*",
-              "<%= yeoman.adminElm %>/dist/*"
+              "<%= yeoman.frontendElm %>/dist/*"
             ]
           }
         ]
@@ -166,19 +166,19 @@ module.exports = function (grunt) {
       updateLastBuilt: {
         command: "echo '$(date +%s)' > <%= yeoman.dist %>/LAST_BUILT"
       },
-      buildAdminElm: {
+      buildFrontendElm: {
         command: "npm run build",
         options: {
           execOptions: {
-            cwd: "<%= yeoman.adminElm %>"
+            cwd: "<%= yeoman.frontendElm %>"
           }
         }
       },
-      watchAdminElm: {
+      watchFrontendElm: {
         command: "npm run watch",
         options: {
           execOptions: {
-            cwd: "<%= yeoman.adminElm %>"
+            cwd: "<%= yeoman.frontendElm %>"
           }
         }
       },
@@ -229,10 +229,10 @@ module.exports = function (grunt) {
           {
             expand: true,
             dot: true,
-            cwd: "<%= yeoman.adminElm %>/dist",
+            cwd: "<%= yeoman.frontendElm %>/dist",
             dest: "<%= yeoman.dist %>",
             src: [
-              "adminonly-assets/**/*"
+              "elm-assets/**/*"
             ]
           }
         ]
@@ -268,7 +268,8 @@ module.exports = function (grunt) {
         tasks: [
           "watch",
           "webpack:allWatch",
-          "webpack:signviewWatch"
+          "webpack:signviewWatch",
+          "shell:watchFrontendElm"
         ],
         options: {logConcurrentOutput: true}
       }
@@ -425,7 +426,7 @@ module.exports = function (grunt) {
       "compileGenerateLocalization",
       "compileStyles",
       "buildJs",
-      "shell:buildAdminElm",
+      "shell:buildFrontendElm",
       "cssmin:dist",
       "deploybuild:dist",
       "concurrent:dist",
@@ -442,8 +443,7 @@ module.exports = function (grunt) {
       "compileGenerateLocalization",
       "uglify:dev",
       "uglify:signview",
-      "concurrent:watch",
-      "shell:watchAdminElm"
+      "concurrent:watch"
     ]);
   });
 
@@ -453,7 +453,7 @@ module.exports = function (grunt) {
       "updateLocalization",
       "compileStyles",
       "buildJs",
-      "shell:buildAdminElm",
+      "shell:buildFrontendElm",
       "cssmin:dist",
       "deploybuild:dist",
       "concurrent:dist",

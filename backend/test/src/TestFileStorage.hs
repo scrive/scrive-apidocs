@@ -4,6 +4,7 @@ module TestFileStorage
   , evalTestFileStorageT
   , runTestFileStorageT
   , getTestFSEnv
+  , FakeFS
   ) where
 
 import Control.Concurrent.STM
@@ -28,12 +29,9 @@ newtype TestFileStorageT m a = TestFileStorageT
            , MonadTransControl )
 
 evalTestFileStorageT
-  :: MonadIO m => Maybe FileStorageConfig -> TestFileStorageT m a -> m a
-evalTestFileStorageT mConfig action = do
-  env <- case mConfig of
-    Nothing   -> fmap Left . liftIO $ newTVarIO HM.empty
-    Just conf -> return $ Right conf
-  runTestFileStorageT action env
+  :: MonadIO m => TVar FakeFS -> Maybe FileStorageConfig -> TestFileStorageT m a -> m a
+evalTestFileStorageT fakeFs mConfig action =
+  runTestFileStorageT action $ maybe (Left fakeFs) Right mConfig
 
 runTestFileStorageT
   :: MonadIO m => TestFileStorageT m a -> Either (TVar FakeFS) FileStorageConfig -> m a

@@ -1,11 +1,14 @@
 {-# LANGUAGE StrictData #-}
-
 module Flow.HighTongue
     ( Expect(..)
     , SystemAction(..)
     , HighTongue(..)
     , Stage(..)
-    , DSLVersion
+    , DocumentName
+    , UserName
+    , MessageName
+    , FieldName
+    , DSLVersion(..)
     , ValidationError(..)
     , decodeHighTongue
     )
@@ -15,14 +18,15 @@ import Control.Arrow
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.Types
+import Data.List.Extra (nubOrd)
 import Data.Set (Set)
-import Data.Text
 import Data.Text.Encoding
 import Data.Word
 import Data.Yaml
 import GHC.Generics
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Set as Set
+import qualified Data.Text as T
 
 import Flow.Names
 import Flow.Process
@@ -90,23 +94,15 @@ data SystemAction
         { actionUsers :: [UserName]
         , actionMessage :: MessageName
         }
-    | Close
-        { actionDocuments :: [DocumentName]
-        }
   deriving (Show, Eq, Ord, Generic)
 
 instance ToJSON SystemAction where
   toJSON (Notify users message) =
     object ["notify" .= object ["users" .= toJSON users, "message" .= toJSON message]]
-  toJSON (Close documents) = object ["close" .= object ["documents" .= toJSON documents]]
 
 parseNotify :: Value -> Parser SystemAction
 parseNotify = withObject "notify" $ \o -> do
   Notify <$> o .: "users" <*> o .: "message"
-
-parseClose :: Value -> Parser SystemAction
-parseClose = withObject "close" $ \o -> do
-  Close <$> o .: "documents"
 
 instance FromJSON SystemAction where
   parseJSON = withObject "action" $ \o -> do
@@ -115,7 +111,6 @@ instance FromJSON SystemAction where
       _        -> typeMismatch "action object should have one key only" (Object o)
     case k of
       "notify" -> parseNotify v
-      "close"  -> parseClose v
       _        -> typeMismatch "Expected key `notify`" (Object o)
 
 data Stage = Stage
@@ -147,7 +142,7 @@ instance FromJSON DSLVersion where
     pure (DSLVersion t)
 
 supportedVersions :: [DSLVersion]
-supportedVersions = [DSLVersion "1"]
+supportedVersions = [DSLVersion "0.1.0"]
 
 data ValidationError = ValidationError
     { line_number :: Word32
@@ -167,12 +162,23 @@ instance ToJSON ValidationError where
 
 
 decodeHighTongue :: Process -> Either [ValidationError] HighTongue
-decodeHighTongue process = packError
-  `left` decodeEither' (encodeUtf8 $ fromProcess process)
+decodeHighTongue process =
+  (packError `left` decodeEither' (encodeUtf8 $ fromProcess process))
+    >>= validateStageNameUniqueness
   where
     packError err =
       [ ValidationError { line_number   = 0
                         , column        = 0
-                        , error_message = pack $ prettyPrintParseException err
+                        , error_message = T.pack $ prettyPrintParseException err
                         }
       ]
+    validateStageNameUniqueness highTongue@HighTongue {..} = do
+      let uniqNames = nubOrd $ stageName <$> stages
+      if length uniqNames == length stages
+        then pure highTongue
+        else Left
+          [ ValidationError { line_number   = 0
+                            , column        = 0
+                            , error_message = "The stage names are not all unique"
+                            }
+          ]

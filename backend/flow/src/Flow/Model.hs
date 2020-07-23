@@ -1,36 +1,46 @@
 {-# LANGUAGE StrictData #-}
-
 module Flow.Model
     ( deleteTemplate
     , insertTemplate
-    , selectTemplate
+    , selectMaybeTemplate
     , selectTemplatesByUserID
     , updateTemplate
     , insertFlowInstance
-    , insertFlowInstanceKeyValue
-    , selectInstance
-    , selectInstancesByUserID
-    , selectInstanceKeyValues
-    , selectFullInstance
-    , selectAggregatorEvents
-    , updateAggregatorState
     , insertEvent
+    , insertFlowInstanceKeyValues
+    , insertInstanceSignatories
+    , selectInstanceEvents
+    , selectDocumentIdsByDocumentIds
+    , selectDocumentIdsAssociatedWithSomeInstance
     , selectDocumentNameFromKV
+    , selectDocumentsByInstanceId
+    , selectFullInstance
+    , selectInstance
+    , selectInstanceIdByDocumentId
+    , selectInstanceKeyValues
+    , selectInstancesByUserID
+    , selectSignatoryIdsByInstanceUser
+    , selectSignatoryInfo
     , selectUserNameFromKV
+    , updateAggregatorState
     )
   where
 
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
 import Control.Monad.Time
+import Data.Tuple.Extra
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
+import qualified Data.Map as Map
 
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
 import Flow.Id
+import Flow.Message
 import Flow.Model.Types
+import Flow.Model.Types.FlowUserId
 import Flow.Names
 import User.UserID (UserID)
 
@@ -57,7 +67,6 @@ deleteTemplate templateId = do
     sqlSet "deleted" now
     sqlWhereEq "id" templateId
 
-
 templateSelectors :: (MonadState v m, SqlResult v) => m ()
 templateSelectors = do
   sqlResult "id"
@@ -69,8 +78,8 @@ templateSelectors = do
   sqlResult "committed"
   sqlResult "deleted"
 
-selectTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe Template)
-selectTemplate templateId = do
+selectMaybeTemplate :: (MonadDB m, MonadThrow m) => TemplateId -> m (Maybe Template)
+selectMaybeTemplate templateId = do
   runQuery_ . sqlSelect "flow_templates" $ do
     templateSelectors
     sqlWhereEq "id" templateId
@@ -102,39 +111,74 @@ insertFlowInstance ii = do
   now <- currentTime
   runQuery_ . sqlInsert "flow_instances" $ do
     sqlSet "template_id" $ ii ^. #templateId
-    sqlSet "current_state" $ ii ^. #currentState
+    sqlSet "current_state" $ ii ^. #currentStage
     sqlSet "created" now
     sqlResult "id"
   fetchOne runIdentity
 
-insertFlowInstanceKeyValue
-    -- TODO: Make Id type for original kontra IDs.
-  :: MonadDB m => InstanceId -> Text -> StoreValue -> m ()
-insertFlowInstanceKeyValue instanceId key value =
-  runQuery_ . sqlInsert "flow_instance_key_value_store" $ do
+insertFlowInstanceKeyValues :: MonadDB m => InstanceId -> InstanceKeyValues -> m ()
+insertFlowInstanceKeyValues instanceId keyValues =
+  unless (null keys) . runQuery_ . sqlInsert "flow_instance_key_value_store" $ do
     sqlSet "instance_id" instanceId
-    sqlSet "key"         key
-    case value of
-      StoreDocumentId document -> do
-        sqlSet "type" $ storeValueTypeToText Document
-        sqlSet "document_id" document
-      StoreUserId user -> do
-        sqlSet "type" $ storeValueTypeToText User
-        sqlSet "user_id" user
-      StoreEmail email -> do
-        sqlSet "type" $ storeValueTypeToText Email
-        sqlSet "string" email
-      StorePhoneNumber number -> do
-        sqlSet "type" $ storeValueTypeToText PhoneNumber
-        sqlSet "string" number
-      StoreMessage msg -> do
-        sqlSet "type" $ storeValueTypeToText Message
-        sqlSet "string" msg
+    sqlSetList "key"  keys
+    sqlSetList "type" types
+    sqlSetListWithDefaults "document_id" documentIds
+    sqlSetListWithDefaults "user_id"     userIds
+    sqlSetListWithDefaults "string"      strings
+  where
+    documents = keyValues ^. #documents
+    users     = keyValues ^. #users
+    messages  = keyValues ^. #messages
+    textKeys :: Map.Map (Name a) b -> [Text]
+    textKeys = fmap fromName . Map.keys
+    keys :: [Text]
+    keys           = textKeys documents <> textKeys users <> textKeys messages
+    documentValues = Map.elems documents
+    userValues     = Map.elems users
+    messageValues  = Map.elems messages
+    applyToValues
+      :: (Show a, ToSQL a)
+      => (DocumentID -> a)
+      -> (FlowUserId -> a)
+      -> (Message -> a)
+      -> [a]
+    applyToValues f g h =
+      fmap f documentValues <> fmap g userValues <> fmap h messageValues
+    types :: [Text]
+    types = applyToValues (const "document") (fst3 . toUserInfo) (const "message")
+
+    toUserInfo :: FlowUserId -> (Text, Maybe UserID, Maybe Text)
+    toUserInfo = \case
+      Email       e   -> ("email", Nothing, Just e)
+      PhoneNumber pn  -> ("phone_number", Nothing, Just pn)
+      UserId      uid -> ("user", Just uid, Nothing)
+
+    documentIds :: [Maybe DocumentID]
+    documentIds = applyToValues Just (const Nothing) (const Nothing)
+
+    userIds :: [Maybe UserID]
+    userIds = applyToValues (const Nothing) (snd3 . toUserInfo) (const Nothing)
+
+    strings :: [Maybe Text]
+    strings = applyToValues (const Nothing) (thd3 . toUserInfo) (Just . fromMessage)
+
+selectDocumentIdsByDocumentIds :: MonadDB m => [DocumentID] -> m [DocumentID]
+selectDocumentIdsByDocumentIds docIds = do
+  runQuery_ . sqlSelect "documents d" $ do
+    sqlResult "d.id"
+    sqlWhereIn "d.id" docIds
+  fetchMany runIdentity
+
+selectDocumentIdsAssociatedWithSomeInstance :: MonadDB m => [DocumentID] -> m [DocumentID]
+selectDocumentIdsAssociatedWithSomeInstance docIds = do
+  runQuery_ . sqlSelect "flow_instance_key_value_store i" $ do
+    sqlResult "i.document_id"
+    sqlWhereIn "i.document_id" docIds
+  fetchMany runIdentity
 
 instanceSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
 instanceSelectors prefix = mapM_ (\c -> sqlResult $ prefix <> "." <> c)
                                  ["id", "template_id", "current_state", "created"]
-
 selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe Instance)
 selectInstance instanceId = do
   runQuery_ . sqlSelect "flow_instances i" $ do
@@ -151,22 +195,60 @@ selectInstancesByUserID userId = do
     sqlWhereIsNULL "t.deleted"
   fetchMany fetchInstance
 
--- TODO: Think about making this function a bit more type safe???
-selectInstanceKeyValues
-  :: (MonadDB m, MonadThrow m, FromSQL t) => InstanceId -> StoreValueType -> m [(Text, t)]
-selectInstanceKeyValues instanceId valueType = do
+-- Copy-paste from flow-document-events branch
+selectInstanceIdByDocumentId
+  :: (MonadDB m, MonadThrow m) => DocumentID -> m (Maybe InstanceId)
+selectInstanceIdByDocumentId documentId = do
+  runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
+    sqlResult "instance_id"
+    sqlWhereEq "document_id" documentId
+    sqlWhereEq "type"        ("document" :: Text)
+  fetchMaybe runIdentity
+
+fetchKeyValues
+  :: MonadDB m => m [(Text, Text, Maybe DocumentID, Maybe UserID, Maybe Text)]
+fetchKeyValues = fetchMany identity
+
+selectInstanceKeyValues :: (MonadDB m, MonadThrow m) => InstanceId -> m InstanceKeyValues
+selectInstanceKeyValues instanceId = do
   runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
     sqlResult "key"
-    sqlResult $ storeValueTypeToValueColumn valueType
+    sqlResult "type"
+    sqlResult "document_id"
+    sqlResult "user_id"
+    sqlResult "string"
     sqlWhereEq "instance_id" instanceId
-    sqlWhereEq "type" $ storeValueTypeToText valueType
-  fetchMany identity
+  toInstanceKeyValues <$> fetchKeyValues
   where
-    storeValueTypeToValueColumn Document    = "document_id"
-    storeValueTypeToValueColumn User        = "user_id"
-    storeValueTypeToValueColumn Email       = "string"
-    storeValueTypeToValueColumn PhoneNumber = "string"
-    storeValueTypeToValueColumn Message     = "string"
+    convert
+      :: (KeyValueTuple -> Maybe (Name a, b)) -> [KeyValueTuple] -> Map.Map (Name a) b
+    convert f = Map.fromList . mapMaybe f
+
+    toInstanceKeyValues :: [KeyValueTuple] -> InstanceKeyValues
+    toInstanceKeyValues keyValues = InstanceKeyValues documents users messages
+      where
+        documents = convert toDocument keyValues
+        users     = convert toUser keyValues
+        messages  = convert toMessage keyValues
+
+    toDocument :: KeyValueTuple -> Maybe (DocumentName, DocumentID)
+    toDocument = \case
+      (k, "document", Just did, _, _) -> Just (unsafeName k, did)
+      _ -> Nothing
+
+    toUser :: KeyValueTuple -> Maybe (UserName, FlowUserId)
+    toUser = \case
+      (k, "email", _, _, Just e) -> Just (unsafeName k, Email e)
+      (k, "phone_number", _, _, Just pn) -> Just (unsafeName k, PhoneNumber pn)
+      (k, "user", _, Just uid, _) -> Just (unsafeName k, UserId uid)
+      _ -> Nothing
+
+    toMessage :: KeyValueTuple -> Maybe (MessageName, Message)
+    toMessage = \case
+      (k, "message", _, _, Just s) -> Just (unsafeName k, unsafeMessage s)
+      _ -> Nothing
+
+type KeyValueTuple = (Text, Text, Maybe DocumentID, Maybe UserID, Maybe Text)
 
 -- TODO write this as a single query
 selectFullInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe FullInstance)
@@ -176,21 +258,23 @@ selectFullInstance id = do
     Nothing           -> pure Nothing
     Just flowInstance -> do
       -- This is guaranteed by a foreign key.
-      template         <- fromJust <$> selectTemplate (flowInstance ^. #templateId)
-      aggregatorEvents <- selectAggregatorEvents id
+      template         <- fromJust <$> selectMaybeTemplate (flowInstance ^. #templateId)
+      aggregatorEvents <- selectInstanceEvents id True
+      allEvents        <- selectInstanceEvents id False
       pure $ Just FullInstance { .. }
 
 updateAggregatorState
   :: (MonadDB m) => InstanceId -> AggregatorState -> EventId -> Bool -> m ()
 updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
   runQuery_ . sqlUpdate "flow_instances" $ do
-    sqlSet "current_state" currentState
-    sqlWhereEq "instance_id" instanceId
+    sqlSet "current_state" currentStage
+    sqlWhereEq "id" instanceId
 
   if stateChange
-    then runQuery_ . sqlDelete "flow_aggregator_events ae" $ do
-      sqlFrom "flow_events ae"
-      sqlWhereEq "ae.instance_id" instanceId
+    then runQuery_ . sqlDelete "flow_aggregator_events" $ do
+      sqlFrom "flow_events"
+      sqlWhere "flow_aggregator_events.id = flow_events.id"
+      sqlWhereEq "flow_events.instance_id" instanceId
     else runQuery_ . sqlInsert "flow_aggregator_events" $ do
       sqlSet "id" eventId
 
@@ -211,12 +295,12 @@ eventSelectors prefix = do
   mapM_ (\c -> sqlResult $ prefix <> "." <> c)
         ["id", "instance_id", "user_name", "document_name", "user_action", "created"]
 
-selectAggregatorEvents :: (MonadDB m, MonadThrow m) => InstanceId -> m [Event]
-selectAggregatorEvents instanceId = do
+selectInstanceEvents :: (MonadDB m, MonadThrow m) => InstanceId -> Bool -> m [Event]
+selectInstanceEvents instanceId onlyAggregatorEvents = do
   runQuery_ . sqlSelect "flow_instances i" $ do
     eventSelectors "e"
-    sqlJoinOn "flow_events e"             "e.instance_id = i.id"
-    sqlJoinOn "flow_aggregator_events ae" "ae.id = e.id"
+    sqlJoinOn "flow_events e" "e.instance_id = i.id"
+    when onlyAggregatorEvents $ sqlJoinOn "flow_aggregator_events ae" "ae.id = e.id"
     sqlWhereEq "i.id" instanceId
     sqlOrderBy "e.created DESC"
   fetchMany fetchEvent
@@ -227,9 +311,25 @@ selectDocumentNameFromKV instanceId documentId = do
   runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
     sqlResult "key"
     sqlWhereEq "instance_id" instanceId
-    sqlWhereEq "type" $ storeValueTypeToText Document
+    sqlWhereEq "type"        ("document" :: Text)
     sqlWhereEq "document_id" documentId
   fetchMaybe runIdentity
+
+insertInstanceSignatories
+  :: MonadDB m => InstanceId -> [(UserName, SignatoryLinkID)] -> m ()
+insertInstanceSignatories instanceId links =
+  unless (null links) . runQuery_ . sqlInsert "flow_instance_signatories" $ do
+    sqlSet "instance_id" instanceId
+    sqlSetList "key" $ map fst links
+    sqlSetList "signatory_id" $ map snd links
+
+selectDocumentsByInstanceId :: (MonadDB m, MonadThrow m) => InstanceId -> m [DocumentID]
+selectDocumentsByInstanceId instanceId = do
+  runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
+    sqlResult "document_id"
+    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "type"        ("document" :: Text)
+  fetchMany runIdentity
 
 selectUserNameFromKV
   :: (MonadDB m, MonadThrow m) => InstanceId -> SignatoryLinkID -> m (Maybe UserName)
@@ -239,3 +339,25 @@ selectUserNameFromKV instanceId signatoryLinkId = do
     sqlWhereEq "instance_id"  instanceId
     sqlWhereEq "signatory_id" signatoryLinkId
   fetchMaybe runIdentity
+
+selectSignatoryIdsByInstanceUser
+  :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m [SignatoryLinkID]
+selectSignatoryIdsByInstanceUser instanceId userName = do
+  runQuery_ . sqlSelect "flow_instance_signatories" $ do
+    sqlResult "signatory_id"
+    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "key"         userName
+  fetchMany runIdentity
+
+selectSignatoryInfo
+  :: (MonadDB m, MonadThrow m)
+  => InstanceId
+  -> m [(UserName, SignatoryLinkID, DocumentID)]
+selectSignatoryInfo instanceId = do
+  runQuery_ . sqlSelect "flow_instance_signatories fis" $ do
+    sqlJoinOn "signatory_links sl" "sl.id = fis.signatory_id"
+    sqlResult "fis.key"
+    sqlResult "fis.signatory_id"
+    sqlResult "sl.document_id"
+    sqlWhereEq "fis.instance_id" instanceId
+  fetchMany identity

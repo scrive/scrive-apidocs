@@ -12,7 +12,6 @@ import Text.RawString.QQ
 import qualified Data.Set as Set
 
 import Flow.OrphanTestInstances ()
-import Flow.Transducer
 import Flow.VariableCollector
 
 tests :: Test
@@ -21,7 +20,7 @@ tests =
 
 process :: Text
 process = [r|
-dsl-version: "1"
+dsl-version: "0.1.0"
 stages:
   - view:
       actions:
@@ -40,7 +39,7 @@ stages:
           documents: [document1]
   |]
 
-data MyError = YamlError ParseException | MachineError Error
+newtype MyError = YamlError ParseException
   deriving (Show)
 
 testCollectFlowVariables :: Assertion

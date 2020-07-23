@@ -4,9 +4,6 @@ module Doc.Tokens.Model
   ) where
 
 import Control.Monad.Catch
-import Control.Monad.Time
-import Crypto.RNG
-import Happstack.Server (ServerMonad)
 
 import DB
 import Doc.SignatoryLinkID
@@ -24,7 +21,7 @@ instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m CheckDocumentSess
     return $ result == Just True
 
 data AddDocumentSession = AddDocumentSession SessionID SignatoryLinkID
-instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m AddDocumentSession () where
+instance MonadDB m => DBUpdate m AddDocumentSession () where
   dbUpdate (AddDocumentSession sid slid) = do
     runQuery_ . sqlInsert "document_session_tokens" $ do
       sqlSet "session_id"        sid

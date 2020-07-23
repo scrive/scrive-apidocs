@@ -12,6 +12,7 @@ import qualified Data.Set as Set
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import Flow.DocumentChecker
+import Flow.Model.Types.FlowUserId
 import Flow.VariableCollector
 import User.UserID
 
@@ -19,9 +20,9 @@ tests :: Test
 tests = testGroup
   "DocumentChecker"
   [ testCase "simple scenario" testSimpleScenario
-  , testProperty "matched users match"                testMatchedUsersMatch
-  , testProperty "unmatched flow users do not match"  testUnmatchedFlowUsersDoNotMatch
-  , testProperty "unmatched signatories do not match" testUnmatchedSignatoriesDoNotMatch
+  , testProperty "matched users match"                  testMatchedUsersMatch
+  , testProperty "unmatched flow user IDs do not match" testUnmatchedFlowUserIdsDoNotMatch
+  , testProperty "unmatched signatories do not match"   testUnmatchedSignatoriesDoNotMatch
   ]
 
 testSimpleScenario :: Assertion
@@ -30,10 +31,10 @@ testSimpleScenario = expected @=? output
     expected             = MatchingResult { .. }
     output               = matchUsers flowRoles signatoryRoles
     matched              = Set.fromList [UserMatch (Email email) signatory1]
-    unmatchedFlowUsers   = Set.fromList [flowRole]
+    unmatchedFlowUserIds = Set.fromList [flowRole]
     unmatchedSignatories = Set.fromList [sigRole]
     flowRoles = Set.fromList [DocRoleFor SigningParty (Email email) docId, flowRole]
-    flowRole             = DocRoleFor Approver (UserID uid) docId
+    flowRole             = DocRoleFor Approver (UserId uid) docId
     signatoryRoles = Set.fromList [DocRoleFor SigningParty signatory1 docId, sigRole]
     uid                  = unsafeUserID 1
     sigRole              = DocRoleFor Viewer signatory2 docId
@@ -58,26 +59,26 @@ uniqueSignatoryIds sigs = Set.size users == Set.size (Set.map id users)
   where users = Set.map user sigs
 
 -- Check that users match in all the returned matches.
-testMatchedUsersMatch :: Set FlowUserDocRole -> Set SignatoryDocRole -> Property
+testMatchedUsersMatch :: Set FlowUserIdDocRole -> Set SignatoryDocRole -> Property
 testMatchedUsersMatch flows sigs =
   uniqueSignatoryIds sigs ==> property . all isCorrect . Set.toList $ matched output
   where
-    isCorrect UserMatch {..} = flowUserMatchesSignatory flow signatory
+    isCorrect UserMatch {..} = flowUserIdMatchesSignatory flowUserId signatory
     output = matchUsers flows sigs
 
 -- Check that unmatched flow users really do not match.
-testUnmatchedFlowUsersDoNotMatch
-  :: Set FlowUserDocRole -> Set SignatoryDocRole -> Property
-testUnmatchedFlowUsersDoNotMatch flows sigs =
-  uniqueSignatoryIds sigs ==> property . all isCorrect . Set.toList $ unmatchedFlowUsers
+testUnmatchedFlowUserIdsDoNotMatch
+  :: Set FlowUserIdDocRole -> Set SignatoryDocRole -> Property
+testUnmatchedFlowUserIdsDoNotMatch flows sigs =
+  uniqueSignatoryIds sigs ==> property . all isCorrect . Set.toList $ unmatchedFlowUserIds
     output
   where
-    isCorrect flowUserDocRole = not $ any (docRolesMatch flowUserDocRole) sigs
+    isCorrect flowUserIdDocRole = not $ any (docRolesMatch flowUserIdDocRole) sigs
     output = matchUsers flows sigs
 
 -- Check that unmatched signatories really do not match.
 testUnmatchedSignatoriesDoNotMatch
-  :: Set FlowUserDocRole -> Set SignatoryDocRole -> Property
+  :: Set FlowUserIdDocRole -> Set SignatoryDocRole -> Property
 testUnmatchedSignatoriesDoNotMatch flows sigs =
   uniqueSignatoryIds sigs
     &&  uniqueSignatories sigs
@@ -110,9 +111,9 @@ fewPhoneNumbers = elements ["1729", "2020", "666"]
 fewUserIds :: Gen UserID
 fewUserIds = elements [unsafeUserID 1, unsafeUserID 2, unsafeUserID 3]
 
-instance Arbitrary FlowUser where
+instance Arbitrary FlowUserId where
   arbitrary =
-    oneof [Email <$> fewEmails, PhoneNumber <$> fewPhoneNumbers, UserID <$> fewUserIds]
+    oneof [Email <$> fewEmails, PhoneNumber <$> fewPhoneNumbers, UserId <$> fewUserIds]
 
 maybeGen :: Gen a -> Gen (Maybe a)
 maybeGen x = oneof [pure Nothing, Just <$> x]

@@ -1,5 +1,4 @@
 {-# LANGUAGE StrictData #-}
-
 module Flow.Id where
 
 import Data.Aeson
@@ -8,10 +7,13 @@ import Database.PostgreSQL.PQTypes hiding (JSON)
 import GHC.Generics
 import Servant.API
 
+import Log.Identifier (Loggable(logDefaultLabel, logValue))
+
 data FlowIdKind
     = InstanceId
     | TemplateId
     | EventId
+    | InstanceAccessTokenId
 
 newtype Id (a :: FlowIdKind) = Id UUID
   deriving (Eq, Show, Generic)
@@ -31,6 +33,7 @@ instance ToJSON (Id a) where
 type InstanceId = Id 'InstanceId
 type TemplateId = Id 'TemplateId
 type EventId = Id 'EventId
+type InstanceAccessTokenId = Id 'InstanceAccessTokenId
 
 instance PQFormat (Id a) where
   pqFormat = pqFormat @UUID
@@ -42,3 +45,7 @@ instance FromSQL (Id a) where
 instance ToSQL (Id a) where
   type PQDest (Id a) = PQDest UUID
   toSQL (Id id) = toSQL id
+
+instance Loggable InstanceId where
+  logValue = toJSON
+  logDefaultLabel _ = "flow_instance_id"

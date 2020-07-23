@@ -4,6 +4,7 @@ module Flow.Names
   , MessageName
   , FieldName
   , StageName
+  , Name
   , fromName
   , unsafeName
   ) where

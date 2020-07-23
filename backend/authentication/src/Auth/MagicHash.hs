@@ -14,6 +14,7 @@ import Data.Word
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Numeric
+import Web.HttpApiData (FromHttpApiData(..), ToHttpApiData(..))
 import qualified Data.Text as T
 
 import Auth.Utils
@@ -58,6 +59,12 @@ instance FromSQL MagicHash where
 instance ToSQL MagicHash where
   type PQDest MagicHash = PQDest Int64
   toSQL (MagicHash n) = toSQL n
+
+instance ToHttpApiData MagicHash where
+  toUrlPiece = T.pack . show
+
+instance FromHttpApiData MagicHash where
+  parseUrlPiece t = maybe (Left "Unable to parse the magic hash") Right (maybeRead t)
 
 -- | Construct a magic hash manually.  It is up to the caller to
 -- reason about the consequences if the argument is not generated from

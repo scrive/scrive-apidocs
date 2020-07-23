@@ -48,6 +48,7 @@ import Doc.Signing.Model ()
 import Doc.Types.SignatoryAccessToken
 import EventStream.Class
 import File.Storage
+import Flow.Model
 import GuardTime (GuardTimeConfMonad)
 import Kontra
 import Log.Identifier
@@ -65,6 +66,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
+import qualified Flow.Model as Flow (selectInstanceIdByDocumentId)
 import qualified MailContext.Internal
 
 -- | Log a document event, adding some standard properties.
@@ -112,7 +114,6 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   logInfo_ "Preparation -> Pending; Sending invitation emails"
   updateDocument $ const initialiseSignatoryAPIMagicHashes
   saveDocumentForSignatories
-  theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject_ d
 
   -- Stat logging
   now     <- currentTime
@@ -125,9 +126,13 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
                     EventPlanhat
       asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
       theDocument >>= logDocEvent "Doc Sent" author []
-  sendInvitationEmails authorsignsimmediately
-  theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn
-  return ()
+
+  did   <- documentid <$> theDocument
+  mFlow <- selectInstanceIdByDocumentId did
+  when (isNothing mFlow) $ do
+    theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject_ d
+    sendInvitationEmails authorsignsimmediately
+    theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn
   where
     userMixpanelData author time =
       [UserIDProp (author ^. #id), someProp "Last Doc Sent" time]
@@ -207,27 +212,35 @@ postDocumentPendingChange olddoc signatoryLink = do
   chargeForItemSingle CIClosingSignature $ documentid olddoc
 
   allSignedOrApproved <- allPartiesSignedOrApproved <$> theDocument
-  if allSignedOrApproved
-    then do
-      commonDocumentClosingActions olddoc
-      document <- theDocument
-      when
-          (signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
-          )
-        $ sendPartyProcessFinalizedNotification document signatoryLink
-    else do
-      document <- theDocument
-      theDocument >>= triggerAPICallbackIfThereIsOne
-      whenM
-          (   (/=) (documentcurrentsignorder olddoc)
-          .   documentcurrentsignorder
-          <$> theDocument
-          )
-        $ do
-            theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject_ d
-            sendInvitationEmails False
-            sendInbetweenPortalInvitations
-      sendPartyProcessFinalizedNotification document signatoryLink
+  maybeFlowInstanceId <- Flow.selectInstanceIdByDocumentId $ documentid olddoc
+  case maybeFlowInstanceId of
+    Just instanceId -> do
+      logInfo "Document is part of the flow."
+        $ object [logPair_ instanceId, logPair_ olddoc]
+      unless allSignedOrApproved $ theDocument >>= triggerAPICallbackIfThereIsOne
+    Nothing -> do
+      if allSignedOrApproved
+        then do
+          commonDocumentClosingActions olddoc
+          document <- theDocument
+          when
+              (  signatorylinkconfirmationdeliverymethod signatoryLink
+              == NoConfirmationDelivery
+              )
+            $ sendPartyProcessFinalizedNotification document signatoryLink
+        else do
+          document <- theDocument
+          theDocument >>= triggerAPICallbackIfThereIsOne
+          whenM
+              (   (/=) (documentcurrentsignorder olddoc)
+              .   documentcurrentsignorder
+              <$> theDocument
+              )
+            $ do
+                theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject_ d
+                sendInvitationEmails False
+                sendInbetweenPortalInvitations
+          sendPartyProcessFinalizedNotification document signatoryLink
   where
     allPartiesSignedOrApproved =
       all

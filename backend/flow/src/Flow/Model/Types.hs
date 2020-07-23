@@ -1,8 +1,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Model.Types
-    ( Template(Template)
+    ( Role(..)
+    , DocRoleFor(..)
+    , InstanceKeyValues(InstanceKeyValues)
+    , Template(Template)
     , InsertTemplate(InsertTemplate)
     , UpdateTemplate(UpdateTemplate)
     , Instance(Instance)
@@ -10,55 +12,59 @@ module Flow.Model.Types
     , Event(Event)
     , InsertEvent(InsertEvent)
     , FullInstance(..)
-    , StoreValue(..)
-    , StoreValueType(..)
+    , InstanceSession(InstanceSession)
+    , InstanceAccessToken(InstanceAccessToken)
     , fetchInstance
     , fetchTemplate
     , fetchEvent
-    , storeValueTypeToText
     , toEventInfo
     , toInsertEvent
     , instanceToAggregator
+    , fetchInstanceSession
+    , fetchInstanceAccessToken
     )
  where
 
+import Data.Aeson
+import Data.Aeson.Casing
 import Data.Time.Clock
-import GHC.Generics (Generic)
+import GHC.Generics
 import qualified Data.Set as Set
 
-import Doc.DocumentID (DocumentID)
+import Auth.MagicHash
+import Auth.Session.SessionID
 import Flow.Aggregator
 import Flow.Id
 import Flow.Machinize
-import Flow.Message
 import Flow.Model.Types.Internal
 import Flow.Names
 import Flow.Process
 import Folder.Types (FolderID)
 import User.UserID (UserID)
 
-data StoreValue
-    = StoreDocumentId DocumentID
-    | StoreUserId UserID
-    | StoreEmail Text
-    | StorePhoneNumber Text
-    | StoreMessage Message
-  deriving (Show, Eq, Generic)
+-- | A role a user can have.
+data Role = Viewer | Approver | SigningParty
+  deriving (Eq, Generic, Ord, Show)
 
-data StoreValueType
-    = Document
-    | User
-    | Email
-    | PhoneNumber
-    | Message
+instance ToJSON Role where
+  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
+-- | This type specifies which role a user has when acting
+-- on a specific document.
+--
+-- Some fields are polymorphic so that we can use this type
+-- with both abstract Flow variables as well as concrete IDs.
+data DocRoleFor u d = DocRoleFor
+  { role     :: Role
+  , user     :: u
+  , document :: d
+  } deriving (Eq, Generic, Ord, Show)
 
-storeValueTypeToText :: StoreValueType -> Text
-storeValueTypeToText Document    = "document"
-storeValueTypeToText User        = "user"
-storeValueTypeToText Email       = "email"
-storeValueTypeToText PhoneNumber = "phone_number"
-storeValueTypeToText Message     = "message"
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+instance (ToJSON u, ToJSON d) => ToJSON (DocRoleFor u d) where
+  toEncoding = genericToEncoding aesonOptions
 
 -- TODO: Maybe use uncurryN functions?
 fetchTemplate
@@ -67,7 +73,7 @@ fetchTemplate
 fetchTemplate (id, userId, folderId, name, process, created, committed, deleted) =
   Template { .. }
 
-fetchInstance :: (InstanceId, TemplateId, Text, UTCTime) -> Instance
+fetchInstance :: (InstanceId, TemplateId, StageName, UTCTime) -> Instance
 fetchInstance (id, templateId, currentState, created) = Instance { .. }
 
 fetchEvent :: (EventId, InstanceId, UserName, DocumentName, UserAction, UTCTime) -> Event
@@ -85,3 +91,10 @@ instanceToAggregator FullInstance {..} = aggregator
   where
     eventInfos = Set.fromList $ fmap toEventInfo aggregatorEvents
     aggregator = AggregatorState eventInfos $ flowInstance ^. #currentState
+
+fetchInstanceSession :: (SessionID, InstanceId, UserName) -> InstanceSession
+fetchInstanceSession (sessionId, instanceId, userName) = InstanceSession { .. }
+
+fetchInstanceAccessToken
+  :: (InstanceAccessTokenId, InstanceId, UserName, MagicHash) -> InstanceAccessToken
+fetchInstanceAccessToken (id, instanceId, userName, hash) = InstanceAccessToken { .. }

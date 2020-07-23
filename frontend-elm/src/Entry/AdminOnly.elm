@@ -1,6 +1,4 @@
-module Main exposing (main)
-
---import Debug
+module Entry.AdminOnly exposing (main)
 
 import AdminOnly.AdminOnly as AdminOnly
 import AdminOnly.BrandedDomain.BrandedDomainsTab as BrandedDomainsTab
@@ -446,7 +444,7 @@ menu model =
             |> Navbar.container
             |> Navbar.brand [ href "#" ]
                 [ img
-                    [ src <| cdnBaseUrl ++ "/adminonly-assets/images/scrive_logo.png"
+                    [ src <| cdnBaseUrl ++ "/elm-assets/images/scrive_logo.png"
                     , width 120
                     ]
                     []
@@ -494,7 +492,7 @@ footerContent model =
         [ div [ class "text-center text-secondary py-3" ]
             [ text "Powered by"
             , br [] []
-            , img [ src <| cdnBaseUrl ++ "/adminonly-assets/images/logo-small-grey.png", width 80 ] []
+            , img [ src <| cdnBaseUrl ++ "/elm-assets/images/logo-small-grey.png", width 80 ] []
             ]
         ]
 

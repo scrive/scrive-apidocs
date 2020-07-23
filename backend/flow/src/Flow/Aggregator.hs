@@ -1,43 +1,39 @@
+-- This module provides an implementation of the Flow DSL
+-- as a simple, nearly-linear, state machine that handles incoming events
+-- and reports errors, moves through the stages, and triggers actions accordingly.
+--
+-- Additional information: https://scriveab.atlassian.net/wiki/spaces/EN/pages/1573355521/Flow+DSL
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData #-}
-
 module Flow.Aggregator
     ( AggregatorState(..)
     , AggregatorError(..)
     , AggregatorStep(..)
-    , aggregate
     , aggregateAndStep
-    , getAllowedEvents
-    , makeNewState
-    , prepareAggregatorState
     , runAggregatorStep
+    , remainingStages
+    , failureStageName
+    , finalStageName
+    , makeNewState
     )
   where
 
-import Control.Arrow (left)
 import Control.Exception (Exception)
 import Data.Set (Set)
 import GHC.Generics
 import qualified Control.Monad.Except as E
-import qualified Control.Monad.Reader as R
 import qualified Control.Monad.State.Strict as S
-import qualified Data.List as List
-import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
+import Flow.HighTongue
 import Flow.Machinize
-import Flow.Transducer
+import Flow.Names
 
 data AggregatorState = AggregatorState
     { receivedEvents :: Set EventInfo
-    , currentState :: StateId
-    }
-  deriving (Show, Eq, Generic)
-
-newtype AggregatorConstans = AggregatorConstans
-    { machine :: Machine
+    , currentStage :: StageName
     }
   deriving (Show, Eq, Generic)
 
@@ -48,92 +44,79 @@ newtype AggregatorMarshallingException = AggregatorMarshallingException String
 data AggregatorStep
     = NeedMoreEvents
     | StateChange [LowAction]
-    | FinalState [LowAction]
   deriving (Eq, Show, Generic)
 
 data AggregatorError
     = UnknownEventInfo
     | DuplicateEvent
-    | TransducerError Flow.Transducer.Error
+    | UnknownStage
   deriving (Eq, Show, Generic)
 
-type AggregatorT = E.ExceptT AggregatorError (R.ReaderT Machine (S.State AggregatorState))
+type AggregatorT = E.ExceptT AggregatorError (S.State AggregatorState)
 
 put :: AggregatorState -> AggregatorT ()
 put = S.put
 
--- | Our state machine is labeled by a set of events;
--- more precisely, it requires that several events be received
--- before moving to another state (for example that several people sign a document).
+remainingStages :: StageName -> [Stage] -> Maybe (Stage, [Stage])
+remainingStages name stages = case dropWhile (\Stage {..} -> stageName /= name) stages of
+  []       -> Nothing
+  (s : ss) -> Just (s, ss)
+
+failureStageName :: StageName
+failureStageName = unsafeName "__FAILURE__"
+
+finalStageName :: StageName
+finalStageName = unsafeName "__FINAL__"
+
+-- | This function looks at the events that have been received and the current state of
+-- the Aggregator. If the requirements have been met, then the Aggregator is stepped to
+-- the next stage as defined in the DSL.
 --
--- The purpose of this function is to validate the incoming event
--- (possibly reporting it as unknown or duplicate),
--- add it to the set of received events, and finally
--- decide whether any edge can now fire (it is checked
--- that only one edge can fire when constructing the state machine).
+-- When the next stage is entered, its actions are triggered (e.g. sending notifications).
 --
--- If a firing edge is found we return Just the set of events to fire that edge
--- (this will be a subset of all received events in general),
--- otherwise return Nothing.
-aggregate :: EventInfo -> AggregatorT (Maybe (Set EventInfo))
-aggregate event = do
-  state@AggregatorState {..} <- S.get
-  machine <- R.ask
-  machineState <- E.liftEither . left TransducerError $ getState machine currentState
-  when (Set.notMember event $ getAllowedEvents machineState)
-    $ E.throwError UnknownEventInfo
-  -- TODO: Think hard about various scenarios where events may be duplicate.
-  -- For example typos can lead to multiple events of the same type.
+-- There are also events which can cause us to enter a failure state. In which case, the
+-- flow will be terminated. Currently, these failure events are caused by rejections.
+--
+-- Unexpected events will not be processed but will not cause failure of the flow.
+aggregateAndStep :: HighTongue -> EventInfo -> AggregatorT AggregatorStep
+aggregateAndStep HighTongue {..} event = do
+  AggregatorState {..} <- S.get
+  (stage, nextStages)  <- maybe (E.throwError UnknownStage) pure
+    $ remainingStages currentStage stages
+  let successEvents = Set.fromList $ Set.toList (stageExpect stage) >>= expectToSuccess
+      failureEvents = Set.fromList $ Set.toList (stageExpect stage) >>= expectToFailure
+      knownEvents   = Set.union successEvents failureEvents
+
+  when (Set.notMember event knownEvents) $ E.throwError UnknownEventInfo
   when (Set.member event receivedEvents) $ E.throwError DuplicateEvent
+
   let newReceivedEvents = Set.insert event receivedEvents
-  put $ state { receivedEvents = newReceivedEvents }
-  pure . List.find (`Set.isSubsetOf` newReceivedEvents) $ getEdgeInputs machineState
 
--- | This functions combines `aggregate` (see above) and `findEdge` (see `Flow.Transducer`).
--- This means that it tries combine the new `event` with the ones received previously
--- and then find an edge that should fire upon receiving the combined set of events.
---
--- If such an edge is found we follow it which gives us
--- a new state to move to and an "output label" (transducer terminology), which we use
--- to trigger actions (e.g. sending notifications).
---
--- Current state is updated accordingly and we return the output label, as well as whether
--- a final state was reached.
-aggregateAndStep :: EventInfo -> AggregatorT AggregatorStep
-aggregateAndStep event = do
-  AggregatorState {..}    <- S.get
-  machine@Transducer {..} <- R.ask
-  maybeEdgeInput          <- aggregate event
-  case maybeEdgeInput of
-    Nothing        -> pure NeedMoreEvents
-    Just edgeInput -> do
-      TransducerEdge {..} <- either (E.throwError . TransducerError) pure
-        $ findEdge machine currentState edgeInput
-      put $ makeNewState edgeNextState
-      pure $ if isFinalState machine edgeNextState
-        then FinalState edgeOutputLabel
-        else StateChange edgeOutputLabel
+  if Set.member event failureEvents
+    then do
+      put $ makeNewState failureStageName
+      pure $ StateChange [Fail]
+    else do
+      if successEvents == newReceivedEvents
+        then case nextStages of
+          [] -> do
+            put $ makeNewState finalStageName
+            pure $ StateChange [CloseAll]
+          (Stage {..} : _) -> do
+            put $ makeNewState stageName
+            pure . StateChange $ fmap Action stageActions
+        else do
+          S.modify $ \s -> s { receivedEvents = newReceivedEvents }
+          pure NeedMoreEvents
 
-makeNewState :: StateId -> AggregatorState
+makeNewState :: StageName -> AggregatorState
 makeNewState newState =
-  AggregatorState { currentState = newState, receivedEvents = mempty }
-
-prepareAggregatorState :: Machine -> AggregatorState
-prepareAggregatorState Transducer {..} = makeNewState initialState
-
-getAllowedEvents :: State -> Set EventInfo
-getAllowedEvents TransducerState {..} = Set.unions $ Map.keys stateEdges
-
-getEdgeInputs :: State -> [Set EventInfo]
-getEdgeInputs TransducerState {..} = Map.keys stateEdges
+  AggregatorState { currentStage = newState, receivedEvents = mempty }
 
 runAggregatorStep
   :: EventInfo
   -> AggregatorState
-  -> Machine
+  -> HighTongue
   -> (Either AggregatorError AggregatorStep, AggregatorState)
-runAggregatorStep event aggregatorState machine = do
-  flip S.runState aggregatorState
-    . flip R.runReaderT machine
-    . E.runExceptT
-    $ aggregateAndStep event
+runAggregatorStep event aggregatorState highTongue = do
+  flip S.runState aggregatorState . E.runExceptT $ aggregateAndStep highTongue event

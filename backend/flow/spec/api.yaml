@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.5.0"
+  version: "0.8.0"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -248,12 +248,8 @@ paths:
             example: |
               "stages: ..."
       responses:
-        200:
+        204:
           description: Flow template validated.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
         401:
           description: Error authenticating the API caller.
           content:
@@ -288,7 +284,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InstanceIdObject"
+                $ref: "#/components/schemas/InstanceGetResponse"
         400:
           description: Flow parameters invalid.
           content:
@@ -400,7 +396,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
 servers:
-  - url: "https://virtserver.swaggerhub.com/scrive/Flow/0.1.0"
+  - url: "https://scrive.com/experimental/flow"
 components:
   parameters:
     TemplateId:
@@ -560,6 +556,12 @@ components:
       type: string
       example: "9179748218119291565"
 
+    SignatoryId:
+      description: |
+        Unique identifier for a signatory of a document.
+      type: string
+      example: "5651929118128479719"
+
     FlowDsl:
       type: string
       format: flow_dsl
@@ -568,7 +570,7 @@ components:
 
         See FlowDslSpec for the specification of the DSL.
       example: |
-        dsl-version: "1"
+        dsl-version: "0.1.0"
         stages: ...
 
     FlowDslSpec:
@@ -594,7 +596,7 @@ components:
             additionalProperties:
               $ref: "#/components/schemas/FlowDslStage"
       example:
-        dsl-version: "1"
+        dsl-version: "0.1.0"
         stages:
           - applicant1-to-sign:
               actions:
@@ -634,14 +636,6 @@ components:
                     - main-application-form
                     - cca-credit-card
                     - direct-debit-form
-          - close-documents:
-              actions:
-                - close:
-                    documents:
-                      - main-application-form
-                      - cca-credit-card
-                      - direct-debit-form
-              expect: {}
 
     FlowDslStage:
       description: |
@@ -664,7 +658,6 @@ components:
         Action to be taken when the stage in entered.
       oneOf:
         - $ref: "#/components/schemas/FlowDslNotify"
-        - $ref: "#/components/schemas/FlowDslClose"
 
     FlowDslNotify:
       type: object
@@ -684,21 +677,6 @@ components:
                 type: string
             message:
               type: string
-
-    FlowDslClose:
-      type: object
-      required: [close]
-      properties:
-        close:
-          description: |
-            Close the specified document, i.e. attach an evidence log and seal it.
-          type: object
-          required: [documents]
-          properties:
-            documents:
-              type: array
-              items:
-                type: string
 
     FlowDslExpect:
       description: |
@@ -760,19 +738,14 @@ components:
       type: string
       format: uuid
       example: 31ebc664-3a61-41ec-b03b-d7b48b7b3a9e
-    InstanceIdObject:
-      type: object
-      required: [id]
-      properties:
-        id:
-          $ref: "#/components/schemas/InstanceId"
     InstanceGetResponse:
       type: object
       required:
         - id
-        - template
+        - template_id
         - template_parameters
         - state
+        - access_links
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
@@ -782,6 +755,17 @@ components:
           $ref: "#/components/schemas/TemplateParameters"
         state:
           $ref: "#/components/schemas/InstanceState"
+        access_links:
+          description: |
+            Flow access links presented as a dictionary with keys being
+            user names used in the process DSL.
+          type: object
+          additionalProperties:
+            type: string
+            description: "A link that a participant can use to access Flow."
+          example:
+            user1: "https://foo.com/flow/123/user1"
+            user2: "https://foo.com/flow/123/user2"
 
     InstanceEvent:
       type: object
@@ -814,22 +798,15 @@ components:
       description: |
         Provides a complete overview of a Flow instance.
 
-        This includes actions available to all the participants at this moment and a full process history.
-
-        The history array is ordered from newest to oldest, so the current stage is the first element.
+        This includes actions available to all the participants at this moment.
       type: object
       required:
         - available_actions
-        - history
       properties:
         available_actions:
           type: array
           items:
             $ref: "#/components/schemas/InstanceAuthorAction"
-        history:
-          type: array
-          items:
-            $ref: "#/components/schemas/InstanceStage"
 
     InstanceStage:
       type: object
@@ -852,6 +829,7 @@ components:
         - id
         - state
         - available_actions
+        - status
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
@@ -861,6 +839,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/InstanceUserAction"
+        status:
+          $ref: "#/components/schemas/InstanceStatus"
 
     InstanceUserState:
       description: |
@@ -873,18 +853,19 @@ components:
         documents:
           type: array
           items:
-            $ref: "#/components/schemas/DocumentOverview"
+            $ref: "#/components/schemas/InstanceUserDocument"
 
-    DocumentOverview:
+    InstanceUserDocument:
       description: |
-        Representation of document that's relevant in an overview
-        of a Flow process.
+        Representation of a document from the perspective of some participant
+        of the process.
 
         Note: this might need to be extended with more document fields.
       type: object
       required:
         - document_id
         - document_state
+        - signatory_id
       properties:
         document_id:
           $ref: "#/components/schemas/DocumentId"
@@ -896,6 +877,8 @@ components:
             - approved
             - viewed
             - rejected
+        signatory_id:
+          $ref: "#/components/schemas/SignatoryId"
 
     InstanceAuthorAction:
       description: |
@@ -920,11 +903,28 @@ components:
       required:
         - type
         - document
+        - signatory_id
+        - action_link
       properties:
         type:
           $ref: "#/components/schemas/InstanceActionType"
         document:
           $ref: "#/components/schemas/DocumentId"
+        signatory_id:
+          $ref: "#/components/schemas/SignatoryId"
+        action_link:
+          description: |
+            Link that can be followed to perform this action.
+          type: string
+          example: "https://scrive.com/s/123/456"
+
+    InstanceStatus:
+      description: Describes in which status the flow instance is.
+      type: string
+      enum:
+        - in_progress
+        - completed
+        - failed
 
     InstanceActionType:
       description: INSTANCTION
@@ -944,5 +944,4 @@ components:
     FolderId:
       description: Unique Folder ID.
       type: string
-      format: number
       example: 42

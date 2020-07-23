@@ -68,6 +68,10 @@ import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified Doc.Flow as Flow
+  ( EngineEvent(..), UserAction(Signature), processEventThrow
+  )
+import qualified Flow.Model as Flow (selectInstanceIdByDocumentId)
 import qualified InputValidation
 import qualified MailContext.Internal
 
@@ -247,7 +251,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       chargeForItemSingle CIIDINSignatureFinished . documentid =<< theDocument
 
     checkSEBankID signingSignatoryID conf transactionID = do
-      -- We parse data from EID service as a whole, not only the completion data, as we need 
+      -- We parse data from EID service as a whole, not only the completion data, as we need
       -- process status information from top level entity
       transactionResponse :: Maybe
           (EIDServiceTransactionResponse SEBankIDEIDServiceSignTransactionData) <-
@@ -604,3 +608,14 @@ signFromESignature DocumentSigning {..} now = do
 
   postDocumentPendingChange initialDoc sl
   handleAfterSigning signingSignatoryID
+
+  Document { documentid } <- theDocument
+  instanceId              <- Flow.selectInstanceIdByDocumentId documentid
+  case instanceId of
+    Just instanceId' -> Flow.processEventThrow $ Flow.EngineEvent
+      { instanceId  = instanceId'
+      , userAction  = Flow.Signature
+      , signatoryId = signingSignatoryID
+      , documentId  = documentid
+      }
+    Nothing -> pure ()

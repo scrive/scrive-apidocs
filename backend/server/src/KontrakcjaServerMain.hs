@@ -50,6 +50,7 @@ import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import Utils.IO
 import Utils.Network
+import qualified Flow.KontraHandler as Flow
 import qualified HostClock.Model as HC
 import qualified VersionTH
 
@@ -91,7 +92,27 @@ main = withCurlDo $ do
       extrasOptions = defaultExtrasOptions { eoEnforcePKs = True }
   pool <- liftBase
     $ createPoolSource (connSettings kontraComposites) (maxDBConnections appConf)
-  rng <- newCryptoRNGState
+  rng        <- newCryptoRNGState
+
+  hostname   <- getHostName
+
+  appGlobals <- do
+    templates <-
+      liftBase $ newMVar =<< (,) <$> getTemplatesModTime <*> readGlobalTemplates
+    mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
+    filecache   <- newFileMemCache $ localFileCacheSize appConf
+    amazonEnv   <- s3envFromConfig $ amazonConfig appConf
+    lambdaEnv   <- pdfToolsLambdaEnvFromConf $ pdfToolsLambdaConf appConf
+
+    return AppGlobals { templates         = templates
+                      , mrediscache       = mrediscache
+                      , filecache         = filecache
+                      , cryptorng         = rng
+                      , connsource        = pool
+                      , hostname          = T.pack hostname
+                      , amazons3env       = amazonEnv
+                      , pdftoolslambdaenv = lambdaEnv
+                      }
 
   -- TODO: This is only a temporary solution. We should move Flow to a proper
   -- standalone service later.
@@ -109,9 +130,12 @@ main = withCurlDo $ do
 
     liftIO . maybeFork . void $ runFlow
       logRunnerFlow
-      ( FlowConfiguration
-          (unConnectionSource . simpleSource $ connSettings kontraComposites)
-      $ flowPort appConf
+      (FlowConfiguration
+        (unConnectionSource . simpleSource $ connSettings kontraComposites)
+        (flowPort appConf)
+        rng
+        (Flow.handle appConf appGlobals)
+        (mainDomainUrl appConf)
       )
 
   -- Start Kontrakcja server
@@ -119,7 +143,6 @@ main = withCurlDo $ do
     (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf) rng
     mapM_ T.putStrLn errs
 
-    hostname <- getHostName
     let globalLogContext = ["server_hostname" .= hostname]
 
     runWithLogRunner lr . localData globalLogContext $ do
@@ -131,23 +154,6 @@ main = withCurlDo $ do
         unless (readOnlyDatabase appConf) $ do
           dbUpdate . SetMainDomainURL $ T.unpack (mainDomainUrl appConf)
 
-      appGlobals <- do
-        templates <-
-          liftBase $ newMVar =<< (,) <$> getTemplatesModTime <*> readGlobalTemplates
-        mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
-        filecache   <- newFileMemCache $ localFileCacheSize appConf
-        amazonEnv   <- s3envFromConfig $ amazonConfig appConf
-        lambdaEnv   <- pdfToolsLambdaEnvFromConf $ pdfToolsLambdaConf appConf
-
-        return AppGlobals { templates         = templates
-                          , mrediscache       = mrediscache
-                          , filecache         = filecache
-                          , cryptorng         = rng
-                          , connsource        = pool
-                          , hostname          = T.pack hostname
-                          , amazons3env       = amazonEnv
-                          , pdftoolslambdaenv = lambdaEnv
-                          }
       startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> MainM ()

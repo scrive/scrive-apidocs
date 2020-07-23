@@ -5,6 +5,7 @@ module Happstack.Server.ReqHandler (
   , ReqHandlerSt(..)
   , ReqHandlerT(..)
   , runReqHandlerT
+  , runReqHandlerT'
   , mapReqHandlerT
   , PlusSandboxT(..)
   , runPlusSandboxT
@@ -12,6 +13,7 @@ module Happstack.Server.ReqHandler (
   , WebSandboxT(..)
   , runWebSandboxT
   , mapWebSandboxT
+  , handleRequest
   ) where
 
 import Control.Monad.Base
@@ -72,10 +74,20 @@ newtype ReqHandlerT m a = ReqHandlerT { unReqHandlerT :: InnerReqHandlerT m a }
   deriving (Applicative, Functor, Monad, MonadFail, MonadBase b, MonadCatch, MonadIO, MonadMask, MonadThrow, MonadTrans)
 
 runReqHandlerT :: Socket -> Conf -> ReqHandlerT IO Response -> IO ()
-runReqHandlerT sock conf (ReqHandlerT action) = L.listen' sock conf $ \req -> do
-  now       <- getCurrentTime
-  (res, st) <- runStateT action $ ReqHandlerSt req identity now
-  runValidator (fromMaybe return $ validator conf) $ hsFilter st res
+runReqHandlerT sock conf handler =
+  L.listen' sock conf $ \req -> handleRequest req handler
+
+handleRequest :: (MonadIO m) => Request -> ReqHandlerT m Response -> m Response
+handleRequest r m = do
+  -- TODO perhaps use MonadTime
+  now       <- liftIO getCurrentTime
+  (res, st) <- runReqHandlerT' now r m
+  liftIO . runValidator pure $ hsFilter st res
+
+runReqHandlerT'
+  :: (MonadIO m) => UTCTime -> Request -> ReqHandlerT m a -> m (a, ReqHandlerSt)
+runReqHandlerT' now req (ReqHandlerT action) = do
+  runStateT action $ ReqHandlerSt req identity now
 
 mapReqHandlerT
   :: (m (a, ReqHandlerSt) -> n (b, ReqHandlerSt)) -> ReqHandlerT m a -> ReqHandlerT n b

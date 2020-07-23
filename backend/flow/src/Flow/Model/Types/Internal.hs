@@ -1,9 +1,6 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StrictData #-}
 {-# LANGUAGE TemplateHaskell #-}
-
 module Flow.Model.Types.Internal
     ( Template(..)
     , InsertTemplate(..)
@@ -13,15 +10,26 @@ module Flow.Model.Types.Internal
     , Event(..)
     , InsertEvent(..)
     , FullInstance(..)
+    , InstanceSession(..)
+    , InstanceKeyValues(..)
+    , InstanceAccessToken(..)
     )
  where
 
+import Data.Aeson
+import Data.Aeson.Casing
+import Data.Map (Map)
 import Data.Time.Clock
 import GHC.Generics (Generic)
 import Optics.TH
 
+import Auth.MagicHash
+import Auth.Session.SessionID
+import Doc.DocumentID
 import Flow.Id
 import Flow.Machinize
+import Flow.Message
+import Flow.Model.Types.FlowUserId
 import Flow.Names
 import Flow.Process
 import Folder.Types (FolderID)
@@ -58,13 +66,13 @@ data UpdateTemplate = UpdateTemplate
 data Instance = Instance
     { id :: InstanceId
     , templateId :: TemplateId
-    , currentState :: Text
+    , currentState :: StageName
     , created :: UTCTime
     }
 
 data InsertInstance = InsertInstance
     { templateId :: TemplateId
-    , currentState :: Text
+    , currentStage :: StageName
     }
 
 data Event = Event
@@ -88,8 +96,36 @@ data FullInstance = FullInstance
     { flowInstance :: Instance
     , template :: Template
     , aggregatorEvents :: [Event]
+    , allEvents :: [Event]
     }
 
+data InstanceSession = InstanceSession
+    { sessionId :: SessionID
+    , instanceId :: InstanceId
+    , userName :: UserName
+    }
+
+data InstanceKeyValues = InstanceKeyValues
+  { documents :: Map DocumentName DocumentID
+  , users     :: Map UserName FlowUserId
+  , messages  :: Map MessageName Message
+  } deriving (Eq, Generic, Show)
+
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+instance FromJSON InstanceKeyValues where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON InstanceKeyValues where
+  toEncoding = genericToEncoding aesonOptions
+
+data InstanceAccessToken = InstanceAccessToken
+    { id :: InstanceAccessTokenId
+    , instanceId :: InstanceId
+    , userName :: UserName
+    , hash :: MagicHash
+    }
 
 makeFieldLabelsWith noPrefixFieldLabels ''Template
 makeFieldLabelsWith noPrefixFieldLabels ''InsertTemplate
@@ -99,3 +135,6 @@ makeFieldLabelsWith noPrefixFieldLabels ''InsertInstance
 makeFieldLabelsWith noPrefixFieldLabels ''Event
 makeFieldLabelsWith noPrefixFieldLabels ''InsertEvent
 makeFieldLabelsWith noPrefixFieldLabels ''FullInstance
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceSession
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceKeyValues
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceAccessToken

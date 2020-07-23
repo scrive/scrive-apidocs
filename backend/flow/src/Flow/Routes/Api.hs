@@ -1,45 +1,93 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData #-}
-
-module Flow.Api
+{-# LANGUAGE TemplateHaskell #-}
+module Flow.Routes.Api
     ( CreateTemplate(..)
     , GetCreateTemplate(..)
     , GetTemplate(..)
     , PatchTemplate(..)
-    , InstanceToTemplateMapping(..)
     , InstanceEventAction(..)
     , InstanceEvent(..)
-    , InstanceStage(..)
     , InstanceState(..)
     , GetInstance(..)
     , InstanceAuthorAction(..)
     , InstanceUserAction(..)
     , GetInstanceView(..)
-    , StartTemplate(..)
     , InstanceUserState(..)
-    , DocumentOverview(..)
+    , InstanceUserDocument(..)
     , DocumentState(..)
-    , FlowAPI
+    , FlowApi
+    , Status(..)
+    , InstanceApi
+    , TemplateApi
     , apiProxy
     )
   where
 
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Map
+import Data.Map (Map)
 import Data.Proxy
 import Data.Time.Clock
 import GHC.Generics
+import Optics.TH
 import Servant.API
 
 import Doc.DocumentID (DocumentID)
+import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.HighTongue
 import Flow.Id
-import Flow.Message
+import Flow.Model.Types
+import Flow.Model.Types.FlowUserId
 import Flow.Process
+import Flow.Routes.Types
 import Folder.Types
-import User.UserID (UserID)
+
+-- brittany-disable-next-binding
+type TemplateApi
+  = -- Configuration
+         ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
+    :<|> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
+    :<|> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
+    :<|> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate
+                     :> Patch '[JSON] GetTemplate
+    :<|> Get '[JSON] [GetTemplate]
+    -- Control
+    :<|> Capture "template_id" TemplateId :> "commit"
+                     :> PostNoContent '[JSON] NoContent
+    :<|> Capture "template_id" TemplateId :> "start"
+                     :> ReqBody '[JSON] InstanceKeyValues
+                     :> PostCreated '[JSON] GetInstance
+
+-- brittany-disable-next-binding
+type InstanceApi
+  = -- Progress
+         Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
+    :<|> Get '[JSON] [GetInstance]
+
+-- brittany-disable-next-binding
+type AllApis
+  = AuthProtect "account" :>
+      (    "templates" :> TemplateApi
+      :<|> "instances" :> InstanceApi
+      )
+    :<|>
+      AuthProtect "instance-user"
+        :> "instances"
+        :> Capture "instance_id" InstanceId
+        :> "view"
+        :> Header "Host" Host
+        :> IsSecure
+        :> Get '[JSON] GetInstanceView
+    :<|>
+      -- No authentication
+      "templates" :> "validate" :> ReqBody '[JSON] Process :> PostNoContent '[JSON] NoContent
+
+type FlowApi = AddFlowPrefix AllApis
+
+apiProxy :: Proxy FlowApi
+apiProxy = Proxy
 
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
@@ -65,15 +113,6 @@ instance FromJSON GetCreateTemplate where
 instance ToJSON GetCreateTemplate where
   toEncoding = genericToEncoding aesonOptions
 
-
-newtype StartTemplate = StartTemplate { id :: InstanceId }
-  deriving (Eq, Generic, Show)
-
-instance FromJSON StartTemplate where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON StartTemplate where
-  toEncoding = genericToEncoding aesonOptions
 
 data GetTemplate = GetTemplate
     { id :: TemplateId
@@ -104,21 +143,6 @@ instance ToJSON PatchTemplate where
   toEncoding = genericToEncoding aesonOptions
 
 
--- TODO use name newtypes (UserName, etc.)
-data InstanceToTemplateMapping = InstanceToTemplateMapping
-    { documents :: Map Text DocumentID
-    , users :: Map Text UserID
-    , messages :: Map Text Message
-    }
-  deriving (Eq, Generic, Show)
-
-instance FromJSON InstanceToTemplateMapping where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON InstanceToTemplateMapping where
-  toEncoding = genericToEncoding aesonOptions
-
-
 data InstanceEventAction
     = Approve
     | Sign
@@ -134,7 +158,7 @@ instance ToJSON InstanceEventAction where
 
 data InstanceEvent = InstanceEvent
     { action :: InstanceEventAction
-    , user :: UserID
+    , user :: FlowUserId
     , document :: DocumentID
     , timestamp :: Text -- TODO: do something about this text...
     }
@@ -147,22 +171,8 @@ instance ToJSON InstanceEvent where
   toEncoding = genericToEncoding aesonOptions
 
 
-data InstanceStage = InstanceStage
-    { stage :: Text
-    , events :: [InstanceEvent]
-    }
-  deriving (Eq, Generic, Show)
-
-instance FromJSON InstanceStage where
-  parseJSON = genericParseJSON aesonOptions
-
-instance ToJSON InstanceStage where
-  toEncoding = genericToEncoding aesonOptions
-
-
-data InstanceState = InstanceState
+newtype InstanceState = InstanceState
     { availableActions :: [InstanceAuthorAction]
-    , history :: [InstanceStage]
     }
   deriving (Eq, Generic, Show)
 
@@ -176,8 +186,10 @@ instance ToJSON InstanceState where
 data GetInstance = GetInstance
     { id :: InstanceId
     , templateId :: TemplateId
-    , templateParameters :: InstanceToTemplateMapping
+    , templateParameters :: InstanceKeyValues
     , state :: InstanceState
+    , accessLinks :: Map UserName Url
+    , status :: Status
     }
   deriving (Eq, Generic, Show)
 
@@ -190,7 +202,7 @@ instance ToJSON GetInstance where
 
 data InstanceAuthorAction = InstanceAuthorAction
     { actionType :: InstanceEventAction
-    , actionUser :: UserID
+    , actionUser :: FlowUserId
     , actionDocument :: DocumentID
     }
   deriving (Eq, Generic, Ord, Show)
@@ -207,6 +219,8 @@ instance ToJSON InstanceAuthorAction where
 data InstanceUserAction = InstanceUserAction
     { actionType :: InstanceEventAction
     , actionDocument :: DocumentID
+    , actionSignatoryId :: SignatoryLinkID
+    , actionLink :: Url
     }
   deriving (Eq, Generic, Ord, Show)
 
@@ -218,7 +232,7 @@ instance ToJSON InstanceUserAction where
 
 
 newtype InstanceUserState = InstanceUserState
-    { documents :: [DocumentOverview]
+    { documents :: [InstanceUserDocument]
     }
   deriving (Eq, Generic, Show)
 
@@ -229,16 +243,17 @@ instance ToJSON InstanceUserState where
   toEncoding = genericToEncoding aesonOptions
 
 
-data DocumentOverview = DocumentOverview
+data InstanceUserDocument = InstanceUserDocument
     { documentId    :: DocumentID
     , documentState :: DocumentState
+    , signatoryId   :: SignatoryLinkID
     }
   deriving (Eq, Generic, Ord, Show)
 
-instance FromJSON DocumentOverview where
+instance FromJSON InstanceUserDocument where
   parseJSON = genericParseJSON aesonOptions
 
-instance ToJSON DocumentOverview where
+instance ToJSON InstanceUserDocument where
   toEncoding = genericToEncoding aesonOptions
 
 
@@ -256,11 +271,23 @@ instance FromJSON DocumentState where
 instance ToJSON DocumentState where
   toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
+data Status
+    = InProgress
+    | Completed
+    | Failed
+  deriving (Eq, Generic, Ord, Show)
+
+instance FromJSON Status where
+  parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
+
+instance ToJSON Status where
+  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
 data GetInstanceView = GetInstanceView
     { id      :: InstanceId
     , state   :: InstanceUserState
     , actions :: [InstanceUserAction]
+    , status :: Status
     }
   deriving (Eq, Generic, Show)
 
@@ -270,28 +297,8 @@ instance FromJSON GetInstanceView where
 instance ToJSON GetInstanceView where
   toEncoding = genericToEncoding aesonOptions
 
-
--- brittany-disable-next-binding
-type FlowAPI
-  = "experimental" :> "flow" :>
-    ( AuthProtect "oauth-or-cookies" :>
-        -- Configuration
-        ("templates" :> ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
-        :<|> "templates" :> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
-        :<|> "templates" :> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
-        :<|> "templates" :> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate :> Patch '[JSON] GetTemplate
-        :<|> "templates" :> Get '[JSON] [GetTemplate]
-        -- Control
-        :<|> "templates" :> Capture "template_id" TemplateId :> "commit" :> PostNoContent '[JSON] NoContent
-        :<|> "templates" :> Capture "template_id" TemplateId :> "start"
-            :> ReqBody '[JSON] InstanceToTemplateMapping :> PostCreated '[JSON] StartTemplate
-        -- Progress
-        :<|> "instances" :> Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
-        :<|> "instances" :> Capture "instance_id" InstanceId :> "view" :> Get '[JSON] GetInstanceView
-        :<|> "instances" :> Get '[JSON] [GetInstance]
-        )
-    :<|> "templates" :> "validate" :> ReqBody '[JSON] Process :> Post '[JSON] [ValidationError]
-    )
-
-apiProxy :: Proxy FlowAPI
-apiProxy = Proxy
+-- TODO: Add all optics...
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserDocument
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserState
+makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserAction
+makeFieldLabelsWith noPrefixFieldLabels ''GetInstanceView

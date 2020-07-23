@@ -16,6 +16,7 @@ import FileStorage.Amazon.S3Env
 import MonthlyInvoice.Config (MonthlyInvoiceConf(..))
 import PdfToolsLambda.Conf
 import Templates
+import TestFileStorage
 
 newtype RunLogger = RunLogger { unRunLogger :: forall m r . LogT m r -> m r }
 
@@ -35,6 +36,7 @@ data TestEnvSt = TestEnvSt
   , amazonS3Env        :: Maybe AmazonS3Env
   , fileMemCache       :: FileMemCache
   , redisConn          :: Maybe R.Connection
+  , memoryStorage      :: TVar FakeFS
   , cronDBConfig       :: !Text
   , cronMonthlyInvoice :: Maybe MonthlyInvoiceConf
   , testDurations      :: MVar [(NominalDiffTime, String)]

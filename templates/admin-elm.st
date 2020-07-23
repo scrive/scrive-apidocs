@@ -3,7 +3,7 @@ adminElmMain=$doctype()$
   $htmlopentag()$
     <head>
       <title>Scrive AdminOnly</title>
-      <link rel="stylesheet" type="text/css" href="$cdnbaseurl$/adminonly-assets/app-$versioncode$.css"/>
+      <link rel="stylesheet" type="text/css" href="$cdnbaseurl$/elm-assets/adminonly-$versioncode$.css"/>
       $IECompatibilityMetaTag()$
     </head>
     <body>
@@ -19,6 +19,6 @@ adminElmMain=$doctype()$
     <script>
     window.cdnBaseUrl="$cdnbaseurl$"
     </script>
-    <script src="$cdnbaseurl$/adminonly-assets/adminonly-elm-$versioncode$.js" crossorigin="anonymous"></script>
+    <script src="$cdnbaseurl$/elm-assets/adminonly-$versioncode$.js" crossorigin="anonymous"></script>
   $htmlclosingtag()$
 ####
