@@ -9,10 +9,9 @@ let GHCVersion = ../type/GHCVersion.dhall
 in
 BackendWorkflow.createWorkflow
   BackendWorkflow.Args ::
-  { name = "GHC 8.8 Backend + Frontend Tests (Nix)"
+  { name = "GHC 8.8 Backend Tests (Nix)"
   , ghcVersion = GHCVersion.Type.ghc88
   , nixShell = NixShell.Type.dev-shell-optimized
-  , testFrontend = True
   , runsOn =
       [ Job.RunsOn.ubuntu-latest
       ]

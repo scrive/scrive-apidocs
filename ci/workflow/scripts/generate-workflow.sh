@@ -4,6 +4,7 @@ jobs=(
   ghc88-nix
   ghc86-nix
   ghc88-manual
+  frontend
 )
 
 for job in "${jobs[@]}"

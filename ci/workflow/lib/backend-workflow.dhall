@@ -10,7 +10,6 @@ let Args =
       { name: Text
       , ghcVersion: GHCVersion.Type
       , nixShell: NixShell.Type
-      , testFrontend: Bool
       , cacheCabal: Bool
       , runsOn: List Job.RunsOn
       , triggers: Workflow.Triggers.Type
@@ -18,7 +17,6 @@ let Args =
   , default =
       { ghcVersion = GHCVersion.Type.ghc88
       , nixShell = NixShell.Type.dev-shell-optimized
-      , testFrontend = False
       , cacheCabal = False
       }
   }
@@ -54,34 +52,18 @@ let createWorkflow =
       CreateJob.createJob
         ( inArgs // { steps = cacheCabalSteps name # steps } )
 
-    let backendTests1 =
-      [ Step ::
-        { name = "Run Backend Tests"
-        , timeout-minutes = Some 180
-        , run = Some "./ci/scripts/run-backend-tests.sh"
-        , env = Some toMap
-            { PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
-            }
-        }
-      ]
-
-    let backendTests2 : List Step.Type =
-      if args.testFrontend
-      then
-        backendTests1 #
-        [ Step ::
-          { name = "Test Frontend"
-          , run = Some "./ci/scripts/run-frontend-tests.sh"
-          }
-        ]
-      else backendTests1
-
     let backendTests = CreateJob.createJob
       ( inArgs //
-          { steps = cacheCabalSteps "backend-tests" # backendTests2
-          , nixExtraArgs = if args.testFrontend
-              then Some "--arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.chromium ]'"
-              else None Text
+          { steps = cacheCabalSteps "backend-tests" #
+            [ Step ::
+              { name = "Run Backend Tests"
+              , timeout-minutes = Some 180
+              , run = Some "./ci/scripts/run-backend-tests.sh"
+              , env = Some toMap
+                  { PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
+                  }
+              }
+            ]
           }
       )
 
