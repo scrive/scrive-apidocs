@@ -1,5 +1,15 @@
 # API specification changelog
 
+## 0.8.0
+
+* Endpoint `GET /templates/validate`: return 204 on success.
+* Schema `InstanceGetResponse`: rename field `template` to `template_id`
+
+## 0.7.0
+
+* Schema `InstanceState`: remove field `history`.
+* Schema `InstanceStage`: add required field `status`.
+
 ## 0.6.3
 
 * Schema `InstanceUserAction`: add required field `action_link`.
