@@ -2,6 +2,8 @@ cradle:
   multi:
     - path: "./Shake"
       config :  {cradle : { none: } }
+    - path: "./Setup.hs"
+      config :  {cradle : { none: } }
     - path: "./evidence-package"
       config :  {cradle : { none: } }
     - path: "./build-scripts"
@@ -69,11 +71,14 @@ cradle:
             - path: "backend/flow/src"
               component: "lib:kontrakcja"
 
+            - path: "./backend/authentication/src/"
+              component: "lib:authentication"
+
             - path: "./backend/kontrakcja-prelude"
               component: "lib:kontrakcja-prelude"
 
             - path: "./backend/appdir"
               component: "lib:kontrakcja-appdir"
-            
+
             - path: "./backend/test/src"
               component: "kontrakcja:test:kontrakcja-test"
