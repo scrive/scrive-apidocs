@@ -16,7 +16,9 @@ import HighlightIcon from "../../icons/highlight_icon.svg";
 import ClearHighlightIcon from "../../icons/clear_highlight_icon.svg";
 import DownloadDocumentButton from "./downloaddocumentbutton";
 
-import vars from "../../../less/signview/vars.less";
+import vars_ from '!less-vars-loader!../../../less/signview/vars.less';
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+const vars = toLessInteropLoader(vars_);
 
 module.exports = React.createClass({
   displayName: "SignviewControls",

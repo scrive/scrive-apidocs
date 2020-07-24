@@ -5,7 +5,10 @@ import classNames from "classnames";
 import {Document} from "../../../js/documents.js";
 import HtmlTextWithSubstitution from "../../common/htmltextwithsubstitution";
 import Instructions from "../instructionsview/instructions";
-import vars from "../../../less/signview/vars.less";
+
+import vars_ from '!less-vars-loader!../../../less/signview/vars.less';
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+const vars = toLessInteropLoader(vars_);
 
 module.exports = React.createClass({
   displayName: "InaccessibleFileView",
