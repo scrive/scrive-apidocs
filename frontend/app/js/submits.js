@@ -149,6 +149,7 @@ var Submit = exports.Submit = Backbone.Model.extend({
                            },
                            error: function(p1,p2,p3,p4) {
                              try {
+                               p1["url"] = self.get("url");
                                self.get('ajaxerror')(p1,p2,p3,p4);
                              } catch (e) {
                                if (window.trackJs !== undefined && trackJs) {
