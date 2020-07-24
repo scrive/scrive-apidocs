@@ -65,7 +65,7 @@ normalisePersonalNumber now rawSSN = do
     else do
       -- We need to prefix 10 digit personal numbers with "19" or "20".
       let centenarian         = '+' `elem` T.unpack rawSSN
-          -- ^ See https://en.wikipedia.org/wiki/Personal_identity_number_(Sweden)#Format.
+          -- -^ See https://en.wikipedia.org/wiki/Personal_identity_number_(Sweden)#Format.
           (currentYear, _, _) = toGregorian $ utctDay now
 
       yy      <- maybe Bad return (readMaybe . T.unpack $ T.take 2 clean)
@@ -99,14 +99,14 @@ beginEIDServiceTransaction conf authKind = case authKind of
 
 data SEBankIDEIDServiceProviderAuthParams = SEBankIDEIDServiceProviderAuthParams {
     cseeatPersonalNumber :: Maybe Text
-  -- ^ If requireAutoStartToken == False, then a personal number needs to be
+  -- -^ If requireAutoStartToken == False, then a personal number needs to be
   -- provided.
   , cseeatRequireAutoStartToken :: Bool
   }
 
 data SEBankIDEIDServiceProviderSignParams = SEBankIDEIDServiceProviderSignParams {
     cseestPersonalNumber :: Maybe Text
-  -- ^ If requireAutoStartToken == False, then a personal number needs to be
+  -- -^ If requireAutoStartToken == False, then a personal number needs to be
   -- provided.
   , cseestRequireAutoStartToken :: Bool
   , cseestUserVisibleData :: Text  -- The text signed by the user.

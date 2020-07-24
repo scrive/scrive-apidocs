@@ -134,6 +134,46 @@ jobs:
         with:
           name: formatting.patch
           path: "_build/formatting.patch"
+  haddock:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - name: Setup Nix
+        uses: "cachix/install-nix-action@v10"
+      - name: Setup Cachix
+        uses: "cachix/cachix-action@v6"
+        with:
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          name: scrive
+      - env:
+          SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
+        name: Setup SSH
+        run: |
+          eval $(ssh-agent)
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+          echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
+      - name: Load Nix Shell
+        run: |
+          nix-shell -j8 \
+            -A ghc88.manual-shell \
+            release.nix \
+            --run "echo Loaded Nix shell"
+      - name: "Cache ~/.cabal"
+        uses: "actions/cache@v2"
+        with:
+          key: "${{ runner.os }}-cabal-Build Haddock-${{ hashFiles('**/*.cabal') }}"
+          path: "~/.cabal"
+          restore-keys: |
+            ${{ runner.os }}-cabal-Build Haddock-${{ hashFiles('**/*.cabal') }}
+            ${{ runner.os }}-cabal-Build Haddock-
+      - name: Build Haddock
+        run: |
+          nix-shell -j8 \
+            -A ghc88.manual-shell \
+            release.nix \
+            --run "./shake.sh haddock"
   hlint:
     runs-on:
       - ubuntu-latest

@@ -120,11 +120,19 @@ let createWorkflow =
         }
       ]
 
+    let haddock = createJob "Build Haddock"
+      [ Step ::
+        { name = "Build Haddock"
+        , run = Some "./shake.sh haddock"
+        }
+      ]
+
     let jobs =
       { backend-tests = backendTests
       , formatting = formatting
       , hlint = hlint
       , detect-unused = detect-unused
+      , haddock = haddock
       }
 
     in
