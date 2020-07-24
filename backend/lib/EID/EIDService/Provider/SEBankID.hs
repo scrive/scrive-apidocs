@@ -378,14 +378,18 @@ beginSignTransaction
   -> SignatoryLink
   -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginSignTransaction conf doc sl = do
-  mPersonalNumber <- do
-    personalNumberField <-
-      guardJust . getFieldByIdentity PersonalNumberFI . signatoryfields $ sl
-    personalNumberRaw <- guardJust . fieldTextValue $ personalNumberField
-    now               <- currentTime
+  let mPersonalNumberField = getFieldByIdentity PersonalNumberFI . signatoryfields $ sl
+  personalNumberRaw <- case mPersonalNumberField of
+    Nothing ->
+      unexpectedError "Tried to sign with SEBankID without personal number field"
+    Just pnf -> case fieldTextValue pnf of
+      Just s | not (T.null s) -> return s
+             | otherwise      -> guardJustM $ getField "personal_number"
+      Nothing -> unexpectedError "Tried to sign with SEBankID without personal number"
+  personalNumber <- do
+    now <- currentTime
     case normalisePersonalNumber now personalNumberRaw of
-      Good pn -> return $ Just pn
-      Empty   -> return Nothing
+      Good pn -> return pn
       _ ->
         unexpectedError
           $  "Tried to sign with SEBankID with invalid personal number "
@@ -408,7 +412,7 @@ beginSignTransaction conf doc sl = do
         , cestMethod             = EIDServiceSignMethod
         , cestRedirectUrl        = redirectUrl
         , cestProviderParameters = Just . toJSON $ SEBankIDEIDServiceProviderSignParams
-                                     { cseestPersonalNumber        = mPersonalNumber
+                                     { cseestPersonalNumber        = Just personalNumber
                                      , cseestRequireAutoStartToken = False
                                      , cseestUserVisibleData       = userVisibleData
                                      }
