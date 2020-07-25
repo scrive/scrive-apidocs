@@ -1,7 +1,9 @@
 var React = require("react");
 var _ = require("underscore");
 
-var DocumentPagesLess = require("../../../less/document-pages.less");
+import DocumentPagesLess_ from '!less-vars-loader!../../../less/document-pages.less';
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+const DocumentPagesLess = toLessInteropLoader(DocumentPagesLess_);
 
 var CheckboxPlacementView = require("./checkboxplacementview");
 var RadioButtonPlacementView = require("./radiobuttonplacementview");

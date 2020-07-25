@@ -4,9 +4,11 @@ var React = require("react");
 var Button = require("../../common/button");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var ViewSize = require("../viewsize");
-var signVars = require("../../../less/signview/sign.less");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var classNames = require("classnames");
+import signVars_ from '!less-vars-loader!../../../less/signview/sign.less';
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+const signVars = toLessInteropLoader(signVars_);
 
   var Status = React.createClass({
     render: function () {

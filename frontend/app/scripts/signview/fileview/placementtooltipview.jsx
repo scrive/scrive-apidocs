@@ -2,7 +2,10 @@ var classNames = require("classnames");
 var React = require("react");
 
 var TooltipTop = require("../../icons/tooltip-top.svg");
-var tooltipVars = require("../../../less/signview/placementtooltip.less");
+
+import tooltipVars_ from '!less-vars-loader!../../../less/signview/placementtooltip.less';
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+const tooltipVars = toLessInteropLoader(tooltipVars_);
 
 var PlacementTooltipView = React.createClass({
   mixins: [React.addons.PureRenderMixin],

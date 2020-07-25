@@ -1,4 +1,6 @@
-var vars = require("../../less/signview/vars.less");
+import vars_ from '!less-vars-loader!../../less/signview/vars.less';
+import {toLessInteropLoader} from '../common/less_utils.jsx';
+const vars = toLessInteropLoader(vars_);
 var matchMediaQuery = require("../common/match_media_query");
 
   module.exports = {
