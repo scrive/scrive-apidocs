@@ -3,8 +3,8 @@ var classNames = require("classnames");
 var $ = require("jquery");
 var _ = require("underscore");
 
-import vars_ from '!less-vars-loader!../../less/branding/modal.less';
 import {toLessInteropLoader} from './less_utils.jsx';
+import vars_ from '!less-vars-loader!../../less/branding/modal.less';
 const vars = toLessInteropLoader(vars_);
 
 var onTransitionEndDelay = parseInt(vars.transitionDuration, 10) + 100;
