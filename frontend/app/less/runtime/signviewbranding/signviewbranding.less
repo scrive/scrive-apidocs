@@ -6,9 +6,8 @@
 @import 'runtime/signviewbranding/identify';
 
 .background_with_ie_support(@bcolor) {
-        @filter :  %("progid:DXImageTransform.Microsoft.gradient(startColorstr=%s,endColorstr=%s)",argb(@bcolor),argb(@bcolor));
         background:transparent; /* Fallback IE */
-        filter: e(@filter);
+        filter: e(%("progid:DXImageTransform.Microsoft.gradient(startColorstr=%s,endColorstr=%s)",argb(@bcolor),argb(@bcolor)));
         background-color: @bcolor;
         @url : %('/img/transparent-pixel.png');
         background-image: @url; // Make click area work in IE8.

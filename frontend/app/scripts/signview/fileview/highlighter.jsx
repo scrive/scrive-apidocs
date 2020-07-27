@@ -5,8 +5,8 @@ import DrawingUtils from "../drawing/drawingutils";
 import DrawingState from "../drawing/drawingstate";
 import Drawing from "../drawing/drawing";
 
-import {toLessInteropLoader} from '../../common/less_utils.jsx';
-import vars_ from '!less-vars-loader!../../../less/signview/vars.less';
+import {toLessInteropLoader} from "../../common/less_utils.jsx";
+import vars_ from "!@hon2a/less-vars-loader!../../../less/signview/vars.less";
 const vars = toLessInteropLoader(vars_);
 
 const OPACITY_RATE = vars.highlightingCanvasOpacity;

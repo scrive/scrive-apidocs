@@ -47,6 +47,14 @@ function defaultConfig (obj) {
               loader: "svg-react-loader"
             }
           ]
+        },
+        {
+          test: /\.(png|jpe?g|gif)$/i,
+          use: [
+            {
+              loader: "file-loader"
+            }
+          ]
         }
       ],
       noParse: [
