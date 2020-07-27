@@ -868,15 +868,9 @@
 "_name":"Namn",
 "_nameFromDKNemIDText":"Namnet som returnerades från danskt NemID var \"$name$\"",
 "_nameFromFiTupasIDText":"Namnet som returnerades från finskt FTN var \"$name$\"",
-<<<<<<< HEAD
-"_nameFromIDINText":"",
-"_nameFromNOBankIDText":"Namnet som returnerades från norskt BankID var \"$name$\"",
-"_nameFromOnfidoText":"",
-=======
 "_nameFromIDINText":"Namnet som returnerades från iDIN var \"$name$\"",
 "_nameFromNOBankIDText":"Namnet som returnerades från norskt BankID var \"$name$\"",
 "_nameFromOnfidoText":"Namnet som returnerades från Onfido var \"$name$\"",
->>>>>>> staging
 "_nameFromSwedishBankIDText":"Namnet som returnerades från svenskt BankID var \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> innehåller ogiltiga tecken.",
 "_nameRequired":"<span class='put-field-name'></span> krävs.",
