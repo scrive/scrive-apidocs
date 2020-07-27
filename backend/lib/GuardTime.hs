@@ -173,6 +173,7 @@ data GuardtimeSignature =
   GuardtimeSignature { time :: String
                      , extended :: Bool
                      , extensible :: Bool
+                     , gatewayIdentity :: String
                      }
   deriving Show
 
@@ -183,13 +184,15 @@ privateGateway _ = True -- Scrive always uses an internal gateway
 instance FromJSValue VerifyResult where
   fromJSValue = do
     mvalid <- fromJSValueFieldCustom "valid" $ do
-      time       <- fromJSValueField "time"
-      extended   <- fromJSValueField "extended"
-      extensible <- fromJSValueField "extensible"
-      lastRev    <- fromJSValueField "last_revision"
+      time         <- fromJSValueField "time"
+      extended     <- fromJSValueField "extended"
+      extensible   <- fromJSValueField "extensible"
+      lastRev      <- fromJSValueField "last_revision"
+      gwayIdentity <- fromJSValueField "identity"
       return $ case lastRev of
         Just ("true" :: String) ->
-          Valid <$> (GuardtimeSignature <$> time <*> extended <*> extensible)
+          Valid
+            <$> (GuardtimeSignature <$> time <*> extended <*> extensible <*> gwayIdentity)
         _ -> Just $ Invalid "not last revision"
     minvalid <- fromJSValueFieldCustom "invalid" $ do
       fmap (Invalid . (show :: JSValue -> String)) <$> fromJSValueField "reason"
@@ -200,9 +203,10 @@ instance FromJSValue VerifyResult where
 
 instance ToJSValue VerifyResult where
   toJSValue (Valid gtsig) = runJSONGen $ do
-    value "success"  True
-    value "time"     (time gtsig)
-    value "extended" (extended gtsig)
+    value "success"          True
+    value "time"             (time gtsig)
+    value "extended"         (extended gtsig)
+    value "gateway_identity" (gatewayIdentity gtsig)
   toJSValue (Invalid msg) = runJSONGen $ do
     value "success" False
     value "error"   False
@@ -245,5 +249,7 @@ verify conf inputFileName = do
         Right json -> case fromJSValue json of
           Nothing ->
             return $ Problem stdout stderr "GuardTime verification result parsing error"
+          Just (Valid sig) | gatewayIdentity sig /= guardTimeGatewayIdentity conf ->
+            return $ Problem stdout stderr "GuardTime Gateway verification failed"
           Just res -> return res
     _ -> return $ Problem stdout stderr "GuardTime verification failed"

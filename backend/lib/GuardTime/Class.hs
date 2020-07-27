@@ -11,6 +11,7 @@ data GuardTimeConf = GuardTimeConf
   , guardTimeSigningLoginKey :: String
   , guardTimeExtendingLoginUser :: String
   , guardTimeExtendingLoginKey :: String
+  , guardTimeGatewayIdentity :: String
   } deriving (Eq, Ord, Show)
 
 instance Unjson GuardTimeConf where
@@ -38,6 +39,9 @@ instance Unjson GuardTimeConf where
       <*> field "extending_login_key"
                 guardTimeExtendingLoginKey
                 "GuardTime password for extending service"
+      <*> field "gateway_identity"
+                guardTimeGatewayIdentity
+                "GuardTime gateway identity for signature verification"
 
 class Monad m => GuardTimeConfMonad m where
   getGuardTimeConf :: m GuardTimeConf
