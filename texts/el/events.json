@@ -10,7 +10,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Το έγγραφο σφραγίστηκε με ψηφιακή υπογραφή. ",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Η υπηρεσία Scrive προετοίμασε το ολοκληρωμένο PDF. ",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Πιστοποίησαν την ταυτότητά τους μέσω της εφαρμογής Danish NemID για πρόσβαση στο έγγραφο.",
-"_AuthenticatedToViewEvidenceArchiveFITupas":"Πιστοποίησαν την ταυτότητά τους μέσω της εφαρμογής FinnishTUPAS για πρόσβαση στο έγγραφο.",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"",
 "_AuthenticatedToViewEvidenceArchiveIDIN":"Πιστοποίησαν την ταυτότητά τους μέσω iDIN για πρόσβαση στο έγγραφο.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Πιστοποίησαν την ταυτότητά τους μέσω της εφαρμογής Norwegian BankID για πρόσβαση στο έγγραφο. ",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Πιστοποίησαν την ταυτότητά τους μέσω της εφαρμογής Swedish BankID για πρόσβαση στο έγγραφο.  ",

@@ -10,7 +10,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokument byl stvrzen digitálním podpisem.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Služba Scrive připravila hotový podepsaný soubor PDF.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí dánské služby NemID.",
-"_AuthenticatedToViewEvidenceArchiveFITupas":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí finské služby TUPAS.",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"",
 "_AuthenticatedToViewEvidenceArchiveIDIN":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí služby iDIN.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí norské služby BankID.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí švédské služby BankID.",
