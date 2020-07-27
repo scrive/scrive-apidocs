@@ -1,22 +1,11 @@
-function parseIntPixels (obj) {
+import camelCase from "lodash/camelCase";
+
+function toJsVars (obj) {
   const output = {};
 
   for (const key in obj) {
-    output[key] = obj[key].match(/\dpx$/) ? parseInt(obj[key]) : obj[key];
-  }
-
-  return output;
-}
-
-function camelCase(obj) {
-  const output = {};
-
-  for (const key in obj) {
-    const newKey = key.toLowerCase().replace(/([-_][a-z])/g, group =>
-      group.toUpperCase().replace('-', '').replace('_', '')
-    );
-
-    output[newKey] = obj[key];
+    const value = obj[key];
+    output[camelCase(key)] = /^\d+(\.\d+)?px$/.test(value) ? parseFloat(value) : value;
   }
 
   return output;
@@ -27,7 +16,9 @@ function camelCase(obj) {
  * less-vars-loader (currently used) and less-interop-loader (retired).
  */
 function toLessInteropLoader(vars) {
-  return parseIntPixels(camelCase(vars));
+  const transformed = toJsVars(vars);
+  // console.log("interop transformed vars:", transformed, vars);
+  return transformed;
 }
 
 module.exports = {
