@@ -10,7 +10,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentet ble forseglet med en digital signatur.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive utarbeidet den ferdigstilte PDF-en.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Verifiserte deres identitet med Dansk NemID for å få tilgang til dokumentet.",
-"_AuthenticatedToViewEvidenceArchiveFITupas":"Verifiserte sin identitet med finsk TUPAS for å få tilgang til dokumentet.",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"",
 "_AuthenticatedToViewEvidenceArchiveIDIN":"De verifiserte identiteten sin med iDIN for å få tilgang til dokumentet. ",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verifiserte deres identitet med norsk BankID for å få tilgang til dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verifiserte deres identitet med svensk BankID for å få tilgang til dokumentet.",
