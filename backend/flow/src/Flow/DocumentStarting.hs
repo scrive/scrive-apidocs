@@ -84,7 +84,7 @@ processResponse
 processResponse docId = \case
   Response {..} -> case rsCode of
     _ | rsCode < 300 -> pure ()
-    _ | rsCode < 500 -> throwError . makeError $ toFlowError rsCode details
+    _ | rsCode < 500 -> throwError . makeJSONError $ toFlowError rsCode details
     _                -> do
       logInfo_ $ "Internal server error when starting document" <> showt rsBody
       throwInternalServerError "Could not start document"

@@ -2,7 +2,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Strict #-}
 
-module Flow.Server.AuthHandler where
+module Flow.Server.AuthHandler
+  ( authHandlerAccount
+  , authHandlerInstanceUser
+  , authHandlerInstanceUserHTML
+  ) where
 
 import Control.Monad.Error.Class
 import Control.Monad.IO.Class
@@ -11,6 +15,7 @@ import Data.ByteString (ByteString)
 import Data.Text.Encoding
 import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Class
+import Log.Monad
 import Network.Wai
 import Servant
 import Servant.Server.Experimental.Auth
@@ -93,30 +98,37 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
 -- in a flow process can only authenticate using session cookies.
 authHandlerInstanceUser
   :: RunLogger -> FlowConfiguration -> AuthHandler Request InstanceUser
-authHandlerInstanceUser runLogger flowConfiguration = mkAuthHandler handler
+authHandlerInstanceUser runLogger flowConfiguration = mkAuthHandler handler'
+  where handler' = instanceUserHandler runLogger flowConfiguration throwAuthError
+
+authHandlerInstanceUserHTML
+  :: RunLogger -> FlowConfiguration -> AuthHandler Request InstanceUserHTML
+authHandlerInstanceUserHTML runLogger flowConfiguration = mkAuthHandler handler'
   where
-    handler :: Request -> Handler InstanceUser
-    handler req =
-      runLogger
-        . runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
-        $ do
-            instanceSession <- do
-              authCookies <- maybe
-                (throwAuthError AuthCookiesParseError (show AuthCookiesParseError))
-                pure
-                (getAuthCookies req)
-              logInfo_
-                ("Authenticating InstanceUser using cookies: " <> showt authCookies)
-              mInstanceSession <- runMaybeT $ do
-                sessionId <- MaybeT
-                  $ getSessionIDByCookies authCookies (cookieDomain $ mHost req)
-                MaybeT $ Model.selectInstanceSession sessionId
-              maybe
-                (throwAuthError InvalidAuthCookiesError (show InvalidAuthCookiesError))
-                pure
-                mInstanceSession
-            pure $ InstanceUser (instanceSession ^. #userName)
-                                (instanceSession ^. #instanceId)
+    handler' =
+      fmap InstanceUserHTML
+        . instanceUserHandler runLogger flowConfiguration throwAuthErrorHTML
+
+instanceUserHandler
+  :: RunLogger
+  -> FlowConfiguration
+  -> (forall a . AuthError -> AuthError -> DBT (LogT Handler) a)
+  -> Request
+  -> Handler InstanceUser
+instanceUserHandler runLogger flowConfiguration errorThrower req =
+  runLogger . runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings $ do
+    instanceSession <- do
+      authCookies <- maybe (errorThrower AuthCookiesParseError AuthCookiesParseError)
+                           pure
+                           (getAuthCookies req)
+      logInfo_ ("Authenticating InstanceUser using cookies: " <> showt authCookies)
+      mInstanceSession <- runMaybeT $ do
+        sessionId <- MaybeT $ getSessionIDByCookies authCookies (cookieDomain $ mHost req)
+        MaybeT $ Model.selectInstanceSession sessionId
+      maybe (errorThrower InvalidAuthCookiesError InvalidAuthCookiesError)
+            pure
+            mInstanceSession
+    pure $ InstanceUser (instanceSession ^. #userName) (instanceSession ^. #instanceId)
 
 mHost :: Request -> Maybe Host
 mHost req = decodeUtf8 <$> requestHeaderHost req
@@ -128,6 +140,15 @@ throwAuthError errorName e = do
   -- TODO use MonadLog
   liftIO $ print e
   throwAuthenticationError errorName
+
+-- TODO handle the exception somehow
+-- ... but don't put it into the response, it leaks internal information!
+throwAuthErrorHTML
+  :: (MonadIO m, Show a, MonadError ServerError m) => AuthError -> a -> m b
+throwAuthErrorHTML errorName e = do
+  -- TODO use MonadLog
+  liftIO $ print e
+  throwAuthenticationErrorHTML errorName
 
 getAuthCookies :: Request -> Maybe AuthCookies
 getAuthCookies req = do

@@ -41,10 +41,12 @@ genAuthServerContext
   :: RunLogger
   -> FlowConfiguration
   -> Context
-       (AuthHandler Request Account ': AuthHandler Request InstanceUser ': '[])
+       ( AuthHandler Request Account ': AuthHandler Request InstanceUser ': AuthHandler Request InstanceUserHTML ': '[]
+       )
 genAuthServerContext runLogger flowConfiguration =
   authHandlerAccount runLogger flowConfiguration
     :. authHandlerInstanceUser runLogger flowConfiguration
+    :. authHandlerInstanceUserHTML runLogger flowConfiguration
     :. EmptyContext
 
 logExceptionMiddleware :: LoggerIO -> Application -> Application
@@ -68,7 +70,11 @@ app runLogger flowConfiguration = do
     . serveWithContext routesProxy (genAuthServerContext runLogger flowConfiguration)
     $ hoistServerWithContext
         routesProxy
-        (Proxy :: Proxy '[AuthHandler Request Account, AuthHandler Request InstanceUser])
+        (Proxy :: Proxy
+            '[AuthHandler Request Account, AuthHandler Request InstanceUser, AuthHandler
+              Request
+              InstanceUserHTML]
+        )
         (naturalFlow runLogger flowConfiguration)
         server
 

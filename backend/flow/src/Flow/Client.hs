@@ -32,6 +32,11 @@ type instance AuthClientData (AuthProtect "account") = OAuthOrCookies
 type instance AuthClientData (AuthProtect "instance-user") =
   (Maybe SessionCookieInfo, Maybe XToken)
 
+-- brittany-disable-next-binding
+-- See: https://github.com/lspitzner/brittany/issues/89
+type instance AuthClientData (AuthProtect "instance-user-html") =
+  (Maybe SessionCookieInfo, Maybe XToken)
+
 data ApiClient = ApiClient
   { createTemplate   :: CreateTemplate -> ClientM GetCreateTemplate
   , deleteTemplate   :: TemplateId -> ClientM NoContent

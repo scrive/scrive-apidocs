@@ -17,7 +17,7 @@ import Flow.Server.Cookies
 
 -- brittany-disable-next-binding
 type Pages
-  = AuthProtect "instance-user" :>
+  = AuthProtect "instance-user-html" :>
       "overview" :> Capture "instance_id" InstanceId :> Capture "user_name" UserName
                  :> Get '[HTML] Text
     :<|>
@@ -32,7 +32,6 @@ type Pages
                                              , Header "Set-Cookie" SetCookie
                                              , Header "Set-Cookie" SetCookie
                                              ] NoContent)
-
 
 type FlowPages = AddFlowPrefix Pages
 

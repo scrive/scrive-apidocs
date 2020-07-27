@@ -6,6 +6,7 @@ module Flow.Server.Types
   , FlowConfiguration(..)
   , FlowContext(..)
   , InstanceUser(..)
+  , InstanceUserHTML(..)
   , RunLogger
   , aesonOptions
   )
@@ -86,5 +87,9 @@ instance ToJSON InstanceUser where
   toJSON = genericToJSON aesonOptions
 
 type instance AuthServerData (AuthProtect "instance-user") = InstanceUser
+
+newtype InstanceUserHTML = InstanceUserHTML InstanceUser
+
+type instance AuthServerData (AuthProtect "instance-user-html") = InstanceUserHTML
 
 type RunLogger = forall m a . LogT m a -> m a

@@ -53,7 +53,7 @@ instanceOverviewMagicHash
        )
 instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
   _ <-
-    fromMaybeM (throwAuthenticationError InvalidInstanceAccessTokenError)
+    fromMaybeM (throwAuthenticationErrorHTML InvalidInstanceAccessTokenError)
       $ Model.verifyInstanceAccessToken instanceId userName hash
 
   mSessionId <- case getAuthCookies of
@@ -96,10 +96,9 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
           throwError $ err500 { errBody = "Error: Unable to add a document session." }
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
-instanceOverview :: InstanceUser -> InstanceId -> UserName -> AppM Text
-instanceOverview InstanceUser {..} instanceId' _ = do
-  when (instanceId /= instanceId') $ throwAuthenticationError AccessControlError
-
+instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Text
+instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
+  when (instanceId /= instanceId') $ throwAuthenticationErrorHTML AccessControlError
   return . Html.renderInstanceOverview $ Html.InstanceOverviewTemplateVars { .. }
   where
     versionCode    = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
