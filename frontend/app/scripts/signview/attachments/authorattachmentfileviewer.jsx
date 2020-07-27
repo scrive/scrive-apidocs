@@ -6,7 +6,9 @@ import isTouchDevice from "../../common/is_touch_device";
 import {AuthorAttachment} from "../../../js/authorattachment";
 import AuthorAttachmentFilePage from "./authorattachmentfilepage";
 
-import vars from "../../../less/signview/vars.less";
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+import vars_ from '!less-vars-loader!../../../less/signview/vars.less';
+const vars = toLessInteropLoader(vars_);
 
 module.exports = React.createClass({
 

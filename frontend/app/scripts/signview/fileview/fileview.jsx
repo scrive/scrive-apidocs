@@ -17,8 +17,9 @@ import ErrorModal from "../errormodal";
 import FilePageView from "./filepageview";
 import Instructions from "../instructionsview/instructions";
 
-import vars from "../../../less/signview/vars.less";
-
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+import vars_ from '!less-vars-loader!../../../less/signview/vars.less';
+const vars = toLessInteropLoader(vars_);
 
 const ZOOM_STEPS = 4;
 const MAX_ZOOM_PIXELS = 2000;

@@ -5,7 +5,9 @@ import DrawingUtils from "../drawing/drawingutils";
 import DrawingState from "../drawing/drawingstate";
 import Drawing from "../drawing/drawing";
 
-import vars from "../../../less/signview/vars.less";
+import {toLessInteropLoader} from '../../common/less_utils.jsx';
+import vars_ from '!less-vars-loader!../../../less/signview/vars.less';
+const vars = toLessInteropLoader(vars_);
 
 const OPACITY_RATE = vars.highlightingCanvasOpacity;
 const DRAWING_COLOR = "#00DED9";
