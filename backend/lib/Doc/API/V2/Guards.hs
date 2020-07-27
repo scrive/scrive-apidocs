@@ -280,14 +280,14 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
     -- Check if either a valid mobile for authToView is set or is provided
     case mMobile of
       Nothing -> unless
-        (isValidMobileForAuthenticationToView authType $ getMobile sl)
+        (isValidMobileForAuthenticationToView authType authKind $ getMobile sl)
         (  apiStateError
         $  "Party does not have a valid mobile number set "
         <> "for the authentication method and you did not provide one"
         )
 
       Just mobile -> unless
-        (isValidMobileForAuthenticationToView authType mobile)
+        (isValidMobileForAuthenticationToView authType authKind mobile)
         (  apiStateError
         $  "The mobile number you provided is not valid "
         <> "for the authentication method"
@@ -317,17 +317,20 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
       (isEmpty || isGood) $ asValidFinnishSSN ssn
     isValidSSNForAuthenticationToView VerimiAuthenticationToView _ = True
     isValidSSNForAuthenticationToView IDINAuthenticationToView   _ = True
-    isValidMobileForAuthenticationToView :: AuthenticationToViewMethod -> Text -> Bool
-    isValidMobileForAuthenticationToView StandardAuthenticationToView _ = True
-    isValidMobileForAuthenticationToView SMSPinAuthenticationToView mobile =
-      isGood . asValidPhoneForSMS $ mobile
-    isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _ = True
-    isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _ = True
-    isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile =
+    isValidMobileForAuthenticationToView
+      :: AuthenticationToViewMethod -> AuthenticationKind -> Text -> Bool
+    isValidMobileForAuthenticationToView StandardAuthenticationToView _ _ = True
+    isValidMobileForAuthenticationToView SMSPinAuthenticationToView AuthenticationToViewArchived mobile
+      = (isGood || isEmpty) . asValidPhoneForSMS $ mobile
+    isValidMobileForAuthenticationToView SMSPinAuthenticationToView AuthenticationToView mobile
+      = isGood . asValidPhoneForSMS $ mobile
+    isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _ _ = True
+    isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _ _ = True
+    isValidMobileForAuthenticationToView NOBankIDAuthenticationToView _ mobile =
       (isGood || isEmpty) $ asValidPhoneForNorwegianBankID mobile
-    isValidMobileForAuthenticationToView FITupasAuthenticationToView _ = True
-    isValidMobileForAuthenticationToView VerimiAuthenticationToView  _ = True
-    isValidMobileForAuthenticationToView IDINAuthenticationToView    _ = True
+    isValidMobileForAuthenticationToView FITupasAuthenticationToView _ _ = True
+    isValidMobileForAuthenticationToView VerimiAuthenticationToView  _ _ = True
+    isValidMobileForAuthenticationToView IDINAuthenticationToView    _ _ = True
 
 -- | `guardCanSetAuthenticationToSignForSignatoryWithValue _ authToSign mSSN
 -- mMobile _` makes sure we can set the sign method to the given method. If the

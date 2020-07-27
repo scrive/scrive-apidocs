@@ -58,6 +58,9 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
       }
       details["Status"] = xhr.status;
       details["Response"] = xhr.responseText;
+      if (xhr["url"] !== undefined) {
+        details["URL"] = xhr.url;
+      }
       try {
         // try to limit length of reported response
         details["Response"] = details["Response"].substring(0, 100);
