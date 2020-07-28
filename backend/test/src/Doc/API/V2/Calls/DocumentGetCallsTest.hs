@@ -1,6 +1,7 @@
 module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
 import Control.Monad.Trans
+import Data.Aeson (Value)
 import Data.Time (UTCTime(..), addUTCTime, fromGregorian)
 import Happstack.Server
 import Log
@@ -42,8 +43,14 @@ import Util.QRCode
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup
   "APIv2DocumentGetCalls"
-  [ testThat "API v2 List: old style"          env (testDocApiV2List False)
-  , testThat "API v2 List: new style"          env (testDocApiV2List True)
+  [ testThat "API v2 List: old style" env (testDocApiV2List False)
+  , testThat "API v2 List: new style" env (testDocApiV2List True)
+  , testThat "API v2 List SignableOnPad: old style"
+             env
+             (testDocApiV2ListSignableOnPad False)
+  , testThat "API v2 List SignableOnPad: new style"
+             env
+             (testDocApiV2ListSignableOnPad True)
   , testThat "API v2 Get Doc"                  env testDocApiV2Get
   , testThat "API v2 Get Doc by shortcode"     env testDocApiV2GetShortCode
   , testThat "API v2 Get Doc QR code"          env testDocApiV2GetQRCode
@@ -71,11 +78,9 @@ testDocApiV2List useFolderListCalls = do
         set #useFolderListCalls useFolderListCalls (fromJust $ ug ^. #settings)
   void . dbUpdate . UserGroupUpdate $ set #settings (Just new_ugsettings) ug
 
-  doc1 <- testDocApiV2New' ctx
-  void $ testDocApiV2New' ctx
-  void $ testDocApiV2New' ctx
+  [doc1, _, _] <- replicateM 3 $ testDocApiV2New' ctx
 
-  listJSON <- jsonTestRequestHelper ctx GET [] docApiV2List 200
+  listJSON     <- jsonTestRequestHelper ctx GET [] docApiV2List 200
   assertListResponseLengthAndStatus listJSON 3 Preparation
 
   let homeFolderID = fromJust $ user ^. #homeFolderID
@@ -98,7 +103,6 @@ testDocApiV2List useFolderListCalls = do
                                      200
   assertListResponseLengthAndStatus listJSON3 1 Preparation
   where
-    filterByFolderID :: FolderID -> (Text, Input)
     filterByFolderID fid =
       ( "filter"
       , inText
@@ -106,13 +110,44 @@ testDocApiV2List useFolderListCalls = do
         <> showt fid
         <> "\"}]"
       )
-    assertListResponseLengthAndStatus response len status = do
-      listArray <- lookupObjectArray "documents" response
-      assertEqual "`docApiV2List` should return same number of docs"
-                  len
-                  (length listArray)
-      let docs = map mockDocFromValue listArray
-      forM_ docs $ \d -> assertEqual "Status should be" status (getMockDocStatus d)
+
+testDocApiV2ListSignableOnPad :: Bool -> TestEnv ()
+testDocApiV2ListSignableOnPad useFolderListCalls = do
+  user    <- instantiateRandomUser
+  ctx     <- mkContextWithUser defaultLang user
+
+  -- test with new list feature as well as old
+  Just ug <- dbQuery . UserGroupGet $ user ^. #groupID
+  let new_ugsettings =
+        set #useFolderListCalls useFolderListCalls (fromJust $ ug ^. #settings)
+  void . dbUpdate . UserGroupUpdate $ set #settings (Just new_ugsettings) ug
+
+  replicateM_ 3 $ addRandomDocument (rdaDefault user)
+    { rdaStatuses    = OneOf [Pending]
+    , rdaTypes       = OneOf [Signable]
+    , rdaSignatories =
+      let author =
+            OneOf [[RSC_IsSignatoryThatHasntSigned, RSC_HasSignOrder $ SignOrder 2]]
+          signatory = OneOf
+            [ [ RSC_IsSignatoryThatHasntSigned
+              , RSC_HasSignOrder $ SignOrder 1
+              , RSC_DeliveryMethodIs PadDelivery
+              ]
+            ]
+      in  OneOf [[author, signatory]]
+    }
+  listJSON <- jsonTestRequestHelper ctx GET [filterBySignableOnPad] docApiV2List 200
+  assertListResponseLengthAndStatus listJSON 3 Pending
+  where
+    filterBySignableOnPad =
+      ("filter", inText "[{\"filter_by\": \"is_signable_on_pad\"}]")
+
+assertListResponseLengthAndStatus :: Value -> Int -> DocumentStatus -> TestEnv ()
+assertListResponseLengthAndStatus response len status = do
+  listArray <- lookupObjectArray "documents" response
+  assertEqual "`docApiV2List` should return same number of docs" len (length listArray)
+  let docs = map mockDocFromValue listArray
+  forM_ docs $ \d -> assertEqual "Status should be" status (getMockDocStatus d)
 
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do

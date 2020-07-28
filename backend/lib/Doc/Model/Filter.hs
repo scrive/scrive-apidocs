@@ -80,10 +80,9 @@ legacyFilterMap = Just
 folderFilterMap :: DocumentFilterMap
 folderFilterMap = \case
   DocumentFilterLinkIsAuthor _ -> Just DocumentFilterEverythingOut
-  DocumentFilterByCanSign _  -> Just DocumentFilterEverythingOut
-  DocumentFilterSignNowOnPad -> Just DocumentFilterEverythingOut
+  DocumentFilterByCanSign _ -> Just DocumentFilterEverythingOut
   DocumentFilterDeleted flag -> Just $ DocumentFilterAuthorDeleted flag
-  filter_                    -> Just filter_
+  filter_ -> Just filter_
 
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
@@ -181,7 +180,7 @@ documentFilterToSQL (DocumentFilterByCanSign userid) = do
 documentFilterToSQL DocumentFilterSignNowOnPad = do
   sqlWhereEq "documents.status" Pending
   sqlWhereExists . sqlSelect "signatory_links AS sl5" $ do
-    sqlWhere "sl5.document_id = signatory_links.document_id"
+    sqlWhere "sl5.document_id = documents.id"
     sqlWhere $ "sl5.signatory_role =" <?> SignatoryRoleSigningParty
     sqlWhereIsNULL "sl5.sign_time"
     sqlWhereEqSql "sl5.sign_order" documentSignOrderExpression

@@ -1156,6 +1156,7 @@ data RandomSignatoryCondition
   | RSC_DeliveryMethodIs DeliveryMethod
   | RSC_HasConsentModule Bool
   | RSC_HasReadInvite Bool
+  | RSC_HasSignOrder SignOrder
   deriving (Eq, Show)
 
 data RandomDocumentAllows = RandomDocumentAllows
@@ -1330,6 +1331,8 @@ addRandomDocumentWithFile fileid rda = do
                 timeReadInvite <- rand 10 arbitrary
                 return sig { maybereadinvite = Just timeReadInvite }
               else return sig { maybereadinvite = Nothing }
+            RSC_HasSignOrder signOrder ->
+              \sig -> return sig { signatorysignorder = signOrder }
 
         foldrM applyCond siglink sigcond
 
