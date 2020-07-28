@@ -74,18 +74,13 @@ data KontraResponse = KontraResponse
 instance ToJSON KontraResponse where
   toEncoding = genericToEncoding aesonOptions
 
-toFlowError :: Int -> KontraResponse -> FlowError
-toFlowError statusCode details =
-  flowError statusCode "Document could not be started" "Document could not be started"
-    $ Just details
-
 processResponse
   :: (MonadError ServerError m, MonadLog m) => DocumentID -> Response -> m ()
 processResponse docId = \case
-  Response {..} -> case rsCode of
-    _ | rsCode < 300 -> pure ()
-    _ | rsCode < 500 -> throwError . makeJSONError $ toFlowError rsCode details
-    _                -> do
+  Response {..} -> if
+    | rsCode < 300 -> pure ()
+    | rsCode < 500 -> throwDocumentCouldNotBeStarted rsCode $ Just details
+    | otherwise -> do
       logInfo_ $ "Internal server error when starting document" <> showt rsBody
       throwInternalServerError "Could not start document"
     where details = KontraResponse docId (decode rsBody)

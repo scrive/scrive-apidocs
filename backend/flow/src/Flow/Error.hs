@@ -9,6 +9,7 @@ module Flow.Error (
   , throwDSLValidationError
   , throwTemplateCannotBeStartedError
   , throwInternalServerError
+  , throwDocumentCouldNotBeStarted
   , AuthError(..)
   , FlowError(..)
   , flowError
@@ -139,13 +140,19 @@ throwDSLValidationError explanation = throwError $ makeJSONError FlowError
   , details     = Nothing
   }
 
-throwTemplateCannotBeStartedError :: Text -> Value -> MonadError ServerError m => m a
+throwTemplateCannotBeStartedError :: MonadError ServerError m => Text -> Value -> m a
 throwTemplateCannotBeStartedError explanation details = throwError $ makeJSONError
   FlowError { code        = 403
             , message     = "Template cannot be started"
             , explanation = explanation
             , details     = Just details
             }
+
+throwDocumentCouldNotBeStarted
+  :: (MonadError ServerError m, ToJSON b) => Int -> Maybe b -> m a
+throwDocumentCouldNotBeStarted statusCode details =
+  throwError . makeJSONError $ flowError statusCode msg msg details
+  where msg = "Document could not be started"
 
 throwInternalServerError :: Text -> MonadError ServerError m => m a
 throwInternalServerError explanation = throwError $ makeJSONError FlowError
