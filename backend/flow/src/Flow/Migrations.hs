@@ -6,62 +6,240 @@ import Database.PostgreSQL.PQTypes.Class
 import Database.PostgreSQL.PQTypes.Model
 import Database.PostgreSQL.PQTypes.Utils
 
-import Flow.Tables
-
 createTableFlowTemplates :: MonadDB m => Migration m
 createTableFlowTemplates = Migration
-  { mgrTableName = tblName tableFlowTemplates
+  { mgrTableName = "flow_templates"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowTemplates
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_templates"
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName     = "id"
+                    , colType     = UuidT
+                    , colNullable = False
+                    , colDefault  = Just "gen_random_uuid()"
+                    }
+        , tblColumn { colName = "name", colType = TextT, colNullable = False }
+        , tblColumn { colName = "process", colType = TextT, colNullable = False }
+        , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
+        , tblColumn { colName = "folder_id", colType = BigIntT, colNullable = False }
+        , tblColumn { colName     = "created"
+                    , colType     = TimestampWithZoneT
+                    , colNullable = False
+                    }
+        , tblColumn { colName = "committed", colType = TimestampWithZoneT }
+        , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
+        ]
+      , tblPrimaryKey  = pkOnColumn "id"
+      , tblIndexes     = [indexOnColumn "user_id", indexOnColumn "folder_id"]
+      , tblForeignKeys = [
+      -- Do not allow to delete users or user groups that still contain templates.
+                           fkOnColumn "user_id"   "users"   "id"
+                         , fkOnColumn "folder_id" "folders" "id"
+                         ]
+      }
   }
 
 createTableFlowInstances :: MonadDB m => Migration m
 createTableFlowInstances = Migration
-  { mgrTableName = tblName tableFlowInstances
+  { mgrTableName = "flow_instances"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstances
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_instances"
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName     = "id"
+                    , colType     = UuidT
+                    , colNullable = False
+                    , colDefault  = Just "gen_random_uuid()"
+                    }
+        , tblColumn { colName = "template_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "current_state", colType = TextT, colNullable = False }
+        , tblColumn { colName     = "created"
+                    , colType     = TimestampWithZoneT
+                    , colNullable = False
+                    }
+        ]
+      , tblPrimaryKey  = pkOnColumn "id"
+      , tblIndexes     = [indexOnColumn "template_id"]
+      , tblForeignKeys = [fkOnColumn "template_id" "flow_templates" "id"]
+      }
   }
 
 createTableFlowInstanceKeyValueStore :: MonadDB m => Migration m
 createTableFlowInstanceKeyValueStore = Migration
-  { mgrTableName = tblName tableFlowInstanceKeyValueStore
+  { mgrTableName = "flow_instance_key_value_store"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceKeyValueStore
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_instance_key_value_store"
+      , tblVersion     = 2
+      , tblColumns     =
+        [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "key", colType = TextT, colNullable = False }
+      -- TODO: Column `type` should be an enum, see the check below for allowed values.
+        , tblColumn { colName = "type", colType = TextT, colNullable = False }
+        , tblColumn { colName = "string", colType = TextT, colNullable = True }
+        , tblColumn { colName = "document_id", colType = BigIntT, colNullable = True }
+        , tblColumn { colName = "user_id", colType = BigIntT, colNullable = True }
+        ]
+      , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
+      , tblIndexes     =
+                        -- Documents cannot be associated with multiple instances.
+                         [ uniqueIndexOnColumn "document_id"
+                        -- Users associated with an instance cannot be used for multiple keys.
+                         , uniqueIndexOnColumns ["instance_id", "user_id"]
+                         ]
+      , tblForeignKeys =
+        [ (fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyCascade
+                                                           }
+        , fkOnColumn "document_id" "documents" "id"
+        , fkOnColumn "user_id" "users" "id"
+        ]
+      , tblChecks      =
+        [ tblCheck
+            { chkName      = "check_value"
+            , chkCondition =
+              "type = 'document'::text AND document_id IS NOT NULL OR \
+          \type = 'user'::text AND user_id IS NOT NULL OR \
+          \type = 'email'::text AND string IS NOT NULL OR \
+          \type = 'phone_number'::text AND string IS NOT NULL OR \
+          \type = 'message'::text AND string IS NOT NULL"
+            }
+        ]
+      }
   }
 
 createTableFlowInstanceSignatories :: MonadDB m => Migration m
 createTableFlowInstanceSignatories = Migration
-  { mgrTableName = tblName tableFlowInstanceSignatories
+  { mgrTableName = "flow_instance_signatories"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSignatories
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_instance_signatories"
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName = "signatory_id", colType = BigIntT, colNullable = False }
+        , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "key", colType = TextT, colNullable = False }
+        ]
+      , tblPrimaryKey  = pkOnColumn "signatory_id"
+      , tblIndexes     = [indexOnColumns ["instance_id", "key"]]
+      , tblForeignKeys = [ (fkOnColumns ["instance_id", "key"]
+                                        "flow_instance_key_value_store"
+                                        ["instance_id", "key"]
+                           )
+                           { fkOnDelete = ForeignKeyCascade
+                           }
+                         , fkOnColumn "signatory_id" "signatory_links" "id"
+                         ]
+      }
   }
 
 createTableFlowEvents :: MonadDB m => Migration m
 createTableFlowEvents = Migration
-  { mgrTableName = tblName tableFlowEvents
+  { mgrTableName = "flow_events"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowEvents
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_events"
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName     = "id"
+                    , colType     = UuidT
+                    , colNullable = False
+                    , colDefault  = Just "gen_random_uuid()"
+                    }
+        , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+        , tblColumn { colName = "document_name", colType = TextT, colNullable = False }
+        , tblColumn { colName = "user_action", colType = TextT, colNullable = False }
+        , tblColumn { colName     = "created"
+                    , colType     = TimestampWithZoneT
+                    , colNullable = False
+                    }
+        ]
+      , tblPrimaryKey  = pkOnColumn "id"
+      , tblIndexes     = [indexOnColumn "instance_id"]
+      , tblForeignKeys =
+        [ (fkOnColumn "instance_id" "flow_instances" "id") { fkOnDelete = ForeignKeyCascade
+                                                           }
+        ]
+      }
   }
 
 createTableFlowAggregatorEvents :: MonadDB m => Migration m
 createTableFlowAggregatorEvents = Migration
-  { mgrTableName = tblName tableFlowAggregatorEvents
+  { mgrTableName = "flow_aggregator_events"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowAggregatorEvents
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_aggregator_events"
+      , tblVersion     = 1
+      , tblColumns = [tblColumn { colName = "id", colType = UuidT, colNullable = False }]
+      , tblPrimaryKey  = pkOnColumn "id"
+      , tblForeignKeys =
+        [(fkOnColumn "id" "flow_events" "id") { fkOnDelete = ForeignKeyCascade }]
+      }
   }
 
 createTableFlowInstanceAccessTokens :: MonadDB m => Migration m
 createTableFlowInstanceAccessTokens = Migration
-  { mgrTableName = tblName tableFlowInstanceAccessTokens
+  { mgrTableName = "flow_instance_access_tokens"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceAccessTokens
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_instance_access_tokens"
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName     = "id"
+                    , colType     = UuidT
+                    , colNullable = False
+                    , colDefault  = Just "gen_random_uuid()"
+                    }
+      -- TODO: add expiration time?
+        , tblColumn { colName = "hash", colType = BigIntT, colNullable = False }
+        , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "key", colType = TextT, colNullable = False }
+        ]
+      , tblPrimaryKey  = pkOnColumn "id"
+      , tblIndexes     = [indexOnColumns ["instance_id", "key"]]
+      , tblForeignKeys = [ (fkOnColumns ["instance_id", "key"]
+                                        "flow_instance_key_value_store"
+                                        ["instance_id", "key"]
+                           )
+                             { fkOnDelete = ForeignKeyCascade
+                             }
+                         ]
+      }
   }
 
 createTableFlowInstanceSessions :: MonadDB m => Migration m
 createTableFlowInstanceSessions = Migration
-  { mgrTableName = tblName tableFlowInstanceSessions
+  { mgrTableName = "flow_instance_sessions"
   , mgrFrom      = 0
-  , mgrAction    = StandardMigration $ createTable True tableFlowInstanceSessions
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = "flow_instance_sessions"
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName = "session_id", colType = BigIntT, colNullable = False }
+        , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "key", colType = TextT, colNullable = False }
+        ]
+      , tblPrimaryKey  = pkOnColumn "session_id"
+      , tblIndexes     = [indexOnColumn "session_id"]
+      , tblForeignKeys =
+        [ (fkOnColumns ["instance_id", "key"]
+                       "flow_instance_key_value_store"
+                       ["instance_id", "key"]
+          ) { fkOnDelete = ForeignKeyCascade
+            }
+        , (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+        ]
+      }
   }
 
 addIndicesToFlowInstanceKeyValueStore :: MonadDB m => Migration m
@@ -74,4 +252,4 @@ addIndicesToFlowInstanceKeyValueStore = Migration
                      runQuery_ . sqlCreateIndexSequentially tableName $ indexOnColumn
                        "user_id"
   }
-  where tableName = tblName tableFlowInstanceKeyValueStore
+  where tableName = "flow_instance_key_value_store"
