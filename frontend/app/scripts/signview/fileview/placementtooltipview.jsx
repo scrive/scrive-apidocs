@@ -3,8 +3,8 @@ var React = require("react");
 
 var TooltipTop = require("../../icons/tooltip-top.svg");
 
-import {toLessInteropLoader} from '../../common/less_utils.jsx';
-import tooltipVars_ from '!less-vars-loader!../../../less/signview/placementtooltip.less';
+import {toLessInteropLoader} from "../../common/less_utils.jsx";
+import tooltipVars_ from "!@hon2a/less-vars-loader!../../../less/signview/placementtooltip.less";
 const tooltipVars = toLessInteropLoader(tooltipVars_);
 
 var PlacementTooltipView = React.createClass({

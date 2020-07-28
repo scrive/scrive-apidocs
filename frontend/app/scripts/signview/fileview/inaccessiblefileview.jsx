@@ -6,8 +6,8 @@ import {Document} from "../../../js/documents.js";
 import HtmlTextWithSubstitution from "../../common/htmltextwithsubstitution";
 import Instructions from "../instructionsview/instructions";
 
-import {toLessInteropLoader} from '../../common/less_utils.jsx';
-import vars_ from '!less-vars-loader!../../../less/signview/vars.less';
+import {toLessInteropLoader} from "../../common/less_utils.jsx";
+import vars_ from "!@hon2a/less-vars-loader!../../../less/signview/vars.less";
 const vars = toLessInteropLoader(vars_);
 
 module.exports = React.createClass({

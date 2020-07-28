@@ -10,8 +10,8 @@ import ArrowDown from "../../icons/arrow-down.svg";
 import ArrowRight from "../../icons/arrow-right.svg";
 import BlinkGroupModel from "./blinkgroupmodel";
 
-import {toLessInteropLoader} from '../../common/less_utils.jsx';
-import arrowVars_ from '!less-vars-loader!../../../less/signview/arrows.less';
+import {toLessInteropLoader} from "../../common/less_utils.jsx";
+import arrowVars_ from "!@hon2a/less-vars-loader!../../../less/signview/arrows.less";
 const arrowVars = toLessInteropLoader(arrowVars_);
 
 const defaultErd = require("element-resize-detector")({"strategy": "scroll"});

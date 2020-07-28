@@ -6,8 +6,8 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var ViewSize = require("../viewsize");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var classNames = require("classnames");
-import {toLessInteropLoader} from '../../common/less_utils.jsx';
-import signVars_ from '!less-vars-loader!../../../less/signview/sign.less';
+import {toLessInteropLoader} from "../../common/less_utils.jsx";
+import signVars_ from "!@hon2a/less-vars-loader!../../../less/signview/sign.less";
 const signVars = toLessInteropLoader(signVars_);
 
   var Status = React.createClass({

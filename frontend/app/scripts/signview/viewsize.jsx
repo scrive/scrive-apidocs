@@ -1,5 +1,5 @@
 import {toLessInteropLoader} from '../common/less_utils.jsx';
-import vars_ from '!less-vars-loader!../../less/signview/vars.less';
+import vars_ from '!@hon2a/less-vars-loader!../../less/signview/vars.less';
 const vars = toLessInteropLoader(vars_);
 var matchMediaQuery = require("../common/match_media_query");
 

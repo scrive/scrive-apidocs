@@ -1,8 +1,8 @@
 var React = require("react");
 var _ = require("underscore");
 
-import {toLessInteropLoader} from '../../common/less_utils.jsx';
-import DocumentPagesLess_ from '!less-vars-loader!../../../less/document-pages.less';
+import {toLessInteropLoader} from "../../common/less_utils.jsx";
+import DocumentPagesLess_ from "!@hon2a/less-vars-loader!../../../less/document-pages.less";
 const DocumentPagesLess = toLessInteropLoader(DocumentPagesLess_);
 
 var CheckboxPlacementView = require("./checkboxplacementview");
