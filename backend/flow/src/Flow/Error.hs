@@ -1,6 +1,7 @@
 {-# LANGUAGE StrictData #-}
 module Flow.Error (
-    throwAuthenticationError
+    AuthError(..)
+  , throwAuthenticationError
   , throwAuthenticationErrorHTML
   , throwTemplateNotFoundError
   , throwTemplateAlreadyCommittedError
@@ -10,10 +11,7 @@ module Flow.Error (
   , throwTemplateCannotBeStartedError
   , throwInternalServerError
   , throwDocumentCouldNotBeStarted
-  , AuthError(..)
-  , FlowError(..)
-  , flowError
-  , makeJSONError
+  , throwUnableToAddDocumentSession
   ) where
 
 import Control.Monad.Except
@@ -150,9 +148,21 @@ throwTemplateCannotBeStartedError explanation details = throwError $ makeJSONErr
 
 throwDocumentCouldNotBeStarted
   :: (MonadError ServerError m, ToJSON b) => Int -> Maybe b -> m a
-throwDocumentCouldNotBeStarted statusCode details =
-  throwError . makeJSONError $ flowError statusCode msg msg details
+throwDocumentCouldNotBeStarted statusCode details = throwError $ makeJSONError FlowError
+  { code        = statusCode
+  , message     = msg
+  , explanation = msg
+  , details     = toJSON <$> details
+  }
   where msg = "Document could not be started"
+
+throwUnableToAddDocumentSession :: MonadError ServerError m => m a
+throwUnableToAddDocumentSession = throwError $ makeJSONError FlowError
+  { code        = 500
+  , message     = "Unable to add a document session"
+  , explanation = "We were unable to create a session for this document"
+  , details     = Nothing
+  }
 
 throwInternalServerError :: Text -> MonadError ServerError m => m a
 throwInternalServerError explanation = throwError $ makeJSONError FlowError
@@ -161,7 +171,3 @@ throwInternalServerError explanation = throwError $ makeJSONError FlowError
   , explanation = explanation
   , details     = Nothing
   }
-
-flowError :: ToJSON a => Int -> Text -> Text -> Maybe a -> FlowError
-flowError code message explanation details' = FlowError { .. }
-  where details = toJSON <$> details'

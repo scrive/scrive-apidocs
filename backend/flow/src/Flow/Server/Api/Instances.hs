@@ -51,7 +51,8 @@ getInstance account instanceId = do
   accessTokens <- Model.selectInstanceAccessTokens instanceId
   let usersWithHashes = fmap (\act -> (act ^. #userName, act ^. #hash)) accessTokens
   let accessLinks     = mkAccessLinks (baseUrl account) instanceId usersWithHashes
-  fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
+  fullInstance <- fromMaybeM throwInstanceNotFoundError
+    $ Model.selectFullInstance instanceId
   let aggrState = instanceToAggregator fullInstance
   tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
   let mAvailableActions =
@@ -128,7 +129,8 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
 
   keyValues    <- Model.selectInstanceKeyValues instanceId
   sigInfo      <- Model.selectSignatoryInfo instanceId
-  fullInstance <- fromMaybeM (throwError err404) $ Model.selectFullInstance instanceId
+  fullInstance <- fromMaybeM throwInstanceNotFoundError
+    $ Model.selectFullInstance instanceId
   let aggrState = instanceToAggregator fullInstance
   tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
 
@@ -200,7 +202,7 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
 
 checkInstancePerms :: Account -> InstanceId -> AccessAction -> AppM Model.Instance
 checkInstancePerms account instanceId action = do
-  flowInstance <- fromMaybeM (throwError err404) $ Model.selectInstance instanceId
+  flowInstance <- fromMaybeM throwInstanceNotFoundError $ Model.selectInstance instanceId
   let tid = flowInstance ^. #templateId
   template <- selectTemplate tid
   guardUserHasPermission account [canDo action . FlowTemplateR $ template ^. #folderId]

@@ -2,7 +2,6 @@
 {-# LANGUAGE StrictData #-}
 module Flow.Server.Pages where
 
-import Control.Monad.Except
 import Control.Monad.Extra (fromMaybeM)
 import Log.Class
 import Servant
@@ -52,9 +51,9 @@ instanceOverviewMagicHash
            NoContent
        )
 instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
-  _ <-
-    fromMaybeM (throwAuthenticationErrorHTML InvalidInstanceAccessTokenError)
-      $ Model.verifyInstanceAccessToken instanceId userName hash
+  void
+    . fromMaybeM (throwAuthenticationErrorHTML InvalidInstanceAccessTokenError)
+    $ Model.verifyInstanceAccessToken instanceId userName hash
 
   mSessionId <- case getAuthCookies of
     Just authCookies -> AuthModel.getSessionIDByCookies authCookies (cookieDomain mHost)
@@ -67,9 +66,10 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
     Just sessionId -> pure (sessionId, noHeader . noHeader)
     Nothing        -> do
       newAuthCookies <- AuthModel.insertNewSession (cookieDomain mHost) Nothing
-      pure ( cookieSessionID (authCookieSession newAuthCookies)
-           , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
-           )
+      pure
+        ( cookieSessionID (authCookieSession newAuthCookies)
+        , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
+        )
 
   -- TODO: We should only add doc sessions for documents that the participant can act on at
   -- the current stage rather than all the documents that the participant is a signatory for.
@@ -86,14 +86,15 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
     getAuthCookies = do
       Cookies' cookies <- mCookies
       readAuthCookies cookies
-    redirectUrl = "/"
-      <> T.intercalate "/" [flowPath, "overview", toUrlPiece instanceId, toUrlPiece userName]
+    redirectUrl = "/" <> T.intercalate
+      "/"
+      [flowPath, "overview", toUrlPiece instanceId, toUrlPiece userName]
     addDocumentSession sid slid = do
       doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
       case checkBeforeAddingDocumentSession doc slid of
         Just err -> do
           logInfo_ $ "Unable to add document session: " <> showt err
-          throwError $ err500 { errBody = "Error: Unable to add a document session." }
+          throwUnableToAddDocumentSession
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
 instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Text
