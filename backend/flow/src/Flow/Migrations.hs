@@ -75,7 +75,7 @@ createTableFlowInstanceKeyValueStore = Migration
   , mgrAction    =
     StandardMigration . createTable True $ tblTable
       { tblName        = "flow_instance_key_value_store"
-      , tblVersion     = 2
+      , tblVersion     = 1
       , tblColumns     =
         [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
         , tblColumn { colName = "key", colType = TextT, colNullable = False }
