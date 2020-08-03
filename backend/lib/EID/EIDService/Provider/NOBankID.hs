@@ -107,27 +107,27 @@ properSignTextChars =
 
 createSignText :: Kontrakcja m => Document -> m Text
 createSignText doc = do
-  let title   = documenttitle doc
-      sdid    = show $ documentid doc
-      unquote = T.replace "\"" ""
-      ellipsise s n | T.length s > n = T.take (n - 3) s <> "..."
-                    | otherwise      = s
-      replaceBadChar c | c `elem` properSignTextChars = c
-                       | otherwise                    = '?'
-      replaceBadChars = T.map replaceBadChar
-      render t d = unquote <$> renderLocalTemplate
-        doc
-        "tbs"
-        (do
-          F.value "document_title" t
-          F.value "document_id" d
-        )
-  -- render empty values to get the length of fixed part of the sign text
-  skeletonText <- render "" ""
-  let skeletonTextLength = T.length skeletonText
-      idLength           = length $ show sdid
-      availableLength    = totalSignTextLength - skeletonTextLength - idLength
-  replaceBadChars <$> render (ellipsise title availableLength) sdid
+  let
+    title   = documenttitle doc
+    sdid    = show $ documentid doc
+    unquote = T.replace "\"" ""
+    replaceBadChar c | c `elem` properSignTextChars = c
+                     | otherwise                    = '?'
+    replaceBadChars = T.map replaceBadChar
+    render t = unquote <$> renderLocalTemplate
+      doc
+      "tbs"
+      (do
+        F.value "document_title" t
+        F.value "document_id" sdid
+      )
+    boundedRender s incomplete = do
+      let s' = if incomplete then s <> "..." else s
+      res <- render s'
+      if T.length res <= totalSignTextLength
+        then return res
+        else boundedRender (T.init s) True
+  replaceBadChars <$> boundedRender title False
 
 beginEIDServiceTransaction
   :: Kontrakcja m
