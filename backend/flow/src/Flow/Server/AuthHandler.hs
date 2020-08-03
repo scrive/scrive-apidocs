@@ -135,7 +135,8 @@ mHost req = decodeUtf8 <$> requestHeaderHost req
 
 -- TODO handle the exception somehow
 -- ... but don't put it into the response, it leaks internal information!
-throwAuthError :: (MonadIO m, MonadLog m, Show a, MonadError ServerError m) => AuthError -> a -> m b
+throwAuthError
+  :: (MonadIO m, MonadLog m, Show a, MonadError ServerError m) => AuthError -> a -> m b
 throwAuthError errorName e = do
   logAttention ("throwAuthError: " <> showt errorName) $ show e
   throwAuthenticationError errorName
