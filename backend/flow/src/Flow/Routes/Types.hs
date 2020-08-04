@@ -36,5 +36,5 @@ type AddFlowPrefix api = "experimental" :> "flow" :> api
 flowPath :: Text
 flowPath = "experimental/flow"
 
-newtype Url = Url Text
+newtype Url = Url { fromUrl :: Text }
   deriving (Eq, FromJSON, Ord, Show, ToJSON)

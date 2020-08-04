@@ -1160,6 +1160,9 @@ Test-suite kontrakcja-test
                  Flow.DocumentCheckerTest
                  Flow.HighTongueTest
                  Flow.IntegrationTest
+                 Flow.IntegrationTest.Common
+                 Flow.IntegrationTest.SimpleCompleteProcess
+                 Flow.IntegrationTest.ComplexCompleteProcess
                  Flow.OrphanTestInstances
                  Flow.TestKontraHandler
                  Flow.TestUtil
