@@ -5,6 +5,7 @@ module Flow.Server.Pages where
 import Control.Monad.Extra (fromMaybeM)
 import Log.Class
 import Servant
+import Text.Blaze.Html5
 import Web.Cookie
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.UTF8 as BS
@@ -97,7 +98,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
           throwUnableToAddDocumentSession
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
-instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Text
+instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Html
 instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
   when (instanceId /= instanceId') $ throwAuthenticationErrorHTML AccessControlError
   return . Html.renderInstanceOverview $ Html.InstanceOverviewTemplateVars { .. }

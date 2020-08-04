@@ -671,6 +671,8 @@ Library
                , base16-bytestring
                , base64-bytestring
                , binary
+               , blaze-markup
+               , blaze-html
                , bytestring
                , case-insensitive
                , cond
@@ -747,6 +749,7 @@ Library
                , semigroups
                , servant
                , servant-auth
+               , servant-blaze
                , servant-checked-exceptions
                , servant-client
                , servant-client-core
@@ -1274,6 +1277,7 @@ Test-suite kontrakcja-test
                , scrypt
                , semigroups
                , servant
+               , servant-blaze
                , servant-client
                , servant-client-core
                , servant-server

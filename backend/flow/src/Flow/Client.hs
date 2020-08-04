@@ -6,6 +6,7 @@ import Servant.API
 import Servant.Client
 import Servant.Client.Core.Auth
 import Servant.Client.Core.Request as Client
+import Text.Blaze.Html5
 import Web.Cookie
 
 import Auth.MagicHash
@@ -14,6 +15,7 @@ import Auth.Session
 import Flow.HighTongue
 import Flow.Id
 import Flow.Model.Types
+import Flow.OrphanInstances ()
 import Flow.Process
 import Flow.Routes.Api
 import Flow.Routes.Pages
@@ -55,7 +57,7 @@ newtype ParticipantApiClient = ParticipantApiClient
   }
 
 data PageClient = PageClient
-  { instanceOverview  :: InstanceId -> UserName -> ClientM Text
+  { instanceOverview  :: InstanceId -> UserName -> ClientM Html
   , instanceOverviewMagicHash
       :: InstanceId -> UserName -> MagicHash -> Maybe Cookies' -> Maybe Host
       -> ClientM (Headers '[ Header "Location" Text

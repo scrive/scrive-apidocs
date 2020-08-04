@@ -18,6 +18,7 @@ import Servant.API.ContentTypes
 import Servant.Client
 import Servant.Client.Core.Request
 import Servant.Client.Internal.HttpClient
+import Servant.HTML.Blaze
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
@@ -28,7 +29,6 @@ import Auth.Session
 import Context.Internal
 import Doc.DocumentID
 import Flow.OrphanTestInstances ()
-import Flow.Routes.Types
 import Flow.Server.Cookies
 import Flow.TestUtil
 import Session.Model

@@ -7,6 +7,8 @@ module Flow.Routes.Pages
 
 import Data.Proxy
 import Servant.API
+import Servant.HTML.Blaze
+import Text.Blaze.Html5
 import Web.Cookie
 
 import Auth.MagicHash
@@ -19,7 +21,7 @@ import Flow.Server.Cookies
 type Pages
   = AuthProtect "instance-user-html" :>
       "overview" :> Capture "instance_id" InstanceId :> Capture "user_name" UserName
-                 :> Get '[HTML] Text
+                 :> Get '[HTML] Html
     :<|>
       -- No authentication
       "overview" :> Capture "instance_id" InstanceId

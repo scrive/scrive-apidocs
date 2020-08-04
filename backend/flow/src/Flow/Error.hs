@@ -24,8 +24,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy as TL
+import qualified Text.Blaze.Html.Renderer.Text as Blaze
 
-import Flow.Routes.Types
 import VersionTH (versionID)
 import qualified Flow.Html as Html
 
@@ -90,13 +91,15 @@ throwAuthenticationErrorHTML explanation' = throwError $ makeHTMLError FlowError
   , details     = Nothing
   }
   where
-    versionCode  = T.decodeUtf8 . B16.encode $ BS.fromString versionID
+    versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
     -- TODO: Get the cdnBaseUrl from .conf file
-    cdnBaseUrl   = ""
-    kontraApiUrl = "/api/v2"
-    flowApiUrl   = "/" <> flowPath
-    explanation  = showt explanation'
-    renderedHTML = Html.renderAuthErrorPage $ Html.AuthErrorTemplateVars { .. }
+    cdnBaseUrl  = ""
+    explanation = showt explanation'
+    renderedHTML =
+      TL.toStrict
+        . Blaze.renderHtml
+        . Html.renderAuthErrorPage
+        $ Html.AuthErrorTemplateVars { .. }
 
 throwTemplateNotFoundError :: MonadError ServerError m => m a
 throwTemplateNotFoundError = throwError $ makeJSONError FlowError
