@@ -1,18 +1,26 @@
+daemon off;
 worker_processes  1;
+error_log /dev/stderr;
+
 events {
     worker_connections  1024;
 }
+
 http {
     default_type  application/octet-stream;
     keepalive_timeout  65;
+
+    proxy_temp_path /tmp/nginx/proxy;
+    uwsgi_temp_path /tmp/nginx/fastcgi;
+    scgi_temp_path /tmp/nginx/fastcgi;
+    fastcgi_temp_path /tmp/nginx/fastcgi;
+
     server {
-        listen       80;
+        listen       8888;
         server_name  localhost;
 
         # Important: the Host header must be the same for Flow and Kontrakcja upstreams.
-        # Specifically, we want to avoid port numbers, hence the $host variable.
-        # This allows Flow to access Kontrakcja sessions.
-        proxy_set_header Host $host;
+        proxy_set_header Host $host:$server_port;
 
         location ~ /experimental/flow {
             proxy_pass   http://127.0.0.1:9173;
@@ -20,5 +28,10 @@ http {
         location ~ / {
             proxy_pass   http://127.0.0.1:8000;
         }
+
+        access_log  access.log;
+        error_log   error.log;
+
+        client_body_temp_path /tmp/nginx/client-body;
     }
 }

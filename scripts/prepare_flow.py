@@ -11,7 +11,7 @@
 
 import requests as req
 
-base_url = "http://localhost"
+base_url = "http://localhost:8888"
 flow_path = base_url + "/experimental/flow"
 author_email = "demo@scrive.com"
 password = "password123"

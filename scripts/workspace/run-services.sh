@@ -9,5 +9,6 @@ echo "Running external services"
 $script_dir/run-postgres.sh &
 $script_dir/run-fakes3.sh &
 $script_dir/run-sam.sh &
+$script_dir/run-nginx.sh &
 
 wait

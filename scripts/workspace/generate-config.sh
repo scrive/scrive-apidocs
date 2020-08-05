@@ -17,6 +17,9 @@ fi
 set_pdftools="setpath([\"pdftools_lambda\"]; $pdftools_conf)"
 set_users="setpath([\"initial_users\"]; $( cat $script_dir/fixture/users.json ))"
 
+# Initialise the nginx config from example conf
+cp "$script_dir"/nginx-conf/nginx.conf.example "$script_dir"/nginx-conf/nginx.conf
+
 db_path="$KONTRAKCJA_WORKSPACE/_local/data"
 main_conn_string="host='$db_path' user='$USER' dbname='kontrakcja'"
 test_conn_string="host='$db_path' user='$USER' dbname='kontrakcja_test'"

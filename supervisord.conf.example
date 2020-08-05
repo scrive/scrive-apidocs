@@ -63,6 +63,17 @@ startsecs = 5
 stderr_logfile = supervisor/logs/sam.log
 stdout_logfile = supervisor/logs/sam.log
 
+[program:nginx]
+command = ./scripts/workspace/run-nginx.sh
+autostart = false
+autorestart = false
+stopasgroup = true
+stopsignal = KILL
+priority = 2
+startsecs = 5
+stderr_logfile = supervisor/logs/nginx.log
+stdout_logfile = supervisor/logs/nginx.log
+
 [program:kontrakcja-server]
 command = cabal run kontrakcja-server
 autostart = false

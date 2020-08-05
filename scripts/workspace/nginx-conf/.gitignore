@@ -1,0 +1,4 @@
+nginx.pid
+nginx.conf
+*.log
+*_temp/
