@@ -50,6 +50,7 @@ import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified Flow.Signview as Flow
 
 pageCreateFromTemplate :: TemplatesMonad m => Context -> UserGroupSettings -> m Text
 pageCreateFromTemplate ctx ugSettings = renderTextTemplate "createFromTemplatePage" $ do
@@ -97,6 +98,8 @@ pageDocumentSignView ctx document siglink ad = do
       mainfile = maybe (unsafeFileID 0) mainfileid (documentfile document)
       useEIDHubForNOBankIDSign =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOSign
+  mFlowOverviewLink <- Flow.linkToInstanceOverview (documentid document)
+                                                   (signatorylinkid siglink)
   renderTextTemplate "pageDocumentSignView" $ do
     F.value "documentid" . show $ documentid document
     F.value "useEIDHubForNOBankIDSign" useEIDHubForNOBankIDSign
@@ -119,6 +122,8 @@ pageDocumentSignView ctx document siglink ad = do
     F.value "postsignviewredirecturl" $ ctx ^. #postSignViewRedirectURL
     F.value "useEIDHubForSEBankIDSign"
       $ useEIDHubForSEBankIDSign ctx (ugwpSettings authorugwp)
+    F.value "flowDocument" $ isJust mFlowOverviewLink
+    F.value "flowBacklink" mFlowOverviewLink
     standardPageFields ctx (Just $ ugwpUIWithID authorugwp) ad  -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView

@@ -1,6 +1,7 @@
 module Flow.Server.Utils
   ( mkAccessLinks
   , mkBaseUrl
+  , mkInstanceOverviewUrl
   ) where
 
 import Data.Map (Map)
@@ -40,3 +41,8 @@ mkBaseUrl mainDomainUrl isSecure = \case
   Nothing   -> mainDomainUrl
   Just host -> protocol <> host
   where protocol = if isSecure then "https://" else "http://"
+
+mkInstanceOverviewUrl :: InstanceId -> UserName -> Text
+mkInstanceOverviewUrl instanceId userName = "/" <> T.intercalate
+  "/"
+  [flowPath, "overview", toUrlPiece instanceId, toUrlPiece userName]

@@ -331,6 +331,17 @@ var moment = require("moment");
          && fromTemplate.postSignViewEnabled;
     },
 
+    hasPostSignviewFlow: function () {
+      var document = this.document();
+      var now = moment();
+
+      return document.currentSignatory() != undefined
+         && document.currentSignatory().hasSigned()
+         && now.diff(document.currentSignatory().signdate(), "days") < 1
+         // ^ it doesn't make sense to show the 'post signview' days after the document was signed
+         && !this.hasSeenPostSignviewBefore();
+    },
+
     recall: function (f) {
       var self = this;
       if (this.document().initialDocumentData()) {

@@ -21,6 +21,7 @@ var PadSigningView = require("./padsigningview");
 var Arrow = require("./navigation/arrow");
 var TaskList = require("./navigation/task_list");
 var PostSignView = require("./postsignview");
+var PostSignViewFlow = require("./postsignviewflow");
 var _ = require("underscore");
 
   module.exports = React.createClass({
@@ -35,7 +36,9 @@ var _ = require("underscore");
       authorFullname: React.PropTypes.string,
       authorPhone: React.PropTypes.string,
       link: React.PropTypes.object,
-      showLegalText: React.PropTypes.bool.isRequired
+      showLegalText: React.PropTypes.bool.isRequired,
+      flowDocument: React.PropTypes.bool.isRequired,
+      flowBacklink: React.PropTypes.string.isRequired
     },
 
     getInitialState: function () {
@@ -246,6 +249,7 @@ var _ = require("underscore");
       var self = this;
       var model = this.state.model;
       var doc = model.document();
+      var flow = this.props.flowDocument;
 
       return (
         <div className="signview">
@@ -327,12 +331,19 @@ var _ = require("underscore");
                   highlighting={this.state.highlighting}
                 />
               }
-              {/* if */ model.hasPostSignview() && !this.state.postsignviewdismissed &&
+              {/* if */ !flow && model.hasPostSignview() && !this.state.postsignviewdismissed &&
                <PostSignView
                   onDismiss={this.onDismissPostSignview}
                   email={this.state.model.document().currentSignatory().email()}
                   siglinkid={this.props.sigLinkId}
                 />
+              }
+              {/* if */ flow && model.hasPostSignviewFlow() && !this.state.postsignviewdismissed &&
+               <PostSignViewFlow
+                  onDismiss={this.onDismissPostSignview}
+                  siglinkid={this.props.sigLinkId}
+                  flowBacklink={this.props.flowBacklink}
+               />
               }
               {/* if */ doc.showfooter() &&
                 <Footer/>

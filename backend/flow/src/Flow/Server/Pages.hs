@@ -9,7 +9,6 @@ import Text.Blaze.Html5
 import Web.Cookie
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 import Auth.MagicHash
@@ -26,6 +25,7 @@ import Flow.Routes.Pages
 import Flow.Routes.Types
 import Flow.Server.Cookies
 import Flow.Server.Types
+import Flow.Server.Utils
 import VersionTH (versionID)
 import qualified Auth.Model as AuthModel
 import qualified Flow.Html as Html
@@ -87,9 +87,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
     getAuthCookies = do
       Cookies' cookies <- mCookies
       readAuthCookies cookies
-    redirectUrl = "/" <> T.intercalate
-      "/"
-      [flowPath, "overview", toUrlPiece instanceId, toUrlPiece userName]
+    redirectUrl = mkInstanceOverviewUrl instanceId userName
     addDocumentSession sid slid = do
       doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
       case checkBeforeAddingDocumentSession doc slid of

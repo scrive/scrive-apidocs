@@ -99,7 +99,9 @@ $htmlopentag()$
           postSignViewEnabled: $if(postsignviewenabled)$ true $else$ false $endif$,
           postSignViewRedirectUrl: "$postsignviewredirecturl$",
           useEIDHubForNOBankIDSign: $if(useEIDHubForNOBankIDSign)$ true $else$ false $endif$,
-          useEIDHubForSEBankIDSign: $if(useEIDHubForSEBankIDSign)$ true $else$ false $endif$
+          useEIDHubForSEBankIDSign: $if(useEIDHubForSEBankIDSign)$ true $else$ false $endif$,
+          flowDocument: $if(flowDocument)$ true $else$ false $endif$,
+          flowBacklink: "$flowBacklink$"
         };
 
       if (window.trackJs !== undefined && trackJs) {
