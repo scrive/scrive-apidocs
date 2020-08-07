@@ -13,10 +13,12 @@ import qualified Data.ByteString.Lazy as BSL
 
 import Doc.AddImageSpec
 import Doc.SealSpec
+import PdfToolsLambda.Conf
 
 data PadesSignSpec = PadesSignSpec
   { inputFileContent   :: BS.ByteString
   , documentNumberText :: Text
+  , overrideAPICredentials :: Maybe GlobalSignAPICredentials
   }
 
 class Monad m => PdfToolsLambdaMonad m where
@@ -25,6 +27,7 @@ class Monad m => PdfToolsLambdaMonad m where
   callPdfToolsCleaning   :: BSL.ByteString -> m (Maybe BS.ByteString)
   callPdfToolsAddImage   :: AddImageSpec   -> m (Maybe BS.ByteString)
   callPdfToolsPadesSign  :: PadesSignSpec  -> m (Maybe BS.ByteString)
+  lambdaEnv              :: m PdfToolsLambdaEnv
 
 -- | Generic, overlappable instance.
 instance {-# OVERLAPPABLE #-}
@@ -37,3 +40,4 @@ instance {-# OVERLAPPABLE #-}
   callPdfToolsAddImage   = lift . callPdfToolsAddImage
   callPdfToolsPadesSign  = lift . callPdfToolsPadesSign
   callPdfToolsCleaning   = lift . callPdfToolsCleaning
+  lambdaEnv              = lift lambdaEnv

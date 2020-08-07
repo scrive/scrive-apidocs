@@ -94,11 +94,13 @@ padesSignSpecToLambdaSpec gs PadesSignSpec {..} = Aeson.encode $ Aeson.object
   [ "documentNumberText" .= documentNumberText
   , "mainFileInput"
     .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode inputFileContent)]
-  , "apiKey" .= (gs ^. #apiKey)
-  , "apiPassword" .= (gs ^. #apiPassword)
+  , "apiKey" .= (apiCreds ^. #apiKey)
+  , "apiPassword" .= (apiCreds ^. #apiPassword)
+  , "commonName" .= (apiCreds ^. #commonName)
   , "sslCertBase64" .= (gs ^. #certificate)
   , "sslCertSecret" .= (gs ^. #certificatePassword)
   ]
+  where apiCreds = fromMaybe (gs ^. #defaultAPICredentials) overrideAPICredentials
 
 callPdfToolsPadesSignPrim
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)

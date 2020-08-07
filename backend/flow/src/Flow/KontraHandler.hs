@@ -83,6 +83,8 @@ instance (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m) => PdfToolsLamb
     KontraT $ callPdfToolsPadesSignPrim spec =<< use #pdfToolsLambdaEnv
   callPdfToolsCleaning spec =
     KontraT $ callPdfToolsCleaningPrim spec =<< use #pdfToolsLambdaEnv
+  lambdaEnv =
+    KontraT $ use #pdfToolsLambdaEnv
 
 runKontraT :: (Monad m) => Context -> KontraT m a -> m a
 runKontraT ctx f = evalStateT (unKontraT f) ctx

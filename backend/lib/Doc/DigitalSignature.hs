@@ -15,7 +15,7 @@ import System.FilePath ((</>))
 import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Data.ByteString as BS
 
-import DB (dbUpdate)
+import DB
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils (fileFromMainFile)
@@ -29,8 +29,12 @@ import GuardTime (GuardTimeConfMonad, getGuardTimeConf)
 import Log.Identifier
 import Log.Utils
 import PdfToolsLambda.Class
+import PdfToolsLambda.Conf
 import SealingMethod
+import User.Model
 import Util.Actor (systemActor)
+import Util.MonadUtils
+import Util.SignatoryLinkUtils
 import Utils.Directory (withSystemTempDirectory')
 import qualified Doc.SealStatus as SealStatus
 import qualified GuardTime as GT
@@ -65,6 +69,7 @@ addDigitalSignature = do
 addPadesSignature
   :: ( CryptoRNG m
      , MonadIO m
+     , MonadDB m
      , MonadMask m
      , MonadLog m
      , MonadBaseControl IO m
@@ -78,7 +83,14 @@ addPadesSignature
   -> m Bool
 addPadesSignature fileName inputFileContent = do
   documentNumberText <- showt <$> theDocumentID
-  answer             <- callPdfToolsPadesSign PadesSignSpec { .. }
+  authorid           <- guardJustM $ getAuthorUserId <$> theDocument
+  mauthor            <- dbQuery $ GetUserByID authorid
+  le                 <- lambdaEnv
+  let overrideAPICredentials = do
+        gsc    <- globalSign le
+        author <- mauthor
+        lookup (author ^. #groupID) (gsc ^. #apiCredentials)
+  answer <- callPdfToolsPadesSign PadesSignSpec { .. }
   case answer of
     Just result -> do
       logInfo_ "Document successfully signed using PAdES"

@@ -2,7 +2,8 @@ module PdfToolsLambda.Conf
   ( GlobalSignConfig
   , LambdaConfig
   , PdfToolsLambdaConf
-  , PdfToolsLambdaEnv
+  , PdfToolsLambdaEnv (..)
+  , GlobalSignAPICredentials (..)
   , pdfToolsLambdaEnvFromConf
   ) where
 

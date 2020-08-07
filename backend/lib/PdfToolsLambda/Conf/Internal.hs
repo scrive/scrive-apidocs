@@ -8,17 +8,24 @@ import Optics.TH
 
 import FileStorage.Amazon.Config
 import FileStorage.Amazon.S3Env
+import UserGroup.Types (UserGroupID)
 
 data LambdaConfig = LambdaConfig
   { gatewayUrl :: Text
   , apiKey     :: Text
   } deriving (Show, Eq)
 
+data GlobalSignAPICredentials = GlobalSignAPICredentials
+  { apiKey :: Text
+  , apiPassword :: Text
+  , commonName :: Text
+  } deriving (Show, Eq)
+
 data GlobalSignConfig = GlobalSignConfig
-  { apiKey              :: Text
-  , apiPassword         :: Text
-  , certificate         :: Text
+  { certificate         :: Text
   , certificatePassword :: Text
+  , defaultAPICredentials :: GlobalSignAPICredentials
+  , apiCredentials :: [(UserGroupID, GlobalSignAPICredentials)]
   } deriving (Show, Eq)
 
 data PdfToolsLambdaConf = PdfToolsLambdaConf
@@ -35,20 +42,33 @@ data PdfToolsLambdaEnv = PdfToolsLambdaEnv
   }
 
 makeFieldLabelsWith noPrefixFieldLabels ''LambdaConfig
+makeFieldLabelsWith noPrefixFieldLabels ''GlobalSignAPICredentials
 makeFieldLabelsWith noPrefixFieldLabels ''GlobalSignConfig
 makeFieldLabelsWith noPrefixFieldLabels ''PdfToolsLambdaConf
 makeFieldLabelsWith noPrefixFieldLabels ''PdfToolsLambdaEnv
+
+instance Unjson GlobalSignAPICredentials where
+  unjsonDef =
+    objectOf
+      $   GlobalSignAPICredentials
+      <$> field "api_key"      (^. #apiKey)      "GlobalSign API key"
+      <*> field "api_password" (^. #apiPassword) "GlobalSign API password"
+      <*> field "common_name"  (^. #commonName)  "GlobalSign certificate's CommonName"
 
 instance Unjson GlobalSignConfig where
   unjsonDef =
     objectOf
       $   GlobalSignConfig
-      <$> field "api_key"      (^. #apiKey)      "GlobalSign API key"
-      <*> field "api_password" (^. #apiPassword) "GlobalSign API password"
-      <*> field "certificate" (^. #certificate) "GlobalSign certificate encoded as Base64"
+      <$> field "certificate" (^. #certificate) "GlobalSign certificate encoded as Base64"
       <*> field "certificate_password"
                 (^. #certificatePassword)
                 "GlobalSign certificate secret"
+      <*> field "default_api_credentials"
+                (^. #defaultAPICredentials)
+                "Default GlobalSign API credentials"
+      <*> field "api_credentials"
+                (^. #apiCredentials)
+                "GlobalSign API credentials per user group"
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef =
