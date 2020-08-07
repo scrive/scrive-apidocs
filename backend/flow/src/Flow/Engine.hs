@@ -59,7 +59,7 @@ toPairs EngineEvent {..} =
 data EngineError
     = AggregatorSteppingFailed
     | DuplicateEventReceived
-    | InvalidProcess [ValidationError]
+    | InvalidProcess ValidationError
     | NoAssociatedDocument
     | NoAssociatedUser
     | NoInstance
@@ -128,9 +128,9 @@ decodeHighTongueM :: (MonadLog m, MonadThrow m) => Process -> m HighTongue
 decodeHighTongueM process = either throwDSLValidationError' pure
   $ decodeHighTongue process
   where
-    throwDSLValidationError' errs = do
-      logAttention_ $ "Flow DSL compatibility broken: " <> showt errs
-      throwM $ InvalidProcess errs
+    throwDSLValidationError' err = do
+      logAttention_ $ "Flow DSL compatibility broken: " <> showt err
+      throwM $ InvalidProcess err
 
 processMachinizeEvent
   :: ( CryptoRNG m

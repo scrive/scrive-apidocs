@@ -62,7 +62,6 @@ insertTemplate it = do
 deleteTemplate :: (MonadDB m, MonadTime m) => TemplateId -> m ()
 deleteTemplate templateId = do
   now <- currentTime
-  -- TODO:  Can committed template be deleted? Maybe this should be in server instead?
   runQuery_ . sqlUpdate "flow_templates" $ do
     sqlSet "deleted" now
     sqlWhereEq "id" templateId

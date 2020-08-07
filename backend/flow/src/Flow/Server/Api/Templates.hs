@@ -42,13 +42,13 @@ createTemplate account@Account {..} CreateTemplate {..} = do
   id <- Model.insertTemplate $ InsertTemplate name process (user ^. #id) (folder ^. #id)
   pure $ GetCreateTemplate { id }
 
--- TODO: Committed templates shouldn't be deleted.
 deleteTemplate :: Account -> TemplateId -> AppM NoContent
 deleteTemplate account id = do
   logInfo_ "Deleting template"
   template <- selectTemplate id
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo DeleteA $ FlowTemplateR fid]
+  when (isJust $ template ^. #committed) throwTemplateAlreadyCommittedError
   Model.deleteTemplate id
   pure NoContent
 
@@ -99,9 +99,6 @@ validateTemplate templateDSL = do
   checkDSL templateDSL
   pure NoContent
 
--- TODO: Currently, there's no way to get more than a singleton list of validation
--- TODO: errors. This allows the Error module to be prettier, all this should be
--- TODO: improved later.
 checkDSL :: Process -> AppM ()
 checkDSL templateDSL = do
   when (T.null $ fromProcess templateDSL)
@@ -109,9 +106,7 @@ checkDSL templateDSL = do
     $  "No template DSL text available. "
     <> "Please update the template with non-empty process and try again."
   whenLeft (decodeHighTongue templateDSL) $ \case
-    -- TODO: Improve error messages.
-    []      -> throwDSLValidationError "Unknown validation error"
-    err : _ -> throwDSLValidationError $ error_message err
+    err -> throwDSLValidationError $ error_message err
 
 listTemplates :: Account -> AppM [GetTemplate]
 listTemplates account@Account {..} = do

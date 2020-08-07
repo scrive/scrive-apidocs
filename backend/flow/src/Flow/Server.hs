@@ -34,8 +34,7 @@ naturalFlow runLogger FlowConfiguration {..} flowApp =
   runLogger
     . runDBT dbConnectionPool defaultTransactionSettings
     . runCryptoRNGT cryptoRNG
-    . runReaderT flowApp
-    $ FlowContext handleWithKontra mainDomainUrl
+    $ runReaderT flowApp context
 
 genAuthServerContext
   :: RunLogger

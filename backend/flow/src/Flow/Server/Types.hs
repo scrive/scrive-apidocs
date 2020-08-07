@@ -18,8 +18,6 @@ import Control.Monad.Reader
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.ByteString
-import Data.CaseInsensitive
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import Happstack.Server (Request, Response)
@@ -41,8 +39,7 @@ data FlowConfiguration = FlowConfiguration
         => ConnectionSourceM m
     , flowPort :: Int
     , cryptoRNG :: CryptoRNGState
-    , handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
-    , mainDomainUrl :: Text
+    , context :: FlowContext
     }
 
 aesonOptions :: Options
@@ -51,6 +48,7 @@ aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 data FlowContext = FlowContext
   { handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
   , mainDomainUrl :: Text
+  , cdnBaseUrl :: Maybe Text
   }
 
 type AppM = ReaderT FlowContext (CryptoRNGT (DBT (LogT Handler)))
@@ -60,9 +58,6 @@ data Account = Account
     , userGroup :: UserGroup
     , folder :: Folder
     , roles :: [AccessRole]
-    -- TODO remove this and implement it by adding Header input to the `startTemplate` handler.
-    -- It is needed because oauth and cookie headers have to be passed to the document starting API.
-    , headers :: [(CI ByteString, ByteString)]
     -- TODO move this into a separate context type
     , baseUrl :: Text
     }

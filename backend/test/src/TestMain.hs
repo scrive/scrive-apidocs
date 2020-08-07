@@ -275,14 +275,15 @@ testMany' tconf (allargs, ts) runLogger rng = do
   (errs, lr) <- mkLogRunner "flow" testLogConfig rng
   mapM_ T.putStrLn errs
 
+  let flowContext =
+        FlowContext (Flow.handle env) ("http://localhost:" <> showt flowPort) Nothing
   void . fork $ runFlow
     lr
     (FlowConfiguration
       (unConnectionSource . simpleSource $ connSettings kontraComposites)
       (testFlowPort tconf)
       rng
-      (Flow.handle env)
-      ("http://localhost:" <> showt flowPort)
+      flowContext
     )
 
   forM_ (env ^. #outputDirectory) $ createDirectoryIfMissing True

@@ -34,7 +34,9 @@ import FeatureFlags.Model
 import FileStorage
 import FileStorage.Amazon.S3Env
 import Flow.Server (runFlow)
-import Flow.Server.Types (FlowConfiguration(FlowConfiguration))
+import Flow.Server.Types
+  ( FlowConfiguration(FlowConfiguration), FlowContext(FlowContext)
+  )
 import Folder.Model
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -128,14 +130,16 @@ main = withCurlDo $ do
 
     runWithLogRunner logRunnerFlow $ logInfo_ "Starting flow-server"
 
+    let flowContext = FlowContext (Flow.handle appConf appGlobals)
+                                  (mainDomainUrl appConf)
+                                  (cdnBaseUrl appConf)
     liftIO . maybeFork . void $ runFlow
       logRunnerFlow
       (FlowConfiguration
         (unConnectionSource . simpleSource $ connSettings kontraComposites)
         (flowPort appConf)
         rng
-        (Flow.handle appConf appGlobals)
-        (mainDomainUrl appConf)
+        flowContext
       )
 
   -- Start Kontrakcja server

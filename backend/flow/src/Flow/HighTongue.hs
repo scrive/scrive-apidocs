@@ -161,24 +161,21 @@ instance ToJSON ValidationError where
   toEncoding = genericToEncoding aesonOptions
 
 
-decodeHighTongue :: Process -> Either [ValidationError] HighTongue
+decodeHighTongue :: Process -> Either ValidationError HighTongue
 decodeHighTongue process =
   (packError `left` decodeEither' (encodeUtf8 $ fromProcess process))
     >>= validateStageNameUniqueness
   where
-    packError err =
-      [ ValidationError { line_number   = 0
-                        , column        = 0
-                        , error_message = T.pack $ prettyPrintParseException err
-                        }
-      ]
+    packError err = ValidationError
+      { line_number   = 0
+      , column        = 0
+      , error_message = T.pack $ prettyPrintParseException err
+      }
     validateStageNameUniqueness highTongue@HighTongue {..} = do
       let uniqNames = nubOrd $ stageName <$> stages
       if length uniqNames == length stages
         then pure highTongue
-        else Left
-          [ ValidationError { line_number   = 0
-                            , column        = 0
-                            , error_message = "The stage names are not all unique"
-                            }
-          ]
+        else Left ValidationError { line_number   = 0
+                                  , column        = 0
+                                  , error_message = "The stage names are not all unique"
+                                  }

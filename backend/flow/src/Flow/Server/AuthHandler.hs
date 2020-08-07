@@ -9,13 +9,12 @@ module Flow.Server.AuthHandler
   ) where
 
 import Control.Monad.Error.Class
-import Control.Monad.IO.Class
+import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
 import Data.Text.Encoding
 import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Class
-import Log.Monad
 import Network.Wai
 import Servant
 import Servant.Server.Experimental.Auth
@@ -80,16 +79,10 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
             ug <- fmap fromJust . dbQuery . UserGroupGet $ unsafeUserGroupID userGroupId
             folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
             roles  <- dbQuery $ GetRolesIncludingInherited user ug
-            let domainUrl = mainDomainUrl (flowConfiguration :: FlowConfiguration)
+            let domainUrl = mainDomainUrl $ context flowConfiguration
             let baseUrl   = mkBaseUrl domainUrl (isSecure req) (mHost req)
 
-            pure $ Account { user
-                           , userGroup = ug
-                           , folder
-                           , roles
-                           , headers   = requestHeaders req
-                           , baseUrl
-                           }
+            pure $ Account { user, userGroup = ug, folder, roles, baseUrl }
 
     parseOAuthAuthorization :: ByteString -> Either Text OAuthAuthorization
     parseOAuthAuthorization = parseParams . splitAuthorization . decodeUtf8
@@ -112,31 +105,41 @@ authHandlerInstanceUserHTML runLogger flowConfiguration = mkAuthHandler handler'
 instanceUserHandler
   :: RunLogger
   -> FlowConfiguration
-  -> (forall a . AuthError -> AuthError -> DBT (LogT Handler) a)
+  -> (  forall a m
+      . (MonadLog m, MonadError ServerError m, MonadReader FlowContext m)
+     => AuthError
+     -> AuthError
+     -> m a
+     )
   -> Request
   -> Handler InstanceUser
 instanceUserHandler runLogger flowConfiguration errorThrower req =
-  runLogger . runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings $ do
-    instanceSession <- do
-      authCookies <- maybe (errorThrower AuthCookiesParseError AuthCookiesParseError)
-                           pure
-                           (getAuthCookies req)
-      logInfo_ ("Authenticating InstanceUser using cookies: " <> showt authCookies)
-      mInstanceSession <- runMaybeT $ do
-        sessionId <- MaybeT $ getSessionIDByCookies authCookies (cookieDomain $ mHost req)
-        MaybeT $ Model.selectInstanceSession sessionId
-      maybe (errorThrower InvalidAuthCookiesError InvalidAuthCookiesError)
+  runLogger
+    . runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
+    . flip runReaderT (context flowConfiguration)
+    $ do
+        instanceSession <- do
+          authCookies <- maybe
+            (errorThrower AuthCookiesParseError AuthCookiesParseError)
             pure
-            mInstanceSession
-    pure $ InstanceUser (instanceSession ^. #userName) (instanceSession ^. #instanceId)
+            (getAuthCookies req)
+          logInfo_ ("Authenticating InstanceUser using cookies: " <> showt authCookies)
+          mInstanceSession <- runMaybeT $ do
+            sessionId <- MaybeT
+              $ getSessionIDByCookies authCookies (cookieDomain $ mHost req)
+            MaybeT $ Model.selectInstanceSession sessionId
+          maybe (errorThrower InvalidAuthCookiesError InvalidAuthCookiesError)
+                pure
+                mInstanceSession
+        pure
+          $ InstanceUser (instanceSession ^. #userName) (instanceSession ^. #instanceId)
 
 mHost :: Request -> Maybe Host
 mHost req = decodeUtf8 <$> requestHeaderHost req
 
 -- TODO handle the exception somehow
 -- ... but don't put it into the response, it leaks internal information!
-throwAuthError
-  :: (MonadIO m, MonadLog m, Show a, MonadError ServerError m) => AuthError -> a -> m b
+throwAuthError :: (MonadLog m, Show a, MonadError ServerError m) => AuthError -> a -> m b
 throwAuthError errorName e = do
   logAttention ("throwAuthError: " <> showt errorName) $ show e
   throwAuthenticationError errorName
@@ -144,7 +147,10 @@ throwAuthError errorName e = do
 -- TODO handle the exception somehow
 -- ... but don't put it into the response, it leaks internal information!
 throwAuthErrorHTML
-  :: (MonadIO m, MonadLog m, Show a, MonadError ServerError m) => AuthError -> a -> m b
+  :: (MonadLog m, Show a, MonadError ServerError m, MonadReader FlowContext m)
+  => AuthError
+  -> a
+  -> m b
 throwAuthErrorHTML errorName e = do
   logAttention ("throwAuthErrorHTML: " <> showt errorName) $ show e
   throwAuthenticationErrorHTML errorName

@@ -49,6 +49,9 @@ tests env = testGroup
   , testThat "Verify endpoint"          env testVerifyEndpoint
   , testThat "Complete flow process"    env testCompleteFlowProcess
   , testThat "Complex flow process"     env testComplexFlowProcess
+  , testThat "Committed template cannot be altered"
+             env
+             testCommittedTemplateCannotBeAltered
   ]
 
 testTemplateHappyCrud :: TestEnv ()
@@ -57,7 +60,6 @@ testTemplateHappyCrud = do
   oauth <- getToken (user ^. #id)
   let ApiClient {..}     = mkApiClient (Left oauth)
 
-  -- TODO nicer check
   let createTemplateData = CreateTemplate "name" "process"
   template1 <- assertRight "create response" . request $ createTemplate createTemplateData
 
@@ -267,6 +269,21 @@ testInstanceListEndpoint = do
     $ request listInstances
   assertBool "third instance list call should have 2 items" $ length is3 == 2
   where mapping = InstanceKeyValues Map.empty Map.empty Map.empty
+
+testCommittedTemplateCannotBeAltered :: TestEnv ()
+testCommittedTemplateCannotBeAltered = do
+  user  <- instantiateRandomUser
+  oauth <- getToken $ user ^. #id
+  let ApiClient {..}     = mkApiClient (Left oauth)
+      createTemplateData = CreateTemplate "name" simpleProcess
+
+  template <- assertRight "create template" . request $ createTemplate createTemplateData
+  let tid = id (template :: GetCreateTemplate)
+  void . assertRight "commit template" . request $ commitTemplate tid
+  void . assertLeft "commit template again" . request $ deleteTemplate tid
+  let patchTemplateData = PatchTemplate (Just "new name") (Just "new process")
+  void . assertLeft "patch template" . request $ patchTemplate tid patchTemplateData
+  void . assertLeft "delete template" . request $ deleteTemplate tid
 
 processInvalid :: Process
 processInvalid = Process [r|

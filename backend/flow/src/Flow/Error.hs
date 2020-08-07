@@ -15,6 +15,7 @@ module Flow.Error (
   ) where
 
 import Control.Monad.Except
+import Control.Monad.Reader
 import Data.Aeson
 import Data.Aeson.Casing
 import GHC.Generics
@@ -27,6 +28,7 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Text.Blaze.Html.Renderer.Text as Blaze
 
+import Flow.Server.Types
 import VersionTH (versionID)
 import qualified Flow.Html as Html
 
@@ -83,19 +85,20 @@ throwAuthenticationError explanation = throwError $ makeJSONError FlowError
   , details     = Nothing
   }
 
-throwAuthenticationErrorHTML :: MonadError ServerError m => AuthError -> m a
-throwAuthenticationErrorHTML explanation' = throwError $ makeHTMLError FlowError
-  { code        = 401
-  , message     = "Authentication Error"
-  , explanation = renderedHTML
-  , details     = Nothing
-  }
+throwAuthenticationErrorHTML
+  :: (MonadError ServerError m, MonadReader FlowContext m) => AuthError -> m a
+throwAuthenticationErrorHTML explanation' = do
+  FlowContext { cdnBaseUrl } <- ask
+  throwError $ makeHTMLError FlowError
+    { code        = 401
+    , message     = "Authentication Error"
+    , explanation = renderedHTML $ fromMaybe "" cdnBaseUrl
+    , details     = Nothing
+    }
   where
     versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
-    -- TODO: Get the cdnBaseUrl from .conf file
-    cdnBaseUrl  = ""
     explanation = showt explanation'
-    renderedHTML =
+    renderedHTML cdnBaseUrl =
       TL.toStrict
         . Blaze.renderHtml
         . Html.renderAuthErrorPage

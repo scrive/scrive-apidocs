@@ -8,14 +8,10 @@ import Control.Concurrent.MVar
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson
-import Data.ByteString (ByteString)
-import Data.CaseInsensitive
-import Data.Char
 import GHC.Generics
 import Happstack.Server
 import Log.Class
 import Servant.Server
-import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Map as Map
 
@@ -43,8 +39,6 @@ startDocumentRequest Account {..} = do
   rqBody       <- newMVar $ Body BS.empty
   rqInputsBody <- newMVar []
 
-  let grouped = groupBy (\x y -> fst x == fst y) $ sortOn fst headers
-  let headers' = fmap toHappstackHeader grouped
   pure $ Request { rqSecure      = True
                  , rqMethod      = POST
                  , rqPaths       = []
@@ -54,17 +48,10 @@ startDocumentRequest Account {..} = do
                  , rqInputsBody
                  , rqCookies     = []
                  , rqVersion     = HttpVersion 1 1
-                 , rqHeaders     = Map.fromList headers'
+                 , rqHeaders     = Map.empty
                  , rqBody
                  , rqPeer        = ("peer hostname", 12345)
                  }
-  where
-    toHappstackHeader :: [(CI ByteString, ByteString)] -> (ByteString, HeaderPair)
-    toHappstackHeader l = (BSC8.map toLower orig, HeaderPair orig values)
-      where
-        orig   = original keys
-        keys   = fst $ head l
-        values = fmap snd l
 
 data KontraResponse = KontraResponse
   { documentId :: DocumentID

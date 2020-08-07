@@ -3,6 +3,7 @@
 module Flow.Server.Pages where
 
 import Control.Monad.Extra (fromMaybeM)
+import Control.Monad.Reader (ask)
 import Log.Class
 import Servant
 import Text.Blaze.Html5
@@ -98,12 +99,14 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
 
 instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Html
 instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
+  FlowContext { cdnBaseUrl } <- ask
   when (instanceId /= instanceId') $ throwAuthenticationErrorHTML AccessControlError
-  return . Html.renderInstanceOverview $ Html.InstanceOverviewTemplateVars { .. }
+  return . Html.renderInstanceOverview $ Html.InstanceOverviewTemplateVars
+    { cdnBaseUrl = fromMaybe "" cdnBaseUrl
+    , ..
+    }
   where
     versionCode    = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
-    -- TODO: Get the cdnBaseUrl from .conf file
-    cdnBaseUrl     = ""
     kontraApiUrl   = "/api/v2"
     flowApiUrl     = "/" <> flowPath
     flowInstanceId = instanceId'
