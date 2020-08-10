@@ -101,3 +101,16 @@ testNewCompanyFeatureFlagDefaults = do
                   (ffCanUseShareableLinks ff)
       assertEqual "New company can use Forwarding" True  (ffCanUseForwarding ff)
       assertEqual "New company can't use Portal"   False (ffCanUsePortal ff)
+      assertEqual "New company can't use archive to DropBox"
+                  False
+                  (ffCanUseArchiveToDropBox ff)
+      assertEqual "New company can't use archive to GoogleDrive"
+                  False
+                  (ffCanUseArchiveToGoogleDrive ff)
+      assertEqual "New company can't use archive to OneDrive"
+                  False
+                  (ffCanUseArchiveToOneDrive ff)
+      assertEqual "New company can't use archive to SharePoint"
+                  False
+                  (ffCanUseArchiveToSharePoint ff)
+      assertEqual "New company can't use archive to Sftp" False (ffCanUseArchiveToSftp ff)

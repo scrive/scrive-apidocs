@@ -71,11 +71,7 @@ kontraComposites =
     , ctSignatoryLink
     , ctDocument
     , ctFeatureFlags
-    , ctFeatureFlags7
-    , ctFeatureFlags6
-    , ctFeatureFlags5
-    , ctFeatureFlags4
-    , ctFeatureFlags3
+    , ctFeatureFlags8
 
   -- user group composites
     , ctUserGroupInvoicing

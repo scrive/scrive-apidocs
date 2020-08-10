@@ -64,6 +64,11 @@ data FeatureFlags = FeatureFlags
   , ffCanUseDocumentPartyNotifications :: Bool
   , ffCanUsePortal :: Bool
   , ffCanUseCustomSMSTexts :: Bool
+  , ffCanUseArchiveToDropBox :: Bool
+  , ffCanUseArchiveToGoogleDrive :: Bool
+  , ffCanUseArchiveToOneDrive :: Bool
+  , ffCanUseArchiveToSharePoint :: Bool
+  , ffCanUseArchiveToSftp :: Bool
   } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -142,11 +147,21 @@ instance Unjson FeatureFlags where
       <*> field "can_use_custom_sms_texts"
                 ffCanUseCustomSMSTexts
                 "Can set a custom content of SMS for invitations and confirmations"
+      <*> field "can_use_archive_to_drop_box"     ffCanUseArchiveToDropBox     "TODO desc"
+      <*> field "can_use_archive_to_google_drive" ffCanUseArchiveToGoogleDrive "TODO desc"
+      <*> field "can_use_archive_to_one_drive"    ffCanUseArchiveToOneDrive    "TODO desc"
+      <*> field "can_use_archive_to_share_point"  ffCanUseArchiveToSharePoint  "TODO desc"
+      <*> field "can_use_archive_to_sftp"         ffCanUseArchiveToSftp        "TODO desc"
 
 
 
 type instance CompositeRow FeatureFlags
   = ( Bool
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Bool
     , Bool
     , Bool
     , Bool
@@ -184,7 +199,7 @@ instance PQFormat FeatureFlags where
   pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
-  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts)
+  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts, ffCanUseArchiveToDropBox, ffCanUseArchiveToGoogleDrive, ffCanUseArchiveToOneDrive, ffCanUseArchiveToSharePoint, ffCanUseArchiveToSftp)
     = FeatureFlags { .. }
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
@@ -264,6 +279,11 @@ defaultFeatures paymentPlan = Features ff ff
                              , ffCanUseDocumentPartyNotifications = False
                              , ffCanUsePortal                     = False
                              , ffCanUseCustomSMSTexts             = False
+                             , ffCanUseArchiveToDropBox           = False
+                             , ffCanUseArchiveToGoogleDrive       = False
+                             , ffCanUseArchiveToOneDrive          = False
+                             , ffCanUseArchiveToSharePoint        = False
+                             , ffCanUseArchiveToSftp              = False
                              }
     ff = case paymentPlan of
       FreePlan -> defaultFF { ffCanUseDKAuthenticationToView     = False
@@ -317,6 +337,11 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_document_party_notifications" $ ffCanUseDocumentPartyNotifications ff
   sqlSet "can_use_portal" $ ffCanUsePortal ff
   sqlSet "can_use_custom_sms_texts" $ ffCanUseCustomSMSTexts ff
+  sqlSet "can_use_archive_to_drop_box" $ ffCanUseArchiveToDropBox ff
+  sqlSet "can_use_archive_to_google_drive" $ ffCanUseArchiveToGoogleDrive ff
+  sqlSet "can_use_archive_to_one_drive" $ ffCanUseArchiveToOneDrive ff
+  sqlSet "can_use_archive_to_share_point" $ ffCanUseArchiveToSharePoint ff
+  sqlSet "can_use_archive_to_sftp" $ ffCanUseArchiveToSftp ff
 
 selectFeatureFlagsSelectors :: [SQL]
 selectFeatureFlagsSelectors =
@@ -352,4 +377,9 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_document_party_notifications"
   , "feature_flags.can_use_portal"
   , "feature_flags.can_use_custom_sms_texts"
+  , "feature_flags.can_use_archive_to_drop_box"
+  , "feature_flags.can_use_archive_to_google_drive"
+  , "feature_flags.can_use_archive_to_one_drive"
+  , "feature_flags.can_use_archive_to_share_point"
+  , "feature_flags.can_use_archive_to_sftp"
   ]

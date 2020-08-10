@@ -23,6 +23,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddCustomSMSTexts
 , featureFlagsAddFIAuthToSign
 , featureFlagsAddOnfidoAuthToSign
+, featureFlagsAddIntegrationsFeatures
 ) where
 
 import Control.Monad.Catch
@@ -1000,4 +1001,130 @@ featureFlagsAddOnfidoAuthToSign = Migration
           , CompositeColumn { ccName = "can_use_custom_sms_texts", ccType = BoolT }
           ]
         }
+  }
+
+
+featureFlagsAddIntegrationsFeatures :: MonadDB m => Migration m
+featureFlagsAddIntegrationsFeatures = Migration
+  { mgrTableName = tblName tableFeatureFlags
+  , mgrFrom      = 24
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableFeatureFlags)
+        [ sqlAddColumn $ tblColumn { colName     = "can_use_archive_to_drop_box"
+                                   , colType     = BoolT
+                                   , colNullable = False
+                                   , colDefault  = Just "False"
+                                   }
+        , sqlAddColumn $ tblColumn { colName     = "can_use_archive_to_google_drive"
+                                   , colType     = BoolT
+                                   , colNullable = False
+                                   , colDefault  = Just "False"
+                                   }
+        , sqlAddColumn $ tblColumn { colName     = "can_use_archive_to_one_drive"
+                                   , colType     = BoolT
+                                   , colNullable = False
+                                   , colDefault  = Just "False"
+                                   }
+        , sqlAddColumn $ tblColumn { colName     = "can_use_archive_to_share_point"
+                                   , colType     = BoolT
+                                   , colNullable = False
+                                   , colDefault  = Just "False"
+                                   }
+        , sqlAddColumn $ tblColumn { colName     = "can_use_archive_to_sftp"
+                                   , colType     = BoolT
+                                   , colNullable = False
+                                   , colDefault  = Just "False"
+                                   }
+        ]
+      runQuery_ $ sqlAlterTable
+        (tblName tableFeatureFlags)
+        [ sqlAlterColumn "can_use_archive_to_drop_box"     "DROP DEFAULT"
+        , sqlAlterColumn "can_use_archive_to_google_drive" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_archive_to_one_drive"    "DROP DEFAULT"
+        , sqlAlterColumn "can_use_archive_to_share_point"  "DROP DEFAULT"
+        , sqlAlterColumn "can_use_archive_to_sftp"         "DROP DEFAULT"
+        ]
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "feature_flags_c9"
+        , ctColumns =
+          [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_branding", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_author_attachments", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_signatory_attachments", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_mass_sendout", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_sms_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_sms_confirmations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_dk_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_dk_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_fi_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_fi_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_no_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_no_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_se_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_se_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_sms_pin_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_sms_pin_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_standard_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_standard_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_verimi_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_idin_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_idin_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_onfido_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_email_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_email_confirmations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_api_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_pad_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_shareable_links", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_forwarding", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_document_party_notifications"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_portal", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_custom_sms_texts", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_drop_box", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_google_drive", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_one_drive", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_share_point", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_sftp", ccType = BoolT }
+          ]
+        }
+      runQuery_ $ sqlDropComposite "feature_flags_c3"
+      runQuery_ $ sqlDropComposite "feature_flags_c4"
+      runQuery_ $ sqlDropComposite "feature_flags_c5"
+      runQuery_ $ sqlDropComposite "feature_flags_c6"
+      runQuery_ $ sqlDropComposite "feature_flags_c7"
   }

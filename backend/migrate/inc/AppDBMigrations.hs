@@ -279,4 +279,5 @@ kontraMigrations =
   , createTableFlowInstanceAccessTokens
   , createTableFlowInstanceSessions
   , addIndicesToFlowInstanceKeyValueStore
+  , featureFlagsAddIntegrationsFeatures
   ]

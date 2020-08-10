@@ -513,6 +513,15 @@ featureFlagsStructure =
       , [ ( "Can use Portal", "can_use_portal" )
         ]
       )
+    
+    , ( "Integrations"
+      , [ ( "Can use archive to DropBox", "can_use_archive_to_drop_box" )
+        , ( "Can use archive to GoogleDrive", "can_use_archive_to_google_drive" )
+        , ( "Can use archive to OneDrive", "can_use_archive_to_one_drive" )
+        , ( "Can use archive to SharePoint", "can_use_archive_to_share_point" )
+        , ( "Can use archive to SFTP", "can_use_archive_to_sftp" )
+        ]
+      )
     ]
 
 

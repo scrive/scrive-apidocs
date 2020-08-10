@@ -369,7 +369,7 @@ instance Arbitrary FeatureFlags where
     (a, b, c, d, e, f, g , h , i , j ) <- arbitrary
     (k, l, m, n, o, p, q , r , s , t ) <- arbitrary
     (u, v, w, x, z, y, aa, bb, cc, dd) <- arbitrary
-    (ee, ff) <- arbitrary
+    (ee, ff, gg, hh, ii, jj, kk)       <- arbitrary
     return $ FeatureFlags { ffCanUseTemplates                  = a
                           , ffCanUseBranding                   = b
                           , ffCanUseAuthorAttachments          = c
@@ -402,6 +402,11 @@ instance Arbitrary FeatureFlags where
                           , ffCanUseDocumentPartyNotifications = y
                           , ffCanUsePortal                     = bb
                           , ffCanUseCustomSMSTexts             = dd
+                          , ffCanUseArchiveToDropBox           = gg
+                          , ffCanUseArchiveToGoogleDrive       = hh
+                          , ffCanUseArchiveToOneDrive          = ii
+                          , ffCanUseArchiveToSharePoint        = jj
+                          , ffCanUseArchiveToSftp              = kk
                           }
 
 instance Arbitrary Features where

@@ -142,6 +142,11 @@ type alias FeatureFlags =
     , canUseOnfidoAuthenticationToSign : Bool
     , canUsePortal : Bool
     , canUseCustomSMSTexts : Bool
+    , canUseArchiveToDropBox : Bool
+    , canUseArchiveToGoogleDrive : Bool
+    , canUseArchiveToOneDrive : Bool
+    , canUseArchiveToSharePoint : Bool
+    , canUseArchiveToSftp : Bool
     }
 
 
@@ -290,6 +295,11 @@ defaultFeatureFlags =
     , canUseOnfidoAuthenticationToSign = False
     , canUsePortal = False
     , canUseCustomSMSTexts = False
+    , canUseArchiveToDropBox = False
+    , canUseArchiveToGoogleDrive = False
+    , canUseArchiveToOneDrive = False
+    , canUseArchiveToSharePoint = False
+    , canUseArchiveToSftp = False
     }
 
 
@@ -327,6 +337,11 @@ ffKeyAccessPairs =
     , ( "can_use_onfido_authentication_to_sign", ( .canUseOnfidoAuthenticationToSign, \ff v -> { ff | canUseOnfidoAuthenticationToSign = v } ) )
     , ( "can_use_portal", ( .canUsePortal, \ff v -> { ff | canUsePortal = v } ) )
     , ( "can_use_custom_sms_texts", ( .canUseCustomSMSTexts, \ff v -> { ff | canUseCustomSMSTexts = v } ) )
+    , ( "can_use_archive_to_drop_box", ( .canUseArchiveToDropBox, \ff v -> { ff | canUseArchiveToDropBox = v } ) )
+    , ( "can_use_archive_to_google_drive", ( .canUseArchiveToGoogleDrive, \ff v -> { ff | canUseArchiveToGoogleDrive = v } ) )
+    , ( "can_use_archive_to_one_drive", ( .canUseArchiveToOneDrive, \ff v -> { ff | canUseArchiveToOneDrive = v } ) )
+    , ( "can_use_archive_to_share_point", ( .canUseArchiveToSharePoint, \ff v -> { ff | canUseArchiveToSharePoint = v } ) )
+    , ( "can_use_archive_to_sftp", ( .canUseArchiveToSftp, \ff v -> { ff | canUseArchiveToSftp = v } ) )
     ]
 
 
