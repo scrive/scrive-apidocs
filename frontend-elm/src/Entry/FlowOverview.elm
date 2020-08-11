@@ -55,10 +55,7 @@ update msg model =
                     case result of
                         Ok instance ->
                             let
-                                newModel =
-                                    updateModel model (\inner -> { inner | mInstance = Just instance })
-
-                                docs =
+                                documentsToGet =
                                     List.map (\a -> ( a.actionDocument, a.actionSignatoryId ))
                                         instance.actions
                                         ++ List.map (\d -> ( d.documentId, d.signatoryId ))
@@ -77,7 +74,18 @@ update msg model =
                                                 , expect = Http.expectJson GetDocumentReceived documentDecoder
                                                 }
                                         )
-                                        docs
+                                        documentsToGet
+
+                                mDocuments =
+                                    if List.isEmpty documentsToGet then
+                                        Just Dict.empty
+
+                                    else
+                                        Nothing
+
+                                newModel =
+                                    updateModel model
+                                        (\inner -> { inner | mInstance = Just instance, mDocuments = mDocuments })
                             in
                             ( newModel, Cmd.batch getDocumentCmds )
 
@@ -128,13 +136,14 @@ view model =
                         mDocWithLink mDoc mLink =
                             M.map (\doc -> ( doc, mLink )) mDoc
 
-                        actionDocs =
-                            List.map (\a -> Dict.get a.actionDocument documents) instance.actions
-
-                        actionLinks =
-                            List.map (\a -> Just a.actionLink) instance.actions
-
                         actionDocsWithLinks =
+                            let
+                                actionDocs =
+                                    List.map (\a -> Dict.get a.actionDocument documents) instance.actions
+
+                                actionLinks =
+                                    List.map (\a -> Just a.actionLink) instance.actions
+                            in
                             List.map2 mDocWithLink actionDocs actionLinks
                                 |> List.filterMap identity
 
@@ -142,10 +151,38 @@ view model =
                             List.map (\d -> Dict.get d.documentId documents) instance.state.documents
                                 |> List.map (\mDoc -> mDocWithLink mDoc Nothing)
                                 |> List.filterMap identity
+
+                        ( statusHeader, statusMessage ) =
+                            case instance.status of
+                                InProgress ->
+                                    ( "Document workflow is in progress"
+                                    , "Please wait for other participants to complete their actions."
+                                    )
+
+                                Completed ->
+                                    ( "Document workflow is complete"
+                                    , "There are no further actions to take."
+                                    )
+
+                                Failed ->
+                                    ( "Document workflow failed"
+                                    , """This document workflow did not complete successfully.
+                                       There are no further actions to take."""
+                                    )
+
+                        statusSection =
+                            View.section statusHeader (p [] [ text statusMessage ])
+
+                        actionDocsSection =
+                            View.section "Select a document to sign or approve"
+                                (View.docTable actionDocsWithLinks "No documents to sign or approve")
                     in
                     div []
-                        [ View.section "Select a document to sign or approve"
-                            (View.docTable actionDocsWithLinks "No documents to sign or approve")
+                        [ if List.isEmpty actionDocsWithLinks then
+                            statusSection
+
+                          else
+                            actionDocsSection
                         , View.section "Signed or approved documents"
                             (View.docTable stateDocsNoLinks "No signed or approved documents")
                         ]
@@ -157,4 +194,3 @@ view model =
                 _ ->
                     div [ class "loading" ]
                         [ text "Loading instance..." ]
-

@@ -36,7 +36,14 @@ type alias GetInstanceView =
     { id : String
     , state : InstanceUserState
     , actions : List InstanceUserAction
+    , status : Status
     }
+
+
+type Status
+    = InProgress
+    | Completed
+    | Failed
 
 
 type alias InstanceUserState =

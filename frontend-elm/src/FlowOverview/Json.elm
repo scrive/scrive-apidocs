@@ -21,6 +21,23 @@ instanceViewDecoder =
         |> JDP.required "id" JD.string
         |> JDP.required "state" instanceUserStateDecoder
         |> JDP.required "actions" (JD.list instanceUserActionDecoder)
+        |> JDP.required "status" (JD.string |> JD.andThen statusDecoder)
+
+
+statusDecoder : String -> Decoder Status
+statusDecoder str =
+    case str of
+        "in_progress" ->
+            JD.succeed InProgress
+
+        "completed" ->
+            JD.succeed Completed
+
+        "failed" ->
+            JD.succeed Failed
+
+        _ ->
+            JD.fail "Unable to decode Flow instance status"
 
 
 instanceUserActionDecoder : Decoder InstanceUserAction
