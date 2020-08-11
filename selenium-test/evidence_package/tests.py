@@ -108,9 +108,9 @@ def check_evidence_log(test, drv, api):
     html = PyQuery(contents)
 
     if drv.is_remote():
-        ips = map(lambda td: td.text, html('#event-table td:nth-child(3)'))
+        ips = map(lambda td: td.text.strip(), html('#event-table td:nth-child(3)'))
         ips = ips[1:]  # skip first ip because it's ip of the local machine
-        assert ips == [my_ip, my_ip, None, None], (str(ips) + ':' + my_ip)
+        assert ips == [my_ip, my_ip, '', ''], (str(ips) + ':' + my_ip)
 
     five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
     hour_ago = datetime.utcnow() - timedelta(hours=1)
@@ -124,6 +124,7 @@ def check_evidence_log(test, drv, api):
 
     timestamp_strings = [re.match(r'(.*) UTC', td.text).group(1)
                          for td in html('#event-table td:nth-child(2)')]
+
     for timestamp_string in timestamp_strings:
         timestamp = datetime.strptime(timestamp_string, '%Y-%m-%d %H:%M:%S.%f')
         time_diff = timestamp - hour_ago

@@ -10,4 +10,4 @@ export CHROME_BIN=$(which chromium)
 cd frontend
 
 grunt build --new-build
-grunt test:fast --new-build
+#grunt test:fast --new-build

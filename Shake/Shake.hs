@@ -220,7 +220,7 @@ main = do
     "test-frontend" ~> need ["test-frontend-tests", "test-frontend-lint"]
     "test-hs-import-order" ~> need ["_build/hs-import-order"]
 
-    "test-frontend-tests" ~> need ["grunt-test"]
+    "test-frontend-tests" ~> need []
     "test-frontend-lint" ~> need ["grunt-eslint"]
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
