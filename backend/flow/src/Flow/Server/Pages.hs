@@ -99,10 +99,11 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
 
 instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Html
 instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
-  FlowContext { cdnBaseUrl } <- ask
+  FlowContext { cdnBaseUrl, production } <- ask
   when (instanceId /= instanceId') $ throwAuthenticationErrorHTML AccessControlError
   return . Html.renderInstanceOverview $ Html.InstanceOverviewTemplateVars
-    { cdnBaseUrl = fromMaybe "" cdnBaseUrl
+    { production = production
+    , cdnBaseUrl = fromMaybe "" cdnBaseUrl
     , ..
     }
   where

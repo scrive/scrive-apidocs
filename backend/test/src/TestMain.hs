@@ -275,8 +275,10 @@ testMany' tconf (allargs, ts) runLogger rng = do
   (errs, lr) <- mkLogRunner "flow" testLogConfig rng
   mapM_ T.putStrLn errs
 
-  let flowContext =
-        FlowContext (Flow.handle env) ("http://localhost:" <> showt flowPort) Nothing
+  let flowContext = FlowContext (Flow.handle env)
+                                ("http://localhost:" <> showt flowPort)
+                                Nothing
+                                False
   void . fork $ runFlow
     lr
     (FlowConfiguration

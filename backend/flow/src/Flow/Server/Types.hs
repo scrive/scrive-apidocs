@@ -49,6 +49,7 @@ data FlowContext = FlowContext
   { handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
   , mainDomainUrl :: Text
   , cdnBaseUrl :: Maybe Text
+  , production :: Bool
   }
 
 type AppM = ReaderT FlowContext (CryptoRNGT (DBT (LogT Handler)))

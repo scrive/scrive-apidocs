@@ -133,6 +133,7 @@ main = withCurlDo $ do
     let flowContext = FlowContext (Flow.handle appConf appGlobals)
                                   (mainDomainUrl appConf)
                                   (cdnBaseUrl appConf)
+                                  (production appConf)
     liftIO . maybeFork . void $ runFlow
       logRunnerFlow
       (FlowConfiguration

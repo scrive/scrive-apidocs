@@ -88,17 +88,17 @@ throwAuthenticationError explanation = throwError $ makeJSONError FlowError
 throwAuthenticationErrorHTML
   :: (MonadError ServerError m, MonadReader FlowContext m) => AuthError -> m a
 throwAuthenticationErrorHTML explanation' = do
-  FlowContext { cdnBaseUrl } <- ask
+  FlowContext { cdnBaseUrl, production } <- ask
   throwError $ makeHTMLError FlowError
     { code        = 401
     , message     = "Authentication Error"
-    , explanation = renderedHTML $ fromMaybe "" cdnBaseUrl
+    , explanation = renderedHTML (fromMaybe "" cdnBaseUrl) production
     , details     = Nothing
     }
   where
     versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
     explanation = showt explanation'
-    renderedHTML cdnBaseUrl =
+    renderedHTML cdnBaseUrl production =
       TL.toStrict
         . Blaze.renderHtml
         . Html.renderAuthErrorPage

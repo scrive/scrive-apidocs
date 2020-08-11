@@ -19,8 +19,8 @@ import Text.RawString.QQ
 
 import Flow.Id
 
-pageHeader :: Text -> Text -> Text -> Html
-pageHeader cdnBaseUrl versionCode titleText = do
+pageHeader :: Bool -> Text -> Text -> Text -> Html
+pageHeader production cdnBaseUrl versionCode titleText = do
   head $ do
     title $ toHtml titleText
     meta ! charset "utf-8"
@@ -30,9 +30,13 @@ pageHeader cdnBaseUrl versionCode titleText = do
     meta ! name "robots" ! content "noindex"
     link ! rel "stylesheet" ! type_ "text/css" ! href
       (textValue $ cdnBaseUrl <> "/elm-assets/flow-overview-" <> versionCode <> ".css")
-    link ! rel "stylesheet" ! type_ "text/css" ! href "/less/signview-less-compiled.css"
+    link ! rel "stylesheet" ! type_ "text/css" ! href (textValue signviewCssUrl)
     link ! rel "stylesheet" ! type_ "text/css" ! href
       (textValue $ cdnBaseUrl <> "/elm-assets/flow-dummy-branding.css")
+  where
+    signviewCssUrl = if production
+      then cdnBaseUrl <> "/" <> versionCode <> ".signview-all-styling-minified.css"
+      else "/less/signview-less-compiled.css"
 
 logoHeader :: Text -> Html
 logoHeader cdnBaseUrl = do
@@ -56,7 +60,8 @@ logoFooter cdnBaseUrl = do
           ! alt "Powered by Scrive"
 
 data InstanceOverviewTemplateVars = InstanceOverviewTemplateVars
-  { cdnBaseUrl :: Text
+  { production :: Bool
+  , cdnBaseUrl :: Text
   , versionCode :: Text
   , kontraApiUrl :: Text
   , flowApiUrl :: Text
@@ -65,7 +70,7 @@ data InstanceOverviewTemplateVars = InstanceOverviewTemplateVars
 
 renderInstanceOverview :: InstanceOverviewTemplateVars -> Html
 renderInstanceOverview InstanceOverviewTemplateVars {..} = docTypeHtml $ do
-  pageHeader cdnBaseUrl versionCode "Scrive Flow Overview"
+  pageHeader production cdnBaseUrl versionCode "Scrive Flow Overview"
   body $ do
     div ! class_ "flow-overview signview" ! style "position: relative;" $ do
       logoHeader cdnBaseUrl
@@ -97,14 +102,15 @@ renderInstanceOverview InstanceOverviewTemplateVars {..} = docTypeHtml $ do
   where crossorigin = attribute "crossorigin" "crossorigin=\""
 
 data AuthErrorTemplateVars = AuthErrorTemplateVars
-  { explanation :: Text
+  { production :: Bool
   , cdnBaseUrl :: Text
   , versionCode :: Text
+  , explanation :: Text
   }
 
 renderAuthErrorPage :: AuthErrorTemplateVars -> Html
 renderAuthErrorPage AuthErrorTemplateVars {..} = docTypeHtml $ do
-  pageHeader cdnBaseUrl versionCode "Scrive Flow Authorisation Error"
+  pageHeader production cdnBaseUrl versionCode "Scrive Flow Authorisation Error"
   body $ do
     div ! class_ "flow-overview signview" ! style "position: relative;" $ do
       logoHeader cdnBaseUrl
