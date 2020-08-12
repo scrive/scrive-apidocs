@@ -611,6 +611,8 @@ getUserGroupSettingsChange = do
       Just "force_eidhub" -> Just $ Just ForceEIDHubForSEBankIDSigning
       Just "no_override"  -> Just Nothing
       _                   -> Nothing
+  mcompanypadescredentialslabel <- fmap emptyToNothing
+    <$> getField "companypadescredentialslabel"
 
   return
     $ maybe identity (set #ipAddressMaskList) mcompanyipaddressmasklist
@@ -655,6 +657,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #eidUseForSEView . (== "true")) mcompanyeiduseforseview
     . maybe identity (set #appFrontend . (== "true"))     mcompanyappfrontend
     . maybe identity (set #seBankIDSigningOverride)       mcompanysebankidsigningoverride
+    . maybe identity (set #padesCredentialsLabel)         mcompanypadescredentialslabel
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))

@@ -32,6 +32,8 @@ import PdfToolsLambda.Class
 import PdfToolsLambda.Conf
 import SealingMethod
 import User.Model
+import UserGroup.Model
+import UserGroup.Types
 import Util.Actor (systemActor)
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
@@ -82,14 +84,17 @@ addPadesSignature
   -> BS.ByteString
   -> m Bool
 addPadesSignature fileName inputFileContent = do
-  documentNumberText <- showt <$> theDocumentID
-  authorid           <- guardJustM $ getAuthorUserId <$> theDocument
-  mauthor            <- dbQuery $ GetUserByID authorid
-  le                 <- lambdaEnv
-  let overrideAPICredentials = do
-        gsc    <- globalSign le
-        author <- mauthor
-        lookup (author ^. #groupID) (gsc ^. #apiCredentials)
+  documentNumberText     <- showt <$> theDocumentID
+  authorid               <- guardJustM $ getAuthorUserId <$> theDocument
+  mauthor                <- dbQuery $ GetUserByID authorid
+  le                     <- lambdaEnv
+  overrideAPICredentials <- case (globalSign le, mauthor) of
+    (Just gsc, Just author) -> do
+      authorugwp <- dbQuery . UserGroupGetWithParentsByUserID $ author ^. #id
+      case ugwpSettings authorugwp ^. #padesCredentialsLabel of
+        Nothing       -> return Nothing
+        Just apiLabel -> return $ lookup apiLabel (gsc ^. #apiCredentials)
+    _ -> return Nothing
   answer <- callPdfToolsPadesSign PadesSignSpec { .. }
   case answer of
     Just result -> do

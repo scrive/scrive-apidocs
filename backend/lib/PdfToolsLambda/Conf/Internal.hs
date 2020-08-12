@@ -8,7 +8,6 @@ import Optics.TH
 
 import FileStorage.Amazon.Config
 import FileStorage.Amazon.S3Env
-import UserGroup.Types (UserGroupID)
 
 data LambdaConfig = LambdaConfig
   { gatewayUrl :: Text
@@ -25,7 +24,7 @@ data GlobalSignConfig = GlobalSignConfig
   { certificate         :: Text
   , certificatePassword :: Text
   , defaultAPICredentials :: GlobalSignAPICredentials
-  , apiCredentials :: [(UserGroupID, GlobalSignAPICredentials)]
+  , apiCredentials :: [(Text, GlobalSignAPICredentials)]
   } deriving (Show, Eq)
 
 data PdfToolsLambdaConf = PdfToolsLambdaConf
@@ -68,7 +67,7 @@ instance Unjson GlobalSignConfig where
                 "Default GlobalSign API credentials"
       <*> field "api_credentials"
                 (^. #apiCredentials)
-                "GlobalSign API credentials per user group"
+                "GlobalSign API credentials per label"
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef =
