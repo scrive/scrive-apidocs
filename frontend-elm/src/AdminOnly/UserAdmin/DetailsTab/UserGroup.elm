@@ -144,6 +144,9 @@ setStringField name value ug =
         "eidServiceToken" ->
             modifySettings (\s -> { s | eidServiceToken = stringNonEmpty value }) ug
 
+        "padesCredentialsLabel" ->
+            modifySettings (\s -> { s | padesCredentialsLabel = stringNonEmpty value }) ug
+
         "parentID" ->
             { ug | parentID = stringNonEmpty value }
 
@@ -346,6 +349,7 @@ type alias Settings =
     , eidUseForSEView : Bool
     , appFrontend : Bool
     , seBankIDSigningOverride : SEBankIDSigningProviderOverride
+    , padesCredentialsLabel : Maybe String
     }
 
 type SEBankIDSigningProviderOverride = ForceCGIForSEBankIDSigning | ForceEIDHubForSEBankIDSigning | DefaultSEBankIDSigning
@@ -401,6 +405,7 @@ settingsDecoder =
         |> DP.required "eiduseforseview" JD.bool
         |> DP.required "appfrontend" JD.bool
         |> DP.required "seBankIDSigningOverride" seBankIDSigningProviderOverrideDecoder
+        |> DP.required "padescredentialslabel" (JD.string |> JD.nullable)
 
 
 type alias ParentUserGroup =
@@ -633,6 +638,7 @@ formValuesSettings settings =
     , ( "companycgiserviceid", M.withDefault "" settings.cgiServiceID )
     , ( "companycgidisplayname", M.withDefault "" settings.cgiDisplayName )
     , ( "companysebankidsigningoverride", Enum.toString enumSEBankIDSigningProviderOverride settings.seBankIDSigningOverride)
+    , ( "companypadescredentialslabel", M.withDefault "" settings.padesCredentialsLabel )
     ]
 
 mField : (value -> String) -> ( String, Maybe value ) -> Maybe ( String, String )

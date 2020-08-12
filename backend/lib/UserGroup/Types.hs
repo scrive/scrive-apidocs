@@ -263,6 +263,7 @@ defaultUserGroupSettings = UserGroupSettings
   , eidUseForSEView            = False
   , appFrontend                = False
   , seBankIDSigningOverride    = Nothing
+  , padesCredentialsLabel      = Nothing
   }
 
 -- UI

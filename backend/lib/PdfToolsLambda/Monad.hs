@@ -49,3 +49,4 @@ instance
   callPdfToolsAddImage spec = PdfToolsLambdaT $ callPdfToolsAddImagePrim spec =<< ask
   callPdfToolsPadesSign spec = PdfToolsLambdaT $ callPdfToolsPadesSignPrim spec =<< ask
   callPdfToolsCleaning spec = PdfToolsLambdaT $ callPdfToolsCleaningPrim spec =<< ask
+  lambdaEnv = PdfToolsLambdaT ask

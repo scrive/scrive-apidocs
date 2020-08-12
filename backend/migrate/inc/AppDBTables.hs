@@ -76,7 +76,7 @@ kontraComposites =
   -- user group composites
     , ctUserGroupInvoicing
     , ctUserGroupSettings
-    , ctUserGroupSettings14
+    , ctUserGroupSettings15
     , ctUserGroupUI
     , ctUserGroupAddress
     , ctUserGroupAddress1

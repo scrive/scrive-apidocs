@@ -280,4 +280,5 @@ kontraMigrations =
   , createTableFlowInstanceSessions
   , addIndicesToFlowInstanceKeyValueStore
   , featureFlagsAddIntegrationsFeatures
+  , userGroupSettingsAddPadesCredentialsLabel
   ]

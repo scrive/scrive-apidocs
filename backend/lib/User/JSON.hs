@@ -238,6 +238,7 @@ companySettingsJson ugs = do
     Just ForceCGIForSEBankIDSigning -> "force_cgi"
     Just ForceEIDHubForSEBankIDSigning -> "force_eidhub"
     Nothing -> "no_override"
+  value "padescredentialslabel" $ ugs ^. #padesCredentialsLabel
 
 userStatsToJSON
   :: (UTCTime -> Text)

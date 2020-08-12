@@ -235,6 +235,7 @@ data UserGroupSettings = UserGroupSettings
   , eidUseForSEView            :: !Bool
   , appFrontend                :: !Bool
   , seBankIDSigningOverride    :: !(Maybe SEBankIDSigningProviderOverride)
+  , padesCredentialsLabel      :: !(Maybe Text)
   } deriving (Show, Eq)
 
 
@@ -269,13 +270,14 @@ type instance CompositeRow UserGroupSettings
     , Bool
     , Bool
     , Maybe SEBankIDSigningProviderOverride
+    , Maybe Text
     )
 
 instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig, addMetadataToPDFs, eidUseForSEView, appFrontend, seBankIDSigningOverride)
+  toComposite (ip_address_mask_list, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, cgiDisplayName, smsProvider, cgiServiceID, padAppMode, padEarchiveEnabled, legalText, requireBPIDForNewDoc, sendTimeoutNotification, useFolderListCalls, totpIsMandatory, sessionTimeoutSecs, portalUrl, eidServiceToken, sealingMethod, documentSessionTimeoutSecs, forceHidePN, hasPostSignview, ssoConfig, addMetadataToPDFs, eidUseForSEView, appFrontend, seBankIDSigningOverride, padesCredentialsLabel)
     = UserGroupSettings
       { ipAddressMaskList   = maybe [] read ip_address_mask_list
       , dataRetentionPolicy = DataRetentionPolicy { .. }
