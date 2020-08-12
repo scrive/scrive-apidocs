@@ -336,6 +336,7 @@ instance Arbitrary UserGroupSettings where
       <*> arbitrary
       <*> arbitrary
       <*> pure Nothing
+      <*> pure Nothing -- do not set GlobalSign credentials label
 
 instance Arbitrary UserGroupAddress where
   arbitrary =

@@ -251,6 +251,7 @@ instance PdfToolsLambdaMonad TestKontra where
     TestKontra $ callPdfToolsPadesSignPrim spec =<< use #pdfToolsLambdaEnv
   -- Don't run pdf cleaning in tests
   callPdfToolsCleaning = pure . Just . BSL.toStrict
+  lambdaEnv            = TestKontra $ use #pdfToolsLambdaEnv
 
 instance MailContextMonad TestKontra where
   getMailContext = contextToMailContext <$> getContext
