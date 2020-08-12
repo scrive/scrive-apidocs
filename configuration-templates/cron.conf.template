@@ -81,8 +81,10 @@
       "gateway_url": "",
       "api_key": "",
       "global_sign": {
-        "api_key": "",
-        "api_password": "",
+        "default_api_credentials": {"api_key": "",
+                                    "api_password": "",
+                                    "common_name": "Scrive AB"},
+        "api_credentials": [],
         "certificate": "",
         "certificate_password": ""
       },
