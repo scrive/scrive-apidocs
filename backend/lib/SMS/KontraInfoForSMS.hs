@@ -5,8 +5,9 @@ module SMS.KontraInfoForSMS (
   ) where
 
 import Control.Monad.Catch
+import Data.Aeson
 import Data.Int
-import Log
+import GHC.Generics
 
 import DB
 import Doc.DocumentID
@@ -26,8 +27,10 @@ data KontraInfoForSMS =
   DocumentPinSendoutSMS DocumentID SignatoryLinkID |
   DocumentPartyNotificationSMS DocumentID SignatoryLinkID |
   OtherDocumentSMS DocumentID
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
 
+-- For logging
+instance ToJSON KontraInfoForSMS
 
 instance PQFormat KontraInfoForSMSType where
   pqFormat = pqFormat @Int16

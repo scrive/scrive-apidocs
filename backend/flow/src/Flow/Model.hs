@@ -13,7 +13,7 @@ module Flow.Model
     , selectDocumentIdsByDocumentIds
     , selectDocumentIdsAssociatedWithSomeInstance
     , selectDocumentNameFromKV
-    , selectDocumentsByInstanceId
+    , selectDocumentIdsByInstanceId
     , selectFullInstance
     , selectInstance
     , selectInstanceIdByDocumentId
@@ -322,8 +322,8 @@ insertInstanceSignatories instanceId links =
     sqlSetList "key" $ map fst links
     sqlSetList "signatory_id" $ map snd links
 
-selectDocumentsByInstanceId :: (MonadDB m, MonadThrow m) => InstanceId -> m [DocumentID]
-selectDocumentsByInstanceId instanceId = do
+selectDocumentIdsByInstanceId :: (MonadDB m, MonadThrow m) => InstanceId -> m [DocumentID]
+selectDocumentIdsByInstanceId instanceId = do
   runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
     sqlResult "document_id"
     sqlWhereEq "instance_id" instanceId

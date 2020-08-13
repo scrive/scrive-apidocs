@@ -1,6 +1,7 @@
 {-# LANGUAGE StrictData #-}
 module Flow.DocumentStarting
   ( startDocument
+  , emptyKontrakcjaRequestFromAccount
   )
  where
 
@@ -25,7 +26,7 @@ import User.Types.User
 startDocument :: Account -> DocumentID -> AppM ()
 startDocument account docId = do
   FlowContext {..} <- ask
-  request          <- liftIO $ startDocumentRequest account
+  request          <- liftIO $ emptyKontrakcjaRequestFromAccount account
   response         <- lift $ handleWithKontra (kontraActions (user account) docId) request
   processResponse docId response
 
@@ -34,8 +35,8 @@ kontraActions user docId = do
   modifyContext $ \ctx -> ctx & (#maybeUser ?~ user)
   docApiV2Start docId
 
-startDocumentRequest :: Account -> IO Request
-startDocumentRequest Account {..} = do
+emptyKontrakcjaRequestFromAccount :: Account -> IO Request
+emptyKontrakcjaRequestFromAccount Account {..} = do
   rqBody       <- newMVar $ Body BS.empty
   rqInputsBody <- newMVar []
 

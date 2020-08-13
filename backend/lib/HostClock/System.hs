@@ -13,7 +13,7 @@ getOffset ntpservers = do
   case take 3 . reverse $ words (last $ lines a) of
     ["sec", offset, "offset"] -> do
       case offset of
-        ""           -> fail $ "HostClock.System.getOffset: (empty output)"
+        ""           -> fail "HostClock.System.getOffset: (empty output)"
         ('+' : rest) -> return (read $ T.pack rest)
         _            -> return (read $ T.pack offset)
     _ -> fail $ "HostClock.System.getOffset:  cannot parse " <> show a

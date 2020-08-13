@@ -11,6 +11,7 @@ module Flow.Server.AuthHandler
 import Control.Monad.Error.Class
 import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
+import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Text.Encoding
 import Database.PostgreSQL.PQTypes hiding (JSON(..))
@@ -135,24 +136,26 @@ instanceUserHandler runLogger flowConfiguration errorThrower req =
           $ InstanceUser (instanceSession ^. #userName) (instanceSession ^. #instanceId)
 
 mHost :: Request -> Maybe Host
-mHost req = decodeUtf8 <$> requestHeaderHost req
+mHost = fmap decodeUtf8 . requestHeaderHost
 
 -- TODO handle the exception somehow
 -- ... but don't put it into the response, it leaks internal information!
-throwAuthError :: (MonadLog m, Show a, MonadError ServerError m) => AuthError -> a -> m b
+throwAuthError
+  :: (MonadLog m, TextShow a, MonadError ServerError m) => AuthError -> a -> m b
 throwAuthError errorName e = do
-  logAttention ("throwAuthError: " <> showt errorName) $ show e
+  logAttention "throwAuthError" $ object ["errorName" .= showt errorName, "e" .= showt e]
   throwAuthenticationError errorName
 
 -- TODO handle the exception somehow
 -- ... but don't put it into the response, it leaks internal information!
 throwAuthErrorHTML
-  :: (MonadLog m, Show a, MonadError ServerError m, MonadReader FlowContext m)
+  :: (MonadLog m, TextShow a, MonadError ServerError m, MonadReader FlowContext m)
   => AuthError
   -> a
   -> m b
 throwAuthErrorHTML errorName e = do
-  logAttention ("throwAuthErrorHTML: " <> showt errorName) $ show e
+  logAttention "throwAuthErrorHTML"
+    $ object ["errorName" .= showt errorName, "e" .= showt e]
   throwAuthenticationErrorHTML errorName
 
 getAuthCookies :: Request -> Maybe AuthCookies

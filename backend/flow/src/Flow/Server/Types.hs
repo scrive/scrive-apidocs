@@ -24,8 +24,10 @@ import Happstack.Server (Request, Response)
 import Log.Monad (LogT)
 import Servant
 import Servant.Server.Experimental.Auth
+import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import AccessControl.Types
+import EventStream.Kinesis
 import Flow.Id
 import Flow.Names
 import Flow.OrphanInstances ()
@@ -35,8 +37,7 @@ import User.Types.User (User)
 import UserGroup.Internal (UserGroup)
 
 data FlowConfiguration = FlowConfiguration
-    { dbConnectionPool :: forall m . (MonadBase IO m, MonadMask m)
-        => ConnectionSourceM m
+    { dbConnectionPool :: forall m . (MonadBase IO m, MonadMask m) => ConnectionSourceM m
     , flowPort :: Int
     , cryptoRNG :: CryptoRNGState
     , context :: FlowContext
@@ -45,14 +46,17 @@ data FlowConfiguration = FlowConfiguration
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 
+type InternalM = KinesisT (CryptoRNGT (DBT (LogT Handler)))
+type AppM = ReaderT FlowContext InternalM
+
 data FlowContext = FlowContext
-  { handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> CryptoRNGT (DBT (LogT Handler)) Response
+  { handleWithKontra :: (forall m. Kontrakcja m => m Response) -> Request -> InternalM Response
   , mainDomainUrl :: Text
   , cdnBaseUrl :: Maybe Text
   , production :: Bool
+  , templates :: TL.GlobalTemplates
+  , kinesisStream :: Maybe KinesisConf
   }
-
-type AppM = ReaderT FlowContext (CryptoRNGT (DBT (LogT Handler)))
 
 data Account = Account
     { user :: User

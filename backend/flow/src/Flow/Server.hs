@@ -18,6 +18,7 @@ import Network.Wai.Middleware.Servant.Errors (errorMw)
 import Servant
 import Servant.Server.Experimental.Auth
 
+import EventStream.Kinesis
 import Flow.OrphanInstances ()
 import Flow.Routes
 import Flow.Server.Api
@@ -34,6 +35,7 @@ naturalFlow runLogger FlowConfiguration {..} flowApp =
   runLogger
     . runDBT dbConnectionPool defaultTransactionSettings
     . runCryptoRNGT cryptoRNG
+    . runKinesisT (kinesisStream context)
     $ runReaderT flowApp context
 
 genAuthServerContext

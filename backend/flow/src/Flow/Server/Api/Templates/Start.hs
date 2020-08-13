@@ -3,6 +3,7 @@
 module Flow.Server.Api.Templates.Start where
 
 import Control.Monad.Except
+import Control.Monad.Reader
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
@@ -13,6 +14,8 @@ import Log.Class
 import Servant
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Text as T
+import qualified Text.StringTemplates.Templates as TM
 
 import AccessControl.Check
 import AccessControl.Types
@@ -21,6 +24,7 @@ import Doc.DocumentID (DocumentID)
 import Doc.Model.Query
 import Doc.SignatoryLinkID
 import Doc.Types.Document
+import Flow.ActionConsumers hiding (Notify, users)
 import Flow.DocumentChecker as DocumentChecker
 import Flow.DocumentStarting
 import Flow.Engine
@@ -32,9 +36,11 @@ import Flow.Model.Types
 import Flow.Model.Types.FlowUserId as FlowUserId
 import Flow.OrphanInstances ()
 import Flow.Routes.Api hiding (documents)
+import Flow.Routes.Types
 import Flow.Server.Api.Common
 import Flow.Server.Types
 import Flow.Server.Utils
+import User.Lang
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.VariableCollector as Collector
@@ -73,9 +79,10 @@ startTemplate account templateId keyValues = do
   documents <- mapM (dbQuery . GetDocumentByDocumentID) documentIds
   reportSettings $ checkDocumentSettingsConsistency documents
 
-  -- TODO: remove head...
-  let stateId = stageName . head $ stages tongue
-  let ii      = InsertInstance templateId stateId
+  let initialStage = head $ stages tongue
+  let actions      = stageActions initialStage
+  let stateId      = stageName initialStage
+  let ii           = InsertInstance templateId stateId
   id <- Model.insertFlowInstance ii
 
   -- The ordering of operations here is crucial.
@@ -111,6 +118,14 @@ startTemplate account templateId keyValues = do
   -- TODO add a proper instance state
   let state = InstanceState { availableActions = [] }
   let status             = InProgress
+
+  templates' <- asks templates
+  TM.runTemplatesT (T.unpack $ codeFromLang LANG_EN, templates')
+    . forM_ actions
+    $ (\Notify {..} -> notifyAction (Url $ baseUrl account) id actionUsers actionMessage
+        >>= uncurry consumeNotifyAction
+      )
+
   pure $ GetInstance { .. }
   where
 

@@ -279,6 +279,8 @@ testMany' tconf (allargs, ts) runLogger rng = do
                                 ("http://localhost:" <> showt flowPort)
                                 Nothing
                                 False
+                                templates
+                                Nothing
   void . fork $ runFlow
     lr
     (FlowConfiguration

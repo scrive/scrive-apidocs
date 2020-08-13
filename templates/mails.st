@@ -897,3 +897,13 @@ gmailGoToActionMarkup=
 <meta itemprop="description" content="$actiondescription$"></meta>
 </div>
 ####
+####
+flowNotifyEmail=
+    $_mailFlowNotifyTitle()$
+    $nicemail(
+      mailp1=_mailFlowNotify();
+      mailspacing1="<br/>";
+      mailp2=flowNotifyMessage;
+      mailp3=nicebutton(link=flowAccessLink; text=_mailFlowAccessLinkLabel())
+    )$
+####

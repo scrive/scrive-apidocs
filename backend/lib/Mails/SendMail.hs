@@ -39,7 +39,7 @@ import qualified Mails.Model as M
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => Mail -> m ()
 scheduleEmailSendout m = scheduleEmailSendoutHelper (originator m) m
 
--- Sending mail with from address like 'Mariusz throught Scrive'
+-- Sending mail with from address like 'Mariusz through Scrive'
 scheduleEmailSendoutWithAuthorSenderThroughService
   :: (CryptoRNG m, MonadDB m, MonadLog m, T.TemplatesMonad m, MonadThrow m)
   => DocumentID

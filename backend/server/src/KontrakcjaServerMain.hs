@@ -130,10 +130,13 @@ main = withCurlDo $ do
 
     runWithLogRunner logRunnerFlow $ logInfo_ "Starting flow-server"
 
+    templates <- readGlobalTemplates
     let flowContext = FlowContext (Flow.handle appConf appGlobals)
                                   (mainDomainUrl appConf)
                                   (cdnBaseUrl appConf)
                                   (production appConf)
+                                  templates
+                                  (kinesisStream appConf)
     liftIO . maybeFork . void $ runFlow
       logRunnerFlow
       (FlowConfiguration

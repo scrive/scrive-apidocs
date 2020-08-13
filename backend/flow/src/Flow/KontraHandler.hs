@@ -28,7 +28,6 @@ import AppConf
 import AppControl
 import EventStream.Kinesis
 import FileStorage
-import Flow.OrphanInstances ()
 import GuardTime (GuardTimeConfMonad(..))
 import Happstack.Server.ReqHandler
 import Kontra

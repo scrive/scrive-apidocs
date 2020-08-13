@@ -16,6 +16,7 @@ import Data.Aeson
 import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes
+import GHC.Generics
 
 import DB.Derive
 import Log.Identifier
@@ -54,7 +55,10 @@ data MessengerJob = MessengerJob
 
 data SMSProvider = SMSDefault
                  | SMSTeliaCallGuide
-  deriving (Bounded, Enum, Eq, Ord, Show, Read)
+  deriving (Bounded, Enum, Eq, Ord, Show, Read, Generic)
+
+-- For logging
+instance ToJSON SMSProvider
 
 instance PQFormat SMSProvider where
   pqFormat = pqFormat @Int16

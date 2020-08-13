@@ -37,6 +37,7 @@ import Flow.Machinize
 import Flow.Model as Model
 import Flow.Model.Types
 import Flow.Process
+import Flow.Routes.Types
 import GuardTime (GuardTimeConfMonad)
 import MailContext
 
@@ -121,7 +122,9 @@ pushActions
   -> [LowAction]
   -> ExceptT EngineError m ()
 pushActions instanceId actions = do
-  consumableActions <- mapM (toConsumableAction instanceId) actions
+  mailCtx <- getMailContext
+  let baseUrl = Url (mailCtx ^. #brandedDomain % #url)
+  consumableActions <- mapM (toConsumableAction baseUrl instanceId) actions
   mapM_ consumeFlowAction consumableActions
 
 decodeHighTongueM :: (MonadLog m, MonadThrow m) => Process -> m HighTongue

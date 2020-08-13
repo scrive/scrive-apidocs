@@ -6,9 +6,11 @@ module SMS.SMS (
   ) where
 
 import Control.Monad.Catch
+import Data.Aeson
 import Data.Char
 import Data.List.Extra
 import Data.Set (Set, fromList, member)
+import GHC.Generics
 import Log
 import qualified Data.Text as T
 
@@ -27,7 +29,10 @@ data SMS = SMS {
   , smsBody       :: Text -- ^ Message body
   , smsOriginator :: Text -- ^ SMS originator/sender name
   , smsProvider   :: SMSProvider -- ^ SMS provider type
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show, Generic)
+
+-- For logging
+instance ToJSON SMS
 
 -- | Schedule SMS sendout. The SMS sendout provider takes care of detecting the
 -- need to use UCS2 or GSM7 and the details of conversion, but unfortunately we

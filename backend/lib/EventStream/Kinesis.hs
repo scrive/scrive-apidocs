@@ -8,6 +8,7 @@ module EventStream.Kinesis
 
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.Except
 import Control.Monad.Reader hiding (fail)
 import Control.Monad.Trans.Control
 import Crypto.RNG
@@ -98,6 +99,10 @@ instance (MonadThrow m, MonadIO m, MonadCatch m, MonadLog m)
                       , "streamId" .= streamId
                       ]
     where payload = BSL.toStrict . encode $ Envelope defaultVersion message
+
+instance MonadError e m => MonadError e (KinesisT m) where
+  throwError = lift . throwError
+  catchError m h = KinesisT $ catchError (unKinesis m) (unKinesis . h)
 
 runKinesisT
   :: (MonadCatch m, MonadIO m, MonadLog m) => Maybe KinesisConf -> KinesisT m a -> m a

@@ -126,7 +126,6 @@ instance (MonadDB m,  MonadThrow m, MonadLog m) => DBQuery m GetMainBrandedDomai
       sqlLimit 1
     fetchOne fetchBrandedDomain
 
-
 newtype GetBrandedDomainByURL = GetBrandedDomainByURL Text
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetBrandedDomainByURL BrandedDomain where
   dbQuery (GetBrandedDomainByURL url) = do
