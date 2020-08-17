@@ -75,3 +75,5 @@ ghc-pkg.list
 frontend-elm/elm-stuff/
 frontend-elm/node_modules/
 frontend-elm/dist/
+.venv/
+__pycache__/
