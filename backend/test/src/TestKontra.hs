@@ -496,6 +496,7 @@ testGtConf = GuardTimeConf
   , guardTimeSigningLoginKey        = "anon"
   , guardTimeExtendingLoginUser     = "anon"
   , guardTimeExtendingLoginKey      = "1234"
+  , guardTimeGatewayIdentity        = "GT :: GT :: Scrive :: public"
   }
 
 dummyGtConf :: GuardTimeConf
