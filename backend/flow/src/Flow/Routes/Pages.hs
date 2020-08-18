@@ -20,7 +20,8 @@ import Flow.Server.Cookies
 -- brittany-disable-next-binding
 type Pages
   = AuthProtect "instance-user-html" :>
-      "overview" :> Capture "instance_id" InstanceId :> Capture "user_name" UserName
+      "overview" :> Capture "instance_id" InstanceId
+                 :> Capture "user_name" UserName
                  :> Get '[HTML] Html
     :<|>
       -- No authentication

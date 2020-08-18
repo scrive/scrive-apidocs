@@ -13,6 +13,7 @@ import BrandedDomain.Model
 import Branding.Adler32
 import Company.CompanyControl
 import Company.JSON
+import Context
 import DB
 import TestingUtil
 import TestKontra
@@ -287,11 +288,13 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
 
   void . dbUpdate . UserGroupUpdate $ set #ui (Just newUgUI) ug
   (Just ugui1) <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
-  adlerSum1    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui1)
+  adlerSum1    <- brandingAdler32 (ctx ^. #brandedDomain) (contextUser ctx)
+    $ Just (ug ^. #id, ugui1)
 
   void . dbUpdate . UserGroupUpdate $ set #ui (Just $ set #serviceTheme Nothing ugui1) ug
   (Just ugui2) <- fmap (^. #ui) . guardJustM . dbQuery . UserGroupGet $ ug ^. #id
-  adlerSum2    <- brandingAdler32 ctx $ Just (ug ^. #id, ugui2)
+  adlerSum2    <- brandingAdler32 (ctx ^. #brandedDomain) (contextUser ctx)
+    $ Just (ug ^. #id, ugui2)
 
   assertBool "Branding Adler32 should change after we stoped using theme for service"
              (adlerSum1 /= adlerSum2)

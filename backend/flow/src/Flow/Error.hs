@@ -96,13 +96,20 @@ throwAuthenticationErrorHTML explanation' = do
     , details     = Nothing
     }
   where
-    versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
-    explanation = showt explanation'
+    -- TODO: The error page should use BrandedDomains like the overview page.
     renderedHTML cdnBaseUrl production =
-      TL.toStrict
-        . Blaze.renderHtml
-        . Html.renderAuthErrorPage
-        $ Html.AuthErrorTemplateVars { .. }
+      TL.toStrict . Blaze.renderHtml . Html.renderAuthErrorPage $ Html.AuthErrorPageVars
+        { commonVars  =
+          Html.CommonPageVars
+            { production     = production
+            , cdnBaseUrl     = cdnBaseUrl
+            , brandingCssUrl = cdnBaseUrl <> "/elm-assets/flow-dummy-branding.css"
+            , logoUrl        = cdnBaseUrl <> "/elm-assets/flow-images/scrive-logo.png"
+            , versionCode    = T.decodeUtf8 . B16.encode $ BS.fromString versionID
+            , browserTitle   = "Scrive Flow Authorisation Error"
+            }
+        , explanation = showt explanation'
+        }
 
 throwTemplateNotFoundError :: MonadError ServerError m => m a
 throwTemplateNotFoundError = throwError $ makeJSONError FlowError

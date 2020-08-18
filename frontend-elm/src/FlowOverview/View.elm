@@ -73,7 +73,7 @@ docTable documents noDocumentsText =
                 Table.thead []
                     [ Table.tr [ Table.rowAttr <| class "row" ]
                         [ Table.th [ cellClass "col-md-4" ] [ text "Document" ]
-                        , Table.th [ cellClass "col-md-4" ] [ text "Signing parties" ]
+                        , Table.th [ cellClass "col-md-4" ] [ text "Participants" ]
                         , Table.th [ cellClass "col-md-4" ] [ text "Sender" ]
                         ]
                     ]

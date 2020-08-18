@@ -21,10 +21,10 @@ module AppView (
               , entryPointFields
               , userGroupUIForPage
               , enableCookiesPage
+              , brandedPageTitle
               ) where
 
 import Control.Arrow (second)
-import Data.List.Extra
 import Data.Unjson
 import Happstack.Server.SimpleHTTP
 import Log
@@ -42,6 +42,7 @@ import qualified Text.JSON as JSON
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
+import BrandedDomain.Model
 import Branding.Adler32
 import DB
 import Kontra
@@ -218,7 +219,8 @@ standardPageFields ctx mugidandui ad = do
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (ctx ^. #trackJsToken)
   F.value "zendeskkey" (ctx ^. #zendeskKey)
-  F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
+  F.valueM "brandinghash"
+    $ brandingAdler32 (ctx ^. #brandedDomain) (contextUser ctx) mugidandui
   F.valueM "b64subscriptiondata"
     $   fmap (B64.encode . A.encode)
     <$> currentSubscriptionJSON
@@ -227,12 +229,15 @@ standardPageFields ctx mugidandui ad = do
         Nothing    -> "undefined"
         Just True  -> "true"
         Just False -> "false"
-  F.value "title"
-    $ case emptyToNothing . trim . T.unpack =<< view #browserTitle . snd =<< mugidandui of
-        Just ctitle ->
-          ctitle <> " - " <> T.unpack (ctx ^. #brandedDomain % #browserTitle)
-        Nothing -> T.unpack (ctx ^. #brandedDomain % #browserTitle)
+  F.value "title" . T.unpack $ brandedPageTitle (ctx ^. #brandedDomain)
+                                                (snd <$> mugidandui)
   entryPointFields ctx
+
+brandedPageTitle :: BrandedDomain -> Maybe UserGroupUI -> Text
+brandedPageTitle bd mugui =
+  case emptyToNothing . T.strip =<< view #browserTitle =<< mugui of
+    Just ctitle -> ctitle <> " - " <> (bd ^. #browserTitle)
+    Nothing     -> bd ^. #browserTitle
 
 jsonContentType :: BS.ByteString
 jsonContentType = "application/json; charset=utf-8"

@@ -13,26 +13,29 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
-import Context
 import DB
 import Theme.Model
+import User.Types.User
 import UserGroup.Model
 import UserGroup.Types
 import VersionTH
 
 brandingAdler32
-  :: (MonadDB m, MonadThrow m) => Context -> Maybe (UserGroupID, UserGroupUI) -> m Text
-brandingAdler32 ctx mugidandui = do
-  ad1 <- domainAdler32 $ ctx ^. #brandedDomain
+  :: (MonadDB m, MonadThrow m)
+  => BrandedDomain
+  -> Maybe User
+  -> Maybe (UserGroupID, UserGroupUI)
+  -> m Text
+brandingAdler32 brandedDomain mUser mugidandui = do
+  ad1 <- domainAdler32 brandedDomain
   ad2 <- maybe (return "") userGroupUIAdler32 mugidandui
   ad3 <- do
-    case contextUser ctx of
+    case mUser of
       Nothing   -> return ""
       Just user -> do
         ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
         userGroupUIAdler32 $ ugwpUIWithID ugwp
   return . adler32Text $ T.concat [ad1, ad2, ad3, showt versionID]
-
 
 imageAdler32 :: BSC8.ByteString -> Text
 imageAdler32 image = T.pack . BSC8.unpack $ adler32BS image

@@ -6,14 +6,18 @@ import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader (ask)
 import Log.Class
 import Servant
-import Text.Blaze.Html5
+import Text.Blaze.Html5 hiding (head)
 import Web.Cookie
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
+import AppView (brandedPageTitle)
 import Auth.MagicHash
 import Auth.Session
+import BrandedDomain.Model
+import Branding.Adler32
 import DB (dbQuery, dbUpdate)
 import Doc.DocControl (checkBeforeAddingDocumentSession)
 import Doc.Model.Query
@@ -27,6 +31,8 @@ import Flow.Routes.Types
 import Flow.Server.Cookies
 import Flow.Server.Types
 import Flow.Server.Utils
+import UserGroup.Model
+import UserGroup.Types
 import VersionTH (versionID)
 import qualified Auth.Model as AuthModel
 import qualified Flow.Html as Html
@@ -101,13 +107,49 @@ instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Html
 instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
   FlowContext { cdnBaseUrl, production } <- ask
   when (instanceId /= instanceId') $ throwAuthenticationErrorHTML AccessControlError
-  return . Html.renderInstanceOverview $ Html.InstanceOverviewTemplateVars
-    { production = production
-    , cdnBaseUrl = fromMaybe "" cdnBaseUrl
-    , ..
+
+  mFullInstance <- Model.selectFullInstance instanceId
+  -- We know the instance exists because of the authenticated InstanceUser
+  let authorUserId = fromJust mFullInstance ^. #template % #userId
+
+  brandingDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
+  bd            <- dbQuery $ GetBrandedDomainByUserID authorUserId
+  brandingUgwp  <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
+
+  -- Used for browser cache busting
+  brandingHash  <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
+
+  let cdnBaseUrl' = fromMaybe "" cdnBaseUrl
+
+  let brandingCssUrl = T.intercalate
+        "/"
+        [ cdnBaseUrl'
+        , "document_signview_branding"
+        , showt (bd ^. #id)
+        , showt brandingDocId
+        , brandingHash <> "-branding.css"
+        ]
+
+  let logoUrl = T.intercalate
+        "/"
+        [ cdnBaseUrl'
+        , "signview_logo"
+        , showt (bd ^. #id)
+        , showt brandingDocId
+        , brandingHash
+        ]
+
+  return . Html.renderInstanceOverview $ Html.InstanceOverviewPageVars
+    { commonVars     = Html.CommonPageVars
+                         { production = production
+                         , cdnBaseUrl = cdnBaseUrl'
+                         , brandingCssUrl = brandingCssUrl
+                         , logoUrl = logoUrl
+                         , versionCode = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
+                         , browserTitle = brandedPageTitle bd (Just $ ugwpUI brandingUgwp)
+                         }
+    , kontraApiUrl   = "/api/v2"
+    , flowApiUrl     = "/" <> flowPath
+    , flowInstanceId = instanceId'
     }
-  where
-    versionCode    = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
-    kontraApiUrl   = "/api/v2"
-    flowApiUrl     = "/" <> flowPath
-    flowInstanceId = instanceId'
+

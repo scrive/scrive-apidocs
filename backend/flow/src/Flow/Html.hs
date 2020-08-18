@@ -3,9 +3,10 @@
 {-# LANGUAGE StrictData #-}
 
 module Flow.Html (
-    InstanceOverviewTemplateVars(..)
+    CommonPageVars(..)
+  , InstanceOverviewPageVars(..)
   , renderInstanceOverview
-  , AuthErrorTemplateVars(..)
+  , AuthErrorPageVars(..)
   , renderAuthErrorPage
   ) where
 
@@ -19,10 +20,31 @@ import Text.RawString.QQ
 
 import Flow.Id
 
-pageHeader :: Bool -> Text -> Text -> Text -> Html
-pageHeader production cdnBaseUrl versionCode titleText = do
+data CommonPageVars = CommonPageVars
+  { production :: Bool
+  , cdnBaseUrl :: Text
+  , brandingCssUrl :: Text
+  , logoUrl :: Text
+  , versionCode :: Text
+  , browserTitle :: Text
+  }
+
+data InstanceOverviewPageVars = InstanceOverviewPageVars
+  { commonVars :: CommonPageVars
+  , kontraApiUrl :: Text
+  , flowApiUrl :: Text
+  , flowInstanceId :: InstanceId
+  }
+
+data AuthErrorPageVars = AuthErrorPageVars
+  { commonVars :: CommonPageVars
+  , explanation :: Text
+  }
+
+pageHeader :: CommonPageVars -> Html
+pageHeader CommonPageVars {..} = do
   head $ do
-    title $ toHtml titleText
+    title $ toHtml browserTitle
     meta ! charset "utf-8"
     meta ! name "viewport" ! content
       "width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no"
@@ -30,24 +52,20 @@ pageHeader production cdnBaseUrl versionCode titleText = do
     meta ! name "robots" ! content "noindex"
     link ! rel "stylesheet" ! type_ "text/css" ! href
       (textValue $ cdnBaseUrl <> "/elm-assets/flow-overview-" <> versionCode <> ".css")
-    link ! rel "stylesheet" ! type_ "text/css" ! href (textValue signviewCssUrl)
-    link ! rel "stylesheet" ! type_ "text/css" ! href
-      (textValue $ cdnBaseUrl <> "/elm-assets/flow-dummy-branding.css")
+    link ! rel "stylesheet" ! type_ "text/css" ! href (textValue signViewCssUrl)
+    link ! rel "stylesheet" ! type_ "text/css" ! href (textValue brandingCssUrl)
   where
-    signviewCssUrl = if production
+    signViewCssUrl = if production
       then cdnBaseUrl <> "/" <> versionCode <> ".signview-all-styling-minified.css"
       else "/less/signview-less-compiled.css"
 
 logoHeader :: Text -> Html
-logoHeader cdnBaseUrl = do
+logoHeader logoUrl = do
   div ! class_ "header" $ do
     div ! class_ "main" $ do
       div ! class_ "col-xs-12 left vertical" $ do
         div ! class_ "middle" $ do
-          img
-            ! class_ "logo"
-            ! src (textValue $ cdnBaseUrl <> "/elm-assets/flow-images/scrive-logo.png")
-            ! alt "Scrive"
+          img ! class_ "logo" ! src (textValue logoUrl) ! alt "Logo"
 
 logoFooter :: Text -> Html
 logoFooter cdnBaseUrl = do
@@ -59,21 +77,13 @@ logoFooter cdnBaseUrl = do
           ! src (textValue $ cdnBaseUrl <> "/elm-assets/flow-images/poweredby.svg")
           ! alt "Powered by Scrive"
 
-data InstanceOverviewTemplateVars = InstanceOverviewTemplateVars
-  { production :: Bool
-  , cdnBaseUrl :: Text
-  , versionCode :: Text
-  , kontraApiUrl :: Text
-  , flowApiUrl :: Text
-  , flowInstanceId :: InstanceId
-  }
-
-renderInstanceOverview :: InstanceOverviewTemplateVars -> Html
-renderInstanceOverview InstanceOverviewTemplateVars {..} = docTypeHtml $ do
-  pageHeader production cdnBaseUrl versionCode "Scrive Flow Overview"
+renderInstanceOverview :: InstanceOverviewPageVars -> Html
+renderInstanceOverview InstanceOverviewPageVars {..} = docTypeHtml $ do
+  let CommonPageVars {..} = commonVars
+  pageHeader commonVars
   body $ do
     div ! class_ "flow-overview signview" ! style "position: relative;" $ do
-      logoHeader cdnBaseUrl
+      logoHeader logoUrl
       div ! class_ "col-xs-12 loading" ! id "elm-mount" $ "Loading ..."
       logoFooter cdnBaseUrl
       script
@@ -101,19 +111,13 @@ renderInstanceOverview InstanceOverviewTemplateVars {..} = docTypeHtml $ do
         $ pure ()
   where crossorigin = attribute "crossorigin" "crossorigin=\""
 
-data AuthErrorTemplateVars = AuthErrorTemplateVars
-  { production :: Bool
-  , cdnBaseUrl :: Text
-  , versionCode :: Text
-  , explanation :: Text
-  }
-
-renderAuthErrorPage :: AuthErrorTemplateVars -> Html
-renderAuthErrorPage AuthErrorTemplateVars {..} = docTypeHtml $ do
-  pageHeader production cdnBaseUrl versionCode "Scrive Flow Authorisation Error"
+renderAuthErrorPage :: AuthErrorPageVars -> Html
+renderAuthErrorPage AuthErrorPageVars {..} = docTypeHtml $ do
+  let CommonPageVars {..} = commonVars
+  pageHeader commonVars
   body $ do
     div ! class_ "flow-overview signview" ! style "position: relative;" $ do
-      logoHeader cdnBaseUrl
+      logoHeader logoUrl
       div ! class_ "" $ do
         div ! class_ "main" $ do
           div ! class_ "section" $ do
