@@ -65,6 +65,7 @@ startTemplate account templateId keyValues = do
                                                        (Set.fromList validDocumentIds)
 
   when (hasDuplicates documentMapping) $ throwTemplateCannotBeStartedError
+    TemplateStartBadRequest
     "Invalid parameters"
     "Document ID cannot be associated with multiple DSL document variables."
 
@@ -73,6 +74,7 @@ startTemplate account templateId keyValues = do
 
   let userMapping = keyValues ^. #users
   when (hasDuplicates userMapping) $ throwTemplateCannotBeStartedError
+    TemplateStartBadRequest
     "Invalid parameters"
     "User ID cannot be associated with multiple DSL user variables."
 
@@ -102,7 +104,8 @@ startTemplate account templateId keyValues = do
       let links = Set.toList . Set.map createPair $ matched userMatchingResult
       Model.insertInstanceSignatories id links
     else
-      throwTemplateCannotBeStartedError "DSL users do not match documents' signatories."
+      throwTemplateCannotBeStartedError TemplateStartConflict
+                                        "DSL users do not match documents' signatories."
         $ toJSON userMatchingResult
 
   -- For the MVP we provide Flow app link,
@@ -144,13 +147,15 @@ startTemplate account templateId keyValues = do
 reportMissingDocuments :: MonadError ServerError m => [DocumentID] -> m ()
 reportMissingDocuments docIds =
   unless (null docIds)
-    . throwTemplateCannotBeStartedError "Some of the documents do not exist"
+    . throwTemplateCannotBeStartedError TemplateStartBadRequest
+                                        "Some of the documents do not exist"
     $ object ["missing_document_ids" .= docIds]
 
 reportAssociatedDocuments :: MonadError ServerError m => [DocumentID] -> m ()
 reportAssociatedDocuments docIds =
   unless (null docIds)
     . throwTemplateCannotBeStartedError
+        TemplateStartConflict
         "Some of the documents are already being used in other Flow instances."
     $ object ["associated_document_ids" .= docIds]
 
@@ -209,6 +214,7 @@ reportVariables :: VariableErrors -> AppM ()
 reportVariables uv@VariableErrors {..} =
   when (nonEmptyVariables undefinedVariables || nonEmptyVariables unknownParameters)
     . throwTemplateCannotBeStartedError
+        TemplateStartBadRequest
         "Provided parameters do not match template variables."
     $ toJSON uv
 
@@ -241,6 +247,6 @@ reportSettings :: Set DocumentField -> AppM ()
 reportSettings fields =
   unless (null fields)
     . throwTemplateCannotBeStartedError
+        TemplateStartConflict
         "Some settings are not consistent across all documents."
     $ toJSON fields
-
