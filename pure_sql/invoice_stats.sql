@@ -462,7 +462,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
-                 AND chi.type = 22
+                 AND chi.type = 24
                  AND chi.time >= period.from
                  AND chi.time <= period.to) AS "Norwegian BankID signatures (started)"
            , (SELECT sum(chi.quantity)
@@ -474,7 +474,7 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
-                 AND chi.type = 24
+                 AND chi.type = 22
                  AND chi.time >= period.from
                  AND chi.time <= period.to) AS "Norwegian BankID authorization (started)"
            , (SELECT sum(chi.quantity)
