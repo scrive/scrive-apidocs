@@ -2,9 +2,10 @@
 
 jobs=(
   ghc88-nix
-  ghc88-nix-pr
   ghc88-manual
   frontend
+  formatting
+  quick-formatting
 )
 
 for job in "${jobs[@]}"

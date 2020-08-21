@@ -14,13 +14,11 @@ let Args =
       , cacheCabal: Bool
       , runsOn: List Job.RunsOn
       , triggers: Workflow.Triggers.Type
-      , quickFormat: Bool
       }
   , default =
       { ghcVersion = GHCVersion.Type.ghc88
       , nixShell = NixShell.Type.dev-shell-optimized
       , cacheCabal = False
-      , quickFormat = False
       }
   }
 
@@ -84,53 +82,8 @@ let createWorkflow =
           }
       )
 
-    let quickVal = if args.quickFormat then "-quick" else ""
-
-    let formatting = CreateJob.createJob
-      ( inArgs //
-          { steps = cacheCabalSteps "test-formatting" #
-            [ Step ::
-              { name = "Test HLint"
-              , if = Some "\${{ always() }}"
-              , env = Some (toMap
-                  { quick = quickVal
-                  })
-              , run = Some "./ci/scripts/test-hlint.sh"
-              }
-            , Step ::
-              { name = "Test Formatting"
-              , env = Some (toMap
-                  { quick = quickVal
-                  })
-              , run = Some "./ci/scripts/test-formatting.sh"
-              }
-            , Step ::
-              { name = "Detect Old Templates"
-              , if = Some "\${{ always() }}"
-              , run = Some "./shake.sh detect-old-templates"
-              }
-            , Step ::
-              { name = "Detect Old Localizations"
-              , if = Some "\${{ always() }}"
-              , run = Some "./shake.sh detect-old-localizations"
-              }
-            , Step ::
-              { name = "Upload Formatting Patch"
-              , uses = Some "actions/upload-artifact@v2"
-              , if = Some "\${{ failure() }}"
-              , with = Some toMap
-                { name = Json.Str "formatting-patch"
-                , path = Json.Str "_build/formatting.patch"
-                }
-              }
-            ]
-            , nixExtraArgs = Some "--arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]'"
-          }
-      )
-
     let jobs =
-      { formatting = formatting
-      , backend-tests = backendTests
+      { backend-tests = backendTests
       }
 
     in

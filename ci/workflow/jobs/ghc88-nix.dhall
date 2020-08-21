@@ -19,5 +19,7 @@ BackendWorkflow.createWorkflow
       { push = Some Workflow.BranchSpec ::
           { branches = Some [ "master", "staging", "production" ]
           }
+      , pull_request = Some Workflow.BranchSpec ::
+          { paths = Some [ "**.hs", "**.cabal" ] }
       }
   }
