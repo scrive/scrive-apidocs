@@ -10,7 +10,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentet förseglades med en digital signatur.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive preparerade den slutgiltiga PDF:en.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Verifierade sin identitet med danskt BankID för att se dokumentet.",
-"_AuthenticatedToViewEvidenceArchiveFITupas":"",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"Verifierade sin identitet med finskt FTN för att se dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveIDIN":"Verifierade sin identitet med iDIN för att se dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verifierade sin identitet med norskt BankID för att se dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verifierade sin identitet med svenskt BankID för att se dokumentet.",
