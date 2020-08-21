@@ -695,7 +695,7 @@
 "_historyHide":"Ocultar",
 "_historyParty":"Parte",
 "_historyTime":"Hora",
-"_identifiedByDKNemIDText":"Identificado pelo NemID dinamarquês como \"$name$\"",
+"_identifiedByDKNemIDText":"Identificado pelo NemID dinamarquês como \"$identity$\"",
 "_identifiedByFITupasText":"Identificado pelo FTN finlandês como \"$identity$\"",
 "_identifiedByIDINText":"Identificado pelo iDIN como \"$identity$\"",
 "_identifiedByNOBankIDText":"Identificado pelo BankID norueguês como \"$identity$\"",
