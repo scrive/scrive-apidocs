@@ -22,6 +22,8 @@ type Pages
   = AuthProtect "instance-user-html" :>
       "overview" :> Capture "instance_id" InstanceId
                  :> Capture "user_name" UserName
+                 :> Header "Host" Host
+                 :> IsSecure
                  :> Get '[HTML] Html
     :<|>
       -- No authentication

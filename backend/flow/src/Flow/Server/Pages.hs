@@ -59,8 +59,12 @@ instanceOverviewMagicHash
            NoContent
        )
 instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
+  FlowContext { mainDomainUrl } <- ask
+  let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
+  bd <- dbQuery $ GetBrandedDomainByURL baseUrl
+
   void
-    . fromMaybeM (throwAuthenticationErrorHTML InvalidInstanceAccessTokenError)
+    . fromMaybeM (throwAuthenticationErrorHTML bd InvalidInstanceAccessTokenError)
     $ Model.verifyInstanceAccessToken instanceId userName hash
 
   mSessionId <- case getAuthCookies of
@@ -103,25 +107,28 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
           throwUnableToAddDocumentSession
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
-instanceOverview :: InstanceUserHTML -> InstanceId -> UserName -> AppM Html
-instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
-  FlowContext { cdnBaseUrl, production } <- ask
-  when (instanceId /= instanceId') $ throwAuthenticationErrorHTML AccessControlError
+instanceOverview
+  :: InstanceUserHTML -> InstanceId -> UserName -> Maybe Host -> IsSecure -> AppM Html
+instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mHost isSecure = do
+  FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
+  let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
+  bd <- dbQuery $ GetBrandedDomainByURL baseUrl
+
+  when (instanceId /= instanceId') $ throwAuthenticationErrorHTML bd AccessControlError
 
   mFullInstance <- Model.selectFullInstance instanceId
   -- We know the instance exists because of the authenticated InstanceUser
   let authorUserId = fromJust mFullInstance ^. #template % #userId
 
   brandingDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
-  bd            <- dbQuery $ GetBrandedDomainByUserID authorUserId
   brandingUgwp  <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
 
   -- Used for browser cache busting
   brandingHash  <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
 
-  let cdnBaseUrl' = fromMaybe "" cdnBaseUrl
+  let cdnBaseUrl'    = fromMaybe "" cdnBaseUrl
 
-  let brandingCssUrl = T.intercalate
+      brandingCssUrl = T.intercalate
         "/"
         [ cdnBaseUrl'
         , "document_signview_branding"
@@ -130,7 +137,7 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
         , brandingHash <> "-branding.css"
         ]
 
-  let logoUrl = T.intercalate
+      logoUrl = T.intercalate
         "/"
         [ cdnBaseUrl'
         , "signview_logo"
@@ -139,17 +146,25 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ = do
         , brandingHash
         ]
 
+      mainCssUrl = if production
+        then cdnBaseUrl' <> "/" <> versionCode <> ".signview-all-styling-minified.css"
+        else "/less/signview-less-compiled.css"
+
+      versionCode = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
+
   return . Html.renderInstanceOverview $ Html.InstanceOverviewPageVars
     { commonVars     = Html.CommonPageVars
-                         { production = production
-                         , cdnBaseUrl = cdnBaseUrl'
+                         { cdnBaseUrl     = cdnBaseUrl'
+                         , mainCssUrl     = mainCssUrl
                          , brandingCssUrl = brandingCssUrl
-                         , logoUrl = logoUrl
-                         , versionCode = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
+                         , logoUrl        = logoUrl
+                         , versionCode    = versionCode
                          , browserTitle = brandedPageTitle bd (Just $ ugwpUI brandingUgwp)
                          }
     , kontraApiUrl   = "/api/v2"
     , flowApiUrl     = "/" <> flowPath
     , flowInstanceId = instanceId'
     }
+
+
 

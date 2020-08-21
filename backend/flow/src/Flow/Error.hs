@@ -15,22 +15,21 @@ module Flow.Error (
   , throwUnableToAddDocumentSession
   ) where
 
+import Control.Monad.Catch
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson
 import Data.Aeson.Casing
+import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import GHC.Generics
 import Servant
-import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Text.Blaze.Html.Renderer.Text as Blaze
 
+import BrandedDomain.Model
 import Flow.Server.Types
-import VersionTH (versionID)
 import qualified Flow.Html as Html
 
 data FlowError = FlowError
@@ -70,11 +69,11 @@ makeJSONError err@FlowError {..} = ServerError
   , errHeaders      = [("Content-Type", "application/json")]
   }
 
-makeHTMLError :: FlowError -> ServerError
-makeHTMLError FlowError {..} = ServerError
+makeHTMLError :: Int -> Text -> Text -> ServerError
+makeHTMLError code reason body = ServerError
   { errHTTPCode     = code
-  , errReasonPhrase = T.unpack message
-  , errBody         = BSL.fromString $ T.unpack explanation
+  , errReasonPhrase = T.unpack reason
+  , errBody         = BSL.fromString $ T.unpack body
   , errHeaders      = [("Content-Type", "text/html; charset=utf-8")]
   }
 
@@ -87,30 +86,15 @@ throwAuthenticationError explanation = throwError $ makeJSONError FlowError
   }
 
 throwAuthenticationErrorHTML
-  :: (MonadError ServerError m, MonadReader FlowContext m) => AuthError -> m a
-throwAuthenticationErrorHTML explanation' = do
-  FlowContext { cdnBaseUrl, production } <- ask
-  throwError $ makeHTMLError FlowError
-    { code        = 401
-    , message     = "Authentication Error"
-    , explanation = renderedHTML (fromMaybe "" cdnBaseUrl) production
-    , details     = Nothing
-    }
-  where
-    -- TODO: The error page should use BrandedDomains like the overview page.
-    renderedHTML cdnBaseUrl production =
-      TL.toStrict . Blaze.renderHtml . Html.renderAuthErrorPage $ Html.AuthErrorPageVars
-        { commonVars  =
-          Html.CommonPageVars
-            { production     = production
-            , cdnBaseUrl     = cdnBaseUrl
-            , brandingCssUrl = cdnBaseUrl <> "/elm-assets/flow-dummy-branding.css"
-            , logoUrl        = cdnBaseUrl <> "/elm-assets/flow-images/scrive-logo.png"
-            , versionCode    = T.decodeUtf8 . B16.encode $ BS.fromString versionID
-            , browserTitle   = "Scrive Flow Authorisation Error"
-            }
-        , explanation = showt explanation'
-        }
+  :: (MonadError ServerError m, MonadReader FlowContext m, MonadDB m, MonadThrow m)
+  => BrandedDomain
+  -> AuthError
+  -> m a
+throwAuthenticationErrorHTML bd explanation = do
+  renderedHtml <- do
+    pageVars <- Html.mkErrorPageVars bd "Authentication Error" (showt explanation)
+    pure . TL.toStrict . Blaze.renderHtml $ Html.renderErrorPage pageVars
+  throwError $ makeHTMLError 401 "Authentication Error" renderedHtml
 
 throwTemplateNotFoundError :: MonadError ServerError m => m a
 throwTemplateNotFoundError = throwError $ makeJSONError FlowError

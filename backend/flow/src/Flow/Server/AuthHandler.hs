@@ -8,6 +8,7 @@ module Flow.Server.AuthHandler
   , authHandlerInstanceUserHTML
   ) where
 
+import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Error.Class
 import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
@@ -25,6 +26,7 @@ import AccessControl.Model (GetRolesIncludingInherited(..))
 import Auth.Model
 import Auth.OAuth
 import Auth.Session
+import BrandedDomain.Model
 import DB hiding (JSON(..))
 import Flow.Error
 import Flow.OrphanInstances ()
@@ -49,7 +51,11 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
     handler req =
       runLogger
         . runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
+        . flip runReaderT (context flowConfiguration)
         $ do
+            FlowContext { mainDomainUrl } <- ask
+            let baseUrl = mkBaseUrl mainDomainUrl (isSecure req) (mHost req)
+
             (userId, userGroupId, folderId) <-
               case lookup "authorization" $ requestHeaders req of
                 -- OAuth
@@ -80,20 +86,22 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
             ug <- fmap fromJust . dbQuery . UserGroupGet $ unsafeUserGroupID userGroupId
             folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
             roles  <- dbQuery $ GetRolesIncludingInherited user ug
-            let domainUrl = mainDomainUrl $ context flowConfiguration
-            let baseUrl   = mkBaseUrl domainUrl (isSecure req) (mHost req)
 
             pure $ Account { user, userGroup = ug, folder, roles, baseUrl }
 
     parseOAuthAuthorization :: ByteString -> Either Text OAuthAuthorization
     parseOAuthAuthorization = parseParams . splitAuthorization . decodeUtf8
 
+    -- For convenience
+    throwAuthError errorName e = do
+      throwAuthErrorJSON Nothing errorName e
+
 -- "Instance" users, i.e. users who don't have an account but participate
 -- in a flow process can only authenticate using session cookies.
 authHandlerInstanceUser
   :: RunLogger -> FlowConfiguration -> AuthHandler Request InstanceUser
 authHandlerInstanceUser runLogger flowConfiguration = mkAuthHandler handler'
-  where handler' = instanceUserHandler runLogger flowConfiguration throwAuthError
+  where handler' = instanceUserHandler runLogger flowConfiguration throwAuthErrorJSON
 
 authHandlerInstanceUserHTML
   :: RunLogger -> FlowConfiguration -> AuthHandler Request InstanceUserHTML
@@ -104,24 +112,19 @@ authHandlerInstanceUserHTML runLogger flowConfiguration = mkAuthHandler handler'
         . instanceUserHandler runLogger flowConfiguration throwAuthErrorHTML
 
 instanceUserHandler
-  :: RunLogger
-  -> FlowConfiguration
-  -> (  forall a m
-      . (MonadLog m, MonadError ServerError m, MonadReader FlowContext m)
-     => AuthError
-     -> AuthError
-     -> m a
-     )
-  -> Request
-  -> Handler InstanceUser
+  :: RunLogger -> FlowConfiguration -> ErrorThrower -> Request -> Handler InstanceUser
 instanceUserHandler runLogger flowConfiguration errorThrower req =
   runLogger
     . runDBT (dbConnectionPool flowConfiguration) defaultTransactionSettings
     . flip runReaderT (context flowConfiguration)
     $ do
+        FlowContext { mainDomainUrl } <- ask
+        let baseUrl = mkBaseUrl mainDomainUrl (isSecure req) (mHost req)
+        bd              <- dbQuery $ GetBrandedDomainByURL baseUrl
+
         instanceSession <- do
           authCookies <- maybe
-            (errorThrower AuthCookiesParseError AuthCookiesParseError)
+            (errorThrower (Just bd) AuthCookiesParseError AuthCookiesParseError)
             pure
             (getAuthCookies req)
           logInfo_ ("Authenticating InstanceUser using cookies: " <> showt authCookies)
@@ -129,34 +132,41 @@ instanceUserHandler runLogger flowConfiguration errorThrower req =
             sessionId <- MaybeT
               $ getSessionIDByCookies authCookies (cookieDomain $ mHost req)
             MaybeT $ Model.selectInstanceSession sessionId
-          maybe (errorThrower InvalidAuthCookiesError InvalidAuthCookiesError)
+          maybe (errorThrower (Just bd) InvalidAuthCookiesError InvalidAuthCookiesError)
                 pure
                 mInstanceSession
         pure
           $ InstanceUser (instanceSession ^. #userName) (instanceSession ^. #instanceId)
 
-mHost :: Request -> Maybe Host
-mHost = fmap decodeUtf8 . requestHeaderHost
-
--- TODO handle the exception somehow
--- ... but don't put it into the response, it leaks internal information!
-throwAuthError
-  :: (MonadLog m, TextShow a, MonadError ServerError m) => AuthError -> a -> m b
-throwAuthError errorName e = do
-  logAttention "throwAuthError" $ object ["errorName" .= showt errorName, "e" .= showt e]
-  throwAuthenticationError errorName
-
--- TODO handle the exception somehow
--- ... but don't put it into the response, it leaks internal information!
-throwAuthErrorHTML
-  :: (MonadLog m, TextShow a, MonadError ServerError m, MonadReader FlowContext m)
-  => AuthError
+type ErrorThrower
+  =  forall a b m
+   . ( MonadLog m
+     , MonadError ServerError m
+     , MonadReader FlowContext m
+     , MonadDB m
+     , MonadThrow m
+     , TextShow a
+     )
+  => Maybe BrandedDomain
+  -> AuthError
   -> a
   -> m b
-throwAuthErrorHTML errorName e = do
+
+throwAuthErrorJSON :: ErrorThrower
+throwAuthErrorJSON _ errorName e = do
+  logAttention "throwAuthErrorJSON"
+    $ object ["errorName" .= showt errorName, "e" .= showt e]
+  throwAuthenticationError errorName
+
+throwAuthErrorHTML :: ErrorThrower
+throwAuthErrorHTML mBrandedDomain errorName e = do
   logAttention "throwAuthErrorHTML"
     $ object ["errorName" .= showt errorName, "e" .= showt e]
-  throwAuthenticationErrorHTML errorName
+  bd <- maybe (dbQuery GetMainBrandedDomain) pure mBrandedDomain
+  throwAuthenticationErrorHTML bd errorName
+
+mHost :: Request -> Maybe Host
+mHost = fmap decodeUtf8 . requestHeaderHost
 
 getAuthCookies :: Request -> Maybe AuthCookies
 getAuthCookies req = do

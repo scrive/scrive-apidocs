@@ -5,24 +5,35 @@
 module Flow.Html (
     CommonPageVars(..)
   , InstanceOverviewPageVars(..)
+  , ErrorPageVars(..)
   , renderInstanceOverview
-  , AuthErrorPageVars(..)
-  , renderAuthErrorPage
+  , renderErrorPage
+  , mkErrorPageVars
   ) where
 
-import Data.Text as T hiding (head)
+import Control.Monad.Catch
+import Control.Monad.Reader
 import Prelude hiding (div, head)
 import Servant (toUrlPiece)
 import Text.Blaze.Html5 hiding (style)
 import Text.Blaze.Html5.Attributes hiding (title)
 import Text.Blaze.Internal (attribute)
 import Text.RawString.QQ
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
+import BrandedDomain.Model
+import Branding.Adler32
+import DB
 import Flow.Id
+import Flow.Server.Types
+import VersionTH
 
 data CommonPageVars = CommonPageVars
-  { production :: Bool
-  , cdnBaseUrl :: Text
+  { cdnBaseUrl :: Text
+  , mainCssUrl :: Text
   , brandingCssUrl :: Text
   , logoUrl :: Text
   , versionCode :: Text
@@ -36,7 +47,7 @@ data InstanceOverviewPageVars = InstanceOverviewPageVars
   , flowInstanceId :: InstanceId
   }
 
-data AuthErrorPageVars = AuthErrorPageVars
+data ErrorPageVars = ErrorPageVars
   { commonVars :: CommonPageVars
   , explanation :: Text
   }
@@ -52,12 +63,8 @@ pageHeader CommonPageVars {..} = do
     meta ! name "robots" ! content "noindex"
     link ! rel "stylesheet" ! type_ "text/css" ! href
       (textValue $ cdnBaseUrl <> "/elm-assets/flow-overview-" <> versionCode <> ".css")
-    link ! rel "stylesheet" ! type_ "text/css" ! href (textValue signViewCssUrl)
+    link ! rel "stylesheet" ! type_ "text/css" ! href (textValue mainCssUrl)
     link ! rel "stylesheet" ! type_ "text/css" ! href (textValue brandingCssUrl)
-  where
-    signViewCssUrl = if production
-      then cdnBaseUrl <> "/" <> versionCode <> ".signview-all-styling-minified.css"
-      else "/less/signview-less-compiled.css"
 
 logoHeader :: Text -> Html
 logoHeader logoUrl = do
@@ -111,15 +118,64 @@ renderInstanceOverview InstanceOverviewPageVars {..} = docTypeHtml $ do
         $ pure ()
   where crossorigin = attribute "crossorigin" "crossorigin=\""
 
-renderAuthErrorPage :: AuthErrorPageVars -> Html
-renderAuthErrorPage AuthErrorPageVars {..} = docTypeHtml $ do
+renderErrorPage :: ErrorPageVars -> Html
+renderErrorPage ErrorPageVars {..} = docTypeHtml $ do
   let CommonPageVars {..} = commonVars
   pageHeader commonVars
   body $ do
-    div ! class_ "flow-overview signview" ! style "position: relative;" $ do
-      logoHeader logoUrl
-      div ! class_ "" $ do
-        div ! class_ "main" $ do
-          div ! class_ "section" $ do
+    div ! class_ "wrapper-position-footer" $ do
+      div ! class_ "mainContainer big error-page" $ do
+        div ! class_ "error-page-header" $ do
+          div ! class_ "error-page-header-logo-wrapper" $ do
+            img ! class_ "logo" ! src (textValue logoUrl) ! alt "Logo"
+            div ! class_ "divider-line" $ ""
+            div ! class_ "label" $ "E-signing powered by Scrive"
+        div ! class_ "error-page-info" $ do
+          div ! class_ "error-page-description" $ do
+            h1 $ toHtml browserTitle
             h4 $ toHtml explanation
-      logoFooter cdnBaseUrl
+          div ! class_ "error-page-instruction" $ "Visit any of these pages instead"
+          div ! class_ "error-page-buttons-box" $ do
+            a ! class_ "button main float-left" ! href "/" $ "Homepage"
+            a
+              ! class_ "button main float-right"
+              ! href "#"
+              ! onclick "history.go(-1);return false;"
+              $ "Back"
+
+mkErrorPageVars
+  :: (MonadReader FlowContext m, MonadDB m, MonadThrow m)
+  => BrandedDomain
+  -> Text
+  -> Text
+  -> m ErrorPageVars
+mkErrorPageVars bd browserTitle explanation = do
+  FlowContext { cdnBaseUrl, production } <- ask
+  brandingHash <- brandingAdler32 bd Nothing Nothing
+
+  let
+    cdnBaseUrl'    = fromMaybe "" cdnBaseUrl
+
+    brandingCssUrl = T.intercalate
+      "/"
+      [cdnBaseUrl', "login_branding", showt (bd ^. #id), brandingHash <> "-styles.css"]
+
+    logoUrl =
+      T.intercalate "/" [cdnBaseUrl', "login_logo", showt (bd ^. #id), brandingHash]
+
+    mainCssUrl = if production
+      then cdnBaseUrl' <> "/" <> versionCode <> ".all-styling-minified.css"
+      else "/less/less-compiled.css"
+
+    versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
+
+  pure $ ErrorPageVars
+    { commonVars  = CommonPageVars { cdnBaseUrl     = cdnBaseUrl'
+                                   , mainCssUrl     = mainCssUrl
+                                   , brandingCssUrl = brandingCssUrl
+                                   , logoUrl        = logoUrl
+                                   , versionCode    = versionCode
+                                   , browserTitle   = browserTitle
+                                   }
+    , explanation = explanation
+    }
