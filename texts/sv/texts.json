@@ -696,7 +696,7 @@
 "_historyParty":"Part",
 "_historyTime":"Tid",
 "_identifiedByDKNemIDText":"Identifierad med danskt NemID som \"$identity$\"",
-"_identifiedByFITupasText":"Identifierad med finskt FTN som \"$name$\"",
+"_identifiedByFITupasText":"Identifierad med finskt FTN som \"$identity$\"",
 "_identifiedByIDINText":"Identifierad med iDIN som \"$identity$\"",
 "_identifiedByNOBankIDText":"Identifierad med norskt BankID som \"$identity$\"",
 "_identifiedBySwedishBankIDText":"Identifierad med svenskt BankID som \"$identity$\"",
