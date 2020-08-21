@@ -61,7 +61,7 @@ def make_local_drivers(lang, test_name, local_devices,
 def make_remote_drivers(lang, test_name, remote_devices, screenshots_enabled):
     selenium_creds = (config.selenium_user, config.selenium_key)
     selenium_url = \
-        'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % selenium_creds
+        'http://%s:%s@ondemand.eu-central-1.saucelabs.com/wd/hub' % selenium_creds
 
     for device_info in remote_devices:
         capabilities = dict(device_info)
