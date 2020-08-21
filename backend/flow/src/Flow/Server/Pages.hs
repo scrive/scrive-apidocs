@@ -150,7 +150,7 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mHost isSecu
         then cdnBaseUrl' <> "/" <> versionCode <> ".signview-all-styling-minified.css"
         else "/less/signview-less-compiled.css"
 
-      versionCode = T.decodeUtf8 $ B16.encode (BS.fromString versionID)
+      versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
 
   return . Html.renderInstanceOverview $ Html.InstanceOverviewPageVars
     { commonVars     = Html.CommonPageVars
