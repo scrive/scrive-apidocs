@@ -3,9 +3,13 @@ let Map = https://prelude.dhall-lang.org/Map/Type
 
 let BranchSpec =
   { Type =
-      { branches: Optional (List Text) }
+      { branches: Optional (List Text)
+      , paths: Optional (List Text)
+      }
   , default =
-      { branches = None (List Text) }
+      { branches = None (List Text)
+      , paths = None (List Text)
+      }
   }
 
 let Triggers =

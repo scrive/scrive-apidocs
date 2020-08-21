@@ -24,21 +24,13 @@ jobs:
       - name: Load Nix Shell
         run: |
           nix-shell -j8 \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "echo Loaded Nix shell"
-      - name: "Cache ~/.cabal"
-        uses: "actions/cache@v2"
-        with:
-          key: "${{ runner.os }}-cabal-backend-tests-${{ hashFiles('**/*.cabal') }}"
-          path: "~/.cabal"
-          restore-keys: |
-            ${{ runner.os }}-cabal-backend-tests-${{ hashFiles('**/*.cabal') }}
-            ${{ runner.os }}-cabal-backend-tests-
       - name: Build Kontrakcja
         run: |
           nix-shell -j8 \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "cabal update; cabal configure --enable-tests --disable-optimization; cabal build all"
         timeout-minutes: 180
@@ -47,7 +39,7 @@ jobs:
         name: Run Backend Tests
         run: |
           nix-shell -j8 \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./ci/scripts/run-backend-tests.sh"
         timeout-minutes: 180
@@ -82,46 +74,38 @@ jobs:
       - name: Load Nix Shell
         run: |
           nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "echo Loaded Nix shell"
-      - name: "Cache ~/.cabal"
-        uses: "actions/cache@v2"
-        with:
-          key: "${{ runner.os }}-cabal-test-formatting-${{ hashFiles('**/*.cabal') }}"
-          path: "~/.cabal"
-          restore-keys: |
-            ${{ runner.os }}-cabal-test-formatting-${{ hashFiles('**/*.cabal') }}
-            ${{ runner.os }}-cabal-test-formatting-
       - env:
-          quick: ''
+          quick: "-quick"
         if: "${{ always() }}"
         name: Test HLint
         run: |
           nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./ci/scripts/test-hlint.sh"
       - env:
-          quick: ''
+          quick: "-quick"
         name: Test Formatting
         run: |
           nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./ci/scripts/test-formatting.sh"
       - if: "${{ always() }}"
         name: Detect Old Templates
         run: |
           nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./shake.sh detect-old-templates"
       - if: "${{ always() }}"
         name: Detect Old Localizations
         run: |
           nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.manual-shell \
+            -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./shake.sh detect-old-localizations"
       - if: "${{ failure() }}"
@@ -130,8 +114,9 @@ jobs:
         with:
           name: formatting-patch
           path: "_build/formatting.patch"
-name: "GHC 8.8 Backend Tests (Manual)"
+name: "GHC 8.8 Backend Tests (Nix) - Pull Requests"
 on:
-  push:
-    branches:
-      - master
+  pull_request:
+    paths:
+      - "**.hs"
+      - "**.cabal"

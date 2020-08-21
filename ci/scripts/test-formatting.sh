@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-set -ux
+set -eux
 
-./shake.sh fix-formatting
+quick=${quick:-}
+
+./shake.sh fix-formatting$quick
 
 git status
 
+set +e
 git diff --exit-code > _build/formatting.patch
 diff_code=$?
 

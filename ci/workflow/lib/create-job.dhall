@@ -5,6 +5,7 @@ let Step = ../type/Step.dhall
 let Job = ../type/Job.dhall
 let GHCVersion = ../type/GHCVersion.dhall
 let NixShell = ../type/NixShell.dhall
+let Json = ../type/Json.dhall
 
 let Args =
   { Type =
@@ -48,6 +49,9 @@ let createJob =
       [ Step ::
           { name = "Checkout Code"
           , uses = Some "actions/checkout@v2"
+          , with = Some (toMap
+              { fetch-depth = Json.Nat 0
+              })
           }
       , Step ::
           { name = "Setup Nix"
@@ -56,10 +60,10 @@ let createJob =
       , Step ::
           { name = "Setup Cachix"
           , uses = Some "cachix/cachix-action@v6"
-          , with = Some toMap
-              { name = "scrive"
-              , authToken = "\${{ secrets.CACHIX_AUTH_TOKEN }}"
-              }
+          , with = Some (toMap
+              { name = Json.Str "scrive"
+              , authToken = Json.Str "\${{ secrets.CACHIX_AUTH_TOKEN }}"
+              })
           }
       , Step ::
           { name = "Setup SSH"
@@ -76,7 +80,6 @@ let createJob =
           { name = "Load Nix Shell"
           , run = Some (wrapCommand "echo Loaded Nix shell")
           }
-
       ] # wrappedSteps
     in
     Job.Job ::

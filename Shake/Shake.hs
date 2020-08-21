@@ -641,7 +641,7 @@ serverFormatLintRules sourceRoot newBuild threads opt cabalFile flags = do
     listChangedHsFiles = do
       hsFiles <- listHsFiles
       let gitBranch = case [ branch | QuickBranch branch <- flags ] of
-            []           -> "master"
+            []           -> "origin/master"
             (branch : _) -> branch
       (Exit code, Stdout res, Stderr err) <- command [Cwd sourceRoot]
                                                      "git"

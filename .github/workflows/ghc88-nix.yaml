@@ -5,6 +5,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
+        with:
+          fetch-depth: 0
       - name: Setup Nix
         uses: "cachix/install-nix-action@v10"
       - name: Setup Cachix
@@ -25,6 +27,13 @@ jobs:
             -A ghc88.dev-shell-optimized \
             release.nix \
             --run "echo Loaded Nix shell"
+      - name: Build Kontrakcja
+        run: |
+          nix-shell -j8 \
+            -A ghc88.dev-shell-optimized \
+            release.nix \
+            --run "cabal update; cabal configure --enable-tests --disable-optimization; cabal build all"
+        timeout-minutes: 180
       - env:
           PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
         name: Run Backend Tests
@@ -34,50 +43,20 @@ jobs:
             release.nix \
             --run "./ci/scripts/run-backend-tests.sh"
         timeout-minutes: 180
-  detect-unused:
-    runs-on:
-      - ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: "actions/checkout@v2"
-      - name: Setup Nix
-        uses: "cachix/install-nix-action@v10"
-      - name: Setup Cachix
-        uses: "cachix/cachix-action@v6"
+      - if: "${{ always() }}"
+        name: Upload Logs
+        uses: "actions/upload-artifact@v2"
         with:
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          name: scrive
-      - env:
-          SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
-        name: Setup SSH
-        run: |
-          eval $(ssh-agent)
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
-      - name: Load Nix Shell
-        run: |
-          nix-shell -j8 \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "echo Loaded Nix shell"
-      - name: Detect Old Templates
-        run: |
-          nix-shell -j8 \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./shake.sh detect-old-templates"
-      - name: Detect Old Localizations
-        run: |
-          nix-shell -j8 \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./shake.sh detect-old-localizations"
+          name: logs
+          path: logs
   formatting:
     runs-on:
       - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
+        with:
+          fetch-depth: 0
       - name: Setup Nix
         uses: "cachix/install-nix-action@v10"
       - name: Setup Cachix
@@ -98,91 +77,45 @@ jobs:
             -A ghc88.dev-shell-optimized \
             release.nix \
             --run "echo Loaded Nix shell"
-      - name: Test Formatting
-        run: |
-          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./ci/scripts/test-formatting.sh"
-      - if: "${{ failure() }}"
-        name: Upload Formatting Patch
-        uses: "actions/upload-artifact@v2"
-        with:
-          name: formatting.patch
-          path: "_build/formatting.patch"
-  haddock:
-    runs-on:
-      - ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: "actions/checkout@v2"
-      - name: Setup Nix
-        uses: "cachix/install-nix-action@v10"
-      - name: Setup Cachix
-        uses: "cachix/cachix-action@v6"
-        with:
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          name: scrive
       - env:
-          SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
-        name: Setup SSH
-        run: |
-          eval $(ssh-agent)
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
-      - name: Load Nix Shell
-        run: |
-          nix-shell -j8 \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "echo Loaded Nix shell"
-      - name: Build Haddock
-        run: |
-          nix-shell -j8 \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./shake.sh haddock"
-  hlint:
-    runs-on:
-      - ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: "actions/checkout@v2"
-      - name: Setup Nix
-        uses: "cachix/install-nix-action@v10"
-      - name: Setup Cachix
-        uses: "cachix/cachix-action@v6"
-        with:
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          name: scrive
-      - env:
-          SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
-        name: Setup SSH
-        run: |
-          eval $(ssh-agent)
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
-      - name: Load Nix Shell
-        run: |
-          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "echo Loaded Nix shell"
-      - name: Test HLint
+          quick: ''
+        if: "${{ always() }}"
+        name: Test HLint
         run: |
           nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
             -A ghc88.dev-shell-optimized \
             release.nix \
             --run "./ci/scripts/test-hlint.sh"
+      - env:
+          quick: ''
+        name: Test Formatting
+        run: |
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
+            -A ghc88.dev-shell-optimized \
+            release.nix \
+            --run "./ci/scripts/test-formatting.sh"
+      - if: "${{ always() }}"
+        name: Detect Old Templates
+        run: |
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
+            -A ghc88.dev-shell-optimized \
+            release.nix \
+            --run "./shake.sh detect-old-templates"
+      - if: "${{ always() }}"
+        name: Detect Old Localizations
+        run: |
+          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
+            -A ghc88.dev-shell-optimized \
+            release.nix \
+            --run "./shake.sh detect-old-localizations"
       - if: "${{ failure() }}"
-        name: Upload HLint Patch
+        name: Upload Formatting Patch
         uses: "actions/upload-artifact@v2"
         with:
-          name: hlint.patch
-          path: "_build/hlint.patch"
+          name: formatting-patch
+          path: "_build/formatting.patch"
 name: "GHC 8.8 Backend Tests (Nix)"
 on:
-  pull_request: {}
   push:
     branches:
       - master

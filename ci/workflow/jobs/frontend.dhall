@@ -27,10 +27,11 @@ in
 Workflow.Workflow ::
   { name = "Frontend Tests"
   , on = Some Workflow.Triggers ::
-      { pull_request = Some Workflow.BranchSpec.default
-      , push = Some
+      { push = Some Workflow.BranchSpec ::
           { branches = Some [ "master", "staging", "production" ]
           }
+      , pull_request = Some Workflow.BranchSpec ::
+          { paths = Some [ "frontend/**", "frontend-elm/**" ] }
       }
   , jobs = toMap
       { frontend-tests = frontendTests
