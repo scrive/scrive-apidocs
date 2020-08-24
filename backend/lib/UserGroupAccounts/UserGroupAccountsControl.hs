@@ -449,12 +449,29 @@ handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
       void . dbUpdate $ SetUserUserGroup (user ^. #id) (newug ^. #id)
       let newFolder = set #parentID (Just newugfdrid) defaultFolder
       newFolderId <- view #id <$> dbUpdate (FolderCreate newFolder)
+      logInfo "Changing user home folder id" $ object
+        [ "user_id" .= (user ^. #id)
+        , "folder_id_new" .= newFolderId
+        , "folder_id_old" .= (user ^. #homeFolderID)
+        , "change_source" .= ("handlePostBecomeUserGroupAccount" :: Text)
+        ]
       void . dbUpdate $ SetUserHomeFolder (user ^. #id) newFolderId
       void . dbUpdate $ RemoveUserGroupInvite [ugid] (user ^. #id)
       case user ^. #homeFolderID of
-        Just sourceFolderId ->
+        Just sourceFolderId -> do
+          logInfo "Moving user's authored documents" $ object
+            [ "user_id" .= (user ^. #id)
+            , "folder_id_new" .= newFolderId
+            , "folder_id_old" .= sourceFolderId
+            , "change_source" .= ("handlePostBecomeUserGroupAccount" :: Text)
+            ]
           void . dbUpdate $ MoveAuthorDocuments (user ^. #id) sourceFolderId newFolderId
-        Nothing -> return ()
+        Nothing -> do
+          logInfo "Not moving user's authored documents" $ object
+            [ "user_id" .= (user ^. #id)
+            , "change_source" .= ("handlePostBecomeUserGroupAccount" :: Text)
+            ]
+          return ()
       -- if we are inviting a user with a plan to join the company, we
       -- should delete their personal plan
       flashmessage <- flashMessageUserHasBecomeCompanyAccount newug
