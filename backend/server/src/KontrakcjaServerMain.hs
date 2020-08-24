@@ -125,7 +125,7 @@ main = withCurlDo $ do
 
   -- Start Flow server
   when startFlow $ do
-    (errsFlow, logRunnerFlow) <- mkLogRunner "flow" (logConfig appConf) rng
+    (errsFlow, logRunnerFlow) <- mkLogRunner "flow" (logConfig appConf)
     mapM_ T.putStrLn errsFlow
 
     runWithLogRunner logRunnerFlow $ logInfo_ "Starting flow-server"
@@ -148,7 +148,7 @@ main = withCurlDo $ do
 
   -- Start Kontrakcja server
   when startKontrakcja $ do
-    (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf) rng
+    (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf)
     mapM_ T.putStrLn errs
 
     let globalLogContext = ["server_hostname" .= hostname]

@@ -70,7 +70,7 @@ main = do
     Just mconf -> void $ startMonitoringServer mconf
     Nothing    -> return ()
   rng        <- newCryptoRNGState
-  (errs, lr) <- mkLogRunner "mailer" (mailerLogConfig conf) rng
+  (errs, lr) <- mkLogRunner "mailer" (mailerLogConfig conf)
   mapM_ T.putStrLn errs
 
   hostname <- getHostName

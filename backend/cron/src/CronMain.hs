@@ -76,7 +76,7 @@ main = do
     Nothing   -> return ()
   rng               <- newCryptoRNGState
 
-  (errs, logRunner) <- mkLogRunner "cron" (cronLogConfig cronConf) rng
+  (errs, logRunner) <- mkLogRunner "cron" (cronLogConfig cronConf)
   mapM_ T.putStrLn errs
 
   reqManager <- newTlsManager
