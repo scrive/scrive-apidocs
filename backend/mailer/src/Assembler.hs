@@ -81,6 +81,11 @@ assembleContent Mail {..} = do
           <> "-"
           <> showt mailToken
           <> "\r\n"
+          <> "X-Mailin-custom: "
+          <> showt mailID
+          <> "-"
+          <> showt mailToken
+          <> "\r\n"
           <> "X-MJ-CustomID: "
           <> showt mailID
           <> "-"

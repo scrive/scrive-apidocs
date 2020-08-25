@@ -414,6 +414,7 @@ normaliseEvent currentEmail = \case
   MailGunEvent    email ev -> (email, normaliseMailGunEvent email ev)
   SocketLabsEvent email ev -> (email, normaliseSocketLabsEvent email ev)
   MailJetEvent    email ev -> (email, normaliseMailJetEvent ev)
+  SendinBlueEvent email ev -> (email, normaliseSendinBlue email ev)
 
   where
     normaliseSendGridEvent :: Text -> SendGridEvent -> NormalisedEvent
@@ -450,3 +451,14 @@ normaliseEvent currentEmail = \case
       MJ_Bounce_Hard -> DeliveryEvent Undelivered
       MJ_Blocked     -> DeliveryEvent Undelivered
       _              -> OtherEvent
+
+    normaliseSendinBlue :: Text -> SendinBlueEvent -> NormalisedEvent
+    normaliseSendinBlue email = \case
+      SiB_Delivered -> DeliveryEvent Delivered
+      SiB_Opened    -> EmailOpenedEvent
+      SiB_Deferred _ | currentEmail == email -> DeliveryEvent Deferred
+      SiB_HardBounce _ | currentEmail == email -> DeliveryEvent Undelivered
+      SiB_SoftBounce _ | currentEmail == email -> DeliveryEvent Undelivered
+      SiB_Blocked _ | currentEmail == email -> DeliveryEvent Undelivered
+      SiB_InvalidEmail _ | currentEmail == email -> DeliveryEvent Undelivered
+      _             -> OtherEvent

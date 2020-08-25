@@ -941,6 +941,7 @@ Executable mailing-server
                  MailJet
                  Sender
                  SendGrid
+                 SendinBlue
                  SocketLabs
 
 

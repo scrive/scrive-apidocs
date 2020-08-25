@@ -19,6 +19,7 @@ import MailGun
 import MailingServerConf
 import MailJet
 import SendGrid
+import SendinBlue
 import SocketLabs
 
 router
@@ -35,6 +36,7 @@ handlers conf = choice
   , dir "mail" . dir "mailgun" $ hPost (withDecodedBody_ handleMailGunEvents)
   , dir "mail" . dir "socketlabs" $ hPost (withDecodedBody_ $ handleSocketLabsEvents conf)
   , dir "mail" . dir "mailjet" $ hPost handleMailJetEvents
+  , dir "mail" . dir "sendinblue" $ hPost handleSendinBlueEvents
   ]
   where
     hGet  = path GET identity
@@ -43,8 +45,8 @@ handlers conf = choice
 showHelloMessage :: Mailer Response
 showHelloMessage = ok $ toResponse "Mailer says hello!"
 
--- All providers except SendGrid send a valid POST request that should be decoded for further processing
--- SendGrid events have JSON in body but not as parameter, and should not be decoded.
+-- All providers except SendGrid and SendinBlue send a valid POST request that should be decoded for further processing
+-- SendGrid and SendinBlue events have JSON in body but not as parameter, and should not be decoded.
 withDecodedBody_ :: Mailer Response -> Mailer Response
 withDecodedBody_ action = do
   tempDir <- liftIO getTemporaryDirectory

@@ -10,6 +10,7 @@ module Mails.Types (
   , MailGunEvent(..)
   , SocketLabsEvent(..)
   , MailJetEvent(..)
+  , SendinBlueEvent(..)
   , Event(..)
   , Mail(..)
   --, unjsonAddress
@@ -247,11 +248,26 @@ data MailJetEvent
   | MJ_Unsub
     deriving (Eq, Ord, Show, Data, Typeable)
 
+{-# ANN type SendinBlueEvent ("HLint: ignore Use camelCase" :: String) #-}
+data SendinBlueEvent
+  = SiB_Request
+  | SiB_Delivered
+  | SiB_Opened
+  | SiB_Click
+  | SiB_HardBounce    !Text
+  | SiB_SoftBounce    !Text
+  | SiB_Blocked       !Text
+  | SiB_Spam          !Text
+  | SiB_InvalidEmail  !Text
+  | SiB_Deferred      !Text
+    deriving (Eq, Ord, Show, Data, Typeable)
+
 data Event
   = SendGridEvent !Text !SendGridEvent !Text   -- ^ email, event, category
   | MailGunEvent !Text !MailGunEvent             -- ^ email, event
   | SocketLabsEvent !Text !SocketLabsEvent       -- ^ email, event
   | MailJetEvent !Text !MailJetEvent             -- ^ email, event
+  | SendinBlueEvent !Text !SendinBlueEvent       -- ^ email, event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat Event where
