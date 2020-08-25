@@ -4,5 +4,5 @@ then ../../../kontrakcja-nix
 else
   builtins.fetchGit {
     url = "git@github.com:scrive/kontrakcja-nix.git";
-    rev = "ab9d6182e57f702d1bc07bf674c16c4094b1ec8c";
+    rev = "524ea50b7edf5c8200b40ceaf4ab975103fecf77";
   }

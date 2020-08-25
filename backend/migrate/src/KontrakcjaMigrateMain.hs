@@ -1,6 +1,5 @@
 module Main (main) where
 
-import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
@@ -45,8 +44,7 @@ main = do
 
   CmdConf {..}               <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   AppDBConf {..}             <- readConfig putStrLn config
-  rng                        <- newCryptoRNGState
-  (errs, logRunner)          <- mkLogRunner "kontrakcja-migrate" logConfig rng
+  (errs, logRunner)          <- mkLogRunner "kontrakcja-migrate" logConfig
   mapM_ T.putStrLn errs
 
   runWithLogRunner logRunner $ do

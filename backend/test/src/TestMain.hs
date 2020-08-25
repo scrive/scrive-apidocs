@@ -196,7 +196,7 @@ modifyTestEnv (d : r) = first (d :) $ modifyTestEnv r
 testMany :: FilePath -> ([String], [TestEnvSt -> Test]) -> IO ()
 testMany workspaceRoot (allargs, ts) = do
   rng        <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  (errs, lr) <- mkLogRunner "test" testLogConfig rng
+  (errs, lr) <- mkLogRunner "test" testLogConfig
   mapM_ T.putStrLn errs
 
   tconf@TestConf {..} <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
@@ -272,7 +272,7 @@ testMany' tconf (allargs, ts) runLogger rng = do
                              }
       ts' = if env ^. #stagingTests then stagingTests ++ ts else ts
 
-  (errs, lr) <- mkLogRunner "flow" testLogConfig rng
+  (errs, lr) <- mkLogRunner "flow" testLogConfig
   mapM_ T.putStrLn errs
 
   let flowContext = FlowContext (Flow.handle env)

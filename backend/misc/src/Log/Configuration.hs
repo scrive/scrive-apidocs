@@ -9,22 +9,20 @@ module Log.Configuration (
   , runWithLogRunner
   ) where
 
-import Crypto.RNG
 import Data.Either (lefts, rights)
-import Data.Functor.Invariant (invmap)
 import Data.List.NonEmpty (fromList)
 import Data.Semigroup
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Checks
-import Log.Backend.ElasticSearch.V5
-import Log.Backend.ElasticSearch.V5.Internal
+import Log.Backend.ElasticSearch
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
 import Log.Internal.Logger hiding (withLogger)
 import Log.Monad
 import Prelude hiding ((<>))
+import qualified Data.Text as T
 
 import DB.PostgreSQL
 import Log.Migrations
@@ -121,17 +119,11 @@ instance Unjson LoggerDef where
                <**> pure (\l esCfg -> esCfg { esLoginInsecure = l })
                )
 
-      unjsonESLogin :: UnjsonDef (EsUsername, EsPassword)
+      unjsonESLogin :: UnjsonDef (T.Text, T.Text)
       unjsonESLogin = objectOf $ (,) <$> field "username" fst "User name" <*> field
         "password"
         snd
         "Password"
-
-instance Unjson EsUsername where
-  unjsonDef = invmap EsUsername esUsername unjsonAeson
-
-instance Unjson EsPassword where
-  unjsonDef = invmap EsPassword esPassword unjsonAeson
 
 ----------------------------------------
 
@@ -164,8 +156,8 @@ instance Semigroup WithLoggerFun where
     WithLoggerFun $ \f -> with0 (\logger0 -> with1 (\logger1 -> f $ logger0 <> logger1))
 
 {-# ANN mkLogRunner ("HLint: ignore Avoid lambda" :: String) #-}
-mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO ([Text], LogRunner)
-mkLogRunner component LogConfig {..} rng = do
+mkLogRunner :: Text -> LogConfig -> IO ([Text], LogRunner)
+mkLogRunner component LogConfig {..} = do
   let run :: Logger -> LogT m a -> m a
       run = runLogT (component <> "-" <> lcSuffix)
 
@@ -180,11 +172,8 @@ mkLogRunner component LogConfig {..} rng = do
             <> "is ElasticSearch server running?\n"
             -- @review-note:include the below? A bit noisy
             -- (pack . show) ex
-        Right () -> return . Right $ WithLoggerFun
-          { withLoggerFun = \act -> do
-                              let randGen = runCryptoRNGT rng boundedIntegralRandom
-                              withElasticSearchLogger ec randGen act
-          }
+        Right () ->
+          return . Right $ WithLoggerFun { withLoggerFun = withElasticSearchLogger ec }
       toWithLoggerFun (PostgreSQL ci) = do
         ConnectionSource pool <- poolSource
           defaultConnectionSettings { csConnInfo = ci }
