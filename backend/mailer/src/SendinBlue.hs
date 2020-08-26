@@ -21,7 +21,7 @@ handleSendinBlueEvents = localDomain "handleSendinBlueEvents" $ do
   logInfo_ "Processing sendinblue events"
   rqVar <- rqBody <$> askRq
   rq    <- liftIO $ fmap unBody <$> tryTakeMVar rqVar
-  case (decode <$> BS.toString <$> rq) of
+  case decode . BS.toString <$> rq of
     Just (Ok v@(JSObject callbackJSON)) -> do
       logInfo "SendinBlue JSON with events parsed" $ object ["json" .= show callbackJSON]
       withJSValue v $ do
@@ -31,7 +31,7 @@ handleSendinBlueEvents = localDomain "handleSendinBlueEvents" $ do
             logInfo "SendinBlue event object not found" $ object ["callback" .= show v]
           Just event -> do
             xMailinCustom <- fromJSValueField "X-Mailin-custom"
-            case (T.splitOn "-" <$> xMailinCustom) of
+            case T.splitOn "-" <$> xMailinCustom of
               Just [messageIdMID, messageIdToken] ->
                 case (maybeRead messageIdMID, maybeRead messageIdToken) of
                   (Just mid, Just token) -> localData [identifier mid] $ do
