@@ -27,7 +27,8 @@
         "signing_login_user": "anon",
         "signing_login_key": "anon",
         "extending_login_user": "anon",
-        "extending_login_key": "1234"
+        "extending_login_key": "1234",
+        "gateway_identity": "GT :: GT :: Scrive :: public"
     },
     "_cgi_grp": { "gateway"      : "https://grpt.funktionstjanster.se:18898/grp/v1"
                 , "cert_file"    : "certs/steria3.pem"

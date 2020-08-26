@@ -173,6 +173,7 @@ data GuardtimeSignature =
   GuardtimeSignature { time :: String
                      , extended :: Bool
                      , extensible :: Bool
+                     , gatewayIdentity :: String
                      }
   deriving Show
 
@@ -183,13 +184,15 @@ privateGateway _ = True -- Scrive always uses an internal gateway
 instance FromJSValue VerifyResult where
   fromJSValue = do
     mvalid <- fromJSValueFieldCustom "valid" $ do
-      time       <- fromJSValueField "time"
-      extended   <- fromJSValueField "extended"
-      extensible <- fromJSValueField "extensible"
-      lastRev    <- fromJSValueField "last_revision"
+      time         <- fromJSValueField "time"
+      extended     <- fromJSValueField "extended"
+      extensible   <- fromJSValueField "extensible"
+      lastRev      <- fromJSValueField "last_revision"
+      gwayIdentity <- fromJSValueField "identity"
       return $ case lastRev of
         Just ("true" :: String) ->
-          Valid <$> (GuardtimeSignature <$> time <*> extended <*> extensible)
+          Valid
+            <$> (GuardtimeSignature <$> time <*> extended <*> extensible <*> gwayIdentity)
         _ -> Just $ Invalid "not last revision"
     minvalid <- fromJSValueFieldCustom "invalid" $ do
       fmap (Invalid . (show :: JSValue -> String)) <$> fromJSValueField "reason"
@@ -200,9 +203,10 @@ instance FromJSValue VerifyResult where
 
 instance ToJSValue VerifyResult where
   toJSValue (Valid gtsig) = runJSONGen $ do
-    value "success"  True
-    value "time"     (time gtsig)
-    value "extended" (extended gtsig)
+    value "success"          True
+    value "time"             (time gtsig)
+    value "extended"         (extended gtsig)
+    value "gateway_identity" (gatewayIdentity gtsig)
   toJSValue (Invalid msg) = runJSONGen $ do
     value "success" False
     value "error"   False
@@ -218,25 +222,13 @@ instance ToJSValue VerifyResult where
 
 verify :: (MonadIO m, MonadMask m) => GuardTimeConf -> FilePath -> m VerifyResult
 verify conf inputFileName = do
-  (code, stdout, stderr) <- withGuardtimeConf conf GTExtendingCredentials $ \confPath ->
-    do
-      let a =
-            [ "-Djava.util.logging.config.file=/dev/null"
-            , "-cp"
-            , "GuardTime/slf4j-jdk14-1.7.28.jar:GuardTime/pdf-verifier.jar"
-            , "com.guardtime.pdftools.PdfVerifier"
-            , "-c"
-            , confPath
-            , "-j"
-            , "-f"
-            , inputFileName
-            ]
-      liftIO $ readProcessWithExitCode "java" a BSL.empty
-  -- if stdout is empty, output json with the error is in stderr
-  let output = if BSL.null stdout then stderr else stdout
+  (code, stdout, stderr) <- invokeGuardtimeTool conf
+                                                GTExtendingCredentials
+                                                "pdf-verifier"
+                                                ["-j", "-f", inputFileName]
   case code of
     ExitSuccess -> do
-      case runGetJSON readJSObject $ BSL.toString output of
+      case runGetJSON readJSObject $ BSL.toString stdout of
         Left s ->
           return
             .  Problem stdout stderr
@@ -245,5 +237,7 @@ verify conf inputFileName = do
         Right json -> case fromJSValue json of
           Nothing ->
             return $ Problem stdout stderr "GuardTime verification result parsing error"
+          Just (Valid sig) | gatewayIdentity sig /= guardTimeGatewayIdentity conf ->
+            return $ Problem stdout stderr "GuardTime Gateway verification failed"
           Just res -> return res
     _ -> return $ Problem stdout stderr "GuardTime verification failed"

@@ -79,12 +79,16 @@ createSMTPSender cs config = createExternalSender cs
     mailRcpt addr = ["--mail-rcpt", "<" <> punyEncode (addrEmail addr) <> ">"]
 
     createArgs Mail { mailFrom, mailTo } =
-      let smtpUserForThisMail = maybe
-            (smtpUser config)
-            smtpDedicatedUser
-            (find (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom)
-                  (smtpDedicatedUsers config)
-            )
+      let
+        smtpUserForThisMail = maybe
+          (smtpUser config)
+          smtpDedicatedUser
+          (find (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom)
+                (smtpDedicatedUsers config)
+          )
+        -- this path changes HELO/EHLO hostname
+        -- it is fine to be hardcoded and used on every service
+        smtpAddress = smtpAddr config <> "/scrive.com"
       in
         [ "-s"
         , "-S"                   -- show no progress information but show error messages
@@ -102,7 +106,7 @@ createSMTPSender cs config = createExternalSender cs
               , smtpAccount smtpUserForThisMail <> ":" <> smtpPassword smtpUserForThisMail
               ]
            )
-        <> [smtpAddr config, "--mail-from", "<" <> addrEmail mailFrom <> ">"]
+        <> [smtpAddress, "--mail-from", "<" <> addrEmail mailFrom <> ">"]
         <> concatMap mailRcpt mailTo
 
 createLocalSender :: TrackedConnectionSource -> SenderConfig -> Sender

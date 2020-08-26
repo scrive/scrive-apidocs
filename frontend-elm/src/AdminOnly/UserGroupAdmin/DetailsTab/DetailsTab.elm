@@ -636,7 +636,7 @@ viewUserGroup model ug address settings =
                 "If set, use GlobalSign API Credentials assigned to this label for PAdES signing."
                 (M.withDefault "" settings.padesCredentialsLabel)
                 (SetStringField "padesCredentialsLabel")
-                [ readonly ug.settingsIsInherited ]
+                [ readonly True ]
             , formCheckboxRowM "Has 'post signview'"
                 "If set, then signatories that don't have an account will be shown a 'post signview' that asks them to sign up for our service."
                 settings.hasPostSignview
