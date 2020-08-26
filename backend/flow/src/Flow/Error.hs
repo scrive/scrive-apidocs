@@ -12,7 +12,8 @@ module Flow.Error (
   , throwTemplateCannotBeStartedError
   , throwInternalServerError
   , throwDocumentCouldNotBeStarted
-  , throwUnableToAddDocumentSession
+  , throwUnableToAddDocumentSessionHTML
+  , throwProcessFailedHTML
   ) where
 
 import Control.Monad.Catch
@@ -160,13 +161,33 @@ throwDocumentCouldNotBeStarted statusCode details = throwError $ makeJSONError F
   }
   where msg = "Document could not be started"
 
-throwUnableToAddDocumentSession :: MonadError ServerError m => m a
-throwUnableToAddDocumentSession = throwError $ makeJSONError FlowError
-  { code        = 500
-  , message     = "Unable to add a document session"
-  , explanation = "We were unable to create a session for this document"
-  , details     = Nothing
-  }
+throwUnableToAddDocumentSessionHTML
+  :: (MonadError ServerError m, MonadReader FlowContext m, MonadDB m, MonadThrow m)
+  => BrandedDomain
+  -> m a
+throwUnableToAddDocumentSessionHTML bd = do
+  renderedHtml <- do
+    pageVars <- Html.mkErrorPageVars
+      bd
+      msg
+      "We were unable to create a session for this document"
+    pure . TL.toStrict . Blaze.renderHtml $ Html.renderErrorPage pageVars
+  throwError $ makeHTMLError 500 msg renderedHtml
+  where msg = "Unable to add a document session"
+
+throwProcessFailedHTML
+  :: (MonadError ServerError m, MonadReader FlowContext m, MonadDB m, MonadThrow m)
+  => BrandedDomain
+  -> m a
+throwProcessFailedHTML bd = do
+  renderedHtml <- do
+    pageVars <- Html.mkErrorPageVars
+      bd
+      msg
+      "This document workflow is no longer accessible to participants."
+    pure . TL.toStrict . Blaze.renderHtml $ Html.renderErrorPage pageVars
+  throwError $ makeHTMLError 403 msg renderedHtml
+  where msg = "Document workflow has failed"
 
 throwInternalServerError :: Text -> MonadError ServerError m => m a
 throwInternalServerError explanation = throwError $ makeJSONError FlowError

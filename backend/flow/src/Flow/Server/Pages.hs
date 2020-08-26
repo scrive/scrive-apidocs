@@ -19,7 +19,9 @@ import Auth.Session
 import BrandedDomain.Model
 import Branding.Adler32
 import DB (dbQuery, dbUpdate)
-import Doc.DocControl (checkBeforeAddingDocumentSession)
+import Doc.DocControl
+  ( AddDocumentSessionError(..), checkBeforeAddingDocumentSession
+  )
 import Doc.Model.Query
 import Doc.Tokens.Model
 import Flow.Error
@@ -87,7 +89,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
   -- the current stage rather than all the documents that the participant is a signatory for.
   -- It should be ok for now since we start all documents at once.
   slids <- Model.selectSignatoryIdsByInstanceUser instanceId userName
-  mapM_ (addDocumentSession sessionId) slids
+  mapM_ (addDocumentSession bd sessionId) slids
 
   -- The Flow user's access token has been verified so insert an "instance session"
   -- which is used for cookie authentication in subsequent calls.
@@ -99,12 +101,14 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
       Cookies' cookies <- mCookies
       readAuthCookies cookies
     redirectUrl = mkInstanceOverviewUrl instanceId userName
-    addDocumentSession sid slid = do
+    addDocumentSession bd sid slid = do
       doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
       case checkBeforeAddingDocumentSession doc slid of
         Just err -> do
           logInfo_ $ "Unable to add document session: " <> showt err
-          throwUnableToAddDocumentSession
+          case err of
+            DocumentNotAccessibleBySignatories _ -> throwProcessFailedHTML bd
+            _ -> throwUnableToAddDocumentSessionHTML bd
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
 instanceOverview

@@ -4,6 +4,7 @@ module Flow.TestUtil where
 
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
+import Data.Aeson
 import Network.HTTP.Client
   ( ManagerSettings, defaultManagerSettings, managerModifyRequest, newManager
   , redirectCount, requestHeaders
@@ -21,6 +22,7 @@ import Flow.Process
 import Flow.Routes.Api
 import OAuth.Model
 import TestEnvSt.Internal
+import TestingUtil (assert)
 import TestKontra
 import User.UserID
 
@@ -37,6 +39,18 @@ assertLeft msg req = do
   case res of
     Right _   -> fail msg
     Left  err -> pure err
+
+assertIsJsonError :: ClientError -> TestEnv ()
+assertIsJsonError = assert . hasJsonBody
+  where
+    isJustObject :: Maybe Value -> Bool
+    isJustObject = \case
+      Just (Object _) -> True
+      _               -> False
+    hasJsonBody :: ClientError -> Bool
+    hasJsonBody = \case
+      FailureResponse _ resp -> isJustObject . decode $ responseBody resp
+      _ -> False
 
 getToken :: UserID -> TestEnv OAuthAuthorization
 getToken uid = do
@@ -110,3 +124,4 @@ createInstance ApiClient {..} name process mapping = do
   void . assertRight "commit template response" . request $ commitTemplate tid
 
   request $ startTemplate tid mapping
+

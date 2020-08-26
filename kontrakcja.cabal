@@ -1166,8 +1166,9 @@ Test-suite kontrakcja-test
                  Flow.HighTongueTest
                  Flow.IntegrationTest
                  Flow.IntegrationTest.Common
-                 Flow.IntegrationTest.SimpleCompleteProcess
+                 Flow.IntegrationTest.Failure
                  Flow.IntegrationTest.ComplexCompleteProcess
+                 Flow.IntegrationTest.SimpleCompleteProcess
                  Flow.OrphanTestInstances
                  Flow.TestKontraHandler
                  Flow.TestUtil

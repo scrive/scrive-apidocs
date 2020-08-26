@@ -6,7 +6,6 @@
 module Flow.IntegrationTest (tests) where
 
 import Control.Monad.Catch (MonadThrow)
-import Data.Aeson
 import Servant.Client
 import Test.Framework
 import Text.RawString.QQ
@@ -21,6 +20,7 @@ import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import Flow.Client
 import Flow.IntegrationTest.ComplexCompleteProcess
+import Flow.IntegrationTest.Failure
 import Flow.IntegrationTest.SimpleCompleteProcess
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId
@@ -43,7 +43,6 @@ tests env = testGroup
   "Integration"
   [ testThat "Template CRUD happy path" env testTemplateHappyCrud
   , testThat "From zero to instance"    env testZeroToInstance
-  , testThat "Instance failure"         env testInstanceFailure
   , testThat "List template endpoint"   env testTemplateListEndpoint
   , testThat "List instance endpoint"   env testInstanceListEndpoint
   , testThat "Verify endpoint"          env testVerifyEndpoint
@@ -52,6 +51,12 @@ tests env = testGroup
   , testThat "Committed template cannot be altered"
              env
              testCommittedTemplateCannotBeAltered
+  , testThat "Instance failure due to a reused document"
+             env
+             testInstanceFailureReusedDocument
+  , testThat "Rejecting a document causes process failure"
+             env
+             testRejectedDocumentCausesProcessFailure
   ]
 
 testTemplateHappyCrud :: TestEnv ()
@@ -179,39 +184,6 @@ getBaseUrl (Url u) = do
   url <- parseBaseUrl $ Text.unpack u
   pure . Text.pack . showBaseUrl $ url { baseUrlPath = "" }
 
-processFailure :: Process
-processFailure = Process [r|
-dsl-version: "0.1.0"
-stages:
-  - initial:
-      actions: []
-      expect:
-        signed-by:
-          users: [signatory]
-          documents: [doc1]
-|]
-
-testInstanceFailure :: TestEnv ()
-testInstanceFailure = do
-  user  <- instantiateRandomUser
-  oauth <- getToken (user ^. #id)
-  let ac@ApiClient {..} = mkApiClient (Left oauth)
-
-  doc1 <- addDocument user
-  commit
-
-  let mapping = InstanceKeyValues documents users messages
-        where
-          documents = Map.fromList [("doc1", documentid doc1)]
-          users     = Map.fromList [("signatory", UserId $ user ^. #id)]
-          messages  = Map.empty
-
-  void $ createInstance ac "name" processFailure mapping
-  clientError <- assertLeft "creating second instance"
-    $ createInstance ac "name" processFailure mapping
-  assertIsJsonError clientError
-
-
 simpleProcess :: Process
 simpleProcess = Process [r|
 dsl-version: "0.1.0"
@@ -314,14 +286,4 @@ testVerifyEndpoint = do
   assertIsJsonError =<< assertLeft "validating invalid DSL" failureReq
   void $ assertRight "validating valid DSL" successReq
 
-assertIsJsonError :: ClientError -> TestEnv ()
-assertIsJsonError = assert . hasJsonBody
-  where
-    isJustObject :: Maybe Value -> Bool
-    isJustObject = \case
-      Just (Object _) -> True
-      _               -> False
-    hasJsonBody :: ClientError -> Bool
-    hasJsonBody = \case
-      FailureResponse _ resp -> isJustObject . decode $ responseBody resp
-      _ -> False
+

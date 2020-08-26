@@ -3,8 +3,9 @@
 -- | DocControl represents the controler (in MVC) of the document.
 
 module Doc.DocControl (
+    AddDocumentSessionError(..)
     -- Exported utils or test functions
-      sendReminderEmail
+    , sendReminderEmail
     -- Top level handlers
     , handleNewDocument
     , showCreateFromTemplate
