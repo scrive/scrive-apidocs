@@ -37,3 +37,9 @@ def change_work_dir(path):
         yield
     finally:
         os.chdir(cwd)
+
+
+def create_empty_dir(dest_dir):
+    if os.path.exists(dest_dir):
+        shutil.rmtree(dest_dir)
+    os.makedirs(dest_dir)

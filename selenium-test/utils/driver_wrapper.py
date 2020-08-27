@@ -9,7 +9,7 @@ from selenium.webdriver.support import ui as support_ui, expected_conditions
 class SeleniumDriverWrapper(object):
 
     def __init__(self, driver_factory, driver_name, test_name,
-                 screenshots_enabled, lang, window_size=None,
+                 screenshots_enabled, lang, selenium_timeout, window_size=None,
                  screenshot_prefix=None):
         self._driver_factory = driver_factory
         self._driver = None
@@ -21,6 +21,7 @@ class SeleniumDriverWrapper(object):
         self._screenshot_requests = []
         self._screenshot_prefix = screenshot_prefix
         self._window_size = window_size
+        self._selenium_timeout = selenium_timeout
 
     def __repr__(self):
         result = 'DRV(' + self._driver_name + ')'
@@ -60,18 +61,34 @@ class SeleniumDriverWrapper(object):
     def driver_name(self):
         return self._driver_name
 
-    def wait(self, timeout=10):
+    def wait(self, timeout=None):
+        if not timeout:
+            timeout = self._selenium_timeout
+
         return support_ui.WebDriverWait(self._driver, timeout)
 
-    def wait_for_element(self, css_selector, timeout=30, extra_requests=0):
+    def wait_for_element(self, css_selector, timeout=None, extra_requests=0):
+        if not timeout:
+            timeout = self._selenium_timeout
+
         self._request_count += extra_requests
         by_css = webdriver.common.by.By.CSS_SELECTOR
         condition = expected_conditions.presence_of_element_located(
             (by_css, css_selector))
-        return self.wait(timeout).until(condition)
+        return self.wait(timeout).until(condition, 'Unable to find css selector %s in %d sec' % (css_selector, timeout))
 
-    def wait_for_element_and_click(self, css_selector, timeout=10):
-        self.wait_for_element(css_selector, timeout, extra_requests=1).click()
+    def wait_for_element_and_click(self, css_selector, timeout=None):
+        if not timeout:
+            timeout = self._selenium_timeout
+
+        element = self.wait_for_element(css_selector, timeout, extra_requests=1)
+
+        try:
+            element.click()
+        except RuntimeError:
+            time.sleep(3)
+            print 'Unable to click on %s, try again.' % css_selector
+            element.click()
 
     def find_elements(self, css_selector):
         return self._driver.find_elements(By.CSS_SELECTOR, css_selector)
@@ -87,7 +104,10 @@ class SeleniumDriverWrapper(object):
             return self._driver.find_elements(By.CSS_SELECTOR,
                                               css_selector)[number - 1]
 
-    def wait_for_element_to_disappear(self, css_selector, timeout=10):
+    def wait_for_element_to_disappear(self, css_selector, timeout=None):
+        if not timeout:
+            timeout = self._selenium_timeout
+
         def condition(driver):
             try:
                 driver.find_element_by_css_selector(css_selector)
@@ -95,7 +115,7 @@ class SeleniumDriverWrapper(object):
             except selenium_exceptions.NoSuchElementException:
                 return True
 
-        return self.wait(timeout).until(condition)
+        return self.wait(timeout).until(condition, 'Unable to find css selector %s in %d sec' % (css_selector, timeout))
 
     def screenshot(self, first_sleep_for=None):
         if not self._screenshots_enabled:
@@ -119,7 +139,7 @@ class SeleniumDriverWrapper(object):
         remote_screenshot_name = ('%04d' % (self._request_count - 1,) +
                                   'screenshot.png')
         import config
-        url = ('https://saucelabs.com/rest/' +
+        url = ('https://eu-central-1.saucelabs.com/rest/' +
                config.selenium_user + '/jobs/' +
                self._driver.session_id + '/results/' +
                remote_screenshot_name)
@@ -131,6 +151,7 @@ class SeleniumDriverWrapper(object):
 
     def scroll_to_bottom(self, use_signview=False):
         if use_signview:
+            self.wait_for_element('.signview')
             self.execute('window.scrollTo(0, $(".signview")[0].scrollHeight);')
         else:
             self.execute('window.scrollTo(0, document.body.scrollHeight);')

@@ -12,7 +12,6 @@ def driver_check(cond):
     def outer(f):
         def inner(*args, **kwargs):
             arguments = inspect.getcallargs(f, *args, **kwargs)
-            print arguments
             drv = arguments['drv']
             cond(drv, f)  # this can raise SkipTest
             return f(*args, **kwargs)

@@ -58,6 +58,9 @@ class Scrive(object):
                           data=None, files=None):
         response = self._make_request(url_elems, method=method,
                                       data=data, files=files)
+        if not response.ok:
+            raise RuntimeError("error: %s" % response.reason)
+
         document = _document.Document._from_json_obj(response.json())
         document._set_api(self, document)
         return document

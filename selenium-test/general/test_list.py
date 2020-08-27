@@ -1,9 +1,12 @@
 import os
+import sys
+sys.path.append(os.path.abspath('../utils'))
+sys.path.append(os.path.abspath('..'))
 
 import tests
 from make_drivers import generate_tests
 from selenium import webdriver
-
+import shutil
 
 ###############################################################################
 #                                   INFO                                      #
@@ -26,7 +29,8 @@ DC = webdriver.DesiredCapabilities
 LOCAL_DEVICES = [{'driver': webdriver.Firefox,
                   'name': DC.FIREFOX['browserName']}]
 
-REMOTE_DEVICES = [{'browserName': 'internet explorer',
+REMOTE_DEVICES = [
+                  {'browserName': 'internet explorer',
                    'version': '11.0',
                    'javascriptEnabled': True,
                    'avoidProxy': True,
@@ -59,10 +63,10 @@ REMOTE_DEVICES = [{'browserName': 'internet explorer',
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 artifact_dir = os.path.join(dir_path, 'artifacts')
-
+screenshots_dir = os.path.join(dir_path, 'screenshots')
 
 # this function is autocalled by nosetests, so it's like main()
 def make_tests():
-    for x in generate_tests(tests, artifact_dir,
+    for x in generate_tests(tests, screenshots_dir, artifact_dir,
                             LOCAL_DEVICES, REMOTE_DEVICES):
         yield x

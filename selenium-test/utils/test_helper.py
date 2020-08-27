@@ -72,14 +72,20 @@ class TestHelper(object):
 
     @contextlib.contextmanager
     def local_ff(self):
+        try:
+            selenium_timeout = int(os.environ['SELENIUM_TIMEOUT'])
+        except KeyError:
+            selenium_timeout = 30
+
         driver_factory = lambda: webdriver.Firefox()
         driver = SeleniumDriverWrapper(driver_factory,
                                        driver_name='local_firefox',
                                        test_name=self._driver._test_name,
                                        screenshots_enabled=False,
-                                       screenshot_prefix=
-                                       self._driver._screenshot_prefix,
-                                       lang=self._driver._lang)
+                                       screenshot_prefix=self._driver._screenshot_prefix,
+                                       lang=self._driver._lang,
+                                       selenium_timeout=selenium_timeout
+                                       )
         try:
             yield driver
         finally:
@@ -90,7 +96,7 @@ class TestHelper(object):
             doc.sealed_document.save_as(fp)
             with utils.temporary_dir() as dir_path:
                 with utils.change_work_dir(dir_path):
-                    subprocess.call(['pdfdetach', '-save', str(number), fp])
+                    subprocess.check_call('pdfdetach -save %d %s' % (number, fp), shell=True)
                     path = os.path.join(dir_path, name)
                     with open(path, 'r') as f:
                         return f.read()
