@@ -2,8 +2,12 @@
   "gateway_url": "http://localhost:9876/seal",
   "api_key": "abc",
   "global_sign": {
-    "api_key": "",
-    "api_password": "",
+    "default_api_credentials": {
+      "api_key": "",
+      "api_password": "",
+      "common_name": "Scrive AB"
+    },
+    "api_credentials": [],
     "certificate": "",
     "certificate_password": ""
   },
