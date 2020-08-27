@@ -32,12 +32,12 @@ if __name__ == '__main__':
             shutil.rmtree(screenshots_dir)
         os.makedirs(screenshots_dir)
 
-    print "Running %s tests %s in %s language %s screenshots" % (
+    print("Running %s tests %s in %s language %s screenshots" % (
         args.single_test_name if args.single_test_name else 'all',
         'on Saucelabs' if args.remote else 'using local browser',
         args.lang,
         'with' if args.enable_screenshots else 'without'
-    )
+        ))
 
     sys.argv = [sys.argv[0]] + left
     nose.main()

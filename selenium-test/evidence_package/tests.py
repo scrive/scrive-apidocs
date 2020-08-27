@@ -29,7 +29,7 @@ single_run = driver_check(single_run_cond)
 
 
 def check_reference_screenshot(test, drv, api):
-    doc = test.create_standard_doc(u'reference screenshot')
+    doc = test.create_standard_doc('reference screenshot')
     doc = api.ready(api.update_document(doc))
 
     # sign document
@@ -76,7 +76,7 @@ def check_reference_screenshot(test, drv, api):
 
 @single_run
 def check_evidence_log(test, drv, api):
-    doc = test.create_standard_doc(u'evidence log')
+    doc = test.create_standard_doc('evidence log')
     doc = api.ready(api.update_document(doc))
 
     # sign document
@@ -101,13 +101,13 @@ def check_evidence_log(test, drv, api):
     att_name = 'Appendix 3 Evidence Log.html'
     contents = test.get_evidence_attachment_contents(doc, 3, att_name)
 
-    with open(test.artifact_path_for(att_name), 'wb') as f:
+    with open(test.artifact_path_for(att_name), 'w') as f:
         f.write(contents)
 
     html = PyQuery(contents)
 
     if drv.is_remote():
-        ips = map(lambda td: td.text.strip(), html('#event-table td:nth-child(3)'))
+        ips = [td.text.strip() for td in html('#event-table td:nth-child(3)')]
         ips = ips[1:]  # skip first ip because it's ip of the local machine
         assert ips == [my_ip, my_ip, '', ''], (str(ips) + ':' + my_ip)
 

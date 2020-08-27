@@ -1,5 +1,6 @@
 import time
 
+import selenium
 from selenium import webdriver
 from selenium.common import exceptions as selenium_exceptions
 from selenium.webdriver.common.by import By
@@ -48,7 +49,12 @@ class SeleniumDriverWrapper(object):
 
     def quit(self):
         if self._driver is not None:
-            self._driver.quit()
+            try:
+                self._driver.quit()
+            except selenium_exceptions.WebDriverException:
+                pass
+            finally:
+                self._driver = None
 
     def extract_screenshot_requests(self):
         return self._screenshot_requests
@@ -85,10 +91,10 @@ class SeleniumDriverWrapper(object):
 
         try:
             element.click()
-        except RuntimeError:
+        except selenium_exceptions.WebDriverException:
             time.sleep(3)
-            print 'Unable to click on %s, try again.' % css_selector
-            element.click()
+            print('Unable to click on %s, try one more time.' % css_selector)
+            webdriver.ActionChains(self._driver).move_to_element(element).click(element).perform()
 
     def find_elements(self, css_selector):
         return self._driver.find_elements(By.CSS_SELECTOR, css_selector)
@@ -158,8 +164,8 @@ class SeleniumDriverWrapper(object):
 
     def switch_window(self):
         current_window = self._driver.current_window_handle
-        other_window = filter(lambda h: h != current_window,
-                              self._driver.window_handles)[-1]
+        other_window = [handler for handler in self._driver.window_handles if handler != current_window][-1]
+
         self._driver.switch_to_window(other_window)
 
     def close_window(self):

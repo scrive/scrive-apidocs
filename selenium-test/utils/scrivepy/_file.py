@@ -48,14 +48,14 @@ class RemoteFile(File):
         self._document = None
 
     def _to_json_obj(self):
-        return {u'id': self.id, u'name': self.name}
+        return {'id': self.id, 'name': self.name}
 
     @classmethod
     def _from_json_obj(cls, json):
         if json is None:
             return None
         else:
-            return RemoteFile(id_=json[u'id'], name=json[u'name'])
+            return RemoteFile(id_=json['id'], name=json['name'])
 
     def _set_api(self, api, document):
         super(RemoteFile, self)._set_api(api, document)
@@ -71,7 +71,7 @@ class RemoteFile(File):
             kwargs['stream'] = True
             return requests.get(*args, **kwargs)
 
-        response = self._api._make_request([b'downloadfile', self._document.id,
+        response = self._api._make_request(['downloadfile', self._document.id,
                                             self.id, self.name],
                                            method=stream_get)
         response.raw.decode_content = True

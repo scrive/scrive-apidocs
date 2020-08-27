@@ -10,25 +10,25 @@ SFT = _field.StandardFieldType
 SF = _field.StandardField
 
 
-class InvitationDeliveryMethod(unicode, enum.Enum):
-    email = u'email'
-    pad = u'pad'
-    api = u'api'
-    mobile = u'mobile'
-    email_and_mobile = u'email_mobile'
+class InvitationDeliveryMethod(str, enum.Enum):
+    email = 'email'
+    pad = 'pad'
+    api = 'api'
+    mobile = 'mobile'
+    email_and_mobile = 'email_mobile'
 
 
-class ConfirmationDeliveryMethod(unicode, enum.Enum):
-    email = u'email'
-    mobile = u'mobile'
-    email_and_mobile = u'email_mobile'
-    none = u'none'
+class ConfirmationDeliveryMethod(str, enum.Enum):
+    email = 'email'
+    mobile = 'mobile'
+    email_and_mobile = 'email_mobile'
+    none = 'none'
 
 
-class AuthenticationMethod(unicode, enum.Enum):
-    standard = u'standard'
-    eleg = u'eleg'
-    sms_pin = u'sms_pin'
+class AuthenticationMethod(str, enum.Enum):
+    standard = 'standard'
+    eleg = 'eleg'
+    sms_pin = 'sms_pin'
 
 
 class SignatoryAttachment(_object.ScriveObject):
@@ -45,20 +45,20 @@ class SignatoryAttachment(_object.ScriveObject):
     def _from_json_obj(cls, json):
         try:
             signatory_attachment = \
-                SignatoryAttachment(requested_name=json[u'name'],
-                                    description=json[u'description'])
-            file_json = json.get(u'file')
+                SignatoryAttachment(requested_name=json['name'],
+                                    description=json['description'])
+            file_json = json.get('file')
             if file_json is not None:
-                file_ = _file.RemoteFile(id_=file_json[u'id'],
-                                         name=file_json[u'name'])
+                file_ = _file.RemoteFile(id_=file_json['id'],
+                                         name=file_json['name'])
                 signatory_attachment._file = file_
             return signatory_attachment
         except (KeyError, TypeError, ValueError) as e:
             raise _exceptions.InvalidResponse(e)
 
     def _to_json_obj(self):
-        return {u'name': self.requested_name,
-                u'description': self.description}
+        return {'name': self.requested_name,
+                'description': self.description}
 
     def _set_api(self, api, document):
         super(SignatoryAttachment, self)._set_api(api, document)
@@ -102,7 +102,7 @@ IDM = InvitationDeliveryMethod
 CDM = ConfirmationDeliveryMethod
 AM = AuthenticationMethod
 
-MaybeUnicode = tvu.nullable(tvu.instance(unicode))
+MaybeUnicode = tvu.nullable(tvu.instance(str))
 
 
 class Signatory(_object.ScriveObject):
@@ -158,48 +158,48 @@ class Signatory(_object.ScriveObject):
     def _from_json_obj(cls, json):
         try:
             fields = [_field.Field._from_json_obj(field_json)
-                      for field_json in json[u'fields']]
+                      for field_json in json['fields']]
             attachments = [SignatoryAttachment._from_json_obj(att_json)
-                           for att_json in json[u'attachments']]
+                           for att_json in json['attachments']]
             signatory = \
-                Signatory(sign_order=json[u'signorder'],
-                          invitation_delivery_method=IDM(json[u'delivery']),
+                Signatory(sign_order=json['signorder'],
+                          invitation_delivery_method=IDM(json['delivery']),
                           confirmation_delivery_method=CDM(
-                              json[u'confirmationdelivery']),
-                          authentication_method=AM(json[u'authentication']),
-                          viewer=not json[u'signs'],
-                          allows_highlighting=json[u'allowshighlighting'],
+                              json['confirmationdelivery']),
+                          authentication_method=AM(json['authentication']),
+                          viewer=not json['signs'],
+                          allows_highlighting=json['allowshighlighting'],
                           sign_success_redirect_url=
-                          json[u'signsuccessredirect'],
-                          rejection_redirect_url=json[u'rejectredirect'])
+                          json['signsuccessredirect'],
+                          rejection_redirect_url=json['rejectredirect'])
             signatory.fields.update(fields)
             signatory.attachments.update(attachments)
-            signatory._id = json[u'id']
-            signatory._author = json[u'author']
-            signatory._current = json[u'current']
-            signatory._undelivered_invitation = json[u'undeliveredInvitation']
+            signatory._id = json['id']
+            signatory._author = json['author']
+            signatory._current = json['current']
+            signatory._undelivered_invitation = json['undeliveredInvitation']
             signatory._undelivered_email_invitation = \
-                json[u'undeliveredMailInvitation']
+                json['undeliveredMailInvitation']
             signatory._undelivered_sms_invitation = \
-                json[u'undeliveredSMSInvitation']
+                json['undeliveredSMSInvitation']
             signatory._delivered_invitation = \
-                json[u'deliveredInvitation']
+                json['deliveredInvitation']
             signatory._has_account = \
-                json[u'saved']
+                json['saved']
             signatory._eleg_mismatch_message = \
-                json[u'datamismatch']
-            if json[u'signdate'] is not None:
-                signatory._sign_time = dateparser.parse(json[u'signdate'])
-            if json[u'seendate'] is not None:
-                signatory._view_time = dateparser.parse(json[u'seendate'])
-            if json[u'readdate'] is not None:
+                json['datamismatch']
+            if json['signdate'] is not None:
+                signatory._sign_time = dateparser.parse(json['signdate'])
+            if json['seendate'] is not None:
+                signatory._view_time = dateparser.parse(json['seendate'])
+            if json['readdate'] is not None:
                 signatory._invitation_view_time = \
-                    dateparser.parse(json[u'readdate'])
-            if json[u'rejecteddate'] is not None:
+                    dateparser.parse(json['readdate'])
+            if json['rejecteddate'] is not None:
                 signatory._rejection_time = \
-                    dateparser.parse(json[u'rejecteddate'])
-            signatory._rejection_message = json[u'rejectionreason']
-            signatory._sign_url = json.get(u'signlink')
+                    dateparser.parse(json['rejecteddate'])
+            signatory._rejection_message = json['rejectionreason']
+            signatory._sign_url = json.get('signlink')
             return signatory
         except (KeyError, TypeError, ValueError) as e:
             raise _exceptions.InvalidResponse(e)
@@ -221,20 +221,20 @@ class Signatory(_object.ScriveObject):
             attachment._set_api(api, document)
 
     def _to_json_obj(self):
-        result = {u'fields': list(self.fields),
-                  u'attachments': list(self.attachments),
-                  u'signorder': self.sign_order,
-                  u'delivery': self.invitation_delivery_method.value,
-                  u'confirmationdelivery':
-                  self.confirmation_delivery_method.value,
-                  u'authentication': self.authentication_method.value,
-                  u'signs': not self.viewer,
-                  u'allowshighlighting': self.allows_highlighting,
-                  u'author': self.author,
-                  u'signsuccessredirect': self.sign_success_redirect_url,
-                  u'rejectredirect': self.rejection_redirect_url}
+        result = {'fields': list(self.fields),
+                  'attachments': list(self.attachments),
+                  'signorder': self.sign_order,
+                  'delivery': self.invitation_delivery_method,
+                  'confirmationdelivery':
+                  self.confirmation_delivery_method,
+                  'authentication': self.authentication_method,
+                  'signs': not self.viewer,
+                  'allowshighlighting': self.allows_highlighting,
+                  'author': self.author,
+                  'signsuccessredirect': self.sign_success_redirect_url,
+                  'rejectredirect': self.rejection_redirect_url}
         if self.id is not None:
-            result[u'id'] = self.id
+            result['id'] = self.id
         return result
 
 #     @property
@@ -401,67 +401,62 @@ class Signatory(_object.ScriveObject):
         if self._sign_url is None:
             return None
         if self._api is None:
-            raise _exceptions.Error(u'API not set')
-        proto = b'https' if self._api.https else b'http'
-        return proto + b'://' + self._api.api_hostname + self._sign_url
+            raise _exceptions.Error('API not set')
+        proto = 'https' if self._api.https else 'http'
+        return proto + '://' + self._api.api_hostname + self._sign_url
 
     @scrive_property
     def full_name(self):
-        fst_name_fields = filter(lambda f: f.name == SFT.first_name,
-                                 self.fields)
-        last_name_fields = filter(lambda f: f.name == SFT.last_name,
-                                  self.fields)
-
-        first_name_part = u''
+        fst_name_fields = [f for f in self.fields if f.name == SFT.first_name]
+        last_name_fields = [f for f in self.fields if f.name == SFT.last_name]
+        first_name_part = ''
         try:
             first_name_part = fst_name_fields[0].value
         except IndexError:
             pass
 
-        last_name_part = u''
+        last_name_part = ''
         try:
             last_name_part = last_name_fields[0].value
         except IndexError:
             pass
 
-        if first_name_part != u'' and last_name_part != u'':
-            return first_name_part + u' ' + last_name_part
-        elif first_name_part != u'':
+        if first_name_part != '' and last_name_part != '':
+            return first_name_part + ' ' + last_name_part
+        elif first_name_part != '':
             return first_name_part
-        elif last_name_part != u'':
+        elif last_name_part != '':
             return last_name_part
         else:
-            return u''
+            return ''
 
     @full_name.setter
-    @tvu.validate_and_unify(full_name=tvu.instance(unicode))
+    @tvu.validate_and_unify(full_name=tvu.instance(str))
     def full_name(self, full_name):
-        fst_name_fields = filter(lambda f: f.name == SFT.first_name,
-                                 self.fields)
+        fst_name_fields = [f for f in self.fields if f.name == SFT.first_name]
         try:
             fst_name_field = fst_name_fields[0]
         except IndexError:
-            fst_name_field = SF(name=SFT.first_name, value=u'')
+            fst_name_field = SF(name=SFT.first_name, value='')
             self.fields.add(fst_name_field)
 
-        last_name_fields = filter(lambda f: f.name == SFT.last_name,
-                                  self.fields)
+        last_name_fields = [f for f in self.fields if f.name == SFT.last_name]
         try:
             last_name_field = last_name_fields[0]
         except IndexError:
-            last_name_field = SF(name=SFT.last_name, value=u'')
+            last_name_field = SF(name=SFT.last_name, value='')
             self.fields.add(last_name_field)
 
-        if u' ' in full_name:
-            name_parts = full_name.split(u' ')
+        if ' ' in full_name:
+            name_parts = full_name.split(' ')
             fst_name = name_parts[0]
-            last_name = u' '.join(name_parts[1:])
-        elif full_name != u' ':
+            last_name = ' '.join(name_parts[1:])
+        elif full_name != ' ':
             fst_name = full_name
-            last_name = u''
+            last_name = ''
         else:
-            fst_name = u''
-            last_name = u''
+            fst_name = ''
+            last_name = ''
 
         fst_name_field.value = fst_name
         last_name_field.value = last_name

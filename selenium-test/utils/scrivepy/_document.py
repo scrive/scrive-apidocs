@@ -1,5 +1,5 @@
 import os
-from cStringIO import StringIO
+from io import BytesIO
 from contextlib import closing
 
 import enum
@@ -13,38 +13,38 @@ from scrivepy import _object, _signatory, _exceptions, \
 scrive_property = _object.scrive_property
 
 
-class DocumentStatus(unicode, enum.Enum):
-    preparation = u'Preparation'
-    pending = u'Pending'
-    closed = u'Closed'
-    canceled = u'Canceled'
-    timedout = u'Timedout'
-    rejected = u'Rejected'
-    error = u'DocumentError'
+class DocumentStatus(str, enum.Enum):
+    preparation = 'Preparation'
+    pending = 'Pending'
+    closed = 'Closed'
+    canceled = 'Canceled'
+    timedout = 'Timedout'
+    rejected = 'Rejected'
+    error = 'DocumentError'
 
 
-MaybeUnicode = tvu.nullable(tvu.instance(unicode))
+MaybeUnicode = tvu.nullable(tvu.instance(str))
 
 
-class Language(unicode, enum.Enum):
-    english = u'en'
-    swedish = u'sv'
-    german = u'de'
-    french = u'fr'
-    italian = u'it'
-    spanish = u'es'
-    portuguese = u'pt'
-    dutch = u'nl'
-    danish = u'da'
-    norwegian = u'no'
-    greek = u'el'
-    finnish = u'fi'
-    estonian = u'et'
-    islandic = u'is'
-    lithuanian = u'lt'
-    latvian = u'lv'
-    czech = u'cs'
-    polish = u'pl'
+class Language(str, enum.Enum):
+    english = 'en'
+    swedish = 'sv'
+    german = 'de'
+    french = 'fr'
+    italian = 'it'
+    spanish = 'es'
+    portuguese = 'pt'
+    dutch = 'nl'
+    danish = 'da'
+    norwegian = 'no'
+    greek = 'el'
+    finnish = 'fi'
+    estonian = 'et'
+    islandic = 'is'
+    lithuanian = 'lt'
+    latvian = 'lv'
+    czech = 'cs'
+    polish = 'pl'
 
 
 class DeletionStatus(enum.Enum):
@@ -66,7 +66,7 @@ class AuthorAttachment(_file.File):
         self._merge = merge
 
     def stream(self):
-        return StringIO(self._content)
+        return BytesIO(self._content)
 
     @classmethod
     def from_file_obj(cls, name, file_obj):
@@ -77,7 +77,7 @@ class AuthorAttachment(_file.File):
     def from_file_path(cls, file_path):
         with open(file_path, 'rb') as f:
             return AuthorAttachment.from_file_obj(
-                unicode(os.path.basename(file_path)), f)
+                str(os.path.basename(file_path)), f)
 
     @scrive_property
     def mandatory(self):
@@ -111,10 +111,10 @@ class RemoteAuthorAttachment(_file.RemoteFile):
 
     @classmethod
     def _from_json_obj(cls, json):
-        return RemoteAuthorAttachment(id_=json[u'id'],
-                                      name=json[u'name'],
-                                      mandatory=json[u'required'],
-                                      merge=json[u'add_to_sealed_file'])
+        return RemoteAuthorAttachment(id_=json['id'],
+                                      name=json['name'],
+                                      mandatory=json['required'],
+                                      merge=json['add_to_sealed_file'])
 
     @scrive_property
     def mandatory(self):
@@ -137,7 +137,7 @@ class RemoteAuthorAttachment(_file.RemoteFile):
 
 class Document(_object.ScriveObject):
 
-    @tvu.validate_and_unify(title=tvu.instance(unicode),
+    @tvu.validate_and_unify(title=tvu.instance(str),
                             number_of_days_to_sign=tvu.bounded_int(1, 90),
                             number_of_days_to_remind=
                             tvu.nullable(tvu.PositiveInt),
@@ -152,15 +152,15 @@ class Document(_object.ScriveObject):
                             api_callback_url=MaybeUnicode,
                             language=tvu.instance(Language, enum=True),
                             saved_as_draft=tvu.instance(bool),
-                            timezone=tvu.instance(unicode))
-    def __init__(self, title=u'', number_of_days_to_sign=14,
+                            timezone=tvu.instance(str))
+    def __init__(self, title='', number_of_days_to_sign=14,
                  number_of_days_to_remind=None,
                  show_header=True, show_pdf_download=True,
                  show_reject_option=True, show_reject_reason=True,
                  show_footer=True, invitation_message=None,
                  confirmation_message=None, api_callback_url=None,
                  language=Language.swedish, is_template=False,
-                 saved_as_draft=False, timezone=u'Europe/Stockholm'):
+                 saved_as_draft=False, timezone='Europe/Stockholm'):
         super(Document, self).__init__()
         self._id = None
         self._title = title
@@ -203,59 +203,59 @@ class Document(_object.ScriveObject):
     def _from_json_obj(cls, json):
         try:
             signatories = [_signatory.Signatory._from_json_obj(signatory_json)
-                           for signatory_json in json[u'signatories']]
-            lang_code = json[u'lang']
-            if lang_code == u'gb':
-                lang_code = u'en'
-            document = Document(title=json[u'title'],
-                                number_of_days_to_sign=json[u'daystosign'],
-                                number_of_days_to_remind=json[u'daystoremind'],
-                                is_template=json[u'template'],
-                                show_header=json[u'showheader'],
-                                show_pdf_download=json[u'showpdfdownload'],
-                                show_reject_option=json[u'showrejectoption'],
-                                show_reject_reason=json[u'allowrejectreason'],
-                                show_footer=json[u'showfooter'],
-                                invitation_message=json[u'invitationmessage'],
+                           for signatory_json in json['signatories']]
+            lang_code = json['lang']
+            if lang_code == 'gb':
+                lang_code = 'en'
+            document = Document(title=json['title'],
+                                number_of_days_to_sign=json['daystosign'],
+                                number_of_days_to_remind=json['daystoremind'],
+                                is_template=json['template'],
+                                show_header=json['showheader'],
+                                show_pdf_download=json['showpdfdownload'],
+                                show_reject_option=json['showrejectoption'],
+                                show_reject_reason=json['allowrejectreason'],
+                                show_footer=json['showfooter'],
+                                invitation_message=json['invitationmessage'],
                                 confirmation_message=
-                                json[u'confirmationmessage'],
-                                api_callback_url=json[u'apicallbackurl'],
+                                json['confirmationmessage'],
+                                api_callback_url=json['apicallbackurl'],
                                 language=Language(lang_code),
-                                saved_as_draft=json[u'saved'],
-                                timezone=json[u'timezone'])
+                                saved_as_draft=json['saved'],
+                                timezone=json['timezone'])
             document.signatories.update(signatories)
-            document.tags.update({elem[u'name']: elem[u'value']
-                                  for elem in json[u'tags']})
-            document._id = json[u'id']
-            if json[u'time'] is not None:
-                document._modification_time = dateparser.parse(json[u'time'])
-            if json[u'ctime'] is not None:
-                document._creation_time = dateparser.parse(json[u'ctime'])
-            if json[u'timeouttime'] is not None:
+            document.tags.update({elem['name']: elem['value']
+                                  for elem in json['tags']})
+            document._id = json['id']
+            if json['time'] is not None:
+                document._modification_time = dateparser.parse(json['time'])
+            if json['ctime'] is not None:
+                document._creation_time = dateparser.parse(json['ctime'])
+            if json['timeouttime'] is not None:
                 document._signing_deadline = \
-                    dateparser.parse(json[u'timeouttime'])
-            if json[u'autoremindtime'] is not None:
+                    dateparser.parse(json['timeouttime'])
+            if json['autoremindtime'] is not None:
                 document._autoremind_time = \
-                    dateparser.parse(json[u'autoremindtime'])
-            document._status = DocumentStatus(json[u'status'])
-            document._current_sign_order = json[u'signorder']
-            deleted = json[u'deleted']
-            really_deleted = json[u'reallydeleted']
+                    dateparser.parse(json['autoremindtime'])
+            document._status = DocumentStatus(json['status'])
+            document._current_sign_order = json['signorder']
+            deleted = json['deleted']
+            really_deleted = json['reallydeleted']
             if deleted and really_deleted:
                 document._deletion_status = DeletionStatus.deleted
             elif deleted:
                 document._deletion_status = DeletionStatus.in_trash
-            document._signing_possible = json[u'canperformsigning']
-            document._object_version = json[u'objectversion']
-            document._viewed_by_author = json[u'isviewedbyauthor']
-            document._access_token = json[u'accesstoken']
+            document._signing_possible = json['canperformsigning']
+            document._object_version = json['objectversion']
+            document._viewed_by_author = json['isviewedbyauthor']
+            document._access_token = json['accesstoken']
             document._original_file = \
-                _file.RemoteFile._from_json_obj(json.get(u'file'))
+                _file.RemoteFile._from_json_obj(json.get('file'))
             document._sealed_document = \
-                _file.RemoteFile._from_json_obj(json.get(u'sealedfile'))
+                _file.RemoteFile._from_json_obj(json.get('sealedfile'))
             author_attachments = \
                 _set.ScriveSet([RemoteAuthorAttachment._from_json_obj(att_json)
-                                for att_json in json[u'authorattachments']])
+                                for att_json in json['authorattachments']])
             author_attachments._elem_validator = tvu.instance(AuthorAttachment)
             document._author_attachments = author_attachments
 
@@ -288,25 +288,25 @@ class Document(_object.ScriveObject):
             self.sealed_document._set_read_only()
 
     def _to_json_obj(self):
-        return {u'title': self.title,
-                u'daystosign': self.number_of_days_to_sign,
-                u'daystoremind': self.number_of_days_to_remind,
-                u'template': self.is_template,
-                u'showheader': self.show_header,
-                u'showpdfdownload': self.show_pdf_download,
-                u'showrejectoption': self.show_reject_option,
-                u'allowrejectreason': self.show_reject_reason,
-                u'showfooter': self.show_footer,
-                u'invitationmessage': self.invitation_message or u'',
-                u'confirmationmessage': self.confirmation_message or u'',
-                u'apicallbackurl': self.api_callback_url,
-                u'lang': self.language.value,
-                u'tags': [{u'name': key, u'value': val}
+        return {'title': self.title,
+                'daystosign': self.number_of_days_to_sign,
+                'daystoremind': self.number_of_days_to_remind,
+                'template': self.is_template,
+                'showheader': self.show_header,
+                'showpdfdownload': self.show_pdf_download,
+                'showrejectoption': self.show_reject_option,
+                'allowrejectreason': self.show_reject_reason,
+                'showfooter': self.show_footer,
+                'invitationmessage': self.invitation_message or '',
+                'confirmationmessage': self.confirmation_message or '',
+                'apicallbackurl': self.api_callback_url,
+                'lang': self.language,
+                'tags': [{'name': key, 'value': val}
                           for key, val in self.tags.items()],
-                u'saved': self.saved_as_draft,
-                u'timezone': self.timezone,
-                u'authorattachments': list(self.author_attachments),
-                u'signatories': list(self.signatories)}
+                'saved': self.saved_as_draft,
+                'timezone': self.timezone,
+                'authorattachments': list(self.author_attachments),
+                'signatories': list(self.signatories)}
 
     @scrive_property
     def signatories(self):
@@ -339,9 +339,9 @@ class Document(_object.ScriveObject):
         self._check_getter()
         others = list(self.other_signatories())
         if not others:
-            raise _exceptions.Error(u'No other signatories')
+            raise _exceptions.Error('No other signatories')
         elif len(others) > 1:
-            raise _exceptions.Error(u'Multiple signatories')
+            raise _exceptions.Error('Multiple signatories')
         else:
             return others[0]
 
@@ -354,7 +354,7 @@ class Document(_object.ScriveObject):
         return self._title
 
     @title.setter
-    @tvu.validate_and_unify(title=tvu.instance(unicode))
+    @tvu.validate_and_unify(title=tvu.instance(str))
     def title(self, title):
         self._title = title
 
@@ -395,7 +395,7 @@ class Document(_object.ScriveObject):
     def authentication_method(self):
         signatories = list(self.signatories)
         if not signatories:
-            return u'mixed'
+            return 'mixed'
 
         # at least 1 signatory
         first_signatory = signatories.pop(0)
@@ -403,7 +403,7 @@ class Document(_object.ScriveObject):
         for signatory in signatories:
             if signatory.authentication_method != result:
                 # signatories use various auth methods
-                return u'mixed'
+                return 'mixed'
         # all signatories have the same auth method
         return result.value
 
@@ -411,7 +411,7 @@ class Document(_object.ScriveObject):
     def invitation_delivery_method(self):
         signatories = list(self.signatories)
         if not signatories:
-            return u'mixed'
+            return 'mixed'
 
         # at least 1 signatory
         first_signatory = signatories.pop(0)
@@ -419,7 +419,7 @@ class Document(_object.ScriveObject):
         for signatory in signatories:
             if signatory.invitation_delivery_method != result:
                 # signatories use various invitation delivery methods
-                return u'mixed'
+                return 'mixed'
         # all signatories have the same invitation delivery method
         return result.value
 
@@ -495,7 +495,7 @@ class Document(_object.ScriveObject):
     @tvu.validate_and_unify(invitation_message=MaybeUnicode)
     def invitation_message(self, invitation_message):
         if invitation_message is not None and invitation_message.isspace()\
-           or invitation_message == u'':
+           or invitation_message == '':
             invitation_message = None
         self._invitation_message = invitation_message
 
@@ -507,7 +507,7 @@ class Document(_object.ScriveObject):
     @tvu.validate_and_unify(confirmation_message=MaybeUnicode)
     def confirmation_message(self, confirmation_message):
         if confirmation_message is not None and confirmation_message.isspace()\
-           or confirmation_message == u'':
+           or confirmation_message == '':
             confirmation_message = None
         self._confirmation_message = confirmation_message
 
@@ -559,7 +559,7 @@ class Document(_object.ScriveObject):
         return self._timezone
 
     @timezone.setter
-    @tvu.validate_and_unify(timezone=tvu.instance(unicode))
+    @tvu.validate_and_unify(timezone=tvu.instance(str))
     def timezone(self, timezone):
         self._timezone = timezone
 
@@ -585,11 +585,11 @@ class Document(_object.ScriveObject):
 
     @scrive_property
     def author(self):
-        authors = filter(lambda s: s.author, self.signatories)
+        authors = [s for s in self._signatories if s.author]
         if not authors:
-            raise _exceptions.Error(u'No author')
+            raise _exceptions.Error('No author')
         if len(authors) > 1:
-            raise _exceptions.Error(u'Multiple authors')
+            raise _exceptions.Error('Multiple authors')
         else:
             return authors[0]
 

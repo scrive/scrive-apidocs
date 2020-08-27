@@ -61,7 +61,7 @@ class TestHelper(object):
         doc.author.invitation_delivery_method = 'pad'
         doc.author.confirmation_delivery_method = 'none'
         doc.author.viewer = True
-        doc.signatories.add(self.create_standard_signatory(u'Alex Allen'))
+        doc.signatories.add(self.create_standard_signatory('Alex Allen'))
         return doc
 
     def arrow_scroll(self, skip_scroll_to_top=False):
