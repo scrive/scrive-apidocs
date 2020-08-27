@@ -1,72 +1,44 @@
 #!/usr/bin/env python
+import argparse
+import nose
 import os
-import subprocess
 import sys
-
-os.environ['PYTHONPATH'] = ':'.join([os.path.abspath('../utils'),
-                                     os.path.abspath('..')])
-
-
-def usage():
-    print 'Usage:', prog, '--(remote|local)',
-    print '[--lang=en|fr|sv|de|...]',
-    print '[--enable-screenshots]',
-    print '[TEST_NAME]', '<NOSE_OPTS>'
-    sys.exit(1)
+import shutil
 
 if __name__ == '__main__':
-    prog = sys.argv[0]
-    argv = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-l', '--local', action='store_true')
+    group.add_argument('-r', '--remote', action='store_true')
+    parser.add_argument('-s', '--enable-screenshots', action='store_true')
+    parser.add_argument('-t', '--timeout', action='store', type=int, default=30)
+    parser.add_argument('-g', '--lang', action='store', default='en')
+    parser.add_argument('-n', '--single-test-name', action='store')
+    parser.add_argument('args', nargs=argparse.REMAINDER)
+    args, left = parser.parse_known_args()
 
-    if len(argv) < 1 or argv[0] not in ['--local', '--remote']:
-        usage()
-
-    remote = argv[0] == '--remote'
-    os.environ['SELENIUM_REMOTE_TESTS'] = '1' if remote else '0'
-    argv.pop(0)
-
-    if len(argv) >= 1 and argv[0].startswith('--lang='):
-        code = argv[0][len('--lang='):]
-        argv.pop(0)
-    else:
-        code = 'en'
-    os.environ['SELENIUM_TEST_LANG'] = code
+    os.environ['SELENIUM_REMOTE_TESTS'] = '1' if args.remote else '0'
+    os.environ['SELENIUM_TAKE_SCREENSHOTS'] = '1' if args.enable_screenshots else '0'
+    os.environ['SELENIUM_TIMEOUT'] = str(args.timeout)
+    os.environ['SELENIUM_TEST_LANG'] = args.lang
+    os.environ['SELENIUM_SINGLE_TEST'] = args.single_test_name if args.single_test_name else ''
 
     dir_path = os.path.dirname(os.path.abspath(__file__))
     screenshots_dir = os.path.join(dir_path, 'screenshots')
-    if not os.path.exists(screenshots_dir):
+
+    if args.enable_screenshots:
+        if os.path.exists(screenshots_dir):
+            shutil.rmtree(screenshots_dir)
+
         os.makedirs(screenshots_dir)
 
-    if len(argv) >= 1 and argv[0] == '--enable-screenshots':
-        screenshots_enabled = True
-        os.environ['SELENIUM_TAKE_SCREENSHOTS'] = '1'
-        argv.pop(0)
+    print "Running %s selenium tests %s in %s language %s screenshots" % (
+        args.single_test_name if args.single_test_name else 'all',
+        'on Saucelabs' if args.remote else 'using local browser',
+        args.lang,
+        'with' if args.enable_screenshots else 'without'
+    )
 
-        # clean up old screenshots
-        for file_name in os.listdir(screenshots_dir):
-            if file_name.startswith(code + '_'):
-                os.remove(os.path.join(screenshots_dir, file_name))
-    else:
-        screenshots_enabled = False
+    sys.argv = [sys.argv[0]] + left
+    nose.main()
 
-    if len(argv) >= 1 and not argv[0].startswith('-'):
-        print 'Running single', argv[0], 'Selenium test',
-        os.environ['SELENIUM_SINGLE_TEST'] = argv[0]
-        argv.pop(0)
-    else:
-        print 'Running all Selenium tests',
-
-    if remote:
-        print 'on Saucelabs',
-    else:
-        print 'using local browser',
-
-    print 'in', code, 'language',
-
-    if screenshots_enabled:
-        print 'with screenshots enabled'
-    else:
-        print 'without taking screenshots'
-
-    ret_code = subprocess.call(['nosetests'] + argv)
-    sys.exit(ret_code)

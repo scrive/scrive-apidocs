@@ -1,11 +1,14 @@
 import os
+import sys
+sys.path.append(os.path.abspath('../utils'))
+sys.path.append(os.path.abspath('..'))
 
 import screenshot_tests
 import tests
 import tests2
 from make_drivers import generate_tests
 from selenium import webdriver
-
+import shutil
 
 ###############################################################################
 #                                   INFO                                      #
@@ -80,15 +83,16 @@ REMOTE_DEVICES_FOR_SCREENSHOTS = [{'browserName': "chrome",
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 artifact_dir = os.path.join(dir_path, 'artifacts')
+screenshots_dir = os.path.join(dir_path, 'screenshots')
 
 
 # this function is autocalled by nosetests, so it's like main()
 def make_tests():
-    for x in generate_tests(tests, artifact_dir,
+    for x in generate_tests(tests, screenshots_dir, artifact_dir,
                             LOCAL_DEVICES, REMOTE_DEVICES):
         yield x
-    for x in generate_tests(tests2, artifact_dir, selenium=False):
+    for x in generate_tests(tests2, screenshots_dir, artifact_dir, selenium=False):
         yield x
-    for x in generate_tests(screenshot_tests, artifact_dir,
+    for x in generate_tests(screenshot_tests, screenshots_dir, artifact_dir,
                             LOCAL_DEVICES, REMOTE_DEVICES_FOR_SCREENSHOTS):
         yield x

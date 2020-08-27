@@ -1,5 +1,4 @@
 from scrivepy import StandardField, Scrive
-
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 
@@ -59,7 +58,7 @@ def check_sign_with_signsuccessredirect(test, drv, api):
     drv.wait_for_element_and_click('.section.sign .button.action')
 
     # wait until we are redirected to google
-    drv.wait(30).until(expected_conditions.title_contains('Google'))
+    drv.wait().until(expected_conditions.title_contains('Google'))
 
 
 def check_regular_rejection(test, drv, api):

@@ -1,10 +1,13 @@
 import os
+import sys
+sys.path.append(os.path.abspath('../utils'))
+sys.path.append(os.path.abspath('..'))
 
 import tests
 from make_drivers import generate_tests
 from scrivepy import Language
 from selenium import webdriver
-
+import shutil
 
 ###############################################################################
 #                                   INFO                                      #
@@ -40,6 +43,7 @@ REMOTE_DEVICES = [{'browserName': "chrome",
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 artifact_dir = os.path.join(dir_path, 'artifacts')
+screenshots_dir = os.path.join(dir_path, 'screenshots')
 
 
 # this function is autocalled by nosetests, so it's like main()
@@ -49,7 +53,7 @@ def make_tests():
     except KeyError:
         remote = False
     for lang in Language:
-        for x in generate_tests(tests, artifact_dir,
+        for x in generate_tests(tests, screenshots_dir, artifact_dir,
                                 LOCAL_DEVICES, REMOTE_DEVICES,
                                 lang=lang.value, screenshots_enabled=remote):
             yield x
