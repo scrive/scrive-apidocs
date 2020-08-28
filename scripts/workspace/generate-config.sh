@@ -26,11 +26,12 @@ test_conn_string="host='$db_path' user='$USER' dbname='kontrakcja_test'"
 
 set_main_database="setpath([\"database\"]; \"$main_conn_string\")"
 set_test_database="setpath([\"database\"]; \"$test_conn_string\")"
+set_services_to_run="setpath([\"services_to_run\"]; \"both\")"
 
 sed -e "s|\$scrivepdftools|$scrivepdftools|g" "$script_dir/fixture/template.yaml" > "$KONTRAKCJA_WORKSPACE/template.yaml"
 
 jq \
-  "$set_main_database | $set_amazon | $set_pdftools | $set_users" \
+  "$set_main_database | $set_amazon | $set_pdftools | $set_users | $set_services_to_run"  \
   < "$KONTRAKCJA_ROOT/configuration-templates/kontrakcja.conf.template" \
   > kontrakcja.conf
 
