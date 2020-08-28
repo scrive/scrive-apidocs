@@ -9,6 +9,14 @@ Submitter checklist:
   * [ ] I have added tests, if not I explain why
   * [ ] Do the changes affect the API? If yes, here is the PR for updating API documentation: **TODO**
 
+* Flow specific (delete if not needed):
+  * [ ] I have modified all high-tongue examples.
+  * [ ] I have modified API spec.
+  * [ ] I have modified API change log.
+  * [ ] I have modified API `flow-api-guide.md`.
+  * [ ] I have written flow end-to-end tests.
+  * [ ] I have written flow unit tests.
+
 ---
 
 Reviewer responsibilities:
