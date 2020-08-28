@@ -55,10 +55,7 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
   xmlTree            <- parseSAMLXML samlResponse
   idpID              <- maybe idpApiErr (return . T.pack) (getIDPID xmlTree)
   ug <- dbQuery $ UserGroupGetBySSOIDPID idpID
-  ugSSOConf <- maybe (ssoConfigErr idpID) return $
-      (ug >>= view #settings >>= view #ssoConfig)
-      <|>
-      getSSOConfFromConfig ssoConf idpID
+  ugSSOConf <- maybe (ssoConfigErr idpID) return (ug >>= view #settings >>= view #ssoConfig)
   verifiedAssertions <- getVerifiedAssertionsFromSAML (getPublicKeys ugSSOConf) xmlTree
   let mFirstAssertion = listToMaybe verifiedAssertions
   guardAssertionsConditionsAreMet (scSamlEntityBaseURI ssoConf)
@@ -110,9 +107,6 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
 
     ssoConfigErr :: (Kontrakcja m) => Text -> m a
     ssoConfigErr idpID = unauthorized $ "No SSO configuration for IDP with ID: " <> idpID
-
-    getSSOConfFromConfig :: SSOConf -> Text -> Maybe UserGroupSSOConfiguration
-    getSSOConfFromConfig systemSSOConfig idpID = Prelude.find (\i -> (i ^. #idpID) == idpID) $ scSamlIdps systemSSOConfig
 
     getPublicKeys :: UserGroupSSOConfiguration -> SIG.PublicKeys
     getPublicKeys ssoConf = SIG.PublicKeys { publicKeyRSA = Just $ ssoConf ^. #publicKey, publicKeyDSA = Nothing }

@@ -7,11 +7,8 @@ import Data.Unjson
 import Network.URI
 import qualified Data.Aeson as Aeson
 
-import UserGroup.Internal (UserGroupSSOConfiguration(..))
-
-data SSOConf = SSOConf {
-   scSamlEntityBaseURI :: !URI,
-   scSamlIdps :: [UserGroupSSOConfiguration]
+newtype SSOConf = SSOConf {
+   scSamlEntityBaseURI :: URI
 } deriving (Show, Eq)
 
 unjsonSSOConf :: UnjsonDef SSOConf
@@ -22,23 +19,6 @@ unjsonSSOConf = objectOf
         scSamlEntityBaseURI
         "base URI of Scrive SAML entity (most of the time base uri of server)  - eg. \"https://features-testbed.scrive.com/\""
         unjsonURI
-  <*> fieldDefBy "idps"
-                 []
-                 scSamlIdps
-                 " a list of idps"
-                 unjsonUserGroupSSOConfigurationsFromConfig
-  )
-
-unjsonUserGroupSSOConfigurationsFromConfig :: UnjsonDef [UserGroupSSOConfiguration]
-unjsonUserGroupSSOConfigurationsFromConfig = arrayOf $ objectOf
-  (   UserGroupSSOConfiguration
-  <$> field "idp_id"         idpID              "ID of idp"
-  <*> field "idp_public_key" publicKey          "public key of idp"
-  <*> field "idp_init_ug"    userInitialGroupID "initial user group id"
-  <*> fieldDef "idp_put_name_id_in_company_position"
-               False
-               putNameIDInCompanyPosition
-               "Put name id into company position field"
   )
 
 instance Unjson SSOConf where
