@@ -51,7 +51,7 @@ class Scrive(object):
         if files is None:
             headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
-        return method(url, data=data, headers=headers, files=files)
+        return method(url, data=data, headers=headers, files=files, proxies=urllib.request.getproxies())
 
     def _make_doc_request(self, url_elems, method=requests.post,
                           data=None, files=None):
