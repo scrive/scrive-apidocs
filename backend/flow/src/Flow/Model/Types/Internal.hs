@@ -60,18 +60,28 @@ data UpdateTemplate = UpdateTemplate
     }
   deriving (Eq, Generic, Show)
 
-
 data Instance = Instance
     { id :: InstanceId
+    , title :: Maybe Text
     , templateId :: TemplateId
     , currentState :: StageName
-    , created :: UTCTime
+    , started :: UTCTime
+    , lastEvent :: UTCTime
     }
 
 data InsertInstance = InsertInstance
     { templateId :: TemplateId
-    , currentStage :: StageName
+    , title :: Maybe Text
+    , stage :: StageName
+    , started :: UTCTime
     }
+  deriving (Eq, Generic, Show)
+
+instance FromJSON InsertInstance where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON InsertInstance where
+  toEncoding = genericToEncoding aesonOptions
 
 data Event = Event
     { id :: EventId

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.8.0"
+  version: "0.9.0"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -277,7 +277,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TemplateParameters"
+              $ref: "#/components/schemas/InstanceCreateRequest"
       responses:
         201:
           description: Returns the ID of a newly created instance.
@@ -513,6 +513,17 @@ components:
         id:
           type: string
           example: joe@foo.com
+    InstanceCreateRequest:
+      description: |
+        This object specifies the parameters required to instantiate a template.
+      type: object
+      required:
+        - template_parameters
+      properties:
+        title:
+          $ref: "#/components/schemas/InstanceTitle"
+        template_parameters:
+          $ref: "#/components/schemas/TemplateParameters"
     TemplateParameters:
       description: |
         This object specifies concrete values for the
@@ -738,6 +749,25 @@ components:
       type: string
       format: uuid
       example: 31ebc664-3a61-41ec-b03b-d7b48b7b3a9e
+
+    InstanceTitle:
+      description: User-supplied title for the flow instance.
+      type: string
+      nullable: true
+      example: foobar
+
+    InstanceStartedTimestamp:
+      description: The precise time that the instance was started.
+      type: string
+      format: date-time
+      example: "1997-01-01T12:00:27.87.00000Z"
+
+    InstanceLastEventTimestamp:
+      description: The precise time that the instance was started.
+      type: string
+      format: date-time
+      example: "1997-01-01T12:00:27.87.00000Z"
+
     InstanceGetResponse:
       type: object
       required:
@@ -751,6 +781,8 @@ components:
           $ref: "#/components/schemas/InstanceId"
         template:
           $ref: "#/components/schemas/TemplateId"
+        title:
+          $ref: "#/components/schemas/InstanceTitle"
         template_parameters:
           $ref: "#/components/schemas/TemplateParameters"
         state:
@@ -766,6 +798,10 @@ components:
           example:
             user1: "https://foo.com/flow/123/user1"
             user2: "https://foo.com/flow/123/user2"
+        started:
+          $ref: "#/components/schemas/InstanceStartedTimestamp"
+        last_event:
+          $ref: "#/components/schemas/InstanceLastEventTimestamp"
 
     InstanceEvent:
       type: object
@@ -833,6 +869,8 @@ components:
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
+        title:
+          $ref: "#/components/schemas/InstanceTitle"
         state:
           $ref: "#/components/schemas/InstanceUserState"
         available_actions:
@@ -841,6 +879,10 @@ components:
             $ref: "#/components/schemas/InstanceUserAction"
         status:
           $ref: "#/components/schemas/InstanceStatus"
+        started:
+          $ref: "#/components/schemas/InstanceStartedTimestamp"
+        last_event:
+          $ref: "#/components/schemas/InstanceLastEventTimestamp"
 
     InstanceUserState:
       description: |

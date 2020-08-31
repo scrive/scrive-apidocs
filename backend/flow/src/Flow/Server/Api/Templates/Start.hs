@@ -43,8 +43,8 @@ import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.VariableCollector as Collector
 
-startTemplate :: Account -> TemplateId -> InstanceKeyValues -> AppM GetInstance
-startTemplate account templateId keyValues = do
+startTemplate :: Account -> TemplateId -> CreateInstance -> AppM GetInstance
+startTemplate account templateId (CreateInstance title keyValues) = do
   logInfo_ "Starting instance"
   template <- selectTemplate templateId
   let fid = template ^. #folderId
@@ -57,7 +57,7 @@ startTemplate account templateId keyValues = do
   reportVariables $ validateVariables variables keyValues
 
   let documentMapping = keyValues ^. #documents
-  let documentIds     = Map.elems documentMapping
+      documentIds     = Map.elems documentMapping
   validDocumentIds <- Model.selectDocumentIdsByDocumentIds documentIds
   reportMissingDocuments . Set.toList $ Set.difference (Set.fromList documentIds)
                                                        (Set.fromList validDocumentIds)
@@ -79,11 +79,13 @@ startTemplate account templateId keyValues = do
   documents <- mapM (dbQuery . GetDocumentByDocumentID) documentIds
   reportSettings $ checkDocumentSettingsConsistency documents
 
+  now <- liftIO currentTime
   let initialStage = head $ stages tongue
-  let actions      = stageActions initialStage
-  let stateId      = stageName initialStage
-  let ii           = InsertInstance templateId stateId
-  id <- Model.insertFlowInstance ii
+      actions      = stageActions initialStage
+      stateId      = stageName initialStage
+      started      = now
+      lastEvent    = now
+  id <- Model.insertFlowInstance $ InsertInstance templateId title stateId started
 
   -- The ordering of operations here is crucial.
   Model.insertFlowInstanceKeyValues id keyValues

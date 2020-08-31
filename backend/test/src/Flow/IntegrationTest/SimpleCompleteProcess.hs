@@ -96,14 +96,25 @@ testCompleteFlowProcess = do
   template <- assertRight "create template" . request $ createTemplate createTemplateData
   let tid = id (template :: GetCreateTemplate)
   void . assertRight "commit template response" . request $ commitTemplate tid
-  GetInstance {..} <- assertRight "start template response" . request $ startTemplate
-    tid
-    mapping
+  startedInstance <-
+    assertRight "start template response" . request . startTemplate tid $ CreateInstance
+      Nothing
+      mapping
+
+  -- Saving the lastEvent time to ensure that it increases after the sign event
+  let lastEventAtStart = startedInstance ^. #lastEvent
+  assertBool "Instance last_event field is equal to the started time"
+    $  startedInstance
+    ^. #started
+    == lastEventAtStart
+
   authorFlowLink <-
-    assertJust' "author's access link should be present" $ accessLinks Map.!? "author"
+    assertJust' "author's access link should be present"
+    $      (startedInstance ^. #accessLinks)
+    Map.!? "author"
   signatoryFlowLink <-
     assertJust' "signatory's access link should be present"
-    $      accessLinks
+    $      (startedInstance ^. #accessLinks)
     Map.!? "signatory"
 
   authorEnv    <- mkEnvForUser
@@ -122,11 +133,11 @@ testCompleteFlowProcess = do
   authorViewBeforeSign <-
     assertRight "get author instance view data before signing"
     . requestWithEnv authorEnv
-    $ getInstanceView id Nothing
+    $ getInstanceView (startedInstance ^. #id) Nothing
   signatoryViewBeforeSign <-
     assertRight "get signatory instance view data before signing"
     . requestWithEnv signatoryEnv
-    $ getInstanceView id Nothing
+    $ getInstanceView (startedInstance ^. #id) Nothing
 
   assertEqual "author's state should be empty at the beginning" []
     $ view (#state % #documents) authorViewBeforeSign
@@ -178,7 +189,7 @@ testCompleteFlowProcess = do
   authorViewAfterSign <-
     assertRight "get author instance view data before signing"
     . requestWithEnv authorEnv
-    $ getInstanceView id Nothing
+    $ getInstanceView (startedInstance ^. #id) Nothing
 
   assertEqual "author's state should contain one document"
               (Just $ InstanceUserDocument did Signed authSigLinkId)
@@ -202,7 +213,7 @@ testCompleteFlowProcess = do
     (docApiV2SigSign did authSigLinkId)
     409
 
-  _ <- mockDocTestRequestHelper
+  void $ mockDocTestRequestHelper
     signatorySignContext
     POST
     [ ("fields"           , inText "[]")
@@ -212,10 +223,11 @@ testCompleteFlowProcess = do
     (docApiV2SigSign did signatorySigLinkId)
     200
 
+  -- Check that the last_updated is greater than it was after making the instance
   signatoryViewAfterSign <-
     assertRight "get signatory instance view data after signing"
     . requestWithEnv signatoryEnv
-    $ getInstanceView id Nothing
+    $ getInstanceView (startedInstance ^. #id) Nothing
 
   assertEqual "signatory's state should contain one document"
               (Just $ InstanceUserDocument did Signed signatorySigLinkId)
@@ -224,9 +236,13 @@ testCompleteFlowProcess = do
   assertEqual "there should be no left action for signatory" []
     $ view #actions signatoryViewAfterSign
 
-
   toBeSealed <- getDocumentsToBeSealed [did]
   assertEqual "Document is scheduled for sealing" [did] toBeSealed
+
+  let lastEventAfterSign = signatoryViewAfterSign ^. #lastEvent
+  assertBool "Instance last_event field is updated after signing"
+    $ lastEventAtStart
+    < lastEventAfterSign
 
   -- Document can't be signed for second time.
   void $ mockDocTestRequestHelper

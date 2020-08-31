@@ -227,12 +227,20 @@ testInstanceListEndpoint = do
   let tid = id (template :: GetCreateTemplate)
   void . assertRight "commit template response" . request $ commitTemplate tid
 
-  void . assertRight "start template response" . request $ startTemplate tid mapping
+  void
+    . assertRight "start template response"
+    . request
+    . startTemplate tid
+    $ CreateInstance Nothing mapping
   is2 <- assertRight "instance list endpoint works when 1 instance"
     $ request listInstances
   assertBool "second instance list call should have 1 item" $ length is2 == 1
 
-  void . assertRight "start template response" . request $ startTemplate tid mapping
+  void
+    . assertRight "start template response"
+    . request
+    . startTemplate tid
+    $ CreateInstance Nothing mapping
   is3 <- assertRight "instance list endpoint works when 2 instances"
     $ request listInstances
   assertBool "third instance list call should have 2 items" $ length is3 == 2

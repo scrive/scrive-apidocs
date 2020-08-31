@@ -281,4 +281,5 @@ kontraMigrations =
   , addIndicesToFlowInstanceKeyValueStore
   , featureFlagsAddIntegrationsFeatures
   , userGroupSettingsAddPadesCredentialsLabel
+  , addMetaDataToInstanceTable
   ]

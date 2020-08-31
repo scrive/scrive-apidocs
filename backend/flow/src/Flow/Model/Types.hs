@@ -6,7 +6,7 @@ module Flow.Model.Types
     , InsertTemplate(InsertTemplate)
     , UpdateTemplate(UpdateTemplate)
     , Instance(Instance)
-    , InsertInstance(InsertInstance)
+    , InsertInstance(..)
     , Event(Event)
     , InsertEvent(InsertEvent)
     , FullInstance(..)
@@ -71,8 +71,9 @@ fetchTemplate
 fetchTemplate (id, userId, folderId, name, process, created, committed, deleted) =
   Template { .. }
 
-fetchInstance :: (InstanceId, TemplateId, StageName, UTCTime) -> Instance
-fetchInstance (id, templateId, currentState, created) = Instance { .. }
+fetchInstance
+  :: (InstanceId, TemplateId, Maybe Text, StageName, UTCTime, UTCTime) -> Instance
+fetchInstance (id, templateId, title, currentState, started, lastEvent) = Instance { .. }
 
 fetchEvent :: (EventId, InstanceId, UserName, DocumentName, UserAction, UTCTime) -> Event
 fetchEvent (id, instanceId, userName, documentName, userAction, created) = Event { .. }

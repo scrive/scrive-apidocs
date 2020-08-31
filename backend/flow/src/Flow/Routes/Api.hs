@@ -4,6 +4,7 @@ module Flow.Routes.Api
     , GetCreateTemplate(..)
     , GetTemplate(..)
     , PatchTemplate(..)
+    , CreateInstance(..)
     , InstanceEventAction(..)
     , InstanceEvent(..)
     , InstanceState(..)
@@ -54,7 +55,7 @@ type TemplateApi
     :<|> Capture "template_id" TemplateId :> "commit"
                      :> PostNoContent '[JSON] NoContent
     :<|> Capture "template_id" TemplateId :> "start"
-                     :> ReqBody '[JSON] InstanceKeyValues
+                     :> ReqBody '[JSON] CreateInstance
                      :> PostCreated '[JSON] GetInstance
 
 -- brittany-disable-next-binding
@@ -89,6 +90,7 @@ apiProxy = Proxy
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 
+
 data CreateTemplate = CreateTemplate
     { name :: Text
     , process :: Process
@@ -100,6 +102,7 @@ instance FromJSON CreateTemplate where
 
 instance ToJSON CreateTemplate where
   toEncoding = genericToEncoding aesonOptions
+
 
 newtype GetCreateTemplate = GetCreateTemplate { id :: TemplateId }
   deriving (Eq, Generic, Show)
@@ -140,6 +143,19 @@ instance ToJSON PatchTemplate where
   toEncoding = genericToEncoding aesonOptions
 
 
+data CreateInstance = CreateInstance
+    { title :: Maybe Text
+    , templateParameters :: InstanceKeyValues
+    }
+  deriving (Eq, Generic, Show)
+
+instance FromJSON CreateInstance where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON CreateInstance where
+  toEncoding = genericToEncoding aesonOptions
+
+
 data InstanceEventAction
     = Approve
     | Sign
@@ -152,6 +168,7 @@ instance FromJSON InstanceEventAction where
 
 instance ToJSON InstanceEventAction where
   toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
+
 
 data InstanceEvent = InstanceEvent
     { action :: InstanceEventAction
@@ -183,10 +200,13 @@ instance ToJSON InstanceState where
 data GetInstance = GetInstance
     { id :: InstanceId
     , templateId :: TemplateId
+    , title :: Maybe Text
     , templateParameters :: InstanceKeyValues
     , state :: InstanceState
     , accessLinks :: Map UserName Url
     , status :: Status
+    , started :: UTCTime
+    , lastEvent :: UTCTime
     }
   deriving (Eq, Generic, Show)
 
@@ -268,6 +288,7 @@ instance FromJSON DocumentState where
 instance ToJSON DocumentState where
   toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
+
 data Status
     = InProgress
     | Completed
@@ -280,11 +301,15 @@ instance FromJSON Status where
 instance ToJSON Status where
   toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
 
+
 data GetInstanceView = GetInstanceView
     { id      :: InstanceId
+    , title :: Maybe Text
     , state   :: InstanceUserState
     , actions :: [InstanceUserAction]
     , status :: Status
+    , started :: UTCTime
+    , lastEvent :: UTCTime
     }
   deriving (Eq, Generic, Show)
 
@@ -294,8 +319,10 @@ instance FromJSON GetInstanceView where
 instance ToJSON GetInstanceView where
   toEncoding = genericToEncoding aesonOptions
 
+
 -- TODO: Add all optics...
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserDocument
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserState
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserAction
+makeFieldLabelsWith noPrefixFieldLabels ''GetInstance
 makeFieldLabelsWith noPrefixFieldLabels ''GetInstanceView

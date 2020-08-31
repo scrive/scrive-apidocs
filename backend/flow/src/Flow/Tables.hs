@@ -44,7 +44,7 @@ tableFlowTemplates = tblTable
 tableFlowInstances :: Table
 tableFlowInstances = tblTable
   { tblName        = "flow_instances"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName     = "id"
                 , colType     = UuidT
@@ -53,7 +53,12 @@ tableFlowInstances = tblTable
                 }
     , tblColumn { colName = "template_id", colType = UuidT, colNullable = False }
     , tblColumn { colName = "current_state", colType = TextT, colNullable = False }
-    , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "started", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "title", colType = TextT, colNullable = True }
+    , tblColumn { colName     = "last_event"
+                , colType     = TimestampWithZoneT
+                , colNullable = False
+                }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "template_id"]

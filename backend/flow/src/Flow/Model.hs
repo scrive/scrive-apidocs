@@ -5,6 +5,7 @@ module Flow.Model
     , selectTemplatesByUserID
     , updateTemplate
     , insertFlowInstance
+    , updateInstanceLastModified
     , insertEvent
     , insertFlowInstanceKeyValues
     , insertInstanceSignatories
@@ -103,14 +104,14 @@ updateTemplate ut = do
     sqlWhereIsNULL "deleted"
   fetchMaybe fetchTemplate
 
-insertFlowInstance
-  :: (MonadDB m, MonadTime m, MonadThrow m) => InsertInstance -> m InstanceId
-insertFlowInstance ii = do
-  now <- currentTime
+insertFlowInstance :: (MonadDB m, MonadThrow m) => InsertInstance -> m InstanceId
+insertFlowInstance InsertInstance {..} = do
   runQuery_ . sqlInsert "flow_instances" $ do
-    sqlSet "template_id" $ ii ^. #templateId
-    sqlSet "current_state" $ ii ^. #currentStage
-    sqlSet "created" now
+    sqlSet "template_id"   templateId
+    sqlSet "current_state" stage
+    sqlSet "started"       started
+    sqlSet "last_event"    started
+    whenJust title $ sqlSet "title"
     sqlResult "id"
   fetchOne runIdentity
 
@@ -175,8 +176,10 @@ selectDocumentIdsAssociatedWithSomeInstance docIds = do
   fetchMany runIdentity
 
 instanceSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
-instanceSelectors prefix = mapM_ (\c -> sqlResult $ prefix <> "." <> c)
-                                 ["id", "template_id", "current_state", "created"]
+instanceSelectors prefix = mapM_
+  (\c -> sqlResult $ prefix <> "." <> c)
+  ["id", "template_id", "title", "current_state", "started", "last_event"]
+
 selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe Instance)
 selectInstance instanceId = do
   runQuery_ . sqlSelect "flow_instances i" $ do
@@ -275,6 +278,13 @@ updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
       sqlWhereEq "flow_events.instance_id" instanceId
     else runQuery_ . sqlInsert "flow_aggregator_events" $ do
       sqlSet "id" eventId
+
+updateInstanceLastModified :: (MonadDB m, MonadTime m, MonadThrow m) => InstanceId -> m ()
+updateInstanceLastModified instanceId = do
+  now <- currentTime
+  runQuery_ . sqlUpdate "flow_instances" $ do
+    sqlSet "last_event" now
+    sqlWhereEq "id" instanceId
 
 insertEvent :: (MonadDB m, MonadTime m, MonadThrow m) => InsertEvent -> m EventId
 insertEvent ie = do

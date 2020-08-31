@@ -59,10 +59,13 @@ getInstance account instanceId = do
         { id                 = instanceId
         , templateId         = flowInstance ^. #templateId
         , templateParameters = keyValues
+        , title              = flowInstance ^. #title
         -- TODO add a proper instance state
         , state              = InstanceState { availableActions }
         , accessLinks
         , status
+        , started            = flowInstance ^. #started
+        , lastEvent          = flowInstance ^. #lastEvent
         }
 
   if
@@ -139,16 +142,19 @@ getInstanceView user@InstanceUser {..} instanceId' mHost isSecure = do
   let userReceivedEvents =
         filter (\e -> eventInfoUser e == userName) . fmap toEventInfo $ allEvents
           fullInstance
-  let userDocs = map eventInfoDocument userReceivedEvents
-  let userDocsWithState = mapMaybe
+      userDocs          = map eventInfoDocument userReceivedEvents
+      userDocsWithState = mapMaybe
         (toApiUserDocument sigInfo userReceivedEvents $ keyValues ^. #documents)
         userDocs
-
-  let mkGetInstanceView actions status = GetInstanceView
-        { id      = instanceId
-        , state   = InstanceUserState { Api.documents = userDocsWithState }
+      flowInstance = fullInstance ^. #flowInstance
+      mkGetInstanceView actions status = GetInstanceView
+        { id        = instanceId
+        , title     = flowInstance ^. #title
+        , state     = InstanceUserState { Api.documents = userDocsWithState }
         , actions
         , status
+        , started   = flowInstance ^. #started
+        , lastEvent = flowInstance ^. #lastEvent
         }
 
   if

@@ -13,7 +13,6 @@ import Auth.OAuth
 import Auth.Session
 import Flow.HighTongue
 import Flow.Id
-import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Process
 import Flow.Routes.Api
@@ -45,7 +44,7 @@ data ApiClient = ApiClient
   , patchTemplate    :: TemplateId -> PatchTemplate -> ClientM GetTemplate
   , listTemplates    :: ClientM [GetTemplate]
   , commitTemplate   :: TemplateId -> ClientM NoContent
-  , startTemplate    :: TemplateId -> InstanceKeyValues -> ClientM GetInstance
+  , startTemplate    :: TemplateId -> CreateInstance -> ClientM GetInstance
   , getInstance      :: InstanceId -> ClientM GetInstance
   , listInstances    :: ClientM [GetInstance]
   , validateTemplate :: Process -> ClientM NoContent

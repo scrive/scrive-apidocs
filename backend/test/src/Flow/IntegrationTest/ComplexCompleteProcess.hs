@@ -115,9 +115,10 @@ testComplexFlowProcess = do
   template <- assertRight "create template" . request $ createTemplate createTemplateData
   let tid = id (template :: GetCreateTemplate)
   void . assertRight "commit template response" . request $ commitTemplate tid
-  GetInstance {..} <- assertRight "start template response" . request $ startTemplate
-    tid
-    mapping
+  GetInstance {..} <-
+    assertRight "start template response" . request . startTemplate tid $ CreateInstance
+      Nothing
+      mapping
   authorFlowLink <-
     assertJust' "author's flow sign link is missing" $ accessLinks Map.!? "author"
   signatoryFlowLink <-

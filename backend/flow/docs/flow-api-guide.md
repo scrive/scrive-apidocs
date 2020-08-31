@@ -186,22 +186,25 @@ First, we need to provide the parameters. We will store these in a file called `
 
 ```json
 {
-  "documents": {
-    "doc1": "123",
-    "doc2": "456"
-  },
-  "users": {
-    "user": {
-      "id_type": "email",
-      "id": "test@flow.com"
+  "title": "foobar",
+  "template_parameters": {
+    "documents": {
+      "doc1": "123",
+      "doc2": "456"
     },
-    "author": {
-      "id_type": "email",
-      "id": "{user_email}"
+    "users": {
+      "user": {
+        "id_type": "email",
+        "id": "test@flow.com"
+      },
+      "author": {
+        "id_type": "email",
+        "id": "{user_email}"
+      }
+    },
+    "messages": {
+      "author-message": "User test@flow.com has signed some documents, now it is your turn."
     }
-  },
-  "messages": {
-    "author-message": "User test@flow.com has signed some documents, now it is your turn."
   }
 }
 ```
@@ -220,6 +223,7 @@ You'll receive something like this in response:
 {
   "id": "0caf1598-2198-455c-acaa-fad97102fed1",
   "template_id": "aa4a482e-6946-4091-b428-8a849854c5ff",
+  "title": "foobar",
   "template_parameters": {
     ...
   },
@@ -230,7 +234,9 @@ You'll receive something like this in response:
     "author": "https://dev.scrive.com/experimental/flow/overview/0caf1598-2198-455c-acaa-fad97102fed1/author/fa940adb3cfed7d3",
     "user": "https://dev.scrive.com/experimental/flow/overview/0caf1598-2198-455c-acaa-fad97102fed1/user/575e2c50331c81b2"
   },
-  "status": "in_progress"
+  "status": "in_progress",
+  "started": "2020-08-31T15:16:25.061591Z",
+  "last_event": "2020-08-31T15:16:25.061591Z"
 }
 ```
 

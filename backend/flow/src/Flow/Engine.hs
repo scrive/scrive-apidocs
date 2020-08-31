@@ -123,7 +123,9 @@ pushActions instanceId actions = do
   mailCtx <- getMailContext
   let baseUrl = Url (mailCtx ^. #brandedDomain % #url)
   consumableActions <- mapM (toConsumableAction baseUrl instanceId) actions
-  mapM_ consumeFlowAction consumableActions
+  forM_ consumableActions $ \action -> do
+    consumeFlowAction action
+    Model.updateInstanceLastModified instanceId
 
 decodeHighTongueM :: (MonadLog m, MonadThrow m) => Process -> m HighTongue
 decodeHighTongueM process = either throwDSLValidationError' pure

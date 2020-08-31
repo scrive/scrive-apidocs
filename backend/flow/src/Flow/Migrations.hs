@@ -252,3 +252,24 @@ addIndicesToFlowInstanceKeyValueStore = Migration
                        "user_id"
   }
   where tableName = "flow_instance_key_value_store"
+
+addMetaDataToInstanceTable :: MonadDB m => Migration m
+addMetaDataToInstanceTable = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 1
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable tableName ["RENAME COLUMN created TO started"]
+      runQuery_ $ sqlAlterTable
+        tableName
+        [ sqlAddColumn
+          $ tblColumn { colName = "title", colType = TextT, colNullable = True }
+        , sqlAddColumn $ tblColumn { colName     = "last_event"
+                                   , colType     = TimestampWithZoneT
+                                   , colNullable = False
+                                   , colDefault  = Just "now()"
+                                   }
+        ]
+      runQuery_ $ sqlAlterTable tableName [sqlAlterColumn "last_event" "DROP DEFAULT"]
+  }
+  where tableName = "flow_instances"
