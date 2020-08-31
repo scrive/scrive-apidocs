@@ -100,12 +100,12 @@ beginEIDServiceTransaction conf authKind doc sl = do
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data DKNemIDEIDServiceCompletionData = DKNemIDEIDServiceCompletionData
-  { eidnidInternalProvider :: !EIDServiceDKNemIDInternalProvider
-  , eidnidSSN :: !T.Text
-  , eidnidBirthDate :: !T.Text
-  , eidnidCertificate :: !T.Text
-  , eidnidDistinguishedName :: !T.Text
-  , eidnidPid :: !T.Text
+  { eidnidInternalProvider :: EIDServiceDKNemIDInternalProvider
+  , eidnidSSN :: T.Text
+  , eidnidBirthDate :: T.Text
+  , eidnidCertificate :: T.Text
+  , eidnidDistinguishedName :: T.Text
+  , eidnidPid :: T.Text
   } deriving (Eq, Ord, Show)
 
 instance FromJSON DKNemIDEIDServiceCompletionData where

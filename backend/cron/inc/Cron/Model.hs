@@ -136,8 +136,8 @@ instance ToSQL JobType where
 ----------------------------------------
 
 data CronJob = CronJob
-  { cjType      :: !JobType
-  , cjAttempts  :: !Int32
+  { cjType      :: JobType
+  , cjAttempts  :: Int32
   } deriving (Eq, Ord, Show)
 
 cronJobSelectors :: [SQL]

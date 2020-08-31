@@ -1,4 +1,3 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
 module Attachment.Model
   ( defaultAttachment
   , NewAttachment(..)

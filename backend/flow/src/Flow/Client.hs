@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module Flow.Client where
 
 import Data.Text as T

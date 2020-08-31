@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-
 module Flow.TestUtil where
 
 import Control.Monad.IO.Class

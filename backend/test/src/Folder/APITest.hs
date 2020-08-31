@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Folder.APITest (folderApiTests) where
 
 import Data.Aeson hiding ((<?>))

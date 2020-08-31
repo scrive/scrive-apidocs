@@ -1,4 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 module PdfToolsLambda.Class
   ( SealSpec(..)
   , PreSealSpec(..)

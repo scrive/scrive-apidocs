@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE StrictData #-}
 module Flow.Server.Api where
 
 import Servant

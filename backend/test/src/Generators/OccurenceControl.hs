@@ -1,5 +1,3 @@
-{-# LANGUAGE GADTs #-}
-
 -- | 'OccurenceControl' allows to create random generators while controlling
 -- the occurence of some event, typically the presence of an error in the data
 -- structure.

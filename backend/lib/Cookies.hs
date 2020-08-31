@@ -1,5 +1,4 @@
 {-# LANGUAGE ViewPatterns #-}
-
 module Cookies ( addCookie
                , addHttpOnlyCookie
                , lookCookieNames

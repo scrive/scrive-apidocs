@@ -12,12 +12,12 @@ import Doc.SignatoryConsentQuestionID
 import Doc.Tables
 
 data SignatoryConsentQuestion = SignatoryConsentQuestion
-  { scqID             :: !SignatoryConsentQuestionID
-  , scqTitle          :: !String
-  , scqPositiveOption :: !String
-  , scqNegativeOption :: !String
-  , scqResponse       :: !(Maybe Bool)
-  , scqDescription    :: !(Maybe (String, String))
+  { scqID             :: SignatoryConsentQuestionID
+  , scqTitle          :: String
+  , scqPositiveOption :: String
+  , scqNegativeOption :: String
+  , scqResponse       :: Maybe Bool
+  , scqDescription    :: Maybe (String, String)
   } deriving (Show, Typeable)
 
 signatoryConsentQuestionsSelectors :: [SQL]

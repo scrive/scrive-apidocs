@@ -1,7 +1,4 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StrictData #-}
-
 module Flow.AuthenticationTest (tests) where
 
 import Network.HTTP.Types.Status

@@ -192,56 +192,56 @@ instance Read StatusClass where
 ---------------------------------
 
 data Document = Document
-  { documentid                     :: !DocumentID
-  , documenttitle                  :: !Text
-  , documentsignatorylinks         :: ![SignatoryLink]
+  { documentid                     :: DocumentID
+  , documenttitle                  :: Text
+  , documentsignatorylinks         :: [SignatoryLink]
   -- | Order: most recently added files first (FIXME: encode this in the type)
-  , documentmainfiles              :: ![MainFile]
-  , documentstatus                 :: !DocumentStatus
-  , documenttype                   :: !DocumentType
-  , documentctime                  :: !UTCTime
-  , documentmtime                  :: !UTCTime
-  , documentdaystosign             :: !Int32
-  , documentdaystoremind           :: !(Maybe Int32)
-  , documenttimeouttime            :: !(Maybe UTCTime)
-  , documentautoremindtime         :: !(Maybe UTCTime)
-  , documentinvitetime             :: !(Maybe SignInfo)
-  , documentinvitetext             :: !Text -- TODO Should be changed to Maybe
-  , documentconfirmtext            :: !Text -- TODO Should be changed to Maybe
-  , documentsmsinvitetext          :: !(Maybe Text)
-  , documentsmsconfirmtext         :: !(Maybe Text)
-  , documentshowheader             :: !Bool
-  , documentshowpdfdownload        :: !Bool
-  , documentshowrejectoption       :: !Bool
-  , documentallowrejectreason      :: !Bool
-  , documentshowfooter             :: !Bool
-  , documentisreceipt              :: !Bool
-  , documentsharing                :: !DocumentSharing
-  , documenttags                   :: !(S.Set DocumentTag)
-  , documentauthorattachments      :: ![AuthorAttachment]
-  , documentlang                   :: !Lang
-  , documentstatusclass            :: !StatusClass
-  , documentapiv1callbackurl       :: !(Maybe Text)
-  , documentapiv2callbackurl       :: !(Maybe Text)
-  , documentunsaveddraft           :: !Bool
-  , documentobjectversion          :: !Int64
-  , documentmagichash              :: !MagicHash
-  , documentauthorugid             :: !(Maybe UserGroupID)
-  , documenttimezonename           :: !TimeZoneName
-  , documentshareablelinkhash      :: !(Maybe MagicHash)
-  , documenttemplateid             :: !(Maybe DocumentID)
-  , documentfromshareablelink      :: !Bool
-  , documentshowarrow              :: !Bool
+  , documentmainfiles              :: [MainFile]
+  , documentstatus                 :: DocumentStatus
+  , documenttype                   :: DocumentType
+  , documentctime                  :: UTCTime
+  , documentmtime                  :: UTCTime
+  , documentdaystosign             :: Int32
+  , documentdaystoremind           :: Maybe Int32
+  , documenttimeouttime            :: Maybe UTCTime
+  , documentautoremindtime         :: Maybe UTCTime
+  , documentinvitetime             :: Maybe SignInfo
+  , documentinvitetext             :: Text -- TODO Should be changed to Maybe
+  , documentconfirmtext            :: Text -- TODO Should be changed to Maybe
+  , documentsmsinvitetext          :: Maybe Text
+  , documentsmsconfirmtext         :: Maybe Text
+  , documentshowheader             :: Bool
+  , documentshowpdfdownload        :: Bool
+  , documentshowrejectoption       :: Bool
+  , documentallowrejectreason      :: Bool
+  , documentshowfooter             :: Bool
+  , documentisreceipt              :: Bool
+  , documentsharing                :: DocumentSharing
+  , documenttags                   :: S.Set DocumentTag
+  , documentauthorattachments      :: [AuthorAttachment]
+  , documentlang                   :: Lang
+  , documentstatusclass            :: StatusClass
+  , documentapiv1callbackurl       :: Maybe Text
+  , documentapiv2callbackurl       :: Maybe Text
+  , documentunsaveddraft           :: Bool
+  , documentobjectversion          :: Int64
+  , documentmagichash              :: MagicHash
+  , documentauthorugid             :: Maybe UserGroupID
+  , documenttimezonename           :: TimeZoneName
+  , documentshareablelinkhash      :: Maybe MagicHash
+  , documenttemplateid             :: Maybe DocumentID
+  , documentfromshareablelink      :: Bool
+  , documentshowarrow              :: Bool
   -- | Folder, where the document belongs. The folder facilitates access to the
   -- document.
-  , documentfolderid               :: !FolderID
+  , documentfolderid               :: FolderID
   -- | When set, use the EID settings of the specified user group (rather than
   -- that of the author) for EID transactions related to the document. This
   -- mainly affects the 'display name', i.e. the name presented to the user as
   -- the party they are entering into a transaction with. Implements CORE-1633.
-  , documentusergroupforeid        :: !(Maybe UserGroupID)
-  , documentsealingmethod          :: !SealingMethod
-  , documentaddmetadatatopdf       :: !Bool
+  , documentusergroupforeid        :: Maybe UserGroupID
+  , documentsealingmethod          :: SealingMethod
+  , documentaddmetadatatopdf       :: Bool
   } deriving (Show)
 
 type instance ID Document = DocumentID

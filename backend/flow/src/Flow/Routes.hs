@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module Flow.Routes
     ( Routes
     , routesProxy

@@ -61,9 +61,9 @@ instance Exception RqDataError
 ----------------------------------------
 
 data ReqHandlerSt = ReqHandlerSt {
-  hsRequest :: !Request
-, hsFilter  :: !(Response -> Response)
-, hsTime    :: !UTCTime
+  hsRequest :: Request
+, hsFilter  :: Response -> Response
+, hsTime    :: UTCTime
 }
 
 type InnerReqHandlerT = StateT ReqHandlerSt

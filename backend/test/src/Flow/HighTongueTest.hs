@@ -1,6 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StrictData #-}
-
 module Flow.HighTongueTest (tests) where
 
 import Test.Framework

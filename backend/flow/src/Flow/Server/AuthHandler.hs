@@ -1,7 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Strict #-}
-
 module Flow.Server.AuthHandler
   ( authHandlerAccount
   , authHandlerInstanceUser

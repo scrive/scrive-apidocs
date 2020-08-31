@@ -1,8 +1,4 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StrictData #-}
-{-# LANGUAGE OverloadedLabels #-}
-
 module Flow.IntegrationTest.ComplexCompleteProcess where
 
 import Control.Monad.Reader.Class

@@ -21,8 +21,8 @@ import MinutesTime
 import qualified HostClock.Model as HC
 
 data EvidenceOfTime = EvidenceOfTime {
-    eotDistribution :: !NormalDistribution
-  , eotGraph        :: !BS.ByteString
+    eotDistribution :: NormalDistribution
+  , eotGraph        :: BS.ByteString
   }
 
 -- | Given the document title, list of clock error estimates, and clock error

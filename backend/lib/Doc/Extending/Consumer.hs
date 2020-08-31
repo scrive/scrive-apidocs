@@ -26,8 +26,8 @@ import Templates
 import User.Lang (defaultLang)
 
 data DocumentExtendingConsumer = DocumentExtendingConsumer {
-    decDocumentID :: !DocumentID
-  , decAttempts :: !Int32
+    decDocumentID :: DocumentID
+  , decAttempts :: Int32
   }
 
 documentExtendingConsumer

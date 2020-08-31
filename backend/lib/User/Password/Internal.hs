@@ -11,8 +11,8 @@ instance Ord Scrypt.EncryptedPass where
 
 -- | An encrypted password. Two password schemes are supported:
 -- current and legacy.
-data Password = Password       { pwdEncPass    :: !Scrypt.EncryptedPass
-                               , pwdSHA256Salt :: !BS.ByteString }
+data Password = Password       { pwdEncPass    :: Scrypt.EncryptedPass
+                               , pwdSHA256Salt :: BS.ByteString }
                 -- ^ Current password scheme, SHA256 + scrypt.
 
               deriving (Eq, Ord)

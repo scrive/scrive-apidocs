@@ -67,15 +67,16 @@ dumpEvidenceTexts now lang doc' = do
         , signatorylinkid = unsafeSignatoryLinkID 1
         }
   let Just time = parseTime' "%d-%m-%Y" "01-01-2013"
-  let actor = Actor { actorTime       = time
+  let email = "author@example.com"
+      actor = Actor { actorTime       = time
                     , actorClientTime = Nothing
                     , actorClientName = Nothing
                     , actorIP         = Nothing
                     , actorUserID     = Nothing
-                    , actorEmail      = Just "author@example.com"
+                    , actorEmail      = Just email
                     , actorSigLinkID  = Just (signatorylinkid author_sl)
                     , actorAPIString  = Nothing
-                    , actorWho = "the author (" <> fromJust (actorEmail actor) <> ")"
+                    , actorWho        = "the author (" <> email <> ")"
                     }
   let evidencetypes = [minBound .. maxBound] :: [CurrentEvidenceEventType]
   let asl = defaultSignatoryLink

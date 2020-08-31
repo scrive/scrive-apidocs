@@ -79,14 +79,14 @@ beginEIDServiceTransaction conf authKind doc sl = do
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data FITupasEIDServiceCompletionData = FITupasEIDServiceCompletionData
-  { eidtupasName :: !Text
-  , eidtupasBirthDate :: !(Maybe Text)
-  , eidtupasDistinguishedName :: !Text  -- may contain the personal number
-  , eidtupasBank :: !(Maybe Text)  -- absent when using Mobile ID
-  , eidtupasPid :: !(Maybe Text)
+  { eidtupasName :: Text
+  , eidtupasBirthDate :: Maybe Text
+  , eidtupasDistinguishedName :: Text  -- may contain the personal number
+  , eidtupasBank :: Maybe Text  -- absent when using Mobile ID
+  , eidtupasPid :: Maybe Text
   -- ^ 'A fixed identifier for the user set in the E-Ident / FTN service.' (from
   -- the Nets documentation)
-  , eidtupasSSN :: !(Maybe Text)  -- seems to be absent for 'legal persons'
+  , eidtupasSSN :: Maybe Text  -- seems to be absent for 'legal persons'
   } deriving (Eq, Ord, Show)
 
 instance FromJSON FITupasEIDServiceCompletionData where

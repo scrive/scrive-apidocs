@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies, ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module API.Monad.V1 (
                  APIError(),
                  badInput,

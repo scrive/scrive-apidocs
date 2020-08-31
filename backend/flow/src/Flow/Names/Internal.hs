@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 module Flow.Names.Internal
   ( Name(..)
   , DocumentName

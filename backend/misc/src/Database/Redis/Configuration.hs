@@ -15,10 +15,10 @@ import qualified Database.Redis as R
 import Database.Redis.Helpers
 
 data RedisConfig = RedisConfig
-  { rcHost     :: !Text
-  , rcPort     :: !Word16
-  , rcAuth     :: !(Maybe Text)
-  , rcDatabase :: !Integer
+  { rcHost     :: Text
+  , rcPort     :: Word16
+  , rcAuth     :: Maybe Text
+  , rcDatabase :: Integer
 
   } deriving (Eq, Ord, Show)
 instance Unjson RedisConfig where

@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module Flow.Id where
 
 import Data.Aeson

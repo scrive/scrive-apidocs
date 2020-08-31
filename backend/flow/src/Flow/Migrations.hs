@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module Flow.Migrations where
 
 import Database.PostgreSQL.PQTypes.Checks

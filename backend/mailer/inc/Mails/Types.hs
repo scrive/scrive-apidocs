@@ -70,8 +70,8 @@ instance ToSQL JobType where
   toSQL tt = toSQL . fromJust $ tt `lookup` jobTypeMapper
 
 data MailerJob = MailerJob
-  { mjType      :: !JobType
-  , mjAttempts  :: !Int32
+  { mjType      :: JobType
+  , mjAttempts  :: Int32
   } deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -96,8 +96,8 @@ instance ToSQL MailID where
   toSQL (MailID n) = toSQL n
 
 data Address = Address
-  { addrName  :: !Text
-  , addrEmail :: !Text
+  { addrName  :: Text
+  , addrEmail :: Text
   } deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 instance Unjson Address where
@@ -130,8 +130,8 @@ instance ToSQL [Address] where
   toSQL = jsonToSQL
 
 data Attachment = Attachment
-  { attName    :: !Text
-  , attContent :: !(Either B.ByteString FileID)
+  { attName    :: Text
+  , attContent :: Either B.ByteString FileID
   } deriving (Eq, Ord, Show)
 
 type instance CompositeRow Attachment = (Text, Maybe B.ByteString, Maybe FileID)
@@ -155,16 +155,16 @@ instance Loggable Attachment where
   logDefaultLabel _ = "attachment"
 
 data Mail = Mail
-  { mailID          :: !MailID
-  , mailToken       :: !MagicHash
-  , mailFrom        :: !Address
-  , mailTo          :: ![Address]
-  , mailReplyTo     :: !(Maybe Address)
-  , mailTitle       :: !Text
-  , mailContent     :: !Text
-  , mailAttachments :: ![Attachment]
-  , mailServiceTest :: !Bool
-  , mailAttempts    :: !Int32
+  { mailID          :: MailID
+  , mailToken       :: MagicHash
+  , mailFrom        :: Address
+  , mailTo          :: [Address]
+  , mailReplyTo     :: Maybe Address
+  , mailTitle       :: Text
+  , mailContent     :: Text
+  , mailAttachments :: [Attachment]
+  , mailServiceTest :: Bool
+  , mailAttempts    :: Int32
   } deriving (Eq, Ord, Show)
 
 instance Loggable Mail where

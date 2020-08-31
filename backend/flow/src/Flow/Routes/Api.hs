@@ -1,6 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Flow.Routes.Api
     ( CreateTemplate(..)

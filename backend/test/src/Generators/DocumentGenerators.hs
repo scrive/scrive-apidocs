@@ -1,5 +1,4 @@
 {-# LANGUAGE ApplicativeDo #-}
-
 module Generators.DocumentGenerators
   ( startableDocumentOC
   , startableDocumentGen

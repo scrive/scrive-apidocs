@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Monitor.APITest (monitorAPITests) where
 
 import Data.Aeson

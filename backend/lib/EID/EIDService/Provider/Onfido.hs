@@ -87,10 +87,10 @@ beginEIDServiceTransaction conf authKind doc sl = do
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusNew)
 
 data OnfidoEIDServiceCompletionData = OnfidoEIDServiceCompletionData
-  { eidonfidoFirstName   :: !Text
-  , eidonfidoLastName    :: !Text
-  , eidonfidoDateOfBirth :: !Text
-  , eidonfidoMethod      :: !OnfidoMethod
+  { eidonfidoFirstName   :: Text
+  , eidonfidoLastName    :: Text
+  , eidonfidoDateOfBirth :: Text
+  , eidonfidoMethod      :: OnfidoMethod
   } deriving (Eq, Ord, Show)
 
 instance FromJSON OnfidoEIDServiceCompletionData where

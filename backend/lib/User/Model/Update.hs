@@ -1,4 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 module User.Model.Update (
     AddUser(..)
   , AcceptTermsOfService(..)

@@ -32,9 +32,9 @@ import User.Lang
 import qualified MailContext.Internal
 
 data DocumentSealing = DocumentSealing {
-    dsDocumentID      :: !DocumentID
-  , dsBrandedDomainID :: !BrandedDomainID
-  , dsAttempts        :: !Int32
+    dsDocumentID      :: DocumentID
+  , dsBrandedDomainID :: BrandedDomainID
+  , dsAttempts        :: Int32
   }
 
 documentSealing

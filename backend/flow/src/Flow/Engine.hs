@@ -1,6 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE StrictData #-}
 module Flow.Engine
   ( EngineEvent(..)
   , EngineError(..)

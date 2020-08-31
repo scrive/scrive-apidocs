@@ -31,11 +31,11 @@ instance ToSQL CallbackID where
   toSQL (CallbackID n) = toSQL n
 
 data DocumentAPICallback = DocumentAPICallback
-  { dacID         :: !CallbackID
-  , dacDocumentID :: !DocumentID
-  , dacApiVersion :: !APIVersion
-  , dacURL        :: !Text
-  , dacAttempts   :: !Int32
+  { dacID         :: CallbackID
+  , dacDocumentID :: DocumentID
+  , dacApiVersion :: APIVersion
+  , dacURL        :: Text
+  , dacAttempts   :: Int32
   } deriving (Eq, Ord, Show)
 
 instance Loggable DocumentAPICallback where

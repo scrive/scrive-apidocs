@@ -10,8 +10,8 @@ import DB
 import Doc.Tables
 
 data DocumentTag = DocumentTag
-  { tagname  :: !Text
-  , tagvalue :: !Text
+  { tagname  :: Text
+  , tagvalue :: Text
   } deriving (Eq, Show)
 
 -- | For 'Set' storage.

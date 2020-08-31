@@ -19,25 +19,25 @@ import Monitoring
 import Utils.TH
 
 data MailingServerConf = MailingServerConf
-  { mailerHttpBindAddress    :: !(Word32, Word16)
-  , mailerDBConfig           :: !Text
-  , mailerMaxDBConnections   :: !Int
-  , mailerRedisCacheConfig   :: !(Maybe RedisConfig)
-  , mailerLocalFileCacheSize :: !Int
-  , mailerLogConfig          :: !LogConfig
-  , mailerMasterSender       :: !SenderConfig
-  , mailerSlaveSender        :: !(Maybe SenderConfig)
-  , mailerAmazonConfig       :: !AmazonConfig
-  , mailerTestReceivers      :: ![Address]
-  , mailerMonitoringConfig   :: !(Maybe MonitoringConf)
+  { mailerHttpBindAddress    :: (Word32, Word16)
+  , mailerDBConfig           :: Text
+  , mailerMaxDBConnections   :: Int
+  , mailerRedisCacheConfig   :: Maybe RedisConfig
+  , mailerLocalFileCacheSize :: Int
+  , mailerLogConfig          :: LogConfig
+  , mailerMasterSender       :: SenderConfig
+  , mailerSlaveSender        :: Maybe SenderConfig
+  , mailerAmazonConfig       :: AmazonConfig
+  , mailerTestReceivers      :: [Address]
+  , mailerMonitoringConfig   :: Maybe MonitoringConf
   } deriving (Eq, Show)
 
 -- | SMTP callback key authentication will be used to receive callbacks
 -- Right now it's used only for SocketLabs
 
 data CallbackValidationKeys = CallbackValidationKeys
-  { callbackValidationSecretKey :: !Text
-  , callbackValidationValidationKey :: !Text
+  { callbackValidationSecretKey :: Text
+  , callbackValidationValidationKey :: Text
   } deriving (Eq, Ord, Show)
 
 unjsonCallbackValidationKeys :: UnjsonDef CallbackValidationKeys
@@ -53,9 +53,9 @@ unjsonCallbackValidationKeys =
 
 
 data SMTPUser = SMTPUser
-  { smtpAccount  :: !Text
-  , smtpPassword :: !Text
-  , callbackValidationKeys :: !(Maybe CallbackValidationKeys)
+  { smtpAccount  :: Text
+  , smtpPassword :: Text
+  , callbackValidationKeys :: Maybe CallbackValidationKeys
   } deriving (Eq, Ord, Show)
 
 unjsonSMTPUser :: UnjsonDef SMTPUser
@@ -72,8 +72,8 @@ unjsonSMTPUser =
 -- | SMTP user that is dedicated only to email
 -- where from address matched given address.
 data SMTPDedicatedUser = SMTPDedicatedUser
-  { smtpFromDedicatedAddress :: !Text
-  , smtpDedicatedUser        :: !SMTPUser
+  { smtpFromDedicatedAddress :: Text
+  , smtpDedicatedUser        :: SMTPUser
   } deriving (Eq, Ord, Show)
 
 unjsonSMTPDedicatedUser :: UnjsonDef SMTPDedicatedUser
@@ -115,13 +115,13 @@ instance Unjson MailingServerConf where
   unjsonDef = unjsonMailingServerConf
 
 data SenderConfig = SMTPSender {
-  serviceName        :: !Text
-, smtpAddr           :: !Text
-, smtpUser           :: !SMTPUser
-, smtpDedicatedUsers :: ![SMTPDedicatedUser]
+  serviceName        :: Text
+, smtpAddr           :: Text
+, smtpUser           :: SMTPUser
+, smtpDedicatedUsers :: [SMTPDedicatedUser]
 } | LocalSender {
-  localDirectory     :: !FilePath
-, localOpenCommand   :: !(Maybe Text)
+  localDirectory     :: FilePath
+, localOpenCommand   :: Maybe Text
 } | NullSender
   deriving (Eq, Ord, Show)
 

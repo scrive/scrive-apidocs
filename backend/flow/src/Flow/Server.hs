@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE StrictData #-}
 module Flow.Server where
 
 import Control.Exception (SomeException, catch, throw)

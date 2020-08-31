@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 import Data.Char (ord)
 import Data.List
 import Data.Text (pack)

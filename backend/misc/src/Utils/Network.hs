@@ -1,6 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface  #-}
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
-
 module Utils.Network where
 
 import Data.Word

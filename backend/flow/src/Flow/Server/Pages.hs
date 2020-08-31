@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE StrictData #-}
 module Flow.Server.Pages where
 
 import Control.Monad.Extra (fromMaybeM)

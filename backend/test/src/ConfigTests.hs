@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, TypeApplications #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 module ConfigTests (configTests) where
 
 import Data.Unjson

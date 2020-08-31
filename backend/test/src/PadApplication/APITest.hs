@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module PadApplication.APITest (padAplicationAPITests) where
 
 import Data.Aeson

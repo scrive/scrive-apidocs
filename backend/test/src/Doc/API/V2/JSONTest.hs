@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V2.JSONTest (
   apiV2JSONTests
 -- Only used for V1 ForwardsCompatibilityTest

@@ -1,4 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module UserGroup.Internal (
@@ -107,34 +106,34 @@ instance Unjson UserGroupID where
 ----------------------------------------
 
 data UserGroup = UserGroup
-  { id            :: !UserGroupID
-  , parentGroupID :: !(Maybe UserGroupID)
-  , name          :: !Text
+  { id            :: UserGroupID
+  , parentGroupID :: Maybe UserGroupID
+  , name          :: Text
   -- Folder, where home folders are created for new users
   -- it is a Maybe for slow migration purposes after that
   -- the Maybe will be removed
   -- The Maybe can be re-introduced, when we implement home folder inheritance
-  , homeFolderID  :: !(Maybe FolderID)
-  , address       :: !(Maybe UserGroupAddress)
-  , settings      :: !(Maybe UserGroupSettings)
-  , invoicing     :: !UserGroupInvoicing
-  , ui            :: !(Maybe UserGroupUI)
-  , features      :: !(Maybe Features)
-  , internalTags  :: !(S.Set Tag)
-  , externalTags  :: !(S.Set Tag)
+  , homeFolderID  :: Maybe FolderID
+  , address       :: Maybe UserGroupAddress
+  , settings      :: Maybe UserGroupSettings
+  , invoicing     :: UserGroupInvoicing
+  , ui            :: Maybe UserGroupUI
+  , features      :: Maybe Features
+  , internalTags  :: S.Set Tag
+  , externalTags  :: S.Set Tag
   } deriving (Show, Eq)
 
 data UserGroupRoot = UserGroupRoot
-  { id            :: !UserGroupID
-  , name          :: !Text
-  , homeFolderID  :: !(Maybe FolderID)
-  , address       :: !UserGroupAddress
-  , settings      :: !UserGroupSettings
-  , paymentPlan   :: !PaymentPlan  -- user group root always must have Invoice
-  , ui            :: !UserGroupUI
-  , features      :: !Features
-  , internalTags  :: !(S.Set Tag)
-  , externalTags  :: !(S.Set Tag)
+  { id            :: UserGroupID
+  , name          :: Text
+  , homeFolderID  :: Maybe FolderID
+  , address       :: UserGroupAddress
+  , settings      :: UserGroupSettings
+  , paymentPlan   :: PaymentPlan  -- user group root always must have Invoice
+  , ui            :: UserGroupUI
+  , features      :: Features
+  , internalTags  :: S.Set Tag
+  , externalTags  :: S.Set Tag
   } deriving (Show, Eq)
 
 -- UserGroup list is ordered from Leaf to Child of Root)
@@ -142,8 +141,8 @@ type UserGroupWithParents = (UserGroupRoot, [UserGroup])
 
 -- UserGroup and all its children down to the bottom
 data UserGroupWithChildren = UserGroupWithChildren
-  { group    :: !UserGroup
-  , children :: ![UserGroupWithChildren]
+  { group    :: UserGroup
+  , children :: [UserGroupWithChildren]
   } deriving (Eq, Show)
 
 data UserGroupInvoicing =
@@ -211,31 +210,31 @@ instance CompositeFromSQL UserGroupInvoicing where
 ----------------------------------------
 
 data UserGroupSettings = UserGroupSettings
-  { ipAddressMaskList          :: ![IPAddressWithMask]
-  , dataRetentionPolicy        :: !DataRetentionPolicy
-  , cgiDisplayName             :: !(Maybe Text)
-  , cgiServiceID               :: !(Maybe Text)
-  , smsProvider                :: !SMSProvider
-  , padAppMode                 :: !PadAppMode
-  , padEarchiveEnabled         :: !Bool
-  , legalText                  :: !Bool
-  , requireBPIDForNewDoc       :: !Bool
-  , sendTimeoutNotification    :: !Bool
-  , useFolderListCalls         :: !Bool
-  , totpIsMandatory            :: !Bool
-  , sessionTimeoutSecs         :: !(Maybe Int32)
-  , portalUrl                  :: !(Maybe Text)
-  , eidServiceToken            :: !(Maybe Text)
+  { ipAddressMaskList          :: [IPAddressWithMask]
+  , dataRetentionPolicy        :: DataRetentionPolicy
+  , cgiDisplayName             :: Maybe Text
+  , cgiServiceID               :: Maybe Text
+  , smsProvider                :: SMSProvider
+  , padAppMode                 :: PadAppMode
+  , padEarchiveEnabled         :: Bool
+  , legalText                  :: Bool
+  , requireBPIDForNewDoc       :: Bool
+  , sendTimeoutNotification    :: Bool
+  , useFolderListCalls         :: Bool
+  , totpIsMandatory            :: Bool
+  , sessionTimeoutSecs         :: Maybe Int32
+  , portalUrl                  :: Maybe Text
+  , eidServiceToken            :: Maybe Text
   , sealingMethod              :: SealingMethod
-  , documentSessionTimeoutSecs :: !(Maybe Int32)
-  , forceHidePN                :: !Bool
-  , hasPostSignview            :: !Bool
-  , ssoConfig                  :: !(Maybe UserGroupSSOConfiguration)
-  , addMetadataToPDFs          :: !Bool
-  , eidUseForSEView            :: !Bool
-  , appFrontend                :: !Bool
-  , seBankIDSigningOverride    :: !(Maybe SEBankIDSigningProviderOverride)
-  , padesCredentialsLabel      :: !(Maybe Text)
+  , documentSessionTimeoutSecs :: Maybe Int32
+  , forceHidePN                :: Bool
+  , hasPostSignview            :: Bool
+  , ssoConfig                  :: Maybe UserGroupSSOConfiguration
+  , addMetadataToPDFs          :: Bool
+  , eidUseForSEView            :: Bool
+  , appFrontend                :: Bool
+  , seBankIDSigningOverride    :: Maybe SEBankIDSigningProviderOverride
+  , padesCredentialsLabel      :: Maybe Text
   } deriving (Show, Eq)
 
 
@@ -327,10 +326,10 @@ instance ToSQL SEBankIDSigningProviderOverride where
 ----------------------------------------
 
 data UserGroupSSOConfiguration = UserGroupSSOConfiguration {
-  idpID              :: !T.Text,
-  publicKey          :: !RSA.PublicKey,
-  userInitialGroupID :: !UserGroupID,
-  putNameIDInCompanyPosition :: !Bool
+  idpID              :: T.Text,
+  publicKey          :: RSA.PublicKey,
+  userInitialGroupID :: UserGroupID,
+  putNameIDInCompanyPosition :: Bool
 } deriving (Show, Eq)
 
 unjsonSSOConfigurationDef :: UnjsonDef UserGroupSSOConfiguration
@@ -378,12 +377,12 @@ instance Unjson RSA.PublicKey where
   unjsonDef = unjsonRSAPublicKey
 
 data UserGroupUI = UserGroupUI
-  { mailTheme     :: !(Maybe ThemeID)
-  , signviewTheme :: !(Maybe ThemeID)
-  , serviceTheme  :: !(Maybe ThemeID)
-  , browserTitle  :: !(Maybe Text)
-  , smsOriginator :: !(Maybe Text)
-  , favicon       :: !(Maybe BS.ByteString)
+  { mailTheme     :: Maybe ThemeID
+  , signviewTheme :: Maybe ThemeID
+  , serviceTheme  :: Maybe ThemeID
+  , browserTitle  :: Maybe Text
+  , smsOriginator :: Maybe Text
+  , favicon       :: Maybe BS.ByteString
   } deriving (Eq, Ord, Show)
 
 type instance CompositeRow UserGroupUI
@@ -415,12 +414,12 @@ instance CompositeFromSQL UserGroupUI where
 ----------------------------------------
 
 data UserGroupAddress = UserGroupAddress
-  { companyNumber :: !Text
-  , entityName    :: !Text
-  , address       :: !Text
-  , zipCode       :: !Text
-  , city          :: !Text
-  , country       :: !Text
+  { companyNumber :: Text
+  , entityName    :: Text
+  , address       :: Text
+  , zipCode       :: Text
+  , city          :: Text
+  , country       :: Text
   } deriving (Eq, Ord, Show)
 
 type instance CompositeRow UserGroupAddress = (Text, Text, Text, Text, Text, Text)

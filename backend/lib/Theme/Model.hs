@@ -27,20 +27,20 @@ import Theme.ThemeID
 import UserGroup.Types
 
 data Theme = Theme
-  { themeID                       :: !ThemeID
-  , themeName                     :: !Text
-  , themeLogo                     :: !BS.ByteString
-  , themeBrandColor               :: !Text
-  , themeBrandTextColor           :: !Text
-  , themeActionColor              :: !Text
-  , themeActionTextColor          :: !Text
-  , themeActionSecondaryColor     :: !Text
-  , themeActionSecondaryTextColor :: !Text
-  , themePositiveColor            :: !Text
-  , themePositiveTextColor        :: !Text
-  , themeNegativeColor            :: !Text
-  , themeNegativeTextColor        :: !Text
-  , themeFont                     :: !Text
+  { themeID                       :: ThemeID
+  , themeName                     :: Text
+  , themeLogo                     :: BS.ByteString
+  , themeBrandColor               :: Text
+  , themeBrandTextColor           :: Text
+  , themeActionColor              :: Text
+  , themeActionTextColor          :: Text
+  , themeActionSecondaryColor     :: Text
+  , themeActionSecondaryTextColor :: Text
+  , themePositiveColor            :: Text
+  , themePositiveTextColor        :: Text
+  , themeNegativeColor            :: Text
+  , themeNegativeTextColor        :: Text
+  , themeFont                     :: Text
   } deriving (Eq, Ord, Show)
 
 newtype GetTheme = GetTheme ThemeID

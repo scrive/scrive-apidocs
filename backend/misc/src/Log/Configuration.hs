@@ -30,8 +30,8 @@ import Log.Tables
 import Utils.TH
 
 data LogConfig = LogConfig
-  { lcSuffix  :: !Text
-  , lcLoggers :: ![LoggerDef]
+  { lcSuffix  :: Text
+  , lcLoggers :: [LoggerDef]
   } deriving (Eq, Show)
 
 instance Unjson LogConfig where

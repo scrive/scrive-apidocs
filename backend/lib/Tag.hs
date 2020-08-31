@@ -20,8 +20,8 @@ import InspectXML
 import Tag.Tables
 
 data Tag = Tag
-  { name  :: !Text
-  , value :: !Text
+  { name  :: Text
+  , value :: Text
   } deriving (Eq, Show)
 
 instance Ord Tag where

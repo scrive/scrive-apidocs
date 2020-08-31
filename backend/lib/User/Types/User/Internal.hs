@@ -42,8 +42,8 @@ data User = User
   , groupID            :: UserGroupID
   , homeFolderID       :: Maybe FolderID
   , sysAuth            :: LoginAuthMethod
-  , internalTags       :: !(S.Set Tag)
-  , externalTags       :: !(S.Set Tag)
+  , internalTags       :: S.Set Tag
+  , externalTags       :: S.Set Tag
   } deriving (Eq, Ord, Show)
 
 instance HasSomeUserInfo User where

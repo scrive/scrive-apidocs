@@ -22,9 +22,9 @@ data DocumentOrderBy
   deriving (Eq, Show)
 
 data DocumentOrderByRep = DocumentOrderByRep {
-    dobrExpr  :: !SQL
-  , dobrName  :: !SQL
-  , dobrOrder :: !SQL
+    dobrExpr  :: SQL
+  , dobrName  :: SQL
+  , dobrOrder :: SQL
   }
 
 defaultDocumentOrderByRep :: DocumentOrderByRep

@@ -64,8 +64,8 @@ instance ToSQL SignOrder where
 ---------------------------------
 
 data SignInfo = SignInfo
-  { signtime     :: !UTCTime
-  , signipnumber :: !IPAddress
+  { signtime     :: UTCTime
+  , signipnumber :: IPAddress
   } deriving (Eq, Ord, Show)
 
 ---------------------------------
@@ -365,54 +365,54 @@ instance ToSQL SignatoryRole where
 ---------------------------------
 
 data SignatoryLink = SignatoryLink
-  { signatorylinkid                         :: !SignatoryLinkID
-  , signatoryfields                         :: ![SignatoryField]
+  { signatorylinkid                         :: SignatoryLinkID
+  , signatoryfields                         :: [SignatoryField]
   -- | True if signatory is an author of the document
-  , signatoryisauthor                       :: !Bool
+  , signatoryisauthor                       :: Bool
   -- | Signatory role: viewer, signing party, approver
-  , signatoryrole                           :: !SignatoryRole
-  , signatorysignorder                      :: !SignOrder
-  , signatoryaccesstokens                   :: ![SignatoryAccessToken]
+  , signatoryrole                           :: SignatoryRole
+  , signatorysignorder                      :: SignOrder
+  , signatoryaccesstokens                   :: [SignatoryAccessToken]
   -- | If this document has been saved to an account, that is the user id
-  , maybesignatory                          :: !(Maybe UserID)
+  , maybesignatory                          :: Maybe UserID
   -- | When a person has signed this document (or approved, in case when
   -- signatory role is approver).
-  , maybesigninfo                           :: !(Maybe SignInfo)
+  , maybesigninfo                           :: Maybe SignInfo
   -- | When a person has first seen this document
-  , maybeseeninfo                           :: !(Maybe SignInfo)
+  , maybeseeninfo                           :: Maybe SignInfo
   -- | when we receive confirmation that a user has read
-  , maybereadinvite                         :: !(Maybe UTCTime)
+  , maybereadinvite                         :: Maybe UTCTime
   -- | Status of email delivery
-  , mailinvitationdeliverystatus            :: !DeliveryStatus
+  , mailinvitationdeliverystatus            :: DeliveryStatus
   -- | Status of email delivery
-  , smsinvitationdeliverystatus             :: !DeliveryStatus
+  , smsinvitationdeliverystatus             :: DeliveryStatus
   -- | When was put in recycle bin
-  , signatorylinkdeleted                    :: !(Maybe UTCTime)
+  , signatorylinkdeleted                    :: Maybe UTCTime
   -- | When was purged from the system
-  , signatorylinkreallydeleted              :: !(Maybe UTCTime)
-  , signatorylinkcsvupload                  :: !(Maybe CSVUpload)
-  , signatoryattachments                    :: ![SignatoryAttachment]
-  , signatoryhighlightedpages               :: ![HighlightedPage]
-  , signatorylinksignredirecturl            :: !(Maybe String)
-  , signatorylinkrejectredirecturl          :: !(Maybe String)
-  , signatorylinkrejectiontime              :: !(Maybe UTCTime)
-  , signatorylinkrejectionreason            :: !(Maybe String)
-  , signatorylinkauthenticationtoviewmethod         :: !AuthenticationToViewMethod
-  , signatorylinkauthenticationtoviewarchivedmethod :: !AuthenticationToViewMethod
-  , signatorylinkauthenticationtosignmethod :: !AuthenticationToSignMethod
-  , signatorylinkdeliverymethod             :: !DeliveryMethod
-  , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
-  , signatorylinknotificationdeliverymethod :: !NotificationDeliveryMethod
-  , signatorylinkallowshighlighting         :: !Bool
+  , signatorylinkreallydeleted              :: Maybe UTCTime
+  , signatorylinkcsvupload                  :: Maybe CSVUpload
+  , signatoryattachments                    :: [SignatoryAttachment]
+  , signatoryhighlightedpages               :: [HighlightedPage]
+  , signatorylinksignredirecturl            :: Maybe String
+  , signatorylinkrejectredirecturl          :: Maybe String
+  , signatorylinkrejectiontime              :: Maybe UTCTime
+  , signatorylinkrejectionreason            :: Maybe String
+  , signatorylinkauthenticationtoviewmethod         :: AuthenticationToViewMethod
+  , signatorylinkauthenticationtoviewarchivedmethod :: AuthenticationToViewMethod
+  , signatorylinkauthenticationtosignmethod :: AuthenticationToSignMethod
+  , signatorylinkdeliverymethod             :: DeliveryMethod
+  , signatorylinkconfirmationdeliverymethod :: ConfirmationDeliveryMethod
+  , signatorylinknotificationdeliverymethod :: NotificationDeliveryMethod
+  , signatorylinkallowshighlighting         :: Bool
   -- | If a person has identified to view the document
-  , signatorylinkidentifiedtoview           :: !Bool
-  , signatorylinkhidepn                     :: !Bool
-  , signatorylinkcanbeforwarded             :: !Bool
+  , signatorylinkidentifiedtoview           :: Bool
+  , signatorylinkhidepn                     :: Bool
+  , signatorylinkcanbeforwarded             :: Bool
   -- | Consent module
-  , signatorylinkconsenttitle               :: !(Maybe String)
-  , signatorylinkconsentquestions           :: ![SignatoryConsentQuestion]
+  , signatorylinkconsenttitle               :: Maybe String
+  , signatorylinkconsentquestions           :: [SignatoryConsentQuestion]
   -- | Status of confirmation email delivery
-  , signatorylinkmailconfirmationdeliverystatus :: !DeliveryStatus
+  , signatorylinkmailconfirmationdeliverystatus :: DeliveryStatus
   } deriving (Show)
 
 defaultSignatoryLink :: SignatoryLink

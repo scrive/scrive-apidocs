@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Mails.SendMail
     ( Mail(..)
     , emptyMail

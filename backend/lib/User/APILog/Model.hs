@@ -1,5 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 module User.APILog.Model (
     CallLogData(..)
   , CallLogID(..)
@@ -32,25 +30,25 @@ import Log.Identifier
 import User.UserID
 
 data CallLogData = CallLogData
-  { cldRequest :: !CallLogRequest
-  , cldResponse :: !CallLogResponse
+  { cldRequest :: CallLogRequest
+  , cldResponse :: CallLogResponse
   } deriving (Show, Eq)
 
 data CallLogRequest = CallLogRequest
-  { clrqURI :: !String
-  , clrqMethod :: !String
-  , clrqParamsGet :: ![CallLogParam]
-  , clrqParamsPost :: ![CallLogParam]
+  { clrqURI :: String
+  , clrqMethod :: String
+  , clrqParamsGet :: [CallLogParam]
+  , clrqParamsPost :: [CallLogParam]
   } deriving (Show, Eq)
 
 data CallLogResponse = CallLogResponse
-  { clrsCode :: !Int32
-  , clrsBody :: !String
+  { clrsCode :: Int32
+  , clrsBody :: String
   } deriving (Show, Eq)
 
 data CallLogParam = CallLogParam
-  { clpName :: !String
-  , clpValue :: !String
+  { clpName :: String
+  , clpValue :: String
   } deriving (Show, Eq)
 
 
@@ -152,10 +150,10 @@ instance ToSQL [CallLogParam] where
 
 
 data CallLogItem = CallLogItem
-  { cliID :: !CallLogID
-  , cliUserID :: !UserID
-  , cliTime :: !UTCTime
-  , cliData :: !CallLogData
+  { cliID :: CallLogID
+  , cliUserID :: UserID
+  , cliTime :: UTCTime
+  , cliData :: CallLogData
   } deriving (Eq, Show)
 
 unjsonCallLogItem :: UnjsonDef CallLogItem

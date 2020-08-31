@@ -16,13 +16,13 @@ import SMS.Types
 import Utils.TH
 
 data MessengerServerConf = MessengerServerConf
-  { messengerHttpBindAddress  :: !(Word32, Word16)
-  , messengerDBConfig         :: !Text
-  , messengerMaxDBConnections :: !Int
-  , messengerLogConfig        :: !LogConfig
-  , messengerSenderDefault    :: !SenderConfig
-  , messengerSenderTelia      :: !SenderConfig
-  , messengerMonitoringConfig :: !(Maybe MonitoringConf)
+  { messengerHttpBindAddress  :: (Word32, Word16)
+  , messengerDBConfig         :: Text
+  , messengerMaxDBConnections :: Int
+  , messengerLogConfig        :: LogConfig
+  , messengerSenderDefault    :: SenderConfig
+  , messengerSenderTelia      :: SenderConfig
+  , messengerMonitoringConfig :: Maybe MonitoringConf
   } deriving (Eq, Show)
 
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
@@ -56,26 +56,26 @@ instance Unjson MessengerServerConf where
   unjsonDef = unjsonMessengerServerConf
 
 data SenderConfig = MbloxSender
-  { mbToken          :: !String
-  , mbURL            :: !String
+  { mbToken          :: String
+  , mbURL            :: String
   -- ^ "https://api.mblox.com/xms/v1/{username}/batches"
-  , mbCallbackURL    :: !(Maybe String)
+  , mbCallbackURL    :: Maybe String
   -- ^ "https://scrive.com/sms/mblox"
   } | TeliaCallGuideSender
-  { tcgSenderUrl      :: !String
+  { tcgSenderUrl      :: String
   -- ^ "https://sms.ace.teliacompany.com/smsplus/smsextended"
-  , tcgSenderUser     :: !String
-  , tcgSenderPassword :: !String
+  , tcgSenderUser     :: String
+  , tcgSenderPassword :: String
   } | GenericSESender
   -- ^ there's nothing generic about this, the provider is called GenericSE
-  { gseSenderUrl      :: !String
+  { gseSenderUrl      :: String
   -- ^ "https://api.genericmobile.se/SmsGateway/api/v1/Message"
-  , gseSenderUser     :: !String
-  , gseSenderPassword :: !String
-  , gseCallbackURL    :: !String
+  , gseSenderUser     :: String
+  , gseSenderPassword :: String
+  , gseCallbackURL    :: String
   } | LocalSender
-  { localDirectory   :: !FilePath
-  , localOpenCommand :: !(Maybe String)
+  { localDirectory   :: FilePath
+  , localOpenCommand :: Maybe String
   } deriving (Eq, Ord, Show)
 
 instance Unjson SenderConfig where

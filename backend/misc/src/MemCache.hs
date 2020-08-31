@@ -17,12 +17,12 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.HashPSQ as Q
 
 data MemCache_ k v = MemCache_ {
-    mcSizeFun     :: !(v -> Int)
-  , mcSizeLimit   :: !Int
-  , mcCurrentSize :: !Int
-  , mcTick        :: !Word64
-  , mcInProgress  :: !(HM.HashMap k (MVar (Either SomeException v)))
-  , mcCache       :: !(Q.HashPSQ k Word64 v)
+    mcSizeFun     :: v -> Int
+  , mcSizeLimit   :: Int
+  , mcCurrentSize :: Int
+  , mcTick        :: Word64
+  , mcInProgress  :: HM.HashMap k (MVar (Either SomeException v))
+  , mcCache       :: Q.HashPSQ k Word64 v
   }
 
 -- | In-memory LRU cache suitable for storage of immutable objects.

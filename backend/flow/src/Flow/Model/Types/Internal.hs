@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Flow.Model.Types.Internal
     ( Template(..)

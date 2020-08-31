@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module Flow.Model.Types.FlowUserId
   ( FlowUserId(..)
   ) where

@@ -1,7 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE StrictData #-}
-{-# LANGUAGE OverloadedLabels #-}
-
 module Flow.IntegrationTest.Common where
 
 import Control.Monad.Catch (MonadThrow)

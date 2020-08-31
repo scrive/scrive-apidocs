@@ -1,7 +1,3 @@
-{-# LANGUAGE BangPatterns      #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# OPTIONS_GHC -Wall          #-}
 module Main (main) where
 
 import Control.Applicative
@@ -77,12 +73,12 @@ parseImpSpec = P.choice
       return $ sort entities
 
 data Import = Import
-  { imQualified      :: !Bool
-  , imModule         :: !Text
-  , imCaselessModule :: !Text
-  , imAlias          :: !(Maybe Text)
-  , imPackage        :: !(Maybe Text)
-  , imImpSpec        :: !ImpSpec
+  { imQualified      :: Bool
+  , imModule         :: Text
+  , imCaselessModule :: Text
+  , imAlias          :: Maybe Text
+  , imPackage        :: Maybe Text
+  , imImpSpec        :: ImpSpec
   } deriving (Eq, Show)
 
 compareImport :: Bool -> Import -> Import -> Ordering
@@ -191,9 +187,9 @@ data ImportGrouping = NoGrouping | ExternalInternal | InternalExternal
   deriving Show
 
 data Style = Style
-  { alignUnqualified :: !Bool
-  , aliasAlignment   :: !(Maybe Int)
-  , importGrouping   :: !ImportGrouping
+  { alignUnqualified :: Bool
+  , aliasAlignment   :: Maybe Int
+  , importGrouping   :: ImportGrouping
   } deriving Show
 
 ----------------------------------------

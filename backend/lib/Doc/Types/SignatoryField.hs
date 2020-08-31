@@ -135,8 +135,8 @@ tempPlacementID = PlacementID 0
 ---------------------------------
 
 data PlacementAnchor = PlacementAnchor
-  { placementanchortext  :: !Text
-  , placementanchorindex :: !Int32
+  { placementanchortext  :: Text
+  , placementanchorindex :: Int32
   } deriving (Eq, Ord, Show)
 
 type instance CompositeRow PlacementAnchor = (Text, Int32)
@@ -169,15 +169,15 @@ instance ToSQL TipSide where
   toSQL RightTip = toSQL (2 :: Int16)
 
 data FieldPlacement = FieldPlacement
-  { placementid      :: !PlacementID
-  , placementxrel    :: !Double
-  , placementyrel    :: !Double
-  , placementwrel    :: !Double
-  , placementhrel    :: !Double
-  , placementfsrel   :: !Double
-  , placementpage    :: !Int32
-  , placementtipside :: !(Maybe TipSide)
-  , placementanchors :: ![PlacementAnchor]
+  { placementid      :: PlacementID
+  , placementxrel    :: Double
+  , placementyrel    :: Double
+  , placementwrel    :: Double
+  , placementhrel    :: Double
+  , placementfsrel   :: Double
+  , placementpage    :: Int32
+  , placementtipside :: Maybe TipSide
+  , placementanchors :: [PlacementAnchor]
   } deriving Show
 
 instance Eq FieldPlacement where
@@ -240,98 +240,98 @@ data SignatoryField = SignatoryNameField SignatoryNameField
   deriving (Show, Typeable)
 
 data SignatoryNameField = NameField
-  { snfID                     :: !SignatoryFieldID
-  , snfNameOrder              :: !NameOrder
-  , snfValue                  :: !Text
-  , snfObligatory             :: !Bool
-  , snfShouldBeFilledBySender :: !Bool
-  , snfPlacements             :: ![FieldPlacement]
+  { snfID                     :: SignatoryFieldID
+  , snfNameOrder              :: NameOrder
+  , snfValue                  :: Text
+  , snfObligatory             :: Bool
+  , snfShouldBeFilledBySender :: Bool
+  , snfPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 data SignatoryCompanyField = CompanyField
-  { scfID                     :: !SignatoryFieldID
-  , scfValue                  :: !Text
-  , scfObligatory             :: !Bool
-  , scfShouldBeFilledBySender :: !Bool
-  , scfPlacements             :: ![FieldPlacement]
+  { scfID                     :: SignatoryFieldID
+  , scfValue                  :: Text
+  , scfObligatory             :: Bool
+  , scfShouldBeFilledBySender :: Bool
+  , scfPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 data SignatoryPersonalNumberField = PersonalNumberField
-  { spnfID                     :: !SignatoryFieldID
-  , spnfValue                  :: !Text
-  , spnfObligatory             :: !Bool
-  , spnfShouldBeFilledBySender :: !Bool
-  , spnfPlacements             :: ![FieldPlacement]
+  { spnfID                     :: SignatoryFieldID
+  , spnfValue                  :: Text
+  , spnfObligatory             :: Bool
+  , spnfShouldBeFilledBySender :: Bool
+  , spnfPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 data SignatoryCompanyNumberField = CompanyNumberField
-  { scnfID                     :: !SignatoryFieldID
-  , scnfValue                  :: !Text
-  , scnfObligatory             :: !Bool
-  , scnfShouldBeFilledBySender :: !Bool
-  , scnfPlacements             :: ![FieldPlacement]
+  { scnfID                     :: SignatoryFieldID
+  , scnfValue                  :: Text
+  , scnfObligatory             :: Bool
+  , scnfShouldBeFilledBySender :: Bool
+  , scnfPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 data SignatoryEmailField = EmailField
-  { sefID                     :: !SignatoryFieldID
-  , sefValue                  :: !Text
-  , sefObligatory             :: !Bool
-  , sefShouldBeFilledBySender :: !Bool
-  , sefEditableBySignatory    :: !Bool
-  , sefPlacements             :: ![FieldPlacement]
+  { sefID                     :: SignatoryFieldID
+  , sefValue                  :: Text
+  , sefObligatory             :: Bool
+  , sefShouldBeFilledBySender :: Bool
+  , sefEditableBySignatory    :: Bool
+  , sefPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 data SignatoryMobileField = MobileField
-  { smfID                     :: !SignatoryFieldID
-  , smfValue                  :: !Text
-  , smfObligatory             :: !Bool
-  , smfShouldBeFilledBySender :: !Bool
-  , smfEditableBySignatory    :: !Bool
-  , smfPlacements             :: ![FieldPlacement]
+  { smfID                     :: SignatoryFieldID
+  , smfValue                  :: Text
+  , smfObligatory             :: Bool
+  , smfShouldBeFilledBySender :: Bool
+  , smfEditableBySignatory    :: Bool
+  , smfPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 data SignatoryTextField = TextField
-  { stfID                     :: !SignatoryFieldID
-  , stfName                   :: !Text
-  , stfFilledByAuthor         :: !Bool
-  , stfValue                  :: !Text
-  , stfObligatory             :: !Bool
-  , stfShouldBeFilledBySender :: !Bool
-  , stfPlacements             :: ![FieldPlacement]
-  , stfCustomValidation       :: !(Maybe TextCustomValidation)
+  { stfID                     :: SignatoryFieldID
+  , stfName                   :: Text
+  , stfFilledByAuthor         :: Bool
+  , stfValue                  :: Text
+  , stfObligatory             :: Bool
+  , stfShouldBeFilledBySender :: Bool
+  , stfPlacements             :: [FieldPlacement]
+  , stfCustomValidation       :: Maybe TextCustomValidation
   } deriving (Show, Typeable)
 
 data TextCustomValidation = TextCustomValidation
-  { tcvPattern         :: !Text
-  , tcvPositiveExample :: !Text
-  , tcvTooltip         :: !Text
+  { tcvPattern         :: Text
+  , tcvPositiveExample :: Text
+  , tcvTooltip         :: Text
   } deriving (Show, Typeable)
 
 data SignatoryCheckboxField = CheckboxField
-  { schfID                     :: !SignatoryFieldID
-  , schfName                   :: !Text
-  , schfValue                  :: !Bool
-  , schfObligatory             :: !Bool
-  , schfShouldBeFilledBySender :: !Bool
-  , schfPlacements             :: ![FieldPlacement]
+  { schfID                     :: SignatoryFieldID
+  , schfName                   :: Text
+  , schfValue                  :: Bool
+  , schfObligatory             :: Bool
+  , schfShouldBeFilledBySender :: Bool
+  , schfPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 data SignatorySignatureField = SignatureField
-  { ssfID                     :: !SignatoryFieldID
-  , ssfName                   :: !Text
-  , ssfValue                  :: !(Maybe FileID)
-  , ssfObligatory             :: !Bool
-  , ssfShouldBeFilledBySender :: !Bool
-  , ssfPlacements             :: ![FieldPlacement]
+  { ssfID                     :: SignatoryFieldID
+  , ssfName                   :: Text
+  , ssfValue                  :: Maybe FileID
+  , ssfObligatory             :: Bool
+  , ssfShouldBeFilledBySender :: Bool
+  , ssfPlacements             :: [FieldPlacement]
   } deriving (Show, Typeable)
 
 
 data SignatoryRadioGroupField = RadioGroupField
-  { srgfID                     :: !SignatoryFieldID
-  , srgfName                   :: !Text
-  , srgfSelectedValue          :: !(Maybe Text)
-  , srgfPlacements             :: ![FieldPlacement]
-  , srgfValues                 :: ![Text]
+  { srgfID                     :: SignatoryFieldID
+  , srgfName                   :: Text
+  , srgfSelectedValue          :: Maybe Text
+  , srgfPlacements             :: [FieldPlacement]
+  , srgfValues                 :: [Text]
   } deriving (Show, Typeable)
 
 instance HasSomeUserInfo [SignatoryField] where

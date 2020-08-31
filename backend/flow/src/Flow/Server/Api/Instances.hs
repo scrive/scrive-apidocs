@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE StrictData #-}
 module Flow.Server.Api.Instances where
 
 import Control.Monad.Catch

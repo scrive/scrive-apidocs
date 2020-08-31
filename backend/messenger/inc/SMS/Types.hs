@@ -47,8 +47,8 @@ instance ToSQL JobType where
   toSQL tt = toSQL . fromJust $ tt `lookup` jobTypeMapper
 
 data MessengerJob = MessengerJob
-  { mjType      :: !JobType
-  , mjAttempts  :: !Int32
+  { mjType      :: JobType
+  , mjAttempts  :: Int32
   } deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -107,12 +107,12 @@ instance ToSQL ShortMessageID where
   toSQL (ShortMessageID n) = toSQL n
 
 data ShortMessage = ShortMessage
-  { smID         :: !ShortMessageID
-  , smProvider   :: !SMSProvider
-  , smOriginator :: !Text
-  , smMSISDN     :: !Text
-  , smBody       :: !Text
-  , smAttempts   :: !Int32
+  { smID         :: ShortMessageID
+  , smProvider   :: SMSProvider
+  , smOriginator :: Text
+  , smMSISDN     :: Text
+  , smBody       :: Text
+  , smAttempts   :: Int32
   } deriving (Eq, Ord, Show)
 
 instance Loggable ShortMessage where

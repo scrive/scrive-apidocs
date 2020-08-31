@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 module Main (main) where
 
 -- TODO:
@@ -7,7 +5,7 @@ module Main (main) where
 -- which results in a false-positive.
 
 import Data.Bifunctor
-import Data.Foldable (foldlM)
+import Data.Foldable (foldlM, forM_)
 import Data.List (intercalate, isPrefixOf, isSuffixOf, unfoldr)
 import Data.Maybe
 import Language.JavaScript.Parser
@@ -19,7 +17,6 @@ import Text.Regex.TDFA
 import qualified Data.Map as Map
 
 import AppDir (setupAppPaths)
-import ScriptsPrelude
 
 ------------------------------
 -- utils

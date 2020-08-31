@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module AccessControl.APITest (accessControlApiTests) where
 
 import Data.Aeson

@@ -1,8 +1,4 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StrictData #-}
-{-# LANGUAGE OverloadedLabels #-}
-
 module Flow.IntegrationTest (tests) where
 
 import Control.Monad.Catch (MonadThrow)
