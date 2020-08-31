@@ -41,9 +41,9 @@ import Utils.IO
 import Utils.Network
 
 {-# ANN type CmdConf ("HLint: ignore Use newtype instead of data" :: String) #-}
--- newtype doesn't work, see https://github.com/ndmitchell/cmdargs/issues/44
+-- Strict fields don't work, see https://github.com/ndmitchell/cmdargs/issues/44
 data CmdConf = CmdConf
-  { config :: String
+  { config :: ~String
   } deriving Data
 
 cmdConf :: FilePath -> String -> CmdConf
