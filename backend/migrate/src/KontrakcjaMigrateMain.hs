@@ -17,9 +17,10 @@ import DB.SQLFunction
 import DB.SQLTrigger
 import Log.Configuration
 
+-- Strict fields don't work, see https://github.com/ndmitchell/cmdargs/issues/44
 data CmdConf = CmdConf
-  { config :: String
-  , force :: Bool
+  { config :: ~String
+  , force  :: ~Bool
   } deriving (Data, Typeable)
 
 cmdConf :: FilePath -> String -> CmdConf
