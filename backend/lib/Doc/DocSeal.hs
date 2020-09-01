@@ -211,7 +211,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       FITupasAuthenticationToSign             -> addBankIDLogo "tupas_logo_fi.png"
       OnfidoDocumentAndPhotoCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
       OnfidoDocumentCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
-      IDINAuthenticationToSign                -> return
+      IDINAuthenticationToSign                -> addBankIDLogo "idin_logo.png"
       StandardAuthenticationToSign            -> return
       SMSPinAuthenticationToSign              -> return
 
