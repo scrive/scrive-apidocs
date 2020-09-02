@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2020-09-02  | Added two missing ip-addresses to list of endpoints.       |
     | 2020-06-29  | Added documentation for custom SMS messages. |
     | 2020-06-15  | View Folder endpoint: added `recursive` parameter and fields: `home_for_user`, `home_for_user_group`. |
     | 2020-06-02  | Add Onfido authentication to sign methods, also add missing `fi_tupas` for setauthenticationtosign`. |
@@ -123,6 +124,8 @@ info:
     * 34.251.5.243
     * 52.208.131.2
     * 99.80.133.235
+    * 34.250.236.187
+    * 34.249.146.57
 
     ### API Testbed
 
