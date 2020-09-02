@@ -23,8 +23,9 @@ main = do
   templates               <- readGlobalTemplatesFrom (sourceRoot </> textsDirectory)
                                                      (sourceRoot </> templateFilesDir)
 
-  versionID <- genVersionID
-  let versionIDHex = TE.decodeUtf8 . B16.encode . BS.fromString $ versionID
+  buildVersion <- genBuildVersion
+  let versionIDHex =
+        TE.decodeUtf8 . B16.encode . BS.fromString $ asVersionId buildVersion
   jsFileNameAndLocalizations <- forM allLangs $ \lang ->
     runTemplatesT (lang, templates) $ do
       jsLocalized <-

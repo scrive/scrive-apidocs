@@ -1,5 +1,10 @@
 # API specification changelog
 
+## 0.9.1
+
+* Add `GET /version` endpoint that presents Flow service version information.
+* Add `VersionResponse` schema.
+
 ## 0.9.0
 
 * New fields added to the return JSON of `GET /instances/{instance_id}` and `GET /instances/{instance_id}/view` depicting the user-provided `title`, the start time and last event time of the flow instance.

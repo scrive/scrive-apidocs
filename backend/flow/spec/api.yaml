@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   description: |
     This is an API for configuring and managing Flow processes
-  version: "0.9.0"
+  version: "0.9.1"
   title: Flow API
   contact:
     email: marek.bernat@scrive.com
@@ -16,6 +16,8 @@ tags:
     description: Calls used to control Flow processes.
   - name: participation
     description: Calls used to participate in Flow processes.
+  - name: general
+    description: General information about the Flow service
 paths:
   /templates:
     get:
@@ -395,6 +397,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /version:
+    get:
+      tags:
+        - general
+      summary: Get information about the Flow service version
+      operationId: getVersion
+      description: |
+        Returns basic information about the Flow service.
+        So far this only includes the commit hash that was
+        used to build the service.
+      responses:
+        200:
+          description: Flow service version information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionResponse"
+
 servers:
   - url: "https://scrive.com/experimental/flow"
 components:
@@ -773,13 +793,16 @@ components:
       required:
         - id
         - template_id
+        - title
         - template_parameters
         - state
         - access_links
+        - started
+        - last_event
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
-        template:
+        template_id:
           $ref: "#/components/schemas/TemplateId"
         title:
           $ref: "#/components/schemas/InstanceTitle"
@@ -863,9 +886,12 @@ components:
       type: object
       required:
         - id
+        - title
         - state
         - available_actions
         - status
+        - started
+        - last_event
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
@@ -987,3 +1013,14 @@ components:
       description: Unique Folder ID.
       type: string
       example: 42
+
+    VersionResponse:
+      description: |
+        Flow service version information
+      type: object
+      required:
+        - build_commit
+      properties:
+        build_commit:
+          type: string
+          example: 25a5af6235033d22cafefcdd68bf402265414741

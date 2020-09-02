@@ -79,8 +79,10 @@ type AllApis
         :> IsSecure
         :> Get '[JSON] GetInstanceView
     :<|>
-      -- No authentication
+    -- No authentication
       "templates" :> "validate" :> ReqBody '[JSON] Process :> PostNoContent '[JSON] NoContent
+    :<|>
+      "version" :> Get '[JSON] Version
 
 type FlowApi = AddFlowPrefix AllApis
 

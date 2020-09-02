@@ -48,6 +48,7 @@ data ApiClient = ApiClient
   , getInstance      :: InstanceId -> ClientM GetInstance
   , listInstances    :: ClientM [GetInstance]
   , validateTemplate :: Process -> ClientM NoContent
+  , version          :: ClientM Version
   }
 
 newtype ParticipantApiClient = ParticipantApiClient
@@ -80,7 +81,7 @@ mkApiClient authData = ApiClient { .. }
         (getInstance
         :<|> listInstances)
       = accountEndpoints (mkAuthenticatedRequest authData addOAuthOrCookies)
-    validateTemplate = noAuthEndpoints
+    validateTemplate :<|> version = noAuthEndpoints
 
 -- brittany-disable-next-binding
 mkParticipantApiClient :: (Maybe SessionCookieInfo, Maybe XToken) -> ParticipantApiClient
