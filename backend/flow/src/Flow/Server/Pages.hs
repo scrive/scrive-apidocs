@@ -167,6 +167,3 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mHost isSecu
     , flowApiUrl     = "/" <> flowPath
     , flowInstanceId = instanceId'
     }
-
-
-

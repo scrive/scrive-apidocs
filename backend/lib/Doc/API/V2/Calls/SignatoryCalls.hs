@@ -14,7 +14,7 @@ module Doc.API.V2.Calls.SignatoryCalls (
 ) where
 
 import Control.Conditional (whenM)
-import Control.Monad.Extra (whenMaybe)
+import Control.Monad.Extra (whenJustM, whenMaybe)
 import Data.Bifunctor
 import Data.Unjson
 import Happstack.Server.Types
@@ -90,9 +90,9 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     postDocumentRejectedChange slid rejectReason =<< theDocument
 
     -- Result
-    doc            <- theDocument
-    flowInstanceId <- Flow.selectInstanceIdByDocumentId did
-    maybe (pure ()) processFlowEvent flowInstanceId
+    doc <- theDocument
+    -- If document is part of a flow instance, send relevant event.
+    whenJustM (Flow.selectInstanceIdByDocumentId did) processFlowEvent
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
     processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
@@ -249,9 +249,9 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
     postDocumentPendingChange olddoc sl
 
     -- Result
-    doc            <- theDocument
-    flowInstanceId <- Flow.selectInstanceIdByDocumentId did
-    maybe (pure ()) processFlowEvent flowInstanceId
+    doc <- theDocument
+    -- If document is part of a flow instance, send relevant event.
+    whenJustM (Flow.selectInstanceIdByDocumentId did) processFlowEvent
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
     processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
@@ -350,8 +350,8 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         updatedSigLink <- guardGetSignatoryFromIdForDocument slid
         postDocumentPendingChange olddoc updatedSigLink
         handleAfterSigning slid
-        maybeInstanceId <- Flow.selectInstanceIdByDocumentId did
-        maybe (pure ()) processFlowEvent maybeInstanceId
+        -- If document is part of a flow instance, send relevant event.
+        whenJustM (Flow.selectInstanceIdByDocumentId did) processFlowEvent
        -- Return
       Just provider -> do
         doclang <- getLang <$> theDocument

@@ -76,7 +76,7 @@ testCompleteFlowProcess = do
 
   -- Retrieve flow participant emails and signatory IDs.
   let [authorSigLink, signatorySigLink] = documentsignatorylinks doc
-  let authSigLinkId      = signatorylinkid authorSigLink
+  let authorSigLinkId    = signatorylinkid authorSigLink
   let signatorySigLinkId = signatorylinkid signatorySigLink
   let signatoryEmail     = getEmail signatorySigLink
 
@@ -147,14 +147,14 @@ testCompleteFlowProcess = do
   assertEqual
       "check author's action before signing"
       (  Just
-      .  InstanceUserAction Sign did authSigLinkId
+      .  InstanceUserAction Sign did authorSigLinkId
       .  Url
       $  "http://localhost:"
       <> showt flowPort
       <> "/s/"
       <> showt did
       <> "/"
-      <> showt authSigLinkId
+      <> showt authorSigLinkId
       )
     $ preview (#actions % ix 0) authorViewBeforeSign
   assertEqual
@@ -183,7 +183,7 @@ testCompleteFlowProcess = do
     , ("accepted_author_attachments", inText "[]")
     , ("consent_responses", inText "[]")
     ]
-    (docApiV2SigSign did authSigLinkId)
+    (docApiV2SigSign did authorSigLinkId)
     200
 
   authorViewAfterSign <-
@@ -192,7 +192,7 @@ testCompleteFlowProcess = do
     $ getInstanceView (startedInstance ^. #id) Nothing
 
   assertEqual "author's state should contain one document"
-              (Just $ InstanceUserDocument did Signed authSigLinkId)
+              (Just $ InstanceUserDocument did Signed authorSigLinkId)
     $ preview (#state % #documents % ix 0) authorViewAfterSign
 
   assertEqual "there should be no left action for author" []
@@ -210,7 +210,7 @@ testCompleteFlowProcess = do
     , ("accepted_author_attachments", inText "[]")
     , ("consent_responses", inText "[]")
     ]
-    (docApiV2SigSign did authSigLinkId)
+    (docApiV2SigSign did authorSigLinkId)
     409
 
   void $ mockDocTestRequestHelper

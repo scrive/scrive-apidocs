@@ -148,8 +148,8 @@ handleNewDocument' user ugwp = do
   actor         <- guardJustM $ mkAuthorActor <$> getContext
   mtimezonename <- lookCookieValue "timezone" . rqHeaders <$> askRq
   case mtimezonename of
-    Nothing  -> logInfo_ "'timezone' cookie not found"
-    (Just _) -> return ()
+    Nothing -> logInfo_ "'timezone' cookie not found"
+    Just _  -> return ()
   timezone <- fromMaybe defaultTimeZoneName
     <$> T.sequence (mkTimeZoneName <$> mtimezonename)
   timestamp <- formatTimeSimpleWithTZ timezone (ctx ^. #time)

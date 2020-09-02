@@ -4,6 +4,7 @@ module Doc.Signing.Consumer (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Extra (whenJustM)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Except
@@ -610,12 +611,10 @@ signFromESignature DocumentSigning {..} now = do
   handleAfterSigning signingSignatoryID
 
   Document { documentid } <- theDocument
-  instanceId              <- Flow.selectInstanceIdByDocumentId documentid
-  case instanceId of
-    Just instanceId' -> Flow.processEventThrow $ Flow.EngineEvent
-      { instanceId  = instanceId'
-      , userAction  = Flow.Signature
-      , signatoryId = signingSignatoryID
-      , documentId  = documentid
-      }
-    Nothing -> pure ()
+  -- If document is part of a flow instance, send relevant event.
+  whenJustM (Flow.selectInstanceIdByDocumentId documentid) $ \instanceId -> do
+    Flow.processEventThrow $ Flow.EngineEvent { instanceId  = instanceId
+                                              , userAction  = Flow.Signature
+                                              , signatoryId = signingSignatoryID
+                                              , documentId  = documentid
+                                              }
