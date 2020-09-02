@@ -104,7 +104,7 @@ def make_party(party):
         number_field = [
             {
               "type": "mobile",
-              "value": "",
+              "value": number,
               "is_obligatory": True,
               "should_be_filled_by_sender": True,
               "editable_by_signatory": False,
