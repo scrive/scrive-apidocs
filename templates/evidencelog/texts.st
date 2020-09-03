@@ -110,7 +110,13 @@ ChangeAuthenticationToViewFromSEBankIDLog=$ChangeAuthenticationToViewFrom(auth='
 ###
 ChangeAuthenticationToViewFromNOBankIDLog=$ChangeAuthenticationToViewFrom(auth='“Norwegian BankID”')$
 ###
-ChangeAuthenticationToViewFromDKNemIDLog=$ChangeAuthenticationToViewFrom(auth='“Danish NemID”')$
+ChangeAuthenticationToViewFromLegacyDKNemIDLog=$ChangeAuthenticationToViewFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewFromDKNemIDCPRLog=$ChangeAuthenticationToViewFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewFromDKNemIDPIDLog=$ChangeAuthenticationToViewFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewFromDKNemIDCVRLog=$ChangeAuthenticationToViewFrom(auth='“Danish Employee NemID”')$
 ###
 ChangeAuthenticationToViewFromFITupasLog=$ChangeAuthenticationToViewFrom(auth='“Finnish TUPAS”')$
 ###
@@ -126,7 +132,13 @@ ChangeAuthenticationToViewToSEBankIDLog=$ChangeAuthenticationToViewTo(auth='“S
 ###
 ChangeAuthenticationToViewToNOBankIDLog=$ChangeAuthenticationToViewTo(auth='“Norwegian BankID”')$
 ###
-ChangeAuthenticationToViewToDKNemIDLog=$ChangeAuthenticationToViewTo(auth='“Danish NemID”')$
+ChangeAuthenticationToViewToLegacyDKNemIDLog=$ChangeAuthenticationToViewTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewToDKNemIDCPRLog=$ChangeAuthenticationToViewTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewToDKNemIDPIDLog=$ChangeAuthenticationToViewTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewToDKNemIDCVRLog=$ChangeAuthenticationToViewTo(auth='“Danish Employee NemID”')$
 ###
 ChangeAuthenticationToViewToFITupasLog=$ChangeAuthenticationToViewTo(auth='“Finnish TUPAS”')$
 ###
@@ -142,7 +154,13 @@ ChangeAuthenticationToViewArchivedFromSEBankIDLog=$ChangeAuthenticationToViewArc
 ###
 ChangeAuthenticationToViewArchivedFromNOBankIDLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Norwegian BankID”')$
 ###
-ChangeAuthenticationToViewArchivedFromDKNemIDLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Danish NemID”')$
+ChangeAuthenticationToViewArchivedFromLegacyDKNemIDLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewArchivedFromDKNemIDCPRLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewArchivedFromDKNemIDPIDLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewArchivedFromDKNemIDCVRLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Danish Employee NemID”')$
 ###
 ChangeAuthenticationToViewArchivedFromFITupasLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Finnish TUPAS”')$
 ###
@@ -158,7 +176,13 @@ ChangeAuthenticationToViewArchivedToSEBankIDLog=$ChangeAuthenticationToViewArchi
 ###
 ChangeAuthenticationToViewArchivedToNOBankIDLog=$ChangeAuthenticationToViewArchivedTo(auth='“Norwegian BankID”')$
 ###
-ChangeAuthenticationToViewArchivedToDKNemIDLog=$ChangeAuthenticationToViewArchivedTo(auth='“Danish NemID”')$
+ChangeAuthenticationToViewArchivedToLegacyDKNemIDLog=$ChangeAuthenticationToViewArchivedTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewArchivedToDKNemIDCPRLog=$ChangeAuthenticationToViewArchivedTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewArchivedToDKNemIDPIDLog=$ChangeAuthenticationToViewArchivedTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToViewArchivedToDKNemIDCVRLog=$ChangeAuthenticationToViewArchivedTo(auth='“Danish Employee NemID”')$
 ###
 ChangeAuthenticationToViewArchivedToFITupasLog=$ChangeAuthenticationToViewArchivedTo(auth='“Finnish TUPAS”')$
 ###
@@ -740,6 +764,9 @@ elegVerificationAuth=
   $endif$
   $if(signatory_pid)$
   <br/>PID: $signatory_pid$
+  $endif$
+  $if(signatory_org_number)$
+  <br/>Organization number: $signatory_org_number$
   $endif$
   $if(signatory_ip)$
   <br/>IP: $signatory_ip$

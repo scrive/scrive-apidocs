@@ -193,11 +193,12 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceNemIDAuthenticati
   dbUpdate (MergeEIDServiceNemIDAuthentication authKind sid slid EIDServiceDKNemIDAuthentication {..})
     = do
       mergeAuthenticationInternal authKind sid slid $ do
-        sqlSet "provider"                NemIDAuth
-        sqlSet "internal_provider"       eidServiceNemIDInternalProvider
-        sqlSet "signature"               eidServiceNemIDCertificate
-        sqlSet "signatory_name"          eidServiceNemIDSignatoryName
-        sqlSet "signatory_date_of_birth" eidServiceNemIDDateOfBirth
+        sqlSet "provider"                  NemIDAuth
+        sqlSet "internal_provider"         eidServiceNemIDInternalProvider
+        sqlSet "signatory_personal_number" eidServiceNemIDSignatoryPersonalOrCVRNumber
+        sqlSet "signature"                 eidServiceNemIDCertificate
+        sqlSet "signatory_name"            eidServiceNemIDSignatoryName
+        sqlSet "signatory_date_of_birth"   eidServiceNemIDDateOfBirth
 
 -- | Insert NOBankID authentication for a given signatory or replace the existing one.
 data MergeEIDServiceNOBankIDAuthentication = MergeEIDServiceNOBankIDAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceNOBankIDAuthentication
@@ -325,9 +326,10 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
     NemIDAuth -> EIDServiceNemIDAuthentication_ EIDServiceDKNemIDAuthentication
       { eidServiceNemIDInternalProvider = unsafeEIDServiceDKNemIDInternalProviderFromInt16
                                             $ fromJust internal_provider
-      , eidServiceNemIDSignatoryName    = fromJust msignatory_name
-      , eidServiceNemIDDateOfBirth      = fromJust signatory_dob
-      , eidServiceNemIDCertificate      = fromJust msignature
+      , eidServiceNemIDSignatoryPersonalOrCVRNumber = fromJust signatory_personal_number
+      , eidServiceNemIDSignatoryName                = fromJust msignatory_name
+      , eidServiceNemIDDateOfBirth                  = signatory_dob
+      , eidServiceNemIDCertificate                  = fromJust msignature
       }
     NOBankIDAuth -> EIDServiceNOBankIDAuthentication_ EIDServiceNOBankIDAuthentication
       { eidServiceNOBankIDInternalProvider =

@@ -119,6 +119,11 @@ inputValidationTests _ = testGroup
     , testCase "bad examples are fixed"   testValidInviteTextBadExamplesAreFixed
     , testCase "good examples pass"       testValidInviteTextGoodExamples
     ]
+  , testGroup
+    "asValidDanishCVR"
+    [ testCase "good Danish CVR passes"        testValidDanishCVR
+    , testCase "wrong Danish CVR doesn't pass" testInvalidDanishCVR
+    ]
   ]
 
 testValidEmailExampleFails :: Assertion
@@ -412,6 +417,13 @@ testValidInviteTextGoodExamples = do
       , "<p>Hej You,</p><p><strong>bold</strong></p><p><em>italics</em></p><p><span style=\"text-decoration: underline;\">underline</span></p><p><span style=\"text-decoration: line-through;\">strikethrough</span></p>"
       ]
   assert $ all (isGood . asValidInviteText) goodexamples
+
+testValidDanishCVR :: Assertion
+testValidDanishCVR = assert . isGood . asValidDanishCVR $ "88146328"
+
+testInvalidDanishCVR :: Assertion
+testInvalidDanishCVR =
+  assert . not $ any (isGood . asValidDanishCVR) ["", "070707070780", "88146327"]
 
 propJustAllowed :: (Text -> Result Text) -> [Char -> Bool] -> Text -> Property
 propJustAllowed f ps xs = isTrimmed xs && T.any isInvalidChar xs ==> isBad $ f xs

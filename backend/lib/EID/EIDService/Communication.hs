@@ -151,7 +151,14 @@ getTransactionFromEIDService
 getTransactionFromEIDService conf provider tid = localData [identifier tid] $ do
   let endpoint = fromEIDServiceTransactionID tid
   cURLCall conf Fetch provider endpoint Nothing >>= \case
-    Right respContent   -> return $ decode respContent
-    Left  httpErrorCode -> do
+    Right respContent -> do
+      case eitherDecode respContent of
+        Right transaction -> return $ Just transaction
+        Left  errMessage  -> do
+          logAttention_
+            $  "There was an error while decoding the transaction"
+            <> showt errMessage
+          return Nothing
+    Left httpErrorCode -> do
       logAttention_ $ "Getting transaction failed with error code " <> showt httpErrorCode
       internalError

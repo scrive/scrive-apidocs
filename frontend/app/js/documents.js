@@ -743,9 +743,11 @@ var Document = exports.Document = Backbone.Model.extend({
           return false;
         }
         if (this.author().seBankIDAuthenticationToSign() || this.author().seBankIDAuthenticationToView()
-          ||this.author().noBankIDAuthenticationToSign() || this.author().noBankIDAuthenticationToView()
-          ||this.author().dkNemIDAuthenticationToSign()  || this.author().dkNemIDAuthenticationToView()
-          ||this.author().fiTupasAuthenticationToView()) {
+          || this.author().noBankIDAuthenticationToSign() || this.author().noBankIDAuthenticationToView()
+          || this.author().dkNemIDAuthenticationToSign()  || this.author().dkNemIDCPRAuthenticationToView()
+          || this.author().dkNemIDPIDAuthenticationToView() || this.author().dkNemIDCVRAuthenticationToView()
+          || this.author().legacyDkNemIDAuthenticationToView()
+          || this.author().fiTupasAuthenticationToView()) {
             // We don't support eleg authorization in design view
             return false;
         }
@@ -963,9 +965,10 @@ var Document = exports.Document = Backbone.Model.extend({
     hasEleg: function() {
         return _.some(this.signatories(), function(s) {
             return  (s.seBankIDAuthenticationToSign() || s.seBankIDAuthenticationToView()
-                   ||s.noBankIDAuthenticationToSign() || s.noBankIDAuthenticationToView()
-                   ||s.dkNemIDAuthenticationToSign()  || s.dkNemIDAuthenticationToView()
-                   ||s.fiTupasAuthenticationToView());
+                   || s.noBankIDAuthenticationToSign() || s.noBankIDAuthenticationToView()
+                   || s.dkNemIDAuthenticationToSign()  || s.dkNemIDCPRAuthenticationToView()
+                   || s.dkNemIDPIDAuthenticationToView() || s.dkNemIDCVRAuthenticationToView()
+                   || s.legacyDkNemIDAuthenticationToView() || s.fiTupasAuthenticationToView());
         });
     },
     hasEmail: function() {

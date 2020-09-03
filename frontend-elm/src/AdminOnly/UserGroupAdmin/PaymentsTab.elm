@@ -131,7 +131,9 @@ setFreeFeatures features =
         adminFeatures2 =
             { adminFeatures1
                 | canUseDKAuthenticationToSign = False
-                , canUseDKAuthenticationToView = False
+                , canUseDKCPRAuthenticationToView = False
+                , canUseDKPIDAuthenticationToView = False
+                , canUseDKCVRAuthenticationToView = False
                 , canUseFIAuthenticationToView = False
                 , canUseFIAuthenticationToSign = False
                 , canUseNOAuthenticationToView = False
@@ -149,7 +151,9 @@ setFreeFeatures features =
 
         userFeatures2 =
             { userFeatures1
-                | canUseDKAuthenticationToView = False
+                | canUseDKCPRAuthenticationToView = False
+                , canUseDKPIDAuthenticationToView = False
+                , canUseDKCVRAuthenticationToView = False
                 , canUseDKAuthenticationToSign = False
                 , canUseFIAuthenticationToView = False
                 , canUseFIAuthenticationToSign = False
@@ -178,7 +182,9 @@ setPaidFeatures features =
         adminFeatures2 =
             { adminFeatures1
                 | canUseDKAuthenticationToSign = True
-                , canUseDKAuthenticationToView = True
+                , canUseDKCPRAuthenticationToView = True
+                , canUseDKPIDAuthenticationToView = True
+                , canUseDKCVRAuthenticationToView = True
                 , canUseFIAuthenticationToView = True
                 , canUseFIAuthenticationToSign = True
                 , canUseNOAuthenticationToView = True
@@ -196,7 +202,9 @@ setPaidFeatures features =
 
         userFeatures2 =
             { userFeatures1
-                | canUseDKAuthenticationToView = True
+                | canUseDKCPRAuthenticationToView = True
+                , canUseDKPIDAuthenticationToView = True
+                , canUseDKCVRAuthenticationToView = True
                 , canUseDKAuthenticationToSign = True
                 , canUseFIAuthenticationToView = True
                 , canUseFIAuthenticationToSign = True
@@ -490,7 +498,9 @@ featureFlagsStructure =
         ]
       )
     , ( "eID to view and sign"
-      , [ ( "Can use DK authorization to view", "can_use_dk_authentication_to_view" )
+      , [ ( "Can use DK CPR authorization to view", "can_use_dk_cpr_authentication_to_view" )
+        , ( "Can use DK PID authorization to view", "can_use_dk_pid_authentication_to_view" )
+        , ( "Can use DK CVR authorization to view", "can_use_dk_cvr_authentication_to_view" )
         , ( "Can use DK authorization to sign", "can_use_dk_authentication_to_sign" )
         , ( "Can use FI authorization to view", "can_use_fi_authentication_to_view" )
         , ( "Can use FI authorization to sign", "can_use_fi_authentication_to_sign" )

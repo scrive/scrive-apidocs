@@ -228,7 +228,8 @@ initDatabaseEntries appConf = do
         let features = fromJust $ ug ^. #features
         -- enable everything for initial admins
         let adminFeatures = (fromJust $ ug ^. #features)
-              { fAdminUsers = (fAdminUsers features) { ffCanUseDKAuthenticationToView = True
+              { fAdminUsers = (fAdminUsers features) { ffCanUseDKCPRAuthenticationToView = True
+                                                     , ffCanUseDKPIDAuthenticationToView = True
                                                      , ffCanUseDKAuthenticationToSign = True
                                                      , ffCanUseFIAuthenticationToView = True
                                                      , ffCanUseNOAuthenticationToView = True

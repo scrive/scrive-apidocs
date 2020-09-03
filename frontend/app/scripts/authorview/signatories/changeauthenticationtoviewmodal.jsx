@@ -6,6 +6,7 @@ var InfoTextInput = require("../../common/infotextinput");
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
 var SSNForNOBankIDValidation = require("../../../js/validation.js").SSNForNOBankIDValidation;
 var SSNForDKNemIDValidation = require("../../../js/validation.js").SSNForDKNemIDValidation;
+var CVRForDKNemIDValidation = require("../../../js/validation.js").CVRForDKNemIDValidation;
 var SSNForFITupasValidation = require("../../../js/validation.js").SSNForFITupasValidation;
 var PhoneValidationNO = require("../../../js/validation.js").PhoneValidationNO;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
@@ -49,7 +50,9 @@ var Modal = require("../../common/modal");
         } else if (this.isAuthenticationNOBankID()) {
           this.setPersonalNumber(signatory.personalnumber());
           this.setMobileNumber(signatory.mobile());
-        } else if (this.isAuthenticationDKNemID()) {
+        } else if (this.isAuthenticationDKNemIDCPR() || this.isAuthenticationDKNemIDPID() || this.isAuthenticationLegacyDKNemID()) {
+          this.setPersonalNumber(signatory.personalnumber());
+        } else if (this.isAuthenticationDKNemIDCVR()) {
           this.setPersonalNumber(signatory.personalnumber());
         } else if (this.isAuthenticationFITupas()) {
           this.setPersonalNumber(signatory.personalnumber());
@@ -83,12 +86,36 @@ var Modal = require("../../common/modal");
       return this.authenticationMethod() == this.NOBankIDAuthenticationValue();
     },
 
-    DKNemIDAuthenticationValue: function () {
+    DKNemIDCPRAuthenticationValue: function () {
+      return "dk_nemid_cpr";
+    },
+
+    isAuthenticationDKNemIDCPR: function () {
+      return this.authenticationMethod() == this.DKNemIDCPRAuthenticationValue();
+    },
+
+    LegacyDKNemIDAuthenticationValue: function () {
       return "dk_nemid";
     },
 
-    isAuthenticationDKNemID: function () {
-      return this.authenticationMethod() == this.DKNemIDAuthenticationValue();
+    isAuthenticationLegacyDKNemID: function () {
+      return this.authenticationMethod() == this.LegacyDKNemIDAuthenticationValue();
+    },
+
+    DKNemIDPIDAuthenticationValue: function () {
+      return "dk_nemid_pid";
+    },
+
+    isAuthenticationDKNemIDPID: function () {
+      return this.authenticationMethod() == this.DKNemIDCPRAuthenticationValue();
+    },
+
+    DKNemIDCVRAuthenticationValue: function () {
+      return "dk_nemid_cvr";
+    },
+
+    isAuthenticationDKNemIDCVR: function () {
+      return this.authenticationMethod() == this.DKNemIDCPRAuthenticationValue();
     },
 
     FITupasAuthenticationValue: function () {
@@ -137,8 +164,10 @@ var Modal = require("../../common/modal");
         return new SSNForSEBankIDValidation().validateData(pn);
       } else if (this.isAuthenticationNOBankID()) {
         return new SSNForNOBankIDValidation().validateData(pn);
-      } else if (this.isAuthenticationDKNemID()) {
+      } else if (this.isAuthenticationDKNemIDCPR() || this.isAuthenticationDKNemIDPID()) {
         return new SSNForDKNemIDValidation().validateData(pn);
+      } else if (this.isAuthenticationDKNemIDCVR()) {
+        return new CVRForDKNemIDValidation().validateData(pn);
       } else if (this.isAuthenticationFITupas()) {
         return new EmptyValidation().or(new SSNForFITupasValidation()).validateData(pn);
       }
@@ -184,8 +213,10 @@ var Modal = require("../../common/modal");
         } else if (!this.isMobileNumberValid()) {
           text = localization.docview.changeAuthenticationToView.flashMessageInvalidNOPhone;
         }
-      } else if (this.isAuthenticationDKNemID() && !this.isPersonalNumberValid()) {
+      } else if ((this.isAuthenticationDKNemIDCPR() || this.isAuthenticationDKNemIDPID()) && !this.isPersonalNumberValid()) {
         text = localization.docview.changeAuthenticationToView.flashMessageInvalidDKSSN;
+      } else if (this.isAuthenticationDKNemIDCVR() && !this.isPersonalNumberValid()) {
+        text = localization.docview.changeAuthenticationToView.flashMessageInvalidDKCVR;
       } else if (this.isAuthenticationFITupas() && !this.isPersonalNumberValid()) {
         text = localization.docview.changeAuthenticationToView.flashMessageInvalidFISSN;
       }
@@ -216,8 +247,12 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (model.isAuthenticationNOBankID()) {
         return localization.docview.signatory.authenticationToViewNOBankID;
-      } else if (model.isAuthenticationDKNemID()) {
-        return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (model.isAuthenticationDKNemIDCPR() || model.isAuthenticationLegacyDKNemID()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDCPR;
+      } else if (model.isAuthenticationDKNemIDPID()){
+        return localization.docview.signatory.authenticationToViewDKNemIDPID;
+      } else if (model.isAuthenticationDKNemIDCVR()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDCVR;
       } else if (model.isAuthenticationFITupas()) {
         return localization.docview.signatory.authenticationToViewFITupas;
       } else if (model.isAuthenticationSMSPin()) {
@@ -271,13 +306,31 @@ var Modal = require("../../common/modal");
         options.push(noBankid);
       }
 
-      var dkNemid = {
-        name: localization.docview.signatory.authenticationToViewDKNemID,
-        selected: model.isAuthenticationDKNemID(),
-        value: model.DKNemIDAuthenticationValue()
+      var dkNemidCPR = {
+        name: localization.docview.signatory.authenticationToViewDKNemIDCPR,
+        selected: model.isAuthenticationDKNemIDCPR(),
+        value: model.DKNemIDCPRAuthenticationValue()
       };
-      if (ff.canUseDKAuthenticationToView() && isAvailable(dkNemid.value)) {
-        options.push(dkNemid);
+      if (ff.canUseDKCPRAuthenticationToView() && isAvailable(dkNemidCPR.value)) {
+        options.push(dkNemidCPR);
+      }
+
+      var dkNemidPID = {
+        name: localization.docview.signatory.authenticationToViewDKNemIDPID,
+        selected: model.isAuthenticationDKNemIDPID(),
+        value: model.DKNemIDPIDAuthenticationValue()
+      };
+      if (ff.canUseDKPIDAuthenticationToView() && isAvailable(dkNemidPID.value)) {
+        options.push(dkNemidPID);
+      }
+
+      var dkNemidCVR = {
+        name: localization.docview.signatory.authenticationToViewDKNemIDCVR,
+        selected: model.isAuthenticationDKNemIDCVR(),
+        value: model.DKNemIDCVRAuthenticationValue()
+      };
+      if (ff.canUseDKCVRAuthenticationToView() && isAvailable(dkNemidCVR.value)) {
+        options.push(dkNemidCVR);
       }
 
       var fiTupas = {
@@ -331,8 +384,10 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthenticationToView.ssnSEBankIDLabel;
       } else if (model.isAuthenticationNOBankID()) {
         text = localization.docview.changeAuthenticationToView.ssnNOBankIDLabel;
-      } else if (model.isAuthenticationDKNemID()) {
-        text = localization.docview.changeAuthenticationToView.ssnDKNemIDLabel;
+      } else if (model.isAuthenticationDKNemIDCPR() || model.isAuthenticationDKNemIDPID()) {
+        text = localization.docview.changeAuthenticationToView.ssnDKNemIDCPRLabel;
+      } else if (model.isAuthenticationDKNemIDCVR()) {
+        text = localization.docview.changeAuthenticationToView.ssnDKNemIDCVRLabel;
       } else if (model.isAuthenticationFITupas()) {
         text = localization.docview.changeAuthenticationToView.ssnFITupasLabel;
       }
@@ -346,8 +401,10 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthenticationToView.ssnSEBankIDPlaceholder;
       } else if (model.isAuthenticationNOBankID()) {
         text = localization.docview.changeAuthenticationToView.ssnNOBankIDPlaceholder;
-      } else if (model.isAuthenticationDKNemID()) {
-        text = localization.docview.changeAuthenticationToView.ssnDKNemIDPlaceholder;
+      } else if (model.isAuthenticationDKNemIDCPR() || model.isAuthenticationDKNemIDPID()) {
+        text = localization.docview.changeAuthenticationToView.ssnDKNemIDCPRPlaceholder;
+      } else if (model.isAuthenticationDKNemIDCVR()) {
+        text = localization.docview.changeAuthenticationToView.ssnDKNemIDCVRPlaceholder;
       } else if (model.isAuthenticationFITupas()) {
         text = localization.docview.changeAuthenticationToView.ssnFITupasPlaceholder;
       }
@@ -375,8 +432,10 @@ var Modal = require("../../common/modal");
             width={348}
             options={this.getAuthenticationMethodOptions()}
           />
-          {/* if */ (model.isAuthenticationSEBankID() || model.isAuthenticationNOBankID() ||
-                     model.isAuthenticationDKNemID() || model.isAuthenticationFITupas()) &&
+          {/* if */ (model.isAuthenticationSEBankID() || model.isAuthenticationNOBankID()
+                     || model.isAuthenticationDKNemIDCPR() || model.isAuthenticationDKNemIDPID()
+                     || model.isAuthenticationDKNemIDCVR() || model.isAuthenticationLegacyDKNemID()
+                     || model.isAuthenticationFITupas()) &&
             <div>
               <label>{this.getPersonalNumberLabelText()}</label>
               <InfoTextInput

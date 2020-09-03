@@ -62,7 +62,8 @@ describe("MaskedPersonalNumber", function () {
     var component = renderComponent({
       number: "70010112345",
       isNorwegian: true,
-      isDanish: false,
+      isDanishPersonal: false,
+      isDanishEmployee: false,
       isFinnish: false
     });
 
@@ -73,7 +74,8 @@ describe("MaskedPersonalNumber", function () {
     var component = renderComponent({
       number: "700101-12345",
       isNorwegian: true,
-      isDanish: false,
+      isDanishPersonal: false,
+      isDanishEmployee: false,
       isFinnish: false
     });
 
@@ -84,29 +86,45 @@ describe("MaskedPersonalNumber", function () {
     var component = renderComponent({
       number: "0101701234",
       isNorwegian: false,
-      isDanish: true,
+      isDanishPersonal: true,
+      isDanishEmployee: false,
       isFinnish: false
     });
 
     assert.equal(React.findDOMNode(component).innerText, "010170****");
   });
 
-  it("should mask Norwegian BankID number with hyphen", function () {
+  it("should mask Danish BankID number with hyphen", function () {
     var component = renderComponent({
       number: "010170-1234",
       isNorwegian: false,
-      isDanish: true,
+      isDanishPersonal: true,
+      isDanishEmployee: false,
       isFinnish: false
     });
 
     assert.equal(React.findDOMNode(component).innerText, "010170-****");
   });
 
+  it("should mask Danish BankID number without hyphen", function () {
+    var component = renderComponent({
+      number: "30808460",
+      isNorwegian: false,
+      isDanishPersonal: false,
+      isDanishEmployee: true,
+      isFinnish: false
+    });
+
+    assert.equal(React.findDOMNode(component).innerText, "3080****");
+  });
+
+
   it("should mask Finnish ID number", function () {
     var component = renderComponent({
       number: "010170+123X",
       isNorwegian: false,
-      isDanish: false,
+      isDanishPersonal: false,
+      isDanishEmployee: false,
       isFinnish: true
     });
 

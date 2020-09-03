@@ -131,7 +131,9 @@ type alias FeatureFlags =
     , canUseSignatoryAttachments : Bool
     , canUseSmsPinAuthenticationToView : Bool
     , canUseSEAuthenticationToSign : Bool
-    , canUseDKAuthenticationToView : Bool
+    , canUseDKCPRAuthenticationToView : Bool
+    , canUseDKPIDAuthenticationToView : Bool
+    , canUseDKCVRAuthenticationToView : Bool
     , canUseSmsConfirmations : Bool
     , canUseFIAuthenticationToView : Bool
     , canUseFIAuthenticationToSign : Bool
@@ -284,7 +286,9 @@ defaultFeatureFlags =
     , canUseSignatoryAttachments = False
     , canUseSmsPinAuthenticationToView = False
     , canUseSEAuthenticationToSign = False
-    , canUseDKAuthenticationToView = False
+    , canUseDKCPRAuthenticationToView = False
+    , canUseDKPIDAuthenticationToView = False
+    , canUseDKCVRAuthenticationToView = False
     , canUseSmsConfirmations = False
     , canUseFIAuthenticationToView = False
     , canUseFIAuthenticationToSign = False
@@ -326,7 +330,9 @@ ffKeyAccessPairs =
     , ( "can_use_signatory_attachments", ( .canUseSignatoryAttachments, \ff v -> { ff | canUseSignatoryAttachments = v } ) )
     , ( "can_use_sms_pin_authentication_to_view", ( .canUseSmsPinAuthenticationToView, \ff v -> { ff | canUseSmsPinAuthenticationToView = v } ) )
     , ( "can_use_se_authentication_to_sign", ( .canUseSEAuthenticationToSign, \ff v -> { ff | canUseSEAuthenticationToSign = v } ) )
-    , ( "can_use_dk_authentication_to_view", ( .canUseDKAuthenticationToView, \ff v -> { ff | canUseDKAuthenticationToView = v } ) )
+    , ( "can_use_dk_cpr_authentication_to_view", ( .canUseDKCPRAuthenticationToView, \ff v -> { ff | canUseDKCPRAuthenticationToView = v } ) )
+    , ( "can_use_dk_pid_authentication_to_view", ( .canUseDKPIDAuthenticationToView, \ff v -> { ff | canUseDKPIDAuthenticationToView = v } ) )
+    , ( "can_use_dk_cvr_authentication_to_view", ( .canUseDKCVRAuthenticationToView, \ff v -> { ff | canUseDKCVRAuthenticationToView = v } ) )
     , ( "can_use_sms_confirmations", ( .canUseSmsConfirmations, \ff v -> { ff | canUseSmsConfirmations = v } ) )
     , ( "can_use_fi_authentication_to_view", ( .canUseFIAuthenticationToView, \ff v -> { ff | canUseFIAuthenticationToView = v } ) )
     , ( "can_use_fi_authentication_to_sign", ( .canUseFIAuthenticationToSign, \ff v -> { ff | canUseFIAuthenticationToSign = v } ) )

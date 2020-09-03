@@ -6,6 +6,7 @@ var NotEmptyValidation = require("./validation.js").NotEmptyValidation;
 var SSNForNOBankIDValidation = require("./validation.js").SSNForNOBankIDValidation;
 var SSNForSEBankIDValidation = require("./validation.js").SSNForSEBankIDValidation;
 var SSNForDKNemIDValidation = require("./validation.js").SSNForDKNemIDValidation;
+var CVRForDKNemIDValidation = require("./validation.js").CVRForDKNemIDValidation;
 var SSNForFITupasValidation = require("./validation.js").SSNForFITupasValidation;
 var PhoneValidation = require("./validation.js").PhoneValidation;
 var Validation = require("./validation.js").Validation;
@@ -176,20 +177,29 @@ var Field = exports.Field = Backbone.Model.extend({
         if (this.isEmail() && this.isOptional() && this.value() != "") {
           return new EmailValidation().validateData(this.value());
         } else if (this.isOptional() && !(this.isCustom() && this.hasCustomValidation())) {
-            return true;
+          return true;
         } else if (this.isFstName() || this.isSndName()) {
-            return new NotEmptyValidation().validateData(this.value());
+          return new NotEmptyValidation().validateData(this.value());
         } else if (this.isEmail()) {
-            return new EmailValidation().validateData(this.value());
+          return new EmailValidation().validateData(this.value());
         }
         if (this.isSSN() && (this.signatory().noBankIDAuthenticationToSign() || this.signatory().noBankIDAuthenticationToView())) {
-            return new SSNForNOBankIDValidation().validateData(this.value());
+          return new SSNForNOBankIDValidation().validateData(this.value());
         }
         if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())) {
-            return new SSNForSEBankIDValidation().validateData(this.value());
+          return new SSNForSEBankIDValidation().validateData(this.value());
         }
-        if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToSign() || this.signatory().dkNemIDAuthenticationToView())) {
-            return new SSNForDKNemIDValidation().validateData(this.value());
+        if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToSign()
+                             || this.signatory().dkNemIDCPRAuthenticationToView()
+                             || this.signatory().dkNemIDPIDAuthenticationToView()
+                             || this.signatory().legacyDkNemIDAuthenticationToView()
+                             || this.signatory().dkNemIDCPRAuthenticationToViewArchived()
+                             || this.signatory().dkNemIDPIDAuthenticationToViewArchived()
+                             || this.signatory().legacyDkNemIDAuthenticationToViewArchived())) {
+          return new SSNForDKNemIDValidation().validateData(this.value());
+        }
+        if (this.isSSN() && (this.signatory().dkNemIDCVRAuthenticationToView() || this.signatory().dkNemIDCVRAuthenticationToViewArchived())) {
+          return new CVRForDKNemIDValidation().validateData(this.value());
         }
         if (this.isSSN() && (this.signatory().fiTupasAuthenticationToSign() || this.signatory().fiTupasAuthenticationToView())) {
             return new SSNForFITupasValidation().validateData(this.value());
@@ -241,6 +251,11 @@ var Field = exports.Field = Backbone.Model.extend({
       } else if  (this.isCompanyName()) {
         return localization.company;
       } else if  (this.isSSN()) {
+        if (this.isCPR()) {
+          return localization.eID.idName.cpr;
+        } else if (this.isCVR()) {
+          return localization.eID.idName.cvr;
+        }
         return localization.personalNumber;
       } else if (this.isCompanyNumber()) {
         return localization.companyNumber;
@@ -282,7 +297,10 @@ var Field = exports.Field = Backbone.Model.extend({
                                          field.isMobile() && (signatory.mobileConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()));
       var nonsignerNeedForArchive = !signatory.signs() && field.isSSN() && (signatory.seBankIDAuthenticationToViewArchived() ||
                                                                             signatory.noBankIDAuthenticationToViewArchived() ||
-                                                                            signatory.dkNemIDAuthenticationToViewArchived() ||
+                                                                            signatory.dkNemIDCPRAuthenticationToViewArchived() ||
+                                                                            signatory.dkNemIDPIDAuthenticationToViewArchived() ||
+                                                                            signatory.dkNemIDCVRAuthenticationToViewArchived() ||
+                                                                            signatory.legacyDkNemIDAuthenticationToViewArchived() ||
                                                                             signatory.fiTupasAuthenticationToViewArchived());
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
@@ -291,7 +309,9 @@ var Field = exports.Field = Backbone.Model.extend({
         && (!signatory.noBankIDAuthenticationToView())
         && (!signatory.noBankIDAuthenticationToSign())
         && (!signatory.dkNemIDAuthenticationToSign())
-        && (!signatory.dkNemIDAuthenticationToView())
+        && (!signatory.dkNemIDCPRAuthenticationToView())
+        && (!signatory.dkNemIDPIDAuthenticationToView())
+        && (!signatory.dkNemIDCVRAuthenticationToView())
         // I've got no idea what's going on here!
         && (!signatory.fiTupasAuthenticationToSign())
         && (!signatory.fiTupasAuthenticationToView())
@@ -341,8 +361,10 @@ var Field = exports.Field = Backbone.Model.extend({
         return new EmptyValidation().or(new SSNForSEBankIDValidation());
       } else if (this.signatory().noBankIDAuthenticationToSign() || this.signatory().noBankIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForNOBankIDValidation());
-      } else if (this.signatory().dkNemIDAuthenticationToSign() || this.signatory().dkNemIDAuthenticationToView()) {
+      } else if (this.isCPR()) {
         return new EmptyValidation().or(new SSNForDKNemIDValidation());
+      } else if (this.isCVR()) {
+        return new EmptyValidation().or(new CVRForDKNemIDValidation());
       } else if (this.signatory().fiTupasAuthenticationToSign() || this.signatory().fiTupasAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForFITupasValidation());
       } else {
@@ -417,6 +439,18 @@ var Field = exports.Field = Backbone.Model.extend({
     },
     isSSN : function() {
         return  this.type() == "personal_number";
+    },
+    isCPR : function() {
+      return this.signatory().dkNemIDAuthenticationToSign()
+                             || this.signatory().dkNemIDCPRAuthenticationToView()
+                             || this.signatory().dkNemIDPIDAuthenticationToView()
+                             || this.signatory().legacyDkNemIDAuthenticationToView()
+                             || this.signatory().dkNemIDCPRAuthenticationToViewArchived()
+                             || this.signatory().dkNemIDPIDAuthenticationToViewArchived()
+                             || this.signatory().legacyDkNemIDAuthenticationToViewArchived();
+    },
+    isCVR : function() {
+      return this.signatory().dkNemIDCVRAuthenticationToView() || this.signatory().dkNemIDCVRAuthenticationToViewArchived();
     },
     isCompanyName : function() {
         return  this.type() == "company";
@@ -528,7 +562,9 @@ var Field = exports.Field = Backbone.Model.extend({
       } else if (this.isSSN()) {
         return (!this.signatory().seBankIDAuthenticationToView()
              && !this.signatory().noBankIDAuthenticationToView()
-             && !this.signatory().dkNemIDAuthenticationToView()
+             && !this.signatory().dkNemIDCPRAuthenticationToView()
+             && !this.signatory().dkNemIDPIDAuthenticationToView()
+             && !this.signatory().dkNemIDCVRAuthenticationToView()
              && !this.signatory().fiTupasAuthenticationToView());
       } else {
         return true;

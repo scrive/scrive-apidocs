@@ -143,8 +143,12 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToViewSEBankID;
     } else if (t == "no_bankid") {
       return localization.designview.addParties.authenticationToViewNOBankID;
-    } else if (t == "dk_nemid") {
-      return localization.designview.addParties.authenticationToViewDKNemID;
+    } else if (t == "dk_nemid_cpr") {
+      return localization.designview.addParties.authenticationToViewDKNemIDCPR;
+    } else if (t == "dk_nemid_pid") {
+      return localization.designview.addParties.authenticationToViewDKNemIDPID;
+    } else if (t == "dk_nemid_cvr") {
+      return localization.designview.addParties.authenticationToViewDKNemIDCVR;
     } else if (t == "fi_tupas") {
       return localization.designview.addParties.authenticationToViewFITupas;
     } else if (t == "sms_pin") {
@@ -159,8 +163,8 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = ["standard", "sms_pin", "se_bankid",
-                        "no_bankid", "dk_nemid", "fi_tupas",
-                        "verimi", "nl_idin"];
+                        "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", 
+                        "dk_nemid_cvr", "fi_tupas", "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 
     var subscription = Subscription.currentSubscription();
@@ -174,10 +178,16 @@ module.exports = React.createClass({
     if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToView()) {
       authTypes = _.without(authTypes, "no_bankid");
     }
-    if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToView()) {
-      authTypes = _.without(authTypes, "dk_nemid");
+    if (!ff.canUseDKCPRAuthenticationToView() && !sig.dkNemIDCPRAuthenticationToView()) {
+      authTypes = _.without(authTypes, "dk_nemid_cpr");
     }
-    if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToView()) {
+    if (!ff.canUseDKPIDAuthenticationToView() && !sig.dkNemIDPIDAuthenticationToView()) {
+      authTypes = _.without(authTypes, "dk_nemid_pid");
+    }
+    if (!ff.canUseDKCVRAuthenticationToView() && !sig.dkNemIDCVRAuthenticationToView()) {
+      authTypes = _.without(authTypes, "dk_nemid_cvr");
+    }
+   if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToView()) {
       authTypes = _.without(authTypes, "sms_pin");
     }
     if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToView()) {
@@ -214,8 +224,8 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = ["standard", "se_bankid", "no_bankid",
-                        "dk_nemid", "fi_tupas", "sms_pin",
-                        "verimi", "nl_idin"];
+                        "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",
+                        "fi_tupas", "sms_pin", "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 
     var subscription = Subscription.currentSubscription();
@@ -229,8 +239,11 @@ module.exports = React.createClass({
     if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToViewArchived()) {
       authTypes = _.without(authTypes, "no_bankid");
     }
-    if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToViewArchived()) {
-      authTypes = _.without(authTypes, "dk_nemid");
+    if (!ff.canUseDKCPRAuthenticationToView() && !sig.dkNemIDCPRAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "dk_nemid_cpr");
+    }
+    if (!ff.canUseDKCVRAuthenticationToView() && !sig.dkNemIDCVRAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "dk_nemid_cvr");
     }
     if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToViewArchived()) {
       authTypes = _.without(authTypes, "sms_pin");

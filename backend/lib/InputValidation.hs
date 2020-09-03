@@ -40,6 +40,7 @@ module InputValidation
     , asValidSwedishSSN
     , asValidNorwegianSSN
     , asValidDanishSSN
+    , asValidDanishCVR
     , asValidFinnishSSN
     , asValidZip
     , asValidCity
@@ -404,6 +405,25 @@ asValidDanishSSN input =
     >>= checkIfEmpty
     >>= checkLengthIs [10]
     >>= checkOnly [isDigit]
+
+{- |
+    Validated Danish CVR company registration number
+    White list: Digits only -conforming to validation formula: https://wiki.scn.sap.com/wiki/display/CRM/Denmark
+    Size: 8
+-}
+asValidDanishCVR :: Text -> Result Text
+asValidDanishCVR input =
+  filterOutCharacters [' ', '-'] input
+    >>= checkIfEmpty
+    >>= checkLengthIs [8]
+    >>= checkOnly [isDigit]
+    >>= verifyCVR
+  where
+    verifyCVR :: Text -> Result Text
+    verifyCVR cvr =
+      let checksum =
+              sum . zipWith (*) [2, 7, 6, 5, 4, 3, 2, 1] . map digitToInt $ T.unpack cvr
+      in  if checksum `mod` 11 == 0 then return cvr else Bad
 
 {- |
     Validated Finnish personal number.

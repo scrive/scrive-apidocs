@@ -144,7 +144,10 @@ data AuthenticationToViewMethod
   = StandardAuthenticationToView
   | SEBankIDAuthenticationToView
   | NOBankIDAuthenticationToView
-  | DKNemIDAuthenticationToView
+  | LegacyDKNemIDAuthenticationToView
+  | DKNemIDCPRAuthenticationToView
+  | DKNemIDPIDAuthenticationToView
+  | DKNemIDCVRAuthenticationToView
   | SMSPinAuthenticationToView
   | FITupasAuthenticationToView
   | VerimiAuthenticationToView
@@ -159,26 +162,32 @@ instance FromSQL AuthenticationToViewMethod where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1 -> return StandardAuthenticationToView
-      2 -> return SEBankIDAuthenticationToView
-      3 -> return NOBankIDAuthenticationToView
-      4 -> return DKNemIDAuthenticationToView
-      5 -> return SMSPinAuthenticationToView
-      6 -> return FITupasAuthenticationToView
-      7 -> return VerimiAuthenticationToView
-      8 -> return IDINAuthenticationToView
-      _ -> throwM RangeError { reRange = [(1, 8)], reValue = n }
+      1  -> return StandardAuthenticationToView
+      2  -> return SEBankIDAuthenticationToView
+      3  -> return NOBankIDAuthenticationToView
+      4  -> return LegacyDKNemIDAuthenticationToView
+      5  -> return SMSPinAuthenticationToView
+      6  -> return FITupasAuthenticationToView
+      7  -> return VerimiAuthenticationToView
+      8  -> return IDINAuthenticationToView
+      9  -> return DKNemIDCPRAuthenticationToView
+      10 -> return DKNemIDPIDAuthenticationToView
+      11 -> return DKNemIDCVRAuthenticationToView
+      _  -> throwM RangeError { reRange = [(1, 11)], reValue = n }
 
 instance ToSQL AuthenticationToViewMethod where
   type PQDest AuthenticationToViewMethod = PQDest Int16
-  toSQL StandardAuthenticationToView = toSQL (1 :: Int16)
-  toSQL SEBankIDAuthenticationToView = toSQL (2 :: Int16)
-  toSQL NOBankIDAuthenticationToView = toSQL (3 :: Int16)
-  toSQL DKNemIDAuthenticationToView  = toSQL (4 :: Int16)
-  toSQL SMSPinAuthenticationToView   = toSQL (5 :: Int16)
-  toSQL FITupasAuthenticationToView  = toSQL (6 :: Int16)
-  toSQL VerimiAuthenticationToView   = toSQL (7 :: Int16)
-  toSQL IDINAuthenticationToView     = toSQL (8 :: Int16)
+  toSQL StandardAuthenticationToView      = toSQL (1 :: Int16)
+  toSQL SEBankIDAuthenticationToView      = toSQL (2 :: Int16)
+  toSQL NOBankIDAuthenticationToView      = toSQL (3 :: Int16)
+  toSQL LegacyDKNemIDAuthenticationToView = toSQL (4 :: Int16)
+  toSQL SMSPinAuthenticationToView        = toSQL (5 :: Int16)
+  toSQL FITupasAuthenticationToView       = toSQL (6 :: Int16)
+  toSQL VerimiAuthenticationToView        = toSQL (7 :: Int16)
+  toSQL IDINAuthenticationToView          = toSQL (8 :: Int16)
+  toSQL DKNemIDCPRAuthenticationToView    = toSQL (9 :: Int16)
+  toSQL DKNemIDPIDAuthenticationToView    = toSQL (10 :: Int16)
+  toSQL DKNemIDCVRAuthenticationToView    = toSQL (11 :: Int16)
 
 ---------------------------------
 

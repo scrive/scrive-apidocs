@@ -301,14 +301,17 @@ getMockDocSigLinkAuthToViewArchivedMethod i md =
           <> showt md
 
 authenticationToViewMethodFromString :: String -> Maybe AuthenticationToViewMethod
-authenticationToViewMethodFromString "standard"  = Just StandardAuthenticationToView
-authenticationToViewMethodFromString "se_bankid" = Just SEBankIDAuthenticationToView
-authenticationToViewMethodFromString "no_bankid" = Just NOBankIDAuthenticationToView
-authenticationToViewMethodFromString "dk_nemid"  = Just DKNemIDAuthenticationToView
-authenticationToViewMethodFromString "fi_tupas"  = Just FITupasAuthenticationToView
-authenticationToViewMethodFromString "sms_pin"   = Just SMSPinAuthenticationToView
-authenticationToViewMethodFromString "nl_idin"   = Just SMSPinAuthenticationToView
-authenticationToViewMethodFromString _           = Nothing
+authenticationToViewMethodFromString "standard"     = Just StandardAuthenticationToView
+authenticationToViewMethodFromString "se_bankid"    = Just SEBankIDAuthenticationToView
+authenticationToViewMethodFromString "no_bankid"    = Just NOBankIDAuthenticationToView
+authenticationToViewMethodFromString "dk_nemid" = Just LegacyDKNemIDAuthenticationToView
+authenticationToViewMethodFromString "dk_nemid_cpr" = Just DKNemIDCPRAuthenticationToView
+authenticationToViewMethodFromString "dk_nemid_pid" = Just DKNemIDPIDAuthenticationToView
+authenticationToViewMethodFromString "dk_nemid_cvr" = Just DKNemIDCVRAuthenticationToView
+authenticationToViewMethodFromString "fi_tupas"     = Just FITupasAuthenticationToView
+authenticationToViewMethodFromString "sms_pin"      = Just SMSPinAuthenticationToView
+authenticationToViewMethodFromString "nl_idin"      = Just SMSPinAuthenticationToView
+authenticationToViewMethodFromString _              = Nothing
 
 getMockDocSigLinkAuthToSignMethod :: Int -> MockDoc -> AuthenticationToSignMethod
 getMockDocSigLinkAuthToSignMethod i md =

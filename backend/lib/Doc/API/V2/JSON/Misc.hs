@@ -81,14 +81,17 @@ unjsonDeliveryStatus = unjsonEnumBy
 unjsonAuthenticationToViewMethod :: UnjsonDef AuthenticationToViewMethod
 unjsonAuthenticationToViewMethod = unjsonEnumBy
   "AuthenticationToViewMethod"
-  [ (StandardAuthenticationToView, "standard")
-  , (SEBankIDAuthenticationToView, "se_bankid")
-  , (NOBankIDAuthenticationToView, "no_bankid")
-  , (DKNemIDAuthenticationToView , "dk_nemid")
-  , (FITupasAuthenticationToView , "fi_tupas")
-  , (SMSPinAuthenticationToView  , "sms_pin")
-  , (VerimiAuthenticationToView  , "verimi")
-  , (IDINAuthenticationToView    , "nl_idin")
+  [ (StandardAuthenticationToView     , "standard")
+  , (SEBankIDAuthenticationToView     , "se_bankid")
+  , (NOBankIDAuthenticationToView     , "no_bankid")
+  , (LegacyDKNemIDAuthenticationToView, "dk_nemid")
+  , (DKNemIDCPRAuthenticationToView   , "dk_nemid_cpr")
+  , (DKNemIDPIDAuthenticationToView   , "dk_nemid_pid")
+  , (DKNemIDCVRAuthenticationToView   , "dk_nemid_cvr")
+  , (FITupasAuthenticationToView      , "fi_tupas")
+  , (SMSPinAuthenticationToView       , "sms_pin")
+  , (VerimiAuthenticationToView       , "verimi")
+  , (IDINAuthenticationToView         , "nl_idin")
   ]
 
 unjsonAuthenticationToSignMethod :: UnjsonDef AuthenticationToSignMethod

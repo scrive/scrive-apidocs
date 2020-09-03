@@ -53,7 +53,10 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           }
         } else if (sig.noBankIDAuthenticationToViewArchived()) {
           model = new NorwegianEIDHubIdentifyModel(args);
-        } else if (sig.dkNemIDAuthenticationToViewArchived()) {
+        } else if (sig.legacyDkNemIDAuthenticationToView()
+                   || sig.dkNemIDCPRAuthenticationToViewArchived()
+                   || sig.dkNemIDPIDAuthenticationToViewArchived()
+                   || sig.dkNemIDCVRAuthenticationToViewArchived()) {
           model = new DanishEIDHubIdentifyModel(args);
         } else if (sig.fiTupasAuthenticationToViewArchived()) {
           if (this.props.useEIDHubForFITupasView) {
@@ -77,7 +80,10 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           }
         } else if (sig.noBankIDAuthenticationToView()) {
           model = new NorwegianEIDHubIdentifyModel(args);
-        } else if (sig.dkNemIDAuthenticationToView()) {
+        } else if (sig.legacyDkNemIDAuthenticationToView()
+                    || sig.dkNemIDCPRAuthenticationToView()
+                    || sig.dkNemIDPIDAuthenticationToView()
+                    || sig.dkNemIDCVRAuthenticationToView()) {
           model = new DanishEIDHubIdentifyModel(args);
         } else if (sig.fiTupasAuthenticationToView()) {
           if (this.props.useEIDHubForFITupasView) {
@@ -116,8 +122,10 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 
     localizationStringForSsnInfoText: function () {
       var model = this.state.model;
-      if (model.isDanish()) {
-        return localization.eID.infoText.nemId;
+      if (model.isDanishPersonal()) {
+        return localization.eID.infoText.cpr;
+      } else if (model.isDanishEmployee()) {
+        return localization.eID.infoText.cvr;
       } else {
         return localization.yourIdNumber;
       }
@@ -174,7 +182,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 model={model}
               />
             }
-            { /* else if */ model.isDanish() &&
+            { /* else if */ (model.isDanishPersonal() || model.isDanishEmployee()) &&
               <DanishEIDHubIdentifyView
                 ref="identify"
                 model={model}
@@ -218,13 +226,18 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 <div>
                   {localization.identifyDocument} <b>{doc.title()}</b>
                 </div>
-                { /* if */ (model.isSwedish() || model.isNorwegian() || model.isDanish() || model.isFinnish()) &&
+                { /* if */ (model.isSwedish()
+                            || model.isNorwegian()
+                            || model.isDanishPersonal()
+                            || model.isDanishEmployee()
+                            || model.isFinnish()) &&
                   <div>
                     {this.localizationStringForSsnInfoText()} <MaskedPersonalNumber
                       number={personalNumber}
                       placeholder="Empty"
                       isNorwegian={model.isNorwegian()}
-                      isDanish={model.isDanish()}
+                      isDanishPersonal={model.isDanishPersonal()}
+                      isDanishEmployee={model.isDanishEmployee()}
                       isFinnish={model.isFinnish()}
                     />
                   </div>
@@ -255,7 +268,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 { /* if */ model.isNorwegian() &&
                   <img src={window.cdnbaseurl + "/img/bankid-no.png"} />
                 }
-                { /* if */ model.isDanish() &&
+                { /* if */ (model.isDanishPersonal() || model.isDanishEmployee()) &&
                   <img src={window.cdnbaseurl + "/img/nemid-dk.png"} />
                 }
                 { /* if */ model.isFinnish() &&

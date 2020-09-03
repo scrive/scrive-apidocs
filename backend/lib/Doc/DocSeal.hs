@@ -102,21 +102,29 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
   signedAtText <- if T.null stime
     then return ""
     else renderTextTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
-  let personalnumber =
-        if signatorylinkhidepn signatory then "" else getPersonalNumber signatory
-      companynumber = getCompanyNumber signatory
+  let companynumber = getCompanyNumber signatory
   companyNumberText <- if T.null companynumber
     then return ""
     else renderTextTemplate "_contractsealingtextsorgNumberText"
       $ F.value "companynumber" companynumber
-  personalNumberText <- if T.null personalnumber
-    then return ""
-    else renderTextTemplate "_contractsealingtextspersonalNumberText"
-      $ F.value "idnumber" personalnumber
 
   meauthentication <-
     dbQuery . GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid
       signatory
+
+  -- making sure that we don't store CPR in case of NemID PID authentication
+  let personalnumber
+        | signatorylinkhidepn signatory
+        = ""
+        | Just (EIDServiceNemIDAuthentication_ auth) <- meauthentication
+        = eidServiceNemIDSignatoryPersonalOrCVRNumber auth
+        | otherwise
+        = getPersonalNumber signatory
+
+  personalNumberText <- if T.null personalnumber
+    then return ""
+    else renderTextTemplate "_contractsealingtextspersonalNumberText"
+      $ F.value "idnumber" personalnumber
 
   identifiedNameText <- do
     case meauthentication of
@@ -267,7 +275,6 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       EIDServiceFITupasAuthentication_ authentication ->
         eidServiceFITupasSignatoryName authentication
       SMSPinAuthentication_ _ -> ""
-
 
 personExFromSignatoryLink
   :: ( MonadDB m

@@ -49,9 +49,15 @@ testNewCompanyFeatureFlagDefaults = do
       assertEqual "New company can use sms confirmations"
                   True
                   (ffCanUseSMSConfirmations ff)
-      assertEqual "New company can't use dk authentication to view"
+      assertEqual "New company can't use dk cpr authentication to view"
                   False
-                  (ffCanUseDKAuthenticationToView ff)
+                  (ffCanUseDKCPRAuthenticationToView ff)
+      assertEqual "New company can't use dk pid authentication to view"
+                  False
+                  (ffCanUseDKPIDAuthenticationToView ff)
+      assertEqual "New company can't use dk cvr authentication to view"
+                  False
+                  (ffCanUseDKCVRAuthenticationToView ff)
       assertEqual "New company can't use dk authentication to sign"
                   False
                   (ffCanUseDKAuthenticationToSign ff)

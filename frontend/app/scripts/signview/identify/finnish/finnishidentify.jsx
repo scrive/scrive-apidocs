@@ -31,7 +31,8 @@ var MaskedPersonalNumber = require("../masked_personal_number");
               {localization.idNumber} <MaskedPersonalNumber
                 number={this.props.model.doc().currentSignatory().personalnumber()}
                 isNorwegian={false}
-                isDanish={false}
+                isDanishPersonal={false}
+                isDanishEmployee={false}
                 isFinnish={true}
               />
             </span>

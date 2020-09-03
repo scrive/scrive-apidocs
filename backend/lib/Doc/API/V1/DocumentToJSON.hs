@@ -166,11 +166,18 @@ authenticationToViewJSON :: AuthenticationToViewMethod -> JSValue
 authenticationToViewJSON StandardAuthenticationToView = toJSValue ("standard" :: String)
 authenticationToViewJSON SEBankIDAuthenticationToView = toJSValue ("se_bankid" :: String)
 authenticationToViewJSON NOBankIDAuthenticationToView = toJSValue ("no_bankid" :: String)
-authenticationToViewJSON DKNemIDAuthenticationToView  = toJSValue ("dk_nemid" :: String)
-authenticationToViewJSON SMSPinAuthenticationToView   = toJSValue ("sms_pin" :: String)
-authenticationToViewJSON FITupasAuthenticationToView  = toJSValue ("fi_tupas" :: String)
-authenticationToViewJSON VerimiAuthenticationToView   = toJSValue ("verimi" :: String)
-authenticationToViewJSON IDINAuthenticationToView     = toJSValue ("nl_idin" :: String)
+authenticationToViewJSON LegacyDKNemIDAuthenticationToView =
+  toJSValue ("dk_nemid" :: String)
+authenticationToViewJSON DKNemIDCPRAuthenticationToView =
+  toJSValue ("dk_nemid_cpr" :: String)
+authenticationToViewJSON DKNemIDPIDAuthenticationToView =
+  toJSValue ("dk_nemid_pid" :: String)
+authenticationToViewJSON DKNemIDCVRAuthenticationToView =
+  toJSValue ("dk_nemid_cvr" :: String)
+authenticationToViewJSON SMSPinAuthenticationToView  = toJSValue ("sms_pin" :: String)
+authenticationToViewJSON FITupasAuthenticationToView = toJSValue ("fi_tupas" :: String)
+authenticationToViewJSON VerimiAuthenticationToView  = toJSValue ("verimi" :: String)
+authenticationToViewJSON IDINAuthenticationToView    = toJSValue ("nl_idin" :: String)
 
 authenticationToSignJSON :: AuthenticationToSignMethod -> JSValue
 authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard" :: String)

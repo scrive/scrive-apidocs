@@ -84,14 +84,22 @@ module.exports = React.createClass({
       const isNorwegian = (sig.noBankIDAuthenticationToView() ||
                            sig.noBankIDAuthenticationToSign() ||
                            sig.noBankIDAuthenticationToViewArchived());
-      const isDanish = (sig.dkNemIDAuthenticationToView() ||
+      const isDanishPersonal = (
+                        sig.legacyDkNemIDAuthenticationToView() ||
+                        sig.dkNemIDCPRAuthenticationToView() ||
+                        sig.dkNemIDPIDAuthenticationToView() ||
                         sig.dkNemIDAuthenticationToSign() ||
-                        sig.dkNemIDAuthenticationToViewArchived());
+                        sig.legacyDkNemIDAuthenticationToViewArchived() ||
+                        sig.dkNemIDCPRAuthenticationToViewArchived() ||
+                        sig.dkNemIDPIDAuthenticationToViewArchived());
+      const isDanishEmployee = sig.dkNemIDCVRAuthenticationToView()
+                               || sig.dkNemIDCVRAuthenticationToViewArchived();
       const isFinnish = (sig.fiTupasAuthenticationToView() ||
                          sig.fiTupasAuthenticationToViewArchived());
       const mpn = new MaskedPersonalNumber({number: personalNumber,
                                             isNorwegian: isNorwegian,
-                                            isDanish: isDanish,
+                                            isDanishPersonal: isDanishPersonal,
+                                            isDanishEmployee: isDanishPersonal,
                                             isFinnish: isFinnish});
       return mpn.maskNumberText();
     },
@@ -99,7 +107,7 @@ module.exports = React.createClass({
       var sig = this.props.signatory;
       switch (sig.authenticationToSign()) {
         case "dk_nemid":
-          return localization.eID.idName.nemId;
+          return localization.eID.idName.cpr;
         default:
           return localization.docsignview.personalNumberLabel;
       }
@@ -137,7 +145,7 @@ module.exports = React.createClass({
         });
       }
 
-      if (signatory.personalnumber() && !signatory.hidePN()) {
+      if (signatory.personalnumber() && !signatory.hidePN() && !signatory.dkNemIDPIDAuthenticationToView()) {
         const info = {label: this.getSsnLabel(),
                       text: this.censoredPersonalNumber() || localization.docsignview.notEntered};
         infoList.push(info);

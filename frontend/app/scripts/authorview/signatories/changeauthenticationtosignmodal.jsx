@@ -221,7 +221,7 @@ var Modal = require("../../common/modal");
       } else if (model.isNewAuthenticationSEBankID() || model.isNewAuthenticationFITupas()) {
         text = localization.docsignview.personalNumberLabel;
       } else if (model.isNewAuthenticationDKNemID()) {
-        text = localization.eID.idName.nemId;
+        text = localization.eID.idName.cpr;
       }
       // there is no NOBankID/IDIN/Onfido here, because authentication value is empty in that case.
       return text;

@@ -169,7 +169,7 @@ var classNames = require("classnames");
       var sig = model.document().currentSignatory();
       switch (sig.authenticationToSign()) {
         case "dk_nemid":
-          return localization.eID.idName.nemId;
+          return localization.eID.idName.cpr;
         default:
           return localization.personalNumber;
       }
@@ -180,7 +180,7 @@ var classNames = require("classnames");
       var sig = model.document().currentSignatory();
       switch (sig.authenticationToSign()) {
         case "dk_nemid":
-          return localization.eID.infoText.nemId;
+          return localization.eID.infoText.cpr;
         default:
           return localization.personalNumber;
       }

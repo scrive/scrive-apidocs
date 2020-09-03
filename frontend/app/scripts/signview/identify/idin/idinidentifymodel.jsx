@@ -28,7 +28,10 @@ module.exports = Backbone.Model.extend({
   isNorwegian: function () {
     return false;
   },
-  isDanish: function () {
+  isDanishPersonal: function () {
+    return false;
+  },
+  isDanishEmployee: function() {
     return false;
   },
   isFinnish: function () {

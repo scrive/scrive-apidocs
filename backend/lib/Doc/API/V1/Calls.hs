@@ -547,12 +547,18 @@ apiCallV1Ready did = logDocument did . api $ do
         SEBankIDAuthenticationToView -> isGood . asValidSwedishSSN $ getPersonalNumber sl
         NOBankIDAuthenticationToView ->
           isGood . asValidNorwegianSSN $ getPersonalNumber sl
-        DKNemIDAuthenticationToView  -> isGood . asValidDanishSSN $ getPersonalNumber sl
-        FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
-        SMSPinAuthenticationToView   -> True
-        StandardAuthenticationToView -> True
-        VerimiAuthenticationToView   -> False -- Verimi auth to view is not supported in API v1
-        IDINAuthenticationToView     -> False -- iDIN auth to view is not supported in API v1
+        LegacyDKNemIDAuthenticationToView ->
+          isGood . asValidDanishSSN $ getPersonalNumber sl
+        DKNemIDCPRAuthenticationToView ->
+          isGood . asValidDanishSSN $ getPersonalNumber sl
+        DKNemIDPIDAuthenticationToView ->
+          isGood . asValidDanishSSN $ getPersonalNumber sl
+        DKNemIDCVRAuthenticationToView -> False -- Danish NemID CVR auth to view is not supported in API V1
+        FITupasAuthenticationToView    -> False -- Finnish TUPAS auth to view is not supported in API v1
+        SMSPinAuthenticationToView     -> True
+        StandardAuthenticationToView   -> True
+        VerimiAuthenticationToView     -> False -- Verimi auth to view is not supported in API v1
+        IDINAuthenticationToView       -> False -- iDIN auth to view is not supported in API v1
 
     signatoryHasValidPhoneForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl
@@ -560,12 +566,15 @@ apiCallV1Ready did = logDocument did . api $ do
             SEBankIDAuthenticationToView -> True
             NOBankIDAuthenticationToView ->
               isGood resultValidPhone || isEmpty resultValidPhone
-            DKNemIDAuthenticationToView  -> True
-            FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
-            SMSPinAuthenticationToView   -> isGood . asValidPhoneForSMS $ getMobile sl
-            StandardAuthenticationToView -> True
-            VerimiAuthenticationToView   -> False -- Verimi auth to view is not supported in API v1
-            IDINAuthenticationToView     -> False -- iDIN auth to view is not supported in API v1
+            LegacyDKNemIDAuthenticationToView -> True
+            DKNemIDCPRAuthenticationToView    -> True
+            DKNemIDPIDAuthenticationToView    -> True
+            DKNemIDCVRAuthenticationToView    -> False -- Danish NemID CVR auth to view is not supported in API V1
+            FITupasAuthenticationToView       -> False -- Finnish TUPAS auth to view is not supported in API v1
+            SMSPinAuthenticationToView -> isGood . asValidPhoneForSMS $ getMobile sl
+            StandardAuthenticationToView      -> True
+            VerimiAuthenticationToView        -> False -- Verimi auth to view is not supported in API v1
+            IDINAuthenticationToView          -> False -- iDIN auth to view is not supported in API v1
 
     checkEmailForConfirmation sl =
       T.null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
@@ -989,18 +998,21 @@ apiCallV1ChangeAuthenticationToView did slid =
       authentication_type <- getField "authentication_type"
       personal_number     <- getField "personal_number"
       mobile_number       <- getField "mobile_number"
-      when (isNothing authentication_type)
-        . throwM
-        . SomeDBExtraException
-        $ badInput
-            "`authentication_type` must be given. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
+      let
+        invalidAuthToViewValue
+          :: forall  a m . (DocumentMonad m, MonadThrow m) => Maybe Text -> m a
+        invalidAuthToViewValue val =
+          throwM
+            .  SomeDBExtraException
+            .  badInput
+            $  "Wrong or no `authentication_type` given: "
+            <> show val
+            <> ". Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`, `dk_nemid_cpr`, `dk_nemid_pid`."
+
+      when (isNothing authentication_type) $ invalidAuthToViewValue Nothing
       (authtoview, mSSN, mPhone) <-
         case fromJSValue . J.toJSValue $ T.unpack (fromMaybe "" authentication_type) of
-          Nothing -> (throwM . SomeDBExtraException) . badInput $ T.unpack
-            (  "Invalid authentication method: `"
-            <> fromMaybe "" authentication_type
-            <> "` was given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
-            )
+          Nothing -> invalidAuthToViewValue authentication_type
           Just StandardAuthenticationToView ->
             return (StandardAuthenticationToView, Nothing, Nothing)
           Just SMSPinAuthenticationToView ->
@@ -1009,26 +1021,20 @@ apiCallV1ChangeAuthenticationToView did slid =
             return (SEBankIDAuthenticationToView, personal_number, Nothing)
           Just NOBankIDAuthenticationToView ->
             return (NOBankIDAuthenticationToView, personal_number, mobile_number)
-          Just DKNemIDAuthenticationToView ->
-            return (DKNemIDAuthenticationToView, personal_number, Nothing)
+          Just LegacyDKNemIDAuthenticationToView ->
+            return (LegacyDKNemIDAuthenticationToView, personal_number, Nothing)
+          Just DKNemIDCPRAuthenticationToView ->
+            return (DKNemIDCPRAuthenticationToView, personal_number, Nothing)
+          Just DKNemIDPIDAuthenticationToView ->
+            return (DKNemIDPIDAuthenticationToView, personal_number, Nothing)
+          Just DKNemIDCVRAuthenticationToView ->
+            return (DKNemIDCVRAuthenticationToView, personal_number, Nothing)
           -- Finnish TUPAS is not supported in API V1
-          Just FITupasAuthenticationToView ->
-            throwM
-              . SomeDBExtraException
-              $ badInput
-                  "Invalid `authentication_type`. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
+          Just FITupasAuthenticationToView -> invalidAuthToViewValue authentication_type
           -- Verimi is not supported in API V1
-          Just VerimiAuthenticationToView ->
-            throwM
-              . SomeDBExtraException
-              $ badInput
-                  "Invalid `authentication_type`. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
+          Just VerimiAuthenticationToView  -> invalidAuthToViewValue authentication_type
           -- iDIN is not supported in API V1
-          Just IDINAuthenticationToView ->
-            throwM
-              . SomeDBExtraException
-              $ badInput
-                  "Invalid `authentication_type`. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
+          Just IDINAuthenticationToView    -> invalidAuthToViewValue authentication_type
       -- Check conditions on signatory
       guardAuthenticationMethodsCanMix authtoview
         $ signatorylinkauthenticationtosignmethod sl
@@ -1075,19 +1081,28 @@ apiCallV1ChangeAuthenticationToView did slid =
       isGood $ asValidSwedishSSN ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn =
       isGood $ asValidNorwegianSSN ssn
-    isValidSSNForAuthenticationToView DKNemIDAuthenticationToView ssn =
+    isValidSSNForAuthenticationToView LegacyDKNemIDAuthenticationToView ssn =
       isGood $ asValidDanishSSN ssn
+    isValidSSNForAuthenticationToView DKNemIDCPRAuthenticationToView ssn =
+      isGood $ asValidDanishSSN ssn
+    isValidSSNForAuthenticationToView DKNemIDPIDAuthenticationToView ssn =
+      isGood $ asValidDanishSSN ssn
+    -- NemID CVR is not supported in API V1
+    isValidSSNForAuthenticationToView DKNemIDCVRAuthenticationToView _ = False
     -- Finnish TUPAS is not supported in API V1
-    isValidSSNForAuthenticationToView FITupasAuthenticationToView _ = False
-    isValidSSNForAuthenticationToView VerimiAuthenticationToView  _ = True
-    isValidSSNForAuthenticationToView IDINAuthenticationToView    _ = True
+    isValidSSNForAuthenticationToView FITupasAuthenticationToView    _ = False
+    isValidSSNForAuthenticationToView VerimiAuthenticationToView     _ = True
+    isValidSSNForAuthenticationToView IDINAuthenticationToView       _ = True
 
     isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> Text -> Bool
     isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView SMSPinAuthenticationToView phone =
       isGood (asValidPhoneForSMS phone)
-    isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView _ = True
-    isValidPhoneForAuthenticationToView DKNemIDAuthenticationToView  _ = True
+    isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView      _ = True
+    isValidPhoneForAuthenticationToView LegacyDKNemIDAuthenticationToView _ = True
+    isValidPhoneForAuthenticationToView DKNemIDCPRAuthenticationToView    _ = True
+    isValidPhoneForAuthenticationToView DKNemIDPIDAuthenticationToView    _ = True
+    isValidPhoneForAuthenticationToView DKNemIDCVRAuthenticationToView    _ = True
     isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone =
       let phoneValidation = asValidPhoneForNorwegianBankID phone
       in  isGood phoneValidation || isEmpty phoneValidation

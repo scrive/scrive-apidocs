@@ -124,12 +124,15 @@ authToViewIsValid sl = case signatorylinkauthenticationtoviewmethod sl of
   SEBankIDAuthenticationToView -> True
   NOBankIDAuthenticationToView ->
     isJust (getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
-  DKNemIDAuthenticationToView  -> True
-  SMSPinAuthenticationToView   -> True
-  StandardAuthenticationToView -> True
-  IDINAuthenticationToView     -> True
-  FITupasAuthenticationToView  -> True
-  VerimiAuthenticationToView   -> True
+  LegacyDKNemIDAuthenticationToView -> True
+  DKNemIDCPRAuthenticationToView    -> True
+  DKNemIDPIDAuthenticationToView    -> True
+  DKNemIDCVRAuthenticationToView    -> True
+  SMSPinAuthenticationToView        -> True
+  StandardAuthenticationToView      -> True
+  IDINAuthenticationToView          -> True
+  FITupasAuthenticationToView       -> True
+  VerimiAuthenticationToView        -> True
 
 -- checking for viewership is a temporary fix to help Telia. should be reverted when they get their shit together
 authToSignIsValid :: SignatoryLink -> Bool
@@ -161,9 +164,12 @@ authToSignIsValid sl =
 signatoryHasValidSSNOrEmailForIdentifyToView :: SignatoryLink -> Bool
 signatoryHasValidSSNOrEmailForIdentifyToView sl =
   case signatorylinkauthenticationtoviewmethod sl of
-    SEBankIDAuthenticationToView -> isGood . asValidSwedishSSN $ getPersonalNumber sl
+    SEBankIDAuthenticationToView      -> isGood . asValidSwedishSSN $ getPersonalNumber sl
     NOBankIDAuthenticationToView -> isGood . asValidNorwegianSSN $ getPersonalNumber sl
-    DKNemIDAuthenticationToView  -> isGood . asValidDanishSSN $ getPersonalNumber sl
+    LegacyDKNemIDAuthenticationToView -> isGood . asValidDanishSSN $ getPersonalNumber sl
+    DKNemIDCPRAuthenticationToView    -> isGood . asValidDanishSSN $ getPersonalNumber sl
+    DKNemIDPIDAuthenticationToView    -> isGood . asValidDanishSSN $ getPersonalNumber sl
+    DKNemIDCVRAuthenticationToView    -> isGood . asValidDanishCVR $ getPersonalNumber sl
     FITupasAuthenticationToView ->
       T.null (getPersonalNumber sl) || isGood (asValidFinnishSSN $ getPersonalNumber sl)
     SMSPinAuthenticationToView   -> True

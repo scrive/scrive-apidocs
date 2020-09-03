@@ -311,12 +311,19 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
       isGood . asValidSwedishSSN $ ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn =
       isGood . asValidNorwegianSSN $ ssn
-    isValidSSNForAuthenticationToView DKNemIDAuthenticationToView ssn =
+    isValidSSNForAuthenticationToView LegacyDKNemIDAuthenticationToView ssn =
       isGood . asValidDanishSSN $ ssn
+    isValidSSNForAuthenticationToView DKNemIDCPRAuthenticationToView ssn =
+      isGood . asValidDanishSSN $ ssn
+    isValidSSNForAuthenticationToView DKNemIDPIDAuthenticationToView ssn =
+      isGood . asValidDanishSSN $ ssn
+    isValidSSNForAuthenticationToView DKNemIDCVRAuthenticationToView ssn =
+      isGood . asValidDanishCVR $ ssn
     isValidSSNForAuthenticationToView FITupasAuthenticationToView ssn =
       (isEmpty || isGood) $ asValidFinnishSSN ssn
     isValidSSNForAuthenticationToView VerimiAuthenticationToView _ = True
     isValidSSNForAuthenticationToView IDINAuthenticationToView   _ = True
+
     isValidMobileForAuthenticationToView
       :: AuthenticationToViewMethod -> AuthenticationKind -> Text -> Bool
     isValidMobileForAuthenticationToView StandardAuthenticationToView _ _ = True
@@ -324,8 +331,11 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
       = (isGood || isEmpty) . asValidPhoneForSMS $ mobile
     isValidMobileForAuthenticationToView SMSPinAuthenticationToView AuthenticationToView mobile
       = isGood . asValidPhoneForSMS $ mobile
-    isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _ _ = True
-    isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _ _ = True
+    isValidMobileForAuthenticationToView SEBankIDAuthenticationToView      _ _ = True
+    isValidMobileForAuthenticationToView LegacyDKNemIDAuthenticationToView _ _ = True
+    isValidMobileForAuthenticationToView DKNemIDCPRAuthenticationToView    _ _ = True
+    isValidMobileForAuthenticationToView DKNemIDPIDAuthenticationToView    _ _ = True
+    isValidMobileForAuthenticationToView DKNemIDCVRAuthenticationToView    _ _ = True
     isValidMobileForAuthenticationToView NOBankIDAuthenticationToView _ mobile =
       (isGood || isEmpty) $ asValidPhoneForNorwegianBankID mobile
     isValidMobileForAuthenticationToView FITupasAuthenticationToView _ _ = True

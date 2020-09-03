@@ -6,6 +6,7 @@ var EmailValidation = require("../../js/validation.js").EmailValidation;
 var NoValidation = require("../../js/validation.js").NoValidation;
 var SSNForNOBankIDValidation = require("../../js/validation.js").SSNForNOBankIDValidation;
 var SSNForDKNemIDValidation = require("../../js/validation.js").SSNForDKNemIDValidation;
+var CVRForDKNemIDValidation = require("../../js/validation.js").CVRForDKNemIDValidation;
 var SSNForSEBankIDValidation = require("../../js/validation.js").SSNForSEBankIDValidation;
 var SSNForFITupasValidation = require("../../js/validation.js").SSNForFITupasValidation;
 var PhoneValidation = require("../../js/validation.js").PhoneValidation;
@@ -227,11 +228,18 @@ var moment = require("moment");
                    || signatory.seBankIDAuthenticationToViewArchived()
                    || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
-        } else if (signatory.dkNemIDAuthenticationToView()
-                   || signatory.dkNemIDAuthenticationToViewArchived()
+        } else if ( signatory.legacyDkNemIDAuthenticationToView()
+                   || signatory.dkNemIDCPRAuthenticationToView()
+                   || signatory.dkNemIDPIDAuthenticationToView()
+                   || signatory.legacyDkNemIDAuthenticationToViewArchived()
+                   || signatory.dkNemIDCPRAuthenticationToViewArchived()
+                   || signatory.dkNemIDPIDAuthenticationToViewArchived()
                    || signatory.dkNemIDAuthenticationToSign()) {
           return !new SSNForDKNemIDValidation().validateData(field.value());
-        } else {
+       } else if (signatory.dkNemIDCVRAuthenticationToView()
+                  || signatory.dkNemIDCVRAuthenticationToViewArchived()) {
+          return !new CVRForDKNemIDValidation().validateData(field.value());
+       } else {
           return !new NoValidation().validateData(field.value());
         }
       } else {

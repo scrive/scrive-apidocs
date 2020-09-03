@@ -366,10 +366,10 @@ instance Arbitrary DeliveryStatus where
 
 instance Arbitrary FeatureFlags where
   arbitrary = do
-    (a, b, c, d, e, f, g , h , i , j ) <- arbitrary
-    (k, l, m, n, o, p, q , r , s , t ) <- arbitrary
-    (u, v, w, x, z, y, aa, bb, cc, dd) <- arbitrary
-    (ee, ff, gg, hh, ii, jj, kk)       <- arbitrary
+    (a, b, c, d, e, f, g , h , i , j )   <- arbitrary
+    (k, l, m, n, o, p, q , r , s , t )   <- arbitrary
+    (u, v, w, x, z, y, aa, bb, cc, dd)   <- arbitrary
+    (ee, ff, gg, hh, ii, jj, kk, ll, mm) <- arbitrary
     return $ FeatureFlags { ffCanUseTemplates                  = a
                           , ffCanUseBranding                   = b
                           , ffCanUseAuthorAttachments          = c
@@ -377,7 +377,9 @@ instance Arbitrary FeatureFlags where
                           , ffCanUseMassSendout                = e
                           , ffCanUseSMSInvitations             = f
                           , ffCanUseSMSConfirmations           = g
-                          , ffCanUseDKAuthenticationToView     = h
+                          , ffCanUseDKCPRAuthenticationToView  = h
+                          , ffCanUseDKPIDAuthenticationToView  = ll
+                          , ffCanUseDKCVRAuthenticationToView  = mm
                           , ffCanUseDKAuthenticationToSign     = i
                           , ffCanUseNOAuthenticationToView     = j
                           , ffCanUseNOAuthenticationToSign     = k

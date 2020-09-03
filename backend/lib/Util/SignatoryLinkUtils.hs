@@ -46,6 +46,7 @@ import qualified Data.Set as S
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import EID.Authentication.Model
+import EID.EIDService.Types
 import User.Email
 import User.Model
 import Util.HasSomeUserInfo
@@ -234,7 +235,10 @@ data MixAuthMethod
   = MAM_Standard
   | MAM_SEBankID
   | MAM_NOBankID
-  | MAM_DKNemID
+  | MAM_LegacyDKNemID
+  | MAM_DKNemIDCPR
+  | MAM_DKNemIDPID
+  | MAM_DKNemIDCVR
   | MAM_SMSPin
   | MAM_FITupas
   | MAM_Verimi
@@ -243,21 +247,24 @@ data MixAuthMethod
   deriving (Eq, Ord, Show)
 
 atvToMix :: AuthenticationToViewMethod -> MixAuthMethod
-atvToMix StandardAuthenticationToView = MAM_Standard
-atvToMix SEBankIDAuthenticationToView = MAM_SEBankID
-atvToMix NOBankIDAuthenticationToView = MAM_NOBankID
-atvToMix DKNemIDAuthenticationToView  = MAM_DKNemID
-atvToMix SMSPinAuthenticationToView   = MAM_SMSPin
-atvToMix FITupasAuthenticationToView  = MAM_FITupas
-atvToMix VerimiAuthenticationToView   = MAM_Verimi
-atvToMix IDINAuthenticationToView     = MAM_NLIDIN
+atvToMix StandardAuthenticationToView      = MAM_Standard
+atvToMix SEBankIDAuthenticationToView      = MAM_SEBankID
+atvToMix NOBankIDAuthenticationToView      = MAM_NOBankID
+atvToMix LegacyDKNemIDAuthenticationToView = MAM_LegacyDKNemID
+atvToMix DKNemIDCPRAuthenticationToView    = MAM_DKNemIDCPR
+atvToMix DKNemIDPIDAuthenticationToView    = MAM_DKNemIDPID
+atvToMix DKNemIDCVRAuthenticationToView    = MAM_DKNemIDCVR
+atvToMix SMSPinAuthenticationToView        = MAM_SMSPin
+atvToMix FITupasAuthenticationToView       = MAM_FITupas
+atvToMix VerimiAuthenticationToView        = MAM_Verimi
+atvToMix IDINAuthenticationToView          = MAM_NLIDIN
 
 atsToMix :: AuthenticationToSignMethod -> MixAuthMethod
 atsToMix StandardAuthenticationToSign            = MAM_Standard
 atsToMix SEBankIDAuthenticationToSign            = MAM_SEBankID
 atsToMix SMSPinAuthenticationToSign              = MAM_SMSPin
 atsToMix NOBankIDAuthenticationToSign            = MAM_NOBankID
-atsToMix DKNemIDAuthenticationToSign             = MAM_DKNemID
+atsToMix DKNemIDAuthenticationToSign             = MAM_DKNemIDCPR
 atsToMix IDINAuthenticationToSign                = MAM_NLIDIN
 atsToMix FITupasAuthenticationToSign             = MAM_FITupas
 atsToMix OnfidoDocumentCheckAuthenticationToSign = MAM_Onfido
@@ -273,20 +280,38 @@ authenticationMethodsCanMix authToView authToSign authToViewArchived =
   let auths = S.fromList
         [atvToMix authToView, atsToMix authToSign, atvToMix authToViewArchived]
       eids = S.fromList
-        [MAM_SEBankID, MAM_NOBankID, MAM_DKNemID, MAM_FITupas, MAM_Verimi, MAM_NLIDIN]
+        [ MAM_SEBankID
+        , MAM_NOBankID
+        , MAM_DKNemIDCPR
+        , MAM_DKNemIDPID
+        , MAM_DKNemIDCVR
+        , MAM_FITupas
+        , MAM_Verimi
+        , MAM_NLIDIN
+        ]
   in  length (auths `S.intersection` eids) <= 1
 
 ----------------------------------------
 
 authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
-authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{}     = True
-authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}      = True
-authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}      = True
-authViewMatchesAuth FITupasAuthenticationToView  NetsFITupasAuthentication_{}      = True
-authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}           = True
-authViewMatchesAuth VerimiAuthenticationToView   EIDServiceVerimiAuthentication_{} = True
-authViewMatchesAuth IDINAuthenticationToView     EIDServiceIDINAuthentication_{}   = True
-authViewMatchesAuth DKNemIDAuthenticationToView  EIDServiceNemIDAuthentication_{}  = True
+authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True
+authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{} = True
+authViewMatchesAuth LegacyDKNemIDAuthenticationToView NetsDKNemIDAuthentication_{} = True
+authViewMatchesAuth FITupasAuthenticationToView NetsFITupasAuthentication_{} = True
+authViewMatchesAuth SMSPinAuthenticationToView SMSPinAuthentication_{} = True
+authViewMatchesAuth VerimiAuthenticationToView EIDServiceVerimiAuthentication_{} = True
+authViewMatchesAuth IDINAuthenticationToView EIDServiceIDINAuthentication_{} = True
+authViewMatchesAuth LegacyDKNemIDAuthenticationToView EIDServiceNemIDAuthentication_{} =
+  True
+authViewMatchesAuth DKNemIDCPRAuthenticationToView (EIDServiceNemIDAuthentication_ auth)
+  = eidServiceNemIDInternalProvider auth == EIDServiceNemIDPersonalKeyCard
+authViewMatchesAuth DKNemIDPIDAuthenticationToView (EIDServiceNemIDAuthentication_ auth)
+  = eidServiceNemIDInternalProvider auth == EIDServiceNemIDPersonalKeyCard
+authViewMatchesAuth DKNemIDCVRAuthenticationToView (EIDServiceNemIDAuthentication_ auth)
+  = eidServiceNemIDInternalProvider auth
+    == EIDServiceNemIDEmployeeKeyCard
+    || eidServiceNemIDInternalProvider auth
+    == EIDServiceNemIDEmployeeKeyFile
 authViewMatchesAuth NOBankIDAuthenticationToView EIDServiceNOBankIDAuthentication_{} =
   True
 authViewMatchesAuth SEBankIDAuthenticationToView EIDServiceSEBankIDAuthentication_{} =
@@ -298,24 +323,30 @@ authViewMatchesAuth _ _ = False
 -- AuthenticationToSignMethod needs Personal Number or Mobile Number
 
 authToViewNeedsPersonalNumber :: AuthenticationToViewMethod -> Bool
-authToViewNeedsPersonalNumber StandardAuthenticationToView = False
-authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
-authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
-authToViewNeedsPersonalNumber DKNemIDAuthenticationToView  = True
-authToViewNeedsPersonalNumber SMSPinAuthenticationToView   = False
-authToViewNeedsPersonalNumber FITupasAuthenticationToView  = False
-authToViewNeedsPersonalNumber VerimiAuthenticationToView   = False
-authToViewNeedsPersonalNumber IDINAuthenticationToView     = False
+authToViewNeedsPersonalNumber StandardAuthenticationToView      = False
+authToViewNeedsPersonalNumber SEBankIDAuthenticationToView      = True
+authToViewNeedsPersonalNumber NOBankIDAuthenticationToView      = True
+authToViewNeedsPersonalNumber LegacyDKNemIDAuthenticationToView = True
+authToViewNeedsPersonalNumber DKNemIDCPRAuthenticationToView    = True
+authToViewNeedsPersonalNumber DKNemIDPIDAuthenticationToView    = True
+authToViewNeedsPersonalNumber DKNemIDCVRAuthenticationToView    = True
+authToViewNeedsPersonalNumber SMSPinAuthenticationToView        = False
+authToViewNeedsPersonalNumber FITupasAuthenticationToView       = False
+authToViewNeedsPersonalNumber VerimiAuthenticationToView        = False
+authToViewNeedsPersonalNumber IDINAuthenticationToView          = False
 
 authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
-authToViewNeedsMobileNumber StandardAuthenticationToView = False
-authToViewNeedsMobileNumber SEBankIDAuthenticationToView = False
-authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
-authToViewNeedsMobileNumber DKNemIDAuthenticationToView  = False
-authToViewNeedsMobileNumber SMSPinAuthenticationToView   = True
-authToViewNeedsMobileNumber FITupasAuthenticationToView  = False
-authToViewNeedsMobileNumber VerimiAuthenticationToView   = False
-authToViewNeedsMobileNumber IDINAuthenticationToView     = False
+authToViewNeedsMobileNumber StandardAuthenticationToView      = False
+authToViewNeedsMobileNumber SEBankIDAuthenticationToView      = False
+authToViewNeedsMobileNumber NOBankIDAuthenticationToView      = True
+authToViewNeedsMobileNumber LegacyDKNemIDAuthenticationToView = False
+authToViewNeedsMobileNumber DKNemIDCPRAuthenticationToView    = False
+authToViewNeedsMobileNumber DKNemIDPIDAuthenticationToView    = False
+authToViewNeedsMobileNumber DKNemIDCVRAuthenticationToView    = False
+authToViewNeedsMobileNumber SMSPinAuthenticationToView        = True
+authToViewNeedsMobileNumber FITupasAuthenticationToView       = False
+authToViewNeedsMobileNumber VerimiAuthenticationToView        = False
+authToViewNeedsMobileNumber IDINAuthenticationToView          = False
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign            = False

@@ -13,7 +13,11 @@ module.exports = React.createClass({
       return false;
     } else if (!ff.canUseNOAuthenticationToView() && am == "no_bankid") {
       return false;
-    } else if (!ff.canUseDKAuthenticationToView() && am == "dk_nemid") {
+    } else if (!ff.canUseDKCPRAuthenticationToView() && am == "dk_nemid_cpr") {
+      return false;
+    } else if (!ff.canUseDKPIDAuthenticationToView() && am == "dk_nemid_pid") {
+      return false;
+    } else if (!ff.canUseDKCVRAuthenticationToView() && am == "dk_nemid_cvr") {
       return false;
     } else if (!ff.canUseFIAuthenticationToView() && am == "fi_tupas") {
       return false;
@@ -33,7 +37,7 @@ module.exports = React.createClass({
       Where: "icon"
     });
     var superthis = this;
-    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin", "verimi", "nl_idin"]
+    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr", "fi_tupas", "sms_pin", "verimi", "nl_idin"]
               .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
     if (ams.length <= 1) {
       // if no auth methods are enabled, tell customer, that they can purchase them
@@ -57,7 +61,9 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";
     } else if (sig.noBankIDAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-no-bankid";
-    } else if (sig.dkNemIDAuthenticationToViewArchived()) {
+    } else if (sig.dkNemIDCPRAuthenticationToViewArchived()
+              || sig.dkNemIDPIDAuthenticationToViewArchived()
+              || sig.dkNemIDCVRAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-dk-nemid";
     } else if (sig.fiTupasAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-fi-tupas";
@@ -88,11 +94,19 @@ module.exports = React.createClass({
       title.push(
         localization.designview.addParties.authenticationToViewNOBankID
       );
-    } else if (authMethod == "dk_nemid") {
+    } else if (authMethod == "dk_nemid_cpr") {
       title.push(
-        localization.designview.addParties.authenticationToViewDKNemID
+        localization.designview.addParties.authenticationToViewDKNemIDCPR
       );
-    } else if (authMethod == "fi_tupas") {
+    } else if (authMethod == "dk_nemid_pid") {
+      title.push(
+        localization.designview.addParties.authenticationToViewDKNemIDPID
+      );
+   } else if (authMethod == "dk_nemid_cvr") {
+      title.push(
+        localization.designview.addParties.authenticationToViewDKNemIDCVR
+      );
+   } else if (authMethod == "fi_tupas") {
       title.push(
         localization.designview.addParties.authenticationToViewFITupas
       );

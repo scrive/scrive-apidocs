@@ -544,8 +544,17 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "no_bankid";
     },
-    dkNemIDAuthenticationToView: function() {
+    legacyDkNemIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "dk_nemid";
+    },
+    dkNemIDCPRAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "dk_nemid_cpr";
+    },
+    dkNemIDPIDAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "dk_nemid_pid";
+    },
+    dkNemIDCVRAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "dk_nemid_cvr";
     },
     fiTupasAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "fi_tupas";
@@ -568,8 +577,17 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "no_bankid";
     },
-    dkNemIDAuthenticationToViewArchived: function() {
+    legacyDkNemIDAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "dk_nemid";
+    },
+    dkNemIDCPRAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "dk_nemid_cpr";
+    },
+    dkNemIDPIDAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "dk_nemid_pid";
+    },
+    dkNemIDCVRAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "dk_nemid_cvr";
     },
     fiTupasAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "fi_tupas";
@@ -948,15 +966,15 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     authenticationToViewArchived: function() {
       return this.get('authentication_method_to_view_archived');
     },
-  authenticationMethodsCanMix: function(authToView, authToSign, authToViewArchived) {
-    var intersect = function(as, bs) {
-      return as.filter(function (item) {
-        return bs.indexOf(item) > -1;
-      });
-    }
-    // maximum of 1 national EID is allowed per signatory
-    var eids = ["se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "nl_idin", "verimi"];
-    return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
+    authenticationMethodsCanMix: function(authToView, authToSign, authToViewArchived) {
+      var intersect = function(as, bs) {
+        return as.filter(function (item) {
+          return bs.indexOf(item) > -1;
+        });
+      }
+      // maximum of 1 national EID is allowed per signatory
+      var eids = ["se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi"];
+      return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
     },
     setAuthenticationToView: function(a) {
         var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
@@ -1093,8 +1111,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.noBankIDAuthenticationToView()
         || this.noBankIDAuthenticationToViewArchived()
         || this.dkNemIDAuthenticationToSign()
-        || this.dkNemIDAuthenticationToView()
-        || this.dkNemIDAuthenticationToViewArchived()
+        || this.dkNemIDCPRAuthenticationToView()
+        || this.dkNemIDPIDAuthenticationToView()
+        || this.dkNemIDCVRAuthenticationToView()
+        || this.legacyDkNemIDAuthenticationToView()
+        || this.dkNemIDCPRAuthenticationToViewArchived()
+        || this.dkNemIDPIDAuthenticationToViewArchived()
+        || this.dkNemIDCVRAuthenticationToViewArchived()
+        || this.legacyDkNemIDAuthenticationToViewArchived()
         || this.fiTupasAuthenticationToSign()
         || this.fiTupasAuthenticationToView()
         || this.fiTupasAuthenticationToViewArchived();
@@ -1102,10 +1126,16 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     needsPersonalNumberFilledByAuthor: function() {
         return (this.seBankIDAuthenticationToView()
              || this.noBankIDAuthenticationToView()
-             || this.dkNemIDAuthenticationToView()
+             || this.dkNemIDCPRAuthenticationToView()
+             || this.dkNemIDPIDAuthenticationToView()
+             || this.dkNemIDCVRAuthenticationToView()
+             || this.legacyDkNemIDAuthenticationToView()
              || (this.views() && this.seBankIDAuthenticationToViewArchived())
              || (this.views() && this.noBankIDAuthenticationToViewArchived())
-             || (this.views() && this.dkNemIDAuthenticationToViewArchived())
+             || (this.views() && this.dkNemIDCPRAuthenticationToViewArchived())
+             || (this.views() && this.dkNemIDPIDAuthenticationToViewArchived())
+             || (this.views() && this.dkNemIDCVRAuthenticationToViewArchived())
+             || (this.views() && this.legacyDkNemIDAuthenticationToViewArchived())
              || (this.views() && this.fiTupasAuthenticationToViewArchived()));
     },
     ensureMobile: function() {

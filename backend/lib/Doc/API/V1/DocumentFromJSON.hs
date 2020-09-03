@@ -21,12 +21,15 @@ instance FromJSValue AuthenticationToViewMethod where
   fromJSValue = do
     j <- fromJSValue
     return $ case j of
-      Just "standard"  -> Just StandardAuthenticationToView
-      Just "se_bankid" -> Just SEBankIDAuthenticationToView
-      Just "no_bankid" -> Just NOBankIDAuthenticationToView
-      Just "dk_nemid"  -> Just DKNemIDAuthenticationToView
-      Just "fi_tupas"  -> Just FITupasAuthenticationToView
-      _                -> Nothing
+      Just "standard"     -> Just StandardAuthenticationToView
+      Just "se_bankid"    -> Just SEBankIDAuthenticationToView
+      Just "no_bankid"    -> Just NOBankIDAuthenticationToView
+      Just "dk_nemid"     -> Just LegacyDKNemIDAuthenticationToView
+      Just "dk_nemid_cpr" -> Just DKNemIDCPRAuthenticationToView
+      Just "dk_nemid_pid" -> Just DKNemIDPIDAuthenticationToView
+      Just "dk_nemid_cvr" -> Just DKNemIDCVRAuthenticationToView
+      Just "fi_tupas"     -> Just FITupasAuthenticationToView
+      _                   -> Nothing
 
 
 instance FromJSValue AuthenticationToSignMethod where

@@ -369,6 +369,20 @@ var SSNForDKNemIDValidation = exports.SSNForDKNemIDValidation = Validation.exten
     }
 });
 
+var CVRForDKNemIDValidation = exports.CVRForDKNemIDValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+           var fWithoutHyphens = t.replace(/-/g, "");
+           var validationFormula = cvr => {
+             [c1, c2, c3, c4, c5, c6, c7, c8] = cvr.split("").map(x => parseInt(x));
+             return (2*c1 + 7*c2 + 6*c3 + 5*c4 + 4*c5 + 3*c6 + 2*c7 + c8) % 11 == 0;
+           }
+           return /^([0-9]{8})$/i.test(fWithoutHyphens) && validationFormula(fWithoutHyphens);
+        },
+        message: "Empoyee ID number for Danish NemID must contain 8 digits, and pass CVR validation formula"
+    }
+});
+
 var SSNForFITupasValidation = exports.SSNForFITupasValidation = Validation.extend({
     defaults: {
         validates: function(t) {

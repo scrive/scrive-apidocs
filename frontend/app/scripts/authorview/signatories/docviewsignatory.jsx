@@ -487,8 +487,12 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (signatory.noBankIDAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewNOBankID;
-      } else if (signatory.dkNemIDAuthenticationToView()) {
-        return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (signatory.dkNemIDCPRAuthenticationToView() || signatory.legacyDkNemIDAuthenticationToView()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDCPR;
+      } else if (signatory.dkNemIDPIDAuthenticationToView()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDPID;
+      } else if (signatory.dkNemIDCVRAuthenticationToView()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDCVR;
       } else if (signatory.fiTupasAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewFITupas;
       } else if (signatory.smsPinAuthenticationToView()) {
@@ -508,8 +512,12 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (signatory.noBankIDAuthenticationToViewArchived()) {
         return localization.docview.signatory.authenticationToViewNOBankID;
-      } else if (signatory.dkNemIDAuthenticationToViewArchived()) {
-        return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (signatory.dkNemIDCPRAuthenticationToViewArchived() || signatory.legacyDkNemIDAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDCPR;
+      } else if (signatory.dkNemIDPIDAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDPID;
+      } else if (signatory.dkNemIDCVRAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewDKNemIDCVR;
       } else if (signatory.fiTupasAuthenticationToViewArchived()) {
         return localization.docview.signatory.authenticationToViewFITupas;
       } else if (signatory.smsPinAuthenticationToViewArchived()) {
@@ -580,7 +588,7 @@ var EmailModal = require("../../common/email_modal");
       var sig = this.props.signatory;
       switch (sig.authenticationToSign()) {
         case "dk_nemid":
-          return localization.eID.idName.nemId;
+          return localization.eID.idName.cpr;
         default:
           return localization.docsignview.personalNumberLabel;
       }

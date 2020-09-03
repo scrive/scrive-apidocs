@@ -418,7 +418,10 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewFromSMSPin   |
   ChangeAuthenticationToViewFromSEBankID |
   ChangeAuthenticationToViewFromNOBankID |
-  ChangeAuthenticationToViewFromDKNemID  |
+  ChangeAuthenticationToViewFromLegacyDKNemID |
+  ChangeAuthenticationToViewFromDKNemIDCPR  |
+  ChangeAuthenticationToViewFromDKNemIDPID  |
+  ChangeAuthenticationToViewFromDKNemIDCVR  |
   ChangeAuthenticationToViewFromFITupas  |
   ChangeAuthenticationToViewFromVerimi   |
   ChangeAuthenticationToViewFromIDIN     |
@@ -426,7 +429,10 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewToSMSPin     |
   ChangeAuthenticationToViewToSEBankID   |
   ChangeAuthenticationToViewToNOBankID   |
-  ChangeAuthenticationToViewToDKNemID    |
+  ChangeAuthenticationToViewToLegacyDKNemID   |
+  ChangeAuthenticationToViewToDKNemIDCPR|
+  ChangeAuthenticationToViewToDKNemIDPID|
+  ChangeAuthenticationToViewToDKNemIDCVR|
   ChangeAuthenticationToViewToFITupas    |
   ChangeAuthenticationToViewToVerimi     |
   ChangeAuthenticationToViewToIDIN       |
@@ -434,7 +440,10 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedFromSMSPin    |
   ChangeAuthenticationToViewArchivedFromSEBankID  |
   ChangeAuthenticationToViewArchivedFromNOBankID  |
-  ChangeAuthenticationToViewArchivedFromDKNemID   |
+  ChangeAuthenticationToViewArchivedFromLegacyDKNemID|
+  ChangeAuthenticationToViewArchivedFromDKNemIDCPR   |
+  ChangeAuthenticationToViewArchivedFromDKNemIDPID   |
+  ChangeAuthenticationToViewArchivedFromDKNemIDCVR   |
   ChangeAuthenticationToViewArchivedFromFITupas   |
   ChangeAuthenticationToViewArchivedFromVerimi    |
   ChangeAuthenticationToViewArchivedFromIDIN      |
@@ -442,7 +451,10 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedToSMSPin      |
   ChangeAuthenticationToViewArchivedToSEBankID    |
   ChangeAuthenticationToViewArchivedToNOBankID    |
-  ChangeAuthenticationToViewArchivedToDKNemID     |
+  ChangeAuthenticationToViewArchivedToLegacyDKNemID |
+  ChangeAuthenticationToViewArchivedToDKNemIDCPR     |
+  ChangeAuthenticationToViewArchivedToDKNemIDPID |
+  ChangeAuthenticationToViewArchivedToDKNemIDCVR |
   ChangeAuthenticationToViewArchivedToFITupas     |
   ChangeAuthenticationToViewArchivedToVerimi      |
   ChangeAuthenticationToViewArchivedToIDIN        |
@@ -964,39 +976,41 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewFromSMSPin          ) = toSQL (233 :: Int16)
   toSQL (Current ChangeAuthenticationToViewFromSEBankID        ) = toSQL (234 :: Int16)
   toSQL (Current ChangeAuthenticationToViewFromNOBankID        ) = toSQL (235 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewFromDKNemID         ) = toSQL (236 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewFromLegacyDKNemID   ) = toSQL (236 :: Int16)
   toSQL (Current ChangeAuthenticationToViewFromFITupas         ) = toSQL (237 :: Int16)
   toSQL (Current ChangeAuthenticationToViewFromVerimi          ) = toSQL (238 :: Int16)
   toSQL (Current ChangeAuthenticationToViewToStandard          ) = toSQL (239 :: Int16)
   toSQL (Current ChangeAuthenticationToViewToSMSPin            ) = toSQL (240 :: Int16)
   toSQL (Current ChangeAuthenticationToViewToSEBankID          ) = toSQL (241 :: Int16)
   toSQL (Current ChangeAuthenticationToViewToNOBankID          ) = toSQL (242 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewToDKNemID           ) = toSQL (243 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToLegacyDKNemID     ) = toSQL (243 :: Int16)
   toSQL (Current ChangeAuthenticationToViewToFITupas           ) = toSQL (244 :: Int16)
   toSQL (Current ChangeAuthenticationToViewToVerimi            ) = toSQL (245 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedFromStandard) = toSQL (246 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedFromSMSPin  ) = toSQL (247 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedFromSEBankID) = toSQL (248 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedFromNOBankID) = toSQL (249 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedFromDKNemID ) = toSQL (250 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedFromFITupas ) = toSQL (251 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedFromVerimi  ) = toSQL (252 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToStandard  ) = toSQL (253 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToSMSPin    ) = toSQL (254 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToSEBankID  ) = toSQL (255 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToNOBankID  ) = toSQL (256 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToDKNemID   ) = toSQL (257 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToFITupas   ) = toSQL (258 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToVerimi    ) = toSQL (259 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewFromIDIN            ) = toSQL (260 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewToIDIN              ) = toSQL (261 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedFromIDIN    ) = toSQL (262 :: Int16)
-  toSQL (Current ChangeAuthenticationToViewArchivedToIDIN      ) = toSQL (263 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignFromIDIN            ) = toSQL (264 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignToIDIN              ) = toSQL (265 :: Int16)
-  toSQL (Current UpdateSsnAfterAuthenticationToViewWithNets    ) = toSQL (266 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignFromFITupas         ) = toSQL (267 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignToFITupas           ) = toSQL (268 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromLegacyDKNemID) =
+    toSQL (250 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromFITupas) = toSQL (251 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromVerimi ) = toSQL (252 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToStandard ) = toSQL (253 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToSMSPin   ) = toSQL (254 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToSEBankID ) = toSQL (255 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToNOBankID ) = toSQL (256 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToLegacyDKNemID) =
+    toSQL (257 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToFITupas) = toSQL (258 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToVerimi ) = toSQL (259 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewFromIDIN         ) = toSQL (260 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToIDIN           ) = toSQL (261 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromIDIN ) = toSQL (262 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToIDIN   ) = toSQL (263 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromIDIN         ) = toSQL (264 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToIDIN           ) = toSQL (265 :: Int16)
+  toSQL (Current UpdateSsnAfterAuthenticationToViewWithNets ) = toSQL (266 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromFITupas      ) = toSQL (267 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToFITupas        ) = toSQL (268 :: Int16)
   toSQL (Current ChangeAuthenticationToSignFromOnfidoDocumentCheck) =
     toSQL (269 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToOnfidoDocumentCheck) = toSQL (270 :: Int16)
@@ -1004,7 +1018,18 @@ instance ToSQL EvidenceEventType where
     toSQL (271 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck) =
     toSQL (272 :: Int16)
-
+  toSQL (Current ChangeAuthenticationToViewFromDKNemIDCPR        ) = toSQL (273 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToDKNemIDCPR          ) = toSQL (274 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromDKNemIDCPR) = toSQL (275 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToDKNemIDCPR  ) = toSQL (276 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewFromDKNemIDPID        ) = toSQL (277 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToDKNemIDPID          ) = toSQL (278 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromDKNemIDPID) = toSQL (279 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToDKNemIDPID  ) = toSQL (280 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewFromDKNemIDCVR        ) = toSQL (281 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToDKNemIDCVR          ) = toSQL (282 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromDKNemIDCVR) = toSQL (283 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToDKNemIDCVR  ) = toSQL (284 :: Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -1288,28 +1313,28 @@ instance FromSQL EvidenceEventType where
       233 -> return (Current ChangeAuthenticationToViewFromSMSPin)
       234 -> return (Current ChangeAuthenticationToViewFromSEBankID)
       235 -> return (Current ChangeAuthenticationToViewFromNOBankID)
-      236 -> return (Current ChangeAuthenticationToViewFromDKNemID)
+      236 -> return (Current ChangeAuthenticationToViewFromLegacyDKNemID)
       237 -> return (Current ChangeAuthenticationToViewFromFITupas)
       238 -> return (Current ChangeAuthenticationToViewFromVerimi)
       239 -> return (Current ChangeAuthenticationToViewToStandard)
       240 -> return (Current ChangeAuthenticationToViewToSMSPin)
       241 -> return (Current ChangeAuthenticationToViewToSEBankID)
       242 -> return (Current ChangeAuthenticationToViewToNOBankID)
-      243 -> return (Current ChangeAuthenticationToViewToDKNemID)
+      243 -> return (Current ChangeAuthenticationToViewToLegacyDKNemID)
       244 -> return (Current ChangeAuthenticationToViewToFITupas)
       245 -> return (Current ChangeAuthenticationToViewToVerimi)
       246 -> return (Current ChangeAuthenticationToViewArchivedFromStandard)
       247 -> return (Current ChangeAuthenticationToViewArchivedFromSMSPin)
       248 -> return (Current ChangeAuthenticationToViewArchivedFromSEBankID)
       249 -> return (Current ChangeAuthenticationToViewArchivedFromNOBankID)
-      250 -> return (Current ChangeAuthenticationToViewArchivedFromDKNemID)
+      250 -> return (Current ChangeAuthenticationToViewArchivedFromLegacyDKNemID)
       251 -> return (Current ChangeAuthenticationToViewArchivedFromFITupas)
       252 -> return (Current ChangeAuthenticationToViewArchivedFromVerimi)
       253 -> return (Current ChangeAuthenticationToViewArchivedToStandard)
       254 -> return (Current ChangeAuthenticationToViewArchivedToSMSPin)
       255 -> return (Current ChangeAuthenticationToViewArchivedToSEBankID)
       256 -> return (Current ChangeAuthenticationToViewArchivedToNOBankID)
-      257 -> return (Current ChangeAuthenticationToViewArchivedToDKNemID)
+      257 -> return (Current ChangeAuthenticationToViewArchivedToLegacyDKNemID)
       258 -> return (Current ChangeAuthenticationToViewArchivedToFITupas)
       259 -> return (Current ChangeAuthenticationToViewArchivedToVerimi)
       260 -> return (Current ChangeAuthenticationToViewFromIDIN)
@@ -1325,7 +1350,19 @@ instance FromSQL EvidenceEventType where
       270 -> return (Current ChangeAuthenticationToSignToOnfidoDocumentCheck)
       271 -> return (Current ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck)
       272 -> return (Current ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 272)], reValue = n }
+      273 -> return (Current ChangeAuthenticationToViewFromDKNemIDCPR)
+      274 -> return (Current ChangeAuthenticationToViewToDKNemIDCPR)
+      275 -> return (Current ChangeAuthenticationToViewArchivedFromDKNemIDCPR)
+      276 -> return (Current ChangeAuthenticationToViewArchivedToDKNemIDCPR)
+      277 -> return (Current ChangeAuthenticationToViewFromDKNemIDPID)
+      278 -> return (Current ChangeAuthenticationToViewToDKNemIDPID)
+      279 -> return (Current ChangeAuthenticationToViewArchivedFromDKNemIDPID)
+      280 -> return (Current ChangeAuthenticationToViewArchivedToDKNemIDPID)
+      281 -> return (Current ChangeAuthenticationToViewFromDKNemIDCVR)
+      282 -> return (Current ChangeAuthenticationToViewToDKNemIDCVR)
+      283 -> return (Current ChangeAuthenticationToViewArchivedFromDKNemIDCVR)
+      284 -> return (Current ChangeAuthenticationToViewArchivedToDKNemIDCVR)
+      _   -> E.throwIO $ RangeError { reRange = [(1, 284)], reValue = n }
 
 
 authToViewChangeEvidence
@@ -1337,25 +1374,31 @@ authToViewChangeEvidence aFrom aTo =
 
 authToViewChangeFrom :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewChangeFrom a = case a of
-  StandardAuthenticationToView -> ChangeAuthenticationToViewFromStandard
-  SEBankIDAuthenticationToView -> ChangeAuthenticationToViewFromSEBankID
-  NOBankIDAuthenticationToView -> ChangeAuthenticationToViewFromNOBankID
-  DKNemIDAuthenticationToView  -> ChangeAuthenticationToViewFromDKNemID
-  SMSPinAuthenticationToView   -> ChangeAuthenticationToViewFromSMSPin
-  FITupasAuthenticationToView  -> ChangeAuthenticationToViewFromFITupas
-  VerimiAuthenticationToView   -> ChangeAuthenticationToViewFromVerimi
-  IDINAuthenticationToView     -> ChangeAuthenticationToViewFromIDIN
+  StandardAuthenticationToView      -> ChangeAuthenticationToViewFromStandard
+  SEBankIDAuthenticationToView      -> ChangeAuthenticationToViewFromSEBankID
+  NOBankIDAuthenticationToView      -> ChangeAuthenticationToViewFromNOBankID
+  LegacyDKNemIDAuthenticationToView -> ChangeAuthenticationToViewToLegacyDKNemID
+  DKNemIDCPRAuthenticationToView    -> ChangeAuthenticationToViewFromDKNemIDCPR
+  DKNemIDPIDAuthenticationToView    -> ChangeAuthenticationToViewFromDKNemIDPID
+  DKNemIDCVRAuthenticationToView    -> ChangeAuthenticationToViewFromDKNemIDCVR
+  SMSPinAuthenticationToView        -> ChangeAuthenticationToViewFromSMSPin
+  FITupasAuthenticationToView       -> ChangeAuthenticationToViewFromFITupas
+  VerimiAuthenticationToView        -> ChangeAuthenticationToViewFromVerimi
+  IDINAuthenticationToView          -> ChangeAuthenticationToViewFromIDIN
 
 authToViewChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewChangeTo a = case a of
-  StandardAuthenticationToView -> ChangeAuthenticationToViewToStandard
-  SEBankIDAuthenticationToView -> ChangeAuthenticationToViewToSEBankID
-  NOBankIDAuthenticationToView -> ChangeAuthenticationToViewToNOBankID
-  DKNemIDAuthenticationToView  -> ChangeAuthenticationToViewToDKNemID
-  SMSPinAuthenticationToView   -> ChangeAuthenticationToViewToSMSPin
-  FITupasAuthenticationToView  -> ChangeAuthenticationToViewToFITupas
-  VerimiAuthenticationToView   -> ChangeAuthenticationToViewToVerimi
-  IDINAuthenticationToView     -> ChangeAuthenticationToViewToIDIN
+  StandardAuthenticationToView      -> ChangeAuthenticationToViewToStandard
+  SEBankIDAuthenticationToView      -> ChangeAuthenticationToViewToSEBankID
+  NOBankIDAuthenticationToView      -> ChangeAuthenticationToViewToNOBankID
+  LegacyDKNemIDAuthenticationToView -> ChangeAuthenticationToViewToLegacyDKNemID
+  DKNemIDCPRAuthenticationToView    -> ChangeAuthenticationToViewToDKNemIDCPR
+  DKNemIDPIDAuthenticationToView    -> ChangeAuthenticationToViewToDKNemIDPID
+  DKNemIDCVRAuthenticationToView    -> ChangeAuthenticationToViewToDKNemIDCVR
+  SMSPinAuthenticationToView        -> ChangeAuthenticationToViewToSMSPin
+  FITupasAuthenticationToView       -> ChangeAuthenticationToViewToFITupas
+  VerimiAuthenticationToView        -> ChangeAuthenticationToViewToVerimi
+  IDINAuthenticationToView          -> ChangeAuthenticationToViewToIDIN
 
 authToViewArchivedChangeEvidence
   :: AuthenticationToViewMethod
@@ -1370,22 +1413,29 @@ authToViewArchivedChangeFrom a = case a of
   StandardAuthenticationToView -> ChangeAuthenticationToViewArchivedFromStandard
   SEBankIDAuthenticationToView -> ChangeAuthenticationToViewArchivedFromSEBankID
   NOBankIDAuthenticationToView -> ChangeAuthenticationToViewArchivedFromNOBankID
-  DKNemIDAuthenticationToView  -> ChangeAuthenticationToViewArchivedFromDKNemID
-  SMSPinAuthenticationToView   -> ChangeAuthenticationToViewArchivedFromSMSPin
-  FITupasAuthenticationToView  -> ChangeAuthenticationToViewArchivedFromFITupas
-  VerimiAuthenticationToView   -> ChangeAuthenticationToViewArchivedFromVerimi
-  IDINAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromIDIN
+  LegacyDKNemIDAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedFromLegacyDKNemID
+  DKNemIDCPRAuthenticationToView -> ChangeAuthenticationToViewArchivedFromDKNemIDCPR
+  DKNemIDPIDAuthenticationToView -> ChangeAuthenticationToViewArchivedFromDKNemIDPID
+  DKNemIDCVRAuthenticationToView -> ChangeAuthenticationToViewArchivedFromDKNemIDCVR
+  SMSPinAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromSMSPin
+  FITupasAuthenticationToView    -> ChangeAuthenticationToViewArchivedFromFITupas
+  VerimiAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromVerimi
+  IDINAuthenticationToView       -> ChangeAuthenticationToViewArchivedFromIDIN
 
 authToViewArchivedChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewArchivedChangeTo a = case a of
-  StandardAuthenticationToView -> ChangeAuthenticationToViewArchivedToStandard
-  SEBankIDAuthenticationToView -> ChangeAuthenticationToViewArchivedToSEBankID
-  NOBankIDAuthenticationToView -> ChangeAuthenticationToViewArchivedToNOBankID
-  DKNemIDAuthenticationToView  -> ChangeAuthenticationToViewArchivedToDKNemID
-  SMSPinAuthenticationToView   -> ChangeAuthenticationToViewArchivedToSMSPin
-  FITupasAuthenticationToView  -> ChangeAuthenticationToViewArchivedToFITupas
-  VerimiAuthenticationToView   -> ChangeAuthenticationToViewArchivedToVerimi
-  IDINAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromIDIN
+  StandardAuthenticationToView      -> ChangeAuthenticationToViewArchivedToStandard
+  SEBankIDAuthenticationToView      -> ChangeAuthenticationToViewArchivedToSEBankID
+  NOBankIDAuthenticationToView      -> ChangeAuthenticationToViewArchivedToNOBankID
+  LegacyDKNemIDAuthenticationToView -> ChangeAuthenticationToViewArchivedToLegacyDKNemID
+  DKNemIDCPRAuthenticationToView    -> ChangeAuthenticationToViewArchivedToDKNemIDCPR
+  DKNemIDPIDAuthenticationToView    -> ChangeAuthenticationToViewArchivedToDKNemIDPID
+  DKNemIDCVRAuthenticationToView    -> ChangeAuthenticationToViewArchivedToDKNemIDCVR
+  SMSPinAuthenticationToView        -> ChangeAuthenticationToViewArchivedToSMSPin
+  FITupasAuthenticationToView       -> ChangeAuthenticationToViewArchivedToFITupas
+  VerimiAuthenticationToView        -> ChangeAuthenticationToViewArchivedToVerimi
+  IDINAuthenticationToView          -> ChangeAuthenticationToViewArchivedFromIDIN
 
 authToSignChangeEvidence
   :: AuthenticationToSignMethod

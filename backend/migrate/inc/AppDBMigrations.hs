@@ -282,4 +282,5 @@ kontraMigrations =
   , featureFlagsAddIntegrationsFeatures
   , userGroupSettingsAddPadesCredentialsLabel
   , addMetaDataToInstanceTable
+  , featureFlagsRenameDKNemIDToViewAndAddPIDAndCVRVersion
   ]

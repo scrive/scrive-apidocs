@@ -165,7 +165,9 @@ var Subscription = Backbone.Model.extend({
         can_use_mass_sendout: ff.canUseMassSendout,
         can_use_sms_invitations: ff.canUseSMSInvitations,
         can_use_sms_confirmations: ff.canUseSMSConfirmations,
-        can_use_dk_authentication_to_view: ff.canUseDKAuthenticationToView,
+        can_use_dk_cpr_authentication_to_view: ff.canUseDKCPRAuthenticationToView,
+        can_use_dk_pid_authentication_to_view: ff.canUseDKPIDAuthenticationToView,
+        can_use_dk_cvr_authentication_to_view: ff.canUseDKCVRAuthenticationToView,
         can_use_dk_authentication_to_sign: ff.canUseDKAuthenticationToSign,
         can_use_fi_authentication_to_view: ff.canUseFIAuthenticationToView,
         can_use_fi_authentication_to_sign: ff.canUseFIAuthenticationToSign,
@@ -289,7 +291,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_mass_sendout": true,
     "can_use_sms_invitations": true,
     "can_use_sms_confirmations": true,
-    "can_use_dk_authentication_to_view": true,
+    "can_use_dk_cpr_authentication_to_view": true,
+    "can_use_dk_pid_authentication_to_view": true,
+    "can_use_dk_cvr_authentication_to_view": true,
     "can_use_dk_authentication_to_sign": true,
     "can_use_fi_authentication_to_view": true,
     "can_use_fi_authentication_to_sign": true,
@@ -337,8 +341,14 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   canUseSMSConfirmations: function () {
      return this.get("can_use_sms_confirmations");
   },
-  canUseDKAuthenticationToView: function () {
-     return this.get("can_use_dk_authentication_to_view");
+  canUseDKCPRAuthenticationToView: function () {
+     return this.get("can_use_dk_cpr_authentication_to_view");
+  },
+  canUseDKPIDAuthenticationToView: function () {
+     return this.get("can_use_dk_pid_authentication_to_view");
+  },
+  canUseDKCVRAuthenticationToView: function () {
+     return this.get("can_use_dk_cvr_authentication_to_view");
   },
   canUseDKAuthenticationToSign: function () {
      return this.get("can_use_dk_authentication_to_sign");
@@ -416,8 +426,12 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "se_bankid";
     else if (this.canUseNOAuthenticationToView())
       return "no_bankid";
-    else if (this.canUseDKAuthenticationToView())
-      return "dk_bankid";
+    else if (this.canUseDKCPRAuthenticationToView())
+      return "dk_nemid_cpr";
+    else if (this.canUseDKPIDAuthenticationToView())
+      return "dk_nemid_pid";
+    else if (this.canUseDKCVRAuthenticationToView())
+      return "dk_nemid_cvr";
     else if (this.canUseFIAuthenticationToView())
       return "fi_tupas";
     else if (this.canUseSMSPinAuthenticationToView())
@@ -473,7 +487,10 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "none";
   },
   canUseNonstandardAuthenticationToView: function () {
-    return this.canUseDKAuthenticationToView() ||
+    return this.canUseDKCPRAuthenticationToView() ||
+      this.canUseDKCPRAuthenticationToView() ||
+      this.canUseDKPIDAuthenticationToView() ||
+      this.canUseDKCVRAuthenticationToView() ||
       this.canUseNOAuthenticationToView() ||
       this.canUseSEAuthenticationToView() ||
       this.canUseFIAuthenticationToView() ||
@@ -499,7 +516,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_mass_sendout: args.can_use_mass_sendout,
       can_use_sms_invitations: args.can_use_sms_invitations,
       can_use_sms_confirmations: args.can_use_sms_confirmations,
-      can_use_dk_authentication_to_view: args.can_use_dk_authentication_to_view,
+      can_use_dk_cpr_authentication_to_view: args.can_use_dk_cpr_authentication_to_view,
+      can_use_dk_pid_authentication_to_view: args.can_use_dk_pid_authentication_to_view,
       can_use_dk_authentication_to_sign: args.can_use_dk_authentication_to_sign,
       can_use_fi_authentication_to_view: args.can_use_fi_authentication_to_view,
       can_use_fi_authentication_to_sign: args.can_use_fi_authentication_to_sign,

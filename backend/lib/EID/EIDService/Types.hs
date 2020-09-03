@@ -320,7 +320,7 @@ instance FromJSON a => FromJSON (EIDServiceTransactionResponse a) where
     tid      <- o .: "id"
     provider <- o .: "provider"
     status   <- o .: "status"
-    mcd      <- parseJSON outer <|> return Nothing
+    mcd      <- parseJSON outer <|> pure Nothing
     return EIDServiceTransactionResponse { estRespID             = tid
                                          , estRespProvider       = provider
                                          , estRespStatus         = status
@@ -355,8 +355,9 @@ data EIDServiceNLIDINAuthentication = EIDServiceNLIDINAuthentication
 
 data EIDServiceDKNemIDAuthentication = EIDServiceDKNemIDAuthentication
   { eidServiceNemIDInternalProvider :: EIDServiceDKNemIDInternalProvider
+  , eidServiceNemIDSignatoryPersonalOrCVRNumber :: Text
   , eidServiceNemIDSignatoryName    :: T.Text
-  , eidServiceNemIDDateOfBirth      :: T.Text
+  , eidServiceNemIDDateOfBirth      :: Maybe T.Text
   , eidServiceNemIDCertificate      :: ByteString
   } deriving (Eq, Ord, Show)
 
@@ -440,16 +441,18 @@ data EIDServiceSEBankIDSignature = EIDServiceSEBankIDSignature
 --TODO: AUTH/SIG TYPES ABOVE ARE REMOVED AND THE TRANSACTION/COMPLETION DATA USED DIRECTLY
 
 data EIDServiceDKNemIDInternalProvider
-  = EIDServiceNemIDKeyCard
-  | EIDServiceNemIDKeyFile
+  = EIDServiceNemIDPersonalKeyCard
+  | EIDServiceNemIDEmployeeKeyFile
+  | EIDServiceNemIDEmployeeKeyCard
   deriving (Eq, Ord, Show)
 
 unsafeEIDServiceDKNemIDInternalProviderFromInt16
   :: Int16 -> EIDServiceDKNemIDInternalProvider
 unsafeEIDServiceDKNemIDInternalProviderFromInt16 v = case v of
-  1 -> EIDServiceNemIDKeyCard
-  2 -> EIDServiceNemIDKeyFile
-  _ -> throw $ RangeError { reRange = [(1, 2)], reValue = v }
+  1 -> EIDServiceNemIDPersonalKeyCard
+  2 -> EIDServiceNemIDEmployeeKeyFile
+  3 -> EIDServiceNemIDEmployeeKeyCard
+  _ -> throw $ RangeError { reRange = [(1, 3)], reValue = v }
 
 instance PQFormat EIDServiceDKNemIDInternalProvider where
   pqFormat = pqFormat @Int16
@@ -459,14 +462,16 @@ instance FromSQL EIDServiceDKNemIDInternalProvider where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1 -> return EIDServiceNemIDKeyCard
-      2 -> return EIDServiceNemIDKeyFile
-      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
+      1 -> return EIDServiceNemIDPersonalKeyCard
+      2 -> return EIDServiceNemIDEmployeeKeyFile
+      3 -> return EIDServiceNemIDEmployeeKeyCard
+      _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL EIDServiceDKNemIDInternalProvider where
   type PQDest EIDServiceDKNemIDInternalProvider = PQDest Int16
-  toSQL EIDServiceNemIDKeyCard = toSQL (1 :: Int16)
-  toSQL EIDServiceNemIDKeyFile = toSQL (2 :: Int16)
+  toSQL EIDServiceNemIDPersonalKeyCard = toSQL (1 :: Int16)
+  toSQL EIDServiceNemIDEmployeeKeyFile = toSQL (2 :: Int16)
+  toSQL EIDServiceNemIDEmployeeKeyCard = toSQL (3 :: Int16)
 
 data EIDServiceNOBankIDInternalProvider
   = EIDServiceNOBankIDStandard

@@ -28,8 +28,26 @@ var link = link;
     isNorwegian: function () {
       return false;
     },
-    isDanish: function () {
-      return true;
+    isCPR: function() {
+      var sig = this.doc().currentSignatory();
+      return sig.legacyDkNemIDAuthenticationToView()
+             || sig.dkNemIDCPRAuthenticationToView()
+             || sig.legacyDkNemIDAuthenticationToViewArchived()
+             || sig.dkNemIDCPRAuthenticationToViewArchived()
+    },
+    isPID: function() {
+      var sig = this.doc().currentSignatory();
+      return sig.dkNemIDPIDAuthenticationToView() || sig.dkNemIDPIDAuthenticationToViewArchived()
+    },
+    isCVR: function() {
+      var sig = this.doc().currentSignatory();
+      return sig.dkNemIDCVRAuthenticationToView() || sig.dkNemIDCVRAuthenticationToViewArchived();
+    },
+    isDanishPersonal: function () {
+      return this.isCPR() || this.isPID();
+    },
+    isDanishEmployee: function () {
+      return this.isCVR();
     },
     isFinnish: function () {
       return false;
@@ -68,12 +86,25 @@ var link = link;
     transactionAccessUrl: function () {
       return this.get("transactionAccessUrl");
     },
+    nemIDMethod: function () {
+      if (this.isCPR()) {
+        return "dk_nemid_cpr";
+      }
+      if (this.isPID()) {
+        return "dk_nemid_pid";
+      }
+      if (this.isCVR()) {
+        return "dk_nemid_cvr";
+      }
+      return "dk_nemid_pid";
+    },
     startTransaction: function () {
       var self = this;
       new Submit({
         url: "/eid-service/start/nemid/view/" + this.doc().documentid() + "/" + this.siglinkid(),
         method: "POST",
         redirect: window.btoa(encodeURIComponent(window.location)),
+        nemid_method: this.nemIDMethod(),
         ajax: true,
         ajaxsuccess: function (resp) {
           self.set({"transactionAccessUrl": resp.accessUrl}, {silent: true});
