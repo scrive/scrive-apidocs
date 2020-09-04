@@ -18,7 +18,6 @@ password = "password123"
 
 documents = {
   "doc1": "",
-  "doc2": ""
 }
 users = {
   "author": {"id_type": "email", "id": author_email},
@@ -50,13 +49,13 @@ stages:
       expect:
         signed-by:
           users: [user]
-          documents: [doc1, doc2]
+          documents: [doc1]
   - author:
       actions: []
       expect:
         signed-by:
           users: [author]
-          documents: [doc1, doc2]
+          documents: [doc1]
 """
 
 resp = s.post(flow_path + "/templates", json={"name": "Fluffy template", "process": process})
@@ -66,10 +65,12 @@ template_id = resp.json()['id']
 resp = s.post(flow_path + "/templates/" + template_id + "/commit")
 print_response("Commit template", resp)
 
-key_values = {
-  "documents": documents,
-  "users": users,
-  "messages": {}
+start_json = {
+  "template_parameters": {
+    "documents": documents,
+    "users": users,
+    "messages": {}
+  }
 }
-resp = s.post(flow_path + "/templates/" + template_id + "/start", json=key_values)
+resp = s.post(flow_path + "/templates/" + template_id + "/start", json=start_json)
 print_response("Start template", resp)

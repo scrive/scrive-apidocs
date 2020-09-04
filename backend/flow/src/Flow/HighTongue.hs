@@ -36,6 +36,7 @@ data HighTongue = HighTongue
     }
   deriving (Show, Eq, Generic)
 
+-- TODO rename this to something nicer, e.g. FlowDsl
 instance FromJSON HighTongue where
   parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = trainCase }
 

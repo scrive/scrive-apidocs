@@ -1,14 +1,18 @@
 openapi: 3.0.0
 info:
+  title: Scrive Flow API
+  version: "0.9.2"
   description: |
-    This is an API for configuring and managing Flow processes
-  version: "0.9.1"
-  title: Flow API
+    This is a specification of an API for configuring and managing Scrive Flow processes.
+
+    Here are some of the additional documentation resources that should be available if you're viewing this document through a Scrive service.
+    * [API guide](/experimental/flow/documentation/flow-api-guide.md), a short introduction that walks you through setting up a simple Flow process.
+    * [API changelog](/experimental/flow/documentation/changelog.md), a list of past changes to the specification.
+    * [Planned API changes](/experimental/flow/documentation/flow-api-changes.md), a list of planned changes to the specification.
+    * [Swagger UI](/experimental/flow/documentation/swagger-ui.html), an alternative presentation of the specification itself.
+    * [ReDoc UI](/experimental/flow/documentation/index.html), the default presentation of the specification itself.
   contact:
-    email: marek.bernat@scrive.com
-  license:
-    name: Apache 2.0
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+    email: support@scrive.com
 tags:
   - name: configuration
     description: Calls used to configure Flow processes.
@@ -396,6 +400,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /documentation:
+    get:
+      tags:
+        - general
+      summary: Get API documentation
+      operationId: getDocs
+      description: |
+        Returns a presentation of this API specification and links to
+        related documentation.
+      responses:
+        200:
+          description: Flow API documentation
+          content:
+            application/html:
+              schema:
+                type: string
 
   /version:
     get:
@@ -826,33 +847,6 @@ components:
         last_event:
           $ref: "#/components/schemas/InstanceLastEventTimestamp"
 
-    InstanceEvent:
-      type: object
-      required:
-        - action
-        - user
-        - document
-        - timestamp
-      properties:
-        action:
-          $ref: "#/components/schemas/InstanceEventAction"
-        user:
-          $ref: "#/components/schemas/RichUserId"
-        document:
-          $ref: "#/components/schemas/DocumentId"
-        timestamp:
-          type: string
-          format: date-time
-          example: "1997-01-01T12:00:27.87.00000Z"
-
-    InstanceEventAction:
-      type: string
-      enum:
-        - approval
-        - rejection
-        - signature
-        - view
-
     InstanceState:
       description: |
         Provides a complete overview of a Flow instance.
@@ -866,19 +860,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/InstanceAuthorAction"
-
-    InstanceStage:
-      type: object
-      required:
-        - stage
-        - events
-      properties:
-        stage:
-          type: string
-        events:
-          type: array
-          items:
-            $ref: "#/components/schemas/InstanceEvent"
 
     InstanceViewResponse:
       description: |

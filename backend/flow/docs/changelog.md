@@ -1,5 +1,12 @@
 # API specification changelog
 
+## 0.9.2
+
+* Add `GET /documentation` endpoint that presents the API specification.
+* Add a more detailed specification description.
+* Fix specification metadata.
+* Remove unused schemas `InstanceStage`, `InstanceEvent`, `InstanceEventAction`.
+
 ## 0.9.1
 
 * Add `GET /version` endpoint that presents Flow service version information.

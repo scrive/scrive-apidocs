@@ -9,8 +9,11 @@ import Servant.API
 
 import Flow.Routes.Api
 import Flow.Routes.Pages
+import Flow.Routes.Types
 
-type Routes = FlowApi :<|> FlowPages
+type Spec = AddFlowPrefix ("documentation" :> Raw)
+
+type Routes = FlowApi :<|> FlowPages :<|> Spec
 
 routesProxy :: Proxy Routes
 routesProxy = Proxy

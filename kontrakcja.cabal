@@ -412,6 +412,7 @@ Library
                  , Flow.Server.Api.Templates.Start
                  , Flow.Server.AuthHandler
                  , Flow.Server.Cookies
+                 , Flow.Server.DocFiles
                  , Flow.Server.Pages
                  , Flow.Server.Types
                  , Flow.Server.Utils
@@ -657,6 +658,7 @@ Library
                , kontrakcja-appdir
                , authentication
                , flow
+               , file-embed
                , AES
                , DRBG
                , Decimal
@@ -780,6 +782,7 @@ Library
                , vector
                , warp
                , wai
+               , wai-app-static
                , wai-log
                , x509
                , xml-conduit

@@ -9,24 +9,30 @@ import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Data
 import Log.Monad (getLoggerIO)
 import Network.Wai
+import Network.Wai.Application.Static
 import Network.Wai.Handler.Warp
 import Network.Wai.Log (mkApplicationLogger)
 import Network.Wai.Log.Internal
 import Network.Wai.Middleware.Servant.Errors (errorMw)
 import Servant
 import Servant.Server.Experimental.Auth
+import WaiAppStatic.Types
 
 import EventStream.Kinesis
 import Flow.OrphanInstances ()
 import Flow.Routes
 import Flow.Server.Api
 import Flow.Server.AuthHandler
+import Flow.Server.DocFiles
 import Flow.Server.Pages
 import Flow.Server.Types
 import Log.Configuration (LogRunner(LogRunner, withLogger))
 
 server :: ServerT Routes AppM
-server = api :<|> pages
+server = api :<|> pages :<|> serveDirectoryWith specSettings
+  where
+    defaultSpecSettings = embeddedSettings docFiles
+    specSettings        = defaultSpecSettings { ssIndices = [unsafeToPiece "index.html"] }
 
 naturalFlow :: RunLogger -> FlowConfiguration -> AppM a -> Handler a
 naturalFlow runLogger FlowConfiguration {..} flowApp =
