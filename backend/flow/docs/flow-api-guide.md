@@ -10,7 +10,7 @@ This is a very young project, so expect the API to evolve and more features to b
 
 ### API specification
 
-The Flow API specification is available at [SwaggerHub](https://app.swaggerhub.com/apis-docs/scrive/Flow/0.8.0#/). You should keep it open and refer to it whenever something in this guide is unclear.
+The Flow API specification is available at [SwaggerHub](https://app.swaggerhub.com/apis/scrive/Flow/0.9.1). You should keep it open and refer to it whenever something in this guide is unclear.
 
 ### Relation to the Scrive Document API
 
