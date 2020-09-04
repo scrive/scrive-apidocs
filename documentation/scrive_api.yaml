@@ -806,7 +806,7 @@ info:
   contact:
     name: Scrive AB
     url: https://scrive.com/
-    email: info@scrive.com
+    email: support@scrive.com
   termsOfService: |
     In using this API you agree to be bound by the Scrive Terms of Service,
     available at [http://scrive.com/en/terms](http://scrive.com/en/terms)
