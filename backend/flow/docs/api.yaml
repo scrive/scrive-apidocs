@@ -437,7 +437,7 @@ paths:
                 $ref: "#/components/schemas/VersionResponse"
 
 servers:
-  - url: "https://scrive.com/experimental/flow"
+  - url: "/experimental/flow"
 components:
   parameters:
     TemplateId:
