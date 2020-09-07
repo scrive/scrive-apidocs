@@ -32,7 +32,7 @@ import Util.HasSomeUserInfo
 
 rejectedDocumentProcess :: Process
 rejectedDocumentProcess = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - author-stage:
       actions: []
@@ -115,7 +115,7 @@ testRejectedDocumentCausesProcessFailure = do
 
 reusedDocumentProcess :: Process
 reusedDocumentProcess = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - initial:
       actions: []
@@ -156,3 +156,63 @@ testInstanceFailureReusedDocument = do
     assertLeft "creating a second instance with the same document"
       $ createInstance ac "name" reusedDocumentProcess mapping
   assertIsJsonError clientError
+
+notificationsRequiredProcess :: Process
+notificationsRequiredProcess = Process [r|
+dsl-version: 0.2.0
+stages:
+  - initial:
+      actions: []
+      expect:
+        signed-by:
+          users: [user1]
+          documents: [doc1]
+      actions:
+        - notify:
+            users: [user1]
+            methods:
+              email: msg1
+              sms: msg2
+|]
+
+testInstanceNotificationMethodFailure :: TestEnv ()
+testInstanceNotificationMethodFailure = do
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
+  let ac@ApiClient {..} = mkApiClient (Left oauth)
+
+  doc1 <- addRandomDocument (rdaDefault user)
+    { rdaStatuses    = OneOf [Preparation]
+    , rdaTypes       = OneOf [Signable]
+    , rdaSignatories = let signatory = OneOf
+                             [ [ RSC_IsSignatory
+                               , RSC_DeliveryMethodIs EmailDelivery
+                               , RSC_AuthToViewIs StandardAuthenticationToView
+                               , RSC_AuthToSignIs StandardAuthenticationToSign
+                               ]
+                             ]
+                       in  OneOf [[signatory]]
+    }
+  commit
+
+  let mappingNoPhoneNum = InstanceKeyValues documents users messages
+        where
+          documents = Map.fromList [("doc1", documentid doc1)]
+          users     = Map.fromList [("user1", UserId $ user ^. #id)]
+          messages  = Map.fromList
+            [("msg1", "Foo bar email message"), ("msg3", "Foo bar sms message")]
+
+  assertIsJsonError =<< assertLeft
+    "creating an instance where a user does not have (but needs) a phone num"
+    (createInstance ac "name" notificationsRequiredProcess mappingNoPhoneNum)
+
+  let mappingNoEmail = InstanceKeyValues documents users messages
+        where
+          documents = Map.fromList [("doc1", documentid doc1)]
+          users     = Map.fromList [("user1", PhoneNumber $ getMobile user)]
+          messages  = Map.fromList
+            [("msg1", "Foo bar email message"), ("msg3", "Foo bar sms message")]
+
+  assertIsJsonError =<< assertLeft
+    "creating an instance where a user does not have (but needs) a phone num"
+    (createInstance ac "name" notificationsRequiredProcess mappingNoEmail)

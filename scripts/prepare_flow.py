@@ -23,6 +23,9 @@ users = {
   "author": {"id_type": "email", "id": author_email},
   "user": {"id_type": "email", "id": "foo@bar.com"}
 }
+messages = {
+  "some-message": "hello"
+}
 
 def print_response(msg, resp):
   print(msg + " response:")
@@ -45,7 +48,11 @@ process = """
 dsl-version: "0.1.0"
 stages:
   - user:
-      actions: []
+      actions:
+        - notify:
+            users: [user, author]
+            methods:
+              email: some-message
       expect:
         signed-by:
           users: [user]
@@ -69,7 +76,7 @@ start_json = {
   "template_parameters": {
     "documents": documents,
     "users": users,
-    "messages": {}
+    "messages": messages
   }
 }
 resp = s.post(flow_path + "/templates/" + template_id + "/start", json=start_json)

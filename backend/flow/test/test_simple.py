@@ -9,7 +9,7 @@ flow_path = base_url + "/experimental/flow"
 
 def test_one_document_process():
     process = """
-    dsl-version: "0.1.0"
+    dsl-version: "0.2.0"
     stages:
       - user:
           actions: []

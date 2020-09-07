@@ -18,13 +18,14 @@ tests =
 
 process :: Text
 process = [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - view:
       actions:
         - notify:
             users: [user3]
-            message: get-data
+            methods:
+              email: get-data
       expect:
         viewed-by:
           users: [user1, user2]

@@ -18,13 +18,14 @@ import Flow.OrphanTestInstances ()
 
 process :: Text
 process = [r|
-  dsl-version: "0.1.0"
+  dsl-version: "0.2.0"
   stages:
     - initial:
         actions:
           - notify:
               users: [user1]
-              message: get-data
+              methods:
+                email: get-data
         expect:
           approved-by:
             users: [approver1]
@@ -33,7 +34,9 @@ process = [r|
         actions:
           - notify:
               users: [user1, user2]
-              message: get-data2
+              methods:
+                email: get-data2
+                sms: get-data3
         expect:
           approved-by:
             users: [approver2]
@@ -123,8 +126,12 @@ testFullTransition = do
     event2 = EventInfo Approval "approver1" "doc2"
     event3 :: EventInfo
     event3 = EventInfo Approval "approver1" "doc3"
+    emailMessage :: Maybe MessageName
+    emailMessage = Just "get-data2"
+    smsMessage :: Maybe MessageName
+    smsMessage = Just "get-data3"
     action :: LowAction
-    action = Action . Notify ["user1", "user2"] $ "get-data2"
+    action = Action . Notify ["user1", "user2"] $ Methods emailMessage smsMessage
 
 testFullTransitionDifferentOrder :: Assertion
 testFullTransitionDifferentOrder = do
@@ -147,8 +154,12 @@ testFullTransitionDifferentOrder = do
     event2 = EventInfo Approval "approver1" "doc2"
     event3 :: EventInfo
     event3 = EventInfo Approval "approver1" "doc3"
+    emailMessage :: Maybe MessageName
+    emailMessage = Just "get-data2"
+    smsMessage :: Maybe MessageName
+    smsMessage = Just "get-data3"
     action :: LowAction
-    action = Action . Notify ["user1", "user2"] $ "get-data2"
+    action = Action . Notify ["user1", "user2"] $ Methods emailMessage smsMessage
 
 testFullTransitionMultipleStates :: Assertion
 testFullTransitionMultipleStates = do
@@ -178,8 +189,12 @@ testFullTransitionMultipleStates = do
     event2 = EventInfo Approval "approver1" "doc2"
     event3 :: EventInfo
     event3 = EventInfo Approval "approver1" "doc3"
+    emailMessage :: Maybe MessageName
+    emailMessage = Just "get-data2"
+    smsMessage :: Maybe MessageName
+    smsMessage = Just "get-data3"
     action :: LowAction
-    action = Action . Notify ["user1", "user2"] $ "get-data2"
+    action = Action . Notify ["user1", "user2"] $ Methods emailMessage smsMessage
     event4 :: EventInfo
     event4 = EventInfo Approval "approver2" "doc5"
 

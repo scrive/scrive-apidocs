@@ -1,5 +1,6 @@
 module Flow.HighTongue
     ( Expect(..)
+    , SystemActionMethods(..)
     , SystemAction(..)
     , HighTongue(..)
     , Stage(..)
@@ -89,10 +90,32 @@ parseSetExpect = withObject "expect"
         "Expected one of the keys `approved-by`, `received-data`, `signed-by`, `viewed-by`"
         v
 
+aesonOptions :: Options
+aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+
+data SystemActionMethods
+    = Methods
+        { email :: Maybe MessageName
+        , sms :: Maybe MessageName
+        }
+  deriving (Show, Eq, Ord, Generic)
+
+instance FromJSON SystemActionMethods where
+  parseJSON outer = do
+    sam <- genericParseJSON aesonOptions outer
+    if isNothing (email sam) && isNothing (sms sam)
+      then typeMismatch
+        "both notification methods cannot be null, you must choose at least one"
+        outer
+      else pure sam
+
+instance ToJSON SystemActionMethods where
+  toEncoding = genericToEncoding aesonOptions
+
 data SystemAction
     = Notify
-        { actionUsers :: [UserName]
-        , actionMessage :: MessageName
+        { notifyUsers :: [UserName]
+        , notifyMethods :: SystemActionMethods
         }
   deriving (Show, Eq, Ord, Generic)
 
@@ -101,8 +124,7 @@ instance ToJSON SystemAction where
     object ["notify" .= object ["users" .= toJSON users, "message" .= toJSON message]]
 
 parseNotify :: Value -> Parser SystemAction
-parseNotify = withObject "notify" $ \o -> do
-  Notify <$> o .: "users" <*> o .: "message"
+parseNotify = withObject "notify" $ \o -> Notify <$> o .: "users" <*> o .: "methods"
 
 instance FromJSON SystemAction where
   parseJSON = withObject "action" $ \o -> do
@@ -142,7 +164,7 @@ instance FromJSON DSLVersion where
     pure (DSLVersion t)
 
 supportedVersions :: [DSLVersion]
-supportedVersions = [DSLVersion "0.1.0"]
+supportedVersions = [DSLVersion "0.2.0"]
 
 data ValidationError = ValidationError
     { line_number :: Word32
@@ -151,15 +173,11 @@ data ValidationError = ValidationError
     }
   deriving (Eq, Generic, Show)
 
-aesonOptions :: Options
-aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
-
 instance FromJSON ValidationError where
   parseJSON = genericParseJSON aesonOptions
 
 instance ToJSON ValidationError where
   toEncoding = genericToEncoding aesonOptions
-
 
 decodeHighTongue :: Process -> Either ValidationError HighTongue
 decodeHighTongue process =

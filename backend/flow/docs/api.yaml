@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.9.2"
+  version: "0.10.0"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -622,7 +622,7 @@ components:
 
         See FlowDslSpec for the specification of the DSL.
       example: |
-        dsl-version: "0.1.0"
+        dsl-version: "0.2.0"
         stages: ...
 
     FlowDslSpec:
@@ -638,7 +638,7 @@ components:
         dsl-version:
           type: string
           description: |
-            Version of the Flow DSL used. Currently the only supported version is "1".
+            Version of the Flow DSL used. Currently the only supported version is "0.2.0".
         stages:
           type: array
           items:
@@ -648,13 +648,14 @@ components:
             additionalProperties:
               $ref: "#/components/schemas/FlowDslStage"
       example:
-        dsl-version: "0.1.0"
+        dsl-version: "0.3.0"
         stages:
           - applicant1-to-sign:
               actions:
                 - notify:
                     users: [applicant1]
-                    message: signing
+                    methods:
+                      email: signing
               expect:
                 signed-by:
                   users: [applicant1]
@@ -666,7 +667,8 @@ components:
               actions:
                 - notify:
                     users: [applicant2]
-                    message: signing
+                    methods:
+                      email: signing
               expect:
                 signed-by:
                   users: [applicant2]
@@ -680,7 +682,8 @@ components:
               actions:
                 - notify:
                     users: [author]
-                    message: counter-signing
+                    methods:
+                      email: counter-signing
               expect:
                 signed-by:
                   users: [author]
@@ -721,14 +724,26 @@ components:
           type: object
           required:
             - users
-            - message
+            - methods
           properties:
             users:
               type: array
               items:
                 type: string
-            message:
-              type: string
+            methods:
+              description: One or more fields are required.
+              type: object
+              properties:
+                sms:
+                  description: |
+                    The variable name which will be populated with an SMS message when
+                    instantiating a flow.
+                  type: string
+                email:
+                  description: |
+                    The variable name which will be populated with an email message when
+                    instantiating a flow.
+                  type: string
 
     FlowDslExpect:
       description: |

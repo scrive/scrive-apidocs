@@ -1,5 +1,10 @@
 # API specification changelog
 
+## 0.10.0
+
+* DSL spec has been modified. Notification methods must be specified (email and/or sms) rather than simply a message.
+* Require that `dsl-version` be equal to `"0.2.0"`.
+
 ## 0.9.2
 
 * Add `GET /documentation` endpoint that presents the API specification.

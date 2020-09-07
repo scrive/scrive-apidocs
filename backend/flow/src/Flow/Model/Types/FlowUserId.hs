@@ -22,7 +22,6 @@ data FlowUserId
   | UserId UserID
   deriving (Eq, Generic, Ord, Show)
 
-
 instance FromJSON FlowUserId where
   parseJSON = withObject "FlowUserId" $ \v -> do
     idType <- v .: "id_type"

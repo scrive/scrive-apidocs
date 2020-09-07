@@ -270,7 +270,7 @@ def sign_document(instance, document_id, user):
 # of.
 
 process = """
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - step1:
       actions: []

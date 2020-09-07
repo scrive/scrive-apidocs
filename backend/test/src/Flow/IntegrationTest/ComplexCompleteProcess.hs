@@ -41,7 +41,7 @@ import qualified Auth.Model as AuthModel
 
 processCompleteFlow :: Process
 processCompleteFlow = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - signatory:
       actions: []

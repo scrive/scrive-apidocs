@@ -15,6 +15,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
+import Data.Tuple.Extra
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import Log
@@ -40,6 +41,7 @@ import Flow.Id
 import Flow.Message.Internal
 import Flow.Model
 import Flow.Model.InstanceSession
+import Flow.Model.Types
 import Flow.Model.Types.FlowUserId
 import Flow.Names
 import Flow.Routes.Types
@@ -66,7 +68,8 @@ type NotifyEmail = Text
 data ConsumableAction
   = Notify
       { users :: [NotifyUser]
-      , message :: Message
+      , emailMessage :: Maybe Message
+      , smsMessage :: Maybe Message
       }
   | CloseAll
       { documentIds :: [DocumentID]
@@ -105,9 +108,9 @@ notifyAction
   => Url
   -> InstanceId
   -> [UserName]
-  -> MessageName
-  -> m ([NotifyUser], Message)
-notifyAction baseUrl instanceId userNames messageName = do
+  -> HighTongue.SystemActionMethods
+  -> m ([NotifyUser], Maybe Message, Maybe Message)
+notifyAction baseUrl instanceId userNames methods = do
   keyValues   <- selectInstanceKeyValues instanceId
   documentIds <- selectDocumentIdsByInstanceId instanceId
   documents   <- mapM (dbQuery . GetDocumentByDocumentID) documentIds
@@ -139,15 +142,22 @@ notifyAction baseUrl instanceId userNames messageName = do
     let phoneNumber = textToMaybe $ getMobile signatoryLink
     pure $ NotifyUser { .. }
 
-  message <-
-    throwIfNothing (MessageNotFound messageName) $ keyValues ^. #messages % at messageName
-  pure (notifyUsers, message)
+  memailMessage <- mapM (findMessageByName keyValues) (HighTongue.email methods)
+  msmsMessage   <- mapM (findMessageByName keyValues) (HighTongue.sms methods)
+  pure (notifyUsers, memailMessage, msmsMessage)
   where
     throwIfNothing :: (MonadThrow m, Exception e) => e -> Maybe a -> m a
     throwIfNothing exception = maybe (throwM exception) pure
 
     textToMaybe :: Text -> Maybe Text
     textToMaybe t = if T.null $ T.strip t then Nothing else Just t
+
+    findMessageByName :: MonadThrow m => InstanceKeyValues -> MessageName -> m Message
+    findMessageByName keyValues messageName =
+      throwIfNothing (MessageNotFound messageName)
+        $  keyValues
+        ^. #messages
+        %  at messageName
 
 toConsumableAction
   :: (MonadThrow m, MonadDB m, MonadLog m)
@@ -157,11 +167,11 @@ toConsumableAction
   -> m ConsumableAction
 toConsumableAction baseUrl instanceId = \case
   Machinize.CloseAll -> CloseAll <$> selectDocumentIdsByInstanceId instanceId
-  Machinize.Action (HighTongue.Notify userNames messageName) ->
-    uncurry Notify <$> notifyAction baseUrl instanceId userNames messageName
+  Machinize.Action (HighTongue.Notify userNames methods) ->
+    uncurry3 Notify <$> notifyAction baseUrl instanceId userNames methods
   Machinize.Fail -> pure Fail
 
-sendNotification
+sendEmailNotification
   :: ( CryptoRNG m
      , MonadLog m
      , MonadThrow m
@@ -170,14 +180,32 @@ sendNotification
      , MonadEventStream m
      , TemplatesMonad m
      )
-  => Message
-  -> NotifyUser
+  => NotifyUser
+  -> Message
   -> m ()
-sendNotification message nu@NotifyUser {..} = do
-  logInfo "Sending notification" nu
-  when (isJust email) . notifyEmail authorUserId message accessLink $ fromJust email
-  when (isJust phoneNumber) . notifySMS docToChargeSMS message accessLink $ fromJust
-    phoneNumber
+sendEmailNotification nu@NotifyUser {..} message = do
+  logInfo "Sending Email notification" nu
+  case email of
+    Nothing           -> logAttention "User does not have email address" nu
+    Just emailAddress -> notifyEmail authorUserId message accessLink emailAddress
+
+sendSMSNotification
+  :: ( CryptoRNG m
+     , MonadLog m
+     , MonadThrow m
+     , MonadCatch m
+     , MonadDB m
+     , MonadEventStream m
+     , TemplatesMonad m
+     )
+  => NotifyUser
+  -> Message
+  -> m ()
+sendSMSNotification nu@NotifyUser {..} message = do
+  logInfo "Sending SMS notification" nu
+  case phoneNumber of
+    Nothing        -> logAttention "User does not have phone number for SMS" nu
+    Just numForSMS -> notifySMS docToChargeSMS message accessLink numForSMS
 
 notifyEmail
   :: (CryptoRNG m, MonadLog m, MonadThrow m, MonadDB m, TemplatesMonad m)
@@ -256,8 +284,8 @@ consumeFlowAction action = do
     CloseAll documentIds -> forM_ documentIds $ \docId -> do
       doc <- dbQuery $ GetDocumentByDocumentID docId
       withDocument doc $ commonDocumentClosingActions doc
-    Notify users message -> forM_ users $ sendNotification message
-    Fail                 -> logInfo "Flow process failed" action
+    Notify users memailMsg msmsMsg -> consumeNotifyAction users memailMsg msmsMsg
+    Fail -> logInfo "Flow process failed" action
 
 consumeNotifyAction
   :: ( MonadLog m
@@ -269,8 +297,11 @@ consumeNotifyAction
      , TemplatesMonad m
      )
   => [NotifyUser]
-  -> Message
+  -> Maybe Message
+  -> Maybe Message
   -> m ()
-consumeNotifyAction users message = do
-  logInfo "Consuming Flow Notify action" $ Notify users message
-  forM_ users $ sendNotification message
+consumeNotifyAction users memailMsg msmsMsg = do
+  logInfo "Consuming Flow Notify action" $ Notify users memailMsg msmsMsg
+  forM_ users $ \user -> do
+    whenJust memailMsg $ sendEmailNotification user
+    whenJust msmsMsg $ sendSMSNotification user

@@ -5,8 +5,11 @@ import Control.Monad.Reader
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
+import Data.Char
+import Data.List.Extra hiding (head)
 import Data.Map (Map)
 import Data.Set (Set)
+import Data.Tuple.Extra
 import GHC.Generics
 import Log.Class
 import Servant
@@ -108,6 +111,10 @@ startTemplate account templateId (CreateInstance title keyValues) = do
                                         "DSL users do not match documents' signatories."
         $ toJSON userMatchingResult
 
+  let notificationErrors =
+        validateNotificationSettings actions userMapping (matched userMatchingResult)
+  reportNotificationErrors notificationErrors
+
   -- For the MVP we provide Flow app link,
   -- and so don't have to run the engine
 
@@ -125,14 +132,15 @@ startTemplate account templateId (CreateInstance title keyValues) = do
   templates' <- asks templates
   TM.runTemplatesT (T.unpack $ codeFromLang LANG_EN, templates')
     . forM_ actions
-    $ (\Notify {..} -> notifyAction (Url $ baseUrl account) id actionUsers actionMessage
-        >>= uncurry consumeNotifyAction
-      )
+    $ \Notify {..} -> notifyAction (Url $ baseUrl account) id notifyUsers notifyMethods
+        >>= uncurry3 consumeNotifyAction
 
   pure $ GetInstance { .. }
   where
 
+    validate :: MatchingResult -> Bool
     validate MatchingResult {..} = null unmatchedFlowUserIds && null unmatchedSignatories
+
     createPair :: UserMatch -> (UserName, SignatoryLinkID)
     createPair UserMatch {..} = (name, DocumentChecker.id signatory)
       where name = fromJust . getUserName flowUserId $ keyValues ^. #users
@@ -143,6 +151,14 @@ startTemplate account templateId (CreateInstance title keyValues) = do
       case Map.keys $ Map.filter (== flowUserId) userMap of
         []      -> Nothing
         (x : _) -> Just x
+
+reportNotificationErrors :: MonadError ServerError m => Set MissingContactDetail -> m ()
+reportNotificationErrors errors =
+  unless (null errors)
+    . throwTemplateCannotBeStartedError
+        TemplateStartConflict
+        "Required contact details are not configured on document signatories"
+    $ object ["missing_contact_details" .= errors]
 
 reportMissingDocuments :: MonadError ServerError m => [DocumentID] -> m ()
 reportMissingDocuments docIds =
@@ -210,7 +226,7 @@ nonEmptyVariables :: Variables -> Bool
 nonEmptyVariables Variables {..} =
   not null users || not null documents || not null messages
 
-reportVariables :: VariableErrors -> AppM ()
+reportVariables :: MonadError ServerError m => VariableErrors -> m ()
 reportVariables uv@VariableErrors {..} =
   when (nonEmptyVariables undefinedVariables || nonEmptyVariables unknownParameters)
     . throwTemplateCannotBeStartedError
@@ -243,10 +259,104 @@ checkDocumentSettingsConsistency docs = Set.filter (\f -> unique f > 1) fields
     uniqueOf :: Ord a => (Document -> a) -> Int
     uniqueOf f = length . Set.fromList $ fmap f docs
 
-reportSettings :: Set DocumentField -> AppM ()
+reportSettings :: MonadError ServerError m => Set DocumentField -> m ()
 reportSettings fields =
   unless (null fields)
     . throwTemplateCannotBeStartedError
         TemplateStartConflict
         "Some settings are not consistent across all documents."
     $ toJSON fields
+
+data RequiredMethods = RequiredMethods
+  { emailRequired :: Bool
+  , smsRequired :: Bool
+  } deriving (Show)
+
+instance Semigroup RequiredMethods where
+  RequiredMethods ae as <> RequiredMethods be bs = RequiredMethods (ae || be) (as || bs)
+
+data MissingMethod
+  = MissingEmail
+  | MissingPhoneNumber
+  deriving (Eq, Generic, Ord, Show)
+
+instance ToJSON MissingMethod where
+  toJSON = \case
+    MissingEmail       -> toJSON ("email" :: T.Text)
+    MissingPhoneNumber -> toJSON ("phone_number" :: T.Text)
+
+data MissingContactDetail = MissingContactDetail
+  { userName :: [UserName]
+  , missingMethod :: MissingMethod
+  } deriving (Eq, Generic, Ord, Show)
+
+instance ToJSON MissingContactDetail where
+  toJSON = genericToJSON aesonOptions
+
+data DetailedRequirement = DetailedRequirement
+  { userName :: UserName
+  , requirement :: RequiredMethods
+  , signatory :: Signatory
+  } deriving (Show)
+
+validateNotificationSettings
+  :: [SystemAction]
+  -> Map UserName FlowUserId
+  -> Set UserMatch
+  -> Set MissingContactDetail
+validateNotificationSettings actions userMap userMatches = Set.fromList errors
+  where
+    errors :: [MissingContactDetail]
+    errors =
+      let groupedPairs = groupSort . concat $ map checkUser detailedRequirements
+      in  [ MissingContactDetail (nubOrd usernames) missingMethods
+          | (missingMethods, usernames) <- groupedPairs
+          ]
+
+    checkUser :: DetailedRequirement -> [(MissingMethod, UserName)]
+    checkUser DetailedRequirement {..} = (, userName) <$> missingMethod
+      where
+        emailError =
+          emailRequired requirement && isAbsent (DocumentChecker.email signatory)
+        smsError =
+          smsRequired requirement && isAbsent (DocumentChecker.phoneNumber signatory)
+        missingMethod = case (emailError, smsError) of
+          (True , True ) -> [MissingEmail, MissingPhoneNumber]
+          (True , False) -> [MissingEmail]
+          (False, True ) -> [MissingPhoneNumber]
+          (False, False) -> []
+        isAbsent = maybe True $ T.all isSpace
+
+    detailedRequirements :: [DetailedRequirement]
+    detailedRequirements = map annotate $ Map.toList userRequirements
+
+    annotate :: (UserName, RequiredMethods) -> DetailedRequirement
+    annotate (userName, requirement) = DetailedRequirement { .. }
+      where
+        userId    = fromJust $ Map.lookup userName userMap
+        signatory = DocumentChecker.signatory . fromJust $ find
+          (\um -> flowUserId um == userId)
+          userMatches
+
+    userRequirements :: Map UserName RequiredMethods
+    userRequirements = foldl' groupUsers Map.empty actions
+
+    groupUsers
+      :: Map UserName RequiredMethods -> SystemAction -> Map UserName RequiredMethods
+    groupUsers reqs action = case action of
+      Notify userNames methods -> foldl' (addUser $ asRequired methods) reqs userNames
+
+    asRequired :: SystemActionMethods -> RequiredMethods
+    asRequired (Methods email sms) = RequiredMethods (isJust email) (isJust sms)
+
+    addUser
+      :: RequiredMethods
+      -> Map UserName RequiredMethods
+      -> UserName
+      -> Map UserName RequiredMethods
+    addUser methods reqs userName = Map.alter (addMethods methods) userName reqs
+
+    addMethods :: Semigroup a => a -> Maybe a -> Maybe a
+    addMethods methods = \case
+      Nothing         -> Just methods
+      Just oldMethods -> Just $ oldMethods <> methods

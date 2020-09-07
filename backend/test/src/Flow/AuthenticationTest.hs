@@ -106,7 +106,7 @@ testCookieAuthAccount = do
 
 process1 :: Process
 process1 = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - initial:
       actions: []

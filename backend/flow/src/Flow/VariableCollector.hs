@@ -52,7 +52,10 @@ collectVariables HighTongue {..} = foldl' toVariables mempty stages
 
     unaction :: SystemAction -> FlowVariables
     unaction Notify {..} =
-      FlowVariables (fromList actionUsers) mempty (singleton actionMessage) mempty
+      let Methods memail mphoneNum = notifyMethods
+          messages                 = fromList $ catMaybes [memail, mphoneNum]
+      in  FlowVariables (fromList notifyUsers) mempty messages mempty
+
     unexpect :: Expect -> FlowVariables
     unexpect ReceivedData {..} = mempty
     unexpect ApprovedBy {..} =

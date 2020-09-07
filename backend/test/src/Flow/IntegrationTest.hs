@@ -50,6 +50,9 @@ tests env = testGroup
   , testThat "Instance failure due to a reused document"
              env
              testInstanceFailureReusedDocument
+  , testThat "Instance failure due to required contact method not present in user"
+             env
+             testInstanceNotificationMethodFailure
   , testThat "Rejecting a document causes process failure"
              env
              testRejectedDocumentCausesProcessFailure
@@ -93,7 +96,7 @@ addDocument user = addRandomDocument (rdaDefault user)
 
 processZero :: Process
 processZero = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - initial:
       actions: []
@@ -105,7 +108,8 @@ stages:
       actions:
         - notify:
             users: [watcher]
-            message: was-signed
+            methods:
+              email: was-signed
       expect: {}
 |]
 
@@ -182,7 +186,7 @@ getBaseUrl (Url u) = do
 
 simpleProcess :: Process
 simpleProcess = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - initial:
       actions: []
@@ -263,7 +267,7 @@ testCommittedTemplateCannotBeAltered = do
 
 processInvalid :: Process
 processInvalid = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - initial:
       actions: []
@@ -275,7 +279,8 @@ sdfgsdfg          users: [signatory]
       actions:dfgdfsg
         - notify:
             users: [watcher
-            message: was-signed
+            methods:
+              email: was-signed
       expect: {}
 |]
 

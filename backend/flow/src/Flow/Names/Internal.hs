@@ -38,7 +38,6 @@ instance ToSQL (Name a) where
   type PQDest (Name a) = PQDest Text
   toSQL (Name n) = toSQL n
 
-
 type DocumentName = Name 'DocumentName
 type UserName = Name 'UserName
 type MessageName = Name 'MessageName

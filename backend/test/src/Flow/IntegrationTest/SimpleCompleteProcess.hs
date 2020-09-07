@@ -33,7 +33,7 @@ import qualified Auth.Model as AuthModel
 
 processCompleteFlow :: Process
 processCompleteFlow = Process [r|
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - initial:
       actions: []
@@ -41,6 +41,11 @@ stages:
         signed-by:
           users: [author, signatory]
           documents: [doc]
+      actions:
+        - notify:
+            users: [signatory]
+            methods:
+              email: msg1
 |]
 
 testCompleteFlowProcess :: TestEnv ()
@@ -86,7 +91,7 @@ testCompleteFlowProcess = do
         { documents = Map.fromList [("doc", did)]
         , users     = Map.fromList
                         [("author", Email authorEmail), ("signatory", Email signatoryEmail)]
-        , messages  = mempty
+        , messages  = Map.fromList [("msg1", "email notification")]
         }
 
   -- Flow stuff runs in another DB session so we need to commit before calling

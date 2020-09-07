@@ -87,7 +87,7 @@ We'll now proceed to the actual Flow API.
 To describe a signing process we use a YAML-based DSL.
 
 ```yaml
-dsl-version: "0.1.0"
+dsl-version: "0.2.0"
 stages:
   - user-stage:
       actions: []
@@ -99,7 +99,8 @@ stages:
       actions:
         - notify:
             users: [author]
-            message: author-message
+            methods:
+              email: author-message
       expect:
         signed-by:
           users: [author]
