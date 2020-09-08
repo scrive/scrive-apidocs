@@ -64,7 +64,7 @@ jobs:
         with:
           name: formatting-patch
           path: "_build/formatting.patch"
-name: Quick Formatting Tests
+name: Formatting Tests
 on:
   push:
     branches:

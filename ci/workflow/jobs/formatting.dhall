@@ -8,7 +8,7 @@ let GHCVersion = ../type/GHCVersion.dhall
 in
 FormattingWorkflow.createWorkflow
   FormattingWorkflow.Args ::
-  { name = "Quick Formatting Tests"
+  { name = "Formatting Tests"
   , runsOn =
       [ Job.RunsOn.ubuntu-latest
       ]
