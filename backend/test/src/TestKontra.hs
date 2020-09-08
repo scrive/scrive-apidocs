@@ -529,6 +529,7 @@ clearTables = do
 
   runSQL_ "DELETE FROM flow_instances"
   runSQL_ "DELETE FROM flow_templates"
+  runSQL_ "DELETE FROM flow_callbacks"
 
   runSQL_ "DELETE FROM mail_attachments"
   runSQL_ "DELETE FROM author_attachments"

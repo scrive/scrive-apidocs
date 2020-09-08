@@ -20,6 +20,7 @@ import AccessControl.Types
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator as Aggregator
+import Flow.Core.Type.Url
 import Flow.Engine
 import Flow.Error
 import Flow.Guards
@@ -66,6 +67,7 @@ getInstance account instanceId = do
         , status
         , started            = flowInstance ^. #started
         , lastEvent          = flowInstance ^. #lastEvent
+        , callback           = flowInstance ^. #callback
         }
 
   if

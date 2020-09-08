@@ -32,6 +32,8 @@ import qualified Data.Set as Set
 import Auth.MagicHash
 import Auth.Session.SessionID
 import Flow.Aggregator
+import Flow.Core.Type.Callback
+import Flow.Core.Type.Url
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types.Internal
@@ -72,8 +74,24 @@ fetchTemplate (id, userId, folderId, name, process, created, committed, deleted)
   Template { .. }
 
 fetchInstance
-  :: (InstanceId, TemplateId, Maybe Text, StageName, UTCTime, UTCTime) -> Instance
-fetchInstance (id, templateId, title, currentState, started, lastEvent) = Instance { .. }
+  :: ( InstanceId
+     , TemplateId
+     , Maybe Text
+     , StageName
+     , UTCTime
+     , UTCTime
+     , Maybe Url
+     , Maybe CallbackVersion
+     )
+  -> Instance
+fetchInstance (id, templateId, title, currentState, started, lastEvent, maybeCallbackUrl, maybeCallbackVersion)
+  = let
+      callback = case (maybeCallbackUrl, maybeCallbackVersion) of
+        (Just url, Just version) -> Just Callback { .. }
+        (Nothing , Nothing     ) -> Nothing
+        _ ->
+          unexpectedError "callback url and version have to be both Just or both Nothing"
+    in  Instance { .. }
 
 fetchEvent :: (EventId, InstanceId, UserName, DocumentName, UserAction, UTCTime) -> Event
 fetchEvent (id, instanceId, userName, documentName, userAction, created) = Event { .. }

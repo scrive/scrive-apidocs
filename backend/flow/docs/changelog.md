@@ -1,5 +1,10 @@
 # API specification changelog
 
+## 0.10.1
+
+* Schema `InstanceCreateRequest`: add field `callback`.
+* Schema `InstanceGetResponse`: add field `callback`.
+
 ## 0.10.0
 
 * DSL spec has been modified. Notification methods must be specified (email and/or sms) rather than simply a message.
@@ -19,8 +24,13 @@
 
 ## 0.9.0
 
-* New fields added to the return JSON of `GET /instances/{instance_id}` and `GET /instances/{instance_id}/view` depicting the user-provided `title`, the start time and last event time of the flow instance.
-* _Breaking change:_ Request JSON spec of `POST /templates/{template_id}/start` altered. The previously-required object is pushed down into the `template_parameters` object and the root object can now take an optional `title` parameter that allows for a human-readable name to be provided.
+* New fields added to the return JSON of `GET /instances/{instance_id}` and
+  `GET /instances/{instance_id}/view` depicting the user-provided `title`, the
+  start time and last event time of the flow instance.
+* _Breaking change:_ Request JSON spec of `POST /templates/{template_id}/start`
+  altered. The previously-required object is pushed down into the
+  `template_parameters` object and the root object can now take an optional
+  `title` parameter that allows for a human-readable name to be provided.
 
 ## 0.8.0
 

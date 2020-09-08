@@ -5,7 +5,8 @@ import requests as req
 import time
 
 
-base_url = "https://dev.scrive.com"
+#base_url = "https://dev.scrive.com"
+base_url = "http://localhost:8888"
 flow_path = base_url + "/experimental/flow"
 user_email="demo@scrive.com"
 user_password="password123"
@@ -245,21 +246,13 @@ def sign_document(instance, document_id, user):
 # an email address and phone number available, both email and SMS will be sent.
 # If the participant has only an email address, only email will be sent etc.
 #
-# Work is ongoing, and nearing completion, to specify which channels should be used for
-# notifications. The following illustrates the template specification which is currently
-# in development.
+# It is possible to specify which channels should be used for notifications.
 #
 # - notify:
 #     users: [applicant1]
 #     methods:
 #       sms: sms-signing-message
 #       email: email-signing-message
-#
-# This is a breaking change: the old version is using the `message` field whereas
-# the new version is using the `methods` field.
-# In the `process` below we use both to guarantee this script works with both versions.
-# Currently, the `message` field is in use and `methods` is ignored. Very soon we will
-# permanently switch to using the `methods` field. At that point, `message` will be ignored.
 #
 # The only "legacy" notification (defined in the document settings, not by flow) which
 # is in use is the Confirmation notification. This is not consistent with the flow "way of
@@ -282,7 +275,6 @@ stages:
       actions:
         - notify:
             users: [user3]
-            message: msg1
             methods:
                 email: msg1
       expect:
@@ -347,9 +339,14 @@ key_values = {
   "users": users,
   "messages": { "msg1" : "Nice little message" },
 }
+callback = {
+  "url": "https://company.com/handle/flow",
+  "version": 1
+}
 params = {
     "title": "foo",
-    "template_parameters": key_values
+    "template_parameters": key_values,
+    "callback": callback
 }
 
 post(s, flow_path + "/templates/" + template_id + "/commit", headers=auth_header)

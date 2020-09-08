@@ -37,6 +37,7 @@ import Doc.Types.Document
 import Doc.Types.SignatoryLink
 import EventStream.Class
 import File.Storage
+import Flow.Core.Type.Url
 import Flow.Id
 import Flow.Message.Internal
 import Flow.Model
@@ -44,7 +45,6 @@ import Flow.Model.InstanceSession
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId
 import Flow.Names
-import Flow.Routes.Types
 import Flow.Server.Utils
 import GuardTime (GuardTimeConfMonad)
 import MailContext

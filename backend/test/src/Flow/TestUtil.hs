@@ -121,5 +121,5 @@ createInstance ApiClient {..} name process mapping = do
   void . assertRight "validate response" . request $ validateTemplate process
   void . assertRight "commit template response" . request $ commitTemplate tid
 
-  request . startTemplate tid $ CreateInstance Nothing mapping
+  request . startTemplate tid $ CreateInstance Nothing mapping Nothing
 

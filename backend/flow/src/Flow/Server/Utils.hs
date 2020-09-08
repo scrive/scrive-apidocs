@@ -10,6 +10,7 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import Auth.MagicHash
+import Flow.Core.Type.Url
 import Flow.Id
 import Flow.Names
 import Flow.Routes.Types

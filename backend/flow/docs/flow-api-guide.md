@@ -206,6 +206,10 @@ First, we need to provide the parameters. We will store these in a file called `
     "messages": {
       "author-message": "User test@flow.com has signed some documents, now it is your turn."
     }
+  },
+  "callback": {
+    "url": "https://company.com/flow/handler",
+    "version": 1
   }
 }
 ```
@@ -237,7 +241,11 @@ You'll receive something like this in response:
   },
   "status": "in_progress",
   "started": "2020-08-31T15:16:25.061591Z",
-  "last_event": "2020-08-31T15:16:25.061591Z"
+  "last_event": "2020-08-31T15:16:25.061591Z",
+  "callback": {
+    "url": "https://company.com/flow/handler",
+    "version": 1
+  }
 }
 ```
 

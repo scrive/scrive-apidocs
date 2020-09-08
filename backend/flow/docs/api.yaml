@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.0"
+  version: "0.10.1"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -475,6 +475,24 @@ components:
           type: string
           description: A longer explanation of the error perhaps with specific details.
           example: There is no template associated with this ID
+    Callback:
+      type: object
+      description: |
+        Callback object containing callback URL and possibly some other data in future.
+      required:
+        - url
+        - version
+      properties:
+        url:
+          type: string
+          description: Callback URL
+          example: https://some.cool.domain/foo/bar
+        version:
+          type: number
+          description: |
+            Requested version of the callback payload, currently only version `1`
+            is supported.
+          example: 1
     TemplateCreateRequest:
       type: object
       required:
@@ -565,6 +583,8 @@ components:
           $ref: "#/components/schemas/InstanceTitle"
         template_parameters:
           $ref: "#/components/schemas/TemplateParameters"
+        callback:
+          $ref: "#/components/schemas/Callback"
     TemplateParameters:
       description: |
         This object specifies concrete values for the
@@ -835,6 +855,7 @@ components:
         - access_links
         - started
         - last_event
+        - callback
       properties:
         id:
           $ref: "#/components/schemas/InstanceId"
@@ -861,6 +882,8 @@ components:
           $ref: "#/components/schemas/InstanceStartedTimestamp"
         last_event:
           $ref: "#/components/schemas/InstanceLastEventTimestamp"
+        callback:
+          $ref: "#/components/schemas/Callback"
 
     InstanceState:
       description: |

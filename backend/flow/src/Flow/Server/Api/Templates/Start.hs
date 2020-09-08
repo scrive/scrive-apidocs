@@ -26,6 +26,7 @@ import Doc.Model.Query
 import Doc.SignatoryLinkID
 import Doc.Types.Document
 import Flow.ActionConsumers hiding (Notify, users)
+import Flow.Core.Type.Url
 import Flow.DocumentChecker as DocumentChecker
 import Flow.DocumentStarting
 import Flow.Engine
@@ -37,7 +38,6 @@ import Flow.Model.Types
 import Flow.Model.Types.FlowUserId as FlowUserId
 import Flow.OrphanInstances ()
 import Flow.Routes.Api hiding (documents)
-import Flow.Routes.Types
 import Flow.Server.Api.Common
 import Flow.Server.Types
 import Flow.Server.Utils
@@ -47,7 +47,7 @@ import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.VariableCollector as Collector
 
 startTemplate :: Account -> TemplateId -> CreateInstance -> AppM GetInstance
-startTemplate account templateId (CreateInstance title keyValues) = do
+startTemplate account templateId (CreateInstance title keyValues callback) = do
   logInfo_ "Starting instance"
   template <- selectTemplate templateId
   let fid = template ^. #folderId
@@ -88,7 +88,8 @@ startTemplate account templateId (CreateInstance title keyValues) = do
       stateId      = stageName initialStage
       started      = now
       lastEvent    = now
-  id <- Model.insertFlowInstance $ InsertInstance templateId title stateId started
+  id <- Model.insertFlowInstance
+    $ InsertInstance templateId title stateId started callback
 
   -- The ordering of operations here is crucial.
   Model.insertFlowInstanceKeyValues id keyValues

@@ -3,7 +3,6 @@ module Flow.Routes.Types
   , Host
   , AddFlowPrefix
   , flowPath
-  , Url(..)
   , Version(..)
   )
  where
@@ -22,9 +21,6 @@ type AddFlowPrefix api = "experimental" :> "flow" :> api
 -- TODO derive this from AddFlowPrefix
 flowPath :: Text
 flowPath = "experimental/flow"
-
-newtype Url = Url { fromUrl :: Text }
-  deriving (Eq, FromJSON, Ord, Show, ToJSON)
 
 newtype Version = Version
   { buildCommit :: Text

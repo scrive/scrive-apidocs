@@ -34,6 +34,7 @@ def test_one_document_process():
 
     document_id = utils.create_document(base_url, s, parties)
 
+    callback_url = "foo/bar/baz"
     documents = {
       "doc1": document_id,
     }
@@ -41,15 +42,19 @@ def test_one_document_process():
       "user1": {"id_type": "email", "id": email}
     }
     key_values = {
-      "documents": documents,
-      "users": users,
-      "messages": {}
+      "template_parameters" : {
+        "documents": documents,
+        "users": users,
+        "messages": {}
+      },
+      "callback": {"url": callback_url, "version": 1},
     }
     utils.post(s, flow_path + "/templates/" + template_id + "/commit")
     resp = utils.post(s, flow_path + "/templates/" + template_id + "/start", json=key_values)
     sign_session = req.Session()
     access_links = resp.json()['access_links']['user1']
     instance_id = resp.json()['id']
+    assert callback_url == resp.json()['callback']['url']
 
     utils.get(sign_session, access_links)
     resp = utils.get(

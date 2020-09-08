@@ -273,3 +273,45 @@ addMetaDataToInstanceTable = Migration
       runQuery_ $ sqlAlterTable tableName [sqlAlterColumn "last_event" "DROP DEFAULT"]
   }
   where tableName = "flow_instances"
+
+createTableCallbacks :: MonadDB m => Migration m
+createTableCallbacks = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName       = tableName
+      , tblVersion    = 1
+      , tblColumns = [ tblColumn { colName     = "id"
+                                 , colType     = UuidT
+                                 , colNullable = False
+                                 , colDefault  = Just "gen_random_uuid()"
+                                 }
+                     , tblColumn { colName = "url", colType = TextT, colNullable = False }
+                     , tblColumn { colName     = "version"
+                                 , colType     = IntegerT
+                                 , colNullable = False
+                                 }
+                     ]
+      , tblPrimaryKey = pkOnColumn "id"
+      }
+  }
+  where tableName = "flow_callbacks"
+
+addCallbacksToInstanceTable :: MonadDB m => Migration m
+addCallbacksToInstanceTable = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 2
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlAlterTable
+                       tableName
+                       [ sqlAddColumn $ tblColumn { colName     = "callback_id"
+                                                  , colType     = UuidT
+                                                  , colNullable = True
+                                                  }
+                       , sqlAddValidFK tableName
+                         $ fkOnColumn "callback_id" "flow_callbacks" "id"
+                       ]
+  }
+  where tableName = "flow_instances"
+

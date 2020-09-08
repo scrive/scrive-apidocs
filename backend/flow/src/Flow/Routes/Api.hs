@@ -34,6 +34,8 @@ import Servant.API
 
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
+import Flow.Core.Type.Callback
+import Flow.Core.Type.Url
 import Flow.HighTongue
 import Flow.Id
 import Flow.Model.Types
@@ -148,6 +150,7 @@ instance ToJSON PatchTemplate where
 data CreateInstance = CreateInstance
     { title :: Maybe Text
     , templateParameters :: InstanceKeyValues
+    , callback :: Maybe Callback
     }
   deriving (Eq, Generic, Show)
 
@@ -209,6 +212,7 @@ data GetInstance = GetInstance
     , status :: Status
     , started :: UTCTime
     , lastEvent :: UTCTime
+    , callback :: Maybe Callback
     }
   deriving (Eq, Generic, Show)
 

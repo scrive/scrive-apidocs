@@ -15,6 +15,8 @@ import Doc.Types.Document
 import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import Flow.Client
+import Flow.Core.Type.Callback
+import Flow.Core.Type.Url
 import Flow.IntegrationTest.ComplexCompleteProcess
 import Flow.IntegrationTest.Failure
 import Flow.IntegrationTest.SimpleCompleteProcess
@@ -23,7 +25,6 @@ import Flow.Model.Types.FlowUserId
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
-import Flow.Routes.Types
 import Flow.TestUtil
 import MinutesTime
 import TestingUtil hiding (assertLeft, assertRight)
@@ -37,13 +38,14 @@ import qualified Flow.Model.InstanceSession as Model
 tests :: TestEnvSt -> Test
 tests env = testGroup
   "Integration"
-  [ testThat "Template CRUD happy path" env testTemplateHappyCrud
-  , testThat "From zero to instance"    env testZeroToInstance
-  , testThat "List template endpoint"   env testTemplateListEndpoint
-  , testThat "List instance endpoint"   env testInstanceListEndpoint
-  , testThat "Verify endpoint"          env testVerifyEndpoint
-  , testThat "Complete flow process"    env testCompleteFlowProcess
-  , testThat "Complex flow process"     env testComplexFlowProcess
+  [ testThat "Template CRUD happy path"           env testTemplateHappyCrud
+  , testThat "From zero to instance"              env testZeroToInstance
+  , testThat "List template endpoint"             env testTemplateListEndpoint
+  , testThat "List instance endpoint"             env testInstanceListEndpoint
+  , testThat "Verify endpoint"                    env testVerifyEndpoint
+  , testThat "Complete flow process"              env testCompleteFlowProcess
+  , testThat "Complex flow process"               env testComplexFlowProcess
+  , testThat "Callbacks are stored and retrieved" env testCallbackConfiguration
   , testThat "Committed template cannot be altered"
              env
              testCommittedTemplateCannotBeAltered
@@ -235,7 +237,7 @@ testInstanceListEndpoint = do
     . assertRight "start template response"
     . request
     . startTemplate tid
-    $ CreateInstance Nothing mapping
+    $ CreateInstance Nothing mapping Nothing
   is2 <- assertRight "instance list endpoint works when 1 instance"
     $ request listInstances
   assertBool "second instance list call should have 1 item" $ length is2 == 1
@@ -244,10 +246,31 @@ testInstanceListEndpoint = do
     . assertRight "start template response"
     . request
     . startTemplate tid
-    $ CreateInstance Nothing mapping
+    $ CreateInstance Nothing mapping Nothing
   is3 <- assertRight "instance list endpoint works when 2 instances"
     $ request listInstances
   assertBool "third instance list call should have 2 items" $ length is3 == 2
+  where mapping = InstanceKeyValues Map.empty Map.empty Map.empty
+
+testCallbackConfiguration :: TestEnv ()
+testCallbackConfiguration = do
+  user  <- instantiateRandomUser
+  oauth <- getToken $ user ^. #id
+  let ApiClient {..}     = mkApiClient (Left oauth)
+      createTemplateData = CreateTemplate "name" simpleProcess
+
+  template <- assertRight "create template" . request $ createTemplate createTemplateData
+  let tid = id (template :: GetCreateTemplate)
+  void . assertRight "commit template response" . request $ commitTemplate tid
+
+  let callback = Just $ Callback (Url "kwa") V1
+  i <-
+    assertRight "start template response" . request . startTemplate tid $ CreateInstance
+      Nothing
+      mapping
+      callback
+
+  assertEqual "callback is stored and retrieved" callback (i ^. #callback)
   where mapping = InstanceKeyValues Map.empty Map.empty Map.empty
 
 testCommittedTemplateCannotBeAltered :: TestEnv ()

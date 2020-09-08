@@ -376,6 +376,8 @@ Library
                  , Flow.ActionConsumers
                  , Flow.Aggregator
                  , Flow.Client
+                 , Flow.Core.Type.Callback
+                 , Flow.Core.Type.Url
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
                  , Flow.Engine

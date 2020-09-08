@@ -2,7 +2,7 @@
 
 ## Callbacks
 
-### Flow event callbacks
+### Flow event callbacks (Added in 0.10.1)
 
 To configure callbacks for Flow events, add the `callback` field when starting an instance from a template.
 
@@ -56,7 +56,7 @@ Note that these payload schemas are not yet completely finalized.
 Events produced by individual document actions will trigger the standard document callback mechanism.
 See the [Callbacks section](https://apidocs.scrive.com/#callbacks) of Scrive API documentation for how to set these up.
 
-## Notifications
+## Notifications (Added in 0.10.0)
 
 The DSL for notifications used to look as follows:
 

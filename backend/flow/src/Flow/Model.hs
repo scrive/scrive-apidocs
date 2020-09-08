@@ -37,6 +37,7 @@ import qualified Data.Map as Map
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
+import Flow.Core.Type.Callback
 import Flow.Id
 import Flow.Message
 import Flow.Model.Types
@@ -104,13 +105,23 @@ updateTemplate ut = do
     sqlWhereIsNULL "deleted"
   fetchMaybe fetchTemplate
 
+insertFlowCallback :: (MonadDB m, MonadThrow m) => Callback -> m CallbackId
+insertFlowCallback Callback {..} = do
+  runQuery_ . sqlInsert "flow_callbacks" $ do
+    sqlSet "url"     url
+    sqlSet "version" version
+    sqlResult "id"
+  fetchOne runIdentity
+
 insertFlowInstance :: (MonadDB m, MonadThrow m) => InsertInstance -> m InstanceId
 insertFlowInstance InsertInstance {..} = do
+  callbackId <- sequence $ insertFlowCallback <$> callback
   runQuery_ . sqlInsert "flow_instances" $ do
     sqlSet "template_id"   templateId
     sqlSet "current_state" stage
     sqlSet "started"       started
     sqlSet "last_event"    started
+    sqlMaybeSet "callback_id" callbackId
     whenJust title $ sqlSet "title"
     sqlResult "id"
   fetchOne runIdentity
@@ -175,23 +186,26 @@ selectDocumentIdsAssociatedWithSomeInstance docIds = do
     sqlWhereIn "i.document_id" docIds
   fetchMany runIdentity
 
-instanceSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
-instanceSelectors prefix = mapM_
-  (\c -> sqlResult $ prefix <> "." <> c)
-  ["id", "template_id", "title", "current_state", "started", "last_event"]
+instanceSelectors :: (MonadState v m, SqlResult v) => SQL -> SQL -> m ()
+instanceSelectors instancePrefix callbackPrefix = do
+  mapM_ (\c -> sqlResult $ instancePrefix <> "." <> c)
+        ["id", "template_id", "title", "current_state", "started", "last_event"]
+  mapM_ (\c -> sqlResult $ callbackPrefix <> "." <> c) ["url", "version"]
 
 selectInstance :: (MonadDB m, MonadThrow m) => InstanceId -> m (Maybe Instance)
 selectInstance instanceId = do
   runQuery_ . sqlSelect "flow_instances i" $ do
-    instanceSelectors "i"
-    sqlWhereEq "id" instanceId
+    instanceSelectors "i" "c"
+    sqlLeftJoinOn "flow_callbacks c" "i.callback_id = c.id"
+    sqlWhereEq "i.id" instanceId
   fetchMaybe fetchInstance
 
 selectInstancesByUserID :: (MonadDB m, MonadThrow m) => UserID -> m [Instance]
 selectInstancesByUserID userId = do
   runQuery_ . sqlSelect "flow_instances i" $ do
-    instanceSelectors "i"
+    instanceSelectors "i" "c"
     sqlJoinOn "flow_templates t" "template_id = t.id"
+    sqlLeftJoinOn "flow_callbacks c" "i.callback_id = c.id"
     sqlWhereEq "t.user_id" userId
     sqlWhereIsNULL "t.deleted"
   fetchMany fetchInstance

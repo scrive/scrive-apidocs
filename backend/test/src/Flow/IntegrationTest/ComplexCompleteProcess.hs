@@ -20,6 +20,7 @@ import Doc.Types.Document
 import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import Flow.Client
+import Flow.Core.Type.Url
 import Flow.Id
 import Flow.IntegrationTest.Common
 import Flow.Model.Types
@@ -28,7 +29,6 @@ import Flow.Model.Types.Internal
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
-import Flow.Routes.Types
 import Flow.TestUtil
 import MinutesTime
 import TestEnvSt.Internal (flowPort)
@@ -119,6 +119,7 @@ testComplexFlowProcess = do
     assertRight "start template response" . request . startTemplate tid $ CreateInstance
       Nothing
       mapping
+      Nothing
   authorFlowLink <-
     assertJust' "author's flow sign link is missing" $ accessLinks Map.!? "author"
   signatoryFlowLink <-

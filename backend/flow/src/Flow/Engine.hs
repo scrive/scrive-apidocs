@@ -29,13 +29,13 @@ import Flow.Aggregator
   ( AggregatorError(DuplicateEvent, UnknownEventInfo, UnknownStage)
   , AggregatorStep(NeedMoreEvents, StateChange), runAggregatorStep
   )
+import Flow.Core.Type.Url
 import Flow.HighTongue
 import Flow.Id (InstanceId)
 import Flow.Machinize
 import Flow.Model as Model
 import Flow.Model.Types
 import Flow.Process
-import Flow.Routes.Types
 import GuardTime (GuardTimeConfMonad)
 import MailContext
 

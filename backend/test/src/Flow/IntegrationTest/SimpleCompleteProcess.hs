@@ -15,6 +15,7 @@ import Doc.Types.Document
 import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import Flow.Client
+import Flow.Core.Type.Url
 import Flow.IntegrationTest.Common
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId
@@ -22,7 +23,6 @@ import Flow.Model.Types.Internal
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
-import Flow.Routes.Types
 import Flow.TestUtil
 import TestEnvSt.Internal (flowPort)
 import TestingUtil hiding (assertLeft, assertRight)
@@ -105,6 +105,7 @@ testCompleteFlowProcess = do
     assertRight "start template response" . request . startTemplate tid $ CreateInstance
       Nothing
       mapping
+      Nothing
 
   -- Saving the lastEvent time to ensure that it increases after the sign event
   let lastEventAtStart = startedInstance ^. #lastEvent

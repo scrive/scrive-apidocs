@@ -13,6 +13,7 @@ data FlowIdKind
     | TemplateId
     | EventId
     | InstanceAccessTokenId
+    | CallbackId
 
 newtype Id (a :: FlowIdKind) = Id UUID
   deriving (Eq, Show, Generic)
@@ -33,6 +34,7 @@ type InstanceId = Id 'InstanceId
 type TemplateId = Id 'TemplateId
 type EventId = Id 'EventId
 type InstanceAccessTokenId = Id 'InstanceAccessTokenId
+type CallbackId = Id 'CallbackId
 
 instance PQFormat (Id a) where
   pqFormat = pqFormat @UUID

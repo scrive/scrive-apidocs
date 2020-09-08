@@ -24,6 +24,7 @@ import Optics.TH
 import Auth.MagicHash
 import Auth.Session.SessionID
 import Doc.DocumentID
+import Flow.Core.Type.Callback
 import Flow.Id
 import Flow.Machinize
 import Flow.Message
@@ -67,6 +68,7 @@ data Instance = Instance
     , currentState :: StageName
     , started :: UTCTime
     , lastEvent :: UTCTime
+    , callback :: Maybe Callback
     }
 
 data InsertInstance = InsertInstance
@@ -74,6 +76,7 @@ data InsertInstance = InsertInstance
     , title :: Maybe Text
     , stage :: StageName
     , started :: UTCTime
+    , callback :: Maybe Callback
     }
   deriving (Eq, Generic, Show)
 

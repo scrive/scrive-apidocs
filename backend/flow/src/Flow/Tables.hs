@@ -5,6 +5,7 @@ import Database.PostgreSQL.PQTypes.Model
 flowTables :: [Table]
 flowTables =
   [ tableFlowTemplates
+  , tableFlowCallbacks
   , tableFlowInstances
   , tableFlowInstanceKeyValueStore
   , tableFlowInstanceSignatories
@@ -44,7 +45,7 @@ tableFlowTemplates = tblTable
 tableFlowInstances :: Table
 tableFlowInstances = tblTable
   { tblName        = "flow_instances"
-  , tblVersion     = 2
+  , tblVersion     = 3
   , tblColumns     =
     [ tblColumn { colName     = "id"
                 , colType     = UuidT
@@ -59,10 +60,31 @@ tableFlowInstances = tblTable
                 , colType     = TimestampWithZoneT
                 , colNullable = False
                 }
+    , tblColumn { colName = "callback_id", colType = UuidT, colNullable = True }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "template_id"]
-  , tblForeignKeys = [fkOnColumn "template_id" "flow_templates" "id"]
+  , tblForeignKeys = [ fkOnColumn "template_id" "flow_templates" "id"
+                     , fkOnColumn "callback_id" "flow_callbacks" "id"
+                     ]
+  }
+
+tableFlowCallbacks :: Table
+tableFlowCallbacks = tblTable
+  { tblName       = "flow_callbacks"
+  , tblVersion    = 1
+  , tblColumns    = [ tblColumn { colName     = "id"
+                                , colType     = UuidT
+                                , colNullable = False
+                                , colDefault  = Just "gen_random_uuid()"
+                                }
+                    , tblColumn { colName = "url", colType = TextT, colNullable = False }
+                    , tblColumn { colName     = "version"
+                                , colType     = IntegerT
+                                , colNullable = False
+                                }
+                    ]
+  , tblPrimaryKey = pkOnColumn "id"
   }
 
 tableFlowInstanceKeyValueStore :: Table
