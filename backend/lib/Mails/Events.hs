@@ -58,14 +58,14 @@ processEvents
 processEvents limit = do
   -- We limit processing to <limit> events not to have issues with large number of documents locked.
   -- kontra infos are retrieved in did ascending order to acquire locks without deadlocking
-  events <- take limit <$> dbQuery GetUnreadEvents
-  forM_ events $ \(eid, mid, eventType, mkifm) -> case mkifm of
-    Nothing -> do
+  events <- take limit <$> getUnreadMailEvents False
+  forM_ events $ \(eid, mid, eventType, kifms) -> case kifms of
+    [] -> do
       logInfo "Proccessing event without document info"
         $ object [identifier eid, identifier mid, "event_type" .= show eventType]
       markEventAsRead eid
-    Just kifm -> localData [identifier eid, identifier mid]
-      $ processEvent (eid, mid, eventType, kifm)
+    _ -> localData [identifier eid, identifier mid]
+      $ mapM_ (\kifm -> processEvent (eid, mid, eventType, kifm)) kifms
   return $ length events
   where
     processEvent (eid, mid, eventType, kontraInfoForMail) = do

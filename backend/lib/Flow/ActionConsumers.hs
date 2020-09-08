@@ -5,6 +5,7 @@ module Flow.ActionConsumers
   , NotifyUser(..)
   , CloseAllAction(..)
   , NotifyAction(..)
+  , NotifyType(..)
   , RejectAction(..)
   , toConsumableAction
   , toConsumableRejectAction
@@ -22,11 +23,13 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
+import Data.Foldable
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import Log
 import Optics (At(at))
 import Text.StringTemplates.Templates (TemplatesMonad)
+import qualified Data.List.NonEmpty as NE
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
@@ -41,6 +44,7 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model.Query (GetDocumentByDocumentID(..))
 import Doc.Model.Update
+import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
 import Doc.Types.Document
 import Doc.Types.DocumentStatus
@@ -61,7 +65,9 @@ import Flow.Names
 import Flow.Server.Utils
 import GuardTime (GuardTimeConfMonad)
 import MailContext
+import Mails.KontraInfoForMail
 import Mails.SendMail
+import SMS.KontraInfoForSMS
 import SMS.SMS
 import SMS.Types
 import Theme.Model
@@ -136,8 +142,8 @@ aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
 
 data NotifyUser = NotifyUser
-    { email :: Maybe NotifyEmail
-    , phoneNumber :: Maybe NotifyPhoneNumber
+    { email :: Maybe (NotifyEmail, [KontraInfoForMail])
+    , phone :: Maybe (NotifyPhoneNumber, [KontraInfoForSMS])
     , docToChargeSMS :: DocumentID
     , authorUserId :: UserID
     , accessLink :: Url
@@ -147,6 +153,10 @@ data NotifyUser = NotifyUser
 instance ToJSON NotifyUser where
   toEncoding = genericToEncoding aesonOptions
 
+data NotifyType
+  = InstanceStarted
+  deriving (Show, Eq)
+
 -- For logging
 instance ToJSON ConsumableAction where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = snakeCase }
@@ -155,6 +165,7 @@ notifyAction
   :: (MonadThrow m, MonadDB m, MonadLog m)
   => Url
   -> InstanceId
+  -- TODO Flow: -> NotifyType -- ^ Action to determine KontraInfoForSMS and KontraInfoForMail types
   -> [UserName]
   -> HighTongue.SystemActionMethods
   -> m ([NotifyUser], Maybe Message, Maybe Message)
@@ -170,7 +181,8 @@ notifyAction baseUrl instanceId userNames methods = do
   let authorUserId =
         fromJust . maybesignatory . fromJust . getAuthorSigLink $ head documents
 
-  let sls = mconcat $ fmap documentsignatorylinks documents
+  let documentIdsWithSignatoryLinks =
+        [ (documentid doc, sl) | doc <- documents, sl <- documentsignatorylinks doc ]
 
   accessTokens <- selectInstanceAccessTokens instanceId
   let usersWithHashes = fmap (\act -> (act ^. #userName, act ^. #hash)) accessTokens
@@ -181,24 +193,33 @@ notifyAction baseUrl instanceId userNames methods = do
   -- could not be sent out.
   notifyUsers <- forM userNames $ \userName -> do
     user <- throwIfNothing (UserNotFound userName) $ keyValues ^. #users % at userName
-    signatoryLink <- throwIfNothing (AssociatedSignatoryNotFound user)
-      $ find (compareUserAndSignatory user) sls
+    didsWithSls <-
+      throwIfNothing (AssociatedSignatoryNotFound user) . NE.nonEmpty $ filter
+        (compareUserAndSignatory user . snd)
+        documentIdsWithSignatoryLinks
     accessLink <- throwIfNothing (AccessLinkNotFound userName)
       $ Map.lookup userName accessLinks
 
-    let email       = textToMaybe $ getEmail signatoryLink
-    let phoneNumber = textToMaybe $ getMobile signatoryLink
+    let signatoryLink = snd $ NE.head didsWithSls
+    let email =
+          textToMaybeTuple (getEmail signatoryLink) (kontraInfo forMail didsWithSls)
+    let phone =
+          textToMaybeTuple (getMobile signatoryLink) (kontraInfo forSMS didsWithSls)
     pure $ NotifyUser { .. }
 
   memailMessage <- mapM (findMessageByName keyValues) (HighTongue.email methods)
   msmsMessage   <- mapM (findMessageByName keyValues) (HighTongue.sms methods)
   pure (notifyUsers, memailMessage, msmsMessage)
   where
+    -- TODO Flow: Pass NotifyType from above once different
+    -- types of notifications are possible.
+    action = InstanceStarted
+
     throwIfNothing :: (MonadThrow m, Exception e) => e -> Maybe a -> m a
     throwIfNothing exception = maybe (throwM exception) pure
 
-    textToMaybe :: Text -> Maybe Text
-    textToMaybe t = if T.null $ T.strip t then Nothing else Just t
+    textToMaybeTuple :: Text -> a -> Maybe (Text, a)
+    textToMaybeTuple t x = if T.null $ T.strip t then Nothing else Just (t, x)
 
     findMessageByName :: MonadThrow m => InstanceKeyValues -> MessageName -> m Message
     findMessageByName keyValues messageName =
@@ -206,6 +227,20 @@ notifyAction baseUrl instanceId userNames methods = do
         $  keyValues
         ^. #messages
         %  at messageName
+
+    kontraInfo
+      :: (Traversable t)
+      => (NotifyType -> DocumentID -> SignatoryLinkID -> a)
+      -> t (DocumentID, SignatoryLink)
+      -> [a]
+    kontraInfo fn = toList . fmap (uncurry (fn action) . over _2 signatorylinkid)
+
+    forMail = \case
+      InstanceStarted -> DocumentInvitationMail
+
+    forSMS = \case
+      InstanceStarted -> DocumentInvitationSMS
+
 
 toConsumableAction
   :: (MonadThrow m, MonadDB m, MonadLog m)
@@ -268,8 +303,9 @@ sendEmailNotification
 sendEmailNotification nu@NotifyUser {..} message = do
   logInfo "Sending Email notification" nu
   case email of
-    Nothing           -> logAttention "User does not have email address" nu
-    Just emailAddress -> notifyEmail authorUserId message accessLink emailAddress
+    Nothing -> logAttention "User does not have email address" nu
+    Just (emailAddress, kifms) ->
+      notifyEmail authorUserId message accessLink emailAddress kifms
 
 sendSMSNotification
   :: ( CryptoRNG m
@@ -285,9 +321,10 @@ sendSMSNotification
   -> m ()
 sendSMSNotification nu@NotifyUser {..} message = do
   logInfo "Sending SMS notification" nu
-  case phoneNumber of
-    Nothing        -> logAttention "User does not have phone number for SMS" nu
-    Just numForSMS -> notifySMS docToChargeSMS message accessLink numForSMS
+  case phone of
+    Nothing -> logAttention "User does not have phone number for SMS" nu
+    Just (numForSMS, kifss) ->
+      notifySMS docToChargeSMS message accessLink numForSMS kifss
 
 notifyEmail
   :: (CryptoRNG m, MonadLog m, MonadThrow m, MonadDB m, TemplatesMonad m)
@@ -295,8 +332,9 @@ notifyEmail
   -> Message
   -> Url
   -> NotifyEmail
+  -> [KontraInfoForMail]
   -> m ()
-notifyEmail authorUserId (Message msg) accessLink email = do
+notifyEmail authorUserId (Message msg) accessLink email kifms = do
   bd    <- dbQuery $ GetBrandedDomainByUserID authorUserId
   ugwp  <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
   theme <- dbQuery . GetTheme $ fromMaybe (bd ^. #mailTheme) (ugwpUI ugwp ^. #mailTheme)
@@ -315,8 +353,10 @@ notifyEmail authorUserId (Message msg) accessLink email = do
     F.value "actioncolor" . ensureHexRGB' $ themeActionColor theme
     F.value "actiontextcolor" . ensureHexRGB' $ themeActionTextColor theme
     F.value "font" $ themeFont theme
-  scheduleEmailSendout
-    $ mail { Mails.SendMail.to = [MailAddress { fullname = "", email = email }] }
+  scheduleEmailSendout $ mail
+    { Mails.SendMail.to                = [MailAddress { fullname = "", email = email }]
+    , Mails.SendMail.kontraInfoForMail = kifms
+    }
   where ensureHexRGB' s = fromMaybe s . ensureHexRGB $ T.unpack s
 
 notifySMS
@@ -325,10 +365,11 @@ notifySMS
   -> Message
   -> Url
   -> NotifyPhoneNumber
+  -> [KontraInfoForSMS]
   -> m ()
-notifySMS docToChargeSMS (Message message) accessLink phoneNum = do
+notifySMS docToChargeSMS (Message message) accessLink phoneNum kifss = do
   let sms = SMS { smsMSISDN        = phoneNum
-                , kontraInfoForSMS = Nothing
+                , kontraInfoForSMS = kifss
                 , smsBody = message <> " - Access documents: " <> fromUrl accessLink
                 , smsOriginator    = "Scrive Flow"
                 , smsProvider      = SMSDefault

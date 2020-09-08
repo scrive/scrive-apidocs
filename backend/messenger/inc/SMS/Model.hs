@@ -13,7 +13,6 @@ module SMS.Model (
   , UpdateWithSMSEventForTeliaID(..)
   , UpdateWithSMSEventForMbloxID(..)
   , GetSMSByRemoteID(..)
-  , GetUnreadSMSEvents(..)
   , MarkSMSEventAsRead(..)
   ) where
 
@@ -134,24 +133,6 @@ instance
     runQuery01 . sqlInsert "sms_events" $ do
       sqlSet "sms_id" mid
       sqlSet "event"  ev
-
-data GetUnreadSMSEvents = GetUnreadSMSEvents
-instance
-  MonadDB m =>
-  DBQuery m GetUnreadSMSEvents
-  [(SMSEventID, ShortMessageID, SMSEvent, Text)] where
-  dbQuery GetUnreadSMSEvents = do
-    runQuery_ . sqlSelect "sms_events" $ do
-      sqlJoinOn "smses" "smses.id = sms_events.sms_id"
-
-      sqlResult "sms_events.id"
-      sqlResult "sms_events.sms_id"
-      sqlResult "sms_events.event"
-      sqlResult "smses.msisdn"
-
-      sqlWhere "sms_events.event_read IS NULL"
-      sqlOrderBy "sms_events.id"
-    fetchMany identity
 
 newtype MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
 instance

@@ -55,7 +55,7 @@ test_smsCounting_default = do
   True <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   doc  <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
-                , kontraInfoForSMS = Nothing
+                , kontraInfoForSMS = []
                 , smsBody          = ""
                 , smsOriginator    = "Scrive"
                 , smsProvider      = SMSDefault
@@ -84,7 +84,7 @@ test_smsCounting_telia = do
   True <- dbUpdate $ SetUserUserGroup (user ^. #id) ugid
   doc  <- addRandomDocument (rdaDefault user)
   let sms = SMS { smsMSISDN        = "+48666666666"
-                , kontraInfoForSMS = Nothing
+                , kontraInfoForSMS = []
                 , smsBody          = ""
                 , smsOriginator    = "Scrive"
                 , smsProvider      = SMSTeliaCallGuide

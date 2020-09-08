@@ -17,6 +17,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
+import Data.List.NonEmpty (NonEmpty((:|)))
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
@@ -364,10 +365,8 @@ sendInbetweenPortalInvitations = do
   case (mauthor, mPortalUrl) of
     (Just author, Just portalUrl) -> do
       doc <- theDocument
-      -- Note that 'nubbing' the signatories here is probably unneccessary, but
-      -- we still do it for consistency.
-      let signatoriesWhoNeedInviting = nubPortalSignatories
-            [ sl
+      let signatoriesWhoNeedInviting = groupPortalSignatories
+            [ (documentid doc, sl)
             | sl <- documentsignatorylinks doc
             , signatorylinkdeliverymethod sl == PortalDelivery  -- is portal signatory
             , not $ isForwarded sl  -- redundant, but here for clarity
@@ -375,10 +374,11 @@ sendInbetweenPortalInvitations = do
             , documentprevioussignorder doc < signatorysignorder sl
             ]  -- wasn't previously activated
 
-      forM_ signatoriesWhoNeedInviting $ \sl -> do
-        uctx <- getCreateUserContextWithoutContext
-        sendPortalMail PortalInvitation author portalUrl sl uctx
-        saveDocumentForSignatory sl
+      forM_ signatoriesWhoNeedInviting $ \allSignatoryLinks@(didWithSl :| didsWithSls) ->
+        do
+          uctx <- getCreateUserContextWithoutContext
+          sendPortalMail PortalInvitation author portalUrl didWithSl didsWithSls uctx
+          forM_ allSignatoryLinks $ saveDocumentForSignatory . snd
 
     _ -> return ()
 
@@ -403,8 +403,7 @@ saveDocumentForSignatory sl = do
   muser <- case sigemail of
     "" -> return Nothing
     _  -> dbQuery $ GetUserByEmail (Email sigemail)
-  whenJust muser $ \user -> do
-    dbUpdate $ SaveDocumentForUser user (signatorylinkid sl)
+  whenJust muser $ \user -> dbUpdate $ SaveDocumentForUser user (signatorylinkid sl)
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out

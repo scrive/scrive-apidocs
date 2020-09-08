@@ -35,6 +35,7 @@ import DB
 import Doc.API.Callback.Model
 import Doc.DocInfo
 import Doc.DocStateData hiding (DocumentStatus(..))
+import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils
 import Doc.DocView
@@ -122,14 +123,14 @@ sendDocumentErrorEmail author document = do
           scheduleEmailSendoutWithAuthorSenderThroughService
             (documentid document)
             (mail { to                = [getMailAddress signatorylink]
-                  , kontraInfoForMail = Just . OtherDocumentMail $ documentid document
+                  , kontraInfoForMail = [OtherDocumentMail $ documentid document]
                   }
             )
         )
         (do
           sms <- smsDocumentErrorSignatory document signatorylink
           scheduleSMS document $ sms
-            { SMS.kontraInfoForSMS = Just (SMS.OtherDocumentSMS $ documentid document)
+            { SMS.kontraInfoForSMS = [SMS.OtherDocumentSMS $ documentid document]
             }
         )
 
@@ -289,17 +290,17 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
         did
         (mail
           { to                = [getMailAddress signatorylink]
-          , kontraInfoForMail = Just . DocumentInvitationMail did $ signatorylinkid
-                                  signatorylink
+          , kontraInfoForMail = [ DocumentInvitationMail did
+                                    $ signatorylinkid signatorylink
+                                ]
           }
         )
     )
     (do
       sms <- smsInvitation invitationTo signatorylink =<< theDocument
       theDocument >>= \doc -> scheduleSMS doc $ sms
-        { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS
-                                   (documentid doc)
-                                   (signatorylinkid signatorylink)
+        { SMS.kontraInfoForSMS =
+          [SMS.DocumentInvitationSMS (documentid doc) (signatorylinkid signatorylink)]
         }
     )
 
@@ -328,17 +329,17 @@ sendInvitationEmail1 authorsiglink = do
         scheduleEmailSendout
           (mail
             { to                = [getMailAddress authorsiglink]
-            , kontraInfoForMail = Just . DocumentInvitationMail did $ signatorylinkid
-                                    authorsiglink
+            , kontraInfoForMail = [ DocumentInvitationMail did
+                                      $ signatorylinkid authorsiglink
+                                  ]
             }
           )
       )
       (do
         sms <- (`smsInvitationToAuthor` authorsiglink) =<< theDocument
         theDocument >>= \doc -> scheduleSMS doc $ sms
-          { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS
-                                     (documentid doc)
-                                     (signatorylinkid authorsiglink)
+          { SMS.kontraInfoForSMS =
+            [SMS.DocumentInvitationSMS (documentid doc) (signatorylinkid authorsiglink)]
           }
       )
 
@@ -379,10 +380,11 @@ sendReminderEmail custommessage actor automatic siglink =
           -- We only collect delivery information, if signatory had not
           -- signed yet
           , kontraInfoForMail = if notSignedOrNotApprovedOrIsAViewer siglink
-                                  then Just $ DocumentInvitationMail
-                                    (documentid doc)
-                                    (signatorylinkid siglink)
-                                  else Just . OtherDocumentMail $ documentid doc
+                                  then
+                                    [ DocumentInvitationMail (documentid doc)
+                                                             (signatorylinkid siglink)
+                                    ]
+                                  else [OtherDocumentMail $ documentid doc]
           -- We only add attachment after document is signed
           , attachments       = attachments mail
                                   <> (if documentstatus doc == DS.Closed && not forceLink
@@ -492,8 +494,9 @@ sendClosedEmails sealFixed document = do
           scheduleEmailFunc $ mail
             { to                = [getMailAddress sl]
             , attachments = attachments mail <> if forceLink then [] else mailattachments
-            , kontraInfoForMail = Just $ DocumentConfirmationMail (documentid document)
-                                                                  (signatorylinkid sl)
+            , kontraInfoForMail = [ DocumentConfirmationMail (documentid document)
+                                                             (signatorylinkid sl)
+                                  ]
             , replyTo           = let maybeAuthor = find signatoryisauthor signatorylinks
                                   in  if signatoryisauthor sl && isJust maybeAuthor
                                         then Nothing
@@ -642,35 +645,34 @@ sendForwardSigningMessages customMessage originalSignatory newSignatory doc = do
 sendForwardSigningMessagesForNewSignatory
   :: Kontrakcja m => Maybe Text -> SignatoryLink -> SignatoryLink -> Document -> m ()
 sendForwardSigningMessagesForNewSignatory customMessage originalsiglink newsiglink doc =
-  do
-    let sendMail = do
-          mail <- mailForwardSigningForNewSignatory customMessage
-                                                    originalsiglink
-                                                    newsiglink
-                                                    doc
-          scheduleEmailSendout $ mail
-            { to                = [getMailAddress newsiglink]
-            , kontraInfoForMail = Just $ DocumentInvitationMail
-                                    (documentid doc)
-                                    (signatorylinkid newsiglink)
-            }
+  case signatorylinkdeliverymethod newsiglink of
+    APIDelivery            -> return ()
+    PadDelivery            -> return ()
+    EmailDelivery          -> when useMail sendMail
+    MobileDelivery         -> when useSMS sendSMS
+    EmailAndMobileDelivery -> do
+      when useMail sendMail
+      when useSMS  sendSMS
+    PortalDelivery -> return ()
+  where
+    sendMail = do
+      mail <- mailForwardSigningForNewSignatory customMessage
+                                                originalsiglink
+                                                newsiglink
+                                                doc
+      scheduleEmailSendout $ mail
+        { to                = [getMailAddress newsiglink]
+        , kontraInfoForMail = [ DocumentInvitationMail (documentid doc)
+                                                       (signatorylinkid newsiglink)
+                              ]
+        }
 
-    let sendSMS =
-          scheduleSMS doc
-            =<< smsForwardSigningForNewSignatory originalsiglink newsiglink doc
+    sendSMS =
+      scheduleSMS doc =<< smsForwardSigningForNewSignatory originalsiglink newsiglink doc
 
-    let useMail = isGood . asValidEmail $ getEmail newsiglink
-        useSMS  = isGood . asValidPhoneForSMS $ getMobile newsiglink
+    useMail = isGood . asValidEmail $ getEmail newsiglink
+    useSMS  = isGood . asValidPhoneForSMS $ getMobile newsiglink
 
-    case signatorylinkdeliverymethod newsiglink of
-      APIDelivery            -> return ()
-      PadDelivery            -> return ()
-      EmailDelivery          -> when useMail sendMail
-      MobileDelivery         -> when useSMS sendSMS
-      EmailAndMobileDelivery -> do
-        when useMail sendMail
-        when useSMS  sendSMS
-      PortalDelivery -> return ()
 
 sendForwardSigningMessagesToAuthor
   :: Kontrakcja m => SignatoryLink -> SignatoryLink -> Document -> m ()
@@ -680,7 +682,7 @@ sendForwardSigningMessagesToAuthor originalsiglink newsiglink doc = do
         mail <- mailForwardSigningForAuthor originalsiglink newsiglink doc
         scheduleEmailSendout $ mail
           { to                = [getMailAddress authorsiglink]
-          , kontraInfoForMail = Just . OtherDocumentMail $ documentid doc
+          , kontraInfoForMail = [OtherDocumentMail $ documentid doc]
           }
 
   let sendSMS =
@@ -799,7 +801,7 @@ sendForwardEmail email noContent noAttachments asiglink = do
     { to                = [MailAddress "" email]
     , content           = if noContent then "" else content mail
     , attachments       = attachments mail <> mailattachments
-    , kontraInfoForMail = Just . OtherDocumentMail $ documentid doc
+    , kontraInfoForMail = [OtherDocumentMail $ documentid doc]
     }
   return ()
 
@@ -847,13 +849,21 @@ sendPortalMail
   => PortalMailKind
   -> User  -- ^ The author of the document that triggered the invitation.
   -> Text  -- ^ The portal URL configured for the user group of the document author.
-  -> SignatoryLink  -- ^ The signatory we want to invite.
+  -> (DocumentID, SignatoryLink)  -- ^ The ID of document and signatory we want to invite.
+  -> [(DocumentID, SignatoryLink)] -- ^ Additional document IDs and signatory links for purpose of event logging and delivery confirmation.
   -> CreateUserContext
   -> m ()
-sendPortalMail kind authorUser portalUrl sl cuctx = do
+sendPortalMail kind authorUser portalUrl signatory@(_, sl) signatories cuctx = do
   let email = Email $ getEmail sl
       name  = getFullName sl
       role  = signatoryrole sl
+      mkKontraMailType (did, sl') = case kind of
+        PortalInvitation -> DocumentInvitationMail did slid
+        PortalReminder   -> OtherDocumentMail did
+        where slid = signatorylinkid sl'
+      allSignatoryLinks = signatory : signatories
+      kifms             = mkKontraMailType <$> allSignatoryLinks
+
   muser <- dbQuery $ GetUserByEmail email
   case muser of
     -- existing, activated user account
@@ -861,7 +871,7 @@ sendPortalMail kind authorUser portalUrl sl cuctx = do
       let link = LinkPortalInviteWithAccount portalUrl email
       mail <- constructPortalMail kind authorUser link role
       scheduleEmailSendout
-        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
+        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = kifms }
 
     -- account not yet activated, or not existing
     _ -> do
@@ -871,7 +881,7 @@ sendPortalMail kind authorUser portalUrl sl cuctx = do
             LinkPortalInviteWithoutAccount portalUrl email (uarToken uar) (uarExpires uar)
       mail <- constructPortalMail kind authorUser link role
       scheduleEmailSendout
-        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = Nothing }
+        $ mail { to = [MailAddress name (unEmail email)], kontraInfoForMail = kifms }
 
 createUserForPortal
   :: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadDB m)

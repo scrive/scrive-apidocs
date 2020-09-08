@@ -1,5 +1,5 @@
-module SMS.KontraInfoForSMS (
-    KontraInfoForSMS(..)
+module SMS.KontraInfoForSMS
+  ( KontraInfoForSMS(..)
   , AddKontraInfoForSMS(..)
   , getUnreadSMSEvents
   ) where
@@ -8,11 +8,13 @@ import Control.Monad.Catch
 import Data.Aeson
 import Data.Int
 import GHC.Generics
+import qualified Data.Text as T
 
 import DB
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import Log.Identifier
+import SMS.FromKontra.Tables
 import SMS.Types
 
 data KontraInfoForSMSType =
@@ -65,78 +67,94 @@ instance Loggable KontraInfoForSMS where
 
   logDefaultLabel _ = "sms_document_info"
 
-data AddKontraInfoForSMS = AddKontraInfoForSMS ShortMessageID KontraInfoForSMS
+data AddKontraInfoForSMS = AddKontraInfoForSMS ShortMessageID [KontraInfoForSMS]
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForSMS Bool where
+  dbUpdate (AddKontraInfoForSMS _     []  ) = pure True
   dbUpdate (AddKontraInfoForSMS smsid kifs) = do
-    runQuery01 . sqlInsert "kontra_info_for_smses" $ do
+    n <- runQuery . sqlInsert "kontra_info_for_smses" $ do
+      let values = kontraInfoToTuple <$> kifs
       sqlSet "sms_id" smsid
-      case kifs of
-        (DocumentInvitationSMS did slid) -> do
-          sqlSet "sms_type"          DocumentInvitationSMST
-          sqlSet "document_id"       did
-          sqlSet "signatory_link_id" slid
-        (DocumentPinSendoutSMS did slid) -> do
-          sqlSet "sms_type"          DocumentPinSendoutSMST
-          sqlSet "document_id"       did
-          sqlSet "signatory_link_id" slid
-        (DocumentPartyNotificationSMS did slid) -> do
-          sqlSet "sms_type"          DocumentPartyNotificationSMST
-          sqlSet "document_id"       did
-          sqlSet "signatory_link_id" slid
-        (OtherDocumentSMS did) -> do
-          sqlSet "sms_type"    OtherDocumentSMST
-          sqlSet "document_id" did
+      sqlSetList "sms_type"          (view _1 <$> values)
+      sqlSetList "document_id"       (view _2 <$> values)
+      sqlSetList "signatory_link_id" (view _3 <$> values)
+    pure $ n == length kifs
+    where
+      kontraInfoToTuple kifs' = case kifs' of
+        (DocumentInvitationSMS did slid) -> (DocumentInvitationSMST, did, Just slid)
+        (DocumentPinSendoutSMS did slid) -> (DocumentPinSendoutSMST, did, Just slid)
+        (DocumentPartyNotificationSMS did slid) ->
+          (DocumentPartyNotificationSMST, did, Just slid)
+        (OtherDocumentSMS did) -> (OtherDocumentSMST, did, Nothing)
 
-fetchKontraInfoForSMS
-  :: (Maybe KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID)
-  -> Maybe KontraInfoForSMS
-fetchKontraInfoForSMS (Nothing, _, _) = Nothing
-fetchKontraInfoForSMS (Just DocumentInvitationSMST, Just did, Just sig) =
-  Just $ DocumentInvitationSMS did sig
-fetchKontraInfoForSMS (Just DocumentInvitationSMST, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
-fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, Just did, Just sig) =
-  Just $ DocumentPinSendoutSMS did sig
-fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
-fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, Just did, Just sig) =
-  Just $ DocumentPartyNotificationSMS did sig
-fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
-fetchKontraInfoForSMS (Just OtherDocumentSMST, Just did, Nothing) =
-  Just $ OtherDocumentSMS did
-fetchKontraInfoForSMS (Just OtherDocumentSMST, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"
+data KontraInfoForSMSAggregate
+  = KontraInfoForSMSAggregate
+  { kontraInfoForSMSType :: KontraInfoForSMSType
+  , kontraInfoForSMSDocumentId :: DocumentID
+  , kontraInfoForSMSSignatoryLinkId :: Maybe SignatoryLinkID
+  }
+
+type instance CompositeRow KontraInfoForSMSAggregate
+  = (KontraInfoForSMSType, DocumentID, Maybe SignatoryLinkID)
+
+instance PQFormat KontraInfoForSMSAggregate where
+  pqFormat = compositeTypePqFormat ctKontraForSMSAggregate
+
+instance CompositeFromSQL KontraInfoForSMSAggregate where
+  toComposite (sms_type, did, mslid) = KontraInfoForSMSAggregate
+    { kontraInfoForSMSType            = sms_type
+    , kontraInfoForSMSDocumentId      = did
+    , kontraInfoForSMSSignatoryLinkId = mslid
+    }
+
+fetchKontraInfoForSMS :: KontraInfoForSMSAggregate -> KontraInfoForSMS
+fetchKontraInfoForSMS KontraInfoForSMSAggregate { kontraInfoForSMSType = sms_type, kontraInfoForSMSDocumentId = did, kontraInfoForSMSSignatoryLinkId = mslid }
+  = mapper mslid
+  where
+    mapper = case sms_type of
+      DocumentInvitationSMST -> maybe
+        (unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)")
+        (DocumentInvitationSMS did)
+      DocumentPinSendoutSMST -> maybe
+        (unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)")
+        (DocumentPinSendoutSMS did)
+      DocumentPartyNotificationSMST -> maybe
+        (unexpectedError
+          "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
+        )
+        (DocumentPartyNotificationSMS did)
+      OtherDocumentSMST -> maybe
+        (OtherDocumentSMS did)
+        (const $ unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)")
 
 fetchEvent
   :: ( SMSEventID
      , ShortMessageID
      , SMSEvent
      , Text
-     , Maybe KontraInfoForSMSType
-     , Maybe DocumentID
-     , Maybe SignatoryLinkID
+     , CompositeArray1 KontraInfoForSMSAggregate
      )
-  -> (SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)
-fetchEvent (eid, smsid, e, msisdn, mkifsmst, mkifsmsdid, mkifsmsslid) =
-  (eid, smsid, e, msisdn, mkifsms)
-  where mkifsms = fetchKontraInfoForSMS (mkifsmst, mkifsmsdid, mkifsmsslid)
+  -> (SMSEventID, ShortMessageID, SMSEvent, Text, [KontraInfoForSMS])
+fetchEvent (eid, smsid, evt, msisdn, kifss) = (eid, smsid, evt, msisdn, kifs)
+  where kifs = fetchKontraInfoForSMS <$> unCompositeArray1 kifss
 
 getUnreadSMSEvents
-  :: MonadDB m => m [(SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)]
+  :: MonadDB m => m [(SMSEventID, ShortMessageID, SMSEvent, Text, [KontraInfoForSMS])]
 getUnreadSMSEvents = do
-  runQuery_ . sqlSelect "sms_events" $ do
-    sqlJoinOn "smses" "smses.id = sms_events.sms_id"
-    sqlLeftJoinOn "kontra_info_for_smses kifsms" "sms_events.sms_id = kifsms.sms_id"
-    sqlResult "sms_events.id"
-    sqlResult "sms_events.sms_id"
-    sqlResult "sms_events.event"
-    sqlResult "smses.msisdn"
-    sqlResult "kifsms.sms_type"
-    sqlResult "kifsms.document_id"
-    sqlResult "kifsms.signatory_link_id"
-    sqlWhere "sms_events.event_read IS NULL"
-    sqlOrderBy "kifsms.document_id"
-    sqlOrderBy "smses.id"
-    sqlOrderBy "sms_events.id"
+  runQuery_ . sqlSelect "smses s" $ do
+    sqlResult "e.id"
+    sqlResult "e.sms_id"
+    sqlResult "e.event"
+    sqlResult "s.msisdn"
+    sqlResult . mkSQL $ T.concat
+      [ "ARRAY_AGG((kifs.sms_type, kifs.document_id, kifs.signatory_link_id)::"
+      , unRawSQL $ ctName ctKontraForSMSAggregate
+      , ")"
+      ]
+    sqlJoinOn "sms_events e" "s.id = e.sms_id"
+    sqlLeftJoinOn "kontra_info_for_smses kifs" "e.sms_id = kifs.sms_id"
+    sqlWhere "e.event_read IS NULL"
+    sqlOrderBy "s.id"
+    sqlOrderBy "e.id"
+    sqlGroupBy "s.id"
+    sqlGroupBy "e.id"
   fetchMany fetchEvent

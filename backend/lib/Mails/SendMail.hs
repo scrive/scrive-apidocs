@@ -85,9 +85,7 @@ scheduleEmailSendoutHelper authorname mail@Mail {..} = do
         , wrapHTML content
         , map toAttachment attachments
         )
-      case kontraInfoForMail of
-        Just kifm -> void . dbUpdate $ AddKontraInfoForMail mailid kifm
-        Nothing   -> return ()
+      void . dbUpdate $ AddKontraInfoForMail mailid kontraInfoForMail
   where
     toAddress MailAddress {..} = Address { addrName = fullname, addrEmail = email }
     toAttachment (name, cont) = M.Attachment { attName = name, attContent = cont }

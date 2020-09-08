@@ -307,4 +307,6 @@ kontraMigrations =
   , moveFlowUserAuthConfigsToJson
   , createTableFlowAuthenticationFailures
   , updateLegacyAuthenticationToViewInTemplates
+  , updateKontraInfoForMailsAggregate
+  , updateKontraInfoForSMSesAggregate
   ]

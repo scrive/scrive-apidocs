@@ -35,6 +35,7 @@ import Control.Conditional (whenM)
 import Control.Monad.Base
 import Crypto.RNG
 import Data.List.Extra (nubOrd)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Log
@@ -303,18 +304,17 @@ docApiV2StartWithPortal = api $ do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
-      let signatoriesWhoNeedInviting = nubPortalSignatories
-            [ sl
+      let signatoriesWhoNeedInviting = groupPortalSignatories
+            [ (documentid doc, sl)
             | doc <- docs1
             , sl <- documentsignatorylinks doc
             , signatorylinkdeliverymethod sl == PortalDelivery  -- is portal signatory
             , not $ isForwarded sl  -- redundant, but here for clarity
             , signatorysignorder sl <= documentcurrentsignorder doc
             ]  -- is actived
-
-      forM_ signatoriesWhoNeedInviting $ \sl -> do
+      forM_ signatoriesWhoNeedInviting $ \(didWithSl :| didsWithSls) -> do
         uctx <- getCreateUserContextFromContext
-        sendPortalMail PortalInvitation user portalUrl sl uctx
+        sendPortalMail PortalInvitation user portalUrl didWithSl didsWithSls uctx
 
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
 
@@ -540,8 +540,8 @@ docApiV2RemindWithPortal = api $ do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   case ugwpSettings ugwp ^. #portalUrl of
     Just portalUrl -> do
-      let signatoriesWhoNeedReminding = nubPortalSignatories
-            [ sl
+      let signatoriesWhoNeedReminding = groupPortalSignatories
+            [ (documentid doc, sl)
             | doc <- docs1
             , sl <- documentsignatorylinks doc
             , signatorylinkdeliverymethod sl == PortalDelivery  -- is portal signatory
@@ -550,9 +550,9 @@ docApiV2RemindWithPortal = api $ do
             , isSignatoryAndHasNotSigned sl || isApproverAndHasNotApproved sl
             ]  -- needs to act
 
-      forM_ signatoriesWhoNeedReminding $ \sl -> do
+      forM_ signatoriesWhoNeedReminding $ \(didWithSl :| didsWithSls) -> do
         uctx <- getCreateUserContextWithoutContext
-        sendPortalMail PortalReminder user portalUrl sl uctx
+        sendPortalMail PortalReminder user portalUrl didWithSl didsWithSls uctx
 
     Nothing -> apiError $ requestFailed "User group doesn't have portal url set"
   docs2 <- forM dids $ \did -> logDocument did . withDocumentID did $ do

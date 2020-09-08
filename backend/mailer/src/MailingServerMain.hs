@@ -224,7 +224,7 @@ main = do
               return $ Ok MarkProcessed
           CollectServiceTestResult -> withPostgreSQL pool $ if hasFailoverTests conf
             then runCryptoRNGT rng $ do
-              events <- dbQuery GetServiceTestEvents
+              events <- getUnreadMailEvents True
               result <- if any isDelivered events
                 then do
                   logInfo_ "Service testing emails were delivered successfully"

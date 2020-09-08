@@ -58,16 +58,15 @@ processEvents = do
   events <- getUnreadSMSEvents
   forM_
     events
-    (\(eid, smsid, eventType, smsOrigMsisdn, mkifsms) -> do
-      case mkifsms of
-        Nothing -> do
-          logInfo "Proccessing event without document info"
-            $ object [identifier eid, identifier smsid, "event_type" .= show eventType]
-          void . dbUpdate $ MarkSMSEventAsRead eid
-        Just kifsms -> do
-          logInfo "Messages.procesEvent: logging info"
-            $ object [identifier eid, identifier smsid, "event_type" .= show eventType]
-          processEvent (eid, smsid, eventType, kifsms, smsOrigMsisdn)
+    (\(eid, smsid, eventType, smsOrigMsisdn, kifss) -> case kifss of
+      [] -> do
+        logInfo "Proccessing event without document info"
+          $ object [identifier eid, identifier smsid, "event_type" .= show eventType]
+        void . dbUpdate $ MarkSMSEventAsRead eid
+      _ -> do
+        logInfo "Messages.procesEvent: logging info"
+          $ object [identifier eid, identifier smsid, "event_type" .= show eventType]
+        forM_ kifss $ \kifs -> processEvent (eid, smsid, eventType, kifs, smsOrigMsisdn)
     )
   where
     processEvent (eid, _, eventType, DocumentInvitationSMS _did slid, smsOrigMsisdn) = do
@@ -94,10 +93,10 @@ processEvents = do
                 Nothing  -> dbQuery GetMainBrandedDomain
                 Just uid -> dbQuery $ GetBrandedDomainByUserID uid
               let host = bd ^. #url
-                  -- since when email is reported deferred author has a possibility to
-                  -- change email address, we don't want to send him emails reporting
-                  -- success/failure for old signatory address, so we need to compare
-                  -- addresses here (for dropped/bounce events)
+                  -- since when sms is reported deferred author has a possibility to
+                  -- change phone number, we don't want to send him SMSes reporting
+                  -- success/failure for old signatory phone number, so we need to compare
+                  -- numbers here (for dropped/bounce events)
                   handleEv (SMSEvent phone ev) = do
                     logInfo "Comparing phone numbers" $ object
                       [ identifier slid

@@ -38,8 +38,8 @@ data Mail = Mail
   , attachments       :: [( Text
                           , Either BS.ByteString FileID )]
     -- ^ List of attachments (name,content).
-  , kontraInfoForMail :: Maybe KontraInfoForMail
-    -- ^ Connection between this message and some entity in kontrakcja.
+  , kontraInfoForMail :: [KontraInfoForMail]
+    -- ^ Connection between this message and some entities in kontrakcja.
   } deriving (Eq, Ord, Show)
 
 
@@ -52,18 +52,17 @@ attachmentToJson (name, acontent) = object
   ]
 
 instance Loggable Mail where
-  logValue Mail {..} =
-    object
-      $  [ "attachment_count" .= length attachments
-         , "attachments" .= map attachmentToJson attachments
-         , "content" .= content
-         , "from" .= originatorEmail
-         , "originator" .= originator
-         , "reply_to" .= maybe Null toJSON replyTo
-         , "subject" .= title
-         , "to" .= to
-         ]
-      ++ maybeToList (logPair_ <$> kontraInfoForMail)
+  logValue Mail {..} = object
+    [ "attachment_count" .= length attachments
+    , "attachments" .= map attachmentToJson attachments
+    , "content" .= content
+    , "from" .= originatorEmail
+    , "originator" .= originator
+    , "reply_to" .= maybe Null toJSON replyTo
+    , "subject" .= title
+    , "to" .= to
+    , "mail_infos" .= fmap logValue kontraInfoForMail
+    ]
 
   logDefaultLabel _ = "mail"
 
@@ -75,5 +74,5 @@ emptyMail = Mail { to                = []
                  , title             = ""
                  , content           = ""
                  , attachments       = []
-                 , kontraInfoForMail = Nothing
+                 , kontraInfoForMail = []
                  }

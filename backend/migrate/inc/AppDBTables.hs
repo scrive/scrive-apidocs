@@ -58,35 +58,39 @@ import UserGroup.Tables
 import UserGroupAccounts.Tables
 
 kontraComposites :: [CompositeType]
-kontraComposites =
-  [ ctAuthorAttachment
-    , ctSignatoryAttachment
-    , ctPlacementAnchor
-    , ctFieldPlacement
-    , ctHighlightedPage
-    , ctSignatoryField
-    , ctDocumentTag
-    , ctFile
-    , ctMainFile
-    , ctMainFile1
-    , ctSignatoryConsentQuestion
-    , ctSignatoryAccessToken
-    , ctSignatoryLink
-    , ctDocument
-    , ctDocument1
-    , ctFeatureFlags
-    , ctFeatureFlags10
+kontraComposites = concat [otherComposites, userGroupComposites, mailerComposites]
+  where
+    otherComposites =
+      [ ctAuthorAttachment
+      , ctSignatoryAttachment
+      , ctPlacementAnchor
+      , ctFieldPlacement
+      , ctHighlightedPage
+      , ctSignatoryField
+      , ctDocumentTag
+      , ctFile
+      , ctMainFile
+      , ctMainFile1
+      , ctSignatoryConsentQuestion
+      , ctSignatoryAccessToken
+      , ctSignatoryLink
+      , ctDocument
+      , ctDocument1
+      , ctFeatureFlags
+      , ctFeatureFlags10
+      , ctKontraForMailAggregate
+      , ctKontraForSMSAggregate
+      ]
 
-  -- user group composites
-    , ctUserGroupInvoicing
-    , ctUserGroupSettings
-    , ctUserGroupSettings15
-    , ctUserGroupUI
-    , ctUserGroupAddress
-    , ctUserGroupAddress1
-    , ctTag
-    ]
-    ++ mailerComposites
+    userGroupComposites =
+      [ ctUserGroupInvoicing
+      , ctUserGroupSettings
+      , ctUserGroupSettings15
+      , ctUserGroupUI
+      , ctUserGroupAddress
+      , ctUserGroupAddress1
+      , ctTag
+      ]
 
 kontraDomains :: [Domain]
 kontraDomains = [domainColor, domainFont]
@@ -102,83 +106,83 @@ kontraTriggers :: [SQLTrigger]
 kontraTriggers = [searchUpdateDocs, searchUpdateSignatoryLinkFields]
 
 kontraTables :: [Table]
-kontraTables =
-  [ tableThemes
-    , tableBrandedDomains
-    , tableCallbackConsumers
-    , tableCallbacks
-    , tableFolders
-    , tableUserGroups
-    , tableUsers
-    , tableUsersHistory
-    , tableCompanyInvites
-    , tableFiles
-    , tableDocuments
-    , tableAccessControl
-    , tableMainFiles
-    , tableSignatoryLinks
-    , tableAuthorAttachments
-    , tableSignatoryAttachments
-    , tableEvidenceLog
-    , tableDocumentTags
-    , tableSignatoryLinkFields
-    , tableFieldPlacements
-    , tablePlacementAnchors
-    , tableSignatoryScreenshots
-    , tableAPIToken
-    , tableAccessToken
-    , tablePrivilege
-    , tableTempCredential
-    , tableTempPrivileges
-    , tablePasswordReminders
-    , tableEmailChangeRequests
-    , tableUserAccountRequests
-    , tableAttachments
-    , tableDocumentApiCallbackConsumers
-    , tableDocumentApiCallbacks
-    , tableDocumentExtendingConsumers
-    , tableDocumentExtendingJobs
-    , tableDocumentSealingConsumers
-    , tableDocumentSealingJobs
-    , tableDocumentSigningConsumers
-    , tableDocumentSigningJobs
-    , tableSessions
-    , tableDocumentSessionTokens
-    , tableCgiGrpTransactions
-    , tableEIDSignatures
-    , tableAsyncEventQueue
-    , tableHostClock
-    , tableUsersCallbackScheme
-    , tableDocumentAutomaticReminders
-    , tableSignatorySMSPins
-    , tableChargeableItems
-    , tableThemeOwnership
-    , tableEIDAuthentications
-    , tableHighlightedPages
-    , tableFeatureFlags
-    , tableNetsSignOrders
-    , tableEIDServiceTransactions
-    , tableUserTags
-    ]
-    ++ cronTables
-    ++ mailerTables
-    ++ messengerTables
-    ++ [ tableKontraInfoForMails
-       , tableKontraInfoForSMSes
-       , tableAPILogs
-       , tableSignatoryLinkConsentQuestions
-       , tableUserGroupSettings
-       , tableUserGroupInvoicings
-       , tableUserGroupUIs
-       , tableUserGroupAddresses
-       , tableUserGroupFreeDocumentTokens
-       , tableUserGroupTags
-       , tableFilePurgeConsumers
-       , tableFilePurgeJobs
-       , tableTemporaryLoginTokens
-       , tableApiCallbackResult
-       , tableSignatoryAccessTokens
-       , tableUserGroupDeletionRequests
-       , tableUserGroupDeletionLog
-       ]
-    ++ flowTables
+kontraTables = concat
+  [kontraTables1, cronTables, mailerTables, messengerTables, kontraTables2, flowTables]
+  where
+    kontraTables1 =
+      [ tableThemes
+      , tableBrandedDomains
+      , tableCallbackConsumers
+      , tableCallbacks
+      , tableFolders
+      , tableUserGroups
+      , tableUsers
+      , tableUsersHistory
+      , tableCompanyInvites
+      , tableFiles
+      , tableDocuments
+      , tableAccessControl
+      , tableMainFiles
+      , tableSignatoryLinks
+      , tableAuthorAttachments
+      , tableSignatoryAttachments
+      , tableEvidenceLog
+      , tableDocumentTags
+      , tableSignatoryLinkFields
+      , tableFieldPlacements
+      , tablePlacementAnchors
+      , tableSignatoryScreenshots
+      , tableAPIToken
+      , tableAccessToken
+      , tablePrivilege
+      , tableTempCredential
+      , tableTempPrivileges
+      , tablePasswordReminders
+      , tableEmailChangeRequests
+      , tableUserAccountRequests
+      , tableAttachments
+      , tableDocumentApiCallbackConsumers
+      , tableDocumentApiCallbacks
+      , tableDocumentExtendingConsumers
+      , tableDocumentExtendingJobs
+      , tableDocumentSealingConsumers
+      , tableDocumentSealingJobs
+      , tableDocumentSigningConsumers
+      , tableDocumentSigningJobs
+      , tableSessions
+      , tableDocumentSessionTokens
+      , tableCgiGrpTransactions
+      , tableEIDSignatures
+      , tableAsyncEventQueue
+      , tableHostClock
+      , tableUsersCallbackScheme
+      , tableDocumentAutomaticReminders
+      , tableSignatorySMSPins
+      , tableChargeableItems
+      , tableThemeOwnership
+      , tableEIDAuthentications
+      , tableHighlightedPages
+      , tableFeatureFlags
+      , tableNetsSignOrders
+      , tableEIDServiceTransactions
+      , tableUserTags
+      ]
+    kontraTables2 =
+      [ tableKontraInfoForMails
+      , tableKontraInfoForSMSes
+      , tableAPILogs
+      , tableSignatoryLinkConsentQuestions
+      , tableUserGroupSettings
+      , tableUserGroupInvoicings
+      , tableUserGroupUIs
+      , tableUserGroupAddresses
+      , tableUserGroupFreeDocumentTokens
+      , tableUserGroupTags
+      , tableFilePurgeConsumers
+      , tableFilePurgeJobs
+      , tableTemporaryLoginTokens
+      , tableApiCallbackResult
+      , tableSignatoryAccessTokens
+      , tableUserGroupDeletionRequests
+      , tableUserGroupDeletionLog
+      ]
