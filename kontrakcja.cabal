@@ -107,6 +107,41 @@ Library kontrakcja-appdir
                     , directory
                     , filepath
 
+Library flow
+  Import: common-stanza
+  Hs-source-dirs: backend/flow/lib
+
+  GHC-Options: -Werror -Wall
+  GHC-Prof-Options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  Exposed-Modules:
+                   Flow.Aggregator
+                 , Flow.Core.Type.Callback
+                 , Flow.Core.Type.Url
+                 , Flow.HighTongue
+                 , Flow.Machinize
+                 , Flow.Message
+                 , Flow.Message.Internal
+                 , Flow.Names
+                 , Flow.Names.Internal
+                 , Flow.Process
+                 , Flow.Process.Internal
+
+  Build-Depends: base-noprelude
+               , kontrakcja-prelude
+               , aeson
+               , aeson-casing
+               , containers
+               , exceptions
+               , extra
+               , hpqtypes
+               , mtl
+               , servant
+               , text
+               , unordered-containers
+               , uuid
+               , yaml
+
 Library
   import: common-stanza
 
@@ -374,22 +409,15 @@ Library
                  , File.Tables
                  , FlashMessage
                  , Flow.ActionConsumers
-                 , Flow.Aggregator
                  , Flow.Client
-                 , Flow.Core.Type.Callback
-                 , Flow.Core.Type.Url
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
-                 , Flow.HighTongue
                  , Flow.Html
                  , Flow.Id
                  , Flow.KontraHandler
-                 , Flow.Machinize
-                 , Flow.Message
-                 , Flow.Message.Internal
                  , Flow.Migrations
                  , Flow.Model
                  , Flow.Model.InstanceSession
@@ -397,11 +425,7 @@ Library
                  , Flow.Model.Types.Internal
                  , Flow.Model.Types.FlowUserId
                  , Flow.Model.Types.UserIdType
-                 , Flow.Names
-                 , Flow.Names.Internal
                  , Flow.OrphanInstances
-                 , Flow.Process
-                 , Flow.Process.Internal
                  , Flow.Routes
                  , Flow.Routes.Api
                  , Flow.Routes.Pages
