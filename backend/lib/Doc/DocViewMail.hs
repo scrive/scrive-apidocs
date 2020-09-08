@@ -422,7 +422,7 @@ mailPartyProcessFinalizedNotification document signatoryLink action = do
                                                        (documentpreviewfile document)
                                                        150
   return email { to                = [getMailAddress signatoryLink]
-               , kontraInfoForMail = Just $ OtherDocumentMail documentId
+               , kontraInfoForMail = [OtherDocumentMail documentId]
                }
 
 

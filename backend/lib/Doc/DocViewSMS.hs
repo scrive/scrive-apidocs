@@ -43,10 +43,10 @@ mkSMS
   :: (MonadDB m, MonadThrow m, MonadTime m, MailContextMonad m)
   => Document
   -> SignatoryLink
-  -> Maybe KontraInfoForSMS
+  -> [KontraInfoForSMS]
   -> Text
   -> m SMS
-mkSMS doc sl mkontraInfoForSMS msgBody = do
+mkSMS doc sl kontraInfoForSMS msgBody = do
   mctx                    <- getMailContext
   (moriginator, provider) <- case getAuthorUserId doc of
     Nothing  -> return (Nothing, SMSDefault)
@@ -59,7 +59,7 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
           return (ugwpUI ugwp ^. #smsOriginator, ugwpSettings ugwp ^. #smsProvider)
   let originator = fromMaybe (mctx ^. #brandedDomain % #smsOriginator)
                              (justEmptyToNothing moriginator)
-  return $ SMS (getMobile sl) mkontraInfoForSMS msgBody originator provider
+  return $ SMS (getMobile sl) kontraInfoForSMS msgBody originator provider
 
 smsDocumentErrorAuthor
   :: ( CryptoRNG m
@@ -73,7 +73,7 @@ smsDocumentErrorAuthor
   -> SignatoryLink
   -> m SMS
 smsDocumentErrorAuthor doc sl = do
-  mkSMS doc sl (Just . OtherDocumentSMS $ documentid doc)
+  mkSMS doc sl [OtherDocumentSMS $ documentid doc]
     =<< renderLocalTemplate doc "_smsDocumentErrorAuthor" (smsFields doc)
 
 smsDocumentErrorSignatory
@@ -88,7 +88,7 @@ smsDocumentErrorSignatory
   -> SignatoryLink
   -> m SMS
 smsDocumentErrorSignatory doc sl = do
-  mkSMS doc sl (Just . OtherDocumentSMS $ documentid doc)
+  mkSMS doc sl [OtherDocumentSMS $ documentid doc]
     =<< renderLocalTemplate doc "_smsDocumentErrorSignatory" (smsFields doc)
 
 smsPartyProcessFinalizedNotification
@@ -124,7 +124,7 @@ smsPartyProcessFinalizedNotification doc sl action = do
         renderLocalTemplate doc (templateName template) fields
   mkSMS doc
         sl
-        (Just $ DocumentPartyNotificationSMS (documentid doc) (signatorylinkid sl))
+        [DocumentPartyNotificationSMS (documentid doc) (signatorylinkid sl)]
         smsContents
 
 smsInvitation
@@ -146,10 +146,7 @@ smsInvitation invitationTo sl doc = do
       return $ t <+> link
     Nothing ->
       renderLocalTemplate doc template (smsFields doc >> smsInvitationLinkFields sl)
-  mkSMS doc
-        sl
-        (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl))
-        smsContent
+  mkSMS doc sl [DocumentInvitationSMS (documentid doc) (signatorylinkid sl)] smsContent
   where
     template = case invitationTo of
       Sign    -> templateName "_smsInvitationToSign"
@@ -175,10 +172,7 @@ smsInvitationToAuthor doc sl = do
     Nothing -> renderLocalTemplate doc
                                    "_smsInvitationToAuthor"
                                    (smsFields doc >> smsInvitationLinkFields sl)
-  mkSMS doc
-        sl
-        (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl))
-        smsContent
+  mkSMS doc sl [DocumentInvitationSMS (documentid doc) (signatorylinkid sl)] smsContent
 
 -- brittany-disable-next-binding
 smsReminder
@@ -211,7 +205,7 @@ smsReminder automatic doc sl = do
  where
   (smstypesignatory, template) = if
     | isSignatoryAndHasSigned sl || isApproverAndHasApproved sl
-      -> (Just (OtherDocumentSMS $ documentid doc), templateName "_smsReminderSigned")
+      -> ([OtherDocumentSMS $ documentid doc], templateName "_smsReminderSigned")
     | automatic && isApprover sl
       -> (invitation, templateName "_smsReminderApproveAutomatic")
     | automatic
@@ -221,7 +215,7 @@ smsReminder automatic doc sl = do
     | otherwise
       -> (invitation, templateName "_smsReminder")
 
-  invitation = Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)
+  invitation = [DocumentInvitationSMS (documentid doc) (signatorylinkid sl)]
 
 smsClosedNotification
   :: ( CryptoRNG m
@@ -243,7 +237,7 @@ smsClosedNotification doc sl withEmail sealFixed = do
       return $ t <+> link
     Nothing ->
       renderLocalTemplate doc template (smsFields doc >> smsConfirmationLinkFields sl)
-  mkSMS doc sl (Just . OtherDocumentSMS $ documentid doc) smsContent
+  mkSMS doc sl [OtherDocumentSMS $ documentid doc] smsContent
   where
     template = case (sealFixed, withEmail) of
       (True , True ) -> templateName "_smsCorrectedNotificationWithEmail"
@@ -264,7 +258,7 @@ smsRejectNotification
   -> SignatoryLink
   -> m SMS
 smsRejectNotification doc sl rejector = do
-  mkSMS doc sl (Just . OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate
+  mkSMS doc sl [OtherDocumentSMS $ documentid doc] =<< renderLocalTemplate
     doc
     "_smsRejectNotification"
     (smsFields doc >> F.value "rejectorName" (getSmartName rejector))
@@ -288,7 +282,7 @@ smsForwardSigningForAuthor originalsl newsl doc = do
     smsFields doc
     F.value "fromName" (getSmartName originalsl)
     F.value "toName" (getSmartName newsl)
-  mkSMS doc alink (Just . OtherDocumentSMS $ documentid doc) message
+  mkSMS doc alink [OtherDocumentSMS $ documentid doc] message
 
 smsForwardSigningForNewSignatory
   :: ( CryptoRNG m
@@ -315,10 +309,7 @@ smsForwardSigningForNewSignatory originalsl newsl doc = do
     smsInvitationLinkFields newsl
     F.value "fromName" (getSmartName originalsl)
     F.value "toName" (getSmartName newsl)
-  mkSMS doc
-        newsl
-        (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid newsl))
-        message
+  mkSMS doc newsl [DocumentInvitationSMS (documentid doc) (signatorylinkid newsl)] message
 
 smsPinCodeSendout
   :: ( CryptoRNG m
@@ -335,7 +326,7 @@ smsPinCodeSendout
   -> m SMS
 smsPinCodeSendout doc sl phone pin = do
   sms <-
-    mkSMS doc sl (Just $ DocumentPinSendoutSMS (documentid doc) (signatorylinkid sl))
+    mkSMS doc sl [DocumentPinSendoutSMS (documentid doc) (signatorylinkid sl)]
       =<< renderLocalTemplate doc "_smsPinSendout" (smsFields doc >> F.value "pin" pin)
   return sms { smsMSISDN = phone }
 

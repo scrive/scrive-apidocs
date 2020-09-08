@@ -27,11 +27,12 @@ module Doc.DocUtils (
   , allRequiredAttachmentsAreOnList
   , hasDigitalSignature
   , hasGuardtimeSignature
-  , nubPortalSignatories
+  , groupPortalSignatories
 ) where
 
 import Control.Monad.Catch
-import Data.List.Extra (nubOrdOn)
+import Data.List.Extra (groupOn)
+import Data.List.NonEmpty (NonEmpty, fromList)
 import Text.StringTemplates.Templates
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
@@ -40,6 +41,7 @@ import DB
 import Doc.DigitalSignatureStatus
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocumentID
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import File.Model
@@ -291,11 +293,12 @@ requiredAuthorAttachments :: Document -> [AuthorAttachment]
 requiredAuthorAttachments doc =
   filter authorattachmentrequired $ documentauthorattachments doc
 
--- | Drop all but one signatory link per email address, keeping signing over
+-- | Groups signatory links per email address with order keeping signing over
 -- approving over viewing links; used for grouping emails to portal signatories.
-nubPortalSignatories :: [SignatoryLink] -> [SignatoryLink]
-nubPortalSignatories = nubOrdOn getEmail
-  . sortOn (\sl -> (roleAsInt $ signatoryrole sl, getEmail sl))
+groupPortalSignatories
+  :: [(DocumentID, SignatoryLink)] -> [NonEmpty (DocumentID, SignatoryLink)]
+groupPortalSignatories = fmap fromList . groupOn (getEmail . snd) . sortOn
+  (\(_, sl) -> (getEmail sl, roleAsInt $ signatoryrole sl))
   where
     roleAsInt SignatoryRoleSigningParty          = 0
     roleAsInt SignatoryRoleApprover              = 1

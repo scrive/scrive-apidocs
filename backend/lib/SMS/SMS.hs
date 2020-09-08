@@ -25,7 +25,7 @@ import SMS.Types (SMSProvider(..))
 
 data SMS = SMS {
     smsMSISDN     :: Text -- ^ Number of recipient in international form (+NNXXYYYYYYY)
-  , kontraInfoForSMS :: Maybe KontraInfoForSMS -- ^ Connection between this message and and some entity in kontrakcja
+  , kontraInfoForSMS :: [KontraInfoForSMS] -- ^ Connection between this message and and some entities in kontrakcja
   , smsBody       :: Text -- ^ Message body
   , smsOriginator :: Text -- ^ SMS originator/sender name
   , smsProvider   :: SMSProvider -- ^ SMS provider type
@@ -51,14 +51,12 @@ scheduleSMS doc SMS {..} = do
                               smsBody
   -- charge company of the author of the document for the smses
   chargeForItemSimple (mapSMSToChargeableItem smsProvider) (documentid doc) smsCount
-  case kontraInfoForSMS of
-    Nothing   -> return ()
-    Just kifs -> void . dbUpdate $ AddKontraInfoForSMS sid kifs
+  void . dbUpdate $ AddKontraInfoForSMS sid kontraInfoForSMS
   logInfo "SMS scheduled for sendout" $ object
     [ identifier $ documentid doc
     , identifier sid
     , "sms_msisdn" .= smsMSISDN
-    , "sms_info" .= (logObject_ <$> kontraInfoForSMS)
+    , "sms_infos" .= (logValue <$> kontraInfoForSMS)
     , "sms_body" .= smsBody
     , "sms_originator" .= smsOriginator
     , "sms_provider" .= show smsProvider

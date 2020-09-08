@@ -1,18 +1,20 @@
-module Mails.KontraInfoForMail (
-    KontraInfoForMail(..)
+module Mails.KontraInfoForMail
+  ( KontraInfoForMail(..)
   , AddKontraInfoForMail(..)
-  , GetUnreadEvents(..)
-  , GetServiceTestEvents(..)
+  , getUnreadMailEvents
 ) where
 
 import Control.Monad.Catch
 import Data.Aeson
 import Data.Int
+import GHC.Generics
+import qualified Data.Text as T
 
 import DB
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import Log.Identifier
+import Mails.FromKontra.Tables
 import Mails.Model
 
 data KontraInfoForMailType
@@ -25,7 +27,10 @@ data KontraInfoForMail
   = DocumentInvitationMail DocumentID SignatoryLinkID
   | DocumentConfirmationMail DocumentID SignatoryLinkID
   | OtherDocumentMail DocumentID
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
+
+-- For logging
+instance ToJSON KontraInfoForMail
 
 instance Loggable KontraInfoForMail where
   logValue (DocumentInvitationMail did slid) =
@@ -35,7 +40,6 @@ instance Loggable KontraInfoForMail where
   logValue (OtherDocumentMail did) = object ["type" .= ("other" :: Text), identifier did]
 
   logDefaultLabel _ = "mail_info"
-
 
 instance PQFormat KontraInfoForMailType where
   pqFormat = pqFormat @Int16
@@ -56,78 +60,83 @@ instance ToSQL KontraInfoForMailType where
   toSQL OtherDocumentMailT        = toSQL (2 :: Int16)
   toSQL DocumentConfirmationMailT = toSQL (3 :: Int16)
 
-data AddKontraInfoForMail = AddKontraInfoForMail MailID KontraInfoForMail
+data AddKontraInfoForMail = AddKontraInfoForMail MailID [KontraInfoForMail]
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
-  dbUpdate (AddKontraInfoForMail mailid mfdi) = do
-    runQuery01 . sqlInsert "kontra_info_for_mails" $ do
+  dbUpdate (AddKontraInfoForMail _      []  ) = pure True
+  dbUpdate (AddKontraInfoForMail mailid kifm) = do
+    n <- runQuery . sqlInsert "kontra_info_for_mails" $ do
+      let values = kontraInfoToTuple <$> kifm
       sqlSet "mail_id" mailid
-      case mfdi of
-        (DocumentInvitationMail did slid) -> do
-          sqlSet "mail_type"         DocumentInvitationMailT
-          sqlSet "document_id"       did
-          sqlSet "signatory_link_id" slid
-        (DocumentConfirmationMail did slid) -> do
-          sqlSet "mail_type"         DocumentConfirmationMailT
-          sqlSet "document_id"       did
-          sqlSet "signatory_link_id" slid
-        (OtherDocumentMail did) -> do
-          sqlSet "mail_type"   OtherDocumentMailT
-          sqlSet "document_id" did
+      sqlSetList "mail_type"         (view _1 <$> values)
+      sqlSetList "document_id"       (view _2 <$> values)
+      sqlSetList "signatory_link_id" (view _3 <$> values)
+    pure $ n == length kifm
+    where
+      kontraInfoToTuple kifm' = case kifm' of
+        (DocumentInvitationMail did slid) -> (DocumentInvitationMailT, did, Just slid)
+        (DocumentConfirmationMail did slid) ->
+          (DocumentConfirmationMailT, did, Just slid)
+        (OtherDocumentMail did) -> (OtherDocumentMailT, did, Nothing)
 
-fetchKontraInfoForMail
-  :: (Maybe KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID)
-  -> Maybe KontraInfoForMail
-fetchKontraInfoForMail (Nothing, _, _) = Nothing
-fetchKontraInfoForMail (Just DocumentInvitationMailT, Just did, Just sig) =
-  Just $ DocumentInvitationMail did sig
-fetchKontraInfoForMail (Just DocumentInvitationMailT, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)"
-fetchKontraInfoForMail (Just DocumentConfirmationMailT, Just did, Just sig) =
-  Just $ DocumentConfirmationMail did sig
-fetchKontraInfoForMail (Just DocumentConfirmationMailT, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)"
-fetchKontraInfoForMail (Just OtherDocumentMailT, Just did, Nothing) =
-  Just $ OtherDocumentMail did
-fetchKontraInfoForMail (Just OtherDocumentMailT, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)"
+data KontraInfoForMailAggregate
+  = KontraInfoForMailAggregate
+  { kontraInfoForMailType :: KontraInfoForMailType
+  , kontraInfoForMailDocumentId :: DocumentID
+  , kontraInfoForMailSignatoryLinkId :: Maybe SignatoryLinkID
+  }
 
+type instance CompositeRow KontraInfoForMailAggregate
+  = (KontraInfoForMailType, DocumentID, Maybe SignatoryLinkID)
+
+instance PQFormat KontraInfoForMailAggregate where
+  pqFormat = compositeTypePqFormat ctKontraForMailAggregate
+
+instance CompositeFromSQL KontraInfoForMailAggregate where
+  toComposite (mail_type, did, mslid) = KontraInfoForMailAggregate
+    { kontraInfoForMailType            = mail_type
+    , kontraInfoForMailDocumentId      = did
+    , kontraInfoForMailSignatoryLinkId = mslid
+    }
+
+fetchKontraInfoForMail :: KontraInfoForMailAggregate -> KontraInfoForMail
+fetchKontraInfoForMail KontraInfoForMailAggregate { kontraInfoForMailType = mail_type, kontraInfoForMailDocumentId = did, kontraInfoForMailSignatoryLinkId = mslid }
+  = mapper mslid
+  where
+    mapper = case mail_type of
+      DocumentInvitationMailT -> maybe
+        (unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)")
+        (DocumentInvitationMail did)
+      DocumentConfirmationMailT -> maybe
+        (unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)")
+        (DocumentConfirmationMail did)
+      OtherDocumentMailT -> maybe
+        (OtherDocumentMail did)
+        (const $ unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)")
 
 fetchEvent
-  :: ( EventID
-     , MailID
-     , Event
-     , Maybe KontraInfoForMailType
-     , Maybe DocumentID
-     , Maybe SignatoryLinkID
-     )
-  -> (EventID, MailID, Event, Maybe KontraInfoForMail)
-fetchEvent (eid, mid, e, mkifmt, mkifmdid, mkifmslid) = (eid, mid, e, mkifm)
-  where mkifm = fetchKontraInfoForMail (mkifmt, mkifmdid, mkifmslid)
+  :: (EventID, MailID, Event, CompositeArray1 KontraInfoForMailAggregate)
+  -> (EventID, MailID, Event, [KontraInfoForMail])
+fetchEvent (eid, mid, e, kifms) = (eid, mid, e, mkifm)
+  where mkifm = fetchKontraInfoForMail <$> unCompositeArray1 kifms
 
-
-getUnreadEvents
-  :: MonadDB m => Bool -> m [(EventID, MailID, Event, Maybe KontraInfoForMail)]
-getUnreadEvents service_test = do
+getUnreadMailEvents
+  :: MonadDB m => Bool -> m [(EventID, MailID, Event, [KontraInfoForMail])]
+getUnreadMailEvents service_test = do
   runQuery_ . sqlSelect "mails m" $ do
     sqlResult "e.id"
     sqlResult "e.mail_id"
     sqlResult "e.event"
-    sqlResult "kifm.mail_type"
-    sqlResult "kifm.document_id"
-    sqlResult "kifm.signatory_link_id"
+    sqlResult . mkSQL $ T.concat
+      [ "ARRAY_AGG((kifm.mail_type, kifm.document_id, kifm.signatory_link_id)::"
+      , unRawSQL $ ctName ctKontraForMailAggregate
+      , ")"
+      ]
     sqlJoinOn "mail_events e" "m.id = e.mail_id"
     sqlLeftJoinOn "kontra_info_for_mails kifm" "e.mail_id = kifm.mail_id"
     sqlWhereEq "m.service_test" service_test
     sqlWhere "e.event_read IS NULL"
-    sqlOrderBy "document_id"
     sqlOrderBy "m.id"
     sqlOrderBy "e.id"
+    sqlGroupBy "m.id"
+    sqlGroupBy "e.id"
   fetchMany fetchEvent
-
-data GetUnreadEvents = GetUnreadEvents
-instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, Event, Maybe KontraInfoForMail)] where
-  dbQuery GetUnreadEvents = getUnreadEvents False
-
-data GetServiceTestEvents = GetServiceTestEvents
-instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, Event, Maybe KontraInfoForMail)] where
-  dbQuery GetServiceTestEvents = getUnreadEvents True
