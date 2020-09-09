@@ -285,4 +285,5 @@ kontraMigrations =
   , featureFlagsRenameDKNemIDToViewAndAddPIDAndCVRVersion
   , createTableCallbacks
   , addCallbacksToInstanceTable
+  , migrateTemplateDSLStoredInDBToNotificationMethods
   ]

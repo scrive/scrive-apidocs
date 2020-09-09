@@ -18,7 +18,7 @@ flowTables =
 tableFlowTemplates :: Table
 tableFlowTemplates = tblTable
   { tblName        = "flow_templates"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName     = "id"
                 , colType     = UuidT

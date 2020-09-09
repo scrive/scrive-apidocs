@@ -1,9 +1,16 @@
 module Flow.Migrations where
 
+import Data.Yaml
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Class
 import Database.PostgreSQL.PQTypes.Model
-import Database.PostgreSQL.PQTypes.Utils
+import Log
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Text.Encoding as TE
+
+import DB
+import Flow.Id
+import Flow.Process
 
 createTableFlowTemplates :: MonadDB m => Migration m
 createTableFlowTemplates = Migration
@@ -315,3 +322,92 @@ addCallbacksToInstanceTable = Migration
   }
   where tableName = "flow_instances"
 
+migrateTemplateDSLStoredInDBToNotificationMethods
+  :: (MonadDB m, MonadLog m) => Migration m
+migrateTemplateDSLStoredInDBToNotificationMethods = Migration
+  { mgrTableName = "flow_templates"
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ . sqlSelect "flow_templates" $ do
+                       sqlResult "id"
+                       sqlResult "process"
+                       sqlWhereIsNotNULL "committed"
+                     templates <- fetchMany identity
+                     forM_ templates $ \(tid :: TemplateId, process) -> do
+                       case updateYAML <$> decodeProcess process of
+                         Right (Just value) -> do
+
+                           let process' = encode value
+
+                           logInfo "parsed to Value" value
+                           logInfo "extruding new process" $ TE.decodeUtf8 process'
+
+                           runQuery_ . sqlUpdate "flow_templates" $ do
+                             sqlSet "process" $ TE.decodeUtf8 process'
+                             sqlWhereEq "id" tid
+                         _ -> pure () -- ignore for now
+  }
+  where
+    decodeProcess :: Process -> Either ParseException Value
+    decodeProcess = decodeEither' . TE.encodeUtf8 . fromProcess
+
+    updateYAML :: Value -> Maybe Value
+    updateYAML value = updateNotifications value >>= setDSLVersion
+
+    setDSLVersion :: Value -> Maybe Value
+    setDSLVersion value = case value of
+      Object o -> pure . Object $ HM.insert "dsl-version" "0.2.0" o
+      _        -> Nothing
+
+    updateNotifications :: Value -> Maybe Value
+    updateNotifications value = case value of
+      Object o -> case HM.lookup "stages" o of
+        Nothing     -> Nothing
+        Just stages -> updateStages stages >>= update o
+      _ -> Nothing
+      where update o stages = pure . Object $ HM.insert "stages" stages o
+
+    updateStages :: Value -> Maybe Value
+    updateStages = \case
+      Array a -> fmap Array . sequence $ updateStage <$> a
+      _       -> Nothing
+
+    updateStage :: Value -> Maybe Value
+    updateStage = \case
+      Object o -> case HM.toList o of
+        [(k, value)] -> updateStageInner value >>= update o k
+        _            -> Nothing
+      _ -> Nothing
+      where update o k stages = pure . Object $ HM.insert k stages o
+
+    updateStageInner :: Value -> Maybe Value
+    updateStageInner value = case value of
+      Object o -> case HM.lookup "actions" o of
+        Nothing      -> pure value -- Actions are not mandatory => NOOP
+        Just actions -> updateActions actions >>= update o
+      _ -> Nothing
+      where update o actions = pure . Object $ HM.insert "actions" actions o
+
+    updateActions :: Value -> Maybe Value
+    updateActions = \case
+      Array a -> fmap Array . sequence $ updateAction <$> a
+      _       -> Nothing
+
+    updateAction :: Value -> Maybe Value
+    updateAction value = case value of
+      Object o -> case HM.lookup "notify" o of
+        Nothing     -> pure value -- Actions are not mandatory => NOOP
+        Just action -> updateNotify action >>= update o
+      _ -> Nothing
+      where update o action = pure . Object $ HM.insert "notify" action o
+
+    updateNotify :: Value -> Maybe Value
+    updateNotify value = case value of
+      Object o -> case HM.lookup "message" o of
+        Just (String msg) ->
+          pure . Object . HM.insert "methods" (makeMethods msg) $ HM.delete "message" o
+        _ -> Nothing
+      _ -> pure value -- May already be a 0.2.0 DSL => NOOP
+
+    makeMethods :: Text -> Value
+    makeMethods msg = Object $ HM.fromList [("sms", String msg), ("email", String msg)]
