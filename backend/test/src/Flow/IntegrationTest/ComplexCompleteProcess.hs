@@ -118,7 +118,7 @@ testComplexFlowProcess = do
   GetInstance {..} <-
     assertRight "start template response" . request . startTemplate tid $ CreateInstance
       Nothing
-      mapping
+      (toTemplateParameters mapping)
       Nothing
   authorFlowLink <-
     assertJust' "author's flow sign link is missing" $ accessLinks Map.!? "author"

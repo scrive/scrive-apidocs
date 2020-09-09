@@ -86,7 +86,7 @@ testRejectedDocumentCausesProcessFailure = do
   commit
 
   GetInstance {..} <- assertRight "start template"
-    $ createInstance ac "dummy" rejectedDocumentProcess mapping
+    $ createInstance ac "dummy" rejectedDocumentProcess (toTemplateParameters mapping)
 
   -- Author rejects the document
   authorContext <- mkContextWithUser defaultLang user
@@ -151,10 +151,10 @@ testInstanceFailureReusedDocument = do
           users     = Map.fromList [("signatory", UserId $ user ^. #id)]
           messages  = Map.empty
 
-  void $ createInstance ac "name" reusedDocumentProcess mapping
+  void $ createInstance ac "name" reusedDocumentProcess (toTemplateParameters mapping)
   clientError <-
     assertLeft "creating a second instance with the same document"
-      $ createInstance ac "name" reusedDocumentProcess mapping
+      $ createInstance ac "name" reusedDocumentProcess (toTemplateParameters mapping)
   assertIsJsonError clientError
 
 notificationsRequiredProcess :: Process
@@ -204,7 +204,9 @@ testInstanceNotificationMethodFailure = do
 
   assertIsJsonError =<< assertLeft
     "creating an instance where a user does not have (but needs) a phone num"
-    (createInstance ac "name" notificationsRequiredProcess mappingNoPhoneNum)
+    ( createInstance ac "name" notificationsRequiredProcess
+    $ toTemplateParameters mappingNoPhoneNum
+    )
 
   let mappingNoEmail = InstanceKeyValues documents users messages
         where
@@ -215,4 +217,6 @@ testInstanceNotificationMethodFailure = do
 
   assertIsJsonError =<< assertLeft
     "creating an instance where a user does not have (but needs) a phone num"
-    (createInstance ac "name" notificationsRequiredProcess mappingNoEmail)
+    ( createInstance ac "name" notificationsRequiredProcess
+    $ toTemplateParameters mappingNoEmail
+    )

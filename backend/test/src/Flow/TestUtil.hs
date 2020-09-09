@@ -11,6 +11,7 @@ import Network.HTTP.Types.Header (hHost, hSetCookie)
 import Servant.Client
 import Web.Cookie
 import qualified Data.Foldable as Foldable
+import qualified Data.Map as Map
 import qualified Data.Text.Encoding as T
 
 import DB
@@ -111,9 +112,9 @@ createInstance
   :: ApiClient
   -> Text
   -> Process
-  -> InstanceKeyValues
+  -> TemplateParameters
   -> TestEnv (Either ClientError GetInstance)
-createInstance ApiClient {..} name process mapping = do
+createInstance ApiClient {..} name process templateParameters = do
   let createTemplateData = CreateTemplate name process
   template1 <- assertRight "create template" . request $ createTemplate createTemplateData
   let tid = id (template1 :: GetCreateTemplate)
@@ -121,5 +122,11 @@ createInstance ApiClient {..} name process mapping = do
   void . assertRight "validate response" . request $ validateTemplate process
   void . assertRight "commit template response" . request $ commitTemplate tid
 
-  request . startTemplate tid $ CreateInstance Nothing mapping Nothing
+  request . startTemplate tid $ CreateInstance Nothing templateParameters Nothing
 
+toTemplateParameters :: InstanceKeyValues -> TemplateParameters
+toTemplateParameters (InstanceKeyValues documents users messages) = TemplateParameters
+  documents
+  users'
+  messages
+  where users' = Map.map (\id -> UserConfig id Nothing Nothing) users

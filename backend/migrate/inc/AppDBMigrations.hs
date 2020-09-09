@@ -286,4 +286,5 @@ kontraMigrations =
   , createTableCallbacks
   , addCallbacksToInstanceTable
   , migrateTemplateDSLStoredInDBToNotificationMethods
+  , createTableFlowUserAuthConfigs
   ]

@@ -104,7 +104,7 @@ testCompleteFlowProcess = do
   startedInstance <-
     assertRight "start template response" . request . startTemplate tid $ CreateInstance
       Nothing
-      mapping
+      (toTemplateParameters mapping)
       Nothing
 
   -- Saving the lastEvent time to ensure that it increases after the sign event

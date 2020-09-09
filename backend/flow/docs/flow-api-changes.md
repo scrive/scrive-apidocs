@@ -99,11 +99,11 @@ Here is an example of the structure required as request body when starting an in
         "id": "joe@foo.com",
         "auth_to_view": {
           "provider": "onfido",
-          "max_tries": 1
+          "max_failures": 1
         },
         "auth_to_view_archived": {
-          "provider": "sms-pin",
-          "max_tries": 3
+          "provider": "sms_pin",
+          "max_failures": 3
         }
       }
     },
@@ -116,4 +116,4 @@ Here is an example of the structure required as request body when starting an in
 
 The `auth_to_view` method will be used during the signing process, whereas the `auth_to_view_archived` can be configured to provide access to the archived documents long after the process is complete.
 
-Note that the illustrated providers, `onfido` and `sms-pin`, will be the only ones supported for the time being.
+Note that the illustrated providers, `onfido` and `sms_pin`, will be the only ones supported for the time being.

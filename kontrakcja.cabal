@@ -412,6 +412,7 @@ Library
                  , Flow.Client
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
+                 , Flow.EID.AuthConfig
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
@@ -1193,6 +1194,7 @@ Test-suite kontrakcja-test
                  Flow.AuthenticationTest
                  Flow.AggregatorTest
                  Flow.DocumentCheckerTest
+                 Flow.EIDTest
                  Flow.HighTongueTest
                  Flow.IntegrationTest
                  Flow.IntegrationTest.Common

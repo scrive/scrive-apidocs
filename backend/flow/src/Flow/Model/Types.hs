@@ -12,6 +12,7 @@ module Flow.Model.Types
     , FullInstance(..)
     , InstanceSession(InstanceSession)
     , InstanceAccessToken(InstanceAccessToken)
+    , UserAuthConfig(UserAuthConfig)
     , fetchInstance
     , fetchTemplate
     , fetchEvent
@@ -20,11 +21,13 @@ module Flow.Model.Types
     , instanceToAggregator
     , fetchInstanceSession
     , fetchInstanceAccessToken
+    , fetchUserAuthConfig
     )
  where
 
 import Data.Aeson
 import Data.Aeson.Casing
+import Data.Int
 import Data.Time.Clock
 import GHC.Generics
 import qualified Data.Set as Set
@@ -34,6 +37,7 @@ import Auth.Session.SessionID
 import Flow.Aggregator
 import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
+import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types.Internal
@@ -115,3 +119,26 @@ fetchInstanceSession (sessionId, instanceId, userName) = InstanceSession { .. }
 fetchInstanceAccessToken
   :: (InstanceAccessTokenId, InstanceId, UserName, MagicHash) -> InstanceAccessToken
 fetchInstanceAccessToken (id, instanceId, userName, hash) = InstanceAccessToken { .. }
+
+fetchUserAuthConfig
+  :: ( InstanceId
+     , UserName
+     , Maybe AuthProvider
+     , Maybe Int32
+     , Maybe AuthProvider
+     , Maybe Int32
+     )
+  -> UserAuthConfig
+fetchUserAuthConfig (instanceId, userName, mViewProvider, mViewMaxFailures, mViewArchivedProvider, mViewArchivedMaxFailures)
+  = UserAuthConfig
+    { instanceId
+    , userName
+    , authToView         = mkAuthConfig mViewProvider mViewMaxFailures
+    , authToViewArchived = mkAuthConfig mViewArchivedProvider mViewArchivedMaxFailures
+    }
+  where
+    mkAuthConfig mProvider mMaxFailures = do
+      provider    <- mProvider
+      maxFailures <- fromIntegral <$> mMaxFailures
+      pure $ AuthConfig { .. }
+

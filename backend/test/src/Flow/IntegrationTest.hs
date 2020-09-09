@@ -138,7 +138,7 @@ testZeroToInstance = do
           messages = Map.fromList [("was-signed", "Documents were signed")]
 
   instance1 <- assertRight "start template response"
-    $ createInstance ac "name" processZero mapping
+    $ createInstance ac "name" processZero (toTemplateParameters mapping)
 
   let iid = id (instance1 :: GetInstance)
   keyValues <- Model.selectInstanceKeyValues iid
@@ -237,7 +237,7 @@ testInstanceListEndpoint = do
     . assertRight "start template response"
     . request
     . startTemplate tid
-    $ CreateInstance Nothing mapping Nothing
+    $ CreateInstance Nothing (toTemplateParameters mapping) Nothing
   is2 <- assertRight "instance list endpoint works when 1 instance"
     $ request listInstances
   assertBool "second instance list call should have 1 item" $ length is2 == 1
@@ -246,7 +246,7 @@ testInstanceListEndpoint = do
     . assertRight "start template response"
     . request
     . startTemplate tid
-    $ CreateInstance Nothing mapping Nothing
+    $ CreateInstance Nothing (toTemplateParameters mapping) Nothing
   is3 <- assertRight "instance list endpoint works when 2 instances"
     $ request listInstances
   assertBool "third instance list call should have 2 items" $ length is3 == 2
@@ -267,7 +267,7 @@ testCallbackConfiguration = do
   i <-
     assertRight "start template response" . request . startTemplate tid $ CreateInstance
       Nothing
-      mapping
+      (toTemplateParameters mapping)
       callback
 
   assertEqual "callback is stored and retrieved" callback (i ^. #callback)

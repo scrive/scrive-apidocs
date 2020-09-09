@@ -11,6 +11,7 @@ module Flow.Model.Types.Internal
     , InstanceSession(..)
     , InstanceKeyValues(..)
     , InstanceAccessToken(..)
+    , UserAuthConfig(..)
     )
  where
 
@@ -25,6 +26,7 @@ import Auth.MagicHash
 import Auth.Session.SessionID
 import Doc.DocumentID
 import Flow.Core.Type.Callback
+import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Machinize
 import Flow.Message
@@ -117,10 +119,10 @@ data InstanceSession = InstanceSession
     }
 
 data InstanceKeyValues = InstanceKeyValues
-  { documents :: Map DocumentName DocumentID
-  , users     :: Map UserName FlowUserId
-  , messages  :: Map MessageName Message
-  } deriving (Eq, Generic, Show)
+    { documents :: Map DocumentName DocumentID
+    , users     :: Map UserName FlowUserId
+    , messages  :: Map MessageName Message
+    } deriving (Eq, Generic, Show)
 
 aesonOptions :: Options
 aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
@@ -138,6 +140,13 @@ data InstanceAccessToken = InstanceAccessToken
     , hash :: MagicHash
     }
 
+data UserAuthConfig = UserAuthConfig
+    { instanceId :: InstanceId
+    , userName :: UserName
+    , authToView :: Maybe AuthConfig
+    , authToViewArchived :: Maybe AuthConfig
+    }
+
 makeFieldLabelsWith noPrefixFieldLabels ''Template
 makeFieldLabelsWith noPrefixFieldLabels ''InsertTemplate
 makeFieldLabelsWith noPrefixFieldLabels ''UpdateTemplate
@@ -149,3 +158,4 @@ makeFieldLabelsWith noPrefixFieldLabels ''FullInstance
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceSession
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceKeyValues
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceAccessToken
+makeFieldLabelsWith noPrefixFieldLabels ''UserAuthConfig

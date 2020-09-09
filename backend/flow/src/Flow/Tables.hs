@@ -13,6 +13,7 @@ flowTables =
   , tableFlowInstanceSessions
   , tableFlowEvents
   , tableFlowAggregatorEvents
+  , tableFlowUserAuthConfigs
   ]
 
 tableFlowTemplates :: Table
@@ -125,6 +126,38 @@ tableFlowInstanceKeyValueStore = tblTable
         \type = 'message'::text AND string IS NOT NULL"
         }
     ]
+  }
+
+tableFlowUserAuthConfigs :: Table
+tableFlowUserAuthConfigs = tblTable
+  { tblName        = "flow_user_auth_configs"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "key", colType = TextT, colNullable = False }
+    , tblColumn { colName = "auth_to_view_provider", colType = TextT, colNullable = True }
+    , tblColumn { colName     = "auth_to_view_max_failures"
+                , colType     = IntegerT
+                , colNullable = True
+                }
+    , tblColumn { colName     = "auth_to_view_archived_provider"
+                , colType     = TextT
+                , colNullable = True
+                }
+    , tblColumn { colName     = "auth_to_view_archived_max_failures"
+                , colType     = IntegerT
+                , colNullable = True
+                }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
+  , tblIndexes     = []
+  , tblForeignKeys = [ (fkOnColumns ["instance_id", "key"]
+                                    "flow_instance_key_value_store"
+                                    ["instance_id", "key"]
+                       )
+                         { fkOnDelete = ForeignKeyCascade
+                         }
+                     ]
   }
 
 tableFlowInstanceSignatories :: Table

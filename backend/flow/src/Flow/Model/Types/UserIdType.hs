@@ -6,7 +6,7 @@ import Data.Aeson
 import Data.Aeson.Casing
 import GHC.Generics
 
-data UserIdType = Email| PhoneNumber| UserId
+data UserIdType = Email | PhoneNumber | UserId
   deriving (Eq, Generic, Show)
 
 instance FromJSON UserIdType where

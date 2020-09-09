@@ -1,5 +1,12 @@
 # API specification changelog
 
+## 0.10.2
+
+* Add optional (per user) authentication settings in `POST /templates/{template_id}/start`
+* Add `UserConfig` and `AuthConfig` schemas.
+* Modify `TemplateParameters` schema: the `users` property now accepts `UserConfig`
+  objects. This change is backwards-compatible and `RichUserId`s are also accepted.
+
 ## 0.10.1
 
 * Schema `InstanceCreateRequest`: add field `callback`.

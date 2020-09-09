@@ -143,8 +143,11 @@ testInvitationLinkLogin = do
   let apiClient = mkApiClient (Left oauth)
 
   -- Create and start an instance
-  instanceId <- getInstanceId
-    $ createInstance apiClient "dummy" process1 (mapping (user ^. #id) doc1)
+  instanceId <- getInstanceId $ createInstance
+    apiClient
+    "dummy"
+    process1
+    (toTemplateParameters $ mapping (user ^. #id) doc1)
   instanceToken <- getInstanceAccessToken instanceId "signatory"
 
   -- Log in with an invitation link containing a magic hash

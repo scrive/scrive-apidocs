@@ -39,7 +39,18 @@ def test_one_document_process():
       "doc1": document_id,
     }
     users = {
-      "user1": {"id_type": "email", "id": email}
+      "user1": {
+        "id_type": "email",
+        "id": email,
+        "auth_to_view": {
+          "provider": "onfido",
+          "max_failures": 1
+        },
+        "auth_to_view_archived": {
+          "provider": "sms_pin",
+          "max_failures": 2
+        }
+      }
     }
     key_values = {
       "template_parameters" : {
@@ -54,6 +65,8 @@ def test_one_document_process():
     sign_session = req.Session()
     access_links = resp.json()['access_links']['user1']
     instance_id = resp.json()['id']
+
+    assert users == resp.json()['template_parameters']['users']
     assert callback_url == resp.json()['callback']['url']
 
     utils.get(sign_session, access_links)

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.1"
+  version: "0.10.2"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -572,6 +572,63 @@ components:
         id:
           type: string
           example: joe@foo.com
+    UserConfig:
+      description: |
+        A user's `RichUserId` together with process settings specific to that user.
+
+        At the moment only authentication settings are supported. Specifically one
+        can enable authentication to view the overview page of a workflow
+        and also authentication to view the workflow once it's completed (archived).
+
+        The authentication settings are optional.
+      type: object
+      required:
+        - id_type
+        - id
+      properties:
+        id_type:
+          description: |
+            See `RichUserId.id_type`
+          type: string
+          enum:
+            - email
+            - phone_number
+            - user_id
+          example: email
+        id:
+          description: |
+            See `RichUserId.id`
+          type: string
+          example: joe@foo.com
+        auth_to_view:
+          $ref: "#/components/schemas/AuthConfig"
+        auth_to_view_archived:
+          $ref: "#/components/schemas/AuthConfig"
+    AuthConfig:
+      description: |
+        Authentication settings
+
+        **In development:** The authentication functionality is in development and these
+         settings do not have any effect yet.
+      type: object
+      required:
+        - provider
+        - max_failures
+      properties:
+        provider:
+          description: |
+            An EID provider to use for authentication. Currently only `onfido` and `sms_pin` are supported.
+          type: string
+          enum:
+            - onfido
+            - sms_pin
+          example: onfido
+        max_failures:
+          description: |
+            Number of failed authentication attempts before the user is denied access.
+          type: number
+          format: integer
+          example: 3
     InstanceCreateRequest:
       description: |
         This object specifies the parameters required to instantiate a template.
@@ -602,7 +659,7 @@ components:
         users:
           type: object
           additionalProperties:
-            $ref: "#/components/schemas/RichUserId"
+            $ref: "#/components/schemas/UserConfig"
         messages:
           type: object
           additionalProperties:
@@ -615,6 +672,12 @@ components:
           applicant1:
             id_type: email
             id: joe@foo.com
+            auth_to_view:
+              provider: onfido
+              max_failures: 1
+            auth_to_view_archived:
+              provider: sms_pin
+              max_failures: 2
           author:
             id_type: user_id
             id: "1589824857756"

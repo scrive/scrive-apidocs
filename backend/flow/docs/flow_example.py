@@ -331,8 +331,26 @@ documents = {
 }
 users = {
   "user1": { "id_type": "email", "id": user_email },
-  "user2": { "id_type": "email", "id": user2_email },
-  "user3": { "id_type": "email", "id": user3_email },
+  "user2": {
+    "id_type": "email",
+    "id": user2_email,
+    "auth_to_view": {
+      "provider": "onfido",
+      "max_failures": 1
+    },
+    "auth_to_view_archived": {
+      "provider": "sms_pin",
+      "max_failures": 2
+    }
+  },
+  "user3": {
+    "id_type": "email",
+    "id": user3_email,
+    "auth_to_view": {
+      "provider": "sms_pin",
+      "max_failures": 3
+    }
+  }
 }
 key_values = {
   "documents": documents,

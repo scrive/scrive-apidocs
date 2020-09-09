@@ -23,6 +23,8 @@ module Flow.Model
     , selectSignatoryInfo
     , selectUserNameFromKV
     , updateAggregatorState
+    , insertUserAuthConfigs
+    , selectUserAuthConfigs
     )
   where
 
@@ -38,6 +40,7 @@ import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
 import Flow.Core.Type.Callback
+import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Message
 import Flow.Model.Types
@@ -383,3 +386,29 @@ selectSignatoryInfo instanceId = do
     sqlResult "sl.document_id"
     sqlWhereEq "fis.instance_id" instanceId
   fetchMany identity
+
+insertUserAuthConfigs :: MonadDB m => [UserAuthConfig] -> m ()
+insertUserAuthConfigs configs =
+  unless (null configs) . runQuery_ . sqlInsert "flow_user_auth_configs" $ do
+    sqlSetList "instance_id" $ map (view #instanceId) configs
+    sqlSetList "key" $ map (view #userName) configs
+    sqlSetList "auth_to_view_provider" $ map (fmap provider . view #authToView) configs
+    sqlSetList "auth_to_view_max_failures"
+      $ map (fmap maxFailures . view #authToView) configs
+    sqlSetList "auth_to_view_archived_provider"
+      $ map (fmap provider . view #authToViewArchived) configs
+    sqlSetList "auth_to_view_archived_max_failures"
+      $ map (fmap maxFailures . view #authToViewArchived) configs
+
+selectUserAuthConfigs :: (MonadDB m, MonadThrow m) => InstanceId -> m [UserAuthConfig]
+selectUserAuthConfigs instanceId = do
+  runQuery_ . sqlSelect "flow_user_auth_configs" $ do
+    sqlResult "instance_id"
+    sqlResult "key"
+    sqlResult "auth_to_view_provider"
+    sqlResult "auth_to_view_max_failures"
+    sqlResult "auth_to_view_archived_provider"
+    sqlResult "auth_to_view_archived_max_failures"
+    sqlWhereEq "instance_id" instanceId
+  fetchMany fetchUserAuthConfig
+

@@ -1,5 +1,6 @@
 module Flow.Model.Types.FlowUserId
   ( FlowUserId(..)
+  , flowUserIdToSeries
   ) where
 
 import Data.Aeson
@@ -31,7 +32,10 @@ instance FromJSON FlowUserId where
       IdType.UserId      -> UserId <$> v .: "id"
 
 instance ToJSON FlowUserId where
-  toEncoding = \case
-    Email       e   -> pairs ("id_type" .= IdType.Email <> "id" .= e)
-    PhoneNumber pn  -> pairs ("id_type" .= IdType.PhoneNumber <> "id" .= pn)
-    UserId      uid -> pairs ("id_type" .= IdType.UserId <> "id" .= uid)
+  toEncoding = pairs . flowUserIdToSeries
+
+flowUserIdToSeries :: FlowUserId -> Series
+flowUserIdToSeries = \case
+  Email       e   -> "id_type" .= IdType.Email <> "id" .= e
+  PhoneNumber pn  -> "id_type" .= IdType.PhoneNumber <> "id" .= pn
+  UserId      uid -> "id_type" .= IdType.UserId <> "id" .= uid

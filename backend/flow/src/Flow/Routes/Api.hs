@@ -5,6 +5,8 @@ module Flow.Routes.Api
     , GetTemplate(..)
     , PatchTemplate(..)
     , CreateInstance(..)
+    , TemplateParameters(TemplateParameters)
+    , UserConfig(..)
     , InstanceEventAction(..)
     , InstanceEvent(..)
     , InstanceState(..)
@@ -36,9 +38,10 @@ import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
+import Flow.EID.AuthConfig
 import Flow.HighTongue
 import Flow.Id
-import Flow.Model.Types
+import Flow.Message
 import Flow.Model.Types.FlowUserId
 import Flow.Process
 import Flow.Routes.Types
@@ -149,7 +152,7 @@ instance ToJSON PatchTemplate where
 
 data CreateInstance = CreateInstance
     { title :: Maybe Text
-    , templateParameters :: InstanceKeyValues
+    , templateParameters :: TemplateParameters
     , callback :: Maybe Callback
     }
   deriving (Eq, Generic, Show)
@@ -160,6 +163,40 @@ instance FromJSON CreateInstance where
 instance ToJSON CreateInstance where
   toEncoding = genericToEncoding aesonOptions
 
+
+data TemplateParameters = TemplateParameters
+  { documents :: Map DocumentName DocumentID
+  , users     :: Map UserName UserConfig
+  , messages  :: Map MessageName Message
+  } deriving (Eq, Generic, Show)
+
+instance FromJSON TemplateParameters where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON TemplateParameters where
+  toEncoding = genericToEncoding aesonOptions
+
+
+data UserConfig = UserConfig
+    { flowUserId :: FlowUserId
+    , authToView :: Maybe AuthConfig
+    , authToViewArchived :: Maybe AuthConfig
+    }
+  deriving (Show, Eq, Generic)
+
+instance FromJSON UserConfig where
+  parseJSON = withObject "user config" $ \o ->
+    UserConfig
+      <$> parseJSON (Object o)
+      <*> (o .:? "auth_to_view")
+      <*> (o .:? "auth_to_view_archived")
+
+instance ToJSON UserConfig where
+  toEncoding uc =
+    pairs
+      $  flowUserIdToSeries (flowUserId uc)
+      <> ("auth_to_view" .= authToView uc)
+      <> ("auth_to_view_archived" .= authToViewArchived uc)
 
 data InstanceEventAction
     = Approve
@@ -201,12 +238,11 @@ instance FromJSON InstanceState where
 instance ToJSON InstanceState where
   toEncoding = genericToEncoding aesonOptions
 
-
 data GetInstance = GetInstance
     { id :: InstanceId
     , templateId :: TemplateId
     , title :: Maybe Text
-    , templateParameters :: InstanceKeyValues
+    , templateParameters :: TemplateParameters
     , state :: InstanceState
     , accessLinks :: Map UserName Url
     , status :: Status
@@ -332,3 +368,5 @@ makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserState
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserAction
 makeFieldLabelsWith noPrefixFieldLabels ''GetInstance
 makeFieldLabelsWith noPrefixFieldLabels ''GetInstanceView
+makeFieldLabelsWith noPrefixFieldLabels ''TemplateParameters
+makeFieldLabelsWith noPrefixFieldLabels ''UserConfig

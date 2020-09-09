@@ -37,7 +37,7 @@ import Flow.Id
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId as FlowUserId
 import Flow.OrphanInstances ()
-import Flow.Routes.Api hiding (documents)
+import Flow.Routes.Api as Api hiding (documents)
 import Flow.Server.Api.Common
 import Flow.Server.Types
 import Flow.Server.Utils
@@ -47,8 +47,9 @@ import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.VariableCollector as Collector
 
 startTemplate :: Account -> TemplateId -> CreateInstance -> AppM GetInstance
-startTemplate account templateId (CreateInstance title keyValues callback) = do
+startTemplate account templateId (CreateInstance title templateParameters callback) = do
   logInfo_ "Starting instance"
+
   template <- selectTemplate templateId
   let fid = template ^. #folderId
   guardUserHasPermission account [canDo CreateA $ FlowTemplateR fid]
@@ -57,6 +58,7 @@ startTemplate account templateId (CreateInstance title keyValues callback) = do
 
   tongue <- decodeHighTongueM $ template ^. #process
   let variables = Collector.collectVariables tongue
+  let keyValues = toKeyValues templateParameters
   reportVariables $ validateVariables variables keyValues
 
   let documentMapping = keyValues ^. #documents
@@ -93,6 +95,7 @@ startTemplate account templateId (CreateInstance title keyValues callback) = do
 
   -- The ordering of operations here is crucial.
   Model.insertFlowInstanceKeyValues id keyValues
+  Model.insertUserAuthConfigs (userAuthConfigs id $ templateParameters ^. #users)
 
   -- 1. Documents have to be started after storing the key values
   -- so that notifications are not sent out.
@@ -105,7 +108,8 @@ startTemplate account templateId (CreateInstance title keyValues callback) = do
   logInfo "Matching result" userMatchingResult
   if validate userMatchingResult
     then do
-      let links = Set.toList . Set.map createPair $ matched userMatchingResult
+      let links =
+            Set.toList . Set.map (createPair keyValues) $ matched userMatchingResult
       Model.insertInstanceSignatories id links
     else
       throwTemplateCannotBeStartedError TemplateStartConflict
@@ -125,10 +129,9 @@ startTemplate account templateId (CreateInstance title keyValues callback) = do
 
   let accessLinks = mkAccessLinks (baseUrl account) id usersWithHashes
 
-  let templateParameters = keyValues
   -- TODO add a proper instance state
   let state = InstanceState { availableActions = [] }
-  let status             = InProgress
+  let status      = InProgress
 
   templates' <- asks templates
   TM.runTemplatesT (T.unpack $ codeFromLang LANG_EN, templates')
@@ -138,12 +141,11 @@ startTemplate account templateId (CreateInstance title keyValues callback) = do
 
   pure $ GetInstance { .. }
   where
-
     validate :: MatchingResult -> Bool
     validate MatchingResult {..} = null unmatchedFlowUserIds && null unmatchedSignatories
 
-    createPair :: UserMatch -> (UserName, SignatoryLinkID)
-    createPair UserMatch {..} = (name, DocumentChecker.id signatory)
+    createPair :: InstanceKeyValues -> UserMatch -> (UserName, SignatoryLinkID)
+    createPair keyValues UserMatch {..} = (name, DocumentChecker.id signatory)
       where name = fromJust . getUserName flowUserId $ keyValues ^. #users
 
     -- Assuming we allow only one UserName per user.
@@ -152,6 +154,21 @@ startTemplate account templateId (CreateInstance title keyValues callback) = do
       case Map.keys $ Map.filter (== flowUserId) userMap of
         []      -> Nothing
         (x : _) -> Just x
+
+    toKeyValues :: TemplateParameters -> InstanceKeyValues
+    toKeyValues (TemplateParameters documents users messages) = InstanceKeyValues
+      documents
+      users'
+      messages
+      where users' = Map.map Api.flowUserId users
+
+    userAuthConfigs :: InstanceId -> Map UserName UserConfig -> [UserAuthConfig]
+    userAuthConfigs instanceId users =
+      map
+          (\(userName, UserConfig _ authToView authToViewArchived) ->
+            UserAuthConfig instanceId userName authToView authToViewArchived
+          )
+        $ Map.toList users
 
 reportNotificationErrors :: MonadError ServerError m => Set MissingContactDetail -> m ()
 reportNotificationErrors errors =
@@ -336,7 +353,7 @@ validateNotificationSettings actions userMap userMatches = Set.fromList errors
       where
         userId    = fromJust $ Map.lookup userName userMap
         signatory = DocumentChecker.signatory . fromJust $ find
-          (\um -> flowUserId um == userId)
+          (\um -> DocumentChecker.flowUserId um == userId)
           userMatches
 
     userRequirements :: Map UserName RequiredMethods

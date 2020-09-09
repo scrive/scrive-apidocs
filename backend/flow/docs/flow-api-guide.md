@@ -259,6 +259,46 @@ Therefore, we can provide the `access_links` directly to those concerned (e.g. b
 
 Note that at the moment it is not possible to create an unstarted instance. As soon as it is created, the signing process starts.
 
+### Authentication to View an Instance
+
+You can configure a Flow instance to require participants to authenticate using an EID service. The authentication is optional and can be configured for each participant separately.
+
+If you want to enable authentication, make sure you haven't started an instance yet. Then modify the `template_parameters` object in your `parameters.json` like so:
+
+```json
+{
+  ...
+  "template_parameters": {
+    ...
+    "users": {
+      "user": {
+        "id_type": "email",
+        "id": "test@flow.com",
+        "auth_to_view": {
+          "provider": "onfido",
+          "max_failures": 1
+        },
+        "auth_to_view_archived": {
+          "provider": "sms_pin",
+          "max_failures": 2
+        }
+      },
+      "author": {
+        "id_type": "email",
+        "id": "{user_email}"
+      }
+    },
+    ...
+  }
+}
+```
+
+Now you can submit the modified parameters to the `flow/templates/${template_id}/start` API endpoint as per the previous step.
+
+With the above configuration the `user` participant will be required to authenticate with our partner `Onfido` before they can view any documents in the Flow and they will be allowed 1 unsuccessful authentication attempt before they are denied access to the Flow.
+
+In addition they will be required to authenticate using an SMS pin if they wish to access the documents once the Flow is finished.
+
 ### Interacting with Instances
 
 Once an instance is created, you generally do not need to interact with it directly. As the process progresses through the actions that participants make, its state will be automatically updated. The various steps of the Flow instance are carried out through the standard Scrive signing interface and a new Flow-specific Overview page. This lets participants see which of their requested actions are outstanding and which they have already performed.

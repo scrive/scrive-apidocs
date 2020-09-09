@@ -47,6 +47,7 @@ getInstance account instanceId = do
   logInfo_ "Getting instance"
   flowInstance <- checkInstancePerms account instanceId ReadA
   keyValues    <- Model.selectInstanceKeyValues instanceId
+  authConfigs  <- Model.selectUserAuthConfigs instanceId
   accessTokens <- Model.selectInstanceAccessTokens instanceId
   let usersWithHashes = fmap (\act -> (act ^. #userName, act ^. #hash)) accessTokens
   let accessLinks     = mkAccessLinks (baseUrl account) instanceId usersWithHashes
@@ -59,7 +60,7 @@ getInstance account instanceId = do
   let mkGetInstance availableActions status = GetInstance
         { id                 = instanceId
         , templateId         = flowInstance ^. #templateId
-        , templateParameters = keyValues
+        , templateParameters = toTemplateParameters keyValues authConfigs
         , title              = flowInstance ^. #title
         -- TODO add a proper instance state
         , state              = InstanceState { availableActions }
@@ -83,6 +84,19 @@ getInstance account instanceId = do
       actionUser     <- keyValues ^. #users % at eventInfoUser
       actionDocument <- keyValues ^. #documents % at eventInfoDocument
       pure InstanceAuthorAction { actionType, actionUser, actionDocument }
+
+    toTemplateParameters :: InstanceKeyValues -> [UserAuthConfig] -> TemplateParameters
+    toTemplateParameters (InstanceKeyValues documents users messages) authConfigs =
+      TemplateParameters documents (Map.mapWithKey toUserConfig users) messages
+      where
+        toUserConfig userName flowUserId =
+          let uac = lookupUserAuthConfig userName authConfigs
+          in  UserConfig { flowUserId
+                         , authToView         = view #authToView =<< uac
+                         , authToViewArchived = view #authToViewArchived =<< uac
+                         }
+        lookupUserAuthConfig userName = find
+          (\uac -> uac ^. #userName == userName && uac ^. #instanceId == instanceId)
 
 listInstances :: Account -> AppM [GetInstance]
 listInstances account@Account {..} = do
