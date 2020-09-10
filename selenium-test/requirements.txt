@@ -3,5 +3,5 @@ selenium == 3.141.0
 requests == 2.10.0
 enum34 == 1.0
 python-dateutil == 2.5.3
-Pillow == 2.8.2
+Pillow == 7.2.0
 pyquery ==1.2.13

@@ -8,25 +8,25 @@ from scrivepy import (
 
 def check_language_tst(test, drv, api):
     # prepare doc
-    doc = test.create_standard_doc(u'language test - ' + drv._lang)
+    doc = test.create_standard_doc('language test - ' + drv._lang)
 
     # clear name to request it in extra details
-    sig = doc.signatories.get_by_attrs(full_name=u'Alex Allen')
-    sig.full_name = u''
+    sig = doc.signatories.get_by_attrs(full_name='Alex Allen')
+    sig.full_name = ''
 
     # add author attachment
     with open(test.PDF_PATH, 'rb') as f:
         contents = f.read()
 
-    doc.author_attachments.add(AuthorAttachment(u'author-att', contents,
+    doc.author_attachments.add(AuthorAttachment('author-att', contents,
                                                 mandatory=True))
 
     # request signatory attachment
-    sig.attachments.add(SigAttachment(requested_name=u'sig-att',
-                                      description=u'description'))
+    sig.attachments.add(SigAttachment(requested_name='sig-att',
+                                      description='description'))
 
     # add signature field
-    signature = Signature(name=u'Signature 1', obligatory=False)
+    signature = Signature(name='Signature 1', obligatory=False)
     placement = Placement(left=.3505, top=.8089, width=.2736, height=.0829)
     signature.placements.add(placement)
     sig.fields.add(signature)
@@ -82,7 +82,7 @@ def check_language_tst(test, drv, api):
 
     # fill out name field in extra details section
     input_ = drv.wait_for_element('.extradetails input', extra_requests=1)
-    input_.send_keys(u'Alex Allen')
+    input_.send_keys('Alex Allen')
 
     # scroll to the final section
     drv.scroll_to_bottom()

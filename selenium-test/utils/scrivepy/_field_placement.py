@@ -15,12 +15,12 @@ class Ratio(tvu.TypeValueUnifier):
 
     def validate(self, value):
         if not 0. <= value <= 1.:
-            self.error(u'in the <0,1> range (inclusive)')
+            self.error('in the <0,1> range (inclusive)')
 
 
-class TipSide(unicode, enum.Enum):
-    left_tip = u'left'
-    right_tip = u'right'
+class TipSide(str, enum.Enum):
+    left_tip = 'left'
+    right_tip = 'right'
 
 
 class MaybeTipSide(tvu.EnumTypeValueUnifier):
@@ -50,24 +50,24 @@ class FieldPlacement(_object.ScriveObject):
         self._tip = tip
 
     def _to_json_obj(self):
-        return {u'xrel': self.left,
-                u'yrel': self.top,
-                u'wrel': self.width,
-                u'hrel': self.height,
-                u'fsrel': self.font_size,
-                u'page': self.page,
-                u'tip': self.tip.value if self.tip else None}
+        return {'xrel': self.left,
+                'yrel': self.top,
+                'wrel': self.width,
+                'hrel': self.height,
+                'fsrel': self.font_size,
+                'page': self.page,
+                'tip': self.tip.value if self.tip else None}
 
     def __str__(self):
-        return u'Placement(page ' + str(self.page) + u',' + \
-            str(self.left) + u':' + str(self.top) + u')'
+        return 'Placement(page ' + str(self.page) + ',' + \
+            str(self.left) + ':' + str(self.top) + ')'
 
     @classmethod
     def _from_json_obj(cls, json):
-        return FieldPlacement(left=json[u'xrel'], top=json[u'yrel'],
-                              width=json[u'wrel'], height=json[u'hrel'],
-                              font_size=json[u'fsrel'], page=json[u'page'],
-                              tip=TipSide(json[u'tip']))
+        return FieldPlacement(left=json['xrel'], top=json['yrel'],
+                              width=json['wrel'], height=json['hrel'],
+                              font_size=json['fsrel'], page=json['page'],
+                              tip=TipSide(json['tip']))
 
     def _resolve_default_tip(self, default_tip_value):
         self._check_invalid()

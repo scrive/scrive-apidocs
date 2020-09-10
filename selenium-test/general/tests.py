@@ -7,7 +7,7 @@ DC = webdriver.DesiredCapabilities
 
 
 def check_basic_sign(test, drv, api):
-    doc = test.create_standard_doc(u'basic sign')
+    doc = test.create_standard_doc('basic sign')
     doc = api.update_document(doc)
     doc = api.ready(doc)
 
@@ -41,8 +41,8 @@ def check_basic_sign(test, drv, api):
 
 
 def check_sign_with_signsuccessredirect(test, drv, api):
-    doc = test.create_standard_doc(u'success redirect')
-    doc.other_signatory().sign_success_redirect_url = u'https://google.com/'
+    doc = test.create_standard_doc('success redirect')
+    doc.other_signatory().sign_success_redirect_url = 'https://google.com/'
     doc = api.update_document(doc)
     doc = api.ready(doc)
 
@@ -62,7 +62,7 @@ def check_sign_with_signsuccessredirect(test, drv, api):
 
 
 def check_regular_rejection(test, drv, api):
-    doc = test.create_standard_doc(u'regular rejection')
+    doc = test.create_standard_doc('regular rejection')
     doc = api.ready(api.update_document(doc))
 
     drv.open_url(doc.other_signatory().absolute_sign_url())
@@ -86,7 +86,7 @@ def check_regular_rejection(test, drv, api):
 
 
 def check_custom_rejection(test, drv, api):
-    doc = test.create_standard_doc(u'custom rejection')
+    doc = test.create_standard_doc('custom rejection')
     doc = api.ready(api.update_document(doc))
 
     drv.open_url(doc.other_signatory().absolute_sign_url())
@@ -127,7 +127,7 @@ def check_custom_rejection(test, drv, api):
 
 
 def check_sign_and_cancel(test, drv, api):
-    doc = test.create_standard_doc(u'sign and cancel')
+    doc = test.create_standard_doc('sign and cancel')
     doc.author.viewer = False
     doc = api.update_document(doc)
     doc = api.ready(doc)
@@ -142,7 +142,7 @@ def check_sign_and_cancel(test, drv, api):
 
 
 def check_signing_settings1(test, drv, api):
-    doc = test.create_standard_doc(u'signing settings 1')
+    doc = test.create_standard_doc('signing settings 1')
     doc.show_header = False
     doc.show_pdf_download = False
     doc.show_footer = False
@@ -162,7 +162,7 @@ def check_signing_settings1(test, drv, api):
 
 
 def check_signing_settings2(test, drv, api):
-    doc = test.create_standard_doc(u'signing settings 2')
+    doc = test.create_standard_doc('signing settings 2')
     doc.show_header = True
     doc.show_pdf_download = False
     doc.show_footer = True
@@ -189,7 +189,7 @@ def check_signing_settings2(test, drv, api):
 
 
 def check_signing_settings3(test, drv, api):
-    doc = test.create_standard_doc(u'signing settings 3')
+    doc = test.create_standard_doc('signing settings 3')
     doc.show_header = True
     doc.show_pdf_download = True
     doc.show_footer = True
@@ -216,7 +216,7 @@ def check_signing_settings3(test, drv, api):
 
 
 def check_many_pages(test, drv, api):
-    doc = test.create_standard_doc(u'many pages')
+    doc = test.create_standard_doc('many pages')
     doc = api.update_document(doc)
     doc = api.ready(api.change_document_file(doc, test.LONG_PDF_PATH))
 
@@ -267,7 +267,7 @@ legal_text_api = Scrive(client_credentials_identifier='276bdb1423dc9d22_177',
 def check_legal_text(test, drv, api):
     api = legal_text_api
 
-    doc = test.create_standard_doc(u'basic sign', api_override=api)
+    doc = test.create_standard_doc('basic sign', api_override=api)
     doc = api.update_document(doc)
     doc = api.ready(doc)
 
@@ -286,10 +286,10 @@ def check_legal_text(test, drv, api):
 def check_legal_text_pinsms(test, drv, api):
     api = legal_text_api
 
-    doc = test.create_standard_doc(u'basic sign', api_override=api)
+    doc = test.create_standard_doc('basic sign', api_override=api)
     doc.other_signatory().authentication_method = 'sms_pin'
     doc.other_signatory().fields.add(StandardField(name='mobile',
-                                                   value=u'+48607123456'))
+                                                   value='+48607123456'))
     doc = api.update_document(doc)
     doc = api.ready(doc)
 

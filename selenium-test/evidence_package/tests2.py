@@ -1,8 +1,8 @@
-import cStringIO
 import json
 import subprocess
 import time
 from datetime import datetime, timedelta
+from io import BytesIO
 
 import requests
 from pyquery import PyQuery
@@ -28,14 +28,14 @@ def signed_doc(title, api, test):
 def verify_doc(doc):
     import config
     files = {'file': (doc.sealed_document.name,
-                      cStringIO.StringIO(doc.sealed_document.get_bytes()),
+                      BytesIO(doc.sealed_document.get_bytes()),
                       'application/pdf')}
     return requests.post(config.scrive_www_url + '/en/verify',
                          files=files).json()
 
 
 def check_service_description(test, api):
-    doc = signed_doc(u'service description', api, test)
+    doc = signed_doc('service description', api, test)
 
     att_name = 'Appendix 2 Service Description.html'
     contents = test.get_evidence_attachment_contents(doc, 2, att_name)
@@ -50,21 +50,21 @@ def check_service_description(test, api):
 
 
 def check_evidence_of_time(test, api):
-    doc = signed_doc(u'evidence of time', api, test)
+    doc = signed_doc('evidence of time', api, test)
 
     att_name = 'Appendix 4 Evidence of Time.html'
     contents = test.get_evidence_attachment_contents(doc, 4, att_name)
 
-    with open(test.artifact_path_for(att_name), 'wb') as f:
+    with open(test.artifact_path_for(att_name), 'w') as f:
         f.write(contents)
 
 
 def check_all_attachments_included(test, api):
-    doc = signed_doc(u'attachments included', api, test)
+    doc = signed_doc('attachments included', api, test)
 
     with utils.temp_file_path() as fp:
         doc.sealed_document.save_as(fp)
-        output = subprocess.check_output(['pdfdetach', '-list', fp])
+        output = subprocess.check_output(['pdfdetach', '-list', fp], text=True)
 
     expected_output = '''7 embedded files
 1: Appendix 1 Evidence Quality Framework.html
@@ -104,7 +104,7 @@ def check_guardtime_extended_sigs(test, api):
 
 
 def check_guardtime_new_sigs(test, api):
-    doc = signed_doc(u'guardtime sig', api, test)
+    doc = signed_doc('guardtime sig', api, test)
     doc.sealed_document.save_as(test.artifact_path_for('new_document.pdf'))
 
     verification_result = verify_doc(doc)

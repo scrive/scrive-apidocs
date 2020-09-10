@@ -12,8 +12,8 @@ class TextMappingOrIterable(tvu.TypeValueUnifier):
             iter(value)
             return
         except TypeError:
-            err_msg = (u'%s must be a mapping or iterable, not %s'
-                       % (self._variable_name, unicode(self._value)))
+            err_msg = ('%s must be a mapping or iterable, not %s'
+                       % (self._variable_name, str(self._value)))
             raise TypeError(err_msg)
 
     def unify(self, value):
@@ -24,11 +24,11 @@ class TextMappingOrIterable(tvu.TypeValueUnifier):
             try:
                 key, val = pair
             except Exception:
-                self.error(u'')
+                self.error('')
             else:
                 key = \
-                    tvu.Text(self._variable_name + u' key').unify_validate(key)
-                val = tvu.Text(self._variable_name + u' value') \
+                    tvu.Text(self._variable_name + ' key').unify_validate(key)
+                val = tvu.Text(self._variable_name + ' value') \
                          .unify_validate(val)
                 result[key] = val
         return result
@@ -67,7 +67,7 @@ class UnicodeDict(dict, _object.ScriveObject):
 
     @classmethod
     @tvu.validate_and_unify(keys=tvu.Iterable, value=tvu.Text)
-    def fromkeys(cls, keys, value=u''):
+    def fromkeys(cls, keys, value=''):
         keys = [tvu.Text('keys[%d]' % (i,)).unify_validate(key)
                 for i, key in enumerate(keys)]
         return UnicodeDict([(key, value) for key in keys])
@@ -125,7 +125,7 @@ class UnicodeDict(dict, _object.ScriveObject):
         return dict.popitem(self)
 
     @tvu.validate_and_unify(default=tvu.Text)
-    def setdefault(self, key, default=u''):
+    def setdefault(self, key, default=''):
         self._check_setter()
         return dict.setdefault(self, key, default)
 

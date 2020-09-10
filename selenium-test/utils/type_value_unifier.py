@@ -8,7 +8,7 @@ class TypeValueUnifier(object):
 
     def __init__(self, variable_name=None):
         self._variable_name = \
-            variable_name or self.__class__.__name__ + u'() argument'
+            variable_name or self.__class__.__name__ + '() argument'
 
     def type_check(self):
         value = self._value
@@ -20,12 +20,12 @@ class TypeValueUnifier(object):
             possible_types_string = types[0].__name__
         else:
             possible_types_string = \
-                u', '.join([type_.__name__ for type_ in types[:-1]]) \
-                + u' or ' + types[-1].__name__
+                ', '.join([type_.__name__ for type_ in types[:-1]]) \
+                + ' or ' + types[-1].__name__
 
-        err_msg = u'%s must be %s, not %s' % (self._variable_name,
+        err_msg = '%s must be %s, not %s' % (self._variable_name,
                                               possible_types_string,
-                                              unicode(self._value))
+                                              str(self._value))
         raise TypeError(err_msg)
 
     def unify_validate(self, value):
@@ -36,9 +36,9 @@ class TypeValueUnifier(object):
         return unified_value
 
     def error(self, msg, soft=False):
-        word = u'could' if soft else u'must'
-        full_msg = (u'%s %s be ' + msg + u', not: %s') % \
-            (self._variable_name, word, unicode(self._value))
+        word = 'could' if soft else 'must'
+        full_msg = ('%s %s be ' + msg + ', not: %s') % \
+            (self._variable_name, word, str(self._value))
         raise ValueError(full_msg)
 
     def unify(self, value):
@@ -93,12 +93,12 @@ class EnumTypeValueUnifier(TypeValueUnifier):
 
     def type_check(self):
         value = self._value
-        if isinstance(value, str):
+        if isinstance(value, str) and not isinstance(value, enum.Enum):
             enum_type = self._get_enum_type()
             try:
                 self._value = getattr(enum_type, value)
             except AttributeError:
-                msg = enum_type.__name__ + u"'s variant name"
+                msg = enum_type.__name__ + "'s variant name"
                 self.error(msg, soft=True)
             return
         super(EnumTypeValueUnifier, self).type_check()
@@ -129,7 +129,7 @@ def nullable(tvu):
             super(NullableTypeValueUnifier, self).validate(value)
 
         def error(self, err_msg):
-            err_msg = u'None or ' + err_msg
+            err_msg = 'None or ' + err_msg
             return super(NullableTypeValueUnifier, self).error(err_msg)
 
     return NullableTypeValueUnifier
@@ -143,25 +143,25 @@ def bounded_int(minimum=None, maximum=None):
 
         def __init__(self, variable_name=None):
             self._variable_name = \
-                variable_name or self.__class__.__name__ + u'() argument'
+                variable_name or self.__class__.__name__ + '() argument'
 
         def unify(self, value):
             if isinstance(value, float) and round(value) != value:
-                self.error(u'a round integer')
+                self.error('a round integer')
             return int(value)
 
         def validate(self, value):
             if minimum is not None and maximum is not None\
                and not (minimum <= value <= maximum):
                 err_msg = \
-                    u'an integer between %d and %d (inclusive)' % (minimum,
+                    'an integer between %d and %d (inclusive)' % (minimum,
                                                                    maximum)
                 self.error(err_msg)
             elif minimum is not None and value < minimum:
-                err_msg = u'an integer greater or equal than %d' % (minimum,)
+                err_msg = 'an integer greater or equal than %d' % (minimum,)
                 self.error(err_msg)
             elif maximum is not None and value > maximum:
-                err_msg = u'an integer lesser or equal than %d' % (maximum,)
+                err_msg = 'an integer lesser or equal than %d' % (maximum,)
                 self.error(err_msg)
 
     return BoundedInt
@@ -177,8 +177,8 @@ class Iterable(TypeValueUnifier):
             iter(value)
             return
         except TypeError:
-            err_msg = u'%s must be iterable, not %s' % (self._variable_name,
-                                                        unicode(self._value))
+            err_msg = '%s must be iterable, not %s' % (self._variable_name,
+                                                        str(self._value))
             raise TypeError(err_msg)
 
 
@@ -191,14 +191,14 @@ def args_of(tvu):
             try:
                 iter(value)
             except TypeError:
-                err_msg = u'%s must be iterable, not %s' % \
-                    (self._variable_name, unicode(self._value))
+                err_msg = '%s must be iterable, not %s' % \
+                    (self._variable_name, str(self._value))
                 raise TypeError(err_msg)
 
         def unify(self, value):
             result = []
             for i, elem in enumerate(value):
-                new_var_name = u'%s[%d]' % (self._variable_name, i)
+                new_var_name = '%s[%d]' % (self._variable_name, i)
                 validated_elem = tvu(new_var_name).unify_validate(elem)
                 result.append(validated_elem)
             return result
@@ -208,21 +208,21 @@ def args_of(tvu):
 
 class NonEmptyUnicode(TypeValueUnifier):
 
-    TYPES = (unicode,)
+    TYPES = (str,)
 
     def validate(self, value):
-        if value is u'':
-            self.error(u'non-empty string')
+        if value == '':
+            self.error('non-empty string')
 
 
 class Text(TypeValueUnifier):
 
-    TYPES = (unicode, str)
+    TYPES = (str,)
 
     def unify(self, value):
         if isinstance(value, str):
             try:
                 return value.decode('ascii')
             except UnicodeDecodeError:
-                self.error(u'unicode text, or ascii-only bytestring')
+                self.error('unicode text, or ascii-only bytestring')
         return value

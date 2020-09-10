@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import nose.tools
-import StringIO
+from io import BytesIO
 import sys
 import time
 
@@ -132,10 +132,10 @@ def download_screenshots(screenshot_requests, screenshots_dir):
                                            config.selenium_key)
         for url, screenshot_name in screenshot_requests:
             screenshot = requests.get(url, auth=auth).content
-            img = Image.open(StringIO.StringIO(screenshot))
+            img = Image.open(BytesIO(screenshot))
             file_path = \
                 os.path.join(screenshots_dir, screenshot_name + '.png')
-            print "Saving screenshot to %s" % file_path
+            print("Saving screenshot to %s" % file_path)
             img.save(file_path)
 
 
@@ -167,7 +167,7 @@ def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
         remote = False
 
     if not remote:
-        print 'Disable screenshots on local browsers'
+        print('Disable screenshots on local browsers')
         screenshots_enabled = False
 
     if screenshots_enabled:
@@ -196,8 +196,8 @@ def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
                         driver.extract_screenshot_requests())
 
                 test.teardown = teardown
-                print "▶ Running selenium test %s for language %s on %s" % (
-                    test_name, lang, driver.driver_name)
+                print("▶ Running selenium test %s for language %s on %s" % (
+                    test_name, lang, driver.driver_name))
                 yield test, test_helper, driver, api
 
             if screenshots_enabled:
@@ -205,5 +205,5 @@ def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
         else:
             test_helper = TestHelper(api, driver=None,
                                      artifact_dir=artifact_dir)
-            print "Running api test %s" % test.func_name
+            print("Running api test %s" % test_name)
             yield test, test_helper, api

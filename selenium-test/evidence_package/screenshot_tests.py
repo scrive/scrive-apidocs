@@ -3,7 +3,7 @@ import base64
 
 
 def check_screenshot(test, drv, api):
-    doc = test.create_standard_doc(u'signview screenshot')
+    doc = test.create_standard_doc('signview screenshot')
     doc = api.ready(api.update_document(doc))
 
     # sign document
@@ -31,7 +31,7 @@ def check_screenshot(test, drv, api):
         ff.open_url(config.scrive_www_url + '/d/' + str(doc.id))
 
         def get_datalink64_image(css):
-            IMG_HEADER = u'data:image/png;base64,'
+            IMG_HEADER = 'data:image/png;base64,'
             link = ff.wait_for_element(css).get_attribute('href')
             assert link[:len(IMG_HEADER)] == IMG_HEADER
             image64 = link[len(IMG_HEADER):]

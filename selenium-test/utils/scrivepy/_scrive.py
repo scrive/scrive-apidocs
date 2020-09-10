@@ -1,8 +1,7 @@
-import cStringIO
 import json
 import urllib
 from os import path
-
+from io import BytesIO
 import requests
 
 from scrivepy import _document
@@ -17,19 +16,19 @@ class Scrive(object):
                  api_hostname=b'scrive.com', https=True):
         self._api_hostname = api_hostname
         self._https = https
-        proto = b'https' if https else b'http'
-        self._api_url = proto + b'://' + api_hostname + b'/api/v1/'
+        proto = 'https' if https else 'http'
+        self._api_url = proto + '://' + api_hostname + '/api/v1/'
 
         oauth_elems = \
-            {b'oauth_signature_method': b'"PLAINTEXT"',
-             b'oauth_consumer_key': b'"%s"' % client_credentials_identifier,
-             b'oauth_token': b'"%s"' % token_credentials_identifier,
-             b'oauth_signature': b'"%s&%s"' % (client_credentials_secret,
+            {'oauth_signature_method': '"PLAINTEXT"',
+             'oauth_consumer_key': '"%s"' % client_credentials_identifier,
+             'oauth_token': '"%s"' % token_credentials_identifier,
+             'oauth_signature': '"%s&%s"' % (client_credentials_secret,
                                                token_credentials_secret)}
-        oauth_string = b','.join([key + b'=' + val
+        oauth_string = ','.join([key + '=' + val
                                   for key, val in oauth_elems.items()])
 
-        self._headers = {b'authorization': oauth_string}
+        self._headers = {'authorization': oauth_string}
 
     @property
     def api_hostname(self):
@@ -42,17 +41,17 @@ class Scrive(object):
     def _make_request(self, url_elems, method=requests.post,
                       data=None, files=None, params=None):
 
-        url = self._api_url + b'/'.join(url_elems)
+        url = self._api_url + '/'.join(url_elems)
 
         if params is not None:
-            url += '?' + urllib.urlencode(params)
-        print url
+            url += '?' + urllib.parse.urlencode(params)
+        print(url)
 
         headers = dict(self._headers)
         if files is None:
             headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
-        return method(url, data=data, headers=headers, files=files)
+        return method(url, data=data, headers=headers, files=files, proxies=urllib.request.getproxies())
 
     def _make_doc_request(self, url_elems, method=requests.post,
                           data=None, files=None):
@@ -100,18 +99,18 @@ class Scrive(object):
         files = {}
         att_count = 0
         for attachment in document.author_attachments:
-            att_key = u'attachment_' + unicode(att_count)
-            att_details = u'attachment_details_' + unicode(att_count)
-            att_descr = {u'name': attachment.name,
-                         u'required': attachment.mandatory,
-                         u'add_to_sealed_file': attachment.merge}
+            att_key = 'attachment_' + str(att_count)
+            att_details = 'attachment_details_' + str(att_count)
+            att_descr = {'name': attachment.name,
+                         'required': attachment.mandatory,
+                         'add_to_sealed_file': attachment.merge}
 
             if isinstance(attachment, _document.AuthorAttachment):
                 files[att_key] = (attachment.name,
                                   attachment.stream(),
                                   'application/pdf')
             else:
-                att_descr[u'file_id'] = attachment.id
+                att_descr['file_id'] = attachment.id
                 data[att_key] = attachment.id
 
             data[att_details] = json.dumps(att_descr)
@@ -176,6 +175,6 @@ class Scrive(object):
         url_elems = ['setsignatoryattachment', document.id,
                      signatory.id, attachment_name]
         files = {'file': (file_name,
-                          cStringIO.StringIO(file_contents),
+                          BytesIO(file_contents),
                           content_type)}
         return self._make_doc_request(url_elems, data='', files=files)
