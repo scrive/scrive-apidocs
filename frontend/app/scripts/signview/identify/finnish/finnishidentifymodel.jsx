@@ -48,7 +48,7 @@ var link = link;
     isDanishPersonal: function () {
       return false;
     },
-    isDanishEmployee: function() {
+    isDanishEmployee: function () {
       return false;
     },
     isFinnish: function () {

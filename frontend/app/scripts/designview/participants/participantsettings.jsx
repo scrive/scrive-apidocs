@@ -163,7 +163,7 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = ["standard", "sms_pin", "se_bankid",
-                        "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", 
+                        "no_bankid", "dk_nemid_cpr", "dk_nemid_pid",
                         "dk_nemid_cvr", "fi_tupas", "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 

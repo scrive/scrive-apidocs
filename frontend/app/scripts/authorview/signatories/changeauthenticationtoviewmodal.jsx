@@ -50,7 +50,9 @@ var Modal = require("../../common/modal");
         } else if (this.isAuthenticationNOBankID()) {
           this.setPersonalNumber(signatory.personalnumber());
           this.setMobileNumber(signatory.mobile());
-        } else if (this.isAuthenticationDKNemIDCPR() || this.isAuthenticationDKNemIDPID() || this.isAuthenticationLegacyDKNemID()) {
+        } else if (this.isAuthenticationDKNemIDCPR()
+                   || this.isAuthenticationDKNemIDPID()
+                   || this.isAuthenticationLegacyDKNemID()) {
           this.setPersonalNumber(signatory.personalnumber());
         } else if (this.isAuthenticationDKNemIDCVR()) {
           this.setPersonalNumber(signatory.personalnumber());
@@ -213,7 +215,8 @@ var Modal = require("../../common/modal");
         } else if (!this.isMobileNumberValid()) {
           text = localization.docview.changeAuthenticationToView.flashMessageInvalidNOPhone;
         }
-      } else if ((this.isAuthenticationDKNemIDCPR() || this.isAuthenticationDKNemIDPID()) && !this.isPersonalNumberValid()) {
+      } else if ((this.isAuthenticationDKNemIDCPR() || this.isAuthenticationDKNemIDPID())
+                 && !this.isPersonalNumberValid()) {
         text = localization.docview.changeAuthenticationToView.flashMessageInvalidDKSSN;
       } else if (this.isAuthenticationDKNemIDCVR() && !this.isPersonalNumberValid()) {
         text = localization.docview.changeAuthenticationToView.flashMessageInvalidDKCVR;
@@ -249,7 +252,7 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewNOBankID;
       } else if (model.isAuthenticationDKNemIDCPR() || model.isAuthenticationLegacyDKNemID()) {
         return localization.docview.signatory.authenticationToViewDKNemIDCPR;
-      } else if (model.isAuthenticationDKNemIDPID()){
+      } else if (model.isAuthenticationDKNemIDPID()) {
         return localization.docview.signatory.authenticationToViewDKNemIDPID;
       } else if (model.isAuthenticationDKNemIDCVR()) {
         return localization.docview.signatory.authenticationToViewDKNemIDCVR;
