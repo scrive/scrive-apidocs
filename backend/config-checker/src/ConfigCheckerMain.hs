@@ -1,6 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 module Main (main) where
 
+import Data.Aeson.Diff
 import Data.Either.Validation
 import Data.Unjson
 import System.Environment
@@ -46,6 +47,12 @@ instance ConfigFile MailingServerConf where
 instance ConfigFile MessengerServerConf where
   configFile = "messenger_server.conf"
 
+newtype FlowConf = FlowConf AppConf
+  deriving (Unjson)
+
+instance ConfigFile FlowConf where
+  configFile = "kontrakcja_flow.conf"
+
 lintConfigFiles :: IO ()
 lintConfigFiles = do
   (AppPaths _ workspaceRoot) <- setupAppPaths
@@ -54,6 +61,7 @@ lintConfigFiles = do
   cronConf                   <- readConfigFile @CronConf workspaceRoot
   mailerConf                 <- readConfigFile @MailingServerConf workspaceRoot
   messengerConf              <- readConfigFile @MessengerServerConf workspaceRoot
+  flowConf                   <- readConfigFile @FlowConf workspaceRoot
 
   putStrLn "Checking that config files are in sync..."
 
@@ -61,6 +69,7 @@ lintConfigFiles = do
       checkFieldsEqualAppConfCronConf appConf cronConf
       *> checkFieldsEqualAppConfMailerConf appConf mailerConf
       *> checkFieldsEqualAppConfMessengerConf appConf messengerConf
+      *> checkFieldsEqualAppConfFlowConf appConf flowConf
     of
       Success ()   -> putStrLn "Checks finished."
       Failure errs -> do
@@ -188,6 +197,24 @@ checkFieldsEqualAppConfMessengerConf
   where
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
     checkEq = checkFieldEq (configFile @AppConf, configFile @MessengerServerConf)
+
+checkFieldsEqualAppConfFlowConf :: AppConf -> FlowConf -> ConfigValidation
+checkFieldsEqualAppConfFlowConf appConf (FlowConf appConf2) = if coreDiff == Patch []
+  then Success ()
+  else Failure $ header <> map show (patchOperations coreDiff)
+  where
+    header =
+      [ "Config files "
+        <> (configFile @AppConf)
+        <> " and "
+        <> (configFile @FlowConf)
+        <> " do not match."
+      , "List of patch operations follows, one per line."
+      , "See https://hackage.haskell.org/package/aeson-diff-1.1.0.9/docs/Data-Aeson-Patch.html#t:Operation for more information."
+      ]
+    coreDiff  = diff (coreValue appConf) (coreValue appConf2)
+    coreValue = unjsonToJSON unjsonDef . setFlowFieldsToDefault
+    setFlowFieldsToDefault conf = conf { flowPort = 9173, servicesToRun = RunBoth }
 
 main :: IO ()
 main = do

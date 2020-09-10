@@ -8,6 +8,7 @@ log/
 .locale
 cron.conf
 kontrakcja.conf
+kontrakcja_flow.conf
 /supervisord.conf
 mailing_server.conf
 messenger_server.conf

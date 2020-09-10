@@ -1352,11 +1352,12 @@ Executable config-checker
                  MessengerServerConf
 
   Build-Depends: base-noprelude
-               , data-default
-               , either
                , kontrakcja-appdir
                , kontrakcja
                , kontrakcja-prelude
+               , aeson-diff
+               , data-default
+               , either
                , lifted-base
                , text
                , unjson
