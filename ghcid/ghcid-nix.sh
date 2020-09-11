@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# A little wrapper script that helps with running ghcid inside a kontrakcja nix workspace
+# A little wrapper script that helps with running ghcid inside a kontrakcja nix-shell
 #
 # You can override ghcid options using env variables, e.g.
 # GHCID_SETUP=':set -Werror' ghcid-nix.sh
@@ -10,11 +10,12 @@
 setup=${GHCID_SETUP:-':set -Wwarn'}
 repl_options=${GHCID_REPL_OPTIONS:-''}
 
-if [ -z "$IN_NIX_SHELL" ] || [ -z "$KONTRAKCJA_WORKSPACE" ]; then
+if [ -z "$IN_NIX_SHELL" ]; then
   echo "You should run this script inside a nix-shell."
   exit 1
 fi
 
+KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-`pwd -P`}
 cd "$KONTRAKCJA_WORKSPACE"
 
 case "$1" in
