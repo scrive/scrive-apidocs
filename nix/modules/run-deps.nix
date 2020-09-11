@@ -1,8 +1,11 @@
 { nixpkgs
 , haskell-nix
+, ghc-version
 }:
 let
   inherit (nixpkgs) pkgs nodePackages elmPackages python3Packages;
+
+  haskellPackages = nixpkgs.haskell.packages.${ghc-version};
 
   vendor = import ./vendor.nix { inherit nixpkgs; };
 
@@ -25,6 +28,10 @@ let
     nodePackages.yarn
     nodePackages.grunt-cli
     nodePackages.node2nix
+  ];
+
+  haskellDeps = [
+    haskellPackages.ghcid
   ];
 
   mainDeps = [
@@ -59,4 +66,5 @@ in
   ++ pythonDeps
   ++ elmDeps
   ++ nodeDeps
+  ++ haskellDeps
   ++ mainDeps

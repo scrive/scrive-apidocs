@@ -16,7 +16,7 @@ let
     { inherit nixpkgs ghc-version; };
 
   run-deps = import ./run-deps.nix
-    { inherit nixpkgs haskell-nix; };
+    { inherit nixpkgs haskell-nix ghc-version; };
 
   haskell-deps = import ./haskell-deps.nix
     { inherit
