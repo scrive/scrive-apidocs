@@ -1,5 +1,6 @@
 import json
-import urllib
+import urllib.parse
+import urllib.request
 from os import path
 from io import BytesIO
 import requests
