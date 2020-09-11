@@ -71,7 +71,6 @@ import Flow.TestKontraHandler as Flow
 import FlowTests
 import Folder.APITest
 import Folder.FolderTest
-import Generators.DocumentGeneratorsTest
 import Generators.OccurenceControlTest
 import GTWorkflowTest
 import HtmlTest
@@ -176,7 +175,6 @@ allTests =
   , userHistoryTests
   , userPasswordTests
   , userStateTests
-  , documentGeneratorsTests
   , occurenceControlTests
   , samlConditionsGuardsTests
   , samlSignatureTest
