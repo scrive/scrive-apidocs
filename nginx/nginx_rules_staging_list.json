@@ -1,0 +1,6 @@
+{"/api/frontend/documents/list": "include /etc/nginx/includes/kontrakcja-staging-list;",
+ "/api/v2/documents/list": "include /etc/nginx/includes/kontrakcja-staging-list;",
+ "/api/v1/list": "include /etc/nginx/includes/kontrakcja-staging-list;",
+ "/verify": "client_max_body_size 30M;\ninclude /etc/nginx/includes/kontrakcja-staging;",
+ "/api/": "include /etc/nginx/includes/kontrakcja-staging;",
+ "/adminonly": "include /etc/nginx/includes/kontrakcja-staging;"}

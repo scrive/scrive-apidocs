@@ -45,8 +45,8 @@ def check_service_description(test, api):
                                      '%a %d %b %Y %H:%M:%S %Z')
     diff = (datetime.now() -
             datetime.fromtimestamp(time.mktime(update_timestamp)))
-    err_msg = 'Service description has not been updated in two weeks'
-    assert diff.total_seconds() < 60 * 60 * 24 * 14, err_msg
+    err_msg = 'Service description has not been updated in 12 months'
+    assert diff.total_seconds() < 60 * 60 * 24 * 365, err_msg
 
 
 def check_evidence_of_time(test, api):

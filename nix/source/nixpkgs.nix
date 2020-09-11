@@ -1,8 +1,8 @@
-{ useLocal }:
 let
-  kontrakcja-nix-src = import ./kontrakcja-nix.nix
-    { inherit useLocal; };
-
-  nixpkgs-src = kontrakcja-nix-src + /source/nixpkgs.nix;
+  version = "efc5084e51783ba3410e08da49dd09b95c608e19";
+  sha256 = "1rvnxvjl0xmpp50bx1wjrjglwhp4l1x6lpirazrdmm7dnr8zdlj1";
 in
-import nixpkgs-src
+builtins.fetchTarball
+  { inherit sha256;
+    url = "https://github.com/NixOS/nixpkgs/archive/${version}.tar.gz";
+  }

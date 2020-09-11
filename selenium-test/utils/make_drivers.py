@@ -49,7 +49,11 @@ selenium_user = 'USER'
 def make_local_drivers(lang, test_name, local_devices,
                        screenshots_enabled, selenium_timeout):
     for device_info in local_devices:
-        driver_factory = lambda: device_info['driver']()
+        if 'options' in device_info:
+            driver_factory = lambda: device_info['driver'](options=device_info['options'])
+        else:
+            driver_factory = lambda: device_info['driver']()
+
         yield SeleniumDriverWrapper(driver_factory,
                                     driver_name=device_info['name'],
                                     test_name=test_name,

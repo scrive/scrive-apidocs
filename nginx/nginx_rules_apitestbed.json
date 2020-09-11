@@ -1,0 +1,3 @@
+{"/verify": "client_max_body_size 30M;\ninclude /etc/nginx/includes/kontrakcja-api-testbed;",
+ "/api/": "include /etc/nginx/includes/kontrakcja-api-testbed;",
+ "/adminonly": "include /etc/nginx/includes/kontrakcja-api-testbed;"}

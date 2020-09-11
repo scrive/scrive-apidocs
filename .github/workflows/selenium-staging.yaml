@@ -1,0 +1,177 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  evidence-package:
+    runs-on:
+      - linux
+      - self-hosted
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+        with:
+          ref: staging
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          df -h
+          nix-collect-garbage
+          df -h
+          
+          nix-shell -j4 -A ghc88.selenium-shell release.nix --run true
+      - env:
+          SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
+        name: "Run Selenium Tests (Evidence Package)"
+        run: |
+          nix-shell -A ghc88.selenium-shell release.nix --run \
+            "./ci/workflow/scripts/run-selenium-tests.sh evidence_package --remote"
+      - if: "${{ always() }}"
+        name: Upload Selenium Server log
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: selenium-logs
+          path: supervisor/logs
+      - if: "${{ always() }}"
+        name: Upload Screenshots
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: screenshots
+          path: selenium-test/evidence_package/screenshots
+      - if: "${{ always() }}"
+        name: Upload Artifacts
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: artifacts
+          path: selenium-test/evidence_package/artifacts
+  general:
+    runs-on:
+      - linux
+      - self-hosted
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+        with:
+          ref: staging
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          df -h
+          nix-collect-garbage
+          df -h
+          
+          nix-shell -j4 -A ghc88.selenium-shell release.nix --run true
+      - env:
+          SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
+        name: "Run Selenium Tests (General)"
+        run: |
+          nix-shell -A ghc88.selenium-shell release.nix --run \
+            "./ci/workflow/scripts/run-selenium-tests.sh general --remote"
+      - if: "${{ always() }}"
+        name: Upload Selenium Server log
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: selenium-logs
+          path: supervisor/logs
+      - if: "${{ always() }}"
+        name: Upload Screenshots
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: screenshots
+          path: selenium-test/general/screenshots
+      - if: "${{ always() }}"
+        name: Upload Artifacts
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: artifacts
+          path: selenium-test/general/artifacts
+  language:
+    runs-on:
+      - linux
+      - self-hosted
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+        with:
+          ref: staging
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          df -h
+          nix-collect-garbage
+          df -h
+          
+          nix-shell -j4 -A ghc88.selenium-shell release.nix --run true
+      - env:
+          SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
+        name: "Run Selenium Tests (Languages)"
+        run: |
+          nix-shell -A ghc88.selenium-shell release.nix --run \
+            "./ci/workflow/scripts/run-selenium-tests.sh language-test --remote"
+      - if: "${{ always() }}"
+        name: Upload Selenium Server log
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: selenium-logs
+          path: supervisor/logs
+      - if: "${{ always() }}"
+        name: Upload Screenshots
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: screenshots
+          path: selenium-test/language-test/screenshots
+      - if: "${{ always() }}"
+        name: Upload Artifacts
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: artifacts
+          path: selenium-test/language-test/artifacts
+name: "Selenium Tests (staging)"
+on:
+  schedule:
+    - cron: "0 0 * * *"

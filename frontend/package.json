@@ -81,7 +81,7 @@
     "node": ">=0.10.15"
   },
   "scripts": {
-    "test": "grunt test",
+    "test": "grunt test:fast --new-build",
     "watch": "webpack --watch --mode=development",
     "build:nix": "grunt build:nix",
     "sync-nix": "./sync-nix.sh"

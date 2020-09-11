@@ -6,10 +6,14 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Crypto.RNG
 import Log
-import System.Directory (listDirectory, removeDirectoryRecursive)
+import System.Directory
+  ( getCurrentDirectory, listDirectory, removeDirectoryRecursive
+  )
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
-import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import System.IO.Temp (createTempDirectory)
+import System.Process (CreateProcess(..), proc)
+import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.Text as T
@@ -27,19 +31,18 @@ sendMailWithMonthlyInvoice
   -> MonthlyInvoiceConf
   -> m ()
 sendMailWithMonthlyInvoice dbConfig invoiceConf = do
-  let
-    script       = scriptPath invoiceConf
-    name         = recipientName invoiceConf
-    emailAddress = recipientEmail invoiceConf
-    reportsDir   = "monthly-report"
-    args = [T.unpack dbConfig, "-f", T.unpack script, "-v", "report_dir=" <> reportsDir]
-  (code, stdout, stderr) <- liftIO $ readProcessWithExitCode "psql" args BSL.empty
-  void $ if code == ExitSuccess
-    then
-      (do
-        runActuallSendout reportsDir name emailAddress
-        liftIO $ removeDirectoryRecursive reportsDir
-      )
+  currentDir <- liftIO getCurrentDirectory
+  reportsDir <- liftIO $ createTempDirectory "/tmp" "monthly-report"
+  let script        = currentDir </> T.unpack (scriptPath invoiceConf)
+      name          = recipientName invoiceConf
+      emailAddress  = recipientEmail invoiceConf
+      args          = [T.unpack dbConfig, "-f", script, "-v", "report_dir=" <> reportsDir]
+      createProcess = (proc "psql" args) { cwd = Just reportsDir }
+  (code, stdout, stderr) <- liftIO $ readCreateProcessWithExitCode createProcess BSL.empty
+  if code == ExitSuccess
+    then do
+      runActuallSendout reportsDir name emailAddress
+      liftIO $ removeDirectoryRecursive reportsDir
     else logAttention "Running monthly-invoice psql script has failed" $ object
       [ "exit_code" .= show code
       , "stdout" `equalsExternalBSL` stdout

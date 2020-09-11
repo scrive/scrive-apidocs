@@ -93,7 +93,7 @@ def check_evidence_log(test, drv, api):
         # do it asap, because saucelabs machine can change its external ip
         # and it will not match the one used for frontend api requests
         drv.open_url('https://api.ipify.org/?format=html')
-        my_ip = drv.find_element('pre').text
+        my_ip = drv.find_element('pre').text.strip()
 
     test.sleep(10)  # wait for sealing
     doc = api.get_document(doc.id)  # refresh
@@ -119,7 +119,7 @@ def check_evidence_log(test, drv, api):
     for timestamp_string in timestamp_strings:
         timestamp = datetime.strptime(timestamp_string, '%Y-%m-%d %H:%M:%S.%f')
         time_diff = timestamp - five_minutes_ago
-        assert 0 < time_diff.total_seconds() < 5*60
+        assert 0 < time_diff.total_seconds() < 5*60, time_diff.total_seconds()
 
     timestamp_strings = [re.match(r'(.*) UTC', td.text).group(1)
                          for td in html('#event-table td:nth-child(2)')]
@@ -127,4 +127,4 @@ def check_evidence_log(test, drv, api):
     for timestamp_string in timestamp_strings:
         timestamp = datetime.strptime(timestamp_string, '%Y-%m-%d %H:%M:%S.%f')
         time_diff = timestamp - hour_ago
-        assert 0 < time_diff.total_seconds() < 60*60
+        assert 0 < time_diff.total_seconds() < 60*60, time_diff.total_seconds()

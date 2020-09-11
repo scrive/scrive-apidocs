@@ -4,14 +4,23 @@ jobs=(
   ghc88-nix
   ghc86-nix
   ghc88-manual
-  frontend
   formatting
   quick-formatting
+  frontend
+  nix-deps
+  nix-deps-mac
+  nix-dist
+  migration-test
+  selenium-staging
+  shake-dist-master
+  shake-dist-staging
+  shake-dist-production
 )
 
 for job in "${jobs[@]}"
 do
-  dhall-to-yaml \
-    --file ci/workflow/jobs/$job.dhall \
-    | tee .github/workflows/$job.yaml
+  echo "# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh." \
+    > .github/workflows/$job.yaml
+  dhall-to-yaml <<< "./ci/workflow/jobs/$job.dhall" \
+    | tee -a .github/workflows/$job.yaml
 done

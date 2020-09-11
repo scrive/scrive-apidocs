@@ -1,4 +1,4 @@
-Cabal-Version: 2.2
+Cabal-Version: 2.4
 Name:          kontrakcja
 Version:       1.0
 Author:        Scrive AB
@@ -107,7 +107,7 @@ Library kontrakcja-appdir
                     , directory
                     , filepath
 
-Library flow
+Library kontrakcja-flow
   Import: common-stanza
   Hs-source-dirs: backend/flow/lib
 
@@ -680,11 +680,13 @@ Library
 
   Other-Modules: BrandedDomain.BrandedDomain.Internal,
                  MailContext.Internal
+  Pkgconfig-Depends:
+                 libxml-2.0
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , kontrakcja-appdir
                , authentication
-               , flow
+               , kontrakcja-flow
                , file-embed
                , AES
                , DRBG
@@ -843,7 +845,7 @@ Executable kontrakcja-server
                , directory
                , exceptions
                , filepath
-               , flow
+               , kontrakcja-flow
                , happstack-server
                , happstack-static-routing
                , hedis
@@ -1254,7 +1256,7 @@ Test-suite kontrakcja-test
                , kontrakcja-appdir
                , kontrakcja
                , authentication
-               , flow
+               , kontrakcja-flow
                , Decimal
                , HStringTemplate
                , HUnit
@@ -1367,6 +1369,8 @@ Executable localization
   import: common-stanza
 
   Hs-source-dirs: localization/src
+                , backend/lib
+                , backend/misc/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -1375,7 +1379,6 @@ Executable localization
   Main-Is: LocalizationMain.hs
 
   Build-depends: base-noprelude
-               , kontrakcja
                , kontrakcja-prelude
                , kontrakcja-appdir
                , base16-bytestring
@@ -1397,6 +1400,12 @@ Executable localization
                , text
                , time
                , transformers
+
+  Other-Modules:
+              Templates
+              User.Lang
+              Version
+              Utils.Enum
 
 Executable routinglist
   import: common-stanza

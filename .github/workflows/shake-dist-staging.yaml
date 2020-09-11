@@ -1,0 +1,54 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  run-shake-dist:
+    runs-on:
+      - linux
+      - self-hosted
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          df -h
+          nix-collect-garbage
+          df -h
+          
+          nix-shell -j4 -A ghc88.backend-shell release.nix --run true
+      - env:
+          BUILD_NUMBER: "github-${{ github.run_id }}"
+          BUILD_VCS_NUMBER: "${{ github.sha }}"
+          NGINX_CONF_DEFAULT_RULE: "include /etc/nginx/includes/kontrakcja-prod;"
+          NGINX_CONF_RULES_PATH: nginx/nginx_rules_prod.json
+          NGINX_CONF_RULES_PATH_ALTERNATIVE: nginx/nginx_rules_prod.json
+          TEAMCITY_VERSION: '1'
+        name: Run Shake Dist
+        run: |
+          nix-shell -A ghc88.backend-shell release.nix --run \
+            ./ci/workflow/scripts/run-shake-dist.sh
+      - name: Upload Shake Dist
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: kontrakcja-shake-dist
+          path: "_build/kontrakcja.tar.gz"
+name: "Build Shake Dist (staging)"
+on:
+  push:
+    branches:
+      - staging

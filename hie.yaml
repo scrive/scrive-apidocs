@@ -1,84 +1,289 @@
 cradle:
-  multi:
-    - path: "./Shake"
-      config :  {cradle : { none: } }
-    - path: "./Setup.hs"
-      config :  {cradle : { none: } }
-    - path: "./evidence-package"
-      config :  {cradle : { none: } }
-    - path: "./build-scripts"
-      config :  {cradle : { none: } }
-    - path: "./transifex"
-      config :  {cradle : { none: } }
-    - path: "./scripts"
-      config :  {cradle : { none: } }
-    - path: "./backend/config-checker"
-      config :  {cradle : { none: } }
+  cabal:
+    - path: "./Shake/./Shake.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-    - path: "./"
-      config:
-        cradle:
-          cabal:
-            - path: "./backend/server/src"
-              component: "kontrakcja:exe:kontrakcja-server"
+    - path: "./Shake/./Shake.Cabal.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-            - path: "./backend/cron/src"
-              component: "kontrakcja:exe:cron"
+    - path: "./Shake/./Shake.DBSchema.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-            - path: "./backend/migrate/src"
-              component: "kontrakcja:exe:kontrakcja-migrate"
+    - path: "./Shake/./Shake.Flags.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-            - path: "./backend/mailer/src"
-              component: "kontrakcja:exe:mailing-server"
+    - path: "./Shake/./Shake.NewBuild.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-            - path: "./backend/messenger/src"
-              component: "kontrakcja:exe:messenger-server"
+    - path: "./Shake/./Shake.Oracles.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-            - path: "./localization/src"
-              component: "kontrakcja:exe:localization"
+    - path: "./Shake/./Shake.TeamCity.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-            - path: "./backend/routinglist/src"
-              component: "kontrakcja:exe:routinglist"
+    - path: "./Shake/./Shake.Utils.hs"
+      component: "kontrakcja-shake:exe:kontrakcja-shake"
 
-            - path: "./backend/cron/inc"
-              component: "lib:kontrakcja"
-            - path: "./backend/cron/schema"
-              component: "lib:kontrakcja"
-            - path: "./backend/lib"
-              component: "lib:kontrakcja"
-            - path: "./backend/mailer/inc "
-              component: "lib:kontrakcja"
-            - path: "./backend/messenger/inc"
-              component: "lib:kontrakcja"
-            - path: "./backend/messenger/src"
-              component: "lib:kontrakcja"
-            - path: "./backend/migrate/inc"
-              component: "lib:kontrakcja"
-            - path: "./backend/misc/schema "
-              component: "lib:kontrakcja"
-            - path: "./backend/server/schema"
-              component: "lib:kontrakcja"
-            - path: "backend/server/src"
-              component: "lib:kontrakcja"
-            - path: "backend/misc/src"
-              component: "lib:kontrakcja"
-            - path: "backend/messenger/schema"
-              component: "lib:kontrakcja"
-            - path: "backend/mailer/schema"
-              component: "lib:kontrakcja"
-            - path: "backend/mailer/src"
-              component: "lib:kontrakcja"
-            - path: "backend/flow/src"
-              component: "lib:kontrakcja"
+    - path: "./backend/kontrakcja-prelude"
+      component: "kontrakcja:lib:kontrakcja-prelude"
 
-            - path: "./backend/authentication/src/"
-              component: "lib:authentication"
+    - path: "./backend/appdir"
+      component: "kontrakcja:lib:kontrakcja-appdir"
 
-            - path: "./backend/kontrakcja-prelude"
-              component: "lib:kontrakcja-prelude"
+    - path: "./backend/flow/lib"
+      component: "kontrakcja:lib:kontrakcja-flow"
 
-            - path: "./backend/appdir"
-              component: "lib:kontrakcja-appdir"
+    - path: "./backend/cron/inc"
+      component: "lib:kontrakcja"
 
-            - path: "./backend/test/src"
-              component: "kontrakcja:test:kontrakcja-test"
+    - path: "./backend/cron/schema"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/lib"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/mailer/inc"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/mailer/schema"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/mailer/src"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/messenger/inc"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/messenger/schema"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/messenger/src"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/migrate/inc"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/misc/schema"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/misc/src"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/server/schema"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/server/src"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/flow/src"
+      component: "lib:kontrakcja"
+
+    - path: "./backend/server/src/KontrakcjaServerMain.hs"
+      component: "kontrakcja:exe:kontrakcja-server"
+
+    - path: "./backend/cron/src/CronMain.hs"
+      component: "kontrakcja:exe:cron"
+
+    - path: "./backend/migrate/src/KontrakcjaMigrateMain.hs"
+      component: "kontrakcja:exe:kontrakcja-migrate"
+
+    - path: "./backend/migrate/src/AppDBConfig.hs"
+      component: "kontrakcja:exe:kontrakcja-migrate"
+
+    - path: "./backend/mailer/src/MailingServerMain.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/AddressUtils.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/Assembler.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/Handlers.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/HtmlToTxt.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/Mailer.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/MailGun.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/MailingServerConf.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/MailJet.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/Sender.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/SendGrid.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/SendinBlue.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/mailer/src/SocketLabs.hs"
+      component: "kontrakcja:exe:mailing-server"
+
+    - path: "./backend/messenger/src/MessengerServerMain.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/messenger/src/Mblox.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/messenger/src/Messenger.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/messenger/src/MessengerServerConf.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/messenger/src/Handlers.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/messenger/src/Sender.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/messenger/src/TeliaCallGuide.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/messenger/src/GenericSE.hs"
+      component: "kontrakcja:exe:messenger-server"
+
+    - path: "./backend/test/src"
+      component: "kontrakcja:test:kontrakcja-test"
+
+    - path: "./backend/config-checker/src/ConfigCheckerMain.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/cron/inc/ConfigCheckerMain.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/mailer/src/ConfigCheckerMain.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/messenger/src/ConfigCheckerMain.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/config-checker/src/CronConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/config-checker/src/MailingServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/config-checker/src/MessengerServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/cron/inc/CronConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/cron/inc/MailingServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/cron/inc/MessengerServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/mailer/src/CronConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/mailer/src/MailingServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/mailer/src/MessengerServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/messenger/src/CronConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/messenger/src/MailingServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./backend/messenger/src/MessengerServerConf.hs"
+      component: "kontrakcja:exe:config-checker"
+
+    - path: "./localization/src/LocalizationMain.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/lib/LocalizationMain.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/misc/src/LocalizationMain.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./localization/src/Templates.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./localization/src/User.Lang.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./localization/src/Version.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./localization/src/Utils.Enum.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/lib/Templates.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/lib/User.Lang.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/lib/Version.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/lib/Utils.Enum.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/misc/src/Templates.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/misc/src/User.Lang.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/misc/src/Version.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/misc/src/Utils.Enum.hs"
+      component: "kontrakcja:exe:localization"
+
+    - path: "./backend/routinglist/src/RoutinglistMain.hs"
+      component: "kontrakcja:exe:routinglist"
+
+    - path: "./transifex/src/TransifexMain.hs"
+      component: "kontrakcja:exe:transifex"
+
+    - path: "./transifex/src/Transifex.Synch.hs"
+      component: "kontrakcja:exe:transifex"
+
+    - path: "./transifex/src/Transifex.Utils.hs"
+      component: "kontrakcja:exe:transifex"
+
+    - path: "./scripts/detect_old_localizations/DetectOldLocalizationsMain.hs"
+      component: "kontrakcja:exe:detect_old_localizations"
+
+    - path: "./scripts/detect_old_templates/DetectOldTemplatesMain.hs"
+      component: "kontrakcja:exe:detect_old_templates"
+
+    - path: "./transifex/src/DetectOldTemplatesMain.hs"
+      component: "kontrakcja:exe:detect_old_templates"
+
+    - path: "./scripts/detect_old_templates/Transifex.Synch.hs"
+      component: "kontrakcja:exe:detect_old_templates"
+
+    - path: "./scripts/detect_old_templates/Transifex.Utils.hs"
+      component: "kontrakcja:exe:detect_old_templates"
+
+    - path: "./transifex/src/Transifex.Synch.hs"
+      component: "kontrakcja:exe:detect_old_templates"
+
+    - path: "./transifex/src/Transifex.Utils.hs"
+      component: "kontrakcja:exe:detect_old_templates"
+
+    - path: "./scripts/sort_imports/SortImportsMain.hs"
+      component: "kontrakcja:exe:sort_imports"
+
+    - path: "./backend/authentication/src"
+      component: "kontrakcja:lib:authentication"

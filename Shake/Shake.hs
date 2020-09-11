@@ -3,7 +3,6 @@
 import Control.Exception (IOException, SomeException, catch, evaluate)
 import Control.Monad
 import Control.Monad.Writer (execWriter, tell)
-import Data.Char
 import Data.List (intercalate)
 import Data.List.Extra (intersperse, trim)
 import Data.Maybe
@@ -130,27 +129,8 @@ usageMsg = unlines
 
 checkPrerequisites :: IO ()
 checkPrerequisites = do
-  requireVersion "node" ["--version"] (makeVersion [4, 0, 0]) tail
-  requireVersion "grunt"
-                 ["--version"]
-                 (makeVersion [0, 1, 0])
-                 (takeWhile dotOrNum . drop 11)
-  requireVersion "lessc"
-                 ["--version"]
-                 (makeVersion [2, 5, 0])
-                 (takeWhile dotOrNum . drop 6)
   requireVersion "cabal" ["--numeric-version"] (makeVersion [2, 4, 0]) id
-  requireVersion "brittany"
-                 ["--version"]
-                 (makeVersion [0, 12, 0, 0])
-                 (takeWhile dotOrNum . drop 17)
-  requireVersion "hlint"
-                 ["--version"]
-                 (makeVersion [2, 2, 11])
-                 (takeWhile dotOrNum . drop 7)
   where
-    dotOrNum c = c == '.' || isNumber c
-
     requireVersion prog args ver pre =
       requireVersion' prog args ver pre
         `catch` (\(_ :: IOException) ->
@@ -603,6 +583,8 @@ serverFormatLintRules sourceRoot newBuild threads opt cabalFile flags = do
 
   "brittany" ~> do
     mapP_ runBrittany =<< listHsFiles
+
+  "native-sort-imports" ~> command [] "sort_imports" srcSubdirs
 
   "brittany-quick" ~> do
     mapP_ runBrittany =<< listChangedHsFiles

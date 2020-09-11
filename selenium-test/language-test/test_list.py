@@ -8,6 +8,7 @@ from make_drivers import generate_tests
 from scrivepy import Language
 from selenium import webdriver
 import shutil
+from selenium.webdriver.firefox.options import Options
 
 ###############################################################################
 #                                   INFO                                      #
@@ -24,8 +25,12 @@ import shutil
 ###############################################################################
 DC = webdriver.DesiredCapabilities
 
+options = Options()
+options.headless = True
 LOCAL_DEVICES = [{'driver': webdriver.Firefox,
-                  'name': DC.FIREFOX['browserName']}]
+                  'name': DC.FIREFOX['browserName'],
+                  'options': options
+                 }]
 
 REMOTE_DEVICES = [{'browserName': "chrome",
                    'chromeOptions': {'args': ['--disable-extensions']},
