@@ -216,6 +216,8 @@ fetchUser (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS,
     , ..
     }
 
+-- TODO: this (inherited) should be fixed to properly handle inherited addresses
+-- for now it is only used in adminonly
 fetchUserWithUserGroupName
   :: ( UserID
      , Maybe ByteString
@@ -249,11 +251,11 @@ fetchUserWithUserGroupName
      , CompositeArray1 Tag
      , CompositeArray1 Tag
      , Text
-     , Text
+     , Maybe Text
      )
   -> (User, Text, Text)
-fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags, ugname, entityName)
-  = (user, ugname, entityName)
+fetchUserWithUserGroupName (id, password, salt, isCompanyAdmin, accountSuspended, hasAcceptedTOS, signupMethod, firstName, lastName, personalNumber, companyPosition, phone, email, lang, idleDocTimeoutPreparation, idleDocTimeoutClosed, idleDocTimeoutCanceled, idleDocTimeoutTimedout, idleDocTimeoutRejected, idleDocTimeoutError, immediateTrash, associatedDomainID, passwordAlgorithm, totpKey, totpActive, groupID, homeFolderID, totpIsMandatory, sysAuth, CompositeArray1 iTags, CompositeArray1 eTags, ugname, mEntityName)
+  = (user, ugname, fromMaybe "(inherited)" mEntityName)
   where
     user = User
       { password     = maybeMkPassword password
