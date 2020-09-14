@@ -8,10 +8,10 @@
   , config
   , ... }:
   {
-    flags = { new-base = false; };
+    flags = {};
     package = {
       specVersion = "1.6";
-      identifier = { name = "curl"; version = "1.3.8.2"; };
+      identifier = { name = "curl"; version = "1.3.8.3"; };
       license = "BSD-3-Clause";
       copyright = "";
       maintainer = "Don Stewart <dons00@gmail.com>";
@@ -39,13 +39,9 @@
       "library" = {
         depends = [
           (hsPkgs."base" or (errorHandler.buildDepError "base"))
+          (hsPkgs."containers" or (errorHandler.buildDepError "containers"))
           (hsPkgs."bytestring" or (errorHandler.buildDepError "bytestring"))
-          ] ++ (if flags.new-base
-          then [
-            (hsPkgs."base" or (errorHandler.buildDepError "base"))
-            (hsPkgs."containers" or (errorHandler.buildDepError "containers"))
-            ]
-          else [ (hsPkgs."base" or (errorHandler.buildDepError "base")) ]);
+          ];
         libs = [ (pkgs."curl" or (errorHandler.sysDepError "curl")) ];
         buildable = true;
         modules = [

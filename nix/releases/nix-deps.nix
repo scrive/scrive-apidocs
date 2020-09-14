@@ -27,6 +27,8 @@ nixpkgs.stdenv.mkDerivation {
       ${kontrakcja-src}/release.nix \
       ${kontrakcja-src}/cabal.project \
       ${kontrakcja-src}/cabal.project.freeze \
+      ${kontrakcja-src}/cabal-deps.project \
+      ${kontrakcja-src}/cabal-deps.project.freeze \
       ./
 
     cp -r \

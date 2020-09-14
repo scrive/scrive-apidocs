@@ -14,6 +14,8 @@ haskell-nix.pkgs.haskell-nix.cabalProject {
 
   src = kontrakcja-src;
 
+  cabalProjectFileName = "cabal-deps.project";
+
   compiler-nix-name = ghc-version;
 
   index-state = hackage-index-state;

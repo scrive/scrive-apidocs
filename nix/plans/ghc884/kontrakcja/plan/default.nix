@@ -562,7 +562,7 @@
               "generic" = lib.mkOverride 900 true;
               };
             };
-          "curl" = { flags = { "new-base" = lib.mkOverride 900 true; }; };
+          "curl" = { flags = {}; };
           "resource-pool" = {
             flags = { "developer" = lib.mkOverride 900 false; };
             };

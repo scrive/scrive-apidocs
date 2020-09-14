@@ -44,7 +44,6 @@ Build-type:    Simple
 -- - remove TH from extensions from everything else, add
 --   LANGUAGE TemplateHaskell at the top of each file where it is used
 -- - use TH only where it is truly needed
---
 
 common common-stanza
   Default-Language: Haskell2010

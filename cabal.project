@@ -2,38 +2,20 @@ packages: . ./Shake
 
 write-ghc-environment-files: never
 
+repository hackage.scrive.com
+    url: https://hackage.scrive.com/
+
 package *
     ghc-options: -j4 +RTS -A32m -RTS
+
+package text-icu
+    extra-include-dirs: /usr/local/opt/icu4c/include
+    extra-lib-dirs: /usr/local/opt/icu4c/lib
 
 source-repository-package
     type: git
     location: https://github.com/dylex/hsaml2.git
     tag: d4852ee7d96f7643c97e5a7f1a82a7705a0e1236
-    --sha256: 0lrkybb5g77bqbjz9lkjkalansqr3fjmwnigvyjdy8hkr2sywy1y
-
-source-repository-package
-    type: git
-    location: https://github.com/scrive/pool.git
-    tag: 902e01e8a5b250b63971c0fbd0724c1288fb18d6
-    --sha256: 14q81sdc89czfhplvjy17skrsmdig6yfkraic5hwwji2ivc35pg8
-
-source-repository-package
-    type: git
-    location: https://github.com/scrive/mixpanel.git
-    tag: c243905bba1e326ff90ae24f1134aa5ad877562a
-    --sha256: 08igv4gfp11vhkc73bvqh4zv5262alpslzwrfh037xwmwzvafqca
-
-source-repository-package
-    type: git
-    location: https://github.com/scrive/json.git
-    tag: 5da565783a9e05440e212e7da214d18a52adb1dc
-    --sha256: 0bfr73qbmqqcz70f6lin17j219kc2a9bciwirb8mjp7rh345k5k0
-
-source-repository-package
-    type: git
-    location: https://github.com/scrive/curl.git
-    tag: f857851f7dcbab636dbcda6ad9ce4d8e1f72cdbf
-    --sha256: 1frl8529qj39x3wjz0vkx8z5rl298r4dgz47la18wza1dglz2hrk
 
 allow-newer: servant-docs:lens
              servant:QuickCheck

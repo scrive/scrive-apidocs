@@ -11,7 +11,7 @@
     flags = { developer = false; };
     package = {
       specVersion = "1.8";
-      identifier = { name = "resource-pool"; version = "0.2.3.3"; };
+      identifier = { name = "resource-pool"; version = "0.2.3.2.1"; };
       license = "BSD-3-Clause";
       copyright = "Copyright 2011 MailRank, Inc.";
       maintainer = "Bryan O'Sullivan <bos@serpentine.com>,\nBas van Dijk <v.dijk.bas@gmail.com>";

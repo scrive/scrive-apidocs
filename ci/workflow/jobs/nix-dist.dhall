@@ -33,10 +33,13 @@ Workflow.Workflow ::
   { name = "Build Nix Dist"
   , on = Some Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
-          { branches = Some [ "master", "staging", "production" ]
+          -- Disabling this workflow on main branches because Nix dist is broken.
+          -- Ses [FLOW-366].
+          -- { branches = Some [ "master", "staging", "production" ]
+          { branches = Some [ "nix" ]
           })
-    --   Uncomment this line to temporary enable running this workflow in PR
-    --   , pull_request = Some Workflow.BranchSpec.default
+      -- Uncomment this line to temporary enable running this workflow in PR
+      -- , pull_request = Some Workflow.BranchSpec.default
       }
   , jobs = toMap
       { build-kontrakcja-dist = build-kontrakcja-dist

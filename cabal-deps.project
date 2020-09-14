@@ -1,0 +1,39 @@
+packages: . ./Shake
+
+write-ghc-environment-files: never
+
+package *
+    ghc-options: -j4 +RTS -A32m -RTS
+
+source-repository-package
+    type: git
+    location: https://github.com/dylex/hsaml2.git
+    tag: d4852ee7d96f7643c97e5a7f1a82a7705a0e1236
+    --sha256: 0lrkybb5g77bqbjz9lkjkalansqr3fjmwnigvyjdy8hkr2sywy1y
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/pool.git
+    tag: 2a73135967bec41c24833378ed0c25997dddf24e
+    --sha256: 0xyhic27r81qbk9xrjb13xpkl7rf430aavfhc802887yaffvxabk
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/mixpanel.git
+    tag: c243905bba1e326ff90ae24f1134aa5ad877562a
+    --sha256: 08igv4gfp11vhkc73bvqh4zv5262alpslzwrfh037xwmwzvafqca
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/json.git
+    tag: 5da565783a9e05440e212e7da214d18a52adb1dc
+    --sha256: 0bfr73qbmqqcz70f6lin17j219kc2a9bciwirb8mjp7rh345k5k0
+
+source-repository-package
+    type: git
+    location: https://github.com/scrive/curl.git
+    tag: b1073ad169e963c23ab06bd0003f8052345eaec7
+    --sha256: 0790n5r2n304jdz590bs47wirqfgscj1p70260zw95iklb2laydj
+
+allow-newer: servant-docs:lens
+             servant:QuickCheck
