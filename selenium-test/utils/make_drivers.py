@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import nose.tools
 from io import BytesIO
 import sys
 import time
@@ -143,7 +142,6 @@ def download_screenshots(screenshot_requests, screenshots_dir):
             img.save(file_path)
 
 
-@nose.tools.nottest
 def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
                    remote_devices=None, screenshots_enabled=None,
                    lang=None, selenium=True):
@@ -170,12 +168,12 @@ def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
     except KeyError:
         remote = False
 
-    if not remote:
+    if screenshots_enabled and not remote:
         print('Disable screenshots on local browsers')
         screenshots_enabled = False
 
-    if screenshots_enabled:
-        utils.create_empty_dir(screenshots_dir)
+    if screenshots_enabled and not os.path.exists(screenshots_dir):
+        os.makedirs(screenshots_dir)
 
     import config
     api = Scrive(**config.scrive_api)
@@ -194,14 +192,26 @@ def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
                 test_helper = TestHelper(api, driver,
                                          artifact_dir=artifact_dir)
 
-                def teardown(driver=driver):
-                    driver.quit()
-                    screenshot_requests.extend(
-                        driver.extract_screenshot_requests())
+                def wrapper(fn):
+                    def inner(test_helper, driver, api):
+                        def close(driver):
+                            driver.quit()
+                            screenshot_requests.extend(
+                                driver.extract_screenshot_requests())
 
-                test.teardown = teardown
-                print("▶ Running selenium test %s for language %s on %s" % (
-                    test_name, lang, driver.driver_name))
+                        try:
+                            func_name = "%s (%s) (%s)" % (fn.__name__, lang, driver.driver_name)
+                            print("👉 Running %s ..." % func_name)
+                            fn(test_helper, driver, api)
+                            print('📭 Result: %s ︎✅ ' % func_name)
+                        except Exception as err:
+                            print('📭 Result: %s ❌ - %s ︎' % (func_name, err))
+                            raise err
+                        finally:
+                            close(driver)
+
+                    return inner
+                test = wrapper(test)
                 yield test, test_helper, driver, api
 
             if screenshots_enabled:
@@ -209,5 +219,4 @@ def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
         else:
             test_helper = TestHelper(api, driver=None,
                                      artifact_dir=artifact_dir)
-            print("Running api test %s" % test_name)
             yield test, test_helper, api

@@ -7,7 +7,6 @@ import tests
 from make_drivers import generate_tests
 from scrivepy import Language
 from selenium import webdriver
-import shutil
 from selenium.webdriver.firefox.options import Options
 
 ###############################################################################
@@ -51,8 +50,7 @@ artifact_dir = os.path.join(dir_path, 'artifacts')
 screenshots_dir = os.path.join(dir_path, 'screenshots')
 
 
-# this function is autocalled by nosetests, so it's like main()
-def make_tests():
+def test_generator():
     try:
         remote = os.environ['SELENIUM_REMOTE_TESTS'] == '1'
     except KeyError:

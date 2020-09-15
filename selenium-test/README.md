@@ -1,4 +1,5 @@
 # Selenium Test
+The tests use [nose2](https://nose2.io/) as the testing framework.
 
 ## Setup
 To install all python dependencies just run:
@@ -7,7 +8,7 @@ pip install -r requirements.txt
 ```
 `virtualenv` is highly encouraged!
 
-The only non-python dependency is `pdfdetach` app (usually available in poppler package)
+The only non-python dependency is `pdfdetach` app (usually available in `poppler` package)
 
 ## Configuration
 A file called `config.py` should be created with following the template below:
@@ -52,8 +53,19 @@ optional arguments:
 ```
 or
 ```
-python run.py --remote --timeout 90 --enable-screenshots --nocapture
+python run.py --remote --timeout 90 --enable-screenshots
 ```
+
+Additionally you can pass any parameters of `nose2` to the end of the command. For example
+```
+python run.py --remote --timeout 90 --enable-screenshots --log-capture ...
+```
+
+You can also run the tests in parallel by
+```
+python run.py --local --log-capture --timeout 120 --plugin=nose2.plugins.mp -N=<n>
+```
+`<n>` is the number of executors you'd like to use.
 
 ## Others
 Each sub-project contains README files with wiki links
