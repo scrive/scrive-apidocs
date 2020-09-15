@@ -29,6 +29,7 @@ jobs:
         run: |
           df -h
           nix-collect-garbage
+          rm -rf ~/.cabal
           df -h
           
           nix-shell -j4 -A ghc88.detect-unused-shell release.nix --run true
@@ -69,6 +70,7 @@ jobs:
         run: |
           df -h
           nix-collect-garbage
+          rm -rf ~/.cabal
           df -h
           
           nix-shell -j4 -A ghc88.lint-shell release.nix --run true
@@ -113,6 +115,7 @@ jobs:
         run: |
           df -h
           nix-collect-garbage
+          rm -rf ~/.cabal
           df -h
           
           nix-shell -j4 -A ghc88.lint-shell release.nix --run true

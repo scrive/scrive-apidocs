@@ -28,17 +28,17 @@ jobs:
         run: |
           df -h
           nix-collect-garbage
+          rm -rf ~/.cabal
           df -h
           
           nix-shell -j4 -A ghc88.manual-backend-shell release.nix --run true
       - name: "Cache ~/.cabal"
         uses: "actions/cache@v2"
         with:
-          key: "${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}"
+          key: "${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-1"
           path: "~/.cabal"
           restore-keys: |
-            ${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}
-            ${{ runner.os }}-cabal-
+            ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-1
       - name: Build Kontrakcja
         run: |
           nix-shell -A ghc88.manual-backend-shell release.nix --run \

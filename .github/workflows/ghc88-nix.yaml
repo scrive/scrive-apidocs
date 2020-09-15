@@ -27,6 +27,7 @@ jobs:
         run: |
           df -h
           nix-collect-garbage
+          rm -rf ~/.cabal
           df -h
           
           nix-shell -j4 -A ghc88.backend-shell release.nix --run true
@@ -58,6 +59,7 @@ on:
     paths:
       - "**.hs"
       - "**.cabal"
+      - cabal.project.freeze
   push:
     branches:
       - master

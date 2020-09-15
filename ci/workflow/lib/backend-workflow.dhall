@@ -32,15 +32,17 @@ let createWorkflow =
     let cacheCabalSteps =
       if args.cacheCabal
       then
+        -- We cache ~/.cabal depending on the hash value of cabal.project.freeze
+        -- The suffix like -1 are used to purge the cache on GitHub Actions if needed
+        let hasher = "\${{ hashFiles('cabal.project.freeze') }}-1" in
         [ Step ::
           { name = "Cache ~/.cabal"
           , uses = Some "actions/cache@v2"
           , with = Some (toMap
               { path = Json.Str "~/.cabal"
-              , key = Json.Str "\${{ runner.os }}-cabal-\${{ hashFiles('**/*.cabal') }}"
+              , key = Json.Str "\${{ runner.os }}-cabal-${hasher}"
               , restore-keys = Json.Str ''
-                  ''${{ runner.os }}-cabal-''${{ hashFiles('**/*.cabal') }}
-                  ''${{ runner.os }}-cabal-
+                  ''${{ runner.os }}-cabal-${hasher}
                   ''
               })
           }

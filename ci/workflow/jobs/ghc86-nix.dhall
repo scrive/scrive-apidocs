@@ -19,6 +19,6 @@ BackendWorkflow.createWorkflow
           })
       -- Uncomment this line to temporary enable running this workflow in PR
       -- , pull_request = Some Workflow.BranchSpec ::
-      --     { paths = Some [ "**.hs", "**.cabal" ] }
+      --     { paths = Some [ "**.hs", "**.cabal", "cabal.project.freeze" ] }
       }
   }

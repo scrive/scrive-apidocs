@@ -66,6 +66,7 @@ let nix-shell-step =
     , run = Some ''
         df -h
         nix-collect-garbage
+        rm -rf ~/.cabal
         df -h
 
         nix-shell -j4 -A ${shell} release.nix --run true
