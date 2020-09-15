@@ -38,8 +38,8 @@ module.exports = React.createClass({
     });
 
     var superthis = this;
-    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr", "fi_tupas",
-               "sms_pin", "verimi", "nl_idin"]
+    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",
+               "fi_tupas", "sms_pin", "verimi", "nl_idin"]
               .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
     if (ams.length <= 1) {
       // if no auth methods are enabled, tell customer, that they can purchase them

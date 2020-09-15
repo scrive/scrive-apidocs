@@ -28,18 +28,18 @@ var link = link;
     isNorwegian: function () {
       return false;
     },
-    isCPR: function() {
+    isCPR: function () {
       var sig = this.doc().currentSignatory();
       return sig.legacyDkNemIDAuthenticationToView()
              || sig.dkNemIDCPRAuthenticationToView()
              || sig.legacyDkNemIDAuthenticationToViewArchived()
-             || sig.dkNemIDCPRAuthenticationToViewArchived()
+             || sig.dkNemIDCPRAuthenticationToViewArchived();
     },
-    isPID: function() {
+    isPID: function () {
       var sig = this.doc().currentSignatory();
-      return sig.dkNemIDPIDAuthenticationToView() || sig.dkNemIDPIDAuthenticationToViewArchived()
+      return sig.dkNemIDPIDAuthenticationToView() || sig.dkNemIDPIDAuthenticationToViewArchived();
     },
-    isCVR: function() {
+    isCVR: function () {
       var sig = this.doc().currentSignatory();
       return sig.dkNemIDCVRAuthenticationToView() || sig.dkNemIDCVRAuthenticationToViewArchived();
     },

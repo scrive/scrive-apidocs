@@ -108,6 +108,7 @@ var Modal = require("../../common/modal");
 
     isAuthenticationValueInvalid: function () {
       var authvalue = this.newAuthenticationValue();
+      var authToView = this.signatory().authenticationToView();
 
       if (this.isNewAuthenticationPINbySMS()) {
         // If NO BankID to view is set, then we need a valid Norwegian number, or empty
@@ -140,7 +141,6 @@ var Modal = require("../../common/modal");
         }
       } else if (this.isNewAuthenticationDKNemIDCPR() || this.isNewAuthenticationDKNemIDPID()) {
         // If DK NemID to view is set, then SSN needs to be valid and not empty
-        var authToView = this.signatory().authenticationToView();
         if (authToView === "dk_nemid_cpr" || authToView === "dk_nemid_pid") {
           return !new SSNForDKNemIDValidation().validateData(authvalue);
           // Else valid or empty
@@ -152,7 +152,6 @@ var Modal = require("../../common/modal");
         }
      } else if (this.isNewAuthenticationDKNemIDCVR()) {
         // If DK NemID for CVR to view is set, then SSN needs to be valid and not empty
-        var authToView = this.signatory().authenticationToView();
         if (authToView === "dk_nemid_cvr") {
           return !new CVRForDKNemIDValidation().validateData(authvalue);
           // Else valid or empty
@@ -184,7 +183,10 @@ var Modal = require("../../common/modal");
 
       if (this.isNewAuthenticationPINbySMS()) {
         text = localization.docview.changeAuthentication.errorPhone;
-      } else if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemIDCPR() || this.isNewAuthenticationDKNemIDPID() || this.isNewAuthenticationDKNemIDCVR()) {
+      } else if (this.isNewAuthenticationSEBankID()
+                 || this.isNewAuthenticationDKNemIDCPR()
+                 || this.isNewAuthenticationDKNemIDPID()
+                 || this.isNewAuthenticationDKNemIDCVR()) {
         text = localization.docview.changeAuthentication.errorEID;
       }
       // no NOBankID here, because there is only empty "" authentication value

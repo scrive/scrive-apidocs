@@ -1211,7 +1211,6 @@ Test-suite kontrakcja-test
                  UserGroup.APITest
                  UserGroup.UserGroupTest
                  Generators.DocumentGenerators
-                 Generators.DocumentGeneratorsTest
                  Generators.OccurenceControl
                  Generators.OccurenceControlTest
                  GTWorkflowTest

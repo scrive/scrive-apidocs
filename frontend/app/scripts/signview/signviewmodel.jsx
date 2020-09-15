@@ -228,7 +228,7 @@ var moment = require("moment");
                    || signatory.seBankIDAuthenticationToViewArchived()
                    || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
-        } else if ( signatory.legacyDkNemIDAuthenticationToView()
+        } else if (signatory.legacyDkNemIDAuthenticationToView()
                    || signatory.dkNemIDCPRAuthenticationToView()
                    || signatory.dkNemIDPIDAuthenticationToView()
                    || signatory.legacyDkNemIDAuthenticationToViewArchived()

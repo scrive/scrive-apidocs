@@ -512,7 +512,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (signatory.noBankIDAuthenticationToViewArchived()) {
         return localization.docview.signatory.authenticationToViewNOBankID;
-      } else if (signatory.dkNemIDCPRAuthenticationToViewArchived() || signatory.legacyDkNemIDAuthenticationToViewArchived()) {
+      } else if (signatory.dkNemIDCPRAuthenticationToViewArchived()
+                 || signatory.legacyDkNemIDAuthenticationToViewArchived()) {
         return localization.docview.signatory.authenticationToViewDKNemIDCPR;
       } else if (signatory.dkNemIDPIDAuthenticationToViewArchived()) {
         return localization.docview.signatory.authenticationToViewDKNemIDPID;

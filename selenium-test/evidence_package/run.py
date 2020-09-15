@@ -33,6 +33,10 @@ if __name__ == '__main__':
             shutil.rmtree(screenshots_dir)
         os.makedirs(screenshots_dir)
 
+    if os.path.exists(artifact_dir):
+        shutil.rmtree(artifact_dir)
+    os.makedirs(artifact_dir)
+
     print("Running %s tests %s in %s language %s screenshots" % (
         args.single_test_name if args.single_test_name else 'all',
         'on Saucelabs' if args.remote else 'using local browser',

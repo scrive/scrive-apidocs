@@ -64,7 +64,8 @@ def check_all_attachments_included(test_helper, api):
 
     with utils.temp_file_path() as fp:
         doc.sealed_document.save_as(fp)
-        output = subprocess.check_output(['pdfdetach', '-list', fp], text=True)
+        output = subprocess.check_output(['pdfdetach', '-list', fp],
+                                         universal_newlines=True)
 
     expected_output = '''7 embedded files
 1: Appendix 1 Evidence Quality Framework.html
