@@ -1,6 +1,20 @@
 # API specification changelog
 
+## 0.10.3
+
+Add specification of callback events.
+
+* Add `CallbackEvent` schema.
+* Add `CallbackEventVersion1` schema.
+* Add `CallbackEventBaseVersion1` schema.
+* Add `CallbackEventCompletedVersion1` schema.
+* Add `CallbackEventFlowRejectedVersion1` schema.
+* Add `CallbackEventAuthenticationAttemptedVersion1` schema.
+* Add `OnfidoProviderDataVersion1` schema.
+
 ## 0.10.2
+
+Add authentication configuration. The authentication functionality itself is not implemented yet.
 
 * Add optional (per user) authentication settings in `POST /templates/{template_id}/start`
 * Add `UserConfig` and `AuthConfig` schemas.
@@ -8,6 +22,8 @@
   objects. This change is backwards-compatible and `RichUserId`s are also accepted.
 
 ## 0.10.1
+
+Add callback configuration. The callback functionality itself is not implemented yet.
 
 * Schema `InstanceCreateRequest`: add field `callback`.
 * Schema `InstanceGetResponse`: add field `callback`.
