@@ -55,8 +55,6 @@ import EvidenceLog.Model
 import File.Types (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
-import Session.Model (getCurrentSession)
-import Session.Types (Session(sesID))
 import User.Lang
 import UserGroup (ugwpSettings)
 import UserGroup.Model (UserGroupGetWithParents(..))
@@ -232,6 +230,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
       pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
       validPin <- checkSignatoryPinToSign slid fields pin
       unless validPin $ do
+        commit -- Commit to save SMS PIN attempts
         apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
     -- Return
     return $ Ok ()
@@ -325,7 +324,10 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         $ do
             pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
             validPin <- checkSignatoryPinToSign slid fields pin
-            if not validPin then apiError documentActionForbidden else return pin
+            if not validPin
+              -- Commit to save SMS PIN attempts
+              then commit >> apiError documentActionForbidden
+              else return pin
 
     seBankIDSignProvider <- do
       authorugid <- guardJust $ documentauthorugid olddoc
@@ -421,7 +423,7 @@ docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ 
       else apiV2ParameterObligatory
         (ApiV2ParameterTextWithValidation "mobile" asValidPhoneForSMS)
     -- API call actions
-    pin <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
+    pin <- dbUpdate $ GetOrCreateSignatoryPin SMSPinToSign slid mobile
     sendPinCode sl mobile pin
     -- Return
     return $ Accepted ()
@@ -455,7 +457,7 @@ docApiV2SigSendSmsPinToView did slid = logDocumentAndSignatory did slid . api $ 
       _ ->
         apiError $ serverError "Mobile number for signatory set by author is not valid"
     -- API call actions
-    pin <- dbQuery $ GetSignatoryPin (authKindToPinType authKind) slid mobile
+    pin <- dbUpdate $ GetOrCreateSignatoryPin (authKindToPinType authKind) slid mobile
     sendPinCode sl mobile pin
     -- Return
     return $ Accepted ()
@@ -476,11 +478,11 @@ docApiV2SigIdentifyToViewWithSmsPin did slid =
       pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
       validPin <- checkSignatoryPinToView (authKindToPinType authKind) slid pin
       unless validPin $ do
+        commit -- Commit to save SMS PIN attempts
         apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
-      sess <- getCurrentSession
-      dbUpdate
-        . MergeDocumentEidAuthentication authKind (sesID sess) slid
-        $ SMSPinAuthentication_ mobile
+      sid <- view #sessionID <$> getContext
+      dbUpdate . MergeDocumentEidAuthentication authKind sid slid $ SMSPinAuthentication_
+        mobile
       let eventFields = do
             F.value "signatory_mobile" mobile
             F.value "provider_sms_pin" True

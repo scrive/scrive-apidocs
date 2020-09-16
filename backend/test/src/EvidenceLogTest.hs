@@ -92,6 +92,7 @@ evidenceLogTemplateVariables = Set.fromList
   , "emailmobile"       -- This relates to the bug found by MR and described in evidenceLogTemplatesWellDefined definition.
   , "used_email_address" -- Email address which was used to invite (for use in evidence log)
   , "used_mobile_number" -- SMS telnum which was used to invite (for use in evidence log)
+  , "pin_attempts"    -- Number of failed SMS PIN entry attempts
   ]
 
 -- Attachment name                                       , "name"

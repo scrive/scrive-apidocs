@@ -666,7 +666,7 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
         validPin <- getValidPin slid fields
         if isJust validPin
           then return . Right $ Ok ()
-          else Left . Failed <$> J.runJSONGenT (J.value "pinProblem" True)
+          else commit >> Left . Failed <$> J.runJSONGenT (J.value "pinProblem" True) -- Commit to save SMS PIN attempts
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         Just _  -> return . Right $ Ok ()
         Nothing -> do
@@ -759,7 +759,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
                 postDocumentPendingChange olddoc signatoryLink
                 handleAfterSigning slid
                 Right . Accepted <$> (documentJSONV1 mu True True Nothing =<< theDocument)
-              else Left . Failed <$> J.runJSONGenT (return ())
+              else commit >> Left . Failed <$> J.runJSONGenT (return ()) -- Commit to save SMS PIN attempts
 
           SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
             mesig@(Just _) -> do
@@ -1783,7 +1783,7 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
       else
         apiGuardJustM (badInput "Phone number provided is not valid.")
           $ getOptionalField asValidPhone "phone"
-    pin <- dbQuery $ GetSignatoryPin SMSPinToSign slid phone
+    pin <- dbUpdate $ GetOrCreateSignatoryPin SMSPinToSign slid phone
     sendPinCode sl phone pin
     Ok <$> J.runJSONGenT (J.value "sent" True)
 
@@ -1939,15 +1939,19 @@ getValidPin
   -> [(FieldIdentity, FieldTmpValue)]
   -> m (Maybe Text)
 getValidPin slid fields = do
-  pin       <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
-  slidPhone <- getMobile . fromJust . getSigLinkFor slid <$> theDocument
-  phone     <- case (not $ T.null slidPhone, lookup MobileFI fields) of
+  pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
+  sl  <- fromJust . getSigLinkFor slid <$> theDocument
+  let slidPhone = getMobile sl
+  phone <- case (not $ T.null slidPhone, lookup MobileFI fields) of
     (True , _                 ) -> return slidPhone
     (False, Just (StringFTV v)) -> return v
     (False, _                 ) -> throwM . SomeDBExtraException $ badInput
       "Phone number not provided by author, you need to provide it"
-  pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid phone
-  if pin == pin' then return $ Just pin else return Nothing
+  ctx    <- getContext
+  actor  <- signatoryActor ctx sl
+  status <- dbUpdate $ VerifySignatoryPin pin SMSPinToSign sl phone actor
+  let success = status == SignatoryPinCorrect
+  return $ if success then Just pin else Nothing
 
 getFieldForSigning :: (Kontrakcja m) => m [(FieldIdentity, FieldTmpValue)]
 getFieldForSigning = do
