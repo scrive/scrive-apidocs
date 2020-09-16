@@ -108,7 +108,6 @@ signDocument
   -> m ()
 signDocument slid fields acceptedAuthorAttachments notUploadedSignatoryAttachments mesig mpin screenshots consentResponses
   = do
-
     switchLang =<< getLang <$> theDocument
 
     ctx             <- getContext
@@ -213,10 +212,10 @@ checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
       (False, _) -> apiError $ requestParameterInvalid
         "fields"
         "Does not contain a mobile number field, author has not set one for the signatory"
-  pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
-  when (pin /= pin') . logInfo "Invalid pin for signing" $ object
-    ["supplied pin" .= pin, "expected pin" .= pin', "slid" .= show slid]
-  return $ pin == pin'
+  ctx   <- getContext
+  actor <- signatoryActor ctx sl
+  (== SignatoryPinCorrect)
+    <$> dbUpdate (VerifySignatoryPin pin SMSPinToSign sl mobile actor)
 
 
 checkSignatoryPinToView
@@ -226,7 +225,6 @@ checkSignatoryPinToView pinType slid pin = do
   mobile <- case asValidPhoneForSMS $ getMobile sl of
     Good x -> return x
     _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
-  pin' <- dbQuery $ GetSignatoryPin pinType slid mobile
-  when (pin /= pin') . logInfo "Invalid pin for identify" $ object
-    ["supplied pin" .= pin, "expected pin" .= pin', "slid" .= show slid]
-  return $ pin == pin'
+  ctx   <- getContext
+  actor <- signatoryActor ctx sl
+  (== SignatoryPinCorrect) <$> dbUpdate (VerifySignatoryPin pin pinType sl mobile actor)

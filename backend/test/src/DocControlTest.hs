@@ -341,8 +341,9 @@ testSigningWithPin = do
     mh <- dbUpdate $ NewSignatoryAccessToken (signatorylinkid siglink)
                                              SignatoryAccessTokenForMailBeforeClosing
                                              Nothing
-    pin <- dbQuery
-      $ GetSignatoryPin SMSPinToSign (signatorylinkid siglink) (getMobile siglink)
+    pin <- dbUpdate $ GetOrCreateSignatoryPin SMSPinToSign
+                                              (signatorylinkid siglink)
+                                              (getMobile siglink)
     preq      <- mkRequest GET []
     (_, ctx') <- updateDocumentWithID $ \did ->
       lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash

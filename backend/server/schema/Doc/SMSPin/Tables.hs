@@ -5,7 +5,7 @@ import DB
 tableSignatorySMSPins :: Table
 tableSignatorySMSPins = tblTable
   { tblName        = "signatory_sms_pins"
-  , tblVersion     = 4
+  , tblVersion     = 5
   , tblColumns     =
     [ tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "phone_number", colType = TextT, colNullable = False }
@@ -14,6 +14,11 @@ tableSignatorySMSPins = tblTable
     , tblColumn { colName     = "generated_at"
                 , colType     = TimestampWithZoneT
                 , colNullable = False
+                }
+    , tblColumn { colName     = "attempts"
+                , colType     = IntegerT
+                , colNullable = False
+                , colDefault  = Just "0"
                 }
     ]
   , tblPrimaryKey  = pkOnColumns ["phone_number", "signatory_link_id", "pin_type"]

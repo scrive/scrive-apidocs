@@ -900,3 +900,5 @@ ForwardedSigningEvidenceArchive=$_ForwardedSigningEvidenceArchive()$
 ConfirmationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the confirmation sent via email to <span class="signatory"/> was delivered.
 ###
 ConfirmationUndeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the confirmation sent via email to <span class="signatory"/> could not be delivered and continued attempts were cancelled.
+###
+SMSPinVerificationFailedLog=SMS PIN verification for $phone$ failed. Either incorrect PIN was provided, too many attempts ($pin_attempts$) were made or PIN’s validity timed out.

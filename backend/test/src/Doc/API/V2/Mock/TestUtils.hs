@@ -46,7 +46,9 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocSigLinkHasSigned
 , getMockDocSigLinkHasRejected
 , getMockDocSigLinkAuthToViewMethod
+, setMockDocSigLinkAuthToViewMethod
 , getMockDocSigLinkAuthToViewArchivedMethod
+, setMockDocSigLinkAuthToViewArchivedMethod
 , getMockDocSigLinkAuthToSignMethod
 , setMockDocSigLinkAuthToSignMethod
 , getMockDocSigLinkPersonalNumber
@@ -68,6 +70,7 @@ module Doc.API.V2.Mock.TestUtils (
 ) where
 
 import Data.Aeson
+import Data.Tuple
 import Data.Unjson
 import Happstack.Server
 import qualified Data.Text as T
@@ -286,6 +289,19 @@ getMockDocSigLinkAuthToViewMethod i md =
           $  "Could not parse AuthenticationToViewMethod from MockDoc:\n"
           <> showt md
 
+setMockDocSigLinkAuthToViewMethod
+  :: Int -> AuthenticationToViewMethod -> MockDoc -> MockDoc
+setMockDocSigLinkAuthToViewMethod i auth = setForSigNumberFromMockDoc i setter
+  where
+    setter msl = msl { mockSigLinkAuthMethodToView = authMethod }
+    authMethod =
+      fromMaybe
+          (  unexpectedError
+          $  "Could not convert AuthenticationToViewMethod to String:\n"
+          <> showt auth
+          )
+        $ authenticationToStringFromViewMethod auth
+
 getMockDocSigLinkAuthToViewArchivedMethod :: Int -> MockDoc -> AuthenticationToViewMethod
 getMockDocSigLinkAuthToViewArchivedMethod i md =
   case
@@ -300,18 +316,40 @@ getMockDocSigLinkAuthToViewArchivedMethod i md =
           $  "Could not parse AuthenticationToViewArchivedMethod from MockDoc:\n"
           <> showt md
 
+setMockDocSigLinkAuthToViewArchivedMethod
+  :: Int -> AuthenticationToViewMethod -> MockDoc -> MockDoc
+setMockDocSigLinkAuthToViewArchivedMethod i auth = setForSigNumberFromMockDoc i setter
+  where
+    setter msl = msl { mockSigLinkAuthMethodToViewArchived = authMethod }
+    authMethod =
+      fromMaybe
+          (  unexpectedError
+          $  "Could not convert AuthenticationToViewArchivedMethod to String:\n"
+          <> showt auth
+          )
+        $ authenticationToStringFromViewMethod auth
+
+authenticationToViewMethodStrings :: [(String, AuthenticationToViewMethod)]
+authenticationToViewMethodStrings =
+  [ ("standard"    , StandardAuthenticationToView)
+  , ("se_bankid"   , SEBankIDAuthenticationToView)
+  , ("no_bankid"   , NOBankIDAuthenticationToView)
+  , ("dk_nemid"    , LegacyDKNemIDAuthenticationToView)
+  , ("dk_nemid_cpr", DKNemIDCPRAuthenticationToView)
+  , ("dk_nemid_pid", DKNemIDPIDAuthenticationToView)
+  , ("dk_nemid_cvr", DKNemIDCVRAuthenticationToView)
+  , ("fi_tupas"    , FITupasAuthenticationToView)
+  , ("sms_pin"     , SMSPinAuthenticationToView)
+  , ("nl_idin"     , SMSPinAuthenticationToView)
+  ]
+
 authenticationToViewMethodFromString :: String -> Maybe AuthenticationToViewMethod
-authenticationToViewMethodFromString "standard"     = Just StandardAuthenticationToView
-authenticationToViewMethodFromString "se_bankid"    = Just SEBankIDAuthenticationToView
-authenticationToViewMethodFromString "no_bankid"    = Just NOBankIDAuthenticationToView
-authenticationToViewMethodFromString "dk_nemid" = Just LegacyDKNemIDAuthenticationToView
-authenticationToViewMethodFromString "dk_nemid_cpr" = Just DKNemIDCPRAuthenticationToView
-authenticationToViewMethodFromString "dk_nemid_pid" = Just DKNemIDPIDAuthenticationToView
-authenticationToViewMethodFromString "dk_nemid_cvr" = Just DKNemIDCVRAuthenticationToView
-authenticationToViewMethodFromString "fi_tupas"     = Just FITupasAuthenticationToView
-authenticationToViewMethodFromString "sms_pin"      = Just SMSPinAuthenticationToView
-authenticationToViewMethodFromString "nl_idin"      = Just SMSPinAuthenticationToView
-authenticationToViewMethodFromString _              = Nothing
+authenticationToViewMethodFromString authMethod =
+  lookup authMethod authenticationToViewMethodStrings
+
+authenticationToStringFromViewMethod :: AuthenticationToViewMethod -> Maybe String
+authenticationToStringFromViewMethod authMethod =
+  lookup authMethod $ fmap swap authenticationToViewMethodStrings
 
 getMockDocSigLinkAuthToSignMethod :: Int -> MockDoc -> AuthenticationToSignMethod
 getMockDocSigLinkAuthToSignMethod i md =

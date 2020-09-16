@@ -721,7 +721,7 @@
 "_identifyWithIdin":"Identify with iDIN",
 "_identifyWithPinEnterPin":"Enter your SMS PIN",
 "_identifyWithPinInfotext":"Check your mobile phone",
-"_identifyWithPinInvalidPin":"Invalid PIN",
+"_identifyWithPinInvalidPin":"Incorrect PIN or too many failed attempts in one hour.",
 "_identifyWithTupas":"Identify with Finnish FTN",
 "_identifyWithVerimi":"Identify with Verimi",
 "_idinText":"Dutch iDIN",

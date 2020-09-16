@@ -105,7 +105,7 @@
 "_forwardToOtherPersonApproving":"If you are not the right person to approve, you can forward this document to a different party and let them approve instead of you.",
 "_forwardTypeYourMessageHere":"Type your message here",
 "_invalidPhone":"Wrong format. Correct format is +46701234567",
-"_invalidPin":"Wrong PIN, please try again",
+"_invalidPin":"Incorrect PIN or too many failed attempts in one hour.",
 "_lastname":"Last name",
 "_legalparagraphBody":"This email contains confidential information and should not be forwarded. Disclosure, copying, distribution or other processing of the information contained in this message is prohibited and may be unlawful. If you have received this in error please notify the sender and delete immediately.",
 "_mailClosedCustomTextHeader":"Message from <strong>$creatorname$</strong>",

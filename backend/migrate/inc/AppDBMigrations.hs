@@ -309,4 +309,5 @@ kontraMigrations =
   , updateLegacyAuthenticationToViewInTemplates
   , updateKontraInfoForMailsAggregate
   , updateKontraInfoForSMSesAggregate
+  , addAttemptsToSMSPin
   ]

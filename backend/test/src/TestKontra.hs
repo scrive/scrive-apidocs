@@ -23,6 +23,7 @@ module TestKontra (
     , mkContext
     , mkContext'
     , mkContextWithUser
+    , addContextSession
     , modifyTestTime
     , setTestTime
     , setRequestURI
@@ -76,7 +77,9 @@ import PasswordService.Conf
 import PdfToolsLambda.Class
 import PdfToolsLambda.Conf.Internal
 import PdfToolsLambda.Control
+import Session.Model
 import Session.SessionID as SessionID
+import Session.Types
 import Templates
 import TestEnvSt
 import TestFileStorage
@@ -487,6 +490,17 @@ mkContext' pdfToolsLambdaEnv globalTemplates time bd fileCache lang = Context
 
 mkContextWithUser :: Lang -> User -> TestEnv Context
 mkContextWithUser lang user = set #maybeUser (Just user) <$> mkContext lang
+
+addContextSession :: Context -> TestEnv Context
+addContextSession ctx = do
+  rq        <- mkRequest GET []
+  (ctx', _) <- runTestKontra rq ctx $ do
+    sid <- case ctx ^. #maybeUser of
+      Just user -> sesID <$> startNewSessionWithUser (user ^. #id)
+      Nothing   -> getNonTempSessionID
+    logInfo_ $ "Adding session: " <> showt sid
+    pure $ ctx & (#sessionID .~ sid)
+  pure ctx'
 
 testGtConf :: GuardTimeConf
 testGtConf = GuardTimeConf
