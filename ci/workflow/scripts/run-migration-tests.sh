@@ -10,13 +10,10 @@ git status
 
 git worktree add --force --detach workspace/base-branch $BASE_BRANCH
 
-(cd workspace/base-branch && git status)
-
-nix-build -j2 -o base-release -A ghc88.dist workspace/base-branch/release.nix
-
-nix-build -j2 -o current-release -A ghc88.dist release.nix
-
+export KONTRAKCJA_ROOT="$(pwd)"
 export KONTRAKCJA_WORKSPACE="$(pwd)"
+
+(cd workspace/base-branch && git status)
 
 set +x
 echo "$PDFTOOLS_CONFIG" > ./pdftools-lambda.local.json
@@ -44,6 +41,6 @@ createdb -h "$db_path" kontrakcja_test
 # Use kontrakcja_test db for both kontrakcja-migrate and kontrakcja-test
 sed -i "s/dbname='kontrakcja'/dbname='kontrakcja_test'/g" kontrakcja.conf
 
-./base-release/bin/kontrakcja-migrate
-./current-release/bin/kontrakcja-migrate
-./current-release/bin/kontrakcja-test
+( cd workspace/base-branch && cabal run kontrakcja-migrate )
+cabal run kontrakcja-migrate
+cabal run kontrakcja-test

@@ -10,7 +10,11 @@ let shell = "ghc88.backend-shell"
 
 let migration-tests =
     Job.Job ::
-      { runs-on = default-runner
+
+      -- Run migration test on cloud runner for now until we have 
+      -- more runner capacity and sufficient disk space.
+      -- { runs-on = default-runner
+      { runs-on = [ "ubuntu-latest" ]
       , steps =
           [ Step ::
               { name = "Checkout Code"
@@ -22,16 +26,9 @@ let migration-tests =
           ] # setupSteps.install-steps #
           [ setupSteps.nix-shell-step shell
           , Step ::
-              { name = "Load Nix Shell"
-              , run = Some ''
-                  nix-shell -j4 -A ${shell} release.nix \
-                    --run "echo Loaded Nix shell"
-                  ''
-              }
-          , Step ::
             { name = "Run Migration Tests"
             , env = Some (toMap
-                { BASE_BRANCH = "master"
+                { BASE_BRANCH = "origin/master"
                 , PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
                 })
             , run = Some ''
@@ -45,7 +42,10 @@ in
 Workflow.Workflow ::
   { name = "Migration Tests"
   , on = Some Workflow.Triggers ::
-      { pull_request = Some (Workflow.BranchSpec ::
+      { push = Some Workflow.BranchSpec ::
+          { branches = Some [ "nix" ]
+          }
+      , pull_request = Some (Workflow.BranchSpec ::
           { paths = Some
               [ "backend/migrate/**"
               ]
