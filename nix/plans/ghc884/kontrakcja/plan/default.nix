@@ -71,7 +71,7 @@
         "fail".revision = (((hackage."fail")."4.9.0.0").revisions).default;
         "dense-linear-algebra".revision = (((hackage."dense-linear-algebra")."0.1.0.0").revisions).default;
         "split".revision = (((hackage."split")."0.2.3.4").revisions).default;
-        "hpqtypes".revision = (((hackage."hpqtypes")."1.9.0.0").revisions).default;
+        "hpqtypes".revision = (((hackage."hpqtypes")."1.9.1.0").revisions).default;
         "stm".revision = (((hackage."stm")."2.5.0.0").revisions).default;
         "log-elasticsearch".revision = (((hackage."log-elasticsearch")."0.11.0.0").revisions).default;
         "dec".revision = (((hackage."dec")."0.0.3").revisions).default;

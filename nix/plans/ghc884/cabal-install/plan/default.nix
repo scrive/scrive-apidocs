@@ -48,7 +48,7 @@
         "hashable".flags.integer-gmp = true;
         "hashable".flags.sse41 = false;
         "hashable".flags.examples = false;
-        "HTTP".revision = (((hackage."HTTP")."4000.3.14").revisions).default;
+        "HTTP".revision = (((hackage."HTTP")."4000.3.15").revisions).default;
         "HTTP".flags.mtl1 = false;
         "HTTP".flags.conduit10 = false;
         "HTTP".flags.warn-as-error = false;

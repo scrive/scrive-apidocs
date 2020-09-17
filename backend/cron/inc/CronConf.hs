@@ -48,6 +48,7 @@ data CronConf = CronConf
   , cronConsumerSealingMaxJobs     :: Int
   , cronConsumerSigningMaxJobs     :: Int
   , cronConsumerExtendingMaxJobs   :: Int
+  , cronConsumerCallbackMaxJobs    :: Int
   , cronConsumerAPICallbackMaxJobs :: Int
   , cronConsumerFilePurgingMaxJobs :: Int
   , cronNetsSignConfig             :: Maybe NetsSignConfig
@@ -100,6 +101,9 @@ unjsonCronConf =
     <*> field "consumer_extending_max_jobs"
               cronConsumerExtendingMaxJobs
               "Maximum number of jobs running the Document Extending Consumer"
+    <*> field "consumer_callback_max_jobs"
+              cronConsumerCallbackMaxJobs
+              "Maximum number of jobs running the Callback Consumer"
     <*> field "consumer_api_callback_max_jobs"
               cronConsumerAPICallbackMaxJobs
               "Maximum number of jobs running the Document API Callback Consumer"

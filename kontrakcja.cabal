@@ -198,6 +198,11 @@ Library
                  , Branding.Adler32
                  , Branding.Control
                  , Branding.CSS
+                 , Callback.Consumer
+                 , Callback.Migrations
+                 , Callback.Model
+                 , Callback.Tables
+                 , Callback.Types
                  , Chargeable
                  , Chargeable.Migrations
                  , Chargeable.Model
@@ -1159,6 +1164,7 @@ Test-suite kontrakcja-test
                  ChargeableTest
                  CronMonthlyInvoiceTest
                  UserGroupAccountsTest
+                 CallbackTest
                  CompanyBrandingTest
                  CompanyControlTest
                  ConfigTests
@@ -1295,6 +1301,7 @@ Test-suite kontrakcja-test
                , invariant
                , json
                , kontrakcja-templates
+               , lifted-async
                , lifted-base
                , log-base
                , monad-control
@@ -1332,6 +1339,8 @@ Test-suite kontrakcja-test
                , unordered-containers
                , utf8-string
                , vector
+               , wai
+               , warp
                , x509
                , xml-conduit
                , yaml

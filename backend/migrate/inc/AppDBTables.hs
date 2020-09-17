@@ -12,6 +12,7 @@ import Database.PostgreSQL.PQTypes.Model
 import AccessControl.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
+import Callback.Tables
 import Chargeable.Tables
 import Cron.Tables
 import DB.SQLFunction
@@ -101,6 +102,8 @@ kontraTables :: [Table]
 kontraTables =
   [ tableThemes
     , tableBrandedDomains
+    , tableCallbackConsumers
+    , tableCallbacks
     , tableFolders
     , tableUserGroups
     , tableUsers

@@ -544,6 +544,9 @@ clearTables = do
 
   runSQL_ "DELETE FROM mails"
 
+  runSQL_ "DELETE FROM callback_consumers"
+  runSQL_ "DELETE FROM callbacks"
+
   runSQL_ "DELETE FROM async_event_queue"
   runSQL_ "DELETE FROM signatory_link_fields"
   runSQL_ "DELETE FROM kontra_info_for_mails"

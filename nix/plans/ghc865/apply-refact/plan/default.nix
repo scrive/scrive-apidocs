@@ -22,7 +22,7 @@
         "bifunctors".revision = (((hackage."bifunctors")."5.5.7").revisions).default;
         "bifunctors".flags.semigroups = true;
         "bifunctors".flags.tagged = true;
-        "extra".revision = (((hackage."extra")."1.7.7").revisions).default;
+        "extra".revision = (((hackage."extra")."1.7.8").revisions).default;
         "stm".revision = (((hackage."stm")."2.5.0.0").revisions).default;
         "unix".revision = (((hackage."unix")."2.7.2.2").revisions).default;
         "ghc-heap".revision = (((hackage."ghc-heap")."8.8.4").revisions).default;

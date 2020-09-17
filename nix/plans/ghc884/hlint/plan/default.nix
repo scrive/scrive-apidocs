@@ -16,7 +16,7 @@
         "bifunctors".revision = (((hackage."bifunctors")."5.5.7").revisions).default;
         "bifunctors".flags.semigroups = true;
         "bifunctors".flags.tagged = true;
-        "extra".revision = (((hackage."extra")."1.7.7").revisions).default;
+        "extra".revision = (((hackage."extra")."1.7.8").revisions).default;
         "split".revision = (((hackage."split")."0.2.3.4").revisions).default;
         "data-fix".revision = (((hackage."data-fix")."0.3.0").revisions).default;
         "stm".revision = (((hackage."stm")."2.5.0.0").revisions).default;
