@@ -118,7 +118,7 @@ ChangeAuthenticationToViewFromDKNemIDPIDLog=$ChangeAuthenticationToViewFrom(auth
 ###
 ChangeAuthenticationToViewFromDKNemIDCVRLog=$ChangeAuthenticationToViewFrom(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewFromFITupasLog=$ChangeAuthenticationToViewFrom(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewFromFITupasLog=$ChangeAuthenticationToViewFrom(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewFromVerimiLog=$ChangeAuthenticationToViewFrom(auth='“Verimi”')$
 ###
@@ -140,7 +140,7 @@ ChangeAuthenticationToViewToDKNemIDPIDLog=$ChangeAuthenticationToViewTo(auth='�
 ###
 ChangeAuthenticationToViewToDKNemIDCVRLog=$ChangeAuthenticationToViewTo(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewToFITupasLog=$ChangeAuthenticationToViewTo(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewToFITupasLog=$ChangeAuthenticationToViewTo(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewToVerimiLog=$ChangeAuthenticationToViewTo(auth='“Verimi”')$
 ###
@@ -162,7 +162,7 @@ ChangeAuthenticationToViewArchivedFromDKNemIDPIDLog=$ChangeAuthenticationToViewA
 ###
 ChangeAuthenticationToViewArchivedFromDKNemIDCVRLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewArchivedFromFITupasLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewArchivedFromFITupasLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewArchivedFromVerimiLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Verimi”')$
 ###
@@ -184,7 +184,7 @@ ChangeAuthenticationToViewArchivedToDKNemIDPIDLog=$ChangeAuthenticationToViewArc
 ###
 ChangeAuthenticationToViewArchivedToDKNemIDCVRLog=$ChangeAuthenticationToViewArchivedTo(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewArchivedToFITupasLog=$ChangeAuthenticationToViewArchivedTo(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewArchivedToFITupasLog=$ChangeAuthenticationToViewArchivedTo(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewArchivedToVerimiLog=$ChangeAuthenticationToViewArchivedTo(auth='“Verimi”')$
 ###
