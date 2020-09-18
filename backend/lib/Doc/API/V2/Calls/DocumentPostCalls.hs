@@ -580,6 +580,9 @@ docApiV2SetFile did = logDocument did . api $ do
     guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation =<< theDocument
+    guardThatDocumentIs (not . flip documentDeletedForUser $ user ^. #id)
+                        "The document is in Trash"
+      =<< theDocument
     -- Parameters
     mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
     -- API call actions
