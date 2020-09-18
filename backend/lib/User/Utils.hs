@@ -163,12 +163,11 @@ moveUserToUserGroup uid newugid =
       let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
       muser        <- dbQuery . GetUserByID $ uid
       newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
-      logInfo "Changing user home folder id"
-        $ object
-        $ [ "user_id" .= uid
-          , "folder_id_new" .= newhomefdrid
-          , "folder_id_old" .= ((^. #homeFolderID) <$> muser)
-          , "change_source" .= ("moveUserToUserGroup" :: Text)
-          ]
+      logInfo "Changing user home folder id" $ object
+        [ "user_id" .= uid
+        , "folder_id_new" .= newhomefdrid
+        , "folder_id_old" .= ((^. #homeFolderID) <$> muser)
+        , "change_source" .= ("moveUserToUserGroup" :: Text)
+        ]
       void . dbUpdate . SetUserHomeFolder uid $ newhomefdrid
       return newhomefdrid

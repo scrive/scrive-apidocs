@@ -463,13 +463,12 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
             void . dbUpdate $ SetUserUserGroup (u ^. #id) ugid_target
             let newhomefdr = set #parentID (Just targetfdrid) defaultFolder
             newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
-            logInfo "Changing user home folder id"
-              $ object
-              $ [ "user_id" .= (u ^. #id)
-                , "folder_id_new" .= newhomefdrid
-                , "folder_id_old" .= (u ^. #homeFolderID)
-                , "change_source" .= ("handleMergeToOtherCompany" :: Text)
-                ]
+            logInfo "Changing user home folder id" $ object
+              [ "user_id" .= (u ^. #id)
+              , "folder_id_new" .= newhomefdrid
+              , "folder_id_old" .= (u ^. #homeFolderID)
+              , "change_source" .= ("handleMergeToOtherCompany" :: Text)
+              ]
             void . dbUpdate . SetUserHomeFolder (u ^. #id) $ newhomefdrid
             case u ^. #homeFolderID of
               Just sourceFolderId -> do
