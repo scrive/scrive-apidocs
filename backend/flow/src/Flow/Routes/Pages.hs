@@ -21,6 +21,7 @@ type Pages
   = AuthProtect "instance-user-html" :>
       "overview" :> Capture "instance_id" InstanceId
                  :> Capture "user_name" UserName
+                 :> QueryFlag "bypass_identify" -- TODO: Temporary!
                  :> Header "Host" Host
                  :> IsSecure
                  :> Get '[HTML] Html

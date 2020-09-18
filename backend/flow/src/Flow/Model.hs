@@ -25,6 +25,7 @@ module Flow.Model
     , updateAggregatorState
     , insertUserAuthConfigs
     , selectUserAuthConfigs
+    , selectUserAuthConfig
     )
   where
 
@@ -402,13 +403,28 @@ insertUserAuthConfigs configs =
 
 selectUserAuthConfigs :: (MonadDB m, MonadThrow m) => InstanceId -> m [UserAuthConfig]
 selectUserAuthConfigs instanceId = do
-  runQuery_ . sqlSelect "flow_user_auth_configs" $ do
-    sqlResult "instance_id"
-    sqlResult "key"
-    sqlResult "auth_to_view_provider"
-    sqlResult "auth_to_view_max_failures"
-    sqlResult "auth_to_view_archived_provider"
-    sqlResult "auth_to_view_archived_max_failures"
+  runQuery_ . sqlSelect "flow_user_auth_configs uac" $ do
+    userAuthConfigSelectors "uac"
     sqlWhereEq "instance_id" instanceId
   fetchMany fetchUserAuthConfig
 
+selectUserAuthConfig
+  :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m (Maybe UserAuthConfig)
+selectUserAuthConfig instanceId userName = do
+  runQuery_ . sqlSelect "flow_user_auth_configs uac" $ do
+    userAuthConfigSelectors "uac"
+    sqlWhereEq "instance_id" instanceId
+    sqlWhereEq "key"         userName
+  fetchMaybe fetchUserAuthConfig
+
+userAuthConfigSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
+userAuthConfigSelectors prefix = do
+  mapM_
+    (\col -> sqlResult $ prefix <> "." <> col)
+    [ "instance_id"
+    , "key"
+    , "auth_to_view_provider"
+    , "auth_to_view_max_failures"
+    , "auth_to_view_archived_provider"
+    , "auth_to_view_archived_max_failures"
+    ]

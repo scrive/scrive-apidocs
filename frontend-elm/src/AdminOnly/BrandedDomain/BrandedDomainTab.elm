@@ -22,10 +22,10 @@ import Vendor.Popover as Popover
 import AdminOnly.BrandedDomain.Types exposing (..)
 import AdminOnly.BrandedDomain.Json exposing (..)
 import AdminOnly.BrandedDomain.EditBrandedDomain as EditBrandedDomain
-import Lib.Theme.Json as Theme
-import Lib.Theme.EditTheme as EditTheme
-import Lib.Theme.PreviewTheme exposing (..)
-import Lib.Theme.Types as Theme exposing (Theme, ThemeID)
+import Lib.Json.Theme as Theme
+import Lib.Components.EditTheme as EditTheme
+import Lib.Components.PreviewTheme exposing (..)
+import Lib.Types.Theme as Theme exposing (Theme, ThemeID)
 
 type EditTab = EditBrandingTab | EditThemeTab
 enumEditTab : Enum EditTab

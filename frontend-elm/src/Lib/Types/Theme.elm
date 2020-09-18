@@ -1,4 +1,4 @@
-module Lib.Theme.Types exposing (..)
+module Lib.Types.Theme exposing (..)
 
 import Color exposing (Color)
 import EnumExtra as Enum exposing (Enum)

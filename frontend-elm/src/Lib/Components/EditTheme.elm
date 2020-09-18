@@ -1,4 +1,4 @@
-module Lib.Theme.EditTheme exposing (..)
+module Lib.Components.EditTheme exposing (..)
 
 import Html exposing (Html, text, div, img)
 import String
@@ -22,7 +22,7 @@ import Tuple exposing (second)
 import EnumExtra as Enum
 import Color exposing (Color)
 
-import Lib.Theme.Types exposing (..)
+import Lib.Types.Theme exposing (..)
 
 type alias EditThemeState =
   { themeBeingEdited : Theme

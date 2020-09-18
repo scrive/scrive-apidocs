@@ -83,9 +83,9 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
         , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
         )
 
-  -- TODO: We should only add doc sessions for documents that the participant can act on at
-  -- the current stage rather than all the documents that the participant is a signatory for.
-  -- It should be ok for now since we start all documents at once.
+  -- TODO: Move this to instanceOverview after auth to view check.
+  -- Otherwise the user will be able to visit the signview before authenticating
+  -- if they happen to know the doc id and slid.
   slids <- Model.selectSignatoryIdsByInstanceUser instanceId userName
   mapM_ (addDocumentSession bd sessionId) slids
 
@@ -110,60 +110,94 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
 instanceOverview
-  :: InstanceUserHTML -> InstanceId -> UserName -> Maybe Host -> IsSecure -> AppM Html
-instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mHost isSecure = do
-  FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
-  let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
-  bd <- dbQuery $ GetBrandedDomainByURL baseUrl
+  :: InstanceUserHTML
+  -> InstanceId
+  -> UserName
+  -> Bool
+  -> Maybe Host
+  -> IsSecure
+  -> AppM Html
+instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdentify mHost isSecure
+  = do
+    FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
+    let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
+    bd <- dbQuery $ GetBrandedDomainByURL baseUrl
 
-  when (instanceId /= instanceId') $ throwAuthenticationErrorHTML bd AccessControlError
+    when (instanceId /= instanceId') $ throwAuthenticationErrorHTML bd AccessControlError
 
-  mFullInstance <- Model.selectFullInstance instanceId
-  -- We know the instance exists because of the authenticated InstanceUser
-  let authorUserId = fromJust mFullInstance ^. #template % #userId
+    mFullInstance <- Model.selectFullInstance instanceId
+    -- We know the instance exists because of the authenticated InstanceUser
+    let authorUserId = fromJust mFullInstance ^. #template % #userId
 
-  brandingDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
-  brandingUgwp  <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
+    brandingDocId    <- head <$> Model.selectDocumentIdsByInstanceId instanceId
+    brandingUgwp     <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
+    brandingHash     <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
+    -- brandingHash is used for browser cache busting
 
-  -- Used for browser cache busting
-  brandingHash  <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
+    -- TODO: Temporary: These Ids are here just to make IdentifyView elm app run.
+    -- It hasn't been modified to accept Flow-specific Ids yet.
+    identifyViewSlid <-
+      head <$> Model.selectSignatoryIdsByInstanceUser instanceId userName
+    identifyViewDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
 
-  let cdnBaseUrl'    = fromMaybe "" cdnBaseUrl
+    let cdnBaseUrl'    = fromMaybe "" cdnBaseUrl
 
-      brandingCssUrl = T.intercalate
-        "/"
-        [ cdnBaseUrl'
-        , "document_signview_branding"
-        , showt (bd ^. #id)
-        , showt brandingDocId
-        , brandingHash <> "-branding.css"
-        ]
+        brandingCssUrl = T.intercalate
+          "/"
+          [ cdnBaseUrl'
+          , "document_signview_branding"
+          , showt (bd ^. #id)
+          , showt brandingDocId
+          , brandingHash <> "-branding.css"
+          ]
 
-      logoUrl = T.intercalate
-        "/"
-        [ cdnBaseUrl'
-        , "signview_logo"
-        , showt (bd ^. #id)
-        , showt brandingDocId
-        , brandingHash
-        ]
+        logoUrl = T.intercalate
+          "/"
+          [ cdnBaseUrl'
+          , "signview_logo"
+          , showt (bd ^. #id)
+          , showt brandingDocId
+          , brandingHash
+          ]
 
-      mainCssUrl = if production
-        then cdnBaseUrl' <> "/" <> versionCode <> ".signview-all-styling-minified.css"
-        else "/less/signview-less-compiled.css"
+        mainCssUrl = if production
+          then cdnBaseUrl' <> "/" <> versionCode <> ".signview-all-styling-minified.css"
+          else "/less/signview-less-compiled.css"
 
-      versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
+        versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
 
-  return . Html.renderInstanceOverview $ Html.InstanceOverviewPageVars
-    { commonVars     = Html.CommonPageVars
-                         { cdnBaseUrl     = cdnBaseUrl'
-                         , mainCssUrl     = mainCssUrl
-                         , brandingCssUrl = brandingCssUrl
-                         , logoUrl        = logoUrl
-                         , versionCode    = versionCode
-                         , browserTitle = brandedPageTitle bd (Just $ ugwpUI brandingUgwp)
-                         }
-    , kontraApiUrl   = "/api/v2"
-    , flowApiUrl     = "/" <> flowPath
-    , flowInstanceId = instanceId'
-    }
+        commonVars  = Html.CommonPageVars
+          { cdnBaseUrl     = cdnBaseUrl'
+          , mainCssUrl     = mainCssUrl
+          , brandingCssUrl = brandingCssUrl
+          , logoUrl        = logoUrl
+          , versionCode    = versionCode
+          , browserTitle   = brandedPageTitle bd (Just $ ugwpUI brandingUgwp)
+          }
+
+        identifyViewVars = Html.IdentifyViewVars { commonVars      = commonVars
+                                                 , brandedDomainId = bd ^. #id
+                                                 , brandingHash    = brandingHash
+                                                 , documentId      = identifyViewDocId       -- TODO: Temporary
+                                                 , signatoryLinkId = identifyViewSlid   -- TODO: Temporary
+                                                 , flowInstanceId  = instanceId'
+                                                 }
+
+        instanceOverviewVars = Html.InstanceOverviewPageVars
+          { commonVars     = commonVars
+          , kontraApiUrl   = "/api/v2"
+          , flowApiUrl     = "/" <> flowPath
+          , flowInstanceId = instanceId'
+          }
+
+    mUserAuthConfig <- Model.selectUserAuthConfig instanceId userName
+    -- TODO: Temporary: needsToIdentify should also check if the participant has
+    -- completed the authentication process.
+    let needsToIdentify = isJust $ do
+          uac <- mUserAuthConfig
+          uac ^. #authToView <|> uac ^. #authToViewArchived
+
+    -- TODO: Temporary: Remove bypassIdentify when the Elm identify-view is usable.
+    if needsToIdentify && not bypassIdentify
+      then return $ Html.renderIdentifyView identifyViewVars
+      else return $ Html.renderInstanceOverview instanceOverviewVars

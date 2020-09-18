@@ -1,4 +1,4 @@
-module Lib.Theme.Json exposing (..)
+module Lib.Json.Theme exposing (..)
 
 import Json.Decode as JD exposing (Decoder)
 import Json.Decode.Pipeline as JDP
@@ -7,7 +7,7 @@ import Vendor.ColorPickerExtra exposing (color2Hex, hex2Color)
 import EnumExtra as Enum
 import Utils exposing (..)
 
-import Lib.Theme.Types exposing (..)
+import Lib.Types.Theme exposing (..)
 
 themeDecoder : Decoder Theme
 themeDecoder =

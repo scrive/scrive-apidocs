@@ -1,6 +1,6 @@
-module Lib.Theme.PreviewTheme exposing (viewEmailThemePreview, viewSignViewThemePreview, viewServiceThemePreview, viewLoginThemePreview)
+module Lib.Components.PreviewTheme exposing (viewEmailThemePreview, viewSignViewThemePreview, viewServiceThemePreview, viewLoginThemePreview)
 
-import Lib.Theme.Types exposing (..)
+import Lib.Types.Theme exposing (..)
 import Html exposing (Html, a, div, img, p, strong, text, span, input)
 import Html.Attributes exposing (class, placeholder, readonly, src, style, type_, value)
 import Vendor.ColorPickerExtra exposing (color2Hex)
