@@ -12,6 +12,7 @@ import File.Conditions
 import File.File
 import File.Model
 import File.Storage
+import MinutesTime
 import Purging.Files
 import TestCron
 import TestingUtil
@@ -84,6 +85,8 @@ testFilePurgingConsumer = do
   void . dbUpdate $ MarkOrphanFilesForPurgeAfter mempty
 
   ctx <- mkContext defaultLang
+  modifyTestTime (1 `daysAfter`)
+  commit
   runTestCronUntilIdle ctx
 
   runSQL_

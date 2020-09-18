@@ -171,7 +171,7 @@ documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhereEq "documents.author_user_id" userid
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do
-  sqlWhereSignatoryRoleIsSigningParty
+  sqlWhereSignatoryRoleIsSigningPartyOrApprover
   sqlWhereEq "signatory_links.user_id" userid
   sqlWhereEq "documents.status"        Pending
   sqlWhereIsNULL "signatory_links.sign_time"

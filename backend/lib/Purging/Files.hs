@@ -111,7 +111,12 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , ")"
       -- Actual purge.
       , "INSERT INTO file_purge_jobs (id, run_at, attempts)"
-      , "SELECT id," <?> now <+> "+" <?> interval <+> ", 0"
+      , "SELECT id,"
+      <?> now
+      <+> "+"
+      <?> interval
+      <+> "+ (random() * interval '24 hours')"
+      <+> ", 0"
       , "FROM files_to_purge"
       , "RETURNING id"
       ]
@@ -153,7 +158,7 @@ filePurgingConsumer pool maxJobs = ConsumerConfig
   , ccJobFetcher          = identity
   , ccJobIndex            = fst
   , ccNotificationChannel = Nothing
-  , ccNotificationTimeout = 60 * 60 * 1000000 -- 1 hour
+  , ccNotificationTimeout = 5 * 60 * 1000000 -- 5 minutes
   , ccMaxRunningJobs      = maxJobs
   , ccProcessJob          = withPostgreSQL pool . withTransaction . purgeFile . fst
   , ccOnException         = onFailure
