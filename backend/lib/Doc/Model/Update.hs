@@ -2069,6 +2069,8 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime             = actorTime actor
       , documentmtime             = actorTime actor
       , documentshareablelinkhash = Nothing
+      , documentmainfiles = filter (\mf -> mainfiledocumentstatus mf == Preparation)
+                              $ documentmainfiles doc
       , documentfolderid          = fromMaybe (documentfolderid doc)
                                               (view #homeFolderID =<< mAuthorUser)
       }
