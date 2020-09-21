@@ -45,6 +45,15 @@ Build-type:    Simple
 --   LANGUAGE TemplateHaskell at the top of each file where it is used
 -- - use TH only where it is truly needed
 
+extra-source-files:
+  backend/flow/docs/*.yaml
+  backend/flow/docs/*.md
+  backend/flow/docs/*.py
+  backend/flow/docs/*.html
+  backend/flow/docs/*.txt
+  backend/flow/docs/*.sh
+  backend/flow/docs/*.pdf
+
 common common-stanza
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
