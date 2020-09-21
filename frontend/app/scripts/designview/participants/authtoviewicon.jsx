@@ -63,7 +63,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";
     } else if (sig.noBankIDAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-no-bankid";
-    } else if (sig.dkNemIDCPRAuthenticationToView()
+    } else if (sig.legacyDkNemIDAuthenticationToView()
+               || sig.dkNemIDCPRAuthenticationToView()
                || sig.dkNemIDCVRAuthenticationToView()
                || sig.dkNemIDPIDAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-dk-nemid";
