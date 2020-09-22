@@ -323,7 +323,7 @@ asDirtyPassword = checkIfEmpty
 asValidName :: Text -> Result Text
 asValidName input = stripWhitespace input >>= checkIfEmpty >>= checkFormatWithSensitive
   False
-  "^[- 0-9'\\p{L}]{0,100}$"
+  "^[- 0-9.'\\p{L}]{0,100}$"
 
 {- |
     Barely validates company names.
