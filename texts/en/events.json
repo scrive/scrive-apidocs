@@ -15,6 +15,7 @@
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Verified their identity with Finnish FTN to access the document.",
 "_AuthenticatedToViewEvidenceArchiveIDIN":"Verified their identity with iDIN to access the document.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verified their identity with Norwegian BankID to access the document.",
+"_AuthenticatedToViewEvidenceArchiveOnfido":"Verified their identity with Onfido to access the document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verified their identity with Swedish BankID to access the document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verified their identity with PIN by SMS to access the document.",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Verified their identity with Verimi to access the document.",

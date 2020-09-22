@@ -712,6 +712,7 @@
 "_identifiedByFITupasText":"Identified by Finnish FTN as \"$identity$\"",
 "_identifiedByIDINText":"Identified by iDIN as \"$identity$\"",
 "_identifiedByNOBankIDText":"Identified by Norwegian BankID as \"$identity$\"",
+"_identifiedByOnfidoText":"Identified by Onfido as \"$identity$\"",
 "_identifiedBySwedishBankIDText":"Identified by Swedish BankID as \"$identity$\"",
 "_identifiedByVerimiText":"Identified by Verimi as \"$identity$\"",
 "_identifyVerimiDataMismatch":"Your data doesn't match the information provided by the sender",

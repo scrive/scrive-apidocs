@@ -5,7 +5,7 @@ import DB
 tableEIDAuthentications :: Table
 tableEIDAuthentications = tblTable
   { tblName        = "eid_authentications"
-  , tblVersion     = 8
+  , tblVersion     = 9
   , tblColumns     =
     [ tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -21,6 +21,7 @@ tableEIDAuthentications = tblTable
     , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "signatory_email", colType = TextT }
     , tblColumn { colName = "provider_customer_id", colType = TextT }
+    , tblColumn { colName = "provider_method", colType = TextT }
     ]
   , tblPrimaryKey  = pkOnColumns ["signatory_link_id", "auth_kind"]
   , tblChecks      =

@@ -178,6 +178,10 @@ authenticationToViewJSON SMSPinAuthenticationToView  = toJSValue ("sms_pin" :: S
 authenticationToViewJSON FITupasAuthenticationToView = toJSValue ("fi_tupas" :: String)
 authenticationToViewJSON VerimiAuthenticationToView  = toJSValue ("verimi" :: String)
 authenticationToViewJSON IDINAuthenticationToView    = toJSValue ("nl_idin" :: String)
+authenticationToViewJSON OnfidoDocumentCheckAuthenticationToView =
+  toJSValue ("onfido_document_check" :: String)
+authenticationToViewJSON OnfidoDocumentAndPhotoCheckAuthenticationToView =
+  toJSValue ("onfido_document_and_photo_check" :: String)
 
 authenticationToSignJSON :: AuthenticationToSignMethod -> JSValue
 authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard" :: String)

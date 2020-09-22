@@ -5,6 +5,7 @@ module EID.Authentication.Migrations (
   , addAuthenticationKindToEIDAuthentications
   , addEmailToEIDAuthentications
   , addProviderCustomerIDToEIDAuthentications
+  , addProviderMethodToEIDAuthentications
   ) where
 
 import DB
@@ -125,4 +126,16 @@ addProviderCustomerIDToEIDAuthentications = Migration
       runQuery_ $ sqlAlterTable
         (tblName tableEIDAuthentications)
         [sqlAddColumn $ tblColumn { colName = "provider_customer_id", colType = TextT }]
+  }
+
+addProviderMethodToEIDAuthentications :: MonadDB m => Migration m
+addProviderMethodToEIDAuthentications = Migration
+  { mgrTableName = tblName tableEIDAuthentications
+  , mgrFrom      = 8
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlAlterTable
+                       (tblName tableEIDAuthentications)
+                       [ sqlAddColumn
+                           $ tblColumn { colName = "provider_method", colType = TextT }
+                       ]
   }

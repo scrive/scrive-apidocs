@@ -62,7 +62,7 @@ completeEIDServiceAuthTransaction conf provider doc sl = case provider of
   EIDServiceTransactionProviderFITupas ->
     FITupas.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderOnfido ->
-    unexpectedError "Onfido auth not supported via EID service"
+    Onfido.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderSEBankID ->
     SEBankID.completeEIDServiceAuthTransaction conf doc sl
 

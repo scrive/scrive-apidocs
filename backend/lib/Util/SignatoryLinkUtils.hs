@@ -247,17 +247,19 @@ data MixAuthMethod
   deriving (Eq, Ord, Show)
 
 atvToMix :: AuthenticationToViewMethod -> MixAuthMethod
-atvToMix StandardAuthenticationToView      = MAM_Standard
-atvToMix SEBankIDAuthenticationToView      = MAM_SEBankID
-atvToMix NOBankIDAuthenticationToView      = MAM_NOBankID
-atvToMix LegacyDKNemIDAuthenticationToView = MAM_LegacyDKNemID
-atvToMix DKNemIDCPRAuthenticationToView    = MAM_DKNemIDCPR
-atvToMix DKNemIDPIDAuthenticationToView    = MAM_DKNemIDPID
-atvToMix DKNemIDCVRAuthenticationToView    = MAM_DKNemIDCVR
-atvToMix SMSPinAuthenticationToView        = MAM_SMSPin
-atvToMix FITupasAuthenticationToView       = MAM_FITupas
-atvToMix VerimiAuthenticationToView        = MAM_Verimi
-atvToMix IDINAuthenticationToView          = MAM_NLIDIN
+atvToMix StandardAuthenticationToView            = MAM_Standard
+atvToMix SEBankIDAuthenticationToView            = MAM_SEBankID
+atvToMix NOBankIDAuthenticationToView            = MAM_NOBankID
+atvToMix LegacyDKNemIDAuthenticationToView       = MAM_LegacyDKNemID
+atvToMix DKNemIDCPRAuthenticationToView          = MAM_DKNemIDCPR
+atvToMix DKNemIDPIDAuthenticationToView          = MAM_DKNemIDPID
+atvToMix DKNemIDCVRAuthenticationToView          = MAM_DKNemIDCVR
+atvToMix SMSPinAuthenticationToView              = MAM_SMSPin
+atvToMix FITupasAuthenticationToView             = MAM_FITupas
+atvToMix VerimiAuthenticationToView              = MAM_Verimi
+atvToMix IDINAuthenticationToView                = MAM_NLIDIN
+atvToMix OnfidoDocumentCheckAuthenticationToView = MAM_Onfido
+atvToMix OnfidoDocumentAndPhotoCheckAuthenticationToView = MAM_Onfido
 
 atsToMix :: AuthenticationToSignMethod -> MixAuthMethod
 atsToMix StandardAuthenticationToSign            = MAM_Standard
@@ -318,36 +320,44 @@ authViewMatchesAuth NOBankIDAuthenticationToView EIDServiceNOBankIDAuthenticatio
 authViewMatchesAuth SEBankIDAuthenticationToView EIDServiceSEBankIDAuthentication_{} =
   True
 authViewMatchesAuth FITupasAuthenticationToView EIDServiceFITupasAuthentication_{} = True
+authViewMatchesAuth OnfidoDocumentCheckAuthenticationToView EIDServiceOnfidoAuthentication_{}
+  = True
+authViewMatchesAuth OnfidoDocumentAndPhotoCheckAuthenticationToView EIDServiceOnfidoAuthentication_{}
+  = True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or
 -- AuthenticationToSignMethod needs Personal Number or Mobile Number
 
 authToViewNeedsPersonalNumber :: AuthenticationToViewMethod -> Bool
-authToViewNeedsPersonalNumber StandardAuthenticationToView      = False
-authToViewNeedsPersonalNumber SEBankIDAuthenticationToView      = True
-authToViewNeedsPersonalNumber NOBankIDAuthenticationToView      = True
-authToViewNeedsPersonalNumber LegacyDKNemIDAuthenticationToView = True
-authToViewNeedsPersonalNumber DKNemIDCPRAuthenticationToView    = True
-authToViewNeedsPersonalNumber DKNemIDPIDAuthenticationToView    = True
-authToViewNeedsPersonalNumber DKNemIDCVRAuthenticationToView    = True
-authToViewNeedsPersonalNumber SMSPinAuthenticationToView        = False
-authToViewNeedsPersonalNumber FITupasAuthenticationToView       = False
-authToViewNeedsPersonalNumber VerimiAuthenticationToView        = False
-authToViewNeedsPersonalNumber IDINAuthenticationToView          = False
+authToViewNeedsPersonalNumber StandardAuthenticationToView            = False
+authToViewNeedsPersonalNumber SEBankIDAuthenticationToView            = True
+authToViewNeedsPersonalNumber NOBankIDAuthenticationToView            = True
+authToViewNeedsPersonalNumber LegacyDKNemIDAuthenticationToView       = True
+authToViewNeedsPersonalNumber DKNemIDCPRAuthenticationToView          = True
+authToViewNeedsPersonalNumber DKNemIDPIDAuthenticationToView          = True
+authToViewNeedsPersonalNumber DKNemIDCVRAuthenticationToView          = True
+authToViewNeedsPersonalNumber SMSPinAuthenticationToView              = False
+authToViewNeedsPersonalNumber FITupasAuthenticationToView             = False
+authToViewNeedsPersonalNumber VerimiAuthenticationToView              = False
+authToViewNeedsPersonalNumber IDINAuthenticationToView                = False
+authToViewNeedsPersonalNumber OnfidoDocumentCheckAuthenticationToView = False
+authToViewNeedsPersonalNumber OnfidoDocumentAndPhotoCheckAuthenticationToView = False
 
 authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
-authToViewNeedsMobileNumber StandardAuthenticationToView      = False
-authToViewNeedsMobileNumber SEBankIDAuthenticationToView      = False
-authToViewNeedsMobileNumber NOBankIDAuthenticationToView      = True
-authToViewNeedsMobileNumber LegacyDKNemIDAuthenticationToView = False
-authToViewNeedsMobileNumber DKNemIDCPRAuthenticationToView    = False
-authToViewNeedsMobileNumber DKNemIDPIDAuthenticationToView    = False
-authToViewNeedsMobileNumber DKNemIDCVRAuthenticationToView    = False
-authToViewNeedsMobileNumber SMSPinAuthenticationToView        = True
-authToViewNeedsMobileNumber FITupasAuthenticationToView       = False
-authToViewNeedsMobileNumber VerimiAuthenticationToView        = False
-authToViewNeedsMobileNumber IDINAuthenticationToView          = False
+authToViewNeedsMobileNumber StandardAuthenticationToView            = False
+authToViewNeedsMobileNumber SEBankIDAuthenticationToView            = False
+authToViewNeedsMobileNumber NOBankIDAuthenticationToView            = True
+authToViewNeedsMobileNumber LegacyDKNemIDAuthenticationToView       = False
+authToViewNeedsMobileNumber DKNemIDCPRAuthenticationToView          = False
+authToViewNeedsMobileNumber DKNemIDPIDAuthenticationToView          = False
+authToViewNeedsMobileNumber DKNemIDCVRAuthenticationToView          = False
+authToViewNeedsMobileNumber SMSPinAuthenticationToView              = True
+authToViewNeedsMobileNumber FITupasAuthenticationToView             = False
+authToViewNeedsMobileNumber VerimiAuthenticationToView              = False
+authToViewNeedsMobileNumber IDINAuthenticationToView                = False
+authToViewNeedsMobileNumber OnfidoDocumentCheckAuthenticationToView = False
+authToViewNeedsMobileNumber OnfidoDocumentAndPhotoCheckAuthenticationToView = False
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign            = False

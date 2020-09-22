@@ -322,8 +322,11 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
       isGood . asValidDanishCVR $ ssn
     isValidSSNForAuthenticationToView FITupasAuthenticationToView ssn =
       (isEmpty || isGood) $ asValidFinnishSSN ssn
-    isValidSSNForAuthenticationToView VerimiAuthenticationToView _ = True
-    isValidSSNForAuthenticationToView IDINAuthenticationToView   _ = True
+    isValidSSNForAuthenticationToView VerimiAuthenticationToView              _ = True
+    isValidSSNForAuthenticationToView IDINAuthenticationToView                _ = True
+    isValidSSNForAuthenticationToView OnfidoDocumentCheckAuthenticationToView _ = True
+    isValidSSNForAuthenticationToView OnfidoDocumentAndPhotoCheckAuthenticationToView _ =
+      True
 
     isValidMobileForAuthenticationToView
       :: AuthenticationToViewMethod -> AuthenticationKind -> Text -> Bool
@@ -342,6 +345,10 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
     isValidMobileForAuthenticationToView FITupasAuthenticationToView _ _ = True
     isValidMobileForAuthenticationToView VerimiAuthenticationToView  _ _ = True
     isValidMobileForAuthenticationToView IDINAuthenticationToView    _ _ = True
+    isValidMobileForAuthenticationToView OnfidoDocumentCheckAuthenticationToView _ _ =
+      True
+    isValidMobileForAuthenticationToView OnfidoDocumentAndPhotoCheckAuthenticationToView _ _
+      = True
 
 -- | `guardCanSetAuthenticationToSignForSignatoryWithValue _ newAuthToSign mSSN
 -- mMobile _` makes sure we can set the sign method to the given method. If the

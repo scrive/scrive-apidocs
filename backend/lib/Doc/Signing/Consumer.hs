@@ -43,7 +43,9 @@ import EID.EIDService.Model
 import EID.EIDService.Provider.FITupas (FITupasEIDServiceCompletionData(..))
 import EID.EIDService.Provider.NLIDIN (NLIDINEIDServiceCompletionData(..))
 import EID.EIDService.Provider.NOBankID (NOBankIDEIDServiceCompletionData(..))
-import EID.EIDService.Provider.Onfido (OnfidoEIDServiceCompletionData(..))
+import EID.EIDService.Provider.Onfido
+  ( CompletionData(..), OnfidoEIDServiceCompletionData(..), completionDataToName
+  )
 import EID.EIDService.Provider.SEBankID
   ( SEBankIDEIDServiceSignCompletionData(..)
   , SEBankIDEIDServiceSignTransactionData(..), normalisePersonalNumber
@@ -336,10 +338,10 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       OnfidoEIDServiceCompletionData {..} <- whenNothing mctd $ throwE (Failed Remove)
 
       let sig = EIDServiceOnfidoSignature
-            { eidServiceOnfidoSigSignatoryName = eidonfidoFirstName
-                                                 <> " "
-                                                 <> eidonfidoLastName
+            { eidServiceOnfidoSigSignatoryName = completionDataToName
+                                                   eidonfidoCompletionData
             , eidServiceOnfidoSigDateOfBirth   = eidonfidoDateOfBirth
+                                                   eidonfidoCompletionData
             , eidServiceOnfidoSigMethod        = eidonfidoMethod
             }
 

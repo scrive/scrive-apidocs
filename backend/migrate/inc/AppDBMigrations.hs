@@ -298,4 +298,5 @@ kontraMigrations =
   , eidSignaturesUpdatePersonalNumberCheck
   , addEvidenceSecretToDocuments
   , featureFlagsAddVerimiQesToSign
+  , addProviderMethodToEIDAuthentications
   ]

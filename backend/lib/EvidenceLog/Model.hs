@@ -427,6 +427,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewFromFITupas  |
   ChangeAuthenticationToViewFromVerimi   |
   ChangeAuthenticationToViewFromIDIN     |
+  ChangeAuthenticationToViewFromOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck     |
   ChangeAuthenticationToViewToStandard   |
   ChangeAuthenticationToViewToSMSPin     |
   ChangeAuthenticationToViewToSEBankID   |
@@ -438,6 +440,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewToFITupas    |
   ChangeAuthenticationToViewToVerimi     |
   ChangeAuthenticationToViewToIDIN       |
+  ChangeAuthenticationToViewToOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck     |
   ChangeAuthenticationToViewArchivedFromStandard |
   ChangeAuthenticationToViewArchivedFromSMSPin    |
   ChangeAuthenticationToViewArchivedFromSEBankID  |
@@ -449,6 +453,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedFromFITupas   |
   ChangeAuthenticationToViewArchivedFromVerimi    |
   ChangeAuthenticationToViewArchivedFromIDIN      |
+  ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck     |
   ChangeAuthenticationToViewArchivedToStandard    |
   ChangeAuthenticationToViewArchivedToSMSPin      |
   ChangeAuthenticationToViewArchivedToSEBankID    |
@@ -460,6 +466,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedToFITupas     |
   ChangeAuthenticationToViewArchivedToVerimi      |
   ChangeAuthenticationToViewArchivedToIDIN        |
+  ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck |
   UpdateSsnAfterAuthenticationToViewWithNets      |
   VerimiQesEvidenceFilePrepared                   |
   AttachDigitalSignatureQesEvidenceFileEvidence   |
@@ -1040,7 +1048,21 @@ instance ToSQL EvidenceEventType where
   toSQL (Current VerimiQesEvidenceFilePrepared                   ) = toSQL (287 :: Int16)
   toSQL (Current AttachDigitalSignatureQesEvidenceFileEvidence   ) = toSQL (288 :: Int16)
   toSQL (Current AttachExtendedQesEvidenceFileEvidence           ) = toSQL (289 :: Int16)
-
+  toSQL (Current ChangeAuthenticationToViewFromOnfidoDocumentCheck) =
+    toSQL (290 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck) =
+    toSQL (291 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToOnfidoDocumentCheck) = toSQL (292 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck) =
+    toSQL (293 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck) =
+    toSQL (294 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck) =
+    toSQL (295 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck) =
+    toSQL (296 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck) =
+    toSQL (297 :: Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -1378,7 +1400,17 @@ instance FromSQL EvidenceEventType where
       287 -> return (Current VerimiQesEvidenceFilePrepared)
       288 -> return (Current AttachDigitalSignatureQesEvidenceFileEvidence)
       289 -> return (Current AttachExtendedQesEvidenceFileEvidence)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 289)], reValue = n }
+      290 -> return (Current ChangeAuthenticationToViewFromOnfidoDocumentCheck)
+      291 -> return (Current ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck)
+      292 -> return (Current ChangeAuthenticationToViewToOnfidoDocumentCheck)
+      293 -> return (Current ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck)
+      294 -> return (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck)
+      295 ->
+        return (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck)
+      296 -> return (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck)
+      297 ->
+        return (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck)
+      _ -> E.throwIO $ RangeError { reRange = [(1, 297)], reValue = n }
 
 
 authToViewChangeEvidence
@@ -1401,6 +1433,10 @@ authToViewChangeFrom a = case a of
   FITupasAuthenticationToView       -> ChangeAuthenticationToViewFromFITupas
   VerimiAuthenticationToView        -> ChangeAuthenticationToViewFromVerimi
   IDINAuthenticationToView          -> ChangeAuthenticationToViewFromIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewFromOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck
 
 authToViewChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewChangeTo a = case a of
@@ -1415,6 +1451,10 @@ authToViewChangeTo a = case a of
   FITupasAuthenticationToView       -> ChangeAuthenticationToViewToFITupas
   VerimiAuthenticationToView        -> ChangeAuthenticationToViewToVerimi
   IDINAuthenticationToView          -> ChangeAuthenticationToViewToIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewToOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck
 
 authToViewArchivedChangeEvidence
   :: AuthenticationToViewMethod
@@ -1438,6 +1478,10 @@ authToViewArchivedChangeFrom a = case a of
   FITupasAuthenticationToView    -> ChangeAuthenticationToViewArchivedFromFITupas
   VerimiAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromVerimi
   IDINAuthenticationToView       -> ChangeAuthenticationToViewArchivedFromIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck
 
 authToViewArchivedChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewArchivedChangeTo a = case a of
@@ -1452,6 +1496,10 @@ authToViewArchivedChangeTo a = case a of
   FITupasAuthenticationToView       -> ChangeAuthenticationToViewArchivedToFITupas
   VerimiAuthenticationToView        -> ChangeAuthenticationToViewArchivedToVerimi
   IDINAuthenticationToView          -> ChangeAuthenticationToViewArchivedFromIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck
 
 authToSignChangeEvidence
   :: AuthenticationToSignMethod

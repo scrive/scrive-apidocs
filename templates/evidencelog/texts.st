@@ -204,6 +204,22 @@ ChangeAuthenticationToViewArchivedToVerimiLog=$ChangeAuthenticationToViewArchive
 ###
 ChangeAuthenticationToViewArchivedToIDINLog=$ChangeAuthenticationToViewArchivedTo(auth='“iDIN“')$
 ###
+ChangeAuthenticationToViewFromOnfidoDocumentCheckLog=$ChangeAuthenticationToViewFrom(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewFrom(auth='“Onfido (document check + facial comparison)”')$
+###
+ChangeAuthenticationToViewToOnfidoDocumentCheckLog=$ChangeAuthenticationToViewTo(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewTo(auth='“Onfido (document check + facial comparison)”')$
+###
+ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheckLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Onfido (document check + facial comparison)”')$
+###
+ChangeAuthenticationToViewArchivedToOnfidoDocumentCheckLog=$ChangeAuthenticationToViewArchivedTo(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewArchivedTo(auth='“Onfido (document check + facial comparison)”')$
+###
 ###
 ###
 CloseDocumentEvidenceLog=Scrive eSign locked the document from further modifications by the parties.
@@ -839,6 +855,8 @@ $elseif(provider_verimi)$
   $_AuthenticatedToViewEvidenceArchiveVerimi()$
 $elseif(provider_idin)$
   $_AuthenticatedToViewEvidenceArchiveIDIN()$
+$elseif(provider_onfido)$
+  $_AuthenticatedToViewEvidenceArchiveOnfido()$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".

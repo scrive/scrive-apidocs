@@ -12,6 +12,7 @@ module EID.Authentication.Model (
   , MergeEIDServiceNOBankIDAuthentication(..)
   , MergeEIDServiceSEBankIDAuthentication(..)
   , MergeEIDServiceFITupasAuthentication(..)
+  , MergeEIDServiceOnfidoAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
   ) where
@@ -48,6 +49,7 @@ data EAuthentication
   | EIDServiceNOBankIDAuthentication_ !EIDServiceNOBankIDAuthentication
   | EIDServiceFITupasAuthentication_ !EIDServiceFITupasAuthentication
   | EIDServiceSEBankIDAuthentication_ !EIDServiceSEBankIDAuthentication
+  | EIDServiceOnfidoAuthentication_ !EIDServiceOnfidoAuthentication
     deriving (Show)
 
 ----------------------------------------
@@ -68,6 +70,7 @@ data AuthenticationProvider
   | NOBankIDAuth
   | FITupasAuth
   | SEBankIDAuth
+  | OnfidoAuth
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -89,7 +92,8 @@ instance FromSQL AuthenticationProvider where
       9  -> return NOBankIDAuth
       10 -> return FITupasAuth
       11 -> return SEBankIDAuth
-      _  -> throwM RangeError { reRange = [(1, 11)], reValue = n }
+      12 -> return OnfidoAuth
+      _  -> throwM RangeError { reRange = [(1, 12)], reValue = n }
 
 instance ToSQL AuthenticationProvider where
   type PQDest AuthenticationProvider = PQDest Int16
@@ -104,6 +108,7 @@ instance ToSQL AuthenticationProvider where
   toSQL NOBankIDAuth = toSQL (9 :: Int16)
   toSQL FITupasAuth  = toSQL (10 :: Int16)
   toSQL SEBankIDAuth = toSQL (11 :: Int16)
+  toSQL OnfidoAuth   = toSQL (12 :: Int16)
 
 ----------------------------------------
 
@@ -163,6 +168,17 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsFITupasAuthentication (
         sqlSet "provider"                NetsFITupas
         sqlSet "signatory_name"          netsFITupasSignatoryName
         sqlSet "signatory_date_of_birth" netsFITupasDateOfBirth
+
+-- | Insert Onfido authentication for a given signatory or replace the existing one.
+data MergeEIDServiceOnfidoAuthentication = MergeEIDServiceOnfidoAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceOnfidoAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceOnfidoAuthentication () where
+  dbUpdate (MergeEIDServiceOnfidoAuthentication authKind sid slid EIDServiceOnfidoAuthentication {..})
+    = do
+      mergeAuthenticationInternal authKind sid slid $ do
+        sqlSet "provider"                OnfidoAuth
+        sqlSet "provider_method"         eidServiceOnfidoMethod
+        sqlSet "signatory_name"          eidServiceOnfidoSignatoryName
+        sqlSet "signatory_date_of_birth" eidServiceOnfidoDateOfBirth
 
 -- | Insert Verimi authentication for a given signatory or replace the existing one.
 data MergeEIDServiceVerimiAuthentication = MergeEIDServiceVerimiAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceVerimiAuthentication
@@ -252,6 +268,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Mayb
       sqlResult "signatory_ip"
       sqlResult "signatory_email"
       sqlResult "provider_customer_id"
+      sqlResult "provider_method"
       sqlWhereEq "signatory_link_id" slid
       sqlWhereEq "auth_kind"         authKind
       whenJust msid $ sqlWhereEq "session_id"
@@ -281,9 +298,10 @@ fetchEAuthentication
      , Maybe Text
      , Maybe Text
      , Maybe Text
+     , Maybe Text
      )
   -> EAuthentication
-fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip, signatory_email, customer_id)
+fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip, signatory_email, customer_id, provider_method)
   = case provider of
     CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication
       { cgisebidaSignatoryName           = fromJust msignatory_name
@@ -351,4 +369,8 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
       , eidServiceFITupasPersonalNumber = signatory_personal_number
       , eidServiceFITupasDateOfBirth    = signatory_dob
       }
-
+    OnfidoAuth -> EIDServiceOnfidoAuthentication_ EIDServiceOnfidoAuthentication
+      { eidServiceOnfidoSignatoryName = fromJust msignatory_name
+      , eidServiceOnfidoDateOfBirth = fromJust signatory_dob
+      , eidServiceOnfidoMethod = unsafeDecodeOnfidoMethod $ fromJust provider_method
+      }

@@ -233,15 +233,17 @@ authToViewIsValid sl = case signatorylinkauthenticationtoviewmethod sl of
   SEBankIDAuthenticationToView -> True
   NOBankIDAuthenticationToView ->
     isJust (getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
-  LegacyDKNemIDAuthenticationToView -> True
-  DKNemIDCPRAuthenticationToView    -> True
-  DKNemIDPIDAuthenticationToView    -> True
-  DKNemIDCVRAuthenticationToView    -> True
-  SMSPinAuthenticationToView        -> True
-  StandardAuthenticationToView      -> True
-  IDINAuthenticationToView          -> True
-  FITupasAuthenticationToView       -> True
-  VerimiAuthenticationToView        -> True
+  LegacyDKNemIDAuthenticationToView       -> True
+  DKNemIDCPRAuthenticationToView          -> True
+  DKNemIDPIDAuthenticationToView          -> True
+  DKNemIDCVRAuthenticationToView          -> True
+  SMSPinAuthenticationToView              -> True
+  StandardAuthenticationToView            -> True
+  IDINAuthenticationToView                -> True
+  FITupasAuthenticationToView             -> True
+  VerimiAuthenticationToView              -> True
+  OnfidoDocumentCheckAuthenticationToView -> True
+  OnfidoDocumentAndPhotoCheckAuthenticationToView -> True
 
 -- checking for viewership is a temporary fix to help Telia. should be reverted when they get their shit together
 authToSignIsValid :: SignatoryLink -> Bool
@@ -282,10 +284,13 @@ signatoryHasValidSSNOrEmailForIdentifyToView sl =
     DKNemIDCVRAuthenticationToView    -> isGood . asValidDanishCVR $ getPersonalNumber sl
     FITupasAuthenticationToView ->
       T.null (getPersonalNumber sl) || isGood (asValidFinnishSSN $ getPersonalNumber sl)
-    SMSPinAuthenticationToView   -> True
-    StandardAuthenticationToView -> True
-    VerimiAuthenticationToView   -> isValidEmail $ getEmail sl
-    IDINAuthenticationToView     -> isValidEmail $ getEmail sl
+    SMSPinAuthenticationToView              -> True
+    StandardAuthenticationToView            -> True
+    VerimiAuthenticationToView              -> isValidEmail $ getEmail sl
+    IDINAuthenticationToView                -> isValidEmail $ getEmail sl
+    -- TODO do we need some validation for Onfido?
+    OnfidoDocumentCheckAuthenticationToView -> True
+    OnfidoDocumentAndPhotoCheckAuthenticationToView -> True
 
 signatoryHasValidMobileForIdentifyToView
   :: HasSomeUserInfo a => (a -> AuthenticationToViewMethod) -> a -> Bool

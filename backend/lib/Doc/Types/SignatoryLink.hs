@@ -152,6 +152,8 @@ data AuthenticationToViewMethod
   | FITupasAuthenticationToView
   | VerimiAuthenticationToView
   | IDINAuthenticationToView
+  | OnfidoDocumentCheckAuthenticationToView
+  | OnfidoDocumentAndPhotoCheckAuthenticationToView
     deriving (Enum, Eq, Ord, Show)
 
 instance PQFormat AuthenticationToViewMethod where
@@ -173,21 +175,25 @@ instance FromSQL AuthenticationToViewMethod where
       9  -> return DKNemIDCPRAuthenticationToView
       10 -> return DKNemIDPIDAuthenticationToView
       11 -> return DKNemIDCVRAuthenticationToView
-      _  -> throwM RangeError { reRange = [(1, 11)], reValue = n }
+      12 -> return OnfidoDocumentCheckAuthenticationToView
+      13 -> return OnfidoDocumentAndPhotoCheckAuthenticationToView
+      _  -> throwM RangeError { reRange = [(1, 13)], reValue = n }
 
 instance ToSQL AuthenticationToViewMethod where
   type PQDest AuthenticationToViewMethod = PQDest Int16
-  toSQL StandardAuthenticationToView      = toSQL (1 :: Int16)
-  toSQL SEBankIDAuthenticationToView      = toSQL (2 :: Int16)
-  toSQL NOBankIDAuthenticationToView      = toSQL (3 :: Int16)
-  toSQL LegacyDKNemIDAuthenticationToView = toSQL (4 :: Int16)
-  toSQL SMSPinAuthenticationToView        = toSQL (5 :: Int16)
-  toSQL FITupasAuthenticationToView       = toSQL (6 :: Int16)
-  toSQL VerimiAuthenticationToView        = toSQL (7 :: Int16)
-  toSQL IDINAuthenticationToView          = toSQL (8 :: Int16)
-  toSQL DKNemIDCPRAuthenticationToView    = toSQL (9 :: Int16)
-  toSQL DKNemIDPIDAuthenticationToView    = toSQL (10 :: Int16)
-  toSQL DKNemIDCVRAuthenticationToView    = toSQL (11 :: Int16)
+  toSQL StandardAuthenticationToView            = toSQL (1 :: Int16)
+  toSQL SEBankIDAuthenticationToView            = toSQL (2 :: Int16)
+  toSQL NOBankIDAuthenticationToView            = toSQL (3 :: Int16)
+  toSQL LegacyDKNemIDAuthenticationToView       = toSQL (4 :: Int16)
+  toSQL SMSPinAuthenticationToView              = toSQL (5 :: Int16)
+  toSQL FITupasAuthenticationToView             = toSQL (6 :: Int16)
+  toSQL VerimiAuthenticationToView              = toSQL (7 :: Int16)
+  toSQL IDINAuthenticationToView                = toSQL (8 :: Int16)
+  toSQL DKNemIDCPRAuthenticationToView          = toSQL (9 :: Int16)
+  toSQL DKNemIDPIDAuthenticationToView          = toSQL (10 :: Int16)
+  toSQL DKNemIDCVRAuthenticationToView          = toSQL (11 :: Int16)
+  toSQL OnfidoDocumentCheckAuthenticationToView = toSQL (12 :: Int16)
+  toSQL OnfidoDocumentAndPhotoCheckAuthenticationToView = toSQL (13 :: Int16)
 
 ---------------------------------
 

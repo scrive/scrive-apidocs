@@ -325,6 +325,8 @@ simplifiedEventText mactor sim dee = do
                         F.value "provider_sebankid_eidservice" True
                       EIDServiceFITupasAuthentication_ _ -> do
                         F.value "provider_fitupas" True
+                      EIDServiceOnfidoAuthentication_ _ -> do
+                        F.value "provider_onfido" True
         F.value "text" $ T.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "additional_text" $ T.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory"
