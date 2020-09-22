@@ -30,9 +30,9 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Types.SignatoryAccessToken
-import File.File
 import File.Model
 import File.Storage
+import File.Types
 import KontraLink
 import MinutesTime
 import User.Model
@@ -85,8 +85,8 @@ documentJSONV1 muser forapi forauthor msl doc = do
   runJSONGenT $ do
     J.value "id" . showt $ documentid doc
     J.value "title" $ documenttitle doc
-    J.value "file" $ fmap mainfileJSON (documentfile doc)
-    J.value "sealedfile" $ fmap mainfileJSON (documentsealedfile doc)
+    J.value "file" $ fmap fileJSON (documentinputfile doc)
+    J.value "sealedfile" $ fileJSON <$> documentclosedmainfile doc
     J.value "authorattachments" $ map authorAttachmentJSON (documentauthorattachments doc)
     J.objects "evidenceattachments" ([] :: [JSONGenT m ()])
     J.value "time" $ jsonDate (Just $ documentmtime doc)
@@ -191,6 +191,8 @@ authenticationToSignJSON OnfidoDocumentCheckAuthenticationToSign =
   toJSValue ("onfido_document_check" :: String)
 authenticationToSignJSON OnfidoDocumentAndPhotoCheckAuthenticationToSign =
   toJSValue ("onfido_document_and_photo_check" :: String)
+authenticationToSignJSON VerimiQesAuthenticationToSign =
+  toJSValue ("verimi_qes" :: String)
 
 signatoryJSON
   :: ( MonadDB m
@@ -468,11 +470,6 @@ fileJSON file = runJSONGen $ do
   J.value "id" . show $ fileid file
   J.value "name" . T.unpack $ filename file
 
-mainfileJSON :: MainFile -> JSValue
-mainfileJSON file = runJSONGen $ do
-  J.value "id" . show $ mainfileid file
-  J.value "name" $ mainfilename file
-
 authorAttachmentJSON :: AuthorAttachment -> JSValue
 authorAttachmentJSON att = runJSONGen $ do
   J.value "id" . show $ authorattachmentfileid att
@@ -552,7 +549,7 @@ docFieldsListForJSON userid doc = do
        || elem Undelivered (smsinvitationdeliverystatus <$> documentsignatorylinks doc)
        )
   J.value "shared" $ isDocumentShared doc
-  J.value "file" $ show . mainfileid <$> (documentsealedfile doc `mplus` documentfile doc)
+  J.value "file" $ show . fileid <$> documentmainfile doc
   J.value "inpadqueue" False
   J.value "deleted" $ documentDeletedForUser doc userid
   J.value "reallydeleted" $ documentReallyDeletedForUser doc userid

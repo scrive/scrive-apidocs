@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Show",
@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"You will sign using Swedish BankID. When you have signed your signature will be registered by the e-signing service Scrive.",
 "_elegSignSEConfirmationTitle":"Sign with Swedish BankID",
 "_elegSignTransactionNumber":"Transaction number",
+"_elegSignVerimiQesConfirmationTitle":"Sign with Verimi QES",
 "_email":"Email",
 "_enterSMSPin":"Enter your SMS PIN",
 "_errorMessagePrefix":"The error returned was:",

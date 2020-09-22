@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable
   { tblName        = "documents"
-  , tblVersion     = 58
+  , tblVersion     = 60
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -102,6 +102,10 @@ tableDocuments = tblTable
     , tblColumn { colName = "sms_invite_text", colType = TextT, colNullable = True }
     , tblColumn { colName = "sms_confirm_text", colType = TextT, colNullable = True }
     , tblColumn { colName = "add_metadata_to_pdf", colType = BoolT, colNullable = False }
+    , tblColumn { colName     = "evidence_file_secret"
+                , colType     = BigIntT
+                , colNullable = True
+                }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys = [
@@ -143,6 +147,62 @@ tableDocuments = tblTable
 
 ctDocument :: CompositeType
 ctDocument = CompositeType
+  { ctName    = "document_c2"
+  , ctColumns =
+    [ CompositeColumn { ccName = "id", ccType = BigIntT }
+    , CompositeColumn { ccName = "title", ccType = TextT }
+    , CompositeColumn { ccName = "signatory_links"
+                      , ccType = ArrayT $ CustomT "signatory_link_c1"
+                      }
+    , CompositeColumn { ccName = "main_files", ccType = ArrayT $ CustomT "main_file_c2" }
+    , CompositeColumn { ccName = "status", ccType = SmallIntT }
+    , CompositeColumn { ccName = "type", ccType = SmallIntT }
+    , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
+    , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }
+    , CompositeColumn { ccName = "days_to_sign", ccType = IntegerT }
+    , CompositeColumn { ccName = "days_to_remind", ccType = IntegerT }
+    , CompositeColumn { ccName = "timeout_time", ccType = TimestampWithZoneT }
+    , CompositeColumn { ccName = "expiration_date", ccType = TimestampWithZoneT }
+    , CompositeColumn { ccName = "invite_time", ccType = TimestampWithZoneT }
+    , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
+    , CompositeColumn { ccName = "invite_text", ccType = TextT }
+    , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+    , CompositeColumn { ccName = "sms_invite_text", ccType = TextT }
+    , CompositeColumn { ccName = "sms_confirm_text", ccType = TextT }
+    , CompositeColumn { ccName = "show_header", ccType = BoolT }
+    , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
+    , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+    , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
+    , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+    , CompositeColumn { ccName = "is_receipt", ccType = BoolT }
+    , CompositeColumn { ccName = "lang", ccType = SmallIntT }
+    , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
+    , CompositeColumn { ccName = "tags", ccType = ArrayT $ CustomT "document_tag_c1" }
+    , CompositeColumn { ccName = "author_attachments"
+                      , ccType = ArrayT $ CustomT "author_attachment_c1"
+                      }
+    , CompositeColumn { ccName = "api_v1_callback_url", ccType = TextT }
+    , CompositeColumn { ccName = "api_v2_callback_url", ccType = TextT }
+    , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
+    , CompositeColumn { ccName = "object_version", ccType = BigIntT }
+    , CompositeColumn { ccName = "token", ccType = BigIntT }
+    , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
+    , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
+    , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+    , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
+    , CompositeColumn { ccName = "template_id", ccType = BigIntT }
+    , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
+    , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
+    , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+    , CompositeColumn { ccName = "user_group_to_impersonate_for_eid", ccType = BigIntT }
+    , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
+    , CompositeColumn { ccName = "add_metadata_to_pdf", ccType = BoolT }
+    , CompositeColumn { ccName = "evidence_file_secret", ccType = BigIntT }
+    ]
+  }
+
+ctDocument1 :: CompositeType
+ctDocument1 = CompositeType
   { ctName    = "document_c1"
   , ctColumns =
     [ CompositeColumn { ccName = "id", ccType = BigIntT }
@@ -201,24 +261,40 @@ ctDocument = CompositeType
 tableMainFiles :: Table
 tableMainFiles = tblTable
   { tblName        = "main_files"
-  , tblVersion     = 3
+  , tblVersion     = 5
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "document_status", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "seal_status", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "evidence_file_id", colType = BigIntT, colNullable = True }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys =
     [ (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
-    , fkOnColumn "file_id" "files" "id"
+    , fkOnColumn "file_id"          "files" "id"
+    , fkOnColumn "evidence_file_id" "files" "id"
     ]
-  , tblIndexes     = [indexOnColumn "document_id", indexOnColumn "file_id"]
+  , tblIndexes     = [ indexOnColumn "document_id"
+                     , indexOnColumn "file_id"
+                     , indexOnColumn "evidence_file_id"
+                     ]
   }
 
 ctMainFile :: CompositeType
 ctMainFile = CompositeType
+  { ctName    = "main_file_c2"
+  , ctColumns = [ CompositeColumn { ccName = "id", ccType = BigIntT }
+                , CompositeColumn { ccName = "document_status", ccType = SmallIntT }
+                , CompositeColumn { ccName = "seal_status", ccType = SmallIntT }
+                , CompositeColumn { ccName = "main_file", ccType = CustomT "file_c1" }
+                , CompositeColumn { ccName = "evidence_file", ccType = CustomT "file_c1" }
+                ]
+  }
+
+ctMainFile1 :: CompositeType
+ctMainFile1 = CompositeType
   { ctName    = "main_file_c1"
   , ctColumns = [ CompositeColumn { ccName = "file_id", ccType = BigIntT }
                 , CompositeColumn { ccName = "document_status", ccType = SmallIntT }

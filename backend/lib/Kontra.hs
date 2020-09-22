@@ -105,6 +105,10 @@ instance PdfToolsLambdaMonad Kontra where
     Kontra $ callPdfToolsPadesSignPrim spec =<< use #pdfToolsLambdaEnv
   callPdfToolsCleaning spec =
     Kontra $ callPdfToolsCleaningPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsVerimiQesSetup spec =
+    Kontra $ callPdfToolsVerimiQesSetupPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsVerimiQesEvidence spec =
+    Kontra $ callPdfToolsVerimiQesEvidencePrim spec =<< use #pdfToolsLambdaEnv
   lambdaEnv = Kontra $ use #pdfToolsLambdaEnv
 
 instance MailContextMonad Kontra where

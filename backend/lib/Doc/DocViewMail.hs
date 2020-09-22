@@ -36,7 +36,6 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Model.Update
 import Doc.Types.SignatoryAccessToken
-import File.FileID
 import KontraLink
 import MagicHash (MagicHash)
 import MailContext
@@ -123,8 +122,7 @@ remindMailNotSigned
   -> m Mail
 remindMailNotSigned automatic forMail customMessage document signlink = do
   mctx <- getMailContext
-  let mainfile   = maybe (unsafeFileID 0) mainfileid (documentfile document)
-      authorname = getAuthorName document
+  let authorname = getAuthorName document
   mh <- makeInvitationMagicHash signlink
   documentMailWithDocLang document (templateName "remindMailNotSignedContract") $ do
     F.value "sign" $ isSignatory signlink
@@ -152,7 +150,7 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
       StandardAuthenticationToView -> Just . show $ LinkDocumentPreview
         (documentid document)
         (Just (signlink, Just mh) <| forMail |> Nothing)
-        mainfile
+        (documentpreviewfile document)
         150
       _ -> Nothing
     F.value "hassigattachments" . not $ null
@@ -409,7 +407,6 @@ mailPartyProcessFinalizedNotification document signatoryLink action = do
         DocumentApproved | hasConfirmationDelivery signatoryLink ->
           templateName "mailDocumentApprovedNotificationWithConfirmation"
         DocumentApproved -> templateName "mailDocumentApprovedNotification"
-      mainfile = maybe (unsafeFileID 0) mainfileid (documentfile document)
   (mh, mtime) <- if isClosed document
     then do
       (mh, time) <- makeConfirmationMagicHash signatoryLink
@@ -422,7 +419,7 @@ mailPartyProcessFinalizedNotification document signatoryLink action = do
     F.value "availabledate" $ fmap formatTimeYMD mtime
     F.value "previewLink" . show $ LinkDocumentPreview (documentid document)
                                                        (Just (signatoryLink, Just mh))
-                                                       mainfile
+                                                       (documentpreviewfile document)
                                                        150
   return email { to                = [getMailAddress signatoryLink]
                , kontraInfoForMail = Just $ OtherDocumentMail documentId
@@ -452,8 +449,7 @@ mailInvitation
   -> Document
   -> m Mail
 mailInvitation forMail invitationto msiglink document = do
-  mctx <- getMailContext
-  let mainfile = maybe (unsafeFileID 0) mainfileid (documentfile document)
+  mctx       <- getMailContext
   msiglinkmh <- case msiglink of
     Nothing      -> return Nothing
     Just siglink -> do
@@ -490,7 +486,7 @@ mailInvitation forMail invitationto msiglink document = do
           StandardAuthenticationToView -> Just . show $ LinkDocumentPreview
             (documentid document)
             (msiglinkmh <| forMail |> Nothing)
-            mainfile
+            (documentpreviewfile document)
             150
           _ -> Nothing
     F.value "hassigattachments"
@@ -567,11 +563,6 @@ mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document 
   partylist <- renderLocalListTemplate document . map getSmartName $ filter
     isSignatory
     (documentsignatorylinks document)
-  let mainfile = maybe (unsafeFileID 0)
-                       mainfileid
-                       (documentsealedfile document
-                   -- For preview we don't have a sealed file yet
-                                                    `mplus` documentfile document)
   documentMailWithDocLang document (templateName "mailContractClosed") $ do
     F.value "partylist" partylist
     F.value "signatoryname" $ getSmartName sl
@@ -580,7 +571,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document 
     F.value "previewLink" . showt $ LinkDocumentPreview
       (documentid document)
       (Nothing <| ispreview |> Just (sl, fst <$> mhtimepreview))
-      mainfile
+      (documentpreviewfile document)
       150
     F.value "sealFixed" sealFixed
     documentAttachableFields (not ispreview) sl forceLink mhtime document
@@ -612,9 +603,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
   signatoriesThatSigned <- renderLocalListTemplate authorlang . map getSmartName $ filter
     isSignatoryAndHasSigned
     (documentsignatorylinks document)
-  -- There always should be main file but tests fail without it
-  let mainfile = maybe (unsafeFileID 0) mainfileid (documentfile document)
-      author   = fromJust $ getAuthorSigLink document
+  let author = fromJust $ getAuthorSigLink document
   mh <- dbUpdate $ NewSignatoryAccessToken (signatorylinkid author)
                                            SignatoryAccessTokenForMailBeforeClosing
                                            Nothing
@@ -629,7 +618,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
     F.value "companyname" . emptyToNothing $ getAuthorCompanyName document
     F.value "previewLink" . show $ LinkDocumentPreview (documentid document)
                                                        (Just (author, Just mh))
-                                                       mainfile
+                                                       (documentpreviewfile document)
                                                        150
 
 -- Helpers.

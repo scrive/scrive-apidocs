@@ -50,7 +50,7 @@ import EID.Authentication.Model (MergeSMSPinAuthentication(..))
 import EID.EIDService.Provider.SEBankID (useEIDHubForSEBankIDSign)
 import EID.Signature.Model
 import EvidenceLog.Model
-import File.File (File(..))
+import File.Types (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
 import Session.Model (getCurrentSession)
@@ -336,6 +336,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         FITupasAuthenticationToSign             -> Just EIDServiceTupas
         OnfidoDocumentCheckAuthenticationToSign -> Just EIDServiceOnfido
         OnfidoDocumentAndPhotoCheckAuthenticationToSign -> Just EIDServiceOnfido
+        VerimiQesAuthenticationToSign           -> Just EIDServiceVerimi
 
     case mprovider of
       Nothing -> do

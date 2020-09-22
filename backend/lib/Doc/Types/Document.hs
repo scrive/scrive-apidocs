@@ -7,39 +7,47 @@ module Doc.Types.Document (
   , documentsSelectors
   , documentStatusClassExpression
   , documentfile
-  , documentsealedfile
-  , documentsealstatus
-  , getSealingMethodForDocument
+  , documentpreviewfile
+  , documentinputfile
+  , documentdigitalsignaturestatus
+  , documentUsesVerimiQes
+  , getDigitalSignatureMethodForDocument
   , getForceHidePersonalNumbers
   , getAddMetadataToPDFForDocument
+  , documentmainfile
+  , documentclosedmainfile
   ) where
 
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Aeson.Types hiding ((<?>))
 import Data.Int
+import Data.Map.Strict (Map)
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Database.PostgreSQL.PQTypes.SQL.Builder
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as S
 
 import DB (dbQuery)
 import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
+import DigitalSignatureMethod
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus)
 import Doc.DocumentID
-import Doc.SealStatus (SealStatus)
 import Doc.Tables
 import Doc.Types.AuthorAttachment
+import Doc.Types.DocumentFile
 import Doc.Types.DocumentStatus
 import Doc.Types.DocumentTag
-import Doc.Types.MainFile
 import Doc.Types.SignatoryLink
+import File.FileID
+import File.Types
 import Folder.Types
 import IPAddress
 import Log.Identifier
 import MagicHash
 import MinutesTime
-import SealingMethod
 import User.Lang
 import UserGroup.Model (UserGroupGetWithParents(..))
 import UserGroup.Types
@@ -195,8 +203,14 @@ data Document = Document
   { documentid                     :: DocumentID
   , documenttitle                  :: Text
   , documentsignatorylinks         :: [SignatoryLink]
-  -- | Order: most recently added files first (FIXME: encode this in the type)
-  , documentmainfiles              :: [MainFile]
+  -- | The files (excluding attachments) associated with the document; usually a
+  -- single 'main file'. We keep track of the history of files, since for
+  -- example we need to be able to refer to the original 'input' pdf (that was
+  -- uploaded by the user). DocumentFilesID are monotonically increasing, i.e.
+  -- lookupMax gives the most recent version. We expect the files to evolve in a
+  -- linear fashion wrt. their corresponding document state, i.e. an `InputFile`
+  -- (corr. `Preparation`) can't follow on a `ClosedFile` (`Closed`).
+  , documentfilehistory           :: Map DocumentFileID DocumentFile
   , documentstatus                 :: DocumentStatus
   , documenttype                   :: DocumentType
   , documentctime                  :: UTCTime
@@ -240,8 +254,9 @@ data Document = Document
   -- mainly affects the 'display name', i.e. the name presented to the user as
   -- the party they are entering into a transaction with. Implements CORE-1633.
   , documentusergroupforeid        :: Maybe UserGroupID
-  , documentsealingmethod          :: SealingMethod
+  , documentdigitalsignaturemethod          :: DigitalSignatureMethod
   , documentaddmetadatatopdf       :: Bool
+  , documentevidencefilesecret     :: Maybe MagicHash -- This could be added instead to the ClosedVerimiQesFile, but placing it here makes using it a little bit easier.
   } deriving (Show)
 
 type instance ID Document = DocumentID
@@ -252,49 +267,50 @@ instance Loggable Document where
   logDefaultLabel _ = "document"
 
 defaultDocument :: Document
-defaultDocument = Document { documentid                = unsafeDocumentID 0
-                           , documenttitle             = ""
-                           , documentsignatorylinks    = []
-                           , documentmainfiles         = []
-                           , documentstatus            = Preparation
-                           , documenttype              = Signable
-                           , documentctime             = unixEpoch
-                           , documentmtime             = unixEpoch
-                           , documentdaystosign        = 90
-                           , documentdaystoremind      = Nothing
-                           , documenttimeouttime       = Nothing
-                           , documentautoremindtime    = Nothing
-                           , documentshowheader        = True
-                           , documentshowpdfdownload   = True
-                           , documentshowrejectoption  = True
-                           , documentallowrejectreason = True
-                           , documentshowfooter        = True
-                           , documentisreceipt         = False
-                           , documentinvitetext        = ""
-                           , documentconfirmtext       = ""
-                           , documentsmsinvitetext     = Nothing
-                           , documentsmsconfirmtext    = Nothing
-                           , documentinvitetime        = Nothing
-                           , documentsharing           = Private
-                           , documenttags              = S.empty
-                           , documentauthorattachments = []
-                           , documentlang              = defaultLang
-                           , documentstatusclass       = SCDraft
-                           , documentapiv1callbackurl  = Nothing
-                           , documentapiv2callbackurl  = Nothing
-                           , documentunsaveddraft      = False
-                           , documentobjectversion     = 0
-                           , documentmagichash         = unsafeMagicHash 0
-                           , documentauthorugid        = Nothing
-                           , documenttimezonename      = defaultTimeZoneName
-                           , documentshareablelinkhash = Nothing
-                           , documenttemplateid        = Nothing
-                           , documentfromshareablelink = False
-                           , documentshowarrow         = True
-                           , documentfolderid          = unsafeFolderID 0
-                           , documentusergroupforeid   = Nothing
-                           , documentsealingmethod     = Guardtime
-                           , documentaddmetadatatopdf  = False
+defaultDocument = Document { documentid                     = unsafeDocumentID 0
+                           , documenttitle                  = ""
+                           , documentsignatorylinks         = []
+                           , documentfilehistory            = Map.empty
+                           , documentstatus                 = Preparation
+                           , documenttype                   = Signable
+                           , documentctime                  = unixEpoch
+                           , documentmtime                  = unixEpoch
+                           , documentdaystosign             = 90
+                           , documentdaystoremind           = Nothing
+                           , documenttimeouttime            = Nothing
+                           , documentautoremindtime         = Nothing
+                           , documentshowheader             = True
+                           , documentshowpdfdownload        = True
+                           , documentshowrejectoption       = True
+                           , documentallowrejectreason      = True
+                           , documentshowfooter             = True
+                           , documentisreceipt              = False
+                           , documentinvitetext             = ""
+                           , documentconfirmtext            = ""
+                           , documentsmsinvitetext          = Nothing
+                           , documentsmsconfirmtext         = Nothing
+                           , documentinvitetime             = Nothing
+                           , documentsharing                = Private
+                           , documenttags                   = S.empty
+                           , documentauthorattachments      = []
+                           , documentlang                   = defaultLang
+                           , documentstatusclass            = SCDraft
+                           , documentapiv1callbackurl       = Nothing
+                           , documentapiv2callbackurl       = Nothing
+                           , documentunsaveddraft           = False
+                           , documentobjectversion          = 0
+                           , documentmagichash              = unsafeMagicHash 0
+                           , documentauthorugid             = Nothing
+                           , documenttimezonename           = defaultTimeZoneName
+                           , documentshareablelinkhash      = Nothing
+                           , documenttemplateid             = Nothing
+                           , documentfromshareablelink      = False
+                           , documentshowarrow              = True
+                           , documentfolderid               = unsafeFolderID 0
+                           , documentusergroupforeid        = Nothing
+                           , documentdigitalsignaturemethod = Guardtime
+                           , documentaddmetadatatopdf       = False
+                           , documentevidencefilesecret     = Nothing
                            }
 
 instance HasID Document where
@@ -314,11 +330,7 @@ documentsSelectors =
     <>  ")::"
     <>  raw (ctName ctSignatoryLink)
     <+> "FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
-  , "ARRAY(SELECT ("
-    <>  mintercalate ", " mainFilesSelectors
-    <>  ")::"
-    <>  raw (ctName ctMainFile)
-    <+> "FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
+  , "ARRAY(" <> documentFileWithIDQuery "documents.id" <> ")"
   , "documents.status"
   , "documents.type"
   , "documents.ctime"
@@ -368,6 +380,7 @@ documentsSelectors =
   , "documents.user_group_to_impersonate_for_eid"
   , "documents.sealing_method"
   , "documents.add_metadata_to_pdf"
+  , "documents.evidence_file_secret"
   ]
 
 documentStatusClassExpression :: SQL
@@ -431,7 +444,7 @@ type instance CompositeRow Document
   = ( DocumentID
     , Text
     , CompositeArray1 SignatoryLink
-    , CompositeArray1 MainFile
+    , CompositeArray1 DocumentFileWithID
     , DocumentStatus
     , DocumentType
     , UTCTime
@@ -470,83 +483,124 @@ type instance CompositeRow Document
     , Bool
     , FolderID
     , Maybe UserGroupID
-    , SealingMethod
+    , DigitalSignatureMethod
     , Bool
+    , Maybe MagicHash
     )
 
 instance PQFormat Document where
   pqFormat = compositeTypePqFormat ctDocument
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, sms_invite_text, sms_confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid, sealing_method, add_metadata_to_pdf)
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 document_files_with_id, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, sms_invite_text, sms_confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid, user_group_to_impersonate_for_eid, sealing_method, add_metadata_to_pdf, evidence_file_secret)
     = Document
-      { documentid                = did
-      , documenttitle             = title
-      , documentsignatorylinks    = signatory_links
-      , documentmainfiles         = main_files
-      , documentstatus            = status
-      , documenttype              = doc_type
-      , documentctime             = ctime
-      , documentmtime             = mtime
-      , documentdaystosign        = days_to_sign
-      , documentdaystoremind      = days_to_remind
-      , documenttimeouttime       = timeout_time
-      , documentautoremindtime    = case status of
-                                      Pending -> auto_remind_time
-                                      _       -> Nothing
-      , documentinvitetime        = case invite_time of
-                                      Nothing -> Nothing
-                                      Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
-      , documentinvitetext        = invite_text
-      , documentconfirmtext       = confirm_text
-      , documentsmsinvitetext     = sms_invite_text
-      , documentsmsconfirmtext    = sms_confirm_text
-      , documentshowheader        = show_header
-      , documentshowpdfdownload   = show_pdf_download
-      , documentshowrejectoption  = show_reject_option
-      , documentallowrejectreason = allow_reject_reason
-      , documentshowfooter        = show_footer
-      , documentisreceipt         = is_receipt
-      , documentsharing           = sharing
-      , documenttags              = S.fromList tags
-      , documentauthorattachments = author_attachments
-      , documentlang              = lang
-      , documentstatusclass       = status_class
-      , documentapiv1callbackurl  = apiv1callback
-      , documentapiv2callbackurl  = apiv2callback
-      , documentunsaveddraft      = unsaved_draft
-      , documentobjectversion     = objectversion
-      , documentmagichash         = token
-      , documentauthorugid        = author_ugid
-      , documenttimezonename      = time_zone_name
-      , documentshareablelinkhash = shareable_link_hash
-      , documenttemplateid        = template_id
-      , documentfromshareablelink = from_shareable_link
-      , documentshowarrow         = show_arrow
-      , documentfolderid          = fid
-      , documentusergroupforeid   = user_group_to_impersonate_for_eid
-      , documentsealingmethod     = sealing_method
-      , documentaddmetadatatopdf  = add_metadata_to_pdf
+      { documentid                     = did
+      , documenttitle                  = title
+      , documentsignatorylinks         = signatory_links
+      , documentfilehistory            = Map.fromList $ map
+                                           (\(DocumentFileWithID id document_files) ->
+                                             (id, document_files)
+                                           )
+                                           document_files_with_id
+      , documentstatus                 = status
+      , documenttype                   = doc_type
+      , documentctime                  = ctime
+      , documentmtime                  = mtime
+      , documentdaystosign             = days_to_sign
+      , documentdaystoremind           = days_to_remind
+      , documenttimeouttime            = timeout_time
+      , documentautoremindtime         = case status of
+                                           Pending -> auto_remind_time
+                                           _       -> Nothing
+      , documentinvitetime             = case invite_time of
+                                           Nothing -> Nothing
+                                           Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
+      , documentinvitetext             = invite_text
+      , documentconfirmtext            = confirm_text
+      , documentsmsinvitetext          = sms_invite_text
+      , documentsmsconfirmtext         = sms_confirm_text
+      , documentshowheader             = show_header
+      , documentshowpdfdownload        = show_pdf_download
+      , documentshowrejectoption       = show_reject_option
+      , documentallowrejectreason      = allow_reject_reason
+      , documentshowfooter             = show_footer
+      , documentisreceipt              = is_receipt
+      , documentsharing                = sharing
+      , documenttags                   = S.fromList tags
+      , documentauthorattachments      = author_attachments
+      , documentlang                   = lang
+      , documentstatusclass            = status_class
+      , documentapiv1callbackurl       = apiv1callback
+      , documentapiv2callbackurl       = apiv2callback
+      , documentunsaveddraft           = unsaved_draft
+      , documentobjectversion          = objectversion
+      , documentmagichash              = token
+      , documentauthorugid             = author_ugid
+      , documenttimezonename           = time_zone_name
+      , documentshareablelinkhash      = shareable_link_hash
+      , documenttemplateid             = template_id
+      , documentfromshareablelink      = from_shareable_link
+      , documentshowarrow              = show_arrow
+      , documentfolderid               = fid
+      , documentusergroupforeid        = user_group_to_impersonate_for_eid
+      , documentdigitalsignaturemethod = sealing_method
+      , documentaddmetadatatopdf       = add_metadata_to_pdf
+      , documentevidencefilesecret     = evidence_file_secret
       }
 
 ---------------------------------
 
-documentfile :: Document -> Maybe MainFile
-documentfile = find ((Preparation ==) . mainfiledocumentstatus) . documentmainfiles
+-- | Helper that returns the most recent document files for which the projection
+-- is defined.
+lookupFileHistory :: (DocumentFile -> Maybe a) -> Document -> Maybe a
+lookupFileHistory p = fmap snd . Map.lookupMax . Map.mapMaybe p . documentfilehistory
 
--- | Here we assume that the most recently sealed file is closest to the head of the list.
-documentsealedfile :: Document -> Maybe MainFile
-documentsealedfile = find ((Preparation /=) . mainfiledocumentstatus) . documentmainfiles
+-- | Get the latest version.
+documentfile :: Document -> Maybe DocumentFile
+documentfile = lookupFileHistory Just
 
-documentsealstatus :: Document -> Maybe SealStatus
-documentsealstatus = fmap mainfilesealstatus . documentsealedfile
+documentinputfile :: Document -> Maybe File
+documentinputfile = lookupFileHistory $ \case
+  InputFile { mainfile } -> Just mainfile
+  _ -> Nothing
 
-getSealingMethodForDocument
-  :: (MonadBase IO m, MonadDB m, MonadThrow m) => Document -> m SealingMethod
-getSealingMethodForDocument doc = do
+documentmainfile :: Document -> Maybe File
+documentmainfile doc = documentfile doc >>= \case
+  InputFile {..}            -> Just mainfile
+  ClosedFile DigitallySignedFile {..} -> Just digitallySignedFile
+  PendingVerimiQesFile {..} -> Just mainfileWithSomeQesSignatures
+  ClosedVerimiQesFile {..}  -> Just mainfileWithQesSignatures
+
+-- | Return the mainfile of the 'closed' set of document files. The name is a
+-- bit misleading, as in the case of Verimi the mainfile itself isn't actually
+-- 'closed' (the evidence file is).
+documentclosedmainfile :: Document -> Maybe File
+documentclosedmainfile = lookupFileHistory $ \case
+  ClosedFile { mainfileWithEvidence }
+    | DigitallySignedFile {..} <- mainfileWithEvidence -> Just digitallySignedFile
+  ClosedVerimiQesFile {..} -> Just mainfileWithQesSignatures
+  _ -> Nothing
+
+-- | By 'digital signature' we mean the GuardTime timestamp or PAdES signature
+-- we apply to the closed file (or evidence file in the case of Verimi QES).
+documentdigitalsignaturestatus :: Document -> Maybe DigitalSignatureStatus
+documentdigitalsignaturestatus = lookupFileHistory $ \case
+  ClosedFile DigitallySignedFile {..} -> Just digitalSignatureStatus
+  ClosedVerimiQesFile _ DigitallySignedFile {..} -> Just digitalSignatureStatus
+  _ -> Nothing
+
+documentUsesVerimiQes :: Document -> Bool
+documentUsesVerimiQes =
+  elem VerimiQesAuthenticationToSign
+    . map signatorylinkauthenticationtosignmethod
+    . documentsignatorylinks
+
+getDigitalSignatureMethodForDocument
+  :: (MonadBase IO m, MonadDB m, MonadThrow m) => Document -> m DigitalSignatureMethod
+getDigitalSignatureMethodForDocument doc = do
   ugid <- guardJust $ documentauthorugid doc
   ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
-  return $ ugwpSettings ugwp ^. #sealingMethod
+  return $ ugwpSettings ugwp ^. #digitalSignatureMethod
 
 getForceHidePersonalNumbers
   :: (MonadBase IO m, MonadDB m, MonadThrow m) => Document -> m Bool
@@ -561,3 +615,16 @@ getAddMetadataToPDFForDocument doc = do
   ugid <- guardJust $ documentauthorugid doc
   ugwp <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
   return $ ugwpSettings ugwp ^. #addMetadataToPDFs
+
+-- | Compute the id of the file to be rendered in preview images (see
+-- `previewResponse`). If no file is present, returns file id 0, which results
+-- in a blank image in `showPreview`.
+documentpreviewfile :: Document -> FileID
+documentpreviewfile doc = case documentfile doc of
+  Just InputFile {..} -> fileid mainfile
+  Just (ClosedFile DigitallySignedFile {..}) -> fileid digitallySignedFile
+  -- We preview the input file in the case of Verimi QES documents where not all
+  -- signatories have signed, to avoid confusion.
+  Just PendingVerimiQesFile {..} -> maybe (unsafeFileID 0) fileid $ documentinputfile doc
+  Just ClosedVerimiQesFile {..} -> fileid mainfileWithQesSignatures
+  Nothing -> unsafeFileID 0

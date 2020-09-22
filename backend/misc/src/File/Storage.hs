@@ -22,8 +22,8 @@ import qualified Network.HTTP as HTTP
 
 import Crypto
 import DB
-import File.File
 import File.Model
+import File.Types
 import FileStorage.Class (MonadFileStorage)
 import Log.Identifier
 import qualified FileStorage.Class as FS
@@ -48,7 +48,7 @@ saveNewFile
      )
   => Text
   -> BS.ByteString
-  -> m FileID
+  -> m File
 saveNewFile fName fContent = do
   startTime       <- liftBase getCurrentTime
   (fid, checksum) <- dbUpdate $ NewEmptyFileForAWS fName fContent
@@ -70,7 +70,7 @@ saveNewFile fName fContent = do
             [ logPair_ file
             , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
             ]
-          return fid
+          return file
         Left err@(FS.FileStorageException msg) -> do
           let attnMsg = "newFile: failed to upload to AWS, purging file"
           logAttention attnMsg $ object [identifier fid, "error" .= msg]

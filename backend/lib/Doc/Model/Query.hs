@@ -99,7 +99,7 @@ data FileInDocument = FileInDocument DocumentID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m FileInDocument Bool where
   dbQuery (FileInDocument did fid) = do
     let s1 = sqlSelect "main_files" $ do
-          sqlWhereEq "file_id"     fid
+          sqlWhere $ "(file_id = " <?> fid <+> ") OR (evidence_file_id = " <?> fid <+> ")"
           sqlWhereEq "document_id" did
           sqlResult "TRUE"
     let s2 = sqlSelect "author_attachments" $ do

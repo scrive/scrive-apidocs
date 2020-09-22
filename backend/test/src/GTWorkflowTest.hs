@@ -13,11 +13,12 @@ import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
 import Doc.DigitalSignature (extendDigitalSignature)
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus(..))
 import Doc.DocStateData
 import Doc.DocumentMonad (theDocument, withDocumentID)
 import Doc.Model
-import Doc.SealStatus (SealStatus(..))
 import File.Storage
+import File.Types
 import GuardTime
 import MinutesTime
 import Templates
@@ -48,18 +49,19 @@ testExtendDigitalSignatures = do
   file1       <- saveNewFile (T.pack filename) filecontent
   file2       <- saveNewFile (T.pack filename) filecontent
   did         <- documentid <$> addRandomDocumentWithFile
-    file
+    (fileid file)
     (rdaDefault author) { rdaTypes = OneOf [Signable], rdaStatuses = OneOf [Closed] }
 
   withDocumentID did $ do
     now <- currentTime
     let actor = systemActor (2 `monthsBefore` now)
     -- Append a file to tweak the modification time
-    dbUpdate
-      $ AppendSealedFile file1 Guardtime { extended = False, private = False } actor
-    dbUpdate $ AppendExtendedSealedFile file2
-                                        Guardtime { extended = False, private = False }
-                                        actor
+    dbUpdate $ AppendClosedFileWithDigitalSignatureEvidence
+      (DigitallySignedFile file1 Guardtime { extended = False, private = False })
+      actor
+    dbUpdate $ AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence
+      (DigitallySignedFile file2 Guardtime { extended = False, private = False })
+      actor
 
     -- Run extending
     templates <- liftBase readGlobalTemplates
@@ -69,7 +71,7 @@ testExtendDigitalSignatures = do
       $ extendDigitalSignature
 
   withDocumentID did $ do
-    documentsealstatus <$> theDocument >>= \case
+    documentdigitalsignaturestatus <$> theDocument >>= \case
       Just Guardtime { extended = True } -> assertSuccess
       s -> assertFailure $ "Unexpected extension status: " ++ show s
 

@@ -55,7 +55,8 @@ import EID.Nets.Types (NetsSignStatus(..), netsFaultText)
 import EID.Signature.Model
 import EventStream.Class
 import File.FileID
-import FileStorage
+import File.Storage
+import File.Types
 import GuardTime
 import IPAddress
 import KontraError
@@ -63,6 +64,7 @@ import Log.Identifier
 import MailContext
 import MinutesTime
 import Templates
+import Text.JSON.Convert
 import User.Lang
 import UserGroup.Model
 import UserGroup.Types
@@ -72,6 +74,7 @@ import Util.SignatoryLinkUtils
 import qualified Doc.Flow as Flow
   ( EngineEvent(..), UserAction(Signature), processEventThrow
   )
+import qualified EID.EIDService.Provider.Verimi as Verimi
 import qualified Flow.Model as Flow (selectInstanceIdByDocumentId)
 import qualified InputValidation
 import qualified MailContext.Internal
@@ -212,6 +215,12 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                   EIDServiceSEBankID -> handleEidService
                     (checkSEBankID signingSignatoryID)
                     processCompleteSEBankIDTransaction
+                    mEidServiceConf
+                    ds
+                    now
+                  EIDServiceVerimi -> handleEidService
+                    (`getTransactionFromEIDService` EIDServiceTransactionProviderVerimi)
+                    processCompleteVerimiTransaction
                     mEidServiceConf
                     ds
                     now
@@ -380,6 +389,40 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       signFromESignature ds now
 
       chargeForItemSingle CISEBankIDSignatureFinished . documentid =<< theDocument
+    processCompleteVerimiTransaction ds@DocumentSigning {..} est ct now = do
+      Verimi.VerimiSignCompletionDataFromResponse signCompletionData <-
+        whenNothing (estRespCompletionData ct) $ do
+          logAttention_
+            "Verimi QES failed: missing completion data when processing complete transaction"
+          throwE (Failed Remove)
+
+      signature <-
+        whenNothing
+            (Verimi.eidServiceVerimiQesSignatureFromCompletionData signCompletionData)
+          $ do
+              logAttention_
+                "Verimi QES failed: completion data does not give rise to an EidServiceVerimiQesSignature."
+              throwE (Failed Remove)
+
+      signedPdfContent <-
+        whenNothing
+            (fmap Verimi.documentData . listToMaybe . Verimi.pdfs $ Verimi.signedDocuments
+              signCompletionData
+            )
+          $ do
+              logAttention_
+                "Verimi QES failed: completion data does not contain a signed pdf!"
+              throwE (Failed Remove)
+
+      mainfile <- do
+        doc <- theDocument
+        whenNothing (documentmainfile doc) $ throwE (Failed Remove)
+      signedFile <- saveNewFile (filename mainfile) $ fromBase64 signedPdfContent
+      dbUpdate $ AppendPendingVerimiQesFile signedFile
+      dbUpdate $ MergeEIDServiceVerimiQesSignature signingSignatoryID signature
+      logInfo_ $ "EidHub Verimi QES Sign succeeded: " <> showt est
+      signFromESignature ds now
+      chargeForItemSingle CIVerimiQesSignatureFinished . documentid =<< theDocument
 
 handleCgiGrpBankID
   :: ( CryptoRNG m

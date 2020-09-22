@@ -13,6 +13,7 @@ import AccessControl.Model
   )
 import AccessControl.Types (AccessRole(..), AccessRoleTarget(..))
 import DB.Query (dbQuery, dbUpdate)
+import DigitalSignatureMethod
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls (docApiV2Get)
@@ -34,7 +35,6 @@ import File.Model
 import Folder.Model
 import Generators.DocumentGenerators
 import Generators.OccurenceControl
-import SealingMethod
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
@@ -277,7 +277,9 @@ testDocApiV2StartPades = do
   ctx  <- mkContextWithUser defaultLang user
   mdoc <- testDocApiV2StartNew ctx
   doc  <- dbQuery $ GetDocumentByDocumentID (getMockDocId mdoc)
-  assertEqual "Document's sealing method should be" Pades (documentsealingmethod doc)
+  assertEqual "Document's sealing method should be"
+              Pades
+              (documentdigitalsignaturemethod doc)
 
 testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do

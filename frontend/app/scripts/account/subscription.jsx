@@ -180,6 +180,7 @@ var Subscription = Backbone.Model.extend({
         can_use_standard_authentication_to_view: ff.canUseStandardAuthenticationToView,
         can_use_standard_authentication_to_sign: ff.canUseStandardAuthenticationToSign,
         can_use_verimi_authentication_to_view: ff.canUseVerimiAuthenticationToView,
+        can_use_verimi_qes_to_sign: ff.canUseVerimiQesToSign,
         can_use_idin_authentication_to_view: ff.canUseIDINAuthenticationToView,
         can_use_idin_authentication_to_sign: ff.canUseIDINAuthenticationToSign,
         can_use_email_invitations: ff.canUseEmailInvitations,
@@ -306,6 +307,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_standard_authentication_to_view": true,
     "can_use_standard_authentication_to_sign": true,
     "can_use_verimi_authentication_to_view": true,
+    "can_use_verimi_qes_to_sign": true,
     "can_use_idin_authentication_to_view": true,
     "can_use_idin_authentication_to_sign": true,
     "can_use_email_invitations": true,
@@ -370,6 +372,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   },
   canUseSEAuthenticationToSign: function () {
      return this.get("can_use_se_authentication_to_sign");
+  },
+  canUseVerimiQesToSign: function () {
+     return this.get("can_use_verimi_qes_to_sign");
   },
   canUseSMSPinAuthenticationToView: function () {
      return this.get("can_use_sms_pin_authentication_to_view");
@@ -461,6 +466,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "fi_tupas";
     else if (this.canUseOnfidoAuthenticationToSign())
       return "onfido_document_check";  // we could also use "onfido_document_and_photo_check"
+    else if (this.canUseVerimiQesToSign())
+      return "verimi_qes"
     else
       // Should not happen, just in case
       return "standard";
@@ -504,7 +511,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       this.canUseDKAuthenticationToSign() ||
       this.canUseIDINAuthenticationToSign() ||
       this.canUseFIAuthenticationToSign() ||
-      this.canUseOnfidoAuthenticationToSign();
+      this.canUseOnfidoAuthenticationToSign() ||
+      this.canUseVerimiQesToSign();
   },
   parse: function (args) {
     return {
@@ -530,6 +538,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_standard_authentication_to_view: args.can_use_standard_authentication_to_view,
       can_use_standard_authentication_to_sign: args.can_use_standard_authentication_to_sign,
       can_use_verimi_authentication_to_view: args.can_use_verimi_authentication_to_view,
+      can_use_verimi_qes_to_sign: args.can_use_verimi_qes_to_sign,
       can_use_idin_authentication_to_view: args.can_use_idin_authentication_to_view,
       can_use_idin_authentication_to_sign: args.can_use_idin_authentication_to_sign,
       can_use_email_invitations: args.can_use_email_invitations,

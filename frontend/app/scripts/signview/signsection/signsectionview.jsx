@@ -28,6 +28,8 @@ var FITupasSignModel = require("../../eleg/fitupassigning");
 var SignFITupasAuth = require("./signfitupasauth");
 var OnfidoSignModel = require("../../eleg/onfidosigning");
 var SignOnfidoAuth = require("./signonfidoauth");
+var VerimiQesSignModel = require("../../eleg/verimiqessigning");
+var SignVerimiQes = require("./signverimiqes");
 var ErrorModal = require("../errormodal");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var $ = require("jquery");
@@ -114,6 +116,7 @@ var Task = require("../navigation/task");
       var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
       var hasOnfidoAuth = signatory.onfidoDocumentCheckAuthenticationToSign()
                           || signatory.onfidoDocumentAndPhotoCheckAuthenticationToSign();
+      var hasVerimiQesSign = signatory.verimiQesAuthenticationToSign();
 
       if (isApprover) {
         return "approve";
@@ -147,6 +150,10 @@ var Task = require("../navigation/task");
         return "eid-onfido-auth";
       }
 
+      if (hasVerimiQesSign) {
+        return "eid-verimi-qes-sign";
+      }
+
       if (signatory.hasPlacedObligatorySignatures()) {
         return "finish";
       }
@@ -159,7 +166,8 @@ var Task = require("../navigation/task");
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
         "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
         "approving", "forward", "eid-idin-auth", "eid-fi-tupas-auth",
-        "eid-onfido-auth", "eid-nobankid-auth", "eid-nobankid-auth-choose"
+        "eid-onfido-auth", "eid-nobankid-auth", "eid-nobankid-auth-choose",
+        "eid-verimi-qes-sign"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -226,7 +234,8 @@ var Task = require("../navigation/task");
       step = step || this.state.step;
       var noOverlayStep = [
         "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth",
-        "eid-fi-tupas-auth", "eid-onfido-auth", "eid-nobankid-auth"
+        "eid-fi-tupas-auth", "eid-onfido-auth", "eid-nobankid-auth",
+        "eid-verimi-qes-sign"
       ];
       return !(noOverlayStep.indexOf(step) > -1);
     },
@@ -691,6 +700,22 @@ var Task = require("../navigation/task");
       }).sign();
     },
 
+    handleVerimiQesSign: function (errorHandler) {
+      if (!this.canSignDocument()) {
+        errorHandler();
+        return this.context.blinkArrow();
+      }
+
+      var document = this.props.model.document();
+      var signatory = document.currentSignatory();
+
+      new VerimiQesSignModel({
+        doc: document,
+        siglinkid: signatory.signatoryid(),
+        errorHandler: errorHandler
+      }).sign();
+    },
+
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -942,6 +967,25 @@ var Task = require("../navigation/task");
                   self.setState({signingButtonBlocked: true});
                   doc.takeSigningScreenshot(function () {
                     self.handleOnfidoAuth(function () {
+                      self.setState({signingButtonBlocked: false});
+                    });
+                  }, {});
+                }
+              }}
+            />
+          }
+          {/* if */ this.isOnStep("eid-verimi-qes-sign") &&
+            <SignVerimiQes
+              model={this.props.model}
+              canSign={this.canSignDocument()}
+              field={phoneField}
+              onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
+              onSign={function () {
+                if (!self.state.signingButtonBlocked) {
+                  self.setState({signingButtonBlocked: true});
+                  doc.takeSigningScreenshot(function () {
+                    self.handleVerimiQesSign(function () {
                       self.setState({signingButtonBlocked: false});
                     });
                   }, {});

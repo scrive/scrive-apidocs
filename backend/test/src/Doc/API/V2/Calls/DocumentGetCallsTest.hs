@@ -31,6 +31,7 @@ import Doc.Types.SignatoryAttachment
   )
 import Doc.Types.SignatoryLink
 import File.Storage (saveNewFile)
+import File.Types
 import Folder.Model
 import Session.Model
 import TestingUtil
@@ -561,7 +562,7 @@ testDocApiV2FilesFull = do
     tz <- mkTimeZoneName "Europe/Stockholm"
     randomUpdate $ PreparationToPending (systemActor now) tz
     let [_, sl] = documentsignatorylinks doc
-    fid <- saveNewFile "some_name.pdf" "Some contents"
+    fid <- fileid <$> saveNewFile "some_name.pdf" "Some contents"
     randomUpdate $ SaveSigAttachment (signatorylinkid sl) att fid (systemActor now)
     randomUpdate $ SignDocument (signatorylinkid sl)
                                 Nothing

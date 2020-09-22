@@ -747,6 +747,7 @@ var Document = exports.Document = Backbone.Model.extend({
           || this.author().dkNemIDAuthenticationToSign()  || this.author().dkNemIDCPRAuthenticationToView()
           || this.author().dkNemIDPIDAuthenticationToView() || this.author().dkNemIDCVRAuthenticationToView()
           || this.author().legacyDkNemIDAuthenticationToView()
+          || this.author().verimiQesAuthenticationToSign()
           || this.author().fiTupasAuthenticationToView()) {
             // We don't support eleg authorization in design view
             return false;
@@ -907,6 +908,11 @@ var Document = exports.Document = Backbone.Model.extend({
         return _.some(sigs, function(sig) {
             return sig.hasProblems();
         });
+    },
+    usesVerimiQes: function() {
+      return _.some(this.signatories(), function(sig) {
+        return sig.verimiQesAuthenticationToSign();
+      })
     },
     newNameWithIndex: function (prefix) {
         var allnumbers = [];
@@ -1089,7 +1095,7 @@ var Document = exports.Document = Backbone.Model.extend({
       if(this.closed()) {
         return _.any(attachments, function(att) {
           return !att.isAddToSealedFile();
-        });
+        }) || this.usesVerimiQes;
       } else {
         const has_sig_atts = _.any(this.signatories(), function (sig) {
           return _.any(sig.attachments(), function (att) {

@@ -52,6 +52,7 @@ module.exports = React.createClass({
         canUseNOAuthenticationToSign: features.canUseNOAuthenticationToSign(),
         canUseSEAuthenticationToView: features.canUseSEAuthenticationToView(),
         canUseSEAuthenticationToSign: features.canUseSEAuthenticationToSign(),
+        canUseVerimiQesToSign: features.canUseVerimiQesToSign(),
         canUseSMSPinAuthenticationToView: features.canUseSMSPinAuthenticationToView(),
         canUseSMSPinAuthenticationToSign: features.canUseSMSPinAuthenticationToSign(),
         canUseCustomSMSTexts: features.canUseCustomSMSTexts(),
@@ -444,6 +445,7 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to view","canUseSEAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to sign","canUseSEAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use Verimi authorization to view","canUseVerimiAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use Verimi QES to sign","canUseVerimiQesToSign")}
               {this.renderTRForOptionWithCheckbox("Can use iDIN authorization to view","canUseIDINAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use iDIN authorization at sign time","canUseIDINAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use Onfido authorization to sign","canUseOnfidoAuthenticationToSign")}

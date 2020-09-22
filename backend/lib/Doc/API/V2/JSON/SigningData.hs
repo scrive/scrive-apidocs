@@ -68,11 +68,12 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                 OnfidoDocumentCheck -> Just OnfidoDocumentCheckAuthenticationToSign
                 OnfidoDocumentAndPhotoCheck ->
                   Just OnfidoDocumentAndPhotoCheckAuthenticationToSign
-            Right (EIDServiceSEBankIDSignature_ _) -> Just SEBankIDAuthenticationToSign
-            Right (LegacyBankIDSignature_       _) -> Nothing
-            Right (LegacyTeliaSignature_        _) -> Nothing
-            Right (LegacyNordeaSignature_       _) -> Nothing
-            Right (LegacyMobileBankIDSignature_ _) -> Nothing
+            Right (EIDServiceSEBankIDSignature_  _) -> Just SEBankIDAuthenticationToSign
+            Right (EIDServiceVerimiQesSignature_ _) -> Just VerimiQesAuthenticationToSign
+            Right (LegacyBankIDSignature_        _) -> Nothing
+            Right (LegacyTeliaSignature_         _) -> Nothing
+            Right (LegacyNordeaSignature_        _) -> Nothing
+            Right (LegacyMobileBankIDSignature_  _) -> Nothing
 
     encB64 = T.decodeUtf8 . B64.encode
 
@@ -157,6 +158,13 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                  then []
                  else ["personal_number" .= eidServiceSEBankIDSigPersonalNumber]
             )
+        ]
+      Right (EIDServiceVerimiQesSignature_ EIDServiceVerimiQesSignature {..}) ->
+        [ "verimi_data" .= object
+            [ "signatory_name" .= eidServiceVerimiSigName
+            , "signatory_mobile" .= eidServiceVerimiSigVerifiedPhone
+            , "signatory_email" .= eidServiceVerimiSigVerifiedEmail
+            ]
         ]
       Right (LegacyBankIDSignature_       _) -> []
       Right (LegacyTeliaSignature_        _) -> []

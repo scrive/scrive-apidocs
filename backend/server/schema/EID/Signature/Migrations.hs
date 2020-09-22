@@ -6,6 +6,8 @@ module EID.Signature.Migrations (
   , addEidJson
   , eidSignaturesAddProviderEIDServiceSEBankID
   , removeEidJson
+  , addFieldsForVerimi
+  , eidSignaturesUpdatePersonalNumberCheck
 ) where
 
 import DB
@@ -116,4 +118,35 @@ removeEidJson = Migration
                                                [sqlDropColumn "eid_service_json"]
   }
 
+addFieldsForVerimi :: MonadDB m => Migration m
+addFieldsForVerimi = Migration
+  { mgrTableName = tblName tableEIDSignatures
+  , mgrFrom      = 8
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableEIDSignatures)
+        [ sqlAddColumn $ tblColumn { colName = "signatory_email", colType = TextT }
+        , sqlAddColumn $ tblColumn { colName = "signatory_phone_number", colType = TextT }
+        ]
+  }
 
+eidSignaturesUpdatePersonalNumberCheck :: MonadDB m => Migration m
+eidSignaturesUpdatePersonalNumberCheck = Migration
+  { mgrTableName = tblName tableEIDSignatures
+  , mgrFrom      = 9
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        "eid_signatures"
+        [sqlDropCheck "eid_signatures_signatory_personal_number_well_defined"]
+
+      runQuery_ $ sqlAlterTable
+        "eid_signatures"
+        [ sqlAddValidCheck $ tblCheck
+            { chkName      = "eid_signatures_signatory_personal_number_well_defined"
+            , chkCondition =
+              "(provider = ANY (ARRAY[1, 2, 3, 4, 13])) = (signatory_personal_number IS NULL)"
+            }
+        ]
+  }

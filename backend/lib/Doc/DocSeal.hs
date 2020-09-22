@@ -8,8 +8,10 @@
 -- All that is needed to seal a document
 -----------------------------------------------------------------------------
 module Doc.DocSeal
-  ( sealDocument
+  ( closeDocumentFile
   , presealDocumentFile
+  , verimiQesSetupDocumentFile
+  , signatoryFieldNameForSignatory
   ) where
 
 import Control.Monad.Base
@@ -34,20 +36,20 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.TimeZoneName
+import DigitalSignatureMethod
 import Doc.CheckboxPlacementsUtils
   ( CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping
   )
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus(Missing))
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
-import Doc.DocUtils
 import Doc.DocView
 import Doc.Logging
 import Doc.Model
 import Doc.RadiobuttonPlacementsUtils
   ( RadiobuttonImagesMapping, getRadiobuttonImage, readRadiobuttonImagesMapping
   )
-import Doc.SealStatus (SealStatus(Missing))
 import Doc.SignatoryIdentification
   ( SignatoryIdentifierMap, siInitials, signatoryIdentifier
   )
@@ -60,13 +62,14 @@ import EvidenceLog.View
 import EvidencePackage.EvidenceLog
 import EvidencePackage.EvidenceOfIntent
 import EvidencePackage.EvidenceOfTime
-import File.File
 import File.Model
 import File.Storage
+import File.Types
 import Kontra
+import KontraLink
 import Log.Identifier
+import MagicHash (unsafeMagicHash)
 import PdfToolsLambda.Class
-import SealingMethod
 import Templates
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -76,6 +79,9 @@ import Utils.Directory
 import Utils.Read
 import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
+
+signatoryFieldNameForSignatory :: SignatoryLink -> Text
+signatoryFieldNameForSignatory sig = "signature_" <> showt (signatorylinkid sig)
 
 personFromSignatory
   :: forall m
@@ -181,6 +187,8 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
             renderTextTemplate "_nameFromOnfidoText" templateField
           EIDServiceIDINSignature_ _ ->
             renderTextTemplate "_nameFromIDINText" templateField
+          EIDServiceVerimiQesSignature_ _ ->
+            renderTextTemplate "_nameFromVerimiQesText" templateField
 
   fields <-
     maybeAddBankIDLogo
@@ -209,6 +217,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     , Seal.highlightedImages  = highlightedImages
     , Seal.identifiedNameText = identifiedNameText
     , Seal.nameFromText       = nameFromText
+    , Seal.signatoryFieldName = signatoryFieldNameForSignatory signatory
     }
   where
     maybeAddBankIDLogo :: [Seal.Field] -> m [Seal.Field]
@@ -220,6 +229,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       OnfidoDocumentAndPhotoCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
       OnfidoDocumentCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
       IDINAuthenticationToSign                -> addBankIDLogo "idin_logo.png"
+      VerimiQesAuthenticationToSign           -> addBankIDLogo "verimi_logo.png"
       StandardAuthenticationToSign            -> return
       SMSPinAuthenticationToSign              -> return
 
@@ -241,18 +251,19 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                                            }
     signatureSignatoryName :: ESignature -> Text
     signatureSignatoryName = \case
-      LegacyMobileBankIDSignature_ _   -> ""
-      LegacyTeliaSignature_        _   -> ""
-      LegacyNordeaSignature_       _   -> ""
-      LegacyBankIDSignature_       _   -> ""
-      CGISEBankIDSignature_        sig -> cgisebidsSignatoryName sig
-      NetsNOBankIDSignature_       sig -> netsnoSignatoryName sig
-      NetsDKNemIDSignature_        sig -> netsdkSignatoryName sig
-      EIDServiceIDINSignature_     sig -> unEIDServiceIDINSigSignatoryName sig
-      EIDServiceFITupasSignature_  sig -> eidServiceFITupasSigSignatoryName sig
-      EIDServiceOnfidoSignature_   sig -> eidServiceOnfidoSigSignatoryName sig
-      EIDServiceNOBankIDSignature_ sig -> eidServiceNOBankIDSigSignatoryName sig
-      EIDServiceSEBankIDSignature_ sig -> eidServiceSEBankIDSigSignatoryName sig
+      LegacyMobileBankIDSignature_  _   -> ""
+      LegacyTeliaSignature_         _   -> ""
+      LegacyNordeaSignature_        _   -> ""
+      LegacyBankIDSignature_        _   -> ""
+      CGISEBankIDSignature_         sig -> cgisebidsSignatoryName sig
+      NetsNOBankIDSignature_        sig -> netsnoSignatoryName sig
+      NetsDKNemIDSignature_         sig -> netsdkSignatoryName sig
+      EIDServiceIDINSignature_      sig -> unEIDServiceIDINSigSignatoryName sig
+      EIDServiceFITupasSignature_   sig -> eidServiceFITupasSigSignatoryName sig
+      EIDServiceOnfidoSignature_    sig -> eidServiceOnfidoSigSignatoryName sig
+      EIDServiceNOBankIDSignature_  sig -> eidServiceNOBankIDSigSignatoryName sig
+      EIDServiceSEBankIDSignature_  sig -> eidServiceSEBankIDSigSignatoryName sig
+      EIDServiceVerimiQesSignature_ sig -> eidServiceVerimiSigName sig
 
     authenticationIdentity :: EAuthentication -> Text
     authenticationIdentity = \case
@@ -601,9 +612,14 @@ createSealingTextsForDocument document hostpart = do
         F.value "hostpart" hostpart
         F.value "verifyurl" ("https://scrive.com/verify" :: String)
 
-  let verificationPageDescriptionTemplate = case documentsealingmethod document of
-        Guardtime -> templateName "_verificationPageDescription"
-        Pades     -> templateName "_verificationPageDescriptionPades"
+  let verificationPageDescriptionTemplate =
+        case documentdigitalsignaturemethod document of
+          Guardtime -> if documentUsesVerimiQes document
+            then templateName "_verificationPageDescriptionQesGuardTime"
+            else templateName "_verificationPageDescription"
+          Pades -> if documentUsesVerimiQes document
+            then templateName "_verificationPageDescriptionQesPades"
+            else templateName "_verificationPageDescriptionPades"
 
   verificationTitle           <- render "_contractsealingtexts"
   partnerText                 <- render "_contractsealingtextspartnerText"
@@ -614,6 +630,181 @@ createSealingTextsForDocument document hostpart = do
   onePageText                 <- render "_numberOfPagesIs1"
 
   return Seal.SealingTexts { .. }
+
+verimiQesEvidenceSpecFromDocument
+  :: ( MonadIO m
+     , TemplatesMonad m
+     , MonadDB m
+     , MonadMask m
+     , MonadLog m
+     , MonadFileStorage m
+     , MonadBaseControl IO m
+     )
+  => CheckboxImagesMapping
+  -> RadiobuttonImagesMapping
+  -> Text
+  -> Document
+  -> [DocumentEvidenceEvent]
+  -> [HC.ClockErrorEstimate]
+  -> EvidenceOfTime
+  -> BS.ByteString
+  -> Text
+  -> Text
+  -> Text
+  -> m Seal.VerimiQesEvidenceSpec
+verimiQesEvidenceSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog offsets eotData content tmppath inputpath outputpath
+  = do
+  -- Form initials from signing parties
+    sim                   <- getSignatoryIdentifierMap False elog
+
+    additionalAttachments <- findOutAttachmentDesc sim tmppath document
+    documentationFiles    <- mapM
+      (\f -> (takeFileName f, ) <$> liftIO (BS.readFile f))
+      [ "files/Evidence Quality of Scrive E-signed Documents.html"
+      , "files/Appendix 1 Evidence Quality Framework.html"
+      , "files/Appendix 2 Service Description.html"
+      , "files/Appendix 6 Digital Signature Documentation.html"
+      ]
+
+    let docid              = documentid document
+        paddeddocid        = pad0 20 (show docid)
+        Just authorsiglink = getAuthorSigLink document
+
+    persons <-
+      sequence
+        $ [ personExFromSignatoryLink inputpath
+                                      (documenttimezonename document)
+                                      sim
+                                      checkboxMapping
+                                      radiobuttonMapping
+                                      s
+          | s <- documentsignatorylinks document
+          , isSignatory s
+          ]
+
+    secretaries <-
+      sequence
+        $ [ personFromSignatory inputpath
+                                (documenttimezonename document)
+                                sim
+                                checkboxMapping
+                                radiobuttonMapping
+                                s
+          | s <- documentsignatorylinks document
+          , not . isSignatory $ s
+          ]
+
+    initiator <- if isSignatory authorsiglink
+      then return Nothing
+      else
+        Just
+          <$> personFromSignatory inputpath
+                                  (documenttimezonename document)
+                                  sim
+                                  checkboxMapping
+                                  radiobuttonMapping
+                                  authorsiglink
+
+    let initials = T.intercalate ", " $ catMaybes
+          [ siInitials <$> Map.lookup (signatorylinkid s) sim
+          | s <- documentsignatorylinks document
+          , isSignatory s
+          ]
+
+    staticTexts <- createSealingTextsForDocument document hostpart
+
+    -- Creating HTML Evidence Log
+    let htmlevents = suppressRepeatedEvents elog
+    elogsim  <- getSignatoryIdentifierMap True htmlevents
+    htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elogsim htmlevents
+    let evidenceLog = Seal.SealAttachment
+          { Seal.fileName    = "Appendix 3 Evidence Log.html"
+          , Seal.mimeType    = Nothing
+          , Seal.fileContent = BS.fromString htmllogs
+          }
+    htmlEvidenceOfTime <- evidenceOfTimeHTML (T.unpack $ documenttitle document)
+                                             offsets
+                                             eotData
+    let evidenceOfTime = Seal.SealAttachment
+          { Seal.fileName    = "Appendix 4 Evidence of Time.html"
+          , Seal.mimeType    = Nothing
+          , Seal.fileContent = BS.fromString htmlEvidenceOfTime
+          }
+    evidenceOfIntent <- evidenceOfIntentAttachment elogsim document
+
+    -- documentation files
+    let docAttachments =
+          [ Seal.SealAttachment { Seal.fileName    = T.pack name
+                                , Seal.mimeType    = Nothing
+                                , Seal.fileContent = doc
+                                }
+          | (name, doc) <- documentationFiles
+          ]
+
+    eNumberOfPages <- liftIO $ getNumberOfPDFPages content
+    numberOfPages  <- case eNumberOfPages of
+      Left e -> do
+        logInfo "Calculating number of pages of document failed, falling back to 1"
+          $ object ["reason" .= e]
+        return 1
+      Right x -> return x
+
+    numberOfPagesText <- if numberOfPages == 1
+      then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
+      else renderLocalTemplate document "_numberOfPages" $ do
+        F.value "pages" numberOfPages
+
+    attachedByText <- do
+      emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
+      renderLocalTemplate document "_documentSentOnBy" $ do
+        F.value "identifier"
+          $ signatoryIdentifier sim (signatorylinkid authorsiglink) emptyNamePlaceholder
+        F.valueM "time" $ mapM
+          (formatUTCTimeForVerificationPage (documenttimezonename document))
+          (signtime <$> documentinvitetime document)
+
+    sealedOn <- do
+      renderLocalTemplate document "_documentSealedOn" $ do
+        F.valueM "time" $ formatUTCTimeForVerificationPage
+          (documenttimezonename document)
+          (getLastSignedOrApprovedTime document)
+
+    mainDocumentText   <- renderLocalTemplate document "_mainDocument" (return ())
+
+    documentNumberText <-
+      renderLocalTemplate document "_contractsealingtextsDocumentNumberAndHash" $ do
+        F.value "documentnumber" paddeddocid
+        F.value "filename" . T.unpack $ documenttitle document <> ".pdf"
+        F.value "hash" . show $ H.hashWith H.SHA256 content
+
+    initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
+      F.value "initials" initials
+
+    let title       = ICU.normalize ICU.NFC $ documenttitle document
+    let attachments = docAttachments <> [evidenceLog, evidenceOfTime, evidenceOfIntent]
+
+    return $ Seal.VerimiQesEvidenceSpec
+      { Seal.vqeInput                     = inputpath
+      , Seal.vqeOutput                    = outputpath
+      , Seal.vqeDocumentNumberAndHashText = documentNumberText
+      , Seal.vqePersons                   = persons
+      , Seal.vqeSecretaries               = secretaries
+      , Seal.vqeInitiator                 = initiator
+      , Seal.vqeInitialsText              = initialsText
+      , Seal.vqeHostpart                  = hostpart
+      , Seal.vqeStaticTexts               = staticTexts
+      , Seal.vqeAttachments               = attachments
+      , Seal.vqeFilesList = [ Seal.FileDesc { fileTitle = title
+                                            , fileRole = mainDocumentText
+                                            , filePagesText = numberOfPagesText
+                                            , fileAttachedBy = attachedByText
+                                            , fileSealedOn = Just sealedOn
+                                            , fileAttachedToSealedFileText = Nothing
+                                            , fileInput = Nothing
+                                            }
+                            ]
+                              <> additionalAttachments
+      }
 
 sealSpecFromDocument
   :: ( MonadIO m
@@ -838,7 +1029,91 @@ presealSpecFromDocument checkboxMapping radiobuttonMapping document inputpath ou
                               , Seal.pssFields = fields
                               }
 
-sealDocument
+verimiQesSetupSpecFromDocument
+  :: ( MonadIO m
+     , TemplatesMonad m
+     , MonadDB m
+     , MonadMask m
+     , MonadLog m
+     , MonadFileStorage m
+     , MonadBaseControl IO m
+     , KontraMonad m
+     )
+  => CheckboxImagesMapping
+  -> RadiobuttonImagesMapping
+  -> Document
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> m Seal.VerimiQesSetupSpec
+verimiQesSetupSpecFromDocument checkboxMapping radiobuttonMapping document tmppath inputpath outputpath hostpart
+  = do
+    fields <- concat <$> mapM (fieldsFromSignatory checkboxMapping radiobuttonMapping)
+                              (documentsignatorylinks document)
+
+    secret <- whenNothing (documentevidencefilesecret document) $ do
+      logAttention_ "verimiQesSetupSpecFromDocument: missing evidence file secret!"
+      return $ unsafeMagicHash 0  -- this will create a broken link, but better than nothing I guess...
+
+    additionalAttachments <- findOutAttachmentDesc Map.empty tmppath document
+
+    elog                  <- dbQuery . GetEvidenceLog $ documentid document
+    sim                   <- getSignatoryIdentifierMap False elog
+    persons               <-
+      sequence
+        $ [ personExFromSignatoryLink inputpath
+                                      (documenttimezonename document)
+                                      sim
+                                      checkboxMapping
+                                      radiobuttonMapping
+                                      s
+          | s <- documentsignatorylinks document
+          , isSignatory s
+          ]
+    ctx <- getContext
+    let
+      verificationLink =
+        ctx
+          ^. #brandedDomain
+          %  #url
+          <> showt
+               (LinkEvidenceFileMagicHash (documenttitle document)
+                                          (documentid document)
+                                          secret
+               )
+
+    linkText <- do
+      vqsFirstWord <- renderLocalTemplate document
+                                          "_verimiQesLinkTextFirstWord"
+                                          (return ())
+      vqsLinkWord <- renderLocalTemplate document "_verimiQesLinkTextLinkWord" (return ())
+      vqsLastWord <- renderLocalTemplate document "_verimiQesLinkTextLastWord" (return ())
+      return Seal.VerimiQesLinkText { .. }
+
+
+    staticTexts <- createSealingTextsForDocument document hostpart
+    return $ Seal.VerimiQesSetupSpec
+      { Seal.vqsInput              = inputpath
+      , Seal.vqsOutput             = outputpath
+      , Seal.vqsFields             = fields
+      , Seal.vqsEvidenceAttachment = Seal.SealAttachment
+                                       { fileName    = "verification supplement.txt"
+                                       , mimeType    = Just "text/plain"
+                                       , fileContent = TE.encodeUtf8 verificationLink
+                                       }
+      , Seal.vqsFilesList          = additionalAttachments
+      , Seal.vqsDocumentNumberText = showt $ documentid document
+      , Seal.vqsVerificationLink   = verificationLink
+      , Seal.vqsStaticTexts        = staticTexts
+      , Seal.vqsPersons            = persons
+      , Seal.vqsLinkText           = linkText
+      }
+
+-- | Render fields and attach evidence log etc. ('sealing' is old terminology).
+-- For Verimi QES this creates a separate evidence file (and leaves the 'main
+-- file' untouched).
+closeDocumentFile
   :: ( CryptoRNG m
      , MonadBaseControl IO m
      , DocumentMonad m
@@ -851,23 +1126,121 @@ sealDocument
      )
   => Text
   -> m ()
-sealDocument hostpart = do
-  mfile <- fileFromMainFile =<< documentfile <$> theDocument
-  case mfile of
-    Just file -> do
-      logInfo_ "Sealing document"
-      startTime <- currentTime
-      sealDocumentFile hostpart file
-      finishTime <- currentTime
-      logInfo "Sealing of document should be done now" $ object
+closeDocumentFile hostpart = do
+  document <- theDocument
+  void . whenNothing (documentevidencefilesecret document) $ do
+    logAttention_ "debuggging: closeDocumentFile missing evidence file secret!"
+    return $ unsafeMagicHash 0  -- this will create a broken link, but better than nothing I guess...
+  usesVerimiQes <- documentUsesVerimiQes <$> theDocument
+  if usesVerimiQes
+    then closeVerimiQesDocumentFile hostpart
+    else closeStandardDocumentFile hostpart
+
+-- | Construct separate evidence file (construct `ClosedVerimiQesFile` from
+-- `PendingVerimiQesFile`). Copy-pasta!
+closeVerimiQesDocumentFile
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , DocumentMonad m
+     , TemplatesMonad m
+     , MonadIO m
+     , MonadMask m
+     , MonadLog m
+     , MonadFileStorage m
+     , PdfToolsLambdaMonad m
+     )
+  => Text
+  -> m ()
+closeVerimiQesDocumentFile hostpart = do
+  logInfo_ "Closing document file (Sealing document)"
+  startTime <- currentTime
+
+  file@File { fileid, filename } <- documentfile <$> theDocument >>= \case
+    Just PendingVerimiQesFile {..} -> return mainfileWithSomeQesSignatures
+    _ -> do
+      logInfo_
+        "Closing of Verimi QES document file (Sealing of document) failed because it has no PendingVerimiQesFile associated"
+      internalError
+  content <- getFileContents file
+
+  theDocumentID >>= \documentid ->
+    withSystemTempDirectory' ("seal-" <> show documentid <> "-" <> show fileid <> "-")
+      $ \tmppath -> do
+          now <- currentTime
+
+          -- We add the last events before we attempt the sealing process, so
+          -- that they are included in the evidence package.
+          do
+            notAddedAttachments <-
+              filter (not . authorattachmentaddtosealedfile)
+              .   documentauthorattachments
+              <$> theDocument
+            forM_ notAddedAttachments $ \a -> do
+              hash <- show . H.hashWith H.SHA256 <$> getFileIDContents
+                (authorattachmentfileid a)
+              void . dbUpdate $ InsertEvidenceEvent
+                AuthorAttachmentHashComputed
+                (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash
+                )
+                (systemActor now)
+
+            void . dbUpdate $ InsertEvidenceEvent
+              VerimiQesEvidenceFilePrepared
+              (F.value "hash" . show $ H.hashWith H.SHA256 content)
+              (systemActor now)
+
+          let tmpin  = tmppath <> "/input.pdf"
+          let tmpout = tmppath <> "/output.pdf"
+
+          liftIO $ BS.writeFile tmpin content
+          logInfo "Temp file write" $ object
+            [ "bytes_written" .= BS.length content
+            , "originator" .= ("sealDocumentFile" :: Text)
+            ]
+
+          -- unused...
+          checkboxMapping    <- liftIO readCheckboxImagesMapping
+          radiobuttonMapping <- liftIO readRadiobuttonImagesMapping
+
+          elog               <- dbQuery $ GetEvidenceLog documentid
+          -- Evidence of Time documentation says we collect last 1000 samples
+          offsets            <- dbQuery $ HC.GetNClockErrorEstimates 1000
+          unless (HC.enoughClockErrorOffsetSamples offsets) $ do
+            logAttention_
+              "Cannot seal document because there are no valid host_clock samples"
+            void . dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
+                                            (return ())
+                                            (systemActor now)
+          eotData <- liftBase $ generateEvidenceOfTimeData
+            100
+            (tmppath <> "/eot_samples.txt")
+            (tmppath <> "/eot_graph.svg")
+            (map HC.offset offsets)
+          spec <- theDocument >>= \d -> do
+            verimiQesEvidenceSpecFromDocument checkboxMapping
+                                              radiobuttonMapping
+                                              hostpart
+                                              d
+                                              elog
+                                              offsets
+                                              eotData
+                                              content
+                                              (T.pack tmppath)
+                                              (T.pack tmpin)
+                                              (T.pack tmpout)
+          logInfo_ "Seal specification generated"
+          runLambdaVerimiQesEvidence tmppath filename spec
+
+  finishTime <- currentTime
+  logInfo "Document file should be closed now (Sealing of document should be done now)"
+    $ object
         [ "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
         , logPair_ file
         ]
-    Nothing -> do
-      logInfo_ "Sealing of document failed because it has no main file attached"
-      internalError
 
-sealDocumentFile
+
+-- | 'Standard' as opposed to Verimi QES.
+closeStandardDocumentFile
   :: ( CryptoRNG m
      , MonadMask m
      , MonadBaseControl IO m
@@ -879,9 +1252,18 @@ sealDocumentFile
      , PdfToolsLambdaMonad m
      )
   => Text
-  -> File
   -> m ()
-sealDocumentFile hostpart file@File { fileid, filename } =
+closeStandardDocumentFile hostpart = do
+  logInfo_ "Closing document file (Sealing document)"
+  startTime <- currentTime
+
+  file@File { fileid, filename } <- do
+    mfile <- documentinputfile <$> theDocument
+    whenNothing mfile $ do
+      logInfo_
+        "Closing of document file (Sealing of document) failed because it has no main file attached"
+      internalError
+
   theDocumentID >>= \documentid ->
     withSystemTempDirectory' ("seal-" <> show documentid <> "-" <> show fileid <> "-")
       $ \tmppath -> do
@@ -929,6 +1311,14 @@ sealDocumentFile hostpart file@File { fileid, filename } =
           logInfo_ "Seal specification generated"
           runLambdaSealing tmppath filename spec
 
+  finishTime <- currentTime
+  logInfo "Document file should be closed now (Sealing of document should be done now)"
+    $ object
+        [ "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
+        , logPair_ file
+        ]
+
+
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
 presealDocumentFile
   :: ( MonadBaseControl IO m
@@ -966,6 +1356,53 @@ presealDocumentFile document@Document { documentid } file@File { fileid } =
                                                       (T.pack tmpout)
         runLambdaPresealing tmppath spec
 
+-- | When starting Verimi QES documents we render all fields, and attach a file linking to the 'verification page'.
+verimiQesSetupDocumentFile
+  :: ( MonadBaseControl IO m
+     , MonadDB m
+     , MonadLog m
+     , KontraMonad m
+     , TemplatesMonad m
+     , MonadIO m
+     , MonadMask m
+     , MonadFileStorage m
+     , PdfToolsLambdaMonad m
+     , CryptoRNG m
+     )
+  => Document
+  -> File
+  -> m (Either Text BS.ByteString)
+verimiQesSetupDocumentFile document@Document { documentid } file@File { fileid } =
+  withSystemTempDirectory'
+      ("verimiqessetup-" <> show documentid <> "-" <> show fileid <> "-")
+    $ \tmppath -> do
+        logInfo "Verimi QES file setup" $ logObject_ file
+        let tmpin  = tmppath <> "/input.pdf"
+        let tmpout = tmppath <> "/output.pdf"
+        content <- getFileContents file
+        liftIO $ BS.writeFile tmpin content
+        logInfo "Temp file write" $ object
+          [ "bytes_written" .= BS.length content
+          , "originator" .= ("verimiQesSetupDocumentFile" :: Text)
+          ]
+        checkboxMapping    <- liftIO readCheckboxImagesMapping
+        radiobuttonMapping <- liftIO readRadiobuttonImagesMapping
+        ctx                <- getContext
+        let hostpart = ctx ^. #brandedDomain % #url
+        spec <- verimiQesSetupSpecFromDocument checkboxMapping
+                                               radiobuttonMapping
+                                               document
+                                               (T.pack tmppath)
+                                               (T.pack tmpin)
+                                               (T.pack tmpout)
+                                               hostpart
+        callPdfToolsVerimiQesSetup spec >>= \case
+          Just verimiQesSetupContent -> do
+            return $ Right verimiQesSetupContent
+          _ -> do
+            logAttention_ "Verimi QES Setup in lambda failed"
+            return $ Left "Error when preprinting fields on PDF"
+
 addSealedEvidenceEvents
   :: ( MonadBaseControl IO m
      , MonadDB m
@@ -990,7 +1427,7 @@ addSealedEvidenceEvents actor = do
       AuthorAttachmentHashComputed
       (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash)
       actor
-  void . dbUpdate $ InsertEvidenceEvent AttachSealedFileEvidence (return ()) actor
+    void . dbUpdate $ InsertEvidenceEvent AttachSealedFileEvidence (return ()) actor
 
 runLambdaSealing
   :: ( CryptoRNG m
@@ -1015,8 +1452,47 @@ runLambdaSealing _tmppath fn spec = do
   case msealedcontent of
     Just sealedcontent -> do
       logInfo_ "Sealing document with lambda finished"
-      sealedfileid <- saveNewFile fn sealedcontent
-      dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
+      sealedfile <- saveNewFile fn sealedcontent
+      dbUpdate $ AppendClosedFileWithDigitalSignatureEvidence
+        (DigitallySignedFile sealedfile Missing)
+        (systemActor now)
+    _ -> do
+      logAttention_ "Sealing document with lambda failed"
+      void . dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
+                                      (return ())
+                                      (systemActor now)
+
+runLambdaVerimiQesEvidence
+  :: ( CryptoRNG m
+     , DocumentMonad m
+     , MonadBaseControl IO m
+     , MonadDB m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     , PdfToolsLambdaMonad m
+     , TemplatesMonad m
+     )
+  => FilePath
+  -> Text
+  -> Seal.VerimiQesEvidenceSpec
+  -> m ()
+runLambdaVerimiQesEvidence _tmppath fn spec = do
+  now <- currentTime
+  logInfo_ "Sealing document with lambda started"
+  (msealedcontent :: Maybe BS.ByteString) <- callPdfToolsVerimiQesEvidence spec
+  case msealedcontent of
+    Just sealedcontent -> do
+      logInfo_ "Sealing document with lambda finished"
+      sealedfile <- saveNewFile fn sealedcontent
+      mmainfile  <- documentfile <$> theDocument >>= \case
+        Just PendingVerimiQesFile {..} -> return $ Just mainfileWithSomeQesSignatures
+        _ -> return Nothing
+      mainfile <- whenNothing mmainfile $ unexpectedError "where did it go?"
+      dbUpdate $ AppendClosedVerimiQesFileWithoutDigitalSignature mainfile
+                                                                  sealedfile
+                                                                  (systemActor now)
     _ -> do
       logAttention_ "Sealing document with lambda failed"
       void . dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence

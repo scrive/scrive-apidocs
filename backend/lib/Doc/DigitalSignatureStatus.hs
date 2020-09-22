@@ -1,7 +1,7 @@
 
-module Doc.SealStatus
-  ( SealStatus(..)
-  , isSealed
+module Doc.DigitalSignatureStatus
+  ( DigitalSignatureStatus(..)
+  , isDigitallySigned
   , isGuardtime
   ) where
 
@@ -12,10 +12,10 @@ import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import qualified Control.Exception.Lifted as E
 
-data SealStatus
+data DigitalSignatureStatus
   -- | File's digital signature status has not been determined
   -- State: unused
-  = UnknownSealStatus
+  = UnknownDigitalSignatureStatus
   -- | File lacks any form of digital signature
   | Missing
   -- | File has a TrustWeaver signature
@@ -30,16 +30,16 @@ data SealStatus
   | Pades
   deriving (Eq, Show, Generic, Typeable)
 
-isSealed :: SealStatus -> Bool
-isSealed s = isGuardtime s || s == Pades
+isDigitallySigned :: DigitalSignatureStatus -> Bool
+isDigitallySigned s = isGuardtime s || s == Pades
 
-isGuardtime :: SealStatus -> Bool
+isGuardtime :: DigitalSignatureStatus -> Bool
 isGuardtime = \case
   Guardtime{} -> True
   _           -> False
 
-instance Enum SealStatus where
-  toEnum (-1) = UnknownSealStatus
+instance Enum DigitalSignatureStatus where
+  toEnum (-1) = UnknownDigitalSignatureStatus
   toEnum 0    = Missing
   toEnum 1    = TrustWeaver
   toEnum 2    = Guardtime { extended = False, private = False }
@@ -49,29 +49,29 @@ instance Enum SealStatus where
   toEnum 6    = Pades
   toEnum i    = unexpectedError $ "invalid value:" <+> showt i
 
-  fromEnum UnknownSealStatus = -1
-  fromEnum Missing           = 0
-  fromEnum TrustWeaver       = 1
+  fromEnum UnknownDigitalSignatureStatus = -1
+  fromEnum Missing     = 0
+  fromEnum TrustWeaver = 1
   fromEnum Guardtime { extended = False, private = False } = 2
   fromEnum Guardtime { extended = True, private = False } = 3
   fromEnum Guardtime { extended = False, private = True } = 4
   fromEnum Guardtime { extended = True, private = True } = 5
-  fromEnum Pades             = 6
+  fromEnum Pades       = 6
 
-instance Ord SealStatus where
+instance Ord DigitalSignatureStatus where
   compare = compare `on` fromEnum
 
-instance PQFormat SealStatus where
+instance PQFormat DigitalSignatureStatus where
   pqFormat = pqFormat @Int16
 
-instance FromSQL SealStatus where
-  type PQBase SealStatus = PQBase Int16
+instance FromSQL DigitalSignatureStatus where
+  type PQBase DigitalSignatureStatus = PQBase Int16
   fromSQL mbase = do
     n :: Int16 <- fromSQL mbase
     if n < -1 || n > 6
       then E.throwIO $ RangeError { reRange = [(-1, 6)], reValue = n }
       else return . toEnum . fromIntegral $ n
 
-instance ToSQL SealStatus where
-  type PQDest SealStatus = PQDest Int16
+instance ToSQL DigitalSignatureStatus where
+  type PQDest DigitalSignatureStatus = PQDest Int16
   toSQL ss = toSQL (fromIntegral (fromEnum ss) :: Int16)

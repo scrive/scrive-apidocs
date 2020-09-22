@@ -489,7 +489,9 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
         , urlEncodeVars
           [ ("documentid", show (documentid doc))
           , ( "signedAndSealed"
-            , if isClosed doc && isJust (documentsealedfile doc) then "true" else "false"
+            , if isClosed doc && isJust (documentclosedmainfile doc)
+              then "true"
+              else "false"
             )
           ]
         , "-H"

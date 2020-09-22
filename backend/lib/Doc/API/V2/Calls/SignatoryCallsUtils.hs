@@ -35,6 +35,7 @@ import Doc.SMSPin.Model
 import EID.Signature.Model
 import File.Model
 import File.Storage
+import File.Types (fileid)
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
 import Templates (renderTextTemplate, renderTextTemplate_)
@@ -178,8 +179,9 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f : fs)) = do
     (fi, FileFTV bs ) -> if BS.null bs
       then return ((fi, FileFV Nothing) : changeFields, files')
       else do
-        fileid <- saveNewFile "signature.png" bs
-        return ((fi, FileFV (Just fileid)) : changeFields, (fileid, bs) : files')
+        file <- saveNewFile "signature.png" bs
+        return
+          ((fi, FileFV . Just $ fileid file) : changeFields, (fileid file, bs) : files')
 
 
 checkSignatoryPinToSign

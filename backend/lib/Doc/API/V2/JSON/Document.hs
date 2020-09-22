@@ -41,11 +41,11 @@ unjsonDocument da =
                       (unjsonSignatoryArray da)
          <**> pure (\sl d -> d { documentsignatorylinks = sl })
          )
-    <*   fieldReadonlyBy "file" documentfile "Document main file" unjsonMaybeMainFile
+    <*   fieldReadonlyBy "file" documentinputfile "Document main file" unjsonMaybeFile
     <*   fieldReadonlyBy "sealed_file"
-                         documentsealedfile
+                         documentclosedmainfile
                          "Document sealed file"
-                         unjsonMaybeMainFile
+                         unjsonMaybeFile
     <*   fieldReadonlyBy "author_attachments"
                          documentauthorattachments
                          "Document author attachments"

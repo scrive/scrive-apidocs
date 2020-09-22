@@ -18,6 +18,7 @@ var CantSignModalContent = require("./cantsignmodalcontent");
 var ConfirmationModalAcceptButton = require("./confirmationmodalacceptbutton");
 var SignConfirmationModalContent = require("./signconfirmationmodalcontent");
 var SendConfirmationModalContent = require("./sendconfirmationmodalcontent");
+var VerimiQesErrors = require("./verimiQesErrors");
 
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin, DocumentSaveMixin],
@@ -35,7 +36,9 @@ module.exports = React.createClass({
       showCantSignModal: false,
       showSignConfirmationModal: false,
       acceptedDocument: false,
-      showSendConfirmationModal: false
+      showSendConfirmationModal: false,
+      showVerimiQesProblemModal: false,
+      canbestarted_errors: []
     };
   },
   showCantSignModal: function () {
@@ -46,6 +49,9 @@ module.exports = React.createClass({
   },
   showSendConfirmationModal: function () {
     this.setState({showSendConfirmationModal: true});
+  },
+  showVerimiQesProblemModal: function () {
+    this.setState({showVerimiQesProblemModal: true});
   },
   saveTemplateButtonText: function () {
     if (this.props.document.isTemplate() && this.props.document.saved()) {
@@ -102,32 +108,53 @@ module.exports = React.createClass({
     Track.track("Click save as draft");
     this.saveDocument();
   },
-  onSendButtonClick: function () {
-    if (this.props.document.hasProblems()) {
-      this.showCantSignModal();
+  showSignOrSendConfirmationModal: function() {
+    var doc = this.props.document;
+
+    var isSigning = doc.authorCanSignFirst();
+
+    Track.track("Click sign button", {
+      "Is Signing": isSigning,
+      "Uses eleg": doc.hasEleg(),
+      "Uses email delivery": doc.hasEmail(),
+      "Uses mobile delivery": doc.hasSMS(),
+      "Uses pad delivery": doc.hasPad(),
+      "Uses email and mobile delivery": doc.hasEmailAndSMS()
+    });
+
+    doc.save();
+    var numberOfDocs = doc.isCsv() ? doc.csv().length - 1 : 1;
+    if (Subscription.currentSubscription().isOverLimit(numberOfDocs)) {
+      this.refs.blockingModal.openContactUsModal();
+    } else if (isSigning) {
+      this.showSignConfirmationModal();
     } else {
-      var doc = this.props.document;
+      this.showSendConfirmationModal();
+    }
+  },
 
-      var isSigning = doc.authorCanSignFirst();
-
-      Track.track("Click sign button", {
-        "Is Signing": isSigning,
-        "Uses eleg": doc.hasEleg(),
-        "Uses email delivery": doc.hasEmail(),
-        "Uses mobile delivery": doc.hasSMS(),
-        "Uses pad delivery": doc.hasPad(),
-        "Uses email and mobile delivery": doc.hasEmailAndSMS()
+  onSendButtonClick: function () {
+    const document = this.props.document;
+    if (document.hasProblems()) {
+      this.showCantSignModal();
+    } else if (document.usesVerimiQes()) {
+      var self = this;
+      document.save(function () { return new Submit({
+          url : "/api/frontend/documents/" + document.documentid() +  "/canbestarted",
+          method: "GET",
+          ajax: true,
+          ajaxsuccess : function(resp) {
+              if(resp.can_start) {
+                self.showSignOrSendConfirmationModal();
+              } else {
+                self.setState({canbestarted_errors: resp.errors});
+                self.showVerimiQesProblemModal();
+              }
+            }
+          }).send();
       });
-
-      doc.save();
-      var numberOfDocs = doc.isCsv() ? doc.csv().length - 1 : 1;
-      if (Subscription.currentSubscription().isOverLimit(numberOfDocs)) {
-        this.refs.blockingModal.openContactUsModal();
-      } else if (isSigning) {
-        this.showSignConfirmationModal();
-      } else {
-        this.showSendConfirmationModal();
-      }
+    } else {
+      this.showSignOrSendConfirmationModal();
     }
   },
   onCantSignModalAcceptClose: function () {
@@ -160,6 +187,9 @@ module.exports = React.createClass({
     doc.takeSigningScreenshot(function () {
       self.sendWithCSV(doc, 1, doc.isCsv() ? doc.csv().length - 1 : undefined);
     });
+  },
+  onVerimiQesProblemModalCancel: function () {
+    this.setState({showVerimiQesProblemModal: false});
   },
   onSendConfirmationModalCancel: function () {
     this.setState({showSendConfirmationModal: false});
@@ -392,6 +422,25 @@ module.exports = React.createClass({
                 <ConfirmationModalAcceptButton
                   onClick={this.onSendConfirmationModalAccept}
                   text={sendConfirmationModalAcceptText}
+                />
+              </Modal.Footer>
+            </Modal.Container>
+          }
+          { /* if */ (this.props.document.ready()) &&
+            <Modal.Container active={this.state.showVerimiQesProblemModal} >
+              <Modal.Header
+                title={"Verimi QES Problems"}
+                onClose={this.onVerimiQesProblemModalCancel}
+              />
+              <Modal.Content>
+              <VerimiQesErrors errors={this.state.canbestarted_errors}/>
+              </Modal.Content>
+              <Modal.Footer>
+                <Button
+                  type="action"
+                  text={"Ok"}
+                  oneClick={false}
+                  onClick={this.onVerimiQesProblemModalCancel}
                 />
               </Modal.Footer>
             </Modal.Container>

@@ -16,21 +16,29 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Data.ByteString as BS
 
 import DB
+import DigitalSignatureMethod
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus(Missing))
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
-import Doc.DocUtils (fileFromMainFile)
-import Doc.Model (AppendExtendedSealedFile(..), AppendSealedFile(..))
-import Doc.Types.Document
-  ( documentid, documentsealedfile, documentsealingmethod
+import Doc.Model
+  ( AppendClosedFileWithDigitalSignatureEvidence(..)
+  , AppendClosedVerimiQesFileWithDigitalSignatureEvidence(..)
+  , AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence(..)
+  , AppendExtendedGuardTimeSignedClosedVerimiQesFileWithDigitalSignatureEvidence(..)
   )
-import File.File (filename)
+import Doc.Types.Document
+  ( documentdigitalsignaturemethod, documentfile, documentid
+  )
+import Doc.Types.DocumentFile
+  ( DigitallySignedFile(..), DocumentFile(..), digitallySignedFile
+  )
 import File.Storage
+import File.Types (File(..))
 import GuardTime (GuardTimeConfMonad, getGuardTimeConf)
 import Log.Identifier
 import Log.Utils
 import PdfToolsLambda.Class
 import PdfToolsLambda.Conf
-import SealingMethod
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
@@ -38,7 +46,7 @@ import Util.Actor (systemActor)
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Directory (withSystemTempDirectory')
-import qualified Doc.SealStatus as SealStatus
+import qualified Doc.DigitalSignatureStatus as DigitalSignatureStatus
 import qualified GuardTime as GT
 
 addDigitalSignature
@@ -55,18 +63,58 @@ addDigitalSignature
      )
   => m Bool
 addDigitalSignature = do
-  mfile <- fileFromMainFile =<< (documentsealedfile <$> theDocument)
-  file  <- case mfile of
-    Nothing   -> unexpectedError "addDigitalSignature: File is not sealed"
-    Just file -> return file
-  content <- getFileContents file
-  let fileName = filename file
-  (docId, sealingMethod) <- (documentid &&& documentsealingmethod) <$> theDocument
-  logInfo "Sealing document"
-    $ object ["document_id" .= show docId, "sealing_method" .= show sealingMethod]
-  case sealingMethod of
-    Guardtime -> addGuardtimeSignature fileName content
-    Pades     -> addPadesSignature fileName content
+  (docId, digitalSignatureMethod) <-
+    (documentid &&& documentdigitalsignaturemethod) <$> theDocument
+  logInfo
+      "addDigitalSignature: Starting adding of digital signature ('Sealing document')."
+    $ object
+        ["document_id" .= show docId, "sealing_method" .= show digitalSignatureMethod]
+
+  documentfile <$> theDocument >>= \case
+    Just ClosedFile {..}
+      | DigitallySignedFile mainfile Missing <- mainfileWithEvidence -> do
+        content <- getFileContents mainfile
+        case digitalSignatureMethod of
+          Guardtime -> do
+            mGuardTimeResult <- addGuardtimeSignature (filename mainfile) content
+            whenJust mGuardTimeResult $ \(digitallySignedFile, digitalSignatureStatus) ->
+              do
+                now <- currentTime
+                dbUpdate
+                  . AppendClosedFileWithDigitalSignatureEvidence
+                      (DigitallySignedFile digitallySignedFile digitalSignatureStatus)
+                  $ systemActor now
+            return $ isJust mGuardTimeResult
+
+          Pades -> addPadesSignature (filename mainfile) content
+      | otherwise -> unexpectedError
+        "addDigitalSignature failed: file is already digitally signed!"
+
+    Just (ClosedVerimiQesFile mainfileWithQesSignatures evidenceFile)
+      | DigitallySignedFile evidenceFile' Missing <- evidenceFile -> do
+        content <- getFileContents evidenceFile'
+        case digitalSignatureMethod of
+          Guardtime -> do
+            mGuardTimeResult <- addGuardtimeSignature (filename evidenceFile') content
+            whenJust mGuardTimeResult
+              $ \(digitallySignedEvidenceFile, digitalSignatureStatus) -> do
+                  now <- currentTime
+                  dbUpdate
+                    . AppendClosedVerimiQesFileWithDigitalSignatureEvidence
+                        mainfileWithQesSignatures
+                        (DigitallySignedFile digitallySignedEvidenceFile
+                                             digitalSignatureStatus
+                        )
+                    $ systemActor now
+            return $ isJust mGuardTimeResult
+          Pades -> unexpectedError
+            "addDigitalSignature failed: Pades with Verimi QES not (yet) implemented!"
+      | otherwise -> unexpectedError
+        "addDigitalSignature failed: file is already digitally signed!"
+
+    _ -> unexpectedError "addDigitalSignature failed: file not closed!"
+
+
 
 addPadesSignature
   :: ( CryptoRNG m
@@ -100,11 +148,13 @@ addPadesSignature fileName inputFileContent = do
     Just result -> do
       logInfo_ "Document successfully signed using PAdES"
       logInfo_ "Adding new sealed file to DB"
-      sealedfileid <- saveNewFile fileName result
+      closedmainfile <- saveNewFile fileName result
       logInfo "Finished adding sealed file to DB, adding to document"
-        $ object [identifier sealedfileid]
+        $ object [identifier . fileid $ closedmainfile]
       now <- currentTime
-      dbUpdate $ AppendSealedFile sealedfileid SealStatus.Pades (systemActor now)
+      dbUpdate $ AppendClosedFileWithDigitalSignatureEvidence
+        (DigitallySignedFile closedmainfile DigitalSignatureStatus.Pades)
+        (systemActor now)
       return True
     Nothing -> do
       logInfo_ "PAdES signing failed"
@@ -123,7 +173,7 @@ addGuardtimeSignature
      )
   => Text
   -> BS.ByteString
-  -> m Bool
+  -> m (Maybe (File, DigitalSignatureStatus))
 addGuardtimeSignature fileName content = theDocumentID >>= \did ->
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
     let mainpath = tmppath </> "main.pdf"
@@ -144,16 +194,14 @@ addGuardtimeSignature fileName content = theDocumentID >>= \did ->
             logInfo "GuardTime verification result" $ logObject_ vr
             logInfo_ "GuardTime signed successfully"
             logInfo_ "Adding new sealed file to DB"
-            sealedfileid <- saveNewFile fileName res
+            sealedfile <- saveNewFile fileName res
             logInfo "Finished adding sealed file to DB, adding to document"
-              $ object [identifier sealedfileid]
-            now <- currentTime
-            dbUpdate
-              . AppendSealedFile
-                  sealedfileid
-                  (SealStatus.Guardtime (GT.extended gsig) (GT.privateGateway gsig))
-              $ systemActor now
-            return True
+              $ object [identifier $ fileid sealedfile]
+            return $ Just
+              ( sealedfile
+              , DigitalSignatureStatus.Guardtime (GT.extended gsig)
+                                                 (GT.privateGateway gsig)
+              )
           _ -> do
             logAttention "GuardTime verification after signing failed for document"
               $ object
@@ -161,10 +209,10 @@ addGuardtimeSignature fileName content = theDocumentID >>= \did ->
                   , "signing_stdout" `equalsExternalBSL` stdout
                   , "signing_stderr" `equalsExternalBSL` stderr
                   ]
-            return False
+            return Nothing
       ExitFailure c -> do
         logAttention "GuardTime failed" $ object ["code" .= c]
-        return False
+        return Nothing
 
 -- | Extend a document: replace the digital signature with a keyless
 -- one.  Trigger callbacks.
@@ -181,24 +229,52 @@ extendDigitalSignature
      )
   => m Bool
 extendDigitalSignature = do
-  mfile <- fileFromMainFile =<< (documentsealedfile <$> theDocument)
-  file  <- case mfile of
-    Nothing   -> unexpectedError "extendDigitalSignature: File is not sealed"
-    Just file -> return file
-
   did <- theDocumentID
   withSystemTempDirectory' ("ExtendSignature-" ++ show did ++ "-") $ \tmppath -> do
-    content <- getFileContents file
     let sealedpath = tmppath </> "sealed.pdf"
-    logInfo "Temp file write" $ object
-      [ "bytes_written" .= BS.length content
-      , "originator" .= ("extendDigitalSignature" :: Text)
-      ]
-    liftIO $ BS.writeFile sealedpath content
-    now <- currentTime
-    res <- digitallyExtendFile now sealedpath (filename file)
-    when res $ triggerAPICallbackIfThereIsOne =<< theDocument -- Users that get API callback on document change, also get information about sealed file being extended.
-    return res
+
+    documentfile <$> theDocument >>= \case
+      Just ClosedFile {..} | DigitallySignedFile mainfile _ <- mainfileWithEvidence -> do
+        content <- getFileContents mainfile
+
+        logInfo "Temp file write" $ object
+          [ "bytes_written" .= BS.length content
+          , "originator" .= ("extendDigitalSignature" :: Text)
+          ]
+        liftIO $ BS.writeFile sealedpath content
+        now <- currentTime
+        res <- digitallyExtendFile sealedpath (filename mainfile)
+        whenJust res $ \(digitallySignedFile, digitalSignatureStatus) ->
+          dbUpdate
+            . AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence
+                DigitallySignedFile { .. }
+            $ systemActor now
+
+        when (isJust res) $ triggerAPICallbackIfThereIsOne =<< theDocument -- Users that get API callback on document change, also get information about sealed file being extended.
+        return $ isJust res
+
+      Just (ClosedVerimiQesFile mainfileWithQesSignatures evidenceFile)
+        | DigitallySignedFile evidenceFile' _ <- evidenceFile -> do
+          content <- getFileContents evidenceFile'
+
+          logInfo "Temp file write" $ object
+            [ "bytes_written" .= BS.length content
+            , "originator" .= ("extendDigitalSignature" :: Text)
+            ]
+          liftIO $ BS.writeFile sealedpath content
+          now <- currentTime
+          res <- digitallyExtendFile sealedpath (filename evidenceFile')
+          whenJust res $ \(digitallySignedFile, digitalSignatureStatus) ->
+            dbUpdate
+              . AppendExtendedGuardTimeSignedClosedVerimiQesFileWithDigitalSignatureEvidence
+                  mainfileWithQesSignatures
+                  DigitallySignedFile { .. }
+              $ systemActor now
+
+          when (isJust res) $ triggerAPICallbackIfThereIsOne =<< theDocument -- Users that get API callback on document change, also get information about sealed file being extended.
+          return $ isJust res
+      _ -> unexpectedError "extendDigitalSignature: File is not closed (sealed)"
+
 
     -- Here, we have the option of notifying signatories of the
     -- extended version.  However: customers that choose to create an
@@ -226,11 +302,10 @@ digitallyExtendFile
      , DocumentMonad m
      , GuardTimeConfMonad m
      )
-  => UTCTime
-  -> FilePath
+  => FilePath
   -> Text
-  -> m Bool
-digitallyExtendFile time pdfpath pdfname = do
+  -> m (Maybe (File, DigitalSignatureStatus))
+digitallyExtendFile pdfpath pdfname = do
   gtconf                 <- getGuardTimeConf
   (code, stdout, stderr) <- GT.digitallyExtend gtconf pdfpath
   mr                     <- case code of
@@ -241,8 +316,12 @@ digitallyExtendFile time pdfpath pdfname = do
           res <- liftIO $ BS.readFile pdfpath
           logInfo "GuardTime verification result" $ logObject_ vr
           logInfo_ "GuardTime extended successfully"
-          return $ Just
-            (res, SealStatus.Guardtime (GT.extended gsig) (GT.privateGateway gsig))
+          return
+            $ Just
+                ( res
+                , DigitalSignatureStatus.Guardtime (GT.extended gsig)
+                                                   (GT.privateGateway gsig)
+                )
         _ -> do
           logAttention "GuardTime verification after extension failed" $ object
             [ logPair_ vr
@@ -254,11 +333,10 @@ digitallyExtendFile time pdfpath pdfname = do
       logAttention "GuardTime failed for document" $ object ["code" .= c]
       return Nothing
   case mr of
-    Nothing -> return False
+    Nothing -> return Nothing
     Just (extendedfilepdf, status) -> do
       logInfo_ "Adding new extended file to DB"
-      sealedfileid <- saveNewFile pdfname extendedfilepdf
+      sealedfile <- saveNewFile pdfname extendedfilepdf
       logInfo "Finished adding extended file to DB, adding to document"
-        $ object [identifier sealedfileid]
-      dbUpdate . AppendExtendedSealedFile sealedfileid status $ systemActor time
-      return True
+        $ object [identifier $ fileid sealedfile]
+      return $ Just (sealedfile, status)

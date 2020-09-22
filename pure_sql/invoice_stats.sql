@@ -336,6 +336,8 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
         "Finnish FTN signatures (finished)" BIGINT,
         "Verimi authentications (started)" BIGINT,
         "Verimi authentications (finished)" BIGINT,
+        "Verimi QES signatures (started)" BIGINT,
+        "Verimi QES signatures (finished)" BIGINT,
         "iDIN authentications (started)" BIGINT,
         "iDIN authentications (finished)" BIGINT,
         "iDIN signatures (started)" BIGINT,
@@ -546,6 +548,18 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 33 -- CIVerimiQesSignatureStarted
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Verimi QES signatures (started)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 34 -- CIVerimiQesSignatureFinished
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) AS "Verimi QES signatures (finished)"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 29 -- CIIDINAuthenticationStarted
                  AND chi.time >= period.from
                  AND chi.time <= period.to) AS "iDIN authentications (started)"
@@ -661,6 +675,8 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
              OR report."Finnish FTN signatures (finished)" > 0
              OR report."Verimi authentications (started)" > 0
              OR report."Verimi authentications (finished)" > 0
+             OR report."Verimi QES signatures (started)" > 0
+             OR report."Verimi QES signatures (finished)" > 0
              OR report."iDIN authentications (started)" > 0
              OR report."iDIN authentications (finished)" > 0
              OR report."iDIN signatures (started)" > 0
@@ -725,6 +741,8 @@ CREATE TEMPORARY TABLE report_master AS
   "Finnish FTN signatures (finished)",
   "Verimi authentications (started)",
   "Verimi authentications (finished)",
+  "Verimi QES signatures (started)",
+  "Verimi QES signatures (finished)",
   "iDIN authentications (started)",
   "iDIN authentications (finished)",
   "iDIN signatures (started)",
@@ -792,6 +810,8 @@ CREATE TEMPORARY TABLE report_aggregated AS
         sum("Finnish TUPAS authorization (finished)") AS "Finnish TUPAS authorization (finished)",
         sum("Verimi authentications (started)") AS "Verimi authentications (started)",
         sum("Verimi authentications (finished)") AS "Verimi authentications (finished)",
+        sum("Verimi QES signatures (started)") AS "Verimi QES signatures (started)",
+        sum("Verimi QES signatures (finished)") AS "Verimi QES signatures (finished)",
         sum("iDIN authentications (started)") AS "iDIN authentications (started)",
         sum("iDIN authentications (finished)") AS "iDIN authentications (finished)",
         sum("iDIN signatures (started)") AS "iDIN signatures (started)",

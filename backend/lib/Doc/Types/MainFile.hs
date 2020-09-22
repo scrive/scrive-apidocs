@@ -3,8 +3,9 @@ module Doc.Types.MainFile (
   , mainFilesSelectors
   ) where
 
-import DB
 import Doc.SealStatus
+
+import DB
 import Doc.Tables
 import Doc.Types.DocumentStatus
 import File.FileID

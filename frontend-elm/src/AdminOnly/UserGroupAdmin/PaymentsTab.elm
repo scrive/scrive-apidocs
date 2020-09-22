@@ -141,6 +141,7 @@ setFreeFeatures features =
                 , canUseSEAuthenticationToView = False
                 , canUseSEAuthenticationToSign = False
                 , canUseVerimiAuthenticationToView = False
+                , canUseVerimiQesToSign = False
                 , canUseIdinAuthenticationToView = False
                 , canUseIdinAuthenticationToSign = False
                 , canUseOnfidoAuthenticationToSign = False
@@ -162,6 +163,7 @@ setFreeFeatures features =
                 , canUseSEAuthenticationToView = False
                 , canUseSEAuthenticationToSign = False
                 , canUseVerimiAuthenticationToView = False
+                , canUseVerimiQesToSign = False
                 , canUseIdinAuthenticationToView = False
                 , canUseIdinAuthenticationToSign = False
                 , canUseOnfidoAuthenticationToSign = False
@@ -192,6 +194,7 @@ setPaidFeatures features =
                 , canUseSEAuthenticationToView = True
                 , canUseSEAuthenticationToSign = True
                 , canUseVerimiAuthenticationToView = True
+                , canUseVerimiQesToSign = True
                 , canUseIdinAuthenticationToView = True
                 , canUseIdinAuthenticationToSign = True
                 , canUseOnfidoAuthenticationToSign = True
@@ -213,6 +216,7 @@ setPaidFeatures features =
                 , canUseSEAuthenticationToView = True
                 , canUseSEAuthenticationToSign = True
                 , canUseVerimiAuthenticationToView = True
+                , canUseVerimiQesToSign = True
                 , canUseIdinAuthenticationToView = True
                 , canUseIdinAuthenticationToSign = True
                 , canUseOnfidoAuthenticationToSign = True
@@ -509,6 +513,7 @@ featureFlagsStructure =
         , ( "Can use SE authorization to view", "can_use_se_authentication_to_view" )
         , ( "Can use SE authorization to sign", "can_use_se_authentication_to_sign" )
         , ( "Can use Verimi authorization to view", "can_use_verimi_authentication_to_view" )
+        , ( "Can use Verimi QES to sign", "can_use_verimi_qes_to_sign" )
         , ( "Can use IDIN Authentication to view", "can_use_idin_authentication_to_view" )
         , ( "Can use IDIN Authentication to sign", "can_use_idin_authentication_to_sign" )
         , ( "Can use Onfido Authentication to sign", "can_use_onfido_authentication_to_sign" )

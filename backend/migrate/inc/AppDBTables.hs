@@ -66,13 +66,16 @@ kontraComposites =
     , ctHighlightedPage
     , ctSignatoryField
     , ctDocumentTag
+    , ctFile
     , ctMainFile
+    , ctMainFile1
     , ctSignatoryConsentQuestion
     , ctSignatoryAccessToken
     , ctSignatoryLink
     , ctDocument
+    , ctDocument1
     , ctFeatureFlags
-    , ctFeatureFlags9
+    , ctFeatureFlags10
 
   -- user group composites
     , ctUserGroupInvoicing

@@ -269,6 +269,7 @@ atsToMix IDINAuthenticationToSign                = MAM_NLIDIN
 atsToMix FITupasAuthenticationToSign             = MAM_FITupas
 atsToMix OnfidoDocumentCheckAuthenticationToSign = MAM_Onfido
 atsToMix OnfidoDocumentAndPhotoCheckAuthenticationToSign = MAM_Onfido
+atsToMix VerimiQesAuthenticationToSign           = MAM_Verimi
 
 authenticationMethodsCanMix
   :: AuthenticationToViewMethod
@@ -358,6 +359,7 @@ authToSignNeedsPersonalNumber IDINAuthenticationToSign                = False
 authToSignNeedsPersonalNumber FITupasAuthenticationToSign             = False
 authToSignNeedsPersonalNumber OnfidoDocumentCheckAuthenticationToSign = False
 authToSignNeedsPersonalNumber OnfidoDocumentAndPhotoCheckAuthenticationToSign = False
+authToSignNeedsPersonalNumber VerimiQesAuthenticationToSign           = False
 
 authToSignNeedsMobileNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsMobileNumber StandardAuthenticationToSign            = False
@@ -369,3 +371,4 @@ authToSignNeedsMobileNumber IDINAuthenticationToSign                = False
 authToSignNeedsMobileNumber FITupasAuthenticationToSign             = False
 authToSignNeedsMobileNumber OnfidoDocumentCheckAuthenticationToSign = False
 authToSignNeedsMobileNumber OnfidoDocumentAndPhotoCheckAuthenticationToSign = False
+authToSignNeedsMobileNumber VerimiQesAuthenticationToSign           = False

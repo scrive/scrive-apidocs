@@ -18,6 +18,7 @@ import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.Conditions
 import Doc.DBActions
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus(..))
 import Doc.DocInfo
 import Doc.DocSeal
 import Doc.DocStateData
@@ -28,7 +29,6 @@ import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model
 import Doc.Model.Filter
-import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryFieldID
 import Doc.TestInvariants
@@ -36,6 +36,7 @@ import EID.EIDService.Types
 import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import File.FileID
+import File.Model (GetFileByFileID(..))
 import MinutesTime
 import PdfToolsLambda.Monad
 import TestingUtil
@@ -533,7 +534,7 @@ testSignDocumentEvidenceLog = do
     assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
     runPdfToolsLambdaT pdfSealLambdaEnv $ do
-      sealDocument "https://scrive.com"
+      closeDocumentFile "https://scrive.com"
 
 testSignDocumentSearchData :: TestEnv ()
 testSignDocumentSearchData = do
@@ -856,10 +857,10 @@ testAppendFirstSealedFileEvidenceLog = do
                                                      , rdaStatuses = OneOf [Closed]
                                                      }
   withDocumentM genDoc $ do
-    file <- addNewRandomFile
-    randomUpdate $ \t -> AppendSealedFile
-      file
-      Guardtime { extended = False, private = False }
+    fileid <- addNewRandomFile
+    file   <- dbQuery $ GetFileByFileID fileid
+    randomUpdate $ \t -> AppendClosedFileWithDigitalSignatureEvidence
+      (DigitallySignedFile file Guardtime { extended = False, private = False })
       (systemActor t)
 
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
@@ -1563,7 +1564,7 @@ testDocumentAttachNotPreparationLeft = replicateM_ 10 $ do
   file <- addNewRandomFile
   --execute
   assertRaisesKontra (\DocumentStatusShouldBe{} -> True) $ do
-    withDocument doc . randomUpdate $ AttachFile file . systemActor
+    withDocument doc . randomUpdate $ SetInputMainfile file . systemActor
 
 testDocumentAttachPreparationRight :: TestEnv ()
 testDocumentAttachPreparationRight = replicateM_ 10 $ do
@@ -1574,7 +1575,7 @@ testDocumentAttachPreparationRight = replicateM_ 10 $ do
   withDocumentM genDoc $ do
     file <- addNewRandomFile
     --execute
-    randomUpdate $ \t -> AttachFile file (systemActor t)
+    randomUpdate $ \t -> SetInputMainfile file (systemActor t)
 
     --assert
     assertInvariants =<< theDocument
@@ -1591,7 +1592,7 @@ testNoDocumentAttachAlwaysLeft = replicateM_ 10 $ do
   -- non-existent docid
   assertRaisesKontra (\DocumentDoesNotExist{} -> True) $ do
     d <- rand 10 arbitrary
-    withDocumentID d $ randomUpdate (AttachFile file . systemActor)
+    withDocumentID d $ randomUpdate (SetInputMainfile file . systemActor)
   --assert
 
 testDocumentAttachHasAttachment :: TestEnv ()
@@ -1604,7 +1605,7 @@ testDocumentAttachHasAttachment = replicateM_ 10 $ do
     file <- addNewRandomFile
     --execute
 
-    randomUpdate $ \t -> AttachFile file (systemActor t)
+    randomUpdate $ \t -> SetInputMainfile file (systemActor t)
     --assert
     -- assertJust $ find ((== a) . filename) (documentfiles $ fromRight edoc)
     assertInvariants =<< theDocument
@@ -1614,13 +1615,16 @@ testNoDocumentAppendSealedAlwaysLeft = replicateM_ 10 $ do
   -- setup
   author <- instantiateRandomUser
   _doc   <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation] }
-  file   <- addNewRandomFile
+  fileid <- addNewRandomFile
+  file   <- dbQuery $ GetFileByFileID fileid
   --execute
   -- non-existent docid
   time   <- rand 10 arbitrary
   assertRaisesKontra (\DocumentDoesNotExist{} -> True) $ do
     docid <- rand 10 arbitrary
-    withDocumentID docid . randomUpdate $ AppendSealedFile file Missing (systemActor time)
+    withDocumentID docid . randomUpdate $ AppendClosedFileWithDigitalSignatureEvidence
+      (DigitallySignedFile file Missing)
+      (systemActor time)
 
 
 testSealDocument :: TestEnv ()
@@ -1629,9 +1633,17 @@ testSealDocument = replicateM_ 1 $ do
   author      <- instantiateRandomUser
   ctx         <- mkContext defaultLang
   screenshots <- getScreenshots
-  let genDoc = addRandomDocument $ (rdaDefault author) { rdaStatuses = OneOf [Pending]
-                                                       , rdaTypes    = OneOf [Signable]
-                                                       }
+  let
+    genDoc = addRandomDocument (rdaDefault author)
+      { rdaStatuses    = OneOf [Pending]
+      , rdaTypes       = OneOf [Signable]
+      , rdaSignatories =
+        let authToSignWithoutVerimiQes =
+              filter (/= VerimiQesAuthenticationToSign) [minBound .. maxBound]
+            signatory = OneOf [map RSC_AuthToSignIs authToSignWithoutVerimiQes]
+        in  OneOf [[signatory]]
+      }
+
   withDocumentM genDoc $ do
     void addNewRandomFile
     atts <- replicateM 2 $ do
@@ -1714,12 +1726,20 @@ testSealDocument = replicateM_ 1 $ do
               Nothing
               screenshots
               sa
+          VerimiQesAuthenticationToSign -> do
+            randomUpdate $ \esig -> SignDocument
+              (signatorylinkid slk)
+              (Just (EIDServiceVerimiQesSignature_ esig))
+              Nothing
+              screenshots
+              sa
       when (isApprover slk) $ do
         dbUpdate $ ApproveDocument (signatorylinkid slk) sa
 
     randomUpdate $ \t -> CloseDocument (systemActor t)
 
-    runPdfToolsLambdaT (ctx ^. #pdfToolsLambdaEnv) $ sealDocument "https://scrive.com"
+    runPdfToolsLambdaT (ctx ^. #pdfToolsLambdaEnv)
+      $ closeDocumentFile "https://scrive.com"
 
 testDocumentAppendSealedPendingRight :: TestEnv ()
 testDocumentAppendSealedPendingRight = replicateM_ 10 $ do
@@ -1729,16 +1749,21 @@ testDocumentAppendSealedPendingRight = replicateM_ 10 $ do
                                                      , rdaStatuses = OneOf [Closed]
                                                      }
   withDocumentM genDoc $ do
-    file    <- addNewRandomFile
+    fileid  <- addNewRandomFile
+    file    <- dbQuery $ GetFileByFileID fileid
 
     --execute
 
     now     <- currentTime
-    success <- randomUpdate . AppendExtendedSealedFile file Missing $ systemActor now
+    success <-
+      randomUpdate
+      . AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence
+          (DigitallySignedFile file Missing)
+      $ systemActor now
 
     --assert
     assert success
-    nfile <- fmap mainfileid . documentsealedfile <$> theDocument
+    nfile <- documentclosedmainfile <$> theDocument
     assertBool "Should have new file attached, but it's not" $ Just file == nfile
 
 

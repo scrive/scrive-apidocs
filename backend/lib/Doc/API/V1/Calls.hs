@@ -61,6 +61,7 @@ import Attachment.Model
 import Chargeable
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
+import DigitalSignatureMethod
 import Doc.Action
 import Doc.Anchors
 import Doc.API.Callback.Model
@@ -70,6 +71,7 @@ import Doc.API.V1.DocumentUpdateUtils
 import Doc.API.V1.ListUtil
 import Doc.AutomaticReminder.Model
 import Doc.Conditions
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus(Missing))
 import Doc.DocControl
 import Doc.DocInfo
 import Doc.DocMails
@@ -84,7 +86,6 @@ import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
 import Doc.Model.OrderBy
-import Doc.SealStatus (SealStatus(Missing))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
   ( SignatoryScreenshots, emptySignatoryScreenshots
@@ -95,9 +96,9 @@ import Doc.Tokens.Model
 import EID.Signature.Model
 import EvidenceLog.Model
 import EvidenceLog.View
-import File.File
 import File.Model
 import File.Storage
+import File.Types
 import Happstack.Fields
 import InputValidation
 import Kontra
@@ -106,7 +107,6 @@ import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model
 import Routing
-import SealingMethod
 import Templates (renderTextTemplate, renderTextTemplate_)
 import Text.JSON.Convert
 import User.Model
@@ -181,8 +181,8 @@ apiCallV1CreateFromFile = api $ do
       let content' = either (const content1') identity (B64.decode content1')
 
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
-      fileid'    <- saveNewFile (T.pack filename) pdfcontent
-      return (Just fileid', T.pack $ takeBaseName filename)
+      file       <- saveNewFile (T.pack filename) pdfcontent
+      return (Just file, T.pack $ takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone  <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
   folderId  <- case user ^. #homeFolderID of
@@ -191,9 +191,9 @@ apiCallV1CreateFromFile = api $ do
   dbUpdate (NewDocument user title doctype timezone 0 actor folderId) `withDocumentM` do
     when_ (not external) . dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
-      Nothing      -> return ()
-      Just fileid' -> do
-        dbUpdate $ AttachFile fileid' actor
+      Nothing   -> return ()
+      Just file -> do
+        dbUpdate $ SetInputMainfile (fileid file) actor
     theDocument >>= \doc -> do
       logInfo "New document created" $ logObject_ doc
       Created <$> documentJSONV1 (Just user) True True Nothing doc
@@ -348,9 +348,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
       newFiles <- case cres of
         Left _ -> throwM . SomeDBExtraException $ badInput
           "One of Attached files is not a valid PDF"
-        Right contents -> forM (zip filenames contents) $ \(filename, content) -> do
-          fid <- saveNewFile filename content
-          dbQuery $ GetFileByFileID fid
+        Right contents -> forM (zip filenames contents) $ uncurry saveNewFile
       let putNewFiles ((Left f, mdetails) : rest) newfs =
             (f, mdetails) : putNewFiles rest newfs
           putNewFiles ((Right _, mdetails) : rest) (nf : newfs) =
@@ -398,8 +396,9 @@ apiCallV1Ready :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Ready did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    -- We do not support PAdES in API V1
-    guardNoPades =<< getSealingMethodForDocument =<< theDocument
+    -- We do not support PAdES or QES in API V1
+    guardNoPades =<< getDigitalSignatureMethodForDocument =<< theDocument
+    guardNoQES =<< theDocument
 
     auid <-
       apiGuardJustM (serverError "No author found") $ getAuthorUserId <$> theDocument
@@ -475,7 +474,7 @@ apiCallV1Ready did = logDocument did . api $ do
                          . SomeDBExtraException
                          $ serverError
                              "Some signatories have invalid phone number and it is required for identification to view document."
-                 whenM (isNothing . documentfile <$> theDocument) $ do
+                 whenM (isNothing . documentinputfile <$> theDocument) $ do
                    throwM . SomeDBExtraException $ serverError
                      "File must be provided before document can be made ready."
                  t        <- view #time <$> getContext
@@ -541,6 +540,7 @@ apiCallV1Ready did = logDocument did . api $ do
         FITupasAuthenticationToSign             -> False -- Finnish TUPAS eSigning is not supported in API v1
         OnfidoDocumentCheckAuthenticationToSign -> False -- Onfido eSigning is not supported in API v1
         OnfidoDocumentAndPhotoCheckAuthenticationToSign -> False -- Onfido eSigning is not supported in API v1
+        VerimiQesAuthenticationToSign           -> False  -- Verimi eSigning is not supported in API v1
 
     signatoryHasValidSSNForIdentifyToView sl =
       case signatorylinkauthenticationtoviewmethod sl of
@@ -686,6 +686,9 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       OnfidoDocumentAndPhotoCheckAuthenticationToSign -> do
         logAttention_ "Onfido signing attempted in V1 API"
         Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
+      VerimiQesAuthenticationToSign -> do
+        logAttention_ "Verimi signing attempted in V1 API"
+        Left . Failed <$> J.runJSONGenT (J.value "verimiNotSupported" True)
 
 apiCallV1Sign
   :: Kontrakcja m
@@ -706,7 +709,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   acceptedAuthorAttachments <- getAcceptedAuthorAttachments
   olddoc                    <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid -- We store old document, as it is needed by postDocumentXXX calls
   -- We do not support PAdES in API V1
-  guardNoPades (documentsealingmethod olddoc)
+  guardNoPades (documentdigitalsignaturemethod olddoc)
   withDocument olddoc
     $ do
         document <- theDocument
@@ -781,6 +784,9 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
           OnfidoDocumentAndPhotoCheckAuthenticationToSign -> do
             logAttention_ "Onfido signing attempted in V1 API"
             Left . Failed <$> J.runJSONGenT (J.value "onfidoNotSupported" True)
+          VerimiQesAuthenticationToSign -> do
+            logAttention_ "Verimi signing attempted in V1 API"
+            Left . Failed <$> J.runJSONGenT (J.value "verimiNotSupported" True)
     `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) ->
                               (throwM . SomeDBExtraException)
                                 $ conflictError ("Document not pending but " <> show i)
@@ -838,6 +844,9 @@ checkAuthenticationToSignMethodAndValue slid = do
             (True, OnfidoDocumentAndPhotoCheckAuthenticationToSign) ->
               throwM . SomeDBExtraException $ conflictError
                 "Onfido signing not supported in API V1"
+            (True, VerimiQesAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Verimi signing not supported in API V1"
         Nothing ->
           throwM . SomeDBExtraException $ badInput "`authentication_type` was not a valid"
     (Nothing, Nothing) -> return ()
@@ -1231,6 +1240,8 @@ apiCallV1ChangeAuthenticationToSign did slid =
         OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
           throwM . SomeDBExtraException $ badInput
             "Onfido signing is not supported in API V1"
+        VerimiQesAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "Verimi signing is not supported in API V1"
 
       -- Change authentication to sign method and return Document JSON
       dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor
@@ -1610,7 +1621,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
 
   content <- case documentstatus doc of
     Closed -> do
-      when (documentsealstatus doc == Just Missing) $ do
+      when (documentdigitalsignaturestatus doc == Just Missing) $ do
         now <- currentTime
         -- Give Guardtime signing a few seconds to complete before we respond
         when (diffUTCTime now (documentmtime doc) < 8) $ do
@@ -1620,19 +1631,20 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
             ]
           throwM . SomeDBExtraException $ noAvailableYet
             "Digitally sealed document not ready"
-      file <- apiGuardJustM (noAvailableYet "Not ready, please try later")
-        $ fileFromMainFile (documentsealedfile doc)
+      file <-
+        apiGuardJustM (noAvailableYet "Not ready, please try later")
+        . return
+        $ documentclosedmainfile doc
       getFileIDContents $ fileid file
     _ -> do
-      sourceFile <-
-        apiGuardJustM (serverError "No file") . fileFromMainFile $ documentfile doc
+      sourceFile <- apiGuardJustM (serverError "No file") . return $ documentinputfile doc
       apiGuardL (serverError "Can't get file content")
         $ DocSeal.presealDocumentFile doc sourceFile
   return $ respondWithPDF False content
 
 apiCallV1DownloadFile :: Kontrakcja m => DocumentID -> FileID -> Text -> m Response
-apiCallV1DownloadFile did fileid nameForBrowser =
-  logDocumentAndFile did fileid . api $ do
+apiCallV1DownloadFile did requestedfileid nameForBrowser =
+  logDocumentAndFile did requestedfileid . api $ do
     (mslid :: Maybe SignatoryLinkID ) <- readField "signatorylinkid"
     (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
     sid   <- view #sessionID <$> getContext
@@ -1659,16 +1671,21 @@ apiCallV1DownloadFile did fileid nameForBrowser =
               modifyContext $ set #maybeUser (ctx ^. #maybeUser)
               return res
             else getDocumentByCurrentUser did
+    let documentfiles = flip foldMap (documentfilehistory doc) $ \case
+          InputFile {..}            -> [mainfile]
+          ClosedFile DigitallySignedFile {..} -> [digitallySignedFile]
+          PendingVerimiQesFile {..} -> [mainfileWithSomeQesSignatures]
+          ClosedVerimiQesFile {..} | DigitallySignedFile {..} <- evidenceFile ->
+            [mainfileWithQesSignatures, digitallySignedFile]
     let allfiles =
-          maybeToList (mainfileid <$> documentfile doc)
-            <> maybeToList (mainfileid <$> documentsealedfile doc)
-            <> (authorattachmentfileid <$> documentauthorattachments doc)
+          map fileid documentfiles
+            <> map authorattachmentfileid (documentauthorattachments doc)
             <> mapMaybe signatoryattachmentfile
                         (concatMap signatoryattachments $ documentsignatorylinks doc)
-    if fileid `notElem` allfiles
+    if requestedfileid `notElem` allfiles
       then throwM . SomeDBExtraException $ forbidden "Access to file is forbiden."
       else do
-        content <- getFileIDContents fileid
+        content <- getFileIDContents requestedfileid
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
             ct | ".pdf" `T.isSuffixOf` T.toLower nameForBrowser = "application/pdf"
                | ".png" `T.isSuffixOf` T.toLower nameForBrowser = "image/png"
@@ -1692,7 +1709,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
     unless (auid == user ^. #id) . throwM . SomeDBExtraException $ serverError
       "Permission problem. Not an author."
 
-    moldfileid <- fmap mainfileid . documentfile <$> theDocument
+    moldfileid <- fmap fileid . documentinputfile <$> theDocument
     fileinput  <- getDataFn' (lookInput "file")
 
     mft        <- case fileinput of
@@ -1710,22 +1727,22 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
         let content' = either (const content1') identity (B64.decode content1')
 
         pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
-        fileid'    <- saveNewFile (T.pack filename) pdfcontent
-        return $ Just (fileid', takeBaseName filename)
+        file       <- saveNewFile (T.pack filename) pdfcontent
+        return $ Just (file, takeBaseName filename)
 
     case mft of
-      Just (fileid, filename) -> do
-        dbUpdate $ AttachFile fileid actor
+      Just (file, filename) -> do
+        dbUpdate $ SetInputMainfile (fileid file) actor
         apiGuardL' . dbUpdate $ SetDocumentTitle (T.pack filename) actor
         case moldfileid of
           Just oldfileid -> do
             start <- liftIO getCurrentTime
-            recalculateAnchoredFieldPlacements oldfileid fileid
+            recalculateAnchoredFieldPlacements oldfileid (fileid file)
             stop <- liftIO getCurrentTime
             logInfo "recalculateAnchoredFieldPlacements timing"
               $ object ["duration" .= (realToFrac $ diffUTCTime stop start :: Double)]
           Nothing -> return ()
-      Nothing -> dbUpdate $ DetachFile actor
+      Nothing -> dbUpdate $ RemoveInputMainfile actor
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 
@@ -1776,7 +1793,7 @@ apiCallV1SetSignatoryAttachment did sid aname =
         =<< getSignatoryAttachment sid aname
         <$> theDocument
       filedata <- getDataFn' (lookInput "file")
-      mfileid  <- case filedata of
+      mfile    <- case filedata of
         (Just (Input contentspec (Just filename) _contentType)) -> Just <$> do
           content1 <- case contentspec of
             Left  filepath -> liftIO $ BSL.readFile filepath
@@ -1806,9 +1823,12 @@ apiCallV1SetSignatoryAttachment did sid aname =
           saveNewFile (T.pack $ Windows.takeFileName filename) content
         _ -> return Nothing
       ctx <- getContext
-      case mfileid of
-        Just fileid ->
-          (dbUpdate . SaveSigAttachment sid sigattach fileid =<< signatoryActor ctx sl)
+      case mfile of
+        Just file ->
+          (   dbUpdate
+            .   SaveSigAttachment sid sigattach (fileid file)
+            =<< signatoryActor ctx sl
+            )
             `catchDBExtraException` (\(DBBaseLineConditionIsFalse _) ->
                                       throwM . SomeDBExtraException $ conflictError
                                         "Inconsistent state - attachment is already set"
@@ -1953,8 +1973,9 @@ fieldsToFieldsWithFiles (field : fields) = do
     (fi, FileFTV bs ) -> if BS.null bs
       then return ((fi, FileFV Nothing) : changeFields, files')
       else do
-        fileid <- saveNewFile "signature.png" bs
-        return ((fi, FileFV (Just fileid)) : changeFields, (fileid, bs) : files')
+        file <- saveNewFile "signature.png" bs
+        return
+          ((fi, FileFV . Just $ fileid file) : changeFields, (fileid file, bs) : files')
 
 -- Mandatory attachments parameters
 getAcceptedAuthorAttachments :: (Kontrakcja m) => m [FileID]
@@ -1983,11 +2004,20 @@ guardThatDocumentIsReadableBySignatories doc = do
     <> ")"
     )
 
-guardNoPades :: (MonadBase IO m, MonadDB m, MonadThrow m) => SealingMethod -> m ()
-guardNoPades sealingMethod = do
-  when (sealingMethod == Pades) $ do
+guardNoPades
+  :: (MonadBase IO m, MonadDB m, MonadThrow m) => DigitalSignatureMethod -> m ()
+guardNoPades digitalSignatureMethod = do
+  when (digitalSignatureMethod == Pades) $ do
     (throwM . SomeDBExtraException) $ actionNotAvailable
       (  "This document or the user group of its author is configured "
       <> "to only use PAdES signatures, which is not supported in this API. "
+      <> "Please use API V2 instead."
+      )
+
+guardNoQES :: (MonadBase IO m, MonadDB m, MonadThrow m) => Document -> m ()
+guardNoQES doc = do
+  when (documentUsesVerimiQes doc) $ do
+    (throwM . SomeDBExtraException) $ actionNotAvailable
+      (  "This document uses QES signing, which is not supported in this API. "
       <> "Please use API V2 instead."
       )

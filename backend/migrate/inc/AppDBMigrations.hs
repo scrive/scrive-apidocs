@@ -290,4 +290,12 @@ kontraMigrations =
   , createTableFlowUserAuthConfigs
   , createCallbackConsumersTable
   , createCallbacksTable
+  , createFileComposite
+  , updateMainFileComposite
+  , updateDocumentCompositeWithNewMainFile
+  , addSeparateEvidenceFileToMainFiles
+  , addFieldsForVerimi
+  , eidSignaturesUpdatePersonalNumberCheck
+  , addEvidenceSecretToDocuments
+  , featureFlagsAddVerimiQesToSign
   ]

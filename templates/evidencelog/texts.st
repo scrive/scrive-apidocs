@@ -1,7 +1,14 @@
+AttachExtendedQesEvidenceFileEvidenceLog=Scrive eSign sealed the evidence file with a keyless digital signature.
+###
+AttachExtendedQesEvidenceFileEvidenceArchive=$_AttachExtendedQesEvidenceFileEvidenceTextSimple()$
+###
 AttachExtendedSealedFileEvidenceLog=Scrive eSign sealed the Evidence Package (as defined in the Service Description) with a keyless digital signature.
 ###
 AttachExtendedSealedFileEvidenceArchive=$_AttachExtendedSealedFileEvidenceTextSimple()$
 ###
+AttachDigitalSignatureQesEvidenceFileEvidenceLog=Scrive eSign sealed the Scrive evidence file with a digital signature.
+###
+AttachDigitalSignatureQesEvidenceFileEvidenceArchive=$_AttachGuardtimeQesEvidenceFileEvidenceTextSimple()$
 ###
 AttachDigitalSignatureSealedFileEvidenceLog=Scrive eSign sealed the final PDF with a digital signature.
 ###
@@ -12,6 +19,9 @@ AttachSealedFileEvidenceLog=Scrive eSign prepared the final PDF, including evide
 ###
 AttachSealedFileEvidenceArchive=$_AttachSealedFileEvidenceTextSimpleArchive()$
 ###
+VerimiQesEvidenceFilePreparedLog=The QES signing process has been completed and the Scrive evidence file has been prepared. The SHA-256 hash of the QES-signed pdf file this Scrive evidence file belongs to is $hash$.
+###
+VerimiQesEvidenceFilePreparedArchive=$_VerimiQesEvidenceFilePreparedTextSimpleArchive()$
 ###
 AutomaticReminderSentLogEmail=Scrive eSign sent an automatic reminder to sign using email to <span class="signatory"/> at the request of <span class="actor"/>.
 ###
@@ -84,6 +94,8 @@ ChangeAuthenticationToSignFromOnfidoDocumentCheckLog=$ChangeAuthenticationToSign
 ###
 ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToSignFrom(auth='“Onfido (document check + facial comparison)”')$
 ###
+ChangeAuthenticationToSignFromVerimiQesLog=$ChangeAuthenticationToSignFrom(auth='“Verimi QES  ”')$
+###
 ChangeAuthenticationToSignToStandardLog=$ChangeAuthenticationToSignTo(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToSignToSMSPinLog=$ChangeAuthenticationToSignTo(auth='“PIN by SMS”')$
@@ -101,6 +113,8 @@ ChangeAuthenticationToSignToFITupasLog=$ChangeAuthenticationToSignTo(auth='“Fi
 ChangeAuthenticationToSignToOnfidoDocumentCheckLog=$ChangeAuthenticationToSignTo(auth='“Onfido (document check only)”')$
 ###
 ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToSignTo(auth='“Onfido (document check + facial comparison)”')$
+###
+ChangeAuthenticationToSignToVerimiQesLog=$ChangeAuthenticationToSignTo(auth='“Verimi QES  ”')$
 ###
 ChangeAuthenticationToViewFromStandardLog=$ChangeAuthenticationToViewFrom(auth='“no extra authentication”')$
 ###
@@ -637,6 +651,13 @@ $if(signed_text)$
 <pre style='white-space:normal'>$signed_text$</pre>
 $endif$
 <br/>
+$if(provider_verimi)$
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  $if(signatory_verified_mobile)$<br/>Mobile: $signatory_verified_mobile$$endif$
+  $if(signatory_verified_email)$<br/>Email: $signatory_verified_email$$endif$
+</p>
+$endif$
 $if(provider_sebankid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
@@ -799,7 +820,7 @@ $endif$
 ###
 provider=$if(provider_sebankid)$CGI$elseif(provider_sebankid_eidservice)$the BankID network$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$elseif(provider_onfido)$$if(onfido_document)$Onfido (document check only)$else$Onfido (document check + facial comparison)$endif$$endif$
 ###
-providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_sebankid_eidservice)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish FTN$elseif(provider_onfido)$Onfido$endif$
+providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_sebankid_eidservice)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish FTN$elseif(provider_onfido)$Onfido$elseif(provider_verimi)$Verimi$endif$
 ###
 AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$

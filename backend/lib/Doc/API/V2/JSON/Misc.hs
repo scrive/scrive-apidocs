@@ -14,7 +14,7 @@ module Doc.API.V2.JSON.Misc (
 , unjsonSignatoryAttachment
 , unjsonHighlightedPage
 , unjsonDocumentTag
-, unjsonMaybeMainFile
+, unjsonMaybeFile
 , unjsonSignatoryScreenshots
 , unjsonCSVUpload
 , evidenceAttachmentsToJSONBS
@@ -35,6 +35,7 @@ import qualified Data.Text as T
 import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.DocumentID
+import File.Types
 import KontraLink
 import User.Lang
 import qualified Data.ByteString.RFC2397 as RFC2397
@@ -106,6 +107,7 @@ unjsonAuthenticationToSignMethod = unjsonEnumBy
   , (FITupasAuthenticationToSign            , "fi_tupas")
   , (OnfidoDocumentCheckAuthenticationToSign, "onfido_document_check")
   , (OnfidoDocumentAndPhotoCheckAuthenticationToSign, "onfido_document_and_photo_check")
+  , (VerimiQesAuthenticationToSign          , "verimi_qes")
   ]
 
 unjsonDeliveryMethod :: UnjsonDef DeliveryMethod
@@ -185,13 +187,13 @@ unjsonDocumentTag =
                                                                           "Value of tag"
 
 -- We should not introduce instance for MainFile since this can't be really parsed. And instance for Maybe MainFile would be missleading
-unjsonMaybeMainFile :: UnjsonDef (Maybe MainFile)
-unjsonMaybeMainFile =
+unjsonMaybeFile :: UnjsonDef (Maybe File)
+unjsonMaybeFile =
   nothingToNullDef
     .  objectOf
     $  Nothing
-    <$ fieldOpt "id"   (fmap mainfileid)   "Id of file"
-    <* fieldOpt "name" (fmap mainfilename) "Name of file"
+    <$ fieldOpt "id"   (fmap fileid)   "Id of file"
+    <* fieldOpt "name" (fmap filename) "Name of file"
 
 unjsonScreenshots :: UnjsonDef Screenshot.Screenshot
 unjsonScreenshots =

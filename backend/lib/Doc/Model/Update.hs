@@ -3,11 +3,15 @@ module Doc.Model.Update
   , ArchiveDocument(..)
   , runArchiveAction
   , runArchiveActionWithAllRoles
-  , AttachFile(..)
-  , DetachFile(..)
-  , AppendSealedFile(..)
-  , AppendExtendedSealedFile(..)
-  , AppendReflattenedFile(..)
+  , SetInputMainfile(..)
+  , RemoveInputMainfile(..)
+  , AppendPendingVerimiQesFile(..)
+  , AppendClosedFileWithDigitalSignatureEvidence(..)
+  , AppendClosedVerimiQesFileWithDigitalSignatureEvidence(..)
+  , AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence(..)
+  , AppendExtendedGuardTimeSignedClosedVerimiQesFileWithDigitalSignatureEvidence(..)
+  , AppendReflattenedInputFile(..)
+  , AppendClosedVerimiQesFileWithoutDigitalSignature(..)
   , CancelDocument(..)  , ChangeSignatoryEmail(..)
   , ChangeSignatoryPhone(..)
   , ChangeAuthenticationToViewMethod(..)
@@ -86,6 +90,7 @@ module Doc.Model.Update
   , PurgeTimeoutedSignatoryAccessTokens(..)
   , ExtendSignatoryAccessTokensForAccessBeforeClosing(..)
   , TransferDocument(..)
+  , InsertFreshEvidenceFileSecret(..)
   ) where
 
 import Control.Arrow (second)
@@ -95,11 +100,13 @@ import Control.Monad.State.Class
 import Crypto.RNG
 import Data.Decimal (realFracToDecimal)
 import Data.Int
+import Data.Map.Strict (Map)
 import Data.Time
 import Log
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
@@ -114,13 +121,15 @@ import DB
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.Conditions
+import Doc.DigitalSignatureStatus
+  ( DigitalSignatureStatus(..), isDigitallySigned
+  )
 import Doc.DocStateCommon
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model.Query
-import Doc.SealStatus (SealStatus(..), isSealed)
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
@@ -131,6 +140,7 @@ import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
 import File.Storage
+import File.Types
 import Folder.Types
 import IPAddress
 import Log.Identifier
@@ -360,17 +370,35 @@ insertAuthorAttachments did atts = runQuery_ . sqlInsert "author_attachments" $ 
   sqlSetList "add_to_sealed_file" $ authorattachmentaddtosealedfile <$> atts
   sqlSetList "file_id" $ authorattachmentfileid <$> atts
 
-insertMainFiles :: MonadDB m => DocumentID -> [MainFile] -> m ()
-insertMainFiles _          []     = return ()
-insertMainFiles documentid rfiles = do
-  -- rfiles should be inserted with descending id: newer files come first in rfiles
-  -- FIXME: this is too error prone, needs to be solved at the type level.
-  let files = reverse rfiles
-  runQuery_ . sqlInsert "main_files" $ do
-    sqlSet "document_id" documentid
-    sqlSetList "file_id" $ mainfileid <$> files
-    sqlSetList "document_status" $ mainfiledocumentstatus <$> files
-    sqlSetList "seal_status" $ mainfilesealstatus <$> files
+insertDocumentFileHistory
+  :: MonadDB m => DocumentID -> Map DocumentFileID DocumentFile -> m ()
+insertDocumentFileHistory documentid filehistory
+  | [] <- rows = return ()
+  | otherwise = do
+    runQuery_ . sqlInsert "main_files" $ do
+      sqlSet "document_id" documentid
+      sqlSetList "document_status" $ map (^. _1) rows
+      sqlSetList "seal_status" $ map (^. _2) rows
+      sqlSetList "file_id" $ map (^. _3) rows
+      sqlSetList "evidence_file_id" $ map (^. _4) rows
+  where
+        -- filehistory needs to be inserted in order of ascending id: older
+        -- files are inserted first (and are thus again assigned a lower id).
+        rows = map (documentFileToRow . snd) $ Map.toAscList filehistory
+
+documentFileToRow
+  :: DocumentFile -> (DocumentStatus, DigitalSignatureStatus, FileID, Maybe FileID)
+documentFileToRow InputFile {..} = (Preparation, Missing, fileid mainfile, Nothing)
+documentFileToRow (ClosedFile DigitallySignedFile {..}) =
+  (Closed, digitalSignatureStatus, fileid digitallySignedFile, Nothing)
+documentFileToRow PendingVerimiQesFile {..} =
+  (Pending, Missing, fileid mainfileWithSomeQesSignatures, Nothing)
+documentFileToRow ClosedVerimiQesFile {..} | DigitallySignedFile {..} <- evidenceFile =
+  ( Closed
+  , digitalSignatureStatus
+  , fileid mainfileWithQesSignatures
+  , Just $ fileid digitallySignedFile
+  )
 
 insertSignatoryScreenshots
   :: ( CryptoRNG m
@@ -395,7 +423,7 @@ insertSignatoryScreenshots l = do
         | (slid, Just s) <- map (second part) l
         ]
   (fileids :: [FileID]) <- forM (zip types ss) $ \(t, s) -> do
-    saveNewFile (t <> "_screenshot.jpeg") s
+    fileid <$> saveNewFile (t <> "_screenshot.jpeg") s
   if null slids
     then return 0
     else runQuery . sqlInsert "signatory_screenshots" $ do
@@ -455,13 +483,13 @@ insertDocument document@Document {..} = do
     sqlSet "show_arrow"          documentshowarrow
     sqlSet "folder_id"           documentfolderid
     sqlSet "user_group_to_impersonate_for_eid" documentusergroupforeid
-    sqlSet "sealing_method"      documentsealingmethod
+    sqlSet "sealing_method"      documentdigitalsignaturemethod
     sqlSet "add_metadata_to_pdf" documentaddmetadatatopdf
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
   insertAuthorAttachments did documentauthorattachments
-  insertMainFiles did documentmainfiles
+  insertDocumentFileHistory did documentfilehistory
   void $ insertDocumentTags False did documenttags
   newdocument <- dbQuery $ GetDocumentByDocumentID did
   assertEqualDocuments document newdocument
@@ -612,9 +640,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 -- | Attach a main file to a document associating it with preparation
 -- status.  Any old main file in preparation status will be removed.
 -- Can only be done on documents in preparation.
-data AttachFile = AttachFile FileID Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AttachFile () where
-  dbUpdate (AttachFile fid a) = updateDocumentWithID $ \did -> do
+data SetInputMainfile = SetInputMainfile FileID Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetInputMainfile () where
+  dbUpdate (SetInputMainfile fid a) = updateDocumentWithID $ \did -> do
     runQuery_ . sqlDelete "main_files" $ do
       sqlWhereEq "document_id"     did
       sqlWhereEq "document_status" Preparation
@@ -646,9 +674,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AttachF
     return ()
 
 -- | Detach main files in Preparation status.  Document must be in Preparation.
-newtype DetachFile = DetachFile Actor
-instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m DetachFile () where
-  dbUpdate (DetachFile a) = updateDocumentWithID $ \did -> do
+newtype RemoveInputMainfile = RemoveInputMainfile Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m RemoveInputMainfile () where
+  dbUpdate (RemoveInputMainfile a) = updateDocumentWithID $ \did -> do
     runQuery_ . sqlDelete "main_files" $ do
       sqlWhereEq "document_id"     did
       sqlWhereEq "document_status" Preparation
@@ -659,50 +687,102 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m DetachFile () where
         sqlWhereDocumentIsNotReallyDeletedByAuthor
     updateMTimeAndObjectVersion (actorTime a)
 
+newtype AppendPendingVerimiQesFile = AppendPendingVerimiQesFile File
+instance (MonadTime m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendPendingVerimiQesFile () where
+  dbUpdate (AppendPendingVerimiQesFile file) = do
+    updateDocumentWithID $ \did -> do
+      now <- currentTime
+      insertDocumentFile did $ PendingVerimiQesFile file
+      updateMTimeAndObjectVersion now
+data AppendClosedVerimiQesFileWithoutDigitalSignature = AppendClosedVerimiQesFileWithoutDigitalSignature File File Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendClosedVerimiQesFileWithoutDigitalSignature () where
+  dbUpdate (AppendClosedVerimiQesFileWithoutDigitalSignature mainfile evidencefile actor)
+    = do
+      updateDocumentWithID $ \did -> do
+        insertDocumentFile did
+          $ ClosedVerimiQesFile mainfile (DigitallySignedFile evidencefile Missing)
+        updateMTimeAndObjectVersion (actorTime actor)
+
 -- | Append a sealed file to a document, updating modification time.
 -- If it has a digital signature, generate an event.
-data AppendSealedFile = AppendSealedFile FileID SealStatus Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendSealedFile () where
-  dbUpdate (AppendSealedFile fid status actor) = do
+data AppendClosedFileWithDigitalSignatureEvidence = AppendClosedFileWithDigitalSignatureEvidence DigitallySignedFile Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendClosedFileWithDigitalSignatureEvidence () where
+  dbUpdate (AppendClosedFileWithDigitalSignatureEvidence digitallySignedMainfile actor) =
+    do
+      updateDocumentWithID $ \did -> do
+        insertDocumentFile did $ ClosedFile digitallySignedMainfile
+        updateMTimeAndObjectVersion (actorTime actor)
+      when (isDigitallySigned $ digitalSignatureStatus digitallySignedMainfile) $ do
+        void . dbUpdate $ InsertEvidenceEvent AttachDigitalSignatureSealedFileEvidence
+                                              (return ())
+                                              actor
+
+data AppendClosedVerimiQesFileWithDigitalSignatureEvidence = AppendClosedVerimiQesFileWithDigitalSignatureEvidence File DigitallySignedFile Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendClosedVerimiQesFileWithDigitalSignatureEvidence () where
+  dbUpdate (AppendClosedVerimiQesFileWithDigitalSignatureEvidence mainfileWithQesSignatures digitallySignedEvidenceFile actor)
+    = do
+      updateDocumentWithID $ \did -> do
+        insertDocumentFile did
+          $ ClosedVerimiQesFile { evidenceFile = digitallySignedEvidenceFile, .. }
+        updateMTimeAndObjectVersion (actorTime actor)
+      when (isDigitallySigned $ digitalSignatureStatus digitallySignedEvidenceFile) $ do
+        void . dbUpdate $ InsertEvidenceEvent
+          AttachDigitalSignatureQesEvidenceFileEvidence
+          (return ())
+          actor
+
+newtype InsertFreshEvidenceFileSecret = InsertFreshEvidenceFileSecret ()
+instance (CryptoRNG m, MonadTime m, MonadThrow m, DocumentMonad m) => DBUpdate m InsertFreshEvidenceFileSecret () where
+  dbUpdate (InsertFreshEvidenceFileSecret ()) = do
     updateDocumentWithID $ \did -> do
-      appendSealedFile did fid status
-      updateMTimeAndObjectVersion (actorTime actor)
-    when (isSealed status) $ do
-      void . dbUpdate $ InsertEvidenceEvent AttachDigitalSignatureSealedFileEvidence
-                                            (return ())
-                                            actor
+      secret :: MagicHash <- random
+      kRun1OrThrowWhyNot . sqlUpdate "documents" $ do
+        sqlSet "evidence_file_secret" $ Just secret
+        sqlWhereDocumentIDIs did
+      currentTime >>= updateMTimeAndObjectVersion
 
 -- | Append an extended sealed file to a document, as a result of
 -- improving an already sealed document.
-data AppendExtendedSealedFile = AppendExtendedSealedFile FileID SealStatus Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendExtendedSealedFile () where
-  dbUpdate (AppendExtendedSealedFile fid status actor) = do
-    updateDocumentWithID $ \did -> do
-      appendSealedFile did fid status
-    void . dbUpdate $ InsertEvidenceEvent AttachExtendedSealedFileEvidence
-                                          (return ())
-                                          actor
+data AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence = AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence DigitallySignedFile Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence () where
+  dbUpdate (AppendExtendedGuardTimeSignedClosedFileWithDigitalSignatureEvidence digitallySignedMainfile actor)
+    = do
+      updateDocumentWithID $ \did -> do
+        insertDocumentFile did $ ClosedFile digitallySignedMainfile
+      void . dbUpdate $ InsertEvidenceEvent AttachExtendedSealedFileEvidence
+                                            (return ())
+                                            actor
 
-appendSealedFile
-  :: (MonadDB m, MonadThrow m, TemplatesMonad m)
-  => DocumentID
-  -> FileID
-  -> SealStatus
-  -> m ()
-appendSealedFile did fid status = do
+data AppendExtendedGuardTimeSignedClosedVerimiQesFileWithDigitalSignatureEvidence = AppendExtendedGuardTimeSignedClosedVerimiQesFileWithDigitalSignatureEvidence File DigitallySignedFile Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendExtendedGuardTimeSignedClosedVerimiQesFileWithDigitalSignatureEvidence () where
+  dbUpdate (AppendExtendedGuardTimeSignedClosedVerimiQesFileWithDigitalSignatureEvidence mainfileWithQesSignatures digitallySignedEvidenceFile actor)
+    = do
+      updateDocumentWithID $ \did -> do
+        insertDocumentFile did
+          $ ClosedVerimiQesFile { evidenceFile = digitallySignedEvidenceFile, .. }
+      void . dbUpdate $ InsertEvidenceEvent AttachExtendedQesEvidenceFileEvidence
+                                            (return ())
+                                            actor
+
+insertDocumentFile :: (MonadDB m, MonadThrow m) => DocumentID -> DocumentFile -> m ()
+insertDocumentFile did docfile =
   kRun1OrThrowWhyNot . sqlInsertSelect "main_files" "" $ do
-    sqlSet "document_id"     did
-    sqlSet "file_id"         fid
-    sqlSet "document_status" Closed
-    sqlSet "seal_status"     status
+    sqlSet "document_id" did
+
+    let (document_status, seal_status, file_id, evidence_file_id) =
+          documentFileToRow docfile
+    sqlSet "document_status"  document_status
+    sqlSet "seal_status"      seal_status
+    sqlSet "file_id"          file_id
+    sqlSet "evidence_file_id" evidence_file_id
     sqlWhereExists . sqlSelect "documents" $ do
       sqlWhereDocumentIDIs did
-      sqlWhereDocumentStatusIs Closed
+      sqlWhereDocumentStatusIs document_status
       sqlWhereDocumentWasNotPurged
 
-data AppendReflattenedFile = AppendReflattenedFile DocumentID FileID
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendReflattenedFile () where
-  dbUpdate (AppendReflattenedFile did fid) = do
+data AppendReflattenedInputFile = AppendReflattenedInputFile DocumentID FileID
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AppendReflattenedInputFile () where
+  dbUpdate (AppendReflattenedInputFile did fid) = do
     kRun1OrThrowWhyNot . sqlInsertSelect "main_files" "" $ do
       sqlSet "document_id"     did
       sqlSet "file_id"         fid
@@ -1070,6 +1150,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         -- Onfido has no obligatory fields
         (False, OnfidoDocumentCheckAuthenticationToSign) -> return ()
         (False, OnfidoDocumentAndPhotoCheckAuthenticationToSign) -> return ()
+        -- Verimi has no obligatory fields (well, email... oh whatever)
+        (False, VerimiQesAuthenticationToSign          ) -> return ()
       -- If newAuthToSign needs PersonalNumber we need to make sure the field
       -- exists and is obligatory, and maybe set to the value provided
       when (authToSignNeedsPersonalNumber newAuthToSign) $ do
@@ -1147,7 +1229,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBUpdate m PreparationToPending () where
   dbUpdate (PreparationToPending actor tzn) = do
-    sealingMethod            <- getSealingMethodForDocument =<< theDocument
+    digitalSignatureMethod   <- getDigitalSignatureMethodForDocument =<< theDocument
     addMetadataToPDF         <- getAddMetadataToPDFForDocument =<< theDocument
     forceHidePersonalNumbers <- getForceHidePersonalNumbers =<< theDocument
     -- We determine the sealing method (currently Guardtime or PAdES) using
@@ -1179,7 +1261,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadBase IO m, MonadMask m) => DBU
         lang :: Lang <-
           kRunAndFetch1OrThrowWhyNot runIdentity . sqlUpdate "documents" $ do
             sqlSet "status"              Pending
-            sqlSet "sealing_method"      sealingMethod
+            sqlSet "sealing_method"      digitalSignatureMethod
             sqlSet "add_metadata_to_pdf" addMetadataToPDF
             sqlSetCmd "timeout_time"
               $   "cast ("
@@ -1902,6 +1984,8 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
         (Just (EIDServiceSEBankIDSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs SEBankIDAuthenticationToSign
+        (Just (EIDServiceVerimiQesSignature_ _), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIs VerimiQesAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
         (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
         (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
@@ -2009,6 +2093,13 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           F.value "provider_sebankid_eidservice" True
           F.value "signature" $ B64.encode eidServiceSEBankIDSigSignature
           F.value "ocsp_response" $ B64.encode eidServiceSEBankIDSigOcspResponse
+        (Just (EIDServiceVerimiQesSignature_ EIDServiceVerimiQesSignature {..}), _) -> do
+          F.value "hide_pn" $ signatorylinkhidepn sl
+          F.value "eleg" True
+          F.value "provider_verimi" True
+          F.value "signatory_name" eidServiceVerimiSigName
+          F.value "signatory_verified_mobile" eidServiceVerimiSigVerifiedPhone
+          F.value "signatory_verified_email" eidServiceVerimiSigVerifiedEmail
         (Nothing, Just _) -> do
           F.value "sms_pin" True
           F.value "phone" $ getMobile sl
@@ -2981,8 +3072,8 @@ assertEqualDocuments d1 d2
         $  map
              (\f -> f d1 d2)
              [ checkEqualBy (==)            "documenttitle"        documenttitle
-             , checkEqualBy (==)            "documentfiles"        documentfile
-             , checkEqualBy (==)            "documentsealedfiles"  documentsealedfile
+             , checkEqualBy (==)            "documentfiles"        documentinputfile
+             , checkEqualBy (==)            "documentsealedfiles"  documentclosedmainfile
              , checkEqualBy (==)            "documentstatus"       documentstatus
              , checkEqualBy (==)            "documenttype"         documenttype
              , checkEqualBy eqUtcTime       "documentctime"        documentctime
@@ -3001,7 +3092,9 @@ assertEqualDocuments d1 d2
              , checkEqualBy (==) "documentlang"             documentlang
              , checkEqualBy (==) "documentapiv1callbackurl" documentapiv1callbackurl
              , checkEqualBy (==) "documentapiv2callbackurl" documentapiv2callbackurl
-             , checkEqualBy (==) "documentsealstatus"       documentsealstatus
+             , checkEqualBy (==)
+                            "documentdigitalsignaturestatus"
+                            documentdigitalsignaturestatus
              , checkEqualBy (==)
                             "documentsignatorylinks count"
                             (length . documentsignatorylinks)

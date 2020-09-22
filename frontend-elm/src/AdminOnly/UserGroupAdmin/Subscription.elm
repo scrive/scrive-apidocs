@@ -139,6 +139,7 @@ type alias FeatureFlags =
     , canUseFIAuthenticationToSign : Bool
     , canUseDocumentPartyNotifications : Bool
     , canUseVerimiAuthenticationToView : Bool
+    , canUseVerimiQesToSign : Bool
     , canUseIdinAuthenticationToView : Bool
     , canUseIdinAuthenticationToSign : Bool
     , canUseOnfidoAuthenticationToSign : Bool
@@ -294,6 +295,7 @@ defaultFeatureFlags =
     , canUseFIAuthenticationToSign = False
     , canUseDocumentPartyNotifications = False
     , canUseVerimiAuthenticationToView = False
+    , canUseVerimiQesToSign = False
     , canUseIdinAuthenticationToView = False
     , canUseIdinAuthenticationToSign = False
     , canUseOnfidoAuthenticationToSign = False
@@ -338,6 +340,7 @@ ffKeyAccessPairs =
     , ( "can_use_fi_authentication_to_sign", ( .canUseFIAuthenticationToSign, \ff v -> { ff | canUseFIAuthenticationToSign = v } ) )
     , ( "can_use_document_party_notifications", ( .canUseDocumentPartyNotifications, \ff v -> { ff | canUseDocumentPartyNotifications = v } ) )
     , ( "can_use_verimi_authentication_to_view", ( .canUseVerimiAuthenticationToView, \ff v -> { ff | canUseVerimiAuthenticationToView = v } ) )
+    , ( "can_use_verimi_qes_to_sign", ( .canUseVerimiQesToSign, \ff v -> { ff | canUseVerimiQesToSign = v } ) )
     , ( "can_use_idin_authentication_to_view", ( .canUseIdinAuthenticationToView, \ff v -> { ff | canUseIdinAuthenticationToView = v } ) )
     , ( "can_use_idin_authentication_to_sign", ( .canUseIdinAuthenticationToSign, \ff v -> { ff | canUseIdinAuthenticationToSign = v } ) )
     , ( "can_use_onfido_authentication_to_sign", ( .canUseOnfidoAuthenticationToSign, \ff v -> { ff | canUseOnfidoAuthenticationToSign = v } ) )

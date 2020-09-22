@@ -1,15 +1,15 @@
 module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     ( Address
     , PadAppMode(..)
-    , SealingMethod(..)
+    , DigitalSignatureMethod(..)
     , Settings
     , SmsProvider(..)
     , UserGroup
     , afterSaved
     , decoder
     , enumPadAppMode
-    , enumSealingMethod
     , enumSEBankIDSigningProviderOverride
+    , enumDigitalSignatureMethod
     , enumSmsProvider
     , formValues
     , getInternalTag
@@ -172,14 +172,14 @@ setStringField name value ug =
                 )
                 ug
 
-        "sealingMethod" ->
+        "digitalSignatureMethod" ->
             modifySettings
                 (\s ->
                     let
                         mNewSealingMethod =
-                            Enum.fromString enumSealingMethod value
+                            Enum.fromString enumDigitalSignatureMethod value
                     in
-                    { s | sealingMethod = M.withDefault s.sealingMethod mNewSealingMethod }
+                    { s | digitalSignatureMethod = M.withDefault s.digitalSignatureMethod mNewSealingMethod }
                 )
                 ug
 
@@ -344,7 +344,7 @@ type alias Settings =
     , documentSessionTimeout : Maybe Int
     , portalUrl : Maybe String
     , eidServiceToken : Maybe String
-    , sealingMethod : SealingMethod
+    , digitalSignatureMethod : DigitalSignatureMethod
     , hasPostSignview : Bool
     , eidUseForSEView : Bool
     , appFrontend : Bool
@@ -400,7 +400,7 @@ settingsDecoder =
         |> DP.required "documentsessiontimeout" (JD.int |> JD.nullable)
         |> DP.required "portalurl" (JD.string |> JD.nullable)
         |> DP.required "eidservicetoken" (JD.string |> JD.nullable)
-        |> DP.required "sealingmethod" (JD.string |> JD.andThen sealingMethodDecoder)
+        |> DP.required "sealingmethod" (JD.string |> JD.andThen digitalSignatureMethodDecoder)
         |> DP.required "haspostsignview" JD.bool
         |> DP.required "eiduseforseview" JD.bool
         |> DP.required "appfrontend" JD.bool
@@ -432,13 +432,13 @@ tagDecoder =
 -- Sealing method
 
 
-type SealingMethod
+type DigitalSignatureMethod
     = GuardTime
     | Pades
 
 
-enumSealingMethod : Enum SealingMethod
-enumSealingMethod =
+enumDigitalSignatureMethod : Enum DigitalSignatureMethod
+enumDigitalSignatureMethod =
     let
         toString sm =
             case sm of
@@ -462,14 +462,14 @@ enumSealingMethod =
     makeEnum allValues toString toHumanString
 
 
-sealingMethodDecoder : String -> Decoder SealingMethod
-sealingMethodDecoder sealingMethodString =
-    case findEnumValue enumSealingMethod sealingMethodString of
+digitalSignatureMethodDecoder : String -> Decoder DigitalSignatureMethod
+digitalSignatureMethodDecoder sealingMethodString =
+    case findEnumValue enumDigitalSignatureMethod sealingMethodString of
         Err _ ->
             JD.fail <| "Cannot parse sealing method: " ++ sealingMethodString
 
-        Ok sealingMethod ->
-            JD.succeed sealingMethod
+        Ok digitalSignatureMethod ->
+            JD.succeed digitalSignatureMethod
 
 
 
@@ -631,7 +631,7 @@ formValuesSettings settings =
     , ( "companydocumentsessiontimeout", fromIntWithEmpty settings.documentSessionTimeout )
     , ( "companyportalurl", M.withDefault "" settings.portalUrl )
     , ( "companyeidservicetoken", M.withDefault "" settings.eidServiceToken )
-    , ( "companysealingmethod", Enum.toString enumSealingMethod settings.sealingMethod )
+    , ( "companysealingmethod", Enum.toString enumDigitalSignatureMethod settings.digitalSignatureMethod )
     , ( "companyhaspostsignview", boolToJson settings.hasPostSignview )
     , ( "companyeiduseforseview", boolToJson settings.eidUseForSEView )
     , ( "companyappfrontend", boolToJson settings.appFrontend )

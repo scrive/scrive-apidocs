@@ -5,7 +5,7 @@ import DB
 tableFiles :: Table
 tableFiles = tblTable
   { tblName       = "files"
-  , tblVersion    = 10
+  , tblVersion    = 11
   , tblColumns    =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
@@ -17,6 +17,19 @@ tableFiles = tblTable
     , tblColumn { colName = "purged_time", colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  }
+
+ctFile :: CompositeType
+ctFile = CompositeType
+  { ctName    = "file_c1"
+  , ctColumns = [ CompositeColumn { ccName = "id", ccType = BigIntT }
+                , CompositeColumn { ccName = "name", ccType = TextT }
+                , CompositeColumn { ccName = "amazon_url", ccType = TextT }
+                , CompositeColumn { ccName = "size", ccType = IntegerT }
+                , CompositeColumn { ccName = "checksum", ccType = BinaryT }
+                , CompositeColumn { ccName = "aes_key", ccType = BinaryT }
+                , CompositeColumn { ccName = "aes_iv", ccType = BinaryT }
+                ]
   }
 
 tableFilePurgeConsumers :: Table

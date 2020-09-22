@@ -23,6 +23,7 @@ data Person =
            , highlightedImages   :: [HighlightedImage]
            , identifiedNameText  :: Text
            , nameFromText        :: Text
+           , signatoryFieldName  :: Text  -- used for QES signature placement
            }
     deriving (Eq,Ord,Show,Read)
 
@@ -109,6 +110,42 @@ data PreSealSpec = PreSealSpec
     { pssInput  :: Text
     , pssOutput :: Text
     , pssFields :: [Field]
+    }
+    deriving (Eq,Ord,Show,Read)
+
+data VerimiQesSetupSpec = VerimiQesSetupSpec
+    { vqsInput  :: Text
+    , vqsOutput :: Text
+    , vqsFields :: [Field]
+    , vqsEvidenceAttachment :: SealAttachment
+    , vqsFilesList :: [FileDesc]
+    , vqsDocumentNumberText :: Text
+    , vqsVerificationLink :: Text
+    , vqsStaticTexts :: SealingTexts
+    , vqsPersons :: [Person]
+    , vqsLinkText       :: VerimiQesLinkText
+    }
+    deriving (Eq,Ord,Show,Read)
+
+data VerimiQesEvidenceSpec = VerimiQesEvidenceSpec
+    { vqeInput          :: Text
+    , vqeOutput         :: Text
+    , vqeDocumentNumberAndHashText :: Text
+    , vqePersons        :: [Person]
+    , vqeSecretaries    :: [Person]
+    , vqeInitiator      :: Maybe Person
+    , vqeInitialsText   :: Text
+    , vqeHostpart       :: Text
+    , vqeStaticTexts    :: SealingTexts
+    , vqeAttachments    :: [SealAttachment]
+    , vqeFilesList      :: [FileDesc]
+    }
+    deriving (Eq,Ord,Show,Read)
+
+data VerimiQesLinkText = VerimiQesLinkText
+    { vqsFirstWord :: Text
+    , vqsLinkWord  :: Text
+    , vqsLastWord  :: Text
     }
     deriving (Eq,Ord,Show,Read)
 

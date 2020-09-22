@@ -46,6 +46,8 @@ data ChargeableItem = CIStartingDocument
                     | CIIDINSignatureStarted
                     | CIOnfidoDocumentCheckSignatureStarted
                     | CIOnfidoDocumentAndPhotoCheckSignatureStarted
+                    | CIVerimiQesSignatureStarted
+                    | CIVerimiQesSignatureFinished
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -90,8 +92,9 @@ instance FromSQL ChargeableItem where
       30 -> return CIIDINSignatureStarted
       31 -> return CIOnfidoDocumentCheckSignatureStarted
       32 -> return CIOnfidoDocumentAndPhotoCheckSignatureStarted
-
-      _  -> throwM RangeError { reRange = [(1, 24)], reValue = n }
+      33 -> return CIVerimiQesSignatureStarted
+      34 -> return CIVerimiQesSignatureFinished
+      _  -> throwM RangeError { reRange = [(1, 34)], reValue = n }
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
@@ -127,6 +130,8 @@ instance ToSQL ChargeableItem where
   toSQL CIIDINSignatureStarted    = toSQL (30 :: Int16)
   toSQL CIOnfidoDocumentCheckSignatureStarted = toSQL (31 :: Int16)
   toSQL CIOnfidoDocumentAndPhotoCheckSignatureStarted = toSQL (32 :: Int16)
+  toSQL CIVerimiQesSignatureStarted = toSQL (33 :: Int16)
+  toSQL CIVerimiQesSignatureFinished = toSQL (34 :: Int16)
 
 
 -- | This type should be used only for serialization. Punishment will be imposed
@@ -194,4 +199,5 @@ instance ToJSON ChargeableItemEvent where
         "onfido_document_signature_started"
       eventTypeToJSON CIOnfidoDocumentAndPhotoCheckSignatureStarted =
         "onfido_document_and_face_signature_started"
-
+      eventTypeToJSON CIVerimiQesSignatureStarted  = "verimiqes_signature_started"
+      eventTypeToJSON CIVerimiQesSignatureFinished = "verimiqes_signature_finished"

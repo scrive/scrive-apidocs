@@ -630,13 +630,16 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return this.get("authentication_method_to_sign") == "nl_idin" && this.canHaveAuthenticationToSign();
     },
     fiTupasAuthenticationToSign: function() {
-        return this.get("authentication_method_to_sign") == "fi_tupas";
+        return this.get("authentication_method_to_sign") == "fi_tupas" && this.canHaveAuthenticationToSign();
     },
     onfidoDocumentCheckAuthenticationToSign: function() {
-      return this.get("authentication_method_to_sign") == "onfido_document_check";
+      return this.get("authentication_method_to_sign") == "onfido_document_check" && this.canHaveAuthenticationToSign();
     },
     onfidoDocumentAndPhotoCheckAuthenticationToSign: function() {
-      return this.get("authentication_method_to_sign") == "onfido_document_and_photo_check";
+      return this.get("authentication_method_to_sign") == "onfido_document_and_photo_check" && this.canHaveAuthenticationToSign();
+    },
+    verimiQesAuthenticationToSign: function() {
+      return this.get("authentication_method_to_sign") == "verimi_qes" && this.canHaveAuthenticationToSign();
     },
     emailDelivery: function() {
           return this.get("delivery_method") == "email";
@@ -973,7 +976,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         });
       }
       // maximum of 1 national EID is allowed per signatory
-      var eids = ["se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi"];
+      var eids = ["se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi", "verimi_qes"];
       return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
     },
     setAuthenticationToView: function(a) {
@@ -1191,7 +1194,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.hasNotificationEmail()
         || this.hasConfirmationEmail()
         || this.verimiAuthenticationToView()
-        || this.verimiAuthenticationToViewArchived();
+        || this.verimiAuthenticationToViewArchived()
+        || this.verimiQesAuthenticationToSign();
     },
     ensureEmail: function() {
         var signatory = this;

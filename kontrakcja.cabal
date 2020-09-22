@@ -328,7 +328,7 @@ Library
                  , Doc.Sealing.Model
                  , Doc.Sealing.Tables
                  , Doc.SealSpec
-                 , Doc.SealStatus
+                 , Doc.DigitalSignatureStatus
                  , Doc.SignatoryConsentQuestionID
                  , Doc.SignatoryFieldID
                  , Doc.SignatoryFieldUtils
@@ -352,7 +352,7 @@ Library
                  , Doc.Types.DocumentStatus
                  , Doc.Types.DocumentTag
                  , Doc.Types.HighlightedPage
-                 , Doc.Types.MainFile
+                 , Doc.Types.DocumentFile
                  , Doc.Types.SignatoryAccessToken
                  , Doc.Types.SignatoryAttachment
                  , Doc.Types.SignatoryConsentQuestion
@@ -408,7 +408,7 @@ Library
                  , FeatureFlags.Model
                  , FeatureFlags.Tables
                  , File.Conditions
-                 , File.File
+                 , File.Types
                  , File.FileID
                  , File.Migrations
                  , File.Model
@@ -554,7 +554,7 @@ Library
                  , Salesforce.AuthorizationWorkflow
                  , Salesforce.Conf
                  , Salesforce.Control
-                 , SealingMethod
+                 , DigitalSignatureMethod
                  , ServerUtils.ServerUtils
                  , Session.Constant
                  , Session.Cookies

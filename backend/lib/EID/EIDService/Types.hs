@@ -24,9 +24,10 @@ module EID.EIDService.Types (
   , EIDServiceNLIDINSignature(..)
   , EIDServiceFITupasSignature(..)
   , EIDServiceOnfidoSignature(..)
+  , OnfidoMethod(..)
   , EIDServiceNOBankIDSignature(..)
   , EIDServiceSEBankIDSignature(..)
-  , OnfidoMethod(..)
+  , EIDServiceVerimiQesSignature(..)
 
   -- Provider specific, can be refactored once redundant types above are removed
   , EIDServiceDKNemIDInternalProvider(..)
@@ -52,7 +53,7 @@ import Doc.Types.SignatoryLink
 import Log.Identifier
 import Session.SessionID
 
-newtype EIDServiceTransactionID = EIDServiceTransactionID T.Text
+newtype EIDServiceTransactionID = EIDServiceTransactionID Text
   deriving (Eq, Ord, Read, Show)
 
 instance Identifier EIDServiceTransactionID where
@@ -60,20 +61,20 @@ instance Identifier EIDServiceTransactionID where
   idValue (EIDServiceTransactionID t) = stringIdentifier $ T.unpack t
 
 instance PQFormat EIDServiceTransactionID where
-  pqFormat = pqFormat @T.Text
+  pqFormat = pqFormat @Text
 
 instance FromSQL EIDServiceTransactionID where
-  type PQBase EIDServiceTransactionID = PQBase T.Text
+  type PQBase EIDServiceTransactionID = PQBase Text
   fromSQL mbase = EIDServiceTransactionID <$> fromSQL mbase
 
 instance ToSQL EIDServiceTransactionID where
-  type PQDest EIDServiceTransactionID = PQDest T.Text
+  type PQDest EIDServiceTransactionID = PQDest Text
   toSQL (EIDServiceTransactionID tid) = toSQL tid
 
-unsafeEIDServiceTransactionID :: T.Text -> EIDServiceTransactionID
+unsafeEIDServiceTransactionID :: Text -> EIDServiceTransactionID
 unsafeEIDServiceTransactionID = EIDServiceTransactionID
 
-fromEIDServiceTransactionID :: EIDServiceTransactionID -> T.Text
+fromEIDServiceTransactionID :: EIDServiceTransactionID -> Text
 fromEIDServiceTransactionID (EIDServiceTransactionID tid) = tid
 
 instance FromJSON EIDServiceTransactionID where
@@ -406,6 +407,13 @@ data EIDServiceNOBankIDSignature = EIDServiceNOBankIDSignature
   , eidServiceNOBankIDSigDateOfBirth :: Maybe Text
   , eidServiceNOBankIDSigSignedText :: Maybe Text
   , eidServiceNOBankIDSigCertificate :: Maybe Text
+  }
+  deriving (Eq, Ord, Show)
+
+data EIDServiceVerimiQesSignature = EIDServiceVerimiQesSignature
+  { eidServiceVerimiSigName            :: !Text
+  , eidServiceVerimiSigVerifiedEmail   :: !(Maybe Text)
+  , eidServiceVerimiSigVerifiedPhone   :: !(Maybe Text)
   }
   deriving (Eq, Ord, Show)
 

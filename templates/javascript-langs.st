@@ -441,6 +441,7 @@ javascriptLocalisation =
                , authenticationToSignFITupas : "$_designViewAddPartiesAuthenticationFITupas()$"
                , authenticationToSignOnfidoDocumentCheck : "$_designViewAddPartiesAuthenticationOnfidoDocCheck()$"
                , authenticationToSignOnfidoDocumentAndPhotoCheck : "$_designViewAddPartiesAuthenticationOnfidoDocAndPhotoCheck()$"
+               , authenticationToSignVerimiQes : "$_designViewAddPartiesAuthenticationVerimiQes()$"
                , confirmation : "$_designViewAddPartiesConfirmation()$"
                , confirmationEmail : "$_designViewAddPartiesConfirmationEmail()$"
                , confirmationSMS : "$_designViewAddPartiesConfirmationSMS()$"
@@ -538,6 +539,13 @@ javascriptLocalisation =
                , validExample: "$_designViewCustomValidationValidExample()$"
                , validExamplePlaceholder: "$_designViewCustomValidationValidExamplePlaceholder()$"
              }
+             , verimiQes : {
+                errorIncompatibleSigningMethod: "$_verimiQesErrorIncompatibleSigningMethod()$",
+                errorNonAuthorField: "$_verimiQesErrorNonAuthorField()$",
+                errorFieldEditableBySignatory : "$_verimiQesErrorFieldEditableBySignatory()$",
+                errorOrderConflict: "$_verimiQesErrorOrderConflict()$",
+                errorMissingAttachment: "$_verimiQesErrorMissingAttachment()$"
+             }
          }
          , validation : {
                 required: "$_nameRequired()$"
@@ -629,6 +637,7 @@ javascriptLocalisation =
              , pending  : "$_authorviewPending()$"
              , goToSignView : "$_authorviewGoToSignview()$"
              , downloadPdf : "$_DownloadPDF()$"
+             , downloadZip : "$_DownloadZIP()$"
              , optionallyRequestedFrom : "$_authorviewOptionallyRequestedFrom()$"
              , notUploaded : "$_authorviewNotUploaded()$"
          }
@@ -695,6 +704,7 @@ javascriptLocalisation =
                       , signNLConfirmationTitle : "$_elegSignNLConfirmationTitle()$"
                       , signFIConfirmationTitle : "$_elegSignFIConfirmationTitle()$"
                       , signOnfidoConfirmationTitle : "$_elegSignOnfidoConfirmationTitle()$"
+                      , signVerimiQesConfirmationTitle : "$_elegSignVerimiQesConfirmationTitle()$"
                       , signNOConfirmationTitle : "$_elegSignNOConfirmationTitle()$"
                       , signDKConfirmationTitle : "$_elegSignDKConfirmationTitle()$"
                       , signSEConfirmationText : "$_elegSignSEConfirmationText()$"
@@ -777,6 +787,7 @@ javascriptLocalisation =
               , authenticationToSignFITupas: "$_docviewSignatoryAuthenticationToSignFITupas()$"
               , authenticationToSignOnfidoDocumentCheck: "$_docviewSignatoryAuthenticationToSignOnfidoDocCheck()$"
               , authenticationToSignOnfidoDocumentAndPhotoCheck: "$_docviewSignatoryAuthenticationToSignOnfidoDocAndPhotoCheck()$"
+              , authenticationToSignVerimiQes : "$_designViewAddPartiesAuthenticationVerimiQes()$"
               , confirmation: "$_docviewSignatoryConfirmationMethodLabel()$"
               , confirmationEmail: "$_docviewSignatoryConfirmationEmail()$"
               , confirmationSMS: "$_docviewSignatoryConfirmationSMS()$"

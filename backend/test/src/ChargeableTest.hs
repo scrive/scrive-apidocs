@@ -8,6 +8,7 @@ import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
 import DB
+import DigitalSignatureMethod
 import Doc.API.V1.Calls
 import Doc.API.V2.AesonTestUtils (testRequestHelperNoAssert_)
 import Doc.API.V2.Calls
@@ -17,7 +18,7 @@ import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import File.Storage
-import SealingMethod
+import File.Types
 import SMS.SMS
 import SMS.Types (SMSProvider(..))
 import TestingUtil
@@ -136,13 +137,13 @@ test_startDocumentCharging = do
       filecontent <- liftIO $ BS.readFile filename
       file        <- saveNewFile (T.pack filename) filecontent
       doc         <- addRandomDocumentWithFile
-        file
+        (fileid file)
         (rdaDefault user)
-          { rdaTypes          = OneOf [Signable]
-          , rdaStatuses       = OneOf [Preparation]
+          { rdaTypes                   = OneOf [Signable]
+          , rdaStatuses                = OneOf [Preparation]
           , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
                              in  OneOf $ map (`replicate` signatory) [1 .. 10]
-          , rdaSealingMethods = OneOf [Guardtime]
+          , rdaDigitalSignatureMethods = OneOf [Guardtime]
           }
 
       True <- withDocument doc $ do

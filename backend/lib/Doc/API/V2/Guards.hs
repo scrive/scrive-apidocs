@@ -41,6 +41,7 @@ module Doc.API.V2.Guards (
 
 import Control.Conditional (whenM)
 import Data.Either (rights)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
@@ -342,7 +343,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSS
     isValidMobileForAuthenticationToView VerimiAuthenticationToView  _ _ = True
     isValidMobileForAuthenticationToView IDINAuthenticationToView    _ _ = True
 
--- | `guardCanSetAuthenticationToSignForSignatoryWithValue _ authToSign mSSN
+-- | `guardCanSetAuthenticationToSignForSignatoryWithValue _ newAuthToSign mSSN
 -- mMobile _` makes sure we can set the sign method to the given method. If the
 -- sign method requires a personal number, then we may also set an SSN as part
 -- of changing the signing method; if we aren't given an SSN and the signatory
@@ -362,23 +363,32 @@ guardCanSetAuthenticationToSignForSignatoryWithValue
   -> Maybe Text
   -> Document
   -> m ()
-guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc =
-  do
+guardCanSetAuthenticationToSignForSignatoryWithValue slid newAuthToSign mSSN mMobile doc
+  = do
     let sl                 = fromJust $ getSigLinkFor slid doc
+        oldAuthToSign      = signatorylinkauthenticationtosignmethod sl
         authToView         = signatorylinkauthenticationtoviewmethod sl
         authToViewArchived = signatorylinkauthenticationtoviewarchivedmethod sl
-    guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
+    guardAuthenticationMethodsCanMix authToView newAuthToSign authToViewArchived
+
+    -- We can't use QES in documents that weren't started as QES documents. In
+    -- practical terms this means we don't allow ever changing from QES to
+    -- non-QES method, and vice-versa.
+    when (oldAuthToSign == VerimiQesAuthenticationToSign) . apiError $ signatoryStateError
+      "Can't change signing method from a QES method to a non-QES method."
+    when (newAuthToSign == VerimiQesAuthenticationToSign) . apiError $ signatoryStateError
+      "Can't change signing method from a non-QES method to a QES method."
 
     -- Note that we have mSSN = Just ssn only if authToSignNeedsPersonalNumber
-    -- authToSign = True.
+    -- newAuthToSign = True.
     whenJust mSSN $ \ssn -> do
       when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl)
         . apiError
         $ signatoryStateError
             "The party has authenticated to view, therefore you can't change the authentication value"
 
-      -- validate is non-trivial iff authToSignNeedsPersonalNumber authToSign = True
-      let validate = case authToSign of
+      -- validate is non-trivial iff authToSignNeedsPersonalNumber newAuthToSign = True
+      let validate = case newAuthToSign of
             SEBankIDAuthenticationToSign            -> asValidSEBankIdPersonalNumber
             DKNemIDAuthenticationToSign             -> asValidDanishSSN
             StandardAuthenticationToSign            -> Good
@@ -388,6 +398,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             IDINAuthenticationToSign                -> Good
             OnfidoDocumentCheckAuthenticationToSign -> Good
             OnfidoDocumentAndPhotoCheckAuthenticationToSign -> Good
+            VerimiQesAuthenticationToSign           -> Good
 
       -- Empty is allowed only if we don't need it for
       -- AuthenticationToViewMethod
@@ -399,7 +410,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
                 "You provided an empty authentication value, needs a value for authentication to view"
         Bad -> do
           let
-            name = case authToSign of
+            name = case newAuthToSign of
               SEBankIDAuthenticationToSign -> "Swedish BankID"
               DKNemIDAuthenticationToSign  -> "Danish NemID"
               auth ->
@@ -411,9 +422,9 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
         Good _ -> return ()
 
     -- Note that we have mMobile = Just mobile only if
-    -- authToSignNeedsMobileNumer authToSign = True, which is only the case for
+    -- authToSignNeedsMobileNumer newAuthToSign = True, which is only the case for
     -- SMSPinAuthenticationToSign.
-    whenJust mMobile $ \mobile -> case authToSign of
+    whenJust mMobile $ \mobile -> case newAuthToSign of
       SMSPinAuthenticationToSign -> do
         -- If the signatory has authenticated to view with
         -- NOBankIDAuthenticationToView and a valid number, then we can't
@@ -458,6 +469,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
       FITupasAuthenticationToSign             -> return ()
       OnfidoDocumentCheckAuthenticationToSign -> return ()
       OnfidoDocumentAndPhotoCheckAuthenticationToSign -> return ()
+      VerimiQesAuthenticationToSign           -> return ()
 
 
 guardAuthenticationMethodsCanMix
@@ -530,8 +542,9 @@ guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()
 guardThatDocumentCanBeStarted = maybe (return ()) apiError . documentCanBeStarted
 
 documentCanBeStarted :: Document -> Maybe APIError
-documentCanBeStarted = fmap toApiError . listToMaybe . validateDocumentForStarting
-  where toApiError = documentStateError . errorExplanation
+documentCanBeStarted doc = case validateDocumentForStarting doc of
+  CanBeStarted               -> Nothing
+  CannotBeStarted (err :| _) -> Just . documentStateError $ errorExplanation err
 
 guardThatRadioButtonValuesAreValid
   :: Kontrakcja m

@@ -74,7 +74,7 @@ sendDocumentMails author = do
 
         asl  <- head . documentsignatorylinks <$> theDocument
         file <- addNewRandomFile
-        randomUpdate $ AttachFile file (systemActor $ ctx ^. #time)
+        randomUpdate $ SetInputMainfile file (systemActor $ ctx ^. #time)
 
         islf <- rand 10 arbitrary
 

@@ -82,7 +82,7 @@ import Doc.DocumentID
 import Doc.DocumentMonad
   ( DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM
   )
-import Doc.DocUtils (canSignatorySignNow, fileFromMainFile)
+import Doc.DocUtils (canSignatorySignNow)
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.Logging
@@ -96,9 +96,9 @@ import EvidenceLog.Model
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
   )
 import FeatureFlags.Model
-import File.File (fileid)
 import File.Model
 import File.Storage (getFileIDContents)
+import File.Types (fileid)
 import Happstack.Fields
 import InternalResponse
 import Kontra
@@ -283,13 +283,6 @@ handleAfterSigning slid = logSignatory slid $ do
 --
 -- Note: JavaScript should never be allowed to see magichash in any
 -- form. Therefore we do immediate redirect without any content.
---
--- Warning: iPhones have this problem: they randomly disable cookies
--- in Safari so cookies cannot be stored. This breaks all session
--- related machinery. Everybody is suffering from this. For now we
--- handle this as special case, but this is not secure and should just
--- be removed. To iPhone users with disabled cookies: tell them to
--- call Apple service and enable cookies (again) on their phone.
 handleSignShowSaveMagicHash
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleSignShowSaveMagicHash did slid mh =
@@ -667,7 +660,7 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
   guardThatDocumentIsReadableBySignatories doc
   if isClosed doc
     then do
-      file    <- guardJustM . fileFromMainFile $ documentsealedfile doc
+      file    <- guardJust $ documentclosedmainfile doc
       content <- getFileIDContents $ fileid file
       return $ respondWithPDF True content
     else respond404

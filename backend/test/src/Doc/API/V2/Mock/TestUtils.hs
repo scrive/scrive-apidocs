@@ -343,6 +343,8 @@ setMockDocSigLinkAuthToSignMethod i auth = setForSigNumberFromMockDoc
     toStrAuth OnfidoDocumentCheckAuthenticationToSign = "onfido_document_check"
     toStrAuth OnfidoDocumentAndPhotoCheckAuthenticationToSign =
       "onfido_document_and_photo_check"
+    toStrAuth VerimiQesAuthenticationToSign = "verimi_qes"
+
 
 getMockDocSigLinkPersonalNumber :: Int -> MockDoc -> String
 getMockDocSigLinkPersonalNumber i =

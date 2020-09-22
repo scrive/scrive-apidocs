@@ -4,7 +4,7 @@ module Doc.DocStateData (
   , module Doc.Types.DocumentStatus
   , module Doc.Types.DocumentTag
   , module Doc.Types.HighlightedPage
-  , module Doc.Types.MainFile
+  , module Doc.Types.DocumentFile
   , module Doc.Types.SignatoryAttachment
   , module Doc.Types.SignatoryConsentQuestion
   , module Doc.Types.SignatoryField
@@ -15,10 +15,10 @@ module Doc.DocStateData (
 import Doc.SignatoryFieldUtils
 import Doc.Types.AuthorAttachment
 import Doc.Types.Document
+import Doc.Types.DocumentFile
 import Doc.Types.DocumentStatus
 import Doc.Types.DocumentTag
 import Doc.Types.HighlightedPage
-import Doc.Types.MainFile
 import Doc.Types.SignatoryAttachment
 import Doc.Types.SignatoryConsentQuestion
 import Doc.Types.SignatoryField

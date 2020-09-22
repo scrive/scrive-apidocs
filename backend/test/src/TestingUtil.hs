@@ -110,6 +110,7 @@ import qualified Data.Aeson.Diff as A
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import qualified Test.HUnit as T
 
@@ -119,13 +120,14 @@ import BrandedDomain.Model
 import Context
 import DataRetentionPolicy
 import DB
+import DigitalSignatureMethod
 import Doc.Action
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus(Missing))
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model
-import Doc.SealStatus (SealStatus(Missing))
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.TestInvariants
@@ -133,10 +135,10 @@ import EID.CGI.GRP.Transaction.Model
 import EID.EIDService.Types
 import EID.Signature.Model
 import FeatureFlags.Model
-import File.File
 import File.FileID
 import File.Model
 import File.Storage
+import File.Types (fileid)
 import FlashMessage
 import Folder.Model
 import GuardTime
@@ -149,7 +151,6 @@ import MailContext
 import MinutesTime
 import PadApplication.Types
 import PdfToolsLambda.Monad
-import SealingMethod
 import Session.SessionID
 import SMS.Types (SMSProvider(..))
 import System.Random.CryptoRNG ()
@@ -258,8 +259,8 @@ instance Arbitrary PadAppMode where
 instance Arbitrary PaymentPlan where
   arbitrary = elements [FreePlan, OnePlan, TeamPlan, EnterprisePlan, TrialPlan]
 
-instance Arbitrary SealingMethod where
-  arbitrary = elements documentAllSealingMethods
+instance Arbitrary DigitalSignatureMethod where
+  arbitrary = elements documentAllDigitalSignatureMethods
 
 -- PostgreSQL will not store \NUL in DB
 genUnicodeString :: Gen String
@@ -366,10 +367,10 @@ instance Arbitrary DeliveryStatus where
 
 instance Arbitrary FeatureFlags where
   arbitrary = do
-    (a, b, c, d, e, f, g , h , i , j )   <- arbitrary
-    (k, l, m, n, o, p, q , r , s , t )   <- arbitrary
-    (u, v, w, x, z, y, aa, bb, cc, dd)   <- arbitrary
-    (ee, ff, gg, hh, ii, jj, kk, ll, mm) <- arbitrary
+    (a , b , c , d , e , f , g , h , i , j ) <- arbitrary
+    (k , l , m , n , o , p , q , r , s , t ) <- arbitrary
+    (u , v , w , x , z , y , aa, bb, cc, dd) <- arbitrary
+    (ee, ff, gg, hh, ii, jj, kk, ll, mm, nn) <- arbitrary
     return $ FeatureFlags { ffCanUseTemplates                  = a
                           , ffCanUseBranding                   = b
                           , ffCanUseAuthorAttachments          = c
@@ -390,6 +391,7 @@ instance Arbitrary FeatureFlags where
                           , ffCanUseStandardAuthenticationToView = p
                           , ffCanUseStandardAuthenticationToSign = q
                           , ffCanUseVerimiAuthenticationToView = z
+                          , ffCanUseVerimiQesAuthenticationToSign = nn
                           , ffCanUseIDINAuthenticationToView   = aa
                           , ffCanUseIDINAuthenticationToSign   = cc
                           , ffCanUseOnfidoAuthenticationToSign = ff
@@ -525,8 +527,8 @@ documentAllSharings = [Private, Shared]
 instance Arbitrary DocumentSharing where
   arbitrary = elements documentAllSharings
 
-documentAllSealingMethods :: [SealingMethod]
-documentAllSealingMethods = [Guardtime, Pades]
+documentAllDigitalSignatureMethods :: [DigitalSignatureMethod]
+documentAllDigitalSignatureMethods = [Guardtime, Pades]
 
 instance Arbitrary Document where
   arbitrary = do
@@ -849,6 +851,13 @@ instance Arbitrary EIDServiceOnfidoSignature where
                                        }
 
 
+instance Arbitrary EIDServiceVerimiQesSignature where
+  arbitrary =
+    EIDServiceVerimiQesSignature
+      <$> arbText 20 30
+      <*> arbitraryMaybe (arbText 20 30)
+      <*> arbitraryMaybe (arbText 10 10)
+
 
 instance Arbitrary ESignature where
   arbitrary = oneof
@@ -942,7 +951,7 @@ addNewRandomFile = do
     , inTestDir "pdfs/visa-application.pdf"
     ]
   cnt <- liftBase $ BS.readFile fn
-  saveNewFile (T.pack fn) cnt
+  fileid <$> saveNewFile (T.pack fn) cnt
 
 data UserGroupTemplate m = UserGroupTemplate
   { parentGroupID :: Maybe UserGroupID
@@ -1176,21 +1185,21 @@ data RandomDocumentAllows = RandomDocumentAllows
   , rdaTimeoutTime :: Bool
   , rdaFolderId    :: FolderID
   , rdaTemplateId  :: Maybe DocumentID
-  , rdaSealingMethods :: OneOf SealingMethod
+  , rdaDigitalSignatureMethods :: OneOf DigitalSignatureMethod
   }
 
 rdaDefault :: User -> RandomDocumentAllows
 rdaDefault user = RandomDocumentAllows
-  { rdaTypes          = OneOf documentAllTypes
-  , rdaStatuses       = OneOf documentAllStatuses
-  , rdaSharings       = OneOf documentAllSharings
-  , rdaSignatories    = OneOf $ map (`replicate` randomSignatory) [1 .. 10]
-  , rdaAuthor         = user
-  , rdaSharedLink     = False
-  , rdaTimeoutTime    = True
-  , rdaFolderId       = fromJust $ user ^. #homeFolderID
-  , rdaTemplateId     = Nothing
-  , rdaSealingMethods = OneOf documentAllSealingMethods
+  { rdaTypes                   = OneOf documentAllTypes
+  , rdaStatuses                = OneOf documentAllStatuses
+  , rdaSharings                = OneOf documentAllSharings
+  , rdaSignatories             = OneOf $ map (`replicate` randomSignatory) [1 .. 10]
+  , rdaAuthor                  = user
+  , rdaSharedLink              = False
+  , rdaTimeoutTime             = True
+  , rdaFolderId                = fromJust $ user ^. #homeFolderID
+  , rdaTemplateId              = Nothing
+  , rdaDigitalSignatureMethods = OneOf documentAllDigitalSignatureMethods
   }
 
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
@@ -1287,9 +1296,11 @@ addRandomDocumentWithFile fileid rda = do
       sharing <- if xtype == Template
         then rand 10 (elements . fromOneOf $ rdaSharings rda)
         else return Private
-      sealingMethod <- rand 1 (elements . fromOneOf $ rdaSealingMethods rda)
-      title         <- rand 1 $ arbText 10 25
-      sigspecs      <- rand 10 (elements . fromOneOf $ rdaSignatories rda)
+      digitalSignatureMethod <- rand
+        1
+        (elements . fromOneOf $ rdaDigitalSignatureMethods rda)
+      title    <- rand 1 $ arbText 10 25
+      sigspecs <- rand 10 (elements . fromOneOf $ rdaSignatories rda)
       -- First signatory link is the author
       let genFuns = randomAuthorLinkByStatus : repeat randomSigLinkByStatus
       asl' : siglinks <- forM (zip sigspecs genFuns) $ \(OneOf sigconds, genSigLink) -> do
@@ -1345,17 +1356,17 @@ addRandomDocumentWithFile fileid rda = do
 
       let
         doc = doc'
-          { documenttype              = xtype
-          , documentstatus            = status
-          , documentsharing           = sharing
-          , documenttitle             = title
-          , documentfromshareablelink = rdaSharedLink rda
-          , documenttemplateid        = rdaTemplateId rda
-          , documentfolderid          = rdaFolderId rda
-          , documenttimeouttime       = if rdaTimeoutTime rda
-                                          then documenttimeouttime doc'
-                                          else Nothing
-          , documentsealingmethod     = sealingMethod
+          { documenttype                   = xtype
+          , documentstatus                 = status
+          , documentsharing                = sharing
+          , documenttitle                  = title
+          , documentfromshareablelink      = rdaSharedLink rda
+          , documenttemplateid             = rdaTemplateId rda
+          , documentfolderid               = rdaFolderId rda
+          , documenttimeouttime            = if rdaTimeoutTime rda
+                                               then documenttimeouttime doc'
+                                               else Nothing
+          , documentdigitalsignaturemethod = digitalSignatureMethod
           }
       userDetails <- signatoryFieldsFromUser user
       let asl =
@@ -1363,20 +1374,15 @@ addRandomDocumentWithFile fileid rda = do
 
       let alllinks = asl : siglinks
 
-
-      let closedfile = if documentstatus doc == Closed
-            then [MainFile fileid Closed Missing (T.unpack $ filename file)]
+      let pendingfile = [(unsafeDocumentFileID 1, InputFile file)]
+          closedfile  = if documentstatus doc == Closed
+            then [(unsafeDocumentFileID 2, ClosedFile (DigitallySignedFile file Missing))]
             else []
-      let adoc = doc
-            { documentsignatorylinks = alllinks
-            , documentlang           = getLang user
-            , documentmainfiles      = closedfile
-                                         <> [ MainFile fileid
-                                                       Preparation
-                                                       Missing
-                                                       (T.unpack $ filename file)
-                                            ]
-            }
+
+      let adoc = doc { documentsignatorylinks = alllinks
+                     , documentlang           = getLang user
+                     , documentfilehistory    = Map.fromList $ pendingfile <> closedfile
+                     }
 
       case invariantProblems now adoc of
         Nothing        -> return adoc
@@ -1402,8 +1408,8 @@ sealTestDocument ctx did = do
         res <- postDocumentClosedActions True False
           `catch` \(_ :: KE.KontraError) -> return False
         when res $ do
-          sealingMethod <- documentsealingmethod <$> theDocument
-          let expectedJobCount = case sealingMethod of
+          digitalSignatureMethod <- documentdigitalsignaturemethod <$> theDocument
+          let expectedJobCount = case digitalSignatureMethod of
                 Guardtime -> 1
                 Pades     -> 0
           actualJobCount <-
@@ -1707,7 +1713,8 @@ instantiateRandomPadesUser
   :: (CryptoRNG m, MonadFail m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => m User
 instantiateRandomPadesUser = do
-  let padesSettings = defaultUserGroupSettings & #sealingMethod .~ SealingMethod.Pades
+  let padesSettings =
+        defaultUserGroupSettings & #digitalSignatureMethod .~ DigitalSignatureMethod.Pades
   userGroup <- instantiateUserGroup
     $ randomUserGroupTemplate { settings = Just padesSettings }
   instantiateUser $ randomUserTemplate { groupID = pure $ userGroup ^. #id }
