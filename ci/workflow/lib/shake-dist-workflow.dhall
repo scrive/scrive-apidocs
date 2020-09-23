@@ -20,7 +20,12 @@ in
   let shell = "ghc88.backend-shell"
 
   let run-shake-dist = Job.Job ::
-    { runs-on = default-runner
+
+    -- Run backend test on cloud runner for now
+    -- until we have more runner capacity
+    -- , runs-on = default-runner
+    { runs-on = [ "ubuntu-latest" ]
+    -- { runs-on = default-runner
     , steps =
         setupSteps.setup-steps #
         [ setupSteps.nix-shell-step shell

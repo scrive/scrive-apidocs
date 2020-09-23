@@ -13,7 +13,7 @@ import DB
 import Log.Identifier
 
 newtype CallbackID = CallbackID Int64
-  deriving newtype (Eq, Ord, Show, PQFormat, FromSQL, ToSQL)
+  deriving newtype (Eq, Ord, Show)
 
 instance Identifier CallbackID where
   idDefaultLabel = "callback_id"
@@ -24,6 +24,17 @@ data AuthMethod
   | BasicAuth Text {- user -} Text {- password -}
   -- other things later if necessary
   deriving (Eq, Ord, Show)
+
+instance PQFormat CallbackID where
+  pqFormat = pqFormat @Int64
+
+instance FromSQL CallbackID where
+  type PQBase CallbackID = PQBase Int64
+  fromSQL mbase = CallbackID <$> fromSQL mbase
+
+instance ToSQL CallbackID where
+  type PQDest CallbackID = PQDest Int64
+  toSQL (CallbackID n) = toSQL n
 
 instance PQFormat AuthMethod where
   pqFormat = pqFormat @(JSONB AuthMethod)

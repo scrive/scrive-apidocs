@@ -2,8 +2,7 @@
 jobs:
   run-shake-dist:
     runs-on:
-      - linux
-      - self-hosted
+      - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"

@@ -10,6 +10,18 @@ let
   inherit (haskell-deps.exes)
     hlint brittany apply-refact
   ;
+
+  deps = [
+    hlint
+    brittany
+    apply-refact
+    cabal-install
+  ] ++ run-deps;
+
+  deps-path = nixpkgs.lib.strings.concatMapStrings
+    (pkg: if pkg == null then "" else "${pkg}/bin:")
+    deps
+  ;
 in
 kontrakcja-project.shellFor {
   inherit scrivepdftools;
@@ -19,13 +31,6 @@ kontrakcja-project.shellFor {
     hsPkgs.kontrakcja-shake
   ];
 
-  buildInputs = [
-    hlint
-    brittany
-    apply-refact
-    cabal-install
-  ] ++ run-deps;
-
   exactDeps = true;
 
   withHoogle = false;
@@ -34,5 +39,6 @@ kontrakcja-project.shellFor {
 
   shellHook = ''
     export LANG=''${LANG:-en_US.UTF-8}
+    export PATH=${deps-path}$PATH
     '';
 }

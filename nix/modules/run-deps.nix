@@ -60,9 +60,8 @@ let
     pkgs.postgresql
     pkgs.imagemagick
     pkgs.glibcLocales
-    haskell-nix.pkgs.pkgconfig
-    haskell-nix.pkgs.aws-sam-cli
-    haskell-nix.pkgs.poppler_utils
+    pkgs.aws-sam-cli
+    pkgs.poppler_utils
   ];
 in
      vendorDeps
