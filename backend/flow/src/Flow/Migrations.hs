@@ -15,6 +15,7 @@ module Flow.Migrations (
   , migrateTemplateDSLStoredInDBToNotificationMethods
   , createTableFlowOverviewAuthentications
   , migrateNullableDocumentNameInEvent
+  , addProviderMethodToFlowEIDAuthentications
 )
 
 where
@@ -430,3 +431,16 @@ migrateNullableDocumentNameInEvent = Migration
                        "flow_events"
                        [sqlAlterColumn "document_name" "DROP NOT NULL"]
   }
+
+addProviderMethodToFlowEIDAuthentications :: MonadDB m => Migration m
+addProviderMethodToFlowEIDAuthentications = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlAlterTable
+                       tableName
+                       [ sqlAddColumn
+                           $ tblColumn { colName = "provider_method", colType = TextT }
+                       ]
+  }
+  where tableName = "flow_eid_authentications"

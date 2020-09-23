@@ -301,4 +301,5 @@ kontraMigrations =
   , addProviderMethodToEIDAuthentications
   , createTableFlowOverviewAuthentications
   , migrateNullableDocumentNameInEvent
+  , addProviderMethodToFlowEIDAuthentications
   ]

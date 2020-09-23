@@ -273,7 +273,7 @@ tableFlowAggregatorEvents = tblTable
 tableFlowEidAuthentications :: Table
 tableFlowEidAuthentications = tblTable
   { tblName        = "flow_eid_authentications"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
     , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
@@ -290,6 +290,7 @@ tableFlowEidAuthentications = tblTable
     , tblColumn { colName = "signatory_ip", colType = TextT }
     , tblColumn { colName = "signatory_email", colType = TextT }
     , tblColumn { colName = "provider_customer_id", colType = TextT }
+    , tblColumn { colName = "provider_method", colType = TextT }
     ]
   , tblPrimaryKey  = pkOnColumns ["instance_id", "user_name", "auth_kind"]
   , tblForeignKeys =
