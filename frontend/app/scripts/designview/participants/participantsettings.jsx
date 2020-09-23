@@ -143,7 +143,7 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToViewSEBankID;
     } else if (t == "no_bankid") {
       return localization.designview.addParties.authenticationToViewNOBankID;
-    } else if (t == "dk_nemid_cpr") {
+     } else if (t == "dk_nemid_cpr") {
       return localization.designview.addParties.authenticationToViewDKNemIDCPR;
     } else if (t == "dk_nemid_pid") {
       return localization.designview.addParties.authenticationToViewDKNemIDPID;
@@ -218,6 +218,12 @@ module.exports = React.createClass({
         result.push(option);
       }
     });
+
+    if (sig.authenticationToView() == "dk_nemid") {
+      // legacy support
+      result.push({name: "NemID", value: "dk_nemid"});
+    }
+
     return result;
   },
   authenticationToViewArchivedOptions: function () {
@@ -276,6 +282,12 @@ module.exports = React.createClass({
         result.push(option);
       }
     });
+
+    if (sig.authenticationToViewArchived() == "dk_nemid") {
+      // legacy support
+      result.push({name: "NemID", value: "dk_nemid"});
+    }
+
     return result;
   },
   authenticationToSignText: function (t) {
@@ -458,6 +470,7 @@ module.exports = React.createClass({
   render: function () {
     var self = this;
     var sig = this.props.model;
+    console.log(sig.authenticationToView());
     var userFeatures = Subscription.currentSubscription().currentUserFeatures();
     return (
       <div className="design-view-action-participant-details-participation">
