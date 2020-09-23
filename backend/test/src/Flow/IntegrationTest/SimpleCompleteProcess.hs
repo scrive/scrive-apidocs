@@ -193,7 +193,7 @@ testCompleteFlowProcess = do
     200
 
   authorViewAfterSign <-
-    assertRight "get author instance view data before signing"
+    assertRight "get author instance view data after signing"
     . requestWithEnv authorEnv
     $ getInstanceView (startedInstance ^. #id) Nothing
 

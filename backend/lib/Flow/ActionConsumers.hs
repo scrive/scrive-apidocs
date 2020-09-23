@@ -10,6 +10,7 @@ module Flow.ActionConsumers
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Extra
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
@@ -27,6 +28,8 @@ import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
 import Branding.Adler32
+import Callback.Model
+import Callback.Types
 import DB hiding (JSON(..))
 import Doc.Action (commonDocumentClosingActions)
 import Doc.DocumentID
@@ -37,6 +40,8 @@ import Doc.Types.Document
 import Doc.Types.SignatoryLink
 import EventStream.Class
 import File.Storage
+import Flow.CallbackPayload
+import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
 import Flow.Id
 import Flow.Message.Internal
@@ -72,9 +77,12 @@ data ConsumableAction
       , smsMessage :: Maybe Message
       }
   | CloseAll
-      { documentIds :: [DocumentID]
+      { instanceId :: InstanceId
+      , documentIds :: [DocumentID]
       }
   | Fail
+      { instanceId :: InstanceId
+      }
   deriving (Show, Generic)
 
 data ActionsError
@@ -82,6 +90,7 @@ data ActionsError
     | AssociatedSignatoryNotFound FlowUserId
     | MessageNotFound HighTongue.MessageName
     | AccessLinkNotFound HighTongue.UserName
+    | NoInstance InstanceId
   deriving (Show, Exception)
 
 aesonOptions :: Options
@@ -166,10 +175,10 @@ toConsumableAction
   -> Machinize.LowAction
   -> m ConsumableAction
 toConsumableAction baseUrl instanceId = \case
-  Machinize.CloseAll -> CloseAll <$> selectDocumentIdsByInstanceId instanceId
+  Machinize.CloseAll -> CloseAll instanceId <$> selectDocumentIdsByInstanceId instanceId
   Machinize.Action (HighTongue.Notify userNames methods) ->
     uncurry3 Notify <$> notifyAction baseUrl instanceId userNames methods
-  Machinize.Fail -> pure Fail
+  Machinize.Fail -> pure $ Fail instanceId
 
 sendEmailNotification
   :: ( CryptoRNG m
@@ -281,11 +290,25 @@ consumeFlowAction
 consumeFlowAction action = do
   logInfo "Consuming Flow action" action
   case action of
-    CloseAll documentIds -> forM_ documentIds $ \docId -> do
+    CloseAll instanceId documentIds -> forM_ documentIds $ \docId -> do
       doc <- dbQuery $ GetDocumentByDocumentID docId
       withDocument doc $ commonDocumentClosingActions doc
+      -- TODO Flow: This event have to be generated after document sealing.
+      sendEventCallback instanceId Completed
     Notify users memailMsg msmsMsg -> consumeNotifyAction users memailMsg msmsMsg
-    Fail -> logInfo "Flow process failed" action
+    Fail instanceId                -> do
+      logInfo "Flow process failed" action
+      sendEventCallback instanceId Failed
+  where
+    sendEventCallback instanceId event = do
+      fullInstance <- fromMaybeM (throwM $ NoInstance instanceId)
+        $ selectFullInstance instanceId
+      now <- currentTime
+      let maybeCallback = fullInstance ^. #flowInstance % #callback
+      whenJust maybeCallback $ \Callback {..} -> do
+        let payload = case version of
+              V1 -> FlowCallbackEventV1Envelope now instanceId event
+        void $ scheduleNewCallback (fromUrl url) NoAuth payload
 
 consumeNotifyAction
   :: ( MonadLog m

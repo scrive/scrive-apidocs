@@ -220,7 +220,7 @@ signDocument id docId Signing {..} step = do
     200
 
   authorViewAfterSign <-
-    assertRight "get author instance view data before signing"
+    assertRight "get author instance view data after signing"
     . requestWithEnv env
     $ getInstanceView id Nothing
 

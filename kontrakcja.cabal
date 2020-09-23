@@ -136,14 +136,15 @@ Library kontrakcja-flow
                  , Flow.Process.Internal
 
   Build-Depends: base-noprelude
-               , kontrakcja-prelude
                , aeson
                , aeson-casing
                , containers
                , exceptions
                , extra
                , hpqtypes
+               , kontrakcja-prelude
                , mtl
+               , optics
                , servant
                , text
                , unordered-containers
@@ -422,6 +423,7 @@ Library
                  , File.Tables
                  , FlashMessage
                  , Flow.ActionConsumers
+                 , Flow.CallbackPayload
                  , Flow.Client
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
@@ -437,8 +439,8 @@ Library
                  , Flow.Model
                  , Flow.Model.InstanceSession
                  , Flow.Model.Types
-                 , Flow.Model.Types.Internal
                  , Flow.Model.Types.FlowUserId
+                 , Flow.Model.Types.Internal
                  , Flow.Model.Types.UserIdType
                  , Flow.OrphanInstances
                  , Flow.Routes
@@ -1210,6 +1212,7 @@ Test-suite kontrakcja-test
                  FlashMessages
                  Flow.AuthenticationTest
                  Flow.AggregatorTest
+                 Flow.CallbackTest
                  Flow.DocumentCheckerTest
                  Flow.EIDTest
                  Flow.HighTongueTest

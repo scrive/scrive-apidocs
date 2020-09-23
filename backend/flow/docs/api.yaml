@@ -1136,6 +1136,7 @@ components:
         schema for that kind of event, possibly with additional fields.
       oneOf:
         - $ref: "#/components/schemas/CallbackEventCompletedVersion1"
+        - $ref: "#/components/schemas/CallbackEventFailedVersion1"
         - $ref: "#/components/schemas/CallbackEventFlowRejectedVersion1"
         - $ref: "#/components/schemas/CallbackEventAuthenticationAttemptedVersion1"
 
@@ -1155,8 +1156,9 @@ components:
           type: string
           enum:
             - completed
-            - authentication_attempted
+            - failed
             - flow_rejected
+            - authentication_attempted
         flow_instance_id:
           $ref: "#/components/schemas/InstanceId"
         event_created:
@@ -1175,6 +1177,18 @@ components:
             type:
               type: string
               enum: [completed]
+
+    CallbackEventFailedVersion1:
+      description: |
+        Callback event produced at Flow failure.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CallbackEventBaseVersion1"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [failed]
 
     CallbackEventFlowRejectedVersion1:
       description: |

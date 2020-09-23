@@ -1,5 +1,10 @@
 # API specification changelog
 
+## 0.10.4
+
+Add `CallbackEventFailedVersion1` schema.
+Start sending `completed` and `failed` events. See the API guide for details.
+
 ## 0.10.3
 
 Add specification of callback events.
