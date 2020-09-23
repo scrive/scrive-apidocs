@@ -237,7 +237,7 @@ tableFlowInstanceSessions = tblTable
 tableFlowEvents :: Table
 tableFlowEvents = tblTable
   { tblName        = "flow_events"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName     = "id"
                 , colType     = UuidT
@@ -246,7 +246,7 @@ tableFlowEvents = tblTable
                 }
     , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
     , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
-    , tblColumn { colName = "document_name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "document_name", colType = TextT, colNullable = True }
     , tblColumn { colName = "user_action", colType = TextT, colNullable = False }
     , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
     ]

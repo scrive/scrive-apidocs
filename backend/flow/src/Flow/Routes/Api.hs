@@ -77,12 +77,18 @@ type AllApis
       )
     :<|>
       AuthProtect "instance-user"
-        :> "instances"
-        :> Capture "instance_id" InstanceId
-        :> "view"
-        :> Header "Host" Host
-        :> IsSecure
-        :> Get '[JSON] GetInstanceView
+        :>
+        (  "instances"
+            :> Capture "instance_id" InstanceId
+            :> "view"
+            :> Header "Host" Host
+            :> IsSecure
+            :> Get '[JSON] GetInstanceView
+        :<|>
+            "instances"
+            :> Capture "instance_id" InstanceId
+            :> "reject" :> PostNoContent '[JSON] NoContent
+        )
     :<|>
     -- No authentication
       "templates" :> "validate" :> ReqBody '[JSON] Process :> PostNoContent '[JSON] NoContent

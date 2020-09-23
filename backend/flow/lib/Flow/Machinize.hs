@@ -32,7 +32,9 @@ data UserAction
   -- | User viewed a document.
   | View
   -- | User rejected a document (used in both signing and approval actions).
-  | Rejection
+  | DocumentRejection
+  -- | User rejected an entire flow instance
+  | FlowRejection
   -- | User had not provided a response within the time limit.
   -- Currently not used.
   | Timeout
@@ -58,12 +60,13 @@ instance ToSQL UserAction where
 encodeUserAction :: UserAction -> Text
 encodeUserAction = \case
   -- TODO support fields
-  Field _   -> "field"
-  Approval  -> "approval"
-  Signature -> "signature"
-  View      -> "view"
-  Rejection -> "rejection"
-  Timeout   -> "timeout"
+  Field _           -> "field"
+  Approval          -> "approval"
+  Signature         -> "signature"
+  View              -> "view"
+  DocumentRejection -> "rejection"
+  FlowRejection     -> "flow_rejection"
+  Timeout           -> "timeout"
 
 newtype UnknownUserAction = UnknownUserAction Text
   deriving Show
@@ -71,20 +74,21 @@ newtype UnknownUserAction = UnknownUserAction Text
 
 decodeUserAction :: Text -> Either UnknownUserAction UserAction
 decodeUserAction = \case
-  "field"     -> Right . Field $ unsafeName ""
-  "approval"  -> Right Approval
-  "signature" -> Right Signature
-  "view"      -> Right View
-  "rejection" -> Right Rejection
-  "timeout"   -> Right Timeout
-  x           -> Left $ UnknownUserAction x
+  "field"          -> Right . Field $ unsafeName ""
+  "approval"       -> Right Approval
+  "signature"      -> Right Signature
+  "view"           -> Right View
+  "rejection"      -> Right DocumentRejection
+  "flow_rejection" -> Right FlowRejection
+  "timeout"        -> Right Timeout
+  x                -> Left $ UnknownUserAction x
 
 -- | A record of an event relevant to a Flow process.
 -- What happened, who did it, and which document was involved?
 data EventInfo = EventInfo
     { eventInfoAction     :: UserAction
     , eventInfoUser     :: UserName
-    , eventInfoDocument :: DocumentName
+    , eventInfoDocument :: Maybe DocumentName
     }
   deriving (Eq, Ord, Show, Generic)
 
@@ -95,6 +99,10 @@ data LowAction
   = Action SystemAction
   -- | An action representing a failure of the Flow process.
   | Fail
+  -- | A reject action is triggered when either a document or a flow instance
+  --   is rejected. This results in all pending documents accessible by the
+  --   user being rejected.
+  | Reject
   -- | An action representing the closing of 0 or more documents.
   | CloseAll
   deriving (Eq, Show, Generic)
@@ -110,17 +118,32 @@ instance ToJSON LowAction where
 -- actions are performed successfully.
 expectToSuccess :: Expect -> [EventInfo]
 expectToSuccess = \case
-  ReceivedData {..} ->
-    EventInfo <$> (Field <$> expectFields) <*> expectUsers <*> expectDocuments
-  ApprovedBy {..} -> EventInfo Approval <$> expectUsers <*> expectDocuments
-  ViewedBy {..}   -> EventInfo View <$> expectUsers <*> expectDocuments
-  SignedBy {..}   -> EventInfo Signature <$> expectUsers <*> expectDocuments
+  ReceivedData { expectFields, expectUsers, expectDocuments } ->
+    EventInfo <$> (Field <$> expectFields) <*> expectUsers <*> (Just <$> expectDocuments)
+
+  ApprovedBy { expectUsers, expectDocuments } ->
+    EventInfo Approval <$> expectUsers <*> (Just <$> expectDocuments)
+
+  ViewedBy { expectUsers, expectDocuments } ->
+    EventInfo View <$> expectUsers <*> (Just <$> expectDocuments)
+
+  SignedBy { expectUsers, expectDocuments } ->
+    EventInfo Signature <$> expectUsers <*> (Just <$> expectDocuments)
 
 -- | Translate `Expect`, a description of expected user actions,
 -- into a list of `Rejection` events, one for each possible failure.
 expectToFailure :: Expect -> [EventInfo]
 expectToFailure = \case
-  ReceivedData {..} -> []
-  ApprovedBy {..}   -> EventInfo Rejection <$> expectUsers <*> expectDocuments
-  ViewedBy {..}     -> []
-  SignedBy {..}     -> EventInfo Rejection <$> expectUsers <*> expectDocuments
+  ReceivedData{} -> []
+
+  -- If a user can approve a document, they can also reject the document
+  -- or the entire flow instance
+  ApprovedBy { expectUsers, expectDocuments } ->
+    EventInfo DocumentRejection <$> expectUsers <*> (Just <$> expectDocuments)
+
+  ViewedBy{} -> []
+
+  -- If a user can sign a document, they can also reject the document
+  -- or the entire flow instance
+  SignedBy { expectUsers, expectDocuments } ->
+    EventInfo DocumentRejection <$> expectUsers <*> (Just <$> expectDocuments)

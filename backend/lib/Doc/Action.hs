@@ -165,15 +165,13 @@ postDocumentRejectedChange siglinkid customMessage doc@Document {..} =
 
 postDocumentForwardChange
   :: Kontrakcja m => Maybe Text -> SignatoryLink -> SignatoryLinkID -> Document -> m ()
-postDocumentForwardChange customMessage originalSignatory newslid doc =
+postDocumentForwardChange customMessage originalSignatory newslid doc = do
   logDocument (documentid doc) $ do
     let newsl = fromJust (getSigLinkFor newslid doc)
     triggerAPICallbackIfThereIsOne doc
     unless (isPending doc) $ stateMismatchError "originalSignatory" Pending doc
     logInfo "Sending forward emails for document" $ logObject_ doc
     sendForwardSigningMessages customMessage originalSignatory newsl doc
-    return ()
-
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> m ()
 postDocumentCanceledChange doc@Document {..} = logDocument documentid $ do

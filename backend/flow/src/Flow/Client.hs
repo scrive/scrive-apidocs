@@ -51,8 +51,9 @@ data ApiClient = ApiClient
   , version          :: ClientM Version
   }
 
-newtype ParticipantApiClient = ParticipantApiClient
+data ParticipantApiClient = ParticipantApiClient
   { getInstanceView  :: InstanceId -> Maybe Host -> ClientM GetInstanceView
+  , rejectInstance :: InstanceId -> ClientM NoContent
   }
 
 data PageClient = PageClient
@@ -88,15 +89,18 @@ mkParticipantApiClient :: (Maybe SessionCookieInfo, Maybe XToken) -> Participant
 mkParticipantApiClient authData = ParticipantApiClient { .. }
   where
     _ :<|> instanceUserEndpoints :<|> _ = client apiProxy
-    getInstanceView
+
+    getInstanceView :<|> rejectInstance
       = instanceUserEndpoints (mkAuthenticatedRequest authData addAuthCookies)
 
 mkPageClient :: (Maybe SessionCookieInfo, Maybe XToken) -> PageClient
 mkPageClient authData = PageClient { .. }
   where
     instanceUserEndpoints :<|> noAuthEndpoints = client pagesProxy
+
     instanceOverview =
       instanceUserEndpoints (mkAuthenticatedRequest authData addAuthCookies)
+
     instanceOverviewMagicHash = noAuthEndpoints
 
 addOAuthOrCookies :: OAuthOrCookies -> Client.Request -> Client.Request
@@ -132,4 +136,3 @@ addAuthCookies (mSessionCookieInfo, mXToken) = Client.addHeader "cookie" cookies
       ]
     -- Kontrakcja quotes its auth cookie values and we want to be compatible
     renderCookie name val = name <> "=\"" <> showt val <> "\""
-

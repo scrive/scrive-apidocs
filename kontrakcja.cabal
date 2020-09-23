@@ -1219,6 +1219,7 @@ Test-suite kontrakcja-test
                  Flow.IntegrationTest
                  Flow.IntegrationTest.Common
                  Flow.IntegrationTest.Failure
+                 Flow.IntegrationTest.Rejection
                  Flow.IntegrationTest.ComplexCompleteProcess
                  Flow.IntegrationTest.SimpleCompleteProcess
                  Flow.OrphanTestInstances

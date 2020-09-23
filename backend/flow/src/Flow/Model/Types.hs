@@ -97,7 +97,8 @@ fetchInstance (id, templateId, title, currentState, started, lastEvent, maybeCal
           unexpectedError "callback url and version have to be both Just or both Nothing"
     in  Instance { .. }
 
-fetchEvent :: (EventId, InstanceId, UserName, DocumentName, UserAction, UTCTime) -> Event
+fetchEvent
+  :: (EventId, InstanceId, UserName, Maybe DocumentName, UserAction, UTCTime) -> Event
 fetchEvent (id, instanceId, userName, documentName, userAction, created) = Event { .. }
 
 toEventInfo :: Event -> EventInfo
@@ -141,4 +142,3 @@ fetchUserAuthConfig (instanceId, userName, mViewProvider, mViewMaxFailures, mVie
       provider    <- mProvider
       maxFailures <- fromIntegral <$> mMaxFailures
       pure $ AuthConfig { .. }
-

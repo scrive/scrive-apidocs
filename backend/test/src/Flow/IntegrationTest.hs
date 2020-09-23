@@ -32,6 +32,7 @@ import TestKontra
 import User.Types.User
 import Util.Actor
 import qualified Auth.Model as AuthModel
+import qualified Flow.IntegrationTest.Rejection as Rejection
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 
@@ -58,6 +59,9 @@ tests env = testGroup
   , testThat "Rejecting a document causes process failure"
              env
              testRejectedDocumentCausesProcessFailure
+  , testThat "Test flow scenario 1" env testScenario1
+  , testThat "Test flow scenario 2" env testScenario2
+  , Rejection.tests env
   ]
 
 testTemplateHappyCrud :: TestEnv ()
@@ -317,5 +321,3 @@ testVerifyEndpoint = do
   assertIsJsonError =<< assertLeft "validating blank DSL" blankReq
   assertIsJsonError =<< assertLeft "validating invalid DSL" failureReq
   void $ assertRight "validating valid DSL" successReq
-
-

@@ -40,7 +40,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.DocUtils
-import Doc.Flow (processEventThrow)
+import Doc.Flow (processFlowEventForSignatory)
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
@@ -97,9 +97,9 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     whenJustM (Flow.selectInstanceIdByDocumentId did) processFlowEvent
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
-    processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
+    processFlowEvent instanceId = processFlowEventForSignatory $ Flow.EngineEvent
       { instanceId  = instanceId
-      , userAction  = Flow.Rejection
+      , userAction  = Flow.DocumentRejection
       , signatoryId = slid
       , documentId  = did
       }
@@ -256,7 +256,7 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
     whenJustM (Flow.selectInstanceIdByDocumentId did) processFlowEvent
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
-    processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
+    processFlowEvent instanceId = processFlowEventForSignatory $ Flow.EngineEvent
       { instanceId  = instanceId
       , userAction  = Flow.Approval
       , signatoryId = slid
@@ -375,7 +375,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     doc <- theDocument
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
-    processFlowEvent instanceId = processEventThrow $ Flow.EngineEvent
+    processFlowEvent instanceId = processFlowEventForSignatory $ Flow.EngineEvent
       { instanceId  = instanceId
       , userAction  = Flow.Signature
       , signatoryId = slid

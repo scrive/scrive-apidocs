@@ -300,4 +300,5 @@ kontraMigrations =
   , featureFlagsAddVerimiQesToSign
   , addProviderMethodToEIDAuthentications
   , createTableFlowOverviewAuthentications
+  , migrateNullableDocumentNameInEvent
   ]

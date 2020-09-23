@@ -32,6 +32,9 @@ let
 
   haskellDeps = [
     haskellPackages.ghcid
+    haskellPackages.ghcide
+    haskellPackages.implicit-hie
+    haskellPackages.haskell-language-server
   ];
 
   mainDeps = [

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.3"
+  version: "0.10.4"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -21,7 +21,9 @@ tags:
   - name: participation
     description: Calls used to participate in Flow processes.
   - name: general
-    description: General information about the Flow service
+    description: General information about the Flow service.
+  - name: internal
+    description: Internal API used by Scrive, with behavior subject to changes.
 paths:
   /templates:
     get:
@@ -388,6 +390,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstanceViewResponse"
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Flow instance not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /instances/{instance_id}/reject:
+    post:
+      tags:
+        - internal
+        - participation
+      summary: Reject a Flow instance
+      operationId: rejectFlow
+      description: |
+        Reject a flow instance, causing all documents that involve the participant
+        to be cancelled. This is an internal API and the behavior may change in the future.
+      parameters:
+        - $ref: "#/components/parameters/InstanceId"
+      responses:
+        204:
+          description: The flow instance is rejected successfully.
         401:
           description: Error authenticating the API caller.
           content:

@@ -74,7 +74,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Doc.Flow as Flow
-  ( EngineEvent(..), UserAction(Signature), processEventThrow
+  ( EngineEvent(..), UserAction(Signature), processFlowEventForSignatory
   )
 import qualified EID.EIDService.Provider.Verimi as Verimi
 import qualified Flow.Model as Flow (selectInstanceIdByDocumentId)
@@ -658,8 +658,9 @@ signFromESignature DocumentSigning {..} now = do
   Document { documentid } <- theDocument
   -- If document is part of a flow instance, send relevant event.
   whenJustM (Flow.selectInstanceIdByDocumentId documentid) $ \instanceId -> do
-    Flow.processEventThrow $ Flow.EngineEvent { instanceId  = instanceId
-                                              , userAction  = Flow.Signature
-                                              , signatoryId = signingSignatoryID
-                                              , documentId  = documentid
-                                              }
+    Flow.processFlowEventForSignatory $ Flow.EngineEvent
+      { instanceId  = instanceId
+      , userAction  = Flow.Signature
+      , signatoryId = signingSignatoryID
+      , documentId  = documentid
+      }

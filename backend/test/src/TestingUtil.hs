@@ -1183,6 +1183,7 @@ data RandomDocumentAllows = RandomDocumentAllows
   , rdaAuthor      :: User
   , rdaSharedLink  :: Bool
   , rdaTimeoutTime :: Bool
+  , rdaDaysToSign  :: Maybe Int32
   , rdaFolderId    :: FolderID
   , rdaTemplateId  :: Maybe DocumentID
   , rdaDigitalSignatureMethods :: OneOf DigitalSignatureMethod
@@ -1197,6 +1198,7 @@ rdaDefault user = RandomDocumentAllows
   , rdaAuthor                  = user
   , rdaSharedLink              = False
   , rdaTimeoutTime             = True
+  , rdaDaysToSign              = Nothing
   , rdaFolderId                = fromJust $ user ^. #homeFolderID
   , rdaTemplateId              = Nothing
   , rdaDigitalSignatureMethods = OneOf documentAllDigitalSignatureMethods
@@ -1366,6 +1368,9 @@ addRandomDocumentWithFile fileid rda = do
           , documenttimeouttime            = if rdaTimeoutTime rda
                                                then documenttimeouttime doc'
                                                else Nothing
+          , documentdaystosign             = case rdaDaysToSign rda of
+                                               Nothing   -> documentdaystosign doc'
+                                               Just days -> days
           , documentdigitalsignaturemethod = digitalSignatureMethod
           }
       userDetails <- signatoryFieldsFromUser user

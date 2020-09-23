@@ -1,6 +1,7 @@
 module Flow.CallbackPayload
     ( FlowCallbackEventV1Envelope(..)
     , FlowCallbackEventV1(..)
+    , RejectedEvent(..)
     )
   where
 
@@ -36,7 +37,7 @@ instance ToJSON FlowCallbackEventV1Envelope where
       eventPairs :: FlowCallbackEventV1 -> Series
       eventPairs Completed = "type" .= ("completed" :: Text)
       eventPairs Failed    = "type" .= ("failed" :: Text)
-      eventPairs Rejected {..} =
+      eventPairs (Rejected RejectedEvent { userName, message }) =
         "type"
           .= ("flow_rejected" :: Text)
           <> "user_name"
@@ -58,14 +59,17 @@ instance FromJSON FlowCallbackEventV1Envelope where
       getTypeSpecifics _ "completed" = pure Completed
       getTypeSpecifics _ "failed"    = pure Failed
       getTypeSpecifics o "flow_rejected" =
-        Rejected <$> o .: "user_name" <*> o .: "message"
+        Rejected <$> (RejectedEvent <$> o .: "user_name" <*> o .: "message")
       getTypeSpecifics _ type' = fail $ "Unknown callback event type: " <> unpack type'
 
 data FlowCallbackEventV1
     = Completed
     | Failed
-    | Rejected
-      { userName :: UserName
-      , message ::  Text
-      }
+    | Rejected RejectedEvent
+  deriving (Eq, Generic, Show)
+
+data RejectedEvent = RejectedEvent
+  { userName :: UserName
+  , message ::  Text
+  }
   deriving (Eq, Generic, Show)

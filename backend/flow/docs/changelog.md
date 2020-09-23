@@ -2,8 +2,9 @@
 
 ## 0.10.4
 
-Add `CallbackEventFailedVersion1` schema.
-Start sending `completed` and `failed` events. See the API guide for details.
+* Add `CallbackEventFailedVersion1` schema.
+* Add `POST /instances/{instance_id}/reject` for rejecting a flow instance.
+* Start sending `completed` and `failed` events. See the API guide for details.
 
 ## 0.10.3
 
