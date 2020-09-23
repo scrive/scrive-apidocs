@@ -46,7 +46,9 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Signing.Model
 import Doc.SMSPin.Model
-import EID.Authentication.Model (MergeSMSPinAuthentication(..))
+import EID.Authentication.Model
+  ( EAuthentication(..), MergeDocumentEidAuthentication(..)
+  )
 import EID.EIDService.Provider.SEBankID (useEIDHubForSEBankIDSign)
 import EID.Signature.Model
 import EvidenceLog.Model
@@ -465,7 +467,9 @@ docApiV2SigIdentifyToViewWithSmsPin did slid =
       unless validPin $ do
         apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
       sess <- getCurrentSession
-      dbUpdate $ MergeSMSPinAuthentication authKind (sesID sess) slid mobile
+      dbUpdate
+        . MergeDocumentEidAuthentication authKind (sesID sess) slid
+        $ SMSPinAuthentication_ mobile
       let eventFields = do
             F.value "signatory_mobile" mobile
             F.value "provider_sms_pin" True

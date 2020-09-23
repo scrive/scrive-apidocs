@@ -14,6 +14,7 @@ module Flow.Aggregator
     , failureStageName
     , finalStageName
     , makeNewState
+    , isComplete
     )
   where
 
@@ -117,3 +118,6 @@ runAggregatorStep
   -> (Either AggregatorError AggregatorStep, AggregatorState)
 runAggregatorStep event aggregatorState highTongue = do
   flip S.runState aggregatorState . E.runExceptT $ aggregateAndStep highTongue event
+
+isComplete :: AggregatorState -> Bool
+isComplete aggrState = currentStage aggrState == finalStageName

@@ -141,16 +141,14 @@ completeEIDServiceAuthTransaction conf doc sl = do
       eIDServiceVerimiAuthenticationFromCompletionData completionData
 
     updateDBTransactionWithCompletionData cd = do
-      let auth = EIDServiceVerimiAuthentication
+      sessionID <- getNonTempSessionID
+      dbUpdate
+        . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+        $ EIDServiceVerimiAuthentication_ EIDServiceVerimiAuthentication
             { eidServiceVerimiName          = eidServiceVerimiName cd
             , eidServiceVerimiVerifiedEmail = eidServiceVerimiVerifiedEmail cd
             , eidServiceVerimiVerifiedPhone = Nothing
             }
-      sessionID <- getNonTempSessionID
-      dbUpdate $ MergeEIDServiceVerimiAuthentication (mkAuthKind doc)
-                                                     sessionID
-                                                     (signatorylinkid sl)
-                                                     auth
 
     updateEvidenceLog cd = do
       ctx <- getContext

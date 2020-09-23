@@ -226,16 +226,14 @@ completionDataToName CompletionData {..} = eidonfidoFirstName <> " " <> eidonfid
 updateDBTransactionWithCompletionData
   :: Kontrakcja m => Document -> SignatoryLink -> OnfidoEIDServiceCompletionData -> m ()
 updateDBTransactionWithCompletionData doc sl OnfidoEIDServiceCompletionData {..} = do
-  let auth = EIDServiceOnfidoAuthentication
+  sessionID <- getNonTempSessionID
+  dbUpdate
+    . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+    $ EIDServiceOnfidoAuthentication_ EIDServiceOnfidoAuthentication
         { eidServiceOnfidoSignatoryName = completionDataToName eidonfidoCompletionData
         , eidServiceOnfidoDateOfBirth   = eidonfidoDateOfBirth eidonfidoCompletionData
         , eidServiceOnfidoMethod        = eidonfidoMethod
         }
-  sessionID <- getNonTempSessionID
-  dbUpdate $ MergeEIDServiceOnfidoAuthentication (mkAuthKind doc)
-                                                 sessionID
-                                                 (signatorylinkid sl)
-                                                 auth
 
 completeEIDServiceSignTransaction
   :: Kontrakcja m => EIDServiceConf -> SignatoryLink -> m Bool

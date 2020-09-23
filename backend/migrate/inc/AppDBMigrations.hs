@@ -299,4 +299,5 @@ kontraMigrations =
   , addEvidenceSecretToDocuments
   , featureFlagsAddVerimiQesToSign
   , addProviderMethodToEIDAuthentications
+  , createTableFlowOverviewAuthentications
   ]

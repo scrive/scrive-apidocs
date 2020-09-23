@@ -1,7 +1,9 @@
 module Flow.Server.Pages where
 
+import Control.Monad.Catch (MonadMask, MonadThrow)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader (ask)
+import Database.PostgreSQL.PQTypes
 import Log.Class
 import Servant
 import Text.Blaze.Html5 hiding (head)
@@ -14,6 +16,7 @@ import qualified Data.Text.Encoding as T
 import AppView (brandedPageTitle)
 import Auth.MagicHash
 import Auth.Session
+import Auth.Session.SessionID
 import BrandedDomain.Model
 import Branding.Adler32
 import DB (dbQuery, dbUpdate)
@@ -22,9 +25,16 @@ import Doc.DocControl
   )
 import Doc.Model.Query
 import Doc.Tokens.Model
+import Doc.Types.SignatoryLink
+import EID.Authentication.Model
+import EID.EIDService.Types
+import Flow.Aggregator
+import Flow.EID.AuthConfig
+import Flow.EID.Authentication
 import Flow.Error
 import Flow.HighTongue
 import Flow.Id
+import Flow.Model.Types
 import Flow.OrphanInstances ()
 import Flow.Routes.Pages
 import Flow.Routes.Types
@@ -67,9 +77,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
     . fromMaybeM (throwAuthenticationErrorHTML bd InvalidInstanceAccessTokenError)
     $ Model.verifyInstanceAccessToken instanceId userName hash
 
-  mSessionId <- case getAuthCookies of
-    Just authCookies -> AuthModel.getSessionIDByCookies authCookies (cookieDomain mHost)
-    Nothing          -> pure Nothing
+  mSessionId <- getMSessionID mCookies mHost
 
   -- If we don't have an existing Kontrakcja session - start a new one
   -- and add sessionId and xtoken cookies to the response.
@@ -95,9 +103,6 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
 
   pure . addHeader redirectUrl $ maybeAddCookieHeaders NoContent
   where
-    getAuthCookies = do
-      Cookies' cookies <- mCookies
-      readAuthCookies cookies
     redirectUrl = mkInstanceOverviewUrl instanceId userName
     addDocumentSession bd sid slid = do
       doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
@@ -114,10 +119,11 @@ instanceOverview
   -> InstanceId
   -> UserName
   -> Bool
+  -> Maybe Cookies'
   -> Maybe Host
   -> IsSecure
   -> AppM Html
-instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdentify mHost isSecure
+instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdentify mCookies mHost isSecure
   = do
     FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
     let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
@@ -125,9 +131,15 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
 
     when (instanceId /= instanceId') $ throwAuthenticationErrorHTML bd AccessControlError
 
-    mFullInstance <- Model.selectFullInstance instanceId
+    sessionId <-
+      getMSessionID mCookies mHost
+      -- The error handling is not necessary, this is authenticated endpoint already.
+      -- When there is a better way to get sessionId, then it will be possible to fix this.
+        >>= maybe (throwAuthenticationErrorHTML bd InvalidAuthCookiesError) return
+
     -- We know the instance exists because of the authenticated InstanceUser
-    let authorUserId = fromJust mFullInstance ^. #template % #userId
+    fullInstance <- fromJust <$> Model.selectFullInstance instanceId
+    let authorUserId = fullInstance ^. #template % #userId
 
     brandingDocId    <- head <$> Model.selectDocumentIdsByInstanceId instanceId
     brandingUgwp     <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
@@ -191,13 +203,71 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
           }
 
     mUserAuthConfig <- Model.selectUserAuthConfig instanceId userName
-    -- TODO: Temporary: needsToIdentify should also check if the participant has
-    -- completed the authentication process.
-    let needsToIdentify = isJust $ do
-          uac <- mUserAuthConfig
-          uac ^. #authToView <|> uac ^. #authToViewArchived
+    needsToIdentify <- participantNeedsToIdentifyToView mUserAuthConfig
+                                                        fullInstance
+                                                        userName
+                                                        sessionId
+
+    -- let needsToIdentify = isJust $ do
+    --       uac <- mUserAuthConfig
+    --       uac ^. #authToView <|> uac ^. #authToViewArchived
 
     -- TODO: Temporary: Remove bypassIdentify when the Elm identify-view is usable.
     if needsToIdentify && not bypassIdentify
       then return $ Html.renderIdentifyView identifyViewVars
       else return $ Html.renderInstanceOverview instanceOverviewVars
+
+participantNeedsToIdentifyToView
+  :: (MonadDB m, MonadThrow m, MonadMask m)
+  => Maybe UserAuthConfig
+  -> FullInstance
+  -> UserName
+  -> SessionID
+  -> m Bool
+participantNeedsToIdentifyToView mUserAuthConfig fullInstance userName sid =
+  if isComplete $ instanceToAggregator fullInstance
+    then check AuthenticationToViewArchived (^. #authToViewArchived)
+    else check AuthenticationToView (^. #authToView)
+  where
+    instanceId = fullInstance ^. #flowInstance % #id
+    check authKind getParticipantAuthConf =
+      case mUserAuthConfig >>= getParticipantAuthConf of
+        Nothing       -> return False
+        Just authConf -> do
+          let authProvider = provider authConf
+          mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
+          case mAuthInDb of
+            Nothing -> do
+              -- TODO: Temporary: This is a dummy way of authenticating
+              -- call me first time: no value in flow_eid_authentications => put something there and serve identifyview
+              -- call me again: some value in flow_eid_authentications => serve flow overview
+              putDummyValueIntoFlowEAuthentication authKind
+              return True
+            Just authInDb ->
+              return . not . authProviderMatchesAuth authProvider $ authInDb
+
+    putDummyValueIntoFlowEAuthentication authKind =
+      updateFlowEidAuthentication instanceId userName authKind sid
+        $ EIDServiceSEBankIDAuthentication_ EIDServiceSEBankIDAuthentication
+            { eidServiceSEBankIDSignatoryName           = "Tester 'Dummy' Testovicz"
+            , eidServiceSEBankIDSignatoryPersonalNumber = "123456"
+            , eidServiceSEBankIDSignatoryIP             = "0.0.0.0"
+            , eidServiceSEBankIDSignature               = "dummySignature"
+            , eidServiceSEBankIDOcspResponse            = "dummyOcspResponse"
+            }
+
+    -- TODO: Temporary: Use Util.SignatoryLinkUtils:authViewMatchesAuth
+    authProviderMatchesAuth _ _ = True
+
+getMSessionID
+  :: (MonadDB m, MonadThrow m, MonadTime m)
+  => Maybe Cookies'
+  -> Maybe Host
+  -> m (Maybe SessionID)
+getMSessionID mCookies mHost = do
+  let mAuthCookies = do
+        Cookies' cookies <- mCookies
+        readAuthCookies cookies
+  case mAuthCookies of
+    Just authCookies -> AuthModel.getSessionIDByCookies authCookies (cookieDomain mHost)
+    Nothing          -> pure Nothing

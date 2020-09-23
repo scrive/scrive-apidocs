@@ -2,6 +2,9 @@ module EID.Authentication.Tables where
 
 import DB
 
+-- | This table contains the eid authentications linked to kontrakcja documents.
+-- Should really be named `kontrakcja_eid_authentications` (but we don't rename
+-- tables).
 tableEIDAuthentications :: Table
 tableEIDAuthentications = tblTable
   { tblName        = "eid_authentications"

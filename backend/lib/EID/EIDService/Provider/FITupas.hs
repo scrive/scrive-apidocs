@@ -167,10 +167,9 @@ updateDBTransactionWithCompletionData doc sl FITupasEIDServiceCompletionData {..
         , eidServiceFITupasDateOfBirth    = eidtupasBirthDate
         }
   sessionID <- getNonTempSessionID
-  dbUpdate $ MergeEIDServiceFITupasAuthentication (mkAuthKind doc)
-                                                  sessionID
-                                                  (signatorylinkid sl)
-                                                  auth
+  dbUpdate
+    . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+    $ EIDServiceFITupasAuthentication_ auth
 
 updateEvidenceLog
   :: Kontrakcja m => Document -> SignatoryLink -> FITupasEIDServiceCompletionData -> m ()

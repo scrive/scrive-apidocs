@@ -299,7 +299,8 @@ simplifiedEventText mactor sim dee = do
                 EIDServiceVerimiQesSignature_ _ -> do
                   F.value "provider_verimi" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
-            dbQuery (GetEAuthenticationWithoutSession AuthenticationToView slinkid)
+            dbQuery
+                (GetDocumentEidAuthenticationWithoutSession AuthenticationToView slinkid)
               >>= \case
                     Nothing   -> return ()
                     Just esig -> case esig of

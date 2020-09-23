@@ -115,8 +115,9 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       $ F.value "companynumber" companynumber
 
   meauthentication <-
-    dbQuery . GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid
-      signatory
+    dbQuery
+    . GetDocumentEidAuthenticationWithoutSession AuthenticationToView
+    $ signatorylinkid signatory
 
   -- making sure that we don't store CPR in case of NemID PID authentication
   let personalnumber

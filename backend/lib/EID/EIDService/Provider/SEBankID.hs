@@ -330,10 +330,9 @@ updateDBTransactionWithCompletionData doc sl SEBankIDEIDServiceAuthCompletionDat
           , eidServiceSEBankIDOcspResponse            = eidsebidaOcspResponse
           }
     sessionID <- getNonTempSessionID
-    dbUpdate $ MergeEIDServiceSEBankIDAuthentication (mkAuthKind doc)
-                                                     sessionID
-                                                     (signatorylinkid sl)
-                                                     auth
+    dbUpdate
+      . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+      $ EIDServiceSEBankIDAuthentication_ auth
 
 updateEvidenceLog
   :: Kontrakcja m

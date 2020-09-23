@@ -186,10 +186,9 @@ updateDBTransactionWithCompletionData doc sl NLIDINEIDServiceCompletionData {..}
         , eidServiceIDINCustomerID    = Just eiditdCustomerID
         }
   sessionID <- getNonTempSessionID
-  dbUpdate $ MergeEIDServiceIDINAuthentication (mkAuthKind doc)
-                                               sessionID
-                                               (signatorylinkid sl)
-                                               auth
+  dbUpdate
+    . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+    $ EIDServiceIDINAuthentication_ auth
 
 updateEvidenceLog
   :: Kontrakcja m => Document -> SignatoryLink -> NLIDINEIDServiceCompletionData -> m ()

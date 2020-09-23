@@ -56,7 +56,7 @@ newtype ParticipantApiClient = ParticipantApiClient
   }
 
 data PageClient = PageClient
-  { instanceOverview  :: InstanceId -> UserName -> Bool -> Maybe Host -> ClientM Html
+  { instanceOverview  :: InstanceId -> UserName -> Bool -> Maybe Cookies' -> Maybe Host -> ClientM Html
   , instanceOverviewMagicHash
       :: InstanceId -> UserName -> MagicHash -> Maybe Cookies' -> Maybe Host
       -> ClientM (Headers '[ Header "Location" Text

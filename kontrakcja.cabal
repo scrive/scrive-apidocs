@@ -426,6 +426,7 @@ Library
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
                  , Flow.EID.AuthConfig
+                 , Flow.EID.Authentication
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
