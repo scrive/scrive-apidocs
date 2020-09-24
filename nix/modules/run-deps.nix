@@ -31,8 +31,8 @@ let
   ];
 
   haskellDeps = [
-    haskellPackages.ghcid
     haskellPackages.ghcide
+    haskellPackages.ghcid.bin
     haskellPackages.implicit-hie
     haskellPackages.haskell-language-server
   ];

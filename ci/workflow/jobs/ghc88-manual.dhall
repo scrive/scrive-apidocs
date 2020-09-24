@@ -13,7 +13,8 @@ BackendWorkflow.createWorkflow
   , ghcVersion = GHCVersion.Type.ghc88
   , nixShell = "manual-backend-shell"
   , cacheCabal = True
-  , runs-on = default-runner
+--   , runs-on = default-runner
+  , runs-on = [ "ubuntu-latest" ]
   , triggers = Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
           { branches = Some [ "master", "staging", "production" ]

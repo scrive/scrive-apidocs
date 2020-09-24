@@ -2,8 +2,7 @@
 jobs:
   backend-tests:
     runs-on:
-      - linux
-      - self-hosted
+      - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -35,10 +34,10 @@ jobs:
       - name: "Cache ~/.cabal"
         uses: "actions/cache@v2"
         with:
-          key: "${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-1"
+          key: "${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-2"
           path: "~/.cabal"
           restore-keys: |
-            ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-1
+            ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-2
       - name: Build Kontrakcja
         run: |
           nix-shell -A ghc88.manual-backend-shell release.nix --run \
