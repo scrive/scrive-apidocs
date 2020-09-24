@@ -467,7 +467,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     else if (this.canUseOnfidoAuthenticationToSign())
       return "onfido_document_check";  // we could also use "onfido_document_and_photo_check"
     else if (this.canUseVerimiQesToSign())
-      return "verimi_qes"
+      return "verimi_qes";
     else
       // Should not happen, just in case
       return "standard";

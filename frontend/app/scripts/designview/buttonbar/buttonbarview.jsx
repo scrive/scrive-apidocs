@@ -108,7 +108,7 @@ module.exports = React.createClass({
     Track.track("Click save as draft");
     this.saveDocument();
   },
-  showSignOrSendConfirmationModal: function() {
+  showSignOrSendConfirmationModal: function () {
     var doc = this.props.document;
 
     var isSigning = doc.authorCanSignFirst();
@@ -139,20 +139,21 @@ module.exports = React.createClass({
       this.showCantSignModal();
     } else if (document.usesVerimiQes()) {
       var self = this;
-      document.save(function () { return new Submit({
-          url : "/api/frontend/documents/" + document.documentid() +  "/canbestarted",
-          method: "GET",
-          ajax: true,
-          ajaxsuccess : function(resp) {
-              if(resp.can_start) {
-                self.showSignOrSendConfirmationModal();
-              } else {
-                self.setState({canbestarted_errors: resp.errors});
-                self.showVerimiQesProblemModal();
-              }
+        document.save(function () {
+          return new Submit({
+            url: "/api/frontend/documents/" + document.documentid() +  "/canbestarted",
+            method: "GET",
+            ajax: true,
+            ajaxsuccess: function (resp) {
+                if (resp.can_start) {
+                  self.showSignOrSendConfirmationModal();
+                } else {
+                  self.setState({canbestarted_errors: resp.errors});
+                  self.showVerimiQesProblemModal();
+                }
             }
           }).send();
-      });
+        });
     } else {
       this.showSignOrSendConfirmationModal();
     }

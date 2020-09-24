@@ -310,7 +310,9 @@ module.exports = React.createClass({
             <Button
               size="big"
               className="s-download-button"
-              text={document_.downloadLink(true).isZip ? localization.authorview.downloadZip : localization.authorview.downloadPdf}
+              text={document_.downloadLink(true).isZip
+                    ? localization.authorview.downloadZip
+                    : localization.authorview.downloadPdf}
               href={document_.downloadLink(true).link}
             />
           }

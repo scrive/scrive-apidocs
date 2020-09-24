@@ -18,7 +18,7 @@ var localiseQesError = function (error) {
   } else {
     return null;
   }
-}
+};
 
 module.exports = React.createClass({
   render: function () {
@@ -28,7 +28,7 @@ module.exports = React.createClass({
                function (err) {
                  const text = localiseQesError(err);
                  return text ? <li>{text}</li> : null;
-               }), function (li){return li != null;} )
+               }), function (li) { return li != null; })
         }
       </ul>
     );
