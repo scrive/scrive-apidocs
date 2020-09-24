@@ -3,8 +3,9 @@ module Flow.Engine
   ( EngineEvent(..)
   , EngineError(..)
   , processMachinizeEvent
-  , processEvent
+  , processFlowEvent
   , decodeHighTongueM
+  , pushActions
   ) where
 
 import Control.Monad.Catch
@@ -20,18 +21,14 @@ import Log (MonadLog, localData, logAttention_, logTrace_)
 import Text.StringTemplates.Templates (TemplatesMonad)
 
 import Doc.DocumentID (DocumentID)
-import Doc.DocumentMonad
 import Doc.SignatoryLinkID (SignatoryLinkID, fromSignatoryLinkID)
 import EventStream.Class
 import File.Storage (MonadFileStorage)
 import Flow.ActionConsumers (consumeFlowAction, toConsumableAction)
 import Flow.Aggregator
-  ( AggregatorError(DuplicateEvent, UnknownEventInfo, UnknownStage)
-  , AggregatorStep(NeedMoreEvents, StateChange), runAggregatorStep
-  )
 import Flow.Core.Type.Url
 import Flow.HighTongue
-import Flow.Id (InstanceId)
+import Flow.Id
 import Flow.Machinize
 import Flow.Model as Model
 import Flow.Model.Types
@@ -65,9 +62,8 @@ data EngineError
     | UnexpectedEventReceived
   deriving (Show, Exception)
 
-processEvent
+processFlowEvent
   :: ( CryptoRNG m
-     , DocumentMonad m
      , GuardTimeConfMonad m
      , MailContextMonad m
      , MonadBaseControl IO m
@@ -82,17 +78,18 @@ processEvent
      )
   => EngineEvent
   -> ExceptT EngineError m ()
-processEvent event@EngineEvent {..} = do
-  localData (toPairs event) $ do
-    documentName <- fromMaybeM noDocumentNameFound
-      $ selectDocumentNameFromKV instanceId documentId
-    userName <- fromMaybeM noUserNameFound $ selectUserNameFromKV instanceId signatoryId
-    processMachinizeEvent
-      instanceId
-      EventInfo { eventInfoAction   = userAction
-                , eventInfoUser     = userName
-                , eventInfoDocument = documentName
-                }
+processFlowEvent event@EngineEvent { instanceId, documentId, signatoryId, userAction } =
+  do
+    localData (toPairs event) $ do
+      documentName <- fromMaybeM noDocumentNameFound
+        $ selectDocumentNameFromKV instanceId documentId
+      userName <- fromMaybeM noUserNameFound $ selectUserNameFromKV instanceId signatoryId
+      processMachinizeEvent
+        instanceId
+        EventInfo { eventInfoAction   = userAction
+                  , eventInfoUser     = userName
+                  , eventInfoDocument = Just documentName
+                  }
   where
     noDocumentNameFound = do
       logAttention_ "Given document not associated with flow instance."
@@ -103,7 +100,6 @@ processEvent event@EngineEvent {..} = do
 
 pushActions
   :: ( CryptoRNG m
-     , DocumentMonad m
      , GuardTimeConfMonad m
      , MailContextMonad m
      , MonadBaseControl IO m
@@ -117,12 +113,13 @@ pushActions
      , TemplatesMonad m
      )
   => InstanceId
+  -> EventInfo
   -> [LowAction]
   -> ExceptT EngineError m ()
-pushActions instanceId actions = do
+pushActions instanceId eventInfo actions = do
   mailCtx <- getMailContext
   let baseUrl = Url (mailCtx ^. #brandedDomain % #url)
-  consumableActions <- mapM (toConsumableAction baseUrl instanceId) actions
+  consumableActions <- mapM (toConsumableAction baseUrl instanceId eventInfo) actions
   forM_ consumableActions $ \action -> do
     consumeFlowAction action
     Model.updateInstanceLastModified instanceId
@@ -135,9 +132,20 @@ decodeHighTongueM process = either throwDSLValidationError' pure
       logAttention_ $ "Flow DSL compatibility broken: " <> showt err
       throwM $ InvalidProcess err
 
+-- Validate and process a flow event *after* it has happen.
+-- The aggregator tries to determine which
+-- are the valid flow events at the current stage. If the
+-- current flow event does not match, e.g. signatory signing
+-- at the wrong stage, then this raises an error the the
+-- event that has happened is *undone* through the
+-- underlying database transaction. This relies on the DB
+-- transaction magic for the application logic to work correctly,
+-- but any other IO side effects will have happened by this point.
+-- [FIXME] Properly test the transaction magic, and refactor the
+-- code so that validation is done *before* any flow action.
 processMachinizeEvent
-  :: ( CryptoRNG m
-     , DocumentMonad m
+  :: forall m
+   . ( CryptoRNG m
      , GuardTimeConfMonad m
      , MailContextMonad m
      , MonadBaseControl IO m
@@ -159,36 +167,44 @@ processMachinizeEvent instanceId eventInfo = do
   -- that is aborted on errors.
   eventId      <- insertEvent $ toInsertEvent instanceId eventInfo
   fullInstance <- fromMaybeM noInstance $ selectFullInstance instanceId
+
   let aggregator = instanceToAggregator fullInstance
   highTongue <- decodeHighTongueM $ fullInstance ^. #template % #process
+
   let (aggregatorResult, newAggregator) =
         runAggregatorStep eventInfo aggregator highTongue
-  either failGracefully (processStep eventId newAggregator) aggregatorResult
+
+  case aggregatorResult of
+    Left  err -> failGracefully err
+    Right res -> processStep eventId newAggregator res
   where
+    processStep
+      :: EventId -> AggregatorState -> AggregatorStep -> ExceptT EngineError m ()
+    processStep eventId newAggregator NeedMoreEvents = do
+      updateAggregatorState instanceId newAggregator eventId False
+      logTrace_ "Aggregator needs more events to step."
+
+    processStep eventId newAggregator (StateChange actions) = do
+      updateAggregatorState instanceId newAggregator eventId True
+      pushActions instanceId eventInfo actions
+
     -- TODO: Think of some error monad. MonadFail is ugly.
     -- TODO: This fail thing may leak some error to user.
     -- TODO: Improve error messages.
-    failGracefully
-      :: (MonadLog m, MonadDB m, MonadThrow m)
-      => AggregatorError
-      -> ExceptT EngineError m ()
+    failGracefully :: AggregatorError -> ExceptT EngineError m ()
     failGracefully UnknownEventInfo = do
       logAttention_ "Unexpected event received."
       throwError UnexpectedEventReceived
+
     failGracefully DuplicateEvent = do
       logAttention_ "Duplicate event received."
       throwM DuplicateEventReceived
+
     failGracefully UnknownStage = do
       logAttention_ "Aggregator is in inconsistent state"
       throwM AggregatorSteppingFailed
 
-    processStep eventId newAggregator NeedMoreEvents = do
-      updateAggregatorState instanceId newAggregator eventId False
-      logTrace_ "Aggregator needs more events to step."
-    processStep eventId newAggregator (StateChange actions) = do
-      updateAggregatorState instanceId newAggregator eventId True
-      pushActions instanceId actions
-
+    noInstance :: ExceptT EngineError m b
     noInstance = do
       logAttention_ "Flow instance with this ID does not exist."
       throwM NoInstance

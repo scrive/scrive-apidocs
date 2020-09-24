@@ -14,8 +14,8 @@ package text-icu
 
 source-repository-package
     type: git
-    location: https://github.com/scrive/hsaml2.git
-    tag: fb247044dfa62f45944f161c71dabea9fd06dca3
+    location: https://github.com/dylex/hsaml2.git
+    tag: d4852ee7d96f7643c97e5a7f1a82a7705a0e1236
 
 allow-newer: servant-docs:lens
              servant:QuickCheck

@@ -2,6 +2,8 @@ module PdfToolsLambda.Spec (
     sealSpecToLambdaSpec
   , presealSpecToLambdaSpec
   , addImageSpecToLambdaSpec
+  , verimiQesSetupSpecToLambdaSpec
+  , verimiQesEvidenceSpecToLambdaSpec
 ) where
 
 import Control.Monad.Base
@@ -45,6 +47,33 @@ sealSpecToLambdaSpec spec = do
        , "staticTexts" .= staticTextsJSON (staticTexts spec)
        ]
 
+verimiQesEvidenceSpecToLambdaSpec
+  :: (MonadLog m, MonadBase IO m) => VerimiQesEvidenceSpec -> m BSL.ByteString
+verimiQesEvidenceSpecToLambdaSpec spec = do
+  mfc          <- liftBase . BS.readFile $ T.unpack (vqeInput spec)
+  persons_     <- mapM sealSpecForPerson (vqePersons spec)
+  secretaries_ <- mapM sealSpecForPerson (vqeSecretaries spec)
+  initiator_   <- mapM sealSpecForPerson (maybeToList $ vqeInitiator spec)
+  attachments_ <- mapM sealSpecForSealAttachment (vqeAttachments spec)
+  files_       <- mapM sealSpecForFile (vqeFilesList spec)
+
+  return
+    .  Aeson.encode
+    .  Aeson.object
+    $  [ "preseal" .= False
+       , "persons" .= persons_
+       , "secretaries" .= secretaries_
+       , "attachments" .= attachments_
+       , "filesList" .= files_
+       ]
+    ++ (("initiator" .=) <$> initiator_)
+    ++ [ "mainFileInput"
+         .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode mfc)]
+       , "documentNumberAndHashText" .= vqeDocumentNumberAndHashText spec
+       , "initialsText" .= vqeInitialsText spec
+       , "staticTexts" .= staticTextsJSON (vqeStaticTexts spec)
+       ]
+
 presealSpecToLambdaSpec :: (MonadLog m, MonadBase IO m) => PreSealSpec -> m BSL.ByteString
 presealSpecToLambdaSpec spec = do
   mfc     <- liftBase . BS.readFile $ T.unpack (pssInput spec)
@@ -53,6 +82,32 @@ presealSpecToLambdaSpec spec = do
     [ "preseal" .= True
     , "fields" .= fields_
     , "mainFileInput" .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode mfc)]
+    ]
+
+verimiQesSetupSpecToLambdaSpec
+  :: (MonadLog m, MonadBase IO m) => VerimiQesSetupSpec -> m BSL.ByteString
+verimiQesSetupSpecToLambdaSpec spec = do
+  mfc                <- liftBase . BS.readFile $ T.unpack (vqsInput spec)
+  fields_            <- mapM sealSpecForField (vqsFields spec)
+  evidenceAttachment <- sealSpecForSealAttachment $ vqsEvidenceAttachment spec
+  filesList          <- mapM sealSpecForFile (vqsFilesList spec)
+  persons_           <- mapM sealSpecForPerson (vqsPersons spec)
+  return . Aeson.encode $ Aeson.object
+    [ "fields" .= fields_
+    , "mainFileInput" .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode mfc)]
+    , "evidenceAttachment" .= evidenceAttachment
+    , "filesList" .= filesList
+    , "documentNumberText" .= vqsDocumentNumberText spec
+    , "verificationLink" .= vqsVerificationLink spec
+    , "staticTexts" .= staticTextsJSON (vqsStaticTexts spec)
+    , "signatories" .= persons_
+    , "linkText"
+      .= let linkText = vqsLinkText spec
+         in  Aeson.object
+               [ "firstWord" .= vqsFirstWord linkText
+               , "linkWord" .= vqsLinkWord linkText
+               , "lastWord" .= vqsLastWord linkText
+               ]
     ]
 
 sealSpecForPerson :: (MonadLog m, MonadBase IO m) => Person -> m Aeson.Value
@@ -79,6 +134,7 @@ sealSpecForPerson person = do
     , "nameFromText" .= nameFromText person
     , "highlightedImages" .= highlightedImages_
     , "fields" .= fields_
+    , "signatoryFieldName" .= signatoryFieldName person
     ]
 
 

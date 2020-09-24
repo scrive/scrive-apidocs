@@ -1,0 +1,7 @@
+{"/api/frontend/documents/list": "include /etc/nginx/includes/kontrakcja-prod-list;",
+ "/api/v2/documents/list": "include /etc/nginx/includes/kontrakcja-prod-list;",
+ "/api/v1/list": "include /etc/nginx/includes/kontrakcja-prod-list;",
+ "/verify": "client_max_body_size 30M;\ninclude /etc/nginx/includes/kontrakcja-prod;",
+ "/api/": "include /etc/nginx/includes/kontrakcja-prod;",
+ "/adminonly": "include /etc/nginx/includes/kontrakcja-prod;",
+ "/api/v2/signup": "add_header Access-Control-Allow-Origin www.scrive.com;\ninclude /etc/nginx/includes/kontrakcja-prod;"}

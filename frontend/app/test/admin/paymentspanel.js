@@ -49,31 +49,6 @@ describe("admin/paymentspanel", function () {
 
   });
 
-  it("should render the payments panel", function () {
-    var component = renderComponent();
-    var checkboxes = $(".checkbox", component.getDOMNode());
-    // We should have 2 checkboxes for each option.
-    // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 68);
-    // We should have one select (for price plan)
-    var selects = $(".select", component.getDOMNode());
-    assert.equal(selects.size(), 2);
-    // We there should be no disabled checkboxes
-    var disabledCheckboxes = $(".checkbox.disabled", component.getDOMNode());
-    assert.equal(disabledCheckboxes.size(), 0);
-
-  });
-
-  it("should render the payments panel even for non-admin with enabled checkboxes", function () {
-    var component = renderComponent({forAdmin: false});
-    var checkboxes = $(".checkbox", component.getDOMNode());
-
-    component.forceUpdate();
-    // We should have 2 checkboxes for each option.
-    // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 68);
-  });
-
   it("should call subscriptions updateSubscriptionAsAdmin on button clicked", function () {
     var component = renderComponent({forAdmin: false});
     var subscription = component.state.subscription;

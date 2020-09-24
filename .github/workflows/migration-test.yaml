@@ -1,0 +1,50 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  migration-tests:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+        with:
+          fetch-depth: 0
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          df -h
+          nix-collect-garbage
+          rm -rf ~/.cabal
+          df -h
+          
+          nix-shell -j4 -A ghc88.backend-shell release.nix --run true
+      - env:
+          BASE_BRANCH: origin/master
+          PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
+        name: Run Migration Tests
+        run: |
+          nix-shell -j4 -A ghc88.backend-shell release.nix \
+            --run "./ci/workflow/scripts/run-migration-tests.sh"
+name: Migration Tests
+on:
+  pull_request:
+    paths:
+      - "backend/migrate/**"
+  push:
+    branches:
+      - nix

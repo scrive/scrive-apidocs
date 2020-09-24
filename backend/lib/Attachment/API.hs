@@ -21,8 +21,8 @@ import Attachment.AttachmentID
 import Attachment.JSON
 import Attachment.Model
 import DB
-import File.File
 import File.Storage
+import File.Types
 import Kontra
 import OAuth.Model
 import Routing

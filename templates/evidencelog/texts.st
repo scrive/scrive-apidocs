@@ -1,7 +1,14 @@
+AttachExtendedQesEvidenceFileEvidenceLog=Scrive eSign sealed the evidence file with a keyless digital signature.
+###
+AttachExtendedQesEvidenceFileEvidenceArchive=$_AttachExtendedQesEvidenceFileEvidenceTextSimple()$
+###
 AttachExtendedSealedFileEvidenceLog=Scrive eSign sealed the Evidence Package (as defined in the Service Description) with a keyless digital signature.
 ###
 AttachExtendedSealedFileEvidenceArchive=$_AttachExtendedSealedFileEvidenceTextSimple()$
 ###
+AttachDigitalSignatureQesEvidenceFileEvidenceLog=Scrive eSign sealed the Scrive evidence file with a digital signature.
+###
+AttachDigitalSignatureQesEvidenceFileEvidenceArchive=$_AttachGuardtimeQesEvidenceFileEvidenceTextSimple()$
 ###
 AttachDigitalSignatureSealedFileEvidenceLog=Scrive eSign sealed the final PDF with a digital signature.
 ###
@@ -12,6 +19,9 @@ AttachSealedFileEvidenceLog=Scrive eSign prepared the final PDF, including evide
 ###
 AttachSealedFileEvidenceArchive=$_AttachSealedFileEvidenceTextSimpleArchive()$
 ###
+VerimiQesEvidenceFilePreparedLog=The QES signing process has been completed and the Scrive evidence file has been prepared. The SHA-256 hash of the QES-signed pdf file this Scrive evidence file belongs to is $hash$.
+###
+VerimiQesEvidenceFilePreparedArchive=$_VerimiQesEvidenceFilePreparedTextSimpleArchive()$
 ###
 AutomaticReminderSentLogEmail=Scrive eSign sent an automatic reminder to sign using email to <span class="signatory"/> at the request of <span class="actor"/>.
 ###
@@ -84,6 +94,8 @@ ChangeAuthenticationToSignFromOnfidoDocumentCheckLog=$ChangeAuthenticationToSign
 ###
 ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToSignFrom(auth='“Onfido (document check + facial comparison)”')$
 ###
+ChangeAuthenticationToSignFromVerimiQesLog=$ChangeAuthenticationToSignFrom(auth='“Verimi QES  ”')$
+###
 ChangeAuthenticationToSignToStandardLog=$ChangeAuthenticationToSignTo(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToSignToSMSPinLog=$ChangeAuthenticationToSignTo(auth='“PIN by SMS”')$
@@ -102,6 +114,8 @@ ChangeAuthenticationToSignToOnfidoDocumentCheckLog=$ChangeAuthenticationToSignTo
 ###
 ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToSignTo(auth='“Onfido (document check + facial comparison)”')$
 ###
+ChangeAuthenticationToSignToVerimiQesLog=$ChangeAuthenticationToSignTo(auth='“Verimi QES  ”')$
+###
 ChangeAuthenticationToViewFromStandardLog=$ChangeAuthenticationToViewFrom(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToViewFromSMSPinLog=$ChangeAuthenticationToViewFrom(auth='“PIN by SMS”')$
@@ -118,7 +132,7 @@ ChangeAuthenticationToViewFromDKNemIDPIDLog=$ChangeAuthenticationToViewFrom(auth
 ###
 ChangeAuthenticationToViewFromDKNemIDCVRLog=$ChangeAuthenticationToViewFrom(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewFromFITupasLog=$ChangeAuthenticationToViewFrom(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewFromFITupasLog=$ChangeAuthenticationToViewFrom(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewFromVerimiLog=$ChangeAuthenticationToViewFrom(auth='“Verimi”')$
 ###
@@ -140,7 +154,7 @@ ChangeAuthenticationToViewToDKNemIDPIDLog=$ChangeAuthenticationToViewTo(auth='�
 ###
 ChangeAuthenticationToViewToDKNemIDCVRLog=$ChangeAuthenticationToViewTo(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewToFITupasLog=$ChangeAuthenticationToViewTo(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewToFITupasLog=$ChangeAuthenticationToViewTo(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewToVerimiLog=$ChangeAuthenticationToViewTo(auth='“Verimi”')$
 ###
@@ -162,7 +176,7 @@ ChangeAuthenticationToViewArchivedFromDKNemIDPIDLog=$ChangeAuthenticationToViewA
 ###
 ChangeAuthenticationToViewArchivedFromDKNemIDCVRLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewArchivedFromFITupasLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewArchivedFromFITupasLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewArchivedFromVerimiLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Verimi”')$
 ###
@@ -184,11 +198,27 @@ ChangeAuthenticationToViewArchivedToDKNemIDPIDLog=$ChangeAuthenticationToViewArc
 ###
 ChangeAuthenticationToViewArchivedToDKNemIDCVRLog=$ChangeAuthenticationToViewArchivedTo(auth='“Danish Employee NemID”')$
 ###
-ChangeAuthenticationToViewArchivedToFITupasLog=$ChangeAuthenticationToViewArchivedTo(auth='“Finnish TUPAS”')$
+ChangeAuthenticationToViewArchivedToFITupasLog=$ChangeAuthenticationToViewArchivedTo(auth='“Finnish FTN”')$
 ###
 ChangeAuthenticationToViewArchivedToVerimiLog=$ChangeAuthenticationToViewArchivedTo(auth='“Verimi”')$
 ###
 ChangeAuthenticationToViewArchivedToIDINLog=$ChangeAuthenticationToViewArchivedTo(auth='“iDIN“')$
+###
+ChangeAuthenticationToViewFromOnfidoDocumentCheckLog=$ChangeAuthenticationToViewFrom(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewFrom(auth='“Onfido (document check + facial comparison)”')$
+###
+ChangeAuthenticationToViewToOnfidoDocumentCheckLog=$ChangeAuthenticationToViewTo(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewTo(auth='“Onfido (document check + facial comparison)”')$
+###
+ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheckLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Onfido (document check + facial comparison)”')$
+###
+ChangeAuthenticationToViewArchivedToOnfidoDocumentCheckLog=$ChangeAuthenticationToViewArchivedTo(auth='“Onfido (document check only)”')$
+###
+ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheckLog=$ChangeAuthenticationToViewArchivedTo(auth='“Onfido (document check + facial comparison)”')$
 ###
 ###
 ###
@@ -637,6 +667,13 @@ $if(signed_text)$
 <pre style='white-space:normal'>$signed_text$</pre>
 $endif$
 <br/>
+$if(provider_verimi)$
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  $if(signatory_verified_mobile)$<br/>Mobile: $signatory_verified_mobile$$endif$
+  $if(signatory_verified_email)$<br/>Email: $signatory_verified_email$$endif$
+</p>
+$endif$
 $if(provider_sebankid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
@@ -799,7 +836,7 @@ $endif$
 ###
 provider=$if(provider_sebankid)$CGI$elseif(provider_sebankid_eidservice)$the BankID network$elseif(provider_nobankid)$Nets$elseif(provider_nobankid_eidservice)$Vipps$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$elseif(provider_onfido)$$if(onfido_document)$Onfido (document check only)$else$Onfido (document check + facial comparison)$endif$$endif$
 ###
-providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_sebankid_eidservice)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish FTN$elseif(provider_onfido)$Onfido$endif$
+providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_sebankid_eidservice)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_nobankid_eidservice)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish FTN$elseif(provider_onfido)$Onfido$elseif(provider_verimi)$Verimi$endif$
 ###
 AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$
@@ -818,6 +855,8 @@ $elseif(provider_verimi)$
   $_AuthenticatedToViewEvidenceArchiveVerimi()$
 $elseif(provider_idin)$
   $_AuthenticatedToViewEvidenceArchiveIDIN()$
+$elseif(provider_onfido)$
+  $_AuthenticatedToViewEvidenceArchiveOnfido()$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".

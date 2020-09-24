@@ -79,7 +79,6 @@ perform : msg -> Cmd msg
 perform =
     Task.perform identity << Task.succeed
 
-
 formBody : { a | xtoken : String } -> List ( String, String ) -> Http.Body
 formBody globals object =
     (object ++ [ ( "xtoken", globals.xtoken ) ])
@@ -154,18 +153,15 @@ statusMerge2 sA sB =
             Success ( a, b )
 
 
+-- move to Utils.Json
 datetimeDecoder : Decoder Posix
 datetimeDecoder =
-    D.string
-        |> D.andThen
-            (\s ->
-                case toDateTime s of
-                    Ok datetime ->
-                        D.succeed <| toPosix datetime
-
-                    _ ->
-                        D.fail "Cannot parse datetime."
-            )
+  D.string
+  |> D.andThen
+      (\s -> case toDateTime s of
+        Ok datetime -> D.succeed <| toPosix datetime
+        _ -> D.fail "Cannot parse datetime."
+      )
 
 
 firstJust : List (Maybe a) -> Maybe a
@@ -425,10 +421,19 @@ monthToInt month =
             12
 
 decodeJust : Decoder (Maybe a) -> Decoder a
-decodeJust d =
-  d |> D.andThen (\ma -> case ma of
+decodeJust = decodeWithDefault (D.fail "Decoder (Maybe a) return Nothing but we expected Just.")
+
+-- | Generalisation of withDefault : a -> Maybe a -> a; corresponds to
+-- fromMaybeM (and fromMaybe).
+decodeWithDefault : Decoder a -> Decoder (Maybe a) -> Decoder a
+decodeWithDefault da dma =
+  dma |> D.andThen (\ma -> case ma of
           Just a -> D.succeed a
-          Nothing -> D.fail "Decoder (Maybe a) return Nothing but we expected Just.")
+          Nothing -> da)
+
+decodeQuotedInt : Decoder Int
+decodeQuotedInt =
+  D.string |> D.map String.toInt |> decodeWithDefault (D.fail "Failed to decode quoted Int.")
 
 decodeFullDict : Enum k -> (k -> Decoder v) -> Decoder (Enum.Dict k v)
 decodeFullDict e d =
@@ -448,3 +453,4 @@ decodeDict e d =
               Just v -> D.map (Enum.insert k v) <| go ks_
               Nothing -> go ks_)
   in go <| Enum.allValues e
+

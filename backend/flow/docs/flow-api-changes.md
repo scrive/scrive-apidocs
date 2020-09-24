@@ -21,35 +21,46 @@ To configure callbacks for Flow events, add the `callback` field when starting a
 
 This `url` is opaque to us and you can include any important parameters in it; in particular, secret tokens to make sure the call originates from Scrive.
 
-### Callback payloads draft
+### Callback payloads (Added in 0.10.3)
 
 The callbacks will contain the following payload format:
 
 ```json
 {
-  "type": "finished",
-  "flow_instance_id": 123
+  "version": 1,
+  "type": "completed",
+  "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+  "event_created": "1997-01-01T12:00:27.87.00000Z"
 }
 ```
 
 ```json
 {
-  "type": "authentication_attempt",
-  "flow_instance_id": 123,
-  "applicant_id": 456,
-  "successful": true
+  "version": 1,
+  "type": "authentication_attempted",
+  "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+  "event_created": "1997-01-01T12:00:27.87.00000Z",
+  "user": "user1",
+  "result": "success",
+  "provider": "onfido",
+  "provider_data": {
+    "applicant_id": "cec0f826-ad0b-4b71-b735-44310f4952fd"
+  }
 }
 ```
 
 ```json
 {
-  "type": "rejection",
-  "flow_instance_id": 123,
+  "version": 1,
+  "type": "flow_rejected",
+  "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+  "event_created": "1997-01-01T12:00:27.87.00000Z",
+  "user": "user1",
   "message": "Nothing works"
 }
 ```
 
-Note that these payload schemas are not yet completely finalized.
+See `CallbackEvent` schema in the API specification.
 
 ### Document event callbacks
 
@@ -80,7 +91,7 @@ Essentially, `message` is being split into two fields, one for each notification
 
 Additionally, this imposes some new commonsense constraints on which users can be used to instantiate a template. For example, a user that does not posess a phone number cannot be used as a participant for whom the template requires SMS notifications.
 
-## Authentication
+## Authentication (Added in 0.10.2)
 
 Initially we will only provide a global authentication mechanism for users accessing all of Flow. It will be configured via optional fields on `user` objects in the `template_parameters` when starting a new instance from a template.
 

@@ -47,6 +47,7 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import DataRetentionPolicy.Guards
 import DB
+import DigitalSignatureMethod
 import Doc.Action (postDocumentClosedActions, postDocumentPendingChange)
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
@@ -54,15 +55,14 @@ import Doc.API.V2.JSON.List
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocumentID)
-import Doc.DocUtils (fileFromMainFile)
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
 import EvidenceLog.Model
-import File.File
 import File.Model
 import File.Storage
+import File.Types
 import Folder.Model
 import Happstack.Fields
 import InputValidation
@@ -76,7 +76,6 @@ import Mails.Model
 import MinutesTime
 import PadApplication.Types (padAppModeFromText)
 import Routing
-import SealingMethod
 import Session.Constant
 import Session.Model
 import Tag
@@ -617,7 +616,7 @@ getUserGroupSettingsChange = do
   mcompanyportalurl               <- fmap emptyToNothing <$> getField "companyportalurl"
   mcompanyeidservicetoken <- fmap emptyToNothing <$> getField "companyeidservicetoken"
   mcompanysealingmethod           <-
-    fmap sealingMethodFromText <$> getField' $ "companysealingmethod"
+    fmap digitalSignatureMethodFromText <$> getField' $ "companysealingmethod"
   mcompanydocumentsessiontimeout <- getSessionTimeoutField "companydocumentsessiontimeout"
   mcompanyhaspostsignview         <- getField "companyhaspostsignview"
   mcompanyeiduseforseview         <- getField "companyeiduseforseview"
@@ -669,7 +668,7 @@ getUserGroupSettingsChange = do
     . maybe identity (set #sessionTimeoutSecs)            mcompanysessiontimeout
     . maybe identity (set #portalUrl)                     mcompanyportalurl
     . maybe identity (set #eidServiceToken)               mcompanyeidservicetoken
-    . maybe identity (set #sealingMethod)                 mcompanysealingmethod
+    . maybe identity (set #digitalSignatureMethod)        mcompanysealingmethod
     . maybe identity (set #documentSessionTimeoutSecs)    mcompanydocumentsessiontimeout
     . maybe identity (set #hasPostSignview . (== "true")) mcompanyhaspostsignview
     . maybe identity (set #eidUseForSEView . (== "true")) mcompanyeiduseforseview
@@ -830,19 +829,19 @@ reflattenFile :: Kontrakcja m => DocumentID -> m KontraLink
 reflattenFile docid = onlyAdmin . withDocumentID docid $ do
   logInfo_ "Reflattening by superadmin, related to issue on 10.06.2020"
   document               <- dbQuery $ GetDocumentByDocumentID docid
-  baseFile               <- guardJustM . fileFromMainFile $ documentfile document
+  baseFile               <- guardJust $ documentinputfile document
   eReflattenedPdfContent <- preCheckPDF =<< getFileContents baseFile
   case eReflattenedPdfContent of
     Left  _                     -> internalError
     Right reflattenedPdfContent -> do
-      reflattenedFileID <- saveNewFile (filename baseFile) reflattenedPdfContent
-      dbUpdate . AppendReflattenedFile docid $ reflattenedFileID
+      reflattenedFile <- saveNewFile (filename baseFile) reflattenedPdfContent
+      dbUpdate . AppendReflattenedInputFile docid $ fileid reflattenedFile
       return LoopBack
 
 guardNoPades :: Kontrakcja m => Document -> m ()
 guardNoPades doc = do
-  let sealingMethod = documentsealingmethod doc
-  when (sealingMethod == Pades) $ do
+  let digitalSignatureMethod = documentdigitalsignaturemethod doc
+  when (digitalSignatureMethod == Pades) $ do
     logInfo "Cannot reseal a document with PAdES" $ logObject_ doc
     internalError
 
@@ -884,7 +883,7 @@ daveDocument documentid = onlyAdmin $ do
                 (documentsignatorylinks document)
             couldBeResealed =
               everybodySignedAndStatusIn [Closed, DocumentError]
-                && documentsealingmethod document
+                && documentdigitalsignaturemethod document
                 == Guardtime
             couldDoPostPending = documentstatus document == Pending
             callbackResult     = fromMaybe "Unknown" mCallbackResult
@@ -894,7 +893,7 @@ daveDocument documentid = onlyAdmin $ do
         F.value "id" $ show documentid
         F.value "couldBeResealed" couldBeResealed
         F.value "couldBeReflatten" $ documentstatus document /= Closed && isJust
-          (documentfile document)
+          (documentinputfile document)
         F.value "couldDoPostPending" couldDoPostPending
         F.value "istemplate" $ documenttype document == Template
         entryPointFields ctx

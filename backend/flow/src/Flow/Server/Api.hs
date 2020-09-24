@@ -16,9 +16,9 @@ version :: AppM Version
 version = pure . Version . T.pack $ buildVcsNumber buildVersion
 
 api :: ServerT FlowApi AppM
-api = accountEndpoints :<|> instanceUserEndpoints :<|> noAuthEndpoints
+api = accountEndpoints :<|> Instances.userEndpoints :<|> noAuthEndpoints
   where
     accountEndpoints account =
       Templates.accountEndpoints account :<|> Instances.accountEndpoints account
-    instanceUserEndpoints = Instances.getInstanceView
-    noAuthEndpoints       = Templates.validateTemplate :<|> version
+
+    noAuthEndpoints = Templates.validateTemplate :<|> version

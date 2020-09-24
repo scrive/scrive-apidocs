@@ -24,10 +24,10 @@ import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
 import qualified Data.Set as S
 
+import DigitalSignatureMethod
 import Doc.API.V2.JSON.Misc
 import MinutesTime
 import PadApplication.Types
-import SealingMethod
 import User.CallbackScheme.Model (UserCallbackScheme(..))
 import User.Model
 import UserGroup.DeletionRequest.Types (UserGroupDeletionRequest)
@@ -228,7 +228,7 @@ companySettingsJson ugs = do
   value "sessiontimeout" $ ugs ^. #sessionTimeoutSecs
   value "portalurl" $ ugs ^. #portalUrl
   value "eidservicetoken" $ ugs ^. #eidServiceToken
-  value "sealingmethod" . sealingMethodText $ ugs ^. #sealingMethod
+  value "sealingmethod" . digitalSignatureMethodText $ ugs ^. #digitalSignatureMethod
   value "documentsessiontimeout" $ ugs ^. #documentSessionTimeoutSecs
   value "haspostsignview" $ ugs ^. #hasPostSignview
   value "eiduseforseview" $ ugs ^. #eidUseForSEView

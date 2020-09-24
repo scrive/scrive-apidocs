@@ -24,7 +24,6 @@ module Doc.DocUtils (
   , documentDeletedForUser
   , documentReallyDeletedForUser
   , userCanPerformSigningAction
-  , fileFromMainFile
   , allRequiredAttachmentsAreOnList
   , hasDigitalSignature
   , hasGuardtimeSignature
@@ -38,12 +37,11 @@ import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import DB
+import Doc.DigitalSignatureStatus
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.SealStatus
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
-import File.File
 import File.Model
 import Templates
 import User.Model
@@ -261,12 +259,6 @@ getSignatoryAttachment slid name doc =
   (find (\a -> name == signatoryattachmentname a) <$> signatoryattachments)
     =<< getSigLinkFor slid doc
 
--- Changes MainFile into file. Works on maybe since this is main case in our system
-fileFromMainFile :: (MonadDB m, MonadThrow m) => Maybe MainFile -> m (Maybe File)
-fileFromMainFile mmf = case mmf of
-  Nothing -> return Nothing
-  Just mf -> Just <$> dbQuery (GetFileByFileID $ mainfileid mf)
-
 documentDeletedForUser :: Document -> UserID -> Bool
 documentDeletedForUser doc uid = maybe
   False
@@ -313,7 +305,9 @@ nubPortalSignatories = nubOrdOn getEmail
     roleAsInt SignatoryRoleForwardedApprover     = 4
 
 hasGuardtimeSignature :: Document -> Bool
-hasGuardtimeSignature doc = (isGuardtime <$> documentsealstatus doc) == Just True
+hasGuardtimeSignature doc =
+  (isGuardtime <$> documentdigitalsignaturestatus doc) == Just True
 
 hasDigitalSignature :: Document -> Bool
-hasDigitalSignature doc = (isSealed <$> documentsealstatus doc) == Just True
+hasDigitalSignature doc =
+  (isDigitallySigned <$> documentdigitalsignaturestatus doc) == Just True

@@ -65,7 +65,7 @@ testUnknownEvent = do
     @?= (Left UnknownEventInfo, initialAggregatorState)
   where
     event :: EventInfo
-    event = EventInfo Signature "who??" "what???"
+    event = EventInfo Signature "who??" $ Just "what???"
 
 testNeedMoreEventsEvent1 :: Assertion
 testNeedMoreEventsEvent1 = do
@@ -75,7 +75,7 @@ testNeedMoreEventsEvent1 = do
   receivedEvents @?= Set.fromList [event]
   where
     event :: EventInfo
-    event = EventInfo Approval "approver1" "doc1"
+    event = EventInfo Approval "approver1" $ Just "doc1"
 
 testDuplicateEventEvent :: Assertion
 testDuplicateEventEvent = do
@@ -90,7 +90,7 @@ testDuplicateEventEvent = do
   result @?= Left DuplicateEvent
   where
     event :: EventInfo
-    event = EventInfo Approval "approver1" "doc1"
+    event = EventInfo Approval "approver1" $ Just "doc1"
 
 testNeedMoreEventsEvent2 :: Assertion
 testNeedMoreEventsEvent2 = do
@@ -100,9 +100,9 @@ testNeedMoreEventsEvent2 = do
   receivedEvents @?= Set.fromList [event1, event2]
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" "doc1"
+    event1 = EventInfo Approval "approver1" $ Just "doc1"
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" "doc2"
+    event2 = EventInfo Approval "approver1" $ Just "doc2"
 
 testFullTransition :: Assertion
 testFullTransition = do
@@ -121,11 +121,11 @@ testFullTransition = do
   result @?= Right (StateChange [action])
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" "doc1"
+    event1 = EventInfo Approval "approver1" $ Just "doc1"
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" "doc2"
+    event2 = EventInfo Approval "approver1" $ Just "doc2"
     event3 :: EventInfo
-    event3 = EventInfo Approval "approver1" "doc3"
+    event3 = EventInfo Approval "approver1" $ Just "doc3"
     emailMessage :: Maybe MessageName
     emailMessage = Just "get-data2"
     smsMessage :: Maybe MessageName
@@ -149,11 +149,11 @@ testFullTransitionDifferentOrder = do
   result @?= Right (StateChange [action])
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" "doc1"
+    event1 = EventInfo Approval "approver1" $ Just "doc1"
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" "doc2"
+    event2 = EventInfo Approval "approver1" $ Just "doc2"
     event3 :: EventInfo
-    event3 = EventInfo Approval "approver1" "doc3"
+    event3 = EventInfo Approval "approver1" $ Just "doc3"
     emailMessage :: Maybe MessageName
     emailMessage = Just "get-data2"
     smsMessage :: Maybe MessageName
@@ -184,11 +184,11 @@ testFullTransitionMultipleStates = do
   result @?= Right (StateChange [CloseAll])
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" "doc1"
+    event1 = EventInfo Approval "approver1" $ Just "doc1"
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" "doc2"
+    event2 = EventInfo Approval "approver1" $ Just "doc2"
     event3 :: EventInfo
-    event3 = EventInfo Approval "approver1" "doc3"
+    event3 = EventInfo Approval "approver1" $ Just "doc3"
     emailMessage :: Maybe MessageName
     emailMessage = Just "get-data2"
     smsMessage :: Maybe MessageName
@@ -196,20 +196,20 @@ testFullTransitionMultipleStates = do
     action :: LowAction
     action = Action . Notify ["user1", "user2"] $ Methods emailMessage smsMessage
     event4 :: EventInfo
-    event4 = EventInfo Approval "approver2" "doc5"
+    event4 = EventInfo Approval "approver2" $ Just "doc5"
 
 testFailure :: Assertion
 testFailure = do
   let (result, nextState@AggregatorState {..}) =
         runAggregatorStep event initialAggregatorState compiled
   receivedEvents @?= Set.empty
-  result @?= Right (StateChange [Fail])
+  result @?= Right (StateChange [Reject])
   let (result, _nextState2@AggregatorState {..}) =
         runAggregatorStep event nextState compiled
   result @?= Left UnknownStage
   where
     event :: EventInfo
-    event = EventInfo Rejection "approver1" "doc1"
+    event = EventInfo DocumentRejection "approver1" $ Just "doc1"
 
 testUnknownStage :: Assertion
 testUnknownStage = do
@@ -219,7 +219,7 @@ testUnknownStage = do
   receivedEvents @?= mempty
   where
     event :: EventInfo
-    event = EventInfo Approval "foo1" "bar1"
+    event = EventInfo Approval "foo1" $ Just "bar1"
 
 tests :: Test
 tests = testGroup

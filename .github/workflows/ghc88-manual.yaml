@@ -1,56 +1,60 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
 jobs:
   backend-tests:
     runs-on:
-      - ubuntu-latest
+      - linux
+      - self-hosted
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
-        with:
-          fetch-depth: 0
       - name: Setup Nix
-        uses: "cachix/install-nix-action@v10"
-      - name: Setup Cachix
-        uses: "cachix/cachix-action@v6"
-        with:
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          name: scrive
-      - env:
-          SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
-        name: Setup SSH
         run: |
-          eval $(ssh-agent)
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          nix-shell -j8 \
-            -A ghc88.manual-shell \
-            release.nix \
-            --run "echo Loaded Nix shell"
+          df -h
+          nix-collect-garbage
+          rm -rf ~/.cabal
+          df -h
+          
+          nix-shell -j4 -A ghc88.manual-backend-shell release.nix --run true
       - name: "Cache ~/.cabal"
         uses: "actions/cache@v2"
         with:
-          key: "${{ runner.os }}-cabal-backend-tests-${{ hashFiles('**/*.cabal') }}"
+          key: "${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-1"
           path: "~/.cabal"
           restore-keys: |
-            ${{ runner.os }}-cabal-backend-tests-${{ hashFiles('**/*.cabal') }}
-            ${{ runner.os }}-cabal-backend-tests-
+            ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-1
       - name: Build Kontrakcja
         run: |
-          nix-shell -j8 \
-            -A ghc88.manual-shell \
-            release.nix \
-            --run "cabal update; cabal configure --enable-tests --disable-optimization; cabal build all"
+          nix-shell -A ghc88.manual-backend-shell release.nix --run \
+            "cabal update; cabal configure --enable-tests --disable-optimization; cabal build all"
         timeout-minutes: 180
       - env:
           PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
         name: Run Backend Tests
         run: |
-          nix-shell -j8 \
-            -A ghc88.manual-shell \
-            release.nix \
-            --run "./ci/scripts/run-backend-tests.sh"
+          nix-shell -A ghc88.manual-backend-shell release.nix --run \
+            "./ci/workflow/scripts/run-backend-tests.sh"
         timeout-minutes: 180
+      - name: Build Haddock
+        run: |
+          nix-shell -A ghc88.manual-backend-shell release.nix --run \
+            "./shake.sh haddock"
       - if: "${{ always() }}"
         name: Upload Logs
         uses: "actions/upload-artifact@v2"
@@ -62,3 +66,5 @@ on:
   push:
     branches:
       - master
+      - staging
+      - production

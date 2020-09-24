@@ -334,10 +334,9 @@ updateDBTransactionWithCompletionData doc sl authKind cd = do
         , eidServiceNemIDCertificate                  = certificate
         }
   sessionID <- getNonTempSessionID
-  dbUpdate $ MergeEIDServiceNemIDAuthentication (mkAuthKind doc)
-                                                sessionID
-                                                (signatorylinkid sl)
-                                                auth
+  dbUpdate
+    . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+    $ EIDServiceNemIDAuthentication_ auth
 
 updateEvidenceLog
   :: Kontrakcja m

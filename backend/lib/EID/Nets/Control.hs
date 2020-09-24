@@ -272,12 +272,13 @@ handleResolveNetsFITupas res doc nt sl ctx = do
     else do
       -- Put FI TUPAS Nem ID transaction in DB
       dbUpdate
-        . EID.MergeNetsFITupasAuthentication (mkAuthKind doc)
+        . EID.MergeDocumentEidAuthentication (mkAuthKind doc)
                                              sessionID
                                              (netsSignatoryID nt)
-        $ NetsFITupasAuthentication { netsFITupasSignatoryName = signatoryName
-                                    , netsFITupasDateOfBirth   = dob_nets
-                                    }
+        $ EID.NetsFITupasAuthentication_ NetsFITupasAuthentication
+            { netsFITupasSignatoryName = signatoryName
+            , netsFITupasDateOfBirth   = dob_nets
+            }
 
       -- Record evidence only for auth-to-view (i.e. if the document is not
       -- closed).

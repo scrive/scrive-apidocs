@@ -621,10 +621,10 @@ viewUserGroup model ug address settings =
                 [ readonly ug.settingsIsInherited ]
             , formCheckboxRowM "PAdES sealing"
                 "If enabled, use PAdES instead of GuardTime sealing."
-                (settings.sealingMethod == UserGroup.Pades)
+                (settings.digitalSignatureMethod == UserGroup.Pades)
                 (\b ->
-                    SetStringField "sealingMethod" <|
-                        Enum.toString UserGroup.enumSealingMethod <|
+                    SetStringField "digitalSignatureMethod" <|
+                        Enum.toString UserGroup.enumDigitalSignatureMethod <|
                             if b then
                                 UserGroup.Pades
 

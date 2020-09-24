@@ -50,6 +50,7 @@ data AuthError
   | AuthCookiesParseError
   | InvalidAuthCookiesError
   | AccessControlError
+  | RejectForbiddenError
   | InvalidInstanceAccessTokenError
 
 instance Show AuthError where
@@ -59,6 +60,7 @@ instance Show AuthError where
     AuthCookiesParseError           -> "Cannot parse the authentication cookies"
     InvalidAuthCookiesError         -> "The provided authentication cookies are invalid"
     AccessControlError -> "You do not have permission to perform the requested action"
+    RejectForbiddenError            -> "You are not allowed to reject the flow instance"
     InvalidInstanceAccessTokenError -> "This invitation link is invalid"
 
 makeJSONError :: FlowError -> ServerError

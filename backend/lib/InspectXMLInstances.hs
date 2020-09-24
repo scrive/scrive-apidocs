@@ -12,22 +12,25 @@
 module InspectXMLInstances (ExtraDocument(..)) where
 
 import Data.Int
+import Data.Map (Map)
 import Text.JSON
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.UTF8 as BU
+import qualified Data.Map as Map
 import qualified Data.Set as S
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
 import DB.TimeZoneName
+import DigitalSignatureMethod
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus)
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.SealStatus (SealStatus)
 import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryLinkID
 import Doc.Types.SignatoryAccessToken
-import File.File
 import File.FileID
+import File.Types
 import FlashMessage
 import Folder.Types
 import InspectXML
@@ -36,7 +39,6 @@ import KontraLink
 import LoginAuth.LoginAuthMethod
 import MagicHash (MagicHash)
 import MinutesTime
-import SealingMethod
 import User.Email
 import User.History.Model
 import User.Model
@@ -63,7 +65,8 @@ instance ( InspectXML a, InspectXML b, InspectXML c
 instance InspectXML (S.Set Tag) where
   inspectXML = inspectXML . S.toList
 
-$(deriveInspectXML ''MainFile)
+$(deriveInspectXML ''DigitallySignedFile)
+$(deriveInspectXML ''DocumentFile)
 $(deriveInspectXML ''Document)
 $(deriveInspectXML ''AuthorAttachment)
 $(deriveInspectXML ''HighlightedPage)
@@ -83,6 +86,9 @@ $(deriveInspectXML ''SignatoryAccessTokenReason)
 
 newtype ExtraDocument = ExtraDocument String
   deriving Show
+
+instance InspectXML (Map DocumentFileID DocumentFile) where
+  inspectXML = inspectXML . Map.toDescList
 
 instance InspectXML SignatoryField where
   inspectXML field =
@@ -198,10 +204,11 @@ instance InspectXML IPAddress where
 instance InspectXML UserHistoryEventType where
 instance InspectXML JSValue where
 instance InspectXML StatusClass where
-instance InspectXML SealStatus
+instance InspectXML DigitalSignatureStatus
 instance InspectXML TimeZoneName
 instance InspectXML UserGroupID
 instance InspectXML UserGroup
 instance InspectXML Folder
 instance InspectXML FolderID
-instance InspectXML SealingMethod
+instance InspectXML DigitalSignatureMethod
+instance InspectXML DocumentFileID

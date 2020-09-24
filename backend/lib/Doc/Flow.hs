@@ -1,5 +1,5 @@
 module Doc.Flow
-    ( processEventThrow
+    ( processFlowEventForSignatory
     , EngineEvent(..)
     , UserAction(..)
     )
@@ -16,17 +16,15 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 
 import API.V2.Errors
 import API.V2.MonadUtils (apiError)
-import Doc.DocumentMonad (DocumentMonad)
 import EventStream.Class (MonadEventStream)
 import File.Storage (MonadFileStorage)
-import Flow.Engine (EngineError(..), EngineEvent(..), processEvent)
+import Flow.Engine (EngineError(..), EngineEvent(..), processFlowEvent)
 import Flow.Machinize (UserAction(..))
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
 
-processEventThrow
+processFlowEventForSignatory
   :: ( CryptoRNG m
-     , DocumentMonad m
      , GuardTimeConfMonad m
      , MailContextMonad m
      , MonadBaseControl IO m
@@ -41,7 +39,7 @@ processEventThrow
      )
   => EngineEvent
   -> m ()
-processEventThrow event = runExceptT (processEvent event) >>= \case
+processFlowEventForSignatory event = runExceptT (processFlowEvent event) >>= \case
   Right _                    -> pure ()
   Left  NoAssociatedDocument -> serverError' "No associated document."
   Left  NoAssociatedUser     -> serverError' "No associated user."

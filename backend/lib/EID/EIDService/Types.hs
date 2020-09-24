@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 module EID.EIDService.Types (
     EIDServiceTransactionID(..)
   , unsafeEIDServiceTransactionID
@@ -21,24 +22,28 @@ module EID.EIDService.Types (
   , EIDServiceNOBankIDAuthentication(..)
   , EIDServiceSEBankIDAuthentication(..)
   , EIDServiceFITupasAuthentication(..)
+  , EIDServiceOnfidoAuthentication(..)
   , EIDServiceNLIDINSignature(..)
   , EIDServiceFITupasSignature(..)
   , EIDServiceOnfidoSignature(..)
   , EIDServiceNOBankIDSignature(..)
   , EIDServiceSEBankIDSignature(..)
-  , OnfidoMethod(..)
+  , EIDServiceVerimiQesSignature(..)
 
   -- Provider specific, can be refactored once redundant types above are removed
   , EIDServiceDKNemIDInternalProvider(..)
   , unsafeEIDServiceDKNemIDInternalProviderFromInt16
   , EIDServiceNOBankIDInternalProvider(..)
   , unsafeEIDServiceNOBankIDInternalProviderFromInt16
+  , OnfidoMethod(..)
+  , unsafeDecodeOnfidoMethod
   ) where
 
 import Control.Exception (throw)
 import Control.Monad.Catch
 import Data.Aeson
 import Data.ByteString (ByteString)
+import Data.Either
 import Data.Int
 import Data.Time
 import Database.PostgreSQL.PQTypes
@@ -52,7 +57,7 @@ import Doc.Types.SignatoryLink
 import Log.Identifier
 import Session.SessionID
 
-newtype EIDServiceTransactionID = EIDServiceTransactionID T.Text
+newtype EIDServiceTransactionID = EIDServiceTransactionID Text
   deriving (Eq, Ord, Read, Show)
 
 instance Identifier EIDServiceTransactionID where
@@ -60,20 +65,20 @@ instance Identifier EIDServiceTransactionID where
   idValue (EIDServiceTransactionID t) = stringIdentifier $ T.unpack t
 
 instance PQFormat EIDServiceTransactionID where
-  pqFormat = pqFormat @T.Text
+  pqFormat = pqFormat @Text
 
 instance FromSQL EIDServiceTransactionID where
-  type PQBase EIDServiceTransactionID = PQBase T.Text
+  type PQBase EIDServiceTransactionID = PQBase Text
   fromSQL mbase = EIDServiceTransactionID <$> fromSQL mbase
 
 instance ToSQL EIDServiceTransactionID where
-  type PQDest EIDServiceTransactionID = PQDest T.Text
+  type PQDest EIDServiceTransactionID = PQDest Text
   toSQL (EIDServiceTransactionID tid) = toSQL tid
 
-unsafeEIDServiceTransactionID :: T.Text -> EIDServiceTransactionID
+unsafeEIDServiceTransactionID :: Text -> EIDServiceTransactionID
 unsafeEIDServiceTransactionID = EIDServiceTransactionID
 
-fromEIDServiceTransactionID :: EIDServiceTransactionID -> T.Text
+fromEIDServiceTransactionID :: EIDServiceTransactionID -> Text
 fromEIDServiceTransactionID (EIDServiceTransactionID tid) = tid
 
 instance FromJSON EIDServiceTransactionID where
@@ -409,8 +414,45 @@ data EIDServiceNOBankIDSignature = EIDServiceNOBankIDSignature
   }
   deriving (Eq, Ord, Show)
 
+data EIDServiceVerimiQesSignature = EIDServiceVerimiQesSignature
+  { eidServiceVerimiSigName            :: !Text
+  , eidServiceVerimiSigVerifiedEmail   :: !(Maybe Text)
+  , eidServiceVerimiSigVerifiedPhone   :: !(Maybe Text)
+  }
+  deriving (Eq, Ord, Show)
+
 data OnfidoMethod = OnfidoDocumentCheck | OnfidoDocumentAndPhotoCheck
   deriving (Eq, Ord, Show)
+
+instance PQFormat OnfidoMethod where
+  pqFormat = pqFormat @Text
+
+instance FromSQL OnfidoMethod where
+  type PQBase OnfidoMethod = PQBase Text
+  fromSQL mbase = fromSQL mbase >>= (either throwM pure . decodeOnfidoMethod)
+
+instance ToSQL OnfidoMethod where
+  type PQDest OnfidoMethod = PQDest Text
+  toSQL = toSQL . encodeOnfidoMethod
+
+encodeOnfidoMethod :: OnfidoMethod -> Text
+encodeOnfidoMethod = \case
+  OnfidoDocumentCheck         -> "onfido_document_check"
+  OnfidoDocumentAndPhotoCheck -> "onfido_document_and_photo_check"
+
+newtype UnknownOnfidoMethod = UnknownOnfidoMethod Text
+  deriving Show
+  deriving anyclass Exception
+
+decodeOnfidoMethod :: Text -> Either UnknownOnfidoMethod OnfidoMethod
+decodeOnfidoMethod = \case
+  "onfido_document_check" -> Right OnfidoDocumentCheck
+  "onfido_document_and_photo_check" -> Right OnfidoDocumentAndPhotoCheck
+  x -> Left $ UnknownOnfidoMethod x
+
+unsafeDecodeOnfidoMethod :: Text -> OnfidoMethod
+unsafeDecodeOnfidoMethod = fromRight (unexpectedError onfidoError) . decodeOnfidoMethod
+  where onfidoError = "Encountered unknown value when fetching OnfidoMethod from Text"
 
 instance ToJSON OnfidoMethod where
   toJSON OnfidoDocumentCheck         = String "document"
@@ -420,6 +462,13 @@ instance FromJSON OnfidoMethod where
   parseJSON (String "document") = return OnfidoDocumentCheck
   parseJSON (String "documentFacialSimilarityPhoto") = return OnfidoDocumentAndPhotoCheck
   parseJSON _                   = mzero
+
+data EIDServiceOnfidoAuthentication = EIDServiceOnfidoAuthentication
+  { eidServiceOnfidoSignatoryName :: Text
+  , eidServiceOnfidoDateOfBirth :: Text
+  , eidServiceOnfidoMethod :: OnfidoMethod
+  }
+  deriving (Eq, Ord, Show)
 
 data EIDServiceOnfidoSignature = EIDServiceOnfidoSignature
   { eidServiceOnfidoSigSignatoryName :: Text

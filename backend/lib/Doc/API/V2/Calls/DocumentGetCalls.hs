@@ -6,19 +6,22 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2History
 , docApiV2EvidenceAttachments
 , docApiV2FilesMain
+, docApiV2FilesEvidence
 , docApiV2FilesFull
 , docApiV2FilesPage
 , docApiV2FilesPagesCount
 , docApiV2FilesGet
 , docApiV2SigningData
+, docApiV2CanBeStarted
 -- * Functions for tests
 , docApiV2FilesFullForTests
 ) where
 
 import Codec.Archive.Zip
 import Control.Monad.IO.Class (liftIO)
+import Data.Aeson (toJSON)
 import Data.List.Extra (nubOrd, nubOrdOn)
-import Data.Time
+import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Data.Unjson
 import Happstack.Server.Types
 import Log
@@ -50,18 +53,18 @@ import Doc.DocStateData
 import Doc.DocStateQuery (getDocByDocIDAndAccessTokenV2)
 import Doc.DocumentID
 import Doc.DocumentMonad
-import Doc.DocUtils (fileFromMainFile)
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Types.SignatoryAccessToken
 import Doc.Types.SigningData
+import Doc.Validation.Starting (validateDocumentForStarting)
 import EID.Signature.Model
 import EvidenceLog.Model
 import EvidenceLog.View
-import File.File
 import File.Model
 import File.Storage
+import File.Types
 import Kontra
 import KontraLink
 import Log.Identifier
@@ -258,18 +261,16 @@ docApiV2EvidenceAttachments did = logDocument did . api . withDocumentID did $ d
 docApiV2FilesMain :: forall  m . Kontrakcja m => DocumentID -> m Response
 docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
   download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
-  case documentstatus doc of
-    Closed ->
+  if isClosed doc
+    then fmap (Ok . respondWithPDF download) . getFileContents =<< maybe
+      errorNonexistingSealedMainFile
+      return
+      (documentclosedmainfile doc)
+    else
       fmap (Ok . respondWithPDF download)
-        .   getFileContents
-        =<< maybe errorNonexistingSealedMainFile return
-        =<< fileFromMainFile (documentsealedfile doc)
-    _ ->
-      fmap (Ok . respondWithPDF download)
-        .   either errorPresealDocumentFile return
-        =<< presealDocumentFile doc
-        =<< maybe errorNonexistingMainFile return
-        =<< fileFromMainFile (documentfile doc)
+      .   either errorPresealDocumentFile return
+      =<< presealDocumentFile doc
+      =<< maybe errorNonexistingMainFile return (documentinputfile doc)
 
   where
     errorNonexistingSealedMainFile = apiError $ documentStateErrorWithCode
@@ -280,6 +281,21 @@ docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
 
     errorPresealDocumentFile :: forall a . Text -> m a
     errorPresealDocumentFile = apiError . serverError
+
+docApiV2FilesEvidence :: Kontrakcja m => DocumentID -> MagicHash -> m Response
+docApiV2FilesEvidence did secret = logDocument did . api . withDocumentID did $ do
+  download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
+  doc      <- theDocument
+  when (documentevidencefilesecret doc /= Just secret) $ apiError documentActionForbidden
+
+  case documentfile doc of
+    Just ClosedVerimiQesFile {..} -> do
+      contents <- getFileContents $ digitallySignedFile evidenceFile
+      return . Ok $ respondWithPDF download contents
+    _ -> do
+      logAttention_
+        "docApiV2FilesEvidence with valid secret, but evidence file does not exist"
+      apiError $ documentStateErrorWithCode 503 "Evidence file does not exist."
 
 docApiV2SigningData :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
@@ -385,10 +401,9 @@ docApiV2FilesFull did = logDocument did . api . withDocAccess did $ \doc -> do
 
   files    <- docApiV2FilesFullInternal doc
   now      <- currentTime
-  let epochBase = UTCTime { utctDay = fromGregorian 1970 1 1, utctDayTime = 0 }
-      epoch     = round $ diffUTCTime now epochBase
+  let timestamp = round $ utcTimeToPOSIXSeconds now
       contents  = BSL.toStrict . fromArchive $ foldr
-        (\(n, c) -> addEntryToArchive (toEntry n epoch (BSL.fromStrict c)))
+        (\(n, c) -> addEntryToArchive (toEntry n timestamp (BSL.fromStrict c)))
         emptyArchive
         files
 
@@ -396,26 +411,39 @@ docApiV2FilesFull did = logDocument did . api . withDocAccess did $ \doc -> do
 
 docApiV2FilesFullInternal :: Kontrakcja m => Document -> m [(FilePath, BS.ByteString)]
 docApiV2FilesFullInternal doc = do
-  mainFile <- case documentstatus doc of
-    Closed -> do
-      mFile <- fileFromMainFile (documentsealedfile doc)
-      case mFile of
-        Nothing -> apiError $ documentStateErrorWithCode
-          503
-          "The sealed PDF for the document is not ready yet, please wait and\
-            \ try again"
-        Just file ->
-          (mkFileName (T.unpack $ documenttitle doc), ) <$> getFileContents file
+  documentFiles <- if isClosed doc
+    then case documentfile doc of
+      Just (ClosedFile DigitallySignedFile {..}) -> do
+        contents <- getFileContents digitallySignedFile
+        return [(mkFileName . T.unpack $ documenttitle doc, contents)]
 
-    _ -> do
-      mFile <- fileFromMainFile (documentfile doc)
-      case mFile of
-        Nothing   -> apiError $ resourceNotFound "The document has no main file"
-        Just file -> do
-          presealFile <- presealDocumentFile doc file
-          case presealFile of
-            Left  err      -> apiError $ serverError err
-            Right contents -> return (T.unpack $ filename file, contents)
+      Just ClosedVerimiQesFile {..} -> do
+        mainfileContents     <- getFileContents mainfileWithQesSignatures
+        evidenceFileContents <- getFileContents $ digitallySignedFile evidenceFile
+        return
+          [ (mkFileName . T.unpack $ documenttitle doc, mainfileContents)
+          , ( mkFileName . T.unpack $ documenttitle doc <> "_evidence"
+            , evidenceFileContents
+            )
+          ]
+
+      _ -> apiError $ documentStateErrorWithCode
+        503
+        "The sealed PDF for the document is not ready yet, please wait and\
+              \ try again"
+    else do
+      inputFile <-
+        whenNothing (documentinputfile doc) . apiError $ documentStateErrorWithCode
+          503
+          "The document has no main file"
+
+      ePresealFile <- presealDocumentFile doc inputFile
+      case ePresealFile of
+        Left  err      -> apiError $ serverError err
+        -- This replicates existing behaviour, which is inconsistent with the
+        -- naming in mail attachments (there we use documenttitle for both
+        -- closed and input files). See ticket CORE-2499.
+        Right contents -> return [(T.unpack $ filename inputFile, contents)]
 
   let separateAuthorAttachments = filter
         (if isClosed doc then not . authorattachmentaddtosealedfile else const True)
@@ -428,7 +456,7 @@ docApiV2FilesFullInternal doc = do
   authorAttachmentFiles <- forM separateAuthorAttachments $ \att -> do
     file     <- dbQuery . GetFileByFileID $ authorattachmentfileid att
     contents <- getFileContents file
-    return (mkFileName (T.unpack $ authorattachmentname att), contents)
+    return (mkFileName . T.unpack $ authorattachmentname att, contents)
 
   signatoryAttachmentFiles <-
     fmap catMaybes . forM separateSignatoryAttachments $ \att -> do
@@ -439,7 +467,7 @@ docApiV2FilesFullInternal doc = do
           contents <- getFileContents file
           return $ Just (mkFileName (T.unpack $ signatoryattachmentname att), contents)
 
-  return $ mainFile : authorAttachmentFiles <> signatoryAttachmentFiles
+  return $ documentFiles <> authorAttachmentFiles <> signatoryAttachmentFiles
 
   where
     mkFileName name | takeExtension name == ".pdf" = name
@@ -447,3 +475,14 @@ docApiV2FilesFullInternal doc = do
 
 docApiV2FilesFullForTests :: Kontrakcja m => Document -> m [(FilePath, BS.ByteString)]
 docApiV2FilesFullForTests = docApiV2FilesFullInternal
+
+docApiV2CanBeStarted :: Kontrakcja m => DocumentID -> m Response
+docApiV2CanBeStarted did = logDocument did . api $ do
+  -- Permissions
+  (user, _) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+    -- Guards
+    guardThatUserIsAuthor user =<< theDocument
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Preparation =<< theDocument
+    Ok . toJSON . validateDocumentForStarting <$> theDocument

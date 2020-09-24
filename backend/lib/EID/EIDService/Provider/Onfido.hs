@@ -1,23 +1,32 @@
 module EID.EIDService.Provider.Onfido (
-    beginEIDServiceTransaction
-  , OnfidoEIDServiceCompletionData(..)
+    OnfidoEIDServiceCompletionData(..)
+  , CompletionData(..)
+  , beginEIDServiceTransaction
+  , completeEIDServiceAuthTransaction
   , completeEIDServiceSignTransaction
+  , completionDataToName
  ) where
 
 import Control.Monad.Trans.Maybe
 import Data.Aeson
 import Log
+import qualified Text.StringTemplates.Fields as F
 
 import Chargeable
 import DB
 import Doc.DocStateData
+import Doc.DocumentMonad
+import Doc.DocUtils
+import EID.Authentication.Model
 import EID.EIDService.Communication
 import EID.EIDService.Conf
 import EID.EIDService.Model
 import EID.EIDService.Types
+import EvidenceLog.Model
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import Session.Model
+import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
@@ -45,15 +54,17 @@ beginEIDServiceTransaction
   -> SignatoryLink
   -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginEIDServiceTransaction conf authKind doc sl = do
-  method <- case signatorylinkauthenticationtosignmethod sl of
-    OnfidoDocumentCheckAuthenticationToSign -> return OnfidoDocumentCheck
-    OnfidoDocumentAndPhotoCheckAuthenticationToSign -> return OnfidoDocumentAndPhotoCheck
-    method -> do
-      logInfo_
-        $  "Tried to start Onfido transaction, but signatory was supposed to use "
-        <> showt method
-        <> "."
-      internalError
+  onfidoMethod <- case authKind of
+    EIDServiceAuthToView AuthenticationToView ->
+      authenticationMethodToOnfidoMethod $ signatorylinkauthenticationtoviewmethod sl
+    EIDServiceAuthToView AuthenticationToViewArchived ->
+      authenticationMethodToOnfidoMethod
+        $ signatorylinkauthenticationtoviewarchivedmethod sl
+    EIDServiceAuthToSign -> case signatorylinkauthenticationtosignmethod sl of
+      OnfidoDocumentCheckAuthenticationToSign -> return OnfidoDocumentCheck
+      OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
+        return OnfidoDocumentAndPhotoCheck
+      method -> handleIncorrectMethod method
   ctx             <- getContext
   mkontraRedirect <- case authKind of
     EIDServiceAuthToView _ -> Just <$> guardJustM (getField "redirect")
@@ -70,27 +81,66 @@ beginEIDServiceTransaction conf authKind doc sl = do
         , cestMethod             = EIDServiceAuthMethod
         , cestRedirectUrl        = showt redirectUrl
         , cestProviderParameters = Just . toJSON $ OnfidoEIDServiceProviderParams
-                                     { onfidoparamMethod    = method
+                                     { onfidoparamMethod    = onfidoMethod
                                      , onfidoparamFirstName = getFirstName sl
                                      , onfidoparamLastName  = getLastName sl
                                      }
         }
   -- Onfido transactions are not started from the API, we get the URL via the create call
   trans <- createTransactionWithEIDService conf createReq
-  case method of
-    OnfidoDocumentCheck ->
+  case (authKind, onfidoMethod) of
+    (EIDServiceAuthToView _, OnfidoDocumentCheck) ->
+      chargeForItemSingle CIOnfidoDocumentCheckAuthenticationStarted $ documentid doc
+    (EIDServiceAuthToView _, OnfidoDocumentAndPhotoCheck) ->
+      chargeForItemSingle CIOnfidoDocumentAndPhotoCheckAuthenticationStarted
+        $ documentid doc
+    (EIDServiceAuthToSign, OnfidoDocumentCheck) ->
       chargeForItemSingle CIOnfidoDocumentCheckSignatureStarted $ documentid doc
-    OnfidoDocumentAndPhotoCheck ->
+    (EIDServiceAuthToSign, OnfidoDocumentAndPhotoCheck) ->
       chargeForItemSingle CIOnfidoDocumentAndPhotoCheckSignatureStarted $ documentid doc
   let tid  = cestRespTransactionID trans
       turl = cestRespAccessUrl trans
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusNew)
+  where
+    handleIncorrectMethod method = do
+      logInfo_
+        $  "Tried to start Onfido transaction, but signatory was supposed to use "
+        <> showt method
+        <> "."
+      internalError
 
-data OnfidoEIDServiceCompletionData = OnfidoEIDServiceCompletionData
+    authenticationMethodToOnfidoMethod = \case
+      OnfidoDocumentCheckAuthenticationToView -> return OnfidoDocumentCheck
+      OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+        return OnfidoDocumentAndPhotoCheck
+      method -> handleIncorrectMethod method
+
+data CompletionData = CompletionData
   { eidonfidoFirstName   :: Text
   , eidonfidoLastName    :: Text
   , eidonfidoDateOfBirth :: Text
-  , eidonfidoMethod      :: OnfidoMethod
+  } deriving (Eq, Ord, Show)
+
+instance FromJSON CompletionData where
+  parseJSON cd =
+    do
+        withObject "object" (.: "documentReportData") cd
+      >>= withObject
+            "object"
+            (\o -> do
+              firstname <- o .: "firstName"
+              lastname  <- o .: "lastName"
+              dob       <- o .: "dateOfBirth"
+              return CompletionData { eidonfidoFirstName   = firstname
+                                    , eidonfidoLastName    = lastname
+                                    , eidonfidoDateOfBirth = dob
+                                    }
+            )
+
+data OnfidoEIDServiceCompletionData = OnfidoEIDServiceCompletionData
+  { eidonfidoCompletionData :: CompletionData
+  , eidonfidoMethod         :: OnfidoMethod
+  , eidonfidoApplicantId    :: Text
   } deriving (Eq, Ord, Show)
 
 instance FromJSON OnfidoEIDServiceCompletionData where
@@ -102,21 +152,88 @@ instance FromJSON OnfidoEIDServiceCompletionData where
       >>= withObject "object" (.: "report")
     withObject "object" (.: "providerInfo") outer
       >>= withObject "object" (.: eidServiceFieldName)
-      >>= withObject "object" (.: "completionData")
-      >>= withObject "object" (.: "documentReportData")
-      >>= withObject
-            "object"
-            (\o -> do
-              firstname <- o .: "firstName"
-              lastname  <- o .: "lastName"
-              dob       <- o .: "dateOfBirth"
-              return OnfidoEIDServiceCompletionData { eidonfidoMethod      = onfidoMethod
-                                                    , eidonfidoFirstName   = firstname
-                                                    , eidonfidoLastName    = lastname
-                                                    , eidonfidoDateOfBirth = dob
-                                                    }
-            )
+      >>= \o -> do
+            completionData <- o .: "completionData"
+            applicantId    <- o .: "applicantId"
+            pure $ OnfidoEIDServiceCompletionData
+              { eidonfidoCompletionData = completionData
+              , eidonfidoMethod         = onfidoMethod
+              , eidonfidoApplicantId    = applicantId
+              }
     where eidServiceFieldName = toEIDServiceProviderName provider <> "Auth"
+
+completeEIDServiceAuthTransaction
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> Document
+  -> SignatoryLink
+  -> m (Maybe EIDServiceTransactionStatus)
+completeEIDServiceAuthTransaction conf doc sl = do
+  _sessionID <- getNonTempSessionID
+  let authKind = EIDServiceAuthToView $ mkAuthKind doc
+  runMaybeT $ do
+    Just estDB <- dbQuery
+    -- TODO for CORE-2417: revert to guarding session ID, once the frontend part of Onfido
+    -- auth-to-view is implemented and things can be tested directly.
+    --  $ GetEIDServiceTransactionGuardSessionID sessionID (signatorylinkid sl) authKind
+      $ GetEIDServiceTransactionNoSessionIDGuard (signatorylinkid sl) authKind
+    Just trans <- getTransactionFromEIDService conf provider (estID estDB)
+    logInfo_ $ "EID transaction: " <> showt trans
+    let eidServiceStatus = estRespStatus trans
+        dbStatus         = estStatus estDB
+    if eidServiceStatus == dbStatus
+      then return eidServiceStatus
+      else finaliseTransaction doc sl estDB trans
+
+finaliseTransaction
+  :: Kontrakcja m
+  => Document
+  -> SignatoryLink
+  -> EIDServiceTransactionFromDB
+  -> EIDServiceTransactionResponse OnfidoEIDServiceCompletionData
+  -> m EIDServiceTransactionStatus
+finaliseTransaction doc sl estDB trans = case validateCompletionData trans of
+  Nothing -> do
+    let status = EIDServiceTransactionStatusCompleteAndFailed
+    mergeEIDServiceTransactionWithStatus status
+    return status
+  Just cd -> do
+    let status = EIDServiceTransactionStatusCompleteAndSuccess
+    mergeEIDServiceTransactionWithStatus status
+    updateDBTransactionWithCompletionData doc sl cd
+    updateEvidenceLog doc sl cd
+    case eidonfidoMethod cd of
+      OnfidoDocumentCheck ->
+        chargeForItemSingle CIOnfidoDocumentCheckAuthenticationFinished $ documentid doc
+      OnfidoDocumentAndPhotoCheck ->
+        chargeForItemSingle CIOnfidoDocumentAndPhotoCheckAuthenticationFinished
+          $ documentid doc
+    return status
+  where
+    mergeEIDServiceTransactionWithStatus newstatus =
+      dbUpdate . MergeEIDServiceTransaction $ estDB { estStatus = newstatus }
+
+validateCompletionData
+  :: EIDServiceTransactionResponse OnfidoEIDServiceCompletionData
+  -> Maybe OnfidoEIDServiceCompletionData
+validateCompletionData trans = case (estRespStatus trans, estRespCompletionData trans) of
+  (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> Just cd
+  (_, _      ) -> Nothing
+
+completionDataToName :: CompletionData -> Text
+completionDataToName CompletionData {..} = eidonfidoFirstName <> " " <> eidonfidoLastName
+
+updateDBTransactionWithCompletionData
+  :: Kontrakcja m => Document -> SignatoryLink -> OnfidoEIDServiceCompletionData -> m ()
+updateDBTransactionWithCompletionData doc sl OnfidoEIDServiceCompletionData {..} = do
+  sessionID <- getNonTempSessionID
+  dbUpdate
+    . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+    $ EIDServiceOnfidoAuthentication_ EIDServiceOnfidoAuthentication
+        { eidServiceOnfidoSignatoryName = completionDataToName eidonfidoCompletionData
+        , eidServiceOnfidoDateOfBirth   = eidonfidoDateOfBirth eidonfidoCompletionData
+        , eidServiceOnfidoMethod        = eidonfidoMethod
+        }
 
 completeEIDServiceSignTransaction
   :: Kontrakcja m => EIDServiceConf -> SignatoryLink -> m Bool
@@ -135,3 +252,20 @@ completeEIDServiceSignTransaction conf sl = do
   where
     isSuccessFullTransaction trans =
       estRespStatus trans == EIDServiceTransactionStatusCompleteAndSuccess
+
+updateEvidenceLog
+  :: Kontrakcja m => Document -> SignatoryLink -> OnfidoEIDServiceCompletionData -> m ()
+updateEvidenceLog doc sl cd = do
+  ctx <- getContext
+  let eventFields = do
+        F.value "signatory_name" . eidonfidoLastName $ eidonfidoCompletionData cd
+        F.value "signatory_dob" . eidonfidoDateOfBirth $ eidonfidoCompletionData cd
+        F.value "provider_onfido" True
+  withDocument doc
+    .   void
+    $   dbUpdate
+    .   InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence
+                                                       eventFields
+                                                       (Just sl)
+                                                       Nothing
+    =<< signatoryActor ctx sl

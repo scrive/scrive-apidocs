@@ -15,14 +15,18 @@ import qualified Data.Map as Map
 import qualified Data.Text.Encoding as T
 
 import DB
+import Doc.Types.Document
+import Doc.Types.DocumentStatus
+import Doc.Types.SignatoryLink
 import Flow.Client
 import Flow.Model.Types
 import Flow.Process
 import Flow.Routes.Api
 import OAuth.Model
 import TestEnvSt.Internal
-import TestingUtil (assert)
+import TestingUtil hiding (assertRight)
 import TestKontra
+import User.Types.User
 import User.UserID
 
 assertRight :: String -> TestEnv (Either ClientError b) -> TestEnv b
@@ -130,3 +134,20 @@ toTemplateParameters (InstanceKeyValues documents users messages) = TemplatePara
   users'
   messages
   where users' = Map.map (\id -> UserConfig id Nothing Nothing) users
+
+addRandomFlowDocumentWithSignatory :: User -> TestEnv Document
+addRandomFlowDocumentWithSignatory author = addRandomDocument (rdaDefault author)
+  { rdaTypes       = OneOf [Signable]
+  , rdaStatuses    = OneOf [Preparation]
+  , rdaTimeoutTime = False
+  , rdaDaysToSign  = Just 90
+  , rdaSignatories = let signatory = OneOf
+                           [ [ RSC_IsSignatoryThatHasntSigned
+                             , RSC_DeliveryMethodIs EmailDelivery
+                             , RSC_AuthToViewIs StandardAuthenticationToView
+                             , RSC_AuthToSignIs StandardAuthenticationToSign
+                             , RSC_HasConsentModule False
+                             ]
+                           ]
+                     in  OneOf [[signatory, signatory]]
+  }

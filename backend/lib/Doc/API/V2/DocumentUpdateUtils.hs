@@ -18,7 +18,6 @@ import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
-import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryFieldID
 import File.Storage (getFileContents)
@@ -167,7 +166,7 @@ mergeSignatoriesIDs _ ns = ns
 -- * non-standard fields that have no placements
 clearDocFields :: (Kontrakcja m, DocumentMonad m) => Actor -> m ()
 clearDocFields actor = do
-  mfile <- fileFromMainFile =<< documentfile <$> theDocument
+  mfile <- documentinputfile <$> theDocument
   case mfile of
     Nothing   -> apiError $ documentStateError "Document does not have a main file"
     Just file -> do

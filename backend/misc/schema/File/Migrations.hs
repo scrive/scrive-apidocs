@@ -3,6 +3,7 @@ module File.Migrations
   , createFilePurgeJobs
   , dropContentAndPurgeAtFromFiles
   , filePurgingJobsAddStatsIndexes
+  , createFileComposite
   ) where
 
 import Database.PostgreSQL.PQTypes.Checks
@@ -88,3 +89,22 @@ filePurgingJobsAddStatsIndexes =
               { idxWhere = Just "attempts > 1 AND finished_at IS NULL"
               }
         }
+
+createFileComposite :: MonadDB m => Migration m
+createFileComposite = Migration
+  { mgrTableName = tblName tableFiles
+  , mgrFrom      = 10
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ . sqlCreateComposite $ CompositeType
+                       { ctName    = "file_c1"
+                       , ctColumns =
+                         [ CompositeColumn { ccName = "id", ccType = BigIntT }
+                         , CompositeColumn { ccName = "name", ccType = TextT }
+                         , CompositeColumn { ccName = "amazon_url", ccType = TextT }
+                         , CompositeColumn { ccName = "size", ccType = IntegerT }
+                         , CompositeColumn { ccName = "checksum", ccType = BinaryT }
+                         , CompositeColumn { ccName = "aes_key", ccType = BinaryT }
+                         , CompositeColumn { ccName = "aes_iv", ccType = BinaryT }
+                         ]
+                       }
+  }

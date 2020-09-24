@@ -163,13 +163,13 @@ handleRestore =
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do
   logInfo_ "Downloading zip list"
-  mentries <-
+  entries <-
     handleArchiveDocumentsAction "download zipped documents"
                                  (isSignatoryOrCanDoAction ReadA)
       $ \_ _ _ -> docToEntry =<< theDocument
   return . ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive
                                                   emptyArchive
-                                                  (catMaybes mentries)
+                                                  (concat entries)
 
 
 -- Fetch a csv file for documents from archive. It's not API call for V2 - just internal functionality used in archive.
@@ -221,15 +221,26 @@ showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
   internalResponse <$> renderFromBodyWithFields (T.pack pb) (F.value "archive" True)
 
 -- Zip utils
-docToEntry :: Kontrakcja m => Document -> m (Maybe Entry)
+docToEntry :: Kontrakcja m => Document -> m [Entry]
 docToEntry doc = do
-  let name = T.filter (not isSpace || isAscii)
-                      (documenttitle doc <> "_" <> showt (documentid doc) <> ".pdf")
-  case mainfileid <$> documentsealedfile doc `mplus` documentfile doc of
-    Just fid -> do
-      content <- getFileIDContents fid
-      return . Just $ toEntry (T.unpack name) 0 (BSL.pack $ BSS.unpack content)
-    Nothing -> return Nothing
+  let name =
+        filter (not isSpace || isAscii) $ T.unpack (documenttitle doc) <> "_" <> show
+          (documentid doc)
+  case documentfile doc of
+    Just ClosedVerimiQesFile {..} -> do
+      let DigitallySignedFile {..} = evidenceFile
+      mainContent     <- getFileContents mainfileWithQesSignatures
+      evidenceContent <- getFileContents digitallySignedFile
+      return
+        [ toEntry (name <> ".pdf") 0 . BSL.pack $ BSS.unpack mainContent
+        , toEntry (name <> "_evidence.pdf") 0 . BSL.pack $ BSS.unpack evidenceContent
+        ]
+
+    _ | Just mainfile <- documentmainfile doc -> do
+      content <- getFileContents mainfile
+      return [toEntry (name <> ".pdf") 0 . BSL.pack $ BSS.unpack content]
+
+    _ | otherwise -> return []
 
 canDoAction :: AccessAction -> User -> [AccessRole] -> Document -> Bool
 canDoAction action _ allUserRoles doc =

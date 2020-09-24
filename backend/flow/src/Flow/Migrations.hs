@@ -1,4 +1,24 @@
-module Flow.Migrations where
+module Flow.Migrations (
+  createTableFlowTemplates
+  , createTableFlowInstances
+  , createTableFlowInstanceKeyValueStore
+  , createTableFlowUserAuthConfigs
+  , createTableFlowInstanceSignatories
+  , createTableFlowEvents
+  , createTableFlowAggregatorEvents
+  , createTableFlowInstanceAccessTokens
+  , createTableFlowInstanceSessions
+  , addIndicesToFlowInstanceKeyValueStore
+  , addMetaDataToInstanceTable
+  , createTableCallbacks
+  , addCallbacksToInstanceTable
+  , migrateTemplateDSLStoredInDBToNotificationMethods
+  , createTableFlowOverviewAuthentications
+  , migrateNullableDocumentNameInEvent
+  , addProviderMethodToFlowEIDAuthentications
+)
+
+where
 
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Class
@@ -363,3 +383,64 @@ migrateTemplateDSLStoredInDBToNotificationMethods = Migration
   -- This migration was just for dev.scrive.com, it's now a NOOP.
   , mgrAction    = StandardMigration $ pure ()
   }
+
+createTableFlowOverviewAuthentications :: MonadDB m => Migration m
+createTableFlowOverviewAuthentications = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = tableName
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+        , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
+        , tblColumn { colName = "session_id", colType = BigIntT }
+        , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
+        , tblColumn { colName = "signature", colType = BinaryT }
+        , tblColumn { colName = "signatory_name", colType = TextT }
+        , tblColumn { colName = "signatory_personal_number", colType = TextT }
+        , tblColumn { colName = "ocsp_response", colType = BinaryT }
+        , tblColumn { colName = "internal_provider", colType = SmallIntT }
+        , tblColumn { colName = "signatory_phone_number", colType = TextT }
+        , tblColumn { colName = "signatory_date_of_birth", colType = TextT }
+        , tblColumn { colName = "signatory_ip", colType = TextT }
+        , tblColumn { colName = "signatory_email", colType = TextT }
+        , tblColumn { colName = "provider_customer_id", colType = TextT }
+        ]
+      , tblPrimaryKey  = pkOnColumns ["instance_id", "user_name", "auth_kind"]
+      , tblForeignKeys =
+        [ (fkOnColumns ["instance_id", "user_name"]
+                       "flow_instance_key_value_store"
+                       ["instance_id", "key"]
+          ) { fkOnDelete = ForeignKeyCascade
+            }
+        , (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+        ]
+      }
+  }
+  where tableName = "flow_eid_authentications"
+
+migrateNullableDocumentNameInEvent :: MonadDB m => Migration m
+migrateNullableDocumentNameInEvent = Migration
+  { mgrTableName = "flow_events"
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlAlterTable
+                       "flow_events"
+                       [sqlAlterColumn "document_name" "DROP NOT NULL"]
+  }
+
+addProviderMethodToFlowEIDAuthentications :: MonadDB m => Migration m
+addProviderMethodToFlowEIDAuthentications = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ do
+                     runQuery_ $ sqlAlterTable
+                       tableName
+                       [ sqlAddColumn
+                           $ tblColumn { colName = "provider_method", colType = TextT }
+                       ]
+  }
+  where tableName = "flow_eid_authentications"

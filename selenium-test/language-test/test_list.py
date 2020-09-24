@@ -7,7 +7,7 @@ import tests
 from make_drivers import generate_tests
 from scrivepy import Language
 from selenium import webdriver
-import shutil
+from selenium.webdriver.firefox.options import Options
 
 ###############################################################################
 #                                   INFO                                      #
@@ -24,8 +24,12 @@ import shutil
 ###############################################################################
 DC = webdriver.DesiredCapabilities
 
+options = Options()
+options.headless = True
 LOCAL_DEVICES = [{'driver': webdriver.Firefox,
-                  'name': DC.FIREFOX['browserName']}]
+                  'name': DC.FIREFOX['browserName'],
+                  'options': options
+                 }]
 
 REMOTE_DEVICES = [{'browserName': "chrome",
                    'chromeOptions': {'args': ['--disable-extensions']},
@@ -46,8 +50,7 @@ artifact_dir = os.path.join(dir_path, 'artifacts')
 screenshots_dir = os.path.join(dir_path, 'screenshots')
 
 
-# this function is autocalled by nosetests, so it's like main()
-def make_tests():
+def test_generator():
     try:
         remote = os.environ['SELENIUM_REMOTE_TESTS'] == '1'
     except KeyError:

@@ -308,7 +308,8 @@ checkCGIAuthStatus did slid = do
   case mcgiTransaction of
     Nothing -> do
       sesid   <- view #sessionID <$> getContext
-      success <- isJust <$> dbQuery (GetEAuthentication (mkAuthKind doc) sesid slid)
+      success <- isJust
+        <$> dbQuery (GetDocumentEidAuthentication (mkAuthKind doc) sesid slid)
       if success then return $ Right Complete else return $ Left ExpiredTransaction
     Just cgiTransaction -> do
       certErrorHandler <- mkCertErrorHandler
@@ -351,17 +352,15 @@ checkCGIAuthStatus did slid = do
                         mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
                   let ipAddress = just_lookup "ipAddress" crsAttributes
 
-                  dbUpdate $ MergeCGISEBankIDAuthentication
-                    (mkAuthKind doc)
-                    session_id
-                    slid
-                    CGISEBankIDAuthentication
-                      { cgisebidaSignatoryName           = signatoryName
-                      , cgisebidaSignatoryPersonalNumber = signatoryPersonalNumber
-                      , cgisebidaSignatoryIP             = ipAddress
-                      , cgisebidaSignature               = signature
-                      , cgisebidaOcspResponse            = ocspResponse
-                      }
+                  dbUpdate
+                    . MergeDocumentEidAuthentication (mkAuthKind doc) session_id slid
+                    $ CGISEBankIDAuthentication_ CGISEBankIDAuthentication
+                        { cgisebidaSignatoryName           = signatoryName
+                        , cgisebidaSignatoryPersonalNumber = signatoryPersonalNumber
+                        , cgisebidaSignatoryIP             = ipAddress
+                        , cgisebidaSignature               = signature
+                        , cgisebidaOcspResponse            = ocspResponse
+                        }
                   ctx <- getContext
                   -- Do not update evidence log if document is closed
                   -- (authentication to view archived case).

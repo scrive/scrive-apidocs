@@ -28,23 +28,23 @@ def single_run_cond(drv, f):
 single_run = driver_check(single_run_cond)
 
 
-def check_reference_screenshot(test, drv, api):
-    doc = test.create_standard_doc('reference screenshot')
+def check_reference_screenshot(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('reference screenshot')
     doc = api.ready(api.update_document(doc))
 
     # sign document
     drv.open_url(doc.other_signatory().absolute_sign_url())
-    test.arrow_scroll(skip_scroll_to_top=True)
+    test_helper.arrow_scroll(skip_scroll_to_top=True)
     drv.wait_for_element_and_click('.section.sign .button.action')
     drv.wait_for_element('.above-overlay')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_and_click('.section.sign .button.action')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_to_disappear('.sign.section')
 
     import config
 
-    with test.local_ff() as ff:
+    with test_helper.local_ff() as ff:
         ff.open_url(config.scrive_www_url + '/en/enter')
 
         # login to authorview
@@ -75,33 +75,33 @@ def check_reference_screenshot(test, drv, api):
 
 
 @single_run
-def check_evidence_log(test, drv, api):
-    doc = test.create_standard_doc('evidence log')
+def check_evidence_log(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('evidence log')
     doc = api.ready(api.update_document(doc))
 
     # sign document
     drv.open_url(doc.other_signatory().absolute_sign_url())
-    test.arrow_scroll(skip_scroll_to_top=True)
+    test_helper.arrow_scroll(skip_scroll_to_top=True)
     drv.wait_for_element_and_click('.section.sign .button.action')
     drv.wait_for_element('.above-overlay')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_and_click('.section.sign .button.action')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_to_disappear('.sign.section')
 
     if drv.is_remote():
         # do it asap, because saucelabs machine can change its external ip
         # and it will not match the one used for frontend api requests
         drv.open_url('https://api.ipify.org/?format=html')
-        my_ip = drv.find_element('pre').text
+        my_ip = drv.find_element('pre').text.strip()
 
-    test.sleep(10)  # wait for sealing
+    test_helper.sleep(10)  # wait for sealing
     doc = api.get_document(doc.id)  # refresh
 
     att_name = 'Appendix 3 Evidence Log.html'
-    contents = test.get_evidence_attachment_contents(doc, 3, att_name)
+    contents = test_helper.get_evidence_attachment_contents(doc, 3, att_name)
 
-    with open(test.artifact_path_for(att_name), 'w') as f:
+    with open(test_helper.artifact_path_for(att_name), 'w') as f:
         f.write(contents)
 
     html = PyQuery(contents)
@@ -119,7 +119,7 @@ def check_evidence_log(test, drv, api):
     for timestamp_string in timestamp_strings:
         timestamp = datetime.strptime(timestamp_string, '%Y-%m-%d %H:%M:%S.%f')
         time_diff = timestamp - five_minutes_ago
-        assert 0 < time_diff.total_seconds() < 5*60
+        assert 0 < time_diff.total_seconds() < 5*60, time_diff.total_seconds()
 
     timestamp_strings = [re.match(r'(.*) UTC', td.text).group(1)
                          for td in html('#event-table td:nth-child(2)')]
@@ -127,4 +127,4 @@ def check_evidence_log(test, drv, api):
     for timestamp_string in timestamp_strings:
         timestamp = datetime.strptime(timestamp_string, '%Y-%m-%d %H:%M:%S.%f')
         time_diff = timestamp - hour_ago
-        assert 0 < time_diff.total_seconds() < 60*60
+        assert 0 < time_diff.total_seconds() < 60*60, time_diff.total_seconds()

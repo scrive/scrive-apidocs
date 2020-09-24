@@ -1,0 +1,41 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  cache-nix-deps:
+    runs-on:
+      - self-hosted
+      - macos
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - env:
+          CACHIX_SIGNING_KEY: "${{ secrets.CACHIX_SIGNING_KEY }}"
+          nix_collect_garbage: 'true'
+        name: Cache Nix Deps
+        run: |
+          ./ci/workflow/scripts/cache-nix-deps.sh ghc88.dev-shell
+        timeout-minutes: 360
+name: "Cache Nix Dependencies (MacOS)"
+on:
+  push:
+    branches:
+      - nix-mac
+    paths:
+      - "nix/**"
+      - "**.cabal"

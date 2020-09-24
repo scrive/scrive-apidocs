@@ -56,6 +56,7 @@ runTestCronUntilIdle ctx = do
         , cronConsumerSealingMaxJobs      = 1
         , cronConsumerSigningMaxJobs      = 1
         , cronConsumerExtendingMaxJobs    = 1
+        , cronConsumerCallbackMaxJobs     = 1
         , cronConsumerAPICallbackMaxJobs  = 1
         , cronConsumerFilePurgingMaxJobs  = 1
         , cronNetsSignConfig              = Nothing

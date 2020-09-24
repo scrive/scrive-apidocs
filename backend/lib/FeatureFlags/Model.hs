@@ -54,6 +54,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseStandardAuthenticationToView :: Bool
   , ffCanUseStandardAuthenticationToSign :: Bool
   , ffCanUseVerimiAuthenticationToView :: Bool
+  , ffCanUseVerimiQesAuthenticationToSign :: Bool
   , ffCanUseIDINAuthenticationToView :: Bool
   , ffCanUseIDINAuthenticationToSign :: Bool
   , ffCanUseOnfidoAuthenticationToSign :: Bool
@@ -135,6 +136,9 @@ instance Unjson FeatureFlags where
       <*> field "can_use_verimi_authentication_to_view"
                 ffCanUseVerimiAuthenticationToView
                 "TODO desc"
+      <*> field "can_use_verimi_qes_to_sign"
+                ffCanUseVerimiQesAuthenticationToSign
+                "Enables Verimi QES signing in the frontend"
       <*> field "can_use_idin_authentication_to_view"
                 ffCanUseIDINAuthenticationToView
                 "TODO desc"
@@ -205,13 +209,14 @@ type instance CompositeRow FeatureFlags
     , Bool
     , Bool
     , Bool
+    , Bool
     )
 
 instance PQFormat FeatureFlags where
   pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
-  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKCPRAuthenticationToView, ffCanUseDKPIDAuthenticationToView, ffCanUseDKCVRAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts, ffCanUseArchiveToDropBox, ffCanUseArchiveToGoogleDrive, ffCanUseArchiveToOneDrive, ffCanUseArchiveToSharePoint, ffCanUseArchiveToSftp)
+  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKCPRAuthenticationToView, ffCanUseDKPIDAuthenticationToView, ffCanUseDKCVRAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseVerimiQesAuthenticationToSign, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts, ffCanUseArchiveToDropBox, ffCanUseArchiveToGoogleDrive, ffCanUseArchiveToOneDrive, ffCanUseArchiveToSharePoint, ffCanUseArchiveToSftp)
     = FeatureFlags { .. }
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
@@ -285,6 +290,7 @@ defaultFeatures paymentPlan = Features ff ff
                              , ffCanUseStandardAuthenticationToView = True
                              , ffCanUseStandardAuthenticationToSign = True
                              , ffCanUseVerimiAuthenticationToView = True
+                             , ffCanUseVerimiQesAuthenticationToSign = True
                              , ffCanUseIDINAuthenticationToView   = True
                              , ffCanUseIDINAuthenticationToSign   = True
                              , ffCanUseOnfidoAuthenticationToSign = True
@@ -304,20 +310,21 @@ defaultFeatures paymentPlan = Features ff ff
                              , ffCanUseArchiveToSftp              = False
                              }
     ff = case paymentPlan of
-      FreePlan -> defaultFF { ffCanUseDKCPRAuthenticationToView  = False
-                            , ffCanUseDKPIDAuthenticationToView  = False
-                            , ffCanUseDKCVRAuthenticationToView  = False
-                            , ffCanUseDKAuthenticationToSign     = False
-                            , ffCanUseFIAuthenticationToView     = False
-                            , ffCanUseFIAuthenticationToSign     = False
-                            , ffCanUseNOAuthenticationToView     = False
-                            , ffCanUseNOAuthenticationToSign     = False
-                            , ffCanUseSEAuthenticationToView     = False
-                            , ffCanUseSEAuthenticationToSign     = False
-                            , ffCanUseVerimiAuthenticationToView = False
-                            , ffCanUseIDINAuthenticationToView   = False
-                            , ffCanUseIDINAuthenticationToSign   = False
-                            , ffCanUseOnfidoAuthenticationToSign = False
+      FreePlan -> defaultFF { ffCanUseDKCPRAuthenticationToView     = False
+                            , ffCanUseDKPIDAuthenticationToView     = False
+                            , ffCanUseDKCVRAuthenticationToView     = False
+                            , ffCanUseDKAuthenticationToSign        = False
+                            , ffCanUseFIAuthenticationToView        = False
+                            , ffCanUseFIAuthenticationToSign        = False
+                            , ffCanUseNOAuthenticationToView        = False
+                            , ffCanUseNOAuthenticationToSign        = False
+                            , ffCanUseSEAuthenticationToView        = False
+                            , ffCanUseSEAuthenticationToSign        = False
+                            , ffCanUseVerimiAuthenticationToView    = False
+                            , ffCanUseVerimiQesAuthenticationToSign = False
+                            , ffCanUseIDINAuthenticationToView      = False
+                            , ffCanUseIDINAuthenticationToSign      = False
+                            , ffCanUseOnfidoAuthenticationToSign    = False
                             }
       _ -> defaultFF
 
@@ -347,6 +354,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_standard_authentication_to_sign"
     $ ffCanUseStandardAuthenticationToSign ff
   sqlSet "can_use_verimi_authentication_to_view" $ ffCanUseVerimiAuthenticationToView ff
+  sqlSet "can_use_verimi_qes_to_sign" $ ffCanUseVerimiQesAuthenticationToSign ff
   sqlSet "can_use_idin_authentication_to_view" $ ffCanUseIDINAuthenticationToView ff
   sqlSet "can_use_idin_authentication_to_sign" $ ffCanUseIDINAuthenticationToSign ff
   sqlSet "can_use_onfido_authentication_to_sign" $ ffCanUseOnfidoAuthenticationToSign ff
@@ -389,6 +397,7 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_standard_authentication_to_view"
   , "feature_flags.can_use_standard_authentication_to_sign"
   , "feature_flags.can_use_verimi_authentication_to_view"
+  , "feature_flags.can_use_verimi_qes_to_sign"
   , "feature_flags.can_use_idin_authentication_to_view"
   , "feature_flags.can_use_idin_authentication_to_sign"
   , "feature_flags.can_use_onfido_authentication_to_sign"

@@ -152,6 +152,8 @@ data AuthenticationToViewMethod
   | FITupasAuthenticationToView
   | VerimiAuthenticationToView
   | IDINAuthenticationToView
+  | OnfidoDocumentCheckAuthenticationToView
+  | OnfidoDocumentAndPhotoCheckAuthenticationToView
     deriving (Enum, Eq, Ord, Show)
 
 instance PQFormat AuthenticationToViewMethod where
@@ -173,21 +175,25 @@ instance FromSQL AuthenticationToViewMethod where
       9  -> return DKNemIDCPRAuthenticationToView
       10 -> return DKNemIDPIDAuthenticationToView
       11 -> return DKNemIDCVRAuthenticationToView
-      _  -> throwM RangeError { reRange = [(1, 11)], reValue = n }
+      12 -> return OnfidoDocumentCheckAuthenticationToView
+      13 -> return OnfidoDocumentAndPhotoCheckAuthenticationToView
+      _  -> throwM RangeError { reRange = [(1, 13)], reValue = n }
 
 instance ToSQL AuthenticationToViewMethod where
   type PQDest AuthenticationToViewMethod = PQDest Int16
-  toSQL StandardAuthenticationToView      = toSQL (1 :: Int16)
-  toSQL SEBankIDAuthenticationToView      = toSQL (2 :: Int16)
-  toSQL NOBankIDAuthenticationToView      = toSQL (3 :: Int16)
-  toSQL LegacyDKNemIDAuthenticationToView = toSQL (4 :: Int16)
-  toSQL SMSPinAuthenticationToView        = toSQL (5 :: Int16)
-  toSQL FITupasAuthenticationToView       = toSQL (6 :: Int16)
-  toSQL VerimiAuthenticationToView        = toSQL (7 :: Int16)
-  toSQL IDINAuthenticationToView          = toSQL (8 :: Int16)
-  toSQL DKNemIDCPRAuthenticationToView    = toSQL (9 :: Int16)
-  toSQL DKNemIDPIDAuthenticationToView    = toSQL (10 :: Int16)
-  toSQL DKNemIDCVRAuthenticationToView    = toSQL (11 :: Int16)
+  toSQL StandardAuthenticationToView            = toSQL (1 :: Int16)
+  toSQL SEBankIDAuthenticationToView            = toSQL (2 :: Int16)
+  toSQL NOBankIDAuthenticationToView            = toSQL (3 :: Int16)
+  toSQL LegacyDKNemIDAuthenticationToView       = toSQL (4 :: Int16)
+  toSQL SMSPinAuthenticationToView              = toSQL (5 :: Int16)
+  toSQL FITupasAuthenticationToView             = toSQL (6 :: Int16)
+  toSQL VerimiAuthenticationToView              = toSQL (7 :: Int16)
+  toSQL IDINAuthenticationToView                = toSQL (8 :: Int16)
+  toSQL DKNemIDCPRAuthenticationToView          = toSQL (9 :: Int16)
+  toSQL DKNemIDPIDAuthenticationToView          = toSQL (10 :: Int16)
+  toSQL DKNemIDCVRAuthenticationToView          = toSQL (11 :: Int16)
+  toSQL OnfidoDocumentCheckAuthenticationToView = toSQL (12 :: Int16)
+  toSQL OnfidoDocumentAndPhotoCheckAuthenticationToView = toSQL (13 :: Int16)
 
 ---------------------------------
 
@@ -201,7 +207,8 @@ data AuthenticationToSignMethod
   | FITupasAuthenticationToSign  -- authentication at the point of signing
   | OnfidoDocumentCheckAuthenticationToSign  -- Onfido document check; authentication at the point of signing
   | OnfidoDocumentAndPhotoCheckAuthenticationToSign  -- Onfido document check and facial comparison; authentication at the point of signing
-    deriving (Enum, Eq, Ord, Show)
+  | VerimiQesAuthenticationToSign
+    deriving (Enum, Bounded, Eq, Ord, Show)
 
 instance PQFormat AuthenticationToSignMethod where
   pqFormat = pqFormat @Int16
@@ -211,16 +218,17 @@ instance FromSQL AuthenticationToSignMethod where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1 -> return StandardAuthenticationToSign
-      2 -> return SEBankIDAuthenticationToSign
-      3 -> return SMSPinAuthenticationToSign
-      4 -> return NOBankIDAuthenticationToSign
-      5 -> return DKNemIDAuthenticationToSign
-      6 -> return IDINAuthenticationToSign
-      7 -> return FITupasAuthenticationToSign
-      8 -> return OnfidoDocumentCheckAuthenticationToSign
-      9 -> return OnfidoDocumentAndPhotoCheckAuthenticationToSign
-      _ -> throwM RangeError { reRange = [(1, 9)], reValue = n }
+      1  -> return StandardAuthenticationToSign
+      2  -> return SEBankIDAuthenticationToSign
+      3  -> return SMSPinAuthenticationToSign
+      4  -> return NOBankIDAuthenticationToSign
+      5  -> return DKNemIDAuthenticationToSign
+      6  -> return IDINAuthenticationToSign
+      7  -> return FITupasAuthenticationToSign
+      8  -> return OnfidoDocumentCheckAuthenticationToSign
+      9  -> return OnfidoDocumentAndPhotoCheckAuthenticationToSign
+      10 -> return VerimiQesAuthenticationToSign
+      _  -> throwM RangeError { reRange = [(1, 10)], reValue = n }
 
 instance ToSQL AuthenticationToSignMethod where
   type PQDest AuthenticationToSignMethod = PQDest Int16
@@ -233,6 +241,7 @@ instance ToSQL AuthenticationToSignMethod where
   toSQL FITupasAuthenticationToSign             = toSQL (7 :: Int16)
   toSQL OnfidoDocumentCheckAuthenticationToSign = toSQL (8 :: Int16)
   toSQL OnfidoDocumentAndPhotoCheckAuthenticationToSign = toSQL (9 :: Int16)
+  toSQL VerimiQesAuthenticationToSign           = toSQL (10 :: Int16)
 
 ---------------------------------
 

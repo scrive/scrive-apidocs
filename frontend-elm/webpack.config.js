@@ -16,7 +16,8 @@ var config = (prodMode) => {
 
     entry: {
       "adminonly": './src/adminonly.js',
-      "flow-overview": './src/flow-overview.js'
+      "flow-overview": './src/flow-overview.js',
+      "identifyview": './src/identifyview.js'
     },
 
     output: {
@@ -26,6 +27,7 @@ var config = (prodMode) => {
     },
 
     plugins: [
+      // Only used in prodMode
       new SriPlugin({
         // FIXME fix WARNING output due to cross-origin policy
         // FIXME make sure we have CSP Headers with `require-sri-for script style`
@@ -33,7 +35,6 @@ var config = (prodMode) => {
         hashFuncNames: ['sha256']
       }),
 
-      // Only used in prodMode
       new MiniCssExtractPlugin({
         filename: `[name]-${versionId}.css`,
         chunkFilename: `[id]-${versionId}.css`

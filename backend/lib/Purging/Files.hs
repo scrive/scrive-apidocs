@@ -11,9 +11,9 @@ import Log
 
 import DB
 import DB.PostgreSQL
-import File.File
 import File.Model
 import File.Tables
+import File.Types
 import FileStorage.Class
 import Log.Identifier
 
@@ -38,6 +38,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
           [ ("attachments"          , "file_id")
           , ("author_attachments"   , "file_id")
           , ("main_files"           , "file_id")
+          , ("main_files"           , "evidence_file_id")
           , ("mail_attachments"     , "file_id")
           , ("signatory_attachments", "file_id")
           , ("signatory_screenshots", "file_id")

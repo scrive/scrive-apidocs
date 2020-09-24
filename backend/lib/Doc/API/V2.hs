@@ -21,6 +21,7 @@ documentAPIV2 = dir "documents" $ choice
   , (param . dir "update" . hPost . toK1) docApiV2Update
   , (param . dir "setfile" . hPost . toK1) docApiV2SetFile
   , (param . dir "removepages" . hPost . toK1) docApiV2RemovePages
+  , (param . dir "canbestarted" . hGet . toK1) docApiV2CanBeStarted
   , (param . dir "start" . hPost . toK1) docApiV2Start
   , (dir "startwithportal" . hPost . toK0) docApiV2StartWithPortal
   , (param . dir "prolong" . hPost . toK1) docApiV2Prolong
@@ -44,6 +45,9 @@ documentAPIV2 = dir "documents" $ choice
   , (param . dir "files" . dir "main" . hGet . toK2)
     $ \docID (_ :: String) -> docApiV2FilesMain docID
   , (param . dir "files" . dir "main" . hGet . toK1) docApiV2FilesMain
+  , (param . dir "files" . dir "evidence" . hGet . toK2) docApiV2FilesEvidence
+  , (param . dir "files" . dir "evidence" . hGet . toK3)
+    $ \docID secret (_ :: String) -> docApiV2FilesEvidence docID secret
   , (param . dir "files" . dir "zip" . hGet . toK2)
     $ \docID (_ :: String) -> docApiV2FilesFull docID
   , (param . dir "files" . dir "zip" . hGet . toK1) docApiV2FilesFull

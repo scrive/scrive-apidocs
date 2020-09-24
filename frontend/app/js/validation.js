@@ -402,7 +402,7 @@ var SSNForFITupasValidation = exports.SSNForFITupasValidation = Validation.exten
              return false;
            }
         },
-        message: "Personal number for Finnish TUPAS must be in format DDMMYY?XXXC"
+        message: "Personal number for Finnish FTN must be in format DDMMYY?XXXC"
     }
 });
 

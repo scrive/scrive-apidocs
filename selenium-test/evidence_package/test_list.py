@@ -8,7 +8,7 @@ import tests
 import tests2
 from make_drivers import generate_tests
 from selenium import webdriver
-import shutil
+from selenium.webdriver.firefox.options import Options
 
 ###############################################################################
 #                                   INFO                                      #
@@ -25,9 +25,13 @@ import shutil
 ###############################################################################
 DC = webdriver.DesiredCapabilities
 
+options = Options()
+options.headless = True
 LOCAL_DEVICES = [{'driver': webdriver.Firefox,
                   'name': DC.FIREFOX['browserName'],
-                  'screenshot-prefix': 'desktop'}]
+                  'screenshot-prefix': 'desktop',
+                  'options': options
+                 }]
 
 REMOTE_DEVICES = [{'browserName': 'chrome',
                    'chromeOptions': {'args': ['--disable-extensions']},
@@ -86,8 +90,7 @@ artifact_dir = os.path.join(dir_path, 'artifacts')
 screenshots_dir = os.path.join(dir_path, 'screenshots')
 
 
-# this function is autocalled by nosetests, so it's like main()
-def make_tests():
+def test_generator():
     for x in generate_tests(tests, screenshots_dir, artifact_dir,
                             LOCAL_DEVICES, REMOTE_DEVICES):
         yield x

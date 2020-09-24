@@ -21,7 +21,7 @@ import File exposing (File)
 import File.Select as FileSelect
 import Task
 
-import Lib.Theme.Types exposing (..)
+import Lib.Types.Theme exposing (..)
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 
 type alias EditUserGroupBrandingReadonly =

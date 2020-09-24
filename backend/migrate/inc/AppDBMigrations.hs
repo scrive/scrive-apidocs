@@ -8,6 +8,7 @@ import Log
 import AccessControl.Migrations
 import Amazon.Migrations
 import BrandedDomain.Migrations
+import Callback.Migrations
 import Chargeable.Migrations
 import Company.Migrations
 import Cron.Migrations
@@ -287,4 +288,18 @@ kontraMigrations =
   , addCallbacksToInstanceTable
   , migrateTemplateDSLStoredInDBToNotificationMethods
   , createTableFlowUserAuthConfigs
+  , createCallbackConsumersTable
+  , createCallbacksTable
+  , createFileComposite
+  , updateMainFileComposite
+  , updateDocumentCompositeWithNewMainFile
+  , addSeparateEvidenceFileToMainFiles
+  , addFieldsForVerimi
+  , eidSignaturesUpdatePersonalNumberCheck
+  , addEvidenceSecretToDocuments
+  , featureFlagsAddVerimiQesToSign
+  , addProviderMethodToEIDAuthentications
+  , createTableFlowOverviewAuthentications
+  , migrateNullableDocumentNameInEvent
+  , addProviderMethodToFlowEIDAuthentications
   ]

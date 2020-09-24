@@ -2,11 +2,11 @@ module AdminOnly.UserGroupAdmin.UserGroupBrandingTab exposing (..)
 
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Json exposing (..)
-import Lib.Theme.EditTheme as EditTheme
+import Lib.Components.EditTheme as EditTheme
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.EditUserGroupBranding as EditUserGroupBranding
-import Lib.Theme.PreviewTheme exposing (..)
-import Lib.Theme.Types exposing (..)
-import Lib.Theme.Json exposing (..)
+import Lib.Components.PreviewTheme exposing (..)
+import Lib.Types.Theme exposing (..)
+import Lib.Json.Theme exposing (..)
 import Bootstrap.Tab as Tab
 import Json.Decode as JD
 import Json.Encode as JE

@@ -141,7 +141,7 @@ insertUserGroupSettings ugid ugs = runQuery_ . sqlInsert "user_group_settings" $
   sqlSet "session_timeout" $ ugs ^. #sessionTimeoutSecs
   sqlSet "portal_url" $ ugs ^. #portalUrl
   sqlSet "eid_service_token" $ ugs ^. #eidServiceToken
-  sqlSet "sealing_method" $ ugs ^. #sealingMethod
+  sqlSet "sealing_method" $ ugs ^. #digitalSignatureMethod
   sqlSet "document_session_timeout" $ ugs ^. #documentSessionTimeoutSecs
   sqlSet "has_post_signview" $ ugs ^. #hasPostSignview
   sqlSet "add_metadata_to_pdfs" $ ugs ^. #addMetadataToPDFs

@@ -23,8 +23,8 @@ import qualified Data.ByteString.Char8 as BS
 import DB
 import Doc.AddImageSpec
 import Doc.DocumentID
-import File.File
 import File.Storage
+import File.Types
 import Kontra
 import Log.Identifier
 import PdfToolsLambda.Class

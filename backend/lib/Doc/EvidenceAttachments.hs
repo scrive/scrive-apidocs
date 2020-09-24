@@ -18,9 +18,11 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Text as T
 
 import DB (MonadDB)
-import Doc.DocStateData (Document(..), documentsealedfile)
-import Doc.Types.MainFile
+import Doc.DocStateData (Document(..))
+import Doc.Types.Document (documentfile)
+import Doc.Types.DocumentFile
 import File.Storage
+import File.Types (fileid)
 import Log.Utils
 import Utils.Directory
 
@@ -35,12 +37,17 @@ extractAttachmentsList
   => Document
   -> m [Text]
 extractAttachmentsList doc = do
-  case mainfileid <$> documentsealedfile doc of
+  let mFileWithEvidenceAttachments = documentfile doc >>= \case
+        ClosedFile DigitallySignedFile {..} -> Just digitallySignedFile
+        ClosedVerimiQesFile {..} -> Just $ digitallySignedFile evidenceFile
+        _ -> Nothing
+
+  case mFileWithEvidenceAttachments of
     Nothing -> do
       logAttention_ "No sealed file found"
       return []
-    Just fid -> do
-      content <- getFileIDContents fid
+    Just fileWithEvidenceAttachments -> do
+      content <- getFileIDContents $ fileid fileWithEvidenceAttachments
       extractAttachmentsListFromFileContent content
 
 extractAttachment
@@ -55,12 +62,17 @@ extractAttachment
   -> Text
   -> m (Maybe BSL.ByteString)
 extractAttachment doc aname = do
-  case mainfileid <$> documentsealedfile doc of
+  let mFileWithEvidenceAttachments = documentfile doc >>= \case
+        ClosedFile DigitallySignedFile {..} -> Just digitallySignedFile
+        ClosedVerimiQesFile {..} -> Just $ digitallySignedFile evidenceFile
+        _ -> Nothing
+
+  case mFileWithEvidenceAttachments of
     Nothing -> do
       logAttention_ "No sealed file found"
       return Nothing
-    Just fid -> do
-      content <- getFileIDContents fid
+    Just fileWithEvidenceAttachments -> do
+      content <- getFileIDContents $ fileid fileWithEvidenceAttachments
       extractAttachmentFromFileContent aname content
 
 extractAttachmentsListFromFileContent

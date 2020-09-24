@@ -26,6 +26,8 @@ class Monad m => PdfToolsLambdaMonad m where
   callPdfToolsCleaning   :: BSL.ByteString -> m (Maybe BS.ByteString)
   callPdfToolsAddImage   :: AddImageSpec   -> m (Maybe BS.ByteString)
   callPdfToolsPadesSign  :: PadesSignSpec  -> m (Maybe BS.ByteString)
+  callPdfToolsVerimiQesSetup :: VerimiQesSetupSpec -> m (Maybe BS.ByteString)
+  callPdfToolsVerimiQesEvidence :: VerimiQesEvidenceSpec -> m (Maybe BS.ByteString)
   lambdaEnv              :: m PdfToolsLambdaEnv
 
 -- | Generic, overlappable instance.
@@ -34,9 +36,11 @@ instance {-# OVERLAPPABLE #-}
   , Monad (t m)
   , MonadTrans t
   ) => PdfToolsLambdaMonad (t m) where
-  callPdfToolsSealing    = lift . callPdfToolsSealing
-  callPdfToolsPresealing = lift . callPdfToolsPresealing
-  callPdfToolsAddImage   = lift . callPdfToolsAddImage
-  callPdfToolsPadesSign  = lift . callPdfToolsPadesSign
-  callPdfToolsCleaning   = lift . callPdfToolsCleaning
-  lambdaEnv              = lift lambdaEnv
+  callPdfToolsSealing           = lift . callPdfToolsSealing
+  callPdfToolsPresealing        = lift . callPdfToolsPresealing
+  callPdfToolsAddImage          = lift . callPdfToolsAddImage
+  callPdfToolsPadesSign         = lift . callPdfToolsPadesSign
+  callPdfToolsCleaning          = lift . callPdfToolsCleaning
+  callPdfToolsVerimiQesSetup    = lift . callPdfToolsVerimiQesSetup
+  callPdfToolsVerimiQesEvidence = lift . callPdfToolsVerimiQesEvidence
+  lambdaEnv                     = lift lambdaEnv

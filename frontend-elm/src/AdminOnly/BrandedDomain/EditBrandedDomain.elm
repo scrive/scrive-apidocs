@@ -1,7 +1,7 @@
 module AdminOnly.BrandedDomain.EditBrandedDomain exposing (..)
 
 import Color exposing (Color)
-import Lib.Theme.Types exposing (ThemeID, Theme)
+import Lib.Types.Theme exposing (ThemeID, Theme)
 import AdminOnly.BrandedDomain.Types exposing (..)
 import File exposing (File)
 import EnumExtra as Enum

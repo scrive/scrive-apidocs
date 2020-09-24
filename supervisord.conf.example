@@ -38,8 +38,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 1
 startsecs = 5
-stderr_logfile = supervisor/logs/postgres.log
-stdout_logfile = supervisor/logs/postgres.log
+stderr_logfile = logs/postgres.log
+stdout_logfile = logs/postgres.log
 
 [program:fakes3]
 command = ./scripts/workspace/run-fakes3.sh
@@ -49,8 +49,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 2
 startsecs = 5
-stderr_logfile = supervisor/logs/fakes3.log
-stdout_logfile = supervisor/logs/fakes3.log
+stderr_logfile = logs/fakes3.log
+stdout_logfile = logs/fakes3.log
 
 [program:sam]
 command = ./scripts/workspace/run-sam.sh
@@ -60,8 +60,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 2
 startsecs = 5
-stderr_logfile = supervisor/logs/sam.log
-stdout_logfile = supervisor/logs/sam.log
+stderr_logfile = logs/sam.log
+stdout_logfile = logs/sam.log
 
 [program:nginx]
 command = ./scripts/workspace/run-nginx.sh
@@ -71,8 +71,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 2
 startsecs = 5
-stderr_logfile = supervisor/logs/nginx.log
-stdout_logfile = supervisor/logs/nginx.log
+stderr_logfile = logs/nginx.log
+stdout_logfile = logs/nginx.log
 
 [program:kontrakcja-server]
 command = cabal run kontrakcja-server
@@ -82,8 +82,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 100
 startsecs = 10
-stderr_logfile = supervisor/logs/kontrakcja-server.log
-stdout_logfile = supervisor/logs/kontrakcja-server.log
+stderr_logfile = logs/kontrakcja-server.log
+stdout_logfile = logs/kontrakcja-server.log
 
 [program:kontrakcja-cron]
 command = cabal run cron
@@ -93,8 +93,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 200
 startsecs = 10
-stderr_logfile = supervisor/logs/kontrakcja-cron.log
-stdout_logfile = supervisor/logs/kontrakcja-cron.log
+stderr_logfile = logs/kontrakcja-cron.log
+stdout_logfile = logs/kontrakcja-cron.log
 
 [program:kontrakcja-mailer]
 command = cabal run mailing-server
@@ -104,8 +104,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 200
 startsecs = 10
-stderr_logfile = supervisor/logs/kontrakcja-mailer.log
-stdout_logfile = supervisor/logs/kontrakcja-mailer.log
+stderr_logfile = logs/kontrakcja-mailer.log
+stdout_logfile = logs/kontrakcja-mailer.log
 
 [program:kontrakcja-messenger]
 command = cabal run messenger-server
@@ -115,8 +115,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 200
 startsecs = 10
-stderr_logfile = supervisor/logs/messenger-mailer.log
-stdout_logfile = supervisor/logs/messenger-mailer.log
+stderr_logfile = logs/messenger-mailer.log
+stdout_logfile = logs/messenger-mailer.log
 
 [program:kontrakcja-frontend]
 command = grunt concurrent:watch
@@ -127,8 +127,8 @@ stopasgroup = true
 stopsignal = KILL
 priority = 400
 startsecs = 20
-stderr_logfile = supervisor/logs/kontrakcja-frontend.log
-stdout_logfile = supervisor/logs/kontrakcja-frontend.log
+stderr_logfile = logs/kontrakcja-frontend.log
+stdout_logfile = logs/kontrakcja-frontend.log
 
 [program:kontrakcja-frontend-elm]
 command = npm run watch
@@ -139,5 +139,5 @@ stopasgroup = true
 stopsignal = KILL
 priority = 400
 startsecs = 20
-stderr_logfile = supervisor/logs/kontrakcja-frontend-elm.log
-stdout_logfile = supervisor/logs/kontrakcja-frontend-elm.log
+stderr_logfile = logs/kontrakcja-frontend-elm.log
+stdout_logfile = logs/kontrakcja-frontend-elm.log

@@ -9,7 +9,7 @@ import EnumExtra as Enum
 import Html exposing (Html)
 
 import AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
-import Lib.Theme.Types exposing (..)
+import Lib.Types.Theme exposing (..)
 
 -- 'massage' `Theme` into `Component.Theme.Data.Theme`
 massage : Theme -> Component.Theme.Data.Theme

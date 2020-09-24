@@ -37,7 +37,7 @@ instance FromSQL SMSPinType where
       1 -> return SMSPinToSign
       2 -> return SMSPinToView
       3 -> return SMSPinToViewArchived
-      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
+      _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL SMSPinType where
   type PQDest SMSPinType = PQDest Int32

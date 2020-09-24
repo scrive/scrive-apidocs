@@ -1,8 +1,6 @@
-{ useLocal ? false
-, extra-run-deps ? pkgs: hsPkgs: []
+{ checkMaterialization ? false
 }:
 let
-  release = import ./default.nix
-    { inherit useLocal extra-run-deps; };
+  args = { inherit checkMaterialization; };
 in
-release.dev-shell-optimized
+(import ./release.nix args).ghc88.dev-shell

@@ -97,6 +97,10 @@ var Modal = require("../../common/modal");
       return this.newAuthenticationMethod() == "onfido_document_and_photo_check";
     },
 
+    isNewAuthenticationVerimiQes: function () {
+      return this.newAuthenticationMethod() == "verimi_qes";
+    },
+
     isAuthenticationValueInvalid: function () {
       var authvalue = this.newAuthenticationValue();
 
@@ -200,6 +204,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToSignOnfidoDocumentCheck;
       } else if (model.isNewAuthenticationOnfidoDocumentAndPhotoCheck()) {
         return localization.docview.signatory.authenticationToSignOnfidoDocumentAndPhotoCheck;
+      } else if (model.isNewAuthenticationVerimiQes()) {
+        return localization.docview.signatory.authenticationToSignVerimiQes;
       }
     },
 
@@ -337,6 +343,14 @@ var Modal = require("../../common/modal");
         options.push(onfidodocandphoto);
       }
 
+      var verimiqes = {
+        name: localization.docview.signatory.authenticationToSignVerimiQes,
+        selected: model.isNewAuthenticationVerimiQes(),
+        value: "verimi_qes"
+      };
+      if (ff.canUseVerimiQesToSign() && isAvailable(verimiqes.value)) {
+        options.push(verimiqes);
+      }
       return options;
     },
 

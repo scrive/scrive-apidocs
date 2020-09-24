@@ -8,7 +8,7 @@
  -
  - /!\ WARNING: This might not be what you're looking for! If you seek to
  - manipulate files in the sense of Scrive, that is the ones defined in
- - 'File.File', you should go to 'File.Storage'.
+ - 'File.Types', you should go to 'File.Storage'.
  -}
 
 module FileStorage

@@ -59,6 +59,7 @@ data KontraLink
     | LinkTemplateShareableLink DocumentID MagicHash
     | LinkPortalInviteWithAccount Text Email
     | LinkPortalInviteWithoutAccount Text Email MagicHash UTCTime
+    | LinkEvidenceFileMagicHash Text DocumentID MagicHash
 
 langFolder :: Lang -> Text
 langFolder lang = "/" <> codeFromLang lang
@@ -167,6 +168,17 @@ instance Show KontraLink where
     <> "&expires="
     <> urlEncode (formatTimeISO utctime)
     )
+  -- This should probably get an unversioned url...
+  showsPrec _ (LinkEvidenceFileMagicHash docname docid magichash) =
+    (<>)
+      $  "/api/v2/documents/"
+      <> show docid
+      <> "/files/evidence/"
+      <> show magichash
+      <> "/"
+      <> T.unpack docname
+      <> "_evidence.pdf"
+
 
 setParams :: URI -> [(Text, Text)] -> URI
 setParams uri params = uri { uriQuery = "?" <> vars }

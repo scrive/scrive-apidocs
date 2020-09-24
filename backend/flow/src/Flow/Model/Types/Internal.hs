@@ -92,7 +92,7 @@ data Event = Event
     { id :: EventId
     , instanceId :: InstanceId
     , userName :: UserName
-    , documentName :: DocumentName
+    , documentName :: Maybe DocumentName
     , userAction :: UserAction
     , created :: UTCTime
     }
@@ -100,7 +100,7 @@ data Event = Event
 data InsertEvent = InsertEvent
     { instanceId :: InstanceId
     , userName :: UserName
-    , documentName :: DocumentName
+    , documentName :: Maybe DocumentName
     , userAction :: UserAction
     }
 

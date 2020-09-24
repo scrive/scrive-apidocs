@@ -170,7 +170,8 @@ testInvitationLinkLogin = do
               (statusCode . responseStatusCode $ response)
 
   -- If the link login is successful we should get auth cookies
-  let mAuthCookies = readAuthCookies . toCookies $ responseSetCookieHeaders response
+  let cookies      = toCookies $ responseSetCookieHeaders response
+      mAuthCookies = readAuthCookies cookies
   AuthCookies {..} <- assertJustAndExtract mAuthCookies
 
   -- Use these cookies to access the instance overview page
@@ -178,13 +179,18 @@ testInvitationLinkLogin = do
         instanceOverview $ mkPageClient (Just authCookieSession, Just authCookieXToken)
   void $ assertRight
     "instanceOverview with auth cookies should succeed"
-    (request . instanceOverviewAuth instanceId "signatory" $ Just flowTestCookieDomain)
+    ( request
+    . instanceOverviewAuth instanceId "signatory" False (Just $ Cookies' cookies)
+    $ Just flowTestCookieDomain
+    )
 
   -- Without the auth cookies the overview page should be inaccessible
   let instanceOverviewNoAuth = instanceOverview $ mkPageClient (Nothing, Nothing)
   void $ assertLeft
     "instanceOverview without auth cookies should fail"
-    (request . instanceOverviewNoAuth instanceId "signatory" $ Just flowTestCookieDomain)
+    (request . instanceOverviewNoAuth instanceId "signatory" False Nothing $ Just
+      flowTestCookieDomain
+    )
 
   where
     mapping uid doc = InstanceKeyValues documents users messages

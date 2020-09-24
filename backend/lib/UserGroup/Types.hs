@@ -47,10 +47,10 @@ import qualified Data.Set as S
 
 import DataRetentionPolicy
 import DB
+import DigitalSignatureMethod
 import FeatureFlags.Model
 import Folder.FolderID
 import PadApplication.Types
-import SealingMethod
 import SMS.Types
 import Tag
 import UserGroup.FolderListCallsTransition
@@ -255,7 +255,7 @@ defaultUserGroupSettings = UserGroupSettings
   , sessionTimeoutSecs         = Nothing
   , portalUrl                  = Nothing
   , eidServiceToken            = Nothing
-  , sealingMethod              = Guardtime
+  , digitalSignatureMethod     = Guardtime
   , documentSessionTimeoutSecs = Nothing
   , hasPostSignview            = True
   , ssoConfig                  = Nothing

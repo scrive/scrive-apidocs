@@ -15,6 +15,7 @@ import qualified Data.Traversable as F
 
 import AppDBTables
 import AppDir (AppPaths(..), setupAppPaths)
+import Callback.Consumer
 import Configuration
 import Cron.Model
 import CronConf
@@ -144,6 +145,10 @@ main = do
                                                templates
                                                pool
                                                (cronConsumerExtendingMaxJobs cronConf)
+
+      callbacks =
+        callbackConsumer runDB reqManager (cronConsumerCallbackMaxJobs cronConf)
+
       apiCallbacks =
         documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
       cron = cronConsumer cronConf
@@ -161,6 +166,7 @@ main = do
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
       . finalize (localDomain "document signing" $ runConsumer docSigning pool)
       . finalize (localDomain "document extending" $ runConsumer docExtending pool)
+      . finalize (localDomain "callbacks" $ runConsumer callbacks pool)
       . finalize (localDomain "api callbacks" $ runConsumer apiCallbacks pool)
       . finalize (localDomain "cron" $ runConsumer cron pool)
       . finalize (localDomain "file purging" $ runConsumer filePurging pool)

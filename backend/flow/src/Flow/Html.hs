@@ -2,8 +2,10 @@
 module Flow.Html (
     CommonPageVars(..)
   , InstanceOverviewPageVars(..)
+  , IdentifyViewVars(..)
   , ErrorPageVars(..)
   , renderInstanceOverview
+  , renderIdentifyView
   , renderErrorPage
   , mkErrorPageVars
   ) where
@@ -14,7 +16,6 @@ import Prelude hiding (div, head)
 import Servant (toUrlPiece)
 import Text.Blaze.Html5 hiding (style)
 import Text.Blaze.Html5.Attributes hiding (title)
-import Text.Blaze.Internal (attribute)
 import Text.RawString.QQ
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.UTF8 as BS
@@ -24,6 +25,8 @@ import qualified Data.Text.Encoding as T
 import BrandedDomain.Model
 import Branding.Adler32
 import DB
+import Doc.DocumentID
+import Doc.SignatoryLinkID
 import Flow.Id
 import Flow.Server.Types
 import VersionTH
@@ -44,6 +47,15 @@ data InstanceOverviewPageVars = InstanceOverviewPageVars
   , flowInstanceId :: InstanceId
   }
 
+data IdentifyViewVars = IdentifyViewVars
+  { commonVars :: CommonPageVars
+  , brandedDomainId :: BrandedDomainID
+  , brandingHash :: Text
+  , flowInstanceId :: InstanceId
+  , documentId :: DocumentID
+  , signatoryLinkId :: SignatoryLinkID
+  }
+
 data ErrorPageVars = ErrorPageVars
   { commonVars :: CommonPageVars
   , explanation :: Text
@@ -62,6 +74,11 @@ pageHeader CommonPageVars {..} = do
       (textValue $ cdnBaseUrl <> "/elm-assets/flow-overview-" <> versionCode <> ".css")
     link ! rel "stylesheet" ! type_ "text/css" ! href (textValue mainCssUrl)
     link ! rel "stylesheet" ! type_ "text/css" ! href (textValue brandingCssUrl)
+    -- TODO: Real localisation. At the moment we just fetch English texts for identify view
+    script
+      ! src (textValue $ cdnBaseUrl <> "/localization/" <> versionCode <> ".en.js")
+      ! crossorigin "anonymous"
+      $ pure ()
 
 logoHeader :: Text -> Html
 logoHeader logoUrl = do
@@ -113,7 +130,49 @@ renderInstanceOverview InstanceOverviewPageVars {..} = docTypeHtml $ do
             )
         ! crossorigin "anonymous"
         $ pure ()
-  where crossorigin = attribute "crossorigin" "crossorigin=\""
+
+renderIdentifyView :: IdentifyViewVars -> Html
+renderIdentifyView IdentifyViewVars {..} = docTypeHtml $ do
+  let CommonPageVars {..} = commonVars
+  pageHeader commonVars
+  body $ do
+    div ! class_ "global-table" $ do
+      div ! class_ "global-table-cell" $ do
+        div ! id "elm-mount" $ ""
+    script
+      . toHtml
+      . T.replace "$cdnBaseUrl$" cdnBaseUrl
+      . T.replace "$brandedDomainId$" (showt brandedDomainId)
+      . T.replace "$brandingHash$" brandingHash
+      . T.replace "$flowInstanceId$" (toUrlPiece flowInstanceId)
+      . T.replace "$documentId$" (showt documentId)
+      . T.replace "$signatoryLinkId$" (showt signatoryLinkId)
+      $ [r|
+            var cdnbaseurl = "$cdnBaseUrl$";
+            var brandingdomainid = "$brandedDomainId$";
+            var brandinghash = "$brandingHash$";
+
+            var fromTemplate = {
+              documentId: "$documentId$",
+              sigLinkId: "$signatoryLinkId$",
+              // TODO: We probably don't need Nets, so nets config can go
+              netsIdentifyUrl: "",
+              netsMerchantIdentifier: "",
+              netsTrustedDomain: "",
+              // Note: In kontrakcja the variables below are configurable
+              // TODO: We probably don't need these either
+              useEIDHubForSEBankIDView: true,
+              useEIDHubForFITupasView: true
+            };
+          |]
+    script
+      ! src
+          (textValue $ cdnBaseUrl <> "/elm-assets/identifyview-" <> versionCode <> ".js")
+      ! crossorigin "anonymous"
+      $ pure ()
+
+crossorigin :: AttributeValue -> Attribute
+crossorigin = customAttribute "crossorigin"
 
 renderErrorPage :: ErrorPageVars -> Html
 renderErrorPage ErrorPageVars {..} = docTypeHtml $ do

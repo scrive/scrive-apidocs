@@ -41,7 +41,6 @@ import Doc.DocUtils
 import Doc.DocViewMail
 import EID.EIDService.Provider.SEBankID (useEIDHubForSEBankIDSign)
 import EID.Nets.Config
-import File.FileID
 import Kontra
 import KontraLink
 import Templates (renderTextTemplate)
@@ -95,7 +94,6 @@ pageDocumentSignView ctx document siglink ad = do
         (Options { pretty = False, indent = 0, nulls = True })
         (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document))
         document
-      mainfile = maybe (unsafeFileID 0) mainfileid (documentfile document)
       useEIDHubForNOBankIDSign =
         fromMaybe False $ ctx ^? #eidServiceConf % _Just % #eidUseForNOSign
   mFlowOverviewLink <- Flow.linkToInstanceOverview (documentid document)
@@ -113,7 +111,7 @@ pageDocumentSignView ctx document siglink ad = do
       StandardAuthenticationToView -> show $ LinkDocumentPreview
         (documentid document)
         (Just (siglink, Nothing))
-        mainfile
+        (documentpreviewfile document)
         600
       _ -> show LinkPreviewLockedImage
     F.value "b64documentdata" $ B64.encode docjson

@@ -2,23 +2,23 @@
 import base64
 
 
-def check_screenshot(test, drv, api):
-    doc = test.create_standard_doc('signview screenshot')
+def check_screenshot(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('signview screenshot')
     doc = api.ready(api.update_document(doc))
 
     # sign document
     drv.open_url(doc.other_signatory().absolute_sign_url())
-    test.arrow_scroll(skip_scroll_to_top=True)
+    test_helper.arrow_scroll(skip_scroll_to_top=True)
     drv.wait_for_element_and_click('.section.sign .button.action')
     drv.wait_for_element('.above-overlay')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_and_click('.section.sign .sign-button')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_to_disappear('.sign.section')
 
     import config
 
-    with test.local_ff() as ff:
+    with test_helper.local_ff() as ff:
         ff.open_url(config.scrive_www_url + '/en/enter')
 
         # login to authorview
@@ -45,8 +45,8 @@ def check_screenshot(test, drv, api):
 
         # get data links using hreft attrs, because in chrome you can't open
         # anymore links that are this huge
-        test.write_artifact(ff._screenshot_prefix + '_entry_screenshot.png',
+        test_helper.write_artifact(ff._screenshot_prefix + '_entry_screenshot.png',
                             get_datalink64_image('.entry-screenshot'))
-        test.write_artifact(ff._screenshot_prefix + '_signing_screenshot.png',
+        test_helper.write_artifact(ff._screenshot_prefix + '_signing_screenshot.png',
                             get_datalink64_image('.signing-screenshot'))
         ff.close_window()

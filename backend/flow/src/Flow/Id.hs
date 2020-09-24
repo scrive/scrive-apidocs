@@ -16,7 +16,7 @@ data FlowIdKind
     | CallbackId
 
 newtype Id (a :: FlowIdKind) = Id UUID
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Ord, Show, Generic)
 
 instance FromHttpApiData (Id a) where
   parseUrlPiece = fmap Id . parseUrlPiece

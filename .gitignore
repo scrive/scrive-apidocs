@@ -1,3 +1,4 @@
+/supervisor/logs
 _local/
 /dist/
 /dist-newstyle/
@@ -29,6 +30,7 @@ selenium-test/selenium-test.properties
 kontrakcja-test.tix
 jslint.txt
 .hpc/
+*.pyc
 *.less.css
 regular-css-compiled.css
 .cabal-sandbox/
@@ -63,6 +65,10 @@ tags
 *.DS_Store
 SkrivaPå BP.pdf
 
+selenium-test/config.py
+selenium-test/general/screenshots
+selenium-test/evidence_package/artifacts
+selenium-test/evidence_package/screenshots
 backend/test/e-legitimation/Test-certificates/Mariana Källström.p12
 backend/test/e-legitimation/Test-certificates/Åke Jansson.p12
 
@@ -85,3 +91,4 @@ venv
 __pycache__/
 artifacts/
 screenshots/
+node_modules/

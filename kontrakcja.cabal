@@ -1,4 +1,4 @@
-Cabal-Version: 2.2
+Cabal-Version: 2.4
 Name:          kontrakcja
 Version:       1.0
 Author:        Scrive AB
@@ -44,7 +44,15 @@ Build-type:    Simple
 -- - remove TH from extensions from everything else, add
 --   LANGUAGE TemplateHaskell at the top of each file where it is used
 -- - use TH only where it is truly needed
---
+
+extra-source-files:
+  backend/flow/docs/*.yaml
+  backend/flow/docs/*.md
+  backend/flow/docs/*.py
+  backend/flow/docs/*.html
+  backend/flow/docs/*.txt
+  backend/flow/docs/*.sh
+  backend/flow/docs/*.pdf
 
 common common-stanza
   Default-Language: Haskell2010
@@ -107,7 +115,7 @@ Library kontrakcja-appdir
                     , directory
                     , filepath
 
-Library flow
+Library kontrakcja-flow
   Import: common-stanza
   Hs-source-dirs: backend/flow/lib
 
@@ -128,14 +136,15 @@ Library flow
                  , Flow.Process.Internal
 
   Build-Depends: base-noprelude
-               , kontrakcja-prelude
                , aeson
                , aeson-casing
                , containers
                , exceptions
                , extra
                , hpqtypes
+               , kontrakcja-prelude
                , mtl
+               , optics
                , servant
                , text
                , unordered-containers
@@ -199,6 +208,11 @@ Library
                  , Branding.Adler32
                  , Branding.Control
                  , Branding.CSS
+                 , Callback.Consumer
+                 , Callback.Migrations
+                 , Callback.Model
+                 , Callback.Tables
+                 , Callback.Types
                  , Chargeable
                  , Chargeable.Migrations
                  , Chargeable.Model
@@ -315,7 +329,7 @@ Library
                  , Doc.Sealing.Model
                  , Doc.Sealing.Tables
                  , Doc.SealSpec
-                 , Doc.SealStatus
+                 , Doc.DigitalSignatureStatus
                  , Doc.SignatoryConsentQuestionID
                  , Doc.SignatoryFieldID
                  , Doc.SignatoryFieldUtils
@@ -339,7 +353,7 @@ Library
                  , Doc.Types.DocumentStatus
                  , Doc.Types.DocumentTag
                  , Doc.Types.HighlightedPage
-                 , Doc.Types.MainFile
+                 , Doc.Types.DocumentFile
                  , Doc.Types.SignatoryAccessToken
                  , Doc.Types.SignatoryAttachment
                  , Doc.Types.SignatoryConsentQuestion
@@ -395,7 +409,7 @@ Library
                  , FeatureFlags.Model
                  , FeatureFlags.Tables
                  , File.Conditions
-                 , File.File
+                 , File.Types
                  , File.FileID
                  , File.Migrations
                  , File.Model
@@ -409,10 +423,12 @@ Library
                  , File.Tables
                  , FlashMessage
                  , Flow.ActionConsumers
+                 , Flow.CallbackPayload
                  , Flow.Client
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
                  , Flow.EID.AuthConfig
+                 , Flow.EID.Authentication
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
@@ -423,8 +439,8 @@ Library
                  , Flow.Model
                  , Flow.Model.InstanceSession
                  , Flow.Model.Types
-                 , Flow.Model.Types.Internal
                  , Flow.Model.Types.FlowUserId
+                 , Flow.Model.Types.Internal
                  , Flow.Model.Types.UserIdType
                  , Flow.OrphanInstances
                  , Flow.Routes
@@ -541,7 +557,7 @@ Library
                  , Salesforce.AuthorizationWorkflow
                  , Salesforce.Conf
                  , Salesforce.Control
-                 , SealingMethod
+                 , DigitalSignatureMethod
                  , ServerUtils.ServerUtils
                  , Session.Constant
                  , Session.Cookies
@@ -680,11 +696,13 @@ Library
 
   Other-Modules: BrandedDomain.BrandedDomain.Internal,
                  MailContext.Internal
+  Pkgconfig-Depends:
+                 libxml-2.0
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , kontrakcja-appdir
                , authentication
-               , flow
+               , kontrakcja-flow
                , file-embed
                , AES
                , DRBG
@@ -843,7 +861,7 @@ Executable kontrakcja-server
                , directory
                , exceptions
                , filepath
-               , flow
+               , kontrakcja-flow
                , happstack-server
                , happstack-static-routing
                , hedis
@@ -1158,6 +1176,7 @@ Test-suite kontrakcja-test
                  ChargeableTest
                  CronMonthlyInvoiceTest
                  UserGroupAccountsTest
+                 CallbackTest
                  CompanyBrandingTest
                  CompanyControlTest
                  ConfigTests
@@ -1193,12 +1212,14 @@ Test-suite kontrakcja-test
                  FlashMessages
                  Flow.AuthenticationTest
                  Flow.AggregatorTest
+                 Flow.CallbackTest
                  Flow.DocumentCheckerTest
                  Flow.EIDTest
                  Flow.HighTongueTest
                  Flow.IntegrationTest
                  Flow.IntegrationTest.Common
                  Flow.IntegrationTest.Failure
+                 Flow.IntegrationTest.Rejection
                  Flow.IntegrationTest.ComplexCompleteProcess
                  Flow.IntegrationTest.SimpleCompleteProcess
                  Flow.OrphanTestInstances
@@ -1253,7 +1274,7 @@ Test-suite kontrakcja-test
                , kontrakcja-appdir
                , kontrakcja
                , authentication
-               , flow
+               , kontrakcja-flow
                , Decimal
                , HStringTemplate
                , HUnit
@@ -1294,6 +1315,7 @@ Test-suite kontrakcja-test
                , invariant
                , json
                , kontrakcja-templates
+               , lifted-async
                , lifted-base
                , log-base
                , monad-control
@@ -1331,6 +1353,8 @@ Test-suite kontrakcja-test
                , unordered-containers
                , utf8-string
                , vector
+               , wai
+               , warp
                , x509
                , xml-conduit
                , yaml
@@ -1366,6 +1390,8 @@ Executable localization
   import: common-stanza
 
   Hs-source-dirs: localization/src
+                , backend/lib
+                , backend/misc/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -1374,7 +1400,6 @@ Executable localization
   Main-Is: LocalizationMain.hs
 
   Build-depends: base-noprelude
-               , kontrakcja
                , kontrakcja-prelude
                , kontrakcja-appdir
                , base16-bytestring
@@ -1396,6 +1421,12 @@ Executable localization
                , text
                , time
                , transformers
+
+  Other-Modules:
+              Templates
+              User.Lang
+              Version
+              Utils.Enum
 
 Executable routinglist
   import: common-stanza

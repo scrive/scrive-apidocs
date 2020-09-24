@@ -1,4 +1,4 @@
-module Flow.Tables where
+module Flow.Tables (flowTables) where
 
 import Database.PostgreSQL.PQTypes.Model
 
@@ -14,6 +14,7 @@ flowTables =
   , tableFlowEvents
   , tableFlowAggregatorEvents
   , tableFlowUserAuthConfigs
+  , tableFlowEidAuthentications
   ]
 
 tableFlowTemplates :: Table
@@ -236,7 +237,7 @@ tableFlowInstanceSessions = tblTable
 tableFlowEvents :: Table
 tableFlowEvents = tblTable
   { tblName        = "flow_events"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName     = "id"
                 , colType     = UuidT
@@ -245,7 +246,7 @@ tableFlowEvents = tblTable
                 }
     , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
     , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
-    , tblColumn { colName = "document_name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "document_name", colType = TextT, colNullable = True }
     , tblColumn { colName = "user_action", colType = TextT, colNullable = False }
     , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
     ]
@@ -263,4 +264,41 @@ tableFlowAggregatorEvents = tblTable
   , tblPrimaryKey  = pkOnColumn "id"
   , tblForeignKeys =
     [(fkOnColumn "id" "flow_events" "id") { fkOnDelete = ForeignKeyCascade }]
+  }
+
+-- todo: write test that checks that both flow_overview_authentications and
+-- tableEIDAuthentications contain all `eid_authentication` columns. general
+-- idea: authenticate overview, and push authentications to kontrakcja for each
+-- document
+tableFlowEidAuthentications :: Table
+tableFlowEidAuthentications = tblTable
+  { tblName        = "flow_eid_authentications"
+  , tblVersion     = 2
+  , tblColumns     =
+    [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "session_id", colType = BigIntT }
+    , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "signature", colType = BinaryT }
+    , tblColumn { colName = "signatory_name", colType = TextT }
+    , tblColumn { colName = "signatory_personal_number", colType = TextT }
+    , tblColumn { colName = "ocsp_response", colType = BinaryT }
+    , tblColumn { colName = "internal_provider", colType = SmallIntT }
+    , tblColumn { colName = "signatory_phone_number", colType = TextT }
+    , tblColumn { colName = "signatory_date_of_birth", colType = TextT }
+    , tblColumn { colName = "signatory_ip", colType = TextT }
+    , tblColumn { colName = "signatory_email", colType = TextT }
+    , tblColumn { colName = "provider_customer_id", colType = TextT }
+    , tblColumn { colName = "provider_method", colType = TextT }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["instance_id", "user_name", "auth_kind"]
+  , tblForeignKeys =
+    [ (fkOnColumns ["instance_id", "user_name"]
+                   "flow_instance_key_value_store"
+                   ["instance_id", "key"]
+      ) { fkOnDelete = ForeignKeyCascade
+        }
+    , (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
   }

@@ -251,7 +251,11 @@ instance PdfToolsLambdaMonad TestKontra where
     TestKontra $ callPdfToolsPadesSignPrim spec =<< use #pdfToolsLambdaEnv
   -- Don't run pdf cleaning in tests
   callPdfToolsCleaning = pure . Just . BSL.toStrict
-  lambdaEnv            = TestKontra $ use #pdfToolsLambdaEnv
+  callPdfToolsVerimiQesSetup spec =
+    TestKontra $ callPdfToolsVerimiQesSetupPrim spec =<< use #pdfToolsLambdaEnv
+  callPdfToolsVerimiQesEvidence spec =
+    TestKontra $ callPdfToolsVerimiQesEvidencePrim spec =<< use #pdfToolsLambdaEnv
+  lambdaEnv = TestKontra $ use #pdfToolsLambdaEnv
 
 instance MailContextMonad TestKontra where
   getMailContext = contextToMailContext <$> getContext
@@ -543,6 +547,9 @@ clearTables = do
   runSQL_ "DELETE FROM sessions"
 
   runSQL_ "DELETE FROM mails"
+
+  runSQL_ "DELETE FROM callback_consumers"
+  runSQL_ "DELETE FROM callbacks"
 
   runSQL_ "DELETE FROM async_event_queue"
   runSQL_ "DELETE FROM signatory_link_fields"

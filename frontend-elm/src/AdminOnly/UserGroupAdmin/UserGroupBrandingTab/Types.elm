@@ -1,7 +1,7 @@
 module AdminOnly.UserGroupAdmin.UserGroupBrandingTab.Types exposing (..)
 
 import EnumExtra as Enum exposing (Enum)
-import Lib.Theme.Types exposing (ThemeID)
+import Lib.Types.Theme exposing (ThemeID)
 
 type ThemeKind = EmailTheme | SignViewTheme | ServiceTheme
 

@@ -10,6 +10,11 @@
         version = "1.0.3";
       };
 
+      "jims/html-parser" = {
+        sha256 = "0n62n8mj8zjm1b8y02xr16h2a57j0x31vk4gkpnsv0npik52vbxg";
+        version = "1.0.0";
+      };
+
       "elm-community/maybe-extra" = {
         sha256 = "0vd8n8pxk16kzff3j92986cig0j0h5jdnb1yyf92i79sy30gn5vl";
         version = "5.1.0";
@@ -28,6 +33,11 @@
       "rundis/elm-bootstrap" = {
         sha256 = "155rqa2hh9h5s0ryqv4pn40vwl2klk3zg8b2xf48z5ky8fdrr31c";
         version = "5.2.0";
+      };
+
+      "truqu/elm-base64" = {
+        sha256 = "12w68b4idbs2vn0gm0lj354pm745jb7n0fj69408mpvh5r1z4m1b";
+        version = "2.0.4";
       };
 
       "jzxhuang/http-extras" = {

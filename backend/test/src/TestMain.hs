@@ -32,6 +32,7 @@ import AppDir (AppPaths(..), setupAppPaths)
 import ArchiveTest
 import Attachment.APITest
 import BrandedDomainTest
+import CallbackTest
 import ChargeableTest
 import CompanyBrandingTest
 import CompanyControlTest
@@ -126,6 +127,7 @@ allTests =
   , archiveTests
   , attachmentAPITests
   , brandedDomainTests
+  , callbackTests
   , chargeableTest
   , companyAccountsTests
   , companyBrandingTests

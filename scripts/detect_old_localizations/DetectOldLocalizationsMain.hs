@@ -374,8 +374,9 @@ main = do
     <$> directoryFilesRecursive "frontend/app/js"
   jsx_compiled_files <- filter (".jsx" `isSuffixOf`)
     <$> directoryFilesRecursive "frontend/app/scripts"
+  elm_files <- filter (".elm" `isSuffixOf`) <$> directoryFilesRecursive "frontend-elm"
   templates_files <- filter (".st" `isSuffixOf`) <$> directoryFilesRecursive "templates"
-  let files = normal_js_files ++ jsx_compiled_files ++ templates_files
+  let files = normal_js_files ++ jsx_compiled_files ++ elm_files ++ templates_files
   localizationCalls <- readLocalizations files
   let
     results =

@@ -34,16 +34,16 @@ readPubKeyRSA path = do
 
 testAzureSignatureVerifies :: TestEnv ()
 testAzureSignatureVerifies = liftBase $ do
-  parsedXml <- readBase64XmlFromFile "backend/test/src/SSO/dustin-response.b64"
-  publicKeys <- readPubKeyRSA "backend/test/src/SSO/dustin-pubkey.pem"
+  parsedXml <- readBase64XmlFromFile "backend/test/sso/dustin-response.b64"
+  publicKeys <- readPubKeyRSA "backend/test/sso/dustin-pubkey.pem"
   result <- verifySignature publicKeys "_1357f79d-688d-47bd-b2a3-852002252400" parsedXml
   assertEqual "Dustin signature verified" result (Just True)
   return ()
 
 testOktaSignatureVerifies :: TestEnv ()
 testOktaSignatureVerifies = liftBase $ do
-  parsedXml  <- readBase64XmlFromFile "backend/test/src/SSO/okta-response.b64"
-  publicKeys <- readPubKeyRSA "backend/test/src/SSO/okta-pubkey.pem"
+  parsedXml  <- readBase64XmlFromFile "backend/test/sso/okta-response.b64"
+  publicKeys <- readPubKeyRSA "backend/test/sso/okta-pubkey.pem"
   result     <- verifySignature publicKeys "id19445555358897071620478623" parsedXml
   assertEqual "Okta response signature verified" result (Just True)
   result2 <- verifySignature publicKeys "id194455553589685681012477200" parsedXml
@@ -52,8 +52,8 @@ testOktaSignatureVerifies = liftBase $ do
 
 testWAMESignatureVerifies :: TestEnv ()
 testWAMESignatureVerifies = liftBase $ do
-  parsedXml  <- readBase64XmlFromFile "backend/test/src/SSO/wame-response.b64"
-  publicKeys <- readPubKeyRSA "backend/test/src/SSO/wame-pubkey.pem"
+  parsedXml  <- readBase64XmlFromFile "backend/test/sso/wame-response.b64"
+  publicKeys <- readPubKeyRSA "backend/test/sso/wame-pubkey.pem"
   result     <- verifySignature publicKeys
                                 "FIMRSP_ed7abb99-0170-145f-beea-d0d544148baa"
                                 parsedXml
@@ -66,17 +66,16 @@ testWAMESignatureVerifies = liftBase $ do
 
 testADFSSignatureVerifies :: TestEnv ()
 testADFSSignatureVerifies = liftBase $ do
-  parsedXml <- readBase64XmlFromFile "backend/test/src/SSO/adfs-response.b64"
-  publicKeys <- readPubKeyRSA "backend/test/src/SSO/adfs-pubkey.pem"
+  parsedXml <- readBase64XmlFromFile "backend/test/sso/adfs-response.b64"
+  publicKeys <- readPubKeyRSA "backend/test/sso/adfs-pubkey.pem"
   result <- verifySignature publicKeys "_47050483-95e1-4e80-a074-1f5b3e3fe31a" parsedXml
   assertEqual "Okta assertion signature verified" result (Just True)
   return ()
 
 testGSuiteSignatureVerifies :: TestEnv ()
 testGSuiteSignatureVerifies = liftBase $ do
-  parsedXml  <- readBase64XmlFromFile "backend/test/src/SSO/gsuite-response.b64"
-  publicKeys <- readPubKeyRSA "backend/test/src/SSO/gsuite-pubkey.pem"
+  parsedXml  <- readBase64XmlFromFile "backend/test/sso/gsuite-response.b64"
+  publicKeys <- readPubKeyRSA "backend/test/sso/gsuite-pubkey.pem"
   result     <- verifySignature publicKeys "_ede2776774b5624585e0851523adc279" parsedXml
   assertEqual "Okta assertion signature verified" result (Just True)
   return ()
-

@@ -31,6 +31,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2AddEvidenceEvent
 ) where
 
+import Control.Conditional (whenM)
 import Control.Monad.Base
 import Crypto.RNG
 import Data.List.Extra (nubOrd)
@@ -66,6 +67,7 @@ import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocAddImage (addImageToDocumentFile)
 import Doc.DocInfo (isClosed, isPending, isTimedout)
 import Doc.DocMails
+import Doc.DocSeal (verimiQesSetupDocumentFile)
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
@@ -73,8 +75,8 @@ import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
-import File.File (File(..))
 import File.Storage
+import File.Types (File(..))
 import InputValidation (asValidEmail, asValidPhone)
 import Kontra
 import Log.Identifier
@@ -118,7 +120,7 @@ docApiV2New = api $ do
     case mFile of
       Nothing -> return ()
       Just f  -> do
-        dbUpdate $ AttachFile (fileid f) actor
+        dbUpdate $ SetInputMainfile (fileid f) actor
     theDocument >>= \doc -> logInfo "New document created" $ logObject_ doc
     allUserRoles <- getRolesIncludingInherited user
     Created
@@ -240,6 +242,23 @@ docApiV2Start did = logDocument did . api $ do
     timezone       <- documenttimezonename <$> theDocument
     clearDocFields actor
     dbUpdate $ PreparationToPending actor timezone
+
+    -- Verimi QES
+    whenM (documentUsesVerimiQes <$> theDocument) $ do
+      -- we need to generate a secret for the evidence file link in the baked pdf
+      dbUpdate $ InsertFreshEvidenceFileSecret ()
+      doc <- theDocument
+      file <- apiGuardJust (serverError "Missing main file") $ documentinputfile doc
+      -- we 'bake' (render) all fields, since during the QES process we can't do form fill-in
+      verimiQesSetupContent <- do
+        res <- verimiQesSetupDocumentFile doc file
+        case res of
+          Left _ -> apiError $ serverError "Failed to prepare main file for signing"
+          Right content -> return content
+      verimiQesSetupFile <- saveNewFile (filename file) verimiQesSetupContent
+      logAttention_ "dbUpdate $ AppendPendingVerimiQesFile verimiQesSetupFile"
+      dbUpdate $ AppendPendingVerimiQesFile verimiQesSetupFile
+
     dbUpdate $ SetDocumentInviteTime t actor
     postDocumentPreparationChange authorSignsNow timezone
     ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
@@ -587,10 +606,10 @@ docApiV2SetFile did = logDocument did . api $ do
     mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
     -- API call actions
     case mFile of
-      Nothing   -> dbUpdate $ DetachFile actor
+      Nothing   -> dbUpdate $ RemoveInputMainfile actor
       Just file -> do
-        moldfileid <- fmap mainfileid . documentfile <$> theDocument
-        dbUpdate $ AttachFile (fileid file) actor
+        moldfileid <- fmap fileid . documentinputfile <$> theDocument
+        dbUpdate $ SetInputMainfile (fileid file) actor
         case moldfileid of
           Just oldfileid -> recalculateAnchoredFieldPlacements oldfileid (fileid file)
           Nothing        -> return ()
@@ -619,7 +638,7 @@ docApiV2RemovePages did = logDocument did . api $ do
       "pages"
       "Pages parameter can't contain duplicates"
     -- Generating and replacing PDF
-    mfile <- fileFromMainFile =<< documentfile <$> theDocument
+    mfile <- documentinputfile <$> theDocument
     case mfile of
       Nothing   -> apiError $ documentStateError "Document does not have a main file"
       Just file -> do
@@ -641,9 +660,9 @@ docApiV2RemovePages did = logDocument did . api $ do
                 case mnewcontent of
                   Nothing -> apiError $ serverError "Removing pages from file failed"
                   Just newcontent -> do
-                    nfileid <- saveNewFile (filename file) newcontent
-                    dbUpdate $ DetachFile actor
-                    dbUpdate $ AttachFile nfileid actor
+                    nfile <- saveNewFile (filename file) newcontent
+                    dbUpdate $ RemoveInputMainfile actor
+                    dbUpdate $ SetInputMainfile (fileid nfile) actor
     -- Changing signatory fiels
     adjustFieldAndPlacementsAfterRemovingPages pages actor
     -- Result
@@ -1022,7 +1041,7 @@ docApiV2AddImage did = logDocument did . api $ do
       apiError
         $ requestParameterInvalid "x or y" "X and Y positions should be between 0 and 1"
     -- Generating and replacing PDF
-    mfile <- fileFromMainFile =<< documentfile <$> theDocument
+    mfile <- documentinputfile <$> theDocument
     case mfile of
       Nothing   -> apiError $ documentStateError "Document does not have a main file"
       Just file -> do
@@ -1039,9 +1058,9 @@ docApiV2AddImage did = logDocument did . api $ do
             case mnewcontent of
               Left _ -> apiError $ serverError "Adding image to main file has failed"
               Right newcontent -> do
-                nfileid <- saveNewFile (filename file) newcontent
-                dbUpdate $ DetachFile actor
-                dbUpdate $ AttachFile nfileid actor
+                nfile <- saveNewFile (filename file) newcontent
+                dbUpdate $ RemoveInputMainfile actor
+                dbUpdate $ SetInputMainfile (fileid nfile) actor
     -- Result
     Ok <$> currentDocumentJsonViewedBy user
 

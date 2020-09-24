@@ -14,6 +14,7 @@ module Flow.Aggregator
     , failureStageName
     , finalStageName
     , makeNewState
+    , isComplete
     )
   where
 
@@ -76,32 +77,46 @@ finalStageName = unsafeName "__FINAL__"
 --
 -- Unexpected events will not be processed but will not cause failure of the flow.
 aggregateAndStep :: HighTongue -> EventInfo -> AggregatorT AggregatorStep
-aggregateAndStep HighTongue {..} event = do
-  AggregatorState {..} <- S.get
-  (stage, nextStages)  <- maybe (E.throwError UnknownStage) pure
+aggregateAndStep HighTongue { stages } event = do
+  AggregatorState { currentStage, receivedEvents } <- S.get
+  (stage, nextStages) <- maybe (E.throwError UnknownStage) pure
     $ remainingStages currentStage stages
+
   let successEvents = Set.fromList $ Set.toList (stageExpect stage) >>= expectToSuccess
+
       failureEvents = Set.fromList $ Set.toList (stageExpect stage) >>= expectToFailure
+
       knownEvents   = Set.union successEvents failureEvents
 
   when (Set.notMember event knownEvents) $ E.throwError UnknownEventInfo
+
   when (Set.member event receivedEvents) $ E.throwError DuplicateEvent
 
   let newReceivedEvents = Set.insert event receivedEvents
+  let eventAction       = eventInfoAction event
 
   if Set.member event failureEvents
-    then do
-      put $ makeNewState failureStageName
-      pure $ StateChange [Fail]
+    then if eventAction == DocumentRejection
+      then
+        (do
+          put $ makeNewState failureStageName
+          pure $ StateChange [Reject]
+        )
+      else
+        (do
+          put $ makeNewState failureStageName
+          pure $ StateChange [Fail]
+        )
     else do
       if successEvents == newReceivedEvents
         then case nextStages of
           [] -> do
             put $ makeNewState finalStageName
             pure $ StateChange [CloseAll]
-          (Stage {..} : _) -> do
-            put $ makeNewState stageName
-            pure . StateChange $ fmap Action stageActions
+
+          (nextStage : _) -> do
+            put . makeNewState $ stageName nextStage
+            (pure . StateChange) . fmap Action $ stageActions nextStage
         else do
           S.modify $ \s -> s { receivedEvents = newReceivedEvents }
           pure NeedMoreEvents
@@ -117,3 +132,6 @@ runAggregatorStep
   -> (Either AggregatorError AggregatorStep, AggregatorState)
 runAggregatorStep event aggregatorState highTongue = do
   flip S.runState aggregatorState . E.runExceptT $ aggregateAndStep highTongue event
+
+isComplete :: AggregatorState -> Bool
+isComplete aggrState = currentStage aggrState == finalStageName

@@ -7,7 +7,7 @@
 # This script assumes TRGMH which is ssh string to target server (builds@prod.scrive.lan)
 # This script assumes AMZN which is a boolean whether to upload to Amazon
 
-BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
+export BUILD_DATE="${BUILD_DATE:-`date "+%Y-%m-%d-%H-%M-%S"`}"
 BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
 ZIP="$BUILD_ID.$SRV.tar.gz"
 echo "BUILD ID: "$BUILD_ID

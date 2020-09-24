@@ -46,6 +46,12 @@ data ChargeableItem = CIStartingDocument
                     | CIIDINSignatureStarted
                     | CIOnfidoDocumentCheckSignatureStarted
                     | CIOnfidoDocumentAndPhotoCheckSignatureStarted
+                    | CIVerimiQesSignatureStarted
+                    | CIVerimiQesSignatureFinished
+                    | CIOnfidoDocumentCheckAuthenticationStarted
+                    | CIOnfidoDocumentAndPhotoCheckAuthenticationStarted
+                    | CIOnfidoDocumentCheckAuthenticationFinished
+                    | CIOnfidoDocumentAndPhotoCheckAuthenticationFinished
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -90,8 +96,13 @@ instance FromSQL ChargeableItem where
       30 -> return CIIDINSignatureStarted
       31 -> return CIOnfidoDocumentCheckSignatureStarted
       32 -> return CIOnfidoDocumentAndPhotoCheckSignatureStarted
-
-      _  -> throwM RangeError { reRange = [(1, 24)], reValue = n }
+      33 -> return CIVerimiQesSignatureStarted
+      34 -> return CIVerimiQesSignatureFinished
+      35 -> return CIOnfidoDocumentCheckAuthenticationStarted
+      36 -> return CIOnfidoDocumentAndPhotoCheckAuthenticationStarted
+      37 -> return CIOnfidoDocumentCheckAuthenticationFinished
+      38 -> return CIOnfidoDocumentAndPhotoCheckAuthenticationFinished
+      _  -> throwM RangeError { reRange = [(1, 38)], reValue = n }
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
@@ -127,6 +138,12 @@ instance ToSQL ChargeableItem where
   toSQL CIIDINSignatureStarted    = toSQL (30 :: Int16)
   toSQL CIOnfidoDocumentCheckSignatureStarted = toSQL (31 :: Int16)
   toSQL CIOnfidoDocumentAndPhotoCheckSignatureStarted = toSQL (32 :: Int16)
+  toSQL CIVerimiQesSignatureStarted = toSQL (33 :: Int16)
+  toSQL CIVerimiQesSignatureFinished = toSQL (34 :: Int16)
+  toSQL CIOnfidoDocumentCheckAuthenticationStarted = toSQL (35 :: Int16)
+  toSQL CIOnfidoDocumentAndPhotoCheckAuthenticationStarted = toSQL (36 :: Int16)
+  toSQL CIOnfidoDocumentCheckAuthenticationFinished = toSQL (37 :: Int16)
+  toSQL CIOnfidoDocumentAndPhotoCheckAuthenticationFinished = toSQL (38 :: Int16)
 
 
 -- | This type should be used only for serialization. Punishment will be imposed
@@ -194,4 +211,13 @@ instance ToJSON ChargeableItemEvent where
         "onfido_document_signature_started"
       eventTypeToJSON CIOnfidoDocumentAndPhotoCheckSignatureStarted =
         "onfido_document_and_face_signature_started"
-
+      eventTypeToJSON CIVerimiQesSignatureStarted  = "verimiqes_signature_started"
+      eventTypeToJSON CIVerimiQesSignatureFinished = "verimiqes_signature_finished"
+      eventTypeToJSON CIOnfidoDocumentCheckAuthenticationStarted =
+        "onfido_document_authentication_started"
+      eventTypeToJSON CIOnfidoDocumentAndPhotoCheckAuthenticationStarted =
+        "onfido_document_and_face_authentication_started"
+      eventTypeToJSON CIOnfidoDocumentCheckAuthenticationFinished =
+        "onfido_document_authentication_finished"
+      eventTypeToJSON CIOnfidoDocumentAndPhotoCheckAuthenticationFinished =
+        "onfido_document_and_face_authentication_finished"

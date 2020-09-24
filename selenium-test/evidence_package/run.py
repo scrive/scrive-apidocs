@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import argparse
-import nose
+import nose2
 import os
 import sys
 import shutil
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -44,4 +45,4 @@ if __name__ == '__main__':
         ))
 
     sys.argv = [sys.argv[0]] + left
-    nose.main()
+    nose2.discover()

@@ -2,10 +2,10 @@ module EID.Signature.Model (
     ESignature(..)
   , module EID.Signature.Legacy
   , SignatureProvider(..)
+  , GetESignature(..)
   -- from EID.CGI.GRP.Types
   , CGISEBankIDSignature(..)
   , MergeCGISEBankIDSignature(..)
-  , GetESignature(..)
   -- from EID.Nets.Types
   , NetsNOBankIDSignature(..)
   , MergeNetsNOBankIDSignature(..)
@@ -21,6 +21,7 @@ module EID.Signature.Model (
   , MergeEIDServiceNOBankIDSignature(..)
   , EIDServiceSEBankIDSignature(..)
   , MergeEIDServiceSEBankIDSignature(..)
+  , MergeEIDServiceVerimiQesSignature(..)
   ) where
 
 import Control.Monad.Catch
@@ -59,6 +60,7 @@ data ESignature
   | EIDServiceOnfidoSignature_ !EIDServiceOnfidoSignature
   | EIDServiceNOBankIDSignature_ !EIDServiceNOBankIDSignature
   | EIDServiceSEBankIDSignature_ !EIDServiceSEBankIDSignature
+  | EIDServiceVerimiQesSignature_ !EIDServiceVerimiQesSignature
   deriving (Eq, Ord, Show)
 
 -- | Signature provider. Used internally to distinguish between
@@ -78,6 +80,7 @@ data SignatureProvider
   | EIDServiceOnfido
   | EIDServiceNOBankID
   | EIDServiceSEBankID
+  | EIDServiceVerimi
     deriving (Eq, Ord, Show)
 
 instance PQFormat SignatureProvider where
@@ -100,7 +103,8 @@ instance FromSQL SignatureProvider where
       10 -> return EIDServiceOnfido
       11 -> return EIDServiceNOBankID
       12 -> return EIDServiceSEBankID
-      _  -> throwM RangeError { reRange = [(1, 12)], reValue = n }
+      13 -> return EIDServiceVerimi
+      _  -> throwM RangeError { reRange = [(1, 13)], reValue = n }
 
 instance ToSQL SignatureProvider where
   type PQDest SignatureProvider = PQDest Int16
@@ -116,7 +120,7 @@ instance ToSQL SignatureProvider where
   toSQL EIDServiceOnfido   = toSQL (10 :: Int16)
   toSQL EIDServiceNOBankID = toSQL (11 :: Int16)
   toSQL EIDServiceSEBankID = toSQL (12 :: Int16)
-
+  toSQL EIDServiceVerimi   = toSQL (13 :: Int16)
 
 ----------------------------------------
 
@@ -360,6 +364,34 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceSEBankIDSignature
         sqlSet "ocsp_response"     eidServiceSEBankIDSigOcspResponse
         sqlSet "data"              eidServiceSEBankIDSigSignedText
 
+data MergeEIDServiceVerimiQesSignature = MergeEIDServiceVerimiQesSignature SignatoryLinkID EIDServiceVerimiQesSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceVerimiQesSignature () where
+  dbUpdate (MergeEIDServiceVerimiQesSignature slid EIDServiceVerimiQesSignature {..}) =
+    do
+      runQuery01_ selectSignatorySignTime
+      msign_time :: Maybe UTCTime <- fetchOne runIdentity
+      when (isJust msign_time) $ do
+        unexpectedError "signatory already signed, can't merge signature"
+      runQuery_ . sqlInsert "eid_signatures" $ do
+        setFields
+        sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
+          setFields
+          -- replace the signature only if signatory hasn't signed yet
+          sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id"      slid
+        sqlSet "provider"               EIDServiceVerimi
+        sqlSet "signatory_name"         eidServiceVerimiSigName
+        sqlSet "signatory_email"        eidServiceVerimiSigVerifiedEmail
+        sqlSet "signatory_phone_number" eidServiceVerimiSigVerifiedPhone
+
 -- | Get signature for a given signatory.
 newtype GetESignature = GetESignature SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature) where
@@ -374,6 +406,8 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature)
       sqlResult "ocsp_response"
       sqlResult "signatory_ip"
       sqlResult "signatory_date_of_birth"
+      sqlResult "signatory_email"
+      sqlResult "signatory_phone_number"
       sqlWhereEq "signatory_link_id" slid
     fetchMaybe fetchESignature
 
@@ -388,9 +422,11 @@ fetchESignature
      , Maybe ByteString
      , Maybe Text
      , Maybe Text
+     , Maybe Text
+     , Maybe Text
      )
   -> ESignature
-fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip, msignatory_dob)
+fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip, msignatory_dob, msignatory_email, msignatory_phone_number)
   = case provider of
     LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature
       { lbidsSignedText  = fromJust sdata
@@ -469,4 +505,9 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       , eidServiceSEBankIDSigSignedText     = fromJust sdata
       , eidServiceSEBankIDSigSignature      = fromJust signature
       , eidServiceSEBankIDSigOcspResponse   = fromJust mocsp_response
+      }
+    EIDServiceVerimi -> EIDServiceVerimiQesSignature_ $ EIDServiceVerimiQesSignature
+      { eidServiceVerimiSigName          = fromJust msignatory_name
+      , eidServiceVerimiSigVerifiedEmail = msignatory_email
+      , eidServiceVerimiSigVerifiedPhone = msignatory_phone_number
       }

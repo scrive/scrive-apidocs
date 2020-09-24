@@ -23,6 +23,7 @@ import Branding.CSS
 import Chargeable
 import DB
 import DB.TimeZoneName (mkTimeZoneName)
+import DigitalSignatureMethod
 import Doc.API.V1.Calls
 import Doc.DocControl
 import Doc.DocStateData
@@ -42,11 +43,11 @@ import Doc.Tokens.Model
 import Doc.Types.SignatoryAccessToken
 import File.FileID
 import File.Storage
+import File.Types (fileid)
 import KontraError
 import MagicHash
 import Mails.Model
 import MinutesTime
-import SealingMethod
 import Session.Model
 import TestCron
 import TestingUtil
@@ -188,7 +189,7 @@ testLastPersonSigningADocumentClosesIt = do
 
   let
     genDoc = addRandomDocumentWithFile
-      file
+      (fileid file)
       (rdaDefault user)
         { rdaTypes       = OneOf [Signable]
         , rdaStatuses    = OneOf [Preparation]
@@ -285,13 +286,13 @@ testSigningWithPin = do
 
   let
     genDoc = addRandomDocumentWithFile
-      file
+      (fileid file)
       (rdaDefault user1)
-        { rdaTypes          = OneOf [Signable]
-        , rdaStatuses       = OneOf [Preparation]
-        , rdaSignatories    = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
-                              in  OneOf $ map (`replicate` signatory) [1 .. 10]
-        , rdaSealingMethods = OneOf [Guardtime]
+        { rdaTypes                   = OneOf [Signable]
+        , rdaStatuses                = OneOf [Preparation]
+        , rdaSignatories = let signatory = OneOf [[RSC_DeliveryMethodIs EmailDelivery]]
+                           in  OneOf $ map (`replicate` signatory) [1 .. 10]
+        , rdaDigitalSignatureMethods = OneOf [Guardtime]
         }
   withDocumentM genDoc $ do
     d       <- theDocument
@@ -492,7 +493,7 @@ testDownloadFile = do
 
   -- who cares which one, just pick the last one
   --let sl = head . reverse $ documentsignatorylinks doc
-  let Just (fid :: FileID) = mainfileid <$> documentfile doc
+  let Just (fid :: FileID) = fileid <$> documentinputfile doc
 
   let cases =
         [ (False, ctxnotloggedin, [], "nobody is not logged in")
@@ -750,7 +751,7 @@ testDownloadSignviewBrandingAccess = do
   file        <- saveNewFile (T.pack filename) filecontent
 
   doc         <- addRandomDocumentWithFile
-    file
+    (fileid file)
     (rdaDefault user)
       { rdaTypes       = OneOf [Signable]
       , rdaStatuses    = OneOf [Preparation]

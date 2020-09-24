@@ -62,7 +62,7 @@ completeEIDServiceAuthTransaction conf provider doc sl = case provider of
   EIDServiceTransactionProviderFITupas ->
     FITupas.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderOnfido ->
-    unexpectedError "Onfido auth not supported via EID service"
+    Onfido.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderSEBankID ->
     SEBankID.completeEIDServiceAuthTransaction conf doc sl
 
@@ -78,8 +78,7 @@ completeEIDServiceSignTransaction conf provider sl = case provider of
   EIDServiceTransactionProviderNLIDIN -> NLIDIN.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderNOBankID ->
     NOBankID.completeEIDServiceSignTransaction conf sl
-  EIDServiceTransactionProviderVerimi ->
-    unexpectedError "Verimi sign not supported via EID service"
+  EIDServiceTransactionProviderVerimi -> Verimi.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderFITupas ->
     FITupas.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderOnfido -> Onfido.completeEIDServiceSignTransaction conf sl

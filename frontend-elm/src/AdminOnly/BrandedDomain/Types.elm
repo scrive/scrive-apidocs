@@ -2,7 +2,7 @@ module AdminOnly.BrandedDomain.Types exposing (..)
 
 import Color exposing (Color)
 import EnumExtra as Enum exposing (Enum)
-import Lib.Theme.Types exposing (ThemeID)
+import Lib.Types.Theme exposing (ThemeID)
 
 type ColorIdentifier = ParticipantColor1 | ParticipantColor2 | ParticipantColor3
   | ParticipantColor4 | ParticipantColor5 | ParticipantColor6 | DraftColor

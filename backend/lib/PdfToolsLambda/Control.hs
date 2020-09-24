@@ -4,6 +4,8 @@ module PdfToolsLambda.Control
   , callPdfToolsCleaningPrim
   , callPdfToolsAddImagePrim
   , callPdfToolsPadesSignPrim
+  , callPdfToolsVerimiQesSetupPrim
+  , callPdfToolsVerimiQesEvidencePrim
   ) where
 
 import Control.Monad.Base
@@ -44,15 +46,19 @@ data PdfToolsAction =
   | PdfToolsActionCleaning
   | PdfToolsActionAddImage
   | PdfToolsActionPadesSign
+  | PdfToolsActionVerimiQesSetup
+  | PdfToolsActionVerimiQesEvidence
   deriving (Generic)
 
 instance ToJSON PdfToolsAction
 
 pdfToolsActionName :: PdfToolsAction -> Text
-pdfToolsActionName PdfToolsActionSealing   = "seal"
-pdfToolsActionName PdfToolsActionCleaning  = "clean"
-pdfToolsActionName PdfToolsActionAddImage  = "addimage"
-pdfToolsActionName PdfToolsActionPadesSign = "padesSign"
+pdfToolsActionName PdfToolsActionSealing           = "seal"
+pdfToolsActionName PdfToolsActionCleaning          = "clean"
+pdfToolsActionName PdfToolsActionAddImage          = "addimage"
+pdfToolsActionName PdfToolsActionPadesSign         = "padesSign"
+pdfToolsActionName PdfToolsActionVerimiQesSetup    = "verimiQesSetup"
+pdfToolsActionName PdfToolsActionVerimiQesEvidence = "qesEvidenceFile"
 
 callPdfToolsSealingPrim
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
@@ -72,6 +78,15 @@ callPdfToolsPresealingPrim spec lc = do
   inputData <- presealSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionSealing inputData
 
+callPdfToolsVerimiQesSetupPrim
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => VerimiQesSetupSpec
+  -> PdfToolsLambdaEnv
+  -> m (Maybe BS.ByteString)
+callPdfToolsVerimiQesSetupPrim spec lc = do
+  inputData <- verimiQesSetupSpecToLambdaSpec spec
+  executePdfToolsLambdaActionCall lc PdfToolsActionVerimiQesSetup inputData
+
 callPdfToolsCleaningPrim
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
   => BSL.ByteString
@@ -79,6 +94,15 @@ callPdfToolsCleaningPrim
   -> m (Maybe BS.ByteString)
 callPdfToolsCleaningPrim inputFileContent lc = do
   executePdfToolsLambdaActionCall lc PdfToolsActionCleaning inputFileContent
+
+callPdfToolsVerimiQesEvidencePrim
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => VerimiQesEvidenceSpec
+  -> PdfToolsLambdaEnv
+  -> m (Maybe BS.ByteString)
+callPdfToolsVerimiQesEvidencePrim spec lc = do
+  inputData <- verimiQesEvidenceSpecToLambdaSpec spec
+  executePdfToolsLambdaActionCall lc PdfToolsActionVerimiQesEvidence inputData
 
 callPdfToolsAddImagePrim
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)

@@ -50,16 +50,6 @@ describe("authorview/titleboxview", function () {
     );
   });
 
-  it("renders PDF download link", function () {
-    var component = renderComponent();
-
-    var downloadLink = document_.mainfile().downloadLinkForMainFile(document_.title(), true);
-    var downloadButton = $(".s-download-button", React.findDOMNode(component));
-
-    assert.lengthOf(downloadButton, 1);
-    assert.equal(downloadButton.attr("href"), downloadLink);
-  });
-
   // Restart button
   it("should render restart button for timedout document", function () {
     document_.set("status", "timedout");

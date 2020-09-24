@@ -405,6 +405,7 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignFromFITupas  |
   ChangeAuthenticationToSignFromOnfidoDocumentCheck   |
   ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck   |
+  ChangeAuthenticationToSignFromVerimiQes   |
   ChangeAuthenticationToSignToStandard   |
   ChangeAuthenticationToSignToSMSPin     |
   ChangeAuthenticationToSignToSEBankID   |
@@ -414,6 +415,7 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignToFITupas    |
   ChangeAuthenticationToSignToOnfidoDocumentCheck     |
   ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck     |
+  ChangeAuthenticationToSignToVerimiQes     |
   ChangeAuthenticationToViewFromStandard |
   ChangeAuthenticationToViewFromSMSPin   |
   ChangeAuthenticationToViewFromSEBankID |
@@ -425,6 +427,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewFromFITupas  |
   ChangeAuthenticationToViewFromVerimi   |
   ChangeAuthenticationToViewFromIDIN     |
+  ChangeAuthenticationToViewFromOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck     |
   ChangeAuthenticationToViewToStandard   |
   ChangeAuthenticationToViewToSMSPin     |
   ChangeAuthenticationToViewToSEBankID   |
@@ -436,6 +440,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewToFITupas    |
   ChangeAuthenticationToViewToVerimi     |
   ChangeAuthenticationToViewToIDIN       |
+  ChangeAuthenticationToViewToOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck     |
   ChangeAuthenticationToViewArchivedFromStandard |
   ChangeAuthenticationToViewArchivedFromSMSPin    |
   ChangeAuthenticationToViewArchivedFromSEBankID  |
@@ -447,6 +453,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedFromFITupas   |
   ChangeAuthenticationToViewArchivedFromVerimi    |
   ChangeAuthenticationToViewArchivedFromIDIN      |
+  ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck     |
   ChangeAuthenticationToViewArchivedToStandard    |
   ChangeAuthenticationToViewArchivedToSMSPin      |
   ChangeAuthenticationToViewArchivedToSEBankID    |
@@ -458,7 +466,12 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedToFITupas     |
   ChangeAuthenticationToViewArchivedToVerimi      |
   ChangeAuthenticationToViewArchivedToIDIN        |
-  UpdateSsnAfterAuthenticationToViewWithNets
+  ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck     |
+  ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck |
+  UpdateSsnAfterAuthenticationToViewWithNets      |
+  VerimiQesEvidenceFilePrepared                   |
+  AttachDigitalSignatureQesEvidenceFileEvidence   |
+  AttachExtendedQesEvidenceFileEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -490,7 +503,7 @@ data ObsoleteEvidenceEventType =
   ReallyDeleteDocumentEvidence                    |
   NewDocumentEvidence                             |
   ChangeMainfileEvidence                          |
-  AttachFileEvidence                              |
+  SetInputMainfileEvidence                              |
   MarkDocumentSeenEvidence                        |
   SetDocumentTimeoutTimeEvidence                  |
   RestoreArchivedDocumentEvidence                 |
@@ -511,7 +524,7 @@ data ObsoleteEvidenceEventType =
   SetPadDeliveryMethodEvidence                    |
   SetAPIDeliveryMethodEvidence                    |
   SetDocumentProcessEvidence                      |
-  DetachFileEvidence                              |
+  RemoveInputMainfileEvidence                              |
   SetStandardAuthenticationToSignMethodEvidence   |
   SetELegAuthenticationToSignMethodEvidence       |
   AuthorUsesCSVEvidence                           |
@@ -671,7 +684,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete ChangeMainfileEvidence         ) = toSQL (32 :: Int16)
   toSQL (Obsolete CancelDocumenElegEvidence      ) = toSQL (33 :: Int16)
   toSQL (Current  CancelDocumentEvidence         ) = toSQL (34 :: Int16)
-  toSQL (Obsolete AttachFileEvidence             ) = toSQL (35 :: Int16)
+  toSQL (Obsolete SetInputMainfileEvidence       ) = toSQL (35 :: Int16)
   toSQL (Current  AttachSealedFileEvidence       ) = toSQL (36 :: Int16)
   toSQL (Current  PreparationToPendingEvidence   ) = toSQL (37 :: Int16)
   toSQL (Current  DeleteSigAttachmentEvidence    ) = toSQL (38 :: Int16)
@@ -706,7 +719,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete SetAPIDeliveryMethodEvidence   ) = toSQL (67 :: Int16)
   toSQL (Current  ReminderSend                   ) = toSQL (68 :: Int16)
   toSQL (Obsolete SetDocumentProcessEvidence     ) = toSQL (69 :: Int16)
-  toSQL (Obsolete DetachFileEvidence             ) = toSQL (70 :: Int16)
+  toSQL (Obsolete RemoveInputMainfileEvidence    ) = toSQL (70 :: Int16)
   toSQL (Current  InvitationDeliveredByEmail     ) = toSQL (71 :: Int16)
   toSQL (Current  InvitationUndeliveredByEmail   ) = toSQL (72 :: Int16)
   toSQL (Obsolete SignatoryLinkVisited           ) = toSQL (73 :: Int16)
@@ -1030,6 +1043,26 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewToDKNemIDCVR          ) = toSQL (282 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedFromDKNemIDCVR) = toSQL (283 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedToDKNemIDCVR  ) = toSQL (284 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromVerimiQes         ) = toSQL (285 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToVerimiQes           ) = toSQL (286 :: Int16)
+  toSQL (Current VerimiQesEvidenceFilePrepared                   ) = toSQL (287 :: Int16)
+  toSQL (Current AttachDigitalSignatureQesEvidenceFileEvidence   ) = toSQL (288 :: Int16)
+  toSQL (Current AttachExtendedQesEvidenceFileEvidence           ) = toSQL (289 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewFromOnfidoDocumentCheck) =
+    toSQL (290 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck) =
+    toSQL (291 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToOnfidoDocumentCheck) = toSQL (292 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck) =
+    toSQL (293 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck) =
+    toSQL (294 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck) =
+    toSQL (295 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck) =
+    toSQL (296 :: Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck) =
+    toSQL (297 :: Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -1070,7 +1103,7 @@ instance FromSQL EvidenceEventType where
       32  -> return (Obsolete ChangeMainfileEvidence)
       33  -> return (Obsolete CancelDocumenElegEvidence)
       34  -> return (Current CancelDocumentEvidence)
-      35  -> return (Obsolete AttachFileEvidence)
+      35  -> return (Obsolete SetInputMainfileEvidence)
       36  -> return (Current AttachSealedFileEvidence)
       37  -> return (Current PreparationToPendingEvidence)
       38  -> return (Current DeleteSigAttachmentEvidence)
@@ -1105,7 +1138,7 @@ instance FromSQL EvidenceEventType where
       67  -> return (Obsolete SetAPIDeliveryMethodEvidence)
       68  -> return (Current ReminderSend)
       69  -> return (Obsolete SetDocumentProcessEvidence)
-      70  -> return (Obsolete DetachFileEvidence)
+      70  -> return (Obsolete RemoveInputMainfileEvidence)
       71  -> return (Current InvitationDeliveredByEmail)
       72  -> return (Current InvitationUndeliveredByEmail)
       73  -> return (Obsolete SignatoryLinkVisited)
@@ -1362,7 +1395,22 @@ instance FromSQL EvidenceEventType where
       282 -> return (Current ChangeAuthenticationToViewToDKNemIDCVR)
       283 -> return (Current ChangeAuthenticationToViewArchivedFromDKNemIDCVR)
       284 -> return (Current ChangeAuthenticationToViewArchivedToDKNemIDCVR)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 284)], reValue = n }
+      285 -> return (Current ChangeAuthenticationToSignFromVerimiQes)
+      286 -> return (Current ChangeAuthenticationToSignToVerimiQes)
+      287 -> return (Current VerimiQesEvidenceFilePrepared)
+      288 -> return (Current AttachDigitalSignatureQesEvidenceFileEvidence)
+      289 -> return (Current AttachExtendedQesEvidenceFileEvidence)
+      290 -> return (Current ChangeAuthenticationToViewFromOnfidoDocumentCheck)
+      291 -> return (Current ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck)
+      292 -> return (Current ChangeAuthenticationToViewToOnfidoDocumentCheck)
+      293 -> return (Current ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck)
+      294 -> return (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck)
+      295 ->
+        return (Current ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck)
+      296 -> return (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck)
+      297 ->
+        return (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck)
+      _ -> E.throwIO $ RangeError { reRange = [(1, 297)], reValue = n }
 
 
 authToViewChangeEvidence
@@ -1385,6 +1433,10 @@ authToViewChangeFrom a = case a of
   FITupasAuthenticationToView       -> ChangeAuthenticationToViewFromFITupas
   VerimiAuthenticationToView        -> ChangeAuthenticationToViewFromVerimi
   IDINAuthenticationToView          -> ChangeAuthenticationToViewFromIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewFromOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewFromOnfidoDocumentAndPhotoCheck
 
 authToViewChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewChangeTo a = case a of
@@ -1399,6 +1451,10 @@ authToViewChangeTo a = case a of
   FITupasAuthenticationToView       -> ChangeAuthenticationToViewToFITupas
   VerimiAuthenticationToView        -> ChangeAuthenticationToViewToVerimi
   IDINAuthenticationToView          -> ChangeAuthenticationToViewToIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewToOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewToOnfidoDocumentAndPhotoCheck
 
 authToViewArchivedChangeEvidence
   :: AuthenticationToViewMethod
@@ -1422,6 +1478,10 @@ authToViewArchivedChangeFrom a = case a of
   FITupasAuthenticationToView    -> ChangeAuthenticationToViewArchivedFromFITupas
   VerimiAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromVerimi
   IDINAuthenticationToView       -> ChangeAuthenticationToViewArchivedFromIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedFromOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedFromOnfidoDocumentAndPhotoCheck
 
 authToViewArchivedChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewArchivedChangeTo a = case a of
@@ -1436,6 +1496,10 @@ authToViewArchivedChangeTo a = case a of
   FITupasAuthenticationToView       -> ChangeAuthenticationToViewArchivedToFITupas
   VerimiAuthenticationToView        -> ChangeAuthenticationToViewArchivedToVerimi
   IDINAuthenticationToView          -> ChangeAuthenticationToViewArchivedFromIDIN
+  OnfidoDocumentCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedToOnfidoDocumentCheck
+  OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+    ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck
 
 authToSignChangeEvidence
   :: AuthenticationToSignMethod
@@ -1457,6 +1521,7 @@ authToSignChangeFrom a = case a of
     ChangeAuthenticationToSignFromOnfidoDocumentCheck
   OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
     ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck
+  VerimiQesAuthenticationToSign -> ChangeAuthenticationToSignFromVerimiQes
 
 authToSignChangeTo :: AuthenticationToSignMethod -> CurrentEvidenceEventType
 authToSignChangeTo a = case a of
@@ -1471,3 +1536,4 @@ authToSignChangeTo a = case a of
     ChangeAuthenticationToSignToOnfidoDocumentCheck
   OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
     ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck
+  VerimiQesAuthenticationToSign -> ChangeAuthenticationToSignToVerimiQes

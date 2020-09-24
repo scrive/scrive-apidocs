@@ -1,69 +1,133 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
 jobs:
-  formatting:
+  detect-unused:
     runs-on:
-      - ubuntu-latest
+      - linux
+      - self-hosted
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
-        with:
-          fetch-depth: 0
       - name: Setup Nix
-        uses: "cachix/install-nix-action@v10"
-      - name: Setup Cachix
-        uses: "cachix/cachix-action@v6"
-        with:
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          name: scrive
-      - env:
-          SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
-        name: Setup SSH
         run: |
-          eval $(ssh-agent)
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "echo Loaded Nix shell"
-      - env:
-          quick: ''
-        if: "${{ always() }}"
-        name: Test HLint
+          df -h
+          nix-collect-garbage
+          rm -rf ~/.cabal
+          df -h
+          
+          nix-shell -j4 -A ghc88.detect-unused-shell release.nix --run true
+      - name: Detect Old Templates
         run: |
-          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./ci/scripts/test-hlint.sh"
+          nix-shell -A ghc88.detect-unused-shell release.nix \
+            --run "detect_old_templates"
+      - name: Detect Old Localizations
+        run: |
+          nix-shell -A ghc88.detect-unused-shell release.nix \
+            --run "detect_old_localizations"
+  formatting:
+    runs-on:
+      - linux
+      - self-hosted
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          df -h
+          nix-collect-garbage
+          rm -rf ~/.cabal
+          df -h
+          
+          nix-shell -j4 -A ghc88.lint-shell release.nix --run true
       - env:
           quick: ''
         name: Test Formatting
         run: |
-          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./ci/scripts/test-formatting.sh"
-      - if: "${{ always() }}"
-        name: Detect Old Templates
-        run: |
-          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./shake.sh detect-old-templates"
-      - if: "${{ always() }}"
-        name: Detect Old Localizations
-        run: |
-          nix-shell -j8 --arg extra-run-deps 'pkgs: hsPkgs: [ pkgs.git ]' \
-            -A ghc88.dev-shell-optimized \
-            release.nix \
-            --run "./shake.sh detect-old-localizations"
+          nix-shell -A ghc88.lint-shell release.nix \
+            --run "./ci/workflow/scripts/test-formatting.sh"
       - if: "${{ failure() }}"
         name: Upload Formatting Patch
         uses: "actions/upload-artifact@v2"
         with:
-          name: formatting-patch
+          name: formatting.patch
           path: "_build/formatting.patch"
+  hlint:
+    runs-on:
+      - linux
+      - self-hosted
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+          cachix use iohk
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          df -h
+          nix-collect-garbage
+          rm -rf ~/.cabal
+          df -h
+          
+          nix-shell -j4 -A ghc88.lint-shell release.nix --run true
+      - env:
+          quick: ''
+        name: Test HLint
+        run: |
+          nix-shell -A ghc88.lint-shell release.nix \
+            --run "./ci/workflow/scripts/test-hlint.sh"
+      - if: "${{ failure() }}"
+        name: Upload HLint Patch
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: hlint.patch
+          path: "_build/hlint.patch"
 name: Formatting Tests
 on:
   push:

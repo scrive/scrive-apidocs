@@ -19,6 +19,7 @@ module Doc.DocMails (
   , MailT
   ) where
 
+import Control.Arrow (second)
 import Control.Conditional ((<|), (|>), ifM, whenM)
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -47,8 +48,8 @@ import EvidenceLog.Model
   ( CurrentEvidenceEventType(..)
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
   )
-import File.File
 import File.Model
+import File.Types
 import Folder.Model
 import InputValidation
 import Kontra
@@ -518,63 +519,63 @@ sendClosedEmails sealFixed document = do
         when useSMS $ sendSMS useMail
 
 -- | Construct the list of attachments. Return nothing if the attachments would
--- be above the maximum size.
+-- be above the maximum size. The implementation changed over time, but nobody
+-- could be bothered to update the type signature.
 makeMailAttachments
   :: (MonadDB m, MonadThrow m)
   => Document
   -> Bool
   -> m [(Text, Either BS.ByteString FileID)]
-makeMailAttachments doc withAttachments =
-  map (\(n, f) -> (n, Right $ fileid f)) <$> if isClosed doc
-    then makeMailAttachmentsForClosedDocument doc withAttachments
-    else makeMailAttachmentsForNotClosedDocument doc withAttachments
+makeMailAttachments doc withAttachments = do
+  let
+    mainPdfName   = documenttitle doc <> ".pdf"
+
+    documentFiles = case documentfile doc of
+      Just (ClosedFile DigitallySignedFile {..}) -> [(mainPdfName, digitallySignedFile)]
+      Just ClosedVerimiQesFile {..} ->
+        [ (mainPdfName, mainfileWithQesSignatures)
+        , (documenttitle doc <> "_evidence.pdf", digitallySignedFile evidenceFile)
+        ]
+      _ | Just mainfile <- documentinputfile doc -> [(mainPdfName, mainfile)]
+      _ ->
+        unexpectedError
+          "`makeMailAttachments` was called on a document without an associated main file."
 
 
-makeMailAttachmentsForClosedDocument
-  :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(Text, File)]
-makeMailAttachmentsForClosedDocument doc withAttachments = do
-  mainfile <- do
-    file <- dbQuery . GetFileByFileID $ mainfileid
-      (fromJust $ documentsealedfile doc `mplus` documentfile doc)
-    return [(documenttitle doc <> ".pdf", file)]
-  aattachments <- if withAttachments
-    then
-      forM
-          (filter (not . authorattachmentaddtosealedfile) $ documentauthorattachments doc)
-        $ \aatt -> do
-            file <- dbQuery . GetFileByFileID $ authorattachmentfileid aatt
-            return [(authorattachmentname aatt <> ".pdf", file)]
-    else return []
-  let allMailAttachments = mainfile <> concat aattachments
-      maxFileSize        = 10 * 1024 * 1024
-  if sum (map (filesize . snd) allMailAttachments) > maxFileSize
-    then return []
-    else return allMailAttachments
+  separateAuthorAttachments <- do
+    let attachments
+          | isClosed doc = filter (not . authorattachmentaddtosealedfile)
+          $ documentauthorattachments doc
+          | otherwise = documentauthorattachments doc
+    forM attachments $ \attachment -> do
+      file <- dbQuery . GetFileByFileID $ authorattachmentfileid attachment
+      return (authorattachmentname attachment, file)
 
-makeMailAttachmentsForNotClosedDocument
-  :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(Text, File)]
-makeMailAttachmentsForNotClosedDocument doc withAttachments = do
-  mainfile <- do
-    file <- dbQuery . GetFileByFileID $ mainfileid (fromJust (documentfile doc))
-    return [(documenttitle doc <> ".pdf", file)]
-  aattachments <- if withAttachments
-    then forM (documentauthorattachments doc) $ \aatt -> do
-      file <- dbQuery . GetFileByFileID $ authorattachmentfileid aatt
-      return [(authorattachmentname aatt <> ".pdf", file)]
-    else return []
-  sattachments <- if withAttachments
-    then forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt ->
-      case signatoryattachmentfile satt of
-        Nothing      -> return []
-        Just sattfid -> do
-          file <- dbQuery $ GetFileByFileID sattfid
-          return [(filename file, file)]
-    else return []
-  let allMailAttachments = mainfile <> concat aattachments <> concat sattachments
-      maxFileSize        = 10 * 1024 * 1024
-  if sum (map (filesize . snd) allMailAttachments) > maxFileSize
-    then return []
-    else return allMailAttachments
+  separateSignatoryAttachments <- do
+    let attachmentfileids
+          | isClosed doc
+          = []
+          | otherwise
+          = mapMaybe signatoryattachmentfile
+            . concatMap signatoryattachments
+            $ documentsignatorylinks doc
+    -- This replicates existing behaviour -- but why aren't we using
+    -- `signatoryattachmentname`? See ticket CORE-2498.
+    forM attachmentfileids $ \attachmentfileid -> do
+      attachmentfile <- dbQuery $ GetFileByFileID attachmentfileid
+      return (filename attachmentfile, attachmentfile)
+
+  let mailAttachments
+        | withAttachments
+        = documentFiles <> separateAuthorAttachments <> separateSignatoryAttachments
+        | otherwise
+        = documentFiles
+      maxFileSize = 10 * 1024 * 1024
+
+  return $ if sum (map (filesize . snd) mailAttachments) <= maxFileSize
+    then map (second $ Right . fileid) mailAttachments
+    else []
+
 
 {- |
    Send an email to the author when the document is timedout

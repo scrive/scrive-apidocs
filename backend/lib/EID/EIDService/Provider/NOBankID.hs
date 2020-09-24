@@ -364,10 +364,9 @@ updateDBTransactionWithCompletionData doc sl cd = do
         , eidServiceNOBankIDCertificate      = certificate
         }
   sessionID <- getNonTempSessionID
-  dbUpdate $ MergeEIDServiceNOBankIDAuthentication (mkAuthKind doc)
-                                                   sessionID
-                                                   (signatorylinkid sl)
-                                                   auth
+  dbUpdate
+    . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
+    $ EIDServiceNOBankIDAuthentication_ auth
 
 updateEvidenceLog
   :: Kontrakcja m => Document -> SignatoryLink -> NOBankIDEIDServiceCompletionData -> m ()

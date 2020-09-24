@@ -150,7 +150,8 @@ signatoryNeedsToIdentifyToView sl doc = if isClosed doc
       StandardAuthenticationToView -> return False
       authtoview                   -> do
         sid       <- view #sessionID <$> getContext
-        mauthindb <- dbQuery (GetEAuthentication authKind sid $ signatorylinkid sl)
+        mauthindb <- dbQuery
+          (GetDocumentEidAuthentication authKind sid $ signatorylinkid sl)
         return $ maybe True (not . authViewMatchesAuth authtoview) mauthindb
 
 -- | Fetch the document and signatory for e-auth. If there is no session token

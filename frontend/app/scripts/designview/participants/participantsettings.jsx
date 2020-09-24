@@ -309,6 +309,8 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToSignOnfidoDocumentCheck;
     } else if (t == "onfido_document_and_photo_check") {
       return localization.designview.addParties.authenticationToSignOnfidoDocumentAndPhotoCheck;
+    } else if (t == "verimi_qes") {
+      return localization.designview.addParties.authenticationToSignVerimiQes;
     }
   },
   authenticationToSignOptions: function () {
@@ -316,7 +318,8 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var allAuthTypes = !sig.signs() ? ["standard"] : [
       "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas",
-      "onfido_document_check", "onfido_document_and_photo_check", "sms_pin"
+      "onfido_document_check", "onfido_document_and_photo_check", "sms_pin",
+      "verimi_qes"
     ];
     var authTypes = allAuthTypes.slice(0);
 
@@ -346,6 +349,9 @@ module.exports = React.createClass({
       }
       if (!ff.canUseOnfidoAuthenticationToSign() && !sig.onfidoDocumentCheckAuthenticationToSign()) {
         authTypes = _.without(authTypes, "onfido_document_check", "onfido_document_and_photo_check");
+      }
+      if (!ff.canUseVerimiQesToSign() && !sig.verimiQesAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "verimi_qes");
       }
     }
 

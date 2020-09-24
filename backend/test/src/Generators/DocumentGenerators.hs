@@ -5,15 +5,16 @@ module Generators.DocumentGenerators
   ) where
 
 import Test.QuickCheck
+import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 
-import Doc.SealStatus
+import Doc.DigitalSignatureStatus
 import Doc.Types.Document
+import Doc.Types.DocumentFile
 import Doc.Types.DocumentStatus
-import Doc.Types.MainFile
 import Doc.Types.SignatoryField
 import Doc.Types.SignatoryLink
-import File.File
+import File.Types
 import Generators.OccurenceControl
 import TestingUtil
 import User.UserID
@@ -27,7 +28,7 @@ startableDocumentOC uid file = do
   doc            <- liftGen arbitrary
 
   noMainfile     <- decide' pure
-  mainfile       <- mainfileOC Preparation file
+  mainfile       <- documentfileOC file
 
   sls            <- listOC 2 5 signatoryLinkOC
 
@@ -41,7 +42,9 @@ startableDocumentOC uid file = do
   notSigningRole <- liftGen $ arbitrary `suchThat` (/= SignatoryRoleSigningParty)
 
   pure doc
-    { documentmainfiles      = if noMainfile then [] else [mainfile]
+    { documentfilehistory    = if noMainfile
+                                 then Map.empty
+                                 else Map.singleton (unsafeDocumentFileID 1) mainfile
     , documentsignatorylinks =
       let
         firstSL : secondSL : sls' = sls
@@ -78,18 +81,21 @@ startableDocumentStatusOC = do
 startableDocumentTypeOC :: OccurenceControl DocumentType
 startableDocumentTypeOC = decide (pure Template) (pure Signable)
 
-mainfileOC :: DocumentStatus -> File -> OccurenceControl MainFile
-mainfileOC status file = do
-  mainfiledocumentstatus <- decide (arbitrary `suchThat` (/= status)) (pure status)
-  mainfilesealstatus     <- liftGen sealStatusGen
-  pure
-    $ let mainfilename = T.unpack $ filename file
-          mainfileid   = fileid file
-      in  MainFile { .. }
+documentfileOC :: File -> OccurenceControl DocumentFile
+documentfileOC file = do
+  isClosed               <- decide (pure True) (pure False)
+  digitalSignatureStatus <- liftGen sealStatusGen
+  pure $ if isClosed
+    then ClosedFile
+      { mainfileWithEvidence = DigitallySignedFile { digitallySignedFile    = file
+                                                   , digitalSignatureStatus
+                                                   }
+      }
+    else InputFile { mainfile = file }
 
-sealStatusGen :: Gen SealStatus
+sealStatusGen :: Gen DigitalSignatureStatus
 sealStatusGen = oneof
-  [ pure UnknownSealStatus
+  [ pure UnknownDigitalSignatureStatus
   , pure Missing
   , pure TrustWeaver
   , Guardtime <$> arbitrary <*> arbitrary

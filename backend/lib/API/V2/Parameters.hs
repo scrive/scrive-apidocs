@@ -18,10 +18,8 @@ import qualified Data.Text as T
 import qualified System.FilePath.Windows as Windows
 
 import API.V2
-import DB
-import File.File (File(..))
-import File.Model
 import File.Storage
+import File.Types (File(..))
 import Happstack.Fields
 import Kontra
 import Util.ImageUtil
@@ -163,8 +161,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
         apiError $ requestParameterParseError (T.intercalate ", " names) "not a valid PDF"
 
   files <- forM pdfcontents $ \(filename, pdfcontent) -> do
-    fileid <- saveNewFile (T.pack filename) pdfcontent
-    dbQuery $ GetFileByFileID fileid
+    saveNewFile (T.pack filename) pdfcontent
   return $ Just files
 
 apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
@@ -200,8 +197,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
               name
               "filename suggests image, but not a valid PNG/JPG"
         _ -> apiError $ requestParameterParseError name "not a PDF or image (PNG or JPG)"
-      fileid <- saveNewFile (T.pack filename) content
-      file   <- dbQuery $ GetFileByFileID fileid
+      file <- saveNewFile (T.pack filename) content
       return $ Just file
 
 apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
@@ -212,8 +208,7 @@ apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
       apiError $ requestParameterParseError name "expected RFC2397 encoded png"
     (Just (Just (_, ""))) -> apiError $ requestParameterParseError name "image is empty"
     (Just (Just (_, content))) -> do
-      fileid <- saveNewFile "image-param.png" content
-      file   <- dbQuery $ GetFileByFileID fileid
+      file <- saveNewFile "image-param.png" content
       return $ Just file
 
 -- * Internal

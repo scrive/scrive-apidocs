@@ -16,6 +16,7 @@ import Servant.Client.Core.Request
 import Servant.Client.Internal.HttpClient
 import Servant.HTML.Blaze
 import qualified Data.ByteString.Char8 as BSC
+import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import qualified Servant.Client as Servant
@@ -24,7 +25,10 @@ import qualified Test.HUnit as T
 import Auth.Session
 import Context.Internal
 import Doc.DocumentID
+import Flow.Core.Type.Url
+import Flow.Names
 import Flow.OrphanTestInstances ()
+import Flow.Routes.Api
 import Flow.Server.Cookies
 import Flow.TestUtil
 import Session.Model
@@ -98,3 +102,17 @@ getDocumentsToBeSealed docIds = do
     sqlResult "d.id"
     sqlWhereIn "d.id" docIds
   fetchMany runIdentity
+
+createClientEnvFromFlowInstance :: UserName -> GetInstance -> TestEnv ClientEnv
+createClientEnvFromFlowInstance username flowInstance = do
+  userEnv  <- mkEnvForUser
+
+  flowLink <- assertJust' "user's access link should be present"
+    $ Map.lookup username (flowInstance ^. #accessLinks)
+
+  void
+    . assertRight "authenticate with user flow link"
+    . callFlowMagicHashLink userEnv
+    $ fromUrl flowLink
+
+  return userEnv

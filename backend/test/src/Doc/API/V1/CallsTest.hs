@@ -458,13 +458,14 @@ testChangeAuthenticationToViewMethod = do
 
   (sessionid, ctx') <- runTestKontra reqSEBankIDAgain ctx getNonTempSessionID
   dbUpdate
-    . MergeCGISEBankIDAuthentication (mkAuthKind doc) sessionid validsiglinkid
-    $ CGISEBankIDAuthentication { cgisebidaSignatoryName           = "AName"
-                                , cgisebidaSignatoryPersonalNumber = "BName"
-                                , cgisebidaSignatoryIP             = "1.2.3.4"
-                                , cgisebidaSignature               = "sig_here"
-                                , cgisebidaOcspResponse            = "sig_resp"
-                                }
+    . MergeDocumentEidAuthentication (mkAuthKind doc) sessionid validsiglinkid
+    $ CGISEBankIDAuthentication_ CGISEBankIDAuthentication
+        { cgisebidaSignatoryName           = "AName"
+        , cgisebidaSignatoryPersonalNumber = "BName"
+        , cgisebidaSignatoryIP             = "1.2.3.4"
+        , cgisebidaSignature               = "sig_here"
+        , cgisebidaOcspResponse            = "sig_resp"
+        }
   reqStandardAgain      <- mkRequest POST [("authentication_type", inText "standard")]
   (resStandardAgain, _) <-
     runTestKontra reqStandardAgain ctx'

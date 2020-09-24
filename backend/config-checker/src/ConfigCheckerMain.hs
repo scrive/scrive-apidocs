@@ -116,7 +116,8 @@ checkFieldsEqualAppConfCronConf
     _cronNtpServers                cronSalesforceConf
     _cronPlanhatConf              _cronMonitoringConf              cronMailNoreplyAddress
     _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
-    _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs _cronConsumerFilePurgingMaxJobs
+    _cronConsumerExtendingMaxJobs _cronConsumerCallbackMaxJobs
+    _cronConsumerAPICallbackMaxJobs _cronConsumerFilePurgingMaxJobs
      cronNetsSignConfig           cronPdfToolsLambdaConf          _cronMonthlyInvoiceConf
     _cronStatsDConf               cronEIDServiceConf              cronKinesisStream
     cronUseFolderListCallsByDefault)

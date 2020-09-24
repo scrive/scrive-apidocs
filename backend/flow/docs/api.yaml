@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.2"
+  version: "0.10.4"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -9,8 +9,8 @@ info:
     * [API guide](/experimental/flow/documentation/flow-api-guide.md), a short introduction that walks you through setting up a simple Flow process.
     * [API changelog](/experimental/flow/documentation/changelog.md), a list of past changes to the specification.
     * [Planned API changes](/experimental/flow/documentation/flow-api-changes.md), a list of planned changes to the specification.
-    * [Swagger UI](/experimental/flow/documentation/swagger-ui.html), an alternative presentation of the specification itself.
-    * [ReDoc UI](/experimental/flow/documentation/index.html), the default presentation of the specification itself.
+    * [ReDoc UI](/experimental/flow/documentation/redoc.html), an alternative presentation of the specification itself.
+    * [Swagger UI](/experimental/flow/documentation/index.html), the default presentation of the specification itself.
   contact:
     email: support@scrive.com
 tags:
@@ -21,7 +21,9 @@ tags:
   - name: participation
     description: Calls used to participate in Flow processes.
   - name: general
-    description: General information about the Flow service
+    description: General information about the Flow service.
+  - name: internal
+    description: Internal API used by Scrive, with behavior subject to changes.
 paths:
   /templates:
     get:
@@ -388,6 +390,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstanceViewResponse"
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Flow instance not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /instances/{instance_id}/reject:
+    post:
+      tags:
+        - internal
+        - participation
+      summary: Reject a Flow instance
+      operationId: rejectFlow
+      description: |
+        Reject a flow instance, causing all documents that involve the participant
+        to be cancelled. This is an internal API and the behavior may change in the future.
+      parameters:
+        - $ref: "#/components/parameters/InstanceId"
+      responses:
+        204:
+          description: The flow instance is rejected successfully.
         401:
           description: Error authenticating the API caller.
           content:
@@ -1106,3 +1136,151 @@ components:
         build_commit:
           type: string
           example: 25a5af6235033d22cafefcdd68bf402265414741
+
+    CallbackEvent:
+      description: |
+        Events for important Flow actions provided by a registered callback.
+        The only field all events share is `version`, which corresponds to the selected
+        version when registering a callback: only events of the specified version will be
+        sent to this callback.
+
+        We guarantee that events in the given version stay backwards compatible,
+        e.g. we will not remove or rename required fields.
+
+        New types of events, fields, and enum variants can still be added in the same version.
+        It is up to the consumer to make sure it is forward compatible with these.
+      allOf:
+        - type: object
+          required: [version]
+          properties:
+            version:
+              type: number
+              enum: [1]
+        - oneOf:
+          - $ref: "#/components/schemas/CallbackEventVersion1"
+
+    CallbackEventVersion1:
+      description: |
+        All version 1 events contain certain shared fields specified in `CallbackEventBaseVersion1`;
+        in particular, `type`, which narrows down what kind of event it is as well as a concrete
+        schema for that kind of event, possibly with additional fields.
+      oneOf:
+        - $ref: "#/components/schemas/CallbackEventCompletedVersion1"
+        - $ref: "#/components/schemas/CallbackEventFailedVersion1"
+        - $ref: "#/components/schemas/CallbackEventFlowRejectedVersion1"
+        - $ref: "#/components/schemas/CallbackEventAuthenticationAttemptedVersion1"
+
+    CallbackEventBaseVersion1:
+      description: |
+        Common fields of all callback events version 1.
+      required:
+        - version
+        - type
+        - flow_instance_id
+        - event_created
+      properties:
+        version:
+          type: number
+          enum: [1]
+        type:
+          type: string
+          enum:
+            - completed
+            - failed
+            - flow_rejected
+            - authentication_attempted
+        flow_instance_id:
+          $ref: "#/components/schemas/InstanceId"
+        event_created:
+          type: string
+          format: date-time
+          example: "1997-01-01T12:00:27.87.00000Z"
+
+    CallbackEventCompletedVersion1:
+      description: |
+        Callback event produced at Flow completion.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CallbackEventBaseVersion1"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [completed]
+
+    CallbackEventFailedVersion1:
+      description: |
+        Callback event produced at Flow failure.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CallbackEventBaseVersion1"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [failed]
+
+    CallbackEventFlowRejectedVersion1:
+      description: |
+        Callback event produced when a participant rejects Flow.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CallbackEventBaseVersion1"
+        - type: object
+          required:
+            - type
+            - user_name
+            - message
+          properties:
+            type:
+              type: string
+              enum: [flow_rejected]
+            user_name:
+              type: string
+              description: |
+                Name of the Flow participant that rejected Flow, as specified in the DSL.
+              example: user1
+            message:
+              type: string
+              example: Please help me, I could not authenticate.
+
+    CallbackEventAuthenticationAttemptedVersion1:
+      description: |
+        Callback event produced when a participant attemps to authenticate.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CallbackEventBaseVersion1"
+        - type: object
+          required:
+            - type
+            - user_name
+            - result
+            - provider
+          properties:
+            type:
+              type: string
+              enum: [authentication_attempted]
+            user_name:
+              type: string
+              description: |
+                Name of the Flow participant that attempted authentication, as specified in the DSL.
+              example: user1
+            result:
+              type: string
+              enum: [success, failure]
+            provider:
+              type: string
+              enum: [onfido, sms_pin]
+            provider_data:
+              oneOf:
+                - $ref: "#/components/schemas/OnfidoProviderDataVersion1"
+
+    OnfidoProviderDataVersion1:
+      description: |
+        Data specific to the Onfido provider.
+      type: object
+      properties:
+        applicant_id:
+          type: string
+          format: uuid
+          example: cec0f826-ad0b-4b71-b735-44310f4952fd

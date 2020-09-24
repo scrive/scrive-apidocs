@@ -312,3 +312,103 @@ $ curl -H "${auth_header}" "${base_url}/experimental/flow/instances/${instance_i
 Besides other fields already mentioned, this contains a `state` object with `available_actions` which makes it clear whose turn it is in the process.
 
 Note that this API will be expanded to provide all the information of interest, in particular the full history that the instance went through.
+
+## Callbacks
+
+During the Flow process various events are produced and we allow you to handle them. Here we briefly describe the callback configuration and how the events are produced.
+
+### Configuration
+
+When starting an instance we accept an optional `callback` field. In fact, we've already used it above; let us write it again.
+
+```json
+  "callback": {
+    "url": "https://company.com/flow/handler",
+    "version": 1
+  }
+```
+
+Field `url` is the address that we try to send the events to. The events themselves are versioned and we only send the events of the version that matches the provided `version` field. This is to ensure backwards compatibility and allow seamless evolution of the event types.
+
+### Mechanism
+
+We make a POST request to the provided URL. In case we receive a response with a 2XX status code we deem the call successful.
+
+If we are not able to reach the given URL or we receive an unsuccessful status code we repeat the attempt at progressively longer intervals; eventually we give up.
+
+It is the your responsibility to make sure the URL is correct and reachable and that the events are handled correctly.
+
+### Lifecycle
+
+Here we describe when the events are produced, as well as what they look like; in general, they are described by `CallbackEvent*` schemas in the API specification.
+
+#### Authentication attempted (Work in progress)
+
+This event is produced when the user tries to access the Flow Overview page and they need to authenticate.
+
+```json
+  {
+    "version": 1,
+    "type": "authentication_attempted",
+    "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+    "event_created": "2020-09-22T16:26:54.87.00000Z",
+    "result": "success",
+    "provider": "onfido",
+    "provider_data": {
+      "applicant_id": "cec0f826-ad0b-4b71-b735-44310f4952fd"
+    }
+  }
+```
+
+The event is described in `CallbackEventAuthenticationAttemptedVersion1` schema.
+
+#### Rejected (Work in progress)
+
+This event is produced when user rejects Flow. They can do this either from the Flow authentication page or from the Flow Overview page. This is different from rejecting individual documents; see the `Failed` event below.
+
+```json
+  {
+    "version": 1,
+    "type": "rejected",
+    "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+    "event_created": "2020-09-22T16:26:54.87.00000Z",
+    "user_name": "user1",
+    "message": "Please help me, I could not authenticate."
+  }
+```
+
+The event is described in `CallbackEventFlowRejectedVersion1` schema.
+
+#### Failed
+
+This event is produced when Flow fails. Currently, this occurs when a user rejects an individual document.
+
+```json
+  {
+    "version": 1,
+    "type": "failed",
+    "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+    "event_created": "2020-09-22T16:26:54.87.00000Z"
+  }
+```
+
+The event is described in `CallbackEventFailedVersion1` schema.
+
+#### Completed
+
+This event is produced when Flow is completed successfully.
+
+```json
+  {
+    "version": 1,
+    "type": "completed",
+    "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+    "event_created": "2020-09-22T16:26:54.87.00000Z"
+  }
+```
+
+The event is described in `CallbackEventCompletedVersion1` schema.
+
+### Document callbacks
+
+Finally, let us mention that we generally do not provide Flow events for individual document actions. If you are interested in those, please use the [document callback mechanism](https://apidocs.scrive.com/#callbacks).

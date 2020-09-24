@@ -39,6 +39,10 @@ module Doc.Migrations
   , addSealingMethodToDocuments
   , addSMSInvitationAndConfirmationTextToDocuments
   , addAddMetadataOptionToDocuments
+  , updateMainFileComposite
+  , updateDocumentCompositeWithNewMainFile
+  , addSeparateEvidenceFileToMainFiles
+  , addEvidenceSecretToDocuments
 ) where
 
 import Data.Int
@@ -1323,6 +1327,263 @@ addAddMetadataOptionToDocuments = Migration
                             }
           , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
           , CompositeColumn { ccName = "add_metadata_to_pdf", ccType = BoolT }
+          ]
+        }
+  }
+
+updateMainFileComposite :: MonadDB m => Migration m
+updateMainFileComposite = Migration
+  { mgrTableName = tblName tableMainFiles
+  , mgrFrom      = 3
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "main_file_c2"
+        , ctColumns =
+          [ CompositeColumn { ccName = "id", ccType = BigIntT }
+          , CompositeColumn { ccName = "document_status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "seal_status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "main_file", ccType = CustomT "file_c1" }
+          ]
+        }
+  }
+
+updateDocumentCompositeWithNewMainFile :: MonadDB m => Migration m
+updateDocumentCompositeWithNewMainFile = Migration
+  { mgrTableName = tblName tableDocuments
+  , mgrFrom      = 58
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "document_c2"
+        , ctColumns =
+          [ CompositeColumn { ccName = "id", ccType = BigIntT }
+          , CompositeColumn { ccName = "title", ccType = TextT }
+          , CompositeColumn { ccName = "signatory_links"
+                            , ccType = ArrayT $ CustomT "signatory_link_c1"
+                            }
+          , CompositeColumn { ccName = "main_files"
+                            , ccType = ArrayT $ CustomT "main_file_c2"
+                            }
+          , CompositeColumn { ccName = "status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "type", ccType = SmallIntT }
+          , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "days_to_sign", ccType = IntegerT }
+          , CompositeColumn { ccName = "days_to_remind", ccType = IntegerT }
+          , CompositeColumn { ccName = "timeout_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "expiration_date", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
+          , CompositeColumn { ccName = "invite_text", ccType = TextT }
+          , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+          , CompositeColumn { ccName = "sms_invite_text", ccType = TextT }
+          , CompositeColumn { ccName = "sms_confirm_text", ccType = TextT }
+          , CompositeColumn { ccName = "show_header", ccType = BoolT }
+          , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
+          , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+          , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
+          , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+          , CompositeColumn { ccName = "is_receipt", ccType = BoolT }
+          , CompositeColumn { ccName = "lang", ccType = SmallIntT }
+          , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
+          , CompositeColumn { ccName = "tags"
+                            , ccType = ArrayT $ CustomT "document_tag_c1"
+                            }
+          , CompositeColumn { ccName = "author_attachments"
+                            , ccType = ArrayT $ CustomT "author_attachment_c1"
+                            }
+          , CompositeColumn { ccName = "api_v1_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "api_v2_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
+          , CompositeColumn { ccName = "object_version", ccType = BigIntT }
+          , CompositeColumn { ccName = "token", ccType = BigIntT }
+          , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
+          , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+          , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
+          , CompositeColumn { ccName = "template_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
+          , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
+          , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "user_group_to_impersonate_for_eid"
+                            , ccType = BigIntT
+                            }
+          , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "add_metadata_to_pdf", ccType = BoolT }
+          ]
+        }
+  }
+
+addSeparateEvidenceFileToMainFiles :: MonadDB m => Migration m
+addSeparateEvidenceFileToMainFiles = Migration
+  { mgrTableName = tblName tableMainFiles
+  , mgrFrom      = 4
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableMainFiles)
+        [ sqlAddColumn $ tblColumn { colName     = "evidence_file_id"
+                                   , colType     = BigIntT
+                                   , colNullable = True
+                                   }
+        , sqlAddValidFK (tblName tableMainFiles)
+                        (fkOnColumn "evidence_file_id" "files" "id")
+        ]
+
+      runQuery_ . sqlCreateIndexSequentially (tblName tableMainFiles) $ indexOnColumn
+        "evidence_file_id"
+
+      -- We can replace main_file_c2 in a no-downtime update, since we only just
+      -- introduced it in a previous migration (the old version was never used
+      -- by a running kontrakcja instance).
+      runQuery_ $ sqlDropComposite "document_c2"
+      runQuery_ $ sqlDropComposite "main_file_c2"
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "main_file_c2"
+        , ctColumns =
+          [ CompositeColumn { ccName = "id", ccType = BigIntT }
+          , CompositeColumn { ccName = "document_status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "seal_status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "main_file", ccType = CustomT "file_c1" }
+          , CompositeColumn { ccName = "evidence_file", ccType = CustomT "file_c1" }
+          ]
+        }
+
+      -- Recreate "document_c2" with the updated "main_file_c2"
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "document_c2"
+        , ctColumns =
+          [ CompositeColumn { ccName = "id", ccType = BigIntT }
+          , CompositeColumn { ccName = "title", ccType = TextT }
+          , CompositeColumn { ccName = "signatory_links"
+                            , ccType = ArrayT $ CustomT "signatory_link_c1"
+                            }
+          , CompositeColumn { ccName = "main_files"
+                            , ccType = ArrayT $ CustomT "main_file_c2"
+                            }
+          , CompositeColumn { ccName = "status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "type", ccType = SmallIntT }
+          , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "days_to_sign", ccType = IntegerT }
+          , CompositeColumn { ccName = "days_to_remind", ccType = IntegerT }
+          , CompositeColumn { ccName = "timeout_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "expiration_date", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
+          , CompositeColumn { ccName = "invite_text", ccType = TextT }
+          , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+          , CompositeColumn { ccName = "sms_invite_text", ccType = TextT }
+          , CompositeColumn { ccName = "sms_confirm_text", ccType = TextT }
+          , CompositeColumn { ccName = "show_header", ccType = BoolT }
+          , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
+          , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+          , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
+          , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+          , CompositeColumn { ccName = "is_receipt", ccType = BoolT }
+          , CompositeColumn { ccName = "lang", ccType = SmallIntT }
+          , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
+          , CompositeColumn { ccName = "tags"
+                            , ccType = ArrayT $ CustomT "document_tag_c1"
+                            }
+          , CompositeColumn { ccName = "author_attachments"
+                            , ccType = ArrayT $ CustomT "author_attachment_c1"
+                            }
+          , CompositeColumn { ccName = "api_v1_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "api_v2_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
+          , CompositeColumn { ccName = "object_version", ccType = BigIntT }
+          , CompositeColumn { ccName = "token", ccType = BigIntT }
+          , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
+          , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+          , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
+          , CompositeColumn { ccName = "template_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
+          , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
+          , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "user_group_to_impersonate_for_eid"
+                            , ccType = BigIntT
+                            }
+          , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "add_metadata_to_pdf", ccType = BoolT }
+          ]
+        }
+  }
+
+addEvidenceSecretToDocuments :: MonadDB m => Migration m
+addEvidenceSecretToDocuments = Migration
+  { mgrTableName = tblName tableDocuments
+  , mgrFrom      = 59
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableDocuments)
+        [ sqlAddColumn $ tblColumn { colName     = "evidence_file_secret"
+                                   , colType     = BigIntT
+                                   , colNullable = True
+                                   }
+        ]
+      runQuery_ . sqlDropComposite $ "document_c2"  -- document_c2 has only just been introduced
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "document_c2"
+        , ctColumns =
+          [ CompositeColumn { ccName = "id", ccType = BigIntT }
+          , CompositeColumn { ccName = "title", ccType = TextT }
+          , CompositeColumn { ccName = "signatory_links"
+                            , ccType = ArrayT $ CustomT "signatory_link_c1"
+                            }
+          , CompositeColumn { ccName = "main_files"
+                            , ccType = ArrayT $ CustomT "main_file_c2"
+                            }
+          , CompositeColumn { ccName = "status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "type", ccType = SmallIntT }
+          , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "days_to_sign", ccType = IntegerT }
+          , CompositeColumn { ccName = "days_to_remind", ccType = IntegerT }
+          , CompositeColumn { ccName = "timeout_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "expiration_date", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
+          , CompositeColumn { ccName = "invite_text", ccType = TextT }
+          , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+          , CompositeColumn { ccName = "sms_invite_text", ccType = TextT }
+          , CompositeColumn { ccName = "sms_confirm_text", ccType = TextT }
+          , CompositeColumn { ccName = "show_header", ccType = BoolT }
+          , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
+          , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+          , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
+          , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+          , CompositeColumn { ccName = "is_receipt", ccType = BoolT }
+          , CompositeColumn { ccName = "lang", ccType = SmallIntT }
+          , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
+          , CompositeColumn { ccName = "tags"
+                            , ccType = ArrayT $ CustomT "document_tag_c1"
+                            }
+          , CompositeColumn { ccName = "author_attachments"
+                            , ccType = ArrayT $ CustomT "author_attachment_c1"
+                            }
+          , CompositeColumn { ccName = "api_v1_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "api_v2_callback_url", ccType = TextT }
+          , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
+          , CompositeColumn { ccName = "object_version", ccType = BigIntT }
+          , CompositeColumn { ccName = "token", ccType = BigIntT }
+          , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
+          , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+          , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
+          , CompositeColumn { ccName = "template_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
+          , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
+          , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "user_group_to_impersonate_for_eid"
+                            , ccType = BigIntT
+                            }
+          , CompositeColumn { ccName = "sealing_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "add_metadata_to_pdf", ccType = BoolT }
+          , CompositeColumn { ccName = "evidence_file_secret", ccType = BigIntT }
           ]
         }
   }

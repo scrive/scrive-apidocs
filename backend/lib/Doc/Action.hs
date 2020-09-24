@@ -28,13 +28,14 @@ import DB.TimeZoneName
 import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature)
+import Doc.DigitalSignatureStatus (DigitalSignatureStatus(..))
 import Doc.DocInfo
 import Doc.DocMails
   ( PortalMailKind(..), sendClosedEmails, sendDocumentErrorEmail
   , sendDocumentTimeoutedEmail, sendForwardSigningMessages, sendInvitationEmails
   , sendPartyProcessFinalizedNotification, sendPortalMail, sendRejectEmails
   )
-import Doc.DocSeal (sealDocument)
+import Doc.DocSeal (closeDocumentFile)
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.DocUtils
@@ -42,7 +43,6 @@ import Doc.Extending.Model
 import Doc.Logging
 import Doc.Model
 import Doc.Sealing.Model
-import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
 import Doc.Types.SignatoryAccessToken
@@ -165,15 +165,13 @@ postDocumentRejectedChange siglinkid customMessage doc@Document {..} =
 
 postDocumentForwardChange
   :: Kontrakcja m => Maybe Text -> SignatoryLink -> SignatoryLinkID -> Document -> m ()
-postDocumentForwardChange customMessage originalSignatory newslid doc =
+postDocumentForwardChange customMessage originalSignatory newslid doc = do
   logDocument (documentid doc) $ do
     let newsl = fromJust (getSigLinkFor newslid doc)
     triggerAPICallbackIfThereIsOne doc
     unless (isPending doc) $ stateMismatchError "originalSignatory" Pending doc
     logInfo "Sending forward emails for document" $ logObject_ doc
     sendForwardSigningMessages customMessage originalSignatory newsl doc
-    return ()
-
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> m ()
 postDocumentCanceledChange doc@Document {..} = logDocument documentid $ do
@@ -311,7 +309,7 @@ postDocumentClosedActions
   => Bool -- ^ Commit to DB after we have sealed the document
   -> Bool -- ^ Prepare final PDF even if it has already been prepared
   -> m Bool
-postDocumentClosedActions commitAfterSealing forceSealDocument = do
+postDocumentClosedActions commitAfterClosingFile forceCloseDocumentFile = do
   mcxt <- getMailContext
   doc0 <- theDocument
 
@@ -319,14 +317,17 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
 
   dbUpdate . ExtendSignatoryAccessTokensForAccessBeforeClosing =<< theDocumentID
 
-  whenM ((\d -> forceSealDocument || isNothing (documentsealedfile d)) <$> theDocument)
+  whenM
+      (   (\d -> forceCloseDocumentFile || isNothing (documentclosedmainfile d))
+      <$> theDocument
+      )
     $ do
 
         whenM (isDocumentError <$> theDocument) $ do
           currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
-        logInfo_ "Running sealDocument"
-        sealDocument $ mcxt ^. #brandedDomain % #url
+        logInfo_ "Running closeDocumentFile (formerly sealDocument)"
+        closeDocumentFile $ mcxt ^. #brandedDomain % #url
 
         -- Here there is a race condition: when we commit, other callers
         -- of postDocumentClosedActions may see a document that lacks a
@@ -335,7 +336,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
         -- mail we actually send out, after design of adding digital
         -- signature to appendices.
 
-        when commitAfterSealing commit -- so that post-sign view can render pages as soon as possible
+        when commitAfterClosingFile commit -- so that post-sign view can render pages as soon as possible
 
   whenM ((\d -> isDocumentError d && not (isDocumentError doc0)) <$> theDocument) $ do
     mauthor <- getDocAuthor =<< theDocument
@@ -352,26 +353,30 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
         internalError
 
 
-    whenM ((\d -> documentsealstatus doc0 /= documentsealstatus d) <$> theDocument) $ do
+    whenM
+        ((\d -> documentdigitalsignaturestatus doc0 /= documentdigitalsignaturestatus d)
+        <$> theDocument
+        )
+      $ do
 
-      sealFixed <- theDocument >>= \d ->
-        return
-          $  documentsealstatus doc0
-          == Just Missing
-                        -- document was already pdf-sealed, but without
-                        -- digital signature, that means we sent out an
-                        -- earlier confirmation mail without a digital
-                        -- seal in the attached document.
-          && hasDigitalSignature d
-                        -- and now it has a digital signature, so we
-                        -- fixed something and we will indicate that
-                        -- this is a correction to the earlier
-                        -- confirmation mail.
-      theDocument >>= sendClosedEmails sealFixed
-      theDocument >>= triggerAPICallbackIfThereIsOne
+          sealFixed <- theDocument >>= \d ->
+            return
+              $  documentdigitalsignaturestatus doc0
+              == Just Missing
+                            -- document was already pdf-sealed, but without
+                            -- digital signature, that means we sent out an
+                            -- earlier confirmation mail without a digital
+                            -- seal in the attached document.
+              && hasDigitalSignature d
+                            -- and now it has a digital signature, so we
+                            -- fixed something and we will indicate that
+                            -- this is a correction to the earlier
+                            -- confirmation mail.
+          theDocument >>= sendClosedEmails sealFixed
+          theDocument >>= triggerAPICallbackIfThereIsOne
 
   resultisok <-
-    (\d -> documentsealstatus d /= Just Missing && documentstatus d == Closed)
+    (\d -> documentdigitalsignaturestatus d /= Just Missing && documentstatus d == Closed)
       <$> theDocument
 
   when resultisok $ do

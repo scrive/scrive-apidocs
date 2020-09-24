@@ -8,7 +8,7 @@ import EnumExtra as Enum
 import Maybe.Extra as Maybe
 import Utils exposing (..)
 
-import Lib.Theme.Types exposing (..)
+import Lib.Types.Theme exposing (..)
 
 brandingDecoder : Decoder UserGroupBranding
 brandingDecoder =

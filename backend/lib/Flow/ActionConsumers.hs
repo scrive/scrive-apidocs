@@ -3,19 +3,24 @@ module Flow.ActionConsumers
   ( ConsumableAction(..)
   , ActionsError(..)
   , NotifyUser(..)
+  , CloseAllAction(..)
+  , NotifyAction(..)
+  , RejectAction(..)
   , toConsumableAction
+  , toConsumableRejectAction
   , notifyAction
   , consumeFlowAction
   , consumeNotifyAction
+  , consumeRejectionAction
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Extra
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Tuple.Extra
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import Log
@@ -27,18 +32,25 @@ import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
 import Branding.Adler32
+import Callback.Model
+import Callback.Types
 import DB hiding (JSON(..))
-import Doc.Action (commonDocumentClosingActions)
+import Doc.Action
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model.Query (GetDocumentByDocumentID(..))
+import Doc.Model.Update
 import Doc.Signing.Model ()
 import Doc.Types.Document
+import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import EventStream.Class
 import File.Storage
+import Flow.CallbackPayload
+import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
 import Flow.Id
+import Flow.Machinize (EventInfo(..))
 import Flow.Message.Internal
 import Flow.Model
 import Flow.Model.InstanceSession
@@ -56,9 +68,11 @@ import User.Lang
 import User.UserID
 import UserGroup.Model
 import UserGroup.Types
+import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Color
+import qualified Flow.CallbackPayload as Callback
 import qualified Flow.HighTongue as HighTongue
 import qualified Flow.Machinize as Machinize
 
@@ -66,22 +80,46 @@ type NotifyPhoneNumber = Text
 type NotifyEmail = Text
 
 data ConsumableAction
-  = Notify
-      { users :: [NotifyUser]
-      , emailMessage :: Maybe Message
-      , smsMessage :: Maybe Message
-      }
-  | CloseAll
-      { documentIds :: [DocumentID]
-      }
-  | Fail
+  = Notify NotifyAction
+  | CloseAll CloseAllAction
+  | Reject RejectAction
+  | Fail FailAction
   deriving (Show, Generic)
+
+data NotifyAction = NotifyAction
+  { users :: [NotifyUser]
+  , emailMessage :: Maybe Message
+  , smsMessage :: Maybe Message
+  }
+  deriving (Show, Generic, ToJSON)
+
+data CloseAllAction = CloseAllAction
+  { instanceId :: InstanceId
+  , documentIds :: [DocumentID]
+  }
+  deriving (Show, Generic, ToJSON)
+
+-- A rejection action can be performed by a signatory.
+-- When triggered, all documents that involves the signatory
+-- is rejected, and the flow fails.
+data RejectAction = RejectAction
+  { rejector :: UserName
+  , instanceId :: InstanceId
+  , documentIds :: [DocumentID]
+  }
+  deriving (Show, Generic, ToJSON)
+
+data FailAction = FailAction
+  { instanceId :: InstanceId
+  }
+  deriving (Show, Generic, ToJSON)
 
 data ActionsError
     = UserNotFound HighTongue.UserName
     | AssociatedSignatoryNotFound FlowUserId
     | MessageNotFound HighTongue.MessageName
     | AccessLinkNotFound HighTongue.UserName
+    | NoInstance InstanceId
   deriving (Show, Exception)
 
 aesonOptions :: Options
@@ -163,13 +201,40 @@ toConsumableAction
   :: (MonadThrow m, MonadDB m, MonadLog m)
   => Url
   -> InstanceId
+  -> EventInfo
   -> Machinize.LowAction
   -> m ConsumableAction
-toConsumableAction baseUrl instanceId = \case
-  Machinize.CloseAll -> CloseAll <$> selectDocumentIdsByInstanceId instanceId
-  Machinize.Action (HighTongue.Notify userNames methods) ->
-    uncurry3 Notify <$> notifyAction baseUrl instanceId userNames methods
-  Machinize.Fail -> pure Fail
+toConsumableAction baseUrl instanceId eventInfo = \case
+  Machinize.CloseAll -> do
+    docIds <- selectDocumentIdsByInstanceId instanceId
+    return . CloseAll $ CloseAllAction instanceId docIds
+
+  Machinize.Action (HighTongue.Notify userNames methods) -> do
+    (users, emailMessage, smsMessage) <- notifyAction baseUrl instanceId userNames methods
+    return . Notify $ NotifyAction { users, emailMessage, smsMessage }
+
+  Machinize.Reject ->
+    Reject <$> toConsumableRejectAction instanceId (eventInfoUser eventInfo)
+
+  Machinize.Fail -> pure . Fail $ FailAction instanceId
+
+toConsumableRejectAction
+  :: (MonadThrow m, MonadDB m) => InstanceId -> UserName -> m RejectAction
+toConsumableRejectAction instanceId username = do
+  signatoryMapping <- selectSignatoryInfo instanceId
+
+  docIds           <- mapMaybeM
+    (\(username2, _, docId) -> if username2 == username
+      then do
+        doc <- dbQuery $ GetDocumentByDocumentID docId
+        if documentstatus doc == Pending
+          then return $ Just (documentid doc)
+          else return Nothing
+      else return Nothing
+    )
+    signatoryMapping
+
+  return $ RejectAction { rejector = username, instanceId, documentIds = docIds }
 
 sendEmailNotification
   :: ( CryptoRNG m
@@ -265,7 +330,7 @@ compareUserAndSignatory (UserId userId) signatoryLink =
 
 consumeFlowAction
   :: ( CryptoRNG m
-     , DocumentMonad m
+     , MonadDB m
      , GuardTimeConfMonad m
      , MailContextMonad m
      , MonadBaseControl IO m
@@ -281,11 +346,43 @@ consumeFlowAction
 consumeFlowAction action = do
   logInfo "Consuming Flow action" action
   case action of
-    CloseAll documentIds -> forM_ documentIds $ \docId -> do
-      doc <- dbQuery $ GetDocumentByDocumentID docId
-      withDocument doc $ commonDocumentClosingActions doc
-    Notify users memailMsg msmsMsg -> consumeNotifyAction users memailMsg msmsMsg
-    Fail -> logInfo "Flow process failed" action
+    CloseAll CloseAllAction { instanceId, documentIds } -> forM_ documentIds $ \docId ->
+      do
+        doc <- dbQuery $ GetDocumentByDocumentID docId
+        withDocument doc $ commonDocumentClosingActions doc
+        -- TODO Flow: This event have to be generated after document sealing.
+        sendEventCallback instanceId Completed
+
+    Notify (NotifyAction users memailMsg msmsMsg) ->
+      consumeNotifyAction users memailMsg msmsMsg
+
+    Reject rejectAction            -> consumeRejectionAction rejectAction
+
+    Fail   (FailAction instanceId) -> do
+      logInfo "Flow process failed" action
+      sendEventCallback instanceId Failed
+
+sendEventCallback
+  :: (MonadThrow m, MonadDB m, MonadTime m) => InstanceId -> FlowCallbackEventV1 -> m ()
+sendEventCallback instanceId event = do
+  fullInstance <- fromMaybeM (throwM $ NoInstance instanceId)
+    $ selectFullInstance instanceId
+  now <- currentTime
+  let maybeCallback = fullInstance ^. #flowInstance % #callback
+  whenJust maybeCallback $ \Callback {..} -> do
+    let payload = case version of
+          V1 -> FlowCallbackEventV1Envelope now instanceId event
+    void $ scheduleNewCallback (fromUrl url) NoAuth payload
+
+    -- CloseAll (CloseAllAction documentIds) -> forM_ documentIds $ \docId -> do
+    --   doc <- dbQuery $ GetDocumentByDocumentID docId
+    --   withDocument doc $ commonDocumentClosingActions doc
+
+
+    -- Notify (NotifyAction users memailMsg msmsMsg) ->
+    --   consumeNotifyAction users memailMsg msmsMsg
+
+    -- Fail -> logInfo "Flow process failed" action
 
 consumeNotifyAction
   :: ( MonadLog m
@@ -301,7 +398,23 @@ consumeNotifyAction
   -> Maybe Message
   -> m ()
 consumeNotifyAction users memailMsg msmsMsg = do
-  logInfo "Consuming Flow Notify action" $ Notify users memailMsg msmsMsg
+  logInfo "Consuming Flow Notify action" . Notify $ NotifyAction users memailMsg msmsMsg
   forM_ users $ \user -> do
     whenJust memailMsg $ sendEmailNotification user
     whenJust msmsMsg $ sendSMSNotification user
+
+consumeRejectionAction
+  :: (MonadDB m, MonadIO m, MonadLog m, MonadMask m, TemplatesMonad m)
+  => RejectAction
+  -> m ()
+consumeRejectionAction RejectAction { rejector, documentIds, instanceId } = do
+  forM_ documentIds $ \docId -> do
+    -- Use the system actor for now as otherwise it requires
+    -- additional monad constraints
+    actor <- systemActor <$> currentTime
+    withDocumentID docId . dbUpdate $ CancelDocument actor
+
+  -- TODO: allow message to be specified from the API and propagated here
+  sendEventCallback instanceId . Callback.Rejected $ RejectedEvent { userName = rejector
+                                                                   , message  = ""
+                                                                   }

@@ -25,6 +25,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddOnfidoAuthToSign
 , featureFlagsRenameDKNemIDToViewAndAddPIDAndCVRVersion
 , featureFlagsAddIntegrationsFeatures
+, featureFlagsAddVerimiQesToSign
 ) where
 
 import Control.Monad.Catch
@@ -1249,3 +1250,108 @@ featureFlagsRenameDKNemIDToViewAndAddPIDAndCVRVersion = Migration
       runQuery_ $ sqlDropComposite "feature_flags_c8"
   }
 
+featureFlagsAddVerimiQesToSign :: MonadDB m => Migration m
+featureFlagsAddVerimiQesToSign = Migration
+  { mgrTableName = tblName tableFeatureFlags
+  , mgrFrom      = 26
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        (tblName tableFeatureFlags)
+        [ sqlAddColumn $ tblColumn { colName     = "can_use_verimi_qes_to_sign"
+                                   , colType     = BoolT
+                                   , colNullable = False
+                                   , colDefault  = Just "False"
+                                   }
+        ]
+
+      runQuery_ $ sqlAlterTable
+        (tblName tableFeatureFlags)
+        [sqlAlterColumn "can_use_verimi_qes_to_sign" "DROP DEFAULT"]
+
+      runQuery_ $ sqlDropComposite "feature_flags_c9"
+
+      runQuery_ . sqlCreateComposite $ CompositeType
+        { ctName    = "feature_flags_c11"
+        , ctColumns =
+          [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_branding", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_author_attachments", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_signatory_attachments", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_mass_sendout", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_sms_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_sms_confirmations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_dk_cpr_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_dk_pid_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_dk_cvr_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_dk_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_fi_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_fi_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_no_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_no_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_se_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_se_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_sms_pin_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_sms_pin_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_standard_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_standard_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_verimi_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_verimi_qes_to_sign", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_idin_authentication_to_view"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_idin_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_onfido_authentication_to_sign"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_email_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_email_confirmations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_api_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_pad_invitations", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_shareable_links", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_forwarding", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_document_party_notifications"
+                            , ccType = BoolT
+                            }
+          , CompositeColumn { ccName = "can_use_portal", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_custom_sms_texts", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_drop_box", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_google_drive", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_one_drive", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_share_point", ccType = BoolT }
+          , CompositeColumn { ccName = "can_use_archive_to_sftp", ccType = BoolT }
+          ]
+        }
+  }

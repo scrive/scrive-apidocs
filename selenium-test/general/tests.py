@@ -6,14 +6,14 @@ from selenium.webdriver.support import expected_conditions
 DC = webdriver.DesiredCapabilities
 
 
-def check_basic_sign(test, drv, api):
-    doc = test.create_standard_doc('basic sign')
+def check_basic_sign(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('basic sign')
     doc = api.update_document(doc)
     doc = api.ready(doc)
 
     # open signview
     drv.open_url(doc.other_signatory().absolute_sign_url())
-    test.assertEqual(drv.title, 'Scrive')
+    test_helper.assertEqual(drv.title, 'Scrive')
 
     # wait for arrow to load
     drv.wait_for_element('.scroll-arrow.down')
@@ -40,8 +40,8 @@ def check_basic_sign(test, drv, api):
     drv.screenshot()
 
 
-def check_sign_with_signsuccessredirect(test, drv, api):
-    doc = test.create_standard_doc('success redirect')
+def check_sign_with_signsuccessredirect(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('success redirect')
     doc.other_signatory().sign_success_redirect_url = 'https://google.com/'
     doc = api.update_document(doc)
     doc = api.ready(doc)
@@ -61,12 +61,12 @@ def check_sign_with_signsuccessredirect(test, drv, api):
     drv.wait().until(expected_conditions.title_contains('Google'))
 
 
-def check_regular_rejection(test, drv, api):
-    doc = test.create_standard_doc('regular rejection')
+def check_regular_rejection(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('regular rejection')
     doc = api.ready(api.update_document(doc))
 
     drv.open_url(doc.other_signatory().absolute_sign_url())
-    test.arrow_scroll(skip_scroll_to_top=True)
+    test_helper.arrow_scroll(skip_scroll_to_top=True)
     drv.screenshot(first_sleep_for=1)
 
     # click reject button and wait for confirmation modal to show up
@@ -85,12 +85,12 @@ def check_regular_rejection(test, drv, api):
     drv.screenshot()
 
 
-def check_custom_rejection(test, drv, api):
-    doc = test.create_standard_doc('custom rejection')
+def check_custom_rejection(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('custom rejection')
     doc = api.ready(api.update_document(doc))
 
     drv.open_url(doc.other_signatory().absolute_sign_url())
-    test.arrow_scroll(skip_scroll_to_top=True)
+    test_helper.arrow_scroll(skip_scroll_to_top=True)
 
     # click reject button and wait for confirmation modal to show up
     drv.wait_for_element_and_click('.section.sign .button:not(.action)')
@@ -104,7 +104,7 @@ def check_custom_rejection(test, drv, api):
     # click 'back' to see if the modal hides properly
     drv.wait_for_element_and_click('.section.sign .transparent-button')
     drv.wait_for_element_to_disappear('.above-overlay')
-    test.sleep(.5)  # there's a 0.2s transition on z-index
+    test_helper.sleep(.5)  # there's a 0.2s transition on z-index
 
     # click reject button again
     drv.wait_for_element_and_click('.section.sign .small-button-block')
@@ -126,8 +126,8 @@ def check_custom_rejection(test, drv, api):
     drv.wait_for_element('.instructions.s-header-doc-cancelled')
 
 
-def check_sign_and_cancel(test, drv, api):
-    doc = test.create_standard_doc('sign and cancel')
+def check_sign_and_cancel(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('sign and cancel')
     doc.author.viewer = False
     doc = api.update_document(doc)
     doc = api.ready(doc)
@@ -141,8 +141,8 @@ def check_sign_and_cancel(test, drv, api):
     drv.screenshot()
 
 
-def check_signing_settings1(test, drv, api):
-    doc = test.create_standard_doc('signing settings 1')
+def check_signing_settings1(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('signing settings 1')
     doc.show_header = False
     doc.show_pdf_download = False
     doc.show_footer = False
@@ -161,8 +161,8 @@ def check_signing_settings1(test, drv, api):
     drv.screenshot(first_sleep_for=1)
 
 
-def check_signing_settings2(test, drv, api):
-    doc = test.create_standard_doc('signing settings 2')
+def check_signing_settings2(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('signing settings 2')
     doc.show_header = True
     doc.show_pdf_download = False
     doc.show_footer = True
@@ -188,8 +188,8 @@ def check_signing_settings2(test, drv, api):
     drv.screenshot(first_sleep_for=1)
 
 
-def check_signing_settings3(test, drv, api):
-    doc = test.create_standard_doc('signing settings 3')
+def check_signing_settings3(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('signing settings 3')
     doc.show_header = True
     doc.show_pdf_download = True
     doc.show_footer = True
@@ -215,10 +215,10 @@ def check_signing_settings3(test, drv, api):
     drv.screenshot(first_sleep_for=1)
 
 
-def check_many_pages(test, drv, api):
-    doc = test.create_standard_doc('many pages')
+def check_many_pages(test_helper, drv, api):
+    doc = test_helper.create_standard_doc('many pages')
     doc = api.update_document(doc)
-    doc = api.ready(api.change_document_file(doc, test.LONG_PDF_PATH))
+    doc = api.ready(api.change_document_file(doc, test_helper.LONG_PDF_PATH))
 
     # open signview
     drv.open_url(doc.other_signatory().absolute_sign_url())
@@ -237,12 +237,12 @@ def check_many_pages(test, drv, api):
     drv.scroll_to_bottom()
     drv.wait_for_element_and_click('.section.sign .button.action')
     drv.wait_for_element('.above-overlay')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_and_click('.section.sign .button.action')
-    test.sleep(1)  # wait for animation to finish
+    test_helper.sleep(1)  # wait for animation to finish
     drv.wait_for_element_to_disappear('.sign.section')
 
-    test.sleep(30)  # wait for all pages to be displayed
+    test_helper.sleep(30)  # wait for all pages to be displayed
     err_msg = 'Wrong number of pages displayed(51)'
     assert len(drv.find_elements('.pagediv')) == 51, err_msg
 
@@ -264,10 +264,10 @@ legal_text_api = Scrive(client_credentials_identifier='276bdb1423dc9d22_177',
                         api_hostname='staging.scrive.com')
 
 
-def check_legal_text(test, drv, api):
+def check_legal_text(test_helper, drv, api):
     api = legal_text_api
 
-    doc = test.create_standard_doc('basic sign', api_override=api)
+    doc = test_helper.create_standard_doc('basic sign', api_override=api)
     doc = api.update_document(doc)
     doc = api.ready(doc)
 
@@ -283,10 +283,10 @@ def check_legal_text(test, drv, api):
     drv.screenshot(first_sleep_for=1)
 
 
-def check_legal_text_pinsms(test, drv, api):
+def check_legal_text_pinsms(test_helper, drv, api):
     api = legal_text_api
 
-    doc = test.create_standard_doc('basic sign', api_override=api)
+    doc = test_helper.create_standard_doc('basic sign', api_override=api)
     doc.other_signatory().authentication_method = 'sms_pin'
     doc.other_signatory().fields.add(StandardField(name='mobile',
                                                    value='+48607123456'))

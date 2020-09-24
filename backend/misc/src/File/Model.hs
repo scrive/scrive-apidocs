@@ -9,22 +9,22 @@ module File.Model (
 
 import Control.Monad.Catch
 import Control.Monad.Time
+import Data.ByteString (ByteString)
 import Data.Int
 import qualified Crypto.Hash as H
 import qualified Data.ByteArray as BA
 import qualified Data.ByteString as BS
-import qualified Data.Text as T
 
 import Crypto
 import DB
 import File.Conditions
-import File.File
 import File.FileID
+import File.Types
 
 newtype GetFileByFileID = GetFileByFileID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where
   dbQuery (GetFileByFileID fid) = do
-    kRunAndFetch1OrThrowWhyNot fetchFile . sqlSelect "files" $ do
+    kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "files" $ do
       mapM_ sqlResult filesSelectors
       sqlWhereFileIDIs fid
       sqlWhereFileWasNotPurged
@@ -36,14 +36,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File
       mapM_ sqlResult filesSelectors
       sqlWhereFileIDIs fid
       sqlWhereFileWasNotPurged
-    fetchMaybe fetchFile
+    fetchMaybe toComposite
 
 -- | Insert a new 'File' in the DB without any URL nor AES configuration.
 -- At the moment, it is only by 'saveNewFile' which immediately adds the missing
 -- information or purges the file.
-data NewEmptyFileForAWS = NewEmptyFileForAWS Text BS.ByteString
+data NewEmptyFileForAWS = NewEmptyFileForAWS Text ByteString
 instance (MonadDB m, MonadThrow m)
-  => DBUpdate m NewEmptyFileForAWS (FileID, BS.ByteString) where
+  => DBUpdate m NewEmptyFileForAWS (FileID, ByteString) where
   dbUpdate (NewEmptyFileForAWS fname fcontent) = do
     let fchecksum = BA.convert $ H.hashWith H.SHA1 fcontent
         fsize     = fromIntegral . BS.length $ fcontent :: Int32
@@ -65,7 +65,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m FileMovedToAWS File where
       sqlWhereFileIDIs fid
       sqlWhereFileWasNotPurged
       mapM_ sqlResult filesSelectors
-    fetchOne fetchFile
+    fetchOne toComposite
 
 newtype PurgeFile = PurgeFile FileID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
@@ -76,50 +76,3 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
       sqlSet "name"        ("" :: String)
       sqlSet "amazon_url"  (Nothing :: Maybe String)
       sqlWhereFileIDIs fid
-
-filesSelectors :: [SQL]
-filesSelectors = ["id", "name", "amazon_url", "checksum", "aes_key", "aes_iv", "size"]
-
-fetchFile
-  :: ( FileID
-     , Text
-     , Maybe Text
-     , BS.ByteString
-     , Maybe BS.ByteString
-     , Maybe BS.ByteString
-     , Int32
-     )
-  -> File
-fetchFile (fid, fname, mamazon_url, checksum, maes_key, maes_iv, size) = File
-  { fileid       = fid
-  , filename     = fname
-  , filestorage  =
-        -- Here we need to support the following cases:
-        --
-        --  * encrypted data in Amazon S3: return (url, aes)
-        --  * missing URL: error (see NewEmptyFileForAWS)
-        --  * invalid AES key: error out at this place
-    case (mamazon_url, eaes) of
-      (Just url, Just (Right aes)) -> FileStorageAWS url aes
-      (Just _  , Just (Left msg) ) -> err $ T.pack msg
-      d ->
-        unexpectedError
-          $   "invalid AWS data for file with id ="
-          <+> showt fid
-          <>  ":"
-          <+> showt d
-  , filechecksum = checksum
-  , filesize     = size
-  }
-  where
-    err :: Text -> FileStorage
-    err msg =
-      unexpectedError
-        $   "file with id ="
-        <+> showt fid
-        <+> "has invalid aes/iv pair:"
-        <+> msg
-
-    eaes = case (maes_key, maes_iv) of
-      (Just aes_key, Just aes_iv) -> Just $ mkAESConf aes_key aes_iv
-      _ -> Nothing

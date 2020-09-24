@@ -1,3 +1,4 @@
+-- What is this file about? (Appears to be very out of date!)
 /*
 
 */
@@ -578,7 +579,7 @@ CREATE TEMPORARY TABLE report_master AS
   "start_date",
   "end_date"
   from report_base);
- 
+
 create temporary table report_master_json as
   (select row_to_json(report_master) from report_master);
 

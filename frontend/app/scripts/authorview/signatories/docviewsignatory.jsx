@@ -550,6 +550,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToSignOnfidoDocumentCheck;
       } else if (signatory.onfidoDocumentAndPhotoCheckAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignOnfidoDocumentAndPhotoCheck;
+      } else if (signatory.verimiQesAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignVerimiQes;
       }
     },
 

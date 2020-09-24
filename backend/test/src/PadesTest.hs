@@ -9,11 +9,12 @@ import qualified Data.Text as T
 
 import DB
 import Doc.DigitalSignature
+import Doc.DigitalSignatureStatus as DigitalSignatureStatus
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.Model
-import Doc.SealStatus as SealStatus
 import File.Storage
+import File.Types
 import GuardTime
 import MinutesTime
 import PdfToolsLambda.Monad
@@ -34,7 +35,7 @@ testSealing = do
   filecontent <- liftIO $ BS.readFile filename
   file        <- saveNewFile (T.pack filename) filecontent
   did         <- documentid <$> addRandomDocumentWithFile
-    file
+    (fileid file)
     (rdaDefault author) { rdaTypes = OneOf [Signable], rdaStatuses = OneOf [Closed] }
   runSQL_ $ "UPDATE documents SET sealing_method = 2 WHERE id =" <?> did
 
@@ -43,7 +44,9 @@ testSealing = do
   withDocumentID did $ do
     now <- currentTime
     let actor = systemActor now
-    dbUpdate $ AppendSealedFile file Missing actor
+    dbUpdate $ AppendClosedFileWithDigitalSignatureEvidence
+      (DigitallySignedFile file Missing)
+      actor
     void
       . runTemplatesT (defaultLang, templates)
       . runGuardTimeConfT testGtConf
@@ -51,5 +54,7 @@ testSealing = do
       $ addDigitalSignature
 
   withDocumentID did $ do
-    status <- documentsealstatus <$> theDocument
-    assertEqual "Document's seal status" (Just SealStatus.Pades) status
+    status <- documentdigitalsignaturestatus <$> theDocument
+    assertEqual "Document digital signature status"
+                (Just DigitalSignatureStatus.Pades)
+                status
