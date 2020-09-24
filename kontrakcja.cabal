@@ -429,6 +429,11 @@ Library
                  , Flow.DocumentStarting
                  , Flow.EID.AuthConfig
                  , Flow.EID.Authentication
+                 , Flow.EID.EIDService.Model
+                 , Flow.EID.EIDService.Types
+                 , Flow.EID.EIDService.Control
+                 , Flow.EID.EIDService.Provider
+                 , Flow.EID.EIDService.Provider.Onfido
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards

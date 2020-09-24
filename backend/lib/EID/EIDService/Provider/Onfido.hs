@@ -5,6 +5,8 @@ module EID.EIDService.Provider.Onfido (
   , completeEIDServiceAuthTransaction
   , completeEIDServiceSignTransaction
   , completionDataToName
+  , OnfidoEIDServiceProviderParams(..)
+  , validateCompletionData
  ) where
 
 import Control.Monad.Trans.Maybe

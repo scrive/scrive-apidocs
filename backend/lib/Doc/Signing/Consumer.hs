@@ -538,15 +538,15 @@ handleEidService check process mEidServiceConf ds@DocumentSigning {..} now = do
       logAttention "Impossible happened - no author for document"
         $ object [identifier $ documentid doc]
       throwE $ Failed Remove
-    ugwp           <- dbQuery . UserGroupGetWithParentsByUserID $ authorID
+    ugwp            <- dbQuery . UserGroupGetWithParentsByUserID $ authorID
 
-    eidServiceConf <- whenNothing mEidServiceConf $ do
+    eidServiceConf_ <- whenNothing mEidServiceConf $ do
       noConfigurationWarning "EIDService Esigning"
       throwE $ Failed Remove
 
-    let serviceToken = fromMaybe (eidServiceConf ^. #eidServiceToken)
+    let serviceToken = fromMaybe (eidServiceConf_ ^. #eidServiceToken)
                                  (ugwpSettings ugwp ^. #eidServiceToken)
-    return $ eidServiceConf & #eidServiceToken .~ serviceToken
+    return $ eidServiceConf_ & #eidServiceToken .~ serviceToken
 
   est <- do
     mest <- dbQuery

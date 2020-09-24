@@ -3,6 +3,7 @@ module EID.EIDService.Model (
   , GetEIDServiceTransactionNoSessionIDGuard(..)
   , GetEIDServiceTransactionGuardSessionID(..)
   , PurgeTimeoutedEIDTransactions(..)
+  , eidServiceConf
   ) where
 
 import Control.Monad.Catch
@@ -12,9 +13,15 @@ import Data.Time
 
 import DB
 import Doc.SignatoryLinkID
+import Doc.Types.Document
+import EID.EIDService.Conf
 import EID.EIDService.Types
+import Kontra
 import MinutesTime
 import Session.SessionID
+import UserGroup.Model
+import UserGroup.Types
+import Util.SignatoryLinkUtils
 
 selectEIDServiceTransaction :: [SQL]
 selectEIDServiceTransaction =
@@ -102,3 +109,18 @@ fetchEIDServiceTransaction (estid, status, slid, auth_kind, session_id, provider
                                 , estSessionID       = session_id
                                 , estDeadline        = deadline
                                 }
+
+eidServiceConf :: Kontrakcja m => Document -> m EIDServiceConf
+eidServiceConf doc = do
+  ctx <- getContext
+  case ctx ^. #eidServiceConf of
+    Nothing    -> noConfigurationError "No eid service provided"
+    Just conf0 -> do
+      let err =
+            unexpectedError $ "Impossible happened - no author for document: " <> showt
+              (documentid doc)
+      authorid <- maybe err return $ getAuthorUserId doc
+      ugwp     <- dbQuery . UserGroupGetWithParentsByUserID $ authorid
+      return $ case ugwpSettings ugwp ^. #eidServiceToken of
+        Nothing    -> conf0
+        Just token -> set #eidServiceToken token conf0

@@ -19,7 +19,6 @@ import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocUtils
 import Doc.SignatoryLinkID
-import EID.EIDService.Conf
 import EID.EIDService.Model
 import EID.EIDService.Provider
 import EID.EIDService.Types
@@ -29,10 +28,7 @@ import MinutesTime
 import Routing
 import Session.Model
 import Templates (renderTextTemplate)
-import UserGroup.Model
-import UserGroup.Types
 import Util.MonadUtils
-import Util.SignatoryLinkUtils
 
 eidServiceRoutes :: Route (Kontra Response)
 eidServiceRoutes = choice
@@ -41,21 +37,6 @@ eidServiceRoutes = choice
   -- redirect endpoints
   , dir "redirect-endpoint" . hGet . toK4 $ redirectEndpointFromEIDServiceTransaction
   ]
-
-eidServiceConf :: Kontrakcja m => Document -> m EIDServiceConf
-eidServiceConf doc = do
-  ctx <- getContext
-  case ctx ^. #eidServiceConf of
-    Nothing    -> noConfigurationError "No eid service provided"
-    Just conf0 -> do
-      let err =
-            unexpectedError $ "Impossible happened - no author for document: " <> showt
-              (documentid doc)
-      authorid <- maybe err return $ getAuthorUserId doc
-      ugwp     <- dbQuery . UserGroupGetWithParentsByUserID $ authorid
-      return $ case ugwpSettings ugwp ^. #eidServiceToken of
-        Nothing    -> conf0
-        Just token -> set #eidServiceToken token conf0
 
 -- Start endpoints for auth and sign
 

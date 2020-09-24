@@ -27,6 +27,7 @@ import Doc.DocControl
 import Doc.Model.Query
 import Doc.Tokens.Model
 import Doc.Types.SignatoryLink
+import EID.Authentication.Model
 import Flow.Aggregator
 import Flow.EID.AuthConfig
 import Flow.EID.Authentication
@@ -45,7 +46,6 @@ import User.UserID
 import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils (authViewMatchesAuth)
 import VersionTH (versionID)
 import qualified Auth.Model as AuthModel
 import qualified Flow.Html as Html
@@ -227,13 +227,18 @@ participantNeedsToIdentifyToView
   -> SessionID
   -> m Bool
 participantNeedsToIdentifyToView (authKind, authConf) instanceId userName sid = do
+  let authProvider = provider authConf
   mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
   case mAuthInDb of
     Nothing -> do
       return True
-    Just authInDb ->
-      return . not . authProviderMatchesAuth (authConf ^. #provider) $ authInDb
-  where authProviderMatchesAuth = authViewMatchesAuth . toAuthenticationToViewMethod
+    Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
+
+  where
+    authProviderMatchesAuth SmsPin SMSPinAuthentication_{} = True
+    authProviderMatchesAuth SmsPin _ = False
+    authProviderMatchesAuth Onfido EIDServiceOnfidoAuthentication_{} = True
+    authProviderMatchesAuth Onfido _ = False
 
 getMSessionID
   :: (MonadDB m, MonadThrow m, MonadTime m)

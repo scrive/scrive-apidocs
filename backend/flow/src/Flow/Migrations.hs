@@ -16,6 +16,7 @@ module Flow.Migrations (
   , createTableFlowOverviewAuthentications
   , migrateNullableDocumentNameInEvent
   , addProviderMethodToFlowEIDAuthentications
+  , createTableFlowEidServiceTransactions
 )
 
 where
@@ -444,3 +445,41 @@ addProviderMethodToFlowEIDAuthentications = Migration
                        ]
   }
   where tableName = "flow_eid_authentications"
+
+createTableFlowEidServiceTransactions :: MonadDB m => Migration m
+createTableFlowEidServiceTransactions = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = tableName
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+        , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
+        , tblColumn { colName = "session_id", colType = BigIntT }
+        , tblColumn { colName = "transaction_id", colType = TextT, colNullable = False }
+        , tblColumn { colName = "status", colType = SmallIntT, colNullable = False }
+        , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
+        , tblColumn { colName     = "deadline"
+                    , colType     = TimestampWithZoneT
+                    , colNullable = False
+                    }
+        ]
+  -- only one authentication per participant. can be relaxed later if necessary.
+      , tblPrimaryKey  = pkOnColumns ["instance_id", "user_name", "auth_kind"]
+      , tblForeignKeys =
+        [ (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+        , (fkOnColumns ["instance_id", "user_name"]
+                       "flow_instance_key_value_store"
+                       ["instance_id", "key"]
+          ) { fkOnDelete = ForeignKeyCascade
+            }
+        ]
+      , tblIndexes     = [ indexOnColumn "session_id"
+                         , (indexOnColumn "transaction_id") { idxUnique = True }
+                         ]
+      }
+  }
+  where tableName = "flow_eid_service_transactions"

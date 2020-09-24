@@ -5,6 +5,7 @@ module EID.EIDService.Types (
   , fromEIDServiceTransactionID
   , EIDServiceTransactionProvider(..)
   , toEIDServiceProviderName
+  , toRedirectURLName
   , EIDServiceEndpointType(..)
   , EIDServiceTransactionStatus (..)
   , EIDServiceAuthenticationKind(..)

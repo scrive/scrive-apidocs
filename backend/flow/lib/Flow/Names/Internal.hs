@@ -10,6 +10,7 @@ module Flow.Names.Internal
 import Data.Aeson
 import Database.PostgreSQL.PQTypes
 import Servant.API
+import qualified Data.Text as T
 
 data NameKind
     = DocumentName
@@ -19,7 +20,10 @@ data NameKind
     | StageName
 
 newtype Name (a :: NameKind) = Name Text
-  deriving (Eq, FromJSON, FromJSONKey, Ord, Show, ToJSON, ToJSONKey)
+  deriving (Eq, FromJSON, FromJSONKey, Ord, ToJSON, ToJSONKey)
+
+instance Show (Name a) where
+  show (Name t) = T.unpack t
 
 instance FromHttpApiData (Name a) where
   parseUrlPiece = fmap Name . parseUrlPiece

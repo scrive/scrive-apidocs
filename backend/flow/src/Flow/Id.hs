@@ -1,10 +1,13 @@
+{-# LANGUAGE DerivingVia #-}
 module Flow.Id where
 
 import Data.Aeson
 import Data.UUID
 import Database.PostgreSQL.PQTypes hiding (JSON)
 import GHC.Generics
+import Happstack.Server
 import Servant.API
+import qualified Data.Text as T
 
 import Log.Identifier (Loggable(logDefaultLabel, logValue))
 
@@ -16,7 +19,8 @@ data FlowIdKind
     | CallbackId
 
 newtype Id (a :: FlowIdKind) = Id UUID
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Generic)
+  deriving Show via UUID
 
 instance FromHttpApiData (Id a) where
   parseUrlPiece = fmap Id . parseUrlPiece
@@ -46,6 +50,9 @@ instance FromSQL (Id a) where
 instance ToSQL (Id a) where
   type PQDest (Id a) = PQDest UUID
   toSQL (Id id) = toSQL id
+
+instance FromReqURI (Id a) where
+  fromReqURI = fmap Id . maybeRead . T.pack
 
 instance Loggable InstanceId where
   logValue = toJSON
