@@ -70,12 +70,12 @@ type alias Params msg =
   , addFlashMessageMsg : FlashMessage -> msg
   , errorTraceMsg : List (String, JE.Value) -> msg
   , provider : Provider
-  , documentId : ID Document
-  , signatory : SignatoryLink
   , xtoken : String
   , location : String  -- window.location.href
   , localization : Localization
   , cdnBaseUrl : String
+  , participantEmail : String
+  , startUrl : String
   }
 
 type State = Idle | Loading | Processing { accessUrl : String }
@@ -89,12 +89,7 @@ update : Params msg -> State -> Msg -> (State, Cmd msg)
 update params _ msg = case msg of
   IdentifyButtonClickedMsg ->
     let postReq = post
-          { url = String.join "/"
-              [ "/eid-service/start"
-              , endpointName params.provider
-              , "view"
-              , showId params.documentId
-              , case params.signatory of SignatoryLink sig -> showId sig.id ]
+          { url = params.startUrl
           , body = formBody params [("redirect", Base64.encode <| Url.percentEncode params.location)]
           , expect = expectJson (params.embed << EidServiceStartCallbackMsg) (JD.field "accessUrl" JD.string)
           }
@@ -140,24 +135,11 @@ viewContent params state = case state of
       ]
 
 viewFooter : Params msg -> Html msg
-viewFooter {provider, localization, signatory} =
+viewFooter {provider, localization, participantEmail} =
   div [] [
-    text <| case provider of
-      FITupas -> localization.yourIdNumber
-      SEBankID -> localization.yourIdNumber
-      NOBankID -> localization.yourIdNumber
-      DKNemID -> localization.eID.infoText.cpr
-      IDIN -> localization.yourEmail
-      Verimi -> localization.yourEmail,
+    text localization.yourEmail,
     text " ",
-    b [] [
-      text <| case provider of
-        FITupas -> maskedPersonalNumber 4 <| getPersonalNumber signatory
-        SEBankID -> maskedPersonalNumber 4 <| getPersonalNumber signatory
-        NOBankID -> maskedPersonalNumber 5 <| getPersonalNumber signatory
-        DKNemID -> maskedPersonalNumber 4 <| getPersonalNumber signatory
-        IDIN -> getEmail signatory
-        Verimi -> getEmail signatory ]
+    b [] [ text participantEmail ]
   ]
 
 viewLogo : Params msg -> Html msg

@@ -3,6 +3,7 @@ module Flow.Server.Pages where
 import Control.Monad.Catch (MonadMask, MonadThrow)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader (ask)
+import Control.Monad.Trans.Maybe
 import Database.PostgreSQL.PQTypes
 import Log.Class
 import Servant
@@ -26,8 +27,6 @@ import Doc.DocControl
 import Doc.Model.Query
 import Doc.Tokens.Model
 import Doc.Types.SignatoryLink
-import EID.Authentication.Model
-import EID.EIDService.Types
 import Flow.Aggregator
 import Flow.EID.AuthConfig
 import Flow.EID.Authentication
@@ -41,8 +40,12 @@ import Flow.Routes.Types
 import Flow.Server.Cookies
 import Flow.Server.Types
 import Flow.Server.Utils
+import User.Model.Query
+import User.UserID
 import UserGroup.Model
 import UserGroup.Types
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils (authViewMatchesAuth)
 import VersionTH (versionID)
 import qualified Auth.Model as AuthModel
 import qualified Flow.Html as Html
@@ -141,16 +144,10 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
     fullInstance <- fromJust <$> Model.selectFullInstance instanceId
     let authorUserId = fullInstance ^. #template % #userId
 
-    brandingDocId    <- head <$> Model.selectDocumentIdsByInstanceId instanceId
-    brandingUgwp     <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
-    brandingHash     <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
+    brandingDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
+    brandingUgwp  <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
+    brandingHash  <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
     -- brandingHash is used for browser cache busting
-
-    -- TODO: Temporary: These Ids are here just to make IdentifyView elm app run.
-    -- It hasn't been modified to accept Flow-specific Ids yet.
-    identifyViewSlid <-
-      head <$> Model.selectSignatoryIdsByInstanceUser instanceId userName
-    identifyViewDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
 
     let cdnBaseUrl'    = fromMaybe "" cdnBaseUrl
 
@@ -187,14 +184,6 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
           , browserTitle   = brandedPageTitle bd (Just $ ugwpUI brandingUgwp)
           }
 
-        identifyViewVars = Html.IdentifyViewVars { commonVars      = commonVars
-                                                 , brandedDomainId = bd ^. #id
-                                                 , brandingHash    = brandingHash
-                                                 , documentId      = identifyViewDocId       -- TODO: Temporary
-                                                 , signatoryLinkId = identifyViewSlid   -- TODO: Temporary
-                                                 , flowInstanceId  = instanceId'
-                                                 }
-
         instanceOverviewVars = Html.InstanceOverviewPageVars
           { commonVars     = commonVars
           , kontraApiUrl   = "/api/v2"
@@ -202,62 +191,49 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
           , flowInstanceId = instanceId'
           }
 
-    mUserAuthConfig <- Model.selectUserAuthConfig instanceId userName
-    needsToIdentify <- participantNeedsToIdentifyToView mUserAuthConfig
-                                                        fullInstance
-                                                        userName
-                                                        sessionId
+    mInstanceAuthConfig <- runMaybeT $ do
+      uac <- MaybeT $ Model.selectUserAuthConfig instanceId userName
+      MaybeT . pure $ instanceAuthConfig fullInstance uac
 
-    -- let needsToIdentify = isJust $ do
-    --       uac <- mUserAuthConfig
-    --       uac ^. #authToView <|> uac ^. #authToViewArchived
+    mIdentifyViewVars <- case mInstanceAuthConfig of
+      Just (authKind, authConfig) -> do
+        needsToIdentify <- participantNeedsToIdentifyToView (authKind, authConfig)
+                                                            instanceId
+                                                            userName
+                                                            sessionId
+        if needsToIdentify
+          then do
+            appConfig <- mkIdentifyViewAppConfig cdnBaseUrl'
+                                                 logoUrl
+                                                 (fullInstance ^. #flowInstance)
+                                                 userName
+                                                 authorUserId
+                                                 authConfig
+            pure . Just $ Html.IdentifyViewVars commonVars appConfig
+          else pure Nothing
+      Nothing -> pure Nothing
 
-    -- TODO: Temporary: Remove bypassIdentify when the Elm identify-view is usable.
-    if needsToIdentify && not bypassIdentify
-      then return $ Html.renderIdentifyView identifyViewVars
-      else return $ Html.renderInstanceOverview instanceOverviewVars
+    case mIdentifyViewVars of
+      -- TODO: Temporary: Remove bypassIdentify when the Elm identify-view is usable.
+      Just identifyViewVars | not bypassIdentify ->
+        return $ Html.renderIdentifyView identifyViewVars
+      _ -> return $ Html.renderInstanceOverview instanceOverviewVars
 
 participantNeedsToIdentifyToView
   :: (MonadDB m, MonadThrow m, MonadMask m)
-  => Maybe UserAuthConfig
-  -> FullInstance
+  => (AuthenticationKind, AuthConfig)
+  -> InstanceId
   -> UserName
   -> SessionID
   -> m Bool
-participantNeedsToIdentifyToView mUserAuthConfig fullInstance userName sid =
-  if isComplete $ instanceToAggregator fullInstance
-    then check AuthenticationToViewArchived (^. #authToViewArchived)
-    else check AuthenticationToView (^. #authToView)
-  where
-    instanceId = fullInstance ^. #flowInstance % #id
-    check authKind getParticipantAuthConf =
-      case mUserAuthConfig >>= getParticipantAuthConf of
-        Nothing       -> return False
-        Just authConf -> do
-          let authProvider = provider authConf
-          mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
-          case mAuthInDb of
-            Nothing -> do
-              -- TODO: Temporary: This is a dummy way of authenticating
-              -- call me first time: no value in flow_eid_authentications => put something there and serve identifyview
-              -- call me again: some value in flow_eid_authentications => serve flow overview
-              putDummyValueIntoFlowEAuthentication authKind
-              return True
-            Just authInDb ->
-              return . not . authProviderMatchesAuth authProvider $ authInDb
-
-    putDummyValueIntoFlowEAuthentication authKind =
-      updateFlowEidAuthentication instanceId userName authKind sid
-        $ EIDServiceSEBankIDAuthentication_ EIDServiceSEBankIDAuthentication
-            { eidServiceSEBankIDSignatoryName           = "Tester 'Dummy' Testovicz"
-            , eidServiceSEBankIDSignatoryPersonalNumber = "123456"
-            , eidServiceSEBankIDSignatoryIP             = "0.0.0.0"
-            , eidServiceSEBankIDSignature               = "dummySignature"
-            , eidServiceSEBankIDOcspResponse            = "dummyOcspResponse"
-            }
-
-    -- TODO: Temporary: Use Util.SignatoryLinkUtils:authViewMatchesAuth
-    authProviderMatchesAuth _ _ = True
+participantNeedsToIdentifyToView (authKind, authConf) instanceId userName sid = do
+  mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
+  case mAuthInDb of
+    Nothing -> do
+      return True
+    Just authInDb ->
+      return . not . authProviderMatchesAuth (authConf ^. #provider) $ authInDb
+  where authProviderMatchesAuth = authViewMatchesAuth . toAuthenticationToViewMethod
 
 getMSessionID
   :: (MonadDB m, MonadThrow m, MonadTime m)
@@ -271,3 +247,60 @@ getMSessionID mCookies mHost = do
   case mAuthCookies of
     Just authCookies -> AuthModel.getSessionIDByCookies authCookies (cookieDomain mHost)
     Nothing          -> pure Nothing
+
+mkIdentifyViewAppConfig
+  :: (MonadDB m, MonadThrow m)
+  => Text
+  -> Text
+  -> Instance
+  -> UserName
+  -> UserID
+  -> AuthConfig
+  -> m Html.IdentifyViewAppConfig
+mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId authConfig = do
+  mAuthor       <- dbQuery $ GetUserByID authorId
+
+  -- TODO: Find a nicer way of getting the signatory link
+  signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
+    <$> Model.selectSignatoryInfo (instance_ ^. #id)
+  signatoryLink <- case signatoryInfo of
+    Just (_, slid, did) -> dbQuery $ GetSignatoryLinkByID did slid
+    Nothing -> unexpectedError "mkIdentifyViewAppConfig: signatory info not found!"
+
+  let genericEidServiceStartUrl = T.intercalate
+        "/"
+        [ "eid-service"
+        , "start-flow"
+        , toUrlPiece (authConfig ^. #provider)
+        , "view"
+        , toUrlPiece (instance_ ^. #id)
+        , toUrlPiece userName
+        ]
+
+      -- TODO: Use localisation
+      welcomeText = "To see the documents verify your identity"
+
+  pure $ Html.IdentifyViewAppConfig
+    { cdnBaseUrl                = cdnBaseUrl
+    , logoUrl                   = logoUrl
+    , welcomeText               = welcomeText
+    , entityTypeLabel           = "Flow"
+    , entityTitle               = fromMaybe "" (instance_ ^. #title)
+    , authenticationMethod      = toAuthenticationToViewMethod (authConfig ^. #provider)
+    , authorName                = maybe "" getFullName mAuthor
+    , participantEmail          = getEmail signatoryLink
+    , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
+    , genericEidServiceStartUrl = genericEidServiceStartUrl
+    , smsPinSendUrl             = "" -- TODO
+    , smsPinVerifyUrl           = "" -- TODO
+    }
+  where
+    maskedMobile showLastN mobile =
+      T.map (\c -> if c /= ' ' then '*' else c) (T.dropEnd showLastN mobile)
+        <> T.takeEnd showLastN mobile
+
+instanceAuthConfig
+  :: FullInstance -> UserAuthConfig -> Maybe (AuthenticationKind, AuthConfig)
+instanceAuthConfig fullInstance uac = if isComplete $ instanceToAggregator fullInstance
+  then uac ^. #authToViewArchived >>= \conf -> pure (AuthenticationToViewArchived, conf)
+  else uac ^. #authToView >>= \conf -> pure (AuthenticationToView, conf)

@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Flow.EID.AuthConfig
     ( AuthConfig(..)
     , AuthProvider(..)
+    , toAuthenticationToViewMethod
     )
   where
 
@@ -10,12 +12,17 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
+import Optics.TH
+import Servant.API
 import qualified Data.Text.Lazy.Encoding as LT
+
+import Doc.Types.SignatoryLink (AuthenticationToViewMethod(..))
 
 aesonOptions :: Options
 aesonOptions =
   defaultOptions { fieldLabelModifier = snakeCase, constructorTagModifier = snakeCase }
 
+-- Auth config
 
 data AuthConfig = AuthConfig
     { provider :: AuthProvider
@@ -29,6 +36,7 @@ instance FromJSON AuthConfig where
 instance ToJSON AuthConfig where
   toEncoding = genericToEncoding aesonOptions
 
+-- Auth provider
 
 data AuthProvider = SmsPin | Onfido
   deriving (Show, Eq, Generic)
@@ -54,6 +62,20 @@ instance ToSQL AuthProvider where
 instance PQFormat AuthProvider where
   pqFormat = pqFormat @Text
 
+instance ToHttpApiData AuthProvider where
+  toUrlPiece = \case
+    Onfido -> "onfido"
+    SmsPin -> "sms_pin"
+
 newtype UnknownAuthProvider = UnknownAuthProvider Text
   deriving Show
   deriving anyclass Exception
+
+toAuthenticationToViewMethod :: AuthProvider -> AuthenticationToViewMethod
+toAuthenticationToViewMethod = \case
+  Onfido -> OnfidoDocumentCheckAuthenticationToView
+  SmsPin -> SMSPinAuthenticationToView
+
+-- Optics
+
+makeFieldLabelsWith noPrefixFieldLabels ''AuthConfig

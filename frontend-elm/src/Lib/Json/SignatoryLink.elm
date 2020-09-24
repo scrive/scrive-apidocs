@@ -89,11 +89,16 @@ authenticationToViewMethodDecoder =
         "standard" -> JD.succeed StandardAuthenticationToView
         "se_bankid" -> JD.succeed SEBankIDAuthenticationToView
         "no_bankid" -> JD.succeed NOBankIDAuthenticationToView
-        "dk_nemid" -> JD.succeed DKNemIDAuthenticationToView
+        "dk_nemid" -> JD.succeed LegacyDKNemIDAuthenticationToView
+        "dk_nemid_cpr" -> JD.succeed DKNemIDCPRAuthenticationToView
+        "dk_nemid_pid" -> JD.succeed DKNemIDPIDAuthenticationToView
+        "dk_nemid_cvr" -> JD.succeed DKNemIDCVRAuthenticationToView
         "fi_tupas" -> JD.succeed FITupasAuthenticationToView
         "sms_pin" -> JD.succeed SMSPinAuthenticationToView
         "verimi" -> JD.succeed VerimiAuthenticationToView
         "nl_idin" -> JD.succeed IDINAuthenticationToView
+        "onfido_document_check" -> JD.succeed OnfidoDocumentCheckAuthenticationToView
+        "onfido_document_and_photo_check" -> JD.succeed OnfidoDocumentAndPhotoCheckAuthenticationToView
         _ -> JD.fail <| "Cannot parse DeliveryMethod: " ++ s
       )
 

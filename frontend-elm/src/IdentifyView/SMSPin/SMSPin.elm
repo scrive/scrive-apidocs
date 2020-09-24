@@ -22,10 +22,11 @@ type alias Params msg =
   { embed : Msg -> msg
   , addFlashMessageMsg : FlashMessage -> msg
   , errorTraceMsg : List (String, JE.Value) -> msg
-  , documentId : ID Document
-  , signatory : SignatoryLink
   , xtoken : String
   , localization : Localization
+  , participantMaskedMobile : String
+  , sendUrl : String
+  , verifyUrl : String
   }
 
 -- modifiable part of the model
@@ -41,11 +42,7 @@ update : Params msg -> State -> Msg -> (State, Cmd msg)
 update params state msg = case msg of
   IdentifyButtonClickedMsg ->
     let postReq = post
-          { url = String.join "/"
-                  [ "/api/v2/documents"
-                  , showId params.documentId
-                  , case params.signatory of SignatoryLink sig -> showId sig.id
-                  , "sendsmspintoview"]
+          { url = params.sendUrl
           , body = formBody params []
           , expect = expectWhatever <| params.embed << SendSMSPinToViewCallbackMsg
           }
@@ -71,11 +68,7 @@ update params state msg = case msg of
   ConfirmPinButtonClickedMsg -> case state of
     EnterPin {pin} ->
       let postReq = post
-            { url = String.join "/"
-                    [ "/api/v2/documents"
-                    , showId params.documentId
-                    , case params.signatory of SignatoryLink sig -> showId sig.id
-                    , "smspinidentifytoview"]
+            { url = params.verifyUrl
             , body = formBody params [("sms_pin", pin)]
             , expect = expectWhatever <| params.embed << SMSPinIdentifyToViewCallbackMsg
             }
@@ -143,10 +136,10 @@ viewContent params state = case state of
     ]
 
 viewFooter : Params msg -> Html msg
-viewFooter params =
+viewFooter { localization, participantMaskedMobile } =
   div [] [
-    text params.localization.yourMobileNumber,
+    text localization.yourMobileNumber,
     text " ",
     b [] [
-      text <| getMobileNumber params.signatory ]
+      text <| participantMaskedMobile ]
   ]

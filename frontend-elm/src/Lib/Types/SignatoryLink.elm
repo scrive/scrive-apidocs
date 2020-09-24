@@ -30,11 +30,16 @@ type AuthenticationToViewMethod
   = StandardAuthenticationToView
   | SEBankIDAuthenticationToView
   | NOBankIDAuthenticationToView
-  | DKNemIDAuthenticationToView
-  | SMSPinAuthenticationToView
+  | LegacyDKNemIDAuthenticationToView
+  | DKNemIDCPRAuthenticationToView
+  | DKNemIDPIDAuthenticationToView
+  | DKNemIDCVRAuthenticationToView
   | FITupasAuthenticationToView
+  | SMSPinAuthenticationToView
   | VerimiAuthenticationToView
   | IDINAuthenticationToView
+  | OnfidoDocumentCheckAuthenticationToView
+  | OnfidoDocumentAndPhotoCheckAuthenticationToView
 
 type SignatoryField
   = SignatoryNameField

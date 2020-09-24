@@ -3,6 +3,7 @@ module Flow.Html (
     CommonPageVars(..)
   , InstanceOverviewPageVars(..)
   , IdentifyViewVars(..)
+  , IdentifyViewAppConfig(..)
   , ErrorPageVars(..)
   , renderInstanceOverview
   , renderIdentifyView
@@ -12,6 +13,8 @@ module Flow.Html (
 
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Data.Aeson
+import GHC.Generics
 import Prelude hiding (div, head)
 import Servant (toUrlPiece)
 import Text.Blaze.Html5 hiding (style)
@@ -21,12 +24,13 @@ import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Lazy.Encoding as LT
 
 import BrandedDomain.Model
 import Branding.Adler32
 import DB
-import Doc.DocumentID
-import Doc.SignatoryLinkID
+import Doc.Types.SignatoryLink (AuthenticationToViewMethod)
 import Flow.Id
 import Flow.Server.Types
 import VersionTH
@@ -49,12 +53,26 @@ data InstanceOverviewPageVars = InstanceOverviewPageVars
 
 data IdentifyViewVars = IdentifyViewVars
   { commonVars :: CommonPageVars
-  , brandedDomainId :: BrandedDomainID
-  , brandingHash :: Text
-  , flowInstanceId :: InstanceId
-  , documentId :: DocumentID
-  , signatoryLinkId :: SignatoryLinkID
+  , appConfig :: IdentifyViewAppConfig
   }
+
+data IdentifyViewAppConfig = IdentifyViewAppConfig
+  { cdnBaseUrl :: Text
+  , logoUrl :: Text
+  , welcomeText :: Text
+  , entityTypeLabel :: Text
+  , entityTitle :: Text
+  , authenticationMethod :: AuthenticationToViewMethod
+  , authorName :: Text
+  , participantEmail :: Text
+  , participantMaskedMobile :: Text
+  , genericEidServiceStartUrl :: Text
+  , smsPinSendUrl :: Text
+  , smsPinVerifyUrl :: Text
+  } deriving (Generic)
+
+instance ToJSON IdentifyViewAppConfig where
+  toEncoding = genericToEncoding defaultOptions
 
 data ErrorPageVars = ErrorPageVars
   { commonVars :: CommonPageVars
@@ -141,30 +159,8 @@ renderIdentifyView IdentifyViewVars {..} = docTypeHtml $ do
         div ! id "elm-mount" $ ""
     script
       . toHtml
-      . T.replace "$cdnBaseUrl$" cdnBaseUrl
-      . T.replace "$brandedDomainId$" (showt brandedDomainId)
-      . T.replace "$brandingHash$" brandingHash
-      . T.replace "$flowInstanceId$" (toUrlPiece flowInstanceId)
-      . T.replace "$documentId$" (showt documentId)
-      . T.replace "$signatoryLinkId$" (showt signatoryLinkId)
-      $ [r|
-            var cdnbaseurl = "$cdnBaseUrl$";
-            var brandingdomainid = "$brandedDomainId$";
-            var brandinghash = "$brandingHash$";
-
-            var fromTemplate = {
-              documentId: "$documentId$",
-              sigLinkId: "$signatoryLinkId$",
-              // TODO: We probably don't need Nets, so nets config can go
-              netsIdentifyUrl: "",
-              netsMerchantIdentifier: "",
-              netsTrustedDomain: "",
-              // Note: In kontrakcja the variables below are configurable
-              // TODO: We probably don't need these either
-              useEIDHubForSEBankIDView: true,
-              useEIDHubForFITupasView: true
-            };
-          |]
+      . T.replace "$appConfig$" (LT.toStrict . LT.decodeUtf8 $ encode appConfig)
+      $ [r| var appConfigFromTemplate = $appConfig$; |]
     script
       ! src
           (textValue $ cdnBaseUrl <> "/elm-assets/identifyview-" <> versionCode <> ".js")
