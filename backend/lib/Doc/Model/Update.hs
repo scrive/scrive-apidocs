@@ -2153,7 +2153,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
     -- mAuthorUser and mUser may coincide at this point
 
     let isInputFile (InputFile _) = True
-        isInputFile _ = False
+        isInputFile _             = False
 
     mDoc <- flip newFromDocumentID (documentid document) $ f . \doc -> doc
       { documentstatus            = Preparation
@@ -2163,7 +2163,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime             = actorTime actor
       , documentmtime             = actorTime actor
       , documentshareablelinkhash = Nothing
-      , documentfilehistory = Map.filter isInputFile $ documentfilehistory doc
+      , documentfilehistory       = Map.filter isInputFile $ documentfilehistory doc
       , documentfolderid          = fromMaybe (documentfolderid doc)
                                               (view #homeFolderID =<< mAuthorUser)
       }
