@@ -84,6 +84,8 @@ testFilePurgingConsumer = do
   void . dbUpdate $ MarkOrphanFilesForPurgeAfter mempty
 
   ctx <- mkContext defaultLang
+  modifyTestTime (1 `daysAfter`)
+  commit
   runTestCronUntilIdle ctx
 
   runSQL_

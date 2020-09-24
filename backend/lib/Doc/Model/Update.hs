@@ -2152,6 +2152,9 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       Just authorID -> dbQuery . GetUserByID $ authorID
     -- mAuthorUser and mUser may coincide at this point
 
+    let isInputFile (InputFile _) = True
+        isInputFile _ = False
+
     mDoc <- flip newFromDocumentID (documentid document) $ f . \doc -> doc
       { documentstatus            = Preparation
       , documentsharing           = Private
@@ -2160,6 +2163,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime             = actorTime actor
       , documentmtime             = actorTime actor
       , documentshareablelinkhash = Nothing
+      , documentfilehistory = Map.filter isInputFile $ documentfilehistory doc
       , documentfolderid          = fromMaybe (documentfolderid doc)
                                               (view #homeFolderID =<< mAuthorUser)
       }

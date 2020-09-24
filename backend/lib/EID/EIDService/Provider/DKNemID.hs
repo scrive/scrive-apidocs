@@ -217,6 +217,7 @@ getDKNemIDAuthMethod kind sl = case kind of
       DKNemIDCPRAuthenticationToView -> return DKNemIDAuthCPR
       DKNemIDPIDAuthenticationToView -> return DKNemIDAuthPID
       DKNemIDCVRAuthenticationToView -> return DKNemIDAuthCVR
+      LegacyDKNemIDAuthenticationToView -> return DKNemIDAuthCPR
       auth -> fail $ "Not supported auth" <> show auth
     where
       getAuthToViewMethod k = case k of

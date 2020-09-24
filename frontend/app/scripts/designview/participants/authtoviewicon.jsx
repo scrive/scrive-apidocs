@@ -38,7 +38,7 @@ module.exports = React.createClass({
     });
 
     var superthis = this;
-    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",
+    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",
                "fi_tupas", "sms_pin", "verimi", "nl_idin"]
               .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
     if (ams.length <= 1) {
@@ -63,7 +63,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";
     } else if (sig.noBankIDAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-no-bankid";
-    } else if (sig.dkNemIDCPRAuthenticationToView()
+    } else if (sig.legacyDkNemIDAuthenticationToView()
+               || sig.dkNemIDCPRAuthenticationToView()
                || sig.dkNemIDCVRAuthenticationToView()
                || sig.dkNemIDPIDAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-dk-nemid";
@@ -96,6 +97,9 @@ module.exports = React.createClass({
       title.push(
         localization.designview.addParties.authenticationToViewNOBankID
       );
+    } else if (authMethod == "dk_nemid") {
+      // legacy support
+      title.push("NemID");
     } else if (authMethod == "dk_nemid_cpr") {
       title.push(
         localization.designview.addParties.authenticationToViewDKNemIDCPR

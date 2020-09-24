@@ -462,13 +462,31 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
             void . dbUpdate $ SetUserUserGroup (u ^. #id) ugid_target
             let newhomefdr = set #parentID (Just targetfdrid) defaultFolder
             newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
+            logInfo "Changing user home folder id" $ object
+              [ "user_id" .= (u ^. #id)
+              , "folder_id_new" .= newhomefdrid
+              , "folder_id_old" .= (u ^. #homeFolderID)
+              , "change_source" .= ("handleMergeToOtherCompany" :: Text)
+              ]
             void . dbUpdate . SetUserHomeFolder (u ^. #id) $ newhomefdrid
             case u ^. #homeFolderID of
-              Just sourceFolderId -> void . dbUpdate $ MoveAuthorDocuments
-                (u ^. #id)
-                sourceFolderId
-                newhomefdrid
-              Nothing -> return ()
+              Just sourceFolderId -> do
+                void . dbUpdate $ MoveAuthorDocuments (u ^. #id)
+                                                      sourceFolderId
+                                                      newhomefdrid
+                logInfo "Moving user's authored documents" $ object
+                  [ "user_id" .= (u ^. #id)
+                  , "folder_id_new" .= newhomefdrid
+                  , "folder_id_old" .= sourceFolderId
+                  , "change_source" .= ("handleMergeToOtherCompany" :: Text)
+                  ]
+              Nothing -> do
+                logInfo "Not moving user's authored documents"
+                  $ object
+                      [ "user_id" .= (u ^. #id)
+                      , "change_source" .= ("handleMergeToOtherCompany" :: Text)
+                      ]
+                return ()
           invites <- dbQuery $ UserGroupGetInvites ugid_source
           forM_ invites $ \i ->
             void . dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)

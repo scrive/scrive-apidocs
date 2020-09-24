@@ -27,15 +27,10 @@
     .data-retention-option-wrapper {
       padding-top: 10px;
 
-      display: grid;
-      grid-template-columns: 1fr 12fr;
-      grid-template-areas:
-        "checkbox main-text"
-        "checkbox description";
-
       .data-retention-option-checkbox {
-        grid-area: checkbox;
         align-self: center;
+        float: left;
+        padding-right: 15px;
         text-align: center;
 
         .checkbox {
@@ -43,13 +38,9 @@
         }
       }
 
-      .data-retention-option-main-text {
-        grid-area: main-text;
-      }
-
       .data-retention-option-description {
-        grid-area: description;
         font-style: italic;
+        padding-left: 30px;
       }
     }
 

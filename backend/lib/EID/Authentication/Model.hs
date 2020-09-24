@@ -296,7 +296,9 @@ fetchEAuthentication (provider, internal_provider, provider_method, msignature, 
     NemIDAuth -> EIDServiceNemIDAuthentication_ EIDServiceDKNemIDAuthentication
       { eidServiceNemIDInternalProvider = unsafeEIDServiceDKNemIDInternalProviderFromInt16
                                             $ fromJust internal_provider
-      , eidServiceNemIDSignatoryPersonalOrCVRNumber = fromJust signatory_personal_number
+      , eidServiceNemIDSignatoryPersonalOrCVRNumber = fromMaybe
+                                                        ""
+                                                        signatory_personal_number
       , eidServiceNemIDSignatoryName                = fromJust msignatory_name
       , eidServiceNemIDDateOfBirth                  = signatory_dob
       , eidServiceNemIDCertificate                  = fromJust msignature
