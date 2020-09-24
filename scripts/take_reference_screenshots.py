@@ -1,4 +1,4 @@
-import StringIO
+import io
 from datetime import datetime
 import contextlib
 import json
@@ -152,7 +152,7 @@ def quitting(thing):
 
 def save_screenshot(driver, file_path):
     screenshot = driver.get_screenshot_as_png()
-    img = Image.open(StringIO.StringIO(screenshot))
+    img = Image.open(io.BytesIO(screenshot))
     img.save(file_path)
 
 
@@ -174,7 +174,7 @@ def screenshot_json(file_path):
         contents = base64.b64encode(f.read())
         now = datetime.now()
         return {'time': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                'image': 'data:image/jpeg;base64,' + contents}
+                'image': 'data:image/jpeg;base64,' + contents.decode('ascii')}
 
 
 def wait_and_js_click(driver, css):
@@ -286,7 +286,7 @@ if __name__ == '__main__':
 
     with quitting(make_driver()) as driver:
         driver.get(URL + desktop_siglink)
-        print URL + desktop_siglink
+        print(URL + desktop_siglink)
         time.sleep(2)  # wait for pages to load
         driver.execute_script('window.scrollTo(0, 99999)')
         time.sleep(2)  # for arrow to adjust
@@ -301,13 +301,13 @@ if __name__ == '__main__':
         time.sleep(1)  # for arrow to adjust
         save_screenshot(driver, '/tmp/mobile_bankid.png')
 
-    with open('files/reference_screenshots/author.json', 'wb') as f:
+    with open('files/reference_screenshots/author.json', 'w') as f:
         json.dump(screenshot_json('/tmp/author.png'), f)
-    with open('files/reference_screenshots/standard.json', 'wb') as f:
+    with open('files/reference_screenshots/standard.json', 'w') as f:
         json.dump(screenshot_json('/tmp/desktop.png'), f)
-    with open('files/reference_screenshots/mobile.json', 'wb') as f:
+    with open('files/reference_screenshots/mobile.json', 'w') as f:
         json.dump(screenshot_json('/tmp/mobile.png'), f)
-    with open('files/reference_screenshots/standard_bankid.json', 'wb') as f:
+    with open('files/reference_screenshots/standard_bankid.json', 'w') as f:
         json.dump(screenshot_json('/tmp/desktop_bankid.png'), f)
-    with open('files/reference_screenshots/mobile_bankid.json', 'wb') as f:
+    with open('files/reference_screenshots/mobile_bankid.json', 'w') as f:
         json.dump(screenshot_json('/tmp/mobile_bankid.png'), f)
