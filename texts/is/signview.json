@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"Þú skrifar undir með því að nota sænskt BankID. Þegar þú hefur skrifað undir verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_elegSignSEConfirmationTitle":"Skrifa undir með sænsku BankID",
 "_elegSignTransactionNumber":"Færslunúmer",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"Netfang",
 "_enterSMSPin":"Sláðu inn PIN-númer textaskilaboða þinna",
 "_errorMessagePrefix":"Uppgefin villa var:",

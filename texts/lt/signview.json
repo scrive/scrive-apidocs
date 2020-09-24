@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"Pasirašysite per Švedijos „BankID“. Pasirašius, jūsų parašas bus užregistruotas e-parašų paslaugoje „Scrive“.",
 "_elegSignSEConfirmationTitle":"Pasirašykite per Švedijos „BankID“. ",
 "_elegSignTransactionNumber":"Sandorio numeris",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"El. paštas",
 "_enterSMSPin":"Įveskite savo SMS žinutės PIN.",
 "_errorMessagePrefix":"Grąžinta klaida:",

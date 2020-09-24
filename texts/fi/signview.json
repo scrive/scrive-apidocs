@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"Allekirjoitat käyttämällä ruotsalaista BankID:tä. Kun olet allekirjoittanut, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_elegSignSEConfirmationTitle":"Allekirjoita ruotsalaisella BankID:llä",
 "_elegSignTransactionNumber":"Tapahtumanumero",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"Sähköposti",
 "_enterSMSPin":"Anna tekstiviestisi PIN",
 "_errorMessagePrefix":"Palautettu virhe oli:",

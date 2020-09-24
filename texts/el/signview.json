@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"Θα υπογράψετε χρησιμοποιώντας την εφαρμογή Swedish BankID. Όταν θα έχετε υπογράψει, η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",
 "_elegSignSEConfirmationTitle":"Υπογράψτε μέσω της εφαρμογής Swedish BankID",
 "_elegSignTransactionNumber":"Αριθμός συναλλαγής",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"Email ",
 "_enterSMSPin":"Εισάγετε το PIN του SMS σας",
 "_errorMessagePrefix":"Το λάθος επιστροφής ήταν:",

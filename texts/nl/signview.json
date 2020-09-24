@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"U gaat ondertekenen met behulp van Swedish BankID. Wanneer u ondertekent wordt uw handtekening geregistreerd door de e-signing service Scrive.",
 "_elegSignSEConfirmationTitle":"Onderteken met Swedish BankID",
 "_elegSignTransactionNumber":"Transactienummer",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"E-mail",
 "_enterSMSPin":"Vul uw SMS PIN in",
 "_errorMessagePrefix":"De volgende fout is opgetreden: ",

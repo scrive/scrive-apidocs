@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"Va a firmar con el BankID sueco. Cuando haya firmado, su firma será registrada por el servicio de firma electrónica de Scrive.",
 "_elegSignSEConfirmationTitle":"Firmar con BankID sueco",
 "_elegSignTransactionNumber":"Número de transacción",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"Email",
 "_enterSMSPin":"Introduzca el PIN de su SMS",
 "_errorMessagePrefix":"El mensaje de error devuelto era:",

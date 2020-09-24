@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"Lai parakstītos, izmantojiet Zviedrijas BankID. Pēc parakstīšanās e-parakstu pakalpojums Scrive saglabās Jūsu parakstu.",
 "_elegSignSEConfirmationTitle":"Parakstīties ar Zviedrijas BankID",
 "_elegSignTransactionNumber":"Darījuma numurs",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"E-pasts",
 "_enterSMSPin":"Ievadiet īsziņas PIN",
 "_errorMessagePrefix":"Uzrādītā kļūda:",

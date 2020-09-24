@@ -88,6 +88,7 @@
 "_elegSignSEConfirmationTextNoName":"Du signerer med det svenske BankID. Din underskrift bliver efterfølgende registreret af e-signing servicen Scrive.",
 "_elegSignSEConfirmationTitle":"Signér med det svenske BankID",
 "_elegSignTransactionNumber":"Transaktionsnummer",
+"_elegSignVerimiQesConfirmationTitle":"",
 "_email":"E-mail",
 "_enterSMSPin":"Indtast din SMS PIN",
 "_errorMessagePrefix":"Den tilbagevendende fejl var:",
