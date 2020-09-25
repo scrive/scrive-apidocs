@@ -22,16 +22,7 @@ import Lib.Misc.Cmd exposing (perform)
 
 {- Provider specific stuff -}
 
-type Provider = DKNemID | FITupas | IDIN | NOBankID | SEBankID | Verimi
-
-endpointName : Provider -> String
-endpointName provider = case provider of
-  DKNemID -> "nemid"
-  FITupas -> "fitupas"
-  IDIN -> "idin"
-  NOBankID -> "nobankid"
-  SEBankID -> "sebankid"
-  Verimi -> "verimi"
+type Provider = DKNemID | FITupas | IDIN | NOBankID | SEBankID | Verimi | Onfido
 
 type ProcessingAction = Embed | Redirect
 
@@ -44,6 +35,7 @@ processingAction provider = case provider of
   FITupas -> Redirect
   IDIN -> Redirect
   Verimi -> Redirect
+  Onfido -> Redirect
 
 identifyButtonText : Params msg -> String
 identifyButtonText params = case params.provider of
@@ -53,6 +45,7 @@ identifyButtonText params = case params.provider of
   NOBankID -> params.localization.identifyBankId
   SEBankID -> params.localization.identifyBankId
   Verimi -> params.localization.identify.identifyWithVerimi
+  Onfido -> "Identify with Onfido" -- TODO: Localisation
 
 logoSrc : Provider -> String
 logoSrc provider = case provider of
@@ -62,6 +55,7 @@ logoSrc provider = case provider of
   FITupas -> "/img/tupas-fi.png"
   IDIN -> "/img/iDIN.png"
   Verimi -> "/img/verimi.svg"
+  Onfido -> "/img/onfido.png"
 
 {- Params / State -}
 

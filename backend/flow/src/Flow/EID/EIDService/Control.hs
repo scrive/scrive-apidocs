@@ -59,8 +59,8 @@ startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
   (doc, _  )   <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
   fullInstance <- fromJust <$> selectFullInstance instanceId
   let authKind = if isComplete $ instanceToAggregator fullInstance
-        then AuthenticationToView
-        else AuthenticationToViewArchived
+        then AuthenticationToViewArchived
+        else AuthenticationToView
   conf               <- eidServiceConf doc
   (tid, val, status) <- beginEIDServiceTransaction conf
                                                    provider

@@ -42,10 +42,10 @@ view {flashMessages, state} = case state of
           div [ class "identify-box-header" ] [ text flags.welcomeText ],
 
           case innerModel of
-            IdentifySMSPin innerState ->
-              SMSPin.viewContent (toSMSPinParams flags) innerState
-            IdentifyGenericEidService provider innerState ->
-              GenericEidService.viewContent (toGenericEidServiceParams flags provider) innerState,
+            IdentifySMSPin params innerState ->
+              SMSPin.viewContent params innerState
+            IdentifyGenericEidService params innerState ->
+              GenericEidService.viewContent params innerState,
 
           div [ class "identify-box-footer" ] [
             div [ class "identify-box-footer-text" ] [
@@ -61,14 +61,14 @@ view {flashMessages, state} = case state of
                 b [] [ text <| Maybe.withDefault "Untitled" <| stringNonEmpty flags.entityTitle ] ],
 
               case innerModel of
-                IdentifySMSPin _ -> SMSPin.viewFooter (toSMSPinParams flags)
-                IdentifyGenericEidService provider _ -> GenericEidService.viewFooter (toGenericEidServiceParams flags provider)
+                IdentifySMSPin params _ -> SMSPin.viewFooter params
+                IdentifyGenericEidService params _ -> GenericEidService.viewFooter params
             ],
 
             div [ class "identify-box-footer-logo" ] [
               case innerModel of
-                IdentifySMSPin _ -> div [] []
-                IdentifyGenericEidService provider _ -> GenericEidService.viewLogo (toGenericEidServiceParams flags provider)
+                IdentifySMSPin _ _ -> div [] []
+                IdentifyGenericEidService params _ -> GenericEidService.viewLogo params
             ] ] ] ]
     ]
 

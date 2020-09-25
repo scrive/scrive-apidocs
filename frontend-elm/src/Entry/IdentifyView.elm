@@ -43,7 +43,7 @@ decodeFlags =
   |> JDP.required "authorName" JD.string
   |> JDP.required "participantEmail" JD.string
   |> JDP.required "participantMaskedMobile" JD.string
-  |> JDP.required "genericEidServiceStartUrl" JD.string
+  |> JDP.required "genericEidServiceStartUrl" (JD.nullable JD.string)
   |> JDP.required "smsPinSendUrl" JD.string
   |> JDP.required "smsPinVerifyUrl" JD.string
 
@@ -54,20 +54,29 @@ init value = case JD.decodeValue decodeFlags value of
                 , state = Loading flags
                 }
 
-        mInnerModel = case flags.authenticationMethod of
-            StandardAuthenticationToView -> Nothing
-            SEBankIDAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.SEBankID GenericEidService.Idle
-            NOBankIDAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.NOBankID GenericEidService.Idle
-            LegacyDKNemIDAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.DKNemID GenericEidService.Idle
-            DKNemIDCPRAuthenticationToView -> Nothing
-            DKNemIDPIDAuthenticationToView -> Nothing
-            DKNemIDCVRAuthenticationToView -> Nothing
-            SMSPinAuthenticationToView -> Just <| IdentifySMSPin SMSPin.Idle
-            FITupasAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.FITupas GenericEidService.Idle
-            VerimiAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.Verimi GenericEidService.Idle
-            IDINAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.IDIN GenericEidService.Idle
-            OnfidoDocumentCheckAuthenticationToView -> Nothing -- TODO: Add Onfido to GenericEidService
-            OnfidoDocumentAndPhotoCheckAuthenticationToView -> Nothing -- TODO: Add Onfido to GenericEidService
+        rInnerModel = case flags.authenticationMethod of
+            StandardAuthenticationToView -> Err unsupportedMethodError
+            SEBankIDAuthenticationToView -> eidServiceModel GenericEidService.SEBankID
+            NOBankIDAuthenticationToView -> eidServiceModel GenericEidService.NOBankID
+            LegacyDKNemIDAuthenticationToView -> eidServiceModel GenericEidService.DKNemID
+            DKNemIDCPRAuthenticationToView -> Err unsupportedMethodError
+            DKNemIDPIDAuthenticationToView -> Err unsupportedMethodError
+            DKNemIDCVRAuthenticationToView -> Err unsupportedMethodError
+            SMSPinAuthenticationToView -> smsPinModel
+            FITupasAuthenticationToView -> eidServiceModel GenericEidService.FITupas
+            VerimiAuthenticationToView -> eidServiceModel GenericEidService.Verimi
+            IDINAuthenticationToView -> eidServiceModel GenericEidService.IDIN
+            OnfidoDocumentCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
+            OnfidoDocumentAndPhotoCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
+
+        unsupportedMethodError = "Authentication method not supported by IdentifyView"
+
+        eidServiceModel provider =
+            Result.map (\params -> IdentifyGenericEidService params GenericEidService.Idle)
+                       (toGenericEidServiceParams flags provider)
+
+        smsPinModel =
+            Result.map (\params -> IdentifySMSPin params SMSPin.Idle) (toSMSPinParams flags)
 
         criticalError str fields =
             let (newFlashMessages, cmd) =
@@ -76,13 +85,13 @@ init value = case JD.decodeValue decodeFlags value of
                 (newModel2, cmd2) = update (ErrorTraceMsg fields) newModel
             in (newModel2, Cmd.batch [cmd, cmd2])
 
-        in case mInnerModel of
-            Just innerModel -> ({model | state = IdentifyView { flags = flags, innerModel = innerModel } }, Cmd.none)
-            Nothing ->
-                let flashMessage = "Internal error: Authentication method not supported by IdentifyView"
+        in case rInnerModel of
+            Ok innerModel -> ({model | state = IdentifyView { flags = flags, innerModel = innerModel } }, Cmd.none)
+            Err errMsg ->
+                let flashMessage = "Internal error: " ++ errMsg
                     errorFields =
                         [ ("where", JE.string "IdentifyView.init")
-                        , ("what", JE.string "Authentication method not supported by IdentifyView")
+                        , ("what", JE.string errMsg)
                         ]
                 in criticalError flashMessage errorFields
 

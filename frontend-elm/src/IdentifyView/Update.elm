@@ -54,9 +54,9 @@ update msg model =
 
   SMSPinMsg msg_ -> case model.state of
     IdentifyView { flags, innerModel } -> case innerModel of
-      IdentifySMSPin state ->
-        let (newInnerState, cmd) = SMSPin.update (toSMSPinParams flags) state msg_
-            newState = IdentifyView {flags = flags, innerModel = IdentifySMSPin newInnerState}
+      IdentifySMSPin params state ->
+        let (newInnerState, cmd) = SMSPin.update params state msg_
+            newState = IdentifyView {flags = flags, innerModel = IdentifySMSPin params newInnerState}
         in ( {model | state = newState}, cmd )
 
       _ -> errorFlashMessage "Internal error: got SMSPin message while in an incompatible state."
@@ -64,11 +64,11 @@ update msg model =
 
   GenericEidServiceMsg msg_ -> case model.state of
     IdentifyView {flags, innerModel} -> case innerModel of
-      IdentifyGenericEidService provider state ->
-        let (newInnerState, cmd) = GenericEidService.update (toGenericEidServiceParams flags provider) state msg_
+      IdentifyGenericEidService params state ->
+        let (newInnerState, cmd) = GenericEidService.update params state msg_
             newState = IdentifyView
                         { flags = flags
-                        , innerModel = IdentifyGenericEidService provider newInnerState
+                        , innerModel = IdentifyGenericEidService params newInnerState
                         }
         in ( {model | state = newState}, cmd )
 

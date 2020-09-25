@@ -28,6 +28,7 @@ import Doc.Model.Query
 import Doc.Tokens.Model
 import Doc.Types.SignatoryLink
 import EID.Authentication.Model
+import EID.EIDService.Types (toRedirectURLName)
 import Flow.Aggregator
 import Flow.EID.AuthConfig
 import Flow.EID.Authentication
@@ -272,15 +273,17 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId authConfi
     Just (_, slid, did) -> dbQuery $ GetSignatoryLinkByID did slid
     Nothing -> unexpectedError "mkIdentifyViewAppConfig: signatory info not found!"
 
-  let genericEidServiceStartUrl = T.intercalate
-        "/"
-        [ "eid-service"
-        , "start-flow"
-        , toUrlPiece (authConfig ^. #provider)
-        , "view"
-        , toUrlPiece (instance_ ^. #id)
-        , toUrlPiece userName
-        ]
+  let mGenericEidServiceStartUrl =
+        (\eidProvider -> "/" <> T.intercalate
+            "/"
+            [ "eid-service-flow"
+            , "start"
+            , toRedirectURLName eidProvider
+            , toUrlPiece (instance_ ^. #id)
+            , toUrlPiece userName
+            ]
+          )
+          <$> toEIDServiceTransactionProvider (authConfig ^. #provider)
 
       -- TODO: Use localisation
       welcomeText = "To see the documents verify your identity"
@@ -295,7 +298,7 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId authConfi
     , authorName                = maybe "" getFullName mAuthor
     , participantEmail          = getEmail signatoryLink
     , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
-    , genericEidServiceStartUrl = genericEidServiceStartUrl
+    , genericEidServiceStartUrl = mGenericEidServiceStartUrl
     , smsPinSendUrl             = "" -- TODO
     , smsPinVerifyUrl           = "" -- TODO
     }

@@ -4,6 +4,7 @@ module Flow.EID.AuthConfig
     ( AuthConfig(..)
     , AuthProvider(..)
     , toAuthenticationToViewMethod
+    , toEIDServiceTransactionProvider
     )
   where
 
@@ -17,6 +18,7 @@ import Servant.API
 import qualified Data.Text.Lazy.Encoding as LT
 
 import Doc.Types.SignatoryLink (AuthenticationToViewMethod(..))
+import EID.EIDService.Types
 
 aesonOptions :: Options
 aesonOptions =
@@ -75,6 +77,11 @@ toAuthenticationToViewMethod :: AuthProvider -> AuthenticationToViewMethod
 toAuthenticationToViewMethod = \case
   Onfido -> OnfidoDocumentCheckAuthenticationToView
   SmsPin -> SMSPinAuthenticationToView
+
+toEIDServiceTransactionProvider :: AuthProvider -> Maybe EIDServiceTransactionProvider
+toEIDServiceTransactionProvider = \case
+  Onfido -> Just EIDServiceTransactionProviderOnfido
+  SmsPin -> Nothing
 
 -- Optics
 

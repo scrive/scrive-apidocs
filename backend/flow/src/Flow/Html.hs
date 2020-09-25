@@ -66,7 +66,7 @@ data IdentifyViewAppConfig = IdentifyViewAppConfig
   , authorName :: Text
   , participantEmail :: Text
   , participantMaskedMobile :: Text
-  , genericEidServiceStartUrl :: Text
+  , genericEidServiceStartUrl :: Maybe Text
   , smsPinSendUrl :: Text
   , smsPinVerifyUrl :: Text
   } deriving (Generic)

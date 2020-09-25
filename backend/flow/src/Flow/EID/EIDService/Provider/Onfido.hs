@@ -101,8 +101,8 @@ completeEIDServiceAuthTransaction conf instanceId userName = do
   _sessionID   <- getNonTempSessionID
   fullInstance <- fromJust <$> Model.selectFullInstance instanceId
   let authKind = if isComplete $ instanceToAggregator fullInstance
-        then AuthenticationToView
-        else AuthenticationToViewArchived
+        then AuthenticationToViewArchived
+        else AuthenticationToView
   runMaybeT $ do
     Just estDB <-
       dbQuery
