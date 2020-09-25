@@ -23,7 +23,9 @@ import EID.EIDService.Provider.Onfido
 import EID.EIDService.Types hiding
   ( EIDServiceTransactionFromDB(..), UnifiedRedirectUrl(..)
   )
+import Flow.ActionConsumers
 import Flow.Aggregator
+import Flow.EID.AuthConfig (AuthProvider(Onfido))
 import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
 import Flow.EID.EIDService.Types
@@ -32,9 +34,11 @@ import Flow.Model.Types
 import Flow.Names
 import Happstack.Fields
 import Kontra hiding (InternalError)
+import Log.Identifier
 import Session.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
+import qualified Flow.CallbackPayload as CB
 import qualified Flow.Model as Model
 
 provider :: EIDServiceTransactionProvider
@@ -129,15 +133,33 @@ finaliseTransaction instanceId userName authKind estDB trans =
     Nothing -> do
       let status = EIDServiceTransactionStatusCompleteAndFailed
       mergeEIDServiceTransactionWithStatus status
+      case estRespCompletionData trans of
+        Just cd -> sendCallback cd CB.Failure
+        Nothing -> do
+          logInfo "Finalizing transaction which is not finished"
+            $ object [logPair_ instanceId]
+          return ()
       return status
     Just cd -> do
       let status = EIDServiceTransactionStatusCompleteAndSuccess
       mergeEIDServiceTransactionWithStatus status
       updateDBTransactionWithCompletionData instanceId userName authKind cd
+      sendCallback cd CB.Success
       return status
   where
     mergeEIDServiceTransactionWithStatus newstatus =
       dbUpdate . MergeEIDServiceTransaction $ estDB { estStatus = newstatus }
+    sendCallback cd result =
+      sendEventCallback instanceId
+        . CB.AuthenticationAttempted
+        $ CB.AuthenticationAttemptedEvent
+            { userName     = userName
+            , result       = result
+            , provider     = Onfido
+            , providerData = CB.OnfidoProviderData_ CB.OnfidoProviderData
+                               { applicantId = eidonfidoApplicantId cd
+                               }
+            }
 
 
 updateDBTransactionWithCompletionData

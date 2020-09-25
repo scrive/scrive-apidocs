@@ -12,6 +12,7 @@ module Flow.ActionConsumers
   , consumeFlowAction
   , consumeNotifyAction
   , consumeRejectionAction
+  , sendEventCallback
   ) where
 
 import Control.Monad.Catch

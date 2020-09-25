@@ -1282,5 +1282,4 @@ components:
       properties:
         applicant_id:
           type: string
-          format: uuid
           example: cec0f826-ad0b-4b71-b735-44310f4952fd
