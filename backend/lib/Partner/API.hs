@@ -64,7 +64,7 @@ partnerAPIV1 = dir "partner" $ choice
 partnerApiCallV1CompanyCreate :: Kontrakcja m => UserGroupID -> m Response
 partnerApiCallV1CompanyCreate partnerUsrGrpID = do
   logPartner partnerUsrGrpID . api $ do
-    user         <- getAPIUserWithAPIPersonal
+    user         <- getAPIUserWithFullAccess
     requiredPerm <- apiRequirePermission . canDo CreateA $ UserGroupR partnerUsrGrpID
     apiAccessControl user requiredPerm $ do
       ugwp_partner <-
@@ -101,7 +101,7 @@ partnerApiCallV1CompanyUpdate partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     requiredPerm <- apiRequireAllPermissions
       [canDo UpdateA $ UserGroupR ugid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
-    user <- getAPIUserWithAPIPersonal
+    user <- getAPIUserWithFullAccess
     apiAccessControl user requiredPerm $ do
       dbQuery (UserGroupGetWithParents ugid) >>= \case
         Nothing   -> noUsrGrpErr
@@ -131,7 +131,7 @@ partnerApiCallV1CompanyGet partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     requiredPerm <- apiRequireAllPermissions
       [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
-    user <- getAPIUserWithAPIPersonal
+    user <- getAPIUserWithFullAccess
     apiAccessControl user requiredPerm $ do
       dbQuery (UserGroupGetWithParents ugid) >>= \case
         Nothing -> noUsrGrpErr
@@ -151,7 +151,7 @@ partnerApiCallV1CompaniesGet partnerUsrGrpID = do
     -- relies on the fact that only partner admins have `(CreateA,
     -- UserGroupR, partnerUsrGrpID)`; cf. instance for HasPermissions of
     -- (AccessRole UserGroupID) in AccessControl.Types...around line 95
-    user <- getAPIUserWithAPIPersonal
+    user <- getAPIUserWithFullAccess
     apiAccessControl user requiredPerm $ do
       user_groups              <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
       user_groups_with_parents <- fmap catMaybes . forM user_groups $ \ug ->
@@ -169,7 +169,7 @@ partnerApiCallV1UserCreate partnerUsrGrpID ugid = do
               {- This last one is blocking for all but partner admins.             -}
               {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
               {- Maybe we don't need to have the _exact_ same behaviour as before? -}
-    user <- getAPIUserWithAPIPersonal
+    user <- getAPIUserWithFullAccess
     apiAccessControl user requiredPerm $ do
       (userInfo, hasAcceptedTOS, lang) <- do
         userForUpdate <- apiV2ParameterObligatory
@@ -210,7 +210,7 @@ partnerApiCallV1UserGet partnerUsrGrpID uid = do
   logPartnerAndUser partnerUsrGrpID uid . api $ do
     requiredPerm <- apiRequireAllPermissions
       [canDo ReadA $ UserR uid, canDo CreateA $ UserGroupR partnerUsrGrpID]
-    apiUser <- getAPIUserWithAPIPersonal
+    apiUser <- getAPIUserWithFullAccess
     apiAccessControl apiUser requiredPerm $ do
       (dbQuery . GetUserByID $ uid) >>= \case
         Nothing -> do
@@ -224,7 +224,7 @@ partnerApiCallV1CompanyUsersGet partnerUsrGrpID ugid = do
   logPartnerAndUserGroup partnerUsrGrpID ugid . api $ do
     requiredPerm <- apiRequireAllPermissions
       [canDo ReadA $ UserGroupR ugid, canDo CreateA $ UserGroupR partnerUsrGrpID]
-    user <- getAPIUserWithAPIPersonal
+    user <- getAPIUserWithFullAccess
     apiAccessControl user requiredPerm $ do
       users <- dbQuery $ UserGroupGetUsers ugid
       Ok <$> return (unjsonUsersForUpdate, userToUserForUpdate <$> users)
@@ -234,7 +234,7 @@ partnerApiCallV1UserUpdate partnerUsrGrpID uid = do
   logPartnerAndUser partnerUsrGrpID uid . api $ do
     requiredPerm <- apiRequireAllPermissions
       [canDo UpdateA $ UserR uid, canDo UpdateA $ UserGroupR partnerUsrGrpID]
-    apiUser <- getAPIUserWithAPIPersonal
+    apiUser <- getAPIUserWithFullAccess
     apiAccessControl apiUser requiredPerm $ do
       user <- guardThatUserExists uid
       ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
@@ -265,7 +265,7 @@ partnerApiCallV1UserGetPersonalToken partnerUsrGrpID uid = do
       , canDo ReadA $ UserPersonalTokenR uid
       , canDo CreateA $ UserGroupR partnerUsrGrpID
       ]
-    apiUser <- getAPIUserWithAPIPersonal
+    apiUser <- getAPIUserWithFullAccess
     apiAccessControl apiUser requiredPerm $ do
       user <- guardThatUserExists uid -- @todo for now...
       void . dbUpdate $ CreatePersonalToken (user ^. #id) -- @todo in the future: avoid this DB hit?

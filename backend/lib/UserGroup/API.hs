@@ -66,7 +66,7 @@ userGroupApiV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiV2Get ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm
     -- Return response
@@ -94,7 +94,7 @@ userGroupApiV2Create = api $ do
     Just parent_ugid -> do
       -- Check user has permissions to create child UserGroup
       requiredPerm <- apiRequirePermission . canDo CreateA $ UserGroupR parent_ugid
-      apiuser      <- getAPIUserWithAPIPersonal
+      apiuser      <- getAPIUserWithFullAccess
       apiAccessControlOrIsAdmin apiuser requiredPerm . dbUpdate $ UserGroupCreate ugIn
   -- Return response
   Ok <$> constructUserGroupResponse inheritable (ugOut ^. #id)
@@ -144,14 +144,14 @@ userGroupApiV2Update ugid = api $ do
       return []
   requiredPerm <-
     apiRequireAllPermissions $ canDo UpdateA (UserGroupR ugid) : movementAccs
-  apiuser <- getAPIUserWithAPIPersonal
+  apiuser <- getAPIUserWithFullAccess
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     dbUpdate $ UserGroupUpdate ugNew
     Ok <$> constructUserGroupResponse inheritable ugid
 
 userGroupApiV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiV2Delete ugid = api $ do
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo DeleteA $ UserGroupR ugid
   -- Check user has permissions to delete UserGroup
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
@@ -176,7 +176,7 @@ userGroupApiV2Delete ugid = api $ do
 userGroupApiContactDetailsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Get ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm
     -- Return response
@@ -189,7 +189,7 @@ userGroupApiContactDetailsV2Update ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   contactDetailsChanges <- apiV2ParameterObligatory
     $ ApiV2ParameterAeson "contact_details"
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug <- ugGetOrErrNotFound ugid
@@ -208,7 +208,7 @@ userGroupApiContactDetailsV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Delete ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to update UserGroup
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug <- ugGetOrErrNotFound ugid
@@ -222,7 +222,7 @@ userGroupApiSettingsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Get ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm
     $   Ok
@@ -233,7 +233,7 @@ userGroupApiSettingsV2Update :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Update ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   settingsChanges <- apiV2ParameterObligatory $ ApiV2ParameterAeson "settings"
-  apiuser         <- getAPIUserWithAPIPersonal
+  apiuser         <- getAPIUserWithFullAccess
   requiredPerm    <- apiRequirePermission . canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug     <- ugGetOrErrNotFound ugid
@@ -260,7 +260,7 @@ userGroupApiSettingsV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Delete ugid = api $ do
   inheritable  <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to update UserGroup
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo UpdateA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     ug <- ugGetOrErrNotFound ugid
@@ -273,7 +273,7 @@ userGroupApiSettingsV2Delete ugid = api $ do
 userGroupApiUsersV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiUsersV2Get ugid = api $ do
   -- Check user has permissions to view UserGroup
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA $ UserGroupR ugid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     users <- dbQuery (UserGroupGetUsers ugid)

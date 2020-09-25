@@ -28,7 +28,7 @@ module API.Monad.V1 (
                  getAPIUser,
                  getAPIUserWithPrivileges,
                  getAPIUserWithAnyPrivileges,
-                 getAPIUserWithPad,
+                 getAPIUserWithPad
                  )
   where
 

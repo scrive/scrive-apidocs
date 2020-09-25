@@ -24,7 +24,6 @@ import DB
 import File.Storage
 import File.Types
 import Kontra
-import OAuth.Model
 import Routing
 
 attachmentAPI :: Route (Kontra Response)
@@ -54,7 +53,7 @@ attachmentsApiV2List = api $ do
 
 attachmentsApiV2List_ :: Kontrakcja m => m [Attachment]
 attachmentsApiV2List_ = do
-  (user, _) <- getAPIUser APIPersonal
+  user      <- getAPIUserWithFullAccess
 
   domainStr <- apiV2ParameterOptional $ ApiV2ParameterText "domain"
   mFilters  <- apiV2ParameterOptional
@@ -75,12 +74,12 @@ attachmentsApiV2List_ = do
 
 attachmentsApiV2Create :: Kontrakcja m => m Response
 attachmentsApiV2Create = api $ do
-  (user, actor) <- getAPIUser APIPersonal
-  mTitle        <- apiV2ParameterOptional $ ApiV2ParameterText "title"
-  file          <- apiV2ParameterObligatory $ ApiV2ParameterFilePDF "file"
+  user   <- getAPIUserWithFullAccess
+  mTitle <- apiV2ParameterOptional $ ApiV2ParameterText "title"
+  file   <- apiV2ParameterObligatory $ ApiV2ParameterFilePDF "file"
 
   let title = fromMaybe (takeTextBaseName $ filename file) mTitle
-  void . dbUpdate $ NewAttachment (user ^. #id) title (fileid file) actor
+  void . dbUpdate $ NewAttachment (user ^. #id) title (fileid file)
 
   return $ Created ()
   where
@@ -89,7 +88,7 @@ attachmentsApiV2Create = api $ do
 
 attachmentsApiV2Download :: Kontrakcja m => AttachmentID -> m Response
 attachmentsApiV2Download attid = api $ do
-  uid  <- view #id <$> getAPIUserWithAPIPersonal
+  uid  <- view #id <$> getAPIUserWithFullAccess
   atts <- dbQuery $ GetAttachments
     [ AttachmentsSharedInUsersUserGroup uid
     , AttachmentsOfAuthorDeleteValue uid True
@@ -105,7 +104,7 @@ attachmentsApiV2Download attid = api $ do
 
 attachmentsApiV2SetSharing :: Kontrakcja m => m Response
 attachmentsApiV2SetSharing = api $ do
-  user <- getAPIUserWithAPIPersonal
+  user <- getAPIUserWithFullAccess
   ids  <- apiV2ParameterObligatory . ApiV2ParameterJSON "attachment_ids" $ arrayOf
     unjsonDef
   shared <- apiV2ParameterObligatory $ ApiV2ParameterBool "shared"
@@ -114,8 +113,8 @@ attachmentsApiV2SetSharing = api $ do
 
 attachmentsApiV2Delete :: Kontrakcja m => m Response
 attachmentsApiV2Delete = api $ do
-  (user, actor) <- getAPIUser APIPersonal
-  ids <- apiV2ParameterObligatory . ApiV2ParameterJSON "attachment_ids" $ arrayOf
+  user <- getAPIUserWithFullAccess
+  ids  <- apiV2ParameterObligatory . ApiV2ParameterJSON "attachment_ids" $ arrayOf
     unjsonDef
-  dbUpdate $ DeleteAttachments (user ^. #id) ids actor
+  dbUpdate $ DeleteAttachments (user ^. #id) ids
   return $ Accepted ()

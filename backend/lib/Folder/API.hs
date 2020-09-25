@@ -64,13 +64,13 @@ folderAPICreate = api $ do
     Just parent_id -> do
       -- Check user has permissions to create child folder
       requiredPerm <- apiRequirePermission . canDo CreateA $ FolderR parent_id
-      apiuser      <- getAPIUserWithAPIPersonal
+      apiuser      <- getAPIUserWithFullAccess
       apiAccessControlOrIsAdmin apiuser requiredPerm . dbUpdate $ FolderCreate fdrIn
   Ok . encodeFolderWithChildren False <$> fwcGetOrErrNotFound False fid
 
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
-  user           <- getAPIUserWithAPIPersonal
+  user           <- getAPIUserWithFullAccess
   requiredPerm   <- apiRequirePermission . canDo ReadA $ FolderR fid
   hasReadAccess  <- apiAccessControlCheck user requiredPerm
   isAdminOrSales <- checkAdminOrSales
@@ -120,7 +120,7 @@ folderAPIUpdate fid = api $ do
           (Nothing, Just toParentID) -> return [canDo UpdateA $ FolderR toParentID]
           -- root is remaining root. no special privileges needed
           _ -> return []
-      apiuser      <- getAPIUserWithAPIPersonal
+      apiuser      <- getAPIUserWithFullAccess
       requiredPerm <- apiRequireAllPermissions $ canDo UpdateA (FolderR fid) : accParents
       apiAccessControlOrIsAdmin apiuser requiredPerm $ do
         void . dbUpdate . FolderUpdate $ fdrNew
@@ -128,7 +128,7 @@ folderAPIUpdate fid = api $ do
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
 folderAPIDelete fid = api $ do
-  apiuser      <- getAPIUserWithAPIPersonal
+  apiuser      <- getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo DeleteA $ FolderR fid
   apiAccessControlOrIsAdmin apiuser requiredPerm $ do
     fdr <- fGetOrErrNotFound fid

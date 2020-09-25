@@ -4,7 +4,7 @@ module API.V2.User (
   , getAPIUserWithAnyPrivileges
   , getAPIUserWithPrivileges
   , getAPIUserWithPad
-  , getAPIUserWithAPIPersonal
+  , getAPIUserWithFullAccess
 ) where
 
 import Happstack.Server
@@ -78,6 +78,6 @@ getAPIUserWith ctxUser privs = do
         ]
       apiError invalidAuthorization
 
-getAPIUserWithAPIPersonal :: Kontrakcja m => m User
-getAPIUserWithAPIPersonal = do
-  fst <$> getAPIUser APIPersonal
+-- Either Personal token or FULL_ACCESS OAuth scope grant full access
+getAPIUserWithFullAccess :: Kontrakcja m => m User
+getAPIUserWithFullAccess = fst <$> getAPIUserWithPrivileges [APIPersonal, APIFullAccess]

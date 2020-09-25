@@ -29,6 +29,7 @@ pagePrivilegesConfirm ctx privileges companyname token = do
     F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
     F.value "isDocumentSend" $ APIDocSend `elem` privileges
     F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
+    F.value "isFullAccess" $ APIFullAccess `elem` privileges
     F.value "companyname" companyname
     F.value "token" $ show token
     standardPageFields ctx Nothing ad
@@ -38,7 +39,9 @@ privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
 privilegeDescription APIDocCreate = renderTemplate_ "_apiConfiramtionCreatePersmission"
 privilegeDescription APIDocCheck  = renderTemplate_ "_apiConfiramtionReadPermission"
 privilegeDescription APIDocSend   = renderTemplate_ "_apiConfiramtionSendPermission"
-privilegeDescription APIPersonal  = return "Personal access token."
+privilegeDescription APIFullAccess =
+  renderTemplate_ "_apiConfiramtionFullAccessPermission"
+privilegeDescription APIPersonal = return "Personal access token."
 
 jsonFromAPIToken :: (APIToken, MagicHash) -> JSValue
 jsonFromAPIToken (apitoken, apisecret) = runJSONGen $ do
