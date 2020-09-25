@@ -24,8 +24,7 @@ type Msg
   | GenericEidServiceMsg GenericEidService.Msg
 
 type alias Flags =
-  { flashMessageFromCookie : Maybe FlashMessage
-  , xtoken : String
+  { xtoken : String
   , localization : Localization
   , cdnBaseUrl : String
   , location : String
@@ -42,6 +41,7 @@ type alias Flags =
   , genericEidServiceStartUrl : Maybe String
   , smsPinSendUrl : String
   , smsPinVerifyUrl : String
+  , errorMessage : Maybe String
   }
 
 type alias Model =

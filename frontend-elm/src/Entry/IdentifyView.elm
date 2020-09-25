@@ -28,7 +28,6 @@ import IdentifyView.View exposing (..)
 decodeFlags : JD.Decoder Flags
 decodeFlags =
   JD.succeed Flags
-  |> JDP.required "flashMessageFromCookie" (JD.maybe flashMessageDecoder)
   |> JDP.required "xtoken" JD.string
   |> JDP.required "localization" localisationDecoder
   |> JDP.required "cdnBaseUrl" JD.string
@@ -46,11 +45,18 @@ decodeFlags =
   |> JDP.required "genericEidServiceStartUrl" (JD.nullable JD.string)
   |> JDP.required "smsPinSendUrl" JD.string
   |> JDP.required "smsPinVerifyUrl" JD.string
+  |> JDP.required "errorMessage" (JD.nullable JD.string)
 
 init : JD.Value -> (Model, Cmd Msg)
 init value = case JD.decodeValue decodeFlags value of
   Ok flags ->
-    let model = { flashMessages = FlashMessage.initialState
+    let flashMessages = case flags.errorMessage of
+            Just err -> Tuple.first <|
+                FlashMessage.addFlashMessage {embed = FlashMessageMsg} (FlashError err) FlashMessage.initialState
+            Nothing ->
+                FlashMessage.initialState
+
+        model = { flashMessages = flashMessages
                 , state = Loading flags
                 }
 

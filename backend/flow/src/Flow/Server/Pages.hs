@@ -28,10 +28,11 @@ import Doc.Model.Query
 import Doc.Tokens.Model
 import Doc.Types.SignatoryLink
 import EID.Authentication.Model
-import EID.EIDService.Types (toRedirectURLName)
+import EID.EIDService.Types
 import Flow.Aggregator
 import Flow.EID.AuthConfig
 import Flow.EID.Authentication
+import Flow.EID.EIDService.Model
 import Flow.Error
 import Flow.HighTongue
 import Flow.Id
@@ -49,6 +50,7 @@ import UserGroup.Types
 import Util.HasSomeUserInfo
 import VersionTH (versionID)
 import qualified Auth.Model as AuthModel
+import qualified Flow.EID.EIDService.Types as FEET
 import qualified Flow.Html as Html
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
@@ -209,7 +211,8 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
                                                  (fullInstance ^. #flowInstance)
                                                  userName
                                                  authorUserId
-                                                 authConfig
+                                                 (authKind, authConfig)
+                                                 sessionId
             pure . Just $ Html.IdentifyViewVars commonVars appConfig
           else pure Nothing
       Nothing -> pure Nothing
@@ -261,51 +264,69 @@ mkIdentifyViewAppConfig
   -> Instance
   -> UserName
   -> UserID
-  -> AuthConfig
+  -> (AuthenticationKind, AuthConfig)
+  -> SessionID
   -> m Html.IdentifyViewAppConfig
-mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId authConfig = do
-  mAuthor       <- dbQuery $ GetUserByID authorId
+mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind, authConfig) sessionId
+  = do
+    mAuthor       <- dbQuery $ GetUserByID authorId
 
-  -- TODO: Find a nicer way of getting the signatory link
-  signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
-    <$> Model.selectSignatoryInfo (instance_ ^. #id)
-  signatoryLink <- case signatoryInfo of
-    Just (_, slid, did) -> dbQuery $ GetSignatoryLinkByID did slid
-    Nothing -> unexpectedError "mkIdentifyViewAppConfig: signatory info not found!"
+    -- TODO: Find a nicer way of getting the signatory link
+    signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
+      <$> Model.selectSignatoryInfo (instance_ ^. #id)
+    signatoryLink <- case signatoryInfo of
+      Just (_, slid, did) -> dbQuery $ GetSignatoryLinkByID did slid
+      Nothing -> unexpectedError "mkIdentifyViewAppConfig: signatory info not found!"
 
-  let mGenericEidServiceStartUrl =
-        (\eidProvider -> "/" <> T.intercalate
-            "/"
-            [ "eid-service-flow"
-            , "start"
-            , toRedirectURLName eidProvider
-            , toUrlPiece (instance_ ^. #id)
-            , toUrlPiece userName
-            ]
-          )
-          <$> toEIDServiceTransactionProvider (authConfig ^. #provider)
+    -- The error message is based on the assumption that we only use EID Hub
+    mEidTransaction <- dbQuery $ GetEIDServiceTransactionGuardSessionID
+      sessionId
+      (instance_ ^. #id)
+      userName
+      (EIDServiceAuthToView authKind)
+    let mAuthErrorMessage = mEidTransaction >>= \t -> if isFailedEidTransaction t
+          then Just "Authentication failed, please try again."
+          else Nothing
 
-      -- TODO: Use localisation
-      welcomeText = "To see the documents verify your identity"
+    let mGenericEidServiceStartUrl =
+          (\eidProvider -> "/" <> T.intercalate
+              "/"
+              [ "eid-service-flow"
+              , "start"
+              , toRedirectURLName eidProvider
+              , toUrlPiece (instance_ ^. #id)
+              , toUrlPiece userName
+              ]
+            )
+            <$> toEIDServiceTransactionProvider (authConfig ^. #provider)
 
-  pure $ Html.IdentifyViewAppConfig
-    { cdnBaseUrl                = cdnBaseUrl
-    , logoUrl                   = logoUrl
-    , welcomeText               = welcomeText
-    , entityTypeLabel           = "Flow"
-    , entityTitle               = fromMaybe "" (instance_ ^. #title)
-    , authenticationMethod      = toAuthenticationToViewMethod (authConfig ^. #provider)
-    , authorName                = maybe "" getFullName mAuthor
-    , participantEmail          = getEmail signatoryLink
-    , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
-    , genericEidServiceStartUrl = mGenericEidServiceStartUrl
-    , smsPinSendUrl             = "" -- TODO
-    , smsPinVerifyUrl           = "" -- TODO
-    }
+        -- TODO: Use localisation
+        welcomeText = "To see the documents verify your identity"
+
+    pure $ Html.IdentifyViewAppConfig
+      { cdnBaseUrl                = cdnBaseUrl
+      , logoUrl                   = logoUrl
+      , welcomeText               = welcomeText
+      , entityTypeLabel           = "Flow"
+      , entityTitle               = fromMaybe "" (instance_ ^. #title)
+      , authenticationMethod      = toAuthenticationToViewMethod (authConfig ^. #provider)
+      , authorName                = maybe "" getFullName mAuthor
+      , participantEmail          = getEmail signatoryLink
+      , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
+      , genericEidServiceStartUrl = mGenericEidServiceStartUrl
+      , smsPinSendUrl             = "" -- TODO
+      , smsPinVerifyUrl           = "" -- TODO
+      , errorMessage              = mAuthErrorMessage
+      }
   where
     maskedMobile showLastN mobile =
       T.map (\c -> if c /= ' ' then '*' else c) (T.dropEnd showLastN mobile)
         <> T.takeEnd showLastN mobile
+    isFailedEidTransaction transaction =
+      FEET.estStatus transaction
+        `elem` [ EIDServiceTransactionStatusFailed
+               , EIDServiceTransactionStatusCompleteAndFailed
+               ]
 
 instanceAuthConfig
   :: FullInstance -> UserAuthConfig -> Maybe (AuthenticationKind, AuthConfig)

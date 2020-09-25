@@ -69,6 +69,7 @@ data IdentifyViewAppConfig = IdentifyViewAppConfig
   , genericEidServiceStartUrl :: Maybe Text
   , smsPinSendUrl :: Text
   , smsPinVerifyUrl :: Text
+  , errorMessage :: Maybe Text
   } deriving (Generic)
 
 instance ToJSON IdentifyViewAppConfig where
