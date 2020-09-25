@@ -1136,7 +1136,7 @@
 "_verificationSuccess":"Valid signature",
 "_verificationTime":"Time",
 "_verificationTitle":"Verify the document's authenticity",
-"_verimiQesErrorFieldEditableBySignatory":"The document contains fields that are editable by signatories other than the other, but that isn't allowed when 'Verimi QES' is to be used.",
+"_verimiQesErrorFieldEditableBySignatory":"The document contains fields that are editable by signatories other than the author, but that isn't allowed when 'Verimi QES' is to be used.",
 "_verimiQesErrorIncompatibleSigningMethod":"Some signatories have a signing method other than 'Verimi QES'. When 'Verimi QES' is to be used, all signatories need to use it.",
 "_verimiQesErrorMissingAttachment":"An attachment required by the document has not been provided. 'Verimi QES' requires all attachments to be present when the document is started.",
 "_verimiQesErrorNonAuthorField":"The document contains fields that are designated to be filled by signatories, but when 'Verimi QES' is used all fields need to be filled out by the author.",

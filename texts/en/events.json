@@ -93,7 +93,7 @@
 "_SignReminderSendSMSLogWithText":"Scrive eSign sent a reminder to sign via SMS to $signatory$ at the request of the user $actor$. The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.",
 "_SignatoryLinkVisitedTextArchiveSimple":"The document was opened online.",
 "_TimeoutDocumentEvidenceTextSimple":"The due date for signing the document passed.",
-"_VerimiQesEvidenceFilePreparedTextSimpleArchive":"QES signging process completed and Scrive evidence file prepared.",
+"_VerimiQesEvidenceFilePreparedTextSimpleArchive":"QES signing process completed and Scrive evidence file prepared.",
 "_VisitedViewForAuthenticationEvidenceArchive":"Opened the view to verify their identity before viewing the document.",
 "_VisitedViewForSigningEvidenceArchive":"The document was opened online.",
 "_designViewAddPartiesRoleApprover":"Approver",
