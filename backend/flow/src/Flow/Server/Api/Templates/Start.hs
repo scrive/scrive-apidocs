@@ -106,7 +106,7 @@ startTemplate account templateId (CreateInstance title templateParameters callba
   -- our foreign keys.
   let userMatchingResult = matchUsersWithSignatories documents variables keyValues
   logInfo "Matching result" userMatchingResult
-  if validate userMatchingResult
+  if validateMatching userMatchingResult
     then do
       let links =
             Set.toList . Set.map (createPair keyValues) $ matched userMatchingResult
@@ -141,9 +141,6 @@ startTemplate account templateId (CreateInstance title templateParameters callba
 
   pure $ GetInstance { .. }
   where
-    validate :: MatchingResult -> Bool
-    validate MatchingResult {..} = null unmatchedFlowUserIds && null unmatchedSignatories
-
     createPair :: InstanceKeyValues -> UserMatch -> (UserName, SignatoryLinkID)
     createPair keyValues UserMatch {..} = (name, DocumentChecker.id signatory)
       where name = fromJust . getUserName flowUserId $ keyValues ^. #users
@@ -169,6 +166,15 @@ startTemplate account templateId (CreateInstance title templateParameters callba
             UserAuthConfig instanceId userName authToView authToViewArchived
           )
         $ Map.toList users
+
+validateMatching :: MatchingResult -> Bool
+validateMatching MatchingResult {..} = null unmatchedFlowUserIds
+  && null unmatchedActiveSignatories
+  where
+    -- This is to allow silent document observers not having to be part of the Flow.
+    -- TODO perhaps it can be removed after we resolve viewing semantics in FLOW-291.
+    unmatchedActiveSignatories =
+      Set.filter (\dr -> role dr /= Viewer) unmatchedSignatories
 
 reportNotificationErrors :: MonadError ServerError m => Set MissingContactDetail -> m ()
 reportNotificationErrors errors =

@@ -31,6 +31,7 @@ import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Types.User
 import Util.Actor
+import Util.HasSomeUserInfo
 import qualified Auth.Model as AuthModel
 import qualified Flow.IntegrationTest.Rejection as Rejection
 import qualified Flow.Model as Model
@@ -59,8 +60,12 @@ tests env = testGroup
   , testThat "Rejecting a document causes process failure"
              env
              testRejectedDocumentCausesProcessFailure
-  , testThat "Test flow scenario 1" env testScenario1
-  , testThat "Test flow scenario 2" env testScenario2
+  , testThat "Test flow scenario 1"             env testScenario1
+  , testThat "Test flow scenario 2"             env testScenario2
+  , testThat "Test unmatched users are ignored" env testUnmatchedViewersAreIgnored
+  , testThat "Test unmatched signatories are not allowed"
+             env
+             testUnmatchedSignatoriesAreNotAllowed
   , Rejection.tests env
   ]
 
@@ -321,3 +326,92 @@ testVerifyEndpoint = do
   assertIsJsonError =<< assertLeft "validating blank DSL" blankReq
   assertIsJsonError =<< assertLeft "validating invalid DSL" failureReq
   void $ assertRight "validating valid DSL" successReq
+
+processOneUserOneDoc :: Process
+processOneUserOneDoc = Process [r|
+dsl-version: "0.2.0"
+stages:
+  - initial:
+      actions: []
+      expect:
+        signed-by:
+          users: [signatory]
+          documents: [doc1]
+|]
+
+randomDocumentWithRoles
+  :: User -> RandomSignatoryCondition -> RandomSignatoryCondition -> RandomDocumentAllows
+randomDocumentWithRoles user authorRole signatoryRole = (rdaDefault user)
+  { rdaTypes       = OneOf [Signable]
+  , rdaStatuses    = OneOf [Preparation]
+  , rdaSignatories = let author = OneOf
+                           [ [ authorRole
+                             , RSC_DeliveryMethodIs EmailDelivery
+                             , RSC_AuthToViewIs StandardAuthenticationToView
+                             , RSC_AuthToSignIs StandardAuthenticationToSign
+                             , RSC_HasConsentModule False
+                             ]
+                           ]
+                         signatory = OneOf
+                           [ [ signatoryRole
+                             , RSC_DeliveryMethodIs EmailDelivery
+                             , RSC_AuthToViewIs StandardAuthenticationToView
+                             , RSC_AuthToSignIs StandardAuthenticationToSign
+                             , RSC_HasConsentModule False
+                             ]
+                           ]
+                     in  OneOf [[author, signatory]]
+  }
+
+testUnmatchedViewersAreIgnored :: TestEnv ()
+testUnmatchedViewersAreIgnored = do
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
+
+  let ac@ApiClient {..} = mkApiClient (Left oauth)
+
+  doc1 <- addRandomDocument $ randomDocumentWithRoles user RSC_IsViewer RSC_IsSignatory
+
+  commit
+
+  let [_authorSigLink, signatorySigLink] = documentsignatorylinks doc1
+  let signatoryEmail                     = getEmail signatorySigLink
+
+  let mapping = InstanceKeyValues documents users messages
+        where
+          documents = Map.fromList [("doc1", documentid doc1)]
+          users     = Map.fromList [("signatory", Email signatoryEmail)]
+          messages  = Map.empty
+
+  void . assertRight "start template response" $ createInstance
+    ac
+    "name"
+    processOneUserOneDoc
+    (toTemplateParameters mapping)
+
+testUnmatchedSignatoriesAreNotAllowed :: TestEnv ()
+testUnmatchedSignatoriesAreNotAllowed = do
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
+
+  let ac@ApiClient {..} = mkApiClient (Left oauth)
+
+  doc1 <- addRandomDocument $ randomDocumentWithRoles user RSC_IsSignatory RSC_IsSignatory
+
+  commit
+
+  let [_authorSigLink, signatorySigLink] = documentsignatorylinks doc1
+  let signatoryEmail                     = getEmail signatorySigLink
+
+  let mapping = InstanceKeyValues documents users messages
+        where
+          documents = Map.fromList [("doc1", documentid doc1)]
+          users     = Map.fromList [("signatory", Email signatoryEmail)]
+          messages  = Map.empty
+
+  void . assertLeft "start template response" $ createInstance
+    ac
+    "name"
+    processOneUserOneDoc
+    (toTemplateParameters mapping)
+
