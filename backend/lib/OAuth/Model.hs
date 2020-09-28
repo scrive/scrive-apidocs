@@ -26,7 +26,7 @@ data APIPrivilege = APIDocCreate
                   -- (also used as fallback for the other privileges)
                   | APIFullAccess
                   | APIPersonal  -- used only for personal access token
-  deriving (Eq, Enum)
+  deriving (Eq, Enum, Ord)
 
 allPrivileges :: [APIPrivilege]
 allPrivileges = [toEnum 0 ..]

@@ -315,7 +315,7 @@ testUserDeletionOwnershipTransfer = do
                                                           , rdaSharings = OneOf [Private]
                                                           }
 
-  ctx <- mkContextWithUser defaultLang anna
+  ctx                <- mkContextWithUser defaultLang anna
 
   fid                <- addNewRandomFile
   fid'               <- addNewRandomFile
