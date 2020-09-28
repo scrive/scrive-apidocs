@@ -974,7 +974,15 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       }
       // maximum of 1 national EID is allowed per signatory
       var eids = ["se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi"];
-      return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
+      var isection = intersect( eids, [authToSign, authToView, authToViewArchived]);
+      if (isection.length <= 1) {
+        return true;
+      } else if (isection.length == 2 && _.contains(isection, "dk_nemid") ) {
+        // temporary hack to support legacy nemid as auth2view and new methods as 2sign
+        return true;
+      } else {
+        return false;
+      }
     },
     setAuthenticationToView: function(a) {
         var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
