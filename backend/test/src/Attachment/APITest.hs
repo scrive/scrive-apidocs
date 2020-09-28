@@ -11,11 +11,9 @@ import Attachment.API
 import Attachment.Model
 import DB
 import File.Storage
-import MinutesTime
 import TestingUtil
 import TestKontra
 import User.Model
-import Util.Actor
 
 attachmentAPITests :: TestEnvSt -> Test
 attachmentAPITests env = testGroup
@@ -37,11 +35,10 @@ testAttachmentList = do
                                                }
   bob  <- instantiateUser $ randomUserTemplate { groupID = return $ anna ^. #groupID }
 
-  now  <- currentTime
   fid  <- addNewRandomFile
-  attA <- dbUpdate . NewAttachment (anna ^. #id) "a" fid $ systemActor now
-  attB <- dbUpdate . NewAttachment (bob ^. #id) "b" fid $ systemActor now
-  _    <- dbUpdate . NewAttachment (bob ^. #id) "c" fid $ systemActor now
+  attA <- dbUpdate $ NewAttachment (anna ^. #id) "a" fid
+  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid
+  _    <- dbUpdate $ NewAttachment (bob ^. #id) "c" fid
   _    <- dbUpdate $ SetAttachmentsSharing (bob ^. #id) [attachmentid attB] True
 
   ctx  <- mkContextWithUser defaultLang anna
@@ -91,11 +88,10 @@ testAttachmentSetSharing = do
                                               , email     = return "bob@blue.com"
                                               }
   ctx  <- mkContextWithUser defaultLang bob
-  now  <- currentTime
 
   fid  <- addNewRandomFile
-  attA <- dbUpdate . NewAttachment (bob ^. #id) "a" fid $ systemActor now
-  attB <- dbUpdate . NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  attA <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid
+  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid
 
   -- IDs are supposed to be sent as strings, e.g. ["3", "4"]
   let idsStr = show $ map (show . attachmentid) [attA, attB]
@@ -131,11 +127,10 @@ testAttachmentDelete = do
                                               , email     = return "bob@blue.com"
                                               }
   ctx  <- mkContextWithUser defaultLang bob
-  now  <- currentTime
 
   fid  <- addNewRandomFile
-  attA <- dbUpdate . NewAttachment (bob ^. #id) "a" fid $ systemActor now
-  attB <- dbUpdate . NewAttachment (bob ^. #id) "b" fid $ systemActor now
+  attA <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid
+  attB <- dbUpdate $ NewAttachment (bob ^. #id) "b" fid
 
   -- IDs are supposed to be sent as strings, e.g. ["3", "4"]
   let idsStr = show $ map (show . attachmentid) [attA, attB]
@@ -156,10 +151,9 @@ testAttachmentDownload = do
                                               , email     = return "bob@blue.com"
                                               }
   ctx      <- mkContextWithUser defaultLang bob
-  now      <- currentTime
 
   fid      <- addNewRandomFile
-  att      <- dbUpdate . NewAttachment (bob ^. #id) "a" fid $ systemActor now
+  att      <- dbUpdate $ NewAttachment (bob ^. #id) "a" fid
   contents <- getFileIDContents fid
 
   req      <- mkRequest GET []
