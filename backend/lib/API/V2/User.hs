@@ -48,7 +48,7 @@ getAPIUserWithPad priv = getAPIUserWith contextUser [priv]
 getMaybeAPIUserWith
   :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (Maybe (User, Actor))
 getMaybeAPIUserWith ctxUser privs = do
-  moauthuser <- getOAuthUser privs
+  moauthuser <- getOAuthUser . nub $ APIFullAccess : privs
   case moauthuser of
     Just (Left  msg          ) -> apiError $ invalidAuthorizationWithMsg msg
     Just (Right (user, actor)) -> return $ Just (user, actor)

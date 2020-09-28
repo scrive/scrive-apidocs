@@ -22,6 +22,8 @@ import User.Model
 data APIPrivilege = APIDocCreate
                   | APIDocCheck
                   | APIDocSend
+                  -- OAuth version of personal access token
+                  -- (also used as fallback for the other privileges)
                   | APIFullAccess
                   | APIPersonal  -- used only for personal access token
   deriving (Eq, Enum)

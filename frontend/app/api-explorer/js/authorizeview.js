@@ -44,6 +44,9 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
     select.append(
       $("<option value='DOC_CREATE+DOC_SEND+DOC_CHECK'>DOC_CREATE+DOC_SEND+DOC_CHECK</option>")
         .attr("selected", oauth.priviliges() == "DOC_CREATE+DOC_SEND+DOC_CHECK"));
+    select.append(
+      $("<option value='FULL_ACCESS'>FULL_ACCESS</option>")
+        .attr("selected", oauth.priviliges() == "FULL_ACCESS"));
     select.change(function () {
       oauth.set_priviliges(select.val());
     });
