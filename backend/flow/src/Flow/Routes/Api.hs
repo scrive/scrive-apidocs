@@ -5,6 +5,7 @@ module Flow.Routes.Api
     , GetTemplate(..)
     , PatchTemplate(..)
     , CreateInstance(..)
+    , RejectParam(..)
     , TemplateParameters(TemplateParameters)
     , UserConfig(..)
     , InstanceEventAction(..)
@@ -87,7 +88,9 @@ type AllApis
         :<|>
             "instances"
             :> Capture "instance_id" InstanceId
-            :> "reject" :> PostNoContent '[JSON] NoContent
+            :> "reject"
+            :> ReqBody '[JSON] RejectParam
+            :> PostNoContent '[JSON] NoContent
         )
     :<|>
     -- No authentication
@@ -155,6 +158,17 @@ instance FromJSON PatchTemplate where
 instance ToJSON PatchTemplate where
   toEncoding = genericToEncoding aesonOptions
 
+
+data RejectParam = RejectParam
+  { message :: Maybe Text
+  }
+  deriving (Eq, Generic, Show)
+
+instance FromJSON RejectParam where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON RejectParam where
+  toEncoding = genericToEncoding aesonOptions
 
 data CreateInstance = CreateInstance
     { title :: Maybe Text
@@ -374,5 +388,6 @@ makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserState
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserAction
 makeFieldLabelsWith noPrefixFieldLabels ''GetInstance
 makeFieldLabelsWith noPrefixFieldLabels ''GetInstanceView
+makeFieldLabelsWith noPrefixFieldLabels ''RejectParam
 makeFieldLabelsWith noPrefixFieldLabels ''TemplateParameters
 makeFieldLabelsWith noPrefixFieldLabels ''UserConfig

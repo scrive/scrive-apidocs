@@ -32,9 +32,11 @@ module Flow.Model
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
 import Control.Monad.Time
+import Data.ByteString.Lazy (ByteString)
 import Data.Tuple.Extra
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
+import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
 
 import Doc.DocumentID (DocumentID)
@@ -306,20 +308,30 @@ updateInstanceLastModified instanceId = do
 
 insertEvent :: (MonadDB m, MonadTime m, MonadThrow m) => InsertEvent -> m EventId
 insertEvent ie = do
+  let detailsBs :: Maybe ByteString = Aeson.encode <$> ie ^. #eventDetails
   now <- currentTime
   runQuery_ . sqlInsert "flow_events" $ do
     sqlSet "instance_id" $ ie ^. #instanceId
     sqlSet "user_name" $ ie ^. #userName
     sqlSet "document_name" $ ie ^. #documentName
     sqlSet "user_action" $ ie ^. #userAction
+    sqlSet "details" (JSONB <$> detailsBs)
     sqlSet "created" now
     sqlResult "id"
   fetchOne runIdentity
 
 eventSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
 eventSelectors prefix = do
-  mapM_ (\c -> sqlResult $ prefix <> "." <> c)
-        ["id", "instance_id", "user_name", "document_name", "user_action", "created"]
+  mapM_
+    (\c -> sqlResult $ prefix <> "." <> c)
+    [ "id"
+    , "instance_id"
+    , "user_name"
+    , "document_name"
+    , "user_action"
+    , "created"
+    , "details"
+    ]
 
 selectInstanceEvents :: (MonadDB m, MonadThrow m) => InstanceId -> Bool -> m [Event]
 selectInstanceEvents instanceId onlyAggregatorEvents = do

@@ -13,6 +13,8 @@ module Flow.Model.Types
     , InstanceSession(InstanceSession)
     , InstanceAccessToken(InstanceAccessToken)
     , UserAuthConfig(UserAuthConfig)
+    , EventDetails(..)
+    , RejectionDetails(..)
     , fetchInstance
     , fetchTemplate
     , fetchEvent
@@ -29,8 +31,8 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Data.Int
 import Data.Time.Clock
+import Database.PostgreSQL.PQTypes
 import GHC.Generics
-import qualified Data.Set as Set
 
 import Auth.MagicHash
 import Auth.Session.SessionID
@@ -98,20 +100,47 @@ fetchInstance (id, templateId, title, currentState, started, lastEvent, maybeCal
     in  Instance { .. }
 
 fetchEvent
-  :: (EventId, InstanceId, UserName, Maybe DocumentName, UserAction, UTCTime) -> Event
-fetchEvent (id, instanceId, userName, documentName, userAction, created) = Event { .. }
+  :: ( EventId
+     , InstanceId
+     , UserName
+     , Maybe DocumentName
+     , UserAction
+     , UTCTime
+     , Maybe (JSONB Value)
+     )
+  -> Event
+fetchEvent (id, instanceId, userName, documentName, userAction, created, detailsJson) =
+  Event { .. }
+  where
+    eventDetails :: Maybe EventDetails
+    eventDetails = do
+      parsed <- mParsed
+      case parsed of
+        Success details -> return details
+        Error   _       -> Nothing
+
+    mParsed :: Maybe (Result EventDetails)
+    mParsed = (fromJSON @EventDetails . unJSONB) <$> detailsJson
 
 toEventInfo :: Event -> EventInfo
-toEventInfo Event {..} = EventInfo userAction userName documentName
+toEventInfo Event { userAction, userName, documentName, eventDetails } =
+  EventInfo userAction userName documentName eventDetails
 
 toInsertEvent :: InstanceId -> EventInfo -> InsertEvent
-toInsertEvent instanceId EventInfo {..} =
-  InsertEvent instanceId eventInfoUser eventInfoDocument eventInfoAction
+toInsertEvent instanceId EventInfo { eventInfoUser, eventInfoDocument, eventInfoAction, eventInfoDetails }
+  = InsertEvent instanceId
+                eventInfoUser
+                eventInfoDocument
+                eventInfoAction
+                eventInfoDetails
 
 instanceToAggregator :: FullInstance -> AggregatorState
 instanceToAggregator FullInstance {..} = aggregator
   where
-    eventInfos = Set.fromList $ fmap toEventInfo aggregatorEvents
+    eventInfos :: [EventInfo]
+    eventInfos = fmap toEventInfo aggregatorEvents
+
+    aggregator :: AggregatorState
     aggregator = AggregatorState eventInfos $ flowInstance ^. #currentState
 
 fetchInstanceSession :: (SessionID, InstanceId, UserName) -> InstanceSession

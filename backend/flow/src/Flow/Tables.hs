@@ -238,7 +238,7 @@ tableFlowInstanceSessions = tblTable
 tableFlowEvents :: Table
 tableFlowEvents = tblTable
   { tblName        = "flow_events"
-  , tblVersion     = 2
+  , tblVersion     = 3
   , tblColumns     =
     [ tblColumn { colName     = "id"
                 , colType     = UuidT
@@ -250,6 +250,7 @@ tableFlowEvents = tblTable
     , tblColumn { colName = "document_name", colType = TextT, colNullable = True }
     , tblColumn { colName = "user_action", colType = TextT, colNullable = False }
     , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "details", colType = JsonbT, colNullable = True }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "instance_id"]

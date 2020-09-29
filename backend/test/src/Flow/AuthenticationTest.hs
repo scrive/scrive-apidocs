@@ -209,4 +209,3 @@ testInvitationLinkLogin = do
       case tokens of
         (t : _) -> pure t
         []      -> fail "No instance access token found"
-

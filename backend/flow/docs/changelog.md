@@ -1,5 +1,10 @@
 # API specification changelog
 
+## 0.10.5
+
+* Add `message` parameter for flow instance rejection API.
+* Send `flow_rejected` callback event when a flow instance is rejected.
+
 ## 0.10.4
 
 * Add `CallbackEventFailedVersion1` schema.

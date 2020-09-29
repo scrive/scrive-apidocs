@@ -65,67 +65,71 @@ testUnknownEvent = do
     @?= (Left UnknownEventInfo, initialAggregatorState)
   where
     event :: EventInfo
-    event = EventInfo Signature "who??" $ Just "what???"
+    event = EventInfo Signature "who??" (Just "what???") Nothing
 
 testNeedMoreEventsEvent1 :: Assertion
 testNeedMoreEventsEvent1 = do
   let (result, AggregatorState {..}) =
         runAggregatorStep event initialAggregatorState compiled
   result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [event]
+  receivedEvents @?= [event]
   where
     event :: EventInfo
-    event = EventInfo Approval "approver1" $ Just "doc1"
+    event = EventInfo Approval "approver1" (Just "doc1") Nothing
 
 testDuplicateEventEvent :: Assertion
 testDuplicateEventEvent = do
   -- Event 1
   let (_, nextState1@AggregatorState {..}) =
         runAggregatorStep event initialAggregatorState compiled
-  receivedEvents @?= Set.fromList [event]
+  receivedEvents @?= [event]
   -- Event 2
   let (result, _nextState2@AggregatorState {..}) =
         runAggregatorStep event nextState1 compiled
-  receivedEvents @?= Set.fromList [event]
+  receivedEvents @?= [event]
   result @?= Left DuplicateEvent
   where
     event :: EventInfo
-    event = EventInfo Approval "approver1" $ Just "doc1"
+    event = EventInfo Approval "approver1" (Just "doc1") Nothing
 
 testNeedMoreEventsEvent2 :: Assertion
 testNeedMoreEventsEvent2 = do
   let (_, state) = runAggregatorStep event1 initialAggregatorState compiled
       (result, AggregatorState {..}) = runAggregatorStep event2 state compiled
   result @?= Right NeedMoreEvents
-  receivedEvents @?= Set.fromList [event1, event2]
+  Set.fromList (toExpectEvent <$> receivedEvents)
+    @?= Set.fromList (toExpectEvent <$> [event1, event2])
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" $ Just "doc1"
+    event1 = EventInfo Approval "approver1" (Just "doc1") Nothing
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" $ Just "doc2"
+    event2 = EventInfo Approval "approver1" (Just "doc2") Nothing
 
 testFullTransition :: Assertion
 testFullTransition = do
   -- Event 1
   let (_, nextState1@AggregatorState {..}) =
         runAggregatorStep event1 initialAggregatorState compiled
-  receivedEvents @?= Set.fromList [event1]
+  receivedEvents @?= [event1]
   -- Event 2
   let (_, nextState2@AggregatorState {..}) = runAggregatorStep event2 nextState1 compiled
-  receivedEvents @?= Set.fromList [event1, event2]
+
+  Set.fromList (toExpectEvent <$> receivedEvents)
+    @?= Set.fromList (toExpectEvent <$> [event1, event2])
+
   -- Event 3
   let (result, _nextState3@AggregatorState {..}) =
         runAggregatorStep event3 nextState2 compiled
-  receivedEvents @?= Set.empty
+  receivedEvents @?= []
 --   currentState @?= "foo"
   result @?= Right (StateChange [action])
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" $ Just "doc1"
+    event1 = EventInfo Approval "approver1" (Just "doc1") Nothing
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" $ Just "doc2"
+    event2 = EventInfo Approval "approver1" (Just "doc2") Nothing
     event3 :: EventInfo
-    event3 = EventInfo Approval "approver1" $ Just "doc3"
+    event3 = EventInfo Approval "approver1" (Just "doc3") Nothing
     emailMessage :: Maybe MessageName
     emailMessage = Just "get-data2"
     smsMessage :: Maybe MessageName
@@ -138,22 +142,22 @@ testFullTransitionDifferentOrder = do
   -- Event 1
   let (_, nextState1@AggregatorState {..}) =
         runAggregatorStep event2 initialAggregatorState compiled
-  receivedEvents @?= Set.fromList [event2]
+  receivedEvents @?= [event2]
   -- Event 2
   let (_, nextState2@AggregatorState {..}) = runAggregatorStep event1 nextState1 compiled
-  receivedEvents @?= Set.fromList [event1, event2]
+  receivedEvents @?= [event1, event2]
   -- Event 3
   let (result, _nextState3@AggregatorState {..}) =
         runAggregatorStep event3 nextState2 compiled
-  receivedEvents @?= Set.empty
+  receivedEvents @?= []
   result @?= Right (StateChange [action])
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" $ Just "doc1"
+    event1 = EventInfo Approval "approver1" (Just "doc1") Nothing
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" $ Just "doc2"
+    event2 = EventInfo Approval "approver1" (Just "doc2") Nothing
     event3 :: EventInfo
-    event3 = EventInfo Approval "approver1" $ Just "doc3"
+    event3 = EventInfo Approval "approver1" (Just "doc3") Nothing
     emailMessage :: Maybe MessageName
     emailMessage = Just "get-data2"
     smsMessage :: Maybe MessageName
@@ -167,28 +171,28 @@ testFullTransitionMultipleStates = do
   -- Event 1
   let (_, nextState1@AggregatorState {..}) =
         runAggregatorStep event2 initialAggregatorState compiled
-  receivedEvents @?= Set.fromList [event2]
+  receivedEvents @?= [event2]
   -- Event 2
   let (_, nextState2@AggregatorState {..}) = runAggregatorStep event1 nextState1 compiled
-  receivedEvents @?= Set.fromList [event1, event2]
+  receivedEvents @?= [event1, event2]
   -- Event 3
   let (result, nextState3@AggregatorState {..}) =
         runAggregatorStep event3 nextState2 compiled
-  receivedEvents @?= Set.empty
+  receivedEvents @?= []
   result @?= Right (StateChange [action])
   -- Stage 2
   -- Event 4
   let (result, _nextState4@AggregatorState {..}) =
         runAggregatorStep event4 nextState3 compiled
-  receivedEvents @?= Set.empty
+  receivedEvents @?= []
   result @?= Right (StateChange [CloseAll])
   where
     event1 :: EventInfo
-    event1 = EventInfo Approval "approver1" $ Just "doc1"
+    event1 = EventInfo Approval "approver1" (Just "doc1") Nothing
     event2 :: EventInfo
-    event2 = EventInfo Approval "approver1" $ Just "doc2"
+    event2 = EventInfo Approval "approver1" (Just "doc2") Nothing
     event3 :: EventInfo
-    event3 = EventInfo Approval "approver1" $ Just "doc3"
+    event3 = EventInfo Approval "approver1" (Just "doc3") Nothing
     emailMessage :: Maybe MessageName
     emailMessage = Just "get-data2"
     smsMessage :: Maybe MessageName
@@ -196,20 +200,20 @@ testFullTransitionMultipleStates = do
     action :: LowAction
     action = Action . Notify ["user1", "user2"] $ Methods emailMessage smsMessage
     event4 :: EventInfo
-    event4 = EventInfo Approval "approver2" $ Just "doc5"
+    event4 = EventInfo Approval "approver2" (Just "doc5") Nothing
 
 testFailure :: Assertion
 testFailure = do
   let (result, nextState@AggregatorState {..}) =
         runAggregatorStep event initialAggregatorState compiled
-  receivedEvents @?= Set.empty
+  receivedEvents @?= []
   result @?= Right (StateChange [Reject])
   let (result, _nextState2@AggregatorState {..}) =
         runAggregatorStep event nextState compiled
   result @?= Left UnknownStage
   where
     event :: EventInfo
-    event = EventInfo DocumentRejection "approver1" $ Just "doc1"
+    event = EventInfo DocumentRejection "approver1" (Just "doc1") Nothing
 
 testUnknownStage :: Assertion
 testUnknownStage = do
@@ -219,11 +223,11 @@ testUnknownStage = do
   receivedEvents @?= mempty
   where
     event :: EventInfo
-    event = EventInfo Approval "foo1" $ Just "bar1"
+    event = EventInfo Approval "foo1" (Just "bar1") Nothing
 
 tests :: Test
 tests = testGroup
-  "Aggregator"
+  "Flow Aggregator"
   [ testCase "Test DSL string compiles"         testDSLCompiles
   , testCase "Test rejection of unwanted event" testUnknownEvent
   , testCase "Test need more events 1"          testNeedMoreEventsEvent1

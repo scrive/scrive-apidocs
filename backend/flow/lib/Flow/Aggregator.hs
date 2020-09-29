@@ -19,7 +19,6 @@ module Flow.Aggregator
   where
 
 import Control.Exception (Exception)
-import Data.Set (Set)
 import GHC.Generics
 import qualified Control.Monad.Except as E
 import qualified Control.Monad.State.Strict as S
@@ -30,7 +29,7 @@ import Flow.Machinize
 import Flow.Names
 
 data AggregatorState = AggregatorState
-    { receivedEvents :: Set EventInfo
+    { receivedEvents :: [EventInfo]
     , currentStage :: StageName
     }
   deriving (Show, Eq, Generic)
@@ -79,6 +78,10 @@ finalStageName = unsafeName "__FINAL__"
 aggregateAndStep :: HighTongue -> EventInfo -> AggregatorT AggregatorStep
 aggregateAndStep HighTongue { stages } event = do
   AggregatorState { currentStage, receivedEvents } <- S.get
+
+  let event'          = toExpectEvent event
+  let receivedEvents' = Set.fromList $ fmap toExpectEvent receivedEvents
+
   (stage, nextStages) <- maybe (E.throwError UnknownStage) pure
     $ remainingStages currentStage stages
 
@@ -88,14 +91,14 @@ aggregateAndStep HighTongue { stages } event = do
 
       knownEvents   = Set.union successEvents failureEvents
 
-  when (Set.notMember event knownEvents) $ E.throwError UnknownEventInfo
+  when (Set.notMember event' knownEvents) $ E.throwError UnknownEventInfo
 
-  when (Set.member event receivedEvents) $ E.throwError DuplicateEvent
+  when (Set.member event' receivedEvents') $ E.throwError DuplicateEvent
 
-  let newReceivedEvents = Set.insert event receivedEvents
+  let newReceivedEvents = Set.insert event' receivedEvents'
   let eventAction       = eventInfoAction event
 
-  if Set.member event failureEvents
+  if Set.member (toExpectEvent event) failureEvents
     then if eventAction == DocumentRejection
       then
         (do
@@ -118,7 +121,7 @@ aggregateAndStep HighTongue { stages } event = do
             put . makeNewState $ stageName nextStage
             (pure . StateChange) . fmap Action $ stageActions nextStage
         else do
-          S.modify $ \s -> s { receivedEvents = newReceivedEvents }
+          S.modify $ \s -> s { receivedEvents = event : receivedEvents }
           pure NeedMoreEvents
 
 makeNewState :: StageName -> AggregatorState

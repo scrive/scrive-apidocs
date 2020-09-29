@@ -52,7 +52,7 @@ accountEndpoints account = getInstance account :<|> listInstances account
 userEndpoints
   :: InstanceUser
   -> (InstanceId -> Maybe Text -> IsSecure -> AppM GetInstanceView)
-      :<|> (InstanceId -> AppM NoContent)
+      :<|> (InstanceId -> RejectParam -> AppM NoContent)
 userEndpoints user =
        getInstanceView user
   :<|> rejectInstance user
@@ -96,12 +96,12 @@ getInstance account instanceId = do
       Just availableActions -> pure $ mkGetInstance availableActions InProgress
       _                     -> inconsistentInstanceState instanceId account
   where
-    toAuthorAction :: InstanceKeyValues -> EventInfo -> Maybe InstanceAuthorAction
-    toAuthorAction keyValues EventInfo { eventInfoAction, eventInfoUser, eventInfoDocument }
-      = do
-        actionType     <- toApiUserAction eventInfoAction
-        actionUser     <- keyValues ^. #users % at eventInfoUser
-        doc            <- eventInfoDocument
+    toAuthorAction :: InstanceKeyValues -> ExpectEvent -> Maybe InstanceAuthorAction
+    toAuthorAction keyValues ExpectEvent { expectAction, expectUser, expectDocument } =
+      do
+        actionType     <- toApiUserAction expectAction
+        actionUser     <- keyValues ^. #users % at expectUser
+        doc            <- expectDocument
         actionDocument <- keyValues ^. #documents % at doc
         pure InstanceAuthorAction { actionType, actionUser, actionDocument }
 
@@ -129,24 +129,30 @@ listInstances account@Account { user } = do
 
 
 getAllowedEvents
-  :: (Expect -> [EventInfo]) -> HighTongue -> AggregatorState -> Maybe (Set EventInfo)
+  :: (Expect -> [ExpectEvent]) -> HighTongue -> AggregatorState -> Maybe (Set ExpectEvent)
 getAllowedEvents expect HighTongue { stages } AggregatorState { currentStage, receivedEvents }
-  = Set.filter (`Set.notMember` receivedEvents) <$> mEvents
+  = Set.filter (`Set.notMember` receivedEvents') <$> mEvents
   where
-    mEvents :: Maybe (Set EventInfo)
-    mEvents = fold . Set.map (Set.fromList . expect) . stageExpect . fst <$> mRestStages
+    receivedEvents' :: Set ExpectEvent
+    receivedEvents' = Set.fromList $ fmap toExpectEvent receivedEvents
+
+    mEvents :: Maybe (Set ExpectEvent)
+    mEvents = fmap mapper mRestStages
+
+    mapper :: (Stage, [Stage]) -> Set ExpectEvent
+    mapper (stage, _) = fold . Set.map (Set.fromList . expect) $ stageExpect stage
 
     mRestStages :: Maybe (Stage, [Stage])
     mRestStages = remainingStages currentStage stages
 
 getUserAllowedEvents
-  :: (Expect -> [EventInfo])
+  :: (Expect -> [ExpectEvent])
   -> HighTongue
   -> AggregatorState
   -> UserName
-  -> Maybe (Set EventInfo)
+  -> Maybe (Set ExpectEvent)
 getUserAllowedEvents expect descriptor state username =
-  Set.filter (\event -> eventInfoUser event == username)
+  Set.filter (\event -> expectUser event == username)
     <$> getAllowedEvents expect descriptor state
 
 inconsistentInstanceState
@@ -173,14 +179,14 @@ toApiUserAction Machinize.Timeout           = Nothing
 -- update the aggregator state and database directly.
 -- This is because AppM does not support the necessary monad constraints
 -- to call the process event functions..
-rejectInstance :: InstanceUser -> InstanceId -> AppM NoContent
-rejectInstance InstanceUser { instanceId = userInstanceId, userName } targetInstanceId =
-  do
-    logInfo "reject instance API called"
-      $ object ["instance_id" .= targetInstanceId, "username" .= userName]
-
+rejectInstance :: InstanceUser -> InstanceId -> RejectParam -> AppM NoContent
+rejectInstance InstanceUser { instanceId = userInstanceId, userName } targetInstanceId RejectParam { message = mRejectMessage }
+  = do
     when (userInstanceId /= targetInstanceId)
       $ throwAuthenticationError AccessControlError
+
+    logInfo "reject instance API called"
+      $ object ["instance_id" .= targetInstanceId, "username" .= userName]
 
     fullInstance <-
       fromMaybeM throwInstanceNotFoundError . Model.selectFullInstance $ userInstanceId
@@ -194,17 +200,30 @@ rejectInstance InstanceUser { instanceId = userInstanceId, userName } targetInst
     when (currentState == failureStageName || currentState == finalStageName)
       $ throwAuthenticationError RejectForbiddenError
 
-    rejectAction <- toConsumableRejectAction targetInstanceId userName
+    let mDetails :: Maybe EventDetails =
+          fmap (RejectionEventDetails . RejectionDetails) mRejectMessage
 
     let eventInfo = EventInfo { eventInfoAction   = FlowRejection
                               , eventInfoUser     = userName
                               , eventInfoDocument = Nothing
+                              , eventInfoDetails  = mDetails
                               }
+
+    rejectAction <- toConsumableRejectAction targetInstanceId eventInfo mRejectMessage
+
+    logInfo "inserting reject event"
+      $ object ["instance_id" .= targetInstanceId, "event_info" .= eventInfo]
 
     -- FIXME: the handler should have called relevant functions like processFlowEvent,
     -- but we can't run those in AppM as of now.
     -- Create a FlowRejection event and insert it directly
     eventId <- insertEvent $ toInsertEvent targetInstanceId eventInfo
+
+    logInfo "updating aggregator state to failure" $ object
+      [ "instance_id" .= targetInstanceId
+      , "event_id" .= eventId
+      , "stage" .= failureStageName
+      ]
 
     -- Update the aggregator state directly into a failure stage, since the flow is rejected
     updateAggregatorState targetInstanceId (makeNewState failureStageName) eventId True
@@ -270,17 +289,17 @@ getInstanceView user@InstanceUser { instanceId = userInstanceId, userName } targ
       | otherwise -> do
         case getUserAllowedEvents expectToSuccess tongue aggrState userName of
           Just userAllowedEvents ->
-            let userActions :: [InstanceUserAction]
-                userActions = catMaybes . Set.toList $ Set.map
-                  (\e -> do
-                    userAction <- toApiUserAction $ eventInfoAction e
-                    doc        <- eventInfoDocument e
-                    docId      <- Map.lookup doc (keyValues ^. #documents)
-                    sigId      <- findSignatoryId sigInfo (eventInfoUser e) docId
-                    let link = mkLink baseUrl docId sigId
-                    pure $ InstanceUserAction userAction docId sigId link
-                  )
-                  userAllowedEvents
+            let mapper :: ExpectEvent -> Maybe InstanceUserAction
+                mapper e = do
+                  userAction <- toApiUserAction $ expectAction e
+                  doc        <- expectDocument e
+                  docId      <- Map.lookup doc (keyValues ^. #documents)
+                  sigId      <- findSignatoryId sigInfo (expectUser e) docId
+                  let link = mkLink baseUrl docId sigId
+                  pure $ InstanceUserAction userAction docId sigId link
+
+                userActions :: [InstanceUserAction]
+                userActions = catMaybes . Set.toList $ Set.map mapper userAllowedEvents
             in  pure $ mkGetInstanceView userActions InProgress
           Nothing -> inconsistentInstanceState targetInstanceId user
   where

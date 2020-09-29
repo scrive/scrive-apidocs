@@ -3,8 +3,13 @@ module Flow.Machinize
     ( EventInfo(..)
     , LowAction(..)
     , UserAction(..)
+    , ExpectEvent(..)
+    , EventDetails(..)
+    , RejectionDetails(..)
     , expectToSuccess
     , expectToFailure
+    , toExpectEvent
+    , getRejectMessageFromEvent
     )
   where
 
@@ -89,8 +94,41 @@ data EventInfo = EventInfo
     { eventInfoAction     :: UserAction
     , eventInfoUser     :: UserName
     , eventInfoDocument :: Maybe DocumentName
+    , eventInfoDetails :: Maybe EventDetails
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Show, Generic)
+
+instance ToJSON EventInfo where
+  toEncoding = genericToEncoding aesonOptions
+
+data RejectionDetails = RejectionDetails
+  { rejectMessage :: Text }
+  deriving (Eq, Show, Generic)
+
+-- Possible variants of details when inserting a flow event
+-- into database. We currently do not validate which user action
+-- should match with which event details.
+data EventDetails
+  = RejectionEventDetails RejectionDetails
+  -- More types to be added here
+  deriving (Eq, Show, Generic)
+
+getRejectMessageFromEvent :: EventInfo -> Maybe Text
+getRejectMessageFromEvent EventInfo { eventInfoDetails } = case eventInfoDetails of
+  (Just (RejectionEventDetails (RejectionDetails message))) -> Just message
+  _ -> Nothing
+
+instance FromJSON RejectionDetails where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON RejectionDetails where
+  toEncoding = genericToEncoding aesonOptions
+
+instance FromJSON EventDetails where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON EventDetails where
+  toEncoding = genericToEncoding aesonOptions
 
 -- | Abstract actions triggered by the engine when transitioning
 -- between states.
@@ -113,37 +151,51 @@ instance FromJSON LowAction where
 instance ToJSON LowAction where
   toJSON = genericToJSON aesonOptions
 
+data ExpectEvent = ExpectEvent
+  { expectAction     :: UserAction
+  , expectUser       :: UserName
+  , expectDocument   :: Maybe DocumentName
+  }
+  deriving (Eq, Ord, Show, Generic)
+
+toExpectEvent :: EventInfo -> ExpectEvent
+toExpectEvent EventInfo { eventInfoAction, eventInfoUser, eventInfoDocument } =
+  ExpectEvent eventInfoAction eventInfoUser eventInfoDocument
+
 -- | Translate `Expect`, a description of expected user actions,
 -- into collection of events to match against, assuming all
 -- actions are performed successfully.
-expectToSuccess :: Expect -> [EventInfo]
+expectToSuccess :: Expect -> [ExpectEvent]
 expectToSuccess = \case
   ReceivedData { expectFields, expectUsers, expectDocuments } ->
-    EventInfo <$> (Field <$> expectFields) <*> expectUsers <*> (Just <$> expectDocuments)
+    ExpectEvent
+      <$> (Field <$> expectFields)
+      <*> expectUsers
+      <*> (Just <$> expectDocuments)
 
   ApprovedBy { expectUsers, expectDocuments } ->
-    EventInfo Approval <$> expectUsers <*> (Just <$> expectDocuments)
+    ExpectEvent Approval <$> expectUsers <*> (Just <$> expectDocuments)
 
   ViewedBy { expectUsers, expectDocuments } ->
-    EventInfo View <$> expectUsers <*> (Just <$> expectDocuments)
+    ExpectEvent View <$> expectUsers <*> (Just <$> expectDocuments)
 
   SignedBy { expectUsers, expectDocuments } ->
-    EventInfo Signature <$> expectUsers <*> (Just <$> expectDocuments)
+    ExpectEvent Signature <$> expectUsers <*> (Just <$> expectDocuments)
 
 -- | Translate `Expect`, a description of expected user actions,
 -- into a list of `Rejection` events, one for each possible failure.
-expectToFailure :: Expect -> [EventInfo]
+expectToFailure :: Expect -> [ExpectEvent]
 expectToFailure = \case
   ReceivedData{} -> []
 
   -- If a user can approve a document, they can also reject the document
   -- or the entire flow instance
   ApprovedBy { expectUsers, expectDocuments } ->
-    EventInfo DocumentRejection <$> expectUsers <*> (Just <$> expectDocuments)
+    ExpectEvent DocumentRejection <$> expectUsers <*> (Just <$> expectDocuments)
 
   ViewedBy{} -> []
 
   -- If a user can sign a document, they can also reject the document
   -- or the entire flow instance
   SignedBy { expectUsers, expectDocuments } ->
-    EventInfo DocumentRejection <$> expectUsers <*> (Just <$> expectDocuments)
+    ExpectEvent DocumentRejection <$> expectUsers <*> (Just <$> expectDocuments)

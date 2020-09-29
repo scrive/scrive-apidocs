@@ -91,19 +91,28 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     dbUpdate $ RejectDocument slid (isApprover sl) rejectReason actor
     postDocumentRejectedChange slid rejectReason =<< theDocument
 
+    let eventDetails :: Maybe Flow.EventDetails
+        eventDetails =
+          fmap (Flow.RejectionEventDetails . Flow.RejectionDetails) rejectReason
+
     -- Result
     doc <- theDocument
     -- If document is part of a flow instance, send relevant event.
-    whenJustM (Flow.selectInstanceIdByDocumentId did) processFlowEvent
+    whenJustM (Flow.selectInstanceIdByDocumentId did) $ processFlowEvent eventDetails
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
-    processFlowEvent instanceId = processFlowEventForSignatory $ Flow.EngineEvent
-      { instanceId  = instanceId
-      , userAction  = Flow.DocumentRejection
-      , signatoryId = slid
-      , documentId  = did
-      }
+    processFlowEvent eventDetails instanceId = do
+      let event = Flow.EngineEvent { instanceId   = instanceId
+                                   , userAction   = Flow.DocumentRejection
+                                   , signatoryId  = slid
+                                   , documentId   = did
+                                   , eventDetails
+                                   }
 
+      logInfo "processing flow rejection event arise from document rejection"
+        $ object ["engine_event" .= event]
+
+      processFlowEventForSignatory event
 
 docApiV2SigForwardSigning :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
@@ -257,10 +266,11 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
     processFlowEvent instanceId = processFlowEventForSignatory $ Flow.EngineEvent
-      { instanceId  = instanceId
-      , userAction  = Flow.Approval
-      , signatoryId = slid
-      , documentId  = did
+      { instanceId   = instanceId
+      , userAction   = Flow.Approval
+      , signatoryId  = slid
+      , documentId   = did
+      , eventDetails = Nothing
       }
 
 -- | In the case of SMS or 'standard' (i.e. none) authentication, sign the
@@ -376,10 +386,11 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     return $ Ok (unjsonDocument (documentAccessForSlid slid doc), doc)
   where
     processFlowEvent instanceId = processFlowEventForSignatory $ Flow.EngineEvent
-      { instanceId  = instanceId
-      , userAction  = Flow.Signature
-      , signatoryId = slid
-      , documentId  = did
+      { instanceId   = instanceId
+      , userAction   = Flow.Signature
+      , signatoryId  = slid
+      , documentId   = did
+      , eventDetails = Nothing
       }
 
 docApiV2SigSendSmsPinToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response

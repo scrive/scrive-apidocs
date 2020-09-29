@@ -17,6 +17,7 @@ module Flow.Migrations (
   , migrateNullableDocumentNameInEvent
   , addProviderMethodToFlowEIDAuthentications
   , createTableFlowEidServiceTransactions
+  , addDetailsJsonColumnToFlowEvents
 )
 
 where
@@ -483,3 +484,16 @@ createTableFlowEidServiceTransactions = Migration
       }
   }
   where tableName = "flow_eid_service_transactions"
+
+addDetailsJsonColumnToFlowEvents :: MonadDB m => Migration m
+addDetailsJsonColumnToFlowEvents = Migration
+  { mgrTableName = "flow_events"
+  , mgrFrom      = 2
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        "flow_events"
+        [ sqlAddColumn
+            $ tblColumn { colName = "details", colType = JsonbT, colNullable = True }
+        ]
+  }

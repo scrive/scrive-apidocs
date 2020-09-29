@@ -53,7 +53,7 @@ data ApiClient = ApiClient
 
 data ParticipantApiClient = ParticipantApiClient
   { getInstanceView  :: InstanceId -> Maybe Host -> ClientM GetInstanceView
-  , rejectInstance :: InstanceId -> ClientM NoContent
+  , rejectInstance :: InstanceId -> RejectParam -> ClientM NoContent
   }
 
 data PageClient = PageClient

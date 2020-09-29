@@ -39,7 +39,7 @@ import qualified Flow.Model.InstanceSession as Model
 
 tests :: TestEnvSt -> Test
 tests env = testGroup
-  "Integration"
+  "Flow Integration Tests"
   [ testThat "Template CRUD happy path"           env testTemplateHappyCrud
   , testThat "From zero to instance"              env testZeroToInstance
   , testThat "List template endpoint"             env testTemplateListEndpoint

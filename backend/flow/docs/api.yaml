@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.4"
+  version: "0.10.5"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -415,6 +415,17 @@ paths:
         to be cancelled. This is an internal API and the behavior may change in the future.
       parameters:
         - $ref: "#/components/parameters/InstanceId"
+      requestBody:
+        description: Rejection parameters.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: message about the rejection reason.
       responses:
         204:
           description: The flow instance is rejected successfully.
@@ -1222,7 +1233,8 @@ components:
 
     CallbackEventFlowRejectedVersion1:
       description: |
-        Callback event produced when a participant rejects Flow.
+        Callback event produced when a participant rejects a Flow,
+        or rejects a document in a Flow.
       type: object
       allOf:
         - $ref: "#/components/schemas/CallbackEventBaseVersion1"
@@ -1230,7 +1242,6 @@ components:
           required:
             - type
             - user_name
-            - message
           properties:
             type:
               type: string
@@ -1240,6 +1251,12 @@ components:
               description: |
                 Name of the Flow participant that rejected Flow, as specified in the DSL.
               example: user1
+            document_name:
+              type: string
+              description: |
+                If provided, the rejection comes from a document in a flow being
+                rejected. This is set to the name of the document that causes the
+                rejection. The field is not set if the Flow itself is rejected.
             message:
               type: string
               example: Please help me, I could not authenticate.

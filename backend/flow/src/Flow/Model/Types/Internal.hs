@@ -12,6 +12,8 @@ module Flow.Model.Types.Internal
     , InstanceKeyValues(..)
     , InstanceAccessToken(..)
     , UserAuthConfig(..)
+    , EventDetails(..)
+    , RejectionDetails(..)
     )
  where
 
@@ -95,6 +97,7 @@ data Event = Event
     , documentName :: Maybe DocumentName
     , userAction :: UserAction
     , created :: UTCTime
+    , eventDetails :: Maybe EventDetails
     }
 
 data InsertEvent = InsertEvent
@@ -102,7 +105,12 @@ data InsertEvent = InsertEvent
     , userName :: UserName
     , documentName :: Maybe DocumentName
     , userAction :: UserAction
+    , eventDetails :: Maybe EventDetails
     }
+  deriving (Generic)
+
+instance ToJSON InsertEvent where
+  toEncoding = genericToEncoding aesonOptions
 
 -- TODO we should also add key/values here
 data FullInstance = FullInstance

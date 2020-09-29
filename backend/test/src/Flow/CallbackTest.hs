@@ -1,6 +1,11 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE DeriveAnyClass #-}
-module Flow.CallbackTest (tests) where
+
+module Flow.CallbackTest
+  ( tests
+  , withTestCallbackProcessor
+  )
+where
 
 import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
@@ -224,4 +229,3 @@ withTestCallbackProcessor action = do
         <$> getRequestBodyChunk req
       modifyMVar_ mv $ \payloads -> return $! payload : payloads
       respondWith $ responseLBS status200 [] BSL.empty
-
