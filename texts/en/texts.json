@@ -704,6 +704,7 @@
 "_headerLogOut":"Log out",
 "_headerSend":"Start new process",
 "_headerTemplate":"Start from template",
+"_headerSwitchFrontend":"Switch to Scrive New",
 "_historyDescription":"Description",
 "_historyExpand":"Show 5 more",
 "_historyHide":"Hide",

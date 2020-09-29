@@ -1433,6 +1433,7 @@ javascriptLocalisation =
             , archive : "$_headerArchive()$"
             , template : "$_headerTemplate()$"
             , send     : "$_headerSend()$"
+            , switchFrontend : "$_headerSwitchFrontend()$"
       }
       , branding: {
             defaultTheme : "$_brandingDefaultTheme()$"
