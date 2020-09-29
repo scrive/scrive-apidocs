@@ -4,9 +4,10 @@ module API.V2.User (
   , getAPIUserWithAnyPrivileges
   , getAPIUserWithPrivileges
   , getAPIUserWithPad
-  , getAPIUserWithAPIPersonal
+  , getAPIUserWithFullAccess
 ) where
 
+import Data.List.Extra
 import Happstack.Server
 import Log
 
@@ -48,7 +49,7 @@ getAPIUserWithPad priv = getAPIUserWith contextUser [priv]
 getMaybeAPIUserWith
   :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (Maybe (User, Actor))
 getMaybeAPIUserWith ctxUser privs = do
-  moauthuser <- getOAuthUser privs
+  moauthuser <- getOAuthUser . nubOrd $ APIFullAccess : privs
   case moauthuser of
     Just (Left  msg          ) -> apiError $ invalidAuthorizationWithMsg msg
     Just (Right (user, actor)) -> return $ Just (user, actor)
@@ -78,6 +79,6 @@ getAPIUserWith ctxUser privs = do
         ]
       apiError invalidAuthorization
 
-getAPIUserWithAPIPersonal :: Kontrakcja m => m User
-getAPIUserWithAPIPersonal = do
-  fst <$> getAPIUser APIPersonal
+-- Either Personal token or FULL_ACCESS OAuth scope grant full access
+getAPIUserWithFullAccess :: Kontrakcja m => m User
+getAPIUserWithFullAccess = fst <$> getAPIUserWithPrivileges [APIPersonal, APIFullAccess]
