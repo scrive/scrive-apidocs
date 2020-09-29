@@ -30,6 +30,8 @@ _Warning:_ The _Template_ concept is currently undergoing a lot of discussion an
 
 Flow uses the same authentication mechanisms as the Document API. In this guide, we will be using so-called personal access credentials, which should be sufficient to test-drive the API. See the [Authentication section](https://apidocs.scrive.com/#authentication) of the Document API documentation for more details and also information on how to configure a full OAuth workflow.
 
+Note that when using OAuth Flow requires a token with privilege `FULL_ACCESS`.
+
 ### Obtaining the Credentials
 
 To run the examples in this guide you will need an account in the Scrive `dev` environment at [https://dev.scrive.com](https://dev.scrive.com).
