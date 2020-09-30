@@ -134,13 +134,17 @@ tableFlowUserAuthConfigs :: Table
 tableFlowUserAuthConfigs = tblTable
   { tblName        = "flow_user_auth_configs"
   , tblVersion     = 2
-  , tblColumns = [ tblColumn { colName     = "instance_id"
-                             , colType     = UuidT
-                             , colNullable = False
-                             }
-                 , tblColumn { colName = "key", colType = TextT, colNullable = False }
-                 , tblColumn { colName = "data", colType = JsonbT, colNullable = False }
-                 ]
+  , tblColumns     = [ tblColumn { colName     = "instance_id"
+                                 , colType     = UuidT
+                                 , colNullable = False
+                                 }
+                     , tblColumn { colName = "key", colType = TextT, colNullable = False }
+                     , tblColumn { colName     = "data"
+                                 , colType     = JsonbT
+                                 , colNullable = False
+                                 , colDefault  = Just "'{}'::jsonb"
+                                 }
+                     ]
   , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
   , tblIndexes     = []
   , tblForeignKeys = [ (fkOnColumns ["instance_id", "key"]

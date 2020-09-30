@@ -501,19 +501,21 @@ moveFlowUserAuthConfigsToJson :: MonadDB m => Migration m
 moveFlowUserAuthConfigsToJson = Migration
   { mgrTableName = tableName
   , mgrFrom      = 1
-  , mgrAction    =
-    StandardMigration $ do
+  , mgrAction    = StandardMigration $ do
       -- We can drop the whole table and create new one because if somebody
       -- used it until now, it did nothing and thus no behaviour will change on
       -- running instances.
-      runQuery_ $ sqlAlterTable
-        tableName
-        [ sqlDropColumn "auth_to_view_provider"
-        , sqlDropColumn "auth_to_view_max_failures"
-        , sqlDropColumn "auth_to_view_archived_provider"
-        , sqlDropColumn "auth_to_view_archived_max_failures"
-        , sqlAddColumn
-          $ tblColumn { colName = "data", colType = JsonbT, colNullable = False }
-        ]
+                     runQuery_ $ sqlAlterTable
+                       tableName
+                       [ sqlDropColumn "auth_to_view_provider"
+                       , sqlDropColumn "auth_to_view_max_failures"
+                       , sqlDropColumn "auth_to_view_archived_provider"
+                       , sqlDropColumn "auth_to_view_archived_max_failures"
+                       , sqlAddColumn $ tblColumn { colName     = "data"
+                                                  , colType     = JsonbT
+                                                  , colNullable = False
+                                                  , colDefault  = Just "'{}'::jsonb"
+                                                  }
+                       ]
   }
   where tableName = "flow_user_auth_configs"
