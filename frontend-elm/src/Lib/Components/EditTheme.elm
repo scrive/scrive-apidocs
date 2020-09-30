@@ -200,7 +200,7 @@ openLogoFileSelect : (Msg -> msg) -> EditThemeState -> (EditThemeState, Cmd msg)
 openLogoFileSelect embed state =
   let callback : File -> msg
       callback file = embed <| LoadLogoFileMsg file
-  in (state, FileSelect.file ["image/png"] callback)
+  in (state, FileSelect.file ["image/png", "image/jpg", "image/jpeg"] callback)
 
 -- implements LoadLogoFileMsg
 loadLogoFile : (Msg -> msg) -> File -> EditThemeState -> (EditThemeState, Cmd msg)

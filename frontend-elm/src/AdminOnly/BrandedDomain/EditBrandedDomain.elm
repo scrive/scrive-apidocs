@@ -183,7 +183,7 @@ openFaviconFileSelect : (Msg -> msg) -> state -> (state, Cmd msg)
 openFaviconFileSelect embed state =
   let callback : File -> msg
       callback file = embed <| LoadFaviconFileMsg file
-  in (state, FileSelect.file ["image/png"] callback)
+  in (state, FileSelect.file ["image/png", "image/jpg", "image/jpeg"] callback)
 
 -- implements LoadFaviconFileMsg
 loadFaviconFile : (Msg -> msg) -> File -> state -> (state, Cmd msg)
