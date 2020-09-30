@@ -19,8 +19,7 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import EID.EIDService.Model (eidServiceConf)
 import EID.EIDService.Types hiding (EIDServiceTransactionFromDB(..))
-import Flow.Aggregator
-import Flow.Core.Type.AuthenticationConfiguration
+import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
 import Flow.EID.EIDService.Provider
 import Flow.EID.EIDService.Types
@@ -59,28 +58,38 @@ startEIDServiceTransaction
 startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
   let providerName = toEIDServiceProviderName provider
   logInfo_ $ "EID Service transaction start - for " <> providerName
-  (sl , did)   <- getAnyDocumentWithSl instanceId userName
-  (doc, _  )   <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
+
   fullInstance <- fromJust <$> selectFullInstance instanceId
   uac          <- fromMaybeM throwNoAuthentication
     $ selectUserAuthenticationConfiguration instanceId userName
-  (authKind, authenticationConfig) <- getKindAndConfiguration fullInstance uac
+  (authenticationKind, authenticationConfig) <-
+    maybe throwNoAuthentication pure
+      $ getAuthenticationKindAndConfiguration fullInstance uac
 
+  maxFailuresExceeded <- checkAuthMaxFailuresExceeded
+    instanceId
+    userName
+    (authenticationKind, authenticationConfig)
+  when maxFailuresExceeded
+    $ Kontra.unauthorized "Maximum number of authentication attempts exceeeded."
+
+  (sl , did)         <- getAnyDocumentWithSl instanceId userName
+  (doc, _  )         <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
   conf               <- eidServiceConf doc
   (tid, val, status) <- beginEIDServiceTransaction conf
                                                    provider
-                                                   authKind
+                                                   authenticationKind
                                                    authenticationConfig
                                                    instanceId
                                                    userName
-  sid <- getNonTempSessionID
   now <- currentTime
+  sid <- getNonTempSessionID
   let newTransaction = EIDServiceTransactionFromDB
         { estID         = tid
         , estStatus     = status
         , estInstanceId = instanceId
         , estUserName   = userName
-        , estAuthKind   = EIDServiceAuthToView authKind
+        , estAuthKind   = EIDServiceAuthToView authenticationKind
         , estProvider   = provider
         , estSessionID  = sid
         , estDeadline   = 60 `minutesAfter` now
@@ -88,26 +97,11 @@ startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
   dbUpdate $ MergeEIDServiceTransaction newTransaction
   return val
   where
-    getKindAndConfiguration
-      :: forall m
-       . Kontrakcja m
-      => FullInstance
-      -> UserAuthenticationConfiguration
-      -> m (AuthenticationKind, AuthenticationConfiguration)
-    getKindAndConfiguration fullInstance uac =
-      if isComplete $ instanceToAggregator fullInstance
-        then do
-          configuration <- guardConf $ conf ^. #authenticationToViewArchived
-          pure (AuthenticationToViewArchived, configuration)
-        else do
-          configuration <- guardConf $ conf ^. #authenticationToView
-          pure (AuthenticationToView, configuration)
-      where
-        conf      = uac ^. #configurationData
-        guardConf = maybe throwNoAuthentication pure
     throwNoAuthentication :: Kontrakcja m => m a
-    throwNoAuthentication =
-      apiError $ conflictError "Participant doesn't have authentication configured."
+    throwNoAuthentication = do
+      let msg = "Participant doesn't have authentication configured."
+      logAttention msg $ object ["instance_id" .= instanceId, "user_name" .= userName]
+      apiError $ conflictError msg
 
 redirectEndpointFromEIDServiceTransaction
   :: Kontrakcja m

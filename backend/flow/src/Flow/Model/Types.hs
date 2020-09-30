@@ -24,6 +24,7 @@ module Flow.Model.Types
     , fetchInstanceSession
     , fetchInstanceAccessToken
     , fetchUserAuthConfig
+    , getAuthenticationKindAndConfiguration
     )
  where
 
@@ -39,7 +40,9 @@ import GHC.Generics
 
 import Auth.MagicHash
 import Auth.Session.SessionID
+import Doc.Types.SignatoryLink
 import Flow.Aggregator
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
 import Flow.Id
@@ -169,3 +172,16 @@ fetchUserAuthConfig (instanceId, userName, configurationDataByteString) =
       . eitherDecodeStrict'
       $ unJSONB configurationDataByteString
     }
+
+-- TODO: Add a type alias or a record instead of passing this tuple around.
+getAuthenticationKindAndConfiguration
+  :: FullInstance
+  -> UserAuthenticationConfiguration
+  -> Maybe (AuthenticationKind, AuthenticationConfiguration)
+getAuthenticationKindAndConfiguration fullInstance uac =
+  if isComplete $ instanceToAggregator fullInstance
+    then confData ^. #authenticationToViewArchived >>= \conf ->
+      pure (AuthenticationToViewArchived, conf)
+    else confData ^. #authenticationToView >>= \conf -> pure (AuthenticationToView, conf)
+  where confData = uac ^. #configurationData
+

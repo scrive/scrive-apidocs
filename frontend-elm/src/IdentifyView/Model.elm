@@ -42,6 +42,7 @@ type alias Flags =
   , smsPinSendUrl : String
   , smsPinVerifyUrl : String
   , errorMessage : Maybe String
+  , maxFailuresExceeded : Bool
   }
 
 type alias Model =

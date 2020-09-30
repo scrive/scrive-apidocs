@@ -70,6 +70,7 @@ data IdentifyViewAppConfig = IdentifyViewAppConfig
   , smsPinSendUrl :: Text
   , smsPinVerifyUrl :: Text
   , errorMessage :: Maybe Text
+  , maxFailuresExceeded :: Bool
   } deriving (Generic)
 
 instance ToJSON IdentifyViewAppConfig where

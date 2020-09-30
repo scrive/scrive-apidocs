@@ -1,6 +1,6 @@
 module IdentifyView.View exposing (..)
 
-import Html exposing (Html, div, text, img, h4, b, a)
+import Html exposing (Html, div, text, img, h4, b, a, p)
 import Html.Attributes exposing (class, src, style, href)
 
 import Lib.Components.FlashMessage as FlashMessage
@@ -41,11 +41,19 @@ view {flashMessages, state} = case state of
         div [ class "identify-box" ] [
           div [ class "identify-box-header" ] [ text flags.welcomeText ],
 
-          case innerModel of
-            IdentifySMSPin params innerState ->
-              SMSPin.viewContent params innerState
-            IdentifyGenericEidService params innerState ->
-              GenericEidService.viewContent params innerState,
+          if flags.maxFailuresExceeded
+            then div [ class "identify-box-content" ]
+                     [ p [ style "margin-bottom" "1em" ]
+                         [ text """We are sorry but you have exceeded the maximum number of
+                                   authentication attempts."""
+                         ]
+                     , p [] [ a [ href "#", class "button" ] [ text "Reject the documents and contact us" ] ]
+                     ]
+            else case innerModel of
+                IdentifySMSPin params innerState ->
+                  SMSPin.viewContent params innerState
+                IdentifyGenericEidService params innerState ->
+                  GenericEidService.viewContent params innerState,
 
           div [ class "identify-box-footer" ] [
             div [ class "identify-box-footer-text" ] [

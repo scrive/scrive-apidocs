@@ -46,6 +46,7 @@ decodeFlags =
   |> JDP.required "smsPinSendUrl" JD.string
   |> JDP.required "smsPinVerifyUrl" JD.string
   |> JDP.required "errorMessage" (JD.nullable JD.string)
+  |> JDP.required "maxFailuresExceeded" JD.bool
 
 init : JD.Value -> (Model, Cmd Msg)
 init value = case JD.decodeValue decodeFlags value of

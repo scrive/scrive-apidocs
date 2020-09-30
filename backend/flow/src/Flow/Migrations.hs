@@ -19,6 +19,7 @@ module Flow.Migrations (
   , createTableFlowEidServiceTransactions
   , addDetailsJsonColumnToFlowEvents
   , moveFlowUserAuthConfigsToJson
+  , createTableFlowAuthenticationFailures
   ) where
 
 import Database.PostgreSQL.PQTypes.Checks
@@ -519,3 +520,37 @@ moveFlowUserAuthConfigsToJson = Migration
                        ]
   }
   where tableName = "flow_user_auth_configs"
+
+createTableFlowAuthenticationFailures :: MonadDB m => Migration m
+createTableFlowAuthenticationFailures = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = tableName
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName     = "id"
+                    , colType     = UuidT
+                    , colNullable = False
+                    , colDefault  = Just "gen_random_uuid()"
+                    }
+        , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+        , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
+        , tblColumn { colName     = "attempted"
+                    , colType     = TimestampWithZoneT
+                    , colNullable = False
+                    }
+        ]
+      , tblPrimaryKey  = pkOnColumns ["id"]
+      , tblForeignKeys = [ (fkOnColumns ["instance_id", "user_name"]
+                                        "flow_instance_key_value_store"
+                                        ["instance_id", "key"]
+                           )
+                             { fkOnDelete = ForeignKeyCascade
+                             }
+                         ]
+      }
+  }
+  where tableName = "flow_eid_authentication_failures"

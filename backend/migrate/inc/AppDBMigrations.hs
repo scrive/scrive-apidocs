@@ -305,4 +305,5 @@ kontraMigrations =
   , createTableFlowEidServiceTransactions
   , addDetailsJsonColumnToFlowEvents
   , moveFlowUserAuthConfigsToJson
+  , createTableFlowAuthenticationFailures
   ]

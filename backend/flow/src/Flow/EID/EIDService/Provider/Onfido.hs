@@ -140,6 +140,7 @@ finaliseTransaction instanceId userName authKind estDB trans =
     Nothing -> do
       let status = EIDServiceTransactionStatusCompleteAndFailed
       mergeEIDServiceTransactionWithStatus status
+      insertAuthenticationFailure instanceId userName authKind
       case estRespCompletionData trans of
         Just cd -> sendCallback cd CB.Failure
         Nothing -> do

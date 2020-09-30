@@ -16,6 +16,7 @@ flowTables =
   , tableFlowUserAuthConfigs
   , tableFlowEidAuthentications
   , tableFlowEidServiceTransactions
+  , tableFlowAuthenticationFailures
   ]
 
 tableFlowTemplates :: Table
@@ -328,5 +329,35 @@ tableFlowEidServiceTransactions = tblTable
     ]
   , tblIndexes     = [ indexOnColumn "session_id"
                      , (indexOnColumn "transaction_id") { idxUnique = True }
+                     ]
+  }
+
+-- TODO: Refactor flow_eid_service_transactions so that we can store multiple transactions
+-- per participant and use that to check for failed transactions. Then we can remove this table.
+tableFlowAuthenticationFailures :: Table
+tableFlowAuthenticationFailures = tblTable
+  { tblName        = "flow_eid_authentication_failures"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName     = "id"
+                , colType     = UuidT
+                , colNullable = False
+                , colDefault  = Just "gen_random_uuid()"
+                }
+    , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName     = "attempted"
+                , colType     = TimestampWithZoneT
+                , colNullable = False
+                }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["id"]
+  , tblForeignKeys = [ (fkOnColumns ["instance_id", "user_name"]
+                                    "flow_instance_key_value_store"
+                                    ["instance_id", "key"]
+                       )
+                         { fkOnDelete = ForeignKeyCascade
+                         }
                      ]
   }

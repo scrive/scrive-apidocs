@@ -3,7 +3,6 @@ module Flow.Server.Pages where
 import Control.Monad.Catch (MonadMask, MonadThrow)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader (ask)
-import Control.Monad.Trans.Maybe
 import Database.PostgreSQL.PQTypes
 import Log.Class
 import Servant
@@ -29,7 +28,6 @@ import Doc.Tokens.Model
 import Doc.Types.SignatoryLink
 import EID.Authentication.Model hiding (AuthenticationProvider)
 import EID.EIDService.Types
-import Flow.Aggregator
 import Flow.Core.Type.AuthenticationConfiguration
 import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
@@ -194,25 +192,27 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
           , flowInstanceId = instanceId'
           }
 
-    mInstanceAuthConfig <- runMaybeT $ do
-      uac <- MaybeT $ Model.selectUserAuthenticationConfiguration instanceId userName
-      MaybeT . pure $ instanceAuthConfig fullInstance uac
+    mUserAuthConfig <- Model.selectUserAuthenticationConfiguration instanceId userName
+    let mAuthKindAndConfig =
+          mUserAuthConfig >>= getAuthenticationKindAndConfiguration fullInstance
 
-    mIdentifyViewVars <- case mInstanceAuthConfig of
-      Just (authKind, authConfig) -> do
-        needsToIdentify <- participantNeedsToIdentifyToView (authKind, authConfig)
-                                                            instanceId
-                                                            userName
-                                                            sessionId
+    mIdentifyViewVars <- case mAuthKindAndConfig of
+      Just (authenticationKind, authenticationConfig) -> do
+        needsToIdentify <- participantNeedsToIdentifyToView
+          (authenticationKind, authenticationConfig)
+          instanceId
+          userName
+          sessionId
         if needsToIdentify
           then do
-            appConfig <- mkIdentifyViewAppConfig cdnBaseUrl'
-                                                 logoUrl
-                                                 (fullInstance ^. #flowInstance)
-                                                 userName
-                                                 authorUserId
-                                                 (authKind, authConfig)
-                                                 sessionId
+            appConfig <- mkIdentifyViewAppConfig
+              cdnBaseUrl'
+              logoUrl
+              (fullInstance ^. #flowInstance)
+              userName
+              authorUserId
+              (authenticationKind, authenticationConfig)
+              sessionId
             pure . Just $ Html.IdentifyViewVars commonVars appConfig
           else pure Nothing
       Nothing -> pure Nothing
@@ -230,10 +230,10 @@ participantNeedsToIdentifyToView
   -> UserName
   -> SessionID
   -> m Bool
-participantNeedsToIdentifyToView (authKind, authenticationConfiguration) instanceId userName sid
+participantNeedsToIdentifyToView (authenticationKind, authenticationConfig) instanceId userName sid
   = do
-    let authProvider = provider authenticationConfiguration
-    mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
+    let authProvider = provider authenticationConfig
+    mAuthInDb <- selectFlowEidAuthentication instanceId userName authenticationKind sid
     case mAuthInDb of
       Nothing -> do
         return True
@@ -268,7 +268,7 @@ mkIdentifyViewAppConfig
   -> (AuthenticationKind, AuthenticationConfiguration)
   -> SessionID
   -> m Html.IdentifyViewAppConfig
-mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind, authenticationConfiguration) sessionId
+mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenticationKind, authenticationConfig) sessionId
   = do
     mAuthor       <- dbQuery $ GetUserByID authorId
 
@@ -279,15 +279,30 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind
       Just (_, slid, did) -> dbQuery $ GetSignatoryLinkByID did slid
       Nothing -> unexpectedError "mkIdentifyViewAppConfig: signatory info not found!"
 
-    -- The error message is based on the assumption that we only use EID Hub
+    maxFailuresExceeded <- checkAuthMaxFailuresExceeded
+      (instance_ ^. #id)
+      userName
+      (authenticationKind, authenticationConfig)
+
     mEidTransaction <- dbQuery $ GetEIDServiceTransactionGuardSessionID
       sessionId
       (instance_ ^. #id)
       userName
-      (EIDServiceAuthToView authKind)
-    let mAuthErrorMessage = mEidTransaction >>= \t -> if isFailedEidTransaction t
-          then Just "Authentication failed, please try again."
-          else Nothing
+      (EIDServiceAuthToView authenticationKind)
+
+    let lastTransactionFailed = maybe False isFailedEidTransaction mEidTransaction
+
+        -- The error messages are based on the assumption that we only use EID Hub
+        mErrorMessage         = if
+          | maxFailuresExceeded -> Just
+            "Maximum number of failed authentications has been reached."
+          | lastTransactionFailed -> Just "Authentication failed, please try again."
+          | otherwise -> Nothing
+
+        -- TODO: Use localisation
+        welcomeText = if maxFailuresExceeded
+          then "Authentication failed"
+          else "To see the documents verify your identity"
 
     let mGenericEidServiceStartUrl =
           (\eidProvider -> "/" <> T.intercalate
@@ -299,10 +314,7 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind
               , toUrlPiece userName
               ]
             )
-            <$> toEIDServiceTransactionProvider (authenticationConfiguration ^. #provider)
-
-        -- TODO: Use localisation
-        welcomeText = "To see the documents verify your identity"
+            <$> toEIDServiceTransactionProvider (authenticationConfig ^. #provider)
 
     pure $ Html.IdentifyViewAppConfig
       { cdnBaseUrl                = cdnBaseUrl
@@ -311,19 +323,21 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind
       , entityTypeLabel           = "Flow"
       , entityTitle               = fromMaybe "" (instance_ ^. #title)
       , authenticationMethod      = toAuthenticationToViewMethod
-                                      (authenticationConfiguration ^. #provider)
+                                      (authenticationConfig ^. #provider)
       , authorName                = maybe "" getFullName mAuthor
       , participantEmail          = getEmail signatoryLink
       , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
       , genericEidServiceStartUrl = mGenericEidServiceStartUrl
       , smsPinSendUrl             = "" -- TODO
       , smsPinVerifyUrl           = "" -- TODO
-      , errorMessage              = mAuthErrorMessage
+      , errorMessage              = mErrorMessage
+      , maxFailuresExceeded       = maxFailuresExceeded
       }
   where
     maskedMobile showLastN mobile =
       T.map (\c -> if c /= ' ' then '*' else c) (T.dropEnd showLastN mobile)
         <> T.takeEnd showLastN mobile
+
     isFailedEidTransaction transaction =
       FEET.estStatus transaction
         `elem` [ EIDServiceTransactionStatusFailed
@@ -344,12 +358,3 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind
         OnfidoDocumentAndPhotoCheckAuthenticationToView
       SmsPin -> SMSPinAuthenticationToView
 
-instanceAuthConfig
-  :: FullInstance
-  -> UserAuthenticationConfiguration
-  -> Maybe (AuthenticationKind, AuthenticationConfiguration)
-instanceAuthConfig fullInstance uac = if isComplete $ instanceToAggregator fullInstance
-  then uac ^. (#configurationData % #authenticationToViewArchived) >>= \conf ->
-    pure (AuthenticationToViewArchived, conf)
-  else uac ^. (#configurationData % #authenticationToView) >>= \conf ->
-    pure (AuthenticationToView, conf)
