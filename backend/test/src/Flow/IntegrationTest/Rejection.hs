@@ -396,9 +396,9 @@ testRejectionCallback = do
 
   let FlowCallbackEventV1Envelope { flowInstanceId, event } = head receivedPayloads
 
-  let event2 = RejectedEvent { userName       = "signatory1"
-                             , mDocumentName  = Nothing
-                             , mRejectMessage = Just rejectMessage
+  let event2 = RejectedEvent { userName      = "signatory1"
+                             , documentName  = Nothing
+                             , rejectMessage = Just rejectMessage
                              }
 
   assertEqual "Event should be rejected event" (Callback.Rejected event2) event
@@ -470,9 +470,9 @@ testSignatoryInFirstStageCanRejectDocument = do
 
   let FlowCallbackEventV1Envelope { flowInstanceId, event } = head receivedPayloads
 
-  let event2 = RejectedEvent { userName       = "signatory1"
-                             , mDocumentName  = Just "doc1"
-                             , mRejectMessage = Just rejectMessage
+  let event2 = RejectedEvent { userName      = "signatory1"
+                             , documentName  = Just "doc1"
+                             , rejectMessage = Just rejectMessage
                              }
 
   assertEqual "Event should be rejected event" (Callback.Rejected event2) event

@@ -18,9 +18,8 @@ module Flow.Migrations (
   , addProviderMethodToFlowEIDAuthentications
   , createTableFlowEidServiceTransactions
   , addDetailsJsonColumnToFlowEvents
-)
-
-where
+  , moveFlowUserAuthConfigsToJson
+  ) where
 
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Class
@@ -497,3 +496,24 @@ addDetailsJsonColumnToFlowEvents = Migration
             $ tblColumn { colName = "details", colType = JsonbT, colNullable = True }
         ]
   }
+
+moveFlowUserAuthConfigsToJson :: MonadDB m => Migration m
+moveFlowUserAuthConfigsToJson = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 1
+  , mgrAction    =
+    StandardMigration $ do
+      -- We can drop the whole table and create new one because if somebody
+      -- used it until now, it did nothing and thus no behaviour will change on
+      -- running instances.
+      runQuery_ $ sqlAlterTable
+        tableName
+        [ sqlDropColumn "auth_to_view_provider"
+        , sqlDropColumn "auth_to_view_max_failures"
+        , sqlDropColumn "auth_to_view_archived_provider"
+        , sqlDropColumn "auth_to_view_archived_max_failures"
+        , sqlAddColumn
+          $ tblColumn { colName = "data", colType = JsonbT, colNullable = False }
+        ]
+  }
+  where tableName = "flow_user_auth_configs"

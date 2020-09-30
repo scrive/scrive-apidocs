@@ -8,6 +8,7 @@ import Data.Aeson
 import Doc.Types.SignatoryLink
 import EID.EIDService.Conf
 import EID.EIDService.Types
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.Id
 import Flow.Names
 import Kontra
@@ -18,25 +19,32 @@ beginEIDServiceTransaction
   => EIDServiceConf
   -> EIDServiceTransactionProvider
   -> AuthenticationKind
+  -> AuthenticationConfiguration
   -> InstanceId
   -> UserName
   -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
-beginEIDServiceTransaction conf provider authKind instanceId userName = do
-  case provider of
-    EIDServiceTransactionProviderVerimi ->
+beginEIDServiceTransaction conf provider authKind authenticationConfig instanceId userName
+  = case (provider, authenticationConfig ^. #provider) of
+    (EIDServiceTransactionProviderVerimi, _) ->
       unexpectedError "Verimi auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderNLIDIN ->
+    (EIDServiceTransactionProviderNLIDIN, _) ->
       unexpectedError "NLIDIN auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderDKNemID ->
+    (EIDServiceTransactionProviderDKNemID, _) ->
       unexpectedError "DKNemID auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderNOBankID ->
+    (EIDServiceTransactionProviderNOBankID, _) ->
       unexpectedError "NOBankID auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderFITupas ->
+    (EIDServiceTransactionProviderFITupas, _) ->
       unexpectedError "FITupas auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderOnfido ->
-      Onfido.beginEIDServiceTransaction conf authKind instanceId userName
-    EIDServiceTransactionProviderSEBankID ->
+    (EIDServiceTransactionProviderOnfido, Onfido onfidoAuthenticationData) ->
+      Onfido.beginEIDServiceTransaction conf
+                                        authKind
+                                        onfidoAuthenticationData
+                                        instanceId
+                                        userName
+    (EIDServiceTransactionProviderSEBankID, _) ->
       unexpectedError "SEBankID auth not supported for Flow via EID service"
+    _ -> unexpectedError
+      "Authentication provider have to match configured provider on flow participant."
 
 completeEIDServiceAuthTransaction
   :: Kontrakcja m

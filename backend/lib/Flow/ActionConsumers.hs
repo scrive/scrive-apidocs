@@ -112,16 +112,17 @@ data RejectAction = RejectAction
 
   -- The name of the document that triggers the rejection action,
   -- if it is triggered from rejecting a document instead of a flow instance.
-  , mDocumentName :: Maybe DocumentName
+  , documentName :: Maybe DocumentName
 
-  , mRejectMessage :: Maybe Text
+  , rejectMessage :: Maybe Text
   }
   deriving (Show, Generic, ToJSON)
 
-data FailAction = FailAction
+newtype FailAction = FailAction
   { instanceId :: InstanceId
   }
-  deriving (Show, Generic, ToJSON)
+  deriving (Show, Generic)
+  deriving newtype ToJSON
 
 data ActionsError
     = UserNotFound HighTongue.UserName
@@ -231,27 +232,26 @@ toConsumableAction baseUrl instanceId eventInfo = \case
 
 toConsumableRejectAction
   :: (MonadThrow m, MonadDB m) => InstanceId -> EventInfo -> Maybe Text -> m RejectAction
-toConsumableRejectAction instanceId EventInfo { eventInfoUser, eventInfoDocument } mRejectMessage
-  = do
-    signatoryMapping <- selectSignatoryInfo instanceId
+toConsumableRejectAction instanceId EventInfo {..} rejectMessage = do
+  signatoryMapping <- selectSignatoryInfo instanceId
 
-    docIds           <- mapMaybeM
-      (\(username2, _, docId) -> if username2 == eventInfoUser
-        then do
-          doc <- dbQuery $ GetDocumentByDocumentID docId
-          if documentstatus doc == Pending
-            then return $ Just (documentid doc)
-            else return Nothing
-        else return Nothing
-      )
-      signatoryMapping
+  docIds           <- mapMaybeM
+    (\(username2, _, docId) -> if username2 == eventInfoUser
+      then do
+        doc <- dbQuery $ GetDocumentByDocumentID docId
+        if documentstatus doc == Pending
+          then return $ Just (documentid doc)
+          else return Nothing
+      else return Nothing
+    )
+    signatoryMapping
 
-    return $ RejectAction { rejector       = eventInfoUser
-                          , instanceId
-                          , mDocumentName  = eventInfoDocument
-                          , documentIds    = docIds
-                          , mRejectMessage
-                          }
+  return $ RejectAction { rejector      = eventInfoUser
+                        , instanceId
+                        , documentName  = eventInfoDocument
+                        , documentIds   = docIds
+                        , rejectMessage = rejectMessage
+                        }
 
 sendEmailNotification
   :: ( CryptoRNG m
@@ -414,22 +414,21 @@ consumeRejectionAction
   :: (MonadDB m, MonadIO m, MonadLog m, MonadMask m, TemplatesMonad m)
   => RejectAction
   -> m ()
-consumeRejectionAction RejectAction { rejector, documentIds, instanceId, mRejectMessage, mDocumentName }
-  = do
-    logInfo "Cancelling documents for rejection of flow instance, and send event callback"
-      $ object
-          [ "document_ids" .= documentIds
-          , "instance_id" .= instanceId
-          , "document_name" .= mDocumentName
-          , "reject_message" .= mRejectMessage
-          ]
+consumeRejectionAction RejectAction {..} = do
+  logInfo "Cancelling documents for rejection of flow instance, and send event callback"
+    $ object
+        [ "document_ids" .= documentIds
+        , "instance_id" .= instanceId
+        , "document_name" .= documentName
+        , "reject_message" .= rejectMessage
+        ]
 
-    forM_ documentIds $ \docId -> do
-      -- Use the system actor for now as otherwise it requires
-      -- additional monad constraints
-      actor <- systemActor <$> currentTime
-      withDocumentID docId . dbUpdate $ CancelDocument actor
+  forM_ documentIds $ \docId -> do
+    -- Use the system actor for now as otherwise it requires
+    -- additional monad constraints
+    actor <- systemActor <$> currentTime
+    withDocumentID docId . dbUpdate $ CancelDocument actor
 
-    let event = RejectedEvent { userName = rejector, mRejectMessage, mDocumentName }
+  let event = RejectedEvent { userName = rejector, rejectMessage, documentName }
 
-    sendEventCallback instanceId $ Callback.Rejected event
+  sendEventCallback instanceId $ Callback.Rejected event

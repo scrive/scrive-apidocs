@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.5"
+  version: "0.10.6"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -646,30 +646,62 @@ components:
         auth_to_view_archived:
           $ref: "#/components/schemas/AuthConfig"
     AuthConfig:
+      oneOf:
+        - $ref: "#/components/schemas/AuthenticationOnfido"
+        - $ref: "#/components/schemas/AuthenticationSMS"
+    AuthConfigBase:
       description: |
         Authentication settings
 
         **In development:** The authentication functionality is in development and these
          settings do not have any effect yet.
-      type: object
-      required:
-        - provider
-        - max_failures
-      properties:
-        provider:
-          description: |
-            An EID provider to use for authentication. Currently only `onfido` and `sms_pin` are supported.
-          type: string
-          enum:
-            - onfido
-            - sms_pin
-          example: onfido
-        max_failures:
-          description: |
-            Number of failed authentication attempts before the user is denied access.
-          type: number
-          format: integer
-          example: 3
+        required:
+          - provider
+          - max_failures
+        properties:
+          provider:
+            description: |
+              An EID provider to use for authentication. Currently only `onfido` and `sms_pin` are supported.
+            type: string
+            enum:
+              - onfido
+              - sms_pin
+          max_failures:
+            description: |
+              Number of failed authentication attempts before the user is denied access.
+            type: number
+            format: integer
+            example: 3
+    AuthenticationOnfido:
+      description: |
+        Onfido authentication object.
+      allOf:
+        - $ref: "#/components/schemas/AuthConfigBase"
+        - type: object
+          properties:
+            provider:
+              type: string
+              enum: [onfido]
+            method:
+              description: |
+                Optional parameter which specifies if Onfido requests only
+                document or both document and photo.
+
+                If not present `document` is assumed.
+              type: string
+              enum:
+                - document
+                - document_and_photo
+    AuthenticationSMS:
+      description: |
+        SMS pin authentication code.
+      allOf:
+        - $ref: "#/components/schemas/AuthConfigBase"
+        - type: object
+          properties:
+            provider:
+              type: string
+              enum: [sms_pin]
     InstanceCreateRequest:
       description: |
         This object specifies the parameters required to instantiate a template.

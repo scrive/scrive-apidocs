@@ -95,7 +95,8 @@ startTemplate account templateId (CreateInstance title templateParameters callba
 
   -- The ordering of operations here is crucial.
   Model.insertFlowInstanceKeyValues id keyValues
-  Model.insertUserAuthConfigs (userAuthConfigs id $ templateParameters ^. #users)
+  Model.insertUserAuthenticationConfigurations
+    (userAuthConfigs id $ templateParameters ^. #users)
 
   -- 1. Documents have to be started after storing the key values
   -- so that notifications are not sent out.
@@ -159,11 +160,13 @@ startTemplate account templateId (CreateInstance title templateParameters callba
       messages
       where users' = Map.map Api.flowUserId users
 
-    userAuthConfigs :: InstanceId -> Map UserName UserConfig -> [UserAuthConfig]
+    userAuthConfigs
+      :: InstanceId -> Map UserName UserConfiguration -> [UserAuthenticationConfiguration]
     userAuthConfigs instanceId users =
       map
-          (\(userName, UserConfig _ authToView authToViewArchived) ->
-            UserAuthConfig instanceId userName authToView authToViewArchived
+          (\(userName, UserConfiguration _ authToView authToViewArchived) ->
+            UserAuthenticationConfiguration instanceId userName
+              $ UserAuthenticationConfigurationData authToView authToViewArchived
           )
         $ Map.toList users
 

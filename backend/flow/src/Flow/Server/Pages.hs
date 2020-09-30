@@ -27,10 +27,10 @@ import Doc.DocControl
 import Doc.Model.Query
 import Doc.Tokens.Model
 import Doc.Types.SignatoryLink
-import EID.Authentication.Model
+import EID.Authentication.Model hiding (AuthenticationProvider)
 import EID.EIDService.Types
 import Flow.Aggregator
-import Flow.EID.AuthConfig
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
 import Flow.Error
@@ -195,7 +195,7 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
           }
 
     mInstanceAuthConfig <- runMaybeT $ do
-      uac <- MaybeT $ Model.selectUserAuthConfig instanceId userName
+      uac <- MaybeT $ Model.selectUserAuthenticationConfiguration instanceId userName
       MaybeT . pure $ instanceAuthConfig fullInstance uac
 
     mIdentifyViewVars <- case mInstanceAuthConfig of
@@ -225,24 +225,25 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
 
 participantNeedsToIdentifyToView
   :: (MonadDB m, MonadThrow m, MonadMask m)
-  => (AuthenticationKind, AuthConfig)
+  => (AuthenticationKind, AuthenticationConfiguration)
   -> InstanceId
   -> UserName
   -> SessionID
   -> m Bool
-participantNeedsToIdentifyToView (authKind, authConf) instanceId userName sid = do
-  let authProvider = provider authConf
-  mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
-  case mAuthInDb of
-    Nothing -> do
-      return True
-    Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
+participantNeedsToIdentifyToView (authKind, authenticationConfiguration) instanceId userName sid
+  = do
+    let authProvider = provider authenticationConfiguration
+    mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
+    case mAuthInDb of
+      Nothing -> do
+        return True
+      Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
 
   where
     authProviderMatchesAuth SmsPin SMSPinAuthentication_{} = True
-    authProviderMatchesAuth SmsPin _ = False
-    authProviderMatchesAuth Onfido EIDServiceOnfidoAuthentication_{} = True
-    authProviderMatchesAuth Onfido _ = False
+    authProviderMatchesAuth SmsPin     _ = False
+    authProviderMatchesAuth (Onfido _) EIDServiceOnfidoAuthentication_{} = True
+    authProviderMatchesAuth (Onfido _) _ = False
 
 getMSessionID
   :: (MonadDB m, MonadThrow m, MonadTime m)
@@ -264,10 +265,10 @@ mkIdentifyViewAppConfig
   -> Instance
   -> UserName
   -> UserID
-  -> (AuthenticationKind, AuthConfig)
+  -> (AuthenticationKind, AuthenticationConfiguration)
   -> SessionID
   -> m Html.IdentifyViewAppConfig
-mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind, authConfig) sessionId
+mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind, authenticationConfiguration) sessionId
   = do
     mAuthor       <- dbQuery $ GetUserByID authorId
 
@@ -298,7 +299,7 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind
               , toUrlPiece userName
               ]
             )
-            <$> toEIDServiceTransactionProvider (authConfig ^. #provider)
+            <$> toEIDServiceTransactionProvider (authenticationConfiguration ^. #provider)
 
         -- TODO: Use localisation
         welcomeText = "To see the documents verify your identity"
@@ -309,7 +310,8 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind
       , welcomeText               = welcomeText
       , entityTypeLabel           = "Flow"
       , entityTitle               = fromMaybe "" (instance_ ^. #title)
-      , authenticationMethod      = toAuthenticationToViewMethod (authConfig ^. #provider)
+      , authenticationMethod      = toAuthenticationToViewMethod
+                                      (authenticationConfiguration ^. #provider)
       , authorName                = maybe "" getFullName mAuthor
       , participantEmail          = getEmail signatoryLink
       , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
@@ -328,8 +330,26 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authKind
                , EIDServiceTransactionStatusCompleteAndFailed
                ]
 
+    toEIDServiceTransactionProvider
+      :: AuthenticationProvider -> Maybe EIDServiceTransactionProvider
+    toEIDServiceTransactionProvider = \case
+      (Onfido _) -> Just EIDServiceTransactionProviderOnfido
+      SmsPin     -> Nothing
+
+    toAuthenticationToViewMethod :: AuthenticationProvider -> AuthenticationToViewMethod
+    toAuthenticationToViewMethod = \case
+      (Onfido (AuthenticationProviderOnfidoData Document)) ->
+        OnfidoDocumentCheckAuthenticationToView
+      (Onfido (AuthenticationProviderOnfidoData DocumentAndPhoto)) ->
+        OnfidoDocumentAndPhotoCheckAuthenticationToView
+      SmsPin -> SMSPinAuthenticationToView
+
 instanceAuthConfig
-  :: FullInstance -> UserAuthConfig -> Maybe (AuthenticationKind, AuthConfig)
+  :: FullInstance
+  -> UserAuthenticationConfiguration
+  -> Maybe (AuthenticationKind, AuthenticationConfiguration)
 instanceAuthConfig fullInstance uac = if isComplete $ instanceToAggregator fullInstance
-  then uac ^. #authToViewArchived >>= \conf -> pure (AuthenticationToViewArchived, conf)
-  else uac ^. #authToView >>= \conf -> pure (AuthenticationToView, conf)
+  then uac ^. (#configurationData % #authenticationToViewArchived) >>= \conf ->
+    pure (AuthenticationToViewArchived, conf)
+  else uac ^. (#configurationData % #authenticationToView) >>= \conf ->
+    pure (AuthenticationToView, conf)

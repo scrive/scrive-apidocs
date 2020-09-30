@@ -5,6 +5,7 @@ import Test.Framework
 import TestKontra
 import qualified Flow.AggregatorTest as Aggregator
 import qualified Flow.AuthenticationTest as Authentication
+import qualified Flow.CallbackPayloadTest as CallbackPayload
 import qualified Flow.CallbackTest as Callback
 import qualified Flow.DocumentCheckerTest as DocumentChecker
 import qualified Flow.EIDTest as EID
@@ -23,4 +24,5 @@ flowTests env = testGroup
   , Integration.tests env
   , VariableCollector.tests
   , Callback.tests env
+  , CallbackPayload.tests
   ]

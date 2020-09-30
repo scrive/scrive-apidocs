@@ -23,15 +23,16 @@ module Flow.Model
     , selectSignatoryInfo
     , selectUserNameFromKV
     , updateAggregatorState
-    , insertUserAuthConfigs
-    , selectUserAuthConfigs
-    , selectUserAuthConfig
+    , insertUserAuthenticationConfigurations
+    , selectUserAuthenticationConfigurations
+    , selectUserAuthenticationConfiguration
     )
   where
 
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
 import Control.Monad.Time
+import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.Tuple.Extra
 import Database.PostgreSQL.PQTypes
@@ -43,7 +44,6 @@ import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
 import Flow.Core.Type.Callback
-import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Message
 import Flow.Model.Types
@@ -400,29 +400,28 @@ selectSignatoryInfo instanceId = do
     sqlWhereEq "fis.instance_id" instanceId
   fetchMany identity
 
-insertUserAuthConfigs :: MonadDB m => [UserAuthConfig] -> m ()
-insertUserAuthConfigs configs =
+insertUserAuthenticationConfigurations
+  :: MonadDB m => [UserAuthenticationConfiguration] -> m ()
+insertUserAuthenticationConfigurations configs =
   unless (null configs) . runQuery_ . sqlInsert "flow_user_auth_configs" $ do
-    sqlSetList "instance_id" $ map (view #instanceId) configs
-    sqlSetList "key" $ map (view #userName) configs
-    sqlSetList "auth_to_view_provider" $ map (fmap provider . view #authToView) configs
-    sqlSetList "auth_to_view_max_failures"
-      $ map (fmap maxFailures . view #authToView) configs
-    sqlSetList "auth_to_view_archived_provider"
-      $ map (fmap provider . view #authToViewArchived) configs
-    sqlSetList "auth_to_view_archived_max_failures"
-      $ map (fmap maxFailures . view #authToViewArchived) configs
+    sqlSetList "instance_id" $ fmap (view #instanceId) configs
+    sqlSetList "key" $ fmap (view #userName) configs
+    sqlSetList "data" $ fmap (JSONB . encode . view #configurationData) configs
 
-selectUserAuthConfigs :: (MonadDB m, MonadThrow m) => InstanceId -> m [UserAuthConfig]
-selectUserAuthConfigs instanceId = do
+selectUserAuthenticationConfigurations
+  :: (MonadDB m, MonadThrow m) => InstanceId -> m [UserAuthenticationConfiguration]
+selectUserAuthenticationConfigurations instanceId = do
   runQuery_ . sqlSelect "flow_user_auth_configs uac" $ do
     userAuthConfigSelectors "uac"
     sqlWhereEq "instance_id" instanceId
   fetchMany fetchUserAuthConfig
 
-selectUserAuthConfig
-  :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m (Maybe UserAuthConfig)
-selectUserAuthConfig instanceId userName = do
+selectUserAuthenticationConfiguration
+  :: (MonadDB m, MonadThrow m)
+  => InstanceId
+  -> UserName
+  -> m (Maybe UserAuthenticationConfiguration)
+selectUserAuthenticationConfiguration instanceId userName = do
   runQuery_ . sqlSelect "flow_user_auth_configs uac" $ do
     userAuthConfigSelectors "uac"
     sqlWhereEq "instance_id" instanceId
@@ -431,12 +430,4 @@ selectUserAuthConfig instanceId userName = do
 
 userAuthConfigSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
 userAuthConfigSelectors prefix = do
-  mapM_
-    (\col -> sqlResult $ prefix <> "." <> col)
-    [ "instance_id"
-    , "key"
-    , "auth_to_view_provider"
-    , "auth_to_view_max_failures"
-    , "auth_to_view_archived_provider"
-    , "auth_to_view_archived_max_failures"
-    ]
+  mapM_ (\col -> sqlResult $ prefix <> "." <> col) ["instance_id", "key", "data"]

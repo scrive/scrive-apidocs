@@ -25,7 +25,6 @@ import EID.EIDService.Types hiding
   )
 import Flow.ActionConsumers
 import Flow.Aggregator
-import Flow.EID.AuthConfig (AuthProvider(Onfido))
 import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
 import Flow.EID.EIDService.Types
@@ -39,60 +38,68 @@ import Session.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import qualified Flow.CallbackPayload as CB
+import qualified Flow.CallbackPayload as Callback
+  ( AuthenticationProvider(..), AuthenticationProviderOnfido(..)
+  )
+import qualified Flow.Core.Type.AuthenticationConfiguration as Core
 import qualified Flow.Model as Model
 
-provider :: EIDServiceTransactionProvider
-provider = EIDServiceTransactionProviderOnfido
+eidProvider :: EIDServiceTransactionProvider
+eidProvider = EIDServiceTransactionProviderOnfido
 
 beginEIDServiceTransaction
   :: Kontrakcja m
   => EIDServiceConf
   -> AuthenticationKind
+  -> Core.AuthenticationProviderOnfidoData
   -> InstanceId
   -> UserName
   -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
-beginEIDServiceTransaction conf authKind instanceId userName = do
-  -- TODO get onfido method from auth config
-  let onfidoMethod = OnfidoDocumentCheck
-  ctx            <- getContext
-  kontraRedirect <- guardJustM (getField "redirect")
-  -- TODO Locally `redDomain` contains localhost:8000 but we want :8888
-  let redirectUrl = UnifiedRedirectUrl { redDomain          = ctx ^. #brandedDomain % #url
-                                       , redProvider        = provider
-                                       , redAuthKind = EIDServiceAuthToView authKind
-                                       , redInstanceId      = instanceId
-                                       , redUserName        = userName
-                                       , redPostRedirectUrl = Just kontraRedirect
-                                       }
-  -- TODO: Temporary - refactor into function when FLOW-325 is merged
-  signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
-    <$> Model.selectSignatoryInfo instanceId
-  (sl, did) <- case signatoryInfo of
-    Just (_, slid, did) -> fmap (, did) <$> dbQuery $ GetSignatoryLinkByID did slid
-    Nothing -> unexpectedError "beginEIDServiceTransaction: signatory info not found!"
-  -- TODO: debugging
-  logInfo_ $ "Redirect URL: " <> showt redirectUrl
+beginEIDServiceTransaction conf authKind onfidoAuthenticationData instanceId userName =
+  do
+    ctx            <- getContext
+    kontraRedirect <- guardJustM (getField "redirect")
+    -- TODO Locally `redDomain` contains localhost:8000 but we want :8888
+    let onfidoMethod = Core.method onfidoAuthenticationData
+    let redirectUrl = UnifiedRedirectUrl { redDomain = ctx ^. #brandedDomain % #url
+                                         , redProvider = eidProvider
+                                         , redAuthKind = EIDServiceAuthToView authKind
+                                         , redInstanceId = instanceId
+                                         , redUserName = userName
+                                         , redPostRedirectUrl = Just kontraRedirect
+                                         }
+    -- TODO: Temporary - refactor into function when FLOW-325 is merged
+    signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
+      <$> Model.selectSignatoryInfo instanceId
+    (sl, did) <- case signatoryInfo of
+      Just (_, slid, did) -> fmap (, did) <$> dbQuery $ GetSignatoryLinkByID did slid
+      Nothing -> unexpectedError "beginEIDServiceTransaction: signatory info not found!"
+    -- TODO: debugging
+    logInfo_ $ "Redirect URL: " <> showt redirectUrl
 
-  let createReq = CreateEIDServiceTransactionRequest
-        { cestProvider           = provider
-        , cestMethod             = EIDServiceAuthMethod
-        , cestRedirectUrl        = showt redirectUrl
-        , cestProviderParameters = Just . toJSON $ OnfidoEIDServiceProviderParams
-                                     { onfidoparamMethod    = onfidoMethod
-                                     , onfidoparamFirstName = getFirstName sl
-                                     , onfidoparamLastName  = getLastName sl
-                                     }
-        }
-  -- Onfido transactions are not started from the API, we get the URL via the create call
-  trans <- createTransactionWithEIDService conf createReq
-  case onfidoMethod of
-    OnfidoDocumentCheck ->
-      chargeForItemSingle CIOnfidoDocumentCheckAuthenticationStarted did
-    OnfidoDocumentAndPhotoCheck ->
-      chargeForItemSingle CIOnfidoDocumentAndPhotoCheckAuthenticationStarted did
-  let tid  = cestRespTransactionID trans
-      turl = cestRespAccessUrl trans
-  return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusNew)
+    let createReq = CreateEIDServiceTransactionRequest
+          { cestProvider           = eidProvider
+          , cestMethod             = EIDServiceAuthMethod
+          , cestRedirectUrl        = showt redirectUrl
+          , cestProviderParameters = Just . toJSON $ OnfidoEIDServiceProviderParams
+                                       { onfidoparamMethod    =
+                                         case onfidoMethod of
+                                           Core.Document -> OnfidoDocumentCheck
+                                           Core.DocumentAndPhoto ->
+                                             OnfidoDocumentAndPhotoCheck
+                                       , onfidoparamFirstName = getFirstName sl
+                                       , onfidoparamLastName  = getLastName sl
+                                       }
+          }
+    -- Onfido transactions are not started from the API, we get the URL via the create call
+    trans <- createTransactionWithEIDService conf createReq
+    case onfidoMethod of
+      Core.Document -> chargeForItemSingle CIOnfidoDocumentCheckAuthenticationStarted did
+      Core.DocumentAndPhoto ->
+        chargeForItemSingle CIOnfidoDocumentAndPhotoCheckAuthenticationStarted did
+    let tid  = cestRespTransactionID trans
+        turl = cestRespAccessUrl trans
+    return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusNew)
 
 
 completeEIDServiceAuthTransaction
@@ -112,7 +119,7 @@ completeEIDServiceAuthTransaction conf instanceId userName = do
       dbQuery
       . GetEIDServiceTransactionNoSessionIDGuard instanceId userName
       $ EIDServiceAuthToView authKind
-    Just trans <- getTransactionFromEIDService conf provider (estID estDB)
+    Just trans <- getTransactionFromEIDService conf eidProvider (estID estDB)
     logInfo_ $ "EID transaction: " <> showt trans
     let eidServiceStatus = estRespStatus trans
         dbStatus         = estStatus estDB
@@ -153,14 +160,12 @@ finaliseTransaction instanceId userName authKind estDB trans =
       sendEventCallback instanceId
         . CB.AuthenticationAttempted
         $ CB.AuthenticationAttemptedEvent
-            { userName     = userName
-            , result       = result
-            , provider     = Onfido
-            , providerData = CB.OnfidoProviderData_ CB.OnfidoProviderData
-                               { applicantId = eidonfidoApplicantId cd
-                               }
+            { userName = userName
+            , result   = result
+            , provider = Callback.Onfido $ Callback.AuthenticationProviderOnfido
+                           { applicantId = eidonfidoApplicantId cd
+                           }
             }
-
 
 updateDBTransactionWithCompletionData
   :: Kontrakcja m

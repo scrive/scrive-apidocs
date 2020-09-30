@@ -124,6 +124,7 @@ Library kontrakcja-flow
 
   Exposed-Modules:
                    Flow.Aggregator
+                 , Flow.Core.Type.AuthenticationConfiguration
                  , Flow.Core.Type.Callback
                  , Flow.Core.Type.Url
                  , Flow.HighTongue
@@ -427,7 +428,6 @@ Library
                  , Flow.Client
                  , Flow.DocumentChecker
                  , Flow.DocumentStarting
-                 , Flow.EID.AuthConfig
                  , Flow.EID.Authentication
                  , Flow.EID.EIDService.Model
                  , Flow.EID.EIDService.Types
@@ -1176,18 +1176,15 @@ Test-suite kontrakcja-test
                  ArchiveTest
                  Attachment.APITest
                  BrandedDomainTest
-                 CSSGenerationTest
-                 CSVUtilTest
-                 ChargeableTest
-                 CronMonthlyInvoiceTest
-                 UserGroupAccountsTest
                  CallbackTest
+                 ChargeableTest
                  CompanyBrandingTest
                  CompanyControlTest
                  ConfigTests
+                 CronMonthlyInvoiceTest
                  CronStatsTest
-                 OAuth
-                 Doc.DBActions
+                 CSSGenerationTest
+                 CSVUtilTest
                  Doc.AccessControlTest
                  Doc.API.V1.CallsTest
                  Doc.API.V1.ForwardsCompatibilityTest
@@ -1203,10 +1200,10 @@ Test-suite kontrakcja-test
                  Doc.API.V2.JSONTest
                  Doc.API.V2.Mock.MockDocInternal
                  Doc.API.V2.Mock.TestUtils
-                 Doc.TestInvariants
                  DocControlTest
+                 Doc.DBActions
                  DocStateTest
-                 Folder.FolderTest
+                 Doc.TestInvariants
                  DumpEvidenceTexts
                  EID.EIDService.CommunicationTest
                  ESignatureTest
@@ -1215,26 +1212,26 @@ Test-suite kontrakcja-test
                  FeatureFlagsTest
                  FileTest
                  FlashMessages
-                 Flow.AuthenticationTest
                  Flow.AggregatorTest
+                 Flow.AuthenticationTest
+                 Flow.CallbackPayloadTest
                  Flow.CallbackTest
                  Flow.DocumentCheckerTest
                  Flow.EIDTest
                  Flow.HighTongueTest
                  Flow.IntegrationTest
                  Flow.IntegrationTest.Common
+                 Flow.IntegrationTest.ComplexCompleteProcess
                  Flow.IntegrationTest.Failure
                  Flow.IntegrationTest.Rejection
-                 Flow.IntegrationTest.ComplexCompleteProcess
                  Flow.IntegrationTest.SimpleCompleteProcess
                  Flow.OrphanTestInstances
                  Flow.TestKontraHandler
+                 FlowTests
                  Flow.TestUtil
                  Flow.VariableCollectorTest
-                 FlowTests
                  Folder.APITest
-                 UserGroup.APITest
-                 UserGroup.UserGroupTest
+                 Folder.FolderTest
                  Generators.DocumentGenerators
                  Generators.OccurenceControl
                  Generators.OccurenceControlTest
@@ -1244,20 +1241,21 @@ Test-suite kontrakcja-test
                  JSONUtilTest
                  LangTest
                  LocalizationTest
-                 LogTest
                  LoginTest
+                 LogTest
                  MailModelTest
                  MailsTest
                  Monitor.APITest
                  NetsXMLTest
-                 PadesTest
+                 OAuth
                  PadApplication.APITest
+                 PadesTest
                  Partner.APITest
                  QRCodeTest
                  ReferenceScreenshotsTest
-                 SMSLinkShorteningTest
                  SessionsTest
                  SignupTest
+                 SMSLinkShorteningTest
                  SSO.GuardsTest
                  SSO.SAMLTest
                  TestConf
@@ -1265,11 +1263,14 @@ Test-suite kontrakcja-test
                  TestEnvSt
                  TestEnvSt.Internal
                  TestFileStorage
-                 TestKontra
                  TestingUtil
                  TestingUtil.JSON
+                 TestKontra
                  ThirdPartyStats
                  User.APITest
+                 UserGroupAccountsTest
+                 UserGroup.APITest
+                 UserGroup.UserGroupTest
                  UserHistoryTest
                  UserPasswordTest
                  UserStateTest
@@ -1278,16 +1279,11 @@ Test-suite kontrakcja-test
                , kontrakcja-prelude
                , kontrakcja-appdir
                , kontrakcja
-               , authentication
                , kontrakcja-flow
-               , Decimal
-               , HStringTemplate
-               , HUnit
-               , HTTP
-               , QuickCheck
                , aeson >= 1.4.4.0
                , aeson-diff
                , amazonka
+               , authentication
                , base64-bytestring
                , binary
                , blaze-markup
@@ -1296,15 +1292,15 @@ Test-suite kontrakcja-test
                , consumers
                , containers
                , cookie
-               , crypto-rng
                , cryptonite
+               , crypto-rng
                , cryptostore
                , data-default
+               , Decimal
                , directory
                , either
                , exceptions
                , extra
-               , optics
                , fields-json
                , filepath
                , free
@@ -1313,9 +1309,12 @@ Test-suite kontrakcja-test
                , hpqtypes
                , hpqtypes-extras
                , hsaml2
+               , HStringTemplate
+               , HTTP
                , http-client
                , http-client-tls
                , http-types
+               , HUnit
                , hxt
                , invariant
                , json
@@ -1328,7 +1327,9 @@ Test-suite kontrakcja-test
                , mtl
                , network-uri
                , one-time-password
+               , optics
                , pretty-simple
+               , QuickCheck
                , quickcheck-instances
                , quickcheck-unicode
                , raw-strings-qq
@@ -1357,6 +1358,7 @@ Test-suite kontrakcja-test
                , unjson
                , unordered-containers
                , utf8-string
+               , uuid
                , vector
                , wai
                , warp

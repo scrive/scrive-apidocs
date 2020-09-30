@@ -2,6 +2,7 @@ module Flow.EID.EIDService.Control (
     eidServiceRoutes
   ) where
 
+import Control.Monad.Extra
 import Data.Aeson (Value)
 import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
@@ -10,6 +11,8 @@ import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
+import API.V2.Errors
+import API.V2.MonadUtils
 import AppView
 import DB
 import Doc.DocStateData
@@ -17,6 +20,7 @@ import Doc.DocStateQuery
 import EID.EIDService.Model (eidServiceConf)
 import EID.EIDService.Types hiding (EIDServiceTransactionFromDB(..))
 import Flow.Aggregator
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.EID.EIDService.Model
 import Flow.EID.EIDService.Provider
 import Flow.EID.EIDService.Types
@@ -58,13 +62,15 @@ startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
   (sl , did)   <- getAnyDocumentWithSl instanceId userName
   (doc, _  )   <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
   fullInstance <- fromJust <$> selectFullInstance instanceId
-  let authKind = if isComplete $ instanceToAggregator fullInstance
-        then AuthenticationToViewArchived
-        else AuthenticationToView
+  uac          <- fromMaybeM throwNoAuthentication
+    $ selectUserAuthenticationConfiguration instanceId userName
+  (authKind, authenticationConfig) <- getKindAndConfiguration fullInstance uac
+
   conf               <- eidServiceConf doc
   (tid, val, status) <- beginEIDServiceTransaction conf
                                                    provider
                                                    authKind
+                                                   authenticationConfig
                                                    instanceId
                                                    userName
   sid <- getNonTempSessionID
@@ -81,6 +87,27 @@ startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
         }
   dbUpdate $ MergeEIDServiceTransaction newTransaction
   return val
+  where
+    getKindAndConfiguration
+      :: forall m
+       . Kontrakcja m
+      => FullInstance
+      -> UserAuthenticationConfiguration
+      -> m (AuthenticationKind, AuthenticationConfiguration)
+    getKindAndConfiguration fullInstance uac =
+      if isComplete $ instanceToAggregator fullInstance
+        then do
+          configuration <- guardConf $ conf ^. #authenticationToViewArchived
+          pure (AuthenticationToViewArchived, configuration)
+        else do
+          configuration <- guardConf $ conf ^. #authenticationToView
+          pure (AuthenticationToView, configuration)
+      where
+        conf      = uac ^. #configurationData
+        guardConf = maybe throwNoAuthentication pure
+    throwNoAuthentication :: Kontrakcja m => m a
+    throwNoAuthentication =
+      apiError $ conflictError "Participant doesn't have authentication configured."
 
 redirectEndpointFromEIDServiceTransaction
   :: Kontrakcja m

@@ -62,7 +62,7 @@ getInstance account instanceId = do
   logInfo_ "Getting instance"
   flowInstance <- checkInstancePerms account instanceId ReadA
   keyValues    <- Model.selectInstanceKeyValues instanceId
-  authConfigs  <- Model.selectUserAuthConfigs instanceId
+  authConfigs  <- Model.selectUserAuthenticationConfigurations instanceId
   accessTokens <- Model.selectInstanceAccessTokens instanceId
 
   let usersWithHashes = fmap (\act -> (act ^. #userName, act ^. #hash)) accessTokens
@@ -105,20 +105,27 @@ getInstance account instanceId = do
         actionDocument <- keyValues ^. #documents % at doc
         pure InstanceAuthorAction { actionType, actionUser, actionDocument }
 
-    toTemplateParameters :: InstanceKeyValues -> [UserAuthConfig] -> TemplateParameters
+    toTemplateParameters
+      :: InstanceKeyValues -> [UserAuthenticationConfiguration] -> TemplateParameters
     toTemplateParameters (InstanceKeyValues documents users messages) authConfigs =
       TemplateParameters documents (Map.mapWithKey toUserConfig users) messages
       where
-        toUserConfig :: UserName -> FlowUserId -> UserConfig
+        toUserConfig :: UserName -> FlowUserId -> UserConfiguration
         toUserConfig userName flowUserId =
-          let uac = lookupUserAuthConfig userName authConfigs
-          in  UserConfig { flowUserId
-                         , authToView         = view #authToView =<< uac
-                         , authToViewArchived = view #authToViewArchived =<< uac
-                         }
-
-        lookupUserAuthConfig :: UserName -> [UserAuthConfig] -> Maybe UserAuthConfig
-        lookupUserAuthConfig userName = find
+          let uac = lookupUserAuthenticationConfiguration userName authConfigs
+          in
+            UserConfiguration
+              { flowUserId
+              , authenticationToView = view (#configurationData % #authenticationToView)
+                                         =<< uac
+              , authenticationToViewArchived =
+                view (#configurationData % #authenticationToViewArchived) =<< uac
+              }
+        lookupUserAuthenticationConfiguration
+          :: UserName
+          -> [UserAuthenticationConfiguration]
+          -> Maybe UserAuthenticationConfiguration
+        lookupUserAuthenticationConfiguration userName = find
           (\uac -> uac ^. #userName == userName && uac ^. #instanceId == instanceId)
 
 listInstances :: Account -> AppM [GetInstance]

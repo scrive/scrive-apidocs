@@ -12,9 +12,9 @@ module Flow.Model.Types
     , FullInstance(..)
     , InstanceSession(InstanceSession)
     , InstanceAccessToken(InstanceAccessToken)
-    , UserAuthConfig(UserAuthConfig)
     , EventDetails(..)
-    , RejectionDetails(..)
+    , UserAuthenticationConfiguration(..)
+    , UserAuthenticationConfigurationData(..)
     , fetchInstance
     , fetchTemplate
     , fetchEvent
@@ -27,9 +27,12 @@ module Flow.Model.Types
     )
  where
 
+import Control.Arrow
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Int
+import Data.ByteString (ByteString)
+import Data.Either.Extra
+import Data.Text
 import Data.Time.Clock
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
@@ -39,7 +42,6 @@ import Auth.Session.SessionID
 import Flow.Aggregator
 import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
-import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types.Internal
@@ -120,7 +122,7 @@ fetchEvent (id, instanceId, userName, documentName, userAction, created, details
         Error   _       -> Nothing
 
     mParsed :: Maybe (Result EventDetails)
-    mParsed = (fromJSON @EventDetails . unJSONB) <$> detailsJson
+    mParsed = fromJSON @EventDetails . unJSONB <$> detailsJson
 
 toEventInfo :: Event -> EventInfo
 toEventInfo Event { userAction, userName, documentName, eventDetails } =
@@ -151,23 +153,19 @@ fetchInstanceAccessToken
 fetchInstanceAccessToken (id, instanceId, userName, hash) = InstanceAccessToken { .. }
 
 fetchUserAuthConfig
-  :: ( InstanceId
-     , UserName
-     , Maybe AuthProvider
-     , Maybe Int32
-     , Maybe AuthProvider
-     , Maybe Int32
-     )
-  -> UserAuthConfig
-fetchUserAuthConfig (instanceId, userName, mViewProvider, mViewMaxFailures, mViewArchivedProvider, mViewArchivedMaxFailures)
-  = UserAuthConfig
+  :: (InstanceId, UserName, JSONB ByteString) -> UserAuthenticationConfiguration
+fetchUserAuthConfig (instanceId, userName, configurationDataByteString) =
+  UserAuthenticationConfiguration
     { instanceId
     , userName
-    , authToView         = mkAuthConfig mViewProvider mViewMaxFailures
-    , authToViewArchived = mkAuthConfig mViewArchivedProvider mViewArchivedMaxFailures
+    , configurationData =
+      fromEither
+      . left
+          (\e ->
+            unexpectedError
+              $  "Can't decode UserAuthenticationConfigurationData: "
+              <> pack e
+          )
+      . eitherDecodeStrict'
+      $ unJSONB configurationDataByteString
     }
-  where
-    mkAuthConfig mProvider mMaxFailures = do
-      provider    <- mProvider
-      maxFailures <- fromIntegral <$> mMaxFailures
-      pure $ AuthConfig { .. }
