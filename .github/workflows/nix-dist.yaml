@@ -2,8 +2,7 @@
 jobs:
   build-kontrakcja-dist:
     runs-on:
-      - linux
-      - self-hosted
+      - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -24,11 +23,6 @@ jobs:
           SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
         name: Setup SSH
         run: "./ci/workflow/scripts/setup-ssh.sh"
-      - name: Nix Collect Garbage
-        run: |
-          df -h
-          nix-collect-garbage
-          df -h
       - name: Build Kontrakcja Dist
         run: |
           nix-build -o result -A ghc88.dist release.nix
@@ -41,4 +35,6 @@ name: Build Nix Dist
 on:
   push:
     branches:
-      - nix
+      - master
+      - staging
+      - production

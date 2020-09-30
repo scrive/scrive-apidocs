@@ -2,8 +2,7 @@
 jobs:
   cache-nix-deps:
     runs-on:
-      - linux
-      - self-hosted
+      - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -26,7 +25,7 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - env:
           CACHIX_SIGNING_KEY: "${{ secrets.CACHIX_SIGNING_KEY }}"
-          nix_collect_garbage: nix-collect-garbage
+          nix_collect_garbage: 'true'
         name: Cache Nix Deps
         run: |
           ./ci/workflow/scripts/cache-nix-deps.sh ${{ matrix.nix-shell }}
