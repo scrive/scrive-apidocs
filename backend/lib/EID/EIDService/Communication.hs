@@ -9,11 +9,9 @@ module EID.EIDService.Communication (
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Aeson
-import Data.Bifunctor
-import Data.ByteString as BS
-import Data.ByteString.Internal as BS
 import Log
 import System.Exit
+import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -51,8 +49,7 @@ guardExitCode calltype provider (exitcode, stdout, stderr) = case exitcode of
     internalError
   ExitSuccess -> do
     let verb = T.pack $ show calltype
-    logInfo ("Success: " <> verb <> " new transaction (eidservice/" <> provider <> ")")
-      $ object ["stdout" `equalsExternalBSL` stdout, "stderr" `equalsExternalBSL` stderr]
+    logInfo_ ("Success: " <> verb <> " new transaction (eidservice/" <> provider <> ")")
 
 cURLCall
   :: (MonadBase IO m, MonadLog m)
@@ -72,26 +69,22 @@ cURLCall conf calltype provider endpoint mjsonData = do
         (  ["-X", verb]
         ++ ["-H", "Authorization: Bearer " <> T.unpack (eidServiceToken conf)]
         ++ ["-H", "Content-Type: application/json"]
-        ++ ["-i"]
+        ++ ["-w", "\n%{http_code}"]  -- attach the http response code after the content
         ++ (if isJust mjsonData then ["--data", "@-"] else [])
         ++ [T.unpack $ eidServiceUrl conf <> "/api/v1/transaction/" <> endpoint]
         )
       $ fromMaybe BSL.empty mjsonData
   guardExitCode calltype (toEIDServiceProviderName provider) (exitcode, stdout, stderr)
-  -- headers and status line are divided by one empty line - we are doing a break on this
-  let (statusAndHeaders, content) =
-        second (BS.drop 4) . BS.breakSubstring "\r\n\r\n" $ BSL.toStrict stdout
-  case getHttpStatusFromStatusLine $ BSL.fromStrict statusAndHeaders of
+  -- The curl output has the shape <content>\n<response code>.
+  let (content, responseCodeLine) = BC.breakEnd (== '\n') $ BSL.toStrict stdout
+  case maybeRead . T.decodeUtf8 $ responseCodeLine of
     Just 200   -> return . Right $ BSL.fromStrict content
     Just other -> return . Left $ HttpErrorCode other
     Nothing    -> do
-      logAttention_ "Can't parse http status line"
+      logAttention_
+        $  "Failed to parse http response code returned by cURL call: "
+        <> T.decodeUtf8 responseCodeLine
       internalError
-  where
-    getHttpStatusFromStatusLine :: BSL.ByteString -> Maybe Int
-    getHttpStatusFromStatusLine bs = case BSL.split (BS.c2w ' ') bs of
-      _ : statusCodeS : _ -> maybeRead . T.decodeUtf8 . BSL.toStrict $ statusCodeS
-      _                   -> Nothing
 
 createTransactionWithEIDService
   :: (Kontrakcja m, FromJSON b)
