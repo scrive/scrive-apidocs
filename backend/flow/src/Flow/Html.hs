@@ -69,6 +69,8 @@ data IdentifyViewAppConfig = IdentifyViewAppConfig
   , genericEidServiceStartUrl :: Maybe Text
   , smsPinSendUrl :: Text
   , smsPinVerifyUrl :: Text
+  , rejectionRejectUrl :: Text
+  , rejectionAlreadyRejected :: Bool
   , errorMessage :: Maybe Text
   , maxFailuresExceeded :: Bool
   } deriving (Generic)

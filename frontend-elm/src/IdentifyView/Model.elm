@@ -14,6 +14,7 @@ import Utils exposing (stringNonEmpty)
 
 import IdentifyView.SMSPin.SMSPin as SMSPin
 import IdentifyView.GenericEidService.GenericEidService as GenericEidService
+import IdentifyView.Rejection.Rejection as Rejection
 
 type Msg
   = AddFlashMessageMsg FlashMessage
@@ -22,6 +23,8 @@ type Msg
   | SMSPinMsg SMSPin.Msg
   | FlashMessageMsg FlashMessage.Msg
   | GenericEidServiceMsg GenericEidService.Msg
+  | RejectionMsg Rejection.Msg
+  | EnterRejectionClickedMsg
 
 type alias Flags =
   { xtoken : String
@@ -41,6 +44,8 @@ type alias Flags =
   , genericEidServiceStartUrl : Maybe String
   , smsPinSendUrl : String
   , smsPinVerifyUrl : String
+  , rejectionRejectUrl : String
+  , rejectionAlreadyRejected : Bool
   , errorMessage : Maybe String
   , maxFailuresExceeded : Bool
   }
@@ -58,6 +63,18 @@ type State
 type ProviderModel
   = IdentifySMSPin (SMSPin.Params Msg) SMSPin.State
   | IdentifyGenericEidService (GenericEidService.Params Msg) GenericEidService.State
+  | IdentifyRejection (Rejection.Params Msg) Rejection.State
+
+toRejectionParams : Flags -> Rejection.Params Msg
+toRejectionParams f =
+    { embed = RejectionMsg
+    , addFlashMessageMsg = AddFlashMessageMsg
+    , errorTraceMsg = ErrorTraceMsg
+    , xtoken = f.xtoken
+    , localization = f.localization
+    , participantEmail = f.participantEmail
+    , rejectUrl = f.rejectionRejectUrl
+    }
 
 toSMSPinParams : Flags -> Result String (SMSPin.Params Msg)
 toSMSPinParams f =

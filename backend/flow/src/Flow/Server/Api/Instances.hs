@@ -186,6 +186,8 @@ toApiUserAction Machinize.Timeout           = Nothing
 -- update the aggregator state and database directly.
 -- This is because AppM does not support the necessary monad constraints
 -- to call the process event functions..
+-- TODO: It would be nice to accept the user's message and send it even if the
+-- flow has been rejected before.
 rejectInstance :: InstanceUser -> InstanceId -> RejectParam -> AppM NoContent
 rejectInstance InstanceUser { instanceId = userInstanceId, userName } targetInstanceId RejectParam { message = mRejectMessage }
   = do

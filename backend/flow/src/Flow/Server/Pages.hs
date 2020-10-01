@@ -28,6 +28,7 @@ import Doc.Tokens.Model
 import Doc.Types.SignatoryLink
 import EID.Authentication.Model hiding (AuthenticationProvider)
 import EID.EIDService.Types
+import Flow.Aggregator (failureStageName)
 import Flow.Core.Type.AuthenticationConfiguration
 import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
@@ -299,12 +300,15 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenti
           | lastTransactionFailed -> Just "Authentication failed, please try again."
           | otherwise -> Nothing
 
-        -- TODO: Use localisation
-        welcomeText = if maxFailuresExceeded
-          then "Authentication failed"
-          else "To see the documents verify your identity"
+        flowRejected = instance_ ^. #currentState == failureStageName
 
-    let mGenericEidServiceStartUrl =
+        -- TODO: Use localisation
+        welcomeText  = if
+          | maxFailuresExceeded -> "Authentication failed"
+          | flowRejected        -> "Flow rejected"
+          | otherwise           -> "To see the documents verify your identity"
+
+        mGenericEidServiceStartUrl =
           (\eidProvider -> "/" <> T.intercalate
               "/"
               [ "eid-service-flow"
@@ -315,6 +319,10 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenti
               ]
             )
             <$> toEIDServiceTransactionProvider (authenticationConfig ^. #provider)
+
+        rejectionRejectUrl = "/" <> T.intercalate
+          "/"
+          [flowPath, "instances", toUrlPiece (instance_ ^. #id), "reject"]
 
     pure $ Html.IdentifyViewAppConfig
       { cdnBaseUrl                = cdnBaseUrl
@@ -330,6 +338,8 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenti
       , genericEidServiceStartUrl = mGenericEidServiceStartUrl
       , smsPinSendUrl             = "" -- TODO
       , smsPinVerifyUrl           = "" -- TODO
+      , rejectionRejectUrl        = rejectionRejectUrl
+      , rejectionAlreadyRejected  = flowRejected
       , errorMessage              = mErrorMessage
       , maxFailuresExceeded       = maxFailuresExceeded
       }

@@ -107,15 +107,19 @@ update params _ msg = case msg of
 
 {- view -}
 
-viewContent : Params msg -> State -> Html msg
-viewContent params state = case state of
+viewContent : Params msg -> State -> Html msg -> Html msg
+viewContent params state rejectionLink = case state of
   Idle ->
     div [ class "identify-box-content" ] [
-      div [ class "identify-box-button" ] [
-        a [ class "button", class "button-large", class "action"
-          , onClick <| params.embed IdentifyButtonClickedMsg ] [
-          div [ class "label" ] [
-            text <| identifyButtonText params ] ] ]
+      div [ class "identify-box-button" ]
+          [ a [ class "button"
+              , class "button-large"
+              , class "action"
+              , onClick <| params.embed IdentifyButtonClickedMsg
+              ]
+              [ div [ class "label" ] [ text <| identifyButtonText params ] ]
+          , rejectionLink
+          ]
     ]
 
   Loading -> div [ class "loadingSpinner" ] []

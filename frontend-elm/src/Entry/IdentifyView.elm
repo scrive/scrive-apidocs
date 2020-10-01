@@ -19,6 +19,7 @@ import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Lib.Types.SignatoryLink exposing (AuthenticationToViewMethod(..))
 
 import IdentifyView.GenericEidService.GenericEidService as GenericEidService
+import IdentifyView.Rejection.Rejection as Rejection
 import IdentifyView.Model exposing (..)
 import IdentifyView.SMSPin.SMSPin as SMSPin
 import IdentifyView.Update exposing (..)
@@ -45,6 +46,8 @@ decodeFlags =
   |> JDP.required "genericEidServiceStartUrl" (JD.nullable JD.string)
   |> JDP.required "smsPinSendUrl" JD.string
   |> JDP.required "smsPinVerifyUrl" JD.string
+  |> JDP.required "rejectionRejectUrl" JD.string
+  |> JDP.required "rejectionAlreadyRejected" JD.bool
   |> JDP.required "errorMessage" (JD.nullable JD.string)
   |> JDP.required "maxFailuresExceeded" JD.bool
 
@@ -61,20 +64,22 @@ init value = case JD.decodeValue decodeFlags value of
                 , state = Loading flags
                 }
 
-        rInnerModel = case flags.authenticationMethod of
-            StandardAuthenticationToView -> Err unsupportedMethodError
-            SEBankIDAuthenticationToView -> eidServiceModel GenericEidService.SEBankID
-            NOBankIDAuthenticationToView -> eidServiceModel GenericEidService.NOBankID
-            LegacyDKNemIDAuthenticationToView -> eidServiceModel GenericEidService.DKNemID
-            DKNemIDCPRAuthenticationToView -> Err unsupportedMethodError
-            DKNemIDPIDAuthenticationToView -> Err unsupportedMethodError
-            DKNemIDCVRAuthenticationToView -> Err unsupportedMethodError
-            SMSPinAuthenticationToView -> smsPinModel
-            FITupasAuthenticationToView -> eidServiceModel GenericEidService.FITupas
-            VerimiAuthenticationToView -> eidServiceModel GenericEidService.Verimi
-            IDINAuthenticationToView -> eidServiceModel GenericEidService.IDIN
-            OnfidoDocumentCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
-            OnfidoDocumentAndPhotoCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
+        rInnerModel = if flags.rejectionAlreadyRejected
+            then Ok <| IdentifyRejection (toRejectionParams flags) Rejection.AlreadyRejected
+            else case flags.authenticationMethod of
+                StandardAuthenticationToView -> Err unsupportedMethodError
+                SEBankIDAuthenticationToView -> eidServiceModel GenericEidService.SEBankID
+                NOBankIDAuthenticationToView -> eidServiceModel GenericEidService.NOBankID
+                LegacyDKNemIDAuthenticationToView -> eidServiceModel GenericEidService.DKNemID
+                DKNemIDCPRAuthenticationToView -> Err unsupportedMethodError
+                DKNemIDPIDAuthenticationToView -> Err unsupportedMethodError
+                DKNemIDCVRAuthenticationToView -> Err unsupportedMethodError
+                SMSPinAuthenticationToView -> smsPinModel
+                FITupasAuthenticationToView -> eidServiceModel GenericEidService.FITupas
+                VerimiAuthenticationToView -> eidServiceModel GenericEidService.Verimi
+                IDINAuthenticationToView -> eidServiceModel GenericEidService.IDIN
+                OnfidoDocumentCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
+                OnfidoDocumentAndPhotoCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
 
         unsupportedMethodError = "Authentication method not supported by IdentifyView"
 

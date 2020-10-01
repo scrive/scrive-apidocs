@@ -1,7 +1,8 @@
 module IdentifyView.View exposing (..)
 
-import Html exposing (Html, div, text, img, h4, b, a, p)
+import Html exposing (Html, div, text, img, h4, b, a, p, textarea)
 import Html.Attributes exposing (class, src, style, href)
+import Html.Events exposing (onClick)
 
 import Lib.Components.FlashMessage as FlashMessage
 import Lib.Types.Document exposing (Document(..))
@@ -13,6 +14,7 @@ import Utils exposing (stringNonEmpty)
 
 import IdentifyView.SMSPin.SMSPin as SMSPin
 import IdentifyView.GenericEidService.GenericEidService as GenericEidService
+import IdentifyView.Rejection.Rejection as Rejection
 import IdentifyView.Model exposing (..)
 
 view : Model -> Html Msg
@@ -41,19 +43,15 @@ view {flashMessages, state} = case state of
         div [ class "identify-box" ] [
           div [ class "identify-box-header" ] [ text flags.welcomeText ],
 
-          if flags.maxFailuresExceeded
-            then div [ class "identify-box-content" ]
-                     [ p [ style "margin-bottom" "1em" ]
-                         [ text """We are sorry but you have exceeded the maximum number of
-                                   authentication attempts."""
-                         ]
-                     , p [] [ a [ href "#", class "button" ] [ text "Reject the documents and contact us" ] ]
-                     ]
-            else case innerModel of
-                IdentifySMSPin params innerState ->
-                  SMSPin.viewContent params innerState
-                IdentifyGenericEidService params innerState ->
-                  GenericEidService.viewContent params innerState,
+          case (innerModel, flags.maxFailuresExceeded) of
+            (IdentifyRejection params innerState, _) ->
+                Rejection.viewContent params innerState
+            (_, True) ->
+                maxFailuresExceededContent
+            (IdentifySMSPin params innerState, False) ->
+                SMSPin.viewContent params innerState rejectionLink
+            (IdentifyGenericEidService params innerState, False) ->
+                GenericEidService.viewContent params innerState rejectionLink,
 
           div [ class "identify-box-footer" ] [
             div [ class "identify-box-footer-text" ] [
@@ -71,14 +69,41 @@ view {flashMessages, state} = case state of
               case innerModel of
                 IdentifySMSPin params _ -> SMSPin.viewFooter params
                 IdentifyGenericEidService params _ -> GenericEidService.viewFooter params
+                IdentifyRejection params _ -> Rejection.viewFooter params
             ],
 
             div [ class "identify-box-footer-logo" ] [
               case innerModel of
                 IdentifySMSPin _ _ -> div [] []
                 IdentifyGenericEidService params _ -> GenericEidService.viewLogo params
+                IdentifyRejection _ _ -> div [] []
             ] ] ] ]
     ]
+
+maxFailuresExceededContent : Html Msg
+maxFailuresExceededContent =
+    div [ class "identify-box-content" ]
+        [ p [ style "margin-bottom" "1em" ]
+            [ text """We are sorry but you have exceeded the maximum number of
+                      authentication attempts."""
+            ]
+        , p []
+            [ a [ class "button"
+                , onClick EnterRejectionClickedMsg
+                ]
+                [ text "Reject the documents and contact us" ]
+            ]
+        ]
+
+rejectionLink : Html Msg
+rejectionLink =
+    div [ style "margin-top" "1em"]
+        [ text "You can also "
+        , a [ class "text-positivecolor"
+            , onClick <| EnterRejectionClickedMsg
+            ]
+            [ text "reject the documents and contact us." ]
+        ]
 
 -- TODO: Temporary: Remove this when the app is usable with Flow.
 underConstructionNotice : String -> Html Msg
