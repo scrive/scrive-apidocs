@@ -55,6 +55,7 @@ on:
       - "**.hs"
       - "**.cabal"
       - cabal.project.freeze
+      - "texts/**"
   push:
     branches:
       - master
