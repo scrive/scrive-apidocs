@@ -1095,7 +1095,7 @@ var Document = exports.Document = Backbone.Model.extend({
       if(this.closed()) {
         return _.any(attachments, function(att) {
           return !att.isAddToSealedFile();
-        }) || this.usesVerimiQes;
+        }) || this.usesVerimiQes();
       } else {
         const has_sig_atts = _.any(this.signatories(), function (sig) {
           return _.any(sig.attachments(), function (att) {
