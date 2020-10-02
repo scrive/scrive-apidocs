@@ -13,6 +13,8 @@ get:
     name. This allows you to download the file with user-specified file name in
     the browser.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: attachment_id
       in: path

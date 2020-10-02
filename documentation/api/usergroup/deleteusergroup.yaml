@@ -23,6 +23,8 @@ post:
     recursive deletion. If this is required, it can be implemented client-side
     by simply working up the tree, deleting the leaves.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: user_group_id
       in: path
