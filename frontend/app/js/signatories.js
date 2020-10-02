@@ -975,17 +975,15 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return bs.indexOf(item) > -1;
         });
       }
-      // maximum of 1 national EID is allowed per signatory
-      var eids = ["se_bankid", "no_bankid", "dk_nemid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi", "verimi_qes"];
-      var isection = intersect( eids, [authToSign, authToView, authToViewArchived]);
-      if (isection.length <= 1) {
-        return true;
-      } else if (isection.length == 2 && _.contains(isection, "dk_nemid") ) {
-        // temporary hack to support legacy nemid as auth2view and new methods as 2sign
-        return true;
-      } else {
-        return false;
+      // TODO remove this code when auth to sign with eid hub is in place
+      // this will allow legacy dk_nemid to sign to only mix with dk_nemid_cpr
+      if (authToSign === "dk_nemid") {
+        authToSign = "dk_nemid_cpr";
       }
+      // maximum of 1 national EID is allowed per signatory
+      var eids = ["se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi", "verimi_qes"];
+      var isection = intersect( eids, [authToSign, authToView, authToViewArchived]);
+      return isection.length <= 1;
     },
     setAuthenticationToView: function(a) {
         var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
