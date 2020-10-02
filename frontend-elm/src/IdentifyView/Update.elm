@@ -24,7 +24,6 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   let errorFlashMessage str =
         update (AddFlashMessageMsg <| FlashError str) model
-
   in case msg of
 
   ErrorTraceMsg fields ->

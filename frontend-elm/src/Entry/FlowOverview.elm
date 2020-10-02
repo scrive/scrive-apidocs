@@ -5,17 +5,21 @@ import Dict
 import FlowOverview.Json exposing (..)
 import FlowOverview.Model exposing (..)
 import FlowOverview.View as View
+import FlowOverview.Update as Update
+import Json.Decode as JD exposing (Value)
 import Html exposing (Html, div, p, text)
 import Html.Attributes exposing (class)
 import Http
-import Json.Decode as JD exposing (Value)
+import Lib.Components.FlashMessage as FlashMessage
+import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Maybe as M
 
 
+main : Program Value Model Msg
 main =
     Browser.element
         { init = init
-        , update = update
+        , update = Update.update
         , subscriptions = subscriptions
         , view = view
         }
@@ -23,113 +27,46 @@ main =
 
 init : Value -> ( Model, Cmd Msg )
 init flagsValue =
-    case JD.decodeValue decodeFlags flagsValue of
-        Ok flags ->
-            case Dict.get "xtoken" flags.cookies of
-                Just _ ->
-                    let
-                        innerModel =
-                            { mInstance = Nothing, mDocuments = Nothing }
+    let (state, cmd) = case JD.decodeValue decodeFlags flagsValue of
+            Ok flags ->
+                case Dict.get "xtoken" flags.cookies of
+                    Just _ ->
+                        let
+                            innerModel =
+                                { mInstance = Nothing, mDocuments = Nothing, mRejection = Nothing }
 
-                        getInstanceViewCmd =
-                            Http.get
-                                { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/view"
-                                , expect = Http.expectJson GetInstanceViewReceived instanceViewDecoder
-                                }
-                    in
-                    ( AppOk { flags = flags, innerModel = innerModel }, getInstanceViewCmd )
+                            getInstanceViewCmd =
+                                Http.get
+                                    { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/view"
+                                    , expect = Http.expectJson GetInstanceViewReceived instanceViewDecoder
+                                    }
+                        in
+                        ( AppOk { flags = flags, innerModel = innerModel }, getInstanceViewCmd )
 
-                Nothing ->
-                    ( Failure "Missing xtoken cookie", Cmd.none )
+                    Nothing ->
+                        ( Failure "Missing xtoken cookie", Cmd.none )
 
-        Err err ->
-            ( Failure (JD.errorToString err), Cmd.none )
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case model of
-        AppOk { flags, innerModel } ->
-            case msg of
-                GetInstanceViewReceived result ->
-                    case result of
-                        Ok instance ->
-                            let
-                                documentsToGet =
-                                    List.map (\a -> ( a.actionDocument, a.actionSignatoryId ))
-                                        instance.actions
-                                        ++ List.map (\d -> ( d.documentId, d.signatoryId ))
-                                            instance.state.documents
-
-                                getDocumentCmds =
-                                    List.map
-                                        (\( documentId, signatoryId ) ->
-                                            Http.get
-                                                { url =
-                                                    flags.kontraApiUrl
-                                                        ++ "/documents/"
-                                                        ++ documentId
-                                                        ++ "/get?signatory_id="
-                                                        ++ signatoryId
-                                                , expect = Http.expectJson GetDocumentReceived documentDecoder
-                                                }
-                                        )
-                                        documentsToGet
-
-                                mDocuments =
-                                    if List.isEmpty documentsToGet then
-                                        Just Dict.empty
-
-                                    else
-                                        Nothing
-
-                                newModel =
-                                    updateModel model
-                                        (\inner -> { inner | mInstance = Just instance, mDocuments = mDocuments })
-                            in
-                            ( newModel, Cmd.batch getDocumentCmds )
-
-                        Err _ ->
-                            -- TODO: Show more specific error info for failed json decoding
-                            ( Failure "Request or json decoding failed for 'view instance' API call.", Cmd.none )
-
-                GetDocumentReceived result ->
-                    case result of
-                        Ok document ->
-                            let
-                                newDocuments =
-                                    case innerModel.mDocuments of
-                                        Nothing ->
-                                            Dict.singleton document.id document
-
-                                        Just docs ->
-                                            Dict.insert document.id document docs
-
-                                newModel =
-                                    updateModel model (\inner -> { inner | mDocuments = Just newDocuments })
-                            in
-                            ( newModel, Cmd.none )
-
-                        Err _ ->
-                            -- TODO: Show more specific error info for failed json decoding
-                            ( Failure "Request or json decoding failed for 'get document' API call.", Cmd.none )
-
-        Failure _ ->
-            ( model, Cmd.none )
+            Err err ->
+                ( Failure (JD.errorToString err), Cmd.none )
+    in ({state = state, flashMessages = FlashMessage.initialState}, cmd)
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
 view : Model -> Html Msg
 view model =
-    case model of
+    case model.state of
         Failure err ->
-            text <| "Error: " ++ err
+            div []
+                [
+                  FlashMessage.view {embed = FlashMessageMsg} model.flashMessages,
+                  text <| "Error: " ++ err
+                ]
 
-        AppOk { flags, innerModel } ->
+        AppOk { innerModel } ->
             case ( innerModel.mInstance, innerModel.mDocuments ) of
                 ( Just instance, Just documents ) ->
                     let
@@ -178,13 +115,23 @@ view model =
                                 (View.docTable actionDocsWithLinks "No documents to sign or approve")
                     in
                     div []
-                        [ if List.isEmpty actionDocsWithLinks then
+                        [
+                          FlashMessage.view {embed = FlashMessageMsg} model.flashMessages,
+
+                          if List.isEmpty actionDocsWithLinks then
                             statusSection
 
                           else
                             actionDocsSection
                         , View.section "Signed or approved documents"
                             (View.docTable stateDocsNoLinks "No signed or approved documents")
+                        , if instance.status == InProgress then
+                            let content = case innerModel.mRejection of
+                                    Just rejectionModel -> View.rejectionComponent rejectionModel
+                                    Nothing -> View.rejectionButton
+                            in View.section "Flow actions" content
+                          else
+                            div [] []
                         ]
 
                 ( Just _, Nothing ) ->

@@ -23,7 +23,7 @@ var app = IdentifyViewElm.init({
   flags: flags
 });
 
-// todo: TrackJS/Mixpanel error tracking
+// todo: TrackJS error tracking
 app.ports.errorTraceMsg.subscribe(function(message) {
   console.log(message);
 });

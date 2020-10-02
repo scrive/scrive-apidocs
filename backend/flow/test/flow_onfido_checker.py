@@ -316,7 +316,7 @@ party_user3 = {
     "number": None,
     "signing_order": 1,
     "first_name": "Foo",
-    "surname": "Bar",
+    "surname": "Consider",
 }
 
 doc1_parties = [ party_user1, party_user2, party_user3 ]
@@ -369,22 +369,9 @@ params = {
 
 post(s, flow_path + "/templates/" + template_id + "/commit", headers=auth_header)
 resp = post(s, flow_path + "/templates/" + template_id + "/start", json=params, headers=auth_header)
-
-user_name = "user2"
 instance = resp.json()
-instance_id = instance["id"]
-access_link = instance["access_links"][user_name]
-print("Flow access link: {access_link}".format(access_link=access_link))
 
-#import urllib.parse
-#redirect = urllib.parse.quote('https://google.com')
-redirect = "foo"
-user_session = req.Session()
-get(user_session, access_link)
-data = {"xtoken": user_session.cookies["xtoken"], "redirect": redirect}
-resp = post(user_session,
-    base_url + "/eid-service-flow/start/onfido/{instance_id}/{user_name}".format(instance_id=instance_id, user_name=user_name),
-    data=data)
-
-access_url = resp.json()['accessUrl']
-print("EID Hub access URL: {access_url}".format(access_url=access_url))
+access_links = instance["access_links"]
+print("Flow access links")
+for user, access_link in access_links.items():
+  print("{user}: {access_link}".format(user=user, access_link=access_link))
