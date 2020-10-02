@@ -17,9 +17,10 @@ module Flow.Migrations (
   , migrateNullableDocumentNameInEvent
   , addProviderMethodToFlowEIDAuthentications
   , createTableFlowEidServiceTransactions
-)
-
-where
+  , addDetailsJsonColumnToFlowEvents
+  , moveFlowUserAuthConfigsToJson
+  , createTableFlowAuthenticationFailures
+  ) where
 
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Class
@@ -483,3 +484,73 @@ createTableFlowEidServiceTransactions = Migration
       }
   }
   where tableName = "flow_eid_service_transactions"
+
+addDetailsJsonColumnToFlowEvents :: MonadDB m => Migration m
+addDetailsJsonColumnToFlowEvents = Migration
+  { mgrTableName = "flow_events"
+  , mgrFrom      = 2
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        "flow_events"
+        [ sqlAddColumn
+            $ tblColumn { colName = "details", colType = JsonbT, colNullable = True }
+        ]
+  }
+
+moveFlowUserAuthConfigsToJson :: MonadDB m => Migration m
+moveFlowUserAuthConfigsToJson = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ do
+      -- We can drop the whole table and create new one because if somebody
+      -- used it until now, it did nothing and thus no behaviour will change on
+      -- running instances.
+                     runQuery_ $ sqlAlterTable
+                       tableName
+                       [ sqlDropColumn "auth_to_view_provider"
+                       , sqlDropColumn "auth_to_view_max_failures"
+                       , sqlDropColumn "auth_to_view_archived_provider"
+                       , sqlDropColumn "auth_to_view_archived_max_failures"
+                       , sqlAddColumn $ tblColumn { colName     = "data"
+                                                  , colType     = JsonbT
+                                                  , colNullable = False
+                                                  , colDefault  = Just "'{}'::jsonb"
+                                                  }
+                       ]
+  }
+  where tableName = "flow_user_auth_configs"
+
+createTableFlowAuthenticationFailures :: MonadDB m => Migration m
+createTableFlowAuthenticationFailures = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 0
+  , mgrAction    =
+    StandardMigration . createTable True $ tblTable
+      { tblName        = tableName
+      , tblVersion     = 1
+      , tblColumns     =
+        [ tblColumn { colName     = "id"
+                    , colType     = UuidT
+                    , colNullable = False
+                    , colDefault  = Just "gen_random_uuid()"
+                    }
+        , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+        , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+        , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
+        , tblColumn { colName     = "attempted"
+                    , colType     = TimestampWithZoneT
+                    , colNullable = False
+                    }
+        ]
+      , tblPrimaryKey  = pkOnColumns ["id"]
+      , tblForeignKeys = [ (fkOnColumns ["instance_id", "user_name"]
+                                        "flow_instance_key_value_store"
+                                        ["instance_id", "key"]
+                           )
+                             { fkOnDelete = ForeignKeyCascade
+                             }
+                         ]
+      }
+  }
+  where tableName = "flow_eid_authentication_failures"

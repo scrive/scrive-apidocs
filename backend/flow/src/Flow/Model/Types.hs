@@ -13,6 +13,7 @@ module Flow.Model.Types
     , InstanceSession(InstanceSession)
     , InstanceAccessToken(InstanceAccessToken)
     , UserAuthConfig(UserAuthConfig)
+    , UserAuthenticationConfigurationData(..)
     , fetchInstance
     , fetchTemplate
     , fetchEvent
@@ -25,10 +26,14 @@ module Flow.Model.Types
     )
  where
 
+import Control.Arrow
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Int
+import Data.ByteString (ByteString)
+import Data.Either.Extra
+import Data.Text
 import Data.Time.Clock
+import Database.PostgreSQL.PQTypes
 import GHC.Generics
 import qualified Data.Set as Set
 
@@ -121,24 +126,40 @@ fetchInstanceAccessToken
   :: (InstanceAccessTokenId, InstanceId, UserName, MagicHash) -> InstanceAccessToken
 fetchInstanceAccessToken (id, instanceId, userName, hash) = InstanceAccessToken { .. }
 
-fetchUserAuthConfig
-  :: ( InstanceId
-     , UserName
-     , Maybe AuthProvider
-     , Maybe Int32
-     , Maybe AuthProvider
-     , Maybe Int32
-     )
-  -> UserAuthConfig
-fetchUserAuthConfig (instanceId, userName, mViewProvider, mViewMaxFailures, mViewArchivedProvider, mViewArchivedMaxFailures)
-  = UserAuthConfig
-    { instanceId
-    , userName
-    , authToView         = mkAuthConfig mViewProvider mViewMaxFailures
-    , authToViewArchived = mkAuthConfig mViewArchivedProvider mViewArchivedMaxFailures
-    }
+
+data UserAuthenticationConfigurationData = UserAuthenticationConfigurationData
+    { authenticationToView :: Maybe AuthConfig
+    , authenticationToViewArchived :: Maybe AuthConfig
+    } deriving (Eq, Generic, Show)
+
+instance FromJSON UserAuthenticationConfigurationData where
+  parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier     = snakeCase
+                                                , constructorTagModifier = snakeCase
+                                                }
+
+instance ToJSON UserAuthenticationConfigurationData where
+  toEncoding = genericToEncoding $ defaultOptions { fieldLabelModifier     = snakeCase
+                                                  , constructorTagModifier = snakeCase
+                                                  }
+
+fetchUserAuthConfig :: (InstanceId, UserName, JSONB ByteString) -> UserAuthConfig
+fetchUserAuthConfig (instanceId, userName, configurationDataByteString) = UserAuthConfig
+  { instanceId
+  , userName
+  , authToView         = authToView
+  , authToViewArchived = authToViewArchived
+  }
   where
-    mkAuthConfig mProvider mMaxFailures = do
-      provider    <- mProvider
-      maxFailures <- fromIntegral <$> mMaxFailures
-      pure $ AuthConfig { .. }
+    (authToView, authToViewArchived) =
+      let
+        UserAuthenticationConfigurationData {..} =
+          fromEither
+            . left
+                (\e ->
+                  unexpectedError
+                    $  "Can't decode UserAuthenticationConfigurationData: "
+                    <> pack e
+                )
+            . eitherDecodeStrict'
+            $ unJSONB configurationDataByteString
+      in  (authenticationToView, authenticationToViewArchived)

@@ -16,6 +16,7 @@ flowTables =
   , tableFlowUserAuthConfigs
   , tableFlowEidAuthentications
   , tableFlowEidServiceTransactions
+  , tableFlowAuthenticationFailures
   ]
 
 tableFlowTemplates :: Table
@@ -133,24 +134,18 @@ tableFlowInstanceKeyValueStore = tblTable
 tableFlowUserAuthConfigs :: Table
 tableFlowUserAuthConfigs = tblTable
   { tblName        = "flow_user_auth_configs"
-  , tblVersion     = 1
-  , tblColumns     =
-    [ tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
-    , tblColumn { colName = "key", colType = TextT, colNullable = False }
-    , tblColumn { colName = "auth_to_view_provider", colType = TextT, colNullable = True }
-    , tblColumn { colName     = "auth_to_view_max_failures"
-                , colType     = IntegerT
-                , colNullable = True
-                }
-    , tblColumn { colName     = "auth_to_view_archived_provider"
-                , colType     = TextT
-                , colNullable = True
-                }
-    , tblColumn { colName     = "auth_to_view_archived_max_failures"
-                , colType     = IntegerT
-                , colNullable = True
-                }
-    ]
+  , tblVersion     = 2
+  , tblColumns     = [ tblColumn { colName     = "instance_id"
+                                 , colType     = UuidT
+                                 , colNullable = False
+                                 }
+                     , tblColumn { colName = "key", colType = TextT, colNullable = False }
+                     , tblColumn { colName     = "data"
+                                 , colType     = JsonbT
+                                 , colNullable = False
+                                 , colDefault  = Just "'{}'::jsonb"
+                                 }
+                     ]
   , tblPrimaryKey  = pkOnColumns ["instance_id", "key"]
   , tblIndexes     = []
   , tblForeignKeys = [ (fkOnColumns ["instance_id", "key"]
@@ -238,7 +233,7 @@ tableFlowInstanceSessions = tblTable
 tableFlowEvents :: Table
 tableFlowEvents = tblTable
   { tblName        = "flow_events"
-  , tblVersion     = 2
+  , tblVersion     = 3
   , tblColumns     =
     [ tblColumn { colName     = "id"
                 , colType     = UuidT
@@ -250,6 +245,7 @@ tableFlowEvents = tblTable
     , tblColumn { colName = "document_name", colType = TextT, colNullable = True }
     , tblColumn { colName = "user_action", colType = TextT, colNullable = False }
     , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "details", colType = JsonbT, colNullable = True }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [indexOnColumn "instance_id"]
@@ -333,5 +329,35 @@ tableFlowEidServiceTransactions = tblTable
     ]
   , tblIndexes     = [ indexOnColumn "session_id"
                      , (indexOnColumn "transaction_id") { idxUnique = True }
+                     ]
+  }
+
+-- TODO: Refactor flow_eid_service_transactions so that we can store multiple transactions
+-- per participant and use that to check for failed transactions. Then we can remove this table.
+tableFlowAuthenticationFailures :: Table
+tableFlowAuthenticationFailures = tblTable
+  { tblName        = "flow_eid_authentication_failures"
+  , tblVersion     = 1
+  , tblColumns     =
+    [ tblColumn { colName     = "id"
+                , colType     = UuidT
+                , colNullable = False
+                , colDefault  = Just "gen_random_uuid()"
+                }
+    , tblColumn { colName = "instance_id", colType = UuidT, colNullable = False }
+    , tblColumn { colName = "user_name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName     = "attempted"
+                , colType     = TimestampWithZoneT
+                , colNullable = False
+                }
+    ]
+  , tblPrimaryKey  = pkOnColumns ["id"]
+  , tblForeignKeys = [ (fkOnColumns ["instance_id", "user_name"]
+                                    "flow_instance_key_value_store"
+                                    ["instance_id", "key"]
+                       )
+                         { fkOnDelete = ForeignKeyCascade
+                         }
                      ]
   }

@@ -303,4 +303,7 @@ kontraMigrations =
   , migrateNullableDocumentNameInEvent
   , addProviderMethodToFlowEIDAuthentications
   , createTableFlowEidServiceTransactions
+  , addDetailsJsonColumnToFlowEvents
+  , moveFlowUserAuthConfigsToJson
+  , createTableFlowAuthenticationFailures
   ]

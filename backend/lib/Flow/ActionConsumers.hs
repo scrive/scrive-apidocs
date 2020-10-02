@@ -109,10 +109,11 @@ data RejectAction = RejectAction
   }
   deriving (Show, Generic, ToJSON)
 
-data FailAction = FailAction
+newtype FailAction = FailAction
   { instanceId :: InstanceId
   }
-  deriving (Show, Generic, ToJSON)
+  deriving stock (Show, Generic)
+  deriving anyclass ToJSON
 
 data ActionsError
     = UserNotFound HighTongue.UserName

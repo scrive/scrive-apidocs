@@ -32,6 +32,7 @@ module Flow.Model
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
 import Control.Monad.Time
+import Data.Aeson
 import Data.Tuple.Extra
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
@@ -41,7 +42,6 @@ import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
 import Flow.Core.Type.Callback
-import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Message
 import Flow.Model.Types
@@ -393,13 +393,13 @@ insertUserAuthConfigs configs =
   unless (null configs) . runQuery_ . sqlInsert "flow_user_auth_configs" $ do
     sqlSetList "instance_id" $ map (view #instanceId) configs
     sqlSetList "key" $ map (view #userName) configs
-    sqlSetList "auth_to_view_provider" $ map (fmap provider . view #authToView) configs
-    sqlSetList "auth_to_view_max_failures"
-      $ map (fmap maxFailures . view #authToView) configs
-    sqlSetList "auth_to_view_archived_provider"
-      $ map (fmap provider . view #authToViewArchived) configs
-    sqlSetList "auth_to_view_archived_max_failures"
-      $ map (fmap maxFailures . view #authToViewArchived) configs
+    let datas = fmap toJson configs
+    sqlSetList "data" datas
+  where
+    toJson c = JSONB . encode $ UserAuthenticationConfigurationData
+      { authenticationToView         = c ^. #authToView
+      , authenticationToViewArchived = c ^. #authToViewArchived
+      }
 
 selectUserAuthConfigs :: (MonadDB m, MonadThrow m) => InstanceId -> m [UserAuthConfig]
 selectUserAuthConfigs instanceId = do
@@ -419,12 +419,4 @@ selectUserAuthConfig instanceId userName = do
 
 userAuthConfigSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
 userAuthConfigSelectors prefix = do
-  mapM_
-    (\col -> sqlResult $ prefix <> "." <> col)
-    [ "instance_id"
-    , "key"
-    , "auth_to_view_provider"
-    , "auth_to_view_max_failures"
-    , "auth_to_view_archived_provider"
-    , "auth_to_view_archived_max_failures"
-    ]
+  mapM_ (\col -> sqlResult $ prefix <> "." <> col) ["instance_id", "key", "data"]
