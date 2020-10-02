@@ -180,7 +180,7 @@ testInvitationLinkLogin = do
   void $ assertRight
     "instanceOverview with auth cookies should succeed"
     ( request
-    . instanceOverviewAuth instanceId "signatory" False (Just $ Cookies' cookies)
+    . instanceOverviewAuth instanceId "signatory" (Just $ Cookies' cookies)
     $ Just flowTestCookieDomain
     )
 
@@ -188,7 +188,7 @@ testInvitationLinkLogin = do
   let instanceOverviewNoAuth = instanceOverview $ mkPageClient (Nothing, Nothing)
   void $ assertLeft
     "instanceOverview without auth cookies should fail"
-    (request . instanceOverviewNoAuth instanceId "signatory" False Nothing $ Just
+    (request . instanceOverviewNoAuth instanceId "signatory" Nothing $ Just
       flowTestCookieDomain
     )
 

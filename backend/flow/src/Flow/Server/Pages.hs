@@ -123,12 +123,11 @@ instanceOverview
   :: InstanceUserHTML
   -> InstanceId
   -> UserName
-  -> Bool
   -> Maybe Cookies'
   -> Maybe Host
   -> IsSecure
   -> AppM Html
-instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdentify mCookies mHost isSecure
+instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mCookies mHost isSecure
   = do
     FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
     let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
@@ -219,10 +218,8 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
       Nothing -> pure Nothing
 
     case mIdentifyViewVars of
-      -- TODO: Temporary: Remove bypassIdentify when the Elm identify-view is usable.
-      Just identifyViewVars | not bypassIdentify ->
-        return $ Html.renderIdentifyView identifyViewVars
-      _ -> return $ Html.renderInstanceOverview instanceOverviewVars
+      Just identifyViewVars -> return $ Html.renderIdentifyView identifyViewVars
+      Nothing               -> return $ Html.renderInstanceOverview instanceOverviewVars
 
 participantNeedsToIdentifyToView
   :: (MonadDB m, MonadThrow m, MonadMask m)

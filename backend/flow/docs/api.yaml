@@ -652,9 +652,6 @@ components:
     AuthConfigBase:
       description: |
         Authentication settings
-
-        **In development:** The authentication functionality is in development and these
-         settings do not have any effect yet.
         required:
           - provider
           - max_failures

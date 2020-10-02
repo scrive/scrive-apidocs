@@ -29,8 +29,6 @@ view {flashMessages, state} = case state of
 
   IdentifyView {flags, innerModel} ->
     div [] [
-      underConstructionNotice flags.location,
-
       FlashMessage.view {embed = FlashMessageMsg} flashMessages,
 
       div [ class "identify-content"] [
@@ -105,23 +103,3 @@ rejectionLink =
             [ text "reject the documents and contact us." ]
         ]
 
--- TODO: Temporary: Remove this when the app is usable with Flow.
-underConstructionNotice : String -> Html Msg
-underConstructionNotice currentUrl =
-    div [ style "background" "#EDA621"
-        , style "color" "#fff"
-        , style "position" "absolute"
-        , style "top" "0"
-        , style "left" "0"
-        , style "height" "40px"
-        , style "line-height" "40px"
-        , style "text-align" "center"
-        , style "width" "100%"
-        ]
-        [ text "This authentication page is under construction. You can "
-        , a [ href <| currentUrl ++ "?bypass_identify"
-            , style "color" "#fff"
-            , style "text-decoration" "underline"
-            ]
-            [ text "go directly to the Flow overview page" ]
-        ]
