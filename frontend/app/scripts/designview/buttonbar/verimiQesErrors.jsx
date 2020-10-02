@@ -23,7 +23,7 @@ var localiseQesError = function (error) {
 module.exports = React.createClass({
   render: function () {
     return (
-      <ul>
+      <ul className={"design-view-verimi-errors-list"}>
         {_.filter(_.map(this.props.errors,
                function (err) {
                  const text = localiseQesError(err);
