@@ -119,7 +119,7 @@ def make_party(party):
       "sign_order": signing_order,
       "has_authenticated_to_view": False,
       "delivery_method": "email",
-      "authentication_method_to_view": "onfido_document_check",
+      "authentication_method_to_view": "standard",
       "authentication_method_to_view_archived": "standard",
       "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",

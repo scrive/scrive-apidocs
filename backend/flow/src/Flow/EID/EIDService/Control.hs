@@ -115,15 +115,14 @@ redirectEndpointFromEIDServiceTransaction provider instanceId (LocalUserName use
     -- TODO nicer logging
     logInfo_ $ "InstanceId: " <> showt instanceId
     logInfo_ $ "User name: " <> showt userName
-    (sl , did)   <- getAnyDocumentWithSl instanceId userName
-    (doc, _  )   <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
-    conf         <- eidServiceConf doc
-    ad           <- getAnalyticsData
-    ctx          <- getContext
-    rd           <- guardJustM $ getField "redirect"
-    mts          <- completeEIDServiceAuthTransaction conf provider instanceId userName
-    redirectPage <- renderTextTemplate "postEIDAuthRedirect" $ do
+    (sl , did) <- getAnyDocumentWithSl instanceId userName
+    (doc, _  ) <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
+    conf       <- eidServiceConf doc
+    ad         <- getAnalyticsData
+    ctx        <- getContext
+    rd         <- guardJustM $ getField "redirect"
+    mts        <- completeEIDServiceAuthTransaction conf provider instanceId userName
+    (simpleHtmlResponse =<<) . renderTextTemplate "postEIDAuthRedirect" $ do
       F.value "redirect" rd
       F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)
       standardPageFields ctx Nothing ad
-    simpleHtmlResponse redirectPage

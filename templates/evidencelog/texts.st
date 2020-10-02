@@ -783,7 +783,9 @@ AuthenticatedToViewEvidenceLog=$if(provider_sms_pin)$ $AuthenticatedToViewEviden
 ###
 AuthenticatedToViewEvidenceLogWithSMSPin=<span class="actor"/> verified their identity through “PIN by SMS” to access the document.
 ###
-AuthenticatedToViewEvidenceLogWithEID=<span class="actor"/> verified their $providerType()$ identity through $provider()$ to access the document. $elegVerificationAuth()$
+AuthenticatedToViewEvidenceLogWithEID=<span class="actor"/> verified their $providerType()$ identity through $provider()$ $FlowAuthToView()$ to access the document. $elegVerificationAuth()$
+###
+FlowAuthToView=$if(flow_auth_to_view)$as part of a Scrive Flow$endif$
 ###
 elegVerificationAuth=
 <br/>
