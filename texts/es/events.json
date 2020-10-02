@@ -93,7 +93,7 @@
 "_SignReminderSendSMSLogWithText":"Scrive eSign envió por SMS un recordatorio de firma a $signatory$ a petición de $actor$. El mensaje recordatorio de $actor$ era: <BR/> <i>$text$</i>.",
 "_SignatoryLinkVisitedTextArchiveSimple":"El documento fue abierto en internet.",
 "_TimeoutDocumentEvidenceTextSimple":"La fecha límite para firmar del documento pasó.",
-"_VerimiQesEvidenceFilePreparedTextSimpleArchive":"",
+"_VerimiQesEvidenceFilePreparedTextSimpleArchive":"Proceso de firma QES completado y archivo de pruebas de Scrive preparado. ",
 "_VisitedViewForAuthenticationEvidenceArchive":"Verifique su identidad en la vista previa antes de ver el documento por completo.",
 "_VisitedViewForSigningEvidenceArchive":"El documento fue abierto en internet.",
 "_designViewAddPartiesRoleApprover":"Autorizador",

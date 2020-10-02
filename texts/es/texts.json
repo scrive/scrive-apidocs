@@ -1136,7 +1136,7 @@
 "_verificationSuccess":"Firma válida",
 "_verificationTime":"Tiempo",
 "_verificationTitle":"Verificar la autenticidad del documento",
-"_verimiQesErrorFieldEditableBySignatory":"",
+"_verimiQesErrorFieldEditableBySignatory":"El documento contiene campos que son editables por signatarios distintos al autor, pero no está permitido cuando se vaya a usar «Verimi QES».",
 "_verimiQesErrorIncompatibleSigningMethod":"Algunos signatarios tienen un método de firma diferente a «Verimi QES». Cuando se vaya a usar «Verimi QES», todos los signatarios deben utilizarlo.",
 "_verimiQesErrorMissingAttachment":"No se ha proporcionado un archivo adjunto requerido por el documento. «Verimi QES» requiere que todos los adjuntos estén presentes al iniciar el documento.",
 "_verimiQesErrorNonAuthorField":"El documento contiene campos que están designados para ser completados por los signatarios, pero al usarse «Verimi QES» todos los campos deben ser completados por el autor.",
