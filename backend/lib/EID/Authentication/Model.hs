@@ -44,6 +44,7 @@ data EAuthentication
   | EIDServiceFITupasAuthentication_ !EIDServiceFITupasAuthentication
   | EIDServiceSEBankIDAuthentication_ !EIDServiceSEBankIDAuthentication
   | EIDServiceOnfidoAuthentication_ !EIDServiceOnfidoAuthentication
+  | EIDServiceSmsOtpAuthentication_ Text -- param is a phone number
     deriving (Show)
 
 ----------------------------------------
@@ -57,6 +58,7 @@ data AuthenticationProvider
   | NetsNOBankID
   | NetsDKNemID
   | SMSPinAuth
+  | SmsOtpAuth
   | NetsFITupas
   | VerimiAuth
   | IDINAuth
@@ -87,7 +89,8 @@ instance FromSQL AuthenticationProvider where
       10 -> return FITupasAuth
       11 -> return SEBankIDAuth
       12 -> return OnfidoAuth
-      _  -> throwM RangeError { reRange = [(1, 12)], reValue = n }
+      13 -> return SmsOtpAuth
+      _  -> throwM RangeError { reRange = [(1, 13)], reValue = n }
 
 instance ToSQL AuthenticationProvider where
   type PQDest AuthenticationProvider = PQDest Int16
@@ -103,6 +106,7 @@ instance ToSQL AuthenticationProvider where
   toSQL FITupasAuth  = toSQL (10 :: Int16)
   toSQL SEBankIDAuth = toSQL (11 :: Int16)
   toSQL OnfidoAuth   = toSQL (12 :: Int16)
+  toSQL SmsOtpAuth   = toSQL (13 :: Int16)
 
 ----------------------------------------
 
@@ -134,6 +138,10 @@ setEIDAuthentication eauth = case eauth of
   SMSPinAuthentication_ mobile -> do
     sqlSet "provider"               SMSPinAuth
     sqlSet "signatory_phone_number" mobile
+
+  EIDServiceSmsOtpAuthentication_ phoneNumber -> do
+    sqlSet "provider"               SmsOtpAuth
+    sqlSet "signatory_phone_number" phoneNumber
 
   NetsFITupasAuthentication_ NetsFITupasAuthentication {..} -> do
     sqlSet "provider"                NetsFITupas
@@ -328,3 +336,4 @@ fetchEAuthentication (provider, internal_provider, provider_method, msignature, 
       , eidServiceOnfidoDateOfBirth = fromJust signatory_dob
       , eidServiceOnfidoMethod = unsafeDecodeOnfidoMethod $ fromJust provider_method
       }
+    SmsOtpAuth -> EIDServiceSmsOtpAuthentication_ (fromJust signatory_phone_number)

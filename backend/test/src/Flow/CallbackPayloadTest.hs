@@ -100,7 +100,7 @@ testAuthenticationSmsPinFailure = encode data' @?= expected
       envelope
         . AuthenticationAttempted
         . AuthenticationAttemptedEvent (unsafeName "user") Failure
-        $ SmsPin
+        $ SmsOtp
 
 testSerializationDeserializationMatch :: FlowCallbackEventV1Envelope -> Bool
 testSerializationDeserializationMatch event = Just event == decode (encode event)
@@ -151,4 +151,4 @@ fewApplicantIds = elements ["1729-asdf-xsdr", "", "very nice applicatn id"]
 
 instance Arbitrary AuthenticationProvider where
   arbitrary =
-    oneof [Onfido . AuthenticationProviderOnfido <$> fewApplicantIds, pure SmsPin]
+    oneof [Onfido . AuthenticationProviderOnfido <$> fewApplicantIds, pure SmsOtp]

@@ -42,6 +42,8 @@ beginEIDServiceTransaction conf provider authKind doc sl = do
       Onfido.beginEIDServiceTransaction conf authKind doc sl
     EIDServiceTransactionProviderSEBankID ->
       SEBankID.beginEIDServiceTransaction conf authKind doc sl
+    EIDServiceTransactionProviderSmsOtp ->
+      unexpectedError "SmsOtp authentication not supported via EID service"
 
 completeEIDServiceAuthTransaction
   :: Kontrakcja m
@@ -65,6 +67,8 @@ completeEIDServiceAuthTransaction conf provider doc sl = case provider of
     Onfido.completeEIDServiceAuthTransaction conf doc sl
   EIDServiceTransactionProviderSEBankID ->
     SEBankID.completeEIDServiceAuthTransaction conf doc sl
+  EIDServiceTransactionProviderSmsOtp ->
+    unexpectedError "SmsOtp authentication not supported via EID service"
 
 completeEIDServiceSignTransaction
   :: Kontrakcja m
@@ -84,3 +88,5 @@ completeEIDServiceSignTransaction conf provider sl = case provider of
   EIDServiceTransactionProviderOnfido -> Onfido.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderSEBankID ->
     SEBankID.completeEIDServiceSignTransaction conf sl
+  EIDServiceTransactionProviderSmsOtp ->
+    unexpectedError "SmsOtp sign not supported via EID service"

@@ -54,10 +54,11 @@ instance ToJSON FlowCallbackEventV1Envelope where
           .= result
           <> encodeProvider provider
 
+      -- TODO FLOW-402: add sms_otp and deprecate sms_pin
       encodeProvider :: AuthenticationProvider -> Series
       encodeProvider (Onfido data') =
         "provider" .= ("onfido" :: Text) <> ("provider_data" `pair` toEncoding data')
-      encodeProvider SmsPin = "provider" .= ("sms_pin" :: Text)
+      encodeProvider SmsOtp = "provider" .= ("sms_pin" :: Text)
 
 
 instance FromJSON FlowCallbackEventV1Envelope where
@@ -87,12 +88,13 @@ instance FromJSON FlowCallbackEventV1Envelope where
               )
       getTypeSpecifics _ type' = fail $ "Unknown callback event type: " <> unpack type'
 
+      -- TODO FLOW-402: add sms_otp and deprecate sms_pin
       getProvider :: Object -> Parser AuthenticationProvider
       getProvider o = do
         (provider :: Text) <- o .: "provider"
         case provider of
           "onfido"  -> Onfido <$> o .: "provider_data"
-          "sms_pin" -> pure SmsPin
+          "sms_pin" -> pure SmsOtp
           _         -> fail $ "Unknown AuthenticationProvider type: " <> unpack provider
 
 data FlowCallbackEventV1
@@ -122,7 +124,7 @@ data AuthenticationAttemptedResult
 
 data AuthenticationProvider
   = Onfido AuthenticationProviderOnfido
-  | SmsPin
+  | SmsOtp
   deriving (Eq, Generic, Show)
 
 newtype AuthenticationProviderOnfido = AuthenticationProviderOnfido

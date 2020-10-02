@@ -25,7 +25,7 @@ import Doc.DocControl
   )
 import Doc.Model.Query
 import Doc.Tokens.Model
-import Doc.Types.SignatoryLink
+import Doc.Types.SignatoryLink (AuthenticationKind)
 import EID.Authentication.Model hiding (AuthenticationProvider)
 import EID.EIDService.Types
 import Flow.Aggregator (failureStageName)
@@ -34,6 +34,7 @@ import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
 import Flow.Error
 import Flow.HighTongue
+import Flow.Html (AuthenticationToViewFlowMethod(..))
 import Flow.Id
 import Flow.Model.Types
 import Flow.OrphanInstances ()
@@ -42,6 +43,7 @@ import Flow.Routes.Types
 import Flow.Server.Cookies
 import Flow.Server.Types
 import Flow.Server.Utils
+import Flow.Utils
 import User.Model.Query
 import User.UserID
 import UserGroup.Model
@@ -238,8 +240,8 @@ participantNeedsToIdentifyToView (authenticationKind, authenticationConfig) inst
       Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
 
   where
-    authProviderMatchesAuth SmsPin SMSPinAuthentication_{} = True
-    authProviderMatchesAuth SmsPin     _ = False
+    authProviderMatchesAuth SmsOtp EIDServiceSmsOtpAuthentication_{} = True
+    authProviderMatchesAuth SmsOtp     _ = False
     authProviderMatchesAuth (Onfido _) EIDServiceOnfidoAuthentication_{} = True
     authProviderMatchesAuth (Onfido _) _ = False
 
@@ -268,14 +270,10 @@ mkIdentifyViewAppConfig
   -> m Html.IdentifyViewAppConfig
 mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenticationKind, authenticationConfig) sessionId
   = do
-    mAuthor       <- dbQuery $ GetUserByID authorId
+    mAuthor             <- dbQuery $ GetUserByID authorId
 
-    -- TODO: Find a nicer way of getting the signatory link
-    signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
-      <$> Model.selectSignatoryInfo (instance_ ^. #id)
-    signatoryLink <- case signatoryInfo of
-      Just (_, slid, did) -> dbQuery $ GetSignatoryLinkByID did slid
-      Nothing -> unexpectedError "mkIdentifyViewAppConfig: signatory info not found!"
+    (did, slid)         <- findFirstSignatoryLink (instance_ ^. #id) userName
+    signatoryLink       <- dbQuery $ GetSignatoryLinkByID did slid
 
     maxFailuresExceeded <- checkAuthMaxFailuresExceeded
       (instance_ ^. #id)
@@ -355,13 +353,13 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenti
       :: AuthenticationProvider -> Maybe EIDServiceTransactionProvider
     toEIDServiceTransactionProvider = \case
       (Onfido _) -> Just EIDServiceTransactionProviderOnfido
-      SmsPin     -> Nothing
+      SmsOtp     -> Just EIDServiceTransactionProviderSmsOtp
 
-    toAuthenticationToViewMethod :: AuthenticationProvider -> AuthenticationToViewMethod
+    toAuthenticationToViewMethod
+      :: AuthenticationProvider -> AuthenticationToViewFlowMethod
     toAuthenticationToViewMethod = \case
       (Onfido (AuthenticationProviderOnfidoData Document)) ->
         OnfidoDocumentCheckAuthenticationToView
       (Onfido (AuthenticationProviderOnfidoData DocumentAndPhoto)) ->
         OnfidoDocumentAndPhotoCheckAuthenticationToView
-      SmsPin -> SMSPinAuthenticationToView
-
+      SmsOtp -> SmsOtpAuthenticationToView

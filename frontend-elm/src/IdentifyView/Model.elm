@@ -2,6 +2,7 @@ module IdentifyView.Model exposing (..)
 
 import Html exposing (Html)
 import Http
+import Json.Decode as JD exposing (Decoder)
 import Json.Encode
 
 import Lib.Types.Document exposing (Document(..))
@@ -26,6 +27,25 @@ type Msg
   | RejectionMsg Rejection.Msg
   | EnterRejectionClickedMsg
 
+-- We're using our own type rather than the one in `Lib.Types.SignatoryLink`,
+-- because signatory links don't support SMS OTP yet. Once they do,
+-- we can switch back to it.
+type AuthenticationToViewFlowMethod
+  = OnfidoDocumentCheckAuthenticationToView
+  | OnfidoDocumentAndPhotoCheckAuthenticationToView
+  | SmsOtpAuthenticationToView
+
+authenticationToViewFlowMethodDecoder : Decoder AuthenticationToViewFlowMethod
+authenticationToViewFlowMethodDecoder =
+  JD.string
+  |> JD.andThen
+      (\s -> case s of
+        "onfido_document_check" -> JD.succeed OnfidoDocumentCheckAuthenticationToView
+        "onfido_document_and_photo_check" -> JD.succeed OnfidoDocumentAndPhotoCheckAuthenticationToView
+        "sms_otp" -> JD.succeed SmsOtpAuthenticationToView
+        _ -> JD.fail <| "Cannot parse AuthenticationToViewFlowMethod: " ++ s
+      )
+
 type alias Flags =
   { xtoken : String
   , localization : Localization
@@ -37,7 +57,7 @@ type alias Flags =
   , welcomeText : String
   , entityTypeLabel : String
   , entityTitle : String
-  , authenticationMethod : AuthenticationToViewMethod
+  , authenticationMethod : AuthenticationToViewFlowMethod
   , authorName : String
   , participantEmail : String
   , participantMaskedMobile : String

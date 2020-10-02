@@ -26,8 +26,9 @@ instance FromJSON AuthorizationConfiguration where
 instance ToJSON AuthorizationConfiguration where
   toEncoding = genericToEncoding aesonOptions
 
+-- TODO: require signatory mobile when sms_otp is used
 data AuthProvider
-    = SmsPin
+    = SmsOtp
     | Onfido
       { method :: OnfidoMethod
       }

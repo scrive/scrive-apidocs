@@ -66,10 +66,10 @@ def make_party(party):
     surname = party["surname"]
     email = party["email"]
     role = party.get("role") or "signing_party"
-    number = party.get("number")
+    phone_number = party.get("phone_number")
     signing_order = party.get("signing_order") or 1
 
-    number_field = []
+    phone_number_field = []
     email_field = []
 
     name_fields = [
@@ -101,11 +101,11 @@ def make_party(party):
               "placements": []
             }
         ]
-    if number:
-        number_field = [
+    if phone_number:
+        phone_number_field = [
             {
               "type": "mobile",
-              "value": number,
+              "value": phone_number,
               "is_obligatory": True,
               "should_be_filled_by_sender": True,
               "editable_by_signatory": False,
@@ -114,7 +114,7 @@ def make_party(party):
         ]
     return {
       "signatory_role": role,
-      "fields": name_fields + email_field + number_field,
+      "fields": name_fields + email_field + phone_number_field,
       "consent_module": None,
       "sign_order": signing_order,
       "has_authenticated_to_view": False,
@@ -291,7 +291,7 @@ template_id = resp.json()['id']
 party_user1 = {
     "email": user_email,
     "role": "signing_party",
-    "number": None,
+    "phone_number": None,
     "signing_order": 1,
     "first_name": "John",
     "surname": "Smith",
@@ -302,7 +302,7 @@ user2_email = "foo@bar.com"
 party_user2 = {
     "email": user2_email,
     "role": "signing_party",
-    "number": None,
+    "phone_number": "",
     "signing_order": 1,
     "first_name": "Foo",
     "surname": "Bar",
@@ -313,7 +313,7 @@ user3_email = "bar@baz.com"
 party_user3 = {
     "email": user3_email,
     "role": "signing_party",
-    "number": None,
+    "phone_number": None,
     "signing_order": 1,
     "first_name": "Foo",
     "surname": "Consider",

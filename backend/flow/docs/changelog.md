@@ -1,5 +1,9 @@
 # API specification changelog
 
+## 0.10.7
+
+* Add support for SMS OTP (one-time password) authentication via EID Hub.
+
 ## 0.10.6
 
 * Add Onfido authentication `method` to `AuthenticationOnfido` schema, can be

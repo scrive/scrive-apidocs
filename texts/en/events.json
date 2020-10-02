@@ -1,4 +1,4 @@
-{ 
+{
 "_ApproveReminderSendEmailLog":"Scrive eSign sent a reminder to approve via email to $signatory$ at the request of the user $actor$.",
 "_ApproveReminderSendEmailLogWithText":"Scrive eSign sent a reminder to approve via email to $signatory$ at the request of the user $actor$. The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.",
 "_ApproveReminderSendEmailSMSLog":"Scrive eSign sent a reminder to approve via email and SMS to $signatory$ at the request of the user $actor$.",
@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"Verified their identity with Onfido to access the document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verified their identity with Swedish BankID to access the document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verified their identity with PIN by SMS to access the document.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"Verified their identity with SMS OTP to access the document.",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Verified their identity with Verimi to access the document.",
 "_AutomaticReminderSentTextSimpleEmail":"An automatic reminder to sign the document was sent to $signatory$ using email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"An automatic reminder to sign the document was sent to $signatory$ using email and SMS.",

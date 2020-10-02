@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.6"
+  version: "0.10.7"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -652,23 +652,23 @@ components:
     AuthConfigBase:
       description: |
         Authentication settings
-        required:
-          - provider
-          - max_failures
-        properties:
-          provider:
-            description: |
-              An EID provider to use for authentication. Currently only `onfido` and `sms_pin` are supported.
-            type: string
-            enum:
-              - onfido
-              - sms_pin
-          max_failures:
-            description: |
-              Number of failed authentication attempts before the user is denied access.
-            type: number
-            format: integer
-            example: 3
+      required:
+        - provider
+        - max_failures
+      properties:
+        provider:
+          description: |
+            An EID provider to use for authentication. Currently only `onfido` and `sms_pin` are supported.
+          type: string
+          enum:
+            - onfido
+            - sms_pin
+        max_failures:
+          description: |
+            Number of failed authentication attempts before the user is denied access.
+          type: number
+          format: integer
+          example: 3
     AuthenticationOnfido:
       description: |
         Onfido authentication object.
@@ -692,6 +692,9 @@ components:
     AuthenticationSMS:
       description: |
         SMS pin authentication code.
+
+        When using this method, make sure that the a phone number is configured on all documents
+        that the given user participates in.
       allOf:
         - $ref: "#/components/schemas/AuthConfigBase"
         - type: object

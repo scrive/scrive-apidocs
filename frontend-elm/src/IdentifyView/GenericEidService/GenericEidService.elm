@@ -22,7 +22,7 @@ import Lib.Misc.Cmd exposing (perform)
 
 {- Provider specific stuff -}
 
-type Provider = DKNemID | FITupas | IDIN | NOBankID | SEBankID | Verimi | Onfido
+type Provider = DKNemID | FITupas | IDIN | NOBankID | SEBankID | Verimi | Onfido | SmsOtp
 
 type ProcessingAction = Embed | Redirect
 
@@ -36,6 +36,7 @@ processingAction provider = case provider of
   IDIN -> Redirect
   Verimi -> Redirect
   Onfido -> Redirect
+  SmsOtp -> Redirect
 
 identifyButtonText : Params msg -> String
 identifyButtonText params = case params.provider of
@@ -46,16 +47,18 @@ identifyButtonText params = case params.provider of
   SEBankID -> params.localization.identifyBankId
   Verimi -> params.localization.identify.identifyWithVerimi
   Onfido -> "Identify with Onfido" -- TODO: Localisation
+  SmsOtp -> "Identify with SMS" -- TODO: Localization
 
-logoSrc : Provider -> String
+logoSrc : Provider -> Maybe String
 logoSrc provider = case provider of
-  DKNemID -> "/img/nemid-dk.png"
-  NOBankID -> "/img/bankid-no.png"
-  SEBankID -> "/img/bankid2.png"
-  FITupas -> "/img/tupas-fi.png"
-  IDIN -> "/img/iDIN.png"
-  Verimi -> "/img/verimi.svg"
-  Onfido -> "/img/onfido.png"
+  DKNemID -> Just "/img/nemid-dk.png"
+  NOBankID -> Just "/img/bankid-no.png"
+  SEBankID -> Just "/img/bankid2.png"
+  FITupas -> Just "/img/tupas-fi.png"
+  IDIN -> Just "/img/iDIN.png"
+  Verimi -> Just "/img/verimi.svg"
+  Onfido -> Just "/img/onfido.png"
+  SmsOtp -> Nothing
 
 {- Params / State -}
 
@@ -150,5 +153,9 @@ viewLogo params = case params.provider of
       img [ src <| params.cdnBaseUrl ++ "/img/bankid2.png" ] []
     ]
 
-  _ -> img [ src <| params.cdnBaseUrl ++ logoSrc params.provider ] []
+
+  _ ->
+    case logoSrc params.provider of
+      Just logo -> img [ src <| params.cdnBaseUrl ++ logo] []
+      Nothing -> div [] []
 

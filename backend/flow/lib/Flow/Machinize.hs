@@ -101,14 +101,14 @@ data EventInfo = EventInfo
 instance ToJSON EventInfo where
   toEncoding = genericToEncoding aesonOptions
 
-data RejectionDetails = RejectionDetails
+newtype RejectionDetails = RejectionDetails
   { rejectMessage :: Text }
   deriving (Eq, Show, Generic)
 
 -- Possible variants of details when inserting a flow event
 -- into database. We currently do not validate which user action
 -- should match with which event details.
-data EventDetails
+newtype EventDetails
   = RejectionEventDetails RejectionDetails
   -- More types to be added here
   deriving (Eq, Show, Generic)

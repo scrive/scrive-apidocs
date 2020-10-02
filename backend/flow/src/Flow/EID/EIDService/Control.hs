@@ -15,7 +15,6 @@ import API.V2.Errors
 import API.V2.MonadUtils
 import AppView
 import DB
-import Doc.DocStateData
 import Doc.DocStateQuery
 import EID.EIDService.Model (eidServiceConf)
 import EID.EIDService.Types hiding (EIDServiceTransactionFromDB(..))
@@ -27,6 +26,7 @@ import Flow.Id
 import Flow.Model
 import Flow.Model.Types
 import Flow.Names
+import Flow.Utils
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import MinutesTime
@@ -73,8 +73,8 @@ startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
   when maxFailuresExceeded
     $ Kontra.unauthorized "Maximum number of authentication attempts exceeeded."
 
-  (sl , did)         <- getAnyDocumentWithSl instanceId userName
-  (doc, _  )         <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
+  (did, slid)        <- findFirstSignatoryLink instanceId userName
+  (doc, _   )        <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
   conf               <- eidServiceConf doc
   (tid, val, status) <- beginEIDServiceTransaction conf
                                                    provider
@@ -115,13 +115,13 @@ redirectEndpointFromEIDServiceTransaction provider instanceId (LocalUserName use
     -- TODO nicer logging
     logInfo_ $ "InstanceId: " <> showt instanceId
     logInfo_ $ "User name: " <> showt userName
-    (sl , did) <- getAnyDocumentWithSl instanceId userName
-    (doc, _  ) <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
-    conf       <- eidServiceConf doc
-    ad         <- getAnalyticsData
-    ctx        <- getContext
-    rd         <- guardJustM $ getField "redirect"
-    mts        <- completeEIDServiceAuthTransaction conf provider instanceId userName
+    (did, slid) <- findFirstSignatoryLink instanceId userName
+    (doc, _   ) <- getDocumentAndSignatoryForEIDAuth did slid
+    conf        <- eidServiceConf doc
+    ad          <- getAnalyticsData
+    ctx         <- getContext
+    rd          <- guardJustM $ getField "redirect"
+    mts         <- completeEIDServiceAuthTransaction conf provider instanceId userName
     (simpleHtmlResponse =<<) . renderTextTemplate "postEIDAuthRedirect" $ do
       F.value "redirect" rd
       F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)

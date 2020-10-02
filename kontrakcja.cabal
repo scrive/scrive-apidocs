@@ -434,6 +434,8 @@ Library
                  , Flow.EID.EIDService.Control
                  , Flow.EID.EIDService.Provider
                  , Flow.EID.EIDService.Provider.Onfido
+                 , Flow.EID.EIDService.Provider.SmsOtp
+                 , Flow.EID.EIDService.Provider.Common
                  , Flow.Engine
                  , Flow.Error
                  , Flow.Guards
@@ -466,6 +468,7 @@ Library
                  , Flow.Server.Utils
                  , Flow.Signview
                  , Flow.Tables
+                 , Flow.Utils
                  , Flow.VariableCollector
                  , Folder.API
                  , Folder.FolderID

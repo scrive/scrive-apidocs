@@ -13,10 +13,8 @@ import Lib.Json.ID exposing (idDecoder)
 import Lib.Json.Document exposing (documentDecoder)
 import Lib.Json.FlashMessage exposing (flashMessageDecoder)
 import Lib.Json.Localization exposing (localisationDecoder)
-import Lib.Json.SignatoryLink exposing (authenticationToViewMethodDecoder)
 import Lib.Components.FlashMessage as FlashMessage
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
-import Lib.Types.SignatoryLink exposing (AuthenticationToViewMethod(..))
 
 import IdentifyView.GenericEidService.GenericEidService as GenericEidService
 import IdentifyView.Rejection.Rejection as Rejection
@@ -39,7 +37,7 @@ decodeFlags =
   |> JDP.required "welcomeText" JD.string
   |> JDP.required "entityTypeLabel" JD.string
   |> JDP.required "entityTitle" JD.string
-  |> JDP.required "authenticationMethod" authenticationToViewMethodDecoder
+  |> JDP.required "authenticationMethod" authenticationToViewFlowMethodDecoder
   |> JDP.required "authorName" JD.string
   |> JDP.required "participantEmail" JD.string
   |> JDP.required "participantMaskedMobile" JD.string
@@ -67,19 +65,9 @@ init value = case JD.decodeValue decodeFlags value of
         rInnerModel = if flags.rejectionAlreadyRejected
             then Ok <| IdentifyRejection (toRejectionParams flags) Rejection.AlreadyRejected
             else case flags.authenticationMethod of
-                StandardAuthenticationToView -> Err unsupportedMethodError
-                SEBankIDAuthenticationToView -> eidServiceModel GenericEidService.SEBankID
-                NOBankIDAuthenticationToView -> eidServiceModel GenericEidService.NOBankID
-                LegacyDKNemIDAuthenticationToView -> eidServiceModel GenericEidService.DKNemID
-                DKNemIDCPRAuthenticationToView -> Err unsupportedMethodError
-                DKNemIDPIDAuthenticationToView -> Err unsupportedMethodError
-                DKNemIDCVRAuthenticationToView -> Err unsupportedMethodError
-                SMSPinAuthenticationToView -> smsPinModel
-                FITupasAuthenticationToView -> eidServiceModel GenericEidService.FITupas
-                VerimiAuthenticationToView -> eidServiceModel GenericEidService.Verimi
-                IDINAuthenticationToView -> eidServiceModel GenericEidService.IDIN
                 OnfidoDocumentCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
                 OnfidoDocumentAndPhotoCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
+                SmsOtpAuthenticationToView -> eidServiceModel GenericEidService.SmsOtp
 
         unsupportedMethodError = "Authentication method not supported by IdentifyView"
 

@@ -69,7 +69,7 @@ testAuthenticationConfiguration = do
         (Onfido $ AuthenticationProviderOnfidoData Document)
         1
       )
-      (Just $ AuthenticationConfiguration SmsPin 3)
+      (Just $ AuthenticationConfiguration SmsOtp 3)
     userConfigs = Map.fromList [("author", authorConfig), ("signatory", signatoryConfig)]
     templateParams =
       TemplateParameters (Map.fromList [("doc", documentid doc)]) userConfigs mempty

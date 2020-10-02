@@ -162,6 +162,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
             renderTextTemplate "_identifiedByFITupasText" fields
           EIDServiceOnfidoAuthentication_ _ ->
             renderTextTemplate "_identifiedByOnfidoText" fields
+          EIDServiceSmsOtpAuthentication_ _ -> return ""
 
   mesignature  <- dbQuery . GetESignature $ signatorylinkid signatory
   nameFromText <- do
@@ -290,7 +291,8 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         eidServiceFITupasSignatoryName authentication
       EIDServiceOnfidoAuthentication_ authentication ->
         eidServiceOnfidoSignatoryName authentication
-      SMSPinAuthentication_ _ -> ""
+      SMSPinAuthentication_           _ -> ""
+      EIDServiceSmsOtpAuthentication_ _ -> ""
 
 personExFromSignatoryLink
   :: ( MonadDB m

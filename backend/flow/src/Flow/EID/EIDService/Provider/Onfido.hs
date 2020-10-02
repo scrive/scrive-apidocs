@@ -29,13 +29,13 @@ import EID.EIDService.Types hiding
   )
 import EvidenceLog.Model
 import Flow.ActionConsumers
-import Flow.Aggregator
 import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
+import Flow.EID.EIDService.Provider.Common
 import Flow.EID.EIDService.Types
 import Flow.Id
-import Flow.Model.Types
 import Flow.Names
+import Flow.Utils
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import Log.Identifier
@@ -48,7 +48,6 @@ import qualified Flow.CallbackPayload as Callback
   ( AuthenticationProvider(..), AuthenticationProviderOnfido(..)
   )
 import qualified Flow.Core.Type.AuthenticationConfiguration as Core
-import qualified Flow.Model as FlowModel
 import qualified Flow.Model as Model
 
 eidProvider :: EIDServiceTransactionProvider
@@ -66,7 +65,6 @@ beginEIDServiceTransaction conf authKind onfidoAuthenticationData instanceId use
   do
     ctx            <- getContext
     kontraRedirect <- guardJustM (getField "redirect")
-    -- TODO Locally `redDomain` contains localhost:8000 but we want :8888
     let onfidoMethod = Core.method onfidoAuthenticationData
     let redirectUrl = UnifiedRedirectUrl { redDomain = ctx ^. #brandedDomain % #url
                                          , redProvider = eidProvider
@@ -75,14 +73,8 @@ beginEIDServiceTransaction conf authKind onfidoAuthenticationData instanceId use
                                          , redUserName = userName
                                          , redPostRedirectUrl = Just kontraRedirect
                                          }
-    -- TODO: Temporary - refactor into function when FLOW-325 is merged
-    signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
-      <$> Model.selectSignatoryInfo instanceId
-    (sl, did) <- case signatoryInfo of
-      Just (_, slid, did) -> fmap (, did) <$> dbQuery $ GetSignatoryLinkByID did slid
-      Nothing -> unexpectedError "beginEIDServiceTransaction: signatory info not found!"
-    -- TODO: debugging
-    logInfo_ $ "Redirect URL: " <> showt redirectUrl
+    (did, slid) <- findFirstSignatoryLink instanceId userName
+    sl          <- dbQuery $ GetSignatoryLinkByID did slid
 
     let createReq = CreateEIDServiceTransactionRequest
           { cestProvider           = eidProvider
@@ -114,24 +106,14 @@ completeEIDServiceAuthTransaction
   -> InstanceId
   -> UserName
   -> m (Maybe EIDServiceTransactionStatus)
-completeEIDServiceAuthTransaction conf instanceId userName = do
-  _sessionID   <- getNonTempSessionID
-  fullInstance <- fromJust <$> Model.selectFullInstance instanceId
-  let authKind = if isComplete $ instanceToAggregator fullInstance
-        then AuthenticationToViewArchived
-        else AuthenticationToView
-  runMaybeT $ do
-    Just estDB <-
-      dbQuery
-      . GetEIDServiceTransactionNoSessionIDGuard instanceId userName
-      $ EIDServiceAuthToView authKind
-    Just trans <- getTransactionFromEIDService conf eidProvider (estID estDB)
-    logInfo_ $ "EID transaction: " <> showt trans
-    let eidServiceStatus = estRespStatus trans
-        dbStatus         = estStatus estDB
-    if eidServiceStatus == dbStatus
-      then return eidServiceStatus
-      else finaliseTransaction instanceId userName authKind estDB trans
+completeEIDServiceAuthTransaction conf instanceId userName = runMaybeT $ do
+  Just (authKind, estDB, trans) <- getTransactionForUser conf
+                                                         eidProvider
+                                                         instanceId
+                                                         userName
+  if estRespStatus trans == estStatus estDB
+    then return $ estRespStatus trans
+    else finaliseTransaction instanceId userName authKind estDB trans
 
 finaliseTransaction
   :: Kontrakcja m
@@ -197,7 +179,7 @@ updateEvidenceLogForRelevantDocs
   :: Kontrakcja m => InstanceId -> UserName -> OnfidoEIDServiceCompletionData -> m ()
 updateEvidenceLogForRelevantDocs instanceId userName cd = do
   ctx     <- getContext
-  sigInfo <- filterPending . filterUser =<< FlowModel.selectSignatoryInfo instanceId
+  sigInfo <- filterPending . filterUser =<< Model.selectSignatoryInfo instanceId
   forM_ sigInfo $ \(sl, doc) -> do
     let eventFields = do
           F.value "signatory_name" . eidonfidoLastName $ eidonfidoCompletionData cd

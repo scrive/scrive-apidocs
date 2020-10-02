@@ -859,6 +859,8 @@ $elseif(provider_idin)$
   $_AuthenticatedToViewEvidenceArchiveIDIN()$
 $elseif(provider_onfido)$
   $_AuthenticatedToViewEvidenceArchiveOnfido()$
+$elseif(provider_sms_otp)$
+  $_AuthenticatedToViewEvidenceArchiveSmsOtp()$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".

@@ -116,5 +116,5 @@ signatoryLinkDecoder =
   |> JDP.required "mobile_delivery_status" deliveryStatusDecoder
   |> JDP.required "delivery_method" deliveryMethodDecoder
   |> JDP.required "authentication_method_to_view" authenticationToViewMethodDecoder
-  |> JDP.required "authentication_method_to_view" authenticationToViewMethodDecoder
+  |> JDP.required "authentication_method_to_view_archived" authenticationToViewMethodDecoder
   |> JD.map SignatoryLink

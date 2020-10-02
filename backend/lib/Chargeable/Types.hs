@@ -52,6 +52,8 @@ data ChargeableItem = CIStartingDocument
                     | CIOnfidoDocumentAndPhotoCheckAuthenticationStarted
                     | CIOnfidoDocumentCheckAuthenticationFinished
                     | CIOnfidoDocumentAndPhotoCheckAuthenticationFinished
+                    | CISmsOtpAuthenticationStarted
+                    | CISmsOtpAuthenticationFinished
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -102,7 +104,9 @@ instance FromSQL ChargeableItem where
       36 -> return CIOnfidoDocumentAndPhotoCheckAuthenticationStarted
       37 -> return CIOnfidoDocumentCheckAuthenticationFinished
       38 -> return CIOnfidoDocumentAndPhotoCheckAuthenticationFinished
-      _  -> throwM RangeError { reRange = [(1, 38)], reValue = n }
+      39 -> return CISmsOtpAuthenticationStarted
+      40 -> return CISmsOtpAuthenticationFinished
+      _  -> throwM RangeError { reRange = [(1, 40)], reValue = n }
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
@@ -144,6 +148,8 @@ instance ToSQL ChargeableItem where
   toSQL CIOnfidoDocumentAndPhotoCheckAuthenticationStarted = toSQL (36 :: Int16)
   toSQL CIOnfidoDocumentCheckAuthenticationFinished = toSQL (37 :: Int16)
   toSQL CIOnfidoDocumentAndPhotoCheckAuthenticationFinished = toSQL (38 :: Int16)
+  toSQL CISmsOtpAuthenticationStarted = toSQL (39 :: Int16)
+  toSQL CISmsOtpAuthenticationFinished = toSQL (40 :: Int16)
 
 
 -- | This type should be used only for serialization. Punishment will be imposed
@@ -221,3 +227,5 @@ instance ToJSON ChargeableItemEvent where
         "onfido_document_authentication_finished"
       eventTypeToJSON CIOnfidoDocumentAndPhotoCheckAuthenticationFinished =
         "onfido_document_and_face_authentication_finished"
+      eventTypeToJSON CISmsOtpAuthenticationStarted  = "sms_otp_authentication_started"
+      eventTypeToJSON CISmsOtpAuthenticationFinished = "sms_otp_authentication_finished"
