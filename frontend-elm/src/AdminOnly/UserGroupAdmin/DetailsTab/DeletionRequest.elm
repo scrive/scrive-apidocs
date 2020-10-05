@@ -1,6 +1,7 @@
 module AdminOnly.UserGroupAdmin.DetailsTab.DeletionRequest exposing (..)
 
-import AdminOnly.UserAdmin.DetailsTab.UserGroup exposing (DeletionRequest, DeletionStatus, UserGroup, deletionRequestDecoder)
+import AdminOnly.Types.UserGroup exposing (UserGroup)
+import AdminOnly.Types.UserGroup.DeletionRequest as DeletionRequest exposing (DeletionRequest)
 import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid exposing (Column)
@@ -22,7 +23,7 @@ type alias Params msg =
     { embed : Msg -> msg
     , userGroupId : String
     , xtoken : String
-    , updateDeletionStatus : DeletionStatus -> Cmd msg
+    , updateDeletionRequest : Maybe DeletionRequest -> Cmd msg
     , showFlashMessage : FlashMessage -> Cmd msg
     }
 
@@ -32,7 +33,7 @@ type alias Params msg =
 
 
 type alias ReadonlyState =
-    { deletionStatus : DeletionStatus
+    { deletionStatus : Maybe DeletionRequest
     }
 
 
@@ -295,14 +296,14 @@ confirmRequestDeletion params { date } =
                 { url = "/adminonly/companyadmin/requestdeletion/" ++ params.userGroupId
                 , body = formBody params [ ( "deletion_date", date ) ]
                 , expect =
-                    Http.expectJson (params.embed << RequestDeletionCallbackMsg) (JD.nullable deletionRequestDecoder)
+                    Http.expectJson (params.embed << RequestDeletionCallbackMsg) (JD.nullable DeletionRequest.decoder)
                 }
     in
     ( Idle, cmd )
 
 
 requestDeletionCallback : Params msg -> ModalState -> Result Http.Error (Maybe DeletionRequest) -> ( ModalState, Cmd msg )
-requestDeletionCallback { showFlashMessage, updateDeletionStatus } state res =
+requestDeletionCallback { showFlashMessage, updateDeletionRequest } state res =
     case res of
         Ok (Just deletionRequest) ->
             let
@@ -310,7 +311,7 @@ requestDeletionCallback { showFlashMessage, updateDeletionStatus } state res =
                     showFlashMessage <| FlashMessage.success "Deletion requested."
 
                 cmd2 =
-                    updateDeletionStatus <| Just deletionRequest
+                    updateDeletionRequest <| Just deletionRequest
             in
             ( state, Cmd.batch [ cmd1, cmd2 ] )
 
@@ -366,7 +367,7 @@ cancelDeletionClicked params =
 
 
 cancelDeletionCallback : Params msg -> ModalState -> Result Http.Error () -> ( ModalState, Cmd msg )
-cancelDeletionCallback { showFlashMessage, updateDeletionStatus } state res =
+cancelDeletionCallback { showFlashMessage, updateDeletionRequest } state res =
     case res of
         Ok () ->
             let
@@ -374,7 +375,7 @@ cancelDeletionCallback { showFlashMessage, updateDeletionStatus } state res =
                     showFlashMessage <| FlashMessage.success "Deletion cancelled."
 
                 cmd2 =
-                    updateDeletionStatus Nothing
+                    updateDeletionRequest Nothing
             in
             ( state, Cmd.batch [ cmd1, cmd2 ] )
 
@@ -445,14 +446,14 @@ confirmSignOffDeletion params =
                 { url = "/adminonly/companyadmin/signoffdeletion/" ++ params.userGroupId
                 , body = formBody params []
                 , expect =
-                    Http.expectJson (params.embed << SignOffDeletionCallbackMsg) deletionRequestDecoder
+                    Http.expectJson (params.embed << SignOffDeletionCallbackMsg) DeletionRequest.decoder
                 }
     in
     ( Idle, cmd )
 
 
 signOffDeletionCallback : Params msg -> ModalState -> Result Http.Error DeletionRequest -> ( ModalState, Cmd msg )
-signOffDeletionCallback { showFlashMessage, updateDeletionStatus } state res =
+signOffDeletionCallback { showFlashMessage, updateDeletionRequest } state res =
     case res of
         Ok deletionRequest ->
             let
@@ -460,7 +461,7 @@ signOffDeletionCallback { showFlashMessage, updateDeletionStatus } state res =
                     showFlashMessage <| FlashMessage.success "Deletion signed off. The user group will be deleted."
 
                 cmd2 =
-                    updateDeletionStatus <| Just deletionRequest
+                    updateDeletionRequest <| Just deletionRequest
             in
             ( state, Cmd.batch [ cmd1, cmd2 ] )
 

@@ -12,7 +12,7 @@ module AdminOnly.UserGroupAdmin.UsersTab exposing
     , view
     )
 
-import AdminOnly.UserAdminTab.CreateUserModal as CreateUserModal exposing (Config(..))
+import AdminOnly.UserAdmin.CreateUserModal as CreateUserModal
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
@@ -78,7 +78,7 @@ init : (Msg -> msg) -> String -> Page -> ( Model, Cmd msg )
 init embed ugid page =
     let
         ( createUserModal, createUserModalCmd ) =
-            CreateUserModal.init (CreateUserInUserGroup ugid)
+            CreateUserModal.init (CreateUserModal.CreateUserInUserGroup ugid)
 
         model =
             { createUserModal = createUserModal
@@ -188,13 +188,14 @@ updatePage : (Msg -> msg) -> String -> Page -> Model -> ( Model, Cmd msg )
 updatePage embed ugid page model =
     let
         ( createUserModal, createUserModalCmd ) =
-            CreateUserModal.init (CreateUserInUserGroup ugid)
+            CreateUserModal.init (CreateUserModal.CreateUserInUserGroup ugid)
 
         model1 =
             { model
                 | page = page
                 , createUserModal = createUserModal
                 , search = M.withDefault "" page.mSearch
+                , sUserList = Loading
             }
     in
     ( model1

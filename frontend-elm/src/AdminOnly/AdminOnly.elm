@@ -38,7 +38,8 @@ type Page
 
 
 type HomeTab
-    = UserAdminTab UserAdminTab.Page
+    = Default -- Serves only as redirect page
+    | UserAdminTab UserAdminTab.Page
     | UserGroupAdminTab UserGroupAdminTab.Page
     | DocumentsTab DocumentsTab.Page
     | BrandedDomainsTab
@@ -72,8 +73,8 @@ init : (Msg -> msg) -> Globals msg -> Page -> ( Model, Cmd msg )
 init embed globals page =
     let
         model =
-            { page = Home (UserAdminTab <| UserAdminTab.Page Nothing Nothing 1)
-            , tabState = Tab.customInitialState UserAdminTab.tabName
+            { page = Home <| Default
+            , tabState = Tab.initialState
             , mUserAdminTab = Nothing
             , mUserGroupAdminTab = Nothing
             , mUserAdmin = Nothing
@@ -89,6 +90,9 @@ init embed globals page =
 fromPage : Page -> PageUrl
 fromPage page =
     case page of
+        Home Default ->
+            PageUrl [ "home" ] [] Nothing
+
         Home (UserAdminTab tabPage) ->
             let
                 pageUrl =
@@ -162,7 +166,8 @@ routeParser =
             (UP.s "page" </> UP.s "companyadmin" </> UserGroupAdmin.routeParser)
         , UP.map BrandedDomain
             (UP.s "page" </> UP.s "brandeddomain" </> BrandedDomain.routeParser)
-        , UP.map (Home <| UserAdminTab <| UserAdminTab.Page Nothing Nothing 1) UP.top
+        , UP.map (Home Default) (UP.s "page" </> UP.s "home")
+        , UP.map (Home Default) UP.top
         ]
 
 
@@ -194,6 +199,9 @@ documentsTab paginationPageNum =
 pageFromModel : Model -> Maybe Page
 pageFromModel model =
     case model.page of
+        Home Default ->
+            Just <| Home Default
+
         Home (UserAdminTab _) ->
             model.mUserAdminTab
                 |> M.andThen UserAdminTab.pageFromModel
@@ -304,6 +312,9 @@ update embed globals msg model =
 updatePage : (Msg -> msg) -> Globals msg -> Page -> Model -> ( Model, Cmd msg )
 updatePage embed globals page model =
     case page of
+        Home Default ->
+            ( model, globals.gotoUserAdminTab )
+
         Home (UserAdminTab tabPage) ->
             let
                 ( tab, tabCmd ) =
@@ -431,6 +442,9 @@ view embed model =
             model.mBrandedDomain
                 |> M.map (BrandedDomain.view <| embed << BrandedDomainMsg)
                 |> M.withDefault viewError
+
+        Home Default ->
+            Html.div [] []
 
         Home _ ->
             Tab.config (embed << TabMsg)

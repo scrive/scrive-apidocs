@@ -5,7 +5,8 @@ module AdminOnly.UserAdmin.DetailsTab.User exposing
     , formValues
     )
 
-import AdminOnly.UserAdmin.DetailsTab.UserGroup exposing (PadAppMode(..), SmsProvider(..), padAppModeDecoder, smsProviderDecoder)
+import AdminOnly.Types.UserGroup.PadAppMode as PadAppMode exposing (PadAppMode)
+import AdminOnly.Types.UserGroup.SmsProvider as SmsProvider exposing (SmsProvider)
 import EnumExtra as Enum exposing (Enum, makeEnum)
 import Json.Decode as D exposing (Decoder)
 import Json.Decode.Pipeline as DP
@@ -113,8 +114,8 @@ userGroupDecoder =
         |> DP.required "ipaddressmasklist" D.string
         |> DP.required "cgidisplayname" (D.string |> D.nullable)
         |> DP.required "cgiserviceid" (D.string |> D.nullable)
-        |> DP.required "smsprovider" (D.string |> D.andThen smsProviderDecoder)
-        |> DP.required "padappmode" (D.string |> D.andThen padAppModeDecoder)
+        |> DP.required "smsprovider" (D.string |> D.andThen SmsProvider.decoder)
+        |> DP.required "padappmode" (D.string |> D.andThen PadAppMode.decoder)
         |> DP.required "padearchiveenabled" D.bool
         |> DP.required "idledoctimeoutpreparation" (D.int |> D.nullable)
         |> DP.required "idledoctimeoutclosed" (D.int |> D.nullable)

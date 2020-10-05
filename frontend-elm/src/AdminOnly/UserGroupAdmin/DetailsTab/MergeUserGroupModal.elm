@@ -7,7 +7,8 @@ module AdminOnly.UserGroupAdmin.DetailsTab.MergeUserGroupModal exposing
     , view
     )
 
-import AdminOnly.UserAdmin.DetailsTab.UserGroup as UserGroup exposing (UserGroup)
+import AdminOnly.Types.UserGroup as UserGroup exposing (UserGroup)
+import AdminOnly.Types.UserGroup.Cmd as Cmd
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
@@ -49,15 +50,7 @@ init embed userGroup =
             , sNewUserGroupName = Success userGroup.name
             }
     in
-    ( model, Cmd.map embed <| getUserGroupCmd model )
-
-
-getUserGroupCmd : Model -> Cmd Msg
-getUserGroupCmd model =
-    Http.get
-        { url = "/adminonly/companyadmin/details/" ++ model.newUserGroupID
-        , expect = Http.expectJson GotUserGroup UserGroup.decoder
-        }
+    ( model, Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.newUserGroupID )
 
 
 update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
@@ -75,7 +68,7 @@ update embed globals msg model =
                             , sNewUserGroupName = Loading
                         }
                 in
-                ( model1, Cmd.map embed <| getUserGroupCmd model1 )
+                ( model1, Cmd.map embed <| Cmd.getUserGroup GotUserGroup model1.newUserGroupID )
 
             else
                 ( { model | newUserGroupID = userGroupID }, Cmd.none )

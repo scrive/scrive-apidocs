@@ -13,7 +13,7 @@ import Html.Attributes exposing (class, href)
 import Http
 import Json.Decode as D exposing (Decoder)
 import List as L
-import Utils exposing (Status(..), ite)
+import Utils exposing (..)
 
 
 type alias Model =

@@ -2,13 +2,19 @@ module AdminOnly.UserGroupAdmin.DetailsTab.DetailsTab exposing
     ( Model
     , Msg
     , init
-    , setUserGroupID
     , tabName
     , update
     , view
     )
 
-import AdminOnly.UserAdmin.DetailsTab.UserGroup as UserGroup exposing (Address, Settings, UserGroup)
+import AdminOnly.Types.UserGroup as UserGroup exposing (UserGroup)
+import AdminOnly.Types.UserGroup.Address as Address exposing (Address)
+import AdminOnly.Types.UserGroup.Cmd as Cmd
+import AdminOnly.Types.UserGroup.DigitalSignatureMethod as DigitalSignatureMethod exposing (DigitalSignatureMethod)
+import AdminOnly.Types.UserGroup.PadAppMode as PadAppMode exposing (PadAppMode)
+import AdminOnly.Types.UserGroup.SEBankIDSigningProviderOverride as SEBankIDSigningProviderOverride
+import AdminOnly.Types.UserGroup.Settings as Settings exposing (Settings)
+import AdminOnly.Types.UserGroup.SmsProvider as SmsProvider exposing (SmsProvider)
 import AdminOnly.UserGroupAdmin.DetailsTab.DeletionRequest as DeletionRequest
 import AdminOnly.UserGroupAdmin.DetailsTab.MergeUserGroupModal as MergeUserGroupModal
 import Bootstrap.Button as Button
@@ -84,28 +90,7 @@ init embed ugid =
             , mDeletionRequest = Nothing
             }
     in
-    ( model, Cmd.map embed <| getUserGroupCmd ugid model )
-
-
-getUserGroupCmd : String -> Model -> Cmd Msg
-getUserGroupCmd ugid _ =
-    Http.get
-        { url = "/adminonly/companyadmin/details/" ++ ugid
-        , expect = Http.expectJson GotUserGroup UserGroup.decoder
-        }
-
-
-getParentUserGroupCmd : String -> Model -> Cmd Msg
-getParentUserGroupCmd ugid _ =
-    Http.get
-        { url = "/adminonly/companyadmin/details/" ++ ugid
-        , expect = Http.expectJson GotParentUserGroup UserGroup.decoder
-        }
-
-
-setUserGroupID : (Msg -> msg) -> String -> Model -> Cmd msg
-setUserGroupID embed ugid =
-    Cmd.map embed << getUserGroupCmd ugid
+    ( model, Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid )
 
 
 modifyUserGroup : (UserGroup -> UserGroup) -> Model -> Model
@@ -127,7 +112,7 @@ update embed globals msg model =
                             { embed = embed << DeletionRequestMsg
                             , userGroupId = userGroup.id
                             , xtoken = globals.xtoken
-                            , updateDeletionStatus = \_ -> globals.gotoUserGroup userGroup.id
+                            , updateDeletionRequest = \_ -> globals.gotoUserGroup userGroup.id
                             , showFlashMessage = globals.flashMessage
                             }
 
@@ -199,7 +184,7 @@ update embed globals msg model =
                     model2 =
                         { model1 | sNewParentName = Loading }
                 in
-                ( model2, Cmd.map embed <| getParentUserGroupCmd newParentID model2 )
+                ( model2, Cmd.map embed <| Cmd.getUserGroup GotParentUserGroup newParentID )
 
             else
                 ( model1, Cmd.none )
@@ -273,7 +258,7 @@ update embed globals msg model =
                             { embed = embed << DeletionRequestMsg
                             , userGroupId = userGroup.id
                             , xtoken = globals.xtoken
-                            , updateDeletionStatus = \_ -> globals.gotoUserGroup userGroup.id
+                            , updateDeletionRequest = \_ -> globals.gotoUserGroup userGroup.id
                             , showFlashMessage = globals.flashMessage
                             }
 
@@ -466,7 +451,7 @@ viewUserGroup model ug address settings =
                 ]
             , Form.row []
                 [ Form.colLabel labelColAttrs [ text "Parent group path" ]
-                , Form.colLabel inputColAttrs
+                , Form.colLabel [ Col.smAuto, Col.mdAuto, Col.lgAuto ]
                     (ug.parentGroupPath
                         |> L.map
                             (\parent -> a [ href parent.id ] [ text <| parent.name ++ " (" ++ parent.id ++ ")" ])
@@ -526,13 +511,13 @@ viewUserGroup model ug address settings =
                 [ readonly ug.settingsIsInherited ]
             , formSelectRowM "SMS Provider"
                 ""
-                UserGroup.enumSmsProvider
+                SmsProvider.enum
                 settings.smsProvider
                 (SetStringField "smsProvider")
                 [ disabled ug.settingsIsInherited ]
             , formSelectRowM "Pad application mode"
                 ""
-                UserGroup.enumPadAppMode
+                PadAppMode.enum
                 settings.padAppMode
                 (SetStringField "padAppMode")
                 [ disabled ug.settingsIsInherited ]
@@ -624,15 +609,15 @@ viewUserGroup model ug address settings =
                 [ readonly ug.settingsIsInherited ]
             , formCheckboxRowM "PAdES sealing"
                 "If enabled, use PAdES instead of GuardTime sealing."
-                (settings.digitalSignatureMethod == UserGroup.Pades)
+                (settings.digitalSignatureMethod == DigitalSignatureMethod.Pades)
                 (\b ->
                     SetStringField "digitalSignatureMethod" <|
-                        Enum.toString UserGroup.enumDigitalSignatureMethod <|
+                        Enum.toString DigitalSignatureMethod.enum <|
                             if b then
-                                UserGroup.Pades
+                                DigitalSignatureMethod.Pades
 
                             else
-                                UserGroup.GuardTime
+                                DigitalSignatureMethod.GuardTime
                 )
                 [ readonly ug.settingsIsInherited ]
             , formTextRowM "Pades Credentials Label"
@@ -652,7 +637,7 @@ viewUserGroup model ug address settings =
                 [ readonly ug.settingsIsInherited ]
             , formSelectRowM "Force SEBankID Signing Provider"
                 ""
-                UserGroup.enumSEBankIDSigningProviderOverride
+                SEBankIDSigningProviderOverride.enum
                 settings.seBankIDSigningOverride
                 (SetStringField "seBankIDSigningOverride")
                 [ disabled ug.settingsIsInherited ]

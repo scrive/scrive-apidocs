@@ -8,8 +8,9 @@ module AdminOnly.UserGroupAdmin.FoldersTab.FoldersTab exposing
     , view
     )
 
+import AdminOnly.Types.UserGroup as UserGroup exposing (UserGroup)
+import AdminOnly.Types.UserGroup.Cmd as Cmd
 import AdminOnly.UserAdmin.DetailsTab.User as User exposing (User)
-import AdminOnly.UserAdmin.DetailsTab.UserGroup as UserGroup exposing (UserGroup)
 import AdminOnly.UserGroupAdmin.FoldersTab.AddModal as AddModal
 import AdminOnly.UserGroupAdmin.FoldersTab.DeleteModal as DeleteModal
 import AdminOnly.UserGroupAdmin.FoldersTab.MakeRootModal as MakeRootModal
@@ -85,7 +86,7 @@ init embed ugid =
             , mRenameModal = Nothing
             }
     in
-    ( model, Cmd.map embed <| getUserGroupCmd ugid )
+    ( model, Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid )
 
 
 getFolderTreeCmd : String -> Cmd Msg
@@ -93,14 +94,6 @@ getFolderTreeCmd fid =
     Http.get
         { url = "/api/frontend/folders/" ++ fid ++ "?recursive=true"
         , expect = Http.expectJson GotFolderTree folderTreeDecoder
-        }
-
-
-getUserGroupCmd : String -> Cmd Msg
-getUserGroupCmd ugid =
-    Http.get
-        { url = "/adminonly/companyadmin/details/" ++ ugid
-        , expect = Http.expectJson GotUserGroup UserGroup.decoder
         }
 
 
@@ -128,7 +121,7 @@ setUserGroupID embed ugid model0 =
             -- The user may have activated another folder so we want to persist that.
             ite (model0.ugid == ugid)
                 Cmd.none
-                (Cmd.map embed <| getUserGroupCmd ugid)
+                (Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid)
 
         model =
             { model0 | ugid = ugid }
@@ -293,7 +286,7 @@ update embed globals msg model =
         AddModalMsg modalMsg ->
             let
                 onSuccessCmd =
-                    Cmd.map embed <| getUserGroupCmd model.ugid
+                    Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.ugid
 
                 updateAddModal =
                     AddModal.update (embed << AddModalMsg) globals modalMsg onSuccessCmd
@@ -320,7 +313,7 @@ update embed globals msg model =
         DeleteModalMsg modalMsg ->
             let
                 onSuccessCmd =
-                    Cmd.map embed <| getUserGroupCmd model.ugid
+                    Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.ugid
 
                 updateDeleteModal =
                     DeleteModal.update (embed << DeleteModalMsg) globals modalMsg onSuccessCmd
@@ -347,7 +340,7 @@ update embed globals msg model =
         MakeRootModalMsg modalMsg ->
             let
                 onSuccessCmd =
-                    Cmd.map embed <| getUserGroupCmd model.ugid
+                    Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.ugid
 
                 updateMakeRootModal =
                     MakeRootModal.update (embed << MakeRootModalMsg) globals modalMsg onSuccessCmd
@@ -384,7 +377,7 @@ update embed globals msg model =
         MoveModalMsg modalMsg ->
             let
                 onSuccessCmd =
-                    Cmd.map embed <| getUserGroupCmd model.ugid
+                    Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.ugid
 
                 updateMoveModal =
                     MoveModal.update (embed << MoveModalMsg) globals modalMsg onSuccessCmd
@@ -415,7 +408,7 @@ update embed globals msg model =
         RenameModalMsg modalMsg ->
             let
                 onSuccessCmd =
-                    Cmd.map embed <| getUserGroupCmd model.ugid
+                    Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.ugid
 
                 updateRenameModal =
                     RenameModal.update (embed << RenameModalMsg) globals modalMsg onSuccessCmd

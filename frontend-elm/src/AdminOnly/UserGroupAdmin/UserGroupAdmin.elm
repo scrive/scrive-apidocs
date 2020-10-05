@@ -346,16 +346,18 @@ update embed globals msg model =
             ( { model | mFoldersTab = newFoldersTab }, cmd )
 
 
+
+-- TODO: `*Tab.(updatePage|setUserGroupID)` basically do same thing as `*Tab.init`.
+-- It might be more reasonable to use `*Tab.init` instead for more reliable behavior.
+
+
 updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
 updatePage embed page model =
     case page.tab of
         DetailsTab ->
             let
                 ( tab, tabCmd ) =
-                    model.mDetailsTab
-                        |> M.map (\t -> ( t, DetailsTab.setUserGroupID (embed << DetailsTabMsg) page.ugid t ))
-                        |> M.withDefault
-                            (DetailsTab.init (embed << DetailsTabMsg) page.ugid)
+                    DetailsTab.init (embed << DetailsTabMsg) page.ugid
             in
             ( { model
                 | tabState = Tab.customInitialState DetailsTab.tabName
