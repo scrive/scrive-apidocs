@@ -72,8 +72,9 @@ init config =
     ( model, Cmd.none )
 
 
-type alias UserCreated
-    = Maybe (Result String String)
+type alias UserCreated =
+    Maybe (Result String String)
+
 
 update : (Msg -> msg) -> (UserCreated -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
 update embed userCreatedMsg globals msg model =
@@ -131,7 +132,9 @@ update embed userCreatedMsg globals msg model =
             ( { model | isUserGroupAdmin = isAdmin }, Cmd.none )
 
         GotResponse result ->
-            let callback = perform << userCreatedMsg
+            let
+                callback =
+                    perform << userCreatedMsg
             in
             case result of
                 Ok r ->
@@ -144,6 +147,7 @@ update embed userCreatedMsg globals msg model =
                         ( model
                         , callback <| Just <| Err <| M.withDefault "Error creating a user." r.error
                         )
+
                 Err _ ->
                     ( model, callback <| Just <| Err "Error creating a user." )
 

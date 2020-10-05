@@ -1,7 +1,7 @@
 module EnumExtra exposing (..)
 
-import Enum as EnumOrig
 import Dict as DictOrig
+import Enum as EnumOrig
 import Maybe.Extra as Maybe
 
 
@@ -39,39 +39,57 @@ findEnumValue : Enum a -> String -> Result String a
 findEnumValue enum str =
     EnumOrig.findEnumValue enum.enum str
 
+
 fromString : Enum a -> String -> Maybe a
-fromString enum = Result.toMaybe << findEnumValue enum
+fromString enum =
+    Result.toMaybe << findEnumValue enum
+
 
 type alias Dict k v =
     { dict : DictOrig.Dict String v
     , enum : Enum k
     }
 
+
 empty : Enum k -> Dict k v
-empty enum = { dict = DictOrig.empty, enum = enum }
+empty enum =
+    { dict = DictOrig.empty, enum = enum }
+
 
 insert : k -> v -> Dict k v -> Dict k v
-insert k v d = { d | dict = DictOrig.insert (toString d.enum k) v d.dict }
+insert k v d =
+    { d | dict = DictOrig.insert (toString d.enum k) v d.dict }
+
 
 remove : k -> Dict k v -> Dict k v
-remove k d = { d | dict = DictOrig.remove (toString d.enum k) d.dict }
+remove k d =
+    { d | dict = DictOrig.remove (toString d.enum k) d.dict }
+
 
 get : k -> Dict k v -> Maybe v
-get k d = DictOrig.get (toString d.enum k) d.dict
+get k d =
+    DictOrig.get (toString d.enum k) d.dict
 
-fromList : Enum k -> List (k,v) -> Dict k v
+
+fromList : Enum k -> List ( k, v ) -> Dict k v
 fromList enum kvs =
-  { dict = DictOrig.fromList <| List.map (\(k,v) -> (toString enum k, v)) kvs
-  , enum = enum
-  }
+    { dict = DictOrig.fromList <| List.map (\( k, v ) -> ( toString enum k, v )) kvs
+    , enum = enum
+    }
 
-toList : Dict k v -> List (k,v)
-toList d = Maybe.values
-  <| List.map (\(s,v) -> fromString d.enum s |> Maybe.andThen (\k -> Just (k,v)))
-  <| DictOrig.toList d.dict
+
+toList : Dict k v -> List ( k, v )
+toList d =
+    Maybe.values <|
+        List.map (\( s, v ) -> fromString d.enum s |> Maybe.andThen (\k -> Just ( k, v ))) <|
+            DictOrig.toList d.dict
+
 
 values : Dict k v -> List v
-values = DictOrig.values << .dict
+values =
+    DictOrig.values << .dict
+
 
 member : k -> Dict k v -> Bool
-member k v = Maybe.isJust <| get k v
+member k v =
+    Maybe.isJust <| get k v

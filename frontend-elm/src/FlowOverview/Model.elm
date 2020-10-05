@@ -1,8 +1,8 @@
 module FlowOverview.Model exposing (..)
 
 import Dict exposing (Dict)
-import Json.Encode
 import Http
+import Json.Encode
 import Lib.Components.FlashMessage as FlashMessage
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
 
@@ -28,13 +28,15 @@ type Msg
     | CancelButtonClicked
     | RejectCallback (Result Http.Error ())
     | AddFlashMessage FlashMessage
-    | ErrorTrace (List (String, Json.Encode.Value))
+    | ErrorTrace (List ( String, Json.Encode.Value ))
     | FlashMessageMsg FlashMessage.Msg
+
 
 type alias Model =
     { flashMessages : FlashMessage.State
     , state : State
     }
+
 
 type State
     = Failure String
@@ -47,7 +49,10 @@ type alias InnerModel =
     , mRejection : Maybe Rejection
     }
 
-type Rejection = Rejection {message : String}
+
+type Rejection
+    = Rejection { message : String }
+
 
 type alias GetInstanceView =
     { id : String
@@ -119,4 +124,3 @@ type SignatoryField
 
 type alias Url =
     String
-

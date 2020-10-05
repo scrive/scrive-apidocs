@@ -5,8 +5,11 @@ import Http.Detailed
 import Json.Decode as D exposing (Decoder)
 
 
+
 -- Public API error
 -- https://apidocs.scrive.com/#apierror
+
+
 type alias APIError =
     { errorType : APIErrorType
     , errorMessage : String
@@ -40,6 +43,7 @@ type APIErrorType
     | ConflictError
     | FolderActionForbidden
 
+
 enumApiErrorType : Enum APIErrorType
 enumApiErrorType =
     let
@@ -64,25 +68,56 @@ enumApiErrorType =
 
         toString e =
             case e of
-                ServerError -> "server_error"
-                RequestFailed -> "request_failed"
-                EndpointNotFound -> "endpoint_not_found"
-                InvalidAuthorization -> "invalid_authorisation"
-                InsufficientPrivileges -> "insufficient_privileges"
-                ResourceNotFound -> "resource_not_found"
-                DocumentActionForbidden -> "document_action_forbidden"
-                RequestParametersMissing -> "request_parameters_missing"
-                RequestParametersParseError -> "request_parameters_parse_error"
-                RequestParametersInvalid -> "request_parameters_invalid"
-                DocumentObjectVersionMismatch -> "document_object_version_mismatch"
-                DocumentStateError -> "document_state_error"
-                SignatoryStateError -> "signatory_state_error"
-                ActionNotPermitted -> "action_not_permitted"
-                ConflictError -> "conflict_error"
-                FolderActionForbidden -> "folder_action_forbidden"
+                ServerError ->
+                    "server_error"
+
+                RequestFailed ->
+                    "request_failed"
+
+                EndpointNotFound ->
+                    "endpoint_not_found"
+
+                InvalidAuthorization ->
+                    "invalid_authorisation"
+
+                InsufficientPrivileges ->
+                    "insufficient_privileges"
+
+                ResourceNotFound ->
+                    "resource_not_found"
+
+                DocumentActionForbidden ->
+                    "document_action_forbidden"
+
+                RequestParametersMissing ->
+                    "request_parameters_missing"
+
+                RequestParametersParseError ->
+                    "request_parameters_parse_error"
+
+                RequestParametersInvalid ->
+                    "request_parameters_invalid"
+
+                DocumentObjectVersionMismatch ->
+                    "document_object_version_mismatch"
+
+                DocumentStateError ->
+                    "document_state_error"
+
+                SignatoryStateError ->
+                    "signatory_state_error"
+
+                ActionNotPermitted ->
+                    "action_not_permitted"
+
+                ConflictError ->
+                    "conflict_error"
+
+                FolderActionForbidden ->
+                    "folder_action_forbidden"
+
         toHumanString =
             toString
-
     in
     Enum.makeEnum allValues toString toHumanString
 
@@ -110,4 +145,3 @@ apiErrorMessage error defaultMessage =
 
         _ ->
             defaultMessage
-

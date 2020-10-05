@@ -12,8 +12,8 @@ import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table
 import FlashMessage
-import Html exposing (Html, div, text, img)
-import Html.Attributes exposing (class, style, src)
+import Html exposing (Html, div, img, text)
+import Html.Attributes exposing (class, src, style)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as JD
@@ -102,29 +102,30 @@ update embed globals msg model =
 
 
 view : (Msg -> msg) -> Model -> Html msg
-view embed model = Html.map embed <|
-    div []
-        [ Grid.row []
-            [ Grid.col []
-                [ Button.button [ Button.success, Button.attrs [ onClick CreateBrandedDomainClicked ] ]
-                    [ text "Create branded domain"
+view embed model =
+    Html.map embed <|
+        div []
+            [ Grid.row []
+                [ Grid.col []
+                    [ Button.button [ Button.success, Button.attrs [ onClick CreateBrandedDomainClicked ] ]
+                        [ text "Create branded domain"
+                        ]
                     ]
                 ]
-            ]
-        , div [ class "mt-3", class "container-fluid" ]
-            [ case model.sBrandedDomains of
-                Failure ->
-                    text "Failure"
+            , div [ class "mt-3", class "container-fluid" ]
+                [ case model.sBrandedDomains of
+                    Failure ->
+                        text "Failure"
 
-                Loading ->
-                    text "Loading"
+                    Loading ->
+                        text "Loading"
 
-                Success brandedDomains ->
-                    brandedDomains
-                        |> L.filter (not << .mainDomain)
-                        |> viewBrandedDomains model
+                    Success brandedDomains ->
+                        brandedDomains
+                            |> L.filter (not << .mainDomain)
+                            |> viewBrandedDomains model
+                ]
             ]
-        ]
 
 
 viewBrandedDomains : Model -> List BrandedDomain -> Html Msg

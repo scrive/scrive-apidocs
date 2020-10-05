@@ -474,13 +474,13 @@ viewFolderDetails folder tree mUserGroup mUser =
             M.map
                 (\user ->
                     p []
-                      [ text "Home folder for user "
-                      , a [ href ("/adminonly/page/useradmin/" ++ user.id) ]
-                          [ text <|
-                              M.withDefault ("UserID: " ++ user.id)
-                                  (stringNonEmpty <| String.trim <| user.firstName ++ " " ++ user.secondName)
-                          ]
-                      ]
+                        [ text "Home folder for user "
+                        , a [ href ("/adminonly/page/useradmin/" ++ user.id) ]
+                            [ text <|
+                                M.withDefault ("UserID: " ++ user.id)
+                                    (stringNonEmpty <| String.trim <| user.firstName ++ " " ++ user.secondName)
+                            ]
+                        ]
                 )
                 mUser
 
@@ -488,10 +488,10 @@ viewFolderDetails folder tree mUserGroup mUser =
             M.map
                 (\ug ->
                     p []
-                      [ text "Home folder for user group "
-                      , a [ href ("/adminonly/page/companyadmin/" ++ ug.id) ]
-                          [ text <| M.withDefault ("UserGroupID: " ++ ug.id) (stringNonEmpty ug.name) ]
-                      ]
+                        [ text "Home folder for user group "
+                        , a [ href ("/adminonly/page/companyadmin/" ++ ug.id) ]
+                            [ text <| M.withDefault ("UserGroupID: " ++ ug.id) (stringNonEmpty ug.name) ]
+                        ]
                 )
                 mUserGroup
 

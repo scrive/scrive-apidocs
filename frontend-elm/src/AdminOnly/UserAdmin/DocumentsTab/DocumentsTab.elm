@@ -144,8 +144,9 @@ getDocumentsCmd model =
             "&max=" ++ String.fromInt Pagination.itemsPerPage
 
         params =
-            offset ++ max
-                ++ case model.config of
+            offset
+                ++ max
+                ++ (case model.config of
                         ConfigForAllDocuments ->
                             ""
 
@@ -157,8 +158,11 @@ getDocumentsCmd model =
                             "&companyid=" ++ ugid ++ filter search ++ sorting
 
                         ConfigForUserGroupTmpl ugid ->
-                            "&companyid=" ++ ugid ++ filter ("{\"filter_by\":\"is_template\"}" :: search)
+                            "&companyid="
+                                ++ ugid
+                                ++ filter ("{\"filter_by\":\"is_template\"}" :: search)
                                 ++ sorting
+                   )
     in
     Http.get
         { url = "/adminonly/documentslist" ++ params
@@ -225,8 +229,8 @@ updatePage embed config page model =
 pageFromSearchSortByOrder : Maybe String -> Maybe String -> Maybe String -> Maybe Int -> Page
 pageFromSearchSortByOrder mSearch mSortByStr mOrderStr mPaginationPageNum =
     Page (mSearch |> M.andThen stringNonEmpty)
-         (mSortingFromSortByOrder enumSortColumn mSortByStr mOrderStr)
-         (M.withDefault 1 mPaginationPageNum)
+        (mSortingFromSortByOrder enumSortColumn mSortByStr mOrderStr)
+        (M.withDefault 1 mPaginationPageNum)
 
 
 fromPage : Page -> PageUrl
@@ -270,30 +274,31 @@ view embed model =
                 ]
             ]
     in
-    Html.map embed <| div [] <|
-        (if useSortingAndSearch model then
-            viewSearchForm
+    Html.map embed <|
+        div [] <|
+            (if useSortingAndSearch model then
+                viewSearchForm
 
-         else
-            []
-        )
-            ++ [ div [ class "mt-3", class "container-fluid" ]
-                    [ case model.sDocumentList of
-                        Failure ->
-                            text "Failure"
+             else
+                []
+            )
+                ++ [ div [ class "mt-3", class "container-fluid" ]
+                        [ case model.sDocumentList of
+                            Failure ->
+                                text "Failure"
 
-                        Loading ->
-                            text "Loading"
+                            Loading ->
+                                text "Loading"
 
-                        Success documentList ->
-                            viewDocuments model documentList
-                    ]
-               ]
-            ++ [ Pagination.view
-                    model.page.paginationPageNum
-                    model.mPaginationTotal
-                    PaginationMsg
-               ]
+                            Success documentList ->
+                                viewDocuments model documentList
+                        ]
+                   ]
+                ++ [ Pagination.view
+                        model.page.paginationPageNum
+                        model.mPaginationTotal
+                        PaginationMsg
+                   ]
 
 
 useSortingAndSearch : Model -> Bool

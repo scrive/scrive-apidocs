@@ -122,7 +122,9 @@ update embed globals msg model =
             ( { model | search = search }, Cmd.none )
 
         FormSubmitted ->
-            let page = model.page
+            let
+                page =
+                    model.page
             in
             ( { model | page = { page | mSearch = Just model.search } }
             , -- we do not initiate the search from here, because it will be
@@ -139,22 +141,30 @@ update embed globals msg model =
                     ( { model | sUserList = Failure }, Cmd.none )
 
         CreateUserModalMsg createUserModalMsg ->
-            let (createUserModal2, cmd) =
-                  CreateUserModal.update (embed << CreateUserModalMsg) (embed << UserCreatedCallback) globals createUserModalMsg model.createUserModal
-            in ( { model | createUserModal = createUserModal2 }, cmd)
+            let
+                ( createUserModal2, cmd ) =
+                    CreateUserModal.update (embed << CreateUserModalMsg) (embed << UserCreatedCallback) globals createUserModalMsg model.createUserModal
+            in
+            ( { model | createUserModal = createUserModal2 }, cmd )
 
-        UserCreatedCallback userCreated -> case userCreated of
-            Just (Ok str) -> -- User created successfully
-                (model, Cmd.batch
+        UserCreatedCallback userCreated ->
+            case userCreated of
+                Just (Ok str) ->
+                    -- User created successfully
+                    ( model
+                    , Cmd.batch
                         [ globals.setPageUrlFromModel
                         , globals.flashMessage <| FlashMessage.success str
-                        ])
+                        ]
+                    )
 
-            Just (Err str) -> -- Failed to create a user
-                (model, globals.flashMessage <| FlashMessage.error str)
+                Just (Err str) ->
+                    -- Failed to create a user
+                    ( model, globals.flashMessage <| FlashMessage.error str )
 
-            Nothing -> -- No attempt was made to create a user
-                (model, Cmd.none)
+                Nothing ->
+                    -- No attempt was made to create a user
+                    ( model, Cmd.none )
 
         CreateUserClicked ->
             ( { model | createUserModal = CreateUserModal.show model.createUserModal }, Cmd.none )
@@ -163,7 +173,9 @@ update embed globals msg model =
             ( model, globals.gotoUser uid )
 
         TableHeaderClicked column ->
-            let page = model.page
+            let
+                page =
+                    model.page
             in
             ( { model | page = { page | mSorting = Just <| toggleSorting column defaultSorting model.page.mSorting } }
             , -- we do not initiate the search from here, because it will be
@@ -186,10 +198,11 @@ updatePage embed ugid page model =
             }
     in
     ( model1
-    , Cmd.map embed <| Cmd.batch
-        [ getUsersCmd ugid model1
-        , createUserModalCmd
-        ]
+    , Cmd.map embed <|
+        Cmd.batch
+            [ getUsersCmd ugid model1
+            , createUserModalCmd
+            ]
     )
 
 
@@ -215,42 +228,43 @@ pageFromModel model =
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
-    Html.map embed <| div []
-        [ Grid.row [ Row.betweenXs ]
-            [ Grid.col []
-                [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
-                    [ text "Add new user in company" ]
-                ]
-            , Grid.col []
-                [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
-                    [ Input.text
-                        [ Input.attrs
-                            [ onInput SetSearch
-                            , value model.search
-                            , placeholder "Username, email or company name"
+    Html.map embed <|
+        div []
+            [ Grid.row [ Row.betweenXs ]
+                [ Grid.col []
+                    [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
+                        [ text "Add new user in company" ]
+                    ]
+                , Grid.col []
+                    [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
+                        [ Input.text
+                            [ Input.attrs
+                                [ onInput SetSearch
+                                , value model.search
+                                , placeholder "Username, email or company name"
+                                ]
                             ]
+                        , Button.button
+                            [ Button.secondary
+                            , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
+                            ]
+                            [ text "Search" ]
                         ]
-                    , Button.button
-                        [ Button.secondary
-                        , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
-                        ]
-                        [ text "Search" ]
                     ]
                 ]
-            ]
-        , div [ class "mt-3", class "container-fluid" ]
-            [ case model.sUserList of
-                Failure ->
-                    text "Failure"
+            , div [ class "mt-3", class "container-fluid" ]
+                [ case model.sUserList of
+                    Failure ->
+                        text "Failure"
 
-                Loading ->
-                    text "Loading"
+                    Loading ->
+                        text "Loading"
 
-                Success sUserList ->
-                    viewUsers model sUserList
+                    Success sUserList ->
+                        viewUsers model sUserList
+                ]
+            , CreateUserModal.view CreateUserModalMsg model.createUserModal
             ]
-        , CreateUserModal.view CreateUserModalMsg model.createUserModal
-        ]
 
 
 type alias User =
