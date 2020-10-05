@@ -60,7 +60,7 @@ instance ToJSON SmsOtpParams where
 smsOtpParams :: Text -> SmsOtpParams
 smsOtpParams phoneNumber = SmsOtpParams { .. }
   where
-    numberOfAttempts = 5
+    numberOfAttempts = 3
     message          = "Your authentication code: "
     originator       = "Scrive"
 

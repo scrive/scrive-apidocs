@@ -313,7 +313,7 @@ user3_email = "bar@baz.com"
 party_user3 = {
     "email": user3_email,
     "role": "signing_party",
-    "phone_number": "+421948886483",
+    "phone_number": None,
     "signing_order": 1,
     "first_name": "Foo",
     "surname": "Consider",
