@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"A vérifié son identité à partir de Onfido, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"a vérifié l'identité à partir de l'identifiant bancaire suédois, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"A vérifié l'identité avec PIN par SMS, en vue d'accéder au document.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"A vérifié son identité à partir de Verimi, en vue d'accéder au document.",
 "_AutomaticReminderSentTextSimpleEmail":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via mail.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via mail et SMS.",

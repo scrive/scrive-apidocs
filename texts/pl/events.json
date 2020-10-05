@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Zweryfikował (-a) swoją tożsamość przy użyciu szwedzkiego BankID celem uzyskania dostępu do dokumentu.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Zweryfikował (-a) swoją tożsamość przy użyciu kodu PIN przesłanego SMS-em celem uzyskania dostępu do dokumentu.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Zweryfikowano swoją tożsamość przy użyciu Verimi celem uzyskania dostępu do dokumentu.",
 "_AutomaticReminderSentTextSimpleEmail":"Za pośrednictwem maila do $signatory$ wysłano automatyczne przypomnienie dotyczące złożenia podpisu na dokumencie.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Za pośrednictwem maila i wiadomości SMS do $signatory$ wysłano automatyczne przypomnienie dotyczące złożenia podpisu na dokumencie.",

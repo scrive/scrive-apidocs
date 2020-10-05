@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Patvirtino savo tapatybę per Švedijos „BankID“, kad gautų dokumento prieigą.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Patvirtino savo tapatybę per SMS žinutę su PIN.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Patvirtino savo tapatybę per Verimi, kad gautų dokumento prieigą.",
 "_AutomaticReminderSentTextSimpleEmail":"$signatory$ elektroniniu paštu išsiųstas automatinis priminimas pasirašyti dokumentą.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"$signatory$ elektroniniu paštu ir SMS žinute išsiųstas automatinis priminimas pasirašyti dokumentą.",

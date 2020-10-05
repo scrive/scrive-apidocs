@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Πιστοποίησαν την ταυτότητά τους μέσω της εφαρμογής Swedish BankID για πρόσβαση στο έγγραφο.  ",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Πιστοποίησαν την ταυτότητά τους με PIN μέσω SMS για πρόσβαση στο έγγραφο.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Πιστοποίησαν την ταυτότητά τους μέσω Verimi για πρόσβαση στο έγγραφο.",
 "_AutomaticReminderSentTextSimpleEmail":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον/στην $signatory$ μέσω email. ",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον/στην $signatory$ μέσω email και SMS. ",

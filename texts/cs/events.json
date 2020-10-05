@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí švédské služby BankID.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí kódu PIN zaslaného zprávou SMS.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí služby Verimi.",
 "_AutomaticReminderSentTextSimpleEmail":"Uživateli $signatory$ byla e-mailem odeslána automatická upomínka k podpisu dokumentu.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Uživateli $signatory$ byla e-mailem a zprávou SMS odeslána automatická upomínka k podpisu dokumentu.",

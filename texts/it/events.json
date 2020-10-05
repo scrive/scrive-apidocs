@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verificare la propria identità con il BankID svedese per accedere al documento.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verificare la propria identità con il PIN via SMS per accedere al documento.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Verificata la propria identità con Verimi per accedere al documento.",
 "_AutomaticReminderSentTextSimpleEmail":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via email e SMS.",

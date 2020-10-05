@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Pārbaudīja personas identitāti ar Zviedrijas BankID, lai nodrošinātu piekļuvi dokumentam.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Lai nodrošinātu piekļuvi dokumentam, pārbaudīja personas identitāti, ievadot īsziņā nosūtīto PIN kodu. ",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"$signatory$ e-pastā tika nosūtīts automātiskais atgādinājums par dokumenta parakstīšanu.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"$signatory$ e-pastā un īsziņā tika nosūtīts automātiskais atgādinājums par dokumenta parakstīšanu.",

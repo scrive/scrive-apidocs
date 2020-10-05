@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"De verifiserte identiteten sin med Onfido for å få tilgang til dokumentet. ",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verifiserte deres identitet med svensk BankID for å få tilgang til dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verifiserte sin identitet med PIN fra SMS for å få tilgang til dokumentet.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Verifiser identiteten deres med Verimi for å få tilgang til dokumentet.",
 "_AutomaticReminderSentTextSimpleEmail":"En automatisk påminnelse om å signere dokumentet ble sendt til $signatory$ via e-post.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"En automatisk påminnelse om å signere dokumentet ble sendt til $signatory$ via e-post og SMS.",

@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"Bevestigde zijn/haar identiteit met Onfido om toegang te krijgen tot het document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Heeft zijn/haar identiteit geverifiëerd met Swedish BankID om toegang te krijgen tot het document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Bevestigde zijn/haar identiteit met PIN via SMS om toegang tot dit document te krijgen.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Heeft zijn of haar identiteit bevestigd met Verimi om toegang tot het document te verkrijgen.",
 "_AutomaticReminderSentTextSimpleEmail":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail. ",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail en SMS.",

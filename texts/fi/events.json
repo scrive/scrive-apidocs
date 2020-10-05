@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Vahvisti henkilöllisyytensä ruotsalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Vahvisti henkilöllisyytensä tekstiviestitse lähetetyn PIN-numeron kanssa päästäkseen käsiksi dokumenttiin.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Vahvisti(vat) henkilöllisyytensä Verimin kanssa päästäkseen käsiksi dokumenttiin.",
 "_AutomaticReminderSentTextSimpleEmail":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin sähköpostitse, vastaanottaja $signatory$.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin sähköpostitse ja tekstiviestillä, vastaanottaja $signatory$.",

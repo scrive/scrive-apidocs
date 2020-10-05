@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Staðfesti auðkenni sitt með sænsku BankID til að fá aðgang að skjalinu.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Staðfesti auðkenni sitt með PIN og SMS til að fá aðgang að skjalinu.",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Staðfesti auðkenni sitt með Verimi til að fá aðgang að skjalinu.",
 "_AutomaticReminderSentTextSimpleEmail":"Sjálfvirk áminning um að skrifa undir skjalið var send til $signatory$ með tölvupósti.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Sjálfvirk áminning um að skrifa undir skjalið var send til $signatory$ með tölvupósti og textaskilaboðum.",

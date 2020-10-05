@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Tuvastas dokumendile ligipääsemiseks enda isiku Rootsi BankID abil.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku SMSi teel saadetud PIN koodi abil",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku Verimi platvormi abil.",
 "_AutomaticReminderSentTextSimpleEmail":"Automaatne meeldetuletus dokumendi allkirjastamiseks saati e-maili teel isikule $signatory$.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Automaatne meedetuletus dokumendi allkirjastamiseks saadeti e-maili ja SMSi teel isikule $signatory$.",

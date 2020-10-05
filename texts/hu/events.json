@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"",
 "_AutomaticReminderSentTextSimpleEmailSMS":"",

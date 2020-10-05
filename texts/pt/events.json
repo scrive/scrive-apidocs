@@ -18,6 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"A sua identidade foi verificada com o BankID sueco para aceder ao documento. ",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"A sua identidade foi verificada com o PIN por SMS para aceder ao documento. ",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"A sua identidade foi verificada com o Verimi para aceder ao documento. ",
 "_AutomaticReminderSentTextSimpleEmail":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando o email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando o email e SMS.",
