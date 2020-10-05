@@ -9,6 +9,8 @@ get:
   description: |
     Fetch a list of attachments, with filtering and sorting options.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: domain
       in: query

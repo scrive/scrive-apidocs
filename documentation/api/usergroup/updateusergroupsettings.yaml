@@ -22,7 +22,7 @@ post:
     }
     ```
 
-    > For examples of the JSON output, see 
+    > For examples of the JSON output, see
     > [View User Group Settings](#view-user-group-settings).
 
     This endpoint allows you to update the User Group's `settings` object.
@@ -38,6 +38,8 @@ post:
 
     The User Group from which the contact_details were previously inherited will
     be unaffected by the operation.
+
+    *OAuth Privileges required: `FULL_ACCESS`*
 
   parameters:
     - name: user_group_id

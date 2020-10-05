@@ -7,6 +7,8 @@ post:
   description: |
     Create a new attachment.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: title
       in: formData

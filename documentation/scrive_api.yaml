@@ -486,7 +486,9 @@ info:
 
     ### OAuth privileges
     The current API version accepts the following privileges names:
-    `DOC_CREATE`, `DOC_CHECK`, and `DOC_SEND`.
+    `DOC_CREATE`, `DOC_CHECK`, `DOC_SEND` and `FULL_ACCESS`.
+
+    `FULL_ACCESS` can be used instead of all the other privileges and their combinations.
 
     Permission levels required for each API call are described on a per call
     basis.

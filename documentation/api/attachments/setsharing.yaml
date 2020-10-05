@@ -7,6 +7,8 @@ post:
   description: |
     Share or unshare the specified attachments with the company's other users.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: attachment_ids
       in: formData

@@ -25,6 +25,8 @@ post:
     This link will redirect the user to `PATH_INSIDE_SCRIVE_COM`.
     Remember that all URL query parameters must be URL encoded!
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: personal_token
       in: formData
