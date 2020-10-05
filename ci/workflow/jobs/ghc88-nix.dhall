@@ -10,13 +10,10 @@ in
 BackendWorkflow.createWorkflow
   BackendWorkflow.Args ::
   { name = "GHC 8.8 Backend Tests (Nix)"
-  , ghcVersion = GHCVersion.Type.ghc88
-  , nixShell = "backend-shell"
+  , ghc-version = GHCVersion.Type.ghc88
+  , nix-shell = "backend-shell"
 
-  -- Run backend test on cloud runner for now
-  -- until we have more runner capacity
-  -- , runs-on = default-runner
-  , runs-on = [ "ubuntu-latest" ]
+  , runs-on = default-runner
 
   , triggers = Workflow.Triggers ::
       { push = Some Workflow.BranchSpec ::

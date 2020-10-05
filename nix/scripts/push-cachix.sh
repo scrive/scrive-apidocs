@@ -11,6 +11,8 @@ nix_deps=$(mktemp -d -t kontrakcja-nix-XXXX)
 
 instances=$(nix-instantiate -A $GHC_VERSION.shell-deps $nix_deps/release.nix)
 
-nix-store -qR --include-outputs $instances | cachix push $CACHIX_STORE
+nix-store --query --references --include-outputs $instances \
+  | xargs nix-store --query --requisites \
+  | cachix push $CACHIX_STORE
 
 rm -rf $nix_deps

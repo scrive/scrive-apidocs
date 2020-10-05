@@ -9,17 +9,17 @@ let default-runner = ../config/default-runner.dhall
 in
 BackendWorkflow.createWorkflow
   BackendWorkflow.Args ::
-  { name = "GHC 8.8 Backend Tests (Manual)"
+  { name = "Backend Tests using local pdftools in Docker"
   , ghc-version = GHCVersion.Type.ghc88
-  , nix-shell = "manual-backend-shell"
-  , cache-cabal = True
-  , runs-on = default-runner
+  , nix-shell = "backend-shell"
+  , runs-on = [ "ubuntu-latest" ]
+  , use-pdftools-lambda = False
   , triggers = Workflow.Triggers ::
-      { push = Some (Workflow.BranchSpec ::
+      { push = Some Workflow.BranchSpec ::
           { branches = Some [ "master", "staging", "production" ]
-          })
-      -- Uncomment this line to temporary enable running this workflow in PR
-      -- , pull_request = Some Workflow.BranchSpec ::
-      --     { paths = Some [ "**.hs", "**.cabal", "cabal.project.freeze" ] }
+          , paths = Some [ "nix/source/pdftools.nix" ]
+          }
+      , pull_request = Some Workflow.BranchSpec ::
+          { paths = Some [ "nix/source/pdftools.nix" ] }
       }
   }

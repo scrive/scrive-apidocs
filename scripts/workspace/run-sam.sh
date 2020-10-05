@@ -62,4 +62,5 @@ echo "Running SAM with template path at $template_path:"
 
 cat "$template_path"
 
+sam --version
 sam local start-api --port 9876 --region eu-central-1 --template "$template_path"

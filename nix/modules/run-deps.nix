@@ -12,6 +12,7 @@ let
   vendorDeps = [
     vendor.elm2nix
     vendor.fakes3
+    vendor.sam
   ];
 
   pythonDeps = [
@@ -60,7 +61,6 @@ let
     pkgs.postgresql
     pkgs.imagemagick
     pkgs.glibcLocales
-    pkgs.aws-sam-cli
     pkgs.poppler_utils
   ];
 in

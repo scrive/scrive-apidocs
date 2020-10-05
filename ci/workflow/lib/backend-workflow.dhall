@@ -1,3 +1,5 @@
+let Map = https://prelude.dhall-lang.org/Map/Type
+
 let config = ../config.dhall
 let Step = ../type/Step.dhall
 let Job = ../type/Job.dhall
@@ -9,28 +11,30 @@ let setupSteps = ./setup-steps.dhall
 let Args =
   { Type =
       { name: Text
-      , ghcVersion: GHCVersion.Type
-      , nixShell: Text
-      , cacheCabal: Bool
+      , ghc-version: GHCVersion.Type
+      , nix-shell: Text
+      , cache-cabal: Bool
       , runs-on: List Text
       , triggers: Workflow.Triggers.Type
+      , use-pdftools-lambda: Bool
       }
   , default =
-      { ghcVersion = GHCVersion.Type.ghc88
-      , nixShell = "dev-shell"
-      , cacheCabal = False
+      { ghc-version = GHCVersion.Type.ghc88
+      , nix-shell = "dev-shell"
+      , cache-cabal = False
+      , use-pdftools-lambda = True
       }
   }
 
 let createWorkflow =
   \(args: Args.Type) ->
-    let shell = "${GHCVersion.format args.ghcVersion}.${args.nixShell}"
+    let shell = "${GHCVersion.format args.ghc-version}.${args.nix-shell}"
 
     -- We want to cache ~/.cabal using GitHub Actions cache
     -- when running on cloud runner to speed up manual shell
     -- builds of cabal dependencies
-    let cacheCabalSteps =
-      if args.cacheCabal
+    let cache-cabalSteps =
+      if args.cache-cabal
       then
         -- We cache ~/.cabal depending on the hash value of cabal.project.freeze
         -- The suffix like -1 are used to purge the cache on GitHub Actions if needed
@@ -50,12 +54,18 @@ let createWorkflow =
       else
         [] : List Step.Type
 
+    let backendEnv = if args.use-pdftools-lambda
+      then Some (toMap
+            { PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
+            })
+      else None (Map Text Text)
+
     let backendTests = Job.Job ::
       { runs-on = args.runs-on
       , steps =
           setupSteps.setup-steps #
           [ setupSteps.nix-shell-step shell ]
-          # cacheCabalSteps #
+          # cache-cabalSteps #
           [ Step ::
             { name = "Build Kontrakcja"
             , timeout-minutes = Some 180
@@ -67,9 +77,7 @@ let createWorkflow =
           , Step ::
             { name = "Run Backend Tests"
             , timeout-minutes = Some 180
-            , env = Some (toMap
-                { PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
-                })
+            , env = backendEnv
             , run = Some ''
                 nix-shell -A ${shell} release.nix --run \
                   "./ci/workflow/scripts/run-backend-tests.sh"

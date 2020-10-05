@@ -17,6 +17,7 @@ mkdir -p result
 nix-shell -j4 -A $1 result/release.nix --run true
 
 nix-store -qR --include-outputs $(nix-instantiate -A $1 result/release.nix) \
+  | xargs nix-store --query --requisites \
   | cachix push scrive
 
 rm -rf result

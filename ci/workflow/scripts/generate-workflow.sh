@@ -9,6 +9,7 @@ jobs=(
   nix-deps
   nix-deps-mac
   nix-dist
+  docker-lambda
   migration-test
   selenium-staging
   shake-dist-master
