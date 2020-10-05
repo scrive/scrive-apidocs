@@ -375,7 +375,7 @@ huePalette id mouseTarget =
             , ( "100%", "#FF0000" )
             ]
     in
-        svg
+    svg
         (SvgAttrs.class "hue-picker" :: sliderStyles)
         [ defs []
             [ linearGradient

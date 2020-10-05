@@ -141,7 +141,9 @@ update embed globals msg model =
             ( { model | search = search }, Cmd.none )
 
         FormSubmitted ->
-            let page = model.page
+            let
+                page =
+                    model.page
             in
             ( { model | page = { page | mSearch = stringNonEmpty model.search } }
             , -- we do not initiate the search from here, because it will be
@@ -162,22 +164,30 @@ update embed globals msg model =
                     )
 
         CreateUserModalMsg createUserModalMsg ->
-            let (createUserModal2, cmd) =
-                  CreateUserModal.update (embed << CreateUserModalMsg) (embed << UserCreatedCallback) globals createUserModalMsg model.createUserModal
-            in ( { model | createUserModal = createUserModal2 }, cmd)
+            let
+                ( createUserModal2, cmd ) =
+                    CreateUserModal.update (embed << CreateUserModalMsg) (embed << UserCreatedCallback) globals createUserModalMsg model.createUserModal
+            in
+            ( { model | createUserModal = createUserModal2 }, cmd )
 
-        UserCreatedCallback userCreated -> case userCreated of
-            Just (Ok str) -> -- User created successfully
-                (model, Cmd.batch
+        UserCreatedCallback userCreated ->
+            case userCreated of
+                Just (Ok str) ->
+                    -- User created successfully
+                    ( model
+                    , Cmd.batch
                         [ Cmd.map embed <| getUsersCmd model
                         , globals.flashMessage <| FlashMessage.success str
-                        ])
+                        ]
+                    )
 
-            Just (Err str) -> -- Failed to create a user
-                (model, globals.flashMessage <| FlashMessage.error str)
+                Just (Err str) ->
+                    -- Failed to create a user
+                    ( model, globals.flashMessage <| FlashMessage.error str )
 
-            Nothing -> -- No attempt was made to create a user
-                (model, Cmd.none)
+                Nothing ->
+                    -- No attempt was made to create a user
+                    ( model, Cmd.none )
 
         CreateUserClicked ->
             ( { model | createUserModal = CreateUserModal.show model.createUserModal }, Cmd.none )
@@ -190,7 +200,8 @@ update embed globals msg model =
                 nameOnlyAsc sorting =
                     ite (sorting.column == SCName) { sorting | order = SOAsc } sorting
 
-                page = model.page
+                page =
+                    model.page
             in
             ( { model | page = { page | mSorting = Just <| nameOnlyAsc <| toggleSorting column defaultSorting model.page.mSorting } }
             , -- we do not initiate the search from here, because it will be
@@ -200,7 +211,8 @@ update embed globals msg model =
 
         PaginationMsg pageNum ->
             let
-                page = model.page
+                page =
+                    model.page
             in
             ( { model | page = { page | paginationPageNum = pageNum } }
             , globals.setPageUrlFromModel
@@ -253,53 +265,54 @@ pageFromSearchOrder mSearch0 mOrderStr mPaginationPageNum =
             mOrderStr |> M.andThen (Enum.findEnumValue enumSortOrder >> R.toMaybe)
     in
     Page mSearch
-         (M.map (Sorting SCTosDate) mOrder)
-         (M.withDefault 1 mPaginationPageNum)
+        (M.map (Sorting SCTosDate) mOrder)
+        (M.withDefault 1 mPaginationPageNum)
 
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
-    Html.map embed <| div []
-        [ Grid.row [ Row.betweenXs ]
-            [ Grid.col []
-                [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
-                    [ text "Create user with empty company"
+    Html.map embed <|
+        div []
+            [ Grid.row [ Row.betweenXs ]
+                [ Grid.col []
+                    [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
+                        [ text "Create user with empty company"
+                        ]
                     ]
-                ]
-            , Grid.col []
-                [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
-                    [ Input.text
-                        [ Input.attrs
-                            [ onInput SetSearch
-                            , value model.search
-                            , placeholder "Username, email or company name"
+                , Grid.col []
+                    [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
+                        [ Input.text
+                            [ Input.attrs
+                                [ onInput SetSearch
+                                , value model.search
+                                , placeholder "Username, email or company name"
+                                ]
                             ]
+                        , Button.button
+                            [ Button.secondary
+                            , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
+                            ]
+                            [ text "Search" ]
                         ]
-                    , Button.button
-                        [ Button.secondary
-                        , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
-                        ]
-                        [ text "Search" ]
                     ]
                 ]
-            ]
-        , div [ class "mt-3", class "container-fluid" ]
-            [ case model.sUserList of
-                Failure ->
-                    text "Failure"
+            , div [ class "mt-3", class "container-fluid" ]
+                [ case model.sUserList of
+                    Failure ->
+                        text "Failure"
 
-                Loading ->
-                    text "Loading"
+                    Loading ->
+                        text "Loading"
 
-                Success sUserList ->
-                    viewUsers model sUserList
+                    Success sUserList ->
+                        viewUsers model sUserList
+                ]
+            , Pagination.view
+                model.page.paginationPageNum
+                model.mPaginationTotal
+                PaginationMsg
+            , CreateUserModal.view CreateUserModalMsg model.createUserModal
             ]
-        , Pagination.view
-            model.page.paginationPageNum
-            model.mPaginationTotal
-            PaginationMsg
-        , CreateUserModal.view CreateUserModalMsg model.createUserModal
-        ]
 
 
 type alias User =

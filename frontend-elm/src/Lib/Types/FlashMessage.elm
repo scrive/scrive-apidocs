@@ -1,3 +1,6 @@
 module Lib.Types.FlashMessage exposing (..)
 
-type FlashMessage = FlashSuccess String | FlashError String
+
+type FlashMessage
+    = FlashSuccess String
+    | FlashError String

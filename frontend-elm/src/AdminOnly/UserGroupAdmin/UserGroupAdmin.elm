@@ -23,12 +23,12 @@ import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Spacing as Spacing
 import Dict
 import Either exposing (Either(..))
-import Html exposing (Html,text)
+import EnumExtra as Enum
+import Html exposing (Html, text)
 import Maybe as M
 import Url.Parser as UP exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as UPQ
 import Utils exposing (..)
-import EnumExtra as Enum
 
 
 type alias Page =
@@ -80,7 +80,8 @@ type Msg
 
 init : (Msg -> msg) -> Globals msg -> Page -> ( Model, Cmd msg )
 init embed globals page =
-    let model =
+    let
+        model =
             { page = Page "" DetailsTab
             , mDetailsTab = Nothing
             , mUsersTab = Nothing
@@ -94,8 +95,8 @@ init embed globals page =
             , tabState = Tab.customInitialState DetailsTab.tabName
             , xtoken = globals.xtoken
             }
-
-    in updatePage embed page model
+    in
+    updatePage embed page model
 
 
 fromPage : Page -> PageUrl
@@ -112,13 +113,15 @@ fromPage page =
                 StructureTab ->
                     ( StructureTab.tabName, emptyPageUrl )
 
-                BrandingTab UserGroupBrandingTab.EditBrandingTab  ->
+                BrandingTab UserGroupBrandingTab.EditBrandingTab ->
                     ( Enum.toString UserGroupBrandingTab.enumEditTab UserGroupBrandingTab.EditBrandingTab
-                    , emptyPageUrl )
+                    , emptyPageUrl
+                    )
 
-                BrandingTab UserGroupBrandingTab.EditThemeTab  ->
+                BrandingTab UserGroupBrandingTab.EditThemeTab ->
                     ( Enum.toString UserGroupBrandingTab.enumEditTab UserGroupBrandingTab.EditThemeTab
-                    , emptyPageUrl )
+                    , emptyPageUrl
+                    )
 
                 PaymentsTab ->
                     ( PaymentsTab.tabName, emptyPageUrl )
@@ -136,7 +139,6 @@ fromPage page =
 
                 FoldersTab ->
                     ( FoldersTab.tabName, emptyPageUrl )
-
     in
     { pageUrl | path = [ page.ugid ], fragment = Just tabName }
 
@@ -257,48 +259,91 @@ update embed globals msg model =
             )
 
         DetailsTabMsg tabMsg ->
-            let updateDetailsTab = DetailsTab.update (embed << DetailsTabMsg) globals tabMsg
-                (newDetailsTab, cmd) = maybeUpdate updateDetailsTab model.mDetailsTab
-            in ({ model | mDetailsTab = newDetailsTab}, cmd)
+            let
+                updateDetailsTab =
+                    DetailsTab.update (embed << DetailsTabMsg) globals tabMsg
+
+                ( newDetailsTab, cmd ) =
+                    maybeUpdate updateDetailsTab model.mDetailsTab
+            in
+            ( { model | mDetailsTab = newDetailsTab }, cmd )
 
         UsersTabMsg tabMsg ->
-            let updateUsersTab = UsersTab.update (embed << UsersTabMsg) globals tabMsg
-                (newUsersTab, cmd) = maybeUpdate updateUsersTab model.mUsersTab
-            in ({ model | mUsersTab = newUsersTab}, cmd)
+            let
+                updateUsersTab =
+                    UsersTab.update (embed << UsersTabMsg) globals tabMsg
+
+                ( newUsersTab, cmd ) =
+                    maybeUpdate updateUsersTab model.mUsersTab
+            in
+            ( { model | mUsersTab = newUsersTab }, cmd )
 
         StructureTabMsg tabMsg ->
-            let (newStructureTab, cmd) = maybeUpdate (StructureTab.update tabMsg) model.mStructureTab
-            in ({ model | mStructureTab = newStructureTab}, cmd)
+            let
+                ( newStructureTab, cmd ) =
+                    maybeUpdate (StructureTab.update tabMsg) model.mStructureTab
+            in
+            ( { model | mStructureTab = newStructureTab }, cmd )
 
         BrandingTabMsg tabMsg ->
-            let updateBrandingTab = UserGroupBrandingTab.update (embed << BrandingTabMsg) globals tabMsg
-                (newUserGroupBranding, cmd) = maybeUpdate updateBrandingTab model.mBrandingTab
-            in ({ model | mBrandingTab = newUserGroupBranding}, cmd)
+            let
+                updateBrandingTab =
+                    UserGroupBrandingTab.update (embed << BrandingTabMsg) globals tabMsg
+
+                ( newUserGroupBranding, cmd ) =
+                    maybeUpdate updateBrandingTab model.mBrandingTab
+            in
+            ( { model | mBrandingTab = newUserGroupBranding }, cmd )
 
         PaymentsTabMsg tabMsg ->
-            let updatePaymentsTab = PaymentsTab.update (embed << PaymentsTabMsg) globals tabMsg
-                (newPaymentsTab, cmd) = maybeUpdate updatePaymentsTab model.mPaymentsTab
-            in ({ model | mPaymentsTab = newPaymentsTab}, cmd)
+            let
+                updatePaymentsTab =
+                    PaymentsTab.update (embed << PaymentsTabMsg) globals tabMsg
+
+                ( newPaymentsTab, cmd ) =
+                    maybeUpdate updatePaymentsTab model.mPaymentsTab
+            in
+            ( { model | mPaymentsTab = newPaymentsTab }, cmd )
 
         StatisticsTabMsg tabMsg ->
-            let updateStatisticsTab = StatisticsTab.update (embed << StatisticsTabMsg) globals tabMsg
-                (newStatisticsTab, cmd) = maybeUpdate updateStatisticsTab model.mStatisticsTab
-            in ({ model | mStatisticsTab = newStatisticsTab}, cmd)
+            let
+                updateStatisticsTab =
+                    StatisticsTab.update (embed << StatisticsTabMsg) globals tabMsg
+
+                ( newStatisticsTab, cmd ) =
+                    maybeUpdate updateStatisticsTab model.mStatisticsTab
+            in
+            ( { model | mStatisticsTab = newStatisticsTab }, cmd )
 
         TemplatesTabMsg tabMsg ->
-            let updateTemplatesTab = DocumentsTab.update (embed << TemplatesTabMsg) globals tabMsg
-                (newTemplatesTab, cmd) = maybeUpdate updateTemplatesTab model.mTemplatesTab
-            in ({ model | mTemplatesTab = newTemplatesTab}, cmd)
+            let
+                updateTemplatesTab =
+                    DocumentsTab.update (embed << TemplatesTabMsg) globals tabMsg
+
+                ( newTemplatesTab, cmd ) =
+                    maybeUpdate updateTemplatesTab model.mTemplatesTab
+            in
+            ( { model | mTemplatesTab = newTemplatesTab }, cmd )
 
         DocumentsTabMsg tabMsg ->
-            let updateDocumentsTab = DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
-                (newDocumentsTab, cmd) = maybeUpdate updateDocumentsTab model.mDocumentsTab
-            in ({ model | mDocumentsTab = newDocumentsTab}, cmd)
+            let
+                updateDocumentsTab =
+                    DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
+
+                ( newDocumentsTab, cmd ) =
+                    maybeUpdate updateDocumentsTab model.mDocumentsTab
+            in
+            ( { model | mDocumentsTab = newDocumentsTab }, cmd )
 
         FoldersTabMsg tabMsg ->
-            let updateFoldersTab = FoldersTab.update (embed << FoldersTabMsg) globals tabMsg
-                (newFoldersTab, cmd) = maybeUpdate updateFoldersTab model.mFoldersTab
-            in ({ model | mFoldersTab = newFoldersTab}, cmd)
+            let
+                updateFoldersTab =
+                    FoldersTab.update (embed << FoldersTabMsg) globals tabMsg
+
+                ( newFoldersTab, cmd ) =
+                    maybeUpdate updateFoldersTab model.mFoldersTab
+            in
+            ( { model | mFoldersTab = newFoldersTab }, cmd )
 
 
 updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
@@ -359,9 +404,10 @@ updatePage embed page model =
                         |> M.map (UserGroupBrandingTab.updatePage (embed << BrandingTabMsg) { ugid = page.ugid, page = tabPage })
                         |> M.withDefault
                             (UserGroupBrandingTab.init (embed << BrandingTabMsg)
-                              { page = tabPage
-                              , ugid = page.ugid
-                              } )
+                                { page = tabPage
+                                , ugid = page.ugid
+                                }
+                            )
             in
             ( { model
                 | tabState = Tab.customInitialState UserGroupBrandingTab.tabName

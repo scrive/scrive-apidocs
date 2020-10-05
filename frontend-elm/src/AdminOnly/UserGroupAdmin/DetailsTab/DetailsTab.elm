@@ -9,6 +9,7 @@ module AdminOnly.UserGroupAdmin.DetailsTab.DetailsTab exposing
     )
 
 import AdminOnly.UserAdmin.DetailsTab.UserGroup as UserGroup exposing (Address, Settings, UserGroup)
+import AdminOnly.UserGroupAdmin.DetailsTab.DeletionRequest as DeletionRequest
 import AdminOnly.UserGroupAdmin.DetailsTab.MergeUserGroupModal as MergeUserGroupModal
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -31,7 +32,6 @@ import Time exposing (Month(..))
 import Url.Parser exposing (map)
 import Utils exposing (..)
 
-import AdminOnly.UserGroupAdmin.DetailsTab.DeletionRequest as DeletionRequest
 
 type alias Model =
     { sUserGroup : Status UserGroup
@@ -131,7 +131,8 @@ update embed globals msg model =
                             , showFlashMessage = globals.flashMessage
                             }
 
-                        (deletionRequest, deletionRequestCmd) = DeletionRequest.init deletionRequestParams
+                        ( deletionRequest, deletionRequestCmd ) =
+                            DeletionRequest.init deletionRequestParams
                     in
                     ( { model
                         | sUserGroup = Success userGroup
@@ -140,7 +141,7 @@ update embed globals msg model =
                         , mMergeUserGroupModal = Just mergeModal
                         , mDeletionRequest = Just deletionRequest
                       }
-                    , Cmd.batch [mergeModalCmd, deletionRequestCmd]
+                    , Cmd.batch [ mergeModalCmd, deletionRequestCmd ]
                     )
 
                 Err _ ->
@@ -265,23 +266,25 @@ update embed globals msg model =
             ( { model | mMergeUserGroupModal = newMergeUserGroupModal }, cmd )
 
         DeletionRequestMsg deletionRequestMsg ->
-          case (model.sUserGroup, model.mDeletionRequest) of
-            (Success userGroup, Just deletionRequest) ->
-              let
-                  params =
-                    { embed = embed << DeletionRequestMsg
-                    , userGroupId = userGroup.id
-                    , xtoken = globals.xtoken
-                    , updateDeletionStatus = \_ -> globals.gotoUserGroup userGroup.id
-                    , showFlashMessage = globals.flashMessage
-                    }
+            case ( model.sUserGroup, model.mDeletionRequest ) of
+                ( Success userGroup, Just deletionRequest ) ->
+                    let
+                        params =
+                            { embed = embed << DeletionRequestMsg
+                            , userGroupId = userGroup.id
+                            , xtoken = globals.xtoken
+                            , updateDeletionStatus = \_ -> globals.gotoUserGroup userGroup.id
+                            , showFlashMessage = globals.flashMessage
+                            }
 
-                  ( newDeletionRequest, cmd ) =
-                      DeletionRequest.update params deletionRequestMsg deletionRequest
-              in
-              ( { model | mDeletionRequest = Just newDeletionRequest }, cmd )
+                        ( newDeletionRequest, cmd ) =
+                            DeletionRequest.update params deletionRequestMsg deletionRequest
+                    in
+                    ( { model | mDeletionRequest = Just newDeletionRequest }, cmd )
 
-            _ -> (model, Cmd.none)
+                _ ->
+                    ( model, Cmd.none )
+
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
@@ -674,9 +677,12 @@ viewUserGroup model ug address settings =
                     [ text "Save" ]
                 ]
             ]
-            ++ case model.mDeletionRequest of
-                Just deletionRequest ->
-                  [ DeletionRequest.viewButtons DeletionRequestMsg {deletionStatus = ug.deletionStatus} deletionRequest
-                  ]
-                Nothing -> []
+                ++ (case model.mDeletionRequest of
+                        Just deletionRequest ->
+                            [ DeletionRequest.viewButtons DeletionRequestMsg { deletionStatus = ug.deletionStatus } deletionRequest
+                            ]
+
+                        Nothing ->
+                            []
+                   )
         ]

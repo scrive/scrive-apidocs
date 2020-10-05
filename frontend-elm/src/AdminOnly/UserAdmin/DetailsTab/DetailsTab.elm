@@ -45,7 +45,7 @@ type alias Model =
     , mChangePasswordModal : Maybe ChangePasswordModal.Model
     , sResend : Status String
     , sDisableTwoFA : Status String
-    , resetPasswordLoading: Bool
+    , resetPasswordLoading : Bool
     }
 
 
@@ -197,12 +197,12 @@ update embed globals msg model =
                 Just user ->
                     ( model
                     , Http.post
-                            { url = "/adminonly/useradmin/" ++ user.id
-                            , body = formBody globals (User.formValues user)
-                            , expect =
-                                Http.expectJson (embed << GotSaveResponse)
-                                    (D.field "changed" D.bool)
-                            }
+                        { url = "/adminonly/useradmin/" ++ user.id
+                        , body = formBody globals (User.formValues user)
+                        , expect =
+                            Http.expectJson (embed << GotSaveResponse)
+                                (D.field "changed" D.bool)
+                        }
                     )
 
                 Nothing ->
@@ -240,9 +240,14 @@ update embed globals msg model =
                     )
 
         DeleteUserModalMsg modalMsg ->
-            let updateDeleteUserModal = DeleteUserModal.update (embed << DeleteUserModalMsg) globals modalMsg
-                (newDeleteUserModal, cmd) = maybeUpdate updateDeleteUserModal model.mDeleteUserModal
-            in ({ model | mDeleteUserModal = newDeleteUserModal}, cmd)
+            let
+                updateDeleteUserModal =
+                    DeleteUserModal.update (embed << DeleteUserModalMsg) globals modalMsg
+
+                ( newDeleteUserModal, cmd ) =
+                    maybeUpdate updateDeleteUserModal model.mDeleteUserModal
+            in
+            ( { model | mDeleteUserModal = newDeleteUserModal }, cmd )
 
         -- RESEND STATUS
         ResendInvitationClicked ->
@@ -258,10 +263,10 @@ update embed globals msg model =
                         _ ->
                             ( { model | sResend = Loading }
                             , Http.post
-                                    { url = "/adminonly/useradmin/sendinviteagain"
-                                    , body = formBody globals [ ( "userid", user.id ) ]
-                                    , expect = Http.expectString (embed << GotResendInvitationResponse)
-                                    }
+                                { url = "/adminonly/useradmin/sendinviteagain"
+                                , body = formBody globals [ ( "userid", user.id ) ]
+                                , expect = Http.expectString (embed << GotResendInvitationResponse)
+                                }
                             )
 
         GotResendInvitationResponse response ->
@@ -269,13 +274,13 @@ update embed globals msg model =
                 Ok str ->
                     ( { model | sResend = Success str }
                     , globals.flashMessage <|
-                            FlashMessage.success "Invitation was sent"
+                        FlashMessage.success "Invitation was sent"
                     )
 
                 Err _ ->
                     ( { model | sResend = Failure }
                     , globals.flashMessage <|
-                            FlashMessage.error "Resending invitation failed"
+                        FlashMessage.error "Resending invitation failed"
                     )
 
         -- MOVE USER
@@ -286,9 +291,14 @@ update embed globals msg model =
                 |> M.withDefault ( model, Cmd.none )
 
         MoveUserModalMsg modalMsg ->
-            let updateMoveUserModal = MoveUserModal.update (embed << MoveUserModalMsg) globals modalMsg
-                (newMoveUserModal, cmd) = maybeUpdate updateMoveUserModal model.mMoveUserModal
-            in ({ model | mMoveUserModal = newMoveUserModal}, cmd)
+            let
+                updateMoveUserModal =
+                    MoveUserModal.update (embed << MoveUserModalMsg) globals modalMsg
+
+                ( newMoveUserModal, cmd ) =
+                    maybeUpdate updateMoveUserModal model.mMoveUserModal
+            in
+            ( { model | mMoveUserModal = newMoveUserModal }, cmd )
 
         -- CHANGE PASSWORD
         ChangePasswordClicked ->
@@ -302,14 +312,19 @@ update embed globals msg model =
                 |> M.withDefault ( model, Cmd.none )
 
         ChangePasswordModalMsg modalMsg ->
-            let updateChangePasswordModal = ChangePasswordModal.update (embed << ChangePasswordModalMsg) globals modalMsg
-                (newChangePasswordModal, cmd) = maybeUpdate updateChangePasswordModal model.mChangePasswordModal
-            in ({ model | mChangePasswordModal = newChangePasswordModal}, cmd)
+            let
+                updateChangePasswordModal =
+                    ChangePasswordModal.update (embed << ChangePasswordModalMsg) globals modalMsg
+
+                ( newChangePasswordModal, cmd ) =
+                    maybeUpdate updateChangePasswordModal model.mChangePasswordModal
+            in
+            ( { model | mChangePasswordModal = newChangePasswordModal }, cmd )
 
         -- SEND RESET PASSWORD LINK
         ResetPasswordClicked ->
-            case (fromStatus model.sUser, model.resetPasswordLoading) of
-                (Just user, False) ->
+            case ( fromStatus model.sUser, model.resetPasswordLoading ) of
+                ( Just user, False ) ->
                     ( { model | resetPasswordLoading = True }
                     , Http.post
                         { url = "/api/frontend/sendpasswordresetmail"
@@ -323,15 +338,15 @@ update embed globals msg model =
 
         GotResetPasswordResponse response ->
             ( { model | resetPasswordLoading = False }
-            , case (fromStatus model.sUser, response) of
-                (Just user, Ok _) ->
+            , case ( fromStatus model.sUser, response ) of
+                ( Just user, Ok _ ) ->
                     globals.flashMessage <|
                         FlashMessage.success "A password reset link was sent to the user's email address."
 
-                (Nothing, Ok _) ->
+                ( Nothing, Ok _ ) ->
                     Cmd.none
 
-                (_, Err _) ->
+                ( _, Err _ ) ->
                     globals.flashMessage <|
                         FlashMessage.error "Error sending the password reset link."
             )
@@ -350,29 +365,30 @@ update embed globals msg model =
                         _ ->
                             ( { model | sDisableTwoFA = Loading }
                             , Http.post
-                                    { url = "/adminonly/useradmin/disable2fa/" ++ user.id
-                                    , body = formBody globals []
-                                    , expect = Http.expectString (embed << GotDisableTwoFAResponse)
-                                    }
+                                { url = "/adminonly/useradmin/disable2fa/" ++ user.id
+                                , body = formBody globals []
+                                , expect = Http.expectString (embed << GotDisableTwoFAResponse)
+                                }
                             )
 
         GotDisableTwoFAResponse response ->
-            case (fromStatus model.sUser, response) of
-                (Just user, Ok str) ->
+            case ( fromStatus model.sUser, response ) of
+                ( Just user, Ok str ) ->
                     ( { model | sDisableTwoFA = Success str }
                     , Cmd.batch
                         [ Cmd.map embed <| getUserCmd user.id
                         , globals.flashMessage <|
-                                FlashMessage.success "Two-factor authentication was disabled."
+                            FlashMessage.success "Two-factor authentication was disabled."
                         ]
                     )
 
-                (Nothing, Ok _) -> ( model, Cmd.none )
+                ( Nothing, Ok _ ) ->
+                    ( model, Cmd.none )
 
-                (_, Err _) ->
+                ( _, Err _ ) ->
                     ( { model | sDisableTwoFA = Failure }
                     , globals.flashMessage <|
-                            FlashMessage.error "Error disabling two-factor authentication."
+                        FlashMessage.error "Error disabling two-factor authentication."
                     )
 
         SetTwoFAMandatory newMandatory ->
@@ -391,11 +407,11 @@ view embed model =
         Success user ->
             div [] <|
                 [ Html.map embed <| viewUser user ]
-                ++ M.values
-                    [ Maybe.map (DeleteUserModal.view <| embed << DeleteUserModalMsg) model.mDeleteUserModal
-                    , Maybe.map (MoveUserModal.view <| embed << MoveUserModalMsg) model.mMoveUserModal
-                    , Maybe.map (ChangePasswordModal.view <| embed << ChangePasswordModalMsg) model.mChangePasswordModal
-                    ]
+                    ++ M.values
+                        [ Maybe.map (DeleteUserModal.view <| embed << DeleteUserModalMsg) model.mDeleteUserModal
+                        , Maybe.map (MoveUserModal.view <| embed << MoveUserModalMsg) model.mMoveUserModal
+                        , Maybe.map (ChangePasswordModal.view <| embed << ChangePasswordModalMsg) model.mChangePasswordModal
+                        ]
 
 
 formTextRow :
@@ -478,7 +494,7 @@ viewUser user =
                         [ text "Active"
                         , a [ onClick DisableTwoFAClicked, href <| "#", Spacing.ml2 ] [ text "Disable" ]
                         ]
-                        [ text "Not active"]
+                        [ text "Not active" ]
                 ]
             , Form.row []
                 [ Form.colLabel labelColAttrs [ text "Two-factor authentication is mandatory" ]
@@ -505,7 +521,7 @@ viewUser user =
             , formSelectRowM enumAccountType "Account type" user.accountType SetAccountType
             , formTextRowM "Callback URL" user.callbackUrl SetCallbackUrl [ readonly <| not user.callbackUrlIsEditable ]
             ]
-        , div [ class "d-inline-block"]
+        , div [ class "d-inline-block" ]
             [ Grid.row [ Row.leftSm, Row.attrs [ class "mb-sm-2" ] ]
                 [ Grid.col [ Col.sm12 ]
                     [ Button.button
