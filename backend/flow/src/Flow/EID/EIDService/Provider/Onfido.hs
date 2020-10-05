@@ -4,7 +4,6 @@ module Flow.EID.EIDService.Provider.Onfido (
   , OnfidoEIDServiceCompletionData(..)
  ) where
 
-import Control.Monad.Extra
 import Control.Monad.Trans.Maybe
 import Data.Aeson
 import Log
@@ -12,7 +11,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import Chargeable
 import DB
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.Model.Query
@@ -48,7 +46,6 @@ import qualified Flow.CallbackPayload as Callback
   ( AuthenticationProvider(..), AuthenticationProviderOnfido(..)
   )
 import qualified Flow.Core.Type.AuthenticationConfiguration as Core
-import qualified Flow.Model as Model
 
 eidProvider :: EIDServiceTransactionProvider
 eidProvider = EIDServiceTransactionProviderOnfido
@@ -178,9 +175,9 @@ updateDBTransactionWithCompletionData instanceId userName authKind OnfidoEIDServ
 updateEvidenceLogForRelevantDocs
   :: Kontrakcja m => InstanceId -> UserName -> OnfidoEIDServiceCompletionData -> m ()
 updateEvidenceLogForRelevantDocs instanceId userName cd = do
-  ctx     <- getContext
-  sigInfo <- filterPending . filterUser =<< Model.selectSignatoryInfo instanceId
-  forM_ sigInfo $ \(sl, doc) -> do
+  ctx    <- getContext
+  slDocs <- getSignatoriesAndDocumentsForUser instanceId userName
+  forM_ slDocs $ \(sl, doc) -> do
     let eventFields = do
           F.value "signatory_name" . eidonfidoLastName $ eidonfidoCompletionData cd
           F.value "signatory_dob" . eidonfidoDateOfBirth $ eidonfidoCompletionData cd
@@ -197,13 +194,3 @@ updateEvidenceLogForRelevantDocs instanceId userName cd = do
                                                          (Just sl)
                                                          Nothing
       =<< signatoryActor ctx sl
-  where
-    filterUser xs =
-      [ (slid, docid) | (userName', slid, docid) <- xs, userName == userName' ]
-    filterPending = mapMaybeM $ \(slid, docid) -> do
-      doc <- dbQuery $ GetDocumentByDocumentID docid
-      if isPending doc
-        then do
-          sl <- dbQuery $ GetSignatoryLinkByID docid slid
-          return $ Just (sl, doc)
-        else return Nothing

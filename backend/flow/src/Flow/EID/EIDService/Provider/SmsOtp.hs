@@ -6,10 +6,12 @@ module Flow.EID.EIDService.Provider.SmsOtp (
 import Control.Monad.Trans.Maybe
 import Data.Aeson
 import Log
+import qualified Text.StringTemplates.Fields as F
 
 import Chargeable
 import DB
 import Doc.DocStateData
+import Doc.DocumentMonad
 import Doc.Model.Query
 import EID.Authentication.Model
 import EID.EIDService.Communication
@@ -17,6 +19,7 @@ import EID.EIDService.Conf
 import EID.EIDService.Types hiding
   ( EIDServiceTransactionFromDB(..), UnifiedRedirectUrl(..)
   )
+import EvidenceLog.Model
 import Flow.ActionConsumers
 import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
@@ -29,6 +32,7 @@ import Happstack.Fields
 import Kontra hiding (InternalError)
 import Log.Identifier
 import Session.Model
+import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import qualified Flow.CallbackPayload as CB
@@ -145,6 +149,8 @@ finaliseTransaction instanceId userName authKind estDB trans =
       let status = EIDServiceTransactionStatusCompleteAndSuccess
       mergeEIDServiceTransactionWithStatus status
       updateDBTransactionWithCompletionData instanceId userName authKind cd
+      when (authKind == AuthenticationToView)
+        $ updateEvidenceLogForRelevantDocs instanceId userName cd
       sendCallback CB.Success
       return status
   where
@@ -176,3 +182,23 @@ updateDBTransactionWithCompletionData instanceId userName authKind SmsOtpComplet
     sessionID <- getNonTempSessionID
     updateFlowEidAuthentication instanceId userName authKind sessionID
       $ EIDServiceSmsOtpAuthentication_ phoneNumber
+
+updateEvidenceLogForRelevantDocs
+  :: Kontrakcja m => InstanceId -> UserName -> SmsOtpCompletionData -> m ()
+updateEvidenceLogForRelevantDocs instanceId userName SmsOtpCompletionData { phoneNumber }
+  = do
+    ctx    <- getContext
+    slDocs <- getSignatoriesAndDocumentsForUser instanceId userName
+    forM_ slDocs $ \(sl, doc) -> do
+      let eventFields = do
+            F.value "signatory_phone_number" phoneNumber
+            F.value "flow_auth_to_view" True
+            F.value "provider_sms_otp" True
+      withDocument doc
+        .   void
+        $   dbUpdate
+        .   InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence
+                                                           eventFields
+                                                           (Just sl)
+                                                           Nothing
+        =<< signatoryActor ctx sl

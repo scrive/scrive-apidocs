@@ -779,9 +779,18 @@ VisitedViewForAuthenticationEvidenceLog=The party <span class="actor"/> opened t
 ###
 VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEvidenceArchive()$
 ###
-AuthenticatedToViewEvidenceLog=$if(provider_sms_pin)$ $AuthenticatedToViewEvidenceLogWithSMSPin()$ $else$ $AuthenticatedToViewEvidenceLogWithEID()$ $endif$
+AuthenticatedToViewEvidenceLog=*
+$if(provider_sms_pin)$
+  $AuthenticatedToViewEvidenceLogWithSMSPin()$
+$elseif(provider_sms_otp)$
+  $AuthenticatedToViewEvidenceLogWithSmsOtp()$
+$else$
+  $AuthenticatedToViewEvidenceLogWithEID()$
+$endif$
 ###
 AuthenticatedToViewEvidenceLogWithSMSPin=<span class="actor"/> verified their identity through “PIN by SMS” to access the document.
+###
+AuthenticatedToViewEvidenceLogWithSmsOtp=<span class="actor"/> verified their identity through “PIN by SMS” $FlowAuthToView()$ to access the document.
 ###
 AuthenticatedToViewEvidenceLogWithEID=<span class="actor"/> verified their $providerType()$ identity through $provider()$ $FlowAuthToView()$ to access the document. $elegVerificationAuth()$
 ###
