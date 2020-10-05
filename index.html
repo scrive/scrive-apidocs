@@ -1375,7 +1375,9 @@ Once these have been approved, you may use the token credentials to make
 API requests on behalf of the user.</p>
 <h3 id='oauth-privileges'>OAuth privileges</h3>
 <p>The current API version accepts the following privileges names:
-<code>DOC_CREATE</code>, <code>DOC_CHECK</code>, and <code>DOC_SEND</code>.</p>
+<code>DOC_CREATE</code>, <code>DOC_CHECK</code>, <code>DOC_SEND</code> and <code>FULL_ACCESS</code>.</p>
+
+<p><code>FULL_ACCESS</code> can be used instead of all the other privileges and their combinations.</p>
 
 <p>Permission levels required for each API call are described on a per call
 basis.</p>
@@ -3575,6 +3577,8 @@ is provided.</li>
 </p>
 
 <p>Fetch a list of attachments, with filtering and sorting options.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-31'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -3621,6 +3625,8 @@ list of attachments in the order you provided.</p>
 <p>The optional <code>filename</code> parameter in the URL can be set to any valid file
 name. This allows you to download the file with user-specified file name in
 the browser.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-32'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -3645,6 +3651,8 @@ the browser.</p>
 </p>
 
 <p>Create a new attachment.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-33'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -3670,6 +3678,8 @@ the file name.</p>
 </p>
 
 <p>Delete the specified attachments.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-34'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -3692,6 +3702,8 @@ the file name.</p>
 </p>
 
 <p>Share or unshare the specified attachments with the company&#39;s other users.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-35'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -3732,6 +3744,8 @@ such as:
 
 <p>This link will redirect the user to <code>PATH_INSIDE_SCRIVE_COM</code>.
 Remember that all URL query parameters must be URL encoded!</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-36'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4094,6 +4108,8 @@ the requisite permissions upon the parent.</p>
 <p>A full User Group JSON response is returned which displays the state <em>after</em>
 the create operation has been performed. Performing <code>/update</code> and then
 using the <code>GET</code> endpoint should produce the same output both times.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-45'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4273,6 +4289,8 @@ append <code>?include-inheritable</code> to the URL when making the call. This w
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-46'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4363,6 +4381,8 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 
 <p><strong>Important Note</strong>: <em>You cannot move usergroups by updating the <code>children</code>
 field, it must be done via <code>parent_id</code></em>.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-47'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4408,6 +4428,8 @@ exists with this ID or that you do not have permission to update it)</p>
 Groups can only deleted by internal Scrive admins. We also do not support
 recursive deletion. If this is required, it can be implemented client-side
 by simply working up the tree, deleting the leaves.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-48'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4543,6 +4565,8 @@ append <code>?include-inheritable</code> to the URL when making the call. This w
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-49'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4607,6 +4631,8 @@ full) update applied to it.</p>
 
 <p>The User Group from which the contact_details were previously inherited will
 be unaffected by the operation.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-50'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4651,6 +4677,8 @@ in no operation being performed. Also, attempting to delete the
 contact_details object of a root User Group will result in an error.</p>
 
 <p>For more details on inheritance, see <a href="#view-user-group-contact-details">View User Group Contact Details</a>.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-51'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4795,6 +4823,8 @@ append <code>?include-inheritable</code> to the URL when making the call. This w
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-52'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4837,7 +4867,7 @@ It is not necessary to minify the JSON, but also not prohibited.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <blockquote>
-<p>For examples of the JSON output, see 
+<p>For examples of the JSON output, see
 <a href="#view-user-group-settings">View User Group Settings</a>.</p>
 </blockquote>
 
@@ -4854,6 +4884,8 @@ become the new non-inherited settings object for this User Group.</p>
 
 <p>The User Group from which the contact_details were previously inherited will
 be unaffected by the operation.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-53'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4898,6 +4930,8 @@ in no operation being performed. Also, attempting to delete the settings
 object of a root User Group will result in an error.</p>
 
 <p>For more details on inheritance, see <a href="#view-user-group-settings">View User Group Settings</a>.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-54'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4948,6 +4982,8 @@ exists with this ID or that you do not have permission to view it)</p>
 
 <p>Note that this will only display Users that are in that User Group and will
 not show the Users who are members of any descendent User Groups.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-55'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -5302,6 +5338,8 @@ folder.</p>
 IDs of the user and the user group for whom the folder is a home folder
 and information about its children. Only the immediate children are
 included by default (see the <code>recursive</code> parameter).</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-60'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -5355,6 +5393,8 @@ you do not include it.</p>
 <p>A full Folder JSON response is returned which displays the state after the
 create operation has been performed. Performing <code>/update</code> and then using the
 GET endpoint should produce the same output both times.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-61'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -5454,6 +5494,8 @@ Update permissions on the Folder.</p>
 can only deleted by internal Scrive admins. We also do not support recursive
 deletion. If this is required, it can be implemented client-side by simply
 working up the tree, deleting the leaves.</p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-63'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -5498,6 +5540,8 @@ and show a little metadata, the document JSON for each item in <code>&quot;docum
 is structured the same as it would be for endpoints that display a given
 document. <em>(See the <a href="#document-3">Document Definition</a> documentation for
 details).</em></p>
+
+<p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
 <h3 id='parameters-64'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
