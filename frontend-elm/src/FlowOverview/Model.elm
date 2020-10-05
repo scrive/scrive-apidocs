@@ -25,6 +25,7 @@ type Msg
     | EnterRejectionClicked
     | UpdateTextarea String
     | RejectButtonClicked
+    | CancelButtonClicked
     | RejectCallback (Result Http.Error ())
     | AddFlashMessage FlashMessage
     | ErrorTrace (List (String, Json.Encode.Value))
@@ -46,7 +47,7 @@ type alias InnerModel =
     , mRejection : Maybe Rejection
     }
 
-type Rejection = Complete | EnterMessage {message : String}
+type Rejection = Rejection {message : String}
 
 type alias GetInstanceView =
     { id : String

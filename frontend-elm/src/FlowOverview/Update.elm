@@ -75,7 +75,7 @@ update msg model =
                 AppOk {flags} ->
                     case result of
                         Ok instance ->
-                            getDocuments flags model instance
+                            getDocuments flags model instance -- {instance | status = Model.Failed}
                         Err error ->
                             let cmd = errorCmd
                                     { message = "Internal error: failed to communicate with backend."
@@ -112,14 +112,14 @@ update msg model =
                     in ( model, cmd )
 
         EnterRejectionClicked ->
-            let newModel = updateModel model (\inner -> { inner | mRejection = Just <| Model.EnterMessage { message = "" }})
+            let newModel = updateModel model (\inner -> { inner | mRejection = Just <| Model.Rejection { message = "" }})
             in ( newModel, Cmd.none )
 
         RejectButtonClicked ->
             case model.state of
                 AppOk {flags, innerModel} ->
                     case innerModel.mRejection of
-                        Just (Model.EnterMessage {message}) ->
+                        Just (Model.Rejection {message}) ->
                             let postReq = Http.post
                                     { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/reject"
                                     , body = Http.jsonBody <| JE.object [("message", JE.string message)]
@@ -129,11 +129,21 @@ update msg model =
                         _ -> (model, Cmd.none)
                 Failure _ -> (model, Cmd.none)
 
+        CancelButtonClicked ->
+            let newModel = updateModel model (\inner -> { inner | mRejection = Nothing } )
+            in (newModel, Cmd.none)
+
         RejectCallback res ->
             case res of
                 Ok () ->
-                    let newModel = updateModel model (\inner -> { inner | mRejection = Just <| Model.Complete } )
-                    in (newModel, Cmd.none)
+                    let newModel = updateModel model (\inner ->
+                            { inner | mInstance = case inner.mInstance of
+                                Just instance -> Just { instance | status = Model.Failed }
+                                Nothing -> Nothing
+                            })
+                        message = "Your rejection message has been sent. Thank you!"
+                        cmd = perform <| AddFlashMessage <| FlashSuccess message
+                    in (newModel, cmd)
                 Err error ->
                     let cmd = errorCmd
                             { message = "Failed to reject the Flow"
@@ -142,7 +152,7 @@ update msg model =
                     in ( model, cmd )
 
         UpdateTextarea message ->
-            let newModel = updateModel model (\inner -> { inner | mRejection = Just <| Model.EnterMessage { message = message }})
+            let newModel = updateModel model (\inner -> { inner | mRejection = Just <| Model.Rejection { message = message }})
             in ( newModel, Cmd.none )
 
         AddFlashMessage flashMessage ->

@@ -114,39 +114,35 @@ rejectionButton : Html Msg
 rejectionButton =
     div []
         [ p []
-            [ a [ href "#"
-                , class "button"
+            [ a [ class "button enter-rejection-button"
                 , onClick <| EnterRejectionClicked
                 ]
-                [ text "Reject the documents and contact us" ]
+                [ text "Reject the documents" ]
             ]
         ]
 
 
 rejectionComponent : Model.Rejection -> Html Msg
-rejectionComponent state = case state of
-  Complete ->
-    div [ class "identify-box-content" ] [
-      div [ class "identify-box-button" ] [ text "Your rejection message has been sent. Thank you!" ]
-    ]
-
-  EnterMessage {message} ->
-    div [ class "identify-box-content" ]
+rejectionComponent (Rejection {message}) =
+    div [ class "rejection" ]
         [ p [ style "margin-bottom" "1em" ]
-            [ text """Please let us know why you reject this Flow.""" ]
-        , textarea [ style "margin-bottom" "1em"
-                   , style "width" "100%"
-                   , style "height" "6em"
-                   , placeholder "Enter message..." -- TODO: Localisation
+            [ text """Please let us know why you are rejecting the Flow.""" ]
+        , textarea [ placeholder "Enter message..." -- TODO: Localisation
                    , autocomplete False
                    , value message
                    , onInput UpdateTextarea
                    ]
                    []
-        , a [ class "button"
-            , class "button-large"
-            , class "action"
-            , onClick RejectButtonClicked
+        , div
+            [ class "button-group right"
             ]
-            [ text "Reject" ]
+            [ a [ class "button button-reject"
+                , onClick RejectButtonClicked
+                ]
+                [ text "Reject" ]
+            , a [ class "button button-cancel"
+                , onClick CancelButtonClicked
+                ]
+                [ text "Cancel" ]
+            ]
         ]
